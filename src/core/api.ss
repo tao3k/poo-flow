@@ -8,6 +8,7 @@
         :core/flow
         :core/plan
         :core/strategy
+        :core/policy
         :core/runtime-adapter
         :core/replay
         :core/runner)
@@ -18,6 +19,7 @@
         (import: :core/flow)
         (import: :core/plan)
         (import: :core/strategy)
+        (import: :core/policy)
         (import: :core/runtime-adapter)
         (import: :core/replay)
         (import: :core/runner))

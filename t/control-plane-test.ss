@@ -38,7 +38,15 @@
                       '(node external-demo 0 external compile))
         (check-equal? (execution-request-frontier request)
                       '((node external-demo 0 external compile)))
-        (check-equal? (execution-request-strategy request) 'local-eager)))))
+        (check-equal? (execution-request-strategy request) 'local-eager)
+        (check-equal? (execution-request-policy request)
+                      '((strategy . local-eager)
+                        (cache-policy . no-cache)
+                        (failure-policy . fail-fast)
+                        (capabilities pure scheme store external graph-frontier)
+                        (frontier (node external-demo 0 external compile))))
+        (check-equal? (receipt-policy child)
+                      (execution-request-policy request))))))
 
 (def funflow-api-test
   (test-suite "funflow-style flow api"
@@ -146,10 +154,16 @@
              (first-complete '((node frontier-demo 0 pure inc)))
              (second-complete '((node frontier-demo 0 pure inc)
                                 (node frontier-demo 1 scheme double)))
+             (policy (strategy-execution-policy strategy second-complete))
              (result (runner-run runner pipeline 2))
              (receipt (run-result-receipt result))
              (children (receipt-children receipt)))
         (check-equal? (strategy-can-select-frontier? strategy) #t)
+        (check-equal? (execution-policy-strategy policy) 'local-eager)
+        (check-equal? (execution-policy-allows? policy 'external) #t)
+        (check-equal? (execution-policy-cache-enabled? policy) #f)
+        (check-equal? (cdr (assoc 'frontier (execution-policy->alist policy)))
+                      second-complete)
         (check-equal? (execution-plan-ready-node-ids plan '())
                       '((node frontier-demo 0 pure inc)))
         (check-equal? (execution-plan-ready-node-ids plan first-complete)
@@ -205,6 +219,9 @@
         (check-equal? (replay-report-valid? runner-report) #t)
         (check-equal? (cdr (assoc 'adapter-request-count summary)) 0)
         (check-equal? (receipt-adapter-request-count receipt) 0)
+        (check-equal? (cdr (assoc 'strategy
+                                  (cdr (assoc 'policy root-event))))
+                      'local-eager)
         (check-equal? (cdr (assoc 'path root-event)) '())
         (check-equal? (cdr (assoc 'path first-event)) '(0))
         (check-equal? (cdr (assoc 'node-id first-event))
@@ -238,6 +255,8 @@
              (child (car (receipt-children receipt))))
         (check-equal? (run-result-value result) 6)
         (check-equal? (receipt-cache receipt) 'no-cache)
+        (check-equal? (cdr (assoc 'cache-policy (receipt-policy child)))
+                      'cache-output)
         (check-equal? (receipt-cache child) '(cache-output inc pure 5 6))))))
 
 (def poo-role-test
@@ -246,8 +265,10 @@
       (check-equal? (role-object? flow-role) #t)
       (check-equal? (role-name flow-role) 'flow)
       (check-equal? (role-kind strategy-role) 'policy)
+      (check-equal? (role-kind execution-policy-role) 'policy-envelope)
       (check-equal? (role-kind replay-role) 'policy)
       (check-equal? (role-runtime-owner runtime-adapter-role) 'rust-or-external-runtime)
+      (check-equal? (role-responsibility execution-policy-role) 'runtime-policy-handoff)
       (check-equal? (role-responsibility replay-role) 'audit-validation)
       (check-equal? (role-responsibility receipt-role) 'execution-explanation))
     (test-case "composes role prototypes with leftmost precedence"

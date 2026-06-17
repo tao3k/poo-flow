@@ -1,0 +1,56 @@
+;;; -*- Gerbil -*-
+;;; Boundary: execution policies package strategy evidence for runtime handoff.
+;;; Invariant: policies are immutable snapshots, not schedulers or executors.
+
+(import :core/strategy)
+
+(export make-execution-policy
+        execution-policy?
+        execution-policy-strategy
+        execution-policy-cache-policy
+        execution-policy-failure-policy
+        execution-policy-capabilities
+        execution-policy-frontier
+        strategy-execution-policy
+        execution-policy->alist
+        execution-policy-allows?
+        execution-policy-cache-enabled?)
+
+;;; A policy snapshot is the Rust-facing view of strategy metadata at a single
+;;; execution frontier.
+;; ExecutionPolicy <- Strategy CachePolicy FailurePolicy [Symbol] [Id]
+(defstruct execution-policy
+  (strategy
+   cache-policy
+   failure-policy
+   capabilities
+   frontier)
+  transparent: #t)
+
+;;; Strategy-owned metadata is frozen at the runner boundary before an adapter
+;;; receives a request, so host runtimes do not need to inspect Scheme objects.
+;; ExecutionPolicy <- Strategy [Id]
+(def (strategy-execution-policy strategy frontier)
+  (make-execution-policy (strategy-name strategy)
+                         (strategy-cache-policy strategy)
+                         (strategy-failure-policy strategy)
+                         (strategy-capabilities strategy)
+                         frontier))
+
+;;; The alist form is the stable request/receipt shape for future Rust
+;;; serialization; it intentionally avoids embedding Gerbil structs.
+;; Alist <- ExecutionPolicy
+(def (execution-policy->alist policy)
+  (list (cons 'strategy (execution-policy-strategy policy))
+        (cons 'cache-policy (execution-policy-cache-policy policy))
+        (cons 'failure-policy (execution-policy-failure-policy policy))
+        (cons 'capabilities (execution-policy-capabilities policy))
+        (cons 'frontier (execution-policy-frontier policy))))
+
+;; Boolean <- ExecutionPolicy Symbol
+(def (execution-policy-allows? policy capability)
+  (and (memq capability (execution-policy-capabilities policy)) #t))
+
+;; Boolean <- ExecutionPolicy
+(def (execution-policy-cache-enabled? policy)
+  (not (eq? (execution-policy-cache-policy policy) 'no-cache)))

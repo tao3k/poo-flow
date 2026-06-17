@@ -9,6 +9,7 @@
     "src/core/flow"
     "src/core/plan"
     "src/core/strategy"
+    "src/core/policy"
     "src/core/runtime-adapter"
     "src/core/replay"
     "src/core/runner"

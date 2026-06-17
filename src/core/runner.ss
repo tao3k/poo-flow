@@ -7,6 +7,7 @@
         :core/flow
         :core/plan
         :core/strategy
+        :core/policy
         :core/runtime-adapter
         :core/replay)
 
@@ -105,7 +106,8 @@
       (runner-validate-plan runner plan)
       (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '() '())))
         (let ((value (car result))
-              (children (reverse (cdr result))))
+              (children (reverse (cdr result)))
+              (root-frontier (strategy-ready-frontier-ids strategy plan '())))
           (make-run-result
            value
            (make-receipt (execution-plan-flow-name plan)
@@ -113,12 +115,14 @@
                          'flow
                          #f
                          (strategy-name strategy)
+                         (execution-policy->alist
+                          (strategy-execution-policy strategy root-frontier))
                          'local
                          #f
                          input
                          value
                          'no-cache
-                         (strategy-ready-frontier-ids strategy plan '())
+                         root-frontier
                          'ok
                          #f
                          children)))))))
@@ -156,7 +160,9 @@
 (def (run-task runner plan strategy node task input frontier)
   (cond
    ((strategy-can-run-locally? strategy task)
-    (let* ((value ((task-executor task) input))
+    (let* ((policy (execution-policy->alist
+                    (strategy-execution-policy strategy frontier)))
+           (value ((task-executor task) input))
            (cache (strategy-cache-decision strategy task input value)))
       (cons value
             (make-receipt (execution-plan-flow-name plan)
@@ -164,6 +170,7 @@
                           (task-kind task)
                           (plan-node-id node)
                           (strategy-name strategy)
+                          policy
                           'local
                           #f
                           input
@@ -179,7 +186,9 @@
                                            (execution-plan-flow-name plan)
                                            (plan-node-id node)
                                            frontier
-                                           (strategy-name strategy)))
+                                           (strategy-name strategy)
+                                           (execution-policy->alist
+                                            (strategy-execution-policy strategy frontier))))
            (adapter-result (adapter-submit (runner-adapter runner) request))
            (cache (strategy-cache-decision strategy task input adapter-result)))
       (cons adapter-result
@@ -188,6 +197,7 @@
                           (task-kind task)
                           (plan-node-id node)
                           (strategy-name strategy)
+                          (execution-request-policy request)
                           (runtime-adapter-name (runner-adapter runner))
                           (adapter-result-request-id adapter-result)
                           input

@@ -9,6 +9,7 @@
         receipt-kind
         receipt-node-id
         receipt-strategy
+        receipt-policy
         receipt-adapter-decision
         receipt-request-id
         receipt-input
@@ -31,13 +32,16 @@
 ;;; observed execution point, keeping scheduler policy inspectable after a run.
 ;;; Node identity is captured separately from task identity so replay policy can
 ;;; detect ordering drift even when task names repeat.
-;; Receipt <- Flow Task Symbol NodeId Strategy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt]
+;;; Policy records the adapter-stable strategy snapshot that produced the
+;;; frontier, cache mode, and failure behavior for this observation.
+;; Receipt <- Flow Task Symbol NodeId Strategy Policy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt]
 (defstruct receipt
   (flow
    task
    kind
    node-id
    strategy
+   policy
    adapter-decision
    request-id
    input
@@ -74,6 +78,7 @@
         (cons 'kind (receipt-kind receipt))
         (cons 'status (receipt-status receipt))
         (cons 'strategy (receipt-strategy receipt))
+        (cons 'policy (receipt-policy receipt))
         (cons 'frontier (receipt-frontier receipt))
         (cons 'event-count (receipt-event-count receipt))
         (cons 'adapter-request-count (receipt-adapter-request-count receipt))
@@ -109,6 +114,7 @@
         (cons 'kind (receipt-kind receipt))
         (cons 'node-id (receipt-node-id receipt))
         (cons 'strategy (receipt-strategy receipt))
+        (cons 'policy (receipt-policy receipt))
         (cons 'adapter-decision (receipt-adapter-decision receipt))
         (cons 'request-id (receipt-request-id receipt))
         (cons 'cache (receipt-cache receipt))

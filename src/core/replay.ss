@@ -30,7 +30,8 @@
 ;;; Intent: validate that a receipt can be replayed against the plan topology
 ;;; that produced it.
 ;;; The policy checks root frontier, child count, node order, child frontiers,
-;;; root status, and exported summary counts without running any task again.
+;;; root status, policy snapshots, and exported summary counts without running
+;;; any task again.
 ;; ReplayReport <- ExecutionPlan Receipt
 (def (validate-replay-report plan receipt)
   (let* ((summary (receipt->run-summary receipt))
@@ -39,6 +40,7 @@
          (reasons
           (append (root-status-reasons receipt)
                   (root-frontier-reasons plan receipt)
+                  (receipt-policy-reasons receipt 'root)
                   (child-count-reasons expected-node-ids
                                        (receipt-children receipt))
                   (child-replay-reasons plan
@@ -115,7 +117,8 @@
           (child-frontier-reasons plan
                                   child
                                   expected-node-id
-                                  completed-node-ids)))
+                                  completed-node-ids)
+          (receipt-policy-reasons child expected-node-id)))
 
 ;; [Reason] <- Receipt Id
 (def (child-node-id-reasons child expected-node-id)
@@ -137,6 +140,26 @@
                   expected-node-id
                   expected
                   observed)))))
+
+;;; Policy snapshots are replay evidence. They must agree with the receipt
+;;; fields that remain first-class for fast audit queries.
+;; [Reason] <- Receipt Label
+(def (receipt-policy-reasons receipt label)
+  (let ((policy (receipt-policy receipt)))
+    (append (policy-field-reasons label
+                                  'strategy
+                                  (receipt-strategy receipt)
+                                  (policy-ref 'strategy policy))
+            (policy-field-reasons label
+                                  'frontier
+                                  (receipt-frontier receipt)
+                                  (policy-ref 'frontier policy)))))
+
+;; [Reason] <- Label Symbol Value Value
+(def (policy-field-reasons label field expected observed)
+  (if (equal? expected observed)
+    '()
+    (list (list 'policy-mismatch label field expected observed))))
 
 ;;; Summary count validation keeps the export surface honest even though the
 ;;; summary is derived locally today.
@@ -175,3 +198,7 @@
 (def (alist-ref key alist)
   (let ((entry (assoc key alist)))
     (and entry (cdr entry))))
+
+;; Value <- Symbol Alist
+(def (policy-ref key policy)
+  (and policy (alist-ref key policy)))

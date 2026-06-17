@@ -168,28 +168,43 @@ frontiers, root status, and exported summary counts.
 - API, build, POO role descriptors, tests, and docs expose the replay owner.
 - Replay validation remains pure control-plane logic; execution replay and
 durable persistence remain Rust/runtime follow-ups.
-*** 10.02.57 M7 Configured Runner And Rust Adapter
-Add a configured runner entrypoint and the first Rust-backed adapter.
+*** 10.02.57 M7 Runtime Policy Snapshot
+Make policy hints concrete in the host-runtime schema instead of leaving them
+as strategy-local symbols.
 
+Exit criteria:
+- A policy module snapshots strategy name, cache policy, failure policy,
+capabilities, and ready frontier.
+- Adapter execution requests carry the policy snapshot as an alist suitable
+for future Rust serialization.
+- Receipts and audit events carry the same policy snapshot used by the
+adapter request.
+- Replay validation checks policy frontier and strategy evidence against the
+first-class receipt fields.
+- API, build, POO role descriptors, tests, and docs expose the execution
+policy owner.
+*** 10.02.58 M8 Configured Runner And Rust Adapter
+Add a configured runner entrypoint and the first Rust-backed adapter.
 Exit criteria:
 - =run-flow-with-config= or equivalent exists.
 - Request-only adapter remains as a test double.
 - Rust adapter can receive at least one store/external request.
 
 ** 10.02.60 Immediate Implementation Slice
-The next code slice is M1.
+The current code slice is M7.
 
-Add an explicit linear plan module now, because every later feature depends on
-the declaration/planning/interpreter boundary:
-- =flow->linear-plan= converts a flow into an =execution-plan=.
-- Each =plan-node= has an id, ordinal, step, kind, and name.
-- =strategy-plan= delegates to =flow->linear-plan= through the strategy's
-  planner.
-- =runner-run= validates and interprets the plan nodes.
+The implementation now freezes strategy policy at the runner boundary and
+copies that snapshot into adapter requests, receipts, audit events, and replay
+validation. This gives the future Rust adapter a stable policy envelope without
+moving execution, scheduling, cache materialization, or persistence into
+Scheme.
+The next functional slice should be M8:
+- =run-flow-with-config= or equivalent should select strategy and adapter
+from a small configuration object.
+- The request-only adapter must remain the deterministic test double.
+- The first Rust-backed adapter can start by accepting one store or external
+request using the existing execution request and policy alist schema.
 
-This is intentionally small but functional. It keeps current flows runnable
-while creating the place where POO task-family descriptors, branching, cache
-policy, and Rust request schema will land.
 
 ** 10.02.70 Harness Integration Receipt
 The Gerbil language project harness is now part of the project policy surface,

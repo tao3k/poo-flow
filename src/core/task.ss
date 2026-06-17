@@ -29,7 +29,8 @@
         execution-request-plan-id
         execution-request-node-id
         execution-request-frontier
-        execution-request-strategy)
+        execution-request-strategy
+        execution-request-policy)
 
 ;;; The request field is symbolic control-plane data; the executor slot is
 ;;; present only for local task kinds.
@@ -47,7 +48,8 @@
 ;;; external tasks.
 ;;; Plan, node, frontier, and strategy fields are optional control-plane
 ;;; evidence so Rust adapters can correlate requests with Scheme planning.
-;; ExecutionRequest <- Symbol Symbol Request Value Contract Contract PlanId NodeId [Id] Strategy
+;;; Policy carries the stable alist snapshot that adapters should persist.
+;; ExecutionRequest <- Symbol Symbol Request Value Contract Contract PlanId NodeId [Id] Strategy Policy
 (defstruct execution-request
   (name
    kind
@@ -58,7 +60,8 @@
    plan-id
    node-id
    frontier
-   strategy)
+   strategy
+   policy)
   transparent: #t)
 
 ;; Task <- Symbol Procedure Contract Contract
@@ -89,12 +92,12 @@
 
 ;; ExecutionRequest <- Task Value
 (def (task-normalized-request task input)
-  (task-adapter-request task input #f #f '() #f))
+  (task-adapter-request task input #f #f '() #f #f))
 
 ;;; Runner-owned request enrichment keeps task constructors pure while still
 ;;; giving runtime adapters the graph and strategy evidence they need.
-;; ExecutionRequest <- Task Value PlanId NodeId [Id] Strategy
-(def (task-adapter-request task input plan-id node-id frontier strategy)
+;; ExecutionRequest <- Task Value PlanId NodeId [Id] Strategy Policy
+(def (task-adapter-request task input plan-id node-id frontier strategy policy)
   (make-execution-request (task-name task)
                           (task-kind task)
                           (task-request task)
@@ -104,4 +107,5 @@
                           plan-id
                           node-id
                           frontier
-                          strategy))
+                          strategy
+                          policy))
