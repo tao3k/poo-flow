@@ -131,7 +131,10 @@
              (plan (runner-plan runner pipeline))
              (first-complete '((node frontier-demo 0 pure inc)))
              (second-complete '((node frontier-demo 0 pure inc)
-                                (node frontier-demo 1 scheme double))))
+                                (node frontier-demo 1 scheme double)))
+             (result (runner-run runner pipeline 2))
+             (receipt (run-result-receipt result))
+             (children (receipt-children receipt)))
         (check-equal? (strategy-can-select-frontier? strategy) #t)
         (check-equal? (execution-plan-ready-node-ids plan '())
                       '((node frontier-demo 0 pure inc)))
@@ -144,7 +147,15 @@
                       '((node frontier-demo 2 pure label)))
         (check-equal? (runner-ready-frontier-ids runner pipeline
                                                 (execution-plan-node-ids plan))
-                      '())))))
+                      '())
+        (check-equal? (receipt-frontier receipt)
+                      '((node frontier-demo 0 pure inc)))
+        (check-equal? (receipt-frontier (car children))
+                      '((node frontier-demo 0 pure inc)))
+        (check-equal? (receipt-frontier (cadr children))
+                      '((node frontier-demo 1 scheme double)))
+        (check-equal? (receipt-frontier (caddr children))
+                      '((node frontier-demo 2 pure label)))))))
 
 (def strategy-cache-test
   (test-suite "strategy cache policy"

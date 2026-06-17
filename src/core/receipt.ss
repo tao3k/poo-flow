@@ -13,6 +13,7 @@
         receipt-input
         receipt-output
         receipt-cache
+        receipt-frontier
         receipt-status
         receipt-error
         receipt-children
@@ -21,7 +22,9 @@
 
 ;;; Children preserve nested execution evidence without forcing a runner to
 ;;; flatten or discard subflow receipts.
-;; Receipt <- Flow Task Symbol Strategy AdapterDecision RequestId Value Value Cache Symbol Error [Receipt]
+;;; Frontier evidence records which plan node ids were ready before the
+;;; observed execution point, keeping scheduler policy inspectable after a run.
+;; Receipt <- Flow Task Symbol Strategy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt]
 (defstruct receipt
   (flow
    task
@@ -32,6 +35,7 @@
    input
    output
    cache
+   frontier
    status
    error
    children)

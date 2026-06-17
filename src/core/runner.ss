@@ -93,7 +93,7 @@
   (let ((strategy (runner-strategy runner)))
     (let ((plan (runner-plan runner flow)))
       (runner-validate-plan runner plan)
-      (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '())))
+      (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '() '())))
         (let ((value (car result))
               (children (reverse (cdr result))))
           (make-run-result
@@ -107,28 +107,32 @@
                          input
                          value
                          'no-cache
+                         (strategy-ready-frontier-ids strategy plan '())
                          'ok
                          #f
                          children)))))))
 
 ;;; Boundary: this recursive driver is the sequential interpreter loop.
-;;; Invariant: it preserves execution order while accumulating receipt evidence.
-;; StepSequenceResult <- Runner ExecutionPlan Strategy [PlanNode] Input [Receipt]
-(def (run-plan-nodes runner plan strategy nodes input receipts)
+;;; Invariant: completed ids are audit state, not scheduling authority; the
+;;; runner still consumes nodes in plan order.
+;; StepSequenceResult <- Runner ExecutionPlan Strategy [PlanNode] Input [Id] [Receipt]
+(def (run-plan-nodes runner plan strategy nodes input completed-node-ids receipts)
   (if (null? nodes)
     (cons input receipts)
     (let* ((node (car nodes))
-           (step-result (run-plan-node runner plan strategy node input))
+           (frontier (strategy-ready-frontier-ids strategy plan completed-node-ids))
+           (step-result (run-plan-node runner plan strategy node input frontier))
            (value (car step-result))
-           (receipt (cdr step-result)))
-      (run-plan-nodes runner plan strategy (cdr nodes) value (cons receipt receipts)))))
+           (receipt (cdr step-result))
+           (completed (cons (plan-node-id node) completed-node-ids)))
+      (run-plan-nodes runner plan strategy (cdr nodes) value completed (cons receipt receipts)))))
 
-;; StepResult <- Runner ExecutionPlan Strategy PlanNode Input
-(def (run-plan-node runner plan strategy node input)
+;; StepResult <- Runner ExecutionPlan Strategy PlanNode Input [Id]
+(def (run-plan-node runner plan strategy node input frontier)
   (let ((step (plan-node-step node)))
     (cond
      ((task? step)
-      (run-task runner plan strategy step input))
+      (run-task runner plan strategy step input frontier))
      ((flow? step)
       (let ((nested (runner-run runner step input)))
         (cons (run-result-value nested) (run-result-receipt nested))))
@@ -137,8 +141,8 @@
 
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
-;; StepResult <- Runner ExecutionPlan Strategy Task Input
-(def (run-task runner plan strategy task input)
+;; StepResult <- Runner ExecutionPlan Strategy Task Input [Id]
+(def (run-task runner plan strategy task input frontier)
   (cond
    ((strategy-can-run-locally? strategy task)
     (let* ((value ((task-executor task) input))
@@ -153,6 +157,7 @@
                           input
                           value
                           cache
+                          frontier
                           'ok
                           #f
                           '()))))
@@ -170,6 +175,7 @@
                           input
                           adapter-result
                           cache
+                          frontier
                           (adapter-result-status adapter-result)
                           (adapter-result-error adapter-result)
                           '()))))
