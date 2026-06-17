@@ -1,0 +1,427 @@
+#+TITLE: 10.03 Funflow Source Audit And Acceleration Plan
+
+* 10.03 Funflow Source Audit And Acceleration Plan
+** 10.03.00 Document Status
+This document is the source-backed acceleration plan after auditing the cloned
+Funflow tree under =.data/funflow=.
+
+The working conclusion is unchanged from 10.01 and 10.02:
+- Gerbil Scheme owns declaration, POO descriptors, planning policy, extension
+  strategy, lightweight local execution, request normalization, and receipts.
+- Rust or another host runtime owns content-addressed storage, Docker or
+  container execution, durable cache state, process control, large filesystem
+  operations, external config loading at scale, and parallel scheduling.
+
+This document should be used as the implementation queue for the next slices.
+It is intentionally more operational than 10.01 and 10.02.
+
+** 10.03.10 Audited Source Map
+The useful reference surface is concentrated in these files:
+
+- =.data/funflow/funflow/src/Funflow/Flow.hs=: public flow API, required
+  strands, extended strands, and smart constructors.
+- =.data/funflow/funflow/src/Funflow/Run.hs=: configured runner, strand
+  weaving, store/cache setup, Docker preflight, config validation, and
+  =performP= execution.
+- =.data/funflow/funflow/src/Funflow/Config.hs=: file/env config model,
+  configurable values, required key collection, and missing-config checks.
+- =.data/funflow/funflow/src/Funflow/Tasks/*.hs=: simple, store, and Docker
+  task family data shapes.
+- =.data/funflow/cas/store/src/Data/CAS/ContentStore.hs=: durable store state,
+  pending/complete lifecycle, aliasing, lookup/wait, and cache computation.
+- =.data/funflow/cas/hashable/src/Data/CAS/ContentHashable.hs=: content hash
+  semantics for files, directories, store items, and external references.
+- =.data/funflow/docker-client/src/Docker/API/Client*.hs=: Docker manager,
+  container spec, pull/run/archive/log operations, and typed Docker errors.
+
+** 10.03.20 Reference Feature Inventory
+*** 10.03.21 Flow And Extension Shape
+Funflow's public flow layer is a typed declaration surface.
+
+Source facts:
+- =RequiredStrands= includes =simple=, =store=, and =docker= in
+  =Funflow/Flow.hs:45=.
+- =Flow input output= is an =ExtendedFlow '[] input output= in
+  =Funflow/Flow.hs:73=.
+- =ExtendedFlow= allows additional strands before interpretation in
+  =Funflow/Flow.hs:78=.
+- Smart constructors include =pureFlow=, =ioFlow=, =dockerFlow=,
+  =putDirFlow=, =getDirFlow=, =throwStringFlow=, and =returnFlow= in
+  =Funflow/Flow.hs:99= through =Funflow/Flow.hs:130=.
+
+Poo-flow interpretation:
+- Scheme should not copy the type-level rope encoding.
+- Scheme should keep POO descriptors and registries as the extension mechanism.
+- The immediate missing behavior is not another flow record. It is making
+  configured execution carry custom task and flow descriptor registries.
+
+*** 10.03.22 Runner And Configured Execution
+Funflow's runner is the integration point where task families become a runnable
+core.
+
+Source facts:
+- =RunFlowConfig= carries =storePath= and optional =configFile= in
+  =Funflow/Run.hs:92=.
+- =runFlowWithConfig= is the explicit configured entrypoint in
+  =Funflow/Run.hs:105=.
+- The runner weaves =docker=, =store=, and =simple= strands in
+  =Funflow/Run.hs:123= through =Funflow/Run.hs:129=.
+- It collects Docker images and external config requirements before execution
+  in =Funflow/Run.hs:136= through =Funflow/Run.hs:149=.
+- It installs cache/store context with =localStoreWithId= in
+  =Funflow/Run.hs:168=.
+- It executes with =performP= in =Funflow/Run.hs:190= through
+  =Funflow/Run.hs:192=.
+
+Poo-flow interpretation:
+- Scheme's runner must remain the policy interpreter, not the heavy runtime.
+- A run config should snapshot strategy, adapter, task descriptor registry,
+  flow descriptor registry, external config policy, and runtime options.
+- Validation should happen before adapter submission so unsupported descriptors
+  produce typed control-plane failures.
+
+*** 10.03.23 Config And Missing-Input Diagnostics
+Funflow treats external config as a first-class preflight surface for Docker
+tasks.
+
+Source facts:
+- =ExternalConfig= has =fileConfig= and =envConfig= in =Funflow/Config.hs:35=.
+- =Configurable= supports file, environment, and literal values in
+  =Funflow/Config.hs:44=.
+- =render= converts a configurable value against external config and reports
+  errors in =Funflow/Config.hs:61=.
+- =ConfigKeysBySource= separates file and environment keys in
+  =Funflow/Config.hs:100=.
+- =missing= reports absent config keys in =Funflow/Config.hs:151=.
+
+Poo-flow interpretation:
+- Scheme should model config requirements and missing keys as inspectable
+  policy data.
+- Loading and secret-handling should be owned by the runtime adapter when it is
+  environment-specific or process-specific.
+- Receipts should record required config keys and missing keys without leaking
+  secret values.
+
+*** 10.03.24 Task Families
+Funflow has three core task families in the audited source.
+
+Source facts:
+- =SimpleTask= has =PureTask= and =IOTask= in
+  =Funflow/Tasks/Simple.hs:12=.
+- =StoreTask= has =PutDir= and =GetDir= in
+  =Funflow/Tasks/Store.hs:15= through =Funflow/Tasks/Store.hs:17=.
+- =DockerTaskConfig= carries =image=, =command=, and =args= in
+  =Funflow/Tasks/Docker.hs:29=.
+- =Arg= distinguishes configurable arguments and placeholders in
+  =Funflow/Tasks/Docker.hs:39=.
+- =DockerTaskInput= carries input bindings and argument values in
+  =Funflow/Tasks/Docker.hs:63=.
+- =VolumeBinding= maps a store item to a mount path in
+  =Funflow/Tasks/Docker.hs:88=.
+
+Poo-flow interpretation:
+- Scheme should keep pure and Scheme tasks runnable locally.
+- Store and Docker tasks should become descriptor-owned adapter request shapes.
+- Docker should not remain a generic external task forever. It needs a
+  descriptor family with image, command, arguments, volumes, config
+  requirements, and output artifact policy.
+
+*** 10.03.25 Store, Cache, And Content Hashing
+Funflow's CAS is a real runtime subsystem, not a small helper.
+
+Source facts:
+- Store state is persisted in the filesystem, and pending/complete items have
+  distinct paths in =Data/CAS/ContentStore.hs:24= through
+  =Data/CAS/ContentStore.hs:48=.
+- =lookupOrWait= returns completed items or waits on pending items in
+  =Data/CAS/ContentStore.hs:476=.
+- =constructIfMissing= atomically queries state and marks missing items pending
+  in =Data/CAS/ContentStore.hs:502=.
+- =markPending=, =markComplete=, and =removeFailed= define item lifecycle in
+  =Data/CAS/ContentStore.hs:563=, =Data/CAS/ContentStore.hs:575=, and
+  =Data/CAS/ContentStore.hs:609=.
+- =cacheComputation= and =cacheKleisliIO= are the core cache execution helpers
+  in =Data/CAS/ContentStore.hs:1164= and =Data/CAS/ContentStore.hs:1189=.
+- =putInStore= hashes content and stores the computed item in
+  =Data/CAS/ContentStore.hs:1223=.
+- =DirectoryContent= hashing ignores the absolute directory path and hashes
+  relative contents in =Data/CAS/ContentHashable.hs:512=.
+
+Poo-flow interpretation:
+- Rust should own durable store state, file locks, pending/complete lifecycle,
+  hash materialization, archive movement, and remote cache.
+- Scheme should own store task declarations, cache policy decisions, request
+  envelopes, and receipts that can be replayed or audited.
+
+*** 10.03.26 Docker Runtime
+Funflow's Docker path is runtime-heavy and has typed error surfaces.
+
+Source facts:
+- =DockerClientError= is a typed error family in
+  =Docker/API/Client/Internal/Types.hs:15=.
+- =ContainerSpec= carries image, command, user, working directory, env vars,
+  and host volumes in =Docker/API/Client/Internal/Types.hs:33=.
+- =runContainer= pulls, creates, and starts a container in
+  =Docker/API/Client/Internal/Requests.hs:44=.
+- =saveContainerArchive= extracts container output in
+  =Docker/API/Client/Internal/Requests.hs:69=.
+- =pullImage= is explicit preflight in
+  =Docker/API/Client/Internal/Requests.hs:110=.
+- Funflow's runner interprets Docker tasks, fills placeholders, mounts input
+  bindings, runs the container, archives output, and writes the result into CAS
+  in =Funflow/Run.hs:237= through =Funflow/Run.hs:317=.
+
+Poo-flow interpretation:
+- Docker descriptor and request schema belong in Scheme.
+- Docker manager, image pulling, container lifecycle, archive extraction,
+  UID/GID handling, and Docker error conversion belong in Rust or a host
+  runtime.
+
+** 10.03.30 Current Poo-Flow Parity Matrix
+| Area | Current state | Target from source audit | Owner |
+| Flow declarations | Task, sequential, branch, empty descriptors exist | Configurable registries select descriptor policy during execution | Scheme |
+| Task families | Pure, Scheme, store, external descriptors exist | Docker becomes a first-class external family; custom registries are config-bound | Scheme |
+| Runner | Local pure/Scheme execution and adapter handoff exist | Runner validates descriptor registry, config policy, and adapter capability before submission | Scheme |
+| Config | Run config selects strategy and adapter | Run config snapshots task registry, flow registry, config source policy, and runtime options | Scheme |
+| Errors | Generic =error= calls remain | Typed control-plane failures for unknown family, unsupported planner, missing dependency, missing config, adapter failure | Scheme |
+| Store | Store requests and cache evidence exist | Durable CAS lifecycle, hashing, aliasing, lookup/wait, remote cache | Rust/runtime |
+| Docker | Generic external request exists | Docker task descriptor, argument rendering, volume binding, output artifact request | Scheme plus Rust/runtime |
+| Parallelism | Branch DAG and frontier evidence exist | Runtime scheduler executes ready frontier concurrently | Rust/runtime first, Scheme policy |
+| Receipts | Receipts record task, request, cache, runtime owner | Receipts also record descriptor registry, config preflight, typed failure, and runtime response ids | Scheme |
+
+** 10.03.40 Acceleration Lanes
+*** 10.03.41 Lane A: Config-Bound Descriptor Registries
+This is the next implementation slice.
+
+Implement:
+- Add task-family registry and flow-declaration registry fields to run config.
+- Build configured runners from those registries.
+- Thread the flow registry into strategy planning.
+- Thread the task registry into runner validation, adapter operation selection,
+  and receipt metadata.
+- Add tests that a custom registry changes behavior through
+  =run-flow-with-config=, not only through direct helper calls.
+
+Exit gate:
+- A custom task descriptor or flow descriptor can be installed through a run
+  config and observed in plan, validation, dispatch, and receipt output.
+
+*** 10.03.42 Lane B: Typed Control-Plane Failures
+This should follow Lane A immediately because it improves every later feature.
+
+Implement:
+- Add an execution-failure data type with owner, code, message, detail, and
+  recoverability.
+- Replace runner/strategy/task generic errors with typed failure construction.
+- Convert adapter-result error fields into receipt failures.
+- Add tests for unknown task family, unsupported planner, missing dependency,
+  unsupported adapter operation, and missing config.
+
+Exit gate:
+- Failing plans and failing adapter submissions return or raise structured
+  failures that are inspectable by tests.
+
+*** 10.03.43 Lane C: External Config Policy
+Implement:
+- Add config requirement descriptors for file/env/literal/placeholder values.
+- Collect required keys during planning or validation.
+- Add a preflight result that records required keys, missing keys, and
+  rendering errors without exposing secret values.
+- Support Docker-style argument rendering as request data.
+
+Exit gate:
+- A Docker-style task can declare required environment and file keys, and
+  missing keys are reported before runtime submission.
+
+*** 10.03.44 Lane D: Rust Runtime Bridge
+Implement:
+- Stabilize a request/response schema for submit, fetch, store-put, store-get,
+  docker-run, and cache-query.
+- Add process invocation or IPC behind the Rust adapter.
+- Preserve request-only adapter behavior as a deterministic test double.
+- Record runtime response ids and artifact handles in receipts.
+
+Exit gate:
+- A non-local task can cross the Rust boundary and return a real response or a
+  typed adapter failure.
+
+*** 10.03.45 Lane E: CAS Store And Cache Runtime
+Implement in Rust/runtime:
+- Content hash model and item handles.
+- Put/get directory operations.
+- Pending/complete/failed lifecycle.
+- Cache key lookup and wait semantics.
+- Receipt-compatible cache evidence.
+
+Scheme scope:
+- Store task descriptors.
+- Cache policy snapshot.
+- Request envelope and receipt projection.
+
+Exit gate:
+- Store put/get flows produce stable artifact handles and replayable cache
+  evidence through the adapter.
+
+*** 10.03.46 Lane F: Docker Task Runtime
+Implement:
+- First-class Docker task descriptor in Scheme.
+- Docker request schema for image, command, args, config requirements, volume
+  bindings, and output policy.
+- Rust/runtime container execution, image pull, logs, archive extraction, and
+  CAS output registration.
+
+Exit gate:
+- A Docker-style workflow can be planned in Scheme and executed by the host
+  runtime without Docker logic inside Scheme.
+
+*** 10.03.47 Lane G: Parallel Scheduler
+Implement:
+- Strategy-level scheduling policy for ready frontier selection.
+- Runtime-level concurrent execution of independent ready nodes.
+- Receipt events that preserve node ids, dependencies, frontier, start/end
+  timestamps, and runtime response ids.
+
+Exit gate:
+- Branch nodes can execute concurrently in the runtime while Scheme still owns
+  the plan and policy evidence.
+
+** 10.03.50 Milestone Queue
+*** 10.03.51 M9 Config Registry Binding
+This is the immediate code target.
+
+Files likely touched:
+- =src/core/config.ss=
+- =src/core/runner.ss=
+- =src/core/strategy.ss=
+- =src/core/task.ss=
+- =src/core/flow.ss=
+- =src/core/receipt.ss=
+- =t/control-plane-test.ss=
+- =t/descriptor-registry-test.ss=
+
+Expected changes:
+- Extend run configs with task and flow registries.
+- Preserve defaults for existing callers.
+- Add configured-runner tests proving registries are not ignored.
+- Add receipt evidence for registry names.
+
+*** 10.03.52 M10 Typed Failure Surface
+Files likely touched:
+- =src/core/failure.ss=
+- =src/core/runner.ss=
+- =src/core/strategy.ss=
+- =src/core/task.ss=
+- =src/core/receipt.ss=
+- =src/core/api.ss=
+- =t/control-plane-test.ss=
+
+Expected changes:
+- Add typed failure constructors and predicates.
+- Replace generic runner/strategy/task errors.
+- Keep receipt serialization stable but include structured failure detail.
+
+*** 10.03.53 M11 Config Requirements And Rendering
+Files likely touched:
+- =src/core/config.ss=
+- =src/core/task.ss=
+- =src/core/runner.ss=
+- =src/core/receipt.ss=
+- =t/control-plane-test.ss=
+
+Expected changes:
+- Add config requirement descriptors.
+- Add missing-key preflight.
+- Add Docker-compatible placeholder rendering request data.
+
+*** 10.03.54 M12 Runtime Bridge Protocol
+Files likely touched:
+- =src/core/runtime-adapter.ss=
+- =src/core/receipt.ss=
+- =src/core/api.ss=
+- Rust runtime crate or command once selected.
+
+Expected changes:
+- Define stable request and response schema.
+- Add real Rust adapter invocation behind feature/config.
+- Keep request-only adapter as a test harness.
+
+*** 10.03.55 M13 Store Runtime
+Files likely touched:
+- =src/core/task.ss=
+- =src/core/runtime-adapter.ss=
+- =src/core/receipt.ss=
+- Rust runtime crate.
+
+Expected changes:
+- Implement store-put and store-get through Rust/runtime.
+- Return stable artifact handles.
+- Add cache hit/miss/pending/complete evidence.
+
+*** 10.03.56 M14 Docker Task Family
+Files likely touched:
+- =src/core/task.ss=
+- =src/core/runtime-adapter.ss=
+- =src/core/config.ss=
+- =src/core/receipt.ss=
+- Rust runtime crate.
+
+Expected changes:
+- Introduce first-class Docker descriptor/request data.
+- Support image, command, args, volume bindings, config requirements, and
+  output artifact policy.
+- Convert runtime Docker errors to typed adapter failures.
+
+*** 10.03.57 M15 Parallel Frontier Execution
+Files likely touched:
+- =src/core/strategy.ss=
+- =src/core/runner.ss=
+- =src/core/receipt.ss=
+- Rust runtime crate.
+
+Expected changes:
+- Keep Scheme plan/frontier policy visible.
+- Move concurrent execution to runtime.
+- Record frontier and node timing evidence.
+
+** 10.03.60 Implementation Priorities
+The fastest route is:
+
+1. Finish M9 first. The current code already has descriptor registries, but
+   configured execution does not own them. Without M9, extension remains a
+   helper-level feature instead of a workflow-level feature.
+2. Finish M10 next. Typed failures are needed before the Rust bridge, config
+   preflight, Docker, and CAS work can produce useful diagnostics.
+3. Finish M11 before Docker. Docker argument rendering and missing config
+   checks should be control-plane behavior, while actual values and execution
+   remain runtime-owned.
+4. Finish M12 before implementing heavy store or Docker behavior. Multiple
+   Scheme stubs would create churn; one bridge protocol should carry store,
+   docker, and cache requests.
+5. Then split M13 and M14 by owner. Store/cache and Docker are mostly runtime
+   work; Scheme should only add descriptors, request schemas, and receipts.
+6. Defer M15 until the request/response protocol exists. Parallel scheduling
+   needs runtime response ids and artifact handles to be useful.
+
+** 10.03.70 Verification Gates
+Every milestone should satisfy these checks before commit:
+
+- Provider-aware source discovery remains valid through ASP or =rg=.
+- Gerbil tests run through the project harness, not only through ad hoc Scheme
+  commands.
+- Descriptor registries are exercised through configured execution where
+  relevant.
+- Receipts expose the policy owner and runtime owner for new behavior.
+- Heavy behavior is either runtime-backed or explicitly request-only; Scheme
+  must not quietly implement a partial Docker, CAS, or scheduler clone.
+- Documentation updates cite the source audit area and the owner boundary.
+
+** 10.03.80 Next Action
+Start with M9 in the next code slice:
+
+- Extend =run-config= with task and flow registries.
+- Make =run-config->runner= preserve those registries.
+- Make runner planning and validation consume configured registries.
+- Add tests that custom registries affect =run-flow-with-config=.
+
+This is the smallest slice that changes real feature behavior and unlocks the
+later Docker, config, and Rust runtime work.
