@@ -43,7 +43,7 @@
                       '((strategy . local-eager)
                         (cache-policy . no-cache)
                         (failure-policy . fail-fast)
-                        (capabilities pure scheme store external graph-frontier)
+                        (capabilities pure scheme store external branch graph-frontier)
                         (frontier (node external-demo 0 external compile))))
         (check-equal? (receipt-policy child)
                       (execution-request-policy request))))))
@@ -116,7 +116,35 @@
                       '(node compile 0 external compile))
         (check-equal? (cdr (assoc 'policy envelope))
                       (execution-request-policy request))
-        (check-equal? (receipt-adapter-decision child) 'rust)))))
+        (check-equal? (receipt-adapter-decision child) 'rust)))
+    (test-case "submits branch arms to rust adapter boundary"
+      (let* ((compile (external-flow 'compile 'rust-build '((crate . "poo-flow")) 'artifact 'artifact))
+             (put (store-flow 'put-cache 'put '((path . "target")) 'artifact 'artifact))
+             (branch (flow-branch 'runtime-fanout compile put))
+             (config (make-rust-run-config))
+             (result (run-flow-with-config config branch 'input-artifact))
+             (values (run-result-value result))
+             (left-result (car values))
+             (right-result (cadr values)))
+        (check-equal? (adapter-result-status left-result) 'submitted)
+        (check-equal? (adapter-result-status right-result) 'submitted)
+        (check-equal? (adapter-result-request-id left-result) '(rust-request compile external))
+        (check-equal? (adapter-result-request-id right-result) '(rust-request put-cache store))))))
+
+(def branch-flow-test
+  (test-suite "branch flow"
+    (test-case "runs pure branches locally"
+      (let* ((left (pure-flow 'left (lambda (x) (+ x 1)) 'number 'number))
+             (right (pure-flow 'right (lambda (x) (* x 2)) 'number 'number))
+             (branch (flow-branch 'local-fanout left right))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner branch 3))
+             (receipt (run-result-receipt result)))
+        (check-equal? (run-result-value result) '(4 6))
+        (check-equal? (length (receipt-children receipt)) 3)
+        (check-equal? (receipt-kind (caddr (receipt-children receipt))) 'branch)
+        (check-equal? (receipt-output (caddr (receipt-children receipt))) '(4 6))))))
 
 (def execution-plan-test
   (test-suite "execution plan"
@@ -171,7 +199,39 @@
         (check-equal? (plan-node-root? first-node) #t)
         (check-equal? (plan-node-root? second-node) #f)
         (check-equal? (plan-node-depends-on? second-node (plan-node-id first-node)) #t)
-        (check-equal? (plan-node-depends-on? third-node (plan-node-id first-node)) #f)))))
+        (check-equal? (plan-node-depends-on? third-node (plan-node-id first-node)) #f)))
+    (test-case "lowers branch flows into a DAG"
+      (let* ((left (pure-flow 'left (lambda (x) (+ x 1)) 'number 'number))
+             (right (pure-flow 'right (lambda (x) (* x 2)) 'number 'number))
+             (branch (flow-branch 'fanout left right))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (plan (runner-plan runner branch))
+             (nodes (execution-plan-nodes plan))
+             (left-node (car nodes))
+             (right-node (cadr nodes))
+             (join-node (caddr nodes)))
+        (check-equal? (flow-step-count branch) 1)
+        (check-equal? (plan-node-count plan) 3)
+        (check-equal? (execution-plan-node-ids plan)
+                      '((node fanout 0 branch-left left)
+                        (node fanout 1 branch-right right)
+                        (node fanout 2 branch fanout)))
+        (check-equal? (execution-plan-dependency-edges plan)
+                      '(((node fanout 0 branch-left left)
+                         (node fanout 2 branch fanout))
+                        ((node fanout 1 branch-right right)
+                         (node fanout 2 branch fanout))))
+        (check-equal? (map plan-node-id (execution-plan-root-nodes plan))
+                      '((node fanout 0 branch-left left)
+                        (node fanout 1 branch-right right)))
+        (check-equal? (map plan-node-id (execution-plan-terminal-nodes plan))
+                      '((node fanout 2 branch fanout)))
+        (check-equal? (plan-node-root? left-node) #t)
+        (check-equal? (plan-node-root? right-node) #t)
+        (check-equal? (plan-node-dependencies join-node)
+                      '((node fanout 0 branch-left left)
+                        (node fanout 1 branch-right right)))))))
 
 (def strategy-frontier-test
   (test-suite "strategy frontier policy"
@@ -299,11 +359,13 @@
     (test-case "declares control-plane roles as Gerbil POO objects"
       (check-equal? (role-object? flow-role) #t)
       (check-equal? (role-name flow-role) 'flow)
+      (check-equal? (role-kind branch-role) 'composition)
       (check-equal? (role-kind strategy-role) 'policy)
       (check-equal? (role-kind execution-policy-role) 'policy-envelope)
       (check-equal? (role-kind run-config-role) 'configuration)
       (check-equal? (role-kind replay-role) 'policy)
       (check-equal? (role-runtime-owner runtime-adapter-role) 'rust-or-external-runtime)
+      (check-equal? (role-responsibility branch-role) 'dag-fanout-join)
       (check-equal? (role-responsibility execution-policy-role) 'runtime-policy-handoff)
       (check-equal? (role-responsibility run-config-role) 'configured-runner-assembly)
       (check-equal? (role-responsibility replay-role) 'audit-validation)
@@ -318,6 +380,7 @@
             adapter-request-test
             funflow-api-test
             configured-runner-test
+            branch-flow-test
             execution-plan-test
             strategy-frontier-test
             receipt-audit-test

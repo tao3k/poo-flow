@@ -37,7 +37,7 @@
 ;; Strategy <- Unit
 (def (make-local-eager-strategy)
   (make-strategy 'local-eager
-                 '(pure scheme store external graph-frontier)
+                 '(pure scheme store external branch graph-frontier)
                  'no-cache
                  'fail-fast
                  default-linear-plan))
@@ -47,7 +47,7 @@
 ;; Strategy <- Unit
 (def (make-cached-local-eager-strategy)
   (make-strategy 'cached-local-eager
-                 '(pure scheme store external graph-frontier)
+                 '(pure scheme store external branch graph-frontier)
                  'cache-output
                  'fail-fast
                  default-linear-plan))

@@ -6,6 +6,7 @@
 
 (export control-plane-role
         flow-role
+        branch-role
         task-role
         strategy-role
         execution-policy-role
@@ -37,6 +38,13 @@
       (name 'flow)
       (kind 'declaration)
       (responsibility 'workflow-composition)))
+
+;; Role <- Unit
+(def branch-role
+  (.o (:: @ control-plane-role)
+      (name 'branch)
+      (kind 'composition)
+      (responsibility 'dag-fanout-join)))
 
 ;; Role <- Unit
 (def task-role

@@ -49,8 +49,10 @@ The current Gerbil implementation has a useful first control-plane slice:
   runtime adapter, and receipt.
 - =task.ss= has pure, Scheme, store, and external tasks plus normalized
   execution requests.
-- =flow.ss= has flow composition and Funflow-style smart constructors.
+- =flow.ss= has flow composition, Funflow-style smart constructors, and
+branch composition that fans out over left/right subflows.
 - =strategy.ss= has a local eager strategy.
+- =plan.ss= lowers branch composition into DAG-shaped fan-out and join nodes.
 - =runtime-adapter.ss= has request-only and Rust handoff adapters for
 store/external work.
 - =runner.ss= can run local pure/Scheme tasks and lower store/external tasks
@@ -74,12 +76,13 @@ drive task-family extension, planning, or adapter selection.
    will make retries, cache hits, and graph evidence ambiguous.
 
 *** 10.02.32 P1 Gaps
-1. There is no branch or parallel composition surface comparable to Funflow's
-   DAG behavior.
+1. Branch DAG composition exists, but there is not yet a true parallel
+runtime scheduler comparable to Funflow's heavy execution path.
 2. Cache/store semantics are named but not modeled as policy objects.
 3. Error handling is still generic =error= calls rather than typed execution
    failures.
-4. There is no configured runner entrypoint comparable to =runFlowWithConfig=.
+4. A configured runner entrypoint exists, but the Rust handoff is still a
+Scheme-side request envelope stub rather than a process bridge.
 5. Docker/container tasks are only represented as generic external tasks.
 
 *** 10.02.33 P2 Gaps
@@ -193,19 +196,18 @@ Exit criteria:
 - Rust adapter can receive at least one store/external request.
 
 ** 10.02.60 Immediate Implementation Slice
-The current code slice is M8.
+The current code slice is M3.
 
-The implementation now has a configured execution entrypoint that lowers a
-run config into the normal runner, preserves the request-only test adapter, and
-adds a Rust handoff adapter that receives store/external execution requests as
-stable envelopes. Rust still owns the heavy runtime; Scheme only assembles
-policy, planning, request, and receipt evidence.
-The next functional slice should close M3:
-- Add branch or pair composition to the declaration surface.
-- Represent branch dependencies in the execution plan as a DAG instead of only
-linear predecessor edges.
-- Keep heavy parallel scheduling behind the runtime adapter boundary while pure
-branch evidence remains locally testable.
+The implementation now has a branch declaration surface, DAG-shaped branch arm
+and join plan nodes, local pure branch execution, and Rust handoff for
+store/external branch arms. The runner interprets the DAG in topological order
+and records one top-level receipt per planned node, while heavy parallel
+scheduling remains outside Scheme.
+The next functional slice should close M5:
+- Split store put/get semantics more explicitly instead of treating them as
+generic store operations.
+- Model cache hit, miss, bypass, and request-only states as policy evidence.
+- Keep durable CAS/cache materialization behind the runtime adapter boundary.
 
 
 ** 10.02.70 Harness Integration Receipt

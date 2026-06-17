@@ -65,22 +65,94 @@
 ;;; preserve order while exposing dependency edges for later schedulers.
 ;; [PlanNode] <- Symbol [Step]
 (def (steps->plan-nodes flow-name steps)
-  (map (lambda (ordinal step previous)
-         (step->plan-node flow-name ordinal step previous))
-       (iota (length steps))
-       steps
-       (cons #f steps)))
+  (let ((lowered (lower-steps flow-name steps '() 0)))
+    (car lowered)))
 
-;; PlanNode <- Symbol Nat Step MaybeStep
-(def (step->plan-node flow-name ordinal step previous)
+;; PlanNode <- Symbol Nat Step [Id]
+(def (step->plan-node flow-name ordinal step dependencies)
   (let* ((kind (step-kind step))
          (name (step-name step))
-         (id (plan-node-id-for flow-name ordinal step))
-         (dependencies
-          (if previous
-            (list (plan-node-id-for flow-name (- ordinal 1) previous))
-            '())))
+         (id (plan-node-id-for flow-name ordinal step)))
     (make-plan-node id ordinal step kind name dependencies)))
+
+;;; Intent: lower declarations into a topologically sorted node stream.
+;;; The returned triple is nodes, current terminal ids, and the next ordinal;
+;;; branch lowering uses the terminal ids to create fan-out and join edges.
+;; LoweredSteps <- Symbol [Step] [Id] Nat
+(def (lower-steps flow-name steps previous-terminal-ids ordinal)
+  (if (null? steps)
+    (list '() previous-terminal-ids ordinal)
+    (let* ((lowered-step (lower-step flow-name
+                                     (car steps)
+                                     previous-terminal-ids
+                                     ordinal))
+           (step-nodes (car lowered-step))
+           (step-terminals (cadr lowered-step))
+           (next-ordinal (caddr lowered-step))
+           (lowered-rest (lower-steps flow-name
+                                      (cdr steps)
+                                      step-terminals
+                                      next-ordinal)))
+      (list (append step-nodes (car lowered-rest))
+            (cadr lowered-rest)
+            (caddr lowered-rest)))))
+
+;; LoweredStep <- Symbol Step [Id] Nat
+(def (lower-step flow-name step previous-terminal-ids ordinal)
+  (if (branch-step? step)
+    (lower-branch-step flow-name step previous-terminal-ids ordinal)
+    (lower-linear-step flow-name step previous-terminal-ids ordinal)))
+
+;;; A normal step becomes one node; branch-specific fan-out is handled by
+;;; lower-branch-step so the linear case keeps the old node id shape.
+;; LoweredStep <- Symbol Step [Id] Nat
+(def (lower-linear-step flow-name step previous-terminal-ids ordinal)
+  (let ((node (step->plan-node flow-name ordinal step previous-terminal-ids)))
+    (list (list node)
+          (list (plan-node-id node))
+          (+ ordinal 1))))
+
+;;; Branch lowering creates two parallel flow nodes with the same prerequisites
+;;; and one join node that depends on both branch results.
+;; LoweredStep <- Symbol BranchStep [Id] Nat
+(def (lower-branch-step flow-name branch previous-terminal-ids ordinal)
+  (let* ((left-flow (branch-step-left branch))
+         (right-flow (branch-step-right branch))
+         (left-node (branch-arm-node flow-name
+                                     ordinal
+                                     'branch-left
+                                     left-flow
+                                     previous-terminal-ids))
+         (right-node (branch-arm-node flow-name
+                                      (+ ordinal 1)
+                                      'branch-right
+                                      right-flow
+                                      previous-terminal-ids))
+         (join-node (make-plan-node (branch-join-node-id flow-name
+                                                         (+ ordinal 2)
+                                                         branch)
+                                    (+ ordinal 2)
+                                    branch
+                                    'branch
+                                    (branch-step-name branch)
+                                    (list (plan-node-id left-node)
+                                          (plan-node-id right-node)))))
+    (list (list left-node right-node join-node)
+          (list (plan-node-id join-node))
+          (+ ordinal 3))))
+
+;; PlanNode <- Symbol Nat Symbol Flow [Id]
+(def (branch-arm-node plan-flow-name ordinal kind flow dependencies)
+  (make-plan-node (list 'node plan-flow-name ordinal kind (flow-name flow))
+                  ordinal
+                  flow
+                  kind
+                  (flow-name flow)
+                  dependencies))
+
+;; Id <- Symbol Nat BranchStep
+(def (branch-join-node-id plan-flow-name ordinal branch)
+  (list 'node plan-flow-name ordinal 'branch (branch-step-name branch)))
 
 ;; Symbol <- Symbol Nat Step
 (def (plan-node-id-for flow-name ordinal step)
@@ -216,6 +288,7 @@
   (cond
    ((task? step) (task-kind step))
    ((flow? step) 'flow)
+   ((branch-step? step) 'branch)
    (else (error "flow step is neither task nor flow" step))))
 
 ;; Symbol <- Step
@@ -223,6 +296,7 @@
   (cond
    ((task? step) (task-name step))
    ((flow? step) (flow-name step))
+   ((branch-step? step) (branch-step-name step))
    (else (error "flow step is neither task nor flow" step))))
 
 ;; Boolean <- ExecutionPlan

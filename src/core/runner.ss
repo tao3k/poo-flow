@@ -104,7 +104,7 @@
   (let ((strategy (runner-strategy runner)))
     (let ((plan (runner-plan runner flow)))
       (runner-validate-plan runner plan)
-      (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '() '())))
+      (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '() '() '())))
         (let ((value (car result))
               (children (reverse (cdr result)))
               (root-frontier (strategy-ready-frontier-ids strategy plan '())))
@@ -127,21 +127,26 @@
                          #f
                          children)))))))
 
-;;; Boundary: this recursive driver is the sequential interpreter loop.
-;;; Invariant: completed ids are audit state, not scheduling authority; the
-;;; runner still consumes nodes in plan order.
-;; StepSequenceResult <- Runner ExecutionPlan Strategy [PlanNode] Input [Id] [Receipt]
-(def (run-plan-nodes runner plan strategy nodes input completed-node-ids receipts)
+;;; Boundary: this recursive driver is the topology interpreter loop.
+;;; Invariant: completed ids are audit state for frontier receipts, while the
+;;; values table is the dataflow state used to feed dependency outputs into
+;;; later DAG nodes.
+;; StepSequenceResult <- Runner ExecutionPlan Strategy [PlanNode] Input [Id] [Receipt] Alist
+(def (run-plan-nodes runner plan strategy nodes input completed-node-ids receipts values)
   (if (null? nodes)
-    (cons input receipts)
+    (cons (plan-output-value plan values input) receipts)
     (let* ((node (car nodes))
            (frontier (strategy-ready-frontier-ids strategy plan completed-node-ids))
-           (step-result (run-plan-node runner plan strategy node input frontier))
+           (node-input (node-input-value node values input))
+           (step-result (run-plan-node runner plan strategy node node-input frontier))
            (value (car step-result))
            (receipt (cdr step-result))
-           (completed (cons (plan-node-id node) completed-node-ids)))
-      (run-plan-nodes runner plan strategy (cdr nodes) value completed (cons receipt receipts)))))
+           (completed (cons (plan-node-id node) completed-node-ids))
+           (next-values (cons (cons (plan-node-id node) value) values)))
+      (run-plan-nodes runner plan strategy (cdr nodes) input completed (cons receipt receipts) next-values))))
 
+;;; Node dispatch stays shape-based: task nodes execute work, flow nodes wrap
+;;; nested runs, and branch nodes join dependency values.
 ;; StepResult <- Runner ExecutionPlan Strategy PlanNode Input [Id]
 (def (run-plan-node runner plan strategy node input frontier)
   (let ((step (plan-node-step node)))
@@ -150,9 +155,97 @@
       (run-task runner plan strategy node step input frontier))
      ((flow? step)
       (let ((nested (runner-run runner step input)))
-        (cons (run-result-value nested) (run-result-receipt nested))))
+        (cons (run-result-value nested)
+              (make-flow-step-receipt plan strategy node step input frontier nested))))
+     ((branch-step? step)
+      (cons input
+            (make-branch-receipt plan strategy node step input frontier)))
      (else
       (error "flow step is neither task nor flow" step)))))
+
+;;; Flow nodes wrap nested receipts so top-level replay can still match each
+;;; planned DAG node to one top-level child receipt.
+;; Receipt <- ExecutionPlan Strategy PlanNode Flow Input [Id] RunResult
+(def (make-flow-step-receipt plan strategy node flow input frontier nested)
+  (make-receipt (execution-plan-flow-name plan)
+                (flow-name flow)
+                (plan-node-kind node)
+                (plan-node-id node)
+                (strategy-name strategy)
+                (execution-policy->alist
+                 (strategy-execution-policy strategy frontier))
+                'local
+                #f
+                input
+                (run-result-value nested)
+                'no-cache
+                frontier
+                'ok
+                #f
+                (list (run-result-receipt nested))))
+
+;;; Branch join nodes are local control-plane joins: their input is the list of
+;;; dependency values produced by branch arms.
+;; Receipt <- ExecutionPlan Strategy PlanNode BranchStep Value [Id]
+(def (make-branch-receipt plan strategy node branch input frontier)
+  (make-receipt (execution-plan-flow-name plan)
+                (branch-step-name branch)
+                'branch
+                (plan-node-id node)
+                (strategy-name strategy)
+                (execution-policy->alist
+                 (strategy-execution-policy strategy frontier))
+                'local
+                #f
+                input
+                input
+                'no-cache
+                frontier
+                'ok
+                #f
+                '()))
+
+;;; Terminal selection converts the dataflow table back to the public run
+;;; result. Multiple terminals remain a list so future DAG plans can expose
+;;; more than one sink without inventing an implicit ordering rule.
+;; Value <- ExecutionPlan Alist Value
+(def (plan-output-value plan values default-input)
+  (let ((terminal-values (node-values (map plan-node-id
+                                           (execution-plan-terminal-nodes plan))
+                                      values)))
+    (cond
+     ((null? terminal-values) default-input)
+     ((null? (cdr terminal-values)) (car terminal-values))
+     (else terminal-values))))
+
+;;; Node input selection follows dependency cardinality: roots receive the
+;;; original input, one dependency passes a scalar value, and joins receive the
+;;; ordered dependency value list.
+;; Value <- PlanNode Alist Value
+(def (node-input-value node values default-input)
+  (let ((dependencies (plan-node-dependencies node)))
+    (cond
+     ((null? dependencies) default-input)
+     ((null? (cdr dependencies)) (value-for-node-id (car dependencies) values))
+     (else (node-values dependencies values)))))
+
+;;; Dependency ids are already in plan order, so this projection preserves the
+;;; branch-left and branch-right ordering expected by join receipts.
+;; [Value] <- [Id] Alist
+(def (node-values ids values)
+  (if (null? ids)
+    '()
+    (cons (value-for-node-id (car ids) values)
+          (node-values (cdr ids) values))))
+
+;;; Missing dependency values indicate a malformed plan order rather than an
+;;; application failure, so the runner raises a control-plane error.
+;; Value <- Id Alist
+(def (value-for-node-id id values)
+  (let ((entry (assoc id values)))
+    (if entry
+      (cdr entry)
+      (error "missing dependency value" id))))
 
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.

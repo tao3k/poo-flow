@@ -10,6 +10,13 @@
         flow-steps
         flow-input-contract
         flow-output-contract
+        make-branch-step
+        branch-step?
+        branch-step-name
+        branch-step-left
+        branch-step-right
+        branch-step-input-contract
+        branch-step-output-contract
         flow-compose
         task-flow
         pure-flow
@@ -18,6 +25,7 @@
         external-flow
         return-flow
         flow-then
+        flow-branch
         flow-empty?
         flow-step-count)
 
@@ -27,6 +35,17 @@
 (defstruct flow
   (name
    steps
+   input-contract
+   output-contract)
+  transparent: #t)
+
+;;; Branch steps keep the left and right flows as declarations so planning can
+;;; expose a DAG before runner or adapter code chooses an execution strategy.
+;; BranchStep <- Symbol Flow Flow Contract Contract
+(defstruct branch-step
+  (name
+   left
+   right
    input-contract
    output-contract)
   transparent: #t)
@@ -72,6 +91,23 @@
                 (append (flow-steps left) (flow-steps right))
                 (flow-input-contract left)
                 (flow-output-contract right)))
+
+;;; Branch composition applies two flows to the same input and joins their
+;;; outputs as a pair-shaped value, leaving heavy parallelism to adapters.
+;; Flow <- Symbol Flow Flow
+(def (flow-branch name left right)
+  (flow-compose name
+                (list (make-branch-step name
+                                        left
+                                        right
+                                        (flow-input-contract left)
+                                        (list 'pair
+                                              (flow-output-contract left)
+                                              (flow-output-contract right))))
+                (flow-input-contract left)
+                (list 'pair
+                      (flow-output-contract left)
+                      (flow-output-contract right))))
 
 ;; Boolean <- Flow
 (def (flow-empty? flow)
