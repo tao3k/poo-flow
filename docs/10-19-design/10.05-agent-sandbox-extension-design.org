@@ -1,0 +1,156 @@
+* 10.05 Agent Sandbox Extension Design
+** 10.05.00 Document Status
+This design defines the Scheme-side =agent-sandbox= extension for POO Flow.
+It does not implement the real agent runtime, LLM integration, API/R support,
+or C bindings. Those are planned integration surfaces for
+=marlin-agent-core=.
+
+** 10.05.10 Context
+POO Flow currently has a Docker extension that models Docker as a task family
+and an adapter capability. The Scheme side declares task request data,
+strategy capabilities, and run configuration. It does not directly own image
+pulls, mounts, process control, CAS, or runtime execution.
+
+That split is the right pattern for agent sandbox support. Modern agent
+sandbox backends such as =nono= and =CubeSandbox= are useful reference systems,
+but their real execution authority should stay outside this Scheme control
+plane. POO Flow should express a stable, backend-neutral request contract that
+Marlin can later interpret through its runtime, API/R surfaces, and C binding
+support.
+
+** 10.05.20 Goals
+- Add a first-class =agent-sandbox= task family.
+- Keep Scheme responsible for declaration, validation, request shape, and
+  receipt-friendly metadata.
+- Preserve the existing runtime-adapter handoff model.
+- Make the request shape rich enough for future =nono=-style local sandboxing
+  and =CubeSandbox=-style remote or clustered sandboxing.
+- Avoid making Docker, nono, CubeSandbox, LLM calls, or Marlin runtime code
+  direct dependencies of POO Flow.
+
+** 10.05.30 Non-Goals
+- Do not call a real sandbox backend from Scheme.
+- Do not add live LLM execution.
+- Do not embed Marlin runtime code in this repository.
+- Do not replace the Docker extension in the first slice.
+- Do not vendor =nono= or =CubeSandbox= code into =src=.
+
+** 10.05.40 Design
+*** 10.05.41 Extension Module
+Create =src/extensions/agent-sandbox.ss= beside the existing Docker and store
+extensions.
+
+The module should export:
+- =agent-sandbox-task-family-descriptor=
+- =make-agent-sandbox-task-family-registry=
+- =make-agent-sandbox-enabled-strategy=
+- =make-agent-sandbox-enabled-adapter=
+- =make-agent-sandbox-run-config=
+- =make-agent-sandbox-task=
+- =task-agent-sandbox-config=
+- field accessors for the request contract
+- =agent-sandbox-flow=
+
+The shape should mirror =src/extensions/docker.ss= so agents can understand the
+new extension by comparing it with the existing Docker extension.
+
+*** 10.05.42 Task Family Descriptor
+The descriptor should identify:
+- family: =agent-sandbox=
+- task kind: =agent-sandbox=
+- execution owner: =adapter=
+- runtime owner: =marlin-or-external-runtime=
+- default operation: =submit=
+
+This is deliberately stronger than naming a concrete backend. It says the
+Scheme task must be lowered into an adapter request, while leaving backend
+selection to the runtime side.
+
+*** 10.05.43 Adapter Capability
+The extension should add an =agent-sandbox= capability to strategies and
+runtime adapters. Missing capability validation should fail before execution,
+matching the existing Docker extension pattern.
+
+*** 10.05.44 Request Contract
+An =agent-sandbox= task request should be alist-shaped and stable across
+language boundaries. The first slice should include these fields:
+- =backend-kind=: symbolic backend family, for example =local=, =remote=,
+  =nono=, =cube=, =e2b-compatible=, or =docker-compatible=.
+- =backend-ref=: optional endpoint, profile name, template id, or runtime
+  selector.
+- =command=: executable or agent entrypoint.
+- =args=: argument list.
+- =env=: environment alist.
+- =workdir=: optional working directory.
+- =mounts=: mount or path capability declarations.
+- =network-policy=: symbolic network mode and optional allow/proxy metadata.
+- =capabilities=: backend-neutral capability declarations.
+- =resource-policy=: CPU, memory, timeout, snapshot, or concurrency hints.
+- =output-policy=: artifact capture policy.
+- =metadata=: receipt-facing annotations for agents and debuggers.
+
+The contract should stay data-only. It should not depend on a Marlin Rust type,
+C ABI layout, R API surface, or backend SDK. Marlin can translate the alist
+into its typed request later.
+
+*** 10.05.45 Run Config
+=make-agent-sandbox-run-config= should install:
+- =agent-sandbox= strategy capability
+- =agent-sandbox= adapter capability
+- the agent-sandbox task family registry
+- options containing at least =((extension . agent-sandbox))=
+
+It may wrap =make-rust-adapter= with an optional =runtime-command= exactly like
+the Docker extension. The command remains a test or bridge hook, not a real
+backend implementation.
+
+** 10.05.50 Backend Reference Mapping
+The reference repositories guide the contract, not the implementation.
+
+=nono= maps to:
+- path and filesystem capabilities
+- network blocked, allow-all, or proxy-only modes
+- local process sandbox application
+
+=CubeSandbox= maps to:
+- remote sandbox creation and resume
+- template or image references
+- E2B-compatible API selection
+- stronger isolation and snapshot hints
+
+Both should be representable by =backend-kind=, =backend-ref=,
+=capabilities=, =network-policy=, and =resource-policy= without adding direct
+backend code.
+
+** 10.05.60 Testing Strategy
+- Descriptor tests should prove the =agent-sandbox= family is registered.
+- Extension tests should prove strategy and adapter capabilities are added.
+- Task tests should prove request fields round trip through accessors.
+- Runner or validation tests should prove missing =agent-sandbox= adapter
+  capability fails before execution if the core validation path supports that.
+- The first slice should use request-only or command-backed adapter receipts,
+  not a live sandbox backend.
+
+** 10.05.70 Implementation Slices
+*** 10.05.71 Slice 1: Scheme Extension Contract
+Add =src/extensions/agent-sandbox.ss= and tests for descriptor, run config,
+task request shape, and accessors.
+
+*** 10.05.72 Slice 2: Docker Compatibility Surface
+Optionally add a compatibility helper that can express Docker-like tasks as
+=agent-sandbox= backend requests, without removing =src/extensions/docker.ss=.
+
+*** 10.05.73 Slice 3: Marlin Runtime Bridge
+In a later Marlin-owned slice, map the alist request into typed Marlin runtime
+requests and backend-specific adapters. That work belongs in
+=marlin-agent-core=, not in this repository.
+
+** 10.05.80 Acceptance Criteria
+- A Scheme user can declare an =agent-sandbox-flow= without importing Docker.
+- The generated task has kind =agent-sandbox= and a stable alist request.
+- Capability validation can distinguish =agent-sandbox= from generic
+  =external= execution.
+- No live backend, LLM, API/R, or C binding dependency is required to run the
+  POO Flow tests for this slice.
+- The request contract is explicit enough for Marlin to implement backend
+  selection later without changing the Scheme task API.
