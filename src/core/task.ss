@@ -15,6 +15,12 @@
         task-executor
         make-task-family-descriptor
         task-family-descriptor?
+        make-task-family-registry
+        task-family-registry?
+        default-task-family-registry
+        task-family-registry-name
+        task-family-registry-descriptors
+        task-family-registry-extend
         pure-task-family-descriptor
         scheme-task-family-descriptor
         store-task-family-descriptor
@@ -25,11 +31,17 @@
         task-family-route
         task-family-runtime-owner
         task-family-adapter-dispatch
+        task-family-for-kind-in
         task-family-for-kind
+        task-descriptor-in
         task-descriptor
+        task-capability-in
         task-capability
+        task-route-in
         task-route
+        task-runtime-owner-in
         task-runtime-owner
+        task-adapter-operation-in
         task-adapter-operation
         make-pure-task
         make-scheme-task
@@ -87,6 +99,36 @@
   (and (object? descriptor)
        (eq? (.@ descriptor kind) 'task-family)))
 
+;;; Registries are immutable POO policy bundles; extension code gets a new
+;;; registry value instead of mutating the default control-plane registry.
+;; TaskFamilyRegistry <- Symbol [TaskFamilyDescriptor]
+(def (make-task-family-registry registry-name registry-descriptors)
+  (.o (:: @ task-role)
+      (name registry-name)
+      (kind 'task-family-registry)
+      (descriptors registry-descriptors)
+      (responsibility (list 'task-family-registry registry-name))))
+
+;; Boolean <- TaskFamilyRegistryCandidate
+(def (task-family-registry? registry)
+  (and (object? registry)
+       (eq? (.@ registry kind) 'task-family-registry)))
+
+;; Symbol <- TaskFamilyRegistry
+(def (task-family-registry-name registry)
+  (.@ registry name))
+
+;; [TaskFamilyDescriptor] <- TaskFamilyRegistry
+(def (task-family-registry-descriptors registry)
+  (.@ registry descriptors))
+
+;; TaskFamilyRegistry <- TaskFamilyRegistry TaskFamilyDescriptor
+(def (task-family-registry-extend registry descriptor)
+  (make-task-family-registry
+   (task-family-registry-name registry)
+   (append (task-family-registry-descriptors registry)
+           (list descriptor))))
+
 ;; TaskFamilyDescriptor <- Unit
 (def pure-task-family-descriptor
   (make-task-family-descriptor 'pure 'pure 'local 'gerbil #f))
@@ -103,12 +145,18 @@
 (def external-task-family-descriptor
   (make-task-family-descriptor 'external 'external 'adapter 'rust-or-external-runtime 'submit))
 
+;; TaskFamilyRegistry <- Unit
+(def default-task-family-registry
+  (make-task-family-registry
+   'default-task-families
+   (list pure-task-family-descriptor
+         scheme-task-family-descriptor
+         store-task-family-descriptor
+         external-task-family-descriptor)))
+
 ;; [TaskFamilyDescriptor] <- Unit
 (def task-family-descriptors
-  (list pure-task-family-descriptor
-        scheme-task-family-descriptor
-        store-task-family-descriptor
-        external-task-family-descriptor))
+  (task-family-registry-descriptors default-task-family-registry))
 
 ;; Symbol <- TaskFamilyDescriptor
 (def (task-family-name descriptor)
@@ -138,33 +186,53 @@
    (else (find-task-family kind (cdr descriptors)))))
 
 ;; TaskFamilyDescriptor <- Symbol
-(def (task-family-for-kind kind)
-  (let ((descriptor (find-task-family kind task-family-descriptors)))
+(def (task-family-for-kind-in registry kind)
+  (let ((descriptor (find-task-family kind (task-family-registry-descriptors registry))))
     (if descriptor
       descriptor
       (error "unknown task family" kind))))
 
+;; TaskFamilyDescriptor <- Symbol
+(def (task-family-for-kind kind)
+  (task-family-for-kind-in default-task-family-registry kind))
+
+;; TaskFamilyDescriptor <- TaskFamilyRegistry Task
+(def (task-descriptor-in registry task)
+  (task-family-for-kind-in registry (task-kind task)))
+
 ;; TaskFamilyDescriptor <- Task
 (def (task-descriptor task)
-  (task-family-for-kind (task-kind task)))
+  (task-descriptor-in default-task-family-registry task))
+
+;; Symbol <- TaskFamilyRegistry Task
+(def (task-capability-in registry task)
+  (task-family-capability (task-descriptor-in registry task)))
 
 ;; Symbol <- Task
 (def (task-capability task)
-  (task-family-capability (task-descriptor task)))
+  (task-capability-in default-task-family-registry task))
+
+;; Symbol <- TaskFamilyRegistry Task
+(def (task-route-in registry task)
+  (task-family-route (task-descriptor-in registry task)))
 
 ;; Symbol <- Task
 (def (task-route task)
-  (task-family-route (task-descriptor task)))
+  (task-route-in default-task-family-registry task))
+
+;; Symbol <- TaskFamilyRegistry Task
+(def (task-runtime-owner-in registry task)
+  (task-family-runtime-owner (task-descriptor-in registry task)))
 
 ;; Symbol <- Task
 (def (task-runtime-owner task)
-  (task-family-runtime-owner (task-descriptor task)))
+  (task-runtime-owner-in default-task-family-registry task))
 
 ;;; Adapter operations translate descriptor-level dispatch into runtime adapter
 ;;; slots while keeping store operation details inside the task owner.
-;; AdapterOperation <- Task
-(def (task-adapter-operation task)
-  (let ((dispatch (task-family-adapter-dispatch (task-descriptor task))))
+;; AdapterOperation <- TaskFamilyRegistry Task
+(def (task-adapter-operation-in registry task)
+  (let ((dispatch (task-family-adapter-dispatch (task-descriptor-in registry task))))
     (cond
      ((eq? dispatch 'store)
       (cond
@@ -172,6 +240,10 @@
        ((task-store-get? task) 'store-get)
        (else (error "unsupported store operation" (task-store-operation task)))))
      (else dispatch))))
+
+;; AdapterOperation <- Task
+(def (task-adapter-operation task)
+  (task-adapter-operation-in default-task-family-registry task))
 
 ;;; Normalized requests are the adapter boundary format shared by store and
 ;;; external tasks.

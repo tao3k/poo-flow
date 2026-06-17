@@ -48,11 +48,11 @@ The current Gerbil implementation has a useful first control-plane slice:
 - =roles.ss= declares POO role descriptors for flow, task, strategy, runner,
   runtime adapter, and receipt.
 - =task.ss= has POO-backed task-family descriptors, pure, Scheme, store, and
-  external tasks, descriptor-driven routing policy, and normalized execution
-  requests.
+external tasks, immutable descriptor registries, descriptor-driven routing
+policy, and normalized execution requests.
 - =flow.ss= has POO-backed flow declaration descriptors, flow composition,
-Funflow-style smart constructors, and branch composition that fans out over
-left/right subflows.
+immutable descriptor registries, Funflow-style smart constructors, and branch
+composition that fans out over left/right subflows.
 - =strategy.ss= has descriptor-aware planning with a local eager strategy.
 - =plan.ss= lowers branch composition into DAG-shaped fan-out and join nodes.
 - =runtime-adapter.ss= has request-only and Rust handoff adapters for
@@ -65,13 +65,13 @@ into adapter requests.
 This is enough to run a small sequential workflow, and the declaration layer is
 now less record-shaped: descriptor policy drives task routing, adapter channel
 selection, flow declaration classification, and planner selection. The
-remaining POO extension gap is registering new descriptor families outside the
-core owners.
+remaining POO extension gap is wiring descriptor registries into configured
+runner execution.
 
 ** 10.02.30 Alignment Gaps
 *** 10.02.31 P0 Gaps
-1. Descriptor families are still registered in core owner lists. Extension code
-cannot yet add task or flow families without editing core modules.
+1. Configured runners do not yet carry descriptor registries, so execution
+still uses default descriptor policy.
 2. Rust handoff remains a Scheme-side request envelope stub rather than a real
 host process bridge.
 3. Typed execution failures are not modeled; control-plane errors still use
@@ -139,12 +139,16 @@ Implementation receipt:
   flow shapes.
 - Strategy planning reads flow descriptor planner policy before lowering a
   flow to an execution plan.
+- Task-family and flow-declaration registries are immutable POO policy bundles
+  that extension code can extend without mutating core defaults.
 
 Exit criteria:
 - Task-family descriptors exist for pure, Scheme, store, and external tasks.
 - Descriptors expose local/adapter routing policy.
 - The runner no longer needs hard-coded knowledge of every task family.
 - Flow descriptor policy selects the supported planner path.
+- Extension code can construct task and flow descriptor registries without
+  editing core descriptor lists.
 
 *** 10.02.53 M3 Branch And Parallel Composition
 Add a declaration surface for pair/branch/parallel flow composition. The first
@@ -219,7 +223,7 @@ Exit criteria:
 - Rust adapter can receive at least one store/external request.
 
 ** 10.02.60 Immediate Implementation Slice
-The current code slice closes M2 on top of the M5 runtime/cache slice.
+The current code slice closes descriptor registration on top of M2 and M5.
 
 The implementation now has a branch declaration surface, DAG-shaped branch arm
 and join plan nodes, local pure branch execution, Rust handoff for
@@ -227,14 +231,13 @@ store/external branch arms, first-class store put/get dispatch, and receipt
 cache evidence for hit, miss, bypass, and request-only states. It also has
 POO-backed task-family descriptors for capability, routing, runtime owner, and
 adapter dispatch policy, plus POO-backed flow declaration descriptors for
-planner policy. The runner interprets the DAG in topological order and records
-one top-level receipt per planned node, while heavy parallel scheduling and
-durable cache materialization remain outside Scheme.
-The next functional slice should move descriptor extension toward an external
-registration surface:
-- Allow additional task or flow descriptor families to be registered without
-  editing the core owner lists.
-- Keep registration declarative and policy-only.
+planner policy. Both descriptor families now have immutable registry extension
+surfaces. The runner interprets the DAG in topological order and records one
+top-level receipt per planned node, while heavy parallel scheduling and durable
+cache materialization remain outside Scheme.
+The next functional slice should bind descriptor registries into configuration:
+- Let run configs carry task-family and flow-declaration registries.
+- Thread configured registries through strategy planning and runner validation.
 - Keep Rust/runtime as the owner for heavy execution attached to registered
   descriptors.
 

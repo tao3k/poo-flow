@@ -14,14 +14,23 @@
         flow-output-contract
         make-flow-declaration-descriptor
         flow-declaration-descriptor?
+        make-flow-declaration-registry
+        flow-declaration-registry?
+        default-flow-declaration-registry
+        flow-declaration-registry-name
+        flow-declaration-registry-descriptors
+        flow-declaration-registry-extend
         task-flow-descriptor
         sequential-flow-descriptor
         branch-flow-descriptor
         empty-flow-descriptor
+        flow-declaration-descriptors
         flow-declaration-name
         flow-declaration-kind
         flow-declaration-planner
         flow-extension-policy
+        flow-declaration-for-kind-in
+        flow-declaration-descriptor-in
         flow-declaration-descriptor
         flow-branch-declaration?
         flow-task-declaration?
@@ -72,6 +81,36 @@
   (and (object? descriptor)
        (eq? (.@ descriptor kind) 'flow-declaration)))
 
+;;; Flow declaration registries are immutable extension bundles. Strategy code
+;;; can consume a registry without knowing which module contributed descriptors.
+;; FlowDeclarationRegistry <- Symbol [FlowDeclarationDescriptor]
+(def (make-flow-declaration-registry registry-name registry-descriptors)
+  (.o (:: @ flow-role)
+      (name registry-name)
+      (kind 'flow-declaration-registry)
+      (descriptors registry-descriptors)
+      (responsibility (list 'flow-declaration-registry registry-name))))
+
+;; Boolean <- FlowDeclarationRegistryCandidate
+(def (flow-declaration-registry? registry)
+  (and (object? registry)
+       (eq? (.@ registry kind) 'flow-declaration-registry)))
+
+;; Symbol <- FlowDeclarationRegistry
+(def (flow-declaration-registry-name registry)
+  (.@ registry name))
+
+;; [FlowDeclarationDescriptor] <- FlowDeclarationRegistry
+(def (flow-declaration-registry-descriptors registry)
+  (.@ registry descriptors))
+
+;; FlowDeclarationRegistry <- FlowDeclarationRegistry FlowDeclarationDescriptor
+(def (flow-declaration-registry-extend registry descriptor)
+  (make-flow-declaration-registry
+   (flow-declaration-registry-name registry)
+   (append (flow-declaration-registry-descriptors registry)
+           (list descriptor))))
+
 ;; FlowDeclarationDescriptor <- Unit
 (def task-flow-descriptor
   (make-flow-declaration-descriptor 'task-flow 'task 'linear-dag 'closed))
@@ -88,6 +127,19 @@
 (def empty-flow-descriptor
   (make-flow-declaration-descriptor 'empty-flow 'empty 'linear-dag 'identity))
 
+;; FlowDeclarationRegistry <- Unit
+(def default-flow-declaration-registry
+  (make-flow-declaration-registry
+   'default-flow-declarations
+   (list task-flow-descriptor
+         sequential-flow-descriptor
+         branch-flow-descriptor
+         empty-flow-descriptor)))
+
+;; [FlowDeclarationDescriptor] <- Unit
+(def flow-declaration-descriptors
+  (flow-declaration-registry-descriptors default-flow-declaration-registry))
+
 ;; Symbol <- FlowDeclarationDescriptor
 (def (flow-declaration-name descriptor)
   (.@ descriptor name))
@@ -103,6 +155,22 @@
 ;; ExtensionPolicy <- FlowDeclarationDescriptor
 (def (flow-extension-policy descriptor)
   (.@ descriptor extension-policy))
+
+;; MaybeFlowDeclarationDescriptor <- Symbol [FlowDeclarationDescriptor]
+(def (find-flow-declaration kind descriptors)
+  (cond
+   ((null? descriptors) #f)
+   ((eq? kind (flow-declaration-kind (car descriptors))) (car descriptors))
+   (else (find-flow-declaration kind (cdr descriptors)))))
+
+;; FlowDeclarationDescriptor <- FlowDeclarationRegistry Symbol
+(def (flow-declaration-for-kind-in registry kind)
+  (let ((descriptor (find-flow-declaration
+                     kind
+                     (flow-declaration-registry-descriptors registry))))
+    (if descriptor
+      descriptor
+      (error "unknown flow declaration kind" kind))))
 
 ;;; Branch steps keep the left and right flows as declarations so planning can
 ;;; expose a DAG before runner or adapter code chooses an execution strategy.
@@ -204,13 +272,17 @@
 
 ;;; Descriptor selection is purely structural today; future extension flows can
 ;;; add new descriptors without changing the runner execution loop.
+;; FlowDeclarationDescriptor <- FlowDeclarationRegistry Flow
+(def (flow-declaration-descriptor-in registry flow)
+  (cond
+   ((flow-empty? flow) (flow-declaration-for-kind-in registry 'empty))
+   ((flow-branch-declaration? flow) (flow-declaration-for-kind-in registry 'branch))
+   ((flow-task-declaration? flow) (flow-declaration-for-kind-in registry 'task))
+   (else (flow-declaration-for-kind-in registry 'sequential))))
+
 ;; FlowDeclarationDescriptor <- Flow
 (def (flow-declaration-descriptor flow)
-  (cond
-   ((flow-empty? flow) empty-flow-descriptor)
-   ((flow-branch-declaration? flow) branch-flow-descriptor)
-   ((flow-task-declaration? flow) task-flow-descriptor)
-   (else sequential-flow-descriptor)))
+  (flow-declaration-descriptor-in default-flow-declaration-registry flow))
 
 ;; Nat <- Flow
 (def (flow-step-count flow)
