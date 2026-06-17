@@ -82,6 +82,19 @@
         (check-equal? (plan-node-kind second-node) 'scheme)
         (check-equal? (plan-node-name second-node) 'double)))))
 
+(def strategy-cache-test
+  (test-suite "strategy cache policy"
+    (test-case "records cache intent in task receipts"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (runner (make-runner (make-cached-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner inc 5))
+             (receipt (run-result-receipt result))
+             (child (car (receipt-children receipt))))
+        (check-equal? (run-result-value result) 6)
+        (check-equal? (receipt-cache receipt) 'no-cache)
+        (check-equal? (receipt-cache child) '(cache-output inc pure 5 6))))))
+
 (def poo-role-test
   (test-suite "poo role descriptors"
     (test-case "declares control-plane roles as Gerbil POO objects"
@@ -100,6 +113,7 @@
             adapter-request-test
             funflow-api-test
             execution-plan-test
+            strategy-cache-test
             poo-role-test
             project-policy-test)
 

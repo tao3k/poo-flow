@@ -13,8 +13,10 @@
         strategy-failure-policy
         strategy-planner
         make-local-eager-strategy
+        make-cached-local-eager-strategy
         strategy-plan
-        strategy-can-run-locally?)
+        strategy-can-run-locally?
+        strategy-cache-decision)
 
 ;;; The planner slot is the only executable policy hook; other fields are
 ;;; declarative metadata used for local capability checks.
@@ -37,6 +39,16 @@
                  'fail-fast
                  default-linear-plan))
 
+;;; Cached eager execution records cache intent in receipts but leaves durable
+;;; cache materialization to the runtime adapter/Rust boundary.
+;; Strategy <- Unit
+(def (make-cached-local-eager-strategy)
+  (make-strategy 'cached-local-eager
+                 '(pure scheme store external)
+                 'cache-output
+                 'fail-fast
+                 default-linear-plan))
+
 ;; ExecutionPlan <- Flow
 (def (default-linear-plan flow)
   (flow->linear-plan flow))
@@ -49,3 +61,15 @@
 (def (strategy-can-run-locally? strategy task)
   (and (memq (task-kind task) (strategy-capabilities strategy))
        (task-local? task)))
+
+;;; Cache decisions are evidence values, not storage actions; runners copy them
+;;; into receipts so adapters can later materialize the policy.
+;; CacheDecision <- Strategy Task Input Output
+(def (strategy-cache-decision strategy task input output)
+  (let ((policy (strategy-cache-policy strategy)))
+    (cond
+     ((eq? policy 'no-cache) 'no-cache)
+     ((eq? policy 'cache-output)
+      (list 'cache-output (task-name task) (task-kind task) input output))
+     (else
+      (list 'cache-policy policy (task-name task) (task-kind task) input output)))))

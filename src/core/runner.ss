@@ -121,7 +121,8 @@
 (def (run-task runner plan strategy task input)
   (cond
    ((strategy-can-run-locally? strategy task)
-    (let ((value ((task-executor task) input)))
+    (let* ((value ((task-executor task) input))
+           (cache (strategy-cache-decision strategy task input value)))
       (cons value
             (make-receipt (execution-plan-flow-name plan)
                           (task-name task)
@@ -131,13 +132,14 @@
                           #f
                           input
                           value
-                          (strategy-cache-policy strategy)
+                          cache
                           'ok
                           #f
                           '()))))
    ((task-adapter-routed? task)
     (let* ((request (task-normalized-request task input))
-           (adapter-result (adapter-submit (runner-adapter runner) request)))
+           (adapter-result (adapter-submit (runner-adapter runner) request))
+           (cache (strategy-cache-decision strategy task input adapter-result)))
       (cons adapter-result
             (make-receipt (execution-plan-flow-name plan)
                           (task-name task)
@@ -147,7 +149,7 @@
                           (adapter-result-request-id adapter-result)
                           input
                           adapter-result
-                          (strategy-cache-policy strategy)
+                          cache
                           (adapter-result-status adapter-result)
                           (adapter-result-error adapter-result)
                           '()))))
