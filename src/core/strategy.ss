@@ -93,8 +93,9 @@
 (def (strategy-cache-decision strategy task input output)
   (let ((policy (strategy-cache-policy strategy)))
     (cond
-     ((eq? policy 'no-cache) 'no-cache)
+     ((eq? policy 'no-cache)
+      (list 'cache-bypass (task-name task) (task-kind task)))
      ((eq? policy 'cache-output)
-      (list 'cache-output (task-name task) (task-kind task) input output))
+      (list 'cache-miss (task-name task) (task-kind task) input output))
      (else
       (list 'cache-policy policy (task-name task) (task-kind task) input output)))))

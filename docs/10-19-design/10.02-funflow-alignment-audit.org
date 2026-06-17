@@ -156,6 +156,15 @@ Exit criteria:
 *** 10.02.55 M5 Store And Cache Semantics
 Model content-store and cache policy as first-class strategy objects.
 
+Implementation receipt:
+- Store tasks expose put/get operation accessors at the task boundary.
+- Runner dispatch uses adapter store put/get slots instead of generic submit
+  for store operations.
+- Receipt cache evidence distinguishes =cache-hit=, =cache-miss=,
+  =cache-bypass=, and =cache-request-only= states.
+- Durable CAS/cache materialization remains behind the runtime adapter
+  boundary.
+
 Exit criteria:
 - Store put/get are separate task-family semantics, not generic externals.
 - Cache policy can be selected per strategy.
@@ -196,18 +205,21 @@ Exit criteria:
 - Rust adapter can receive at least one store/external request.
 
 ** 10.02.60 Immediate Implementation Slice
-The current code slice is M3.
+The current code slice is M5.
 
 The implementation now has a branch declaration surface, DAG-shaped branch arm
-and join plan nodes, local pure branch execution, and Rust handoff for
-store/external branch arms. The runner interprets the DAG in topological order
-and records one top-level receipt per planned node, while heavy parallel
-scheduling remains outside Scheme.
-The next functional slice should close M5:
-- Split store put/get semantics more explicitly instead of treating them as
-generic store operations.
-- Model cache hit, miss, bypass, and request-only states as policy evidence.
-- Keep durable CAS/cache materialization behind the runtime adapter boundary.
+and join plan nodes, local pure branch execution, Rust handoff for
+store/external branch arms, first-class store put/get dispatch, and receipt
+cache evidence for hit, miss, bypass, and request-only states. The runner
+interprets the DAG in topological order and records one top-level receipt per
+planned node, while heavy parallel scheduling and durable cache materialization
+remain outside Scheme.
+The next functional slice should close the remaining M2 descriptor gap:
+- Attach task-family descriptors to pure, Scheme, store, and external tasks.
+- Move runner routing decisions behind POO descriptor policy instead of direct
+  task-kind checks.
+- Keep the descriptor layer declarative so Rust/runtime remains the owner for
+  heavy execution.
 
 
 ** 10.02.70 Harness Integration Receipt

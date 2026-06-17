@@ -247,6 +247,36 @@
       (cdr entry)
       (error "missing dependency value" id))))
 
+;;; Adapter dispatch preserves store put/get as first-class task-family
+;;; operations; external tasks still use the generic submit slot.
+;; AdapterResult <- RuntimeAdapter Task ExecutionRequest
+(def (adapter-result-for-task adapter task request)
+  (cond
+   ((task-store-put? task)
+    (adapter-store-put adapter request))
+   ((task-store-get? task)
+    (adapter-store-get adapter (task-store-payload task)))
+   (else
+    (adapter-submit adapter request))))
+
+;;; Adapter cache evidence is derived after runtime handoff because only the
+;;; adapter result knows whether this was a request-only handoff or a handle hit.
+;; CacheDecision <- Strategy Task Input AdapterResult
+(def (adapter-cache-decision strategy task input adapter-result)
+  (cond
+   ((task-store-get? task)
+    (list 'cache-hit
+          (task-name task)
+          (task-store-payload task)
+          (adapter-result-artifact-handle adapter-result)))
+   ((eq? (adapter-result-status adapter-result) 'requested)
+    (list 'cache-request-only
+          (task-name task)
+          (task-kind task)
+          (adapter-result-request-id adapter-result)))
+   (else
+    (strategy-cache-decision strategy task input adapter-result))))
+
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
 ;; StepResult <- Runner ExecutionPlan Strategy PlanNode Task Input [Id]
@@ -282,8 +312,8 @@
                                            (strategy-name strategy)
                                            (execution-policy->alist
                                             (strategy-execution-policy strategy frontier))))
-           (adapter-result (adapter-submit (runner-adapter runner) request))
-           (cache (strategy-cache-decision strategy task input adapter-result)))
+           (adapter-result (adapter-result-for-task (runner-adapter runner) task request))
+           (cache (adapter-cache-decision strategy task input adapter-result)))
       (cons adapter-result
             (make-receipt (execution-plan-flow-name plan)
                           (task-name task)

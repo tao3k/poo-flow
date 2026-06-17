@@ -341,6 +341,14 @@
 
 (def strategy-cache-test
   (test-suite "strategy cache policy"
+    (test-case "records cache bypass for no-cache task receipts"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner inc 5))
+             (child (car (receipt-children (run-result-receipt result)))))
+        (check-equal? (run-result-value result) 6)
+        (check-equal? (receipt-cache child) '(cache-bypass inc pure))))
     (test-case "records cache intent in task receipts"
       (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
              (runner (make-runner (make-cached-local-eager-strategy)
@@ -352,7 +360,46 @@
         (check-equal? (receipt-cache receipt) 'no-cache)
         (check-equal? (cdr (assoc 'cache-policy (receipt-policy child)))
                       'cache-output)
-        (check-equal? (receipt-cache child) '(cache-output inc pure 5 6))))))
+        (check-equal? (receipt-cache child) '(cache-miss inc pure 5 6))))))
+
+(def store-cache-semantics-test
+  (test-suite "store cache semantics"
+    (test-case "exposes store operation semantics"
+      (let ((put (make-store-task 'put-cache 'put '((path . "target")) 'artifact 'artifact))
+            (get (make-store-task 'get-cache 'get 'cache-handle 'artifact 'artifact)))
+        (check-equal? (task-store-operation put) 'put)
+        (check-equal? (task-store-payload get) 'cache-handle)
+        (check-equal? (task-store-put? put) #t)
+        (check-equal? (task-store-get? get) #t)))
+    (test-case "routes store put through the store adapter slot"
+      (let* ((put (store-flow 'put-cache 'put '((path . "target")) 'artifact 'artifact))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner put 'input-artifact))
+             (adapter-result (run-result-value result))
+             (request (adapter-result-value adapter-result))
+             (child (car (receipt-children (run-result-receipt result)))))
+        (check-equal? (adapter-result-status adapter-result) 'requested)
+        (check-equal? (adapter-result-request-id adapter-result)
+                      '(request put-cache store))
+        (check-equal? (execution-request-request request)
+                      '(store put ((path . "target"))))
+        (check-equal? (receipt-cache child)
+                      '(cache-request-only put-cache store (request put-cache store)))))
+    (test-case "routes store get through the store adapter slot"
+      (let* ((get (store-flow 'get-cache 'get 'cache-handle 'artifact 'artifact))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner get 'input-artifact))
+             (adapter-result (run-result-value result))
+             (child (car (receipt-children (run-result-receipt result)))))
+        (check-equal? (adapter-result-status adapter-result) 'requested)
+        (check-equal? (adapter-result-request-id adapter-result)
+                      '(store-get cache-handle))
+        (check-equal? (adapter-result-value adapter-result) #f)
+        (check-equal? (adapter-result-artifact-handle adapter-result) 'cache-handle)
+        (check-equal? (receipt-cache child)
+                      '(cache-hit get-cache cache-handle cache-handle))))))
 
 (def poo-role-test
   (test-suite "poo role descriptors"
@@ -385,6 +432,7 @@
             strategy-frontier-test
             receipt-audit-test
             strategy-cache-test
+            store-cache-semantics-test
             poo-role-test
             project-policy-test)
 

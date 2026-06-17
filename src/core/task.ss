@@ -13,6 +13,10 @@
         make-pure-task
         make-scheme-task
         make-store-task
+        task-store-operation
+        task-store-payload
+        task-store-put?
+        task-store-get?
         make-external-task
         task-local?
         task-adapter-routed?
@@ -75,6 +79,28 @@
 ;; Task <- Symbol Symbol Payload Contract Contract
 (def (make-store-task name operation payload input-contract output-contract)
   (make-task name 'store (list 'store operation payload) input-contract output-contract #f))
+
+;;; Store operation accessors keep cache semantics explicit at the task-family
+;;; boundary without requiring runners to destructure arbitrary request data.
+;; Symbol | #f <- Task
+(def (task-store-operation task)
+  (if (eq? (task-kind task) 'store)
+    (cadr (task-request task))
+    #f))
+
+;; Payload | #f <- Task
+(def (task-store-payload task)
+  (if (eq? (task-kind task) 'store)
+    (caddr (task-request task))
+    #f))
+
+;; Boolean <- Task
+(def (task-store-put? task)
+  (eq? (task-store-operation task) 'put))
+
+;; Boolean <- Task
+(def (task-store-get? task)
+  (eq? (task-store-operation task) 'get))
 
 ;; Task <- Symbol Symbol Payload Contract Contract
 (def (make-external-task name operation payload input-contract output-contract)
