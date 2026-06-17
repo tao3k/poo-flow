@@ -1,3 +1,7 @@
+;;; -*- Gerbil -*-
+;;; Boundary: public API re-exports the control-plane modules.
+;;; Invariant: implementation logic stays in the leaf owners below.
+
 (import :poo-flow/roles
         :poo-flow/receipt
         :poo-flow/task

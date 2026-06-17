@@ -1,3 +1,7 @@
+;;; -*- Gerbil -*-
+;;; Boundary: runner interprets plans and emits receipts.
+;;; Invariant: adapter calls remain behind runtime-adapter functions.
+
 (import :poo-flow/receipt
         :poo-flow/task
         :poo-flow/flow
@@ -17,20 +21,27 @@
         runner-validate
         runner-run)
 
+;; RunResult <- Value Receipt
 (defstruct run-result
   (value receipt)
   transparent: #t)
 
+;; Runner <- Strategy RuntimeAdapter
 (defstruct runner
   (strategy adapter)
   transparent: #t)
 
+;; ExecutionPlan <- Runner Flow
 (def (runner-plan runner flow)
   (strategy-plan (runner-strategy runner) flow))
 
+;; Boolean <- Runner Flow
 (def (runner-validate runner flow)
   (runner-validate-plan runner (runner-plan runner flow)))
 
+;;; Boundary: validation is the only pre-run traversal over planned nodes.
+;;; Invariant: each node is checked against both strategy and adapter support.
+;; Boolean <- Runner ExecutionPlan
 (def (runner-validate-plan runner plan)
   (let ((strategy (runner-strategy runner))
         (adapter (runner-adapter runner)))
@@ -38,13 +49,16 @@
               (execution-plan-nodes plan))
     #t))
 
+;; Boolean <- Strategy RuntimeAdapter PlanNode
 (def (validate-plan-node strategy adapter node)
   (validate-step strategy adapter (plan-node-step node)))
 
+;; Boolean <- Strategy RuntimeAdapter Step
 (def (validate-step strategy adapter step)
   (when (task? step)
     (validate-task strategy adapter step)))
 
+;; Boolean <- Strategy RuntimeAdapter Task
 (def (validate-task strategy adapter task)
   (unless (memq (task-kind task) (strategy-capabilities strategy))
     (error "strategy does not support task kind" (task-kind task)))
@@ -52,6 +66,9 @@
     (unless (adapter-supports? adapter (task-kind task))
       (error "adapter does not support task kind" (task-kind task)))))
 
+;;; Execution returns both the final value and a root receipt that contains the
+;;; child receipts produced by each planned step.
+;; RunResult <- Runner Flow Input
 (def (runner-run runner flow input)
   (let ((strategy (runner-strategy runner)))
     (let ((plan (runner-plan runner flow)))
@@ -74,6 +91,9 @@
                          #f
                          children)))))))
 
+;;; Boundary: this recursive driver is the sequential interpreter loop.
+;;; Invariant: it preserves execution order while accumulating receipt evidence.
+;; StepSequenceResult <- Runner ExecutionPlan Strategy [PlanNode] Input [Receipt]
 (def (run-plan-nodes runner plan strategy nodes input receipts)
   (if (null? nodes)
     (cons input receipts)
@@ -83,6 +103,7 @@
            (receipt (cdr step-result)))
       (run-plan-nodes runner plan strategy (cdr nodes) value (cons receipt receipts)))))
 
+;; StepResult <- Runner ExecutionPlan Strategy PlanNode Input
 (def (run-plan-node runner plan strategy node input)
   (let ((step (plan-node-step node)))
     (cond
@@ -94,6 +115,9 @@
      (else
       (error "flow step is neither task nor flow" step)))))
 
+;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
+;;; Invariant: both branches return the same value/receipt pair shape.
+;; StepResult <- Runner ExecutionPlan Strategy Task Input
 (def (run-task runner plan strategy task input)
   (cond
    ((strategy-can-run-locally? strategy task)

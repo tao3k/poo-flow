@@ -1,3 +1,7 @@
+;;; -*- Gerbil -*-
+;;; Boundary: receipts record observed execution outcomes.
+;;; Invariant: retry, scheduling, and adapter policy remain outside receipts.
+
 (export make-receipt
         receipt?
         receipt-flow
@@ -15,6 +19,9 @@
         receipt-ok?
         receipt-failed?)
 
+;;; Children preserve nested execution evidence without forcing a runner to
+;;; flatten or discard subflow receipts.
+;; Receipt <- Flow Task Symbol Strategy AdapterDecision RequestId Value Value Cache Symbol Error [Receipt]
 (defstruct receipt
   (flow
    task
@@ -30,8 +37,10 @@
    children)
   transparent: #t)
 
+;; Boolean <- Receipt
 (def (receipt-ok? receipt)
   (eq? (receipt-status receipt) 'ok))
 
+;; Boolean <- Receipt
 (def (receipt-failed? receipt)
   (eq? (receipt-status receipt) 'failed))
