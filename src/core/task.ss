@@ -17,6 +17,7 @@
         task-local?
         task-adapter-routed?
         task-normalized-request
+        task-adapter-request
         make-execution-request
         execution-request?
         execution-request-name
@@ -24,7 +25,11 @@
         execution-request-request
         execution-request-input
         execution-request-input-contract
-        execution-request-output-contract)
+        execution-request-output-contract
+        execution-request-plan-id
+        execution-request-node-id
+        execution-request-frontier
+        execution-request-strategy)
 
 ;;; The request field is symbolic control-plane data; the executor slot is
 ;;; present only for local task kinds.
@@ -40,14 +45,20 @@
 
 ;;; Normalized requests are the adapter boundary format shared by store and
 ;;; external tasks.
-;; ExecutionRequest <- Symbol Symbol Request Value Contract Contract
+;;; Plan, node, frontier, and strategy fields are optional control-plane
+;;; evidence so Rust adapters can correlate requests with Scheme planning.
+;; ExecutionRequest <- Symbol Symbol Request Value Contract Contract PlanId NodeId [Id] Strategy
 (defstruct execution-request
   (name
    kind
    request
    input
    input-contract
-   output-contract)
+   output-contract
+   plan-id
+   node-id
+   frontier
+   strategy)
   transparent: #t)
 
 ;; Task <- Symbol Procedure Contract Contract
@@ -78,9 +89,19 @@
 
 ;; ExecutionRequest <- Task Value
 (def (task-normalized-request task input)
+  (task-adapter-request task input #f #f '() #f))
+
+;;; Runner-owned request enrichment keeps task constructors pure while still
+;;; giving runtime adapters the graph and strategy evidence they need.
+;; ExecutionRequest <- Task Value PlanId NodeId [Id] Strategy
+(def (task-adapter-request task input plan-id node-id frontier strategy)
   (make-execution-request (task-name task)
                           (task-kind task)
                           (task-request task)
                           input
                           (task-input-contract task)
-                          (task-output-contract task)))
+                          (task-output-contract task)
+                          plan-id
+                          node-id
+                          frontier
+                          strategy))

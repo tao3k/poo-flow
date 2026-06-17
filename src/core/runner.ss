@@ -132,7 +132,7 @@
   (let ((step (plan-node-step node)))
     (cond
      ((task? step)
-      (run-task runner plan strategy step input frontier))
+      (run-task runner plan strategy node step input frontier))
      ((flow? step)
       (let ((nested (runner-run runner step input)))
         (cons (run-result-value nested) (run-result-receipt nested))))
@@ -141,8 +141,8 @@
 
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
-;; StepResult <- Runner ExecutionPlan Strategy Task Input [Id]
-(def (run-task runner plan strategy task input frontier)
+;; StepResult <- Runner ExecutionPlan Strategy PlanNode Task Input [Id]
+(def (run-task runner plan strategy node task input frontier)
   (cond
    ((strategy-can-run-locally? strategy task)
     (let* ((value ((task-executor task) input))
@@ -162,7 +162,12 @@
                           #f
                           '()))))
    ((task-adapter-routed? task)
-    (let* ((request (task-normalized-request task input))
+    (let* ((request (task-adapter-request task
+                                           input
+                                           (execution-plan-flow-name plan)
+                                           (plan-node-id node)
+                                           frontier
+                                           (strategy-name strategy)))
            (adapter-result (adapter-submit (runner-adapter runner) request))
            (cache (strategy-cache-decision strategy task input adapter-result)))
       (cons adapter-result

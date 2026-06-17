@@ -25,11 +25,19 @@
              (runner (make-runner (make-local-eager-strategy)
                                   (make-request-only-adapter)))
              (result (runner-run runner flow 'input-artifact))
+             (adapter-result (run-result-value result))
+             (request (adapter-result-value adapter-result))
              (child (car (receipt-children (run-result-receipt result)))))
         (check-equal? (receipt-task child) 'compile)
         (check-equal? (receipt-kind child) 'external)
         (check-equal? (receipt-adapter-decision child) 'request-only)
-        (check-equal? (adapter-result-status (run-result-value result)) 'requested)))))
+        (check-equal? (adapter-result-status adapter-result) 'requested)
+        (check-equal? (execution-request-plan-id request) 'external-demo)
+        (check-equal? (execution-request-node-id request)
+                      '(node external-demo 0 external compile))
+        (check-equal? (execution-request-frontier request)
+                      '((node external-demo 0 external compile)))
+        (check-equal? (execution-request-strategy request) 'local-eager)))))
 
 (def funflow-api-test
   (test-suite "funflow-style flow api"
@@ -56,10 +64,14 @@
                                   (make-request-only-adapter)))
              (result (runner-run runner compile 'input-artifact))
              (receipt (run-result-receipt result))
+             (request (adapter-result-value (run-result-value result)))
              (child (car (receipt-children receipt))))
         (check-equal? (receipt-flow receipt) 'compile)
         (check-equal? (receipt-kind child) 'external)
-        (check-equal? (adapter-result-status (run-result-value result)) 'requested)))))
+        (check-equal? (adapter-result-status (run-result-value result)) 'requested)
+        (check-equal? (execution-request-plan-id request) 'compile)
+        (check-equal? (execution-request-frontier request)
+                      '((node compile 0 external compile)))))))
 
 (def execution-plan-test
   (test-suite "execution plan"
