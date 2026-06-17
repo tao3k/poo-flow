@@ -18,6 +18,8 @@
         runner-strategy
         runner-adapter
         runner-plan
+        runner-ready-frontier
+        runner-ready-frontier-ids
         runner-validate
         runner-run)
 
@@ -34,6 +36,24 @@
 ;; ExecutionPlan <- Runner Flow
 (def (runner-plan runner flow)
   (strategy-plan (runner-strategy runner) flow))
+
+;;; Frontier queries follow the same runner boundary as execution: flow is
+;;; lowered once, then strategy decides which graph facts are policy-visible.
+;; [PlanNode] <- Runner Flow [Id]
+(def (runner-ready-frontier runner flow completed-node-ids)
+  (let ((strategy (runner-strategy runner)))
+    (strategy-ready-frontier strategy
+                             (runner-plan runner flow)
+                             completed-node-ids)))
+
+;;; Id-only frontier output is the adapter-friendly form; it avoids leaking
+;;; task closures or Scheme plan-node payloads across runtime boundaries.
+;; [Id] <- Runner Flow [Id]
+(def (runner-ready-frontier-ids runner flow completed-node-ids)
+  (let ((strategy (runner-strategy runner)))
+    (strategy-ready-frontier-ids strategy
+                                 (runner-plan runner flow)
+                                 completed-node-ids)))
 
 ;; Boolean <- Runner Flow
 (def (runner-validate runner flow)

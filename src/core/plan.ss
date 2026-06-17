@@ -24,8 +24,11 @@
         execution-plan-dependency-edges
         execution-plan-root-nodes
         execution-plan-terminal-nodes
+        execution-plan-ready-nodes
+        execution-plan-ready-node-ids
         plan-node-root?
         plan-node-depends-on?
+        plan-node-ready?
         plan-empty?
         plan-node-count)
 
@@ -115,6 +118,27 @@
        (not (id-has-dependent? (plan-node-id node) edges)))
      (execution-plan-nodes plan))))
 
+;;; Intent: compute the runnable frontier from completed node ids without
+;;; changing the plan's original node order.
+;;; The one-argument predicate tests each candidate node against a completed-id
+;;; set, so future schedulers can choose from ready nodes without re-parsing
+;;; flow steps or task internals.
+;; [PlanNode] <- ExecutionPlan [Id]
+(def (execution-plan-ready-nodes plan completed-node-ids)
+  (select-plan-nodes
+   (lambda (node)
+     (plan-node-ready? node completed-node-ids))
+   (execution-plan-nodes plan)))
+
+;;; Intent: expose a lightweight frontier shape for strategy receipts and
+;;; adapter requests that do not need the full plan-node payload.
+;;; The map projection reuses plan-node-id so ready-frontier evidence matches
+;;; dependency-edge endpoints exactly.
+;; [Id] <- ExecutionPlan [Id]
+(def (execution-plan-ready-node-ids plan completed-node-ids)
+  (map plan-node-id
+       (execution-plan-ready-nodes plan completed-node-ids)))
+
 ;;; Dependency predicates stay at the node/id level so tests and adapters can
 ;;; audit graph shape without depending on task internals.
 ;; Boolean <- PlanNode
@@ -126,6 +150,14 @@
 ;; Boolean <- PlanNode Id
 (def (plan-node-depends-on? node dependency-id)
   (id-member? dependency-id (plan-node-dependencies node)))
+
+;;; Readiness has two independent guards: the node itself must not already be
+;;; complete, and every declared dependency must be present in the completed
+;;; id set.
+;; Boolean <- PlanNode [Id]
+(def (plan-node-ready? node completed-node-ids)
+  (and (not (id-member? (plan-node-id node) completed-node-ids))
+       (ids-subset? (plan-node-dependencies node) completed-node-ids)))
 
 ;;; Edge expansion is factored from the public API to keep future non-linear
 ;;; plan constructors responsible only for node dependencies, not edge shape.
@@ -170,6 +202,14 @@
    ((null? ids) #f)
    ((equal? id (car ids)) #t)
    (else (id-member? id (cdr ids)))))
+
+;; Boolean <- [Id] [Id]
+(def (ids-subset? candidate-ids available-ids)
+  (cond
+   ((null? candidate-ids) #t)
+   ((id-member? (car candidate-ids) available-ids)
+    (ids-subset? (cdr candidate-ids) available-ids))
+   (else #f)))
 
 ;; Symbol <- Step
 (def (step-kind step)

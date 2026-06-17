@@ -15,11 +15,14 @@
         make-local-eager-strategy
         make-cached-local-eager-strategy
         strategy-plan
+        strategy-can-select-frontier?
+        strategy-ready-frontier
+        strategy-ready-frontier-ids
         strategy-can-run-locally?
         strategy-cache-decision)
 
 ;;; The planner slot is the only executable policy hook; other fields are
-;;; declarative metadata used for local capability checks.
+;;; declarative metadata used for task and graph-frontier capability checks.
 ;; Strategy <- Symbol [Symbol] Symbol Symbol Planner
 (defstruct strategy
   (name
@@ -34,7 +37,7 @@
 ;; Strategy <- Unit
 (def (make-local-eager-strategy)
   (make-strategy 'local-eager
-                 '(pure scheme store external)
+                 '(pure scheme store external graph-frontier)
                  'no-cache
                  'fail-fast
                  default-linear-plan))
@@ -44,7 +47,7 @@
 ;; Strategy <- Unit
 (def (make-cached-local-eager-strategy)
   (make-strategy 'cached-local-eager
-                 '(pure scheme store external)
+                 '(pure scheme store external graph-frontier)
                  'cache-output
                  'fail-fast
                  default-linear-plan))
@@ -56,6 +59,28 @@
 ;; ExecutionPlan <- Strategy Flow
 (def (strategy-plan strategy flow)
   ((strategy-planner strategy) flow))
+
+;;; Frontier support is capability-gated so later strategies can opt out of
+;;; graph scheduling without changing the execution-plan data model.
+;; Boolean <- Strategy
+(def (strategy-can-select-frontier? strategy)
+  (and (memq 'graph-frontier (strategy-capabilities strategy)) #t))
+
+;;; Strategy owns the policy decision to expose a ready frontier; plan owns the
+;;; pure graph predicate that computes it.
+;; [PlanNode] <- Strategy ExecutionPlan [Id]
+(def (strategy-ready-frontier strategy plan completed-node-ids)
+  (if (strategy-can-select-frontier? strategy)
+    (execution-plan-ready-nodes plan completed-node-ids)
+    (error "strategy cannot select graph frontier" (strategy-name strategy))))
+
+;;; The id projection is the stable receipt/adapter surface for frontier
+;;; evidence when callers do not need plan-node payloads.
+;; [Id] <- Strategy ExecutionPlan [Id]
+(def (strategy-ready-frontier-ids strategy plan completed-node-ids)
+  (if (strategy-can-select-frontier? strategy)
+    (execution-plan-ready-node-ids plan completed-node-ids)
+    (error "strategy cannot select graph frontier" (strategy-name strategy))))
 
 ;; Boolean <- Strategy Task
 (def (strategy-can-run-locally? strategy task)

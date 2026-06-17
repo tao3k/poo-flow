@@ -116,6 +116,36 @@
         (check-equal? (plan-node-depends-on? second-node (plan-node-id first-node)) #t)
         (check-equal? (plan-node-depends-on? third-node (plan-node-id first-node)) #f)))))
 
+(def strategy-frontier-test
+  (test-suite "strategy frontier policy"
+    (test-case "selects ready nodes from completed dependency ids"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (double (scheme-flow 'double (lambda (x) (* x 2)) 'number 'number))
+             (label (pure-flow 'label (lambda (x) x) 'number 'number))
+             (pipeline (flow-then 'frontier-demo
+                                  (flow-then 'inc-then-double inc double)
+                                  label))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (strategy (runner-strategy runner))
+             (plan (runner-plan runner pipeline))
+             (first-complete '((node frontier-demo 0 pure inc)))
+             (second-complete '((node frontier-demo 0 pure inc)
+                                (node frontier-demo 1 scheme double))))
+        (check-equal? (strategy-can-select-frontier? strategy) #t)
+        (check-equal? (execution-plan-ready-node-ids plan '())
+                      '((node frontier-demo 0 pure inc)))
+        (check-equal? (execution-plan-ready-node-ids plan first-complete)
+                      '((node frontier-demo 1 scheme double)))
+        (check-equal? (map plan-node-id
+                           (strategy-ready-frontier strategy plan second-complete))
+                      '((node frontier-demo 2 pure label)))
+        (check-equal? (runner-ready-frontier-ids runner pipeline second-complete)
+                      '((node frontier-demo 2 pure label)))
+        (check-equal? (runner-ready-frontier-ids runner pipeline
+                                                (execution-plan-node-ids plan))
+                      '())))))
+
 (def strategy-cache-test
   (test-suite "strategy cache policy"
     (test-case "records cache intent in task receipts"
@@ -147,6 +177,7 @@
             adapter-request-test
             funflow-api-test
             execution-plan-test
+            strategy-frontier-test
             strategy-cache-test
             poo-role-test
             project-policy-test)
