@@ -1,0 +1,201 @@
+* 10.02 Funflow Alignment Audit
+** 10.02.00 Document Status
+This audit turns the first control-plane design into a milestone map for
+functional implementation.
+
+The target remains a Gerbil POO workflow control plane:
+- Gerbil owns declaration, planning policy, extension strategy, and a small
+  runnable interpreter.
+- Rust or another host runtime owns heavy work: CAS, Docker or container
+  execution, filesystem-heavy store operations, durable cache metadata,
+  parallel scheduling, and external process management.
+
+The audit sources are:
+- =.data/funflow/README.md=
+- =.data/funflow/funflow/package.yaml=
+- =.data/funflow/funflow/src/Funflow/Flow.hs=
+- =.data/funflow/funflow/src/Funflow/Run.hs=
+- =docs/10-19-design/10.01-gerbil-poo-funflow-control-plane.org=
+- =src/poo-flow/*.ss=
+- =t/control-plane-test.ss=
+
+** 10.02.10 Funflow Reference Surface
+Funflow 2 is a Haskell workflow library built around reusable workflows and a
+content-addressed store. Its public shape is useful even though its Haskell
+type-level encoding should not be copied directly into Gerbil.
+
+The core =Flow= surface has these important traits:
+- =Flow= is a named task-strand composition over required strands.
+- =RequiredStrands= includes =simple=, =store=, and =docker= task families.
+- Smart constructors include =pureFlow=, =ioFlow=, =dockerFlow=,
+  =putDirFlow=, =getDirFlow=, =throwStringFlow=, and =returnFlow=.
+- =ExtendedFlow= permits additional strands before the flow is interpreted.
+
+The runner surface has these important traits:
+- =runFlowWithConfig= is the explicit configured execution entrypoint.
+- The runner weaves =docker=, =store=, and =simple= strands into a core plan.
+- Docker images and external config requirements are collected before the core
+  execution.
+- The cache/store layer is installed before execution.
+- =performP= runs the resulting DAG, including parallel branches.
+
+The package dependencies confirm the heavy runtime boundary: =cas-store=,
+=cas-hashable=, =docker-client=, and =kernmantle= are implementation-heavy
+dependencies that should stay outside the Scheme control plane for this repo.
+
+** 10.02.20 Current Poo-Flow Surface
+The current Gerbil implementation has a useful first control-plane slice:
+- =roles.ss= declares POO role descriptors for flow, task, strategy, runner,
+  runtime adapter, and receipt.
+- =task.ss= has pure, Scheme, store, and external tasks plus normalized
+  execution requests.
+- =flow.ss= has flow composition and Funflow-style smart constructors.
+- =strategy.ss= has a local eager strategy.
+- =runtime-adapter.ss= has a request-only adapter for store/external work.
+- =runner.ss= can run local pure/Scheme tasks and lower store/external tasks
+  into adapter requests.
+- =receipt.ss= records execution evidence with child receipts.
+
+This is enough to run a small sequential workflow, but the architecture is
+still too record-shaped. The POO layer currently names roles; it does not yet
+drive task-family extension, planning, or adapter selection.
+
+** 10.02.30 Alignment Gaps
+*** 10.02.31 P0 Gaps
+1. The planner returns raw flow steps instead of an explicit execution plan.
+   This blurs the boundary between declaration and interpretation.
+2. Flow/task POO descriptors are not attached to executable declarations.
+   POO is still metadata, not the object protocol that powers extension.
+3. Store/external requests are adapter-routed, but there is no stable
+   host-runtime request schema for Rust to implement.
+4. Receipts do not distinguish plan node identity from task identity, which
+   will make retries, cache hits, and graph evidence ambiguous.
+
+*** 10.02.32 P1 Gaps
+1. There is no branch or parallel composition surface comparable to Funflow's
+   DAG behavior.
+2. Cache/store semantics are named but not modeled as policy objects.
+3. Error handling is still generic =error= calls rather than typed execution
+   failures.
+4. There is no configured runner entrypoint comparable to =runFlowWithConfig=.
+5. Docker/container tasks are only represented as generic external tasks.
+
+*** 10.02.33 P2 Gaps
+1. Contracts are descriptive symbols only.
+2. There is no flow serialization or export format.
+3. There is no adapter capability negotiation beyond simple symbol membership.
+
+** 10.02.40 POO-First Direction
+The strongest Gerbil POO version should not be a thin record wrapper around a
+Haskell-inspired API. The object model should make extension cheap.
+
+The direction is:
+- Keep records for low-level data that needs predictable construction,
+  printing, tests, and future Rust serialization.
+- Use POO prototypes for role behavior, strategy mixins, task-family
+  descriptors, and adapter capability declarations.
+- Let strategies compose POO policies: planning, cache policy, failure policy,
+  adapter routing, and future branch scheduling.
+- Let task families provide POO descriptors that say how they are planned,
+  whether they can run locally, and how they lower into adapter requests.
+- Keep the runner small: it validates a plan, interprets plan nodes, delegates
+  heavy work, and emits receipts.
+
+This gives Gerbil the high-abstraction role the project wants: Scheme becomes
+the policy language for object protocols and workflow meaning, while Rust
+implements the heavy runtime behind stable request boundaries.
+
+** 10.02.50 Milestone Plan
+*** 10.02.51 M1 Explicit Execution Plan
+Add plan objects and make =strategy-plan= return an execution plan instead of
+raw steps. The runner interprets plan nodes and receipts can start carrying
+node identity.
+
+Exit criteria:
+- =execution-plan= and =plan-node= are exported.
+- =runner-plan= returns an execution plan.
+- Existing sequential flows still run.
+- Tests assert plan node identity and kind.
+
+*** 10.02.52 M2 POO-Backed Task And Flow Descriptors
+Attach POO role descriptors to task families and flow declarations. The goal is
+not inheritance theater; it is to let extension code add new task families and
+planning behavior without editing the runner.
+
+Exit criteria:
+- Task-family descriptors exist for pure, Scheme, store, and external tasks.
+- Descriptors expose local/adapter routing policy.
+- The runner no longer needs hard-coded knowledge of every task family.
+
+*** 10.02.53 M3 Branch And Parallel Composition
+Add a declaration surface for pair/branch/parallel flow composition. The first
+version can be request-only for heavy parallel scheduling, but plan shape must
+represent a DAG rather than only a linear list.
+
+Exit criteria:
+- Branch nodes exist in execution plans.
+- Pure branch flows can run locally.
+- Store/external branch plans can be delegated to a host runtime.
+
+*** 10.02.54 M4 Host Runtime Request Schema
+Stabilize the Rust-facing request and receipt schema. This is the contract
+that lets the Scheme control plane ask Rust to run store, container, process,
+or scheduler operations.
+
+Exit criteria:
+- Requests include operation, payload, contracts, flow name, plan node id, and
+  policy hints.
+- Adapter results have stable status and artifact fields.
+- Receipt data can round-trip through a future Rust boundary.
+
+*** 10.02.55 M5 Store And Cache Semantics
+Model content-store and cache policy as first-class strategy objects.
+
+Exit criteria:
+- Store put/get are separate task-family semantics, not generic externals.
+- Cache policy can be selected per strategy.
+- Receipts distinguish cache hit, miss, bypass, and request-only states.
+
+*** 10.02.56 M6 Configured Runner And Rust Adapter
+Add a configured runner entrypoint and the first Rust-backed adapter.
+
+Exit criteria:
+- =run-flow-with-config= or equivalent exists.
+- Request-only adapter remains as a test double.
+- Rust adapter can receive at least one store/external request.
+
+** 10.02.60 Immediate Implementation Slice
+The next code slice is M1.
+
+Add an explicit linear plan module now, because every later feature depends on
+the declaration/planning/interpreter boundary:
+- =flow->linear-plan= converts a flow into an =execution-plan=.
+- Each =plan-node= has an id, ordinal, step, kind, and name.
+- =strategy-plan= delegates to =flow->linear-plan= through the strategy's
+  planner.
+- =runner-run= validates and interprets the plan nodes.
+
+This is intentionally small but functional. It keeps current flows runnable
+while creating the place where POO task-family descriptors, branching, cache
+policy, and Rust request schema will land.
+
+** 10.02.70 Harness Integration Receipt
+The Gerbil language project harness is now part of the project policy surface,
+not just a passive package dependency.
+
+The package policy sets =source-scope= roots to =.= so harness checks cover the
+package's current Gerbil sources: build scripts, harness policy, runtime
+modules, API aggregation, and tests. =runtime-roots= remains =src= because that
+is the runtime loadpath root.
+
+The package-owned =harness-policy/gerbil.ss= file only supplies local threshold
+overrides. It does not disable the default harness policy suite.
+
+Current receipt:
+- =asp gerbil-scheme check= reports =scope=full= and policy warnings across
+  the package's =.ss= owners.
+- The former same-level owner ambiguity between =src/poo-flow.ss= and
+  =src/poo-flow/= is removed by moving the aggregate API to
+  =src/poo-flow/api.ss=.
+- Remaining warnings are real follow-up work: typed-combinator-style contracts,
+  named-let replacement in =plan.ss=, and engineering comment quality.

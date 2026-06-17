@@ -1,4 +1,4 @@
-(import :poo-flow/flow
+(import :poo-flow/plan
         :poo-flow/task)
 
 (export make-strategy
@@ -28,7 +28,7 @@
                  default-linear-plan))
 
 (def (default-linear-plan flow)
-  (flow-steps flow))
+  (flow->linear-plan flow))
 
 (def (strategy-plan strategy flow)
   ((strategy-planner strategy) flow))

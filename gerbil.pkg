@@ -2,11 +2,14 @@
  depend: ("git.cons.io/mighty-gerbils/gerbil-poo"
           "github.com/tao3k/gerbil-scheme-language-project-harness")
  policy: ((source-scope
-           roots: ("src")
+           roots: (".")
            runtime-roots: ("src")
-           explanation: "Gerbil owns the workflow control plane. Heavy execution remains behind runtime adapters.")
+           explanation: "The Gerbil language project harness covers every .ss file in this package; src remains the runtime loadpath root.")
           (runtime-boundary
            heavy-owners: ("rust" "external-runtime")
            explanation: "CAS, Docker, subprocesses, parallel scheduling, and durable persistence are not Scheme-owned.")
+          (modularity-policy
+           config: "harness-policy/gerbil.ss"
+           explanation: "This package-owned config only supplies policy thresholds; the harness default policy suite remains enabled across the full source scope.")
           (poo-control-plane
            explanation: "Flow, task, strategy, runner, adapter, and receipt objects form the first Gerbil POO surface.")))

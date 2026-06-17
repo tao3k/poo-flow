@@ -1,6 +1,7 @@
 (import :poo-flow/receipt
         :poo-flow/task
         :poo-flow/flow
+        :poo-flow/plan
         :poo-flow/strategy
         :poo-flow/runtime-adapter)
 
@@ -28,11 +29,17 @@
   (strategy-plan (runner-strategy runner) flow))
 
 (def (runner-validate runner flow)
+  (runner-validate-plan runner (runner-plan runner flow)))
+
+(def (runner-validate-plan runner plan)
   (let ((strategy (runner-strategy runner))
         (adapter (runner-adapter runner)))
-    (for-each (lambda (step) (validate-step strategy adapter step))
-              (flow-steps flow))
+    (for-each (lambda (node) (validate-plan-node strategy adapter node))
+              (execution-plan-nodes plan))
     #t))
+
+(def (validate-plan-node strategy adapter node)
+  (validate-step strategy adapter (plan-node-step node)))
 
 (def (validate-step strategy adapter step)
   (when (task? step)
@@ -46,51 +53,53 @@
       (error "adapter does not support task kind" (task-kind task)))))
 
 (def (runner-run runner flow input)
-  (runner-validate runner flow)
   (let ((strategy (runner-strategy runner)))
-    (let ((result (run-steps runner flow strategy (runner-plan runner flow) input '())))
-      (let ((value (car result))
-            (children (reverse (cdr result))))
-        (make-run-result
-         value
-         (make-receipt (flow-name flow)
-                       #f
-                       'flow
-                       (strategy-name strategy)
-                       'local
-                       #f
-                       input
-                       value
-                       'no-cache
-                       'ok
-                       #f
-                       children))))))
+    (let ((plan (runner-plan runner flow)))
+      (runner-validate-plan runner plan)
+      (let ((result (run-plan-nodes runner plan strategy (execution-plan-nodes plan) input '())))
+        (let ((value (car result))
+              (children (reverse (cdr result))))
+          (make-run-result
+           value
+           (make-receipt (execution-plan-flow-name plan)
+                         #f
+                         'flow
+                         (strategy-name strategy)
+                         'local
+                         #f
+                         input
+                         value
+                         'no-cache
+                         'ok
+                         #f
+                         children)))))))
 
-(def (run-steps runner flow strategy steps input receipts)
-  (if (null? steps)
+(def (run-plan-nodes runner plan strategy nodes input receipts)
+  (if (null? nodes)
     (cons input receipts)
-    (let* ((step (car steps))
-           (step-result (run-step runner flow strategy step input))
+    (let* ((node (car nodes))
+           (step-result (run-plan-node runner plan strategy node input))
            (value (car step-result))
            (receipt (cdr step-result)))
-      (run-steps runner flow strategy (cdr steps) value (cons receipt receipts)))))
+      (run-plan-nodes runner plan strategy (cdr nodes) value (cons receipt receipts)))))
 
-(def (run-step runner flow strategy step input)
-  (cond
-   ((task? step)
-    (run-task runner flow strategy step input))
-   ((flow? step)
-    (let ((nested (runner-run runner step input)))
-      (cons (run-result-value nested) (run-result-receipt nested))))
-   (else
-    (error "flow step is neither task nor flow" step))))
+(def (run-plan-node runner plan strategy node input)
+  (let ((step (plan-node-step node)))
+    (cond
+     ((task? step)
+      (run-task runner plan strategy step input))
+     ((flow? step)
+      (let ((nested (runner-run runner step input)))
+        (cons (run-result-value nested) (run-result-receipt nested))))
+     (else
+      (error "flow step is neither task nor flow" step)))))
 
-(def (run-task runner flow strategy task input)
+(def (run-task runner plan strategy task input)
   (cond
    ((strategy-can-run-locally? strategy task)
     (let ((value ((task-executor task) input)))
       (cons value
-            (make-receipt (flow-name flow)
+            (make-receipt (execution-plan-flow-name plan)
                           (task-name task)
                           (task-kind task)
                           (strategy-name strategy)
@@ -106,7 +115,7 @@
     (let* ((request (task-normalized-request task input))
            (adapter-result (adapter-submit (runner-adapter runner) request)))
       (cons adapter-result
-            (make-receipt (flow-name flow)
+            (make-receipt (execution-plan-flow-name plan)
                           (task-name task)
                           (task-kind task)
                           (strategy-name strategy)

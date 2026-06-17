@@ -14,7 +14,7 @@
         role-compose
         role-object?)
 
-;; These prototypes are the high-level POO control-plane descriptors.
+;; These prototypes are the high-level POO control-plane role descriptors.
 ;; Runtime records remain thin adapters until the Rust boundary is stable.
 (def control-plane-role
   (.o (name 'control-plane)

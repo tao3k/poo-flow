@@ -1,5 +1,5 @@
 (import :std/test
-        :poo-flow)
+        :poo-flow/api)
 
 (def pure-flow-test
   (test-suite "pure flow"
@@ -30,6 +30,57 @@
         (check-equal? (receipt-adapter-decision child) 'request-only)
         (check-equal? (adapter-result-status (run-result-value result)) 'requested)))))
 
+(def funflow-api-test
+  (test-suite "funflow-style flow api"
+    (test-case "builds and runs flow-level smart constructors"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (double (scheme-flow 'double (lambda (x) (* x 2)) 'number 'number))
+             (pipeline (flow-then 'inc-then-double inc double))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner pipeline 4)))
+        (check-equal? (flow-step-count pipeline) 2)
+        (check-equal? (flow-input-contract pipeline) 'number)
+        (check-equal? (flow-output-contract pipeline) 'number)
+        (check-equal? (run-result-value result) 10)))
+    (test-case "keeps return-flow as identity"
+      (let* ((identity (return-flow 'return-number 'number))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner identity 11)))
+        (check-equal? (run-result-value result) 11)))
+    (test-case "lowers external-flow into adapter request"
+      (let* ((compile (external-flow 'compile 'rust-build '((crate . "poo-flow")) 'artifact 'artifact))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (result (runner-run runner compile 'input-artifact))
+             (receipt (run-result-receipt result))
+             (child (car (receipt-children receipt))))
+        (check-equal? (receipt-flow receipt) 'compile)
+        (check-equal? (receipt-kind child) 'external)
+        (check-equal? (adapter-result-status (run-result-value result)) 'requested)))))
+
+(def execution-plan-test
+  (test-suite "execution plan"
+    (test-case "strategy lowers flows into named plan nodes"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (double (scheme-flow 'double (lambda (x) (* x 2)) 'number 'number))
+             (pipeline (flow-then 'inc-then-double inc double))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (plan (runner-plan runner pipeline))
+             (nodes (execution-plan-nodes plan))
+             (first-node (car nodes))
+             (second-node (cadr nodes)))
+        (check-equal? (execution-plan-flow-name plan) 'inc-then-double)
+        (check-equal? (plan-node-count plan) 2)
+        (check-equal? (plan-node-id first-node) '(node inc-then-double 0 pure inc))
+        (check-equal? (plan-node-kind first-node) 'pure)
+        (check-equal? (plan-node-name first-node) 'inc)
+        (check-equal? (plan-node-id second-node) '(node inc-then-double 1 scheme double))
+        (check-equal? (plan-node-kind second-node) 'scheme)
+        (check-equal? (plan-node-name second-node) 'double)))))
+
 (def poo-role-test
   (test-suite "poo role descriptors"
     (test-case "declares control-plane roles as Gerbil POO objects"
@@ -44,4 +95,4 @@
         (check-equal? (role-name composed) 'runtime-adapter)
         (check-equal? (role-runtime-owner composed) 'rust-or-external-runtime)))))
 
-(run-tests! pure-flow-test adapter-request-test poo-role-test)
+(run-tests! pure-flow-test adapter-request-test funflow-api-test execution-plan-test poo-role-test)
