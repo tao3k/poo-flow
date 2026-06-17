@@ -9,6 +9,7 @@
         :core/plan
         :core/strategy
         :core/runtime-adapter
+        :core/replay
         :core/runner)
 
 (export (import: :core/roles)
@@ -18,4 +19,5 @@
         (import: :core/plan)
         (import: :core/strategy)
         (import: :core/runtime-adapter)
+        (import: :core/replay)
         (import: :core/runner))

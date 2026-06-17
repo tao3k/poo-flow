@@ -11,6 +11,7 @@
         runner-role
         runtime-adapter-role
         receipt-role
+        replay-role
         role-name
         role-kind
         role-responsibility
@@ -70,6 +71,13 @@
       (name 'receipt)
       (kind 'evidence)
       (responsibility 'execution-explanation)))
+
+;; Role <- Unit
+(def replay-role
+  (.o (:: @ control-plane-role)
+      (name 'replay)
+      (kind 'policy)
+      (responsibility 'audit-validation)))
 
 ;; Symbol <- Role
 (def (role-name role)

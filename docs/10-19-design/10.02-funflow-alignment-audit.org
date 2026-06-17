@@ -156,7 +156,19 @@ Exit criteria:
 - Cache policy can be selected per strategy.
 - Receipts distinguish cache hit, miss, bypass, and request-only states.
 
-*** 10.02.56 M6 Configured Runner And Rust Adapter
+*** 10.02.56 M6 Replay Policy And Audit Validation
+Add a replay policy layer that validates receipts against the execution plan
+without re-running tasks. This closes the gap between having receipts and
+trusting those receipts as replay baselines.
+Exit criteria:
+- Receipts carry plan node identity separately from task identity.
+- A replay module validates root frontier, child count, node order, child
+frontiers, root status, and exported summary counts.
+- Runner exposes a one-call replay report path for a flow execution.
+- API, build, POO role descriptors, tests, and docs expose the replay owner.
+- Replay validation remains pure control-plane logic; execution replay and
+durable persistence remain Rust/runtime follow-ups.
+*** 10.02.57 M7 Configured Runner And Rust Adapter
 Add a configured runner entrypoint and the first Rust-backed adapter.
 
 Exit criteria:

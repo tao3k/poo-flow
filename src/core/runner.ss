@@ -7,7 +7,8 @@
         :core/flow
         :core/plan
         :core/strategy
-        :core/runtime-adapter)
+        :core/runtime-adapter
+        :core/replay)
 
 (export make-run-result
         run-result?
@@ -21,7 +22,8 @@
         runner-ready-frontier
         runner-ready-frontier-ids
         runner-validate
-        runner-run)
+        runner-run
+        runner-run-replay-report)
 
 ;; RunResult <- Value Receipt
 (defstruct run-result
@@ -58,6 +60,14 @@
 ;; Boolean <- Runner Flow
 (def (runner-validate runner flow)
   (runner-validate-plan runner (runner-plan runner flow)))
+
+;;; Replay reporting runs the normal interpreter first, then validates the
+;;; emitted receipt against the same plan that drove execution.
+;; ReplayReport <- Runner Flow Input
+(def (runner-run-replay-report runner flow input)
+  (let* ((plan (runner-plan runner flow))
+         (result (runner-run runner flow input)))
+    (validate-replay-report plan (run-result-receipt result))))
 
 ;;; Boundary: validation is the only pre-run traversal over planned nodes.
 ;;; Invariant: each node is checked against both strategy and adapter support.
@@ -101,6 +111,7 @@
            (make-receipt (execution-plan-flow-name plan)
                          #f
                          'flow
+                         #f
                          (strategy-name strategy)
                          'local
                          #f
@@ -151,6 +162,7 @@
             (make-receipt (execution-plan-flow-name plan)
                           (task-name task)
                           (task-kind task)
+                          (plan-node-id node)
                           (strategy-name strategy)
                           'local
                           #f
@@ -174,6 +186,7 @@
             (make-receipt (execution-plan-flow-name plan)
                           (task-name task)
                           (task-kind task)
+                          (plan-node-id node)
                           (strategy-name strategy)
                           (runtime-adapter-name (runner-adapter runner))
                           (adapter-result-request-id adapter-result)

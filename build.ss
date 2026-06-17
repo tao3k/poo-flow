@@ -10,5 +10,6 @@
     "src/core/plan"
     "src/core/strategy"
     "src/core/runtime-adapter"
+    "src/core/replay"
     "src/core/runner"
     "src/core/api"))

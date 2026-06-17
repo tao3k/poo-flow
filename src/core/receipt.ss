@@ -7,6 +7,7 @@
         receipt-flow
         receipt-task
         receipt-kind
+        receipt-node-id
         receipt-strategy
         receipt-adapter-decision
         receipt-request-id
@@ -28,11 +29,14 @@
 ;;; flatten or discard subflow receipts.
 ;;; Frontier evidence records which plan node ids were ready before the
 ;;; observed execution point, keeping scheduler policy inspectable after a run.
-;; Receipt <- Flow Task Symbol Strategy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt]
+;;; Node identity is captured separately from task identity so replay policy can
+;;; detect ordering drift even when task names repeat.
+;; Receipt <- Flow Task Symbol NodeId Strategy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt]
 (defstruct receipt
   (flow
    task
    kind
+   node-id
    strategy
    adapter-decision
    request-id
@@ -103,6 +107,7 @@
         (cons 'flow (receipt-flow receipt))
         (cons 'task (receipt-task receipt))
         (cons 'kind (receipt-kind receipt))
+        (cons 'node-id (receipt-node-id receipt))
         (cons 'strategy (receipt-strategy receipt))
         (cons 'adapter-decision (receipt-adapter-decision receipt))
         (cons 'request-id (receipt-request-id receipt))
