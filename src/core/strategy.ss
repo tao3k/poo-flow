@@ -2,7 +2,8 @@
 ;;; Boundary: strategies choose planning policy, not runtime execution.
 ;;; Invariant: heavy execution remains in runner/runtime-adapter code.
 
-(import :core/plan
+(import :core/flow
+        :core/plan
         :core/task)
 
 (export make-strategy
@@ -15,6 +16,7 @@
         make-local-eager-strategy
         make-cached-local-eager-strategy
         strategy-plan
+        strategy-planner-for-flow
         strategy-can-select-frontier?
         strategy-ready-frontier
         strategy-ready-frontier-ids
@@ -58,7 +60,16 @@
 
 ;; ExecutionPlan <- Strategy Flow
 (def (strategy-plan strategy flow)
-  ((strategy-planner strategy) flow))
+  ((strategy-planner-for-flow strategy flow) flow))
+
+;;; Flow descriptors declare the planner policy; strategies bind supported
+;;; descriptor planner names to concrete plan functions.
+;; Planner <- Strategy Flow
+(def (strategy-planner-for-flow strategy flow)
+  (let ((planner (flow-declaration-planner (flow-declaration-descriptor flow))))
+    (cond
+     ((eq? planner 'linear-dag) (strategy-planner strategy))
+     (else (error "strategy does not support flow planner" planner)))))
 
 ;;; Frontier support is capability-gated so later strategies can opt out of
 ;;; graph scheduling without changing the execution-plan data model.

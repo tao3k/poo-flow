@@ -50,9 +50,10 @@ The current Gerbil implementation has a useful first control-plane slice:
 - =task.ss= has POO-backed task-family descriptors, pure, Scheme, store, and
   external tasks, descriptor-driven routing policy, and normalized execution
   requests.
-- =flow.ss= has flow composition, Funflow-style smart constructors, and
-branch composition that fans out over left/right subflows.
-- =strategy.ss= has a local eager strategy.
+- =flow.ss= has POO-backed flow declaration descriptors, flow composition,
+Funflow-style smart constructors, and branch composition that fans out over
+left/right subflows.
+- =strategy.ss= has descriptor-aware planning with a local eager strategy.
 - =plan.ss= lowers branch composition into DAG-shaped fan-out and join nodes.
 - =runtime-adapter.ss= has request-only and Rust handoff adapters for
 store/external work.
@@ -61,31 +62,27 @@ into adapter requests.
 - =config.ss= provides a Funflow-style configured runner entrypoint.
 - =receipt.ss= records execution evidence with child receipts.
 
-This is enough to run a small sequential workflow, and the task-family layer is
-now less record-shaped: descriptor policy drives local/adapter routing and
-adapter channel selection. The remaining POO extension gap is flow declaration
-and planning policy extension.
+This is enough to run a small sequential workflow, and the declaration layer is
+now less record-shaped: descriptor policy drives task routing, adapter channel
+selection, flow declaration classification, and planner selection. The
+remaining POO extension gap is registering new descriptor families outside the
+core owners.
 
 ** 10.02.30 Alignment Gaps
 *** 10.02.31 P0 Gaps
-1. The planner returns raw flow steps instead of an explicit execution plan.
-   This blurs the boundary between declaration and interpretation.
-2. Flow/task POO descriptors are not attached to executable declarations.
-   POO is still metadata, not the object protocol that powers extension.
-3. Store/external requests are adapter-routed, but there is no stable
-   host-runtime request schema for Rust to implement.
-4. Receipts do not distinguish plan node identity from task identity, which
-   will make retries, cache hits, and graph evidence ambiguous.
+1. Descriptor families are still registered in core owner lists. Extension code
+cannot yet add task or flow families without editing core modules.
+2. Rust handoff remains a Scheme-side request envelope stub rather than a real
+host process bridge.
+3. Typed execution failures are not modeled; control-plane errors still use
+generic =error= calls.
 
 *** 10.02.32 P1 Gaps
 1. Branch DAG composition exists, but there is not yet a true parallel
 runtime scheduler comparable to Funflow's heavy execution path.
-2. Cache/store semantics are named but not modeled as policy objects.
-3. Error handling is still generic =error= calls rather than typed execution
-   failures.
-4. A configured runner entrypoint exists, but the Rust handoff is still a
-Scheme-side request envelope stub rather than a process bridge.
-5. Docker/container tasks are only represented as generic external tasks.
+2. Cache/store receipt semantics exist, but durable CAS/cache materialization
+is still a runtime follow-up.
+3. Docker/container tasks are only represented as generic external tasks.
 
 *** 10.02.33 P2 Gaps
 1. Contracts are descriptive symbols only.
@@ -138,11 +135,16 @@ Implementation receipt:
   instead of directly classifying task families.
 - Store put/get channel selection is translated by the task owner, leaving the
   runner to dispatch adapter operations rather than inspect task-family names.
+- Flow declaration descriptors exist for task, sequential, branch, and empty
+  flow shapes.
+- Strategy planning reads flow descriptor planner policy before lowering a
+  flow to an execution plan.
 
 Exit criteria:
 - Task-family descriptors exist for pure, Scheme, store, and external tasks.
 - Descriptors expose local/adapter routing policy.
 - The runner no longer needs hard-coded knowledge of every task family.
+- Flow descriptor policy selects the supported planner path.
 
 *** 10.02.53 M3 Branch And Parallel Composition
 Add a declaration surface for pair/branch/parallel flow composition. The first
@@ -224,15 +226,17 @@ and join plan nodes, local pure branch execution, Rust handoff for
 store/external branch arms, first-class store put/get dispatch, and receipt
 cache evidence for hit, miss, bypass, and request-only states. It also has
 POO-backed task-family descriptors for capability, routing, runtime owner, and
-adapter dispatch policy. The runner interprets the DAG in topological order
-and records one top-level receipt per planned node, while heavy parallel
-scheduling and durable cache materialization remain outside Scheme.
-The next functional slice should extend the POO layer from task routing into
-flow and planning extension:
-- Attach descriptor metadata to flow declarations and extension points.
-- Let strategies select planning behavior from descriptor policy.
-- Keep extension descriptors declarative so Rust/runtime remains the owner for
-  heavy execution.
+adapter dispatch policy, plus POO-backed flow declaration descriptors for
+planner policy. The runner interprets the DAG in topological order and records
+one top-level receipt per planned node, while heavy parallel scheduling and
+durable cache materialization remain outside Scheme.
+The next functional slice should move descriptor extension toward an external
+registration surface:
+- Allow additional task or flow descriptor families to be registered without
+  editing the core owner lists.
+- Keep registration declarative and policy-only.
+- Keep Rust/runtime as the owner for heavy execution attached to registered
+  descriptors.
 
 
 ** 10.02.70 Harness Integration Receipt
