@@ -78,9 +78,12 @@
         (check-equal? (plan-node-id first-node) '(node inc-then-double 0 pure inc))
         (check-equal? (plan-node-kind first-node) 'pure)
         (check-equal? (plan-node-name first-node) 'inc)
+        (check-equal? (plan-node-dependencies first-node) '())
         (check-equal? (plan-node-id second-node) '(node inc-then-double 1 scheme double))
         (check-equal? (plan-node-kind second-node) 'scheme)
-        (check-equal? (plan-node-name second-node) 'double)))))
+        (check-equal? (plan-node-name second-node) 'double)
+        (check-equal? (plan-node-dependencies second-node)
+                      '((node inc-then-double 0 pure inc)))))))
 
 (def strategy-cache-test
   (test-suite "strategy cache policy"
