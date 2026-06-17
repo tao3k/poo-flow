@@ -169,6 +169,47 @@
         (check-equal? (receipt-frontier (caddr children))
                       '((node frontier-demo 2 pure label)))))))
 
+(def receipt-audit-test
+  (test-suite "receipt audit summary"
+    (test-case "exports replay events in execution order"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (double (scheme-flow 'double (lambda (x) (* x 2)) 'number 'number))
+             (label (pure-flow 'label (lambda (x) x) 'number 'number))
+             (pipeline (flow-then 'audit-demo
+                                  (flow-then 'inc-then-double inc double)
+                                  label))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (receipt (run-result-receipt (runner-run runner pipeline 2)))
+             (summary (receipt->run-summary receipt))
+             (events (cdr (assoc 'events summary)))
+             (root-event (car events))
+             (first-event (cadr events))
+             (third-event (cadddr events)))
+        (check-equal? (cdr (assoc 'event-count summary)) 4)
+        (check-equal? (receipt-event-count receipt) 4)
+        (check-equal? (cdr (assoc 'adapter-request-count summary)) 0)
+        (check-equal? (receipt-adapter-request-count receipt) 0)
+        (check-equal? (cdr (assoc 'path root-event)) '())
+        (check-equal? (cdr (assoc 'path first-event)) '(0))
+        (check-equal? (cdr (assoc 'path third-event)) '(2))
+        (check-equal? (cdr (assoc 'frontier root-event))
+                      '((node audit-demo 0 pure inc)))
+        (check-equal? (cdr (assoc 'task third-event)) 'label)))
+    (test-case "counts adapter request receipts"
+      (let* ((external (external-flow 'compile 'rust-build '((crate . "poo-flow")) 'artifact 'artifact))
+             (runner (make-runner (make-local-eager-strategy)
+                                  (make-request-only-adapter)))
+             (receipt (run-result-receipt (runner-run runner external 'input-artifact)))
+             (summary (receipt->run-summary receipt))
+             (events (cdr (assoc 'events summary)))
+             (child-event (cadr events)))
+        (check-equal? (cdr (assoc 'event-count summary)) 2)
+        (check-equal? (cdr (assoc 'adapter-request-count summary)) 1)
+        (check-equal? (cdr (assoc 'request-id child-event))
+                      '(request compile external))
+        (check-equal? (cdr (assoc 'adapter-decision child-event)) 'request-only)))))
+
 (def strategy-cache-test
   (test-suite "strategy cache policy"
     (test-case "records cache intent in task receipts"
@@ -201,6 +242,7 @@
             funflow-api-test
             execution-plan-test
             strategy-frontier-test
+            receipt-audit-test
             strategy-cache-test
             poo-role-test
             project-policy-test)
