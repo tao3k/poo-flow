@@ -1,0 +1,12 @@
+(package: poo-flow
+ depend: ("git.cons.io/mighty-gerbils/gerbil-poo"
+          "github.com/tao3k/gerbil-scheme-language-project-harness")
+ policy: ((source-scope
+           roots: ("src")
+           runtime-roots: ("src")
+           explanation: "Gerbil owns the workflow control plane. Heavy execution remains behind runtime adapters.")
+          (runtime-boundary
+           heavy-owners: ("rust" "external-runtime")
+           explanation: "CAS, Docker, subprocesses, parallel scheduling, and durable persistence are not Scheme-owned.")
+          (poo-control-plane
+           explanation: "Flow, task, strategy, runner, adapter, and receipt objects form the first Gerbil POO surface.")))
