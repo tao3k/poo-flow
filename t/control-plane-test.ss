@@ -1,5 +1,5 @@
 (import :std/test
-        :poo-flow/api
+        :core/api
         :project-policy-test)
 
 (def pure-flow-test

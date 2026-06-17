@@ -307,12 +307,12 @@ Create the Gerbil package structure, =gerbil.pkg=, and protocol modules.
 
 Expected modules:
 
-- =src/poo-flow/flow.ss=
-- =src/poo-flow/task.ss=
-- =src/poo-flow/strategy.ss=
-- =src/poo-flow/runner.ss=
-- =src/poo-flow/runtime-adapter.ss=
-- =src/poo-flow/receipt.ss=
+- =src/core/flow.ss=
+- =src/core/task.ss=
+- =src/core/strategy.ss=
+- =src/core/runner.ss=
+- =src/core/runtime-adapter.ss=
+- =src/core/receipt.ss=
 
 *** 10.01.112 Slice 2: Local Runnable Control Plane
 

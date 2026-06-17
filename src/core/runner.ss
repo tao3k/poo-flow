@@ -2,12 +2,12 @@
 ;;; Boundary: runner interprets plans and emits receipts.
 ;;; Invariant: adapter calls remain behind runtime-adapter functions.
 
-(import :poo-flow/receipt
-        :poo-flow/task
-        :poo-flow/flow
-        :poo-flow/plan
-        :poo-flow/strategy
-        :poo-flow/runtime-adapter)
+(import :core/receipt
+        :core/task
+        :core/flow
+        :core/plan
+        :core/strategy
+        :core/runtime-adapter)
 
 (export make-run-result
         run-result?

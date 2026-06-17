@@ -16,7 +16,7 @@ The audit sources are:
 - =.data/funflow/funflow/src/Funflow/Flow.hs=
 - =.data/funflow/funflow/src/Funflow/Run.hs=
 - =docs/10-19-design/10.01-gerbil-poo-funflow-control-plane.org=
-- =src/poo-flow/*.ss=
+- =src/core/*.ss=
 - =t/control-plane-test.ss=
 
 ** 10.02.10 Funflow Reference Surface
@@ -194,8 +194,8 @@ overrides. It does not disable the default harness policy suite.
 Current receipt:
 - =asp gerbil-scheme check= reports =scope=full= and policy warnings across
   the package's =.ss= owners.
-- The former same-level owner ambiguity between =src/poo-flow.ss= and
-  =src/poo-flow/= is removed by moving the aggregate API to
-  =src/poo-flow/api.ss=.
+- The former same-level owner ambiguity between =src/core.ss= and
+  =src/core/= is removed by moving the aggregate API to
+  =src/core/api.ss=.
 - Remaining warnings are real follow-up work: typed-combinator-style contracts,
   named-let replacement in =plan.ss=, and engineering comment quality.

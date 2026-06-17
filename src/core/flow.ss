@@ -2,7 +2,7 @@
 ;;; Boundary: flows describe workflow composition and contract shape.
 ;;; Invariant: task execution is deferred to runner/runtime-adapter code.
 
-(import :poo-flow/task)
+(import :core/task)
 
 (export make-flow
         flow?
