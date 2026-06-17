@@ -47,8 +47,9 @@ dependencies that should stay outside the Scheme control plane for this repo.
 The current Gerbil implementation has a useful first control-plane slice:
 - =roles.ss= declares POO role descriptors for flow, task, strategy, runner,
   runtime adapter, and receipt.
-- =task.ss= has pure, Scheme, store, and external tasks plus normalized
-  execution requests.
+- =task.ss= has POO-backed task-family descriptors, pure, Scheme, store, and
+  external tasks, descriptor-driven routing policy, and normalized execution
+  requests.
 - =flow.ss= has flow composition, Funflow-style smart constructors, and
 branch composition that fans out over left/right subflows.
 - =strategy.ss= has a local eager strategy.
@@ -60,9 +61,10 @@ into adapter requests.
 - =config.ss= provides a Funflow-style configured runner entrypoint.
 - =receipt.ss= records execution evidence with child receipts.
 
-This is enough to run a small sequential workflow, but the architecture is
-still too record-shaped. The POO layer currently names roles; it does not yet
-drive task-family extension, planning, or adapter selection.
+This is enough to run a small sequential workflow, and the task-family layer is
+now less record-shaped: descriptor policy drives local/adapter routing and
+adapter channel selection. The remaining POO extension gap is flow declaration
+and planning policy extension.
 
 ** 10.02.30 Alignment Gaps
 *** 10.02.31 P0 Gaps
@@ -126,6 +128,16 @@ Exit criteria:
 Attach POO role descriptors to task families and flow declarations. The goal is
 not inheritance theater; it is to let extension code add new task families and
 planning behavior without editing the runner.
+
+Implementation receipt:
+- Task-family descriptors exist as Gerbil POO objects for pure, Scheme, store,
+  and external task families.
+- Descriptors expose capability, local/adapter route, runtime owner, and
+  adapter dispatch policy.
+- Strategy and runner validation read descriptor capabilities and routes
+  instead of directly classifying task families.
+- Store put/get channel selection is translated by the task owner, leaving the
+  runner to dispatch adapter operations rather than inspect task-family names.
 
 Exit criteria:
 - Task-family descriptors exist for pure, Scheme, store, and external tasks.
@@ -205,20 +217,21 @@ Exit criteria:
 - Rust adapter can receive at least one store/external request.
 
 ** 10.02.60 Immediate Implementation Slice
-The current code slice is M5.
+The current code slice closes M2 on top of the M5 runtime/cache slice.
 
 The implementation now has a branch declaration surface, DAG-shaped branch arm
 and join plan nodes, local pure branch execution, Rust handoff for
 store/external branch arms, first-class store put/get dispatch, and receipt
-cache evidence for hit, miss, bypass, and request-only states. The runner
-interprets the DAG in topological order and records one top-level receipt per
-planned node, while heavy parallel scheduling and durable cache materialization
-remain outside Scheme.
-The next functional slice should close the remaining M2 descriptor gap:
-- Attach task-family descriptors to pure, Scheme, store, and external tasks.
-- Move runner routing decisions behind POO descriptor policy instead of direct
-  task-kind checks.
-- Keep the descriptor layer declarative so Rust/runtime remains the owner for
+cache evidence for hit, miss, bypass, and request-only states. It also has
+POO-backed task-family descriptors for capability, routing, runtime owner, and
+adapter dispatch policy. The runner interprets the DAG in topological order
+and records one top-level receipt per planned node, while heavy parallel
+scheduling and durable cache materialization remain outside Scheme.
+The next functional slice should extend the POO layer from task routing into
+flow and planning extension:
+- Attach descriptor metadata to flow declarations and extension points.
+- Let strategies select planning behavior from descriptor policy.
+- Keep extension descriptors declarative so Rust/runtime remains the owner for
   heavy execution.
 
 

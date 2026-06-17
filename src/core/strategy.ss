@@ -84,7 +84,7 @@
 
 ;; Boolean <- Strategy Task
 (def (strategy-can-run-locally? strategy task)
-  (and (memq (task-kind task) (strategy-capabilities strategy))
+  (and (memq (task-capability task) (strategy-capabilities strategy))
        (task-local? task)))
 
 ;;; Cache decisions are evidence values, not storage actions; runners copy them

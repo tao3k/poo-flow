@@ -2,6 +2,9 @@
 ;;; Boundary: tasks describe work intent and adapter request shape.
 ;;; Invariant: only pure/scheme tasks carry an in-process executor.
 
+(import (only-in :clan/poo/object .o .@ object?)
+        :core/roles)
+
 (export make-task
         task?
         task-name
@@ -10,6 +13,24 @@
         task-input-contract
         task-output-contract
         task-executor
+        make-task-family-descriptor
+        task-family-descriptor?
+        pure-task-family-descriptor
+        scheme-task-family-descriptor
+        store-task-family-descriptor
+        external-task-family-descriptor
+        task-family-descriptors
+        task-family-name
+        task-family-capability
+        task-family-route
+        task-family-runtime-owner
+        task-family-adapter-dispatch
+        task-family-for-kind
+        task-descriptor
+        task-capability
+        task-route
+        task-runtime-owner
+        task-adapter-operation
         make-pure-task
         make-scheme-task
         make-store-task
@@ -47,6 +68,110 @@
    output-contract
    executor)
   transparent: #t)
+
+;;; Task-family descriptors are POO objects because extension policy should be
+;;; data-driven at the task boundary, not hard-coded in the runner.
+;; TaskFamilyDescriptor <- Symbol Symbol Symbol Symbol AdapterDispatch
+(def (make-task-family-descriptor family-name family-capability family-route family-runtime-owner family-adapter-dispatch)
+  (.o (:: @ task-role)
+      (name family-name)
+      (kind 'task-family)
+      (capability family-capability)
+      (route family-route)
+      (runtime-owner family-runtime-owner)
+      (adapter-dispatch family-adapter-dispatch)
+      (responsibility (list 'task-family family-route family-capability))))
+
+;; Boolean <- TaskFamilyDescriptorCandidate
+(def (task-family-descriptor? descriptor)
+  (and (object? descriptor)
+       (eq? (.@ descriptor kind) 'task-family)))
+
+;; TaskFamilyDescriptor <- Unit
+(def pure-task-family-descriptor
+  (make-task-family-descriptor 'pure 'pure 'local 'gerbil #f))
+
+;; TaskFamilyDescriptor <- Unit
+(def scheme-task-family-descriptor
+  (make-task-family-descriptor 'scheme 'scheme 'local 'gerbil #f))
+
+;; TaskFamilyDescriptor <- Unit
+(def store-task-family-descriptor
+  (make-task-family-descriptor 'store 'store 'adapter 'rust-or-external-runtime 'store))
+
+;; TaskFamilyDescriptor <- Unit
+(def external-task-family-descriptor
+  (make-task-family-descriptor 'external 'external 'adapter 'rust-or-external-runtime 'submit))
+
+;; [TaskFamilyDescriptor] <- Unit
+(def task-family-descriptors
+  (list pure-task-family-descriptor
+        scheme-task-family-descriptor
+        store-task-family-descriptor
+        external-task-family-descriptor))
+
+;; Symbol <- TaskFamilyDescriptor
+(def (task-family-name descriptor)
+  (.@ descriptor name))
+
+;; Symbol <- TaskFamilyDescriptor
+(def (task-family-capability descriptor)
+  (.@ descriptor capability))
+
+;; Symbol <- TaskFamilyDescriptor
+(def (task-family-route descriptor)
+  (.@ descriptor route))
+
+;; Symbol <- TaskFamilyDescriptor
+(def (task-family-runtime-owner descriptor)
+  (.@ descriptor runtime-owner))
+
+;; AdapterDispatch <- TaskFamilyDescriptor
+(def (task-family-adapter-dispatch descriptor)
+  (.@ descriptor adapter-dispatch))
+
+;; MaybeTaskFamilyDescriptor <- Symbol [TaskFamilyDescriptor]
+(def (find-task-family kind descriptors)
+  (cond
+   ((null? descriptors) #f)
+   ((eq? kind (task-family-name (car descriptors))) (car descriptors))
+   (else (find-task-family kind (cdr descriptors)))))
+
+;; TaskFamilyDescriptor <- Symbol
+(def (task-family-for-kind kind)
+  (let ((descriptor (find-task-family kind task-family-descriptors)))
+    (if descriptor
+      descriptor
+      (error "unknown task family" kind))))
+
+;; TaskFamilyDescriptor <- Task
+(def (task-descriptor task)
+  (task-family-for-kind (task-kind task)))
+
+;; Symbol <- Task
+(def (task-capability task)
+  (task-family-capability (task-descriptor task)))
+
+;; Symbol <- Task
+(def (task-route task)
+  (task-family-route (task-descriptor task)))
+
+;; Symbol <- Task
+(def (task-runtime-owner task)
+  (task-family-runtime-owner (task-descriptor task)))
+
+;;; Adapter operations translate descriptor-level dispatch into runtime adapter
+;;; slots while keeping store operation details inside the task owner.
+;; AdapterOperation <- Task
+(def (task-adapter-operation task)
+  (let ((dispatch (task-family-adapter-dispatch (task-descriptor task))))
+    (cond
+     ((eq? dispatch 'store)
+      (cond
+       ((task-store-put? task) 'store-put)
+       ((task-store-get? task) 'store-get)
+       (else (error "unsupported store operation" (task-store-operation task)))))
+     (else dispatch))))
 
 ;;; Normalized requests are the adapter boundary format shared by store and
 ;;; external tasks.
@@ -108,13 +233,11 @@
 
 ;; Boolean <- Task
 (def (task-local? task)
-  (or (eq? (task-kind task) 'pure)
-      (eq? (task-kind task) 'scheme)))
+  (eq? (task-route task) 'local))
 
 ;; Boolean <- Task
 (def (task-adapter-routed? task)
-  (or (eq? (task-kind task) 'store)
-      (eq? (task-kind task) 'external)))
+  (eq? (task-route task) 'adapter))
 
 ;; ExecutionRequest <- Task Value
 (def (task-normalized-request task input)

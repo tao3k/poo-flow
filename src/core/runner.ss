@@ -91,10 +91,10 @@
 
 ;; Boolean <- Strategy RuntimeAdapter Task
 (def (validate-task strategy adapter task)
-  (unless (memq (task-kind task) (strategy-capabilities strategy))
+  (unless (memq (task-capability task) (strategy-capabilities strategy))
     (error "strategy does not support task kind" (task-kind task)))
   (when (task-adapter-routed? task)
-    (unless (adapter-supports? adapter (task-kind task))
+    (unless (adapter-supports? adapter (task-capability task))
       (error "adapter does not support task kind" (task-kind task)))))
 
 ;;; Execution returns both the final value and a root receipt that contains the
@@ -251,20 +251,23 @@
 ;;; operations; external tasks still use the generic submit slot.
 ;; AdapterResult <- RuntimeAdapter Task ExecutionRequest
 (def (adapter-result-for-task adapter task request)
-  (cond
-   ((task-store-put? task)
-    (adapter-store-put adapter request))
-   ((task-store-get? task)
-    (adapter-store-get adapter (task-store-payload task)))
-   (else
-    (adapter-submit adapter request))))
+  (let ((operation (task-adapter-operation task)))
+    (cond
+     ((eq? operation 'store-put)
+      (adapter-store-put adapter request))
+     ((eq? operation 'store-get)
+      (adapter-store-get adapter (task-store-payload task)))
+     ((eq? operation 'submit)
+      (adapter-submit adapter request))
+     (else
+      (error "unsupported adapter operation" operation)))))
 
 ;;; Adapter cache evidence is derived after runtime handoff because only the
 ;;; adapter result knows whether this was a request-only handoff or a handle hit.
 ;; CacheDecision <- Strategy Task Input AdapterResult
 (def (adapter-cache-decision strategy task input adapter-result)
   (cond
-   ((task-store-get? task)
+   ((eq? (task-adapter-operation task) 'store-get)
     (list 'cache-hit
           (task-name task)
           (task-store-payload task)
