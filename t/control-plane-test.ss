@@ -1,5 +1,6 @@
 (import :std/test
-        :poo-flow/api)
+        :poo-flow/api
+        :project-policy-test)
 
 (def pure-flow-test
   (test-suite "pure flow"
@@ -95,4 +96,12 @@
         (check-equal? (role-name composed) 'runtime-adapter)
         (check-equal? (role-runtime-owner composed) 'rust-or-external-runtime)))))
 
-(run-tests! pure-flow-test adapter-request-test funflow-api-test execution-plan-test poo-role-test)
+(run-tests! pure-flow-test
+            adapter-request-test
+            funflow-api-test
+            execution-plan-test
+            poo-role-test
+            project-policy-test)
+
+(unless (zero? (project-policy-status))
+  (exit 1))
