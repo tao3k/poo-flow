@@ -1,0 +1,361 @@
+#+TITLE: 10.01 Gerbil POO Funflow Control Plane Design
+#+DATE: 2026-06-17
+#+AUTHOR: tao3k / Codex
+#+OPTIONS: toc:2 num:t
+
+* 10.01 Gerbil POO Funflow Control Plane
+
+** 10.01.00 Document Status
+
+This is the first design document for implementing a Funflow-like workflow
+system with Gerbil POO.
+
+The design scope is intentionally between a pure concept kernel and a minimal
+running system:
+
+- Gerbil Scheme owns the conceptual model, POO object boundaries, policy
+  selection, extension points, and a lightweight runnable interpreter.
+- Rust or other host runtimes own heavy execution: real content-addressed
+  storage, Docker or container tasks, parallel scheduling, process control,
+  large filesystem operations, networking, and durable persistence.
+
+The first implementation should prove the control-plane semantics. It should
+not try to reimplement the full Haskell Funflow runtime in Scheme.
+
+** 10.01.10 Context
+
+Funflow 2 is a Haskell workflow library. Its useful ideas for this project are:
+
+- Workflows are composed from typed task arrows.
+- Task families are interpreted by a runner.
+- Reproducibility is supported through content-addressed storage.
+- Docker and external runtime tasks are explicit task families.
+- The public API separates workflow declaration from execution.
+
+The Gerbil version should preserve these architectural ideas while changing the
+implementation shape:
+
+- Haskell type-level ropes are not copied directly.
+- Gerbil POO objects express protocol boundaries.
+- Strategy objects decide how workflows are run.
+- Runtime adapters move heavy work to Rust or another implementation language.
+
+** 10.01.20 Goals
+
+The first milestone has five goals.
+
+1. Define a small, stable object model for flows, tasks, strategies, runners,
+   runtime adapters, and receipts.
+2. Make lightweight workflows runnable inside Gerbil.
+3. Represent external work as declarative execution requests, not direct
+   Scheme implementations of heavy runtime behavior.
+4. Make extension points explicit so new task families can be added without
+   rewriting the runner.
+5. Keep Rust-facing adapter boundaries stable enough that the heavy runtime can
+   be implemented after the Scheme control plane is validated.
+
+** 10.01.30 Non-Goals
+
+The first milestone does not include:
+
+- A production CAS implementation in Scheme.
+- Docker execution in Scheme.
+- A full parallel scheduler in Scheme.
+- A clone of Kernmantle's type-level encoding.
+- Full static type checking of workflow inputs and outputs.
+- A distributed execution engine.
+
+These are runtime or later-phase concerns. The design must leave protocol slots
+for them, but not implement them in the Gerbil control plane.
+
+** 10.01.40 Recommended Architecture
+
+The recommended architecture is a Gerbil POO control plane with a pluggable
+runtime adapter.
+
+At the top level:
+
+- =flow= objects declare composition.
+- =task= objects declare units of work.
+- =strategy= objects choose execution behavior.
+- =runner= objects interpret flows using a strategy and runtime adapter.
+- =runtime-adapter= objects bridge to Rust or another heavy runtime.
+- =receipt= objects record what was requested, what ran, and what artifacts or
+  failures were produced.
+
+This gives Scheme the high-abstraction role and keeps heavy implementation out
+of the control plane.
+
+** 10.01.50 Alternatives Considered
+
+*** 10.01.51 Concept Kernel Only
+
+This approach implements only objects and composition rules.
+
+It is clean and fast to build, but it cannot validate the runner boundary. It
+also leaves too much ambiguity for Rust integration because no execution
+request or receipt protocol is exercised.
+
+*** 10.01.52 Gerbil POO Control Plane
+
+This is the recommended approach.
+
+It supports pure tasks, Scheme procedure tasks, abstract store tasks, and
+external task requests. It can run locally for lightweight cases while treating
+heavy operations as adapter calls.
+
+The result is small enough to build first but real enough to validate object
+boundaries, strategy selection, receipt shape, and host runtime integration.
+
+*** 10.01.53 Scheme Reimplementation Of Funflow
+
+This approach puts CAS, Docker, scheduling, and external execution into Scheme.
+
+It is not recommended. It violates the language-boundary goal and would make
+Scheme responsible for implementation-heavy behavior that Rust is better suited
+to own.
+
+** 10.01.60 Object Model
+
+*** 10.01.61 Flow
+
+A =flow= is a composable declaration. It should not directly execute work.
+
+Required protocol:
+
+- =flow-name= returns a stable symbolic name.
+- =flow-steps= returns child tasks or child flows.
+- =flow-compose= creates a new flow from existing flow fragments.
+- =flow-input-contract= returns a descriptive input contract.
+- =flow-output-contract= returns a descriptive output contract.
+
+The contracts are descriptive in the first milestone. They are used for
+validation, receipts, and error reporting, not full static typing.
+
+*** 10.01.62 Task
+
+A =task= is a declared unit of work.
+
+Required protocol:
+
+- =task-name= returns a stable symbolic name.
+- =task-kind= returns one of =pure=, =scheme=, =store=, or =external=.
+- =task-request= returns a normalized request object.
+- =task-input-contract= returns a descriptive input contract.
+- =task-output-contract= returns a descriptive output contract.
+
+The first milestone task kinds are:
+
+- =pure=: deterministic Scheme value transform.
+- =scheme=: lightweight Scheme procedure execution.
+- =store=: abstract store operation such as =put= or =get=.
+- =external=: adapter-routed work such as Docker, subprocess, or Rust-native
+  execution.
+
+*** 10.01.63 Strategy
+
+A =strategy= is a policy object. It decides how to run a task or flow.
+
+Required protocol:
+
+- =strategy-name= returns a stable symbolic name.
+- =strategy-capabilities= returns required runtime capabilities.
+- =strategy-plan= maps a flow to an execution plan.
+- =strategy-cache-policy= returns cache behavior for a task request.
+- =strategy-failure-policy= returns failure behavior for a task request.
+
+Examples:
+
+- =local-eager-strategy=: run lightweight tasks immediately.
+- =request-only-strategy=: lower all external work into receipts without
+  executing it.
+- =adapter-strategy=: run supported external tasks through a runtime adapter.
+
+*** 10.01.64 Runner
+
+A =runner= owns interpretation. It combines a flow, strategy, and adapter.
+
+Required protocol:
+
+- =runner-run= evaluates a flow against input.
+- =runner-plan= returns the execution plan without running it.
+- =runner-validate= checks contracts and required capabilities.
+- =runner-receipt= returns the final receipt tree.
+
+The runner must not embed Docker, CAS, or thread-pool logic. It delegates those
+through the adapter protocol.
+
+*** 10.01.65 Runtime Adapter
+
+A =runtime-adapter= is the boundary to Rust or another heavy runtime.
+
+Required protocol:
+
+- =adapter-capabilities= returns supported task kinds and operations.
+- =adapter-submit= accepts a normalized execution request.
+- =adapter-fetch= fetches completion or result state.
+- =adapter-store-put= stores an artifact request.
+- =adapter-store-get= resolves a stored artifact handle.
+
+The initial adapter can be an in-memory or file-backed mock. The protocol shape
+must already match the later Rust adapter.
+
+*** 10.01.66 Receipt
+
+A =receipt= is the durable explanation of execution.
+
+Required fields:
+
+- flow name
+- task name
+- task kind
+- strategy name
+- adapter capability decision
+- request id
+- input summary
+- output summary or artifact handle
+- cache decision
+- status
+- error record, when failed
+
+Receipts are part of the public control-plane contract. They make agent-facing
+behavior explicit and testable.
+
+** 10.01.70 Data Flow
+
+The normal execution path is:
+
+1. The caller constructs a =flow= from tasks and nested flows.
+2. The caller chooses a =strategy=.
+3. The =runner= validates the flow against strategy requirements.
+4. The strategy lowers the flow into an execution plan.
+5. Pure and Scheme tasks run locally when the strategy allows it.
+6. Store and external tasks become normalized adapter requests.
+7. The adapter returns artifact handles or result records.
+8. The runner records a receipt tree.
+9. The caller receives the final value and receipt.
+
+This separates declaration, planning, execution, and evidence.
+
+** 10.01.80 Runtime Boundary
+
+The runtime boundary is strict.
+
+Gerbil Scheme may:
+
+- define object protocols;
+- declare task kinds;
+- compose workflows;
+- choose strategy;
+- validate descriptive contracts;
+- create normalized execution requests;
+- run lightweight pure and Scheme tasks;
+- record receipts.
+
+Rust or another host runtime should:
+
+- implement production CAS;
+- run Docker or other container systems;
+- run subprocesses;
+- schedule parallel work;
+- perform large filesystem operations;
+- manage durable stores;
+- expose stable capability metadata.
+
+If a feature requires resource management, OS-specific behavior, high
+throughput, or durable persistence, it belongs behind the adapter.
+
+** 10.01.90 Error Handling
+
+Errors should be object-level records, not raw strings.
+
+Required error fields:
+
+- =kind=: contract, capability, adapter, execution, cache, or internal.
+- =owner=: flow, task, strategy, runner, or adapter.
+- =message=: human-readable summary.
+- =request-id=: adapter request id when available.
+- =receipt-path=: path in the receipt tree.
+- =recoverable?=: whether strategy may continue.
+
+The strategy decides whether an error stops the whole flow, marks a branch as
+failed, retries through another adapter, or emits a request-only receipt.
+
+** 10.01.100 Testing Strategy
+
+The first test layer should validate object behavior without Rust.
+
+Required tests:
+
+- Flow composition preserves step order.
+- Pure tasks run locally and produce receipts.
+- Scheme tasks run locally and produce receipts.
+- Store tasks lower into adapter requests.
+- External tasks lower into adapter requests.
+- Missing adapter capabilities fail during validation.
+- Strategy choice changes execution behavior without changing task objects.
+- Receipt trees contain enough information for an agent to explain what ran.
+
+Rust adapter integration tests come after the Scheme control-plane protocol is
+stable.
+
+** 10.01.110 First Implementation Slices
+
+*** 10.01.111 Slice 1: Package And Protocol Skeleton
+
+Create the Gerbil package structure, =gerbil.pkg=, and protocol modules.
+
+Expected modules:
+
+- =src/poo-flow/flow.ss=
+- =src/poo-flow/task.ss=
+- =src/poo-flow/strategy.ss=
+- =src/poo-flow/runner.ss=
+- =src/poo-flow/runtime-adapter.ss=
+- =src/poo-flow/receipt.ss=
+
+*** 10.01.112 Slice 2: Local Runnable Control Plane
+
+Implement pure tasks, Scheme tasks, sequential flow composition, a local eager
+strategy, and receipt generation.
+
+This slice proves that the system is runnable without pretending Scheme owns
+the heavy runtime.
+
+*** 10.01.113 Slice 3: Adapter Request Boundary
+
+Implement abstract store and external tasks that lower into normalized adapter
+requests.
+
+The adapter can be a mock implementation, but the request and receipt shapes
+must be stable.
+
+*** 10.01.114 Slice 4: Rust Adapter Contract
+
+Write the Rust-facing contract after the Scheme receipt and request shapes have
+passed tests.
+
+The Rust side should implement capabilities first, then store operations, then
+external execution.
+
+** 10.01.120 Design Rules
+
+1. Do not blur concept objects and runtime implementation.
+2. Do not put machine-local paths in package metadata.
+3. Do not make the runner depend on concrete Docker or CAS modules.
+4. Do not hide strategy decisions from receipts.
+5. Do not make external tasks silently execute locally.
+6. Prefer explicit adapter capability failures over fallback behavior.
+7. Keep the first runnable system small enough to test completely.
+
+** 10.01.130 Review Checklist
+
+This design has no placeholder requirements.
+
+The implementation scope is one milestone: a Gerbil POO control plane with a
+lightweight local runner and adapter request boundary.
+
+The heavy runtime boundary is explicit: production CAS, Docker, process
+execution, parallel scheduling, and durable persistence are not Scheme-owned.
+
+The document uses Org format and Johnny Decimal numbering.
