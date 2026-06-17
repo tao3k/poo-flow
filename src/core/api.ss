@@ -11,7 +11,8 @@
         :core/policy
         :core/runtime-adapter
         :core/replay
-        :core/runner)
+        :core/runner
+        :core/config)
 
 (export (import: :core/roles)
         (import: :core/receipt)
@@ -22,4 +23,5 @@
         (import: :core/policy)
         (import: :core/runtime-adapter)
         (import: :core/replay)
-        (import: :core/runner))
+        (import: :core/runner)
+        (import: :core/config))

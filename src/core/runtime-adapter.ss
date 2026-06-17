@@ -20,6 +20,8 @@
         runtime-adapter-store-putter
         runtime-adapter-store-getter
         make-request-only-adapter
+        make-rust-adapter
+        rust-request-envelope
         adapter-supports?
         adapter-submit
         adapter-fetch
@@ -58,6 +60,17 @@
                         request-only-store-put
                         request-only-store-get))
 
+;;; The Rust adapter is a Scheme-side handoff stub. It proves the request shape
+;;; can cross the boundary without embedding the heavy runtime implementation.
+;; RuntimeAdapter <- Unit
+(def (make-rust-adapter)
+  (make-runtime-adapter 'rust
+                        '(store external)
+                        rust-submit
+                        rust-fetch
+                        rust-store-put
+                        rust-store-get))
+
 ;; Boolean <- RuntimeAdapter Symbol
 (def (adapter-supports? adapter capability)
   (and (memq capability (runtime-adapter-capabilities adapter)) #t))
@@ -82,6 +95,27 @@
 (def (request-id request)
   (list 'request (execution-request-name request) (execution-request-kind request)))
 
+;; RequestId <- ExecutionRequest
+(def (rust-request-id request)
+  (list 'rust-request (execution-request-name request) (execution-request-kind request)))
+
+;; ArtifactHandle <- ExecutionRequest
+(def (rust-artifact-handle request)
+  (list 'rust-artifact
+        (execution-request-plan-id request)
+        (execution-request-node-id request)))
+
+;;; The envelope is intentionally alist-shaped so Rust can deserialize the same
+;;; data without understanding Gerbil structs.
+;; Alist <- ExecutionRequest
+(def (rust-request-envelope request)
+  (list (cons 'runtime 'rust)
+        (cons 'request request)
+        (cons 'policy (execution-request-policy request))
+        (cons 'plan-id (execution-request-plan-id request))
+        (cons 'node-id (execution-request-node-id request))
+        (cons 'frontier (execution-request-frontier request))))
+
 ;; AdapterResult <- ExecutionRequest
 (def (request-only-submit request)
   (make-adapter-result (request-id request) 'requested request #f #f))
@@ -97,3 +131,23 @@
 ;; AdapterResult <- ArtifactHandle
 (def (request-only-store-get handle)
   (make-adapter-result (list 'store-get handle) 'requested #f handle #f))
+
+;; AdapterResult <- ExecutionRequest
+(def (rust-submit request)
+  (make-adapter-result (rust-request-id request)
+                       'submitted
+                       (rust-request-envelope request)
+                       (rust-artifact-handle request)
+                       #f))
+
+;; AdapterResult <- RequestId
+(def (rust-fetch request-id)
+  (make-adapter-result request-id 'submitted #f #f #f))
+
+;; AdapterResult <- ExecutionRequest
+(def (rust-store-put request)
+  (rust-submit request))
+
+;; AdapterResult <- ArtifactHandle
+(def (rust-store-get handle)
+  (make-adapter-result (list 'rust-store-get handle) 'submitted #f handle #f))

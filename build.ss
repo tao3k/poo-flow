@@ -13,4 +13,5 @@
     "src/core/runtime-adapter"
     "src/core/replay"
     "src/core/runner"
+    "src/core/config"
     "src/core/api"))

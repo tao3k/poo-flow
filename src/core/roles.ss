@@ -9,6 +9,7 @@
         task-role
         strategy-role
         execution-policy-role
+        run-config-role
         runner-role
         runtime-adapter-role
         receipt-role
@@ -57,6 +58,13 @@
       (name 'execution-policy)
       (kind 'policy-envelope)
       (responsibility 'runtime-policy-handoff)))
+
+;; Role <- Unit
+(def run-config-role
+  (.o (:: @ control-plane-role)
+      (name 'run-config)
+      (kind 'configuration)
+      (responsibility 'configured-runner-assembly)))
 
 ;; Role <- Unit
 (def runner-role

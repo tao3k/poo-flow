@@ -51,9 +51,11 @@ The current Gerbil implementation has a useful first control-plane slice:
   execution requests.
 - =flow.ss= has flow composition and Funflow-style smart constructors.
 - =strategy.ss= has a local eager strategy.
-- =runtime-adapter.ss= has a request-only adapter for store/external work.
+- =runtime-adapter.ss= has request-only and Rust handoff adapters for
+store/external work.
 - =runner.ss= can run local pure/Scheme tasks and lower store/external tasks
-  into adapter requests.
+into adapter requests.
+- =config.ss= provides a Funflow-style configured runner entrypoint.
 - =receipt.ss= records execution evidence with child receipts.
 
 This is enough to run a small sequential workflow, but the architecture is
@@ -191,19 +193,19 @@ Exit criteria:
 - Rust adapter can receive at least one store/external request.
 
 ** 10.02.60 Immediate Implementation Slice
-The current code slice is M7.
+The current code slice is M8.
 
-The implementation now freezes strategy policy at the runner boundary and
-copies that snapshot into adapter requests, receipts, audit events, and replay
-validation. This gives the future Rust adapter a stable policy envelope without
-moving execution, scheduling, cache materialization, or persistence into
-Scheme.
-The next functional slice should be M8:
-- =run-flow-with-config= or equivalent should select strategy and adapter
-from a small configuration object.
-- The request-only adapter must remain the deterministic test double.
-- The first Rust-backed adapter can start by accepting one store or external
-request using the existing execution request and policy alist schema.
+The implementation now has a configured execution entrypoint that lowers a
+run config into the normal runner, preserves the request-only test adapter, and
+adds a Rust handoff adapter that receives store/external execution requests as
+stable envelopes. Rust still owns the heavy runtime; Scheme only assembles
+policy, planning, request, and receipt evidence.
+The next functional slice should close M3:
+- Add branch or pair composition to the declaration surface.
+- Represent branch dependencies in the execution plan as a DAG instead of only
+linear predecessor edges.
+- Keep heavy parallel scheduling behind the runtime adapter boundary while pure
+branch evidence remains locally testable.
 
 
 ** 10.02.70 Harness Integration Receipt

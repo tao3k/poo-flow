@@ -83,6 +83,41 @@
         (check-equal? (execution-request-frontier request)
                       '((node compile 0 external compile)))))))
 
+(def configured-runner-test
+  (test-suite "configured runner"
+    (test-case "runs through request-only config"
+      (let* ((compile (external-flow 'compile 'rust-build '((crate . "poo-flow")) 'artifact 'artifact))
+             (config (make-request-only-run-config))
+             (result (run-flow-with-config config compile 'input-artifact))
+             (adapter-result (run-result-value result))
+             (request (adapter-result-value adapter-result)))
+        (check-equal? (run-config-name config) 'request-only)
+        (check-equal? (run-config-runtime-owner config) 'request-only)
+        (check-equal? (adapter-result-status adapter-result) 'requested)
+        (check-equal? (execution-request-plan-id request) 'compile)))
+    (test-case "submits external requests to rust adapter boundary"
+      (let* ((compile (external-flow 'compile 'rust-build '((crate . "poo-flow")) 'artifact 'artifact))
+             (config (make-rust-run-config))
+             (runner (run-config->runner config))
+             (result (run-flow-with-config config compile 'input-artifact))
+             (adapter-result (run-result-value result))
+             (envelope (adapter-result-value adapter-result))
+             (request (cdr (assoc 'request envelope)))
+             (child (car (receipt-children (run-result-receipt result)))))
+        (check-equal? (run-config-runtime-owner config) 'rust)
+        (check-equal? (runtime-adapter-name (runner-adapter runner)) 'rust)
+        (check-equal? (adapter-result-status adapter-result) 'submitted)
+        (check-equal? (adapter-result-request-id adapter-result) '(rust-request compile external))
+        (check-equal? (adapter-result-artifact-handle adapter-result)
+                      '(rust-artifact compile (node compile 0 external compile)))
+        (check-equal? (cdr (assoc 'runtime envelope)) 'rust)
+        (check-equal? (execution-request-plan-id request) 'compile)
+        (check-equal? (execution-request-node-id request)
+                      '(node compile 0 external compile))
+        (check-equal? (cdr (assoc 'policy envelope))
+                      (execution-request-policy request))
+        (check-equal? (receipt-adapter-decision child) 'rust)))))
+
 (def execution-plan-test
   (test-suite "execution plan"
     (test-case "strategy lowers flows into named plan nodes"
@@ -266,9 +301,11 @@
       (check-equal? (role-name flow-role) 'flow)
       (check-equal? (role-kind strategy-role) 'policy)
       (check-equal? (role-kind execution-policy-role) 'policy-envelope)
+      (check-equal? (role-kind run-config-role) 'configuration)
       (check-equal? (role-kind replay-role) 'policy)
       (check-equal? (role-runtime-owner runtime-adapter-role) 'rust-or-external-runtime)
       (check-equal? (role-responsibility execution-policy-role) 'runtime-policy-handoff)
+      (check-equal? (role-responsibility run-config-role) 'configured-runner-assembly)
       (check-equal? (role-responsibility replay-role) 'audit-validation)
       (check-equal? (role-responsibility receipt-role) 'execution-explanation))
     (test-case "composes role prototypes with leftmost precedence"
@@ -280,6 +317,7 @@
 (run-tests! pure-flow-test
             adapter-request-test
             funflow-api-test
+            configured-runner-test
             execution-plan-test
             strategy-frontier-test
             receipt-audit-test
