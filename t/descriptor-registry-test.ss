@@ -2,34 +2,41 @@
 ;;; Boundary: descriptor registries are policy extension surfaces.
 
 (import :std/test
+        (only-in :clan/poo/object .@ .slot? .all-slots)
         :core/api)
 
 (def descriptor-registry-test
   (test-suite "descriptor registries"
     (test-case "extends task family descriptors without editing defaults"
-      (let* ((docker (make-task-family-descriptor 'docker
-                                                  'docker
+      (let* ((custom (make-task-family-descriptor 'custom-runtime
+                                                  'external
                                                   'adapter
                                                   'rust-or-external-runtime
                                                   'submit))
              (registry (task-family-registry-extend
                         default-task-family-registry
-                        docker))
+                        custom))
              (task (make-task 'build
-                              'docker
-                              '(docker build)
+                              'custom-runtime
+                              '(custom build)
                               'artifact
                               'artifact
                               #f)))
         (check-equal? (task-family-registry? registry) #t)
         (check-equal? (task-family-name
-                       (task-family-for-kind-in registry 'docker))
-                      'docker)
+                       (task-family-for-kind-in registry 'custom-runtime))
+                      'custom-runtime)
         (check-equal? (task-route-in registry task) 'adapter)
         (check-equal? (task-runtime-owner-in registry task)
                       'rust-or-external-runtime)
         (check-equal? (task-adapter-operation-in registry task) 'submit)
-        (check-equal? (length task-family-descriptors) 4)))
+        (check-equal? (.slot? custom 'extension-policy) #t)
+        (check-equal? (.@ custom extension-policy) 'descriptor-prototype)
+        (check-equal? (.slot? registry 'extension-policy) #t)
+        (check-equal? (.@ registry extension-policy) 'immutable-registry)
+        (check-equal? (and (memq 'extension-policy (.all-slots custom)) #t)
+                      #t)
+        (check-equal? (length task-family-descriptors) 3)))
     (test-case "extends flow declarations without editing defaults"
       (let* ((remote (make-flow-declaration-descriptor 'remote-flow
                                                        'remote
@@ -51,6 +58,12 @@
         (check-equal? (flow-declaration-kind
                        (flow-declaration-descriptor-in registry inc))
                       'task)
+        (check-equal? (.slot? remote 'extension-policy) #t)
+        (check-equal? (.@ remote extension-policy) 'extension)
+        (check-equal? (.slot? registry 'extension-policy) #t)
+        (check-equal? (.@ registry extension-policy) 'immutable-registry)
+        (check-equal? (and (memq 'planner (.all-slots remote)) #t)
+                      #t)
         (check-equal? (execution-plan-node-ids plan)
                       '((node inc 0 pure inc)))
         (check-equal? (length flow-declaration-descriptors) 4)))))

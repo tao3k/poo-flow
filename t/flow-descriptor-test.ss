@@ -12,7 +12,23 @@
       (check-equal? (flow-declaration-name task-flow-descriptor) 'task-flow)
       (check-equal? (flow-declaration-kind branch-flow-descriptor) 'branch)
       (check-equal? (flow-declaration-planner branch-flow-descriptor) 'linear-dag)
-      (check-equal? (flow-extension-policy sequential-flow-descriptor) 'composable))
+      (check-equal? (flow-extension-policy sequential-flow-descriptor) 'composable)
+      (check-equal? (flow-declaration-capability task-flow-descriptor
+                                                 'flow-capability
+                                                 #f)
+                    'workflow-composition)
+      (check-equal? (flow-declaration-capability task-flow-descriptor
+                                                 'task-capability
+                                                 #f)
+                    'work-intent)
+      (check-equal? (flow-declaration-capability branch-flow-descriptor
+                                                 'branch-capability
+                                                 #f)
+                    'dag-fanout-join)
+      (check-equal? (flow-declaration-capability sequential-flow-descriptor
+                                                 'branch-capability
+                                                 #f)
+                    #f))
     (test-case "selects descriptors from flow declaration shape"
       (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
              (double (scheme-flow 'double (lambda (x) (* x 2)) 'number 'number))

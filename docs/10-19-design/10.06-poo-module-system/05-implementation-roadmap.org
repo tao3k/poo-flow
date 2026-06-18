@@ -1,0 +1,129 @@
+#+title: 10.06.05 Implementation Roadmap
+
+* 10.06.05 Implementation Roadmap
+** 10.06.05.05 Current Landing
+Status: Marlin facade migration implemented. Slice 1F also landed Nix-style option merge receipts.
+
+The current code does the large-block migration requested from Marlin's Gerbil module surface into =poo-flow/src/modules/module-system.ss=. It includes interface/config construction, structured imports, inline module closure, schema/config projection, validation receipts, module workflow projection, value catalogs, eval receipts, and system presentations.
+
+Not included in this landing: Marlin's concrete policy-pack furniture, deck-runtime dependencies, or Rust handler catalog integration. Those are domain-specific consumers of the module facade, not the =poo-flow= module-system core.
+** 10.06.05.10 Slice 1: Descriptor Activation And Inspection
+Status: implemented.
+
+Files:
+- =src/modules/module-system.ss=
+- =t/module-system-test.ss=
+- =build.ss=
+- =t/unit-tests.ss=
+
+Delivered behavior:
+- create and project module source refs;
+- create immutable module catalogs;
+- resolve selected source refs into module descriptors;
+- create POO module descriptors;
+- create module descriptors through the thin =poo-module= macro;
+- validate explicit imports;
+- combine module task-family descriptors into run-config;
+- combine module flow-declaration descriptors into run-config;
+- expose module activation options with activated module names;
+- raise typed =module-system/missing-module-imports= failures;
+- raise typed =module-system/missing-module-source= failures;
+- report non-executing diagnostics through =poo-module-doctor=.
+
+** 10.06.05.15 Slice 1B: Marlin Facade Migration
+Status: implemented.
+Delivered behavior:
+- create module interfaces with schema and metadata;
+- create module descriptors through =pooModules= and =defpoo-module=;
+- normalize local/source imports with =poo-import= and source refs;
+- include inline import profiles in doctor and activation closure;
+- project option configs, option schemas, and validation receipts;
+- create inspectable runtime module, workflow, eval, and presentation values;
+- keep all implementation under =src/modules= and out of =src/core=.
+** 10.06.05.20 Slice 2: Loader Backend
+Status: started. First-pass pure loader backend implemented.
+Add loader backends that can construct descriptors from source refs before handing them to the existing catalog resolver. This must not change activation semantics.
+Planned loader sources:
+- local source files;
+- package manifests;
+- registry manifests;
+- generated module descriptors.
+Implemented first-pass behavior:
+- added =src/modules/loader.ss= as a source-loader owner under =src/modules=;
+- added static loader entries for source-ref to descriptor mappings;
+- added load receipts so user tooling can inspect loaded and missing sources before activation;
+- added =poo-module-load-catalog= to hand loaded descriptors to the existing catalog resolver;
+- updated =t/module-system-user-interface-test.ss= to cover loader-to-catalog-to-resolver activation through =:modules/module-system=.
+** 10.06.05.30 Slice 3: CLI Or Doctor Command
+Status: started. First-pass doctor presentation helpers implemented.
+Add a command or helper surface that can explain:
+- active modules;
+- imports;
+- contributed task descriptors;
+- contributed flow descriptors;
+- missing runtime capabilities;
+- config requirements introduced by modules.
+This is the =poo-flow= equivalent of borrowing Doom's =doctor= idea without borrowing Doom's implementation.
+Implemented first-pass behavior:
+- added =src/modules/doctor.ss= as the user-facing doctor presentation owner;
+- added =pooModuleDoctorPresentation= for value catalogs;
+- added =pooModuleSourceDoctorPresentation= for loader receipts plus module doctor summary;
+- included module ids, import graph, contribution counts, diagnostic status, validation count, merge status, and merged option summary;
+- kept runtime execution out of doctor projections;
+- updated =t/module-system-user-interface-test.ss= to cover both doctor surfaces through =:modules/module-system=.
+** 10.06.05.40 Validation Gates
+For each slice:
+- run =gxi build.ss= or the repository build wrapper;
+- run =gxtest t/<new-test>.ss= when debugging one surface;
+- run =gxtest t/unit-tests.ss= before claiming the slice is complete;
+- keep docs updated before adding macro-facing syntax.
+** 10.06.05.45 Downstream User Interface
+Status: implemented.
+Delivered behavior:
+- added =src/modules/user-config.ss= as the upstream-owned thin user config API;
+- added =user-interface/modules.ss= for hot-plug flow, loop, and sandbox module selections and flags;
+- added =user-interface/config.ss= as the public root-level configuration entrypoint;
+- added =user-interface/README.org= to document that descriptor realization remains in =src/modules=;
+- added =t/user-interface-config-test.ss= to verify the real root-level config instead of defining examples inside tests.
+** 10.06.05.17 Slice 1C: Doom And C3 Interface Polish
+Status: implemented.
+
+Delivered behavior:
+- cloned Doom core into =.data/doomemacs-core= as a research-only checkout;
+- kept the implementation under =src/modules= leaf owners;
+- added explicit descriptor metadata for =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
+- added descriptor-level =poo-module-active?= checks with Doom-style negative flag requirements;
+- added catalog-level =pooModuleActive?= checks for user-facing module predicates;
+- added =poo-module-phase-order= for init/config ordering projections;
+- added runtime projection fields for phase order and hooks;
+- kept activation data-only and avoided Doom's hidden macro context.
+** 10.06.05.18 Slice 1D: Doom And Nix Interface Principles
+Status: documented.
+
+Delivered behavior:
+- documented Doom as the authoring-experience reference;
+- documented Nix as the option and merge semantics reference;
+- defined a macro design contract for future user-facing DSL work;
+- required macro-facing tests to import only =:modules/module-system=;
+- kept macro expansion constrained to inspectable descriptor data.
+** 10.06.05.19 Slice 1E: Focused Macro Sugar
+Status: implemented.
+
+Delivered behavior:
+- added =src/modules/syntax.ss= as the macro-only owner;
+- exported macro sugar through =:modules/module-system=;
+- added =poo-module-option-block= for schema/config POO slot blocks;
+- added =poo-module-hook-block= for data-only hook payload blocks;
+- added =poo-module-when= for conditional module list inclusion;
+- added =defpoo-module-set= for value catalog construction from module lists;
+- updated =t/module-system-user-interface-test.ss= to cover macro-facing authoring.
+** 10.06.05.21 Slice 1F: Nix-Style Option Merge Receipts
+Status: implemented.
+Delivered behavior:
+- added =src/modules/merge.ss= as the option merge owner under =src/modules=;
+- exported merge receipts through =:modules/module-system=;
+- added user-facing helpers =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and =poo-option-merge=;
+- composed option configs dependencies-first and root-last for append and override behavior;
+- represented conflicting values as invalid receipts instead of runtime exceptions;
+- exposed =poo-module-merged-option-alist= for valid final option values;
+- updated =t/module-system-user-interface-test.ss= to cover public facade merge behavior.

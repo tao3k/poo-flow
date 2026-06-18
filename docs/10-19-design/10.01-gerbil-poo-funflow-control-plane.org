@@ -86,6 +86,23 @@ At the top level:
 This gives Scheme the high-abstraction role and keeps heavy implementation out
 of the control plane.
 
+*** 10.01.41 C3 Role Composition
+
+Gerbil POO's native multiple inheritance is part of the flow control-plane
+design, not an incidental implementation detail.
+
+Flow declaration descriptors are POO objects whose primary parent is the flow
+descriptor prototype and whose additional parents are role objects such as
+=task-role= and =branch-role=. The prototype stays first in the C3 precedence
+order so descriptor identity slots, such as =kind= and planner policy, remain
+descriptor-owned. Additional role parents contribute inherited capability slots,
+such as =task-capability= and =branch-capability=, without requiring the Scheme
+code to reimplement C3 linearization.
+
+This makes flow descriptors extensible in the Gerbil layer while preserving the
+runtime boundary: inherited roles describe strategy and policy semantics, while
+Rust or another runtime still owns Docker, CAS, subprocess, and artifact work.
+
 ** 10.01.50 Alternatives Considered
 
 *** 10.01.51 Concept Kernel Only

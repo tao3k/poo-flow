@@ -1,0 +1,136 @@
+;;; -*- Gerbil -*-
+;;; Boundary: loop-strategy tests cover policy selection and handoff projection.
+;;; Invariant: tests assert harness-only local validation, not runtime execution.
+
+(import :std/test
+        :core/api
+        :loops/agent)
+
+(export loop-strategy-test)
+
+;; Value <- Alist Symbol
+(def (test-ref alist key)
+  (cdr (assoc key alist)))
+
+;; [Symbol] <- [Alist]
+(def (contract-pattern-names contracts)
+  (map (lambda (contract) (test-ref contract 'name))
+       contracts))
+
+;; Value <- Thunk
+(def (capture-control-plane-failure thunk)
+  (with-catch (lambda (failure) failure)
+              thunk))
+
+;; LoopPatternDescriptor <- Symbol Symbol Integer
+(def (test-pattern name level priority)
+  (make-loop-pattern-descriptor
+   name
+   "Exercise loop strategy selection."
+   (list (cons 'level level)
+         (cons 'priority priority))))
+
+(def loop-strategy-test
+  (test-suite "loop strategy policy selection"
+    (test-case "selects priority-ordered patterns below autonomy ceiling"
+      (let* ((triage (test-pattern 'daily-triage 'l1 5))
+             (repair (test-pattern 'pr-repair 'l2 20))
+             (migration (test-pattern 'dependency-migration 'l3 10))
+             (plan
+              (make-loop-strategy-plan
+               'repo-maintenance
+               (list repair migration triage)
+               (list (cons 'level-ceiling 'l2)
+                     (cons 'metadata '((source . loop-engineering))))))
+             (contract (loop-strategy-plan->contract plan)))
+        (check-equal? (loop-strategy-plan? plan) #t)
+        (check-equal? (loop-strategy-control-owner plan) 'gerbil)
+        (check-equal? (loop-strategy-execution-owner plan)
+                      'marlin-agent-core)
+        (check-equal? (loop-strategy-local-validation-harness-only? plan) #t)
+        (check-equal? (map loop-pattern-name
+                           (loop-strategy-selected-patterns plan))
+                      '(daily-triage pr-repair))
+        (check-equal? (map loop-pattern-name
+                           (loop-strategy-actionable-patterns plan))
+                      '(pr-repair))
+        (check-equal? (loop-pattern-name (loop-strategy-next-pattern plan))
+                      'pr-repair)
+        (check-equal? (contract-pattern-names
+                       (test-ref contract 'selected-patterns))
+                      '(daily-triage pr-repair))
+        (check-equal? (test-ref contract 'actionable-patterns)
+                      '(pr-repair))
+        (check-equal? (test-ref (test-ref contract 'handoff) 'target)
+                      'marlin-agent-core)
+        (check-equal? (test-ref (test-ref contract 'runtime-boundary)
+                                'local-execution)
+                      'validation-only)))
+    (test-case "uses autonomy rank as tie breaker after priority"
+      (let* ((planner (test-pattern 'planner 'l2 10))
+             (connector (test-pattern 'connector-writer 'l2+ 10))
+             (plan
+              (make-loop-strategy-plan
+               'tie-break
+               (list planner connector)
+               (list (cons 'level-ceiling 'l3)))))
+        (check-equal? (map loop-pattern-name
+                           (loop-strategy-selected-patterns plan))
+                      '(connector-writer planner))))
+    (test-case "finds human-gated patterns as policy facts"
+      (let* ((safe (test-pattern 'safe-triage 'l1 1))
+             (upgrade
+              (make-loop-pattern-descriptor
+               'upgrade-watch
+               "Watch dependency upgrade work."
+               (list (cons 'level 'l2)
+                     (cons 'priority 2)
+                     (cons 'safety
+                           '((human-gates . (governor-approval security))
+                             (denylist . ())
+                             (auto-merge . #f))))))
+             (plan
+              (make-loop-strategy-plan
+               'gate-scan
+               (list safe upgrade))))
+        (check-equal? (map loop-pattern-name
+                           (loop-strategy-human-gated-patterns
+                            plan
+                            'governor-approval))
+                      '(upgrade-watch))))
+    (test-case "rejects plans that imply local production execution"
+      (let* ((plan
+              (make-loop-strategy-plan
+               'bad-local-runtime
+               (list (test-pattern 'repair 'l2 1))
+               (list (cons 'local-validation
+                           '((mode . production)
+                             (allow-effects . #t))))))
+             (failure
+              (capture-control-plane-failure
+               (lambda ()
+                 (loop-strategy-plan->contract plan)))))
+        (check-equal? (execution-failure? failure) #t)
+        (check-equal? (execution-failure-owner failure) 'loop-strategy)
+        (check-equal? (execution-failure-code failure)
+                      'invalid-loop-strategy-plan)))
+    (test-case "rejects invalid loop pattern descriptors"
+      (let* ((bad-pattern
+              (make-loop-pattern-descriptor
+               'bad-loop
+               "Unsupported level must fail strategy validation."
+               (list (cons 'level 'l4))))
+             (plan
+              (make-loop-strategy-plan
+               'bad-pattern-plan
+               (list bad-pattern)))
+             (failure
+              (capture-control-plane-failure
+               (lambda ()
+                 (loop-strategy-plan->contract plan)))))
+        (check-equal? (execution-failure? failure) #t)
+        (check-equal? (execution-failure-owner failure) 'loop-strategy)
+        (check-equal? (execution-failure-code failure)
+                      'invalid-loop-strategy-plan)))))
+
+(run-tests! loop-strategy-test)

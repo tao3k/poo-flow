@@ -1,5 +1,6 @@
 (import :std/test
         :core/api
+        :extensions/store
         :project-policy-test)
 
 (def pure-flow-test
@@ -43,8 +44,10 @@
                       '((strategy . local-eager)
                         (cache-policy . no-cache)
                         (failure-policy . fail-fast)
-                        (capabilities pure scheme store external branch graph-frontier)
-                        (frontier (node external-demo 0 external compile))))
+                        (capabilities pure scheme external branch graph-frontier)
+                        (frontier (node external-demo 0 external compile))
+                        (task-registry . default-task-families)
+                        (flow-registry . default-flow-declarations)))
         (check-equal? (receipt-policy child)
                       (execution-request-policy request))))))
 
@@ -121,7 +124,7 @@
       (let* ((compile (external-flow 'compile 'rust-build '((crate . "poo-flow")) 'artifact 'artifact))
              (put (store-flow 'put-cache 'put '((path . "target")) 'artifact 'artifact))
              (branch (flow-branch 'runtime-fanout compile put))
-             (config (make-rust-run-config))
+             (config (make-store-rust-run-config))
              (result (run-flow-with-config config branch 'input-artifact))
              (values (run-result-value result))
              (left-result (car values))
@@ -129,7 +132,55 @@
         (check-equal? (adapter-result-status left-result) 'submitted)
         (check-equal? (adapter-result-status right-result) 'submitted)
         (check-equal? (adapter-result-request-id left-result) '(rust-request compile external))
-        (check-equal? (adapter-result-request-id right-result) '(rust-request put-cache store))))))
+        (check-equal? (adapter-result-request-id right-result) '(rust-request put-cache store))))
+    (test-case "threads descriptor registries through configured execution"
+      (let* ((docker (make-task-family-descriptor 'docker
+                                                  'external
+                                                  'adapter
+                                                  'rust-or-external-runtime
+                                                  'submit))
+             (task-registry (make-task-family-registry
+                             'configured-task-families
+                             (append task-family-descriptors (list docker))))
+             (flow-registry (make-flow-declaration-registry
+                             'configured-flow-declarations
+                             flow-declaration-descriptors))
+             (task (make-task 'build-image
+                              'docker
+                              '(docker build)
+                              'artifact
+                              'artifact
+                              #f))
+             (flow (flow-compose 'docker-demo (list task) 'artifact 'artifact))
+             (config (make-run-config 'configured-extension
+                                      (make-local-eager-strategy)
+                                      (make-request-only-adapter)
+                                      '((runtime . request-only))
+                                      task-registry
+                                      flow-registry))
+             (runner (run-config->runner config))
+             (result (run-flow-with-config config flow 'input-artifact))
+             (adapter-result (run-result-value result))
+             (request (adapter-result-value adapter-result))
+             (child (car (receipt-children (run-result-receipt result)))))
+        (check-equal? (task-family-registry-name (run-config-task-registry config))
+                      'configured-task-families)
+        (check-equal? (flow-declaration-registry-name (run-config-flow-registry config))
+                      'configured-flow-declarations)
+        (check-equal? (task-family-registry-name (runner-task-registry runner))
+                      'configured-task-families)
+        (check-equal? (flow-declaration-registry-name (runner-flow-registry runner))
+                      'configured-flow-declarations)
+        (check-equal? (adapter-result-status adapter-result) 'requested)
+        (check-equal? (adapter-result-request-id adapter-result)
+                      '(request build-image docker))
+        (check-equal? (execution-request-kind request) 'docker)
+        (check-equal? (cdr (assoc 'task-registry (execution-request-policy request)))
+                      'configured-task-families)
+        (check-equal? (cdr (assoc 'flow-registry (execution-request-policy request)))
+                      'configured-flow-declarations)
+        (check-equal? (receipt-policy child)
+                      (execution-request-policy request))))))
 
 (def branch-flow-test
   (test-suite "branch flow"
@@ -373,9 +424,9 @@
         (check-equal? (task-store-get? get) #t)))
     (test-case "routes store put through the store adapter slot"
       (let* ((put (store-flow 'put-cache 'put '((path . "target")) 'artifact 'artifact))
-             (runner (make-runner (make-local-eager-strategy)
-                                  (make-request-only-adapter)))
-             (result (runner-run runner put 'input-artifact))
+             (result (run-flow-with-config (make-store-run-config)
+                                           put
+                                           'input-artifact))
              (adapter-result (run-result-value result))
              (request (adapter-result-value adapter-result))
              (child (car (receipt-children (run-result-receipt result)))))
@@ -385,12 +436,18 @@
         (check-equal? (execution-request-request request)
                       '(store put ((path . "target"))))
         (check-equal? (receipt-cache child)
-                      '(cache-request-only put-cache store (request put-cache store)))))
+                      '(adapter-result
+                        put-cache
+                        store
+                        store-put
+                        requested
+                        (request put-cache store)
+                        #f))))
     (test-case "routes store get through the store adapter slot"
       (let* ((get (store-flow 'get-cache 'get 'cache-handle 'artifact 'artifact))
-             (runner (make-runner (make-local-eager-strategy)
-                                  (make-request-only-adapter)))
-             (result (runner-run runner get 'input-artifact))
+             (result (run-flow-with-config (make-store-run-config)
+                                           get
+                                           'input-artifact))
              (adapter-result (run-result-value result))
              (child (car (receipt-children (run-result-receipt result)))))
         (check-equal? (adapter-result-status adapter-result) 'requested)
@@ -399,7 +456,13 @@
         (check-equal? (adapter-result-value adapter-result) #f)
         (check-equal? (adapter-result-artifact-handle adapter-result) 'cache-handle)
         (check-equal? (receipt-cache child)
-                      '(cache-hit get-cache cache-handle cache-handle))))))
+                      '(adapter-result
+                        get-cache
+                        store
+                        store-get
+                        requested
+                        (store-get cache-handle)
+                        cache-handle))))))
 
 (def poo-role-test
   (test-suite "poo role descriptors"

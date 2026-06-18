@@ -3,6 +3,7 @@
 ;;; Invariant: implementation logic stays in the leaf owners below.
 
 (import :core/roles
+        :core/failure
         :core/receipt
         :core/task
         :core/flow
@@ -15,6 +16,7 @@
         :core/config)
 
 (export (import: :core/roles)
+        (import: :core/failure)
         (import: :core/receipt)
         (import: :core/task)
         (import: :core/flow)

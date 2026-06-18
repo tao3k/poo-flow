@@ -1,0 +1,106 @@
+* 10.06.03 Gerbil Scheme C3 Foundation
+** 10.06.03.10 Why Gerbil Scheme Matters
+=poo-flow= uses Gerbil Scheme because the control plane benefits from a Lisp where executable configuration, inspectable data, and object composition are available in the same language.
+
+This is not accidental. The module system should be designed around Gerbil POO rather than treating Scheme as a thin syntax layer over a Rust runtime.
+** 10.06.03.20 C3 As A Core Design Tool
+Existing =poo-flow= docs already place C3 role composition in the control-plane design. Descriptors can inherit behavior from multiple roles without reimplementing linearization in local code.
+
+The module system follows that rule:
+- =poo-module-role= extends the control-plane role family;
+- =poo-module-descriptor-prototype= supplies module-owned slots;
+- future module descriptors can add UX, backend, or policy roles through the same Gerbil POO composition path.
+** 10.06.03.25 v0.19-staging Evidence
+This section is forward-looking evidence. =poo-flow= currently targets Gerbil 0.18.2, so implementation work should rely on Gerbil POO and the C3-style precedence behavior available today. C4-specific suffix semantics are documented here as a future compatibility path for the Gerbil 0.19 line.
+
+The Gerbil upstream research checkout is local at:
+#+begin_src text
+.data/gerbil-v0.19-staging
+#+end_src
+
+It was cloned from =https://git.cons.io/mighty-gerbils/gerbil.git= on branch =v0.19-staging= at commit =c778d20d=.
+
+The relevant upstream owners are:
+- =src/gerbil/runtime/c3.ss= for the implementation;
+- =doc/reference/gerbil/runtime/c3.md= for the algorithm description;
+- =src/gerbil/test/c3-test.ss= for regression examples;
+- =src/gerbil/runtime/mop.ss= for the MOP integration that calls C4 when computing class precedence lists.
+
+Upstream explicitly says that =gerbil/runtime/c3= implements C4, a slight extension of C3. The public API is =c4-linearize= / =c4-linearize*= plus =c4-compute-class-slots=. The implementation keeps the C3 selection loop in =c3-select-next= and adds C4-specific suffix handling before that loop.
+
+In =runtime/mop.ss=, class creation calls =compute-precedence-list=, which calls:
+#+begin_src scheme
+(c4-linearize [] direct-supers
+              get-precedence-list: class-precedence-list
+              struct: class-type-struct?
+              eq: eq?
+              get-name: ##type-name)
+#+end_src
+
+That means Gerbil's v0.19 class MRO is not an ad hoc local merge. It is the runtime class precedence list used by the MOP. For =poo-flow= today, this is compatibility research, not a current dependency.
+** 10.06.03.27 What C3 And C4 Mean Here
+C3 is an inheritance linearization algorithm. It turns a multiple-inheritance DAG into one deterministic precedence list while preserving:
+- local precedence order;
+- monotonicity across descendants;
+- deterministic shape-based ordering;
+- a candidate selection rule that avoids old depth-first MRO anomalies.
+
+C4 is Gerbil's v0.19 extension of C3. It adds suffix specifications, corresponding to Gerbil structs. A suffix specification's precedence list must remain a suffix of every descendant's precedence list. This preserves the performance and field layout benefits associated with struct-like single-inheritance tails while still allowing multiple-inheritance classes/mixins above them.
+
+The upstream test suite demonstrates why this matters. For object =Z=, C4 computes:
+#+begin_src scheme
+'(Z K1 K2 K3 D A B C E O)
+#+end_src
+
+The legacy MRO algorithm produced:
+#+begin_src scheme
+'(Z K1 K2 K3 D B E A C O)
+#+end_src
+
+The test marks that as bad because =B A C= violates the intended precedence. The same test also checks that slot computation follows the C4/MRO order.
+** 10.06.03.28 Impact On Flow Design
+POO/C3 helps =poo-flow= most where we compose behavior or metadata from multiple roles. C4 is a later compatibility target once Gerbil 0.19 is stable. Neither should replace the workflow execution plan.
+
+Use POO/C3 now for:
+- role composition in POO descriptors;
+- module descriptor inheritance;
+- task-family and flow-declaration descriptor extension;
+- option/profile layers where deterministic override precedence matters;
+- slot ownership and mixin ordering when a descriptor has multiple behavioral parents.
+
+Do not use POO/C3 or C4 for:
+- scheduling task execution;
+- lowering a flow into dependency edges;
+- deciding which runnable node is ready;
+- representing data dependencies between tasks.
+
+Those are execution-DAG concerns. In this repository they remain inspectable facts in =src/core/plan.ss= and =src/core/runner.ss=. Heavy runtime execution belongs in =marlin-agent-core=.
+
+The practical design rule is:
+#+begin_src text
+POO/C3 now for descriptor inheritance and role precedence.
+C4 later as a Gerbil 0.19 compatibility upgrade.
+Explicit DAG/topological planning for workflow execution, implemented outside this project.
+#+end_src
+
+This division is important for the Rust boundary too. =marlin-agent-core= remains the heavy execution substrate for CAS, subprocesses, persistence, and parallel scheduling, while Scheme/POO owns high-level policy and descriptor composition order.
+** 10.06.03.30 Slot Ownership Rule
+The first implementation keeps slot ownership explicit:
+- module descriptor owns =name=, =imports=, =task-registry=, =flow-registry=, and =options=;
+- task descriptors remain owned by =src/core/task.ss=;
+- flow descriptors remain owned by =src/core/flow.ss=;
+- run-config remains owned by =src/core/config.ss=.
+
+This prevents module activation from becoming a broad mutation point.
+** 10.06.03.40 Macro Governance
+Macros are allowed later, but not as the first layer.
+
+The stable order is:
+1. Plain POO descriptors.
+2. Import validation.
+3. Activation object.
+4. Run-config lowering.
+5. Diagnostic commands.
+6. Macro sugar over the stable API.
+
+This order keeps agent-facing output explicit. A future macro must expand to the same descriptor values that tests can construct by hand.

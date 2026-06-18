@@ -3,6 +3,7 @@
 ;;; Invariant: adapter calls remain behind runtime-adapter functions.
 
 (import :core/receipt
+        :core/failure
         :core/task
         :core/flow
         :core/plan
@@ -19,11 +20,15 @@
         runner?
         runner-strategy
         runner-adapter
+        runner-task-registry
+        runner-flow-registry
         runner-plan
         runner-ready-frontier
         runner-ready-frontier-ids
         runner-validate
         runner-run
+        runner-run-either
+        runner-run-value-or-recover
         runner-run-replay-report)
 
 ;; RunResult <- Value Receipt
@@ -31,14 +36,54 @@
   (value receipt)
   transparent: #t)
 
-;; Runner <- Strategy RuntimeAdapter
-(defstruct runner
-  (strategy adapter)
+;; RunnerState <- Strategy RuntimeAdapter TaskFamilyRegistry FlowDeclarationRegistry
+(defstruct runner-state
+  (strategy
+   adapter
+   task-registry
+   flow-registry)
   transparent: #t)
+
+;;; Public runner construction keeps the two-argument control-plane API stable
+;;; while allowing configured entrypoints to supply POO descriptor registries.
+;; Runner <- Strategy RuntimeAdapter [TaskFamilyRegistry] [FlowDeclarationRegistry]
+(def (make-runner strategy adapter . registries)
+  (make-runner-state strategy
+                     adapter
+                     (if (null? registries)
+                       default-task-family-registry
+                       (car registries))
+                     (if (or (null? registries) (null? (cdr registries)))
+                       default-flow-declaration-registry
+                       (cadr registries))))
+
+;; Boolean <- RunnerCandidate
+(def (runner? runner)
+  (runner-state? runner))
+
+;; Strategy <- Runner
+(def (runner-strategy runner)
+  (runner-state-strategy runner))
+
+;; RuntimeAdapter <- Runner
+(def (runner-adapter runner)
+  (runner-state-adapter runner))
+
+;; TaskFamilyRegistry <- Runner
+(def (runner-task-registry runner)
+  (runner-state-task-registry runner))
+
+;; FlowDeclarationRegistry <- Runner
+(def (runner-flow-registry runner)
+  (runner-state-flow-registry runner))
 
 ;; ExecutionPlan <- Runner Flow
 (def (runner-plan runner flow)
-  (strategy-plan (runner-strategy runner) flow))
+  ((strategy-planner-for-flow-in
+    (runner-strategy runner)
+    (runner-flow-registry runner)
+    flow)
+   flow))
 
 ;;; Frontier queries follow the same runner boundary as execution: flow is
 ;;; lowered once, then strategy decides which graph facts are policy-visible.
@@ -75,27 +120,54 @@
 ;; Boolean <- Runner ExecutionPlan
 (def (runner-validate-plan runner plan)
   (let ((strategy (runner-strategy runner))
-        (adapter (runner-adapter runner)))
-    (for-each (lambda (node) (validate-plan-node strategy adapter node))
+        (adapter (runner-adapter runner))
+        (task-registry (runner-task-registry runner)))
+    (for-each (lambda (node) (validate-plan-node task-registry strategy adapter node))
               (execution-plan-nodes plan))
     #t))
 
-;; Boolean <- Strategy RuntimeAdapter PlanNode
-(def (validate-plan-node strategy adapter node)
-  (validate-step strategy adapter (plan-node-step node)))
+;; Boolean <- TaskFamilyRegistry Strategy RuntimeAdapter PlanNode
+(def (validate-plan-node task-registry strategy adapter node)
+  (validate-step task-registry strategy adapter (plan-node-step node)))
 
-;; Boolean <- Strategy RuntimeAdapter Step
-(def (validate-step strategy adapter step)
+;; Boolean <- TaskFamilyRegistry Strategy RuntimeAdapter Step
+(def (validate-step task-registry strategy adapter step)
   (when (task? step)
-    (validate-task strategy adapter step)))
+    (validate-task task-registry strategy adapter step)))
 
-;; Boolean <- Strategy RuntimeAdapter Task
-(def (validate-task strategy adapter task)
-  (unless (memq (task-capability task) (strategy-capabilities strategy))
-    (error "strategy does not support task kind" (task-kind task)))
-  (when (task-adapter-routed? task)
-    (unless (adapter-supports? adapter (task-capability task))
-      (error "adapter does not support task kind" (task-kind task)))))
+;; Boolean <- TaskFamilyRegistry Strategy RuntimeAdapter Task
+(def (validate-task task-registry strategy adapter task)
+  (let ((capability (task-capability-in task-registry task)))
+    (unless (memq capability (strategy-capabilities strategy))
+      (raise-control-plane-failure
+       'runner
+       'unsupported-task-capability
+       "strategy does not support task kind"
+       (list (cons 'strategy (strategy-name strategy))
+             (cons 'capability capability)
+             (cons 'task-kind (task-kind task)))))
+    (when (task-adapter-routed?-in task-registry task)
+      (unless (adapter-supports? adapter capability)
+        (raise-control-plane-failure
+         'runner
+         'unsupported-adapter-capability
+         "adapter does not support task kind"
+         (list (cons 'adapter (runtime-adapter-name adapter))
+               (cons 'capability capability)
+               (cons 'task-kind (task-kind task))))))))
+
+;; Policy <- Runner
+(def (runner-registry-policy runner)
+  (list (cons 'task-registry
+              (task-family-registry-name (runner-task-registry runner)))
+        (cons 'flow-registry
+              (flow-declaration-registry-name (runner-flow-registry runner)))))
+
+;; Policy <- Runner Strategy [Id]
+(def (runner-execution-policy->alist runner strategy frontier)
+  (append (execution-policy->alist
+           (strategy-execution-policy strategy frontier))
+          (runner-registry-policy runner)))
 
 ;;; Execution returns both the final value and a root receipt that contains the
 ;;; child receipts produced by each planned step.
@@ -115,8 +187,7 @@
                          'flow
                          #f
                          (strategy-name strategy)
-                         (execution-policy->alist
-                          (strategy-execution-policy strategy root-frontier))
+                         (runner-execution-policy->alist runner strategy root-frontier)
                          'local
                          #f
                          input
@@ -126,6 +197,52 @@
                          'ok
                          #f
                          children)))))))
+
+;;; Boundary:
+;;; - Recovery handles both local thrown failures and adapter-failed receipts.
+;;; - Successful runs return the normal run value.
+;; Value <- Runner Flow Input FailureHandler
+(def (runner-run-value-or-recover runner flow input handler)
+  (try-control-plane
+   (lambda ()
+     (let* ((result (runner-run runner flow input))
+            (failed (first-failed-receipt (run-result-receipt result))))
+       (if failed
+         (handler failed)
+         (run-result-value result))))
+   handler))
+
+;;; Runner-level try projection mirrors Funflow's =tryE= observable contract:
+;;; local throws and failed adapter receipts become left values, while normal
+;;; completion keeps the successful value on the right.
+;; TryResult <- Runner Flow Input
+(def (runner-run-either runner flow input)
+  (try-control-plane
+   (lambda ()
+     (let* ((result (runner-run runner flow input))
+            (failed (first-failed-receipt (run-result-receipt result))))
+       (if failed
+         (make-try-left (receipt-error failed))
+         (make-try-right (run-result-value result)))))
+   make-try-left))
+
+;;; Invariant:
+;;; - Receipt trees preserve nested subflow and adapter evidence.
+;;; - The first failed receipt is the recovery target closest to execution.
+;; MaybeReceipt <- Receipt
+(def (first-failed-receipt receipt)
+  (if (receipt-failed? receipt)
+    receipt
+    (first-failed-receipt-in (receipt-children receipt))))
+
+;; MaybeReceipt <- [Receipt]
+(def (first-failed-receipt-in receipts)
+  (if (null? receipts)
+    #f
+    (let (failed (first-failed-receipt (car receipts)))
+      (if failed
+        failed
+        (first-failed-receipt-in (cdr receipts))))))
 
 ;;; Boundary: this recursive driver is the topology interpreter loop.
 ;;; Invariant: completed ids are audit state for frontier receipts, while the
@@ -156,24 +273,28 @@
      ((flow? step)
       (let ((nested (runner-run runner step input)))
         (cons (run-result-value nested)
-              (make-flow-step-receipt plan strategy node step input frontier nested))))
+              (make-flow-step-receipt runner plan strategy node step input frontier nested))))
      ((branch-step? step)
       (cons input
-            (make-branch-receipt plan strategy node step input frontier)))
+            (make-branch-receipt runner plan strategy node step input frontier)))
      (else
-      (error "flow step is neither task nor flow" step)))))
+      (raise-control-plane-failure
+       'runner
+       'unsupported-step
+       "flow step is neither task nor flow"
+       (list (cons 'node-id (plan-node-id node))
+             (cons 'step step)))))))
 
 ;;; Flow nodes wrap nested receipts so top-level replay can still match each
 ;;; planned DAG node to one top-level child receipt.
-;; Receipt <- ExecutionPlan Strategy PlanNode Flow Input [Id] RunResult
-(def (make-flow-step-receipt plan strategy node flow input frontier nested)
+;; Receipt <- Runner ExecutionPlan Strategy PlanNode Flow Input [Id] RunResult
+(def (make-flow-step-receipt runner plan strategy node flow input frontier nested)
   (make-receipt (execution-plan-flow-name plan)
                 (flow-name flow)
                 (plan-node-kind node)
                 (plan-node-id node)
                 (strategy-name strategy)
-                (execution-policy->alist
-                 (strategy-execution-policy strategy frontier))
+                (runner-execution-policy->alist runner strategy frontier)
                 'local
                 #f
                 input
@@ -186,15 +307,14 @@
 
 ;;; Branch join nodes are local control-plane joins: their input is the list of
 ;;; dependency values produced by branch arms.
-;; Receipt <- ExecutionPlan Strategy PlanNode BranchStep Value [Id]
-(def (make-branch-receipt plan strategy node branch input frontier)
+;; Receipt <- Runner ExecutionPlan Strategy PlanNode BranchStep Value [Id]
+(def (make-branch-receipt runner plan strategy node branch input frontier)
   (make-receipt (execution-plan-flow-name plan)
                 (branch-step-name branch)
                 'branch
                 (plan-node-id node)
                 (strategy-name strategy)
-                (execution-policy->alist
-                 (strategy-execution-policy strategy frontier))
+                (runner-execution-policy->alist runner strategy frontier)
                 'local
                 #f
                 input
@@ -245,93 +365,142 @@
   (let ((entry (assoc id values)))
     (if entry
       (cdr entry)
-      (error "missing dependency value" id))))
+      (raise-control-plane-failure
+       'runner
+       'missing-dependency-value
+       "missing dependency value"
+       (list (cons 'node-id id))))))
 
-;;; Adapter dispatch preserves store put/get as first-class task-family
-;;; operations; external tasks still use the generic submit slot.
-;; AdapterResult <- RuntimeAdapter Task ExecutionRequest
-(def (adapter-result-for-task adapter task request)
-  (let ((operation (task-adapter-operation task)))
+;;; Adapter dispatch preserves runtime adapter operations while keeping
+;;; extension-specific task request interpretation outside the runner.
+;; AdapterResult <- TaskFamilyRegistry RuntimeAdapter Task ExecutionRequest
+(def (adapter-result-for-task task-registry adapter task request)
+  (let ((operation (task-adapter-operation-in task-registry task)))
     (cond
      ((eq? operation 'store-put)
       (adapter-store-put adapter request))
      ((eq? operation 'store-get)
-      (adapter-store-get adapter (task-store-payload task)))
+      (adapter-store-get adapter (task-request-payload task)))
      ((eq? operation 'submit)
       (adapter-submit adapter request))
      (else
-      (error "unsupported adapter operation" operation)))))
+      (raise-control-plane-failure
+       'runner
+       'unsupported-adapter-operation
+       "unsupported adapter operation"
+       (list (cons 'operation operation)
+             (cons 'task (task-name task))))))))
 
-;;; Adapter cache evidence is derived after runtime handoff because only the
-;;; adapter result knows whether this was a request-only handoff or a handle hit.
-;; CacheDecision <- Strategy Task Input AdapterResult
-(def (adapter-cache-decision strategy task input adapter-result)
+;;; Adapter failures remain runtime-owned but are wrapped before receipt
+;;; persistence so replay and audit code can inspect the same failure shape.
+;; MaybeExecutionFailure <- RuntimeAdapter AdapterResult
+(def (adapter-result-failure adapter adapter-result)
   (cond
-   ((eq? (task-adapter-operation task) 'store-get)
-    (list 'cache-hit
-          (task-name task)
-          (task-store-payload task)
-          (adapter-result-artifact-handle adapter-result)))
-   ((eq? (adapter-result-status adapter-result) 'requested)
-    (list 'cache-request-only
-          (task-name task)
-          (task-kind task)
-          (adapter-result-request-id adapter-result)))
-   (else
-    (strategy-cache-decision strategy task input adapter-result))))
+   ((adapter-result-error adapter-result)
+    (control-plane-failure
+     'runtime-adapter
+     'adapter-failure
+     "runtime adapter returned an error"
+     (list (cons 'adapter (runtime-adapter-name adapter))
+           (cons 'request-id (adapter-result-request-id adapter-result))
+           (cons 'error (adapter-result-error adapter-result)))
+     #t))
+   ((eq? (adapter-result-status adapter-result) 'failed)
+    (control-plane-failure
+     'runtime-adapter
+     'adapter-failure
+     "runtime adapter failed without a detailed error"
+     (list (cons 'adapter (runtime-adapter-name adapter))
+           (cons 'request-id (adapter-result-request-id adapter-result))
+           (cons 'status (adapter-result-status adapter-result)))
+     #t))
+   (else #f)))
+
+;; Symbol <- MaybeExecutionFailure AdapterResult
+(def (adapter-receipt-status failure adapter-result)
+  (if failure
+    'failed
+    (adapter-result-status adapter-result)))
+
+;;; Adapter evidence is derived after runtime handoff because only the adapter
+;;; result knows the durable request id, status, and artifact handle.  Core
+;;; deliberately records a generic adapter observation; cache/CAS lifecycle
+;;; interpretation belongs to store/CAS extensions or the runtime owner.
+;; AdapterEvidence <- TaskFamilyRegistry Task AdapterResult
+(def (adapter-result-evidence task-registry task adapter-result)
+  (list 'adapter-result
+        (task-name task)
+        (task-kind task)
+        (task-adapter-operation-in task-registry task)
+        (adapter-result-status adapter-result)
+        (adapter-result-request-id adapter-result)
+        (adapter-result-artifact-handle adapter-result)))
+
+;;; Local tasks keep strategy-owned cache policy; adapter-routed tasks record
+;;; generic runtime evidence instead of pretending to know cache semantics.
+;; CacheDecision <- TaskFamilyRegistry Strategy Task Input AdapterResult
+(def (adapter-cache-decision task-registry strategy task input adapter-result)
+  (if (task-adapter-routed?-in task-registry task)
+    (adapter-result-evidence task-registry task adapter-result)
+    (strategy-cache-decision strategy task input adapter-result)))
 
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
 ;; StepResult <- Runner ExecutionPlan Strategy PlanNode Task Input [Id]
 (def (run-task runner plan strategy node task input frontier)
-  (cond
-   ((strategy-can-run-locally? strategy task)
-    (let* ((policy (execution-policy->alist
-                    (strategy-execution-policy strategy frontier)))
-           (value ((task-executor task) input))
-           (cache (strategy-cache-decision strategy task input value)))
-      (cons value
-            (make-receipt (execution-plan-flow-name plan)
-                          (task-name task)
-                          (task-kind task)
-                          (plan-node-id node)
-                          (strategy-name strategy)
-                          policy
-                          'local
-                          #f
-                          input
-                          value
-                          cache
-                          frontier
-                          'ok
-                          #f
-                          '()))))
-   ((task-adapter-routed? task)
-    (let* ((request (task-adapter-request task
-                                           input
-                                           (execution-plan-flow-name plan)
-                                           (plan-node-id node)
-                                           frontier
-                                           (strategy-name strategy)
-                                           (execution-policy->alist
-                                            (strategy-execution-policy strategy frontier))))
-           (adapter-result (adapter-result-for-task (runner-adapter runner) task request))
-           (cache (adapter-cache-decision strategy task input adapter-result)))
-      (cons adapter-result
-            (make-receipt (execution-plan-flow-name plan)
-                          (task-name task)
-                          (task-kind task)
-                          (plan-node-id node)
-                          (strategy-name strategy)
-                          (execution-request-policy request)
-                          (runtime-adapter-name (runner-adapter runner))
-                          (adapter-result-request-id adapter-result)
-                          input
-                          adapter-result
-                          cache
-                          frontier
-                          (adapter-result-status adapter-result)
-                          (adapter-result-error adapter-result)
-                          '()))))
-   (else
-    (error "unsupported task kind" (task-kind task)))))
+  (let ((task-registry (runner-task-registry runner)))
+    (cond
+     ((strategy-can-run-locally-in strategy task-registry task)
+      (let* ((policy (runner-execution-policy->alist runner strategy frontier))
+             (value ((task-executor task) input))
+             (cache (strategy-cache-decision strategy task input value)))
+        (cons value
+              (make-receipt (execution-plan-flow-name plan)
+                            (task-name task)
+                            (task-kind task)
+                            (plan-node-id node)
+                            (strategy-name strategy)
+                            policy
+                            'local
+                            #f
+                            input
+                            value
+                            cache
+                            frontier
+                            'ok
+                            #f
+                            '()))))
+     ((task-adapter-routed?-in task-registry task)
+      (let* ((policy (runner-execution-policy->alist runner strategy frontier))
+             (request (task-adapter-request task
+                                             input
+                                             (execution-plan-flow-name plan)
+                                             (plan-node-id node)
+                                             frontier
+                                             (strategy-name strategy)
+                                             policy))
+             (adapter-result (adapter-result-for-task task-registry (runner-adapter runner) task request))
+             (cache (adapter-cache-decision task-registry strategy task input adapter-result))
+             (failure (adapter-result-failure (runner-adapter runner) adapter-result)))
+        (cons adapter-result
+              (make-receipt (execution-plan-flow-name plan)
+                            (task-name task)
+                            (task-kind task)
+                            (plan-node-id node)
+                            (strategy-name strategy)
+                            (execution-request-policy request)
+                            (runtime-adapter-name (runner-adapter runner))
+                            (adapter-result-request-id adapter-result)
+                            input
+                            adapter-result
+                            cache
+                            frontier
+                            (adapter-receipt-status failure adapter-result)
+                            failure
+                            '()))))
+     (else
+      (raise-control-plane-failure
+       'runner
+       'unsupported-task-kind
+       "unsupported task kind"
+       (list (cons 'task-kind (task-kind task))))))))

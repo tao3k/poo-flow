@@ -1,0 +1,10 @@
+* POO Flow User Interface
+This root-level directory is the maintained downstream user configuration surface, not a test fixture and not package runtime source.
+
+The shape is POO Flow native:
+- =modules.ss= chooses hot-plug module groups, module ids, and flags;
+- =config.ss= sets flow, loop, and sandbox strategy values and exports the complete user config.
+
+There is no package layer here. Sandbox, loop, flow, and future capabilities enter through module selections and upstream realization in =src/modules=.
+
+Normal consumers should import =:poo-flow/user-interface/config= with the project root on =GERBIL_LOADPATH=.

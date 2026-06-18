@@ -3,6 +3,7 @@
 ;;; Invariant: heavy execution remains in runner/runtime-adapter code.
 
 (import :core/flow
+        :core/failure
         :core/plan
         :core/task)
 
@@ -21,6 +22,7 @@
         strategy-can-select-frontier?
         strategy-ready-frontier
         strategy-ready-frontier-ids
+        strategy-can-run-locally-in
         strategy-can-run-locally?
         strategy-cache-decision)
 
@@ -40,7 +42,7 @@
 ;; Strategy <- Unit
 (def (make-local-eager-strategy)
   (make-strategy 'local-eager
-                 '(pure scheme store external branch graph-frontier)
+                 '(pure scheme external branch graph-frontier)
                  'no-cache
                  'fail-fast
                  default-linear-plan))
@@ -50,7 +52,7 @@
 ;; Strategy <- Unit
 (def (make-cached-local-eager-strategy)
   (make-strategy 'cached-local-eager
-                 '(pure scheme store external branch graph-frontier)
+                 '(pure scheme external branch graph-frontier)
                  'cache-output
                  'fail-fast
                  default-linear-plan))
@@ -71,7 +73,13 @@
                   (flow-declaration-descriptor-in registry flow))))
     (cond
      ((eq? planner 'linear-dag) (strategy-planner strategy))
-     (else (error "strategy does not support flow planner" planner)))))
+     (else
+      (raise-control-plane-failure
+       'strategy
+       'unsupported-flow-planner
+       "strategy does not support flow planner"
+       (list (cons 'strategy (strategy-name strategy))
+             (cons 'planner planner)))))))
 
 ;; Planner <- Strategy Flow
 (def (strategy-planner-for-flow strategy flow)
@@ -89,7 +97,11 @@
 (def (strategy-ready-frontier strategy plan completed-node-ids)
   (if (strategy-can-select-frontier? strategy)
     (execution-plan-ready-nodes plan completed-node-ids)
-    (error "strategy cannot select graph frontier" (strategy-name strategy))))
+    (raise-control-plane-failure
+     'strategy
+     'unsupported-frontier
+     "strategy cannot select graph frontier"
+     (list (cons 'strategy (strategy-name strategy))))))
 
 ;;; The id projection is the stable receipt/adapter surface for frontier
 ;;; evidence when callers do not need plan-node payloads.
@@ -97,12 +109,20 @@
 (def (strategy-ready-frontier-ids strategy plan completed-node-ids)
   (if (strategy-can-select-frontier? strategy)
     (execution-plan-ready-node-ids plan completed-node-ids)
-    (error "strategy cannot select graph frontier" (strategy-name strategy))))
+    (raise-control-plane-failure
+     'strategy
+     'unsupported-frontier
+     "strategy cannot select graph frontier"
+     (list (cons 'strategy (strategy-name strategy))))))
+
+;; Boolean <- Strategy TaskFamilyRegistry Task
+(def (strategy-can-run-locally-in strategy registry task)
+  (and (memq (task-capability-in registry task) (strategy-capabilities strategy))
+       (task-local?-in registry task)))
 
 ;; Boolean <- Strategy Task
 (def (strategy-can-run-locally? strategy task)
-  (and (memq (task-capability task) (strategy-capabilities strategy))
-       (task-local? task)))
+  (strategy-can-run-locally-in strategy default-task-family-registry task))
 
 ;;; Cache decisions are evidence values, not storage actions; runners copy them
 ;;; into receipts so adapters can later materialize the policy.

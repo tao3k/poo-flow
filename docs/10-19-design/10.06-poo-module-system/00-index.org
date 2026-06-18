@@ -1,0 +1,45 @@
+* 10.06 POO Module System
+** 10.06.10 Purpose
+This document pack defines the module-system layer for =poo-flow=. The package is not a port of Doom Emacs and not a copy of Marlin's Gerbil module API. =poo-flow= remains the core control plane. External systems are reference material for interface shape, diagnostics, and modular organization.
+
+The implementation lives in =src/modules/module-system.ss=. It depends on core registries and config APIs, but core does not import or re-export it.
+** 10.06.20 Reading Order
+- [[file:01-doom-core-audit.org][01 Doom Core Audit]]
+[[file:01-doom-core-audit.org][01 Doom Core Audit]]
+- [[file:02-marlin-gerbil-modules-audit.org][02 Marlin Gerbil Modules Audit]]
+[[file:02-marlin-gerbil-modules-audit.org][02 Marlin Gerbil Modules Audit]]
+- [[file:03-gerbil-scheme-c3-foundation.org][03 Gerbil Scheme C3 Foundation]]
+[[file:03-gerbil-scheme-c3-foundation.org][03 Gerbil Scheme C3 Foundation]]
+- [[file:04-poo-flow-module-system-design.org][04 POO Flow Module System Design]]
+[[file:04-poo-flow-module-system-design.org][04 POO Flow Module System Design]]
+- [[file:05-implementation-roadmap.org][05 Implementation Roadmap]]
+[[file:05-implementation-roadmap.org][05 Implementation Roadmap]]
+- [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
+[[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
+- [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
+[[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
+** 10.06.30 Local Evidence
+The module-system design builds on existing =poo-flow= contracts:
+- =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.
+- =src/core/task.ss= owns task-family descriptors and immutable task-family registries.
+- =src/core/flow.ss= owns flow-declaration descriptors and immutable flow-declaration registries.
+- =src/core/config.ss= accepts task and flow registries at the =run-config= boundary.
+- =src/modules/module-system.ss= owns source refs, catalog resolution, module activation, and import validation.
+- =src/extensions/*= demonstrates descriptor bundles as extension modules.
+** 10.06.40 Delivered Surface
+The implemented module-system surface includes:
+- source refs: =local=, =package=, =registry=, and =generated=;
+- immutable module catalogs;
+- source resolution from catalog refs to already-built descriptors;
+- POO module descriptors;
+- the thin =poo-module= macro;
+- module doctor reports and alist projection;
+- descriptor activation into run-config registries;
+- typed failures for missing imports and missing catalog sources;
+- duplicate and empty-contribution diagnostics for agent/CLI inspection.
+** 10.06.50 Non-Goals
+- Do not vendor Doom Emacs, Marlin, or backend runtime code into =src=.
+- Do not let core import or re-export the module-system layer.
+- Do not execute tasks during module activation.
+- Do not let macro DSLs perform loading, validation, or runtime work.
+- Do not replace existing task/flow registries with a parallel registry type.

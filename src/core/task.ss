@@ -2,8 +2,9 @@
 ;;; Boundary: tasks describe work intent and adapter request shape.
 ;;; Invariant: only pure/scheme tasks carry an in-process executor.
 
-(import (only-in :clan/poo/object .o .@ object?)
-        :core/roles)
+(import (only-in :clan/poo/object .mix .@ object?)
+        :core/roles
+        :core/failure)
 
 (export make-task
         task?
@@ -15,15 +16,16 @@
         task-executor
         make-task-family-descriptor
         task-family-descriptor?
+        task-family-descriptor-prototype
         make-task-family-registry
         task-family-registry?
+        task-family-registry-prototype
         default-task-family-registry
         task-family-registry-name
         task-family-registry-descriptors
         task-family-registry-extend
         pure-task-family-descriptor
         scheme-task-family-descriptor
-        store-task-family-descriptor
         external-task-family-descriptor
         task-family-descriptors
         task-family-name
@@ -43,15 +45,14 @@
         task-runtime-owner
         task-adapter-operation-in
         task-adapter-operation
+        task-request-operation
+        task-request-payload
         make-pure-task
         make-scheme-task
-        make-store-task
-        task-store-operation
-        task-store-payload
-        task-store-put?
-        task-store-get?
         make-external-task
+        task-local?-in
         task-local?
+        task-adapter-routed?-in
         task-adapter-routed?
         task-normalized-request
         task-adapter-request
@@ -83,16 +84,28 @@
 
 ;;; Task-family descriptors are POO objects because extension policy should be
 ;;; data-driven at the task boundary, not hard-coded in the runner.
+;; TaskFamilyDescriptorPrototype <- Unit
+(def task-family-descriptor-prototype
+  (.mix slots: (role-constant-slots
+                (list (cons 'kind 'task-family)
+                      (cons 'capability #f)
+                      (cons 'route 'local)
+                      (cons 'runtime-owner 'gerbil)
+                      (cons 'adapter-dispatch #f)
+                      (cons 'extension-policy 'descriptor-prototype)))
+        task-role))
+
 ;; TaskFamilyDescriptor <- Symbol Symbol Symbol Symbol AdapterDispatch
 (def (make-task-family-descriptor family-name family-capability family-route family-runtime-owner family-adapter-dispatch)
-  (.o (:: @ task-role)
-      (name family-name)
-      (kind 'task-family)
-      (capability family-capability)
-      (route family-route)
-      (runtime-owner family-runtime-owner)
-      (adapter-dispatch family-adapter-dispatch)
-      (responsibility (list 'task-family family-route family-capability))))
+  (.mix slots: (role-constant-slots
+                (list (cons 'name family-name)
+                      (cons 'capability family-capability)
+                      (cons 'route family-route)
+                      (cons 'runtime-owner family-runtime-owner)
+                      (cons 'adapter-dispatch family-adapter-dispatch)
+                      (cons 'responsibility
+                            (list 'task-family family-route family-capability))))
+        task-family-descriptor-prototype))
 
 ;; Boolean <- TaskFamilyDescriptorCandidate
 (def (task-family-descriptor? descriptor)
@@ -101,13 +114,22 @@
 
 ;;; Registries are immutable POO policy bundles; extension code gets a new
 ;;; registry value instead of mutating the default control-plane registry.
+;; TaskFamilyRegistryPrototype <- Unit
+(def task-family-registry-prototype
+  (.mix slots: (role-constant-slots
+                (list (cons 'kind 'task-family-registry)
+                      (cons 'descriptors '())
+                      (cons 'extension-policy 'immutable-registry)))
+        task-role))
+
 ;; TaskFamilyRegistry <- Symbol [TaskFamilyDescriptor]
 (def (make-task-family-registry registry-name registry-descriptors)
-  (.o (:: @ task-role)
-      (name registry-name)
-      (kind 'task-family-registry)
-      (descriptors registry-descriptors)
-      (responsibility (list 'task-family-registry registry-name))))
+  (.mix slots: (role-constant-slots
+                (list (cons 'name registry-name)
+                      (cons 'descriptors registry-descriptors)
+                      (cons 'responsibility
+                            (list 'task-family-registry registry-name))))
+        task-family-registry-prototype))
 
 ;; Boolean <- TaskFamilyRegistryCandidate
 (def (task-family-registry? registry)
@@ -138,10 +160,6 @@
   (make-task-family-descriptor 'scheme 'scheme 'local 'gerbil #f))
 
 ;; TaskFamilyDescriptor <- Unit
-(def store-task-family-descriptor
-  (make-task-family-descriptor 'store 'store 'adapter 'rust-or-external-runtime 'store))
-
-;; TaskFamilyDescriptor <- Unit
 (def external-task-family-descriptor
   (make-task-family-descriptor 'external 'external 'adapter 'rust-or-external-runtime 'submit))
 
@@ -151,7 +169,6 @@
    'default-task-families
    (list pure-task-family-descriptor
          scheme-task-family-descriptor
-         store-task-family-descriptor
          external-task-family-descriptor)))
 
 ;; [TaskFamilyDescriptor] <- Unit
@@ -190,7 +207,12 @@
   (let ((descriptor (find-task-family kind (task-family-registry-descriptors registry))))
     (if descriptor
       descriptor
-      (error "unknown task family" kind))))
+      (raise-control-plane-failure
+       'task-registry
+       'unknown-task-family
+       "unknown task family"
+       (list (cons 'registry (task-family-registry-name registry))
+             (cons 'kind kind))))))
 
 ;; TaskFamilyDescriptor <- Symbol
 (def (task-family-for-kind kind)
@@ -229,17 +251,14 @@
   (task-runtime-owner-in default-task-family-registry task))
 
 ;;; Adapter operations translate descriptor-level dispatch into runtime adapter
-;;; slots while keeping store operation details inside the task owner.
+;;; slots. Extensions may install a procedure dispatch hook when an operation
+;;; must be derived from extension-owned task request data.
 ;; AdapterOperation <- TaskFamilyRegistry Task
 (def (task-adapter-operation-in registry task)
   (let ((dispatch (task-family-adapter-dispatch (task-descriptor-in registry task))))
-    (cond
-     ((eq? dispatch 'store)
-      (cond
-       ((task-store-put? task) 'store-put)
-       ((task-store-get? task) 'store-get)
-       (else (error "unsupported store operation" (task-store-operation task)))))
-     (else dispatch))))
+    (if (procedure? dispatch)
+      (dispatch task)
+      dispatch)))
 
 ;; AdapterOperation <- Task
 (def (task-adapter-operation task)
@@ -273,43 +292,42 @@
 (def (make-scheme-task name proc input-contract output-contract)
   (make-task name 'scheme (list 'scheme name) input-contract output-contract proc))
 
-;; Task <- Symbol Symbol Payload Contract Contract
-(def (make-store-task name operation payload input-contract output-contract)
-  (make-task name 'store (list 'store operation payload) input-contract output-contract #f))
-
-;;; Store operation accessors keep cache semantics explicit at the task-family
-;;; boundary without requiring runners to destructure arbitrary request data.
+;;; Request operation and payload are generic helpers for extension-owned task
+;;; families that use the conventional =(family operation payload)= shape.
 ;; Symbol | #f <- Task
-(def (task-store-operation task)
-  (if (eq? (task-kind task) 'store)
+(def (task-request-operation task)
+  (if (and (pair? (task-request task))
+           (pair? (cdr (task-request task))))
     (cadr (task-request task))
     #f))
 
 ;; Payload | #f <- Task
-(def (task-store-payload task)
-  (if (eq? (task-kind task) 'store)
+(def (task-request-payload task)
+  (if (and (pair? (task-request task))
+           (pair? (cdr (task-request task)))
+           (pair? (cddr (task-request task))))
     (caddr (task-request task))
     #f))
-
-;; Boolean <- Task
-(def (task-store-put? task)
-  (eq? (task-store-operation task) 'put))
-
-;; Boolean <- Task
-(def (task-store-get? task)
-  (eq? (task-store-operation task) 'get))
 
 ;; Task <- Symbol Symbol Payload Contract Contract
 (def (make-external-task name operation payload input-contract output-contract)
   (make-task name 'external (list 'external operation payload) input-contract output-contract #f))
 
+;; Boolean <- TaskFamilyRegistry Task
+(def (task-local?-in registry task)
+  (eq? (task-route-in registry task) 'local))
+
 ;; Boolean <- Task
 (def (task-local? task)
-  (eq? (task-route task) 'local))
+  (task-local?-in default-task-family-registry task))
+
+;; Boolean <- TaskFamilyRegistry Task
+(def (task-adapter-routed?-in registry task)
+  (eq? (task-route-in registry task) 'adapter))
 
 ;; Boolean <- Task
 (def (task-adapter-routed? task)
-  (eq? (task-route task) 'adapter))
+  (task-adapter-routed?-in default-task-family-registry task))
 
 ;; ExecutionRequest <- Task Value
 (def (task-normalized-request task input)

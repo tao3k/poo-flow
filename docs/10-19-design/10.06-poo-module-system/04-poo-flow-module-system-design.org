@@ -1,0 +1,188 @@
+#+title: 10.06.04 POO Flow Module System Design
+
+* 10.06.04 POO Flow Module System Design
+** 10.06.04.05 Current Implementation Delta
+The module system now includes the Marlin-style facade in =src/modules/module-system.ss= while preserving the existing descriptor/catalog/activation API.
+
+Implemented facade pieces:
+- =poo-module-interface= with schema and metadata slots;
+- =poo-string-required=, =poo-string-constant=, =poo-string-default=, and =poo-string-optional= schema helpers;
+- =pooModules= and =defpoo-module= for interface/config construction;
+- =poo-import=, =poo-imports=, =poo-local-source=, and =poo-source-ref= for structured imports;
+- inline import closure before doctor and activation;
+- =poo-module-option-configs=, =poo-module-option-schemas=, and validation receipts;
+- =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and merge receipts;
+- =poo-module-apply=, =poo-module-evaluate=, =poo-module-workflow=, =pooEvalModules=, and =pooModuleSystemPresentation= for inspectable runtime-facing projection.
+
+Direct symbol/string imports remain closed-world dependencies. Source refs and import specs remain metadata and profile values; they do not load Scheme files or manufacture runtime handlers.
+** 10.06.04.10 Architecture
+The module system is a thin layer over existing =poo-flow= registries.
+
+#+begin_src text
+source ref
+  -> metadata for local/package/registry/generated origin
+
+catalog
+  -> binds source refs to already-built module descriptors
+  -> resolves selected sources before doctor or activation
+
+poo module descriptor
+  -> task-family registry contribution
+  -> flow-declaration registry contribution
+  -> module options
+  -> explicit imports
+
+doctor
+  -> reports missing imports
+  -> reports duplicate descriptor and option keys
+  -> reports empty descriptor bundles
+
+activation
+  -> validates imports
+  -> combines descriptor registries
+  -> creates inspectable activation object
+  -> lowers to run-config
+#+end_src
+
+The implementation lives in =src/modules/module-system.ss=. It imports core
+descriptor and config APIs, but core does not import or re-export it.
+
+** 10.06.04.20 Core Types
+*** PooModuleSourceRef
+Source refs describe where a module descriptor came from without making
+activation responsible for loading that source. The implemented source ref kinds
+are:
+- =local=
+- =package=
+- =registry=
+- =generated=
+
+Source refs are metadata values and can be projected with
+=poo-module-source-ref->alist=.
+
+*** PooModuleCatalog
+Catalogs bind =PooModuleSourceRef= values to already-built descriptors. They
+are immutable indexes:
+- =poo-module-catalog-add= returns a new catalog;
+- =resolve-poo-module-source= raises typed =missing-module-source= failures;
+- =resolve-poo-module-sources= produces descriptor lists for doctor or activation.
+
+*** PooModuleDescriptor
+The descriptor is a Gerbil POO object with module-owned slots:
+- =name=
+- =imports=
+- =task-registry=
+- =flow-registry=
+- =options=
+
+*** PooModuleActivation
+The activation is a transparent struct containing:
+- activated module descriptors;
+- combined task-family registry;
+- combined flow-declaration registry;
+- combined options.
+
+Activation does not execute user code and does not load files.
+
+*** PooModuleDoctorReport
+=poo-module-doctor= produces an inspectable report containing module names,
+status, and diagnostics. =poo-module-resolve-doctor= applies the same report to
+catalog-selected source refs.
+
+** 10.06.04.30 Source Resolution Rules
+Source resolution is value-based. A catalog entry already contains a constructed
+descriptor. The resolver only matches source refs by kind and value. It does
+not read files, query package managers, or evaluate Scheme code.
+
+This keeps the boundary explicit:
+- loading belongs to a later source-loader layer;
+- resolving belongs to =src/modules/module-system.ss=;
+- activation receives descriptor values only.
+
+** 10.06.04.40 Activation Rules
+Imports are explicit. If a module imports =foundation=, a module named
+=foundation= must be present in the activation list.
+
+Activation appends descriptor contributions after the base registries. Duplicate
+contributions do not mutate activation behavior. They are reported by
+=poo-module-doctor=.
+
+** 10.06.04.50 User Interface Direction
+The implemented macro is intentionally thin:
+
+#+begin_src scheme
+(poo-module remote-runtime
+  (imports foundation)
+  (tasks remote-task-descriptor)
+  (flows remote-flow-descriptor)
+  (options (cons 'source 'user-config)))
+#+end_src
+
+The macro performs no loading, no validation, and no runtime execution. It only
+builds a =PooModuleDescriptor=.
+
+** 10.06.04.60 Diagnostics Direction
+The diagnostic surface is implemented as =poo-module-doctor=. It reports:
+- missing imports;
+- duplicate task-family names;
+- duplicate flow-declaration kinds;
+- duplicate option keys;
+- modules with no descriptor contributions.
+
+Later diagnostics should include unused imports, runtime capability gaps after
+activation, and source-ref drift when filesystem or package loading is added.
+** 10.06.04.70 Current Modular Owner Layout
+The implementation is now split under =src/modules/= instead of being held in core or in a single large file:
+- =interface.ss= owns Marlin-style interfaces, schema helpers, and object helpers;
+- =source.ss= owns source refs and structured imports;
+- =descriptor.ss= owns C3 role data, descriptors, imports, metadata slots, and closed-world import validation;
+- =context.ss= owns Doom-style flags, hook lookup, active checks, and phase-order projections;
+- =diagnostics.ss= owns doctor reports;
+- =resolver.ss= owns source catalog lookup, activation, and run-config lowering;
+- =loader.ss= owns pure source-ref loader backends and load receipts;
+- =projection.ss= owns schemas, validation receipts, runtime projections, value catalogs, and presentation receipts;
+- =merge.ss= owns Nix-style option merge receipts and final option alist projection;
+- =doctor.ss= owns user-facing module doctor and source doctor presentations;
+- =syntax.ss= owns user-facing macro sugar that expands to descriptor/catalog data;
+- =module-system.ss= remains a thin facade that re-exports the leaf owners.
+
+The Doom/C3 interface additions are data-only:
+- descriptor slots now include =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
+- =poo-module-active?= and =pooModuleActive?= provide explicit flag checks;
+- =poo-module-option-merge-receipts= keeps append, override, conflict, constant, required, and missing-schema findings inspectable before runtime;
+- =poo-module-phase-order= projects init/config ordering from depth metadata;
+- runtime projections expose phase ids, hooks, and active metadata without loading files.
+
+This keeps the boundary stable: Scheme owns descriptor data and validation, while loader backends and runtime execution remain separate owners.
+** 10.06.04.80 User Interface Contract
+The user-facing import is =:modules/module-system=. Users should not import leaf owners such as =:modules/context= or =:modules/projection= directly for normal module authoring.
+
+The public interface contract is:
+- declare profiles with =poo-module-interface= and string schema helpers;
+- construct modules with =pooModules= or =defpoo-module=;
+- express imports with =poo-import= and =poo-imports=;
+- inspect descriptor metadata with =poo-module-name=, =poo-module-group=, =poo-module-flags=, =poo-module-features=, =poo-module-phase-file=, and =poo-module-hook-values=;
+- ask active/flag questions with =poo-module-active?= and =pooModuleActive?=;
+- inspect final option composition with =poo-module-option-merge-receipts= and =poo-module-merged-option-alist=;
+- load source refs into catalogs with =poo-module-static-loader=, =poo-module-load-source-receipts=, and =poo-module-load-catalog=;
+- group modules with =pooModuleCatalog=;
+- project runtime-facing receipts with =poo-module-workflow=, =pooEvalModules=, and =pooModuleSystemPresentation=;
+- project pre-runtime doctor summaries with =pooModuleDoctorPresentation= and =pooModuleSourceDoctorPresentation=;
+- inspect user config mistakes through validation receipts rather than runtime exceptions.
+
+The regression owner for this contract is =t/module-system-user-interface-test.ss=. That test intentionally imports only =:modules/module-system= plus generic POO object accessors.
+** 10.06.04.85 Maintained Downstream User Interface
+=user-interface/= is the root-level maintained user-interface directory. It is not a test fixture and it is not package runtime source.
+The directory models the thin handoff that downstream users see:
+- =modules.ss= chooses hot-plug module groups, module ids, and flags;
+- =config.ss= supplies flow, loop, sandbox, and strategy values and exports =:poo-flow/user-interface/config= when the project root is on =GERBIL_LOADPATH=.
+This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/modules=. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
+** 10.06.04.90 Doom And Nix Design Boundary
+The detailed design principles are in [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]].
+
+The short version:
+- learn Doom's authoring experience, not its hidden runtime effects;
+- learn Nix's option and merge semantics, not its syntax;
+- keep Gerbil POO and C3 as the implementation substrate;
+- add macro sugar only after the data API and user-interface tests exist;
+- require user-facing tests to import =:modules/module-system= only.

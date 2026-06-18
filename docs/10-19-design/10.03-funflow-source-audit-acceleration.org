@@ -179,55 +179,93 @@ Poo-flow interpretation:
 
 ** 10.03.30 Current Poo-Flow Parity Matrix
 | Area | Current state | Target from source audit | Owner |
-| Flow declarations | Task, sequential, branch, empty descriptors exist | Configurable registries select descriptor policy during execution | Scheme |
-| Task families | Pure, Scheme, store, external descriptors exist | Docker becomes a first-class external family; custom registries are config-bound | Scheme |
-| Runner | Local pure/Scheme execution and adapter handoff exist | Runner validates descriptor registry, config policy, and adapter capability before submission | Scheme |
-| Config | Run config selects strategy and adapter | Run config snapshots task registry, flow registry, config source policy, and runtime options | Scheme |
-| Errors | Generic =error= calls remain | Typed control-plane failures for unknown family, unsupported planner, missing dependency, missing config, adapter failure | Scheme |
+| Flow declarations | Task, sequential, branch, empty descriptors are POO prototypes with config-bound registries | Descriptor policy participates in planning and receipts | Scheme |
+| Task families | Pure, Scheme, store, external descriptors are POO prototypes with config-bound registries | Docker becomes a first-class external family | Scheme |
+| Runner | Local pure/Scheme execution, descriptor validation, and adapter handoff exist | Runner validates config policy and adapter capability before submission | Scheme |
+| Config | Run config snapshots strategy, adapter, registries, options, config requirements, configurable arguments, config source keys, and preflight/rendering status | Runtime source loading and secret materialization | Scheme |
+| Errors | Typed =execution-failure= exists for registry, strategy, runner, dependency, adapter-result, and missing-config failures | Runtime response normalization still needs typed failures | Scheme |
 | Store | Store requests and cache evidence exist | Durable CAS lifecycle, hashing, aliasing, lookup/wait, remote cache | Rust/runtime |
 | Docker | Generic external request exists | Docker task descriptor, argument rendering, volume binding, output artifact request | Scheme plus Rust/runtime |
 | Parallelism | Branch DAG and frontier evidence exist | Runtime scheduler executes ready frontier concurrently | Rust/runtime first, Scheme policy |
 | Receipts | Receipts record task, request, cache, runtime owner | Receipts also record descriptor registry, config preflight, typed failure, and runtime response ids | Scheme |
 
+** 10.03.35 Gerbil POO Implementation Correction
+The first descriptor implementation used POO objects but kept too much slot
+construction policy inside =task.ss= and =flow.ss=. The corrected shape follows
+the =gerbil-poo= source model more closely.
+
+Evidence:
+- =asp gerbil-scheme search extension gerbil-poo usage --view seeds= confirms
+  =gerbil-poo://= is registered knowledge and not project activation.
+- =asp gerbil-scheme search pattern gerbil-poo usage --view seeds= points to
+  the object slot-resolution model and warns against direct slot hash guesses.
+- =.data/gerbil-poo/object.ss= shows =.mix= delegates to =make-object= with
+  =slots:= and =defaults:=, and slot functions are computed from slot specs.
+
+Implementation decision:
+- Descriptor and registry policy stay as POO objects.
+- Raw descriptor values are converted to =$constant-slot-spec= before entering
+  =.mix slots:=.
+- That conversion lives in =role-constant-slots= under =src/core/roles.ss=, so
+  task and flow modules do not each carry private POO slot machinery.
+- Tests assert =.slot?= and =.all-slots= over descriptors and registries, not
+  only accessor results. This keeps the POO behavior observable.
+
 ** 10.03.40 Acceleration Lanes
 *** 10.03.41 Lane A: Config-Bound Descriptor Registries
-This is the next implementation slice.
+Core Scheme path landed.
 
-Implement:
-- Add task-family registry and flow-declaration registry fields to run config.
-- Build configured runners from those registries.
-- Thread the flow registry into strategy planning.
-- Thread the task registry into runner validation, adapter operation selection,
-  and receipt metadata.
-- Add tests that a custom registry changes behavior through
-  =run-flow-with-config=, not only through direct helper calls.
+Landed:
+- Run config carries task-family and flow-declaration registries.
+- Configured runners are assembled from those registries.
+- Strategy planning consumes the configured flow declaration registry.
+- Runner validation, adapter operation selection, and receipt metadata consume
+  the configured task-family registry.
+- Tests install custom registries through =run-flow-with-config= and observe
+  planning, validation, dispatch, and receipt behavior.
 
 Exit gate:
 - A custom task descriptor or flow descriptor can be installed through a run
   config and observed in plan, validation, dispatch, and receipt output.
 
 *** 10.03.42 Lane B: Typed Control-Plane Failures
-This should follow Lane A immediately because it improves every later feature.
+First Scheme slice landed.
 
-Implement:
-- Add an execution-failure data type with owner, code, message, detail, and
+Landed:
+- Added =execution-failure= with owner, code, message, detail, and
   recoverability.
-- Replace runner/strategy/task generic errors with typed failure construction.
-- Convert adapter-result error fields into receipt failures.
-- Add tests for unknown task family, unsupported planner, missing dependency,
-  unsupported adapter operation, and missing config.
+- Replaced registry, strategy, task, and runner generic error boundaries with
+  typed failure construction and direct structured raises.
+- Converted adapter-result error fields into receipt failures before audit
+  persistence.
+- Added tests for unknown task family, unsupported planner, and adapter
+  failure receipt wrapping.
+
+Remaining:
+- Normalize runtime response failures once the Rust bridge returns real error
+  payloads.
 
 Exit gate:
 - Failing plans and failing adapter submissions return or raise structured
   failures that are inspectable by tests.
 
 *** 10.03.43 Lane C: External Config Policy
-Implement:
-- Add config requirement descriptors for file/env/literal/placeholder values.
-- Collect required keys during planning or validation.
-- Add a preflight result that records required keys, missing keys, and
-  rendering errors without exposing secret values.
-- Support Docker-style argument rendering as request data.
+First Scheme preflight slice landed.
+
+Landed:
+- Added config requirement descriptors with source, key, and secret metadata.
+- Added config preflight results with status, requirements, and missing keys.
+- Added run-config accessors for requirements and caller-supplied source keys.
+- =run-flow-with-config= validates preflight before runner execution.
+- Missing keys raise typed =execution-failure= under owner =config= without
+  exposing secret values.
+- Added configurable argument descriptors for literal, env, file, and
+  placeholder arguments.
+- Added rendering helpers that preserve placeholders as runtime references and
+  redact secret env/file values from Scheme request data.
+
+Remaining:
+- Let Rust/runtime own real file/env loading and secret materialization.
 
 Exit gate:
 - A Docker-style task can declare required environment and file keys, and
@@ -240,6 +278,33 @@ Implement:
 - Add process invocation or IPC behind the Rust adapter.
 - Preserve request-only adapter behavior as a deterministic test double.
 - Record runtime response ids and artifact handles in receipts.
+
+Implementation receipt:
+- Landed the first Scheme-side bridge schema in =src/core/runtime-adapter.ss=
+  with =poo-flow.runtime-request.v1= and =poo-flow.runtime-response.v1=
+  constants.
+- Rust submit and store-put now emit alist-shaped envelopes with schema,
+  runtime, operation, request id, artifact handle, policy, plan id, node id,
+  and frontier data.
+- Adapter results now project into a durable runtime response shape so receipts
+  and future Rust IPC can share the same response contract.
+- =make-rust-run-config= now accepts a =runtime-command= option that receives
+  one request envelope and returns a normalizable runtime response.
+- Runtime command responses normalize from runtime-response alists,
+  =runtime-response= structs, or internal adapter results; invalid command
+  output becomes a failed adapter result.
+- Added =t/runtime-bridge-test.ss= coverage for request schema fields,
+  store-put operation tags, adapter-result response projection, configured
+  command responses, and invalid command responses.
+
+Remaining:
+- Add concrete process invocation or IPC behind the configured runtime command.
+- Wire fetch and store-get through the same request/response schema instead of
+  placeholder adapter results.
+- Add docker-run and cache-query request operations after the Docker and CAS
+  descriptors land.
+- Record runtime response ids and artifact handles in receipts once the runtime
+  can return real ids.
 
 Exit gate:
 - A non-local task can cross the Rust boundary and return a real response or a
@@ -305,6 +370,13 @@ Expected changes:
 - Add configured-runner tests proving registries are not ignored.
 - Add receipt evidence for registry names.
 
+Implementation receipt:
+- Landed in Scheme control-plane code with registry-aware run configs,
+  registry-aware runner planning and validation, registry-aware task dispatch,
+  and configured-runner coverage for custom task-family descriptors.
+- The POO registry remains the policy owner. Runner code consumes registry
+  helpers instead of destructuring descriptor objects.
+
 *** 10.03.52 M10 Typed Failure Surface
 Files likely touched:
 - =src/core/failure.ss=
@@ -344,6 +416,21 @@ Expected changes:
 - Define stable request and response schema.
 - Add real Rust adapter invocation behind feature/config.
 - Keep request-only adapter as a test harness.
+
+Implementation receipt:
+- First Scheme schema slice is landed with runtime request/response constants,
+  Rust submit/store-put envelopes, response projection helpers, and focused
+  bridge tests.
+- Configured runtime commands are landed through =make-rust-run-config=
+  options, keeping the default Rust adapter deterministic until a command is
+  provided.
+- Runtime command output is normalized before runner receipt construction, so
+  the runner still consumes only =adapter-result= values.
+
+Next implementation cut:
+- Add a concrete process/IPC implementation behind the configured runtime
+  command boundary.
+- Wire fetch and store-get through request/response schema operations.
 
 *** 10.03.55 M13 Store Runtime
 Files likely touched:
@@ -416,12 +503,17 @@ Every milestone should satisfy these checks before commit:
 - Documentation updates cite the source audit area and the owner boundary.
 
 ** 10.03.80 Next Action
-Start with M9 in the next code slice:
+M9 through the M12 Scheme command-boundary slice are implemented. Continue under
+the tutorial-result ladder in =10.04-funflow-tutorial-result-ladder.org=:
 
-- Extend =run-config= with task and flow registries.
-- Make =run-config->runner= preserve those registries.
-- Make runner planning and validation consume configured registries.
-- Add tests that custom registries affect =run-flow-with-config=.
+- Keep Stage 1 through Stage 6 green as the lightweight result gate.
+- Add Docker task descriptors using the ExternalConfig and CCompilation
+  tutorial payload shapes.
+- Add process invocation or IPC behind the configured runtime command boundary
+  only when it can produce a visible tutorial-shaped result.
+- Preserve typed control-plane failures and config preflight before runtime
+  submission.
 
-This is the smallest slice that changes real feature behavior and unlocks the
-later Docker, config, and Rust runtime work.
+This resets implementation priority from abstract feature parity to visible
+tutorial-result parity without moving Docker, CAS, or scheduling logic into
+Scheme.

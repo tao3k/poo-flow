@@ -1,0 +1,215 @@
+;;; -*- Gerbil -*-
+;;; Boundary: makefile-tool runtime stages prove descriptor handoff behavior.
+;;; Invariant: tests emulate runtime responses without executing Makefile work.
+
+(import :std/test
+        :core/api
+        :extensions/workflow)
+
+(export tutorial-makefile-runtime-test)
+
+;; RuntimeResponseAlist <- Alist Value ArtifactHandle
+(def (makefile-runtime-response envelope value artifact)
+  (list (cons 'schema +runtime-response-schema+)
+        (cons 'request-id (cdr (assoc 'request-id envelope)))
+        (cons 'status 'completed)
+        (cons 'value value)
+        (cons 'artifact-handle artifact)
+        (cons 'error #f)
+        (cons 'metadata '((tutorial . makefile-runtime-stage)))))
+
+;; ExecutionRequest <- Alist
+(def (makefile-envelope-request envelope)
+  (cdr (assoc 'request envelope)))
+
+;; Symbol <- ExecutionRequest
+(def (makefile-external-operation request)
+  (cadr (execution-request-request request)))
+
+;; Payload <- ExecutionRequest
+(def (makefile-external-payload request)
+  (caddr (execution-request-request request)))
+
+;; Value <- Alist Symbol Value
+(def (makefile-alist-ref alist key default)
+  (let (entry (assoc key alist))
+    (if entry (cdr entry) default)))
+
+;;; Stage 17 uses the stdout-response boundary while preserving makefile-tool
+;;; parse/run as separate external task operations.
+;; ArgumentsBuilder <- Procedure Procedure
+(def (makefile-runtime-response-arguments record-parse record-run)
+  (lambda (envelope)
+    (let* ((request (makefile-envelope-request envelope))
+           (operation (makefile-external-operation request))
+           (payload (makefile-external-payload request)))
+      (cond
+       ((eq? operation 'makefile-tool-parse)
+        (record-parse request)
+        (let (plan (list (cons 'plan 'makefile-tool-plan)
+                         (cons 'working-directory
+                               (makefile-alist-ref payload
+                                                   'working-directory
+                                                   "."))
+                         (cons 'makefile
+                               (makefile-alist-ref payload
+                                                   'makefile
+                                                   "Makefile"))
+                         (cons 'sources
+                               (makefile-alist-ref payload 'sources '()))))
+          (list
+           (object->string
+            (makefile-runtime-response
+             envelope
+             plan
+             '(artifact stage-17-makefile-plan))))))
+       ((eq? operation 'makefile-tool-run)
+        (record-run request)
+        (let* ((input (execution-request-input request))
+               (plan (adapter-result-value input))
+               (result
+                (list (cons 'target
+                            (makefile-alist-ref payload 'target ""))
+                      (cons 'binary
+                            (makefile-alist-ref payload 'binary ""))
+                      (cons 'process-output
+                            '(stdout "makefile-tool hello output"))
+                      (cons 'plan-sources
+                            (makefile-alist-ref plan 'sources '())))))
+          (list
+           (object->string
+            (makefile-runtime-response
+             envelope
+             result
+             '(artifact stage-17-hello-output))))))
+       (else
+        (list
+         (object->string
+          (makefile-runtime-response
+           envelope
+           '(unexpected-makefile-tool-operation)
+           '(artifact unexpected-makefile-tool)))))))))
+
+;;; Boundary:
+;;; - Request envelopes are built from public task-adapter-request data.
+;;; - Manifest tests do not depend on runner internals.
+;; RuntimeRequestEnvelope <- ExecutionRequest Symbol ArtifactHandle
+(def (makefile-runtime-envelope request request-id artifact)
+  (list (cons 'schema +runtime-request-schema+)
+        (cons 'request-id request-id)
+        (cons 'request request)
+        (cons 'artifact-handle artifact)))
+
+(def tutorial-makefile-runtime-test
+  (test-suite "funflow makefile-tool runtime result ladder"
+    (test-case "stage 17 descriptor command drives makefile tool workflow"
+      (let ((seen-parse #f)
+            (seen-run #f))
+        (let* ((descriptor
+                (make-makefile-tool-runtime-command-descriptor
+                 'stage-17-makefile-tool-runtime
+                 "/bin/echo"
+                 (list (cons 'arguments
+                             (makefile-runtime-response-arguments
+                              (lambda (request) (set! seen-parse request))
+                              (lambda (request) (set! seen-run request))))
+                       (cons 'tutorial 'stage-17))))
+               (runtime-command (runtime-command-descriptor->command descriptor))
+               (config (make-rust-run-config
+                        (list (cons 'runtime-command runtime-command))))
+               (flow (make-makefile-tool-workflow 'makefile-tool-stage-17))
+               (result (run-result-value
+                        (run-flow-with-config config flow 'makefile-project)))
+               (value (adapter-result-value result)))
+          (check-equal? (runtime-command-descriptor-protocol descriptor)
+                        'stdout-s-expression)
+          (check-equal? (runtime-command-kind runtime-command) 'process)
+          (check-equal? (adapter-result-status result) 'completed)
+          (check-equal? (adapter-result-artifact-handle result)
+                        '(artifact stage-17-hello-output))
+          (check-equal? (cdr (assoc 'process-output value))
+                        '(stdout "makefile-tool hello output"))
+          (check-equal? (cdr (assoc 'plan-sources value))
+                        '("main.cpp" "hello.cpp" "factorial.cpp"))
+          (check-equal? (makefile-external-operation seen-parse)
+                        'makefile-tool-parse)
+          (check-equal? (makefile-external-operation seen-run)
+                        'makefile-tool-run)
+          (check-equal? (adapter-result-artifact-handle
+                         (execution-request-input seen-run))
+                        '(artifact stage-17-makefile-plan)))))
+    (test-case "stage 18 makefile tool descriptor manifest exposes rust cli handoff"
+      (let* ((descriptor
+              (make-makefile-tool-runtime-command-descriptor
+               'stage-18-makefile-tool-cli
+               "/usr/bin/poo-flow-runtime"
+               (list (cons 'runtime-name "poo-flow-runtime")
+                     (cons 'tutorial 'stage-18))))
+             (flow (make-makefile-tool-workflow 'makefile-tool-stage-18))
+             (parse-task (car (flow-steps flow)))
+             (run-task (cadr (flow-steps flow)))
+             (parse-request
+              (task-adapter-request parse-task
+                                    'makefile-project
+                                    'makefile-tool-stage-18
+                                    '(node makefile-tool-stage-18 0)
+                                    '()
+                                    'local-eager
+                                    '()))
+             (run-request
+              (task-adapter-request run-task
+                                    '(adapter-result makefile-plan)
+                                    'makefile-tool-stage-18
+                                    '(node makefile-tool-stage-18 1)
+                                    '((node makefile-tool-stage-18 0))
+                                    'local-eager
+                                    '()))
+             (parse-manifest
+              (runtime-command-descriptor->manifest
+               descriptor
+               (makefile-runtime-envelope
+                parse-request
+                'stage-18-parse-request
+                '(artifact stage-18-parse))))
+             (run-manifest
+              (runtime-command-descriptor->manifest
+               descriptor
+               (makefile-runtime-envelope
+                run-request
+                'stage-18-run-request
+                '(artifact stage-18-run))))
+             (parse-args (cdr (assoc 'arguments parse-manifest)))
+             (run-args (cdr (assoc 'arguments run-manifest))))
+        (check-equal? (cdr (assoc 'schema parse-manifest))
+                      +runtime-command-descriptor-schema+)
+        (check-equal? (cdr (assoc 'name parse-manifest))
+                      'stage-18-makefile-tool-cli)
+        (check-equal? (cdr (assoc 'executable parse-manifest))
+                      "/usr/bin/poo-flow-runtime")
+        (check-equal? (cdr (assoc 'metadata parse-manifest))
+                      '((workflow . makefile-tool)
+                        (runtime . rust-cli-compatible)
+                        (runtime-name . "poo-flow-runtime")
+                        (tutorial . stage-18)))
+        (check-equal? (member "--operation" parse-args)
+                      '("--operation"
+                        "makefile-tool-parse"
+                        "--working-directory"
+                        "funflow-examples/makefile-tool/test"
+                        "--makefile"
+                        "Makefile"
+                        "--sources"
+                        "(\"main.cpp\" \"hello.cpp\" \"factorial.cpp\")"))
+        (check-equal? (member "--operation" run-args)
+                      '("--operation"
+                        "makefile-tool-run"
+                        "--target"
+                        "hello"
+                        "--binary"
+                        "./hello"
+                        "--expected-output"
+                        "process-output"))
+        (check-equal? (cdr (assoc 'argv run-manifest))
+                      (cons "/usr/bin/poo-flow-runtime" run-args))))))
+
+(run-tests! tutorial-makefile-runtime-test)

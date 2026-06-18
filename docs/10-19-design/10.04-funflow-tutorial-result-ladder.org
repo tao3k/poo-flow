@@ -1,0 +1,460 @@
+#+TITLE: 10.04 Funflow Tutorial Result Ladder
+
+* 10.04 Funflow Tutorial Result Ladder
+
+** 10.04.00 Purpose
+
+This document changes the alignment driver from source-shape parity to
+tutorial-result parity. Funflow's tutorials show what users actually observe:
+values printed by minimal flows, composed flows, custom task extensions,
+word-count workflows, external configuration checks, Docker execution, and
+runtime-backed artifacts.
+
+Poo-flow implementation should now advance by result gates. Each gate must
+state:
+- the Funflow tutorial output being matched;
+- the poo-flow behavior that produces an equivalent observable result;
+- the command that proves the result in this repository.
+
+** 10.04.10 Audited Tutorial Surface
+
+The reference checkout under =.data/funflow= exposes these result sources:
+- =funflow-tutorial/notebooks/Tutorial1.ipynb=: minimal pure flow, saved output
+  =2= for running =(+1)= over input =1=.
+- =funflow-tutorial/notebooks/QuickReference.ipynb=: minimal greeting output
+  ="Hello Watson !"=, composition output ="Hello world"=, and cache-oriented
+  repeated =Increment!= output.
+- =funflow-tutorial/notebooks/Tutorial2.ipynb=: custom task extension output
+  ="Kangaroo goes woop!woop!woop!woop!woop!woop!woop!"=.
+- =funflow-tutorial/notebooks/WordCount/WordCount.ipynb=: word count pipeline
+  prints counts such as =a: 3=, =and: 3=, =lets: 2=, and =file: 1=.
+- =funflow-tutorial/notebooks/ExternalConfig/ExternalConfig.ipynb=: config
+  values from env/file/placeholder feed Docker args; missing config fails before
+  expensive runtime work.
+- =funflow-tutorial/notebooks/ErrorHandling.ipynb=: =tryE= catches Docker and
+  local failures and routes them to handled branches.
+- =funflow-tutorial/notebooks/CCompilation/CCompilation.ipynb=: Docker-backed
+  GCC flow prints =15= for input =3=.
+- =funflow-tutorial/notebooks/TensorflowDocker/TensorflowDocker.ipynb=:
+  multi-step Docker workflow adds data to store, trains a model, runs
+  inference, and renders =summary.png=.
+- =funflow-examples/makefile-tool/README.md=: runnable example builds
+  =makefile-tool=, enters =funflow-examples/makefile-tool/test=, runs the tool,
+  then runs =./hello=.
+
+** 10.04.20 Result Gates
+
+*** 10.04.21 Stage 1: Minimal Flow Value
+
+Reference result:
+- Tutorial1 runs a pure flow over =1= and returns =2=.
+
+Poo-flow result:
+- =pure-flow= plus =runner-run= returns =2=.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 1 tutorial1 minimal pure
+  flow returns 2"=.
+
+*** 10.04.22 Stage 2: Composition And Greeting
+
+Reference result:
+- QuickReference returns ="Hello Watson !"= for the minimal greeting.
+- QuickReference returns ="Hello world"= for composed flows.
+
+Poo-flow result:
+- =pure-flow= produces the greeting.
+- =flow-then= composes two local flows into the same visible output.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 2 quick reference hello and
+  composition results"=.
+
+*** 10.04.23 Stage 3: Extension Behavior
+
+Reference result:
+- Tutorial2 custom task returns ="Kangaroo goes
+  woop!woop!woop!woop!woop!woop!woop!"=.
+
+Poo-flow result:
+- =custom-repeat-flow= and =make-custom-run-config= demonstrate the same
+  extension-facing behavior through a local extension-owned task family.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 3 tutorial2 extension
+  behavior repeats custom text"=.
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 12 tutorial2 custom
+  task interpreter runs through extension"=.
+
+*** 10.04.24 Stage 4: WordCount Pipeline
+
+Reference result:
+- WordCount prints counts including =a: 3=, =and: 3=, =lets: 2=, and =file: 1=.
+
+Poo-flow result:
+- =word-count-flow= and =make-text-run-config= return deterministic counts with
+  the same observable cardinalities.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 4 word count exposes
+  deterministic counts"=.
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 13 word count
+  extension returns notebook counts"=.
+
+*** 10.04.25 Stage 5: External Config Fail-Fast
+
+Reference result:
+- ExternalConfig catches missing env/file keys before successful runtime output.
+- Saved notebook output includes =Missing the following required config keys:
+  ["SECOND_GREETING"]=.
+
+Poo-flow result:
+- =run-flow-with-config= raises typed =missing-config-keys= before adapter
+  submission.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 5 external config fails
+  before runtime submission"=.
+
+*** 10.04.26 Stage 6: Runtime Response Boundary
+
+Reference result:
+- Docker-backed tutorials return runtime-owned artifacts and visible output.
+
+Poo-flow result:
+- A configured =runtime-command= receives one request envelope and returns a
+  normalized runtime response, proving the command/IPC boundary before real
+  Docker or CAS execution exists.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 6 configured runtime command
+  returns normalized result"=.
+
+*** 10.04.27 Stage 7: Docker/CAS Real Runtime
+
+Reference result:
+- CCompilation prints =15= after Docker GCC execution.
+- ExternalConfig prints configured Docker echo output.
+- makefile-tool builds a C example and then =./hello= runs.
+
+Poo-flow target result:
+- Rust/runtime owns Docker execution, CAS materialization, filesystem movement,
+  and process output.
+- Scheme core owns descriptor registries, config preflight, request envelopes,
+  response normalization, and receipts.
+- Scheme core exposes a =runtime-command= descriptor boundary so procedure
+  commands, process-backed commands, and later Rust commands share one
+  invocation shape.
+- Process-backed commands may use the stdout protocol: print one
+  =poo-flow.runtime-response.v1= s-expression and let Scheme normalize it.
+- Docker-specific declarations belong to =src/extensions/docker.ss=.
+- CAS/store lifecycle interpretation belongs to a store/CAS extension or Rust
+  runtime, not to =src/core/runner.ss=.
+- Core receipts may carry generic =adapter-result= evidence: task, kind,
+  adapter operation, status, request id, and artifact handle.
+
+Poo-flow precursor landed:
+- =src/extensions/docker.ss= owns =docker-task-family-descriptor=.
+- =src/extensions/docker.ss= owns =docker-flow= and =make-docker-task=.
+- The extension installs its own registry, strategy capability, and adapter
+  capability instead of changing core defaults.
+- Docker request data carries image, command, args, volume bindings, and output
+  policy as adapter-routed request data.
+- CCompilation-style payloads can carry =gcc:9.3.0=, =gcc= arguments, mount
+  bindings, and process-handle output policy.
+- ExternalConfig-style payloads can carry rendered file/env/placeholder args
+  without doing Docker execution in Scheme.
+- =src/core/runner.ss= no longer emits =cache-hit= or =cache-request-only= for
+  store operations; it emits generic adapter evidence so CAS policy can be
+  layered outside core.
+- =src/extensions/store.ss= owns =store-task-family-descriptor=,
+  =store-flow=, =make-store-task=, and store-enabled run configs.
+- Core defaults no longer install store task families or store capabilities;
+  Store/CAS users opt in through the extension registry and strategy wrappers.
+- Stage 7 now uses =make-stdout-runtime-command=, so the visible-result proof
+  crosses a real process boundary before decoding the runtime response.
+- The preferred process path is =make-stdout-runtime-command=, which removes
+  per-call custom decoders from tutorial proof code.
+
+Proof:
+- =gxtest t/docker-descriptor-test.ss=, cases ="captures CCompilation-style
+  docker payload"= and ="captures ExternalConfig-style rendered arguments"=.
+- =gxtest t/tutorial-result-test.ss=, case ="stage 7 docker runtime command
+  returns CCompilation visible result"=.
+
+Remaining proof target:
+- A future Rust-backed runtime command descriptor must replace the test process
+  command, print the same stdout runtime-response schema, and produce visible
+  output equivalent to =15= or =hello= without embedding Docker/CAS
+  implementation in Scheme.
+
+*** 10.04.28 Stage 8: Docker Artifact Handoff To Store
+
+Reference result:
+- Funflow's Docker/CAS tutorials make runtime artifacts observable across
+  workflow steps rather than only returning an immediate scalar.
+
+Poo-flow target result:
+- Scheme composes =docker-flow= and =store-flow= with =flow-then=.
+- =src/extensions/workflow.ss= owns the Docker+Store run-config composition.
+- The composed config installs Docker and Store task registries, strategy
+  capabilities, and adapter capabilities without changing core defaults.
+- The stdout runtime command handles both =docker= and =store= requests through
+  the same =poo-flow.runtime-response.v1= schema.
+- The Store step receives the previous Docker =adapter-result= as input and can
+  observe its value and artifact handle.
+
+Poo-flow landed:
+- Stage 8 returns a store manifest whose =input-value= is =15=.
+- Stage 8 returns a store manifest whose =input-artifact= is
+  =(artifact stage-8-ccompilation-output)=.
+- The final result artifact is =(artifact stage-8-store-manifest)=.
+
+Proof:
+- =gxtest t/tutorial-result-test.ss=, case ="stage 8 docker artifact feeds
+  store manifest"=.
+
+*** 10.04.29 Stage 9: Descriptor-Declared Runtime Command
+
+Reference result:
+- A Rust-backed runtime should replace the current process test command without
+  changing workflow declarations or response normalization.
+
+Poo-flow target result:
+- =runtime-command-descriptor= records command name, executable, argument
+  builder, response protocol, and metadata as inert data.
+- =runtime-command-descriptor->command= materializes a descriptor into the
+  existing process command boundary.
+- The stdout protocol remains =poo-flow.runtime-response.v1=, so a future Rust
+  CLI only needs to print the same response s-expression.
+- Docker-to-Store workflows depend on the descriptor protocol, not on the
+  =make-stdout-runtime-command= constructor directly.
+
+Poo-flow landed:
+- Stage 9 runs the same Docker artifact handoff through a descriptor-declared
+  command.
+- The descriptor exposes =stdout-s-expression= and the executable path as
+  inspectable data.
+- The materialized command still produces =(artifact stage-9-store-manifest)=.
+
+Proof:
+- =gxtest t/runtime-bridge-test.ss=, case ="stdout runtime command descriptor
+  materializes process command"=.
+- =gxtest t/tutorial-runtime-result-test.ss=, case ="stage 9 descriptor command
+  drives docker store workflow"=.
+
+*** 10.04.30 Stage 10: Descriptor Manifest For Rust CLI Handoff
+
+Reference result:
+- A real Rust runtime needs an explicit command manifest before it can replace
+  the test process command.
+
+Poo-flow target result:
+- =runtime-command-descriptor->manifest= projects a descriptor and request
+  envelope into stable CLI handoff data.
+- The manifest records =poo-flow.runtime-command-descriptor.v1=, the request
+  schema, request id, command name, protocol, executable, arguments, argv, and
+  metadata.
+- The projection evaluates the descriptor's argument builder for a concrete
+  envelope but still does not execute the process.
+
+Poo-flow landed:
+- Stage 10 exposes a Rust-compatible argv manifest for a stdout response
+  protocol descriptor.
+- Runtime bridge tests prove the manifest shape independently of Docker/Store.
+
+Proof:
+- =gxtest t/runtime-bridge-test.ss=, case ="runtime command descriptor exports
+  cli manifest"=.
+- =gxtest t/tutorial-runtime-result-test.ss=, case ="stage 10 descriptor
+  manifest exposes rust cli handoff"=.
+
+*** 10.04.31 Stage 11: QuickReference Conditional And Cache Semantics
+
+Reference result:
+- QuickReference's limited increment returns =1= for the three-step =9= input
+  case.
+- QuickReference's cached increment performs the side-effecting increment once
+  for repeated identical cache keys.
+
+Poo-flow result:
+- =conditional-flow= provides local branch selection without pretending this is
+  the same as graph scheduling.
+- =cached-scheme-flow= memoizes local task outputs for tutorial parity while
+  durable cache/CAS materialization remains store/runtime-owned.
+
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 11 quick reference
+  conditional and cached increment run"=.
+
+*** 10.04.32 Stage 12: Tutorial2 Custom Task Interpreter
+
+Reference result:
+- Tutorial2 builds a custom task declaration, weaves an interpreter, and returns
+  ="Kangaroo goes woop!woop!woop!woop!woop!woop!woop!"=.
+
+Poo-flow result:
+- =extensions/custom-task= owns the =custom= task descriptor, run config,
+  request data, and local interpreter.
+
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 12 tutorial2 custom
+  task interpreter runs through extension"=.
+
+*** 10.04.33 Stage 13: WordCount Text Extension
+
+Reference result:
+- WordCount removes tutorial punctuation, filters non-word tokens, counts words,
+  sorts by descending count, and formats lines such as =a: 3= and =Lets: 2=.
+
+Poo-flow result:
+- =extensions/text= owns =text= task descriptors and WordCount text parsing.
+  The module consumes text directly; caller/runtime code owns file IO.
+
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 13 word count
+  extension returns notebook counts"=.
+
+*** 10.04.34 Stage 14: CCompilation And Tensorflow Descriptor Workflows
+
+Reference result:
+- CCompilation and TensorflowDocker are multi-step runtime workflows with Docker
+  images, commands, mounted inputs, and runtime-owned artifacts.
+
+Poo-flow result:
+- =extensions/workflow= exposes public constructors for CCompilation,
+  CCompilation-to-store, Tensorflow training, Tensorflow inference, and the
+  two-step Tensorflow workflow descriptor.
+
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 14 ccompilation and
+  tensorflow workflow descriptors are public"=.
+
+*** 10.04.35 Stage 15: ErrorHandling Recovery Boundary
+
+Reference result:
+- ErrorHandling uses =tryE= to catch both local =throwStringFlow= failures and
+  runtime failures, then returns handled branch values.
+
+Poo-flow result:
+- =throw-string-flow= raises typed control-plane failures through a Scheme task.
+- =runner-run-value-or-recover= recovers either raised =execution-failure=
+  values or failed adapter receipts in one public runner boundary.
+- =runner-run-either= projects the same boundary into a =try-result= value, so
+  downstream logic can map left failures to visible results such as ="The task
+  failed"=.
+- Adapter failures remain runtime-owned receipt evidence; Scheme recovery does
+  not parse strings or Docker-specific payloads.
+
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 15 error handling
+  recovers local throw and adapter failure"=.
+
+*** 10.04.36 Stage 16: makefile-tool Workflow Descriptor
+
+Reference result:
+- =funflow-examples/makefile-tool= parses a Makefile project, runs the selected
+  target, and observes =./hello= process output.
+
+Poo-flow result:
+- =extensions/workflow= exposes =make-makefile-tool-parse-flow=,
+  =make-makefile-tool-run-flow=, and =make-makefile-tool-workflow= as external
+  task descriptors.
+- The descriptor records Makefile path, working directory, source files,
+  target, binary, and expected process-output contract while leaving filesystem
+  and process execution to Rust/runtime.
+
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="stage 16 makefile tool
+  workflow descriptor is public"=.
+
+*** 10.04.37 Stage 17: makefile-tool Descriptor Runtime Result
+
+Reference result:
+- =funflow-examples/makefile-tool= runs the generated tool and then runs
+  =./hello= from the test project.
+
+Poo-flow result:
+- =make-makefile-tool-runtime-command-descriptor= materializes through the same
+  stdout runtime-response protocol used by Docker/Store stages.
+- The parse step returns a makefile plan artifact; the run step consumes that
+  adapter result and returns a process-output artifact.
+- Scheme still does not execute Makefile or subprocess work; the runtime command
+  owns that boundary.
+
+Proof:
+- =gxtest t/tutorial-makefile-runtime-test.ss=, case ="stage 17 descriptor
+  command drives makefile tool workflow"=.
+
+*** 10.04.38 Stage 18: makefile-tool Rust CLI Manifest
+
+Reference result:
+- A Rust-backed makefile-tool runtime needs a stable command manifest for both
+  parse and run task requests.
+
+Poo-flow result:
+- =make-makefile-tool-runtime-arguments= projects request id, plan id,
+  operation, Makefile path, working directory, source files, target, binary, and
+  expected process-output into argv-compatible strings.
+- =make-makefile-tool-runtime-command-descriptor= exposes the Rust CLI handoff
+  without changing workflow declarations.
+
+Proof:
+- =gxtest t/tutorial-makefile-runtime-test.ss=, case ="stage 18 makefile tool
+  descriptor manifest exposes rust cli handoff"=.
+
+*** 10.04.39 Stage 19: Runtime Manifest Consumer
+Reference result:
+- Funflow's configured runner consumes a fully configured task interpreter and returns a runtime-owned result without changing the flow declaration.
+Poo-flow result:
+- =runtime-command-descriptor->manifest= exports a request-bound CLI manifest with argv, request id, operation, policy, plan id, node id, frontier, and artifact handle.
+- =run-runtime-command-manifest= consumes that manifest locally: it validates the schema, executes the stored argv, reads one stdout s-expression, and normalizes it into an =adapter-result=.
+- =runtime-command-manifest->command= lets the same manifest plug into the existing =runtime-command= slot, so Rust can replace only the executable while Scheme keeps descriptor policy and response normalization.
+Proof:
+- =gxtest t/runtime-manifest-test.ss=, cases ="runtime command descriptor exports cli manifest"=, ="runtime command manifest consumer executes stdout protocol"=, and ="runtime command manifest rejects unsupported protocol"=.
+** 10.04.40 Current Command Receipt
+
+The current repository proof commands are:
+
+#+begin_src sh
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-result-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-runtime-result-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-feature-batch-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/runtime-manifest-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/unit-tests.ss
+asp gerbil-scheme check --workspace .
+asp org lint docs/10-19-design/10.04-funflow-tutorial-result-ladder.org
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxi build.ss
+git diff --check
+#+end_src
+
+Observed result:
+- Stage 1 through Stage 6 pass with 13 checks.
+- Stage 7 through Stage 10 and Stage 17 through Stage 18 pass with 53 runtime
+  checks.
+- Stage 11 through Stage 16 pass with 33 checks.
+- Stage 1 through Stage 18 pass with 99 combined tutorial-result checks.
+- Stage 19 passes with 19 runtime manifest consumer checks.
+- The runtime bridge owner is split from the manifest consumer owner and passes with 39 schema checks.
+- Stage 7 descriptor precursor passes with 11 checks through
+  =gxtest t/docker-descriptor-test.ss=.
+- The full package check passes with =status=pass scope=full files=54 definitions=619 findings=0=.
+- The agent-sandbox tests are split into descriptor, bridge, and profile owners
+  so the project harness policy remains active across the full source scope.
+
+** 10.04.50 Implementation Priority Reset
+
+The next implementation sequence should be:
+1. Keep Stage 1 through Stage 6 green as the lightweight result gate.
+2. Keep the Stage 7 Docker descriptor precursor green.
+3. Keep the Stage 8 Docker-to-Store handoff green as the composed workflow
+   result gate.
+4. Keep the Stage 9 descriptor boundary green so Rust can replace only the
+   executable/arguments layer.
+5. Keep the Stage 10 descriptor manifest green as the Rust CLI handoff contract.
+6. Keep Stage 11 through Stage 16 green as the public tutorial feature batch.
+7. Keep Stage 17 and Stage 18 green as the makefile-tool runtime handoff gate.
+8. Keep Stage 19 green as the local manifest consumer and adapter-result normalization gate.
+9. Promote Stage 7 through Stage 19 to real runtime status only when Rust
+   consumes the manifests and produces the visible result plus artifact
+   manifests without embedding Docker/CAS/process execution in Scheme.
