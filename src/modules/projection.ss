@@ -261,7 +261,7 @@
 ;;; Boundary: apply creates an inspectable runtime-module value, not a handle.
 ;; POOObject <- PooModuleDescriptor
 (def (poo-module-apply module)
-  (.o kind: "poo.modules.runtime-module.v1"
+  (.o kind: "poo-flow.modules.runtime-module.v1"
       id: (poo-module-name module)
       group: (poo-module-group module)
       flags: (poo-module-flags module)
@@ -284,7 +284,7 @@
 ;; POOObject <- PooModuleDescriptor
 (def (poo-module-evaluate module)
   (let (closed-modules (poo-module-closure (list module)))
-    (.o kind: "poo.modules.runtime-evaluation.v1"
+    (.o kind: "poo-flow.modules.runtime-evaluation.v1"
         module-ids: (poo-module-names closed-modules)
         init-module-ids:
         (poo-module-names (poo-module-phase-order closed-modules 'init))

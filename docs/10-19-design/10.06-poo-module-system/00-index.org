@@ -18,6 +18,8 @@ The implementation lives in =src/modules/module-system.ss=. It depends on core r
 [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
 - [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
 [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
+- [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
+[[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.

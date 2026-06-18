@@ -31,6 +31,7 @@
     "src/loops/descriptor"
     "src/loops/strategy"
     "src/loops/governor"
+    "src/loops/governor-marlin"
     "src/loops/agent"
     "src/core/api"
     "src/extensions/custom-task"

@@ -59,7 +59,7 @@
         loop-pattern-descriptor->contract)
 
 ;; Symbol <- Unit
-(def +loop-pattern-schema+ 'poo.loop-pattern.v1)
+(def +loop-pattern-schema+ 'poo-flow.loop-pattern.v1)
 
 ;; [Symbol] <- Unit
 (def +loop-levels+ '(l1 l2 l2+ l3))

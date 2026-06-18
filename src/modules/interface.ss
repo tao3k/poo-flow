@@ -35,39 +35,39 @@
 ;;; Boundary: stable ids are receipt vocabulary only; they do not choose a loader.
 ;; ModuleKindId <- Unit
 (def poo-modules-kind
-  "poo.modules.v1")
+  "poo-flow.modules.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-workflow-kind
-  "poo.modules.workflow.v1")
+  "poo-flow.modules.workflow.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-value-catalog-kind
-  "poo.modules.value-catalog.v1")
+  "poo-flow.modules.value-catalog.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-eval-modules-result-kind
-  "poo.modules.eval-result.v1")
+  "poo-flow.modules.eval-result.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-system-presentation-kind
-  "poo.modules.system-presentation.v1")
+  "poo-flow.modules.system-presentation.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-interface-kind
-  "poo.modules.interface.v1")
+  "poo-flow.modules.interface.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-import-kind
-  "poo.modules.import.v1")
+  "poo-flow.modules.import.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-import-source-ref-kind
-  "poo.modules.import.source-ref.v1")
+  "poo-flow.modules.import.source-ref.v1")
 
 ;; ModuleKindId <- Unit
 (def poo-module-import-local-source-kind
-  "poo.modules.import.local-source.v1")
+  "poo-flow.modules.import.local-source.v1")
 
 ;;; Boundary: interface prototype defaults are sparse so configs can override.
 ;; PooModuleInterfacePrototype <- Unit

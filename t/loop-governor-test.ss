@@ -149,6 +149,48 @@
         (check-equal? (test-ref (test-ref envelope 'runtime-boundary)
                                 'production-execution)
                       'marlin-agent-core)))
+    (test-case "projects L1 report-only handoff receipts without writes"
+      (let* ((governor (make-governor-fixture))
+             (states (governor-test-states))
+             (receipt
+              (loop-governor->l1-run-receipt
+               governor
+               states
+               'receipt-1))
+             (envelope (test-ref receipt 'request-envelope)))
+        (check-equal? (test-ref receipt 'schema)
+                      +loop-governor-l1-run-receipt-schema+)
+        (check-equal? (test-ref receipt 'level) 'l1)
+        (check-equal? (test-ref receipt 'mode) 'report-only)
+        (check-equal? (test-ref receipt 'status) 'handoff-ready)
+        (check-equal? (test-ref receipt 'state-writes) '())
+        (check-equal? (test-ref receipt 'effects) '())
+        (check-equal? (test-ref receipt 'schedules) '())
+        (check-equal? (test-ref envelope 'schema)
+                      +loop-governor-marlin-request-schema+)
+        (check-equal? (test-ref envelope 'operation) 'govern-loop)))
+    (test-case "publishes runtime manifest discovery for Marlin governor requests"
+      (let* ((governor (make-governor-fixture))
+             (states (governor-test-states))
+             (manifest
+              (loop-governor->marlin-runtime-manifest
+               governor
+               states
+               'manifest-1))
+             (envelope (test-ref manifest 'request-envelope))
+             (abi (test-ref manifest 'abi-manifest)))
+        (check-equal? (test-ref manifest 'schema)
+                      +loop-governor-marlin-runtime-manifest-schema+)
+        (check-equal? (test-ref manifest 'bridge) 'runtime-manifest)
+        (check-equal? (test-ref manifest 'operation) 'govern-loop)
+        (check-equal? (test-ref manifest 'request-schema)
+                      +loop-governor-marlin-request-schema+)
+        (check-equal? (test-ref manifest 'receipt-schema)
+                      +loop-governor-l1-run-receipt-schema+)
+        (check-equal? (test-ref manifest 'target) 'marlin-agent-core)
+        (check-equal? (test-ref envelope 'request-id) 'manifest-1)
+        (check-equal? (test-ref abi 'schema)
+                      +loop-governor-marlin-abi-schema+)))
     (test-case "rejects invalid Marlin request envelopes"
       (let (failure
             (capture-control-plane-failure

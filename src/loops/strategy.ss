@@ -40,7 +40,7 @@
 
 ;;; Boundary: schema id is the stable contract name exported to Marlin.
 ;; Symbol <- Unit
-(def +loop-strategy-plan-schema+ 'poo.loop-strategy-plan.v1)
+(def +loop-strategy-plan-schema+ 'poo-flow.loop-strategy-plan.v1)
 
 ;;; Boundary: local validation defaults keep repository execution harness-only.
 ;;; Intent: tests and probes may run locally without claiming production loop ownership.
@@ -57,7 +57,7 @@
 (def +loop-runtime-handoff-default+
   '((target . marlin-agent-core)
     (transport . scheme-abi)
-    (contract . poo.loop-pattern.v1)))
+    (contract . poo-flow.loop-pattern.v1)))
 
 ;;; Boundary: engine role marks this file as policy composition, not execution.
 ;;; Boundary: root strategy role identifies Scheme as the policy owner while

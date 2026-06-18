@@ -20,12 +20,12 @@
 ;;; Boundary: value-catalog doctor kind identifies summaries over in-memory modules.
 ;; ModuleKindId <- Unit
 (def poo-module-doctor-presentation-kind
-  "poo.modules.doctor-presentation.v1")
+  "poo-flow.modules.doctor-presentation.v1")
 
 ;;; Boundary: source doctor kind identifies summaries that include loader receipts.
 ;; ModuleKindId <- Unit
 (def poo-module-source-doctor-presentation-kind
-  "poo.modules.source-doctor-presentation.v1")
+  "poo-flow.modules.source-doctor-presentation.v1")
 
 ;;; Boundary: validation receipt projection stays local to the doctor edge.
 ;; Alist <- PooModuleOptionValidationReceipt

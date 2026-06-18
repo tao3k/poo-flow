@@ -233,3 +233,22 @@ Governor contract: policy facts derived from descriptors and supplied state.
 #+end_src
 
 The manifest does not submit work, allocate worktrees, lock state, or persist receipts. It is only the Scheme-side contract publication needed before =marlin-agent-core= implements the execution owner.
+** 10.06.07.160 L1 Receipt And Runtime Manifest Landing
+The loop governor now has two more data-only projections:
+- =loop-governor->l1-run-receipt= emits a report-only handoff receipt for L1 validation.
+- =loop-governor->marlin-runtime-manifest= publishes the concrete =govern-loop= request envelope through a runtime-manifest discovery surface.
+
+The L1 receipt explicitly records:
+#+begin_src text
+state-writes = ()
+effects      = ()
+schedules    = ()
+#+end_src
+
+That is the local safety boundary. Scheme can prove the handoff shape, open
+patterns, blocked patterns, human inbox items, and Marlin target, but it still
+does not schedule the loop or mutate durable state.
+
+The runtime manifest keeps Marlin from guessing entry points. It carries the
+request schema, ABI manifest, request envelope, operation, target, transport,
+and receipt schema as one inspectable alist.

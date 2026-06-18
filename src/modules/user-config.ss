@@ -23,13 +23,13 @@
 ;;; Boundary: public ids are receipt vocabulary, not runtime owners.
 ;; PooUserConfigKind <- Unit
 (def poo-user-config-kind
-  "poo.modules.user-config.v1")
+  "poo-flow.modules.user-config.v1")
 
 ;;; Module selections are user-facing hot-plug facts, so their kind id stays
 ;;; separate from realized descriptor and module contract ids.
 ;; PooUserModuleSelectionKind <- Unit
 (def poo-user-module-selection-kind
-  "poo.modules.user-selection.v1")
+  "poo-flow.modules.user-selection.v1")
 
 ;;; Boundary: kind checks keep root user files independent of constructor identity.
 ;; Boolean <- POOObject String

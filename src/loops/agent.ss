@@ -4,8 +4,10 @@
 
 (import :loops/descriptor
         :loops/strategy
-        :loops/governor)
+        :loops/governor
+        :loops/governor-marlin)
 
 (export (import: :loops/descriptor)
         (import: :loops/strategy)
-        (import: :loops/governor))
+        (import: :loops/governor)
+        (import: :loops/governor-marlin))

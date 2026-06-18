@@ -9,8 +9,6 @@
         :loops/strategy)
 
 (export +loop-governor-schema+
-        +loop-governor-marlin-request-schema+
-        +loop-governor-marlin-abi-schema+
         +loop-governor-default-state-key+
         +loop-governor-default-collision-policy+
         +loop-governor-default-aggregate-budget+
@@ -51,29 +49,13 @@
         loop-governor-human-inbox-items
         loop-governor-validation-errors
         validate-loop-governor
-        loop-governor->contract
-        loop-governor-marlin-abi-manifest
-        loop-governor-marlin-request-envelope-validation-errors
-        validate-loop-governor-marlin-request-envelope
-        loop-governor->marlin-request-envelope)
+        loop-governor->contract)
 
 ;;; Governor schema tags the Marlin-facing contract object, not a runtime loop
 ;;; handle. Keeping it domain-named prevents schema constants from collapsing
 ;;; into generic symbols in policy reports.
 ;; LoopGovernorSchema <- Unit
-(def +loop-governor-schema+ 'poo.loop-governor.v1)
-
-;;; Request schema names the ABI handoff wrapper around the governor contract.
-;;; The wrapped contract remains =poo.loop-governor.v1= for policy stability.
-;; LoopGovernorMarlinRequestSchema <- Unit
-(def +loop-governor-marlin-request-schema+
-  'poo.loop-governor.marlin-request.v1)
-
-;;; ABI schema names the discovery manifest for Rust-side bindings.
-;;; The manifest is separate from request instances so Marlin can pin fields.
-;; LoopGovernorMarlinAbiSchema <- Unit
-(def +loop-governor-marlin-abi-schema+
-  'poo.loop-governor.marlin-abi.v1)
+(def +loop-governor-schema+ 'poo-flow.loop-governor.v1)
 
 ;;; The state-key default names the runtime field that Marlin should persist
 ;;; before an action loop mutates a branch, ticket, file set, or connector item.
@@ -110,7 +92,7 @@
 (def +loop-governor-default-handoff+
   '((target . marlin-agent-core)
     (transport . scheme-abi)
-    (contract . poo.loop-governor.v1)))
+    (contract . poo-flow.loop-governor.v1)))
 
 ;;; Boundary: root governor role owns multi-loop policy composition only.
 ;;; The runtime observes this role as data before it schedules anything.
@@ -532,117 +514,3 @@
           (cons 'execution-owner
                 (loop-governor-execution-owner valid-governor))
           (cons 'metadata (loop-governor-metadata valid-governor)))))
-
-;;; ABI manifest is the stable discovery surface for marlin-agent-core.
-;;; It is inert metadata: Scheme publishes the contract shape, not a runner.
-;; Alist <- Unit
-(def (loop-governor-marlin-abi-manifest)
-  (list (cons 'schema +loop-governor-marlin-abi-schema+)
-        (cons 'producer 'poo-flow)
-        (cons 'consumer 'marlin-agent-core)
-        (cons 'transport 'scheme-abi)
-        (cons 'operation 'govern-loop)
-        (cons 'request-schema +loop-governor-marlin-request-schema+)
-        (cons 'governor-schema +loop-governor-schema+)
-        (cons 'required-fields
-              '(schema governor-schema operation target transport governor))
-        (cons 'optional-fields
-              '(request-id abi-manifest contract state-facts open-patterns
-                blocked-patterns human-inbox-items runtime-boundary
-                control-owner execution-owner metadata))
-        (cons 'runtime-boundary
-              '((local-execution . validation-only)
-                (production-execution . marlin-agent-core)))
-        (cons 'control-owner 'gerbil)
-        (cons 'execution-owner 'marlin-agent-core)))
-
-;;; Marlin request validation is intentionally shallow: it checks the ABI
-;;; wrapper fields and leaves governor policy validation to the nested contract.
-;;; The request remains a value until marlin-agent-core consumes it.
-;; [ValidationError] <- Alist
-(def (loop-governor-marlin-request-envelope-validation-errors envelope)
-  (if (list? envelope)
-    (append
-     (loop-governor-required-field-error
-      'schema
-      (and (eq? (loop-governor-alist-ref envelope 'schema #f)
-                +loop-governor-marlin-request-schema+)
-           #t))
-     (loop-governor-required-field-error
-      'governor-schema
-      (and (eq? (loop-governor-alist-ref envelope 'governor-schema #f)
-                +loop-governor-schema+)
-           #t))
-     (loop-governor-required-field-error
-      'operation
-      (loop-governor-alist-ref envelope 'operation #f))
-     (loop-governor-required-field-error
-      'target
-      (loop-governor-alist-ref envelope 'target #f))
-     (loop-governor-required-field-error
-      'transport
-      (loop-governor-alist-ref envelope 'transport #f))
-     (loop-governor-required-field-error
-      'governor
-      (loop-governor-alist-ref envelope 'governor #f)))
-    (list '((field . marlin-request-envelope) (code . not-alist)))))
-
-;;; Validation raises a typed loop-governor failure before the request leaves
-;;; Scheme, so downstream tests do not parse malformed request strings.
-;; MarlinRequestEnvelope <- Alist
-(def (validate-loop-governor-marlin-request-envelope envelope)
-  (let (errors
-        (loop-governor-marlin-request-envelope-validation-errors envelope))
-    (if (null? errors)
-      envelope
-      (raise-control-plane-failure
-       'loop-governor
-       'invalid-loop-governor-marlin-request-envelope
-       "invalid loop governor Marlin request envelope"
-       (list (cons 'errors errors)
-             (cons 'marlin-request-envelope envelope))))))
-
-;;; Request projection packages the governor contract for marlin-agent-core.
-;;; It does not submit, schedule, lock, mutate, or persist any runtime state.
-;; MarlinRequestEnvelope <- LoopGovernor [Alist] [RequestId]
-(def (loop-governor->marlin-request-envelope
-      governor
-      states
-      . maybe-request-id)
-  (let* ((contract (loop-governor->contract governor states))
-         (handoff (loop-governor-alist-ref contract 'handoff '()))
-         (request-id (if (null? maybe-request-id)
-                       #f
-                       (car maybe-request-id))))
-    (validate-loop-governor-marlin-request-envelope
-     (list (cons 'schema +loop-governor-marlin-request-schema+)
-           (cons 'governor-schema
-                 (loop-governor-alist-ref contract 'schema #f))
-           (cons 'operation 'govern-loop)
-           (cons 'request-id request-id)
-           (cons 'abi-manifest
-                 (loop-governor-marlin-abi-manifest))
-           (cons 'target
-                 (loop-governor-alist-ref handoff 'target #f))
-           (cons 'transport
-                 (loop-governor-alist-ref handoff 'transport #f))
-           (cons 'contract
-                 (loop-governor-alist-ref handoff 'contract #f))
-           (cons 'governor contract)
-           (cons 'state-facts states)
-           (cons 'open-patterns
-                 (loop-governor-alist-ref contract 'open-patterns '()))
-           (cons 'blocked-patterns
-                 (append
-                  (loop-governor-alist-ref contract 'conflicting-patterns '())
-                  (loop-governor-alist-ref contract 'denied-patterns '())))
-           (cons 'human-inbox-items
-                 (loop-governor-alist-ref contract 'human-inbox-items '()))
-           (cons 'runtime-boundary
-                 (loop-governor-alist-ref contract 'runtime-boundary '()))
-           (cons 'control-owner
-                 (loop-governor-alist-ref contract 'control-owner #f))
-           (cons 'execution-owner
-                 (loop-governor-alist-ref contract 'execution-owner #f))
-           (cons 'metadata
-                 (loop-governor-alist-ref contract 'metadata '()))))))
