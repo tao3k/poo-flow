@@ -6,7 +6,8 @@
         :core/api
         :modules/agent-sandbox/api
         :modules/agent-sandbox/cube
-        :modules/agent-sandbox/nono)
+        :modules/agent-sandbox/nono
+        :modules/nono-sandbox/c-binding)
 
 (export agent-sandbox-marlin-interface-test)
 

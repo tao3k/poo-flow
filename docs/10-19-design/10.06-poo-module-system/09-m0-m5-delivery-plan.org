@@ -24,8 +24,8 @@ Current landed work:
 - =build.ss= uses the package build shape and supports =gxi build.ss compile=.
 - =src/modules/module-system.ss= is the public module-system facade.
 - =src/modules/user-config.ss= owns the thin downstream config projection.
-- =src/extensions/agent-sandbox-nono-c-binding.ss= has been split into
-  descriptor and runtime owners.
+- =src/modules/nono-sandbox/c-binding.ss= is split into descriptor and runtime
+  owners under the sandbox category.
 
 Exit criteria:
 

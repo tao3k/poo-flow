@@ -160,24 +160,41 @@
 ;;; downstream project can select or override them later without owning backend
 ;;; policy recipes in its root configuration file.
 ;; : PooSandboxProfileList
+;; | PooSandboxProfileList = [PooSandboxProfile]
 (def poo-flow-default-sandbox-profiles
   (poo-flow-sandbox-profiles
    (agent/nono
     (backend nono)
     (network deny-by-default)
     (capabilities process-run filesystem-read filesystem-write tmpdir)
-    (resources (cpu . 2) (memory . "4Gi") (timeout-ms . 300000))
+    (resources (filesystem . scoped)
+               (cpu . 2)
+               (memory . "4Gi")
+               (timeout-ms . 300000))
     (metadata (intent . coding-agent) (risk . high-demand)))
    (agent/cube
-    (backend cubeSandbox cube-local)
+    (backend cube cube-local)
     (network allowlisted "github.com" "crates.io")
     (capabilities process-run filesystem-read cache-mount)
-    (resources (cpu . 4) (memory . "8Gi") (timeout-ms . 600000))
-    (metadata (intent . ci-agent) (risk . hermetic)))))
+    (resources (filesystem . snapshot)
+               (cpu . 4)
+               (memory . "8Gi")
+               (timeout-ms . 600000))
+    (metadata (intent . ci-agent) (risk . hermetic)))
+   (agent/docker
+    (backend docker docker-local)
+    (network allowlisted "ghcr.io" "docker.io")
+    (capabilities process-run filesystem-read filesystem-write tmpdir)
+    (resources (filesystem . volume)
+               (cpu . 2)
+               (memory . "4Gi")
+               (timeout-ms . 300000))
+    (metadata (intent . container-agent) (risk . image-runtime)))))
 
 ;;; Kind guards keep downstream tools independent of constructor identity while
 ;;; still allowing POO slot extension behind the public recipe surface.
-;; : (-> Any Boolean)
+;; : (-> PooSandboxProfileCandidate Boolean)
+;; | PooSandboxProfileCandidate = POOObject
 (def (poo-flow-sandbox-profile? value)
   (and (object? value)
        (equal? (.ref value 'kind) poo-flow-sandbox-profile-kind)))
@@ -298,8 +315,7 @@
       runtime-executed: #f
       replayable: #t))
 
-;; : (List PooSandboxProfileName)
-;; | PooSandboxProfileName = Symbol
+;; : [Symbol]
 (def poo-flow-default-sandbox-profile-names
   (poo-flow-sandbox-profile-names poo-flow-default-sandbox-profiles))
 

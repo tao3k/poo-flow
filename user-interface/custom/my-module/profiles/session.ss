@@ -10,7 +10,7 @@
     (capabilities process-run filesystem-read filesystem-write tmpdir)
     (capabilities :remove filesystem-write)
     (capabilities :append cache-mount)
-    (resources (cpu . 2) (memory . "4Gi"))
+    (resources (filesystem . scoped) (cpu . 2) (memory . "4Gi"))
     (resources :append (timeout-ms . 300000))
     (metadata (intent . coding-agent)
               (scope . session))

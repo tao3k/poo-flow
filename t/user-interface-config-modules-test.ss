@@ -46,7 +46,8 @@
                       '(process-run filesystem-read tmpdir cache-mount))
         (check-equal? (poo-flow-sandbox-profile-resource-policy
                        task-cache-profile)
-                      '((cpu . 2)
+                      '((filesystem . scoped)
+                        (cpu . 2)
                         (memory . "2Gi")
                         (timeout-ms . 180000)))
         (check-equal? (poo-flow-sandbox-profile-network-policy

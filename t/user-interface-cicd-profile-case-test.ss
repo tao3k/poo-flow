@@ -3,6 +3,7 @@
 ;;; Invariant: cases stay declarative and do not execute release workflows.
 
 (import :std/test
+        :core/api
         :modules/module-system)
 
 (export user-interface-cicd-profile-case-test)
@@ -18,7 +19,8 @@
                      (ci/check
                       (network deny-by-default)
                       (capabilities process-run filesystem-read tmpdir)
-                      (resources (cpu . 1)
+                      (resources (filesystem . scoped)
+                                 (cpu . 1)
                                  (memory . "1Gi")
                                  (timeout-ms . 90000))
                       (metadata (intent . ci-check)
@@ -31,7 +33,8 @@
                                     filesystem-write
                                     tmpdir)
                       (capabilities :append cache-mount)
-                      (resources (cpu . 4)
+                      (resources (filesystem . scoped)
+                                 (cpu . 4)
                                  (memory . "8Gi")
                                  (timeout-ms . 600000))
                       (metadata (intent . ci-build)
@@ -44,7 +47,8 @@
                                     filesystem-read
                                     filesystem-write
                                     tmpdir)
-                      (resources (cpu . 2)
+                      (resources (filesystem . scoped)
+                                 (cpu . 2)
                                  (memory . "4Gi")
                                  (timeout-ms . 300000))
                       (metadata (intent . cd-release)
@@ -59,7 +63,8 @@
                                     filesystem-read
                                     filesystem-write
                                     tmpdir)
-                      (resources (cpu . 1)
+                      (resources (filesystem . scoped)
+                                 (cpu . 1)
                                  (memory . "2Gi")
                                  (timeout-ms . 180000))
                       (metadata (intent . artifact-promote)
@@ -85,6 +90,11 @@
         (check-equal? (poo-flow-sandbox-profile-capabilities build-profile)
                       '(process-run filesystem-read filesystem-write tmpdir
                         cache-mount))
+        (check-equal? (poo-flow-sandbox-profile-resource-policy check-profile)
+                      '((filesystem . scoped)
+                        (cpu . 1)
+                        (memory . "1Gi")
+                        (timeout-ms . 90000)))
         (check-equal? (poo-flow-sandbox-profile-network-policy release-profile)
                       '(allowlisted "github.com" "ghcr.io"))
         (check-equal? (poo-flow-sandbox-profile-metadata promote-profile)
@@ -93,4 +103,32 @@
                         (intent . artifact-promote)
                         (scope . cicd)
                         (stage . promote)
-                        (artifacts . consume)))))))
+                        (artifacts . consume)))))
+    (test-case "rejects CI/CD resources without filesystem sandbox"
+      (let* ((broken-config
+              (car (use-module nono-sandbox
+                    :config
+                    (profiles
+                     (ci/broken
+                      (network deny-by-default)
+                      (capabilities process-run filesystem-read tmpdir)
+                      (resources (cpu . 1)
+                                 (memory . "1Gi"))
+                      (metadata (intent . ci-check)
+                                (scope . cicd)))))))
+             (profiles
+              (cdr (poo-flow-user-module-selection-flag-entry
+                    broken-config
+                    ':config)))
+             (broken-profile
+              (poo-flow-sandbox-profile-by-name profiles 'ci/broken))
+             (failure
+              (with-catch (lambda (failure) failure)
+                          (lambda ()
+                            (poo-flow-sandbox-profile->profile
+                             broken-profile)))))
+        (check-equal? (poo-flow-sandbox-profile-capabilities broken-profile)
+                      '(process-run filesystem-read tmpdir))
+        (check-equal? (execution-failure? failure) #t)
+        (check-equal? (execution-failure-code failure)
+                      'invalid-agent-sandbox-profile)))))

@@ -209,7 +209,74 @@
    (agent-sandbox-required-field-errors
     profile
     (list (cons 'backend-kind agent-sandbox-profile-required-value?)
-          (cons 'backend-ref agent-sandbox-profile-required-value?)))))
+          (cons 'backend-ref agent-sandbox-profile-required-value?)))
+   (agent-sandbox-profile-filesystem-sandbox-errors profile)))
+
+;;; Resource policies only make sense when the profile also declares a
+;;; filesystem sandbox capability and a filesystem resource boundary. Accept
+;;; both user-facing symbol rows and backend default alist-style rows.
+;; | AgentSandboxCapability = (U Symbol Pair)
+;; : (-> AgentSandboxCapability Boolean)
+(def (agent-sandbox-profile-filesystem-capability? capability)
+  (cond
+   ((symbol? capability)
+    (or (eq? capability 'filesystem)
+        (eq? capability 'filesystem-read)
+        (eq? capability 'filesystem-write)))
+   ((pair? capability)
+    (agent-sandbox-profile-filesystem-capability? (car capability)))
+   (else #f)))
+
+;; : (-> Capabilities Boolean)
+(def (agent-sandbox-profile-capabilities-have-filesystem? capabilities)
+  (cond
+   ((null? capabilities) #f)
+   ((not (pair? capabilities)) #f)
+   ((agent-sandbox-profile-filesystem-capability? (car capabilities)) #t)
+   (else
+    (agent-sandbox-profile-capabilities-have-filesystem? (cdr capabilities)))))
+
+;; | AgentSandboxResourcePolicyEntry = (U Symbol Pair)
+;; : (-> AgentSandboxResourcePolicyEntry Boolean)
+(def (agent-sandbox-profile-filesystem-resource? resource)
+  (cond
+   ((symbol? resource)
+    (eq? resource 'filesystem))
+   ((pair? resource)
+    (agent-sandbox-profile-filesystem-resource? (car resource)))
+   (else #f)))
+
+;; : (-> ResourcePolicy Boolean)
+(def (agent-sandbox-profile-resource-policy-has-filesystem? resource-policy)
+  (cond
+   ((null? resource-policy) #f)
+   ((not (pair? resource-policy)) #f)
+   ((agent-sandbox-profile-filesystem-resource? (car resource-policy)) #t)
+   (else
+    (agent-sandbox-profile-resource-policy-has-filesystem?
+     (cdr resource-policy)))))
+
+;; : (-> AgentSandboxProfile [ValidationError])
+(def (agent-sandbox-profile-filesystem-sandbox-errors profile)
+  (let ((resource-policy (agent-sandbox-profile-resource-policy profile))
+        (capabilities (agent-sandbox-profile-capabilities profile)))
+    (if (null? resource-policy)
+      '()
+      (append
+       (if (agent-sandbox-profile-capabilities-have-filesystem?
+            capabilities)
+         '()
+         (list (list (cons 'field 'capabilities)
+                     (cons 'code 'missing-filesystem-sandbox-capability)
+                     (cons 'requires 'resource-policy)
+                     (cons 'resource-policy resource-policy))))
+       (if (agent-sandbox-profile-resource-policy-has-filesystem?
+            resource-policy)
+         '()
+         (list (list (cons 'field 'resource-policy)
+                     (cons 'code 'missing-filesystem-sandbox-resource)
+                     (cons 'requires 'filesystem)
+                     (cons 'resource-policy resource-policy))))))))
 
 ;;; Validation raises typed control-plane failures at the Scheme boundary before
 ;;; malformed profile data reaches adapter or Marlin bridge code.

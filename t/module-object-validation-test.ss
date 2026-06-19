@@ -6,19 +6,24 @@
         :modules/extension
         :modules/object-validation
         :modules/objects
+        :modules/sandbox-core/objects
         :modules/user-interface/objects
         :modules/nono-sandbox/objects
-        :modules/cubeSandbox/objects)
+        :modules/cubeSandbox/objects
+        :modules/docker-sandbox/objects)
 
 (export module-object-validation-test)
 
+;; : (-> HashTable Symbol Value)
 (def (receipt-ref receipt key)
   (hash-get receipt key))
 
+;; : (-> [HashTable] [Symbol])
 (def (diagnostic-codes diagnostics)
   (map (lambda (diagnostic) (receipt-ref diagnostic 'code))
        diagnostics))
 
+;; : TestSuite
 (def module-object-validation-test
   (test-suite "poo-flow module object validation"
     (test-case "projects module objects into harness validation receipts"
@@ -49,15 +54,17 @@
     (test-case "validates real module object sets"
       (let* ((objects
               (append poo-flow-shared-module-objects
+                      poo-flow-sandbox-core-module-objects
                       poo-flow-user-interface-root-module-objects
                       poo-flow-nono-sandbox-module-objects
-                      poo-flow-cubeSandbox-module-objects))
+                      poo-flow-cubeSandbox-module-objects
+                      poo-flow-docker-sandbox-module-objects))
              (validations
               (poo-flow-module-objects-validation objects)))
-        (check-equal? (length validations) 5)
+        (check-equal? (length validations) 9)
         (check-equal? (map poo-flow-module-object-validation-valid?
                            validations)
-                      '(#t #t #t #t #t))))
+                      '(#t #t #t #t #t #t #t #t #t))))
 
     (test-case "reports local contract diagnostics without dropping harness evidence"
       (let* ((broken-field

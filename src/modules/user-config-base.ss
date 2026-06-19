@@ -88,7 +88,11 @@
     "poo-flow-sandbox-profile"
     "poo-flow-sandbox-profiles"
     "poo-flow-nono-sandbox-profile"
-    "poo-flow-nono-sandbox-profiles"))
+    "poo-flow-nono-sandbox-profiles"
+    "poo-flow-cubeSandbox-profile"
+    "poo-flow-cubeSandbox-profiles"
+    "poo-flow-docker-sandbox-profile"
+    "poo-flow-docker-sandbox-profiles"))
 
 ;;; Boundary: these names are the programmatic API exposed for tests, doctors,
 ;;; presentations, and advanced module code. They should not be required in
@@ -184,7 +188,8 @@
    ((eq? module 'funflow) 'flow)
    ((eq? module 'governor) 'loop)
    ((or (eq? module 'nono-sandbox)
-        (eq? module 'cubeSandbox))
+        (eq? module 'cubeSandbox)
+        (eq? module 'docker-sandbox))
     'sandbox)
    (else 'custom)))
 

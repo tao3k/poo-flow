@@ -14,13 +14,19 @@
     (backend nono)
     (network deny-by-default)
     (capabilities process-run filesystem-read filesystem-write tmpdir)
-    (resources (cpu . 2) (memory . "4Gi") (timeout-ms . 300000))
+    (resources (filesystem . scoped)
+               (cpu . 2)
+               (memory . "4Gi")
+               (timeout-ms . 300000))
     (metadata (intent . coding-agent) (risk . high-demand)))
    (agent/cube
     (backend cubeSandbox cube-local)
     (network allowlisted "github.com" "crates.io")
     (capabilities process-run filesystem-read cache-mount)
-    (resources (cpu . 4) (memory . "8Gi") (timeout-ms . 600000))
+    (resources (filesystem . scoped)
+               (cpu . 4)
+               (memory . "8Gi")
+               (timeout-ms . 600000))
     (metadata (intent . ci-agent) (risk . hermetic)))))
 
 ;; : PooUserModuleSelection
@@ -34,12 +40,37 @@
        (capabilities process-run filesystem-read filesystem-write tmpdir)
        (capabilities :remove filesystem-write)
        (capabilities :append cache-mount)
-       (resources (cpu . 2) (memory . "4Gi"))
+       (resources (filesystem . scoped) (cpu . 2) (memory . "4Gi"))
        (resources :append (timeout-ms . 300000))
        (metadata (intent . operator-demo)
                  (scope . profile))
        (metadata :append (stage . extension))
        (metadata :remove (scope . profile)))))))
+
+;; : PooUserModuleSelection
+(def user-cube-build-module
+  (car
+   (use-module cubeSandbox
+     :config
+     (profiles
+      (ci/cube
+       (network allowlisted "github.com" "crates.io")
+       (resources :append (cpu . 4) (memory . "8Gi"))
+       (metadata (intent . cube-build)
+                 (scope . profile)))))))
+
+;; : PooUserModuleSelection
+(def user-docker-build-module
+  (car
+   (use-module docker-sandbox
+     :config
+     (profiles
+      (ci/docker
+       (network allowlisted "ghcr.io")
+       (capabilities :remove filesystem-write)
+       (resources :append (cpu . 2) (memory . "4Gi"))
+       (metadata (intent . docker-build)
+                 (scope . profile)))))))
 
 ;; : (-> Symbol Alist MaybeValue)
 (def (alist-value key entries)
@@ -94,7 +125,8 @@
                       '(process-run filesystem-read tmpdir cache-mount))
         (check-equal? (poo-flow-sandbox-profile-resource-policy
                        operator-profile)
-                      '((cpu . 2)
+                      '((filesystem . scoped)
+                        (cpu . 2)
                         (memory . "4Gi")
                         (timeout-ms . 300000)))
         (check-equal? (poo-flow-sandbox-profile-metadata operator-profile)
@@ -102,6 +134,47 @@
                         (runtime-executed . #f)
                         (intent . operator-demo)
                         (stage . extension)))))
+    (test-case "applies profile inheritance for cube and docker sandbox objects"
+      (let* ((cube-profiles
+              (cdr (poo-flow-user-module-selection-flag-entry
+                    user-cube-build-module
+                    ':config)))
+             (docker-profiles
+              (cdr (poo-flow-user-module-selection-flag-entry
+                    user-docker-build-module
+                    ':config)))
+             (cube-profile
+              (poo-flow-sandbox-profile-by-name cube-profiles 'ci/cube))
+             (docker-profile
+              (poo-flow-sandbox-profile-by-name docker-profiles 'ci/docker)))
+        (check-equal? (poo-flow-user-module-selection-key
+                       user-cube-build-module)
+                      '(sandbox . cubeSandbox))
+        (check-equal? (poo-flow-user-module-selection-key
+                       user-docker-build-module)
+                      '(sandbox . docker-sandbox))
+        (check-equal? (poo-flow-sandbox-profile-backend-kind cube-profile)
+                      'cube)
+        (check-equal? (poo-flow-sandbox-profile-resource-policy cube-profile)
+                      '((filesystem . snapshot)
+                        (cpu . 4)
+                        (memory . "8Gi")))
+        (check-equal? (poo-flow-sandbox-profile-backend-kind docker-profile)
+                      'docker)
+        (check-equal? (poo-flow-sandbox-profile-capabilities docker-profile)
+                      '(process-run filesystem-read tmpdir))
+        (check-equal? (poo-flow-sandbox-profile-resource-policy docker-profile)
+                      '((filesystem . volume)
+                        (cpu . 2)
+                        (memory . "4Gi")))
+        (check-equal? (alist-value
+                       'backend-kind
+                       (poo-flow-sandbox-profile->profile cube-profile))
+                      'cube)
+        (check-equal? (alist-value
+                       'backend-kind
+                       (poo-flow-sandbox-profile->profile docker-profile))
+                      'docker)))
     (test-case "projects user declarations into validated agent sandbox profiles"
       (let* ((nono-profile
               (poo-flow-sandbox-profile-by-name user-sandbox-profiles
@@ -117,7 +190,8 @@
         (check-equal? (alist-value 'capabilities profile)
                       '(process-run filesystem-read filesystem-write tmpdir))
         (check-equal? (alist-value 'resource-policy profile)
-                      '((cpu . 2)
+                      '((filesystem . scoped)
+                        (cpu . 2)
                         (memory . "4Gi")
                         (timeout-ms . 300000)))))
     (test-case "presents profile collections as runtime handoff intent data"

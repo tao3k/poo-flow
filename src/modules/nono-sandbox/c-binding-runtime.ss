@@ -14,6 +14,7 @@
 
 (export +nono-c-binding-dry-run-receipt-schema+
         +nono-c-binding-smoke-test-receipt-schema+
+        nono-c-binding-compile-probe-command
         nono-c-binding-runtime-manifest-validation-errors
         nono-c-binding-validate-runtime-manifest
         nono-c-binding-dry-run
@@ -33,6 +34,21 @@
 ;; : (-> Unit Symbol)
 (def +nono-c-binding-smoke-test-receipt-schema+
   'poo-flow.sandbox.nono-sandbox.c-binding.smoke-test.v1)
+
+;;; The C probe command is direct argv data, not a shell wrapper. It mirrors the
+;;; previous syntax-only check while keeping `.bin` reserved for build outputs.
+;; : (-> Unit [String])
+(def (nono-c-binding-compile-probe-command)
+  '("clang"
+    "-Qunused-arguments"
+    "-std=c11"
+    "-Wall"
+    "-Wextra"
+    "-Werror"
+    "-fsyntax-only"
+    "-Ibindings/nono-c"
+    "-I.data/nono/bindings/c/include"
+    "bindings/nono-c/poo_flow_nono_binding_probe.c"))
 
 ;;; Mount validation is deliberately stricter than the neutral request schema:
 ;;; the C ABI needs a UTF-8 path and one of the generated access constants.
@@ -307,8 +323,8 @@
                 (agent-sandbox-alist-ref apply-plan 'support #f)))))
 
 ;;; Smoke tests run a host probe command through Gerbil's standard process
-;;; library after dry-run validation. The default probe is the existing C
-;;; compile check; callers may pass a safer or platform-specific command.
+;;; library after dry-run validation. The default probe is the direct C compile
+;;; argv; callers may pass a safer or platform-specific command.
 ;; nono-c-binding-smoke-test
 ;;   : (-> RuntimeManifest [Command] Alist)
 ;;   | contract: runs a host probe command only; native sandbox apply is never called
@@ -316,14 +332,14 @@
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (nono-c-binding-smoke-test runtime-manifest '("sh" ".bin/check-nono-c-binding"))
+;;       (nono-c-binding-smoke-test runtime-manifest (nono-c-binding-compile-probe-command))
 ;;       ;; => receipt
 ;;       ```
 ;;     %
 (def (nono-c-binding-smoke-test runtime-manifest . maybe-command)
   (let* ((dry-run (nono-c-binding-dry-run runtime-manifest))
          (command (if (null? maybe-command)
-                    '("sh" ".bin/check-nono-c-binding")
+                    (nono-c-binding-compile-probe-command)
                     (car maybe-command)))
          (status 0)
          (output

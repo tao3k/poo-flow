@@ -53,6 +53,11 @@
         poo-flow-module-tree-lazy-load-plans
         poo-flow-src-modules-root
         poo-flow-src-module-tree-entrypoints
+        poo-flow-module-category-names
+        poo-flow-module-tree-entrypoint-module-name
+        poo-flow-module-tree-entrypoint-name-conflict?
+        poo-flow-module-tree-entrypoint-conflicts
+        poo-flow-src-module-tree-entrypoint-conflicts
         poo-flow-src-modules-source-refs
         poo-flow-src-modules-lazy-load-plans
         poo-flow-module-auto-import-root-identity
@@ -337,11 +342,51 @@
 (def poo-flow-src-module-tree-entrypoints
   '(("agent-sandbox" config)
     ("cubeSandbox" objects config)
+    ("sandbox-core" objects)
     ("funflow" config)
     ("loop-governor" config)
     ("nono-sandbox" objects config)
     ("user-interface" objects config)
     ("workflow" flows syntax)))
+
+;;; Boundary: category names are loader-owned because every module tree,
+;;; developer object tree, and user tree eventually passes through this owner.
+;; : [Symbol]
+(def poo-flow-module-category-names
+  '(modules flow loop sandbox custom))
+
+;; : (-> (Path Symbol...) Symbol)
+(def (poo-flow-module-tree-entrypoint-module-name entrypoint-spec)
+  (string->symbol (car entrypoint-spec)))
+
+;; : (-> (Path Symbol...) Boolean)
+(def (poo-flow-module-tree-entrypoint-name-conflict? entrypoint-spec)
+  (poo-flow-loader-member?
+   (poo-flow-module-tree-entrypoint-module-name entrypoint-spec)
+   poo-flow-module-category-names))
+
+;;; Conflict receipts are data so doctors can report naming drift without
+;;; forcing source loading or descriptor realization.
+;; : (-> [(Path Symbol...)] [Alist])
+(def (poo-flow-module-tree-entrypoint-conflicts entrypoint-specs)
+  (cond
+   ((null? entrypoint-specs) '())
+   ((poo-flow-module-tree-entrypoint-name-conflict? (car entrypoint-specs))
+    (cons
+     (list (cons 'code 'module-category-name-conflict)
+           (cons 'module-name
+                 (poo-flow-module-tree-entrypoint-module-name
+                  (car entrypoint-specs)))
+           (cons 'module-root (car (car entrypoint-specs)))
+           (cons 'categories poo-flow-module-category-names))
+     (poo-flow-module-tree-entrypoint-conflicts (cdr entrypoint-specs))))
+   (else
+    (poo-flow-module-tree-entrypoint-conflicts (cdr entrypoint-specs)))))
+
+;; : (-> Unit [Alist])
+(def (poo-flow-src-module-tree-entrypoint-conflicts)
+  (poo-flow-module-tree-entrypoint-conflicts
+   poo-flow-src-module-tree-entrypoints))
 
 ;;; Internal path join stays string-only so this owner never probes the filesystem.
 ;; : (-> Path Path)

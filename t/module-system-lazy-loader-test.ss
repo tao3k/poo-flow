@@ -131,9 +131,14 @@
               (poo-flow-lazy-load-plan-receipt (car plans)))
              (first-metadata
               (poo-flow-module-load-receipt-metadata first-receipt)))
-        (check-equal? (length plans) 11)
+        (check-equal? (length plans) 12)
         (check-equal? (car source-values)
                       "src/modules/agent-sandbox/config.ss")
+        (check-equal? (if (member "src/modules/sandbox-core/objects.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
         (check-equal? (if (member "src/modules/nono-sandbox/objects.ss"
                                   source-values)
                         #t
@@ -158,6 +163,19 @@
         (check-equal? (cdr (assoc 'mode first-metadata)) 'lazy)
         (check-equal? (cdr (assoc 'owner first-metadata)) 'src-modules)
         (check-equal? lazy-loader-call-count 0)))
+
+    (test-case "reports module names that collide with loader categories"
+      (let ((conflicts
+             (poo-flow-module-tree-entrypoint-conflicts
+              '(("sandbox" objects)
+                ("sandbox-core" objects)
+                ("flow" config)
+                ("nono-sandbox" objects config)))))
+        (check-equal? (poo-flow-src-module-tree-entrypoint-conflicts) '())
+        (check-equal? (length conflicts) 2)
+        (check-equal? (cdr (assoc 'module-name (car conflicts))) 'sandbox)
+        (check-equal? (cdr (assoc 'module-name (cadr conflicts)))
+                      'flow)))
 
     (test-case "projects user-root init objects config and module helpers"
       (set! lazy-loader-call-count 0)

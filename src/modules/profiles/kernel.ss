@@ -6,11 +6,13 @@
         :modules/user-config-syntax
         :modules/funflow/config
         :modules/loop-governor/config
+        :modules/docker-sandbox/config
         :modules/nono-sandbox/config
         :modules/cubeSandbox/config)
 
 (export (import: :modules/funflow/config)
         (import: :modules/loop-governor/config)
+        (import: :modules/docker-sandbox/config)
         (import: :modules/nono-sandbox/config)
         (import: :modules/cubeSandbox/config)
         poo-flow-kernel-profile-module-bundles
@@ -27,7 +29,8 @@
    poo-flow-funflow-module-bundles
    poo-flow-loop-governor-module-bundles
    poo-flow-nono-sandbox-module-bundles
-   poo-flow-cubeSandbox-module-bundles))
+   poo-flow-cubeSandbox-module-bundles
+   poo-flow-docker-sandbox-module-bundles))
 
 ;;; The kernel profile is inspectable user-profile data, not descriptor activation.
 ;; : (-> Unit PooUserProfile)

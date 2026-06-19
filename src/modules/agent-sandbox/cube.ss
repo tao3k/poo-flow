@@ -23,9 +23,11 @@
    'cube
    backend-ref
    '((mode . egress-filtered))
-   '((isolation . kvm)
+   '((filesystem . snapshot)
+     (isolation . kvm)
      (api . e2b-compatible))
-   '((snapshot . clone)
+   '((filesystem . snapshot)
+     (snapshot . clone)
      (resume . supported))
    (lambda (profile-ref)
      (list (cons 'backend 'cube)

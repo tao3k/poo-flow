@@ -131,7 +131,7 @@
    flow-mode: 'funflow
    loop-strategy: 'governed
    sandbox-policy: 'module-gated
-   sandbox-backends: '(nono cube)
+   sandbox-backends: '(nono cube docker)
    mode-lock: "stable"))
 
 ;; : [Symbol]

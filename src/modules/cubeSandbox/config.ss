@@ -1,10 +1,15 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: CubeSandbox kernel module selection.
-;;; Invariant: this module declares CubeSandbox capability flags only.
+;;; Invariant: object inheritance and row extension live in objects.ss owners.
 
-(import :modules/user-config-base)
+(import :modules/cubeSandbox/objects
+        :modules/sandbox-core/objects
+        :modules/user-config-base)
 
-(export poo-flow-cubeSandbox-module-bundles)
+(export poo-flow-cubeSandbox-module-bundles
+        poo-flow-cubeSandbox-profile-config
+        poo-flow-cubeSandbox-profile
+        poo-flow-cubeSandbox-profiles)
 
 ;;; CubeSandbox is a sandbox module row; runtime handoff stays outside selection.
 ;; : (-> Unit [[PooUserModuleSelection]])
@@ -12,3 +17,30 @@
   (list
    (poo-flow-user-module-bundle
     (sandbox cubeSandbox +cube +doctor))))
+
+;;; Backend wrappers pass their inherited profile object into sandbox-core; this
+;;; keeps user syntax thin while object merge semantics stay centralized.
+;; : (-> Symbol [SandboxProfileForm] PooSandboxProfile)
+(def (poo-flow-cubeSandbox-profile-config name-value forms)
+  (poo-flow-sandbox-profile-object-config
+   poo-flow-cubeSandbox-profile-object
+   'cube
+   name-value
+   forms))
+
+;;; Profile row macros quote the profile name and forms only; validation is
+;;; delegated to the backend profile object above.
+;; : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+(defrules poo-flow-cubeSandbox-profile ()
+  ((_ name form ...)
+   (poo-flow-cubeSandbox-profile-config 'name '(form ...))))
+
+;;; Multiple CubeSandbox profile rows remain ordered user declarations for the
+;;; module-system facade and presentation tests.
+;; : (-> CubeSandboxProfileRow... [PooSandboxProfile])
+(defrules poo-flow-cubeSandbox-profiles ()
+  ((_)
+   '())
+  ((_ (name form ...) profile-clause ...)
+   (cons (poo-flow-cubeSandbox-profile name form ...)
+         (poo-flow-cubeSandbox-profiles profile-clause ...))))

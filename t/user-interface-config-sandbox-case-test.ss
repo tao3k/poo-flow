@@ -22,16 +22,27 @@
              (cube-profile
               (poo-flow-sandbox-profile-by-name
                poo-flow-default-sandbox-profiles
-               'agent/cube)))
+               'agent/cube))
+             (docker-profile
+              (poo-flow-sandbox-profile-by-name
+               poo-flow-default-sandbox-profiles
+               'agent/docker)))
         (check-equal? poo-flow-default-sandbox-profile-names
-                      '(agent/nono agent/cube))
-        (check-equal? (.ref presentation 'profile-count) 2)
+                      '(agent/nono agent/cube agent/docker))
+        (check-equal? (.ref presentation 'profile-count) 3)
         (check-equal? (poo-flow-sandbox-profile-backend-kind nono-profile)
                       'nono)
+        (check-equal? (poo-flow-sandbox-profile-resource-policy nono-profile)
+                      '((filesystem . scoped)
+                        (cpu . 2)
+                        (memory . "4Gi")
+                        (timeout-ms . 300000)))
         (check-equal? (poo-flow-sandbox-profile-backend-ref cube-profile)
                       'cube-local)
         (check-equal? (poo-flow-sandbox-profile-network-policy cube-profile)
                       '(allowlisted "github.com" "crates.io"))
+        (check-equal? (poo-flow-sandbox-profile-backend-kind docker-profile)
+                      'docker)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))
     (test-case "declares sandbox and loop module flags without descriptors"
@@ -40,7 +51,10 @@
             (nono-module
              (caddr (poo-flow-user-config-modules test-poo-flow-user-config)))
             (cube-module
-             (cadddr (poo-flow-user-config-modules test-poo-flow-user-config))))
+             (cadddr (poo-flow-user-config-modules test-poo-flow-user-config)))
+            (docker-module
+             (car (cddddr
+                   (poo-flow-user-config-modules test-poo-flow-user-config)))))
         (check-equal? (poo-flow-user-module-selection? loop-module) #t)
         (check-equal? (poo-flow-user-module-selection-flags loop-module)
                       '(+strategy +policy +marlin-handoff +runtime-manifest
@@ -57,6 +71,10 @@
         (check-equal? (poo-flow-user-module-selection-has-flag?
                        cube-module
                        '+cube)
+                      #t)
+        (check-equal? (poo-flow-user-module-selection-has-flag?
+                       docker-module
+                       '+docker)
                       #t)))
     (test-case "queries selected module features without package management"
       (let* ((custom-config
@@ -107,6 +125,13 @@
                        '+doctor)
                       #t)
         (check-equal? (poo-flow-user-config-feature?
+                       test-poo-flow-user-config
+                       'sandbox
+                       'docker-sandbox
+                       '+docker
+                       '+doctor)
+                      #t)
+        (check-equal? (poo-flow-user-config-feature?
                        custom-config
                        'custom
                        'my-module
@@ -119,4 +144,4 @@
         (check-equal? (.ref settings 'loop-strategy) 'governed)
         (check-equal? (.ref settings 'sandbox-policy) 'module-gated)
         (check-equal? (.ref settings 'sandbox-backends)
-                      '(nono cube))))))
+                      '(nono cube docker))))))

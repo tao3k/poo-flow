@@ -6,6 +6,8 @@
                  current-expander-context
                  expander-context-id)
         (only-in :gerbil/expander/stx stx-source)
+        :modules/cubeSandbox/config
+        :modules/docker-sandbox/config
         :modules/nono-sandbox/config
         :modules/user-config)
 
@@ -193,7 +195,7 @@
 ;;       ```
 ;;     %
 (defsyntax (use-module stx)
-  (syntax-case stx (:config profiles nono-sandbox)
+  (syntax-case stx (:config profiles nono-sandbox cubeSandbox docker-sandbox)
     ((_ nono-sandbox :config (profiles profile-clause ...))
      (syntax
       (poo-flow-use-module
@@ -201,6 +203,20 @@
        (list
         (cons ':config
               (poo-flow-nono-sandbox-profiles profile-clause ...))))))
+    ((_ cubeSandbox :config (profiles profile-clause ...))
+     (syntax
+      (poo-flow-use-module
+       'cubeSandbox
+       (list
+        (cons ':config
+              (poo-flow-cubeSandbox-profiles profile-clause ...))))))
+    ((_ docker-sandbox :config (profiles profile-clause ...))
+     (syntax
+      (poo-flow-use-module
+       'docker-sandbox
+       (list
+        (cons ':config
+              (poo-flow-docker-sandbox-profiles profile-clause ...))))))
     ((_ module :config bad-clause ...)
      (error "use-module :config expects (profiles ...)"))
     ((_ module flag ...)

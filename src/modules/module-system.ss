@@ -20,6 +20,8 @@
         :modules/extension
         :modules/objects
         :modules/nono-sandbox/config
+        :modules/cubeSandbox/config
+        :modules/docker-sandbox/config
         :modules/syntax)
 
 (export (import: :modules/interface)
@@ -40,4 +42,6 @@
         (import: :modules/extension)
         (import: :modules/objects)
         (import: :modules/nono-sandbox/config)
+        (import: :modules/cubeSandbox/config)
+        (import: :modules/docker-sandbox/config)
         (import: :modules/syntax))

@@ -13,7 +13,7 @@
 ;;; function declarations without needing a platform sandbox or native link step.
 ;; : (-> Unit String)
 (def (run-nono-c-binding-compile-probe)
-  (run-process '("sh" ".bin/check-nono-c-binding")
+  (run-process (nono-c-binding-compile-probe-command)
                stderr-redirection: #t))
 
 (def nono-sandbox-c-language-test

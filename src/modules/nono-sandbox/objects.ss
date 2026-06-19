@@ -2,12 +2,16 @@
 ;;; Boundary: nono sandbox module objects.
 
 (import :modules/extension
-        :modules/objects)
+        :modules/objects
+        :modules/sandbox-core/objects)
 
 (export poo-flow-nono-sandbox-object
         poo-flow-nono-sandbox-profile-object
         poo-flow-nono-sandbox-module-objects)
 
+;;; Nono sandbox object data names the backend family and binding defaults; C
+;;; binding probes and runtime calls remain in their dedicated owners.
+;; : PooModuleObject
 (def poo-flow-nono-sandbox-object
   (poo-flow-module-object
    'objects.nono-sandbox.sandbox
@@ -21,10 +25,14 @@
      (domain . sandbox)
      (inherits . objects.shared.sandbox))))
 
+;;; The nono profile object specializes sandbox-core through C3 inheritance, so
+;;; legacy nono defaults and shared profile rows merge through one object path.
+;; : PooModuleObject
 (def poo-flow-nono-sandbox-profile-object
   (poo-flow-module-object
    'objects.nono-sandbox.profile
-   (list poo-flow-nono-sandbox-object)
+   (list poo-flow-sandbox-core-profile-object
+         poo-flow-nono-sandbox-object)
    (list
     (poo-flow-module-field-contract
      'profile-name 'Symbol 'override 'default
@@ -42,7 +50,7 @@
      'capabilities 'List 'override '(process filesystem tmpdir)
      '((scope . nono-sandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
-     'resource-policy 'List 'override '()
+     'resource-policy 'List 'override '((filesystem . scoped))
      '((scope . nono-sandbox) (dsl-row . resources)))
     (poo-flow-module-field-contract
      'metadata 'List 'append '()
@@ -54,6 +62,8 @@
      (backend-owned-by . use-module)
      (inherits . objects.nono-sandbox.sandbox))))
 
+;;; Object catalogs are validation and loader inputs; they do not load bindings.
+;; : [PooModuleObject]
 (def poo-flow-nono-sandbox-module-objects
   (list poo-flow-nono-sandbox-object
         poo-flow-nono-sandbox-profile-object))

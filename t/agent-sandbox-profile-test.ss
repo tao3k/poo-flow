@@ -37,14 +37,19 @@
        (check-equal? (agent-sandbox-profile-capabilities nono)
                      '((filesystem . scoped)
                        (credentials . injected)))
+       (check-equal? (agent-sandbox-profile-resource-policy nono)
+                     '((filesystem . scoped)
+                       (startup . zero-latency)))
        (check-equal? (agent-sandbox-profile-backend-kind cube) 'cube)
        (check-equal? (agent-sandbox-profile-network-policy cube)
                      '((mode . egress-filtered)))
        (check-equal? (agent-sandbox-profile-capabilities cube)
-                     '((isolation . kvm)
+                     '((filesystem . snapshot)
+                       (isolation . kvm)
                        (api . e2b-compatible)))
        (check-equal? (agent-sandbox-profile-resource-policy cube)
-                     '((snapshot . clone)
+                     '((filesystem . snapshot)
+                       (snapshot . clone)
                        (resume . supported)))))
    (test-case "uses POO profile descriptors for backend overrides"
      (let* ((cube-descriptor
@@ -56,7 +61,8 @@
               'base-profile
               '((mode . proxy-only))
               '((filesystem . scoped))
-              '((startup . zero-latency))
+              '((filesystem . scoped)
+                (startup . zero-latency))
               '((backend . custom))
               (list (cons 'backend-ref 'override-profile)
                     (cons 'metadata '((backend . override)
@@ -89,6 +95,41 @@
               '()
               '()
               '()))
+            (resource-only-profile
+             (make-agent-sandbox-backend-profile
+              'nono
+              'resource-only
+              '()
+              '(process-run tmpdir)
+              '((cpu . 1))
+              '()))
+            (resource-only-failure
+             (with-catch (lambda (failure) failure)
+                         (lambda ()
+                           (agent-sandbox-validate-profile
+                            resource-only-profile))))
+            (missing-filesystem-resource-profile
+             (make-agent-sandbox-backend-profile
+              'nono
+              'missing-filesystem-resource
+              '()
+              '(process-run filesystem-read tmpdir)
+              '((cpu . 1))
+              '()))
+            (missing-filesystem-resource-failure
+             (with-catch (lambda (failure) failure)
+                         (lambda ()
+                           (agent-sandbox-validate-profile
+                            missing-filesystem-resource-profile))))
+            (filesystem-profile
+             (make-agent-sandbox-backend-profile
+              'nono
+              'filesystem-profile
+              '()
+              '(process-run filesystem-read tmpdir)
+              '((filesystem . scoped)
+                (cpu . 1))
+              '()))
             (request-failure
              (with-catch (lambda (failure) failure)
                          (lambda ()
@@ -107,6 +148,16 @@
        (check-equal? (execution-failure? profile-failure) #t)
        (check-equal? (execution-failure-code profile-failure)
                      'invalid-agent-sandbox-profile)
+       (check-equal? (execution-failure? resource-only-failure) #t)
+       (check-equal? (execution-failure-code resource-only-failure)
+                     'invalid-agent-sandbox-profile)
+       (check-equal? (execution-failure? missing-filesystem-resource-failure)
+                     #t)
+       (check-equal? (execution-failure-code
+                      missing-filesystem-resource-failure)
+                     'invalid-agent-sandbox-profile)
+       (check-equal? (agent-sandbox-validate-profile filesystem-profile)
+                     filesystem-profile)
        (check-equal? (execution-failure? request-failure) #t)
        (check-equal? (execution-failure-code request-failure)
                      'invalid-agent-sandbox-request)))
@@ -148,7 +199,8 @@
        (let* ((profile (make-nono-agent-sandbox-profile
                         'always-further/opencode
                         (list (cons 'resource-policy
-                                    '((startup . zero-latency)
+                                    '((filesystem . scoped)
+                                      (startup . zero-latency)
                                       (profile-timeout-ms . 120000))))))
               (command (lambda (envelope)
                          (set! seen-request (cdr (assoc 'request envelope)))
@@ -185,6 +237,7 @@
                          (credentials . injected)))
          (check-equal? (cdr (assoc 'resource-policy sandbox))
                        '((task-timeout-ms . 30000)
+                         (filesystem . scoped)
                          (startup . zero-latency)
                          (profile-timeout-ms . 120000)))
          (check-equal? (cdr (assoc 'metadata sandbox))
