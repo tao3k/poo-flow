@@ -18,6 +18,7 @@
         :poo-flow/src/modules/user-interface/config
         :poo-flow/src/modules/user-interface-case
         :poo-flow/src/modules/extension
+        :poo-flow/src/modules/object-core
         :poo-flow/src/modules/objects
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/cubeSandbox/config
@@ -40,6 +41,7 @@
         (import: :poo-flow/src/modules/user-interface/config)
         (import: :poo-flow/src/modules/user-interface-case)
         (import: :poo-flow/src/modules/extension)
+        (import: :poo-flow/src/modules/object-core)
         (import: :poo-flow/src/modules/objects)
         (import: :poo-flow/src/modules/nono-sandbox/config)
         (import: :poo-flow/src/modules/cubeSandbox/config)

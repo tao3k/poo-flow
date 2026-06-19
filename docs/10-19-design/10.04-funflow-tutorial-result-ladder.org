@@ -459,6 +459,11 @@ Proof:
 Implementation update:
 - The report now records all 22 local result gate ids plus inert proof command strings, so manifest consumer, functional kernel, workflow macro, and alignment-report coverage are inspectable from one POO object.
 - The report now records a =source-index= and =runtime-gap-index= so each =.data/funflow= source can be mapped to local coverage status and remaining Rust/Marlin-owned runtime work.
+- The report now records a =status-source-matrix= so each coverage status exposes its source ids and upstream paths without re-scanning the spec snapshots.
+- The report now records a =source-proof-index= so each upstream source has a direct proof-count, inert proof receipts, and runtime-gap metadata.
+- The report now records a =runtime-owner-matrix= so each runtime-owned concern can be traced to affected source ids, coverage statuses, and deferred outputs.
+- The report now records a =handoff-readiness-summary= so CI and user interfaces can read runtime handoff status without scanning every report index.
+- The report now records a =ci-receipt-manifest= so CI and user interfaces can display the local proof commands without executing them from Scheme.
 Reference result:
 - Funflow's tutorial surface is broader than a single file or workflow: the
   real user-facing outcomes span Tutorial1, QuickReference, Tutorial2,

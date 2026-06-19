@@ -3,7 +3,7 @@
 ;;; Gerbil harness structural validation vocabulary.
 
 (import :std/test
-        :poo-flow/src/modules/extension
+        :poo-flow/src/modules/object-core
         :poo-flow/src/modules/object-validation
         :poo-flow/src/modules/objects
         :poo-flow/src/modules/sandbox-core/objects
@@ -31,7 +31,9 @@
               (poo-flow-module-object-validation
                poo-flow-nono-sandbox-object))
              (harness-validation
-              (receipt-ref validation 'harnessValidation)))
+              (receipt-ref validation 'harnessValidation))
+             (source-ref
+              (receipt-ref validation 'sourceRef)))
         (check-equal? (poo-flow-module-object-validation? validation) #t)
         (check-equal? (receipt-ref validation 'kind)
                       poo-flow-module-object-validation-kind)
@@ -45,6 +47,15 @@
                       "poo-pattern-evidence/v1")
         (check-equal? (receipt-ref harness-validation 'patternKind)
                       "type-validation")
+        (check-equal? (receipt-ref harness-validation 'valid) #t)
+        (check-equal? (receipt-ref harness-validation 'diagnostics) '())
+        (check-equal? (not (not (member
+                                 "source-ref-shape"
+                                 (receipt-ref harness-validation
+                                              'checkedSignals))))
+                      #t)
+        (check-equal? (receipt-ref source-ref 'dependency)
+                      "github.com/tao3k/gerbil-scheme-language-project-harness")
         (check-equal? (poo-flow-module-object-validation-valid? validation)
                       #t)
         (check-equal? (poo-flow-module-object-validation-diagnostics
@@ -86,6 +97,7 @@
                       #f)
         (check-equal? (receipt-ref harness-validation 'patternKind)
                       "type-validation")
+        (check-equal? (receipt-ref harness-validation 'valid) #t)
         (check-equal? (diagnostic-codes diagnostics)
                       '(invalid-merge
                         default-kind-mismatch

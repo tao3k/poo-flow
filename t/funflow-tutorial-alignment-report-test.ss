@@ -2,9 +2,13 @@
 ;;; Boundary: Funflow tutorial alignment is a POO report, not loose prose.
 ;;; Invariant: heavy Docker/CAS/process work remains runtime-owned.
 
-(import :std/test
-        (only-in :clan/poo/object .ref object?)
-        :poo-flow/src/modules/workflow/flows)
+(import (only-in :std/test
+                 test-suite
+                 test-case
+                 check-equal?
+                 run-tests!)
+          (only-in :clan/poo/object .ref object?)
+          :poo-flow/src/modules/workflow/flows)
 
 (export funflow-tutorial-alignment-report-test)
 
@@ -36,12 +40,37 @@
     (car entries))
    (else (alignment-test-entry-by-source source (cdr entries)))))
 
+;; : (-> Symbol [Alist] (U Alist #f))
+(def (alignment-test-entry-by-status status entries)
+  (cond
+   ((null? entries) #f)
+   ((eq? status (alignment-test-alist-ref (car entries) 'status))
+    (car entries))
+   (else (alignment-test-entry-by-status status (cdr entries)))))
+
+;; : (-> Symbol [Alist] (U Alist #f))
+(def (alignment-test-entry-by-runtime-owner owner entries)
+  (cond
+   ((null? entries) #f)
+   ((eq? owner (alignment-test-alist-ref (car entries) 'runtime-owner))
+    (car entries))
+   (else (alignment-test-entry-by-runtime-owner owner (cdr entries)))))
+
+;;; Boundary: this suite is the public receipt for Funflow tutorial alignment.
+;;; Keep report-shape, source indexes, and runtime-gap assertions together so
+;;; Stage 22 fails in one owner when the POO report contract drifts.
 (def funflow-tutorial-alignment-report-test
   (test-suite "funflow tutorial alignment report"
     (test-case "projects audited upstream tutorial coverage as a POO report"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
              (spec-snapshots (.ref report 'specs))
              (source-index (.ref report 'source-index))
+             (source-proof-index (.ref report 'source-proof-index))
+             (status-source-matrix (.ref report 'status-source-matrix))
+             (runtime-owner-matrix (.ref report 'runtime-owner-matrix))
+             (handoff-readiness-summary
+              (.ref report 'handoff-readiness-summary))
+             (ci-receipt-manifest (.ref report 'ci-receipt-manifest))
              (counts (.ref report 'status-counts)))
         (check-equal? (object? report) #t)
         (check-equal? (poo-flow-funflow-tutorial-alignment-report? report) #t)
@@ -53,6 +82,9 @@
         (check-equal? (.ref report 'source-count) 9)
         (check-equal? (length spec-snapshots) 9)
         (check-equal? (length source-index) 9)
+        (check-equal? (length source-proof-index) 9)
+        (check-equal? (length status-source-matrix) 3)
+        (check-equal? (length runtime-owner-matrix) 10)
         (check-equal? (alignment-test-alist-ref counts 'result-covered) 6)
         (check-equal? (alignment-test-alist-ref counts
                                                 'runtime-manifest-covered)
@@ -64,6 +96,56 @@
         (check-equal? (> (.ref report 'gate-proof-count) 25) #t)
         (check-equal? (.ref report 'runtime-gap-count) 5)
         (check-equal? (.ref report 'runtime-owner) "marlin-agent-core")
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'runtime-owner)
+                      "marlin-agent-core")
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'runtime-executed)
+                      #f)
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'source-count)
+                      9)
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'result-covered)
+                      6)
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'runtime-gap-count)
+                      5)
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'runtime-owner-count)
+                      10)
+        (check-equal? (alignment-test-alist-ref handoff-readiness-summary
+                                                'handoff-required)
+                      #t)
+        (check-equal? (alignment-test-alist-ref ci-receipt-manifest
+                                                'expected-status)
+                      'pass)
+        (check-equal? (alignment-test-alist-ref ci-receipt-manifest
+                                                'runtime-executed)
+                      #f)
+        (check-equal? (alignment-test-alist-ref
+                       (alignment-test-alist-ref ci-receipt-manifest
+                                                 'handoff-readiness-summary)
+                       'handoff-required)
+                      #t)
+        (check-equal? (length (alignment-test-alist-ref ci-receipt-manifest
+                                                        'result-gates))
+                      7)
+        (check-equal? (length (alignment-test-alist-ref ci-receipt-manifest
+                                                        'commands))
+                      7)
+        (check-equal? (not
+                       (not
+                        (member "gxi build.ss compile"
+                                (alignment-test-alist-ref ci-receipt-manifest
+                                                          'commands))))
+                      #t)
+        (check-equal? (not
+                       (not
+                        (member "asp org lint docs/10-19-design/10.04-funflow-tutorial-result-ladder.org"
+                                (alignment-test-alist-ref ci-receipt-manifest
+                                                          'commands))))
+                      #t)
         (check-equal? (.ref report 'runtime-executed) #f)))
     (test-case "keeps runtime-heavy tutorial gaps explicit"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
@@ -99,11 +181,34 @@
     (test-case "indexes upstream sources and runtime-owned gaps"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
              (source-index (.ref report 'source-index))
+             (source-proof-index (.ref report 'source-proof-index))
+             (status-source-matrix (.ref report 'status-source-matrix))
+             (runtime-owner-matrix (.ref report 'runtime-owner-matrix))
              (gap-index (.ref report 'runtime-gap-index))
+             (result-covered
+              (alignment-test-entry-by-status 'result-covered
+                                              status-source-matrix))
+             (descriptor-covered
+              (alignment-test-entry-by-status 'descriptor-covered
+                                              status-source-matrix))
              (external-config
               (alignment-test-entry-by-source
                "funflow-tutorial/notebooks/ExternalConfig/ExternalConfig.ipynb"
                source-index))
+             (external-config-proof
+              (alignment-test-entry-by-source
+               "funflow-tutorial/notebooks/ExternalConfig/ExternalConfig.ipynb"
+               source-proof-index))
+             (ccompilation-proof
+              (alignment-test-entry-by-source
+               "funflow-tutorial/notebooks/CCompilation/CCompilation.ipynb"
+               source-proof-index))
+             (docker-process
+              (alignment-test-entry-by-runtime-owner 'docker-process
+                                                     runtime-owner-matrix))
+             (make-process
+              (alignment-test-entry-by-runtime-owner 'make-process
+                                                     runtime-owner-matrix))
              (tensorflow
               (alignment-test-entry-by-source
                "funflow-tutorial/notebooks/TensorflowDocker/TensorflowDocker.ipynb"
@@ -116,6 +221,52 @@
                       'external-config)
         (check-equal? (alignment-test-alist-ref external-config 'status)
                       'result-covered)
+        (check-equal? (alignment-test-alist-ref external-config-proof
+                                                'proof-count)
+                      2)
+        (check-equal? (not
+                       (not
+                        (member 'docker-echo
+                                (alignment-test-alist-ref external-config-proof
+                                                          'runtime-owned))))
+                      #t)
+        (check-equal? (alignment-test-alist-ref ccompilation-proof
+                                                'proof-count)
+                      4)
+        (check-equal? (not
+                       (not
+                        (member 'real-cas-write
+                                (alignment-test-alist-ref ccompilation-proof
+                                                          'deferred))))
+                      #t)
+        (check-equal? (alignment-test-alist-ref docker-process 'count) 2)
+        (check-equal? (alignment-test-alist-ref docker-process 'ids)
+                      '(ccompilation tensorflow-docker))
+        (check-equal? (alignment-test-alist-ref docker-process 'statuses)
+                      '(runtime-manifest-covered descriptor-covered))
+        (check-equal? (not
+                       (not
+                        (member "funflow-tutorial/notebooks/TensorflowDocker/TensorflowDocker.ipynb"
+                                (alignment-test-alist-ref docker-process
+                                                          'sources))))
+                      #t)
+        (check-equal? (alignment-test-alist-ref make-process 'ids)
+                      '(makefile-tool))
+        (check-equal? (not
+                       (not
+                        (member 'real-hello-binary-output
+                                (alignment-test-alist-ref make-process
+                                                          'deferred))))
+                      #t)
+        (check-equal? (alignment-test-alist-ref result-covered 'count) 6)
+        (check-equal? (not
+                       (not
+                        (member "funflow-tutorial/notebooks/ExternalConfig/ExternalConfig.ipynb"
+                                (alignment-test-alist-ref result-covered
+                                                          'sources))))
+                      #t)
+        (check-equal? (alignment-test-alist-ref descriptor-covered 'ids)
+                      '(tensorflow-docker))
         (check-equal? (not
                        (not
                         (member 'python-training

@@ -332,6 +332,11 @@
         '()
         specs))
 
+;; : (-> Symbol Alist Integer)
+(def (alignment-status-count-ref status counts)
+  (let (entry (assoc status counts))
+    (if entry (cdr entry) 0)))
+
 ;;; Boundary: map preserves source row order so report output stays diff-stable.
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-spec-ids specs)
@@ -392,6 +397,159 @@
 (def (alignment-source-index specs)
   (map alignment-source-index-entry specs))
 
+;;; Boundary: proof entries are detailed audit rows keyed by upstream source.
+;;; They keep command receipts inert while linking proof coverage to runtime gaps.
+;; : (-> PooObject Alist)
+(def (alignment-source-proof-entry spec)
+  (let (proofs (.ref spec 'proofs))
+    (list (cons 'source (.ref spec 'source))
+          (cons 'id (.ref spec 'id))
+          (cons 'status (.ref spec 'status))
+          (cons 'proof-count (length proofs))
+          (cons 'proofs proofs)
+          (cons 'runtime-owned (.ref spec 'runtime-owned))
+          (cons 'deferred (.ref spec 'deferred)))))
+
+;;; Boundary: source proof index preserves tutorial source order from specs.
+;;; Use it for diagnostics that need proof strings; keep source-index compact.
+;; : (-> [PooObject] [Alist])
+(def (alignment-source-proof-index specs)
+  (map alignment-source-proof-entry specs))
+
+;;; Boundary: owner symbol collection is stable and spec-order preserving.
+;;; Duplicate runtime owners collapse into the first observed matrix row.
+;; : (-> [PooObject] [Symbol])
+(def (alignment-runtime-owner-symbols specs)
+  (fold (lambda (spec owners)
+          (fold (lambda (owner seen)
+                  (if (member owner seen)
+                    seen
+                    (append seen (list owner))))
+                owners
+                (.ref spec 'runtime-owned)))
+        '()
+        specs))
+
+;;; Boundary: status filtering stays over normalized spec rows.
+;;; It supports coverage matrix projections without changing the source table.
+;; : (-> Symbol [PooObject] [PooObject])
+(def (alignment-specs-with-status status specs)
+  (filter (lambda (spec)
+            (eq? status
+                 (poo-flow-funflow-tutorial-alignment-spec-status spec)))
+          specs))
+
+;;; Boundary: status matrix rows expose source ids and paths for one status.
+;;; The row is a report index, not another coverage authority.
+;; : (-> Symbol [PooObject] Alist)
+(def (alignment-status-source-entry status specs)
+  (let* ((matching-specs (alignment-specs-with-status status specs))
+         (matching-source-index (alignment-source-index matching-specs)))
+    (list (cons 'status status)
+          (cons 'count (length matching-specs))
+          (cons 'ids (alignment-spec-ids matching-specs))
+          (cons 'sources
+                (map (lambda (entry) (cdr (assoc 'source entry)))
+                     matching-source-index)))))
+
+;;; Boundary: matrix order follows status-counts so summary and detail align.
+;;; Consumers can compare counts without re-scanning the spec snapshots.
+;; : (-> [PooObject] [Alist])
+(def (alignment-status-source-matrix specs)
+  (map (lambda (status-entry)
+         (alignment-status-source-entry (car status-entry) specs))
+       (alignment-status-counts specs)))
+
+;;; Boundary: runtime owner matching is structural and data-only.
+;;; It never executes the runtime operation named by the owner symbol.
+;; : (-> Symbol PooObject Boolean)
+(def (alignment-spec-has-runtime-owner? owner spec)
+  (not (not (member owner (.ref spec 'runtime-owned)))))
+
+;;; Boundary: runtime owner rows show handoff blast radius by backend concern.
+;;; Statuses and deferred outputs stay attached so runtime readiness is visible.
+;; : (-> Symbol [PooObject] Alist)
+(def (alignment-runtime-owner-entry owner specs)
+  (let* ((matching-specs
+          (filter (lambda (spec)
+                    (alignment-spec-has-runtime-owner? owner spec))
+                  specs))
+         (matching-source-index (alignment-source-index matching-specs)))
+    (list (cons 'runtime-owner owner)
+          (cons 'count (length matching-specs))
+          (cons 'ids (alignment-spec-ids matching-specs))
+          (cons 'statuses
+                (map poo-flow-funflow-tutorial-alignment-spec-status
+                     matching-specs))
+          (cons 'sources
+                (map (lambda (entry) (cdr (assoc 'source entry)))
+                     matching-source-index))
+          (cons 'deferred
+                (fold (lambda (spec deferred)
+                        (append deferred (.ref spec 'deferred)))
+                      '()
+                      matching-specs)))))
+
+;;; Boundary: owner matrix groups runtime gaps by backend concern.
+;;; It is diagnostic metadata for Marlin handoff, not an execution scheduler.
+;; : (-> [PooObject] [Alist])
+(def (alignment-runtime-owner-matrix specs)
+  (map (lambda (owner)
+         (alignment-runtime-owner-entry owner specs))
+       (alignment-runtime-owner-symbols specs)))
+
+;;; Boundary: readiness summary is a CI/user-interface snapshot.
+;;; It summarizes existing report indexes without becoming a runtime scheduler.
+;; : (-> Integer Alist [Alist] [Alist] Integer Integer Alist)
+(def (alignment-handoff-readiness-summary source-count
+                                          status-counts
+                                          runtime-owner-matrix
+                                          runtime-gap-index
+                                          proof-count
+                                          gate-proof-count)
+  (let ((runtime-gap-count (length runtime-gap-index)))
+    (list (cons 'runtime-owner "marlin-agent-core")
+          (cons 'runtime-executed #f)
+          (cons 'source-count source-count)
+          (cons 'result-covered
+                (alignment-status-count-ref 'result-covered status-counts))
+          (cons 'runtime-manifest-covered
+                (alignment-status-count-ref 'runtime-manifest-covered
+                                            status-counts))
+          (cons 'descriptor-covered
+                (alignment-status-count-ref 'descriptor-covered status-counts))
+          (cons 'runtime-gap-count runtime-gap-count)
+          (cons 'runtime-owner-count (length runtime-owner-matrix))
+          (cons 'proof-count proof-count)
+          (cons 'gate-proof-count gate-proof-count)
+          (cons 'handoff-required (> runtime-gap-count 0)))))
+
+;;; Boundary: CI receipt manifest is inert user-interface data.
+;;; It names local proof commands without becoming a command runner.
+;; : (-> Alist Alist)
+(def (alignment-ci-receipt-manifest handoff-readiness-summary)
+  (list (cons 'schema
+              'poo-flow.modules.funflow.tutorial-alignment.ci-receipts.v1)
+        (cons 'expected-status 'pass)
+        (cons 'runtime-executed #f)
+        (cons 'handoff-readiness-summary handoff-readiness-summary)
+        (cons 'result-gates
+              '(alignment-report
+                runtime-manifest
+                functional-flow-kernel
+                tutorial-feature-batch
+                tutorial-makefile-runtime
+                package-compile
+                org-lint))
+        (cons 'commands
+              '("gxtest t/funflow-tutorial-alignment-report-test.ss"
+                "gxtest t/runtime-manifest-test.ss"
+                "gxtest t/functional-flow-kernel-test.ss"
+                "gxtest t/tutorial-feature-batch-test.ss"
+                "gxtest t/tutorial-makefile-runtime-test.ss"
+                "gxi build.ss compile"
+                "asp org lint docs/10-19-design/10.04-funflow-tutorial-result-ladder.org"))))
+
 ;;; Boundary: runtime-gap detection stays structural and data-only.
 ;;; A gap means the source still delegates real work to Rust/Marlin runtime.
 ;; : (-> PooObject Boolean)
@@ -439,7 +597,20 @@
           (alignment-gate-proof-count gate-proofs-value))
          (spec-snapshots-value (map alignment-spec-snapshot specs))
          (source-index-value (alignment-source-index specs))
-         (runtime-gap-index-value (alignment-runtime-gap-index specs)))
+         (source-proof-index-value (alignment-source-proof-index specs))
+         (status-source-matrix-value
+          (alignment-status-source-matrix specs))
+         (runtime-owner-matrix-value (alignment-runtime-owner-matrix specs))
+         (runtime-gap-index-value (alignment-runtime-gap-index specs))
+         (handoff-readiness-summary-value
+          (alignment-handoff-readiness-summary source-count-value
+                                                status-counts-value
+                                                runtime-owner-matrix-value
+                                                runtime-gap-index-value
+                                                proof-count-value
+                                                gate-proof-count-value))
+         (ci-receipt-manifest-value
+          (alignment-ci-receipt-manifest handoff-readiness-summary-value)))
    (.o kind: (poo-flow-funflow-tutorial-alignment-report-kind)
        schema: (poo-flow-funflow-tutorial-alignment-schema)
         upstream: "tweag/funflow"
@@ -449,8 +620,13 @@
         spec-ids: ids-value
         specs: spec-snapshots-value
         source-index: source-index-value
+        source-proof-index: source-proof-index-value
+        status-source-matrix: status-source-matrix-value
         status-counts: status-counts-value
         deferred-ids: deferred-ids-value
+        runtime-owner-matrix: runtime-owner-matrix-value
+        handoff-readiness-summary: handoff-readiness-summary-value
+        ci-receipt-manifest: ci-receipt-manifest-value
         runtime-gap-index: runtime-gap-index-value
         runtime-gap-count: (length runtime-gap-index-value)
         proof-count: proof-count-value

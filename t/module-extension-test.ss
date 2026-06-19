@@ -4,6 +4,7 @@
 
 (import :std/test
         :poo-flow/src/modules/module-system
+        :poo-flow/src/modules/object-core
         :poo-flow/src/modules/objects
         :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/cubeSandbox/objects)
@@ -213,6 +214,108 @@
         (check-equal? (slot-value resolved-cube 'runtime-args)
                       '("--trace-cube"))
         (check-equal? (slot-value resolved-cube 'profile) 'strict)))
+
+    (test-case "resolves module object fields through gerbil-poo C3 precedence"
+      (let* ((root-object
+              (poo-flow-module-object
+               'object/root
+               '()
+               (list
+                (poo-flow-module-field-contract
+                 'shared 'Symbol 'override 'root '())
+                (poo-flow-module-field-contract
+                 'root-only 'Symbol 'override 'root-only '()))
+               '()))
+             (right-object
+              (poo-flow-module-object
+               'object/right
+               (list root-object)
+               (list
+                (poo-flow-module-field-contract
+                 'shared 'Symbol 'override 'right '())
+                (poo-flow-module-field-contract
+                 'right-only 'Symbol 'override 'right-only '()))
+               '()))
+             (left-object
+              (poo-flow-module-object
+               'object/left
+               (list root-object)
+               (list
+                (poo-flow-module-field-contract
+                 'shared 'Symbol 'override 'left '())
+                (poo-flow-module-field-contract
+                 'left-only 'Symbol 'override 'left-only '()))
+               '()))
+             (child-object
+              (poo-flow-module-object
+               'object/child
+               (list left-object right-object)
+               (list
+                (poo-flow-module-field-contract
+                 'child-only 'Symbol 'override 'child-only '()))
+               '())))
+        (check-equal? (map poo-flow-module-field-contract-identity
+                           (poo-flow-module-object-fields child-object))
+                      '(child-only))
+        (check-equal? (map poo-flow-module-field-contract-identity
+                           (poo-flow-module-object-resolved-fields
+                            child-object))
+                      '(shared root-only right-only left-only child-only))
+        (check-equal? (poo-flow-module-field-contract-default
+                       (poo-flow-module-object-field child-object 'shared))
+                      'left)
+        (check-equal? (poo-flow-module-field-contract-default
+                       (poo-flow-module-object-field child-object 'right-only))
+                      'right-only)
+        (check-equal? (poo-flow-module-field-contract-default
+                       (poo-flow-module-object-field child-object 'root-only))
+                      'root-only)))
+
+    (test-case "rejects inconsistent gerbil-poo C3 module object graphs"
+      (let* ((root-object
+              (poo-flow-module-object
+               'object/root
+               '()
+               (list
+                (poo-flow-module-field-contract
+                 'shared 'Symbol 'override 'root '()))
+               '()))
+             (a-object
+              (poo-flow-module-object
+               'object/a
+               (list root-object)
+               '()
+               '()))
+             (b-object
+              (poo-flow-module-object
+               'object/b
+               (list root-object)
+               '()
+               '()))
+             (x-object
+              (poo-flow-module-object
+               'object/x
+               (list a-object b-object)
+               '()
+               '()))
+             (y-object
+              (poo-flow-module-object
+               'object/y
+               (list b-object a-object)
+               '()
+               '()))
+             (broken-object
+              (poo-flow-module-object
+               'object/broken
+               (list x-object y-object)
+               '()
+               '()))
+             (failure
+              (with-catch (lambda (failure) failure)
+                          (lambda ()
+                            (poo-flow-module-object-resolved-fields
+                             broken-object)))))
+        (check-equal? (not (not failure)) #t)))
 
     (test-case "merges real module objects under the objects namespace"
       (let* ((objects

@@ -10,6 +10,8 @@ The module system follows that rule:
 - =poo-module-role= extends the control-plane role family;
 - =poo-module-descriptor-prototype= supplies module-owned slots;
 - future module descriptors can add UX, backend, or policy roles through the same Gerbil POO composition path.
+
+=src/modules/extension.ss= now makes =poo-flow-module-object= a Gerbil POO object with inherited objects passed as =supers:=. The =fields= slot is computed through gerbil-poo =superfun=, so object field resolution uses native POO/C3 precedence rather than a local recursive inheritance merge.
 ** 10.06.03.25 v0.19-staging Evidence
 This section is forward-looking evidence. =poo-flow= currently targets Gerbil 0.18.2, so implementation work should rely on Gerbil POO and the C3-style precedence behavior available today. C4-specific suffix semantics are documented here as a future compatibility path for the Gerbil 0.19 line.
 

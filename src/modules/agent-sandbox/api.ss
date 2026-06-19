@@ -9,6 +9,7 @@
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/profile-candidate
         :poo-flow/src/modules/agent-sandbox/request
         :poo-flow/src/modules/agent-sandbox/request-macro
         :poo-flow/src/modules/agent-sandbox/bridge
@@ -16,6 +17,7 @@
 
 (export (import: :poo-flow/src/modules/agent-sandbox/alist)
         (import: :poo-flow/src/modules/agent-sandbox/profile)
+        (import: :poo-flow/src/modules/agent-sandbox/profile-candidate)
         (import: :poo-flow/src/modules/agent-sandbox/request)
         (import: :poo-flow/src/modules/agent-sandbox/request-macro)
         (import: :poo-flow/src/modules/agent-sandbox/bridge)

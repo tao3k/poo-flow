@@ -3,7 +3,10 @@
 ;;; Build file for the POO Flow Gerbil runtime package.
 ;;; The runtime package root is the repository root, matching imports such as :poo-flow/src/core/roles.
 
-(import :clan/building)
+(import (only-in :std/cli/multicall define-entry-point)
+        :std/make
+        :clan/base
+        :clan/building)
 
 ;;; clan/building owns package build-environment initialization and compilation.
 ;;; Non-module practice fragments stay out of the package build and are loaded
@@ -31,3 +34,8 @@
  deps: '("gerbil-poo"
          "gerbil-scheme-language-project-harness")
  spec: spec)
+
+(define-entry-point (clean)
+  (help: "Clean compilation artefacts from this package"
+   getopt: [])
+  (make-clean (spec) srcdir: (current-directory)))

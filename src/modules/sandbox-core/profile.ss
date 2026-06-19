@@ -5,6 +5,7 @@
 (import (only-in :clan/poo/object .o)
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/extension
+        :poo-flow/src/modules/object-core
         :poo-flow/src/modules/objects)
 
 (export poo-flow-sandbox-core-profile-object

@@ -7,10 +7,12 @@
 ;;; Runtime contract: credentials and LLM calls stay out of Scheme.
 ;;; Policy evidence: tests should import this module when they assert nono defaults.
 
-(import :poo-flow/src/modules/agent-sandbox/profile)
+(import :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/nono-profile-candidate)
 
 (export make-nono-agent-sandbox-profile-descriptor
-        make-nono-agent-sandbox-profile)
+        make-nono-agent-sandbox-profile
+        (import: :poo-flow/src/modules/agent-sandbox/nono-profile-candidate))
 
 ;;; nono profile defaults model local zero-setup agent sandboxing. The ordinary
 ;;; helper form keeps backend defaults explicit and avoids macro-only evidence.

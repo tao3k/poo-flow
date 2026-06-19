@@ -5,7 +5,9 @@
 
 (import :gerbil/gambit
         (only-in :std/srfi/1 append-map)
-        :poo-flow/src/modules/extension)
+        (only-in :gerbil-scheme-language-project-harness/src/extensions/poo-validation
+                 poo-pattern-structural-validation)
+        :poo-flow/src/modules/object-core)
 
 (export poo-flow-module-object-validation-kind
         poo-flow-module-object-validation-schema
@@ -90,17 +92,13 @@
               (poo-flow-module-object-resolved-fields object)))))
 
 ;;; Harness validation is report-only here. The Gerbil language-project harness
-;;; owns structural POO checks upstream; poo-flow records the object-aware source
-;;; reference without importing a second validation module namespace.
+;;; owns structural POO checks upstream; poo-flow only supplies the object-aware
+;;; source reference and keeps module-domain diagnostics local.
 ;; : (-> PooModuleObject HashTable)
 (def (poo-flow-module-object-harness-validation object)
-  (receipt
-   (cons 'kind "poo-pattern-structural-validation")
-   (cons 'schema "poo-pattern-evidence/v1")
-   (cons 'patternKind "type-validation")
-   (cons 'valid #t)
-   (cons 'sourceRef
-         (poo-flow-module-object-validation-source-ref object))))
+  (poo-pattern-structural-validation
+   'type-validation
+   (poo-flow-module-object-validation-source-ref object)))
 
 ;; : (-> PooModuleObject PooModuleFieldContract [HashTable])
 (def (field-diagnostics object field)
@@ -177,17 +175,22 @@
 (def (poo-flow-module-object-validation object)
   (let* ((harness-validation
           (poo-flow-module-object-harness-validation object))
+         (source-ref
+          (poo-flow-module-object-validation-source-ref object))
          (diagnostics (object-diagnostics object))
-         (valid? (null? diagnostics)))
+         (valid? (and (null? diagnostics)
+                      (hash-get harness-validation 'valid))))
     (receipt
      (cons 'kind poo-flow-module-object-validation-kind)
      (cons 'schema poo-flow-module-object-validation-schema)
      (cons 'object (poo-flow-module-object-identity object))
+     (cons 'sourceRef source-ref)
      (cons 'harnessValidation harness-validation)
      (cons 'valid valid?)
      (cons 'diagnostics diagnostics)
      (cons 'checkedSignals
            '(harness-type-validation
+             upstream-structural-validation
              field-merge-kind
              field-default-kind
              metadata-shape
