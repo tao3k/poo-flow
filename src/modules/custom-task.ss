@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
-;;; Owner: Tutorial2 custom task alignment lives in this extension module.
+;;; Owner: Tutorial2 custom task alignment lives in this module.
 ;;; Boundary: core provides descriptor, strategy, runner, and adapter protocols.
-;;; Import contract: users opt in through =:extensions/custom-task= exports.
+;;; Import contract: users opt in through =:modules/custom-task= exports.
 ;;; Runtime contract: this module emits Tutorial2 task data only.
 ;;; Runtime contract: repeat-task interpretation stays behind the local adapter.
 ;;; Runtime contract: scheduler and plan semantics stay out of this extension.
@@ -29,7 +29,7 @@
   (make-task-family-descriptor 'custom 'custom 'local 'gerbil #f))
 
 ;;; Boundary:
-;;; - Registry extension is immutable.
+;;; - Registry module extension is immutable.
 ;;; - Callers may pass a base registry or use the core default.
 ;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-custom-task-family-registry . maybe-registry)

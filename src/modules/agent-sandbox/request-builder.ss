@@ -9,10 +9,10 @@
 ;;; - The named-field macro and profiled flow both call these constructors.
 
 (import :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile
-        :extensions/agent-sandbox-request-field
-        :extensions/agent-sandbox-request-validation)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile
+        :modules/agent-sandbox/request-field
+        :modules/agent-sandbox/request-validation)
 
 (export make-agent-sandbox-request
         make-agent-sandbox-request-with

@@ -4,9 +4,9 @@
 
 (import :std/test
         :core/api
-        :extensions/agent-sandbox
-        :extensions/agent-sandbox-nono
-        :extensions/agent-sandbox-cube)
+        :modules/agent-sandbox/api
+        :modules/agent-sandbox/nono
+        :modules/agent-sandbox/cube)
 
 ;; : (-> Value Alist AdapterResult)
 (def (runtime-result value artifact)

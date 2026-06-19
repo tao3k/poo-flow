@@ -4,8 +4,8 @@
 
 (import :std/test
         :core/api
-        :extensions/workflow
-        :extensions/workflow-syntax)
+        :modules/workflow/flows
+        :modules/workflow/syntax)
 
 (export tutorial-makefile-runtime-test)
 

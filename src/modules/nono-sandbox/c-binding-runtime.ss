@@ -1,15 +1,15 @@
 ;;; -*- Gerbil -*-
-;;; Owner: nono C binding runtime manifest projection lives here.
+;;; Owner: nono-sandbox C binding runtime manifest projection lives here.
 ;;; Boundary: this module emits capability plans and backend handoff manifests.
 ;;; Runtime contract: Marlin or another C runtime owns dlopen/FFI execution.
 ;;; Source contract: symbols mirror .data/nono/bindings/c/include/nono.h.
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
 (import :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile
-        :extensions/agent-sandbox-bridge
-        :extensions/agent-sandbox-nono-c-binding-descriptor
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile
+        :modules/agent-sandbox/bridge
+        :modules/nono-sandbox/c-binding-descriptor
         (only-in :std/misc/process run-process))
 
 (export +nono-c-binding-dry-run-receipt-schema+
@@ -26,13 +26,13 @@
 ;;; manifest can be projected, but they do not load a native library or apply a sandbox.
 ;; : (-> Unit Symbol)
 (def +nono-c-binding-dry-run-receipt-schema+
-  'poo-flow.agent-sandbox.nono-c-binding.dry-run.v1)
+  'poo-flow.sandbox.nono-sandbox.c-binding.dry-run.v1)
 
 ;;; Smoke receipts add an opt-in process probe over the dry-run receipt while
 ;;; keeping irreversible nono sandbox application outside Scheme.
 ;; : (-> Unit Symbol)
 (def +nono-c-binding-smoke-test-receipt-schema+
-  'poo-flow.agent-sandbox.nono-c-binding.smoke-test.v1)
+  'poo-flow.sandbox.nono-sandbox.c-binding.smoke-test.v1)
 
 ;;; Mount validation is deliberately stricter than the neutral request schema:
 ;;; the C ABI needs a UTF-8 path and one of the generated access constants.
@@ -136,7 +136,7 @@
     (if (null? errors)
       runtime-manifest
       (raise-control-plane-failure
-       'agent-sandbox-nono
+       'nono-sandbox
        'invalid-nono-c-binding-manifest
        "invalid nono C binding runtime manifest"
        (list (cons 'errors errors)

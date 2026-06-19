@@ -2,16 +2,181 @@
 ;;; Boundary: user profile/module declaration syntax lives outside core profile data.
 ;;; Invariant: macros expand to user-config data and never realize descriptors.
 
-(import :modules/user-config)
+(import (only-in :gerbil/expander/core
+                 current-expander-context
+                 expander-context-id)
+        (only-in :gerbil/expander/stx stx-source)
+        :modules/nono-sandbox/config
+        :modules/user-config)
 
 (export poo-flow-module-bundles
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
+        load!
         poo-flow!
         poo-flow-profile-set
         poo-flow-profile-extend
         poo-flow-profile)
+
+;;; Doom-style config fragments are declaration includes, not runtime module
+;;; loading. Extensionless paths mirror Doom's `load!` surface; the macro wraps
+;;; the fragment result in a generated binding so user files only write the
+;;; declaration form, such as `(use-module ...)`.
+;; load!
+;;   : (-> String Syntax...)
+;;   | contract: loads a user config fragment relative to the current module
+;;       and exports a generated binding for the fragment result
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (load! "profiles/session")
+;;       ;; => exports poo-flow-custom-<module>-session-module
+;;       ```
+;;     %
+(defsyntax (load! stx)
+  (syntax-case stx ()
+    ((ctx path)
+     (let* ((path-value (syntax->datum (syntax path)))
+            (path-length (and (string? path-value)
+                              (string-length path-value)))
+            (source-value (stx-source (syntax path)))
+            (call-source-path/raw
+             (cond
+              ((string? source-value) source-value)
+              ((and (pair? source-value) (string? (car source-value)))
+               (car source-value))
+              (else #f)))
+            (include-source-path
+             (cond
+              ((not (string? path-value))
+               (error "load! expects a string path"))
+              ((and (>= path-length 3)
+                    (string=? (substring path-value
+                                         (- path-length 3)
+                                         path-length)
+                              ".ss"))
+               path-value)
+              (else
+               (string-append path-value ".ss"))))
+            (absolute-path?
+             (lambda (value)
+               (and (> (string-length value) 0)
+                    (char=? (string-ref value 0) #\/))))
+            (string-prefix?
+             (lambda (prefix value)
+               (let ((prefix-length (string-length prefix))
+                     (value-length (string-length value)))
+                 (and (>= value-length prefix-length)
+                      (string=? (substring value 0 prefix-length)
+                                prefix)))))
+            (path-segments
+             (lambda (value)
+               (let ((length (string-length value)))
+                 (let loop ((index 0) (start 0) (segments '()))
+                   (cond
+                    ((= index length)
+                     (reverse
+                      (cons (substring value start index) segments)))
+                    ((char=? (string-ref value index) #\/)
+                     (loop (+ index 1)
+                           (+ index 1)
+                           (cons (substring value start index) segments)))
+                    (else
+                     (loop (+ index 1) start segments)))))))
+            (drop-suffix
+             (lambda (suffix value)
+               (let ((value-length (string-length value))
+                     (suffix-length (string-length suffix)))
+                 (if (and (>= value-length suffix-length)
+                          (string=? (substring value
+                                               (- value-length suffix-length)
+                                               value-length)
+                                    suffix))
+                   (substring value 0 (- value-length suffix-length))
+                   value))))
+            (member-tail
+             (lambda (needle values)
+               (let loop ((rest values))
+                 (cond
+                  ((null? rest) #f)
+                  ((equal? (car rest) needle) rest)
+                  (else (loop (cdr rest)))))))
+            (last-segment
+             (lambda (segments fallback)
+               (let loop ((rest segments) (last fallback))
+                 (if (null? rest) last (loop (cdr rest) (car rest))))))
+            (module-context-source-path
+             (let* ((context-id
+                     (expander-context-id (current-expander-context)))
+                    (context-name
+                     (and (symbol? context-id)
+                          (symbol->string context-id)))
+                    (package-prefix "poo-flow/"))
+               (and context-name
+                    (let (relative-context-name
+                          (if (string-prefix? package-prefix context-name)
+                            (substring context-name
+                                       (string-length package-prefix)
+                                       (string-length context-name))
+                            context-name))
+                      (string-append relative-context-name ".ss")))))
+            (call-source-path
+             (let (raw-source-path
+                   (or call-source-path/raw module-context-source-path))
+               (and raw-source-path
+                    (path-expand raw-source-path (current-directory)))))
+            (fragment-source-path
+             (if (absolute-path? include-source-path)
+               include-source-path
+               (path-expand include-source-path
+                            (path-directory
+                             (or call-source-path
+                                 (current-directory))))))
+            (read-fragment-forms
+             (lambda (value)
+               (call-with-input-file value
+                 (lambda (port)
+                   (let loop ((forms '()))
+                     (let (form (read port))
+                       (if (eof-object? form)
+                         (reverse forms)
+                         (loop (cons form forms)))))))))
+            (source-segments
+             (if call-source-path
+               (path-segments call-source-path)
+               (path-segments fragment-source-path)))
+            (custom-tail
+             (member-tail "custom" source-segments))
+            (custom-module-name
+             (if (and custom-tail
+                      (pair? (cdr custom-tail)))
+               (cadr custom-tail)
+               "module"))
+            (load-name
+             (drop-suffix ".ss"
+                          (last-segment (path-segments include-source-path)
+                                        "config")))
+            (binding-name
+             (string->symbol
+              (string-append "poo-flow-custom-"
+                             custom-module-name
+                             "-"
+                             load-name
+                             "-module")))
+            (fragment-forms
+             (read-fragment-forms fragment-source-path)))
+       (with-syntax ((binding (datum->syntax (syntax ctx) binding-name))
+                     ((fragment-form ...)
+                      (map (lambda (form)
+                             (datum->syntax (syntax ctx) form))
+                           fragment-forms)))
+         (syntax
+          (begin
+            (def binding
+              (begin fragment-form ...))
+            (export binding))))))))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives
@@ -27,9 +192,20 @@
 ;;       ;; => sandbox module selection bundle
 ;;       ```
 ;;     %
-(defrules use-module ()
-  ((_ module flag ...)
-   (poo-flow-use-module 'module (list 'flag ...))))
+(defsyntax (use-module stx)
+  (syntax-case stx (:config profiles nono-sandbox)
+    ((_ nono-sandbox :config (profiles profile-clause ...))
+     (syntax
+      (poo-flow-use-module
+       'nono-sandbox
+       (list
+        (cons ':config
+              (poo-flow-nono-sandbox-profiles profile-clause ...))))))
+    ((_ module :config bad-clause ...)
+     (error "use-module :config expects (profiles ...)"))
+    ((_ module flag ...)
+     (syntax
+      (poo-flow-use-module 'module (list 'flag ...))))))
 
 ;;; Module bundle lists are the direct analogue of Doom's module rows: each row
 ;;; stays a separate bundle so diagnostics can preserve declaration order.
@@ -302,8 +478,10 @@
                     (datum->syntax (syntax ctx)
                                    'poo-flow-user-module-bundles)))
        (syntax
-        (def module-bundles-binding
-          (poo-flow-init-module-bundles init-clause ...)))))))
+        (begin
+          (def module-bundles-binding
+            (poo-flow-init-module-bundles init-clause ...))
+          (export module-bundles-binding)))))))
 
 ;;; Compact profile-set syntax borrows Doom's profiles.el shape but restricts
 ;;; the surface to profile registry data.

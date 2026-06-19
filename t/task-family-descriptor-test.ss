@@ -3,7 +3,7 @@
 
 (import :std/test
         :core/api
-        :extensions/store)
+        :workflow/store)
 
 (def task-family-descriptor-test
   (test-suite "task family descriptors"

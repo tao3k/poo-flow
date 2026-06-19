@@ -8,8 +8,8 @@
 ;;; Policy evidence: runtime command tests should assert this projection surface.
 
 (import :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-request)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/request)
 
 (export +agent-sandbox-bridge-schema+
         +agent-sandbox-runtime-manifest-schema+

@@ -7,7 +7,7 @@
 
 (import (only-in :clan/poo/object .@ .mix object?)
         :core/api
-        :extensions/agent-sandbox-util)
+        :modules/agent-sandbox/alist)
 
 (export +agent-sandbox-profile-schema+
         agent-sandbox-profile-descriptor-prototype

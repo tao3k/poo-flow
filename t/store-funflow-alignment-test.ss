@@ -3,7 +3,7 @@
 
 (import :std/test
         :core/api
-        :extensions/store)
+        :workflow/store)
 
 (export store-funflow-alignment-test)
 

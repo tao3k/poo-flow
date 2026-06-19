@@ -23,6 +23,24 @@
     (resources (cpu . 4) (memory . "8Gi") (timeout-ms . 600000))
     (metadata (intent . ci-agent) (risk . hermetic)))))
 
+;; : PooUserModuleSelection
+(def user-nono-operator-module
+  (car
+   (use-module nono-sandbox
+     :config
+     (profiles
+      (agent/operator
+       (network :override allowlisted "github.com" "crates.io")
+       (capabilities process-run filesystem-read filesystem-write tmpdir)
+       (capabilities :remove filesystem-write)
+       (capabilities :append cache-mount)
+       (resources (cpu . 2) (memory . "4Gi"))
+       (resources :append (timeout-ms . 300000))
+       (metadata (intent . operator-demo)
+                 (scope . profile))
+       (metadata :append (stage . extension))
+       (metadata :remove (scope . profile)))))))
+
 ;; : (-> Symbol Alist MaybeValue)
 (def (alist-value key entries)
   (cond
@@ -50,6 +68,40 @@
                       'cube-local)
         (check-equal? (poo-flow-sandbox-profile-network-policy cube-profile)
                       '(allowlisted "github.com" "crates.io"))))
+    (test-case "applies profile row operators through nono object validation"
+      (let* ((profile-payload
+              (poo-flow-user-module-selection-flag-entry
+               user-nono-operator-module
+               ':config))
+             (profiles (cdr profile-payload))
+             (operator-profile
+              (poo-flow-sandbox-profile-by-name profiles 'agent/operator)))
+        (check-equal? (poo-flow-user-module-selection-key
+                       user-nono-operator-module)
+                      '(sandbox . nono-sandbox))
+        (check-equal? (length profiles) 1)
+        (check-equal? (poo-flow-sandbox-profile-name operator-profile)
+                      'agent/operator)
+        (check-equal? (poo-flow-sandbox-profile-backend-kind operator-profile)
+                      'nono)
+        (check-equal? (poo-flow-sandbox-profile-backend-ref operator-profile)
+                      'agent/operator)
+        (check-equal? (poo-flow-sandbox-profile-network-policy
+                       operator-profile)
+                      '(allowlisted "github.com" "crates.io"))
+        (check-equal? (poo-flow-sandbox-profile-capabilities
+                       operator-profile)
+                      '(process-run filesystem-read tmpdir cache-mount))
+        (check-equal? (poo-flow-sandbox-profile-resource-policy
+                       operator-profile)
+                      '((cpu . 2)
+                        (memory . "4Gi")
+                        (timeout-ms . 300000)))
+        (check-equal? (poo-flow-sandbox-profile-metadata operator-profile)
+                      '((declared-by . poo-flow-user-interface)
+                        (runtime-executed . #f)
+                        (intent . operator-demo)
+                        (stage . extension)))))
     (test-case "projects user declarations into validated agent sandbox profiles"
       (let* ((nono-profile
               (poo-flow-sandbox-profile-by-name user-sandbox-profiles

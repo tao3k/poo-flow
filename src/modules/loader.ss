@@ -51,6 +51,10 @@
         poo-flow-module-tree-objects-source
         poo-flow-module-tree-source-refs
         poo-flow-module-tree-lazy-load-plans
+        poo-flow-src-modules-root
+        poo-flow-src-module-tree-entrypoints
+        poo-flow-src-modules-source-refs
+        poo-flow-src-modules-lazy-load-plans
         poo-flow-module-auto-import-root-identity
         poo-flow-module-auto-import-entry-node
         poo-flow-module-auto-imports-node
@@ -323,6 +327,62 @@
     (map (lambda (source-ref)
            (poo-flow-make-lazy-load-plan backends source-ref metadata))
          (poo-flow-module-tree-source-refs module-root-path))))
+
+;;; Boundary: src/modules is a declared module tree, not a filesystem scan root.
+;; : Path
+(def poo-flow-src-modules-root "src/modules")
+
+;;; Boundary: each entry names module-tree entrypoints that exist under src/modules.
+;; : [(Path Symbol...)]
+(def poo-flow-src-module-tree-entrypoints
+  '(("agent-sandbox" config)
+    ("cubeSandbox" objects config)
+    ("funflow" config)
+    ("loop-governor" config)
+    ("nono-sandbox" objects config)
+    ("user-interface" objects config)
+    ("workflow" flows syntax)))
+
+;;; Internal path join stays string-only so this owner never probes the filesystem.
+;; : (-> Path Path)
+(def (poo-flow-src-module-tree-root module-name)
+  (string-append poo-flow-src-modules-root "/" module-name))
+
+;;; Internal expansion keeps module entrypoints ordered for stable diagnostics.
+;; : (-> (Path Symbol...) [PooModuleSourceRef])
+(def (poo-flow-src-module-tree-entrypoint-source-refs entrypoint-spec)
+  (let ((module-root
+         (poo-flow-src-module-tree-root (car entrypoint-spec)))
+        (entrypoint-roles (cdr entrypoint-spec)))
+    (map (lambda (entrypoint-role)
+           (poo-flow-module-tree-source module-root entrypoint-role))
+         entrypoint-roles)))
+
+;;; Internal recursion flattens the declared tree without forcing source loads.
+;; : (-> [(Path Symbol...)] [PooModuleSourceRef])
+(def (poo-flow-src-module-tree-entrypoint-source-refs* entrypoint-specs)
+  (if (null? entrypoint-specs)
+    '()
+    (append
+     (poo-flow-src-module-tree-entrypoint-source-refs
+      (car entrypoint-specs))
+     (poo-flow-src-module-tree-entrypoint-source-refs*
+      (cdr entrypoint-specs)))))
+
+;;; Boundary: upstream module sources are declared and lazy by default.
+;; : (-> [PooModuleSourceRef])
+(def (poo-flow-src-modules-source-refs)
+  (poo-flow-src-module-tree-entrypoint-source-refs*
+   poo-flow-src-module-tree-entrypoints))
+
+;;; Boundary: src/modules lazy plans never call loader handlers.
+;; : (-> [PooModuleLoaderBackend] [PooFlowLazyLoadPlan])
+(def (poo-flow-src-modules-lazy-load-plans backends . maybe-metadata)
+  (let (metadata
+        (if (null? maybe-metadata) '() (car maybe-metadata)))
+    (map (lambda (source-ref)
+           (poo-flow-make-lazy-load-plan backends source-ref metadata))
+         (poo-flow-src-modules-source-refs))))
 
 ;; : (-> PooModuleLoaderMetadata Symbol PooModuleLoaderMetadataValue PooModuleLoaderMetadataValue)
 (def (poo-flow-loader-alist-ref/default entries key default-value)

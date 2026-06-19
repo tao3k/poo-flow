@@ -1,25 +1,25 @@
 ;;; -*- Gerbil -*-
 ;;; Owner: Agent sandbox facade and task/flow opt-in live here.
 ;;; Boundary: profile, request, and bridge contracts live in leaf modules.
-;;; Import contract: users opt in through =:extensions/agent-sandbox= exports.
+;;; Import contract: users opt in through =:modules/agent-sandbox= exports.
 ;;; Runtime contract: Marlin or another runtime owns real sandbox execution.
 ;;; Runtime contract: LLM calls, API/R surfaces, and C bindings stay out of Scheme.
 ;;; Policy evidence: tests should validate this facade plus leaf contracts.
 
 (import :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile
-        :extensions/agent-sandbox-request
-        :extensions/agent-sandbox-request-macro
-        :extensions/agent-sandbox-bridge
-        :extensions/agent-sandbox-marlin-interface)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile
+        :modules/agent-sandbox/request
+        :modules/agent-sandbox/request-macro
+        :modules/agent-sandbox/bridge
+        :modules/agent-sandbox/marlin-interface)
 
-(export (import: :extensions/agent-sandbox-util)
-        (import: :extensions/agent-sandbox-profile)
-        (import: :extensions/agent-sandbox-request)
-        (import: :extensions/agent-sandbox-request-macro)
-        (import: :extensions/agent-sandbox-bridge)
-        (import: :extensions/agent-sandbox-marlin-interface)
+(export (import: :modules/agent-sandbox/alist)
+        (import: :modules/agent-sandbox/profile)
+        (import: :modules/agent-sandbox/request)
+        (import: :modules/agent-sandbox/request-macro)
+        (import: :modules/agent-sandbox/bridge)
+        (import: :modules/agent-sandbox/marlin-interface)
         agent-sandbox-task-family-descriptor
         make-agent-sandbox-task-family-registry
         agent-sandbox-enable-strategy

@@ -1,15 +1,15 @@
 ;;; -*- Gerbil -*-
-;;; Owner: Docker tutorial alignment lives in this extension module.
+;;; Owner: Docker tutorial alignment lives in this module.
 ;;; Boundary: core provides descriptor, strategy, runner, and adapter protocols.
-;;; Import contract: users opt in through =:extensions/docker= exports.
+;;; Import contract: users opt in through =:modules/docker= exports.
 ;;; Runtime contract: this module emits request data only.
 ;;; Runtime contract: image pulls and mounts stay behind runtime commands.
 ;;; Runtime contract: process control and CAS writes stay out of Scheme.
-;;; Dependency: generic sandbox resources live in =:sandbox/resource=.
-;;; Policy evidence: tests should trust the installed extension registry.
+;;; Dependency: generic sandbox resources live in =:modules/agent-sandbox/resource=.
+;;; Policy evidence: tests should trust the installed module registry.
 
 (import :core/api
-        :sandbox/resource)
+        :modules/agent-sandbox/resource)
 
 (export docker-task-family-descriptor
         +docker-task-input-receipt-schema+

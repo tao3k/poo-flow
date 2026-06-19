@@ -4,7 +4,7 @@
 
 (import :std/test
         :core/api
-        :extensions/agent-sandbox)
+        :modules/agent-sandbox/api)
 
 (export agent-sandbox-bridge-test)
 

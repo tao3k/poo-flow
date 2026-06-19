@@ -1,6 +1,6 @@
 (import :std/test
         :core/api
-        :extensions/store
+        :workflow/store
         :project-policy-test)
 
 (def pure-flow-test

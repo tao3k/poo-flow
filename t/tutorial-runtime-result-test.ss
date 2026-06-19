@@ -4,9 +4,9 @@
 
 (import :std/test
         :core/api
-        :extensions/docker
-        :extensions/store
-        :extensions/workflow)
+        :modules/docker
+        :workflow/store
+        :modules/workflow/flows)
 
 (export tutorial-runtime-result-test)
 

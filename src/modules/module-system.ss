@@ -19,6 +19,7 @@
         :modules/user-interface-case
         :modules/extension
         :modules/objects
+        :modules/nono-sandbox/config
         :modules/syntax)
 
 (export (import: :modules/interface)
@@ -38,4 +39,5 @@
         (import: :modules/user-interface-case)
         (import: :modules/extension)
         (import: :modules/objects)
+        (import: :modules/nono-sandbox/config)
         (import: :modules/syntax))

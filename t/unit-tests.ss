@@ -5,8 +5,6 @@
         :agent-sandbox-bridge-test
         :agent-sandbox-cube-interface-test
         :agent-sandbox-marlin-interface-test
-        :agent-sandbox-nono-c-binding-test
-        :agent-sandbox-nono-c-language-test
         :agent-sandbox-profile-test
         :agent-sandbox-profile-user-interface-test
         :cli-test
@@ -16,6 +14,7 @@
         :docker-descriptor-test
         :failure-test
         :flow-descriptor-test
+        :funflow-tutorial-alignment-report-test
         :functional-flow-kernel-test
         :loop-agent-descriptor-test
         :loop-governor-test
@@ -23,8 +22,11 @@
         :module-system-facade-test
         :module-system-lazy-loader-test
         :module-system-observability-test
+        :module-object-validation-test
         :module-system-user-interface-test
         :module-system-test
+        :nono-sandbox-c-binding-test
+        :nono-sandbox-c-language-test
         :runtime-bridge-test
         :runtime-manifest-test
         :sandbox-resource-test

@@ -79,18 +79,28 @@
         (check-equal? (.ref presentation 'brand-group) poo-flow-brand-group)
         (check-equal? (not
                        (not
-                        (member "pooFlowUserConfigPresentation"
+                        (member "poo-flow!"
                                 (.ref presentation 'user-entrypoints))))
+                      #t)
+        (check-equal? (not
+                       (not
+                        (member "use-module"
+                                (.ref presentation 'user-entrypoints))))
+                      #t)
+        (check-equal? (not
+                       (not
+                        (member "pooFlowUserConfigPresentation"
+                                (.ref presentation 'api-entrypoints))))
                       #t)
         (check-equal? (not
                        (not
                         (member "poo-flow-user-config-feature?"
-                                (.ref presentation 'user-entrypoints))))
+                                (.ref presentation 'api-entrypoints))))
                       #t)
         (check-equal? (not
                        (not
                         (member "pooFlowSandboxProfilesPresentation"
-                                (.ref presentation 'user-entrypoints))))
+                                (.ref presentation 'api-entrypoints))))
                       #t)
         (check-equal? (alist-value 'runtime-owner
                                    (.ref presentation 'boundary))
@@ -172,7 +182,7 @@
         (check-equal? (not
                        (not
                         (member "pooFlowUserProfileDoctorPresentation"
-                                (.ref presentation 'user-entrypoints))))
+                                (.ref presentation 'api-entrypoints))))
                       #t)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))

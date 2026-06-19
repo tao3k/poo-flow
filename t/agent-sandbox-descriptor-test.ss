@@ -4,8 +4,8 @@
 
 (import :std/test
         :core/api
-        :extensions/agent-sandbox
-        :extensions/agent-sandbox-nono)
+        :modules/agent-sandbox/api
+        :modules/agent-sandbox/nono)
 
 (export agent-sandbox-descriptor-test)
 

@@ -13,6 +13,7 @@
         poo-flow-user-module-selection-kind
         poo-flow-user-config-presentation-kind
         poo-flow-user-config-public-entrypoints
+        poo-flow-user-config-api-entrypoints
         poo-flow-user-config-boundary
         pooFlowUserConfig
         pooFlowUserConfigPresentation
@@ -68,18 +69,35 @@
 (def poo-flow-user-config-presentation-kind
   "poo-flow.modules.user-config.presentation.v1")
 
-;;; Boundary: these names are the downstream contract, not an implementation map.
+;;; Boundary: these names are the manual-facing declaration surface, not an
+;;; implementation map. Programmatic constructors stay in the API list below.
 ;; : (-> Unit [String])
 (def poo-flow-user-config-public-entrypoints
   '("poo-flow!"
-    "poo-flow-module-bundles"
-    "poo-flow-custom-module-bundles"
-    "poo-flow-init-module-bundles"
+    "load!"
+    "use-module"
     ":workflow"
     ":loop"
     ":sandbox"
     ":custom"
-    "use-module"
+    ":config"
+    "profiles"
+    "poo-flow-profile"
+    "poo-flow-profile-set"
+    "poo-flow-profile-extend"
+    "poo-flow-sandbox-profile"
+    "poo-flow-sandbox-profiles"
+    "poo-flow-nono-sandbox-profile"
+    "poo-flow-nono-sandbox-profiles"))
+
+;;; Boundary: these names are the programmatic API exposed for tests, doctors,
+;;; presentations, and advanced module code. They should not be required in
+;;; everyday init.ss/config.ss files.
+;; : (-> Unit [String])
+(def poo-flow-user-config-api-entrypoints
+  '("poo-flow-module-bundles"
+    "poo-flow-custom-module-bundles"
+    "poo-flow-init-module-bundles"
     "poo-flow-user-module-selection"
     "poo-flow-user-custom-module-selection"
     "poo-flow-user-module-selection-feature?"
@@ -90,11 +108,6 @@
     "poo-flow-use-module"
     "poo-flow-user-module-when"
     "poo-flow-settings"
-    "poo-flow-profile"
-    "poo-flow-profile-set"
-    "poo-flow-profile-extend"
-    "poo-flow-sandbox-profile"
-    "poo-flow-sandbox-profiles"
     "poo-flow-sandbox-profile->profile"
     "pooFlowSandboxProfilesPresentation"
     "pooFlowUserProfile"
@@ -704,6 +717,7 @@
           setting-keys: public-setting-keys
           settings: (poo-flow-user-settings->alist setting-object public-setting-keys)
           user-entrypoints: poo-flow-user-config-public-entrypoints
+          api-entrypoints: poo-flow-user-config-api-entrypoints
           boundary: poo-flow-user-config-boundary
           brand-name: poo-flow-brand-name
           brand-group: poo-flow-brand-group

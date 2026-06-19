@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
-;;; Owner: WordCount tutorial alignment lives in this extension module.
+;;; Owner: WordCount tutorial alignment lives in this module.
 ;;; Boundary: core provides descriptor, strategy, runner, and adapter protocols.
-;;; Import contract: users opt in through =:extensions/text= exports.
+;;; Import contract: users opt in through =:modules/text= exports.
 ;;; Runtime contract: this module emits WordCount task data only.
 ;;; Runtime contract: parsing, counting, and formatting stay local and deterministic.
 ;;; Runtime contract: file IO remains caller/runtime-owned.
@@ -31,7 +31,7 @@
   (make-task-family-descriptor 'text 'text 'local 'gerbil #f))
 
 ;;; Boundary:
-;;; - Registry extension is immutable.
+;;; - Registry module extension is immutable.
 ;;; - Callers may pass a base registry or use the core default.
 ;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-text-task-family-registry . maybe-registry)

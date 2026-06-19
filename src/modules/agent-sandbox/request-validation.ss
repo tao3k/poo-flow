@@ -12,9 +12,9 @@
 ;;; - Profile and bridge tests assert both valid requests and failure codes.
 
 (import :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile
-        :extensions/agent-sandbox-request-field)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile
+        :modules/agent-sandbox/request-field)
 
 (export agent-sandbox-request-validation-errors
         agent-sandbox-validate-request

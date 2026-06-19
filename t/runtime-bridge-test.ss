@@ -4,7 +4,7 @@
 
 (import :std/test
         :core/api
-        :extensions/store)
+        :workflow/store)
 
 (export runtime-bridge-test)
 

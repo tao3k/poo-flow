@@ -4,9 +4,9 @@
 
 (import :std/test
         :core/api
-        :extensions/agent-sandbox
-        :extensions/agent-sandbox-cube
-        :extensions/agent-sandbox-nono)
+        :modules/agent-sandbox/api
+        :modules/agent-sandbox/cube
+        :modules/agent-sandbox/nono)
 
 (export agent-sandbox-cube-interface-test)
 

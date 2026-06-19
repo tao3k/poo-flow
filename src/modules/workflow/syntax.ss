@@ -1,11 +1,11 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: hygienic authoring macros for extension-owned workflow constructors.
-;;; Invariant: macros expand to public extension constructors, not a workflow DSL.
+;;; Boundary: hygienic authoring macros for workflow module constructors.
+;;; Invariant: macros expand to public module constructors, not a separate DSL runtime.
 
-(import :extensions/custom-task
-        :extensions/docker
-        :extensions/store
-        :extensions/workflow)
+(import :modules/custom-task
+        :modules/docker
+        :workflow/store
+        :modules/workflow/flows)
 
 (export defpoo-custom-repeat-flow
         defpoo-docker-flow

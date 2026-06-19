@@ -3,7 +3,7 @@
 ;;; Invariant: profiles are inert data until a runtime bridge consumes them.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :extensions/agent-sandbox-profile)
+        :modules/agent-sandbox/profile)
 
 (export poo-flow-sandbox-profile-kind
         poo-flow-sandbox-profiles-presentation-kind

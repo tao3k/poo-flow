@@ -571,6 +571,7 @@
         config-presentation-kind: (.ref config-presentation 'kind)
         config-module-count: (.ref config-presentation 'module-count)
         user-entrypoints: poo-flow-user-config-public-entrypoints
+        api-entrypoints: poo-flow-user-config-api-entrypoints
         boundary: poo-flow-user-config-boundary
         brand-name: poo-flow-brand-name
         brand-group: poo-flow-brand-group
@@ -604,6 +605,7 @@
         (map poo-flow-user-profile-summary->alist
              (poo-flow-user-profile-set-profiles profile-set))
         user-entrypoints: poo-flow-user-config-public-entrypoints
+        api-entrypoints: poo-flow-user-config-api-entrypoints
         boundary: poo-flow-user-config-boundary
         brand-name: poo-flow-brand-name
         brand-group: poo-flow-brand-group
@@ -655,6 +657,7 @@
         setting-count: (length public-setting-keys)
         setting-keys: public-setting-keys
         user-entrypoints: poo-flow-user-config-public-entrypoints
+        api-entrypoints: poo-flow-user-config-api-entrypoints
         boundary: poo-flow-user-config-boundary
         brand-name: poo-flow-brand-name
         brand-group: poo-flow-brand-group
@@ -691,6 +694,7 @@
         (length (poo-flow-user-profile-set-profiles profile-set))
         profile-names: (.ref doctor-report 'profile-names)
         user-entrypoints: poo-flow-user-config-public-entrypoints
+        api-entrypoints: poo-flow-user-config-api-entrypoints
         boundary: poo-flow-user-config-boundary
         brand-name: poo-flow-brand-name
         brand-group: poo-flow-brand-group

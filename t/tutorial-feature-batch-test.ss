@@ -4,11 +4,11 @@
 
 (import :std/test
         :core/api
-        :extensions/custom-task
-        :extensions/docker
-        :extensions/text
-        :extensions/workflow
-        :extensions/workflow-syntax)
+        :modules/custom-task
+        :modules/docker
+        :modules/text
+        :modules/workflow/flows
+        :modules/workflow/syntax)
 
 ;; : (-> RunConfig Flow Input Value)
 (def (configured-run config flow input)

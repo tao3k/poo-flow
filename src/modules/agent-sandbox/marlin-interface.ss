@@ -5,11 +5,11 @@
 ;;; Policy evidence: dispatcher tests assert nono/Cube routing and failure gates.
 
 (import :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile
-        :extensions/agent-sandbox-bridge
-        :extensions/agent-sandbox-nono-c-binding
-        :extensions/agent-sandbox-cube-interface)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile
+        :modules/agent-sandbox/bridge
+        :modules/nono-sandbox/c-binding
+        :modules/agent-sandbox/cube-interface)
 
 (export +agent-sandbox-marlin-interface-schema+
         +agent-sandbox-marlin-admission-schema+

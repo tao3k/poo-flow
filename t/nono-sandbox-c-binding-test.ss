@@ -1,21 +1,22 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: nono C binding tests cover ABI contracts and manifest projection.
+;;; Boundary: nono-sandbox C binding tests cover ABI contracts and manifest projection.
 ;;; Invariant: tests do not load or execute the C library.
 
 (import :std/test
         :core/api
-        :extensions/agent-sandbox
-        :extensions/agent-sandbox-nono
-        :extensions/agent-sandbox-cube)
+        :modules/agent-sandbox/api
+        :modules/agent-sandbox/nono
+        :modules/agent-sandbox/cube
+        :modules/nono-sandbox/c-binding)
 
-(export agent-sandbox-nono-c-binding-test)
+(export nono-sandbox-c-binding-test)
 
 ;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
-(def agent-sandbox-nono-c-binding-test
-  (test-suite "nono C binding contract"
+(def nono-sandbox-c-binding-test
+  (test-suite "nono-sandbox C binding contract"
     (test-case "declares POO descriptor for the generated nono C ABI"
       (let* ((descriptor (make-nono-c-binding-descriptor))
              (contract (nono-c-binding-descriptor->contract descriptor))
@@ -167,4 +168,4 @@
         (check-equal? (execution-failure-code mode-failure)
                       'invalid-nono-c-binding-manifest)))))
 
-(run-tests! agent-sandbox-nono-c-binding-test)
+(run-tests! nono-sandbox-c-binding-test)

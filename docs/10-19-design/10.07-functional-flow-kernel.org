@@ -130,12 +130,12 @@ Constraints:
   envelopes and receipts as direct function calls;
 - non-goal: no alternate workflow data language.
 
-** 10.07.70 Extension Macro Landing
+** 10.07.70 Workflow Module Macro Landing
 
-The extension macro authoring layer is now implemented in
-=src/extensions/workflow-syntax.ss=.
+The workflow macro authoring layer is now implemented in
+=src/modules/workflow/syntax.ss=.
 
-Implemented extension macro surface:
+Implemented workflow module macro surface:
 
 - =defpoo-custom-repeat-flow= authors Tutorial2 custom-repeat flows.
 - =defpoo-docker-flow= authors Docker request flows.

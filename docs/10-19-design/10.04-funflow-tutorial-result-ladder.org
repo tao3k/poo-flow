@@ -150,15 +150,15 @@ Poo-flow target result:
   invocation shape.
 - Process-backed commands may use the stdout protocol: print one
   =poo-flow.runtime-response.v1= s-expression and let Scheme normalize it.
-- Docker-specific declarations belong to =src/extensions/docker.ss=.
+- Docker-specific declarations belong to =src/modules/docker.ss=.
 - CAS/store lifecycle interpretation belongs to a store/CAS extension or Rust
   runtime, not to =src/core/runner.ss=.
 - Core receipts may carry generic =adapter-result= evidence: task, kind,
   adapter operation, status, request id, and artifact handle.
 
 Poo-flow precursor landed:
-- =src/extensions/docker.ss= owns =docker-task-family-descriptor=.
-- =src/extensions/docker.ss= owns =docker-flow= and =make-docker-task=.
+- =src/modules/docker.ss= owns =docker-task-family-descriptor=.
+- =src/modules/docker.ss= owns =docker-flow= and =make-docker-task=.
 - The extension installs its own registry, strategy capability, and adapter
   capability instead of changing core defaults.
 - Docker request data carries image, command, args, volume bindings, and output
@@ -170,7 +170,7 @@ Poo-flow precursor landed:
 - =src/core/runner.ss= no longer emits =cache-hit= or =cache-request-only= for
   store operations; it emits generic adapter evidence so CAS policy can be
   layered outside core.
-- =src/extensions/store.ss= owns =store-task-family-descriptor=,
+- =src/workflow/store.ss= owns =store-task-family-descriptor=,
   =store-flow=, =make-store-task=, and store-enabled run configs.
 - Core defaults no longer install store task families or store capabilities;
   Store/CAS users opt in through the extension registry and strategy wrappers.
@@ -325,7 +325,7 @@ Reference result:
   images, commands, mounted inputs, and runtime-owned artifacts.
 
 Poo-flow result:
-- =extensions/workflow= exposes public constructors for CCompilation,
+- =modules/workflow= exposes public constructors for CCompilation,
   CCompilation-to-store, Tensorflow training, Tensorflow inference, and the
   two-step Tensorflow workflow descriptor.
 
@@ -360,7 +360,7 @@ Reference result:
   target, and observes =./hello= process output.
 
 Poo-flow result:
-- =extensions/workflow= exposes =make-makefile-tool-parse-flow=,
+- =modules/workflow= exposes =make-makefile-tool-parse-flow=,
   =make-makefile-tool-run-flow=, and =make-makefile-tool-workflow= as external
   task descriptors.
 - The descriptor records Makefile path, working directory, source files,
@@ -433,15 +433,15 @@ Poo-flow result:
 Proof:
 - =gxtest t/functional-flow-kernel-test.ss=, suite ="functional flow kernel"=.
 
-*** 10.04.41 Stage 21: Extension-Owned Macro Authoring
+*** 10.04.41 Stage 21: Workflow Module Macro Authoring
 Reference result:
 - Funflow users author real task-family flows through a compact functional
   surface while task interpreters stay extension/runtime-owned.
 Poo-flow result:
-- =src/extensions/workflow-syntax.ss= exposes hygienic Gerbil macros for
+- =src/modules/workflow/syntax.ss= exposes hygienic Gerbil macros for
   custom-repeat, Docker, Store/CAS, CCompilation, TensorflowDocker,
   makefile-tool, and makefile-tool runtime command descriptors.
-- Macro expansion targets extension-owned public constructors such as
+- Macro expansion targets workflow module public constructors such as
   =custom-repeat-flow=, =docker-flow=, =store-flow=,
   =make-ccompilation-store-workflow=, =make-tensorflow-workflow=,
   =make-makefile-tool-workflow=, and
@@ -454,6 +454,30 @@ Proof:
   workflows with Gerbil macros"=.
 - =gxtest t/tutorial-makefile-runtime-test.ss=, case ="authors makefile
   runtime descriptor with Gerbil macros"=.
+
+*** 10.04.42 Stage 22: POO Tutorial Alignment Report
+Reference result:
+- Funflow's tutorial surface is broader than a single file or workflow: the
+  real user-facing outcomes span Tutorial1, QuickReference, Tutorial2,
+  WordCount, ExternalConfig, ErrorHandling, CCompilation, TensorflowDocker, and
+  the makefile-tool example.
+
+Poo-flow result:
+- =poo-flow-funflow-tutorial-alignment-report= exposes the audited tutorial
+  surface as one POO object with stable kind/schema slots.
+- Each tutorial source is a POO spec with source path, observable result,
+  coverage status, proof commands, runtime-owned operations, and deferred
+  heavy-runtime gaps.
+- The report records =result-covered=, =runtime-manifest-covered=, and
+  =descriptor-covered= status counts, plus explicit deferred ids for real
+  Docker/CAS/process/image outputs.
+- This keeps the Scheme side accountable for tutorial parity while keeping
+  Docker, CAS, Makefile, Tensorflow, filesystem, and process execution behind
+  the Rust/Marlin runtime boundary.
+
+Proof:
+- =gxtest t/funflow-tutorial-alignment-report-test.ss=, suite ="funflow
+  tutorial alignment report"=.
 ** 10.04.50 Current Command Receipt
 
 The current repository proof commands are:
@@ -463,6 +487,7 @@ GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/ge
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-runtime-result-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-feature-batch-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-makefile-runtime-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/funflow-tutorial-alignment-report-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/runtime-manifest-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/functional-flow-kernel-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/unit-tests.ss
@@ -481,6 +506,8 @@ Observed result:
 - Stage 19 passes with 19 runtime manifest consumer checks.
 - Stage 20 passes with functional Category/Arrow kernel and macro authoring checks.
 - Stage 21 passes with extension-owned workflow and runtime descriptor macro checks.
+- Stage 22 exposes nine audited Funflow tutorial surfaces as POO alignment
+  specs with coverage/deferred/runtime-boundary status.
 - The runtime bridge owner is split from the manifest consumer owner and passes with 39 schema checks.
 - Stage 7 descriptor precursor passes with 11 checks through
   =gxtest t/docker-descriptor-test.ss=.
@@ -503,6 +530,7 @@ The next implementation sequence should be:
 8. Keep Stage 19 green as the local manifest consumer and adapter-result normalization gate.
 9. Keep Stage 20 green as the functional Scheme/POO kernel and macro authoring gate.
 10. Keep Stage 21 green as the extension-owned macro authoring gate.
-11. Promote Stage 7 through Stage 19 to real runtime status only when Rust
+11. Keep Stage 22 green as the tutorial coverage report and runtime-gap audit.
+12. Promote Stage 7 through Stage 19 to real runtime status only when Rust
    consumes the manifests and produces the visible result plus artifact
    manifests without embedding Docker/CAS/process execution in Scheme.

@@ -5,7 +5,7 @@
 ;;; Policy evidence: request facade re-exports these constants for stable callers.
 
 (import :core/api
-        :extensions/agent-sandbox-util)
+        :modules/agent-sandbox/alist)
 
 (export +agent-sandbox-request-schema+
         +agent-sandbox-request-field-names+

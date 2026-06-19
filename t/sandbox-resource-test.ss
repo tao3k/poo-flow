@@ -3,7 +3,7 @@
 ;;; Invariant: tests assert composition and projection only, never runtime setup.
 
 (import :std/test
-        :sandbox/resource)
+        :modules/agent-sandbox/resource)
 
 (export sandbox-resource-test)
 

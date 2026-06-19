@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
-;;; Owner: Store/CAS workflow alignment lives in this extension module.
+;;; Owner: Store/CAS workflow alignment lives in this workflow module.
 ;;; Boundary: core provides generic task, strategy, config, and adapter slots.
-;;; Import contract: users opt in through =:extensions/store= exports.
+;;; Import contract: users opt in through =:workflow/store= exports.
 ;;; Runtime contract: this module emits artifact-store request data only.
 ;;; Runtime contract: CAS materialization and cache reuse stay runtime-owned.
 ;;; Policy evidence: receipts carry generic adapter observations from core.

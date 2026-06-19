@@ -33,6 +33,17 @@
        #f))
    '((library . standard))))
 
+;; : (-> [PooFlowLazyLoadPlan] Boolean)
+(def (lazy-loader-plans-deferred? plans)
+  (cond
+   ((null? plans) #t)
+   ((and (not (poo-flow-lazy-load-plan-forced? (car plans)))
+         (eq? (poo-flow-module-load-receipt-code
+               (poo-flow-lazy-load-plan-receipt (car plans)))
+              'deferred))
+    (lazy-loader-plans-deferred? (cdr plans)))
+   (else #f)))
+
 ;; : (-> Unit TestSuite)
 (def module-system-lazy-loader-test
   (test-suite "poo-flow module system lazy loader"
@@ -103,6 +114,49 @@
         (check-equal? (poo-flow-module-load-receipt-code
                        (poo-flow-lazy-load-plan-receipt (cadr plans)))
                       'deferred)
+        (check-equal? lazy-loader-call-count 0)))
+
+    (test-case "projects src/modules entrypoints as lazy load plans"
+      (set! lazy-loader-call-count 0)
+      (let* ((plans
+              (poo-flow-src-modules-lazy-load-plans
+               (list user-standard-library-loader)
+               '((owner . src-modules))))
+             (source-values
+              (map (lambda (plan)
+                     (poo-flow-module-source-ref-value
+                      (poo-flow-lazy-load-plan-source plan)))
+                   plans))
+             (first-receipt
+              (poo-flow-lazy-load-plan-receipt (car plans)))
+             (first-metadata
+              (poo-flow-module-load-receipt-metadata first-receipt)))
+        (check-equal? (length plans) 11)
+        (check-equal? (car source-values)
+                      "src/modules/agent-sandbox/config.ss")
+        (check-equal? (if (member "src/modules/nono-sandbox/objects.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (if (member "src/modules/user-interface/config.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (if (member "src/modules/workflow/flows.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (if (member "src/modules/workflow/syntax.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (lazy-loader-plans-deferred? plans) #t)
+        (check-equal? (cdr (assoc 'mode first-metadata)) 'lazy)
+        (check-equal? (cdr (assoc 'owner first-metadata)) 'src-modules)
         (check-equal? lazy-loader-call-count 0)))
 
     (test-case "projects user-root init objects config and module helpers"

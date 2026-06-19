@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
-;;; Owner: nono C binding descriptor contract projection lives here.
+;;; Owner: nono-sandbox C binding descriptor contract projection lives here.
 ;;; Boundary: this module emits ABI descriptor data only.
 ;;; Runtime contract: Marlin or another C runtime owns dlopen/FFI execution.
 ;;; Source contract: symbols mirror .data/nono/bindings/c/include/nono.h.
@@ -7,8 +7,8 @@
 
 (import (only-in :clan/poo/object .ref .mix object?)
         :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile)
 
 (export +nono-c-binding-schema+
         +nono-c-binding-access-modes+
@@ -39,9 +39,9 @@
         nono-c-binding-network-mode-info)
 
 ;;; Binding manifest schema versioning is separate from the neutral runtime
-;;; manifest so nono ABI changes can evolve without changing bridge envelopes.
+;;; manifest so nono-sandbox ABI changes can evolve without changing bridge envelopes.
 ;; : Symbol
-(def +nono-c-binding-schema+ 'poo-flow.agent-sandbox-nono-c-binding.v1)
+(def +nono-c-binding-schema+ 'poo-flow.sandbox.nono-sandbox.c-binding.v1)
 
 ;;; Access modes pin Scheme mount policy to the integer constants used by the
 ;;; C capability API, so validation and projection cannot drift separately.
@@ -341,7 +341,7 @@
     (if (null? errors)
       descriptor
       (raise-control-plane-failure
-       'agent-sandbox-nono
+       'nono-sandbox
        'invalid-nono-c-binding-descriptor
        "invalid nono C binding descriptor"
        (list (cons 'errors errors))))))

@@ -4,8 +4,8 @@
 
 (import :std/test
         :core/api
-        :extensions/docker
-        :sandbox/resource)
+        :modules/docker
+        :modules/agent-sandbox/resource)
 
 (export docker-descriptor-test)
 

@@ -6,9 +6,9 @@
 
 (import (only-in :clan/poo/object .ref .mix object?)
         :core/api
-        :extensions/agent-sandbox-util
-        :extensions/agent-sandbox-profile
-        :extensions/agent-sandbox-bridge)
+        :modules/agent-sandbox/alist
+        :modules/agent-sandbox/profile
+        :modules/agent-sandbox/bridge)
 
 (export +cube-interface-schema+
         +cube-interface-api-compatibilities+
