@@ -4,11 +4,12 @@
 
 (import :std/test
         :core/api
-        :extensions/docker)
+        :extensions/docker
+        :sandbox/resource)
 
 (export docker-descriptor-test)
 
-;; AdapterResult <- Value Alist
+;; : (-> Value Alist AdapterResult)
 (def (runtime-result value artifact)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id '(runtime docker-test))
@@ -18,7 +19,7 @@
         (cons 'error #f)
         (cons 'metadata '((runtime . docker-descriptor-test)))))
 
-;; Alist <- ExecutionRequest
+;; : (-> ExecutionRequest Alist)
 (def (request-config request)
   (cadr (execution-request-request request)))
 
@@ -86,6 +87,93 @@
           (check-equal? (cdr (assoc 'args docker))
                         '("Hello from the flow.yaml"
                           "I'm from an env var!"
-                          ((placeholder . par3)))))))))
+                          ((placeholder . par3)))))))
+    (test-case "merges DockerTaskInput with left-biased bindings and args"
+      (let* ((left (make-docker-task-input
+                    (list (make-sandbox-volume-binding 'source-item "/work" 'read)
+                          (make-sandbox-volume-binding 'config-item "/config" 'read))
+                    (list (cons 'message "hello")
+                          (cons 'mode "left"))))
+             (right (make-docker-task-input
+                     (list (make-sandbox-volume-binding 'other-source "/work" 'read)
+                           (make-sandbox-volume-binding 'cache-item "/cache" 'read))
+                     (list (cons 'message "ignored")
+                           (cons 'count "3"))))
+             (merged (docker-task-input-merge left right))
+             (request (docker-task-input->request merged)))
+        (check-equal? (cdr (assoc 'input-bindings request))
+                      '(((store-item . source-item)
+                         (mount-path . "/work")
+                         (mode . read)
+                         (read-only? . #t))
+                        ((store-item . config-item)
+                         (mount-path . "/config")
+                         (mode . read)
+                         (read-only? . #t))
+                        ((store-item . cache-item)
+                         (mount-path . "/cache")
+                         (mode . read)
+                         (read-only? . #t))))
+        (check-equal? (cdr (assoc 'args-vals request))
+                      '((message . "hello")
+                        (mode . "left")
+                        (count . "3")))))
+    (test-case "exposes Funflow dockerFlow-shaped task input boundary"
+      (let* ((flow (docker-task-flow 'parameterized-docker
+                                     "alpine:latest"
+                                     "echo"
+                                     (list "fixed" (list (cons 'placeholder 'message)))))
+             (task (car (flow-steps flow)))
+             (input (make-docker-task-input
+                     (list (make-sandbox-volume-binding 'script-item "/script" 'read))
+                     (list (cons 'message "hello"))))
+             (receipt (docker-flow->task-input-receipt flow input)))
+        (check-equal? (task-input-contract task) 'docker-task-input)
+        (check-equal? (task-output-contract task) 'cas-item)
+        (check-equal? (task-docker-volumes task) '())
+        (check-equal? (docker-task-input-receipt-schema receipt)
+                      +docker-task-input-receipt-schema+)
+        (check-equal? (docker-task-input-receipt-flow receipt)
+                      'parameterized-docker)
+        (check-equal? (docker-task-input-receipt-image receipt)
+                      "alpine:latest")
+        (check-equal? (docker-task-input-receipt-command receipt)
+                      "echo")
+        (check-equal? (docker-task-input-receipt-args receipt)
+                      '("fixed" ((placeholder . message))))
+        (check-equal? (docker-task-input-receipt-input-bindings receipt)
+                      '(((store-item . script-item)
+                         (mount-path . "/script")
+                         (mode . read)
+                         (read-only? . #t))))
+        (check-equal? (docker-task-input-receipt-args-vals receipt)
+                      '((message . "hello")))
+        (check-equal? (docker-task-input-receipt-output-policy receipt)
+                      'cas-item)
+        (check-equal? (docker-task-input-receipt-runtime-executed receipt)
+                      #f)))
+    (test-case "passes DockerTaskInput through runtime request envelope"
+      (let (seen-request #f)
+        (let* ((command (lambda (envelope)
+                          (set! seen-request (cdr (assoc 'request envelope)))
+                          (runtime-result '(cas item out) '(artifact docker-output))))
+               (config (make-docker-run-config
+                        (list (cons 'runtime-command command))))
+               (flow (docker-task-flow 'docker-input-flow
+                                       "alpine:latest"
+                                       "cat"
+                                       (list (list (cons 'placeholder 'filename)))))
+               (input (make-docker-task-input
+                       (list (make-sandbox-volume-binding 'text-item "/input" 'read))
+                       (list (cons 'filename "/input/message.txt"))))
+               (result (run-result-value
+                        (run-flow-with-config config flow input)))
+               (docker (request-config seen-request)))
+          (check-equal? (adapter-result-status result) 'completed)
+          (check-equal? (adapter-result-value result) '(cas item out))
+          (check-equal? (execution-request-kind seen-request) 'docker)
+          (check-equal? (execution-request-input seen-request) input)
+          (check-equal? (cdr (assoc 'image docker)) "alpine:latest")
+          (check-equal? (cdr (assoc 'output-policy docker)) 'cas-item))))))
 
 (run-tests! docker-descriptor-test)

@@ -8,11 +8,11 @@
 
 (export loop-agent-descriptor-test)
 
-;; Value <- Alist Symbol
+;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
-;; Value <- Thunk
+;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))

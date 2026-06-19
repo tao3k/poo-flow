@@ -26,7 +26,7 @@
 
 ;;; Execution failures are the Scheme-side explanation surface for planning,
 ;;; validation, adapter dispatch, and runtime handoff errors.
-;; ExecutionFailure <- Symbol Symbol String Detail Boolean
+;; : (-> Symbol Symbol String Detail Boolean ExecutionFailure)
 (defstruct execution-failure
   (owner
    code
@@ -37,41 +37,41 @@
 
 ;;; Try results are the Scheme-side value form of Funflow's =tryE= Either:
 ;;; a recoverable failure becomes a left value, while success becomes right.
-;; TryResult <- Symbol Value
+;; : (-> Symbol Value TryResult)
 (defstruct try-result
   (side
    value)
   transparent: #t)
 
-;; Boolean <- ExecutionFailure
+;; : (-> ExecutionFailure Boolean)
 (def (execution-failure-recoverable? failure)
   (execution-failure-recoverable failure))
 
-;; TryResult <- ExecutionFailure
+;; : (-> ExecutionFailure TryResult)
 (def (make-try-left failure)
   (make-try-result 'left failure))
 
-;; TryResult <- Value
+;; : (-> Value TryResult)
 (def (make-try-right value)
   (make-try-result 'right value))
 
-;; Boolean <- TryResult
+;; : (-> TryResult Boolean)
 (def (try-left? result)
   (and (try-result? result)
        (eq? (try-result-side result) 'left)))
 
-;; Boolean <- TryResult
+;; : (-> TryResult Boolean)
 (def (try-right? result)
   (and (try-result? result)
        (eq? (try-result-side result) 'right)))
 
-;; ExecutionFailure <- Symbol Symbol String Detail Boolean
+;; : (-> Symbol Symbol String Detail Boolean ExecutionFailure)
 (def (control-plane-failure owner code message detail recoverable?)
   (make-execution-failure owner code message detail recoverable?))
 
 ;;; Raising the failure object directly keeps tests and callers tied to the
 ;;; structured payload instead of parsing implementation-specific error text.
-;; Never <- Symbol Symbol String Detail [Boolean]
+;; : (-> Symbol Symbol String Detail [Boolean] Never)
 (def (raise-control-plane-failure owner code message detail . maybe-recoverable)
   (raise (control-plane-failure owner
                                 code
@@ -83,7 +83,7 @@
 
 ;;; Alist projection is the durable shape for audit logs and future runtime
 ;;; bridge serialization.
-;; Alist <- ExecutionFailure
+;; : (-> ExecutionFailure Alist)
 (def (control-plane-failure->alist failure)
   (list (cons 'owner (execution-failure-owner failure))
         (cons 'code (execution-failure-code failure))
@@ -94,7 +94,7 @@
 ;;; Boundary:
 ;;; - This is the Scheme-side equivalent of Funflow's =tryE= catch boundary.
 ;;; - Non-control-plane exceptions are re-raised instead of being normalized.
-;; Value <- Thunk FailureHandler
+;; : (-> Thunk FailureHandler Value)
 (def (try-control-plane thunk handler)
   (with-catch
    (lambda (failure)
@@ -106,7 +106,7 @@
 ;;; Boundary:
 ;;; - String throws model ErrorHandling's =throwStringFlow= result.
 ;;; - The raised value stays typed so recovery logic need not parse strings.
-;; Never <- String
+;; : (-> String Never)
 (def (throw-string-control-plane-failure message)
   (raise-control-plane-failure
    'flow

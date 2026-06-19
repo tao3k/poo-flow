@@ -8,21 +8,21 @@
 
 (export loop-governor-test)
 
-;; Value <- Alist Symbol
+;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
-;; [Value] <- [Alist] Symbol
+;; : (-> [Alist] Symbol [Value])
 (def (test-field-values alists key)
   (map (lambda (alist) (test-ref alist key))
        alists))
 
-;; Value <- Thunk
+;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
-;; LoopPatternDescriptor <- Symbol Symbol Integer ActionKey
+;; : (-> Symbol Symbol Integer ActionKey LoopPatternDescriptor)
 (def (governor-test-pattern name level priority action-key)
   (make-loop-pattern-descriptor
    name
@@ -34,7 +34,7 @@
 
 ;;; Fixture construction keeps priorities and action keys visible in tests.
 ;;; The governor can then be checked without depending on hidden runtime state.
-;; LoopGovernor <- Unit
+;; : (-> Unit LoopGovernor)
 (def (make-governor-fixture)
   (let* ((triage (governor-test-pattern 'triage 'l1 1 "repo"))
          (repair-a (governor-test-pattern 'repair-a 'l2 10 "src/a"))
@@ -54,7 +54,7 @@
                    (max-attempts . 2)))
            (cons 'metadata '((source . loop-engineering)))))))
 
-;; [Alist] <- Unit
+;; : (-> Unit [Alist])
 (def (governor-test-states)
   (list '((loop . other-loop)
           (acting_on . "src/a"))))

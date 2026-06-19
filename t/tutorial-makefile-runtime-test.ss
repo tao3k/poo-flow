@@ -4,11 +4,12 @@
 
 (import :std/test
         :core/api
-        :extensions/workflow)
+        :extensions/workflow
+        :extensions/workflow-syntax)
 
 (export tutorial-makefile-runtime-test)
 
-;; RuntimeResponseAlist <- Alist Value ArtifactHandle
+;; : (-> Alist Value ArtifactHandle RuntimeResponseAlist)
 (def (makefile-runtime-response envelope value artifact)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id (cdr (assoc 'request-id envelope)))
@@ -18,26 +19,26 @@
         (cons 'error #f)
         (cons 'metadata '((tutorial . makefile-runtime-stage)))))
 
-;; ExecutionRequest <- Alist
+;; : (-> Alist ExecutionRequest)
 (def (makefile-envelope-request envelope)
   (cdr (assoc 'request envelope)))
 
-;; Symbol <- ExecutionRequest
+;; : (-> ExecutionRequest Symbol)
 (def (makefile-external-operation request)
   (cadr (execution-request-request request)))
 
-;; Payload <- ExecutionRequest
+;; : (-> ExecutionRequest Payload)
 (def (makefile-external-payload request)
   (caddr (execution-request-request request)))
 
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (makefile-alist-ref alist key default)
   (let (entry (assoc key alist))
     (if entry (cdr entry) default)))
 
 ;;; Stage 17 uses the stdout-response boundary while preserving makefile-tool
 ;;; parse/run as separate external task operations.
-;; ArgumentsBuilder <- Procedure Procedure
+;; : (-> Procedure Procedure ArgumentsBuilder)
 (def (makefile-runtime-response-arguments record-parse record-run)
   (lambda (envelope)
     (let* ((request (makefile-envelope-request envelope))
@@ -93,12 +94,21 @@
 ;;; Boundary:
 ;;; - Request envelopes are built from public task-adapter-request data.
 ;;; - Manifest tests do not depend on runner internals.
-;; RuntimeRequestEnvelope <- ExecutionRequest Symbol ArtifactHandle
+;; : (-> ExecutionRequest Symbol ArtifactHandle RuntimeRequestEnvelope)
 (def (makefile-runtime-envelope request request-id artifact)
   (list (cons 'schema +runtime-request-schema+)
         (cons 'request-id request-id)
         (cons 'request request)
         (cons 'artifact-handle artifact)))
+
+(defpoo-makefile-tool-workflow macro-makefile-runtime-flow
+  macro-makefile-runtime-flow)
+
+(defpoo-makefile-tool-runtime-command-descriptor macro-makefile-tool-cli
+  macro-makefile-tool-cli
+  "/usr/bin/poo-flow-runtime"
+  (list (cons 'runtime-name "poo-flow-runtime")
+        (cons 'tutorial 'macro-stage)))
 
 (def tutorial-makefile-runtime-test
   (test-suite "funflow makefile-tool runtime result ladder"
@@ -210,6 +220,42 @@
                         "--expected-output"
                         "process-output"))
         (check-equal? (cdr (assoc 'argv run-manifest))
-                      (cons "/usr/bin/poo-flow-runtime" run-args))))))
+                      (cons "/usr/bin/poo-flow-runtime" run-args))))
+    (test-case "authors makefile runtime descriptor with Gerbil macros"
+      (let* ((parse-task (car (flow-steps macro-makefile-runtime-flow)))
+             (parse-request
+              (task-adapter-request parse-task
+                                    'makefile-project
+                                    'macro-makefile-runtime-flow
+                                    '(node macro-makefile-runtime-flow 0)
+                                    '()
+                                    'local-eager
+                                    '()))
+             (manifest
+              (runtime-command-descriptor->manifest
+               macro-makefile-tool-cli
+               (makefile-runtime-envelope
+                parse-request
+                'macro-parse-request
+                '(artifact macro-parse))))
+             (args (cdr (assoc 'arguments manifest))))
+        (check-equal? (runtime-command-descriptor-name macro-makefile-tool-cli)
+                      'macro-makefile-tool-cli)
+        (check-equal? (cdr (assoc 'schema manifest))
+                      +runtime-command-descriptor-schema+)
+        (check-equal? (cdr (assoc 'metadata manifest))
+                      '((workflow . makefile-tool)
+                        (runtime . rust-cli-compatible)
+                        (runtime-name . "poo-flow-runtime")
+                        (tutorial . macro-stage)))
+        (check-equal? (member "--operation" args)
+                      '("--operation"
+                        "makefile-tool-parse"
+                        "--working-directory"
+                        "funflow-examples/makefile-tool/test"
+                        "--makefile"
+                        "Makefile"
+                        "--sources"
+                        "(\"main.cpp\" \"hello.cpp\" \"factorial.cpp\")"))))))
 
 (run-tests! tutorial-makefile-runtime-test)

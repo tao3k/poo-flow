@@ -7,6 +7,7 @@
         :core/receipt
         :core/task
         :core/flow
+        :core/flow-syntax
         :core/plan
         :core/strategy
         :core/policy
@@ -20,6 +21,7 @@
         (import: :core/receipt)
         (import: :core/task)
         (import: :core/flow)
+        (import: :core/flow-syntax)
         (import: :core/plan)
         (import: :core/strategy)
         (import: :core/policy)

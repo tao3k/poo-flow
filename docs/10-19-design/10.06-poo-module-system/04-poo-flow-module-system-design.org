@@ -1,6 +1,6 @@
-#+title: 10.06.04 POO Flow Module System Design
+#+title: 10.06.04 poo-flow Module System Design
 
-* 10.06.04 POO Flow Module System Design
+* 10.06.04 poo-flow Module System Design
 ** 10.06.04.05 Current Implementation Delta
 The module system now includes the Marlin-style facade in =src/modules/module-system.ss= while preserving the existing descriptor/catalog/activation API.
 
@@ -26,7 +26,7 @@ catalog
   -> binds source refs to already-built module descriptors
   -> resolves selected sources before doctor or activation
 
-poo module descriptor
+poo-flow module descriptor
   -> task-family registry contribution
   -> flow-declaration registry contribution
   -> module options
@@ -148,7 +148,7 @@ The implementation is now split under =src/modules/= instead of being held in co
 
 The Doom/C3 interface additions are data-only:
 - descriptor slots now include =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
-- =poo-module-active?= and =pooModuleActive?= provide explicit flag checks;
+- =poo-module-active?= and =poo-flow-module-value-catalog-active?= provide explicit flag checks;
 - =poo-module-option-merge-receipts= keeps append, override, conflict, constant, required, and missing-schema findings inspectable before runtime;
 - =poo-module-phase-order= projects init/config ordering from depth metadata;
 - runtime projections expose phase ids, hooks, and active metadata without loading files.
@@ -162,9 +162,9 @@ The public interface contract is:
 - construct modules with =pooModules= or =defpoo-module=;
 - express imports with =poo-import= and =poo-imports=;
 - inspect descriptor metadata with =poo-module-name=, =poo-module-group=, =poo-module-flags=, =poo-module-features=, =poo-module-phase-file=, and =poo-module-hook-values=;
-- ask active/flag questions with =poo-module-active?= and =pooModuleActive?=;
+- ask active/flag questions with =poo-module-active?= and =poo-flow-module-value-catalog-active?=;
 - inspect final option composition with =poo-module-option-merge-receipts= and =poo-module-merged-option-alist=;
-- load source refs into catalogs with =poo-module-static-loader=, =poo-module-load-source-receipts=, and =poo-module-load-catalog=;
+- load source refs into catalogs with =poo-flow-module-static-loader=, =poo-flow-module-load-source-receipts=, and =poo-flow-module-load-catalog=;
 - group modules with =pooModuleCatalog=;
 - project runtime-facing receipts with =poo-module-workflow=, =pooEvalModules=, and =pooModuleSystemPresentation=;
 - project pre-runtime doctor summaries with =pooModuleDoctorPresentation= and =pooModuleSourceDoctorPresentation=;
@@ -174,8 +174,9 @@ The regression owner for this contract is =t/module-system-user-interface-test.s
 ** 10.06.04.85 Maintained Downstream User Interface
 =user-interface/= is the root-level maintained user-interface directory. It is not a test fixture and it is not package runtime source.
 The directory models the thin handoff that downstream users see:
-- =modules.ss= chooses hot-plug module groups, module ids, and flags;
-- =config.ss= supplies flow, loop, sandbox, and strategy values and exports =:poo-flow/user-interface/config= when the project root is on =GERBIL_LOADPATH=.
+- =init.ss= chooses hot-plug module groups, module ids, flags, and custom module entrypoints;
+- =custom/*/config.ss= is the downstream-owned custom module authoring space;
+- =src/modules/user-interface/config.ss= projects those root declarations into the canonical profile/config objects.
 This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/modules=. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
 ** 10.06.04.90 Doom And Nix Design Boundary
 The detailed design principles are in [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]].

@@ -8,7 +8,7 @@
         :extensions/agent-sandbox-nono
         :extensions/agent-sandbox-cube)
 
-;; AdapterResult <- Value Alist
+;; : (-> Value Alist AdapterResult)
 (def (runtime-result value artifact)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id '(runtime agent-sandbox-profile-test))
@@ -18,7 +18,7 @@
         (cons 'error #f)
         (cons 'metadata '((runtime . agent-sandbox-profile-test)))))
 
-;; Alist <- ExecutionRequest
+;; : (-> ExecutionRequest Alist)
 (def (request-config request)
   (cadr (execution-request-request request)))
 

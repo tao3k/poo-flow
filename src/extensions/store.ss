@@ -9,6 +9,7 @@
 (import :core/api)
 
 (export store-task-family-descriptor
+        +store-content-address-receipt-schema+
         make-store-task-family-registry
         store-enable-strategy
         make-store-enabled-strategy
@@ -21,9 +22,42 @@
         task-store-payload
         task-store-put?
         task-store-get?
-        store-flow)
+        store-flow
+        put-dir-flow
+        get-dir-flow
+        make-store-content-address-receipt
+        store-content-address-receipt?
+        store-content-address-receipt-schema
+        store-content-address-receipt-flow
+        store-content-address-receipt-operation
+        store-content-address-receipt-payload
+        store-content-address-receipt-input-contract
+        store-content-address-receipt-output-contract
+        store-content-address-receipt-address-algorithm
+        store-content-address-receipt-content-address
+        store-content-address-receipt-runtime-executed
+        store-flow->content-address-receipt)
 
-;; AdapterOperation <- Task
+;; : (-> Unit Symbol)
+(def +store-content-address-receipt-schema+
+  'poo-flow.extensions.store-content-address-receipt.v1)
+
+;;; Report-only CAS evidence mirrors Funflow's content-addressed store promise
+;;; without claiming that Scheme has materialized or fetched any store item.
+;; : (-> Symbol Symbol Symbol Payload Contract Contract Symbol Value Boolean StoreContentAddressReceipt)
+(defstruct store-content-address-receipt
+  (schema
+   flow
+   operation
+   payload
+   input-contract
+   output-contract
+   address-algorithm
+   content-address
+   runtime-executed)
+  transparent: #t)
+
+;; : (-> Task AdapterOperation)
 (def (store-task-adapter-dispatch task)
   (cond
    ((task-store-put? task) 'store-put)
@@ -36,7 +70,7 @@
      (list (cons 'task (task-name task))
            (cons 'operation (task-store-operation task)))))))
 
-;; TaskFamilyDescriptor <- Unit
+;; : (-> Unit TaskFamilyDescriptor)
 (def store-task-family-descriptor
   (make-task-family-descriptor 'store
                                'store
@@ -44,19 +78,19 @@
                                'rust-or-external-runtime
                                store-task-adapter-dispatch))
 
-;; TaskFamilyRegistry <- [TaskFamilyRegistry]
+;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-store-task-family-registry . maybe-registry)
   (task-family-registry-extend
    (if (null? maybe-registry) default-task-family-registry (car maybe-registry))
    store-task-family-descriptor))
 
-;; [Symbol] <- [Symbol] Symbol
+;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
     (append capability-set (list capability))))
 
-;; Strategy <- Strategy
+;; : (-> Strategy Strategy)
 (def (store-enable-strategy strategy)
   (make-strategy (strategy-name strategy)
                  (capabilities-with (strategy-capabilities strategy) 'store)
@@ -66,15 +100,15 @@
 
 ;;; Store-aware strategies are opt-in wrappers over core strategy policy. Core
 ;;; stays unaware of Store/CAS while extension users get normal validation.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-store-enabled-strategy)
   (store-enable-strategy (make-local-eager-strategy)))
 
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-cached-store-enabled-strategy)
   (store-enable-strategy (make-cached-local-eager-strategy)))
 
-;; RuntimeAdapter <- RuntimeAdapter
+;; : (-> RuntimeAdapter RuntimeAdapter)
 (def (make-store-enabled-adapter adapter)
   (make-runtime-adapter (runtime-adapter-name adapter)
                         (capabilities-with (runtime-adapter-capabilities adapter)
@@ -84,14 +118,14 @@
                         (runtime-adapter-store-putter adapter)
                         (runtime-adapter-store-getter adapter)))
 
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (store-option options key default)
   (let (entry (assoc key options))
     (if entry
       (cdr entry)
       default)))
 
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-store-run-config . maybe-options)
   (let (options (if (null? maybe-options) '() (car maybe-options)))
     (make-run-config 'store-request-only
@@ -103,7 +137,7 @@
                      (make-store-task-family-registry)
                      default-flow-declaration-registry)))
 
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-store-rust-run-config . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (command (store-option options 'runtime-command #f)))
@@ -116,33 +150,88 @@
                      (make-store-task-family-registry)
                      default-flow-declaration-registry)))
 
-;; Task <- Symbol Symbol Payload Contract Contract
+;; : (-> Symbol Symbol Payload Contract Contract Task)
 (def (make-store-task name operation payload input-contract output-contract)
   (make-task name 'store (list 'store operation payload) input-contract output-contract #f))
 
 ;;; Store operation accessors keep CAS semantics explicit at the extension
 ;;; boundary without requiring runners to destructure store request data.
-;; Symbol | #f <- Task
+;; : (-> Task (U Symbol #f))
 (def (task-store-operation task)
   (if (eq? (task-kind task) 'store)
     (task-request-operation task)
     #f))
 
-;; Payload | #f <- Task
+;; : (-> Task (U Payload #f))
 (def (task-store-payload task)
   (if (eq? (task-kind task) 'store)
     (task-request-payload task)
     #f))
 
-;; Boolean <- Task
+;; : (-> Task Boolean)
 (def (task-store-put? task)
   (eq? (task-store-operation task) 'put))
 
-;; Boolean <- Task
+;; : (-> Task Boolean)
 (def (task-store-get? task)
   (eq? (task-store-operation task) 'get))
 
-;; Flow <- Symbol Symbol Payload Contract Contract
+;; : (-> Symbol Symbol Payload Contract Contract Flow)
 (def (store-flow name operation payload input-contract output-contract)
   (task-flow name
              (make-store-task name operation payload input-contract output-contract)))
+
+;; : (-> Symbol Symbol Payload)
+(def (store-directory-payload task-name operation)
+  (list (cons 'store-task task-name)
+        (cons 'content-kind 'directory)
+        (cons 'operation operation)))
+
+;;; Funflow exposes putDirFlow as the user-facing directory-to-CAS-item arrow.
+;;; The Scheme side keeps this as request data for the runtime adapter.
+;; : (-> Symbol Flow)
+(def (put-dir-flow name)
+  (store-flow name
+              'put
+              (store-directory-payload 'put-dir 'put)
+              'abs-dir
+              'cas-item))
+
+;;; Funflow exposes getDirFlow as the user-facing CAS-item-to-directory arrow.
+;;; The Scheme side only declares the adapter request and flow contracts.
+;; : (-> Symbol Flow)
+(def (get-dir-flow name)
+  (store-flow name
+              'get
+              (store-directory-payload 'get-dir 'get)
+              'cas-item
+              'abs-dir))
+
+;; : (-> Flow Task)
+(def (store-flow-primary-task flow)
+  (let (steps (flow-steps flow))
+    (if (and (pair? steps)
+             (task? (car steps))
+             (eq? (task-kind (car steps)) 'store))
+      (car steps)
+      (raise-control-plane-failure
+       'store-extension
+       'expected-store-flow
+       "expected a flow whose first step is a store task"
+       (list (cons 'flow (flow-name flow)))))))
+
+;;; Content address receipts are discovery artifacts: Rust/Marlin may use them
+;;; to bind a real CAS store, while Scheme only records the declared hash fact.
+;; : (-> Flow Symbol Value StoreContentAddressReceipt)
+(def (store-flow->content-address-receipt flow address-algorithm content-address)
+  (let (task (store-flow-primary-task flow))
+    (make-store-content-address-receipt
+     +store-content-address-receipt-schema+
+     (flow-name flow)
+     (task-store-operation task)
+     (task-store-payload task)
+     (flow-input-contract flow)
+     (flow-output-contract flow)
+     address-algorithm
+     content-address
+     #f)))

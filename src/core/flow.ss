@@ -46,24 +46,53 @@
         branch-step-right
         branch-step-input-contract
         branch-step-output-contract
+        make-try-step
+        try-step?
+        try-step-name
+        try-step-source
+        try-step-input-contract
+        try-step-output-contract
         flow-compose
         task-flow
         pure-flow
+        flow-arr
         scheme-flow
         throw-string-flow
+        try-flow
+        flow-try
         external-flow
         return-flow
+        flow-identity
         conditional-flow
         cached-pure-flow
         cached-scheme-flow
         flow-then
         flow-branch
+        flow-fanout
+        flow-map
+        flow-first
+        flow-second
         flow-empty?
-        flow-step-count)
+        flow-step-count
+        flow-category-prototype
+        make-flow-category
+        flow-category?
+        default-flow-category
+        flow-category-name
+        flow-category-arrow
+        flow-category-domain
+        flow-category-codomain
+        flow-category-compose
+        flow-category-identity
+        flow-category-arr
+        flow-category-map
+        flow-category-fanout
+        flow-category-first
+        flow-category-second)
 
 ;;; Boundary: a flow stores ordered steps plus its input/output contract edge.
 ;;; Invariant: nested flows remain steps until a planner chooses lowering.
-;; Flow <- Symbol [Step] Contract Contract
+;; : (-> Symbol [Step] Contract Contract Flow)
 (defstruct flow
   (name
    steps
@@ -73,7 +102,7 @@
 
 ;;; Flow descriptors are POO declaration metadata: they select planning policy
 ;;; without changing the stable flow record or running any task.
-;; FlowDeclarationDescriptorPrototype <- Unit
+;; : (-> Unit FlowDeclarationDescriptorPrototype)
 (def flow-declaration-descriptor-prototype
   (.mix slots: (role-constant-slots
                 (list (cons 'kind 'flow-declaration)
@@ -84,11 +113,11 @@
 ;;; Descriptor supers are a pair-tree on purpose: gerbil-poo flattens supers
 ;;; before C3 linearization, so extension descriptors can add role parents
 ;;; without this module reimplementing inheritance order.
-;; [Role] <- [Role]
+;; : (-> [Role] [Role])
 (def (flow-declaration-descriptor-supers role-supers)
   (cons flow-declaration-descriptor-prototype role-supers))
 
-;; FlowDeclarationDescriptor <- Symbol Symbol PlannerPolicy ExtensionPolicy [Role]
+;; : (-> Symbol Symbol PlannerPolicy ExtensionPolicy [Role] FlowDeclarationDescriptor)
 (def (make-flow-declaration-descriptor descriptor-name descriptor-kind descriptor-planner descriptor-extension-policy . maybe-role-supers)
   (let (role-supers (if (null? maybe-role-supers) '() (car maybe-role-supers)))
     (.mix slots: (role-constant-slots
@@ -100,14 +129,14 @@
                               (list 'flow-declaration descriptor-kind descriptor-planner))))
           (flow-declaration-descriptor-supers role-supers))))
 
-;; Boolean <- FlowDeclarationDescriptorCandidate
+;; : (-> FlowDeclarationDescriptorCandidate Boolean)
 (def (flow-declaration-descriptor? descriptor)
   (and (object? descriptor)
        (eq? (.@ descriptor kind) 'flow-declaration)))
 
 ;;; Flow declaration registries are immutable extension bundles. Strategy code
 ;;; can consume a registry without knowing which module contributed descriptors.
-;; FlowDeclarationRegistryPrototype <- Unit
+;; : (-> Unit FlowDeclarationRegistryPrototype)
 (def flow-declaration-registry-prototype
   (.mix slots: (role-constant-slots
                 (list (cons 'kind 'flow-declaration-registry)
@@ -115,7 +144,7 @@
                       (cons 'extension-policy 'immutable-registry)))
         flow-role))
 
-;; FlowDeclarationRegistry <- Symbol [FlowDeclarationDescriptor]
+;; : (-> Symbol [FlowDeclarationDescriptor] FlowDeclarationRegistry)
 (def (make-flow-declaration-registry registry-name registry-descriptors)
   (.mix slots: (role-constant-slots
                 (list (cons 'name registry-name)
@@ -124,45 +153,45 @@
                             (list 'flow-declaration-registry registry-name))))
         flow-declaration-registry-prototype))
 
-;; Boolean <- FlowDeclarationRegistryCandidate
+;; : (-> FlowDeclarationRegistryCandidate Boolean)
 (def (flow-declaration-registry? registry)
   (and (object? registry)
        (eq? (.@ registry kind) 'flow-declaration-registry)))
 
-;; Symbol <- FlowDeclarationRegistry
+;; : (-> FlowDeclarationRegistry Symbol)
 (def (flow-declaration-registry-name registry)
   (.@ registry name))
 
-;; [FlowDeclarationDescriptor] <- FlowDeclarationRegistry
+;; : (-> FlowDeclarationRegistry [FlowDeclarationDescriptor])
 (def (flow-declaration-registry-descriptors registry)
   (.@ registry descriptors))
 
-;; FlowDeclarationRegistry <- FlowDeclarationRegistry FlowDeclarationDescriptor
+;; : (-> FlowDeclarationRegistry FlowDeclarationDescriptor FlowDeclarationRegistry)
 (def (flow-declaration-registry-extend registry descriptor)
   (make-flow-declaration-registry
    (flow-declaration-registry-name registry)
    (append (flow-declaration-registry-descriptors registry)
            (list descriptor))))
 
-;; FlowDeclarationDescriptor <- Unit
+;; : (-> Unit FlowDeclarationDescriptor)
 (def task-flow-descriptor
   (make-flow-declaration-descriptor 'task-flow 'task 'linear-dag 'closed
                                     (list task-role)))
 
-;; FlowDeclarationDescriptor <- Unit
+;; : (-> Unit FlowDeclarationDescriptor)
 (def sequential-flow-descriptor
   (make-flow-declaration-descriptor 'sequential-flow 'sequential 'linear-dag 'composable))
 
-;; FlowDeclarationDescriptor <- Unit
+;; : (-> Unit FlowDeclarationDescriptor)
 (def branch-flow-descriptor
   (make-flow-declaration-descriptor 'branch-flow 'branch 'linear-dag 'parallelizable
                                     (list branch-role)))
 
-;; FlowDeclarationDescriptor <- Unit
+;; : (-> Unit FlowDeclarationDescriptor)
 (def empty-flow-descriptor
   (make-flow-declaration-descriptor 'empty-flow 'empty 'linear-dag 'identity))
 
-;; FlowDeclarationRegistry <- Unit
+;; : (-> Unit FlowDeclarationRegistry)
 (def default-flow-declaration-registry
   (make-flow-declaration-registry
    'default-flow-declarations
@@ -171,38 +200,38 @@
          branch-flow-descriptor
          empty-flow-descriptor)))
 
-;; [FlowDeclarationDescriptor] <- Unit
+;; : (-> Unit [FlowDeclarationDescriptor])
 (def flow-declaration-descriptors
   (flow-declaration-registry-descriptors default-flow-declaration-registry))
 
-;; Symbol <- FlowDeclarationDescriptor
+;; : (-> FlowDeclarationDescriptor Symbol)
 (def (flow-declaration-name descriptor)
   (.@ descriptor name))
 
-;; Symbol <- FlowDeclarationDescriptor
+;; : (-> FlowDeclarationDescriptor Symbol)
 (def (flow-declaration-kind descriptor)
   (.@ descriptor declaration-kind))
 
-;; PlannerPolicy <- FlowDeclarationDescriptor
+;; : (-> FlowDeclarationDescriptor PlannerPolicy)
 (def (flow-declaration-planner descriptor)
   (.@ descriptor planner))
 
-;; ExtensionPolicy <- FlowDeclarationDescriptor
+;; : (-> FlowDeclarationDescriptor ExtensionPolicy)
 (def (flow-extension-policy descriptor)
   (.@ descriptor extension-policy))
 
-;; Value <- FlowDeclarationDescriptor Symbol Value
+;; : (-> FlowDeclarationDescriptor Symbol Value Value)
 (def (flow-declaration-capability descriptor slot default)
   (role-slot/default descriptor slot default))
 
-;; MaybeFlowDeclarationDescriptor <- Symbol [FlowDeclarationDescriptor]
+;; : (-> Symbol [FlowDeclarationDescriptor] MaybeFlowDeclarationDescriptor)
 (def (find-flow-declaration kind descriptors)
   (cond
    ((null? descriptors) #f)
    ((eq? kind (flow-declaration-kind (car descriptors))) (car descriptors))
    (else (find-flow-declaration kind (cdr descriptors)))))
 
-;; FlowDeclarationDescriptor <- FlowDeclarationRegistry Symbol
+;; : (-> FlowDeclarationRegistry Symbol FlowDeclarationDescriptor)
 (def (flow-declaration-for-kind-in registry kind)
   (let ((descriptor (find-flow-declaration
                      kind
@@ -218,7 +247,7 @@
 
 ;;; Branch steps keep the left and right flows as declarations so planning can
 ;;; expose a DAG before runner or adapter code chooses an execution strategy.
-;; BranchStep <- Symbol Flow Flow Contract Contract
+;; : (-> Symbol Flow Flow Contract Contract BranchStep)
 (defstruct branch-step
   (name
    left
@@ -227,29 +256,46 @@
    output-contract)
   transparent: #t)
 
-;; Flow <- Symbol [Step] Contract Contract
+;;; Try steps keep Funflow-style =tryE= as a composable flow declaration. The
+;;; runner owns interpretation; this record only names the protected source.
+;; : (-> Symbol Flow Contract Contract TryStep)
+(defstruct try-step
+  (name
+   source
+   input-contract
+   output-contract)
+  transparent: #t)
+
+;; : (-> Step Symbol)
+;; : (-> Symbol [Step] Contract Contract Flow)
 (def (flow-compose name steps input-contract output-contract)
   (make-flow name steps input-contract output-contract))
 
-;; Flow <- Symbol Task
+;; : (-> Symbol Task Flow)
 (def (task-flow name task)
   (flow-compose name
                 (list task)
                 (task-input-contract task)
                 (task-output-contract task)))
 
-;; Flow <- Symbol Procedure Contract Contract
+;; : (-> Symbol Procedure Contract Contract Flow)
 (def (pure-flow name proc input-contract output-contract)
   (task-flow name (make-pure-task name proc input-contract output-contract)))
 
-;; Flow <- Symbol Procedure Contract Contract
+;;; Arrow lifting keeps Funflow's =arr=/=pureFlow= idea in the core Scheme
+;;; composition API while still lowering to an ordinary pure task.
+;; : (-> Symbol Procedure Contract Contract Flow)
+(def (flow-arr name proc input-contract output-contract)
+  (pure-flow name proc input-contract output-contract))
+
+;; : (-> Symbol Procedure Contract Contract Flow)
 (def (scheme-flow name proc input-contract output-contract)
   (task-flow name (make-scheme-task name proc input-contract output-contract)))
 
 ;;; Boundary:
 ;;; - This flow is the local ErrorHandling throw source.
 ;;; - Recovery policy stays in runner/failure helpers.
-;; Flow <- Symbol String Contract Contract
+;; : (-> Symbol String Contract Contract Flow)
 (def (throw-string-flow name message input-contract output-contract)
   (scheme-flow name
                (lambda (_input)
@@ -257,20 +303,40 @@
                input-contract
                output-contract))
 
-;; Flow <- Symbol Symbol Payload Contract Contract
+;;; The try flow returns a typed =try-result= value through ordinary
+;;; =runner-run=, matching Funflow's recoverable =tryE= surface.
+;; : (-> Symbol Flow Flow)
+(def (try-flow name source)
+  (flow-compose name
+                (list (make-try-step name
+                                     source
+                                     (flow-input-contract source)
+                                     (list 'try (flow-output-contract source))))
+                (flow-input-contract source)
+                (list 'try (flow-output-contract source))))
+
+;; : (-> Symbol Flow Flow)
+(def (flow-try name source)
+  (try-flow name source))
+
+;; : (-> Symbol Symbol Payload Contract Contract Flow)
 (def (external-flow name operation payload input-contract output-contract)
   (task-flow name (make-external-task name operation payload input-contract output-contract)))
 
 ;;; The identity lambda is the unit flow: it preserves value and contract while
 ;;; still presenting the same task-backed flow shape as non-trivial steps.
-;; Flow <- Symbol Contract
+;; : (-> Symbol Contract Flow)
 (def (return-flow name contract)
   (pure-flow name (lambda (value) value) contract contract))
+
+;; : (-> Symbol Contract Flow)
+(def (flow-identity name contract)
+  (return-flow name contract))
 
 ;;; Boundary:
 ;;; - This helper owns local value selection for QuickReference.
 ;;; - Graph fan-out remains =flow-branch= and scheduler-owned planning.
-;; Flow <- Symbol Predicate Procedure Procedure Contract Contract
+;; : (-> Symbol Predicate Procedure Procedure Contract Contract Flow)
 (def (conditional-flow name predicate then-proc else-proc input-contract output-contract)
   (scheme-flow name
                (lambda (input)
@@ -283,7 +349,7 @@
 ;;; Boundary:
 ;;; - This wrapper owns only local tutorial cache reuse.
 ;;; - Store and CAS extensions own persistent cache materialization.
-;; Flow <- Symbol KeyProcedure Procedure Contract Contract
+;; : (-> Symbol KeyProcedure Procedure Contract Contract Flow)
 (def (cached-pure-flow name key-proc proc input-contract output-contract)
   (let (entries '())
     (pure-flow name
@@ -301,7 +367,7 @@
 ;;; Invariant:
 ;;; - Cache lookup must happen before executor invocation.
 ;;; - This preserves QuickReference's single visible =Increment!= observation.
-;; Flow <- Symbol KeyProcedure Procedure Contract Contract
+;; : (-> Symbol KeyProcedure Procedure Contract Contract Flow)
 (def (cached-scheme-flow name key-proc proc input-contract output-contract)
   (let (entries '())
     (scheme-flow name
@@ -318,7 +384,7 @@
 
 ;;; Composition concatenates logical steps and keeps the left input/right output
 ;;; edge, matching pipeline composition without running either side.
-;; Flow <- Symbol Flow Flow
+;; : (-> Symbol Flow Flow Flow)
 (def (flow-then name left right)
   (flow-compose name
                 (append (flow-steps left) (flow-steps right))
@@ -327,7 +393,7 @@
 
 ;;; Branch composition applies two flows to the same input and joins their
 ;;; outputs as a pair-shaped value, leaving heavy parallelism to adapters.
-;; Flow <- Symbol Flow Flow
+;; : (-> Symbol Flow Flow Flow)
 (def (flow-branch name left right)
   (flow-compose name
                 (list (make-branch-step name
@@ -342,28 +408,90 @@
                       (flow-output-contract left)
                       (flow-output-contract right))))
 
-;; Boolean <- Flow
+;; : (-> Symbol Flow Flow Flow)
+(def (flow-fanout name left right)
+  (flow-branch name left right))
+
+;;; Functional output mapping is ordinary sequential composition: the source
+;;; flow runs first, then a pure arrow transforms its result.
+;; : (-> Symbol Flow Procedure Contract Flow)
+(def (flow-map name source proc output-contract)
+  (flow-then name
+             source
+             (flow-arr (flow-derived-name name 'map)
+                       proc
+                       (flow-output-contract source)
+                       output-contract)))
+
+;;; Arrow =first= applies a flow to the first element of a pair-shaped list and
+;;; carries the second element through unchanged.
+;; : (-> Symbol Flow Contract Flow)
+(def (flow-first name source second-contract)
+  (let* ((input-contract (list 'pair
+                               (flow-input-contract source)
+                               second-contract))
+         (left-input (flow-arr (flow-derived-name name 'first-input)
+                               car
+                               input-contract
+                               (flow-input-contract source)))
+         (left (flow-then (flow-derived-name name 'first-left)
+                          left-input
+                          source))
+         (right (flow-arr (flow-derived-name name 'first-right)
+                          cadr
+                          input-contract
+                          second-contract)))
+    (flow-fanout name left right)))
+
+;;; Arrow =second= mirrors =flow-first= and applies the source flow to the
+;;; second element of a pair-shaped list.
+;; : (-> Symbol Flow Contract Flow)
+(def (flow-second name source first-contract)
+  (let* ((input-contract (list 'pair
+                               first-contract
+                               (flow-input-contract source)))
+         (left (flow-arr (flow-derived-name name 'second-left)
+                         car
+                         input-contract
+                         first-contract))
+         (right-input (flow-arr (flow-derived-name name 'second-input)
+                                cadr
+                                input-contract
+                                (flow-input-contract source)))
+         (right (flow-then (flow-derived-name name 'second-right)
+                           right-input
+                           source)))
+    (flow-fanout name left right)))
+
+;; : (-> Symbol Symbol Symbol)
+(def (flow-derived-name base suffix)
+  (string->symbol
+   (string-append (symbol->string base)
+                  "-"
+                  (symbol->string suffix))))
+
+;; : (-> Flow Boolean)
 (def (flow-empty? flow)
   (null? (flow-steps flow)))
 
-;; Boolean <- Flow
+;; : (-> Flow Boolean)
 (def (flow-branch-declaration? flow)
   (steps-contain-branch? (flow-steps flow)))
 
-;; Boolean <- Flow
+;; : (-> Flow Boolean)
 (def (flow-task-declaration? flow)
   (let ((steps (flow-steps flow)))
     (and (not (null? steps))
          (null? (cdr steps))
          (task? (car steps)))))
 
-;; Boolean <- Flow
+;; : (-> Flow Boolean)
 (def (flow-sequential-declaration? flow)
   (and (not (flow-empty? flow))
        (not (flow-branch-declaration? flow))
        (not (flow-task-declaration? flow))))
 
-;; Boolean <- [Step]
+;; : (-> [Step] Boolean)
 (def (steps-contain-branch? steps)
   (cond
    ((null? steps) #f)
@@ -376,7 +504,7 @@
 ;;; Extension contract:
 ;;; - New flow kinds register descriptors instead of changing this dispatch shape.
 ;;; - Structural predicates keep legacy task/branch/sequential flows stable.
-;; FlowDeclarationDescriptor <- FlowDeclarationRegistry Flow
+;; : (-> FlowDeclarationRegistry Flow FlowDeclarationDescriptor)
 (def (flow-declaration-descriptor-in registry flow)
   (cond
    ((flow-empty? flow) (flow-declaration-for-kind-in registry 'empty))
@@ -384,10 +512,93 @@
    ((flow-task-declaration? flow) (flow-declaration-for-kind-in registry 'task))
    (else (flow-declaration-for-kind-in registry 'sequential))))
 
-;; FlowDeclarationDescriptor <- Flow
+;; : (-> Flow FlowDeclarationDescriptor)
 (def (flow-declaration-descriptor flow)
   (flow-declaration-descriptor-in default-flow-declaration-registry flow))
 
-;; Nat <- Flow
+;; : (-> Flow Nat)
 (def (flow-step-count flow)
   (length (flow-steps flow)))
+
+;;; The category object is POO metadata for the functional flow kernel. It does
+;;; not replace the stable =flow= struct; it names the Category/Arrow operations
+;;; that strategy and extension code can reuse without hard-coding helpers.
+;; : (-> Unit FlowCategoryPrototype)
+(def flow-category-prototype
+  (.mix slots: (role-constant-slots
+                (list (cons 'kind 'flow-category)
+                      (cons 'arrow 'flow)
+                      (cons 'domain flow-input-contract)
+                      (cons 'codomain flow-output-contract)
+                      (cons 'compose flow-then)
+                      (cons 'identity flow-identity)
+                      (cons 'arr flow-arr)
+                      (cons 'map flow-map)
+                      (cons 'fanout flow-fanout)
+                      (cons 'first flow-first)
+                      (cons 'second flow-second)
+                      (cons 'extension-policy 'functional-kernel)))
+        flow-role))
+
+;; : (-> Symbol FlowCategory)
+(def (make-flow-category category-name)
+  (.mix slots: (role-constant-slots
+                (list (cons 'name category-name)
+                      (cons 'responsibility
+                            (list 'functional-flow-kernel category-name))))
+        flow-category-prototype))
+
+;; : (-> Unit FlowCategory)
+(def default-flow-category
+  (make-flow-category 'flow))
+
+;; : (-> FlowCategoryCandidate Boolean)
+(def (flow-category? category)
+  (and (object? category)
+       (eq? (.@ category kind) 'flow-category)))
+
+;; : (-> FlowCategory Symbol)
+(def (flow-category-name category)
+  (.@ category name))
+
+;; : (-> FlowCategory Symbol)
+(def (flow-category-arrow category)
+  (.@ category arrow))
+
+;; : (-> FlowCategory Flow Contract)
+(def (flow-category-domain category flow)
+  ((.@ category domain) flow))
+
+;; : (-> FlowCategory Flow Contract)
+(def (flow-category-codomain category flow)
+  ((.@ category codomain) flow))
+
+;; : (-> FlowCategory Symbol Flow Flow Flow)
+(def (flow-category-compose category name left right)
+  ((.@ category compose) name left right))
+
+;; : (-> FlowCategory Symbol Contract Flow)
+(def (flow-category-identity category name contract)
+  ((.@ category identity) name contract))
+
+;; : (-> FlowCategory Symbol Procedure Contract Contract Flow)
+(def (flow-category-arr category name proc input-contract output-contract)
+  ((.@ category arr) name proc input-contract output-contract))
+
+;; : (-> FlowCategory Symbol Flow Procedure Contract Flow)
+(def (flow-category-map category name source proc output-contract)
+  ((.@ category map) name source proc output-contract))
+
+;; : (-> FlowCategory Symbol Flow Flow Flow)
+(def (flow-category-fanout category name left right)
+  ((.@ category fanout) name left right))
+
+;;; Category-owned Arrow projections keep pair-routing visible as functional
+;;; kernel metadata instead of requiring callers to hard-code helper names.
+;; : (-> FlowCategory Symbol Flow Contract Flow)
+(def (flow-category-first category name source second-contract)
+  ((.@ category first) name source second-contract))
+
+;; : (-> FlowCategory Symbol Flow Contract Flow)
+(def (flow-category-second category name source first-contract)
+  ((.@ category second) name source first-contract))

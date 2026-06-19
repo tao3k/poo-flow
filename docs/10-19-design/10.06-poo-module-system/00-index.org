@@ -1,4 +1,4 @@
-* 10.06 POO Module System
+* 10.06 poo-flow Module System
 ** 10.06.10 Purpose
 This document pack defines the module-system layer for =poo-flow=. The package is not a port of Doom Emacs and not a copy of Marlin's Gerbil module API. =poo-flow= remains the core control plane. External systems are reference material for interface shape, diagnostics, and modular organization.
 
@@ -10,8 +10,8 @@ The implementation lives in =src/modules/module-system.ss=. It depends on core r
 [[file:02-marlin-gerbil-modules-audit.org][02 Marlin Gerbil Modules Audit]]
 - [[file:03-gerbil-scheme-c3-foundation.org][03 Gerbil Scheme C3 Foundation]]
 [[file:03-gerbil-scheme-c3-foundation.org][03 Gerbil Scheme C3 Foundation]]
-- [[file:04-poo-flow-module-system-design.org][04 POO Flow Module System Design]]
-[[file:04-poo-flow-module-system-design.org][04 POO Flow Module System Design]]
+- [[file:04-poo-flow-module-system-design.org][04 poo-flow Module System Design]]
+[[file:04-poo-flow-module-system-design.org][04 poo-flow Module System Design]]
 - [[file:05-implementation-roadmap.org][05 Implementation Roadmap]]
 [[file:05-implementation-roadmap.org][05 Implementation Roadmap]]
 - [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
@@ -19,6 +19,7 @@ The implementation lives in =src/modules/module-system.ss=. It depends on core r
 - [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
 [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
 - [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
+- [[file:15-bass-cicd-module-audit.org][15 Bass CI/CD Module Audit]]
 [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:

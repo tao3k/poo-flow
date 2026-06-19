@@ -8,13 +8,13 @@ Doom is useful because it is Lisp-family software. Its user interface shows how 
 
 - Doom gives the authoring experience target.
 - Nix gives the configuration semantics target.
-- Gerbil POO and C3 give the local implementation substrate.
+- Gerbil Scheme, POO, and C3 give the host-language implementation substrate.
 
 ** 10.06.06.20 Doom Lessons To Borrow
 *** Declarative Entry Macro
-Doom's =doom!= shape is valuable because users declare grouped modules in one compact form. The important idea is not Emacs Lisp loading. The important idea is that the user sees a small module declaration language with groups, flags, conditional inclusion, and predictable order.
+Doom's =doom!= shape is valuable because users declare grouped modules in one compact form. The important idea is not Emacs Lisp loading. The important idea is that the user sees a small Gerbil module authoring surface with groups, flags, conditional inclusion, and predictable order.
 
-For =poo-flow=, the equivalent should eventually be a module-set macro that expands into descriptor values and catalog values. The macro may organize syntax, but it must not load files, evaluate runtime tasks, query registries, or mutate global runtime state.
+For =poo-flow=, the equivalent should eventually be a module-set macro that expands into Gerbil bindings which construct POO descriptor values and catalog values. The macro may organize syntax, but it must not load files, evaluate runtime tasks, query registries, or mutate global runtime state.
 
 *** Active Module Predicate
 Doom's =modulep!= pattern is useful because users can ask whether a module or flag is active at the point where conditional configuration is written.
@@ -22,14 +22,14 @@ Doom's =modulep!= pattern is useful because users can ask whether a module or fl
 =poo-flow= already absorbs this as explicit data checks:
 
 - =poo-module-active?= checks a descriptor and flag requirements.
-- =pooModuleActive?= checks a catalog by module id.
+- =poo-flow-module-value-catalog-active?= checks a catalog by module id.
 
 This is intentionally less magical than Doom. The active predicate receives data explicitly instead of guessing the current module from the source file.
 
 *** Domain-Specific Macros
-Doom's macros such as keybinding and package helpers are effective because each macro owns one domain and compiles compact user syntax into domain actions.
+Doom's macros such as keybinding and package helpers are effective because each macro owns one domain and compiles compact user syntax into the host language's own extension points.
 
-=poo-flow= should use the same rule: a macro is allowed only when it has one clear domain owner and expands to inspectable data. Good future candidates:
+=poo-flow= should use the same rule: a macro is allowed only when it has one clear domain owner and expands to inspectable Gerbil/POO values. Good future candidates:
 
 - module-set declaration;
 - option schema declaration;
@@ -43,10 +43,10 @@ Bad candidates:
 - a macro that performs source loading during expansion;
 - a macro that hides option merge conflicts;
 - a macro that silently changes task or flow registries outside descriptor activation.
-For loop engineering this means Doom-style authoring sugar may eventually declare a named loop bundle, but the expansion target must remain =loop-pattern-descriptor= or =loop-strategy-plan= data. The macro should never wake a loop, allocate a worktree, call a connector, or bypass the Marlin handoff boundary.
+For loop engineering this means Doom-style authoring forms may eventually declare a named loop bundle, but the expansion target must remain Gerbil values such as =loop-pattern-descriptor= or =loop-strategy-plan=. The macro should never wake a loop, allocate a worktree, call a connector, or bypass the Marlin handoff boundary.
 
 *** High-Order Authoring Helpers
-Doom's high-order helpers make small transformations concise. =poo-flow= should borrow the spirit, not the exact names. In Gerbil, this means small typed helpers and expression-level composition around:
+Doom's high-order helpers make small transformations concise. =poo-flow= should borrow the spirit, not the exact names. In Gerbil, this means hygienic higher-order macros, macro factories, small typed helpers, and expression-level composition around:
 
 - descriptor projection;
 - option receipt projection;
@@ -103,13 +103,14 @@ The design rule is:
 - keep leaf owners split under =src/modules=;
 - keep =:modules/module-system= as the only normal user import.
 
-Macros should expand into these data structures. They should not become an alternate runtime.
+Macros should expand into Gerbil bindings and POO values in this system. They should not become an alternate runtime or a separate alist/record DSL.
 
 ** 10.06.06.50 Macro Design Contract
 Every user-facing macro must satisfy all of these rules:
 
-- Expansion is pure descriptor construction.
+- Expansion is hygienic Gerbil code that constructs POO descriptors, catalogs, or boundary receipts.
 - Expansion is inspectable through existing accessors.
+- Expansion does not introduce an alist/record DSL as the semantic core.
 - Expansion does not read files.
 - Expansion does not resolve catalogs.
 - Expansion does not activate modules.
@@ -117,29 +118,29 @@ Every user-facing macro must satisfy all of these rules:
 - Expansion does not depend on hidden current-file module context.
 - Expansion has a focused test that imports only =:modules/module-system=.
 
-This contract lets =poo-flow= borrow Doom's friendly Lisp surface without inheriting uncontrolled magic.
+This contract lets =poo-flow= borrow Doom's friendly Lisp surface while staying a Gerbil-hosted POO module system.
 
 ** 10.06.06.60 Proposed User Interface Layers
-*** Layer 1: Explicit Data API
+*** Layer 1: Explicit POO API
 Status: implemented.
 
 Users can already declare interfaces, modules, imports, catalogs, active checks, eval receipts, and presentation receipts through =:modules/module-system=.
 
-*** Layer 2: Focused Macro Sugar
+*** Layer 2: Focused Hygienic Authoring Forms
 Status: partially implemented.
 
 Implemented macros:
 
 - =defpoo-module-set= for grouped module declarations;
 - =poo-module-option-block= for schema and config POO slot blocks;
-- =poo-module-hook-block= for hook payload blocks;
+- =poo-module-hook-block= for hook POO slot blocks;
 - =poo-module-when= for explicit conditional inclusion.
 
-The =*-block= names avoid colliding with existing public accessors such as =poo-module-options= and =poo-module-hooks=. These macros only expand into layer-1 values.
+The =*-block= names avoid colliding with existing public accessors such as =poo-module-options= and =poo-module-hooks=. These macros only expand into layer-1 Gerbil/POO values.
 
 *** Layer 3: Nix-Style Merge Policy
-Status: implemented for first-pass data semantics.
-Schema vocabulary and receipts now cover default, override, append, and conflict semantics. Macro sugar remains constrained to data behavior that is tested through =:modules/module-system=.
+Status: implemented for first-pass projection semantics.
+Schema vocabulary and receipts now cover default, override, append, and conflict semantics. Macro authoring remains constrained to POO behavior that is tested through =:modules/module-system=.
 *** Layer 4: Loader Integration
 Status: future.
 
@@ -154,6 +155,7 @@ The required test shape is:
 - avoid importing leaf owners;
 - construct values as a module author would;
 - assert descriptor shape through public accessors;
+- assert macro block values as POO slot objects before boundary projection;
 - assert receipts before runtime execution;
 - assert failure or validation behavior as data.
 

@@ -26,27 +26,27 @@
 
 ;;; Marlin interface schema is the stable envelope Marlin consumes before it
 ;;; delegates to backend-specific nono or Cube runners.
-;; MarlinInterfaceSchema <- Unit
+;; : (-> Unit MarlinInterfaceSchema)
 (def +agent-sandbox-marlin-interface-schema+
   'poo-flow.agent-sandbox-marlin-interface.v1)
 
 ;;; Admission envelopes are the Marlin runtime entry contract. They keep the
 ;;; core runtime request identity beside the selected backend handoff manifest.
-;; MarlinAdmissionSchema <- Unit
+;; : (-> Unit MarlinAdmissionSchema)
 (def +agent-sandbox-marlin-admission-schema+
   'poo-flow.agent-sandbox-marlin-admission.v1)
 
 ;;; Supported backends are explicit so adding a new backend requires a dispatch
 ;;; branch and tests instead of silently passing through unknown manifests.
-;; [Symbol] <- Unit
+;; : (-> Unit [Symbol])
 (def +agent-sandbox-marlin-supported-backends+
   '(nono cube))
 
-;; Boolean <- Symbol
+;; : (-> Symbol Boolean)
 (def (agent-sandbox-marlin-supported-backend? backend-kind)
   (and (memq backend-kind +agent-sandbox-marlin-supported-backends+) #t))
 
-;; Symbol | #f <- RuntimeManifest
+;; : (-> RuntimeManifest (U Symbol #f))
 (def (agent-sandbox-marlin-runtime-backend-kind runtime-manifest)
   (agent-sandbox-alist-ref
    (agent-sandbox-alist-ref runtime-manifest 'backend '())
@@ -55,24 +55,24 @@
 
 ;;; Validation specs are first-class so runtime and admission validation share
 ;;; the same predicate contract shape instead of repeating anonymous lambdas.
-;; Boolean <- RequiredManifestField
+;; : (-> RequiredManifestField Boolean)
 (def (agent-sandbox-marlin-present? value)
   (and value #t))
 
 ;;; Boundary: schema predicates keep manifest version checks declarative.
 ;;; Each field spec can carry the expected symbol without closing over runtime IO.
-;; Predicate <- Symbol
+;; : (-> Symbol Predicate)
 (def (agent-sandbox-marlin-schema? expected)
   (lambda (value)
     (eq? value expected)))
 
-;; FieldSpec <- Symbol Predicate
+;; : (-> Symbol Predicate FieldSpec)
 (def (agent-sandbox-marlin-field-spec field predicate)
   (cons field predicate))
 
 ;;; Marlin dispatch validation checks only the shared handoff envelope. Backend
 ;;; leaves still validate nono C ABI policy and Cube lifecycle policy.
-;; [ValidationError] <- RuntimeManifest
+;; : (-> RuntimeManifest [ValidationError])
 (def (agent-sandbox-marlin-runtime-manifest-validation-errors runtime-manifest)
   (if (list? runtime-manifest)
     (let (backend-kind
@@ -93,7 +93,7 @@
 
 ;;; Validation preserves the manifest in typed failures so callers can decide
 ;;; whether to repair backend selection or task policy before invoking Marlin.
-;; AgentSandboxRuntimeManifest <- RuntimeManifest
+;; : (-> RuntimeManifest AgentSandboxRuntimeManifest)
 (def (agent-sandbox-marlin-validate-runtime-manifest runtime-manifest)
   (let (errors
         (agent-sandbox-marlin-runtime-manifest-validation-errors
@@ -109,7 +109,7 @@
 
 ;;; Backend projection is the only dispatch branch in Scheme. It routes to the
 ;;; leaf contract owners while keeping runtime execution out of this module.
-;; Alist <- AgentSandboxRuntimeManifest
+;; : (-> AgentSandboxRuntimeManifest Alist)
 (def (agent-sandbox-marlin-backend-manifest runtime-manifest)
   (let (backend-kind
         (agent-sandbox-marlin-runtime-backend-kind runtime-manifest))
@@ -126,27 +126,27 @@
        (list (cons 'backend-kind backend-kind)
              (cons 'runtime-manifest runtime-manifest)))))))
 
-;; Symbol <- Symbol
+;; : (-> Symbol Symbol)
 (def (agent-sandbox-marlin-handoff-kind backend-kind)
   (cond
    ((eq? backend-kind 'nono) 'nono-c-binding)
    ((eq? backend-kind 'cube) 'cube-interface)
    (else 'unknown)))
 
-;; Boolean <- Symbol
+;; : (-> Symbol Boolean)
 (def (agent-sandbox-marlin-supported-handoff-kind? handoff-kind)
   (and (memq handoff-kind '(nono-c-binding cube-interface)) #t))
 
 ;;; Handoff manifests must be non-empty alists; an empty list would validate the
 ;;; envelope while giving Marlin no backend contract to execute.
-;; Boolean <- MarlinHandoffManifestCandidate
+;; : (-> MarlinHandoffManifestCandidate Boolean)
 (def (agent-sandbox-marlin-handoff-manifest? value)
   (and (pair? value) (list? value)))
 
 ;;; Final Marlin handoff wraps the backend-owned manifest with uniform routing
 ;;; fields. Marlin can inspect `handoff-kind` before delegating to a native or
 ;;; remote runner, while tests can assert one shape across backends.
-;; MarlinInterfaceManifest <- AgentSandboxRuntimeManifest
+;; : (-> AgentSandboxRuntimeManifest MarlinInterfaceManifest)
 (def (agent-sandbox-runtime-manifest->marlin-interface-manifest
       runtime-manifest)
   (let* ((valid-manifest
@@ -171,14 +171,14 @@
 
 ;;; Request projection gives Scheme callers the same Marlin envelope that
 ;;; execution-request projection will hand to runtime adapters.
-;; MarlinInterfaceManifest <- AgentSandboxRequest
+;; : (-> AgentSandboxRequest MarlinInterfaceManifest)
 (def (agent-sandbox-request->marlin-interface-manifest request)
   (agent-sandbox-runtime-manifest->marlin-interface-manifest
    (agent-sandbox-request->runtime-manifest request)))
 
 ;;; Execution-request projection reuses bridge projection so Marlin envelopes
 ;;; and runtime command envelopes cannot drift.
-;; MarlinInterfaceManifest <- ExecutionRequest
+;; : (-> ExecutionRequest MarlinInterfaceManifest)
 (def (agent-sandbox-execution-request->marlin-interface-manifest request)
   (let (runtime-manifest
         (agent-sandbox-alist-ref
@@ -191,7 +191,7 @@
 ;;; Boundary: admission validation checks only Marlin's common routing contract.
 ;;; Backend-specific shape checks stay with the leaf handoff manifests.
 ;;; Invariant: this function returns validation data and never invokes Marlin.
-;; [ValidationError] <- Alist
+;; : (-> Alist [ValidationError])
 (def (agent-sandbox-marlin-admission-envelope-validation-errors envelope)
   (if (list? envelope)
     (agent-sandbox-required-field-errors
@@ -230,7 +230,7 @@
             agent-sandbox-marlin-handoff-manifest?)))
     (list '((field . admission-envelope) (code . not-alist)))))
 
-;; MarlinAdmissionEnvelope <- Alist
+;; : (-> Alist MarlinAdmissionEnvelope)
 (def (agent-sandbox-marlin-validate-admission-envelope envelope)
   (let (errors
         (agent-sandbox-marlin-admission-envelope-validation-errors envelope))
@@ -245,7 +245,7 @@
 
 ;;; This is the handoff Marlin should consume from runtime commands: it keeps
 ;;; Rust request identity and policy data together with the backend contract.
-;; MarlinAdmissionEnvelope <- ExecutionRequest [Symbol]
+;; : (-> ExecutionRequest [Symbol] MarlinAdmissionEnvelope)
 (def (agent-sandbox-execution-request->marlin-admission-envelope
       request
       . maybe-operation)

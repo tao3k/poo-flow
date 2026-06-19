@@ -8,7 +8,7 @@
 
 (export agent-sandbox-bridge-test)
 
-;; AdapterResult <- Value Alist
+;; : (-> Value Alist AdapterResult)
 (def (bridge-runtime-result value artifact)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id '(runtime agent-sandbox-bridge-test))
@@ -18,7 +18,7 @@
         (cons 'error #f)
         (cons 'metadata '((runtime . agent-sandbox-bridge-test)))))
 
-;; Alist <- ExecutionRequest
+;; : (-> ExecutionRequest Alist)
 (def (bridge-request-config request)
   (cadr (execution-request-request request)))
 

@@ -1,0 +1,43 @@
+#+TITLE: 10.06.11 Marlin Runtime Handoff
+
+* 10.06.11.01 Boundary
+
+POO Flow owns the Scheme-side control plane.  Marlin owns runtime execution.
+
+POO Flow may produce:
+
+- module descriptors;
+- user config presentations;
+- loader receipts;
+- doctor diagnostics;
+- option validation and merge receipts;
+- runtime manifests and handoff data.
+
+POO Flow must not own:
+
+- LLM invocation;
+- API/R backend execution;
+- C binding execution;
+- runtime handler lifecycle;
+- Marlin session scheduling.
+
+* 10.06.11.02 Runtime Owner Field
+
+Presentation objects that mention backend lifecycle ownership should expose
+=runtime-owner = "marlin-agent-core"=.  This field is a boundary marker, not an
+execution handle.
+
+Every doctor or presentation helper must keep:
+
+- =runtime-executed = #f=;
+- =runtime-parses-scheme-source = #f= when the field is present;
+- =scheme-manufactures-runtime-handlers = #f= when the field is present.
+
+* 10.06.11.03 Nono C Binding Split
+
+The descriptor side can live in this repository because it is Scheme-side
+contract data.  Runtime execution and native binding lifecycle stay Marlin-owned.
+
+This allows =poo-flow= to test nono/C binding shape without pretending it owns
+the backend that will execute it.
+

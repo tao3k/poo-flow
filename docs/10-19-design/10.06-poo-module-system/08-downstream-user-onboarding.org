@@ -53,8 +53,8 @@ result looks like:
 
 ** 10.06.08.50 root user-interface/*
 The =user-interface/*= directory is intentionally top-level:
-- =user-interface/modules.ss= shows user-owned module selection.
-- =user-interface/config.ss= shows user-owned settings and selected modules.
+- =user-interface/init.ss= shows user-owned module selection.
+- =user-interface/custom/*/config.ss= shows user-owned custom module bodies.
 - =user-interface/README.org= explains the practice surface.
 
 Those files are examples of how a user writes configuration. They are not a

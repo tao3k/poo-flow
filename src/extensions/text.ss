@@ -26,14 +26,14 @@
         task-text-word-count?
         word-count-flow)
 
-;; TaskFamilyDescriptor <- Unit
+;; : (-> Unit TaskFamilyDescriptor)
 (def text-task-family-descriptor
   (make-task-family-descriptor 'text 'text 'local 'gerbil #f))
 
 ;;; Boundary:
 ;;; - Registry extension is immutable.
 ;;; - Callers may pass a base registry or use the core default.
-;; TaskFamilyRegistry <- [TaskFamilyRegistry]
+;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-text-task-family-registry . maybe-registry)
   (task-family-registry-extend
    (if (null? maybe-registry) default-task-family-registry (car maybe-registry))
@@ -42,7 +42,7 @@
 ;;; Invariant:
 ;;; - Capability lists stay set-like.
 ;;; - Existing capabilities keep their original order.
-;; [Symbol] <- [Symbol] Symbol
+;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
@@ -51,7 +51,7 @@
 ;;; Boundary:
 ;;; - Text capability is opt-in at the extension edge.
 ;;; - Core strategies stay unaware of WordCount parsing.
-;; Strategy <- Strategy
+;; : (-> Strategy Strategy)
 (def (text-enable-strategy strategy)
   (make-strategy (strategy-name strategy)
                  (capabilities-with (strategy-capabilities strategy) 'text)
@@ -62,14 +62,14 @@
 ;;; Boundary:
 ;;; - Default text strategy starts from core local eager policy.
 ;;; - Extension capability is added only through =text-enable-strategy=.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-text-enabled-strategy)
   (text-enable-strategy (make-local-eager-strategy)))
 
 ;;; Boundary:
 ;;; - Text workflows run locally through an opt-in registry.
 ;;; - File reads and writes stay outside this extension.
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-text-run-config . maybe-options)
   (let (options (if (null? maybe-options) '() (car maybe-options)))
     (make-run-config 'text-local
@@ -84,7 +84,7 @@
 ;;; Boundary:
 ;;; - This predicate owns the tutorial punctuation set.
 ;;; - Token scanning decides whether punctuation separates or disappears.
-;; Boolean <- Char
+;; : (-> Char Boolean)
 (def (punctuation-char? char)
   (or (char=? char #\,)
       (char=? char #\.)
@@ -98,7 +98,7 @@
 ;;; Boundary:
 ;;; - This predicate owns whitespace separation.
 ;;; - Punctuation handling remains separate.
-;; Boolean <- Char
+;; : (-> Char Boolean)
 (def (separator-char? char)
   (or (char=? char #\space)
       (char=? char #\newline)
@@ -108,7 +108,7 @@
 ;;; Boundary:
 ;;; - Character range checks are ASCII-only for tutorial word filtering.
 ;;; - Unicode token policy is intentionally outside this extension.
-;; Boolean <- Char Char Char
+;; : (-> Char Char Char Boolean)
 (def (char-between? char lower upper)
   (and (char>=? char lower)
        (char<=? char upper)))
@@ -116,7 +116,7 @@
 ;;; Boundary:
 ;;; - Word-character policy is limited to latin letters and hyphen.
 ;;; - This matches the notebook regex instead of locale-aware parsing.
-;; Boolean <- Char
+;; : (-> Char Boolean)
 (def (latin-word-char? char)
   (or (char-between? char #\A #\Z)
       (char-between? char #\a #\z)
@@ -125,14 +125,14 @@
 ;;; Boundary:
 ;;; - Whole-word validation delegates to character policy.
 ;;; - Scanner behavior remains separate from validity rules.
-;; Boolean <- String
+;; : (-> String Boolean)
 (def (latin-word? word)
   (latin-word-chars? (string->list word)))
 
 ;;; Invariant:
 ;;; - Empty character lists are valid after a word has been built.
 ;;; - Invalid characters reject the whole candidate word.
-;; Boolean <- [Char]
+;; : (-> [Char] Boolean)
 (def (latin-word-chars? chars)
   (cond
    ((null? chars) #t)
@@ -143,14 +143,14 @@
 ;;; Boundary:
 ;;; - Tokenization is pure extension logic.
 ;;; - Flow execution stays in the text task wrapper.
-;; [String] <- String
+;; : (-> String [String])
 (def (text->words text)
   (scan-word-chars (string->list text) '() '()))
 
 ;;; Invariant:
 ;;; - Punctuation is removed rather than used as a separator.
 ;;; - =WordCount.hs= becomes =WordCounths= before word filtering.
-;; [String] <- [Char] [Char] [String]
+;; : (-> [Char] [Char] [String] [String])
 (def (scan-word-chars chars current words)
   (cond
    ((null? chars)
@@ -165,7 +165,7 @@
 ;;; Invariant:
 ;;; - Empty current buffers do not create words.
 ;;; - Non-latin tokens are dropped before counting.
-;; [String] <- [Char] [String]
+;; : (-> [Char] [String] [String])
 (def (finish-word current words)
   (if (null? current)
     words
@@ -177,14 +177,14 @@
 ;;; Boundary:
 ;;; - Counting is reusable pure text logic.
 ;;; - =word-count-flow= remains the workflow constructor.
-;; [TextCount] <- String
+;; : (-> String [TextCount])
 (def (word-counts text)
   (count-words (text->words text) '()))
 
 ;;; Invariant:
 ;;; - Counting preserves first-seen entry order for equal frequencies.
 ;;; - Later sorting only compares counts.
-;; [TextCount] <- [String] [TextCount]
+;; : (-> [String] [TextCount] [TextCount])
 (def (count-words words counts)
   (if (null? words)
     counts
@@ -194,7 +194,7 @@
 ;;; Invariant:
 ;;; - Existing word entries are updated in place in the logical alist.
 ;;; - New words are appended at the current traversal point.
-;; [TextCount] <- String [TextCount]
+;; : (-> String [TextCount] [TextCount])
 (def (increment-word-count word counts)
   (cond
    ((null? counts) (list (cons word 1)))
@@ -208,7 +208,7 @@
 ;;; Boundary:
 ;;; - Count lookup is test-facing read access.
 ;;; - Missing words return zero instead of raising.
-;; Nat <- [TextCount] String
+;; : (-> [TextCount] String Nat)
 (def (word-count-ref counts word)
   (cond
    ((null? counts) 0)
@@ -218,7 +218,7 @@
 ;;; Boundary:
 ;;; - Sorting is count-only presentation policy.
 ;;; - Counting remains independent from output order.
-;; [TextCount] <- [TextCount]
+;; : (-> [TextCount] [TextCount])
 (def (sort-word-counts-desc counts)
   (if (null? counts)
     '()
@@ -228,7 +228,7 @@
 ;;; Invariant:
 ;;; - Equal-count entries preserve existing order.
 ;;; - No alphabetical tiebreaker is added beyond the tutorial behavior.
-;; [TextCount] <- TextCount [TextCount]
+;; : (-> TextCount [TextCount] [TextCount])
 (def (insert-word-count-desc entry counts)
   (cond
    ((null? counts) (list entry))
@@ -241,7 +241,7 @@
 ;;; Boundary:
 ;;; - Formatting is presentation logic for the notebook surface.
 ;;; - Counting and sorting stay separately testable.
-;; [String] <- [TextCount]
+;; : (-> [TextCount] [String])
 (def (format-word-counts counts)
   (map (lambda (entry)
          (string-append (car entry) ": " (number->string (cdr entry))))
@@ -250,14 +250,14 @@
 ;;; Boundary:
 ;;; - This is the notebook-visible print surface.
 ;;; - Callers own file IO and persistence of the summary text.
-;; String <- String
+;; : (-> String String)
 (def (word-count-summary text)
   (join-lines (format-word-counts (word-counts text))))
 
 ;;; Boundary:
 ;;; - Joining owns only the printable text surface.
 ;;; - Line construction remains in =format-word-counts=.
-;; String <- [String]
+;; : (-> [String] String)
 (def (join-lines lines)
   (cond
    ((null? lines) "")
@@ -270,7 +270,7 @@
 ;;; Boundary:
 ;;; - Operation access is limited to text tasks.
 ;;; - Non-text tasks project to =#f= for descriptor probes.
-;; Symbol | #f <- Task
+;; : (-> Task (U Symbol #f))
 (def (task-text-operation task)
   (if (eq? (task-kind task) 'text)
     (task-request-operation task)
@@ -279,7 +279,7 @@
 ;;; Boundary:
 ;;; - Payload access is limited to text tasks.
 ;;; - Non-text tasks project to =#f= for descriptor probes.
-;; Payload | #f <- Task
+;; : (-> Task (U Payload #f))
 (def (task-text-payload task)
   (if (eq? (task-kind task) 'text)
     (task-request-payload task)
@@ -288,14 +288,14 @@
 ;;; Boundary:
 ;;; - WordCount detection is descriptor-level policy.
 ;;; - Execution still belongs to the text task executor.
-;; Boolean <- Task
+;; : (-> Task Boolean)
 (def (task-text-word-count? task)
   (eq? (task-text-operation task) 'word-count))
 
 ;;; Boundary:
 ;;; - Text task request data records the WordCount operation.
 ;;; - The executor stays the pure =word-count-summary= pipeline.
-;; Task <- Symbol Contract Contract
+;; : (-> Symbol Contract Contract Task)
 (def (make-word-count-task name input-contract output-contract)
   (make-task name
              'text
@@ -307,7 +307,7 @@
 ;;; Boundary:
 ;;; - Public workflow construction hides the task record shape.
 ;;; - Descriptor tests can still inspect the underlying task via flow steps.
-;; Flow <- Symbol Contract Contract
+;; : (-> Symbol Contract Contract Flow)
 (def (word-count-flow name input-contract output-contract)
   (task-flow name
              (make-word-count-task name input-contract output-contract)))

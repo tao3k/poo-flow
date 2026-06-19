@@ -1,0 +1,48 @@
+* 10.06.18 Agent Sandbox Profile Interface
+** 10.06.18.10 Bass-Derived User Interface Rule
+Bass keeps user work visible as small, inspectable recipes before a runtime executes them. The important lesson for =poo-flow= sandbox work is not the Bass language implementation. The lesson is the user-facing shape:
+
+- users write short scenario rows;
+- rows are ordinary data before execution;
+- runtime images, cache, mounts, and host access remain explicit;
+- backends do the heavy execution outside the small user interface.
+
+For =poo-flow=, agent sandbox profiles should follow the same rule. A profile is an inert POO recipe that names the backend, network policy, capabilities, resource policy, and metadata. Projection to backend descriptors is a later step. Runtime execution remains owned by =marlin-agent-core= or the selected backend adapter.
+
+** 10.06.18.20 User Surface
+Root =init.ss= keeps module selection separate from sandbox profile recipes. The public user surface is concrete module loading; the facade builds the canonical =users= profile from those rows. Built-in sandbox profile recipes live upstream in =src/modules/agent-sandbox/config.ss=, and downstream user files load those defaults instead of spelling out backend policy rows.
+
+#+begin_src scheme
+(use-module nono-sandbox +nono +doctor)
+(use-module cubeSandbox +cube +doctor)
+
+poo-flow-default-sandbox-profiles
+(poo-flow-default-sandbox-profile-presentation)
+#+end_src
+
+The public user row is module-level: =(use-module nono-sandbox ...)=. The full profile construction layer remains upstream so agents or higher profiles can generate one =users= profile without making the user understand descriptor catalogs, C3 slot resolution internals, or Marlin runtime manifests.
+
+** 10.06.18.30 Boundary
+The boundary is:
+
+- concrete =(use-module ...)= rows select sandbox modules such as =nono-sandbox= and =cubeSandbox=;
+- =poo-flow-default-sandbox-profiles= declares upstream profile recipes consumed by those modules or their runtime bridges;
+- downstream user config may select or override profile names, but it should not own built-in backend policy rows;
+- =pooFlowSandboxProfilesPresentation= gives tools a shallow receipt with names, backend refs, and runtime handoff intent;
+- =poo-flow-sandbox-profile->profile= projects one recipe into the existing validated sandbox profile contract;
+- no package installation, descriptor realization, or runtime command execution happens in the user interface layer.
+
+** 10.06.18.40 POO Rule
+The public profile value stays a POO object. Alists are presentation products only. This follows the gerbil-poo policy surface: macros are thin syntax bridges, while object/protocol slots keep semantic state. Future nono and cubeSandbox specialization should therefore extend the profile object family or runtime bridge projection instead of making user init rows parse backend-specific strings.
+
+** 10.06.18.50 Delivery State
+Delivered in this slice:
+
+- =src/modules/agent-sandbox/config.ss= owns the profile DSL and presentation;
+- =src/modules/agent-sandbox/config.ss= owns the built-in =agent/nono= and =agent/cube= defaults;
+- =src/modules/user-interface/config.ss= exposes the upstream DSL and defaults to downstream init files;
+- =user-interface/init.ss= remains a module-loading surface only;
+- =src/modules/user-interface/config.ss= builds the canonical =users= profile projection from root declarations;
+- focused tests cover inert recipes, upstream runtime intent presentation, and root config loading.
+
+Next milestone: connect selected profile names to Funflow/CI runtime-command manifest projection so workflow nodes can request a sandbox profile without embedding backend-specific execution details in Scheme.

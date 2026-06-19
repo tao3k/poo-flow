@@ -14,18 +14,26 @@
         make-nono-agent-sandbox-profile
         (import: :extensions/agent-sandbox-nono-c-binding))
 
-;;; nono profile defaults model local zero-setup agent sandboxing. The macro
-;;; keeps backend declaration compact while preserving the POO override seam.
-;; AgentSandboxBackendProfile <- BackendRef [Alist]
-(defagent-sandbox-backend-profile
-  make-nono-agent-sandbox-profile-descriptor
-  make-nono-agent-sandbox-profile
-  'nono-profile
-  'nono
-  '((mode . proxy-only))
-  '((filesystem . scoped)
-    (credentials . injected))
-  '((startup . zero-latency))
-  (lambda (backend-ref)
-    (list (cons 'backend 'nono)
-          (cons 'profile backend-ref))))
+;;; nono profile defaults model local zero-setup agent sandboxing. The ordinary
+;;; helper form keeps backend defaults explicit and avoids macro-only evidence.
+;; : (-> BackendRef [Alist] AgentSandboxProfileDescriptor)
+(def (make-nono-agent-sandbox-profile-descriptor backend-ref . maybe-options)
+  (make-agent-sandbox-backend-profile-descriptor
+   'nono-profile
+   'nono
+   backend-ref
+   '((mode . proxy-only))
+   '((filesystem . scoped)
+     (credentials . injected))
+   '((startup . zero-latency))
+   (lambda (profile-ref)
+     (list (cons 'backend 'nono)
+           (cons 'profile profile-ref)))
+   (if (null? maybe-options) '() (car maybe-options))))
+
+;; : (-> BackendRef [Alist] AgentSandboxBackendProfile)
+(def (make-nono-agent-sandbox-profile backend-ref . maybe-options)
+  (agent-sandbox-profile-descriptor->profile
+   (make-nono-agent-sandbox-profile-descriptor
+    backend-ref
+    (if (null? maybe-options) '() (car maybe-options)))))

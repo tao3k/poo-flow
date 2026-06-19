@@ -30,38 +30,38 @@
 
 ;;; Boundary: request schema names the ABI wrapper that Marlin consumes.
 ;;; Intent: keep the nested governor contract stable and separately typed.
-;; LoopGovernorMarlinRequestSchema <- Unit
+;; : (-> Unit LoopGovernorMarlinRequestSchema)
 (def +loop-governor-marlin-request-schema+
   'poo-flow.loop-governor.marlin-request.v1)
 
 ;;; Boundary: ABI schema names Rust-side discovery, not a request instance.
 ;;; Intent: Marlin can pin fields without executing or constructing Scheme data.
-;; LoopGovernorMarlinAbiSchema <- Unit
+;; : (-> Unit LoopGovernorMarlinAbiSchema)
 (def +loop-governor-marlin-abi-schema+
   'poo-flow.loop-governor.marlin-abi.v1)
 
 ;;; Boundary: L1 receipts are report-only proof objects.
 ;;; Invariant: the receipt records handoff readiness without state writes.
-;; LoopGovernorL1RunReceiptSchema <- Unit
+;; : (-> Unit LoopGovernorL1RunReceiptSchema)
 (def +loop-governor-l1-run-receipt-schema+
   'poo-flow.loop-governor.l1-run-receipt.v1)
 
 ;;; Boundary: runtime manifest schema is the Marlin discovery entry.
 ;;; Intent: consumers bind to data fields instead of guessing Scheme constructors.
-;; LoopGovernorMarlinRuntimeManifestSchema <- Unit
+;; : (-> Unit LoopGovernorMarlinRuntimeManifestSchema)
 (def +loop-governor-marlin-runtime-manifest-schema+
   'poo-flow.loop-governor.marlin-runtime-manifest.v1)
 
 ;;; Boundary: Marlin projections keep alist probing local to avoid exporting
 ;;; core governor internals only for ABI wrapper assembly.
-;; AlistValue <- Alist Symbol AlistValue
+;; : (-> Alist Symbol AlistValue AlistValue)
 (def (loop-governor-marlin-alist-ref alist key default)
   (let (found (and (list? alist) (assoc key alist)))
     (if found (cdr found) default)))
 
 ;;; Boundary: request-envelope validation reports wrapper shape errors without
 ;;; coupling Marlin-specific schemas back into the core governor module.
-;; [ValidationError] <- Symbol FieldValue
+;; : (-> Symbol FieldValue [ValidationError])
 (def (loop-governor-marlin-required-field-error field value)
   (if value
     '()
@@ -70,7 +70,7 @@
 
 ;;; Boundary: ABI manifest publishes the stable marlin-agent-core field set.
 ;;; Invariant: this metadata describes contract shape and never runs a loop.
-;; Alist <- Unit
+;; : (-> Unit Alist)
 (def (loop-governor-marlin-abi-manifest)
   (list (cons 'schema +loop-governor-marlin-abi-schema+)
         (cons 'producer 'poo-flow)
@@ -97,7 +97,7 @@
 
 ;;; Boundary: request validation checks only the Marlin ABI wrapper.
 ;;; Intent: governor policy validation stays owned by the nested contract.
-;; [ValidationError] <- Alist
+;; : (-> Alist [ValidationError])
 (def (loop-governor-marlin-request-envelope-validation-errors envelope)
   (if (list? envelope)
     (append
@@ -127,7 +127,7 @@
 
 ;;; Boundary: invalid envelopes fail before leaving the Scheme control plane.
 ;;; Intent: downstream tests inspect typed failures, not malformed strings.
-;; MarlinRequestEnvelope <- Alist
+;; : (-> Alist MarlinRequestEnvelope)
 (def (validate-loop-governor-marlin-request-envelope envelope)
   (let (errors
         (loop-governor-marlin-request-envelope-validation-errors envelope))
@@ -142,7 +142,7 @@
 
 ;;; Boundary: request projection packages governor facts for marlin-agent-core.
 ;;; Invariant: projection never submits, schedules, locks, mutates, or persists.
-;; MarlinRequestEnvelope <- LoopGovernor [Alist] [RequestId]
+;; : (-> LoopGovernor [Alist] [RequestId] MarlinRequestEnvelope)
 (def (loop-governor->marlin-request-envelope
       governor
       states
@@ -199,7 +199,7 @@
 
 ;;; Boundary: L1 receipt projects report-only handoff outcome for a governor.
 ;;; Invariant: no schedule, state write, or external effect is represented.
-;; Alist <- LoopGovernor [Alist] [RequestId]
+;; : (-> LoopGovernor [Alist] [RequestId] Alist)
 (def (loop-governor->l1-run-receipt governor states . maybe-request-id)
   (let* ((request-id (if (null? maybe-request-id)
                        #f
@@ -258,7 +258,7 @@
 
 ;;; Boundary: runtime manifest exposes the govern-loop request for discovery.
 ;;; Intent: Marlin decides if and when to consume the inert request envelope.
-;; Alist <- LoopGovernor [Alist] [RequestId]
+;; : (-> LoopGovernor [Alist] [RequestId] Alist)
 (def (loop-governor->marlin-runtime-manifest
       governor
       states

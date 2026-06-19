@@ -24,14 +24,14 @@
         task-custom-repeat?
         custom-repeat-flow)
 
-;; TaskFamilyDescriptor <- Unit
+;; : (-> Unit TaskFamilyDescriptor)
 (def custom-task-family-descriptor
   (make-task-family-descriptor 'custom 'custom 'local 'gerbil #f))
 
 ;;; Boundary:
 ;;; - Registry extension is immutable.
 ;;; - Callers may pass a base registry or use the core default.
-;; TaskFamilyRegistry <- [TaskFamilyRegistry]
+;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-custom-task-family-registry . maybe-registry)
   (task-family-registry-extend
    (if (null? maybe-registry) default-task-family-registry (car maybe-registry))
@@ -40,7 +40,7 @@
 ;;; Invariant:
 ;;; - Capability lists stay set-like.
 ;;; - Existing capabilities keep their original order.
-;; [Symbol] <- [Symbol] Symbol
+;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
@@ -49,7 +49,7 @@
 ;;; Boundary:
 ;;; - Custom capability is opt-in at the extension edge.
 ;;; - Core strategies stay unaware of Tutorial2 task semantics.
-;; Strategy <- Strategy
+;; : (-> Strategy Strategy)
 (def (custom-enable-strategy strategy)
   (make-strategy (strategy-name strategy)
                  (capabilities-with (strategy-capabilities strategy) 'custom)
@@ -60,14 +60,14 @@
 ;;; Boundary:
 ;;; - Default custom strategy starts from core local eager policy.
 ;;; - Extension capability is added only through =custom-enable-strategy=.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-custom-enabled-strategy)
   (custom-enable-strategy (make-local-eager-strategy)))
 
 ;;; Boundary:
 ;;; - Run config installs the custom registry for local interpretation.
 ;;; - Runtime adapters remain placeholders because this task family is local.
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-custom-run-config . maybe-options)
   (let (options (if (null? maybe-options) '() (car maybe-options)))
     (make-run-config 'custom-local
@@ -79,7 +79,7 @@
                      (make-custom-task-family-registry)
                      default-flow-declaration-registry)))
 
-;; CustomRepeatSpec <- String Nat
+;; : (-> String Nat CustomRepeatSpec)
 (defstruct custom-repeat-spec
   (text
    count)
@@ -88,7 +88,7 @@
 ;;; Invariant:
 ;;; - Non-positive repeat counts return an empty suffix.
 ;;; - Tutorial2 custom task behavior stays local and deterministic.
-;; String <- String Nat
+;; : (-> String Nat String)
 (def (repeat-string text count)
   (if (<= count 0)
     ""
@@ -97,7 +97,7 @@
 ;;; Boundary:
 ;;; - Operation access is limited to custom tasks.
 ;;; - Non-custom tasks project to =#f= instead of raising.
-;; Symbol | #f <- Task
+;; : (-> Task (U Symbol #f))
 (def (task-custom-operation task)
   (if (eq? (task-kind task) 'custom)
     (task-request-operation task)
@@ -106,7 +106,7 @@
 ;;; Boundary:
 ;;; - Payload access is limited to custom tasks.
 ;;; - Non-custom tasks project to =#f= for descriptor probes.
-;; Payload | #f <- Task
+;; : (-> Task (U Payload #f))
 (def (task-custom-payload task)
   (if (eq? (task-kind task) 'custom)
     (task-request-payload task)
@@ -115,14 +115,14 @@
 ;;; Boundary:
 ;;; - Repeat detection is descriptor-level policy.
 ;;; - Execution still belongs to the custom repeat task executor.
-;; Boolean <- Task
+;; : (-> Task Boolean)
 (def (task-custom-repeat? task)
   (eq? (task-custom-operation task) 'repeat))
 
 ;;; Boundary:
 ;;; - Custom task declarations remain request data.
 ;;; - This extension owns the Tutorial2 interpreter weave point.
-;; Task <- Symbol String Nat Contract Contract
+;; : (-> Symbol String Nat Contract Contract Task)
 (def (make-custom-repeat-task name text count input-contract output-contract)
   (let (spec (make-custom-repeat-spec text count))
     (make-task name
@@ -139,7 +139,7 @@
 ;;; Boundary:
 ;;; - Public users construct a flow, not the raw custom task.
 ;;; - The task descriptor remains inspectable through =flow-steps=.
-;; Flow <- Symbol String Nat Contract Contract
+;; : (-> Symbol String Nat Contract Contract Flow)
 (def (custom-repeat-flow name text count input-contract output-contract)
   (task-flow name
              (make-custom-repeat-task name

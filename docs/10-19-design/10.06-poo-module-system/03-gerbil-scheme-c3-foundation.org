@@ -93,7 +93,7 @@ The first implementation keeps slot ownership explicit:
 
 This prevents module activation from becoming a broad mutation point.
 ** 10.06.03.40 Macro Governance
-Macros are allowed later, but not as the first layer.
+Macros are allowed only on top of the stable POO layer, not as an alternate module model.
 
 The stable order is:
 1. Plain POO descriptors.
@@ -101,6 +101,6 @@ The stable order is:
 3. Activation object.
 4. Run-config lowering.
 5. Diagnostic commands.
-6. Macro sugar over the stable API.
+6. Hygienic Gerbil authoring forms over the stable API.
 
-This order keeps agent-facing output explicit. A future macro must expand to the same descriptor values that tests can construct by hand.
+This order keeps agent-facing output explicit. A macro must expand to Gerbil bindings and POO values that tests can construct by hand through =:modules/module-system=. It must not introduce an alist/record DSL as the semantic core.

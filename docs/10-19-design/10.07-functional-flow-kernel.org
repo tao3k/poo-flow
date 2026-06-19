@@ -1,0 +1,276 @@
+#+TITLE: 10.07 Functional Flow Kernel
+#+DATE: 2026-06-18
+#+AUTHOR: tao3k / Codex
+#+OPTIONS: toc:2 num:t
+
+* 10.07 Functional Flow Kernel
+
+** 10.07.00 Purpose
+
+This document records the implementation route for making the Funflow kernel
+feel like functional programming in Gerbil Scheme while keeping the project
+boundary unchanged:
+
+- Gerbil Scheme owns flow composition, POO category metadata, policy
+  selection, and lightweight validation runs.
+- Rust or another runtime owns Docker, CAS, subprocesses, durable state,
+  parallel scheduling, and artifact materialization.
+
+This is not a DSL track. It does not introduce an alist or record language for
+workflow authoring. Gerbil Scheme remains the host language, and Gerbil POO is
+the semantic object system.
+
+** 10.07.10 Reference Evidence
+
+The local Gerbil POO checkout at =.data/gerbil-poo/fun.ss= defines functional
+programming concepts as type objects:
+
+- =Category.= has =Arrow=, =domain=, =codomain=, =compose=, and =identity=.
+- =Functor.= and =ParametricFunctor.= have =.ap= and =.map= style slots.
+- =Identity= supplies identity mapping and bind-like behavior as object
+  semantics.
+
+The Funflow checkout at =.data/funflow/funflow/src/Funflow/Flow.hs= exposes the
+user-facing kernel as:
+
+- =Flow input output= and =ExtendedFlow=;
+- =pureFlow= and =ioFlow= smart constructors;
+- =toFlow= for task-family lifting;
+- =returnFlow= as =returnA=;
+- public re-export of Arrow composition such as =>>>=.
+
+The Scheme implementation should therefore model the same core ideas as
+Category/Arrow operations over =flow= declarations, not as a separate config
+syntax.
+
+** 10.07.20 Code Landing
+
+The current landing keeps =src/core/flow.ss= as the owner because that file
+already owns the stable =flow= declaration structure and descriptor
+classification.
+
+Implemented functional kernel surface:
+
+- =flow-arr= lifts a Scheme procedure into a pure flow.
+- =flow-identity= aliases the unit/identity flow.
+- =flow-map= maps over a flow's output by composing a pure arrow after it.
+- =flow-fanout= exposes =flow-branch= as Arrow-style fanout.
+- =flow-first= applies a flow to the first element of a pair-shaped value.
+- =flow-second= applies a flow to the second element of a pair-shaped value.
+- =flow-category-prototype= and =default-flow-category= expose these
+  operations as POO metadata slots.
+- =flow-category-compose=, =flow-category-identity=, =flow-category-arr=,
+  =flow-category-map=, and =flow-category-fanout= call the selected POO
+  category operations.
+- =src/core/flow-syntax.ss= owns hygienic Gerbil authoring macros:
+  =defpoo-flow-arr=, =defpoo-flow-identity=, =defpoo-flow-compose=,
+  =defpoo-flow-map=, =defpoo-flow-fanout=, =defpoo-flow-first=, and
+  =defpoo-flow-second=.
+
+The stable =flow= struct is unchanged. The POO category object is metadata and
+operation selection over existing declarations, not a replacement runtime
+representation.
+
+** 10.07.30 Boundary Rules
+
+1. Category/Arrow composition stays in =src/core/flow.ss=.
+2. Planning stays in =src/core/plan.ss= and strategy-owned planner selection.
+3. Local execution proofs stay in =src/core/runner.ss=.
+4. Runtime handoff stays behind runtime adapters and extension descriptors.
+5. Authoring conveniences may use hygienic Gerbil macros later, but those
+   macros must expand to the functional kernel and POO objects. They must not
+   define a new alist/record DSL.
+6. The landed =defpoo-flow-*= macros define Gerbil bindings over existing
+   combinators. Flow names become quoted symbolic names; procedures, contracts,
+   and source flows remain caller expressions.
+
+** 10.07.40 Verification
+
+Proof command:
+
+#+begin_src sh
+GERBIL_LOADPATH=src:t gxtest t/functional-flow-kernel-test.ss
+#+end_src
+
+The test covers:
+
+- POO category object inspection;
+- category compose and identity;
+- output mapping;
+- fanout over two arrows;
+- =first= and =second= over pair-shaped values.
+- hygienic Gerbil macro authoring for the same flow declarations.
+
+** 10.07.50 Current Slice Receipt
+
+The hygienic macro authoring layer is now implemented.
+
+Current proof:
+
+- =defpoo-flow-arr= authors pure arrows.
+- =defpoo-flow-compose= authors sequential composition.
+- =defpoo-flow-map= authors output mapping.
+- =defpoo-flow-fanout= authors branch/fanout declarations.
+- =defpoo-flow-first= and =defpoo-flow-second= author pair-shaped Arrow
+  projections.
+- =t/functional-flow-kernel-test.ss= proves that macro-authored flows run
+  through the same runner path as direct function-authored flows.
+
+** 10.07.60 Extension Macro Plan
+
+The next functional slice was to lift extension-owned task constructors into
+the same macro authoring style. The first candidates were Docker/store/runtime
+descriptor helpers because they already preserve the runtime boundary.
+
+Constraints:
+
+- macro expansion target: extension-owned public constructors and existing
+  =flow= combinators;
+- proof target: macro-authored extension flows produce the same request
+  envelopes and receipts as direct function calls;
+- non-goal: no alternate workflow data language.
+
+** 10.07.70 Extension Macro Landing
+
+The extension macro authoring layer is now implemented in
+=src/extensions/workflow-syntax.ss=.
+
+Implemented extension macro surface:
+
+- =defpoo-custom-repeat-flow= authors Tutorial2 custom-repeat flows.
+- =defpoo-docker-flow= authors Docker request flows.
+- =defpoo-store-flow= authors Store/CAS request flows.
+- =defpoo-ccompilation-flow= and =defpoo-ccompilation-store-workflow= author
+  CCompilation descriptor workflows.
+- =defpoo-tensorflow-train-flow=, =defpoo-tensorflow-inference-flow=, and
+  =defpoo-tensorflow-workflow= author TensorflowDocker descriptor workflows.
+- =defpoo-makefile-tool-parse-flow=, =defpoo-makefile-tool-run-flow=, and
+  =defpoo-makefile-tool-workflow= author makefile-tool descriptor workflows.
+- =defpoo-makefile-tool-runtime-command-descriptor= authors inert Rust CLI
+  runtime command descriptors.
+
+Proof commands:
+
+#+begin_src sh
+GERBIL_LOADPATH=src:t gxtest t/tutorial-feature-batch-test.ss
+GERBIL_LOADPATH=src:t gxtest t/tutorial-makefile-runtime-test.ss
+#+end_src
+
+Boundary result:
+
+- macro-authored extension flows still produce ordinary =flow= values;
+- macro-authored Docker/Store/custom requests still pass through extension
+  constructors;
+- macro-authored runtime descriptors still materialize manifests through
+  =runtime-command-descriptor->manifest=;
+- no macro executes Docker, CAS, Makefile, Tensorflow, subprocess, or artifact
+  work in Scheme.
+
+** 10.07.80 Next Slice
+
+- Add a strategy-facing projection for arrow graphs into plan/DAG receipts.
+- Keep all runtime execution behind runner/runtime-adapter or Marlin.
+- Extend tutorial examples only after the kernel laws stay green.
+
+** 10.07.90 Category Law Landing
+
+This slice makes the POO category object cover the Arrow pair projections,
+not only arr/map/fanout.
+
+- Code:
+  - =src/core/flow.ss= now stores =first= and =second= operations in
+    =flow-category-prototype=.
+  - =flow-category-first= and =flow-category-second= expose those operations
+    through the same category object used for arr/map/fanout.
+- Tests:
+  - =t/functional-flow-kernel-test.ss= checks category-owned first/second.
+  - Category identity and associativity are verified as observable laws.
+  - Identity remains task-backed in the current representation, so the law is
+    value-level rather than structural step equality.
+- Boundary:
+  - Scheme still owns composition and declaration metadata.
+  - Runtime scheduling, parallelism, and execution remain outside the kernel.
+
+** 10.07.100 DAG Receipt Projection Landing
+
+This slice exposes arrow graphs as report-only DAG receipts for strategy and
+Marlin-facing consumers.
+
+- Code:
+  - =src/core/plan.ss= now exports =flow-dag-receipt-kind=,
+    =execution-plan-root-node-ids=, =execution-plan-terminal-node-ids=,
+    =plan-node->dag-entry=, =execution-plan->dag-receipt=, and
+    =flow->dag-receipt=.
+  - The receipt contains node ids, dependency edges, root ids, terminal ids,
+    contracts, and report-only/runtime-executed markers.
+- Tests:
+  - =t/control-plane-test.ss= covers generic plan-to-DAG receipt projection.
+  - =t/functional-flow-kernel-test.ss= covers Arrow fanout to DAG receipt.
+- Boundary:
+  - The receipt omits raw step payloads so it does not leak executable Scheme
+    procedures or task internals.
+  - It is not a scheduler and does not submit adapter requests.
+
+The next functional slice should add a small extension-macro reference section
+to the downstream user-interface documentation, then decide whether text and
+agent-sandbox extension constructors need matching authoring macros.
+** 10.07.110 DAG Runtime Manifest Discovery Landing
+This slice puts the Arrow DAG receipt behind the same report-only discovery
+shape used by Marlin-facing runtime manifests.
+- =src/core/plan.ss= now exports =+flow-dag-runtime-manifest-schema+=,
+  =execution-plan->dag-runtime-manifest=, and =flow->dag-runtime-manifest=.
+- The manifest exposes =schema=, =bridge=, =producer=, =consumer=,
+  =operation=, =receipt-schema=, =dag-receipt=, topology summaries, and
+  =entrypoints=.
+- =consumer= is =marlin-agent-core= and =operation= is
+  =inspect-flow-dag=, so Marlin can discover the graph receipt without guessing
+  Scheme constructors.
+- =entrypoints= names the flow, execution-plan, and receipt projections as data;
+  it does not dispatch them.
+- =runtime-boundary= keeps local execution at =validation-only= and production
+  execution at =marlin-agent-core=.
+Proof:
+#+begin_src sh
+GERBIL_LOADPATH=src:t gxtest t/functional-flow-kernel-test.ss
+#+end_src
+Boundary result:
+- The manifest wraps the report-only DAG receipt.
+- It does not schedule nodes, submit adapter requests, write state, or execute
+  runtime work in Scheme.
+** 10.07.120 User-Facing Functional DAG Authoring Landing
+This slice exposes a compact Gerbil macro surface for users who want to write a
+Funflow-style DAG through functional composition.
+- =defpoo-flow-dag= defines a DAG flow as Arrow fanout over two already-defined
+  flow expressions.
+- =defpoo-flow-dag-artifacts= names the report-only DAG receipt and Marlin
+  runtime manifest for that flow.
+- Both macros expand to public =flow= and =plan= combinators. They do not
+  introduce an alist/record workflow language.
+Example:
+#+begin_src scheme
+(defpoo-flow-arr parse-input
+  parse-input
+  (lambda (x) x)
+  'text
+  'tokens)
+
+(defpoo-flow-arr score-input
+  score-input
+  (lambda (x) x)
+  'text
+  'score)
+
+(defpoo-flow-dag analyze-input
+  analyze-input
+  parse-input
+  score-input)
+
+(defpoo-flow-dag-artifacts analyze-input-receipt
+  analyze-input-manifest
+  analyze-input
+  'analyze-input-request)
+#+end_src
+Boundary result:
+- Users author with normal Scheme bindings and procedures.
+- The DAG receipt and manifest are named evidence artifacts.
+- Runtime work remains outside Scheme and is owned by =marlin-agent-core=.

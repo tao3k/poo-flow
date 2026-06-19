@@ -5,16 +5,26 @@
 ;;; Runtime contract: this module emits request data only.
 ;;; Runtime contract: image pulls and mounts stay behind runtime commands.
 ;;; Runtime contract: process control and CAS writes stay out of Scheme.
+;;; Dependency: generic sandbox resources live in =:sandbox/resource=.
 ;;; Policy evidence: tests should trust the installed extension registry.
 
-(import :core/api)
+(import :core/api
+        :sandbox/resource)
 
 (export docker-task-family-descriptor
+        +docker-task-input-receipt-schema+
         make-docker-task-family-registry
         docker-enable-strategy
         make-docker-enabled-strategy
         make-docker-enabled-adapter
         make-docker-run-config
+        make-docker-task-input
+        docker-task-input?
+        docker-task-input-input-bindings
+        docker-task-input-args-vals
+        make-empty-docker-task-input
+        docker-task-input-merge
+        docker-task-input->request
         make-docker-task
         task-docker-config
         task-docker-image
@@ -22,13 +32,55 @@
         task-docker-args
         task-docker-volumes
         task-docker-output-policy
-        docker-flow)
+        docker-flow
+        docker-task-flow
+        make-docker-task-input-receipt
+        docker-task-input-receipt?
+        docker-task-input-receipt-schema
+        docker-task-input-receipt-flow
+        docker-task-input-receipt-image
+        docker-task-input-receipt-command
+        docker-task-input-receipt-args
+        docker-task-input-receipt-input-bindings
+        docker-task-input-receipt-args-vals
+        docker-task-input-receipt-output-policy
+        docker-task-input-receipt-runtime-executed
+        docker-flow->task-input-receipt)
 
-;; TaskFamilyDescriptor <- Unit
+;;; Boundary: DockerTaskInput receipts use an explicit schema symbol so Marlin
+;;; can discover report-only handoff data without guessing task entrypoints.
+;; : (-> Unit Symbol)
+(def +docker-task-input-receipt-schema+
+  'poo-flow.extensions.docker-task-input-receipt.v1)
+
+;;; Docker task input mirrors Funflow's DockerTaskInput: inputBindings plus
+;;; placeholder argument values. It is input data to the flow, not task config.
+;; : (-> [SandboxVolumeBinding] Alist DockerTaskInput)
+(defstruct docker-task-input
+  (input-bindings
+   args-vals)
+  transparent: #t)
+
+;;; Report-only evidence for the Docker input/config boundary. It does not mean
+;;; a container ran, an image was pulled, or a CAS output was written.
+;; : (-> Symbol Symbol Image Command [Arg] [VolumeBinding] Alist OutputPolicy Boolean DockerTaskInputReceipt)
+(defstruct docker-task-input-receipt
+  (schema
+   flow
+   image
+   command
+   args
+   input-bindings
+   args-vals
+   output-policy
+   runtime-executed)
+  transparent: #t)
+
+;; : (-> Unit TaskFamilyDescriptor)
 (def docker-task-family-descriptor
   (make-task-family-descriptor 'docker 'docker 'adapter 'rust-or-external-runtime 'submit))
 
-;; TaskFamilyRegistry <- [TaskFamilyRegistry]
+;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-docker-task-family-registry . maybe-registry)
   (task-family-registry-extend (if (null? maybe-registry)
                                  default-task-family-registry
@@ -37,7 +89,7 @@
 
 ;;; Docker-aware strategies are opt-in wrappers over core strategy policy. Core
 ;;; stays unaware of Docker while extension users still get normal validation.
-;; Strategy <- Strategy
+;; : (-> Strategy Strategy)
 (def (docker-enable-strategy strategy)
   (make-strategy (strategy-name strategy)
                  (append (strategy-capabilities strategy) '(docker))
@@ -47,11 +99,13 @@
 
 ;;; The default constructor starts from local eager policy; composition helpers
 ;;; can reuse docker-enable-strategy when Docker is only one workflow capability.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-docker-enabled-strategy)
   (docker-enable-strategy (make-local-eager-strategy)))
 
-;; RuntimeAdapter <- RuntimeAdapter
+;;; Adapter extension is structural: it preserves submit/fetch/store handlers and
+;;; only advertises Docker capability to strategy validation.
+;; : (-> RuntimeAdapter RuntimeAdapter)
 (def (make-docker-enabled-adapter adapter)
   (make-runtime-adapter (runtime-adapter-name adapter)
                         (append (runtime-adapter-capabilities adapter) '(docker))
@@ -60,16 +114,69 @@
                         (runtime-adapter-store-putter adapter)
                         (runtime-adapter-store-getter adapter)))
 
-;; Value <- Alist Symbol Value
+;;; Option lookup is intentionally local to the extension so Docker defaults do
+;;; not leak into core run-config construction.
+;; : (-> Alist Symbol Value Value)
 (def (docker-option options key default)
   (let (entry (assoc key options))
     (if entry
       (cdr entry)
       default)))
 
+;;; Boundary: empty Docker inputs are the monoidal zero for composition tests
+;;; and config-only tasks before a runtime supplies CAS mounts.
+;; : (-> Unit DockerTaskInput)
+(def (make-empty-docker-task-input)
+  (make-docker-task-input '() '()))
+
+;;; Boundary: request projection is local to Docker options. Shared sandbox
+;;; resource projection lives in =:extensions/sandbox-resource=.
+;; : (-> Alist Symbol Value Value)
+(def (docker-alist-ref alist key default)
+  (let (entry (assoc key alist))
+    (if entry
+      (cdr entry)
+      default)))
+
+;; : (-> Symbol Alist Boolean)
+(def (docker-arg-key-seen? key args)
+  (if (assoc key args) #t #f))
+
+;; : (-> Alist Alist Alist)
+(def (docker-args-vals-append-left-biased left right)
+  (if (null? right)
+    left
+    (let ((entry (car right)))
+      (if (docker-arg-key-seen? (car entry) left)
+        (docker-args-vals-append-left-biased left (cdr right))
+        (docker-args-vals-append-left-biased
+         (append left (list entry))
+         (cdr right))))))
+
+;;; Boundary: Funflow's DockerTaskInput semigroup is left-biased for duplicate
+;;; mounts and placeholder values, so earlier composition layers keep priority.
+;; : (-> DockerTaskInput DockerTaskInput DockerTaskInput)
+(def (docker-task-input-merge left right)
+  (make-docker-task-input
+   (sandbox-volume-bindings-merge
+    (docker-task-input-input-bindings left)
+    (docker-task-input-input-bindings right))
+   (docker-args-vals-append-left-biased
+    (docker-task-input-args-vals left)
+    (docker-task-input-args-vals right))))
+
+;;; Boundary: runtime request shape is data-only; Rust/Marlin chooses Docker
+;;; flags, resolves store items, and writes CAS outputs.
+;; : (-> DockerTaskInput Alist)
+(def (docker-task-input->request input)
+  (list (cons 'input-bindings
+              (sandbox-volume-bindings->request
+               (docker-task-input-input-bindings input)))
+        (cons 'args-vals (docker-task-input-args-vals input))))
+
 ;;; The configured Docker run entrypoint installs the extension task registry
 ;;; and adapter capability while preserving core run-config behavior.
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-docker-run-config . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (command (docker-option options 'runtime-command #f)))
@@ -84,7 +191,7 @@
 
 ;;; Docker tasks are first-class extension request data for the runtime
 ;;; boundary. Rust owns image pulls, mounts, process control, and CAS output.
-;; Task <- Symbol Image Command [Arg] [VolumeBinding] OutputPolicy Contract Contract
+;; : (-> Symbol Image Command [Arg] [SandboxVolumeBinding] OutputPolicy Contract Contract Task)
 (def (make-docker-task name image command args volumes output-policy input-contract output-contract)
   (make-task name
              'docker
@@ -98,13 +205,15 @@
              output-contract
              #f))
 
-;; DockerConfig | #f <- Task
+;;; Task config extraction refuses non-Docker tasks instead of assuming the
+;;; request payload shape belongs to this extension.
+;; : (-> Task (U DockerConfig #f))
 (def (task-docker-config task)
   (if (eq? (task-kind task) 'docker)
     (cadr (task-request task))
     #f))
 
-;; Value <- Task Symbol Value
+;; : (-> Task Symbol Value Value)
 (def (task-docker-config-ref task key default)
   (let ((config (task-docker-config task)))
     (if config
@@ -114,27 +223,27 @@
           default))
       default)))
 
-;; Image | #f <- Task
+;; : (-> Task (U Image #f))
 (def (task-docker-image task)
   (task-docker-config-ref task 'image #f))
 
-;; Command | #f <- Task
+;; : (-> Task (U Command #f))
 (def (task-docker-command task)
   (task-docker-config-ref task 'command #f))
 
-;; [Arg] <- Task
+;; : (-> Task [Arg])
 (def (task-docker-args task)
   (task-docker-config-ref task 'args '()))
 
-;; [VolumeBinding] <- Task
+;; : (-> Task [SandboxVolumeBinding])
 (def (task-docker-volumes task)
   (task-docker-config-ref task 'volumes '()))
 
-;; OutputPolicy | #f <- Task
+;; : (-> Task (U OutputPolicy #f))
 (def (task-docker-output-policy task)
   (task-docker-config-ref task 'output-policy #f))
 
-;; Flow <- Symbol Image Command [Arg] [VolumeBinding] OutputPolicy Contract Contract
+;; : (-> Symbol Image Command [Arg] [SandboxVolumeBinding] OutputPolicy Contract Contract Flow)
 (def (docker-flow name image command args volumes output-policy input-contract output-contract)
   (task-flow name
              (make-docker-task name
@@ -145,3 +254,48 @@
                                output-policy
                                input-contract
                                output-contract)))
+
+;;; Funflow's dockerFlow takes DockerTaskConfig and returns a flow from
+;;; DockerTaskInput to a CAS item. This constructor preserves that boundary.
+;; : (-> Symbol Image Command [Arg] Flow)
+(def (docker-task-flow name image command args)
+  (docker-flow name
+               image
+               command
+               args
+               '()
+               'cas-item
+               'docker-task-input
+               'cas-item))
+
+;;; Boundary: receipt helpers validate that the flow is backed by a Docker task
+;;; before projecting report-only handoff data.
+;; : (-> Flow Task)
+(def (docker-flow-primary-task flow)
+  (let (steps (flow-steps flow))
+    (if (and (pair? steps)
+             (task? (car steps))
+             (eq? (task-kind (car steps)) 'docker))
+      (car steps)
+      (raise-control-plane-failure
+       'docker-extension
+       'expected-docker-flow
+       "expected a flow whose first step is a docker task"
+       (list (cons 'flow (flow-name flow)))))))
+
+;;; Project the Funflow DockerTaskConfig + DockerTaskInput boundary into a
+;;; receipt that Marlin/Rust can consume before any container execution exists.
+;; : (-> Flow DockerTaskInput DockerTaskInputReceipt)
+(def (docker-flow->task-input-receipt flow input)
+  (let (task (docker-flow-primary-task flow))
+    (make-docker-task-input-receipt
+     +docker-task-input-receipt-schema+
+     (flow-name flow)
+     (task-docker-image task)
+     (task-docker-command task)
+     (task-docker-args task)
+     (sandbox-volume-bindings->request
+      (docker-task-input-input-bindings input))
+     (docker-task-input-args-vals input)
+     (task-docker-output-policy task)
+     #f)))

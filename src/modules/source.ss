@@ -9,156 +9,206 @@
 ;;; Future loader backends must consume these values from outside this owner.
 ;;; Agents should treat this file as the source/import shape authority.
 ;;; No function here may read a path, query a registry, or evaluate a profile.
+;; | SourceRefValue = Path | Symbol | PooModuleSourceRef | Value
+;; | PooModuleSourceRefCandidate = Value
 
 (import (only-in :clan/poo/object .o .ref object?)
         :modules/interface)
 
-(export make-poo-module-source-ref
-        poo-module-source-ref?
-        poo-module-source-ref-kind
-        poo-module-source-ref-value
-        poo-module-source-ref-metadata
-        make-poo-module-local-source
-        make-poo-module-package-source
-        make-poo-module-registry-source
-        make-poo-module-generated-source
-        poo-module-source-ref=?
-        poo-module-source-ref->alist
-        poo-local-source
-        poo-source-ref
-        poo-module-import-source-ref?
-        poo-module-import-local-source?
-        poo-module-import-normalize-source
-        poo-import
-        poo-imports
-        poo-imports-append
-        poo-extensions
-        poo-extensions-append
-        poo-import?)
+(export make-poo-flow-module-source-ref
+        poo-flow-module-source-ref?
+        poo-flow-module-source-ref-kind
+        poo-flow-module-source-ref-value
+        poo-flow-module-source-ref-metadata
+        make-poo-flow-module-local-source
+        make-poo-flow-module-custom-config-source
+        make-poo-flow-module-package-source
+        make-poo-flow-module-standard-library-source
+        make-poo-flow-module-registry-source
+        make-poo-flow-module-generated-source
+        poo-flow-module-source-ref=?
+        poo-flow-module-source-ref->alist
+        poo-flow-module-custom-config-entrypoint
+        poo-flow-local-source
+        poo-flow-custom-source
+        poo-flow-standard-library-source
+        poo-flow-source-ref
+        poo-flow-module-import-source-ref?
+        poo-flow-module-import-local-source?
+        poo-flow-module-import-normalize-source
+        poo-flow-import
+        poo-flow-imports
+        poo-flow-imports-append
+        poo-flow-extensions
+        poo-flow-extensions-append
+        poo-flow-import?)
 
 ;;; Boundary: source refs are metadata only and shared by catalog/import code.
 ;;; Intent: keep loader provenance comparable without granting this layer IO authority.
-;; PooModuleSourceRef <- Symbol Value Alist
-(defstruct poo-module-source-ref
+;; : (-> Symbol SourceRefValue Alist PooModuleSourceRef)
+(defstruct poo-flow-module-source-ref
   (kind
    value
    metadata)
   transparent: #t)
 
 ;;; Boundary: local sources are path metadata, not file reads.
-;; PooModuleSourceRef <- Path
-(def (make-poo-module-local-source path)
-  (make-poo-module-source-ref 'local path '()))
+;; : (-> Path PooModuleSourceRef)
+(def (make-poo-flow-module-local-source path)
+  (make-poo-flow-module-source-ref 'local path '()))
+
+;;; Boundary: custom module directories are user-owned; the module-system only
+;;; records the config.ss entrypoint that a future loader may consume.
+;; : (-> Path Path)
+(def (poo-flow-module-custom-config-entrypoint module-root-path)
+  (let ((path-length (string-length module-root-path)))
+    (if (and (> path-length 0)
+             (char=? (string-ref module-root-path (- path-length 1)) #\/))
+      (string-append module-root-path "config.ss")
+      (string-append module-root-path "/config.ss"))))
+
+;;; Boundary: custom sources stay local source refs so loader matching remains
+;;; deterministic; root/entrypoint details live in metadata.
+;; : (-> Path PooModuleSourceRef)
+(def (make-poo-flow-module-custom-config-source module-root-path)
+  (let ((entrypoint
+         (poo-flow-module-custom-config-entrypoint module-root-path)))
+    (make-poo-flow-module-source-ref 'local entrypoint
+                                     (list
+                                      (cons 'kind
+                                            poo-flow-module-import-local-source-kind)
+                                      (cons 'custom-module-root module-root-path)
+                                      (cons 'entrypoint entrypoint)
+                                      (cons 'entrypoint-role 'config)))))
 
 ;;; Boundary: package sources are symbolic references for future loaders.
-;; PooModuleSourceRef <- Symbol
-(def (make-poo-module-package-source package-name)
-  (make-poo-module-source-ref 'package package-name '()))
+;; : (-> Symbol PooModuleSourceRef)
+(def (make-poo-flow-module-package-source package-name)
+  (make-poo-flow-module-source-ref 'package package-name '()))
+
+;;; Boundary: standard-library sources name upstream built-in modules without
+;;; importing or realizing them at declaration time.
+;; : (-> Symbol PooModuleSourceRef)
+(def (make-poo-flow-module-standard-library-source module-name)
+  (make-poo-flow-module-source-ref 'standard-library module-name
+                                   (list (cons 'library 'standard))))
 
 ;;; Boundary: registry sources name catalogs without querying them.
-;; PooModuleSourceRef <- Symbol
-(def (make-poo-module-registry-source registry-name)
-  (make-poo-module-source-ref 'registry registry-name '()))
+;; : (-> Symbol PooModuleSourceRef)
+(def (make-poo-flow-module-registry-source registry-name)
+  (make-poo-flow-module-source-ref 'registry registry-name '()))
 
 ;;; Boundary: generated sources are provenance tags for constructed modules.
-;; PooModuleSourceRef <- Symbol
-(def (make-poo-module-generated-source module-name)
-  (make-poo-module-source-ref 'generated module-name '()))
+;; : (-> Symbol PooModuleSourceRef)
+(def (make-poo-flow-module-generated-source module-name)
+  (make-poo-flow-module-source-ref 'generated module-name '()))
 
 ;;; Boundary: source equality ignores metadata and compares resolver identity.
-;; Boolean <- PooModuleSourceRef PooModuleSourceRef
-(def (poo-module-source-ref=? left right)
-  (and (eq? (poo-module-source-ref-kind left)
-            (poo-module-source-ref-kind right))
-       (equal? (poo-module-source-ref-value left)
-               (poo-module-source-ref-value right))))
+;; : (-> PooModuleSourceRef PooModuleSourceRef Boolean)
+(def (poo-flow-module-source-ref=? left right)
+  (and (eq? (poo-flow-module-source-ref-kind left)
+            (poo-flow-module-source-ref-kind right))
+       (equal? (poo-flow-module-source-ref-value left)
+               (poo-flow-module-source-ref-value right))))
 
 ;;; Boundary: source refs project to alists only at inspection boundaries.
-;; Alist <- PooModuleSourceRef
-(def (poo-module-source-ref->alist source-ref)
-  (list (cons 'kind (poo-module-source-ref-kind source-ref))
-        (cons 'value (poo-module-source-ref-value source-ref))
-        (cons 'metadata (poo-module-source-ref-metadata source-ref))))
+;; : (-> PooModuleSourceRef Alist)
+(def (poo-flow-module-source-ref->alist source-ref)
+  (list (cons 'kind (poo-flow-module-source-ref-kind source-ref))
+        (cons 'value (poo-flow-module-source-ref-value source-ref))
+        (cons 'metadata (poo-flow-module-source-ref-metadata source-ref))))
 
 ;;; Boundary: import-local sources are catalog-compatible source refs.
-;; PooModuleSourceRef <- Path
-(def (poo-local-source source-path)
-  (make-poo-module-source-ref 'local source-path
-                              (list (cons 'kind poo-module-import-local-source-kind))))
+;; : (-> Path PooModuleSourceRef)
+(def (poo-flow-local-source source-path)
+  (make-poo-flow-module-source-ref 'local source-path
+                                   (list (cons 'kind poo-flow-module-import-local-source-kind))))
+
+;;; Boundary: user-facing shorthand for a custom module directory.
+;; : (-> Path PooModuleSourceRef)
+(def (poo-flow-custom-source module-root-path)
+  (make-poo-flow-module-custom-config-source module-root-path))
+
+;;; Boundary: shorthand for upstream standard-library module source refs.
+;; : (-> Symbol PooModuleSourceRef)
+(def (poo-flow-standard-library-source module-name)
+  (make-poo-flow-module-standard-library-source module-name))
 
 ;;; Boundary: arbitrary source values are wrapped without interpretation.
-;; PooModuleSourceRef <- SourceRefInput
-(def (poo-source-ref source-value)
+;; : (-> SourceRefInput PooModuleSourceRef)
+(def (poo-flow-source-ref source-value)
   (cond
-   ((poo-module-source-ref? source-value) source-value)
+   ((poo-flow-module-source-ref? source-value) source-value)
    (else
-    (make-poo-module-source-ref 'source source-value
-                                (list (cons 'kind poo-module-import-source-ref-kind))))))
+    (make-poo-flow-module-source-ref
+     'source
+     source-value
+     (list (cons 'kind poo-flow-module-import-source-ref-kind))))))
 
-;; Boolean <- SourceRefInput
-(def (poo-module-import-source-ref? value)
-  (poo-module-source-ref? value))
+;; : (-> SourceRefInput Boolean)
+(def (poo-flow-module-import-source-ref? value)
+  (poo-flow-module-source-ref? value))
 
-;; Boolean <- SourceRefInput
-(def (poo-module-import-local-source? value)
-  (and (poo-module-source-ref? value)
-       (eq? (poo-module-source-ref-kind value) 'local)))
+;; : (-> SourceRefInput Boolean)
+(def (poo-flow-module-import-local-source? value)
+  (and (poo-flow-module-source-ref? value)
+       (eq? (poo-flow-module-source-ref-kind value) 'local)))
 
-;; PooModuleSourceRef <- SourceRefInput
-(def (poo-module-import-normalize-source source-value)
+;; : (-> SourceRefInput PooModuleSourceRef)
+(def (poo-flow-module-import-normalize-source source-value)
   (cond
    ((string? source-value)
-    (poo-local-source source-value))
-   ((poo-module-import-source-ref? source-value)
+    (poo-flow-local-source source-value))
+   ((poo-flow-module-import-source-ref? source-value)
     source-value)
    (else
-    (poo-source-ref source-value))))
+    (poo-flow-source-ref source-value))))
 
 ;;; Boundary: import values keep source identity separate from profile payloads.
 ;;; Intent: a source/profile pair can be resolved or projected without parsing a file path.
-;; PooImport <- MaybePooModuleSourceRef ModuleImportProfile
-(def (make-poo-import source-ref-value profile-value)
-  (.o kind: poo-module-import-kind
+;; : (-> MaybePooModuleSourceRef ModuleImportProfile PooImport)
+(def (make-poo-flow-import source-ref-value profile-value)
+  (.o kind: poo-flow-module-import-kind
       source-ref: source-ref-value
       profile: profile-value))
 
 ;;; Boundary: one-arg import is profile-only, two-arg import binds source+profile.
-;; PooImport <- ModuleImportArg...
-(def (poo-import . import-values)
+;; : (-> ModuleImportArg... PooImport)
+(def (poo-flow-import . import-values)
   (cond
    ;; Profile-only imports are already in-memory module/profile values.
    ((= (length import-values) 1)
-    (make-poo-import #f (car import-values)))
+    (make-poo-flow-import #f (car import-values)))
    ;; Source/profile imports preserve source identity without invoking a loader.
    ((= (length import-values) 2)
-    (make-poo-import
-     (poo-module-import-normalize-source (car import-values))
+    (make-poo-flow-import
+     (poo-flow-module-import-normalize-source (car import-values))
      (cadr import-values)))
    (else
-    (error "poo-import expects profile or source/profile"))))
+    (error "poo-flow-import expects profile or source/profile"))))
 
 ;;; Boundary: import lists preserve caller order for closure expansion.
-;; [PooImport] <- Value...
-(def (poo-imports . import-values)
+;; : (-> ModuleImportValue... [ModuleImportValue])
+(def (poo-flow-imports . import-values)
   import-values)
 
 ;;; Boundary: inherited imports are prepended before direct imports.
-;; [PooImport] <- [PooImport] [PooImport]
-(def (poo-imports-append inherited-imports direct-imports)
+;; : (-> [PooImport] [PooImport] [PooImport])
+(def (poo-flow-imports-append inherited-imports direct-imports)
   (append inherited-imports direct-imports))
 
 ;;; Boundary: extensions stay first-class values until projection.
-;; [ModuleExtension] <- ModuleExtension...
-(def (poo-extensions . extension-values)
+;; : (-> ModuleExtension... [ModuleExtension])
+(def (poo-flow-extensions . extension-values)
   extension-values)
 
 ;;; Boundary: inherited extensions are prepended before direct extensions.
-;; [ModuleExtension] <- [ModuleExtension] [ModuleExtension]
-(def (poo-extensions-append inherited-extensions direct-extensions)
+;; : (-> [ModuleExtension] [ModuleExtension] [ModuleExtension])
+(def (poo-flow-extensions-append inherited-extensions direct-extensions)
   (append inherited-extensions direct-extensions))
 
-;; Boolean <- ModuleImportCandidate
-(def (poo-import? value)
+;; : (-> ModuleImportCandidate Boolean)
+(def (poo-flow-import? value)
   (and (object? value)
-       (poo-module-object-has-slot? value 'kind)
-       (poo-module-kind=? (.ref value 'kind) poo-module-import-kind)))
+       (poo-flow-module-object-has-slot? value 'kind)
+       (poo-flow-module-kind=? (.ref value 'kind) poo-flow-module-import-kind)))

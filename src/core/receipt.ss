@@ -34,7 +34,7 @@
 ;;; detect ordering drift even when task names repeat.
 ;;; Policy records the adapter-stable strategy snapshot that produced the
 ;;; frontier, cache mode, and failure behavior for this observation.
-;; Receipt <- Flow Task Symbol NodeId Strategy Policy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt]
+;; : (-> Flow Task Symbol NodeId Strategy Policy AdapterDecision RequestId Value Value Cache [Id] Symbol Error [Receipt] Receipt)
 (defstruct receipt
   (flow
    task
@@ -53,11 +53,11 @@
    children)
   transparent: #t)
 
-;; Boolean <- Receipt
+;; : (-> Receipt Boolean)
 (def (receipt-ok? receipt)
   (eq? (receipt-status receipt) 'ok))
 
-;; Boolean <- Receipt
+;; : (-> Receipt Boolean)
 (def (receipt-failed? receipt)
   (eq? (receipt-status receipt) 'failed))
 
@@ -65,14 +65,14 @@
 ;;; while preserving child order with a stable path.
 ;;; Each event omits raw input/output values so external persistence can store
 ;;; control-plane evidence without capturing potentially large runtime payloads.
-;; [AuditEvent] <- Receipt
+;; : (-> Receipt [AuditEvent])
 (def (receipt->audit-events receipt)
   (receipt->audit-events-at receipt '()))
 
 ;;; A run summary keeps root status and aggregate counts next to the event log.
 ;;; This is the durable handoff shape for Rust or external storage layers that
 ;;; want audit evidence before they implement full replay execution.
-;; RunSummary <- Receipt
+;; : (-> Receipt RunSummary)
 (def (receipt->run-summary receipt)
   (list (cons 'flow (receipt-flow receipt))
         (cons 'kind (receipt-kind receipt))
@@ -86,27 +86,27 @@
 
 ;;; Event count is tree cardinality, not step count; the root receipt is counted
 ;;; because it carries run-level frontier and status evidence.
-;; Nat <- Receipt
+;; : (-> Receipt Nat)
 (def (receipt-event-count receipt)
   (+ 1 (receipt-list-event-count (receipt-children receipt))))
 
 ;;; Adapter request count follows request-id evidence on receipts instead of
 ;;; task kind names, keeping the summary tied to observed adapter decisions.
-;; Nat <- Receipt
+;; : (-> Receipt Nat)
 (def (receipt-adapter-request-count receipt)
   (+ (if (receipt-request-id receipt) 1 0)
      (receipt-list-adapter-request-count (receipt-children receipt))))
 
 ;;; Path construction is separated from event shape so nested subflow receipts
 ;;; can be replayed without flattening away hierarchy.
-;; [AuditEvent] <- Receipt [Nat]
+;; : (-> Receipt [Nat] [AuditEvent])
 (def (receipt->audit-events-at receipt path)
   (cons (receipt->audit-event receipt path)
         (child-receipts->audit-events (receipt-children receipt) path 0)))
 
 ;;; Audit events are intentionally small alists: they describe control-plane
 ;;; decisions, not application payloads.
-;; AuditEvent <- Receipt [Nat]
+;; : (-> Receipt [Nat] AuditEvent)
 (def (receipt->audit-event receipt path)
   (list (cons 'path path)
         (cons 'flow (receipt-flow receipt))
@@ -126,7 +126,7 @@
 ;;; Intent: recursively append child event streams in child ordinal order.
 ;;; The ordinal path is the replay cursor; it remains stable even if task names
 ;;; repeat inside nested flows.
-;; [AuditEvent] <- [Receipt] [Nat] Nat
+;; : (-> [Receipt] [Nat] Nat [AuditEvent])
 (def (child-receipts->audit-events children parent-path ordinal)
   (if (null? children)
     '()
@@ -136,14 +136,14 @@
                                           parent-path
                                           (+ ordinal 1)))))
 
-;; Nat <- [Receipt]
+;; : (-> [Receipt] Nat)
 (def (receipt-list-event-count receipts)
   (if (null? receipts)
     0
     (+ (receipt-event-count (car receipts))
        (receipt-list-event-count (cdr receipts)))))
 
-;; Nat <- [Receipt]
+;; : (-> [Receipt] Nat)
 (def (receipt-list-adapter-request-count receipts)
   (if (null? receipts)
     0

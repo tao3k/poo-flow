@@ -9,7 +9,7 @@
 
 (export agent-sandbox-descriptor-test)
 
-;; AdapterResult <- Value Alist
+;; : (-> Value Alist AdapterResult)
 (def (runtime-result value artifact)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id '(runtime agent-sandbox-test))
@@ -19,7 +19,7 @@
         (cons 'error #f)
         (cons 'metadata '((runtime . agent-sandbox-descriptor-test)))))
 
-;; Alist <- ExecutionRequest
+;; : (-> ExecutionRequest Alist)
 (def (request-config request)
   (cadr (execution-request-request request)))
 

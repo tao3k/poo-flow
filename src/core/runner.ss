@@ -31,12 +31,12 @@
         runner-run-value-or-recover
         runner-run-replay-report)
 
-;; RunResult <- Value Receipt
+;; : (-> Value Receipt RunResult)
 (defstruct run-result
   (value receipt)
   transparent: #t)
 
-;; RunnerState <- Strategy RuntimeAdapter TaskFamilyRegistry FlowDeclarationRegistry
+;; : (-> Strategy RuntimeAdapter TaskFamilyRegistry FlowDeclarationRegistry RunnerState)
 (defstruct runner-state
   (strategy
    adapter
@@ -46,7 +46,7 @@
 
 ;;; Public runner construction keeps the two-argument control-plane API stable
 ;;; while allowing configured entrypoints to supply POO descriptor registries.
-;; Runner <- Strategy RuntimeAdapter [TaskFamilyRegistry] [FlowDeclarationRegistry]
+;; : (-> Strategy RuntimeAdapter [TaskFamilyRegistry] [FlowDeclarationRegistry] Runner)
 (def (make-runner strategy adapter . registries)
   (make-runner-state strategy
                      adapter
@@ -57,27 +57,27 @@
                        default-flow-declaration-registry
                        (cadr registries))))
 
-;; Boolean <- RunnerCandidate
+;; : (-> RunnerCandidate Boolean)
 (def (runner? runner)
   (runner-state? runner))
 
-;; Strategy <- Runner
+;; : (-> Runner Strategy)
 (def (runner-strategy runner)
   (runner-state-strategy runner))
 
-;; RuntimeAdapter <- Runner
+;; : (-> Runner RuntimeAdapter)
 (def (runner-adapter runner)
   (runner-state-adapter runner))
 
-;; TaskFamilyRegistry <- Runner
+;; : (-> Runner TaskFamilyRegistry)
 (def (runner-task-registry runner)
   (runner-state-task-registry runner))
 
-;; FlowDeclarationRegistry <- Runner
+;; : (-> Runner FlowDeclarationRegistry)
 (def (runner-flow-registry runner)
   (runner-state-flow-registry runner))
 
-;; ExecutionPlan <- Runner Flow
+;; : (-> Runner Flow ExecutionPlan)
 (def (runner-plan runner flow)
   ((strategy-planner-for-flow-in
     (runner-strategy runner)
@@ -87,7 +87,7 @@
 
 ;;; Frontier queries follow the same runner boundary as execution: flow is
 ;;; lowered once, then strategy decides which graph facts are policy-visible.
-;; [PlanNode] <- Runner Flow [Id]
+;; : (-> Runner Flow [Id] [PlanNode])
 (def (runner-ready-frontier runner flow completed-node-ids)
   (let ((strategy (runner-strategy runner)))
     (strategy-ready-frontier strategy
@@ -96,20 +96,20 @@
 
 ;;; Id-only frontier output is the adapter-friendly form; it avoids leaking
 ;;; task closures or Scheme plan-node payloads across runtime boundaries.
-;; [Id] <- Runner Flow [Id]
+;; : (-> Runner Flow [Id] [Id])
 (def (runner-ready-frontier-ids runner flow completed-node-ids)
   (let ((strategy (runner-strategy runner)))
     (strategy-ready-frontier-ids strategy
                                  (runner-plan runner flow)
                                  completed-node-ids)))
 
-;; Boolean <- Runner Flow
+;; : (-> Runner Flow Boolean)
 (def (runner-validate runner flow)
   (runner-validate-plan runner (runner-plan runner flow)))
 
 ;;; Replay reporting runs the normal interpreter first, then validates the
 ;;; emitted receipt against the same plan that drove execution.
-;; ReplayReport <- Runner Flow Input
+;; : (-> Runner Flow Input ReplayReport)
 (def (runner-run-replay-report runner flow input)
   (let* ((plan (runner-plan runner flow))
          (result (runner-run runner flow input)))
@@ -117,7 +117,7 @@
 
 ;;; Boundary: validation is the only pre-run traversal over planned nodes.
 ;;; Invariant: each node is checked against both strategy and adapter support.
-;; Boolean <- Runner ExecutionPlan
+;; : (-> Runner ExecutionPlan Boolean)
 (def (runner-validate-plan runner plan)
   (let ((strategy (runner-strategy runner))
         (adapter (runner-adapter runner))
@@ -126,16 +126,16 @@
               (execution-plan-nodes plan))
     #t))
 
-;; Boolean <- TaskFamilyRegistry Strategy RuntimeAdapter PlanNode
+;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter PlanNode Boolean)
 (def (validate-plan-node task-registry strategy adapter node)
   (validate-step task-registry strategy adapter (plan-node-step node)))
 
-;; Boolean <- TaskFamilyRegistry Strategy RuntimeAdapter Step
+;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter Step Boolean)
 (def (validate-step task-registry strategy adapter step)
   (when (task? step)
     (validate-task task-registry strategy adapter step)))
 
-;; Boolean <- TaskFamilyRegistry Strategy RuntimeAdapter Task
+;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter Task Boolean)
 (def (validate-task task-registry strategy adapter task)
   (let ((capability (task-capability-in task-registry task)))
     (unless (memq capability (strategy-capabilities strategy))
@@ -156,14 +156,14 @@
                (cons 'capability capability)
                (cons 'task-kind (task-kind task))))))))
 
-;; Policy <- Runner
+;; : (-> Runner Policy)
 (def (runner-registry-policy runner)
   (list (cons 'task-registry
               (task-family-registry-name (runner-task-registry runner)))
         (cons 'flow-registry
               (flow-declaration-registry-name (runner-flow-registry runner)))))
 
-;; Policy <- Runner Strategy [Id]
+;; : (-> Runner Strategy [Id] Policy)
 (def (runner-execution-policy->alist runner strategy frontier)
   (append (execution-policy->alist
            (strategy-execution-policy strategy frontier))
@@ -171,7 +171,7 @@
 
 ;;; Execution returns both the final value and a root receipt that contains the
 ;;; child receipts produced by each planned step.
-;; RunResult <- Runner Flow Input
+;; : (-> Runner Flow Input RunResult)
 (def (runner-run runner flow input)
   (let ((strategy (runner-strategy runner)))
     (let ((plan (runner-plan runner flow)))
@@ -201,7 +201,7 @@
 ;;; Boundary:
 ;;; - Recovery handles both local thrown failures and adapter-failed receipts.
 ;;; - Successful runs return the normal run value.
-;; Value <- Runner Flow Input FailureHandler
+;; : (-> Runner Flow Input FailureHandler Value)
 (def (runner-run-value-or-recover runner flow input handler)
   (try-control-plane
    (lambda ()
@@ -215,7 +215,7 @@
 ;;; Runner-level try projection mirrors Funflow's =tryE= observable contract:
 ;;; local throws and failed adapter receipts become left values, while normal
 ;;; completion keeps the successful value on the right.
-;; TryResult <- Runner Flow Input
+;; : (-> Runner Flow Input TryResult)
 (def (runner-run-either runner flow input)
   (try-control-plane
    (lambda ()
@@ -229,13 +229,13 @@
 ;;; Invariant:
 ;;; - Receipt trees preserve nested subflow and adapter evidence.
 ;;; - The first failed receipt is the recovery target closest to execution.
-;; MaybeReceipt <- Receipt
+;; : (-> Receipt MaybeReceipt)
 (def (first-failed-receipt receipt)
   (if (receipt-failed? receipt)
     receipt
     (first-failed-receipt-in (receipt-children receipt))))
 
-;; MaybeReceipt <- [Receipt]
+;; : (-> [Receipt] MaybeReceipt)
 (def (first-failed-receipt-in receipts)
   (if (null? receipts)
     #f
@@ -248,7 +248,7 @@
 ;;; Invariant: completed ids are audit state for frontier receipts, while the
 ;;; values table is the dataflow state used to feed dependency outputs into
 ;;; later DAG nodes.
-;; StepSequenceResult <- Runner ExecutionPlan Strategy [PlanNode] Input [Id] [Receipt] Alist
+;; : (-> Runner ExecutionPlan Strategy [PlanNode] Input [Id] [Receipt] Alist StepSequenceResult)
 (def (run-plan-nodes runner plan strategy nodes input completed-node-ids receipts values)
   (if (null? nodes)
     (cons (plan-output-value plan values input) receipts)
@@ -264,7 +264,7 @@
 
 ;;; Node dispatch stays shape-based: task nodes execute work, flow nodes wrap
 ;;; nested runs, and branch nodes join dependency values.
-;; StepResult <- Runner ExecutionPlan Strategy PlanNode Input [Id]
+;; : (-> Runner ExecutionPlan Strategy PlanNode Input [Id] StepResult)
 (def (run-plan-node runner plan strategy node input frontier)
   (let ((step (plan-node-step node)))
     (cond
@@ -274,6 +274,8 @@
       (let ((nested (runner-run runner step input)))
         (cons (run-result-value nested)
               (make-flow-step-receipt runner plan strategy node step input frontier nested))))
+     ((try-step? step)
+      (run-try-step runner plan strategy node step input frontier))
      ((branch-step? step)
       (cons input
             (make-branch-receipt runner plan strategy node step input frontier)))
@@ -287,7 +289,7 @@
 
 ;;; Flow nodes wrap nested receipts so top-level replay can still match each
 ;;; planned DAG node to one top-level child receipt.
-;; Receipt <- Runner ExecutionPlan Strategy PlanNode Flow Input [Id] RunResult
+;; : (-> Runner ExecutionPlan Strategy PlanNode Flow Input [Id] RunResult Receipt)
 (def (make-flow-step-receipt runner plan strategy node flow input frontier nested)
   (make-receipt (execution-plan-flow-name plan)
                 (flow-name flow)
@@ -305,9 +307,50 @@
                 #f
                 (list (run-result-receipt nested))))
 
+;;; Try nodes are local control-plane recovery points. They catch structured
+;;; failures from the protected source and turn them into =try-left= values;
+;;; successful runs become =try-right= values.
+;; : (-> Runner ExecutionPlan Strategy PlanNode TryStep Input [Id] StepResult)
+(def (run-try-step runner plan strategy node step input frontier)
+  (let* ((projection (try-step-projection runner (try-step-source step) input))
+         (value (car projection))
+         (children (cdr projection)))
+    (cons value
+          (make-receipt (execution-plan-flow-name plan)
+                        (try-step-name step)
+                        'try
+                        (plan-node-id node)
+                        (strategy-name strategy)
+                        (runner-execution-policy->alist runner strategy frontier)
+                        'local
+                        #f
+                        input
+                        value
+                        'no-cache
+                        frontier
+                        'ok
+                        #f
+                        children))))
+
+;;; Projection keeps the protected flow's receipt tree when execution reached
+;;; the runner, while local thrown failures still become receipt-free lefts.
+;; : (-> Runner Flow Input (Pair TryResult [Receipt]))
+(def (try-step-projection runner source input)
+  (try-control-plane
+   (lambda ()
+     (let* ((nested (runner-run runner source input))
+            (receipt (run-result-receipt nested))
+            (failed (first-failed-receipt receipt)))
+       (cons (if failed
+               (make-try-left (receipt-error failed))
+               (make-try-right (run-result-value nested)))
+             (list receipt))))
+   (lambda (failure)
+     (cons (make-try-left failure) '()))))
+
 ;;; Branch join nodes are local control-plane joins: their input is the list of
 ;;; dependency values produced by branch arms.
-;; Receipt <- Runner ExecutionPlan Strategy PlanNode BranchStep Value [Id]
+;; : (-> Runner ExecutionPlan Strategy PlanNode BranchStep Value [Id] Receipt)
 (def (make-branch-receipt runner plan strategy node branch input frontier)
   (make-receipt (execution-plan-flow-name plan)
                 (branch-step-name branch)
@@ -328,7 +371,7 @@
 ;;; Terminal selection converts the dataflow table back to the public run
 ;;; result. Multiple terminals remain a list so future DAG plans can expose
 ;;; more than one sink without inventing an implicit ordering rule.
-;; Value <- ExecutionPlan Alist Value
+;; : (-> ExecutionPlan Alist Value Value)
 (def (plan-output-value plan values default-input)
   (let ((terminal-values (node-values (map plan-node-id
                                            (execution-plan-terminal-nodes plan))
@@ -341,7 +384,7 @@
 ;;; Node input selection follows dependency cardinality: roots receive the
 ;;; original input, one dependency passes a scalar value, and joins receive the
 ;;; ordered dependency value list.
-;; Value <- PlanNode Alist Value
+;; : (-> PlanNode Alist Value Value)
 (def (node-input-value node values default-input)
   (let ((dependencies (plan-node-dependencies node)))
     (cond
@@ -351,7 +394,7 @@
 
 ;;; Dependency ids are already in plan order, so this projection preserves the
 ;;; branch-left and branch-right ordering expected by join receipts.
-;; [Value] <- [Id] Alist
+;; : (-> [Id] Alist [Value])
 (def (node-values ids values)
   (if (null? ids)
     '()
@@ -360,7 +403,7 @@
 
 ;;; Missing dependency values indicate a malformed plan order rather than an
 ;;; application failure, so the runner raises a control-plane error.
-;; Value <- Id Alist
+;; : (-> Id Alist Value)
 (def (value-for-node-id id values)
   (let ((entry (assoc id values)))
     (if entry
@@ -373,7 +416,7 @@
 
 ;;; Adapter dispatch preserves runtime adapter operations while keeping
 ;;; extension-specific task request interpretation outside the runner.
-;; AdapterResult <- TaskFamilyRegistry RuntimeAdapter Task ExecutionRequest
+;; : (-> TaskFamilyRegistry RuntimeAdapter Task ExecutionRequest AdapterResult)
 (def (adapter-result-for-task task-registry adapter task request)
   (let ((operation (task-adapter-operation-in task-registry task)))
     (cond
@@ -393,7 +436,7 @@
 
 ;;; Adapter failures remain runtime-owned but are wrapped before receipt
 ;;; persistence so replay and audit code can inspect the same failure shape.
-;; MaybeExecutionFailure <- RuntimeAdapter AdapterResult
+;; : (-> RuntimeAdapter AdapterResult MaybeExecutionFailure)
 (def (adapter-result-failure adapter adapter-result)
   (cond
    ((adapter-result-error adapter-result)
@@ -416,7 +459,7 @@
      #t))
    (else #f)))
 
-;; Symbol <- MaybeExecutionFailure AdapterResult
+;; : (-> MaybeExecutionFailure AdapterResult Symbol)
 (def (adapter-receipt-status failure adapter-result)
   (if failure
     'failed
@@ -426,7 +469,7 @@
 ;;; result knows the durable request id, status, and artifact handle.  Core
 ;;; deliberately records a generic adapter observation; cache/CAS lifecycle
 ;;; interpretation belongs to store/CAS extensions or the runtime owner.
-;; AdapterEvidence <- TaskFamilyRegistry Task AdapterResult
+;; : (-> TaskFamilyRegistry Task AdapterResult AdapterEvidence)
 (def (adapter-result-evidence task-registry task adapter-result)
   (list 'adapter-result
         (task-name task)
@@ -438,7 +481,7 @@
 
 ;;; Local tasks keep strategy-owned cache policy; adapter-routed tasks record
 ;;; generic runtime evidence instead of pretending to know cache semantics.
-;; CacheDecision <- TaskFamilyRegistry Strategy Task Input AdapterResult
+;; : (-> TaskFamilyRegistry Strategy Task Input AdapterResult CacheDecision)
 (def (adapter-cache-decision task-registry strategy task input adapter-result)
   (if (task-adapter-routed?-in task-registry task)
     (adapter-result-evidence task-registry task adapter-result)
@@ -446,7 +489,7 @@
 
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
-;; StepResult <- Runner ExecutionPlan Strategy PlanNode Task Input [Id]
+;; : (-> Runner ExecutionPlan Strategy PlanNode Task Input [Id] StepResult)
 (def (run-task runner plan strategy node task input frontier)
   (let ((task-registry (runner-task-registry runner)))
     (cond

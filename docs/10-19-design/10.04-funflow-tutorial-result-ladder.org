@@ -116,19 +116,22 @@ Proof:
 - =gxtest t/tutorial-result-test.ss=, case ="stage 5 external config fails
   before runtime submission"=.
 
-*** 10.04.26 Stage 6: Runtime Response Boundary
+*** 10.04.26 Stage 6: Error Handling Try Boundary
 
 Reference result:
-- Docker-backed tutorials return runtime-owned artifacts and visible output.
+- ErrorHandling uses =tryE= to catch local/runtime failures and route them to handled branches.
 
 Poo-flow result:
-- A configured =runtime-command= receives one request envelope and returns a
-  normalized runtime response, proving the command/IPC boundary before real
-  Docker or CAS execution exists.
+- =try-flow= wraps an ordinary flow and returns =try-left= or =try-right=
+  through normal =runner-run= composition.
+- =defpoo-flow-try= exposes the same boundary to user-facing functional flow
+  declarations.
 
 Proof:
-- =gxtest t/tutorial-result-test.ss=, case ="stage 6 configured runtime command
-  returns normalized result"=.
+- =gxtest t/tutorial-result-test.ss=, case ="stage 6 error handling try-flow
+  routes thrown failures"=.
+- =gxtest t/functional-flow-kernel-test.ss=, case ="authors functional flows
+  with hygienic Gerbil macros"=.
 
 *** 10.04.27 Stage 7: Docker/CAS Real Runtime
 
@@ -412,7 +415,46 @@ Poo-flow result:
 - =runtime-command-manifest->command= lets the same manifest plug into the existing =runtime-command= slot, so Rust can replace only the executable while Scheme keeps descriptor policy and response normalization.
 Proof:
 - =gxtest t/runtime-manifest-test.ss=, cases ="runtime command descriptor exports cli manifest"=, ="runtime command manifest consumer executes stdout protocol"=, and ="runtime command manifest rejects unsupported protocol"=.
-** 10.04.40 Current Command Receipt
+
+*** 10.04.40 Stage 20: Functional Flow Kernel And Macro Authoring
+Reference result:
+- Funflow exposes a functional core through =Flow=, =pureFlow=, =returnFlow=,
+  Arrow composition, and Arrow fanout helpers.
+Poo-flow result:
+- =src/core/flow.ss= exposes =flow-arr=, =flow-identity=, =flow-map=,
+  =flow-fanout=, =flow-first=, and =flow-second= as Gerbil Scheme functions
+  over the existing =flow= declaration.
+- =default-flow-category= is a POO object whose slots name the Category/Arrow
+  operations over =flow=.
+- =src/core/flow-syntax.ss= exposes =defpoo-flow-*= hygienic Gerbil macros
+  that author the same flow declarations through bindings.
+- The stable =flow= struct and runner boundary remain unchanged; this is not a
+  new workflow DSL or alist/record language.
+Proof:
+- =gxtest t/functional-flow-kernel-test.ss=, suite ="functional flow kernel"=.
+
+*** 10.04.41 Stage 21: Extension-Owned Macro Authoring
+Reference result:
+- Funflow users author real task-family flows through a compact functional
+  surface while task interpreters stay extension/runtime-owned.
+Poo-flow result:
+- =src/extensions/workflow-syntax.ss= exposes hygienic Gerbil macros for
+  custom-repeat, Docker, Store/CAS, CCompilation, TensorflowDocker,
+  makefile-tool, and makefile-tool runtime command descriptors.
+- Macro expansion targets extension-owned public constructors such as
+  =custom-repeat-flow=, =docker-flow=, =store-flow=,
+  =make-ccompilation-store-workflow=, =make-tensorflow-workflow=,
+  =make-makefile-tool-workflow=, and
+  =make-makefile-tool-runtime-command-descriptor=.
+- The macros produce ordinary =flow= values or inert runtime command
+  descriptors. Scheme still does not execute Docker, CAS, Makefile,
+  Tensorflow, subprocess, or artifact work.
+Proof:
+- =gxtest t/tutorial-feature-batch-test.ss=, case ="authors extension-owned
+  workflows with Gerbil macros"=.
+- =gxtest t/tutorial-makefile-runtime-test.ss=, case ="authors makefile
+  runtime descriptor with Gerbil macros"=.
+** 10.04.50 Current Command Receipt
 
 The current repository proof commands are:
 
@@ -420,7 +462,9 @@ The current repository proof commands are:
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-result-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-runtime-result-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-feature-batch-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/tutorial-makefile-runtime-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/runtime-manifest-test.ss
+GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/functional-flow-kernel-test.ss
 GERBIL_LOADPATH="$PWD/src:$PWD/t:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo:$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils:$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness/src" gxtest t/unit-tests.ss
 asp gerbil-scheme check --workspace .
 asp org lint docs/10-19-design/10.04-funflow-tutorial-result-ladder.org
@@ -435,6 +479,8 @@ Observed result:
 - Stage 11 through Stage 16 pass with 33 checks.
 - Stage 1 through Stage 18 pass with 99 combined tutorial-result checks.
 - Stage 19 passes with 19 runtime manifest consumer checks.
+- Stage 20 passes with functional Category/Arrow kernel and macro authoring checks.
+- Stage 21 passes with extension-owned workflow and runtime descriptor macro checks.
 - The runtime bridge owner is split from the manifest consumer owner and passes with 39 schema checks.
 - Stage 7 descriptor precursor passes with 11 checks through
   =gxtest t/docker-descriptor-test.ss=.
@@ -442,7 +488,7 @@ Observed result:
 - The agent-sandbox tests are split into descriptor, bridge, and profile owners
   so the project harness policy remains active across the full source scope.
 
-** 10.04.50 Implementation Priority Reset
+** 10.04.60 Implementation Priority Reset
 
 The next implementation sequence should be:
 1. Keep Stage 1 through Stage 6 green as the lightweight result gate.
@@ -455,6 +501,8 @@ The next implementation sequence should be:
 6. Keep Stage 11 through Stage 16 green as the public tutorial feature batch.
 7. Keep Stage 17 and Stage 18 green as the makefile-tool runtime handoff gate.
 8. Keep Stage 19 green as the local manifest consumer and adapter-result normalization gate.
-9. Promote Stage 7 through Stage 19 to real runtime status only when Rust
+9. Keep Stage 20 green as the functional Scheme/POO kernel and macro authoring gate.
+10. Keep Stage 21 green as the extension-owned macro authoring gate.
+11. Promote Stage 7 through Stage 19 to real runtime status only when Rust
    consumes the manifests and produces the visible result plus artifact
    manifests without embedding Docker/CAS/process execution in Scheme.

@@ -18,7 +18,7 @@
 
 ;;; Reports keep validation status beside the summary they validated so Rust or
 ;;; external replay tooling can persist one bounded control-plane object.
-;; ReplayReport <- Symbol [Reason] RunSummary [Id] [Id]
+;; : (-> Symbol [Reason] RunSummary [Id] [Id] ReplayReport)
 (defstruct replay-report
   (status
    reasons
@@ -32,7 +32,7 @@
 ;;; The policy checks root frontier, child count, node order, child frontiers,
 ;;; root status, policy snapshots, and exported summary counts without running
 ;;; any task again.
-;; ReplayReport <- ExecutionPlan Receipt
+;; : (-> ExecutionPlan Receipt ReplayReport)
 (def (validate-replay-report plan receipt)
   (let* ((summary (receipt->run-summary receipt))
          (expected-node-ids (execution-plan-node-ids plan))
@@ -54,17 +54,17 @@
                         expected-node-ids
                         observed-node-ids)))
 
-;; Boolean <- ReplayReport
+;; : (-> ReplayReport Boolean)
 (def (replay-report-valid? report)
   (eq? (replay-report-status report) 'valid))
 
-;; Nat <- ReplayReport
+;; : (-> ReplayReport Nat)
 (def (replay-report-reason-count report)
   (length (replay-report-reasons report)))
 
 ;;; Root status is part of replay policy because failed runs can still be
 ;;; summarized, but they are not valid successful replay baselines.
-;; [Reason] <- Receipt
+;; : (-> Receipt [Reason])
 (def (root-status-reasons receipt)
   (if (receipt-ok? receipt)
     '()
@@ -72,7 +72,7 @@
 
 ;;; The first frontier must match the graph frontier before any node completes.
 ;;; This catches summaries built from a different plan or strategy policy.
-;; [Reason] <- ExecutionPlan Receipt
+;; : (-> ExecutionPlan Receipt [Reason])
 (def (root-frontier-reasons plan receipt)
   (let ((expected (execution-plan-ready-node-ids plan '()))
         (observed (receipt-frontier receipt)))
@@ -83,7 +83,7 @@
 ;;; Child count is the coarse guard before node-by-node replay checks run.
 ;;; Detailed checks still operate on the common prefix so diagnostics remain
 ;;; useful when the trace is too short or too long.
-;; [Reason] <- [Id] [Receipt]
+;; : (-> [Id] [Receipt] [Reason])
 (def (child-count-reasons expected-node-ids children)
   (let ((expected (length expected-node-ids))
         (observed (length children)))
@@ -94,7 +94,7 @@
 ;;; Node replay checks are ordered by plan node ids and recorded child receipts.
 ;;; Completed ids advance according to the expected plan so one bad receipt does
 ;;; not cascade into unrelated frontier calculations.
-;; [Reason] <- ExecutionPlan [Receipt] [Id] [Id]
+;; : (-> ExecutionPlan [Receipt] [Id] [Id] [Reason])
 (def (child-replay-reasons plan children expected-node-ids completed-node-ids)
   (if (or (null? children) (null? expected-node-ids))
     '()
@@ -111,7 +111,7 @@
 
 ;;; A child receipt is replay-valid when it names the expected node and records
 ;;; the exact ready frontier visible before that node ran.
-;; [Reason] <- ExecutionPlan Receipt Id [Id]
+;; : (-> ExecutionPlan Receipt Id [Id] [Reason])
 (def (child-replay-reason plan child expected-node-id completed-node-ids)
   (append (child-node-id-reasons child expected-node-id)
           (child-frontier-reasons plan
@@ -120,7 +120,7 @@
                                   completed-node-ids)
           (receipt-policy-reasons child expected-node-id)))
 
-;; [Reason] <- Receipt Id
+;; : (-> Receipt Id [Reason])
 (def (child-node-id-reasons child expected-node-id)
   (let ((observed (receipt-node-id child)))
     (if (equal? expected-node-id observed)
@@ -130,7 +130,7 @@
 ;;; Frontier comparison is deliberately stricter than "expected node is ready":
 ;;; replay traces must preserve the whole ready-set policy, not only the chosen
 ;;; sequential node.
-;; [Reason] <- ExecutionPlan Receipt Id [Id]
+;; : (-> ExecutionPlan Receipt Id [Id] [Reason])
 (def (child-frontier-reasons plan child expected-node-id completed-node-ids)
   (let ((expected (execution-plan-ready-node-ids plan completed-node-ids))
         (observed (receipt-frontier child)))
@@ -143,7 +143,7 @@
 
 ;;; Policy snapshots are replay evidence. They must agree with the receipt
 ;;; fields that remain first-class for fast audit queries.
-;; [Reason] <- Receipt Label
+;; : (-> Receipt Label [Reason])
 (def (receipt-policy-reasons receipt label)
   (let ((policy (receipt-policy receipt)))
     (append (policy-field-reasons label
@@ -155,7 +155,7 @@
                                   (receipt-frontier receipt)
                                   (policy-ref 'frontier policy)))))
 
-;; [Reason] <- Label Symbol Value Value
+;; : (-> Label Symbol Value Value [Reason])
 (def (policy-field-reasons label field expected observed)
   (if (equal? expected observed)
     '()
@@ -163,12 +163,12 @@
 
 ;;; Summary count validation keeps the export surface honest even though the
 ;;; summary is derived locally today.
-;; [Reason] <- RunSummary Receipt
+;; : (-> RunSummary Receipt [Reason])
 (def (summary-count-reasons summary receipt)
   (append (summary-event-count-reasons summary receipt)
           (summary-adapter-count-reasons summary receipt)))
 
-;; [Reason] <- RunSummary Receipt
+;; : (-> RunSummary Receipt [Reason])
 (def (summary-event-count-reasons summary receipt)
   (let ((expected (receipt-event-count receipt))
         (observed (alist-ref 'event-count summary)))
@@ -176,7 +176,7 @@
       '()
       (list (list 'event-count-mismatch expected observed)))))
 
-;; [Reason] <- RunSummary Receipt
+;; : (-> RunSummary Receipt [Reason])
 (def (summary-adapter-count-reasons summary receipt)
   (let ((expected (receipt-adapter-request-count receipt))
         (observed (alist-ref 'adapter-request-count summary)))
@@ -190,15 +190,15 @@
 ;;; node-id slot at this replay boundary.
 ;;; Nested flow evidence stays in audit events so this sequence remains aligned
 ;;; with the parent execution plan.
-;; [Id] <- Receipt
+;; : (-> Receipt [Id])
 (def (top-level-receipt-node-ids receipt)
   (map receipt-node-id (receipt-children receipt)))
 
-;; Value <- Symbol Alist
+;; : (-> Symbol Alist Value)
 (def (alist-ref key alist)
   (let ((entry (assoc key alist)))
     (and entry (cdr entry))))
 
-;; Value <- Symbol Alist
+;; : (-> Symbol Alist Value)
 (def (policy-ref key policy)
   (and policy (alist-ref key policy)))

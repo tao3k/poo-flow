@@ -20,7 +20,7 @@
 
 ;;; Normalized assembly is concrete: one validated profile plus one validated
 ;;; field alist becomes the bridge-stable request shape consumed by adapters.
-;; AgentSandboxRequest <- AgentSandboxProfile AgentSandboxRequestFields
+;; : (-> AgentSandboxProfile AgentSandboxRequestFields AgentSandboxRequest)
 (def (agent-sandbox-normalized-request profile fields)
   (let* ((valid-profile (agent-sandbox-validate-profile profile))
          (request-fields (agent-sandbox-validate-request-fields fields)))
@@ -56,13 +56,24 @@
 
 ;;; Macro entry point: generated code supplies a thunk that materializes field
 ;;; data once, while the builder owns validation and request assembly.
-;; AgentSandboxRequest <- AgentSandboxProfile (AgentSandboxRequestFields <- Unit)
+;; | AgentSandboxRequestFieldsThunk = (-> Unit AgentSandboxRequestFields)
+;; : (-> AgentSandboxProfile AgentSandboxRequestFieldsThunk AgentSandboxRequest)
+;; make-agent-sandbox-request-with
+;;   : (-> AgentSandboxProfile AgentSandboxRequestFieldsThunk AgentSandboxRequest)
+;;   | contract: thunk is evaluated once and must return request field data
+;;   | doc m%
+;;   | # Examples
+;;   | ```scheme
+;;   | (make-agent-sandbox-request-with profile
+;;   |   (lambda () '((command . "true"))))
+;;   | ```
+;;   | result: validated inert request alist for adapter handoff.
 (def (make-agent-sandbox-request-with profile fields-thunk)
   (agent-sandbox-normalized-request profile (fields-thunk)))
 
 ;;; Positional construction is compatibility glue for older call sites. New
 ;;; code should prefer named fields or the request macro.
-;; AgentSandboxRequest <- AgentSandboxProfile Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata
+;; : (-> AgentSandboxProfile Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata AgentSandboxRequest)
 (def (make-agent-sandbox-request profile
                                  command
                                  args
@@ -89,6 +100,6 @@
 
 ;;; Named-field construction is the preferred typed contract for callers.
 ;;; Missing optional fields receive deterministic defaults during assembly.
-;; AgentSandboxRequest <- AgentSandboxProfile AgentSandboxRequestFields
+;; : (-> AgentSandboxProfile AgentSandboxRequestFields AgentSandboxRequest)
 (def (make-agent-sandbox-request-from-fields profile fields)
   (agent-sandbox-normalized-request profile fields))

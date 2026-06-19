@@ -7,22 +7,22 @@
 
 (export tutorial-result-test)
 
-;; Runner <- Unit
+;; : (-> Unit Runner)
 (def (tutorial-runner)
   (make-runner (make-local-eager-strategy)
                (make-request-only-adapter)))
 
-;; Value <- Flow Value
+;; : (-> Flow Value Value)
 (def (tutorial-run flow input)
   (run-result-value (runner-run (tutorial-runner) flow input)))
 
-;; String <- String Nat
+;; : (-> String Nat String)
 (def (repeat-string text count)
   (if (<= count 0)
     ""
     (string-append text (repeat-string text (- count 1)))))
 
-;; Alist <- [Symbol] Alist
+;; : (-> [Symbol] Alist Alist)
 (def (count-symbols words counts)
   (if (null? words)
     counts
@@ -34,14 +34,14 @@
                              (remove-count word counts))
                        (cons (cons word 1) counts))))))
 
-;; Alist <- Symbol Alist
+;; : (-> Symbol Alist Alist)
 (def (remove-count word counts)
   (cond
    ((null? counts) '())
    ((eq? word (caar counts)) (cdr counts))
    (else (cons (car counts) (remove-count word (cdr counts))))))
 
-;; Value <- Alist Symbol
+;; : (-> Alist Symbol Value)
 (def (count-ref counts word)
   (let (entry (assoc word counts))
     (if entry (cdr entry) 0)))
@@ -109,7 +109,35 @@
                                     (run-flow-with-config config flow #!void)))))
         (check-equal? (execution-failure? failure) #t)
         (check-equal? (execution-failure-code failure) 'missing-config-keys)))
-    (test-case "stage 6 configured runtime command returns normalized result"
+    (test-case "stage 6 error handling try-flow routes thrown failures"
+      (let* ((thrower (throw-string-flow 'throw-local
+                                         "handled tutorial failure"
+                                         'unit
+                                         'string))
+             (attempt (try-flow 'try-local thrower))
+             (handled
+              (flow-map 'handle-local-error
+                        attempt
+                        (lambda (result)
+                          (if (try-left? result)
+                            (string-append
+                             "handled: "
+                             (execution-failure-message
+                              (try-result-value result)))
+                            "unexpected success"))
+                        'string))
+             (success
+              (try-flow 'try-success
+                        (pure-flow 'success
+                                   (lambda (value) value)
+                                   'string
+                                   'string)))
+             (success-result (tutorial-run success "ok")))
+        (check-equal? (tutorial-run handled #!void)
+                      "handled: handled tutorial failure")
+        (check-equal? (try-right? success-result) #t)
+        (check-equal? (try-result-value success-result) "ok")))
+    (test-case "stage 7 configured runtime command returns normalized result"
       (let* ((command (lambda (envelope)
                         (list (cons 'schema +runtime-response-schema+)
                               (cons 'request-id (cdr (assoc 'request-id envelope)))

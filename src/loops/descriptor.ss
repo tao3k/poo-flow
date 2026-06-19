@@ -58,21 +58,21 @@
         validate-loop-pattern-descriptor
         loop-pattern-descriptor->contract)
 
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +loop-pattern-schema+ 'poo-flow.loop-pattern.v1)
 
-;; [Symbol] <- Unit
+;; : (-> Unit [Symbol])
 (def +loop-levels+ '(l1 l2 l2+ l3))
 
-;; [Symbol] <- Unit
+;; : (-> Unit [Symbol])
 (def +loop-policy-roles+
   '(safety budget level checker maker state schedule purpose observability connector skill isolation))
 
-;; [Symbol] <- Unit
+;; : (-> Unit [Symbol])
 (def +loop-default-human-gates+
   '(security authentication authorization payments pii infrastructure dependency-upgrade large-change repeated-failure))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-agent-role
   (.o (:: @ control-plane-role)
       (name 'loop-agent)
@@ -81,7 +81,7 @@
       (runtime-owner 'gerbil)
       (loop-capability 'policy-composition)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-purpose-role
   (.o (:: @ loop-agent-role)
       (name 'loop-purpose)
@@ -89,7 +89,7 @@
       (responsibility 'goal-and-scope)
       (loop-policy-slot 'purpose)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-level-role
   (.o (:: @ loop-agent-role)
       (name 'loop-level)
@@ -97,7 +97,7 @@
       (responsibility 'autonomy-level-gates)
       (loop-policy-slot 'level)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-schedule-role
   (.o (:: @ loop-agent-role)
       (name 'loop-schedule)
@@ -105,7 +105,7 @@
       (responsibility 'wake-up-policy)
       (loop-policy-slot 'schedule)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-state-role
   (.o (:: @ loop-agent-role)
       (name 'loop-state)
@@ -113,7 +113,7 @@
       (responsibility 'durable-state-contract)
       (loop-policy-slot 'state)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-budget-role
   (.o (:: @ loop-agent-role)
       (name 'loop-budget)
@@ -121,7 +121,7 @@
       (responsibility 'cost-and-attempt-gates)
       (loop-policy-slot 'budget)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-isolation-role
   (.o (:: @ loop-agent-role)
       (name 'loop-isolation)
@@ -129,7 +129,7 @@
       (responsibility 'worktree-and-session-isolation)
       (loop-policy-slot 'isolation)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-skill-role
   (.o (:: @ loop-agent-role)
       (name 'loop-skill)
@@ -137,7 +137,7 @@
       (responsibility 'intent-memory)
       (loop-policy-slot 'skills)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-connector-role
   (.o (:: @ loop-agent-role)
       (name 'loop-connector)
@@ -145,7 +145,7 @@
       (responsibility 'external-surface-scopes)
       (loop-policy-slot 'connectors)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-maker-role
   (.o (:: @ loop-agent-role)
       (name 'loop-maker)
@@ -153,7 +153,7 @@
       (responsibility 'action-agent)
       (loop-policy-slot 'maker)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-checker-role
   (.o (:: @ loop-agent-role)
       (name 'loop-checker)
@@ -161,7 +161,7 @@
       (responsibility 'verification-agent)
       (loop-policy-slot 'checker)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-safety-role
   (.o (:: @ loop-agent-role)
       (name 'loop-safety)
@@ -169,7 +169,7 @@
       (responsibility 'human-gates-and-denylists)
       (loop-policy-slot 'safety)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def loop-observability-role
   (.o (:: @ loop-agent-role)
       (name 'loop-observability)
@@ -179,7 +179,7 @@
 
 ;;; Boundary: default loop pattern slots are inert policy data.
 ;;; Intent: C3/POO composition ranks policy defaults before Marlin executes.
-;; LoopPatternDescriptorPrototype <- Unit
+;; : (-> Unit LoopPatternDescriptorPrototype)
 (def loop-pattern-descriptor-prototype
   (.mix slots: (role-constant-slots
                 (list (cons 'schema +loop-pattern-schema+)
@@ -223,7 +223,7 @@
 
 ;;; Boundary: constructor accepts only descriptor-policy overrides.
 ;;; Runtime commands, timers, and connector handles belong to marlin-agent-core.
-;; LoopPatternDescriptor <- Symbol String [Alist]
+;; : (-> Symbol String [Alist] LoopPatternDescriptor)
 (def (make-loop-pattern-descriptor name goal . maybe-overrides)
   (.mix slots: (role-constant-slots
                 (append
@@ -232,107 +232,107 @@
                  (if (null? maybe-overrides) '() (car maybe-overrides))))
         loop-pattern-descriptor-prototype))
 
-;; Boolean <- LoopPatternDescriptorCandidate
+;; : (-> LoopPatternDescriptorCandidate Boolean)
 (def (loop-pattern-descriptor? descriptor)
   (and (object? descriptor)
        (eq? (loop-pattern-descriptor-slot descriptor 'kind #f)
             'loop-pattern)))
 
-;; LoopSlotValue <- LoopPatternDescriptor Symbol LoopSlotValue
+;; : (-> LoopPatternDescriptor Symbol LoopSlotValue LoopSlotValue)
 (def (loop-pattern-descriptor-slot descriptor slot default)
   (role-slot/default descriptor slot default))
 
-;; AlistValue <- Alist Symbol AlistValue
+;; : (-> Alist Symbol AlistValue AlistValue)
 (def (loop-alist-ref alist key default)
   (cond
    ((assoc key alist) => cdr)
    (else default)))
 
-;; Symbol <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Symbol)
 (def (loop-pattern-name descriptor)
   (loop-pattern-descriptor-slot descriptor 'name #f))
 
-;; String <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor String)
 (def (loop-pattern-goal descriptor)
   (loop-pattern-descriptor-slot descriptor 'goal #f))
 
-;; Symbol <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Symbol)
 (def (loop-pattern-level descriptor)
   (loop-pattern-descriptor-slot descriptor 'level #f))
 
-;; Integer <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Integer)
 (def (loop-pattern-priority descriptor)
   (loop-pattern-descriptor-slot descriptor 'priority #f))
 
-;; [Value] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [Value])
 (def (loop-pattern-watched-scope descriptor)
   (loop-pattern-descriptor-slot descriptor 'watched-scope '()))
 
-;; [Value] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [Value])
 (def (loop-pattern-non-goals descriptor)
   (loop-pattern-descriptor-slot descriptor 'non-goals '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-schedule descriptor)
   (loop-pattern-descriptor-slot descriptor 'schedule '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-state descriptor)
   (loop-pattern-descriptor-slot descriptor 'state '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-budget descriptor)
   (loop-pattern-descriptor-slot descriptor 'budget '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-isolation descriptor)
   (loop-pattern-descriptor-slot descriptor 'isolation '()))
 
-;; [Value] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [Value])
 (def (loop-pattern-skills descriptor)
   (loop-pattern-descriptor-slot descriptor 'skills '()))
 
-;; [Value] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [Value])
 (def (loop-pattern-connectors descriptor)
   (loop-pattern-descriptor-slot descriptor 'connectors '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-maker descriptor)
   (loop-pattern-descriptor-slot descriptor 'maker '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-checker descriptor)
   (loop-pattern-descriptor-slot descriptor 'checker '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-safety descriptor)
   (loop-pattern-descriptor-slot descriptor 'safety '()))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-observability descriptor)
   (loop-pattern-descriptor-slot descriptor 'observability '()))
 
-;; [Symbol] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [Symbol])
 (def (loop-pattern-policy-order descriptor)
   (loop-pattern-descriptor-slot descriptor 'policy-order '()))
 
-;; Symbol <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Symbol)
 (def (loop-pattern-control-owner descriptor)
   (loop-pattern-descriptor-slot descriptor 'control-owner #f))
 
-;; Symbol <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Symbol)
 (def (loop-pattern-execution-owner descriptor)
   (loop-pattern-descriptor-slot descriptor 'execution-owner #f))
 
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-metadata descriptor)
   (loop-pattern-descriptor-slot descriptor 'metadata '()))
 
-;; Boolean <- Symbol
+;; : (-> Symbol Boolean)
 (def (loop-pattern-level? level)
   (and (memq level +loop-levels+) #t))
 
-;; Nat <- Symbol
+;; : (-> Symbol Nat)
 (def (loop-pattern-level-rank level)
   (case level
     ((l1) 1)
@@ -341,36 +341,36 @@
     ((l3) 4)
     (else 0)))
 
-;; Boolean <- Symbol Symbol
+;; : (-> Symbol Symbol Boolean)
 (def (loop-pattern-level<=? lower upper)
   (<= (loop-pattern-level-rank lower)
       (loop-pattern-level-rank upper)))
 
-;; Boolean <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Boolean)
 (def (loop-pattern-report-only? descriptor)
   (eq? (loop-pattern-level descriptor) 'l1))
 
-;; Boolean <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Boolean)
 (def (loop-pattern-actionable? descriptor)
   (and (loop-pattern-level? (loop-pattern-level descriptor))
        (not (loop-pattern-report-only? descriptor))))
 
-;; [Symbol] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [Symbol])
 (def (loop-pattern-safety-human-gates descriptor)
   (loop-alist-ref (loop-pattern-safety descriptor) 'human-gates '()))
 
-;; Boolean <- LoopPatternDescriptor Symbol
+;; : (-> LoopPatternDescriptor Symbol Boolean)
 (def (loop-pattern-human-gate-required? descriptor gate)
   (and (memq gate (loop-pattern-safety-human-gates descriptor)) #t))
 
-;; [ValidationError] <- Symbol FieldValue
+;; : (-> Symbol FieldValue [ValidationError])
 (def (loop-required-field-error field value)
   (if value
     '()
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
-;; [ValidationError] <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor [ValidationError])
 (def (loop-pattern-validation-errors descriptor)
   (if (loop-pattern-descriptor? descriptor)
     (append
@@ -392,7 +392,7 @@
                    (cons 'code 'not-list)))))
     (list '((field . descriptor) (code . not-loop-pattern-descriptor)))))
 
-;; LoopPatternDescriptor <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor LoopPatternDescriptor)
 (def (validate-loop-pattern-descriptor descriptor)
   (let (errors (loop-pattern-validation-errors descriptor))
     (if (null? errors)
@@ -405,7 +405,7 @@
 
 ;;; Boundary: contract projection is inert data for Marlin.
 ;;; Invariant: no scheduler, connector, or worktree side effect happens here.
-;; Alist <- LoopPatternDescriptor
+;; : (-> LoopPatternDescriptor Alist)
 (def (loop-pattern-descriptor->contract descriptor)
   (let (valid-descriptor (validate-loop-pattern-descriptor descriptor))
     (list (cons 'schema +loop-pattern-schema+)

@@ -10,7 +10,7 @@
 
 (export agent-sandbox-nono-c-binding-test)
 
-;; Value <- Alist Symbol
+;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
@@ -102,6 +102,41 @@
         (check-equal? (test-ref (test-ref manifest 'apply-plan)
                                 'apply)
                       'nono_sandbox_apply)))
+    (test-case "dry-runs and smoke-tests nono C binding manifests without applying sandbox"
+      (let* ((request (agent-sandbox-request
+                       (make-nono-agent-sandbox-profile
+                        'always-further/opencode)
+                       (command "opencode")
+                       (args '("--print" "hello"))
+                       (workdir "/workspace")
+                       (mounts '(((path . "/workspace")
+                                  (mode . read-write))))
+                       (network-policy '((mode . blocked)))))
+             (runtime-manifest
+              (agent-sandbox-request->runtime-manifest request))
+             (dry-run
+              (nono-c-binding-dry-run runtime-manifest))
+             (smoke
+              (nono-c-binding-smoke-test
+               runtime-manifest
+               '("sh" "-c" "printf nono-smoke"))))
+        (check-equal? (test-ref dry-run 'schema)
+                      +nono-c-binding-dry-run-receipt-schema+)
+        (check-equal? (test-ref dry-run 'ok?) #t)
+        (check-equal? (test-ref dry-run 'would-apply?) #f)
+        (check-equal? (test-ref dry-run 'runtime-executed) #f)
+        (check-equal? (test-ref dry-run 'apply-function)
+                      'nono_sandbox_apply)
+        (check-equal? (> (test-ref dry-run 'capability-plan-count) 0)
+                      #t)
+        (check-equal? (test-ref smoke 'schema)
+                      +nono-c-binding-smoke-test-receipt-schema+)
+        (check-equal? (test-ref smoke 'ok?) #t)
+        (check-equal? (test-ref smoke 'status) 0)
+        (check-equal? (test-ref smoke 'output) "nono-smoke")
+        (check-equal? (test-ref smoke 'runtime-executed) #f)
+        (check-equal? (test-ref (test-ref smoke 'dry-run) 'would-apply?)
+                      #f)))
     (test-case "rejects non-nono and unsupported C binding policy"
       (let* ((cube-request
               (agent-sandbox-request

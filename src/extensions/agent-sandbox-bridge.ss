@@ -23,18 +23,18 @@
 
 ;;; The bridge schema marks extension-aware envelopes without changing the
 ;;; stable core runtime request schema used by existing adapters.
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +agent-sandbox-bridge-schema+ 'poo-flow.agent-sandbox-bridge.v1)
 
 ;;; Runtime manifests are the bridge-facing request contract for Marlin. They
 ;;; regroup the normalized request without choosing a backend implementation.
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +agent-sandbox-runtime-manifest-schema+
   'poo-flow.agent-sandbox-runtime-manifest.v1)
 
 ;;; Execution request projection is intentionally narrow: only agent-sandbox
 ;;; tasks expose the normalized sandbox request to runtime bridge helpers.
-;; AgentSandboxRequest | #f <- ExecutionRequest
+;; : (-> ExecutionRequest (U AgentSandboxRequest #f))
 (def (agent-sandbox-execution-request-config request)
   (if (and (execution-request? request)
            (eq? (execution-request-kind request) 'agent-sandbox))
@@ -47,7 +47,7 @@
 
 ;;; The execution request predicate checks the task family and normalized
 ;;; request schema, leaving per-backend interpretation to the runtime owner.
-;; Boolean <- ExecutionRequestCandidate
+;; : (-> ExecutionRequestCandidate Boolean)
 (def (agent-sandbox-execution-request? request)
   (and (execution-request? request)
        (agent-sandbox-request?
@@ -58,7 +58,7 @@
 ;;; Boundary:
 ;;; - Non-agent execution requests must fail here instead of projecting #f fields.
 ;;; - Backend-specific policy validation still belongs to the runtime owner.
-;; ExecutionRequest <- ExecutionRequest
+;; : (-> ExecutionRequest ExecutionRequest)
 (def (agent-sandbox-validate-execution-request request)
   (if (agent-sandbox-execution-request? request)
     request
@@ -73,7 +73,7 @@
 ;;; Boundary:
 ;;; - Process, filesystem, network, resource, and output fields are grouped.
 ;;; - Real nono/Cube execution still belongs to runtime commands.
-;; AgentSandboxRuntimeManifest <- AgentSandboxRequest
+;; : (-> AgentSandboxRequest AgentSandboxRuntimeManifest)
 (def (agent-sandbox-request->runtime-manifest request)
   (let (sandbox (agent-sandbox-validate-request request))
     (let* ((command (agent-sandbox-request-ref sandbox 'command #f))
@@ -117,7 +117,7 @@
 ;;; Intent: extend the core Rust request envelope at the bridge edge, not in
 ;;; core task structs. Marlin can consume these projection fields without
 ;;; depending on Gerbil's internal =('agent-sandbox request)= pair shape.
-;; Alist <- ExecutionRequest [Symbol]
+;; : (-> ExecutionRequest [Symbol] Alist)
 (def (make-agent-sandbox-bridge-envelope request . maybe-operation)
   (let* ((operation (if (null? maybe-operation) 'submit (car maybe-operation)))
          (valid-request (agent-sandbox-validate-execution-request request))
@@ -140,7 +140,7 @@
 
 ;;; Runtime command errors keep the bridge envelope identifiers, so Marlin-side
 ;;; failures can be correlated without knowing the underlying Gerbil task.
-;; AdapterResult <- RuntimeCommand Alist
+;; : (-> RuntimeCommand Alist AdapterResult)
 (def (agent-sandbox-runtime-command-result command envelope)
   (with-catch
    (lambda (failure)
@@ -157,7 +157,7 @@
 
 ;;; Agent-sandbox command submission swaps in the extension bridge envelope.
 ;;; The command still returns the same runtime response schema as core adapters.
-;; AdapterResult <- RuntimeCommand ExecutionRequest
+;; : (-> RuntimeCommand ExecutionRequest AdapterResult)
 (def (agent-sandbox-command-submit command request)
   (agent-sandbox-runtime-command-result
    command

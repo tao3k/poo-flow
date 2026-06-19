@@ -12,7 +12,9 @@ Status: implemented.
 
 Files:
 - =src/modules/module-system.ss=
+- =src/modules/observability.ss=
 - =t/module-system-test.ss=
+- =t/module-system-observability-test.ss=
 - =build.ss=
 - =t/unit-tests.ss=
 
@@ -28,7 +30,8 @@ Delivered behavior:
 - expose module activation options with activated module names;
 - raise typed =module-system/missing-module-imports= failures;
 - raise typed =module-system/missing-module-source= failures;
-- report non-executing diagnostics through =poo-module-doctor=.
+- report non-executing diagnostics through =poo-module-doctor=;
+- expose strict observability traces for POO presentation debugging, including =recursive-stage= detection.
 
 ** 10.06.05.15 Slice 1B: Marlin Facade Migration
 Status: implemented.
@@ -81,10 +84,12 @@ For each slice:
 Status: implemented.
 Delivered behavior:
 - added =src/modules/user-config.ss= as the upstream-owned thin user config API;
-- added =user-interface/modules.ss= for hot-plug flow, loop, and sandbox module selections and flags;
-- added =user-interface/config.ss= as the public root-level configuration entrypoint;
+- added =src/modules/user-interface/config.ss= as the upstream projection owner for root declarations;
+- added =src/modules/user-interface/objects.ss= as the upstream object-contract owner for user-interface data;
+- kept root =user-interface/init.ss= as the pure module-selection declaration entrypoint;
+- kept root =user-interface/custom/*/config.ss= as the downstream custom-module authoring space;
 - added =user-interface/README.org= to document that descriptor realization remains in =src/modules=;
-- added =t/user-interface-config-test.ss= to verify the real root-level config instead of defining examples inside tests.
+- added =t/user-interface-config-test.ss= to verify the real root-level init declaration instead of defining examples inside tests.
 ** 10.06.05.17 Slice 1C: Doom And C3 Interface Polish
 Status: implemented.
 
@@ -93,7 +98,7 @@ Delivered behavior:
 - kept the implementation under =src/modules= leaf owners;
 - added explicit descriptor metadata for =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
 - added descriptor-level =poo-module-active?= checks with Doom-style negative flag requirements;
-- added catalog-level =pooModuleActive?= checks for user-facing module predicates;
+- added catalog-level =poo-flow-module-value-catalog-active?= checks for user-facing module predicates;
 - added =poo-module-phase-order= for init/config ordering projections;
 - added runtime projection fields for phase order and hooks;
 - kept activation data-only and avoided Doom's hidden macro context.

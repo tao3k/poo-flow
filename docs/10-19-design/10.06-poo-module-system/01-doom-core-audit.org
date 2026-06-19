@@ -102,4 +102,4 @@ The useful Doom interfaces observed in the checkout are:
 - =depth= drives phase-order projections;
 - =phase-files= records candidate entrypoint names without loading files;
 - =hooks= records runtime-owned payloads without running them;
-- =poo-module-active?= and =pooModuleActive?= replace Doom's implicit =modulep!= macro.
+- =poo-module-active?= and =poo-flow-module-value-catalog-active?= replace Doom's implicit =modulep!= macro.

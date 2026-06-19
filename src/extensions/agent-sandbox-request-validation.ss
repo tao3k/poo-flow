@@ -21,24 +21,36 @@
         agent-sandbox-request?
         agent-sandbox-request-ref)
 
+;;; Schema predicate is intentionally exact: bridge requests must use the
+;;; normalized request vocabulary before backend-specific validation begins.
+;; : (-> AgentSandboxRequestSchemaCandidate Boolean)
+(def (agent-sandbox-request-schema? value)
+  (eq? value +agent-sandbox-request-schema+))
+
+;;; Presence accepts any non-false value because backend refs and commands may
+;;; be symbols, strings, or richer request payloads owned by later adapters.
+;; : (-> AgentSandboxRequiredFieldCandidate Boolean)
+(def (agent-sandbox-present? value)
+  (and value #t))
+
 ;;; Request validation covers the bridge-stable fields that every backend needs
 ;;; before runtime dispatch. Policy payloads stay backend-owned alists.
-;; [ValidationError] <- AgentSandboxRequest
+;; : (-> AgentSandboxRequest [ValidationError])
 (def (agent-sandbox-request-validation-errors request)
   (append
-   (if (eq? (agent-sandbox-request-ref request 'schema #f)
-            +agent-sandbox-request-schema+)
+   (if (agent-sandbox-request-schema?
+        (agent-sandbox-request-ref request 'schema #f))
      '()
      (list '((field . schema) (code . schema-mismatch))))
    (agent-sandbox-required-field-errors
     request
-    (list (cons 'backend-kind (lambda (value) (and value #t)))
-          (cons 'backend-ref (lambda (value) (and value #t)))
-          (cons 'command (lambda (value) (and value #t)))))))
+    (list (cons 'backend-kind agent-sandbox-present?)
+          (cons 'backend-ref agent-sandbox-present?)
+          (cons 'command agent-sandbox-present?)))))
 
 ;;; Request validation is the last Scheme-side gate before a runtime adapter or
 ;;; bridge envelope sees the normalized sandbox request.
-;; AgentSandboxRequest <- AgentSandboxRequest
+;; : (-> AgentSandboxRequest AgentSandboxRequest)
 (def (agent-sandbox-validate-request request)
   (let (errors (agent-sandbox-request-validation-errors request))
     (if (null? errors)
@@ -52,7 +64,7 @@
 
 ;;; Request predicates keep bridge code honest without making Scheme validate
 ;;; backend-specific policy details that Marlin or Cube/nono integrations own.
-;; Boolean <- AgentSandboxRequestCandidate
+;; : (-> AgentSandboxRequestCandidate Boolean)
 (def (agent-sandbox-request? value)
   (and (list? value)
        (let (schema (assoc 'schema value))
@@ -61,6 +73,6 @@
 
 ;;; Public request lookup gives bridge tests and future bindings one stable
 ;;; reader instead of duplicating raw alist access at every integration point.
-;; Value <- AgentSandboxRequest Symbol Value
+;; : (-> AgentSandboxRequest Symbol Value Value)
 (def (agent-sandbox-request-ref request key default)
   (agent-sandbox-alist-ref request key default))

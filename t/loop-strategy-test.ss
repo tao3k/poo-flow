@@ -8,21 +8,21 @@
 
 (export loop-strategy-test)
 
-;; Value <- Alist Symbol
+;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
-;; [Symbol] <- [Alist]
+;; : (-> [Alist] [Symbol])
 (def (contract-pattern-names contracts)
   (map (lambda (contract) (test-ref contract 'name))
        contracts))
 
-;; Value <- Thunk
+;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
-;; LoopPatternDescriptor <- Symbol Symbol Integer
+;; : (-> Symbol Symbol Integer LoopPatternDescriptor)
 (def (test-pattern name level priority)
   (make-loop-pattern-descriptor
    name

@@ -18,7 +18,7 @@
 
 ;;; A policy snapshot is the Rust-facing view of strategy metadata at a single
 ;;; execution frontier.
-;; ExecutionPolicy <- Strategy CachePolicy FailurePolicy [Symbol] [Id]
+;; : (-> Strategy CachePolicy FailurePolicy [Symbol] [Id] ExecutionPolicy)
 (defstruct execution-policy
   (strategy
    cache-policy
@@ -29,7 +29,7 @@
 
 ;;; Strategy-owned metadata is frozen at the runner boundary before an adapter
 ;;; receives a request, so host runtimes do not need to inspect Scheme objects.
-;; ExecutionPolicy <- Strategy [Id]
+;; : (-> Strategy [Id] ExecutionPolicy)
 (def (strategy-execution-policy strategy frontier)
   (make-execution-policy (strategy-name strategy)
                          (strategy-cache-policy strategy)
@@ -39,7 +39,7 @@
 
 ;;; The alist form is the stable request/receipt shape for future Rust
 ;;; serialization; it intentionally avoids embedding Gerbil structs.
-;; Alist <- ExecutionPolicy
+;; : (-> ExecutionPolicy Alist)
 (def (execution-policy->alist policy)
   (list (cons 'strategy (execution-policy-strategy policy))
         (cons 'cache-policy (execution-policy-cache-policy policy))
@@ -47,10 +47,10 @@
         (cons 'capabilities (execution-policy-capabilities policy))
         (cons 'frontier (execution-policy-frontier policy))))
 
-;; Boolean <- ExecutionPolicy Symbol
+;; : (-> ExecutionPolicy Symbol Boolean)
 (def (execution-policy-allows? policy capability)
   (and (memq capability (execution-policy-capabilities policy)) #t))
 
-;; Boolean <- ExecutionPolicy
+;; : (-> ExecutionPolicy Boolean)
 (def (execution-policy-cache-enabled? policy)
   (not (eq? (execution-policy-cache-policy policy) 'no-cache)))

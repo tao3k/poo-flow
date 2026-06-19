@@ -1,0 +1,83 @@
+* Purpose
+
+** Upstream Kernel Profile
+
+The maintained kernel module implementations are upstream-owned under
+=src/modules=:
+
+- =src/modules/funflow/config.ss= owns =(flow funflow +functional +dag +typed-receipts +runtime-manifest)=.
+- =src/modules/loop-governor/config.ss= owns =(loop governor +strategy +policy)=.
+- =src/modules/nono-sandbox/config.ss= owns =(sandbox nono-sandbox +nono +doctor)=.
+- =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
+
+=user-interface/init.ss= exports category/module/feature bundle rows, and
+upstream =src/modules/user-interface/config.ss= extends
+=poo-flow-kernel-profile= with those rows. Downstream users extend through
+=init.ss= and =custom/*/config.ss= instead of editing or repeating upstream
+kernel files.
+
+This directory models the downstream repository surface that a POO Flow user
+would maintain. It is intentionally root-level and separate from =src=. POO Flow
+is the brand name. Bare =poo= remains only a Scheme/API prefix for Gerbil POO
+helpers and should not be used as the user-visible product or module group
+identity.
+
+The files here stay declarative:
+
+- =init.ss= lists optional feature patches/custom modules through =poo-flow-init-module-bundles= category rows.
+- =custom/*/config.ss= declares user-maintained custom module bodies.
+
+The implementation stays upstream:
+
+- =src/modules/user-interface/objects.ss= owns user-interface object contracts.
+- =src/modules/user-interface/config.ss= owns profile/config projection helpers.
+- =src/modules/user-interface-case.ss= owns case contracts for tools and tests.
+- module descriptors, loaders, merge rules, and runtime adapters remain in =src/modules= and other implementation owners.
+
+* Public Entry Points
+
+Downstream users should rely on root declarations plus upstream helpers:
+
+- =poo-flow-init-module-bundles=
+- =poo-flow-module-bundles=
+- =poo-flow-custom-module-bundles=
+- =pooFlowUserInterfaceProfile=
+- =pooFlowUserInterfaceProfileSet=
+- =pooFlowUserInterfaceProfileSetPresentation=
+- =pooFlowUserInterfaceProfileSetDoctorPresentation=
+- =pooFlowUserInterfaceSelectedProfile=
+- =pooFlowUserInterfaceConfig=
+- =poo-flow-user-module-selection=
+- =poo-flow-settings=
+- =pooFlowUserConfigPresentation=
+- =pooFlowRootUserInterfaceDeveloperCase=
+- =poo-flow-user-interface-case-presentation-matches?=
+
+The presentation surface exposes ownership metadata so agents can inspect the
+config without realizing descriptors or executing runtime hooks. Presentations
+must include =presentation-trace= facts. Trace stages are report-only
+observability data for catching lazy POO projection recursion; they must keep
+=descriptor-realized? = #f= and =runtime-executed = #f=.
+
+* Boundaries
+
+- User-owned: root module selection and custom module declarations.
+- Module-system-owned: settings, profile projection, profile-set validation, descriptor realization, validation, merge, doctor output.
+- Runtime-owned: backend execution and handler lifecycle in =marlin-agent-core=.
+
+Every downstream presentation must keep =runtime-executed = #f=. Kernel profile
+module groups and presentation fields should expose =poo-flow= as the brand
+identity.
+
+* Doom-Style Init Shape
+
+=init.ss= is intentionally closer to Doom's =init.el= than to an implementation
+module:
+
+- inherit required workflow, loop, and sandbox rows through =poo-flow-kernel-profile=;
+- group optional feature patches by category, such as =:workflow= and =:custom=;
+- attach user-toggleable module features with =+feature= flags;
+- keep object contracts, sandbox recipes, settings, and facade exports out of =init.ss=;
+- keep sandbox recipes and non-object configuration out of root =user-interface=;
+- keep =objects.ss=, =config.ss=, and =modules/config.ss= out of root =user-interface=;
+- keep custom module bodies under =custom= so users have room to write their own modules.

@@ -28,7 +28,7 @@
 
 ;;; Workflow options stay alist-shaped so this composition layer can pass
 ;;; caller metadata through without owning Docker or Store schema validation.
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (workflow-option options key default)
   (let (entry (assoc key options))
     (if entry
@@ -38,7 +38,7 @@
 ;;; Boundary:
 ;;; - Option filtering keeps control callbacks out of exported descriptor metadata.
 ;;; - Metadata remains inert data for runtime manifests.
-;; Alist <- Alist Symbol
+;; : (-> Alist Symbol Alist)
 (def (workflow-options-without options key)
   (cond
    ((null? options) '())
@@ -51,7 +51,7 @@
 ;;; Boundary:
 ;;; - Runtime manifests are argv-shaped, so every projected value becomes text.
 ;;; - Symbols stay readable while structured values use s-expression spelling.
-;; CliArgument <- RuntimeValue
+;; : (-> RuntimeValue CliArgument)
 (def (workflow-cli-string value)
   (cond
    ((not value) "")
@@ -61,7 +61,7 @@
 
 ;;; The Docker+Store config composes capabilities and task registries while
 ;;; keeping both backend contracts behind the same runtime command boundary.
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-docker-store-run-config . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (command (workflow-option options 'runtime-command #f)))
@@ -81,7 +81,7 @@
 ;;; CCompilation's public Scheme result is a descriptor-shaped Docker flow.
 ;;; The runtime command owns image pulls, volume realization, compilation, and
 ;;; process handles; this constructor owns the tutorial's stable request shape.
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-ccompilation-flow name)
   (docker-flow name
                "gcc:9.3.0"
@@ -101,7 +101,7 @@
 
 ;;; The store handoff mirrors the tutorial's post-compile artifact boundary:
 ;;; Docker produces a process/artifact result, Store records a durable manifest.
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-ccompilation-store-workflow name)
   (flow-then name
              (make-ccompilation-flow 'compile-c)
@@ -112,7 +112,7 @@
                          'process-handle
                          'artifact-manifest)))
 
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-tensorflow-train-flow name)
   (docker-flow name
                "tensorflow/tensorflow:2.3.0"
@@ -127,7 +127,7 @@
                'unit
                'trained-model))
 
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-tensorflow-inference-flow name)
   (docker-flow name
                "tensorflow/tensorflow:2.3.0"
@@ -147,7 +147,7 @@
 ;;; TensorflowDocker is represented as a two-step external workflow. It keeps
 ;;; the visible training/inference milestones inspectable while leaving model
 ;;; training, image rendering, and filesystem writes to the runtime owner.
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-tensorflow-workflow name)
   (flow-then name
              (make-tensorflow-train-flow 'train-mnist)
@@ -156,7 +156,7 @@
 ;;; Boundary:
 ;;; - makefile-tool parsing is a runtime-owned external task.
 ;;; - Scheme owns only the tutorial-visible project descriptor.
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-makefile-tool-parse-flow name)
   (external-flow name
                  'makefile-tool-parse
@@ -169,7 +169,7 @@
 ;;; Boundary:
 ;;; - makefile-tool execution is a runtime-owned external task.
 ;;; - The output contract models the notebook's process-output result.
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-makefile-tool-run-flow name)
   (external-flow name
                  'makefile-tool-run
@@ -182,7 +182,7 @@
 ;;; Boundary:
 ;;; - This workflow preserves the tutorial's parse-then-run milestone shape.
 ;;; - Rust or another adapter owns Makefile execution and filesystem effects.
-;; Flow <- Symbol
+;; : (-> Symbol Flow)
 (def (make-makefile-tool-workflow name)
   (flow-then name
              (make-makefile-tool-parse-flow 'makefile-tool-parse)
@@ -191,7 +191,18 @@
 ;;; Boundary:
 ;;; - This argument builder is the Rust CLI handoff for makefile-tool requests.
 ;;; - It serializes request metadata without running Makefile or process work.
-;; ([String] <- RuntimeEnvelope) <- [Alist]
+;; | RuntimeArgumentBuilder = (-> RuntimeEnvelope [String])
+;; : (-> [Alist] RuntimeArgumentBuilder)
+;; make-makefile-tool-runtime-arguments
+;;   : (-> [Alist] RuntimeArgumentBuilder)
+;;   | contract: options produce an envelope serializer, not runtime execution
+;;   | doc m%
+;;   | # Examples
+;;   | ```scheme
+;;   | ((make-makefile-tool-runtime-arguments '((runtime-name . "makefile-tool")))
+;;   |  runtime-envelope)
+;;   | ```
+;;   | result: CLI argv list for the Marlin-owned runtime command.
 (def (make-makefile-tool-runtime-arguments . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (runtime-name (workflow-option options
@@ -237,7 +248,7 @@
 ;;; Boundary:
 ;;; - The descriptor is inert until materialized by runtime-adapter code.
 ;;; - Tests may override =arguments= to emulate a runtime response through /bin/echo.
-;; RuntimeCommandDescriptor <- Symbol String [Alist]
+;; : (-> Symbol String [Alist] RuntimeCommandDescriptor)
 (def (make-makefile-tool-runtime-command-descriptor name executable . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (arguments (workflow-option

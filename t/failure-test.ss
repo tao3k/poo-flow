@@ -7,12 +7,12 @@
 
 (export failure-test)
 
-;; Value <- Thunk
+;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
-;; AdapterResult <- ExecutionRequest
+;; : (-> ExecutionRequest AdapterResult)
 (def (failing-submit request)
   (make-adapter-result '(failing-request)
                        'failed
@@ -21,7 +21,7 @@
                        (list (cons 'reason 'boom)
                              (cons 'request-kind (execution-request-kind request)))))
 
-;; AdapterResult <- Value
+;; : (-> Value AdapterResult)
 (def (failing-runtime-slot value)
   (make-adapter-result '(failing-slot)
                        'failed
@@ -31,7 +31,7 @@
 
 ;;; Failing adapter slots let the runner exercise receipt failure wrapping
 ;;; without requiring the Rust runtime to exist in the Scheme test process.
-;; RuntimeAdapter <- Unit
+;; : (-> Unit RuntimeAdapter)
 (def (make-failing-adapter)
   (make-runtime-adapter 'failing
                         '(external)

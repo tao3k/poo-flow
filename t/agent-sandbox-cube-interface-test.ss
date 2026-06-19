@@ -10,7 +10,7 @@
 
 (export agent-sandbox-cube-interface-test)
 
-;; Value <- Alist Symbol
+;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 

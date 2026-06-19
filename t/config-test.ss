@@ -7,7 +7,7 @@
 
 (export config-test)
 
-;; Value <- Thunk
+;; : (-> Thunk Value)
 (def (capture-config-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))

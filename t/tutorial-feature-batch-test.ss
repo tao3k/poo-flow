@@ -7,13 +7,14 @@
         :extensions/custom-task
         :extensions/docker
         :extensions/text
-        :extensions/workflow)
+        :extensions/workflow
+        :extensions/workflow-syntax)
 
-;; Value <- RunConfig Flow Input
+;; : (-> RunConfig Flow Input Value)
 (def (configured-run config flow input)
   (run-result-value (run-flow-with-config config flow input)))
 
-;; Value <- Flow Input
+;; : (-> Flow Input Value)
 (def (local-run flow input)
   (run-result-value
    (runner-run
@@ -21,6 +22,43 @@
                  (make-request-only-adapter))
     flow
     input)))
+
+(defpoo-custom-repeat-flow macro-custom-repeat
+  macro-custom-repeat
+  "woop!"
+  7
+  'string
+  'string)
+
+(defpoo-docker-flow macro-docker-compile
+  macro-docker-compile
+  "gcc:9.3.0"
+  "gcc"
+  '("/example/main.c" "-o" "/output/main")
+  '(((store-item . example-src)
+     (mount-path . "/example"))
+    ((store-item . output-dir)
+     (mount-path . "/output")))
+  'process-handle
+  'integer
+  'process-handle)
+
+(defpoo-store-flow macro-store-put
+  macro-store-put
+  put
+  '((store-item . macro-output)
+    (path . "/output/main"))
+  'process-handle
+  'artifact-manifest)
+
+(defpoo-ccompilation-store-workflow macro-ccompilation-store
+  macro-ccompilation-store)
+
+(defpoo-tensorflow-workflow macro-tensorflow
+  macro-tensorflow)
+
+(defpoo-makefile-tool-workflow macro-makefile-tool
+  macro-makefile-tool)
 
 (run-tests!
   (test-suite "funflow tutorial feature batch"
@@ -225,4 +263,34 @@ FILE WordCount.hs complex-words numbers 123 punctuation!")
         (check-equal? (task-request-payload run-task)
                       '((target . "hello")
                         (binary . "./hello")
-                        (expected-output . process-output)))))))
+                        (expected-output . process-output)))))
+    (test-case "authors extension-owned workflows with Gerbil macros"
+      (let* ((custom-task (car (flow-steps macro-custom-repeat)))
+             (docker-task (car (flow-steps macro-docker-compile)))
+             (store-task (car (flow-steps macro-store-put)))
+             (store-plan (runner-plan
+                          (run-config->runner (make-docker-store-run-config))
+                          macro-ccompilation-store))
+             (tensorflow-plan (runner-plan
+                               (run-config->runner (make-docker-store-run-config))
+                               macro-tensorflow))
+             (makefile-plan (runner-plan
+                             (run-config->runner (make-rust-run-config))
+                             macro-makefile-tool)))
+        (check-equal? (configured-run (make-custom-run-config)
+                                      macro-custom-repeat
+                                      "Kangaroo goes ")
+                      "Kangaroo goes woop!woop!woop!woop!woop!woop!woop!")
+        (check-equal? (task-custom-repeat? custom-task) #t)
+        (check-equal? (task-docker-image docker-task) "gcc:9.3.0")
+        (check-equal? (task-docker-command docker-task) "gcc")
+        (check-equal? (task-request-operation store-task) 'put)
+        (check-equal? (execution-plan-node-ids store-plan)
+                      '((node macro-ccompilation-store 0 docker compile-c)
+                        (node macro-ccompilation-store 1 store store-c-binary)))
+        (check-equal? (execution-plan-node-ids tensorflow-plan)
+                      '((node macro-tensorflow 0 docker train-mnist)
+                        (node macro-tensorflow 1 docker infer-mnist)))
+        (check-equal? (execution-plan-node-ids makefile-plan)
+                      '((node macro-makefile-tool 0 external makefile-tool-parse)
+                        (node macro-makefile-tool 1 external makefile-tool-run)))))))

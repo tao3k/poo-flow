@@ -8,13 +8,13 @@
 
 (export module-system-test)
 
-;; Value <- Thunk
+;; : (-> Thunk Value)
 (def (capture-module-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
 (def module-system-test
-  (test-suite "poo module system"
+  (test-suite "poo-flow module system"
     (test-case "activates module descriptor registries into run config"
       (let* ((task-descriptor
               (make-task-family-descriptor 'remote-job
@@ -28,7 +28,7 @@
                                                 'linear-dag
                                                 'extension))
              (module
-              (make-poo-module-descriptor
+              (make-poo-flow-module-descriptor
                'remote-runtime
                '()
                (make-task-family-registry 'remote-runtime-tasks
@@ -36,16 +36,16 @@
                (make-flow-declaration-registry 'remote-runtime-flows
                                                (list flow-descriptor))
                (list (cons 'source 'test-module))))
-             (activation (activate-poo-modules (list module)))
-             (config (poo-module-activation->run-config
+             (activation (activate-poo-flow-modules (list module)))
+             (config (poo-flow-module-activation->run-config
                       'with-remote-runtime
                       (make-local-eager-strategy)
                       (make-request-only-adapter)
                       activation)))
-        (check-equal? (poo-module-descriptor? module) #t)
-        (check-equal? (poo-module-name module) 'remote-runtime)
-        (check-equal? (cdr (assoc 'poo-modules
-                                  (poo-module-activation-options activation)))
+        (check-equal? (poo-flow-module-descriptor? module) #t)
+        (check-equal? (poo-flow-module-name module) 'remote-runtime)
+        (check-equal? (cdr (assoc 'poo-flow-modules
+                                  (poo-flow-module-activation-options activation)))
                       '(remote-runtime))
         (check-equal? (task-family-name
                        (task-family-for-kind-in
@@ -58,13 +58,13 @@
                         'remote))
                       'remote-flow)))
     (test-case "rejects missing module imports before activation"
-      (let* ((module (make-empty-poo-module-descriptor
+      (let* ((module (make-empty-poo-flow-module-descriptor
                       'feature
                       '(foundation)
                       '()))
              (failure (capture-module-failure
                        (lambda ()
-                         (activate-poo-modules (list module)))))
+                         (activate-poo-flow-modules (list module)))))
              (missing (cdr (assoc 'missing
                                   (execution-failure-detail failure)))))
         (check-equal? (execution-failure? failure) #t)
@@ -73,21 +73,42 @@
         (check-equal? (cdr (assoc 'module (car missing))) 'feature)
         (check-equal? (cdr (assoc 'import (car missing))) 'foundation)))
     (test-case "normalizes source refs as inspectable metadata"
-      (let* ((local (make-poo-module-local-source "modules/remote-runtime.ss"))
-             (package (make-poo-module-package-source 'remote-runtime))
-             (registry (make-poo-module-registry-source 'default-modules))
-             (generated (make-poo-module-generated-source 'generated-runtime))
-             (local-shape (poo-module-source-ref->alist local)))
-        (check-equal? (poo-module-source-ref? local) #t)
-        (check-equal? (poo-module-source-ref-kind package) 'package)
-        (check-equal? (poo-module-source-ref-value registry) 'default-modules)
-        (check-equal? (poo-module-source-ref=? generated
-                                               (make-poo-module-generated-source
+      (let* ((local (make-poo-flow-module-local-source "modules/remote-runtime.ss"))
+             (package (make-poo-flow-module-package-source 'remote-runtime))
+             (standard-library
+              (make-poo-flow-module-standard-library-source 'kernel-profile))
+             (registry (make-poo-flow-module-registry-source 'kernel-profile))
+             (generated (make-poo-flow-module-generated-source 'generated-runtime))
+             (custom-entrypoint
+              (poo-flow-module-custom-config-entrypoint "./custom/my-module"))
+             (custom
+              (make-poo-flow-module-custom-config-source "./custom/my-module"))
+             (custom-metadata
+              (poo-flow-module-source-ref-metadata custom))
+             (local-shape (poo-flow-module-source-ref->alist local)))
+        (check-equal? (poo-flow-module-source-ref? local) #t)
+        (check-equal? (poo-flow-module-source-ref-kind package) 'package)
+        (check-equal? (poo-flow-module-source-ref-kind standard-library)
+                      'standard-library)
+        (check-equal? (cdr (assoc 'library
+                                  (poo-flow-module-source-ref-metadata
+                                   standard-library)))
+                      'standard)
+        (check-equal? (poo-flow-module-source-ref-value registry) 'kernel-profile)
+        (check-equal? (poo-flow-module-source-ref=? generated
+                                               (make-poo-flow-module-generated-source
                                                 'generated-runtime))
                       #t)
         (check-equal? (cdr (assoc 'kind local-shape)) 'local)
         (check-equal? (cdr (assoc 'value local-shape))
-                      "modules/remote-runtime.ss")))
+                      "modules/remote-runtime.ss")
+        (check-equal? custom-entrypoint
+                      "./custom/my-module/config.ss")
+        (check-equal? (poo-flow-module-source-ref-kind custom) 'local)
+        (check-equal? (poo-flow-module-source-ref-value custom)
+                      "./custom/my-module/config.ss")
+        (check-equal? (cdr (assoc 'entrypoint custom-metadata))
+                      "./custom/my-module/config.ss")))
     (test-case "macro syntax expands to the same descriptor contract"
       (let* ((task-descriptor
               (make-task-family-descriptor 'macro-job
@@ -101,19 +122,19 @@
                                                 'linear-dag
                                                 'extension))
              (module
-              (poo-module macro-runtime
+              (poo-flow-module macro-runtime
                 (imports foundation)
                 (tasks task-descriptor)
                 (flows flow-descriptor)
                 (options (cons 'source 'macro-test)))))
-        (check-equal? (poo-module-name module) 'macro-runtime)
-        (check-equal? (poo-module-imports module) '(foundation))
-        (check-equal? (task-family-name (car (poo-module-task-descriptors module)))
+        (check-equal? (poo-flow-module-name module) 'macro-runtime)
+        (check-equal? (poo-flow-module-imports module) '(foundation))
+        (check-equal? (task-family-name (car (poo-flow-module-task-descriptors module)))
                       'macro-job)
         (check-equal? (flow-declaration-kind
-                       (car (poo-module-flow-descriptors module)))
+                       (car (poo-flow-module-flow-descriptors module)))
                       'macro)
-        (check-equal? (cdr (assoc 'source (poo-module-options module)))
+        (check-equal? (cdr (assoc 'source (poo-flow-module-options module)))
                       'macro-test)))
     (test-case "doctor reports duplicate and empty module diagnostics"
       (let* ((task-a (make-task-family-descriptor 'dup-job
@@ -135,7 +156,7 @@
                                                        'linear-dag
                                                        'extension))
              (foundation
-              (make-poo-module-descriptor
+              (make-poo-flow-module-descriptor
                'foundation
                '()
                (make-task-family-registry 'foundation-tasks
@@ -144,21 +165,21 @@
                                                (list flow-a flow-b))
                (list (cons 'source 'first)
                      (cons 'source 'second))))
-             (empty (make-empty-poo-module-descriptor
+             (empty (make-empty-poo-flow-module-descriptor
                      'empty
                      '(foundation)
                      '()))
-             (report (poo-module-doctor (list foundation empty)))
-             (shape (poo-module-doctor-report->alist report)))
-        (check-equal? (poo-module-doctor-ok? report) #f)
-        (check-equal? (poo-module-doctor-report-status report) 'warning)
-        (check-equal? (length (poo-module-doctor-report-diagnostics report)) 4)
+             (report (poo-flow-module-doctor (list foundation empty)))
+             (shape (poo-flow-module-doctor-report->alist report)))
+        (check-equal? (poo-flow-module-doctor-ok? report) #f)
+        (check-equal? (poo-flow-module-doctor-report-status report) 'warning)
+        (check-equal? (length (poo-flow-module-doctor-report-diagnostics report)) 4)
         (check-equal? (cdr (assoc 'modules shape)) '(foundation empty))
-        (check-equal? (poo-module-diagnostic-code
-                       (car (poo-module-doctor-report-diagnostics report)))
+        (check-equal? (poo-flow-module-diagnostic-code
+                       (car (poo-flow-module-doctor-report-diagnostics report)))
                       'duplicate-task-family)))
     (test-case "resolves catalog source refs before doctor and activation"
-      (let* ((source (make-poo-module-generated-source 'remote-runtime))
+      (let* ((source (make-poo-flow-module-generated-source 'remote-runtime))
              (task-descriptor
               (make-task-family-descriptor 'catalog-job
                                            'catalog-job
@@ -166,34 +187,34 @@
                                            'rust-or-external-runtime
                                            'submit))
              (module
-              (make-poo-module-descriptor
+              (make-poo-flow-module-descriptor
                'remote-runtime
                '()
                (make-task-family-registry 'catalog-tasks
                                           (list task-descriptor))
                (make-flow-declaration-registry 'catalog-flows '())
                (list (cons 'source source))))
-             (entry (make-poo-module-catalog-entry source module))
-             (catalog (make-poo-module-catalog 'test-catalog (list entry)))
-             (doctor (poo-module-resolve-doctor catalog (list source)))
-             (activation (poo-module-resolve-and-activate catalog (list source)))
-             (catalog-shape (poo-module-catalog->alist catalog)))
-        (check-equal? (poo-module-catalog? catalog) #t)
-        (check-equal? (cdr (assoc 'module (poo-module-catalog-entry->alist entry)))
+             (entry (make-poo-flow-module-catalog-entry source module))
+             (catalog (make-poo-flow-module-catalog 'test-catalog (list entry)))
+             (doctor (poo-flow-module-resolve-doctor catalog (list source)))
+             (activation (poo-flow-module-resolve-and-activate catalog (list source)))
+             (catalog-shape (poo-flow-module-catalog->alist catalog)))
+        (check-equal? (poo-flow-module-catalog? catalog) #t)
+        (check-equal? (cdr (assoc 'module (poo-flow-module-catalog-entry->alist entry)))
                       'remote-runtime)
-        (check-equal? (poo-module-doctor-report-status doctor) 'ok)
+        (check-equal? (poo-flow-module-doctor-report-status doctor) 'ok)
         (check-equal? (task-family-name
                        (task-family-for-kind-in
-                        (poo-module-activation-task-registry activation)
+                        (poo-flow-module-activation-task-registry activation)
                         'catalog-job))
                       'catalog-job)
         (check-equal? (cdr (assoc 'name catalog-shape)) 'test-catalog)))
     (test-case "raises typed failure for missing catalog sources"
-      (let* ((catalog (make-poo-module-catalog 'empty-catalog '()))
-             (source (make-poo-module-local-source "missing.ss"))
+      (let* ((catalog (make-poo-flow-module-catalog 'empty-catalog '()))
+             (source (make-poo-flow-module-local-source "missing.ss"))
              (failure (capture-module-failure
                        (lambda ()
-                         (resolve-poo-module-source catalog source))))
+                         (resolve-poo-flow-module-source catalog source))))
              (detail (execution-failure-detail failure))
              (source-shape (cdr (assoc 'source detail))))
         (check-equal? (execution-failure? failure) #t)

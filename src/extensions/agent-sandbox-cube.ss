@@ -14,19 +14,27 @@
         make-cube-agent-sandbox-profile
         (import: :extensions/agent-sandbox-cube-interface))
 
-;;; Cube profiles model remote or clustered KVM-backed sandboxes. The macro
-;;; lets Tencent-specific defaults evolve without making core backend-aware.
-;; AgentSandboxBackendProfile <- BackendRef [Alist]
-(defagent-sandbox-backend-profile
-  make-cube-agent-sandbox-profile-descriptor
-  make-cube-agent-sandbox-profile
-  'cube-profile
-  'cube
-  '((mode . egress-filtered))
-  '((isolation . kvm)
-    (api . e2b-compatible))
-  '((snapshot . clone)
-    (resume . supported))
-  (lambda (backend-ref)
-    (list (cons 'backend 'cube)
-          (cons 'template backend-ref))))
+;;; Cube profiles model remote or clustered KVM-backed sandboxes. The ordinary
+;;; helper form keeps backend defaults explicit and avoids macro-only evidence.
+;; : (-> BackendRef [Alist] AgentSandboxProfileDescriptor)
+(def (make-cube-agent-sandbox-profile-descriptor backend-ref . maybe-options)
+  (make-agent-sandbox-backend-profile-descriptor
+   'cube-profile
+   'cube
+   backend-ref
+   '((mode . egress-filtered))
+   '((isolation . kvm)
+     (api . e2b-compatible))
+   '((snapshot . clone)
+     (resume . supported))
+   (lambda (profile-ref)
+     (list (cons 'backend 'cube)
+           (cons 'template profile-ref)))
+   (if (null? maybe-options) '() (car maybe-options))))
+
+;; : (-> BackendRef [Alist] AgentSandboxBackendProfile)
+(def (make-cube-agent-sandbox-profile backend-ref . maybe-options)
+  (agent-sandbox-profile-descriptor->profile
+   (make-cube-agent-sandbox-profile-descriptor
+    backend-ref
+    (if (null? maybe-options) '() (car maybe-options)))))

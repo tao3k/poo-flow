@@ -10,7 +10,7 @@
 
 (export tutorial-runtime-result-test)
 
-;; RuntimeResponseAlist <- Alist Value ArtifactHandle
+;; : (-> Alist Value ArtifactHandle RuntimeResponseAlist)
 (def (tutorial-runtime-response envelope value artifact)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id (cdr (assoc 'request-id envelope)))
@@ -20,28 +20,28 @@
         (cons 'error #f)
         (cons 'metadata '((tutorial . runtime-stage)))))
 
-;; ExecutionRequest <- Alist
+;; : (-> Alist ExecutionRequest)
 (def (runtime-envelope-request envelope)
   (cdr (assoc 'request envelope)))
 
-;; DockerConfig <- ExecutionRequest
+;; : (-> ExecutionRequest DockerConfig)
 (def (runtime-docker-config request)
   (cadr (execution-request-request request)))
 
-;; Symbol <- ExecutionRequest
+;; : (-> ExecutionRequest Symbol)
 (def (runtime-store-operation request)
   (cadr (execution-request-request request)))
 
-;; Payload <- ExecutionRequest
+;; : (-> ExecutionRequest Payload)
 (def (runtime-store-payload request)
   (caddr (execution-request-request request)))
 
-;; Value <- DockerConfig Symbol Value
+;; : (-> DockerConfig Symbol Value Value)
 (def (docker-config-ref config key default)
   (let (entry (assoc key config))
     (if entry (cdr entry) default)))
 
-;; Value <- ExecutionRequest DockerConfig
+;; : (-> ExecutionRequest DockerConfig Value)
 (def (ccompilation-visible-result request docker)
   (if (and (equal? (docker-config-ref docker 'image #f) "gcc:9.3.0")
            (equal? (docker-config-ref docker 'command #f) "gcc")
@@ -51,7 +51,7 @@
 
 ;;; Stage 8 and 9 share runtime behavior; Stage 9 changes only how the command
 ;;; is declared, proving descriptors are the replaceable Rust CLI seam.
-;; ArgumentsBuilder <- Procedure Procedure ArtifactHandle ArtifactHandle
+;; : (-> Procedure Procedure ArtifactHandle ArtifactHandle ArgumentsBuilder)
 (def (docker-store-runtime-arguments record-docker record-store docker-artifact store-artifact)
   (lambda (envelope)
     (let (request (runtime-envelope-request envelope))

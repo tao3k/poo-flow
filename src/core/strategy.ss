@@ -28,7 +28,7 @@
 
 ;;; The planner slot is the only executable policy hook; other fields are
 ;;; declarative metadata used for task and graph-frontier capability checks.
-;; Strategy <- Symbol [Symbol] Symbol Symbol Planner
+;; : (-> Symbol [Symbol] Symbol Symbol Planner Strategy)
 (defstruct strategy
   (name
    capabilities
@@ -39,7 +39,7 @@
 
 ;;; The default strategy mirrors Funflow's eager local path while still lowering
 ;;; to an inspectable plan before any runner touches execution.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-local-eager-strategy)
   (make-strategy 'local-eager
                  '(pure scheme external branch graph-frontier)
@@ -49,7 +49,7 @@
 
 ;;; Cached eager execution records cache intent in receipts but leaves durable
 ;;; cache materialization to the runtime adapter/Rust boundary.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-cached-local-eager-strategy)
   (make-strategy 'cached-local-eager
                  '(pure scheme external branch graph-frontier)
@@ -57,17 +57,17 @@
                  'fail-fast
                  default-linear-plan))
 
-;; ExecutionPlan <- Flow
+;; : (-> Flow ExecutionPlan)
 (def (default-linear-plan flow)
   (flow->linear-plan flow))
 
-;; ExecutionPlan <- Strategy Flow
+;; : (-> Strategy Flow ExecutionPlan)
 (def (strategy-plan strategy flow)
   ((strategy-planner-for-flow strategy flow) flow))
 
 ;;; Flow descriptors declare the planner policy; strategies bind supported
 ;;; descriptor planner names to concrete plan functions.
-;; Planner <- Strategy FlowDeclarationRegistry Flow
+;; : (-> Strategy FlowDeclarationRegistry Flow Planner)
 (def (strategy-planner-for-flow-in strategy registry flow)
   (let ((planner (flow-declaration-planner
                   (flow-declaration-descriptor-in registry flow))))
@@ -81,19 +81,19 @@
        (list (cons 'strategy (strategy-name strategy))
              (cons 'planner planner)))))))
 
-;; Planner <- Strategy Flow
+;; : (-> Strategy Flow Planner)
 (def (strategy-planner-for-flow strategy flow)
   (strategy-planner-for-flow-in strategy default-flow-declaration-registry flow))
 
 ;;; Frontier support is capability-gated so later strategies can opt out of
 ;;; graph scheduling without changing the execution-plan data model.
-;; Boolean <- Strategy
+;; : (-> Strategy Boolean)
 (def (strategy-can-select-frontier? strategy)
   (and (memq 'graph-frontier (strategy-capabilities strategy)) #t))
 
 ;;; Strategy owns the policy decision to expose a ready frontier; plan owns the
 ;;; pure graph predicate that computes it.
-;; [PlanNode] <- Strategy ExecutionPlan [Id]
+;; : (-> Strategy ExecutionPlan [Id] [PlanNode])
 (def (strategy-ready-frontier strategy plan completed-node-ids)
   (if (strategy-can-select-frontier? strategy)
     (execution-plan-ready-nodes plan completed-node-ids)
@@ -105,7 +105,7 @@
 
 ;;; The id projection is the stable receipt/adapter surface for frontier
 ;;; evidence when callers do not need plan-node payloads.
-;; [Id] <- Strategy ExecutionPlan [Id]
+;; : (-> Strategy ExecutionPlan [Id] [Id])
 (def (strategy-ready-frontier-ids strategy plan completed-node-ids)
   (if (strategy-can-select-frontier? strategy)
     (execution-plan-ready-node-ids plan completed-node-ids)
@@ -115,18 +115,18 @@
      "strategy cannot select graph frontier"
      (list (cons 'strategy (strategy-name strategy))))))
 
-;; Boolean <- Strategy TaskFamilyRegistry Task
+;; : (-> Strategy TaskFamilyRegistry Task Boolean)
 (def (strategy-can-run-locally-in strategy registry task)
   (and (memq (task-capability-in registry task) (strategy-capabilities strategy))
        (task-local?-in registry task)))
 
-;; Boolean <- Strategy Task
+;; : (-> Strategy Task Boolean)
 (def (strategy-can-run-locally? strategy task)
   (strategy-can-run-locally-in strategy default-task-family-registry task))
 
 ;;; Cache decisions are evidence values, not storage actions; runners copy them
 ;;; into receipts so adapters can later materialize the policy.
-;; CacheDecision <- Strategy Task Input Output
+;; : (-> Strategy Task Input Output CacheDecision)
 (def (strategy-cache-decision strategy task input output)
   (let ((policy (strategy-cache-policy strategy)))
     (cond

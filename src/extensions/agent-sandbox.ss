@@ -22,6 +22,7 @@
         (import: :extensions/agent-sandbox-marlin-interface)
         agent-sandbox-task-family-descriptor
         make-agent-sandbox-task-family-registry
+        agent-sandbox-enable-strategy
         make-agent-sandbox-enabled-strategy
         make-agent-sandbox-enabled-adapter
         make-agent-sandbox-runtime-adapter
@@ -33,7 +34,7 @@
 
 ;;; The descriptor names the Scheme-visible contract only. Concrete backend
 ;;; selection remains adapter-owned so Marlin can choose API/R/C paths later.
-;; TaskFamilyDescriptor <- Unit
+;; : (-> Unit TaskFamilyDescriptor)
 (def agent-sandbox-task-family-descriptor
   (make-task-family-descriptor 'agent-sandbox
                                'agent-sandbox
@@ -43,7 +44,7 @@
 
 ;;; Registry installation is opt-in and composable with other extension
 ;;; registries. Default core task families are not mutated.
-;; TaskFamilyRegistry <- [TaskFamilyRegistry]
+;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-agent-sandbox-task-family-registry . maybe-registry)
   (task-family-registry-extend
    (if (null? maybe-registry) default-task-family-registry (car maybe-registry))
@@ -51,7 +52,7 @@
 
 ;;; Capability insertion is idempotent because extension wrappers may compose
 ;;; with future Docker-compatible or store-aware adapters.
-;; [Symbol] <- [Symbol] Symbol
+;; : (-> [Symbol] Symbol [Symbol])
 (def (agent-sandbox-capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
@@ -59,7 +60,7 @@
 
 ;;; Strategy wrapping only advertises planning support. It does not select a
 ;;; concrete backend or change the core planner.
-;; Strategy <- Strategy
+;; : (-> Strategy Strategy)
 (def (agent-sandbox-enable-strategy strategy)
   (make-strategy
    (strategy-name strategy)
@@ -71,13 +72,13 @@
 
 ;;; Agent-sandbox-aware strategies are opt-in wrappers over core strategy
 ;;; policy. Core stays unaware of backend-specific sandbox implementations.
-;; Strategy <- Unit
+;; : (-> Unit Strategy)
 (def (make-agent-sandbox-enabled-strategy)
   (agent-sandbox-enable-strategy (make-local-eager-strategy)))
 
 ;;; Adapter wrapping is capability-only. The submit/fetch/store functions stay
 ;;; owned by the underlying adapter so Scheme never becomes the sandbox runtime.
-;; RuntimeAdapter <- RuntimeAdapter
+;; : (-> RuntimeAdapter RuntimeAdapter)
 (def (make-agent-sandbox-enabled-adapter adapter)
   (make-runtime-adapter
    (runtime-adapter-name adapter)
@@ -90,7 +91,7 @@
 
 ;;; Agent-sandbox runtime adapters are Rust-compatible, but their submit slot
 ;;; gives Marlin an extension-aware envelope instead of a generic Rust request.
-;; RuntimeAdapter <- RuntimeCommand | #f
+;; : (-> (U RuntimeCommand #f) RuntimeAdapter)
 (def (make-agent-sandbox-runtime-adapter command)
   (let (base (make-rust-adapter))
     (make-agent-sandbox-enabled-adapter
@@ -109,7 +110,7 @@
 
 ;;; The configured entrypoint installs the extension task registry and adapter
 ;;; capability while leaving backend selection to Marlin or an external runtime.
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-agent-sandbox-run-config . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (command (agent-sandbox-option options 'runtime-command #f)))
@@ -127,7 +128,7 @@
 ;;; callers while routing all backend default logic through the profiled path.
 ;;; Boundary: future backend policy belongs in profiles/options, not by growing
 ;;; this long signature with runtime-owned concerns.
-;; Task <- Symbol Symbol BackendRef Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata Contract Contract
+;; : (-> Symbol Symbol BackendRef Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata Contract Contract Task)
 (def (make-agent-sandbox-task name
                               backend-kind
                               backend-ref
@@ -161,7 +162,7 @@
 
 ;;; Profiled tasks are the preferred bridge-facing constructor. The profile
 ;;; supplies backend defaults and options supply per-task overrides.
-;; Task <- Symbol AgentSandboxProfile Command [Arg] Env Workdir Mounts OutputPolicy Contract Contract [Alist]
+;; : (-> Symbol AgentSandboxProfile Command [Arg] Env Workdir Mounts OutputPolicy Contract Contract [Alist] Task)
 (def (make-profiled-agent-sandbox-task name
                                        profile
                                        command
@@ -199,7 +200,7 @@
 
 ;;; The flow helper keeps user code declaration-shaped: every backend detail is
 ;;; still inert request data until a runtime adapter interprets it.
-;; Flow <- Symbol Symbol BackendRef Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata Contract Contract
+;; : (-> Symbol Symbol BackendRef Command [Arg] Env Workdir Mounts NetworkPolicy Capabilities ResourcePolicy OutputPolicy Metadata Contract Contract Flow)
 (def (agent-sandbox-flow name
                          backend-kind
                          backend-ref
@@ -234,7 +235,7 @@
 
 ;;; Profiled flows keep reusable backend policy out of call sites while still
 ;;; producing the same normalized task request as direct constructors.
-;; Flow <- Symbol AgentSandboxProfile Command [Arg] Env Workdir Mounts OutputPolicy Contract Contract [Alist]
+;; : (-> Symbol AgentSandboxProfile Command [Arg] Env Workdir Mounts OutputPolicy Contract Contract [Alist] Flow)
 (def (profiled-agent-sandbox-flow name
                                   profile
                                   command

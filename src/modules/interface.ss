@@ -4,102 +4,127 @@
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?))
 
-(export poo-modules-kind
-        poo-module-workflow-kind
-        poo-module-value-catalog-kind
-        poo-eval-modules-result-kind
-        poo-module-system-presentation-kind
-        poo-module-interface-kind
-        poo-module-import-kind
-        poo-module-import-source-ref-kind
-        poo-module-import-local-source-kind
-        poo-module-interface-prototype
-        poo-module-interface
-        poo-module-interface?
-        poo-module-interface-id
-        poo-module-interface-schemas
-        poo-module-interface-metadata
-        poo-string-required
-        poo-string-constant
-        poo-string-default
-        poo-string-optional
-        poo-option-merge
-        poo-option-append
-        poo-option-override
-        poo-option-conflict
-        poo-module-kind=?
-        poo-module-object-has-slot?
-        poo-module-object-ref/default
-        poo-module-object->alist)
+(export poo-flow-modules-kind
+        poo-flow-brand-name
+        poo-flow-brand-group
+        poo-flow-scheme-owner
+        poo-flow-module-system-owner
+        poo-flow-module-workflow-kind
+        poo-flow-module-value-catalog-kind
+        poo-flow-eval-modules-result-kind
+        poo-flow-module-system-presentation-kind
+        poo-flow-module-interface-kind
+        poo-flow-module-import-kind
+        poo-flow-module-import-source-ref-kind
+        poo-flow-module-import-local-source-kind
+        poo-flow-module-interface-prototype
+        poo-flow-module-interface
+        poo-flow-module-interface?
+        poo-flow-module-interface-id
+        poo-flow-module-interface-schemas
+        poo-flow-module-interface-metadata
+        poo-flow-string-required
+        poo-flow-string-constant
+        poo-flow-string-default
+        poo-flow-string-optional
+        poo-flow-option-policy
+        poo-flow-option-append
+        poo-flow-option-override
+        poo-flow-option-conflict
+        poo-flow-module-kind=?
+        poo-flow-module-object-has-slot?
+        poo-flow-module-object-ref/default
+        poo-flow-module-object->alist)
+
+;;; Boundary: poo-flow is the product/module-system brand, not the bare POO prefix.
+;; : (-> Unit String)
+(def poo-flow-brand-name
+  "poo-flow")
+
+;;; Boundary: default module group uses the brand identity.
+;; : (-> Unit Symbol)
+(def poo-flow-brand-group
+  'poo-flow)
+
+;;; Boundary: Scheme-side ownership is branded but still Gerbil-hosted.
+;; : (-> Unit String)
+(def poo-flow-scheme-owner
+  "poo-flow.scheme")
+
+;;; Boundary: module-system ownership is distinct from runtime execution.
+;; : (-> Unit String)
+(def poo-flow-module-system-owner
+  "poo-flow.modules")
 
 ;;; Boundary: stable ids are receipt vocabulary only; they do not choose a loader.
-;; ModuleKindId <- Unit
-(def poo-modules-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-modules-kind
   "poo-flow.modules.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-workflow-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-workflow-kind
   "poo-flow.modules.workflow.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-value-catalog-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-value-catalog-kind
   "poo-flow.modules.value-catalog.v1")
 
-;; ModuleKindId <- Unit
-(def poo-eval-modules-result-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-eval-modules-result-kind
   "poo-flow.modules.eval-result.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-system-presentation-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-system-presentation-kind
   "poo-flow.modules.system-presentation.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-interface-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-interface-kind
   "poo-flow.modules.interface.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-import-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-import-kind
   "poo-flow.modules.import.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-import-source-ref-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-import-source-ref-kind
   "poo-flow.modules.import.source-ref.v1")
 
-;; ModuleKindId <- Unit
-(def poo-module-import-local-source-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-import-local-source-kind
   "poo-flow.modules.import.local-source.v1")
 
 ;;; Boundary: interface prototype defaults are sparse so configs can override.
-;; PooModuleInterfacePrototype <- Unit
-(def poo-module-interface-prototype
-  (.o kind: poo-module-interface-kind
+;; : (-> Unit PooModuleInterfacePrototype)
+(def poo-flow-module-interface-prototype
+  (.o kind: poo-flow-module-interface-kind
       id: "anonymous-poo-module-interface"
+      brand-name: poo-flow-brand-name
       schemas: (.o)
       metadata: '()))
 
-;; Boolean <- ModuleKind ModuleKind
-(def (poo-module-kind=? value expected)
+;; : (-> ModuleKind ModuleKind Boolean)
+(def (poo-flow-module-kind=? value expected)
   (cond
    ((and (string? value) (string? expected))
     (string=? value expected))
    (else
     (equal? value expected))))
 
-;;; Boundary: config lookup stays record-like and avoids list-shape parsing.
-;; Boolean <- POOConfigRecord Symbol
-(def (poo-module-object-has-slot? object slot-name)
+;;; Boundary: config lookup stays POO slot-based and avoids list-shape parsing.
+;; : (-> POOConfigRecord Symbol Boolean)
+(def (poo-flow-module-object-has-slot? object slot-name)
   (and (object? object)
        (member slot-name (.all-slots object))))
 
-;; ConfigSlotValue <- POOConfigRecord Symbol ConfigSlotValue
-(def (poo-module-object-ref/default object slot-name default-value)
-  (if (poo-module-object-has-slot? object slot-name)
+;; : (-> POOConfigRecord Symbol ConfigSlotValue ConfigSlotValue)
+(def (poo-flow-module-object-ref/default object slot-name default-value)
+  (if (poo-flow-module-object-has-slot? object slot-name)
     (.ref object slot-name)
     default-value))
 
 ;;; Boundary: alist projection happens only at activation/config edges.
-;; ModuleOptionAlist <- POOConfigRecordOrAlist
-(def (poo-module-object->alist value)
+;; : (-> POOConfigRecordOrAlist ModuleOptionAlist)
+(def (poo-flow-module-object->alist value)
   (cond
    ((object? value)
     (map (lambda (slot-name)
@@ -109,69 +134,69 @@
    (else '())))
 
 ;;; Boundary: schemas live on the interface, user values live in config objects.
-;; PooModuleInterface <- InterfaceId InterfaceSchemaObject InterfaceMetadata
-(def (poo-module-interface interface-id-value schema-object metadata-value)
-  (.o (:: @ (list poo-module-interface-prototype))
+;; : (-> InterfaceId InterfaceSchemaObject InterfaceMetadata PooModuleInterface)
+(def (poo-flow-module-interface interface-id-value schema-object metadata-value)
+  (.o (:: @ (list poo-flow-module-interface-prototype))
       id: interface-id-value
       schemas: schema-object
       metadata: metadata-value))
 
 ;;; Boundary: interface detection uses kind slots, not constructor identity.
-;; Boolean <- PooModuleInterfaceCandidate
-(def (poo-module-interface? value)
+;; : (-> PooModuleInterfaceCandidate Boolean)
+(def (poo-flow-module-interface? value)
   (and (object? value)
-       (poo-module-object-has-slot? value 'kind)
-       (poo-module-kind=? (.ref value 'kind) poo-module-interface-kind)))
+       (poo-flow-module-object-has-slot? value 'kind)
+       (poo-flow-module-kind=? (.ref value 'kind) poo-flow-module-interface-kind)))
 
-;; InterfaceId <- PooModuleInterface
-(def (poo-module-interface-id interface)
+;; : (-> PooModuleInterface InterfaceId)
+(def (poo-flow-module-interface-id interface)
   (.ref interface 'id))
 
-;; InterfaceSchemaObject <- PooModuleInterface
-(def (poo-module-interface-schemas interface)
+;; : (-> PooModuleInterface InterfaceSchemaObject)
+(def (poo-flow-module-interface-schemas interface)
   (.ref interface 'schemas))
 
-;; InterfaceMetadata <- PooModuleInterface
-(def (poo-module-interface-metadata interface)
+;; : (-> PooModuleInterface InterfaceMetadata)
+(def (poo-flow-module-interface-metadata interface)
   (.ref interface 'metadata))
 
 ;;; Boundary: schema helper records are intentionally plain POO values.
-;; InterfaceSchemaSpec <- Unit
-(def (poo-string-required)
+;; : (-> Unit InterfaceSchemaSpec)
+(def (poo-flow-string-required)
   (.o type: 'String))
 
-;; InterfaceSchemaSpec <- String
-(def (poo-string-constant constant-value)
+;; : (-> String InterfaceSchemaSpec)
+(def (poo-flow-string-constant constant-value)
   (.o type: 'String
       constant: constant-value))
 
-;; InterfaceSchemaSpec <- String
-(def (poo-string-default default-value)
+;; : (-> String InterfaceSchemaSpec)
+(def (poo-flow-string-default default-value)
   (.o type: 'String
       default: default-value))
 
-;; InterfaceSchemaSpec <- Unit
-(def (poo-string-optional)
+;; : (-> Unit InterfaceSchemaSpec)
+(def (poo-flow-string-optional)
   (.o type: 'String
       optional?: #t))
 
-;;; Boundary: merge helpers declare option semantics without reading configs.
-;; InterfaceSchemaSpec <- OptionValueType OptionMergeRule Value Alist
-(def (poo-option-merge value-type merge-rule default-value metadata-value)
+;;; Boundary: policy helpers declare option semantics without reading configs.
+;; : (-> OptionValueType OptionPolicyRule Value Alist InterfaceSchemaSpec)
+(def (poo-flow-option-policy value-type policy-rule default-value metadata-value)
   (.o type: value-type
-      merge: merge-rule
+      policy: policy-rule
       default: default-value
       metadata: metadata-value))
 
-;; InterfaceSchemaSpec <- OptionValueType Value
-(def (poo-option-append value-type default-value)
-  (poo-option-merge value-type 'append default-value '()))
+;; : (-> OptionValueType Value InterfaceSchemaSpec)
+(def (poo-flow-option-append value-type default-value)
+  (poo-flow-option-policy value-type 'append default-value '()))
 
-;; InterfaceSchemaSpec <- OptionValueType Value
-(def (poo-option-override value-type default-value)
-  (poo-option-merge value-type 'override default-value '()))
+;; : (-> OptionValueType Value InterfaceSchemaSpec)
+(def (poo-flow-option-override value-type default-value)
+  (poo-flow-option-policy value-type 'override default-value '()))
 
-;; InterfaceSchemaSpec <- OptionValueType
-(def (poo-option-conflict value-type)
+;; : (-> OptionValueType InterfaceSchemaSpec)
+(def (poo-flow-option-conflict value-type)
   (.o type: value-type
-      merge: 'conflict))
+      policy: 'conflict))

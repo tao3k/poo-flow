@@ -13,12 +13,12 @@
         agent-sandbox-request-field-contract-errors
         agent-sandbox-validate-request-fields)
 
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +agent-sandbox-request-schema+ 'poo-flow.agent-sandbox-request.v1)
 
 ;;; Named request fields are the typed public surface for macro builders. They
 ;;; deliberately exclude profile-derived backend fields, which stay descriptor-owned.
-;; [Symbol] <- Unit
+;; : (-> Unit [Symbol])
 (def +agent-sandbox-request-field-names+
   '(command
     args
@@ -31,13 +31,13 @@
     output-policy
     metadata))
 
-;; Boolean <- Symbol
+;; : (-> Symbol Boolean)
 (def (agent-sandbox-request-builder-field? field)
   (and (memq field +agent-sandbox-request-field-names+) #t))
 
 ;;; Field contract errors catch typo-level interface mistakes before request
 ;;; normalization merges profile defaults into the runtime-facing shape.
-;; [ValidationError] <- FieldAlist
+;; : (-> FieldAlist [ValidationError])
 (def (agent-sandbox-request-field-contract-errors fields)
   (cond
    ((null? fields) '())
@@ -55,7 +55,7 @@
 
 ;;; Field validation is the first gate for the higher-level request macro:
 ;;; accepted fields are explicit, but value-level semantics remain request-owned.
-;; FieldAlist <- FieldAlist
+;; : (-> FieldAlist FieldAlist)
 (def (agent-sandbox-validate-request-fields fields)
   (let (errors (agent-sandbox-request-field-contract-errors fields))
     (if (null? errors)

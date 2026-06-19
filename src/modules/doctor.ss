@@ -1,172 +1,214 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: user-facing module doctor presentations.
 ;;; Invariant: doctor presentation explains data and never activates runtime execution.
-;;; Intent: borrow Doom's doctor ergonomics while keeping Nix-style receipts explicit.
+;;; Intent: borrow Doom's doctor ergonomics while keeping POO values explicit.
 ;;; Parser policy should treat this file as the module-system doctor surface owner.
 
 (import (only-in :clan/poo/object .o .ref)
+        :modules/interface
         :modules/source
         :modules/descriptor
         :modules/diagnostics
         :modules/projection
-        :modules/loader
-        :modules/merge)
+        :modules/loader)
 
-(export poo-module-doctor-presentation-kind
-        poo-module-source-doctor-presentation-kind
-        pooModuleDoctorPresentation
-        pooModuleSourceDoctorPresentation)
+(export poo-flow-module-doctor-presentation-kind
+        poo-flow-module-source-doctor-presentation-kind
+        pooFlowModuleDoctorPresentation
+        poo-flow-module-doctor-presentation
+        pooFlowModuleSourceDoctorPresentation
+        poo-flow-module-source-doctor-presentation)
 
 ;;; Boundary: value-catalog doctor kind identifies summaries over in-memory modules.
-;; ModuleKindId <- Unit
-(def poo-module-doctor-presentation-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-doctor-presentation-kind
   "poo-flow.modules.doctor-presentation.v1")
 
 ;;; Boundary: source doctor kind identifies summaries that include loader receipts.
-;; ModuleKindId <- Unit
-(def poo-module-source-doctor-presentation-kind
+;; : (-> Unit ModuleKindId)
+(def poo-flow-module-source-doctor-presentation-kind
   "poo-flow.modules.source-doctor-presentation.v1")
 
 ;;; Boundary: validation receipt projection stays local to the doctor edge.
-;; Alist <- PooModuleOptionValidationReceipt
-(def (poo-module-validation-receipt->alist receipt)
-  (list (cons 'id (poo-module-option-validation-receipt-id receipt))
+;; : (-> PooModuleOptionValidationReceipt Alist)
+(def (poo-flow-module-validation-receipt->alist receipt)
+  (list (cons 'id (poo-flow-module-option-validation-receipt-id receipt))
         (cons 'source-module
-              (poo-module-option-validation-receipt-source-module receipt))
-        (cons 'valid? (poo-module-option-validation-receipt-valid? receipt))
-        (cons 'code (poo-module-option-validation-receipt-code receipt))
-        (cons 'messages (poo-module-option-validation-receipt-messages receipt))
-        (cons 'metadata (poo-module-option-validation-receipt-metadata receipt))))
+              (poo-flow-module-option-validation-receipt-source-module receipt))
+        (cons 'valid? (poo-flow-module-option-validation-receipt-valid? receipt))
+        (cons 'code (poo-flow-module-option-validation-receipt-code receipt))
+        (cons 'messages (poo-flow-module-option-validation-receipt-messages receipt))
+        (cons 'metadata (poo-flow-module-option-validation-receipt-metadata receipt))))
 
 ;;; Boundary: import profiles are summarized without resolving source refs.
-;; Value <- ModuleImportProfile
-(def (poo-module-import-profile-summary profile)
+;; : (-> ModuleImportProfile Value)
+(def (poo-flow-module-import-profile-summary profile)
   (cond
-   ((poo-module-config? profile) (poo-module-name profile))
+   ((poo-flow-module-config? profile) (poo-flow-module-name profile))
    (else profile)))
 
 ;;; Boundary: import summaries expose source metadata and profile identity only.
-;; Alist <- ModuleImportValue
-(def (poo-module-import-summary import-value)
-  (if (poo-import? import-value)
+;; : (-> ModuleImportValue Alist)
+(def (poo-flow-module-import-summary import-value)
+  (if (poo-flow-import? import-value)
     (let ((source-ref (.ref import-value 'source-ref))
           (profile (.ref import-value 'profile)))
       (list (cons 'source
                   (if source-ref
-                    (poo-module-source-ref->alist source-ref)
+                    (poo-flow-module-source-ref->alist source-ref)
                     #f))
             (cons 'profile
-                  (poo-module-import-profile-summary profile))))
+                  (poo-flow-module-import-profile-summary profile))))
     (list (cons 'source #f)
           (cons 'profile
-                (poo-module-import-profile-summary import-value)))))
+                (poo-flow-module-import-profile-summary import-value)))))
 
 ;;; Boundary: import graph is a per-module projection, not a resolver action.
-;; Alist <- PooModuleDescriptor
-(def (poo-module-import-graph-entry module)
-  (cons (poo-module-name module)
-        (map poo-module-import-summary
-             (poo-module-imports module))))
+;; : (-> PooModuleDescriptor Alist)
+(def (poo-flow-module-import-graph-entry module)
+  (cons (poo-flow-module-name module)
+        (map poo-flow-module-import-summary
+             (poo-flow-module-imports module))))
 
 ;;; Boundary: full import graph keeps named imports unresolved for doctor visibility.
-;; Alist <- [PooModuleDescriptor]
-(def (poo-module-import-graph modules)
-  (map poo-module-import-graph-entry modules))
+;; : (-> [PooModuleDescriptor] Alist)
+(def (poo-flow-module-import-graph modules)
+  (map poo-flow-module-import-graph-entry modules))
 
 ;;; Boundary: contribution summary counts descriptor payloads without interpreting them.
-;; Alist <- PooModuleDescriptor
-(def (poo-module-contribution-summary module)
-  (list (cons 'module (poo-module-name module))
-        (cons 'import-count (length (poo-module-imports module)))
-        (cons 'task-count (length (poo-module-task-descriptors module)))
-        (cons 'flow-count (length (poo-module-flow-descriptors module)))
-        (cons 'option-count (length (poo-module-options module)))
-        (cons 'extension-count (length (poo-module-extensions module)))
-        (cons 'script-count (length (poo-module-scripts module)))
-        (cons 'hook-count (length (poo-module-hooks module)))))
+;; : (-> PooModuleDescriptor Alist)
+(def (poo-flow-module-contribution-summary module)
+  (list (cons 'module (poo-flow-module-name module))
+        (cons 'import-count (length (poo-flow-module-imports module)))
+        (cons 'task-count (length (poo-flow-module-task-descriptors module)))
+        (cons 'flow-count (length (poo-flow-module-flow-descriptors module)))
+        (cons 'option-count (length (poo-flow-module-options module)))
+        (cons 'extension-count (length (poo-flow-module-extensions module)))
+        (cons 'script-count (length (poo-flow-module-scripts module)))
+        (cons 'hook-count (length (poo-flow-module-hooks module)))))
 
 ;;; Boundary: contribution summaries are intentionally shallow for CLI-sized output.
-;; [Alist] <- [PooModuleDescriptor]
-(def (poo-module-contribution-summaries modules)
-  (map poo-module-contribution-summary modules))
+;; : (-> [PooModuleDescriptor] [Alist])
+(def (poo-flow-module-contribution-summaries modules)
+  (map poo-flow-module-contribution-summary modules))
 
-;;; Boundary: merge status collapses detailed receipts into one doctor-level signal.
-;; Boolean <- [PooModuleOptionMergeReceipt]
-(def (poo-module-merge-receipts-all-valid? receipts)
+;;; Boundary: loader status is a presentation signal, not a strict-load action.
+;; : (-> [PooModuleLoadReceipt] Boolean)
+(def (poo-flow-module-load-receipts-all-loaded? receipts)
   (cond
    ((null? receipts) #t)
-   ((poo-module-option-merge-receipt-valid? (car receipts))
-    (poo-module-merge-receipts-all-valid? (cdr receipts)))
+   ((poo-flow-module-load-receipt-loaded? (car receipts))
+    (poo-flow-module-load-receipts-all-loaded? (cdr receipts)))
    (else #f)))
 
+;;; Boundary: missing count is derived from receipts without inspecting sources.
+;; : (-> [PooModuleLoadReceipt] Fixnum)
+(def (poo-flow-module-load-receipts-missing-count receipts)
+  (cond
+   ((null? receipts) 0)
+   ((poo-flow-module-load-receipt-loaded? (car receipts))
+    (poo-flow-module-load-receipts-missing-count (cdr receipts)))
+   (else
+    (+ 1 (poo-flow-module-load-receipts-missing-count (cdr receipts))))))
+
+;;; Boundary: empty source lists are distinct from failed source loads.
+;; : (-> [PooModuleSourceRef] [PooModuleLoadReceipt] Symbol)
+(def (poo-flow-module-load-status source-refs receipts)
+  (cond
+   ((null? source-refs) 'empty)
+   ((poo-flow-module-load-receipts-all-loaded? receipts) 'ok)
+   (else 'error)))
+
 ;;; Boundary: root doctor presentation is the shared data projection for both callers.
-;; POOObject <- PooModuleDescriptor
-(def (poo-module-root-doctor-presentation root-module)
-  (let* ((closed-modules (poo-module-closure (list root-module)))
-         (doctor-report (poo-module-doctor closed-modules))
-         (evaluation-value (poo-module-evaluate root-module))
+;; : (-> PooModuleDescriptor POOObject)
+(def (poo-flow-module-root-doctor-presentation root-module)
+  (let* ((closed-modules (poo-flow-module-closure (list root-module)))
+         (doctor-report (poo-flow-module-doctor closed-modules))
+         (evaluation-value (poo-flow-module-evaluate root-module))
          (validation-receipts
-          (.ref evaluation-value 'validation-receipts))
-         (merge-receipts
-          (poo-module-option-merge-receipts root-module)))
-    (.o kind: poo-module-doctor-presentation-kind
-        root-module-id: (poo-module-name root-module)
-        module-ids: (poo-module-names closed-modules)
-        doctor-status: (poo-module-doctor-report-status doctor-report)
-        doctor-ok: (poo-module-doctor-ok? doctor-report)
+         (.ref evaluation-value 'validation-receipts)))
+    (.o kind: poo-flow-module-doctor-presentation-kind
+        root-module-id: (poo-flow-module-name root-module)
+        module-ids: (poo-flow-module-names closed-modules)
+        doctor-status: (poo-flow-module-doctor-report-status doctor-report)
+        doctor-ok: (poo-flow-module-doctor-ok? doctor-report)
         diagnostics:
-        (map poo-module-diagnostic->alist
-             (poo-module-doctor-report-diagnostics doctor-report))
-        import-graph: (poo-module-import-graph closed-modules)
-        contributions: (poo-module-contribution-summaries closed-modules)
+        (map poo-flow-module-diagnostic->alist
+             (poo-flow-module-doctor-report-diagnostics doctor-report))
+        import-graph: (poo-flow-module-import-graph closed-modules)
+        contributions: (poo-flow-module-contribution-summaries closed-modules)
         validation-receipt-count: (length validation-receipts)
-        merge-status:
-        (if (poo-module-merge-receipts-all-valid? merge-receipts) 'ok 'error)
-        merge-receipt-count: (length merge-receipts)
-        merged-options: (poo-module-merged-option-alist root-module)
         module-evaluation-kind: (.ref evaluation-value 'kind)
-        scheme-owner: "gerbil-poo"
-        runtime-owner: "poo-flow-runtime"
+        brand-name: poo-flow-brand-name
+        brand-group: poo-flow-brand-group
+        scheme-owner: poo-flow-scheme-owner
+        module-system-owner: poo-flow-module-system-owner
+        runtime-owner: "marlin-agent-core"
+        runtime-boundary-owner: "marlin-agent-core"
+        runtime-parses-scheme-source: #f
+        scheme-manufactures-runtime-handlers: #f
         runtime-executed: #f
         replayable: #t)))
 
 ;;; Boundary: value-catalog doctor mirrors system presentation root selection.
 ;;; Intent: callers can inspect already-built module values without invoking source loaders.
 ;;; Runtime activation remains an explicit resolver step outside this presentation helper.
-;; POOObject <- PooModuleValueCatalog MaybeModuleName
-(def (pooModuleDoctorPresentation catalog . maybe-root-module-id)
-  (poo-module-root-doctor-presentation
-   (poo-module-value-catalog-root
+;; : (-> PooModuleValueCatalog MaybeModuleName POOObject)
+(def (pooFlowModuleDoctorPresentation catalog . maybe-root-module-id)
+  (poo-flow-module-root-doctor-presentation
+   (poo-flow-module-value-catalog-root
     catalog
     (if (null? maybe-root-module-id) #f (car maybe-root-module-id)))))
 
+;; : (-> PooModuleValueCatalog MaybeModuleName POOObject)
+(def poo-flow-module-doctor-presentation
+  pooFlowModuleDoctorPresentation)
+
 ;;; Boundary: source doctor ignores failed loads here because receipts retain failures.
-;; [PooModuleDescriptor] <- [PooModuleLoadReceipt]
-(def (poo-module-loaded-modules-from-receipts receipts)
+;; : (-> [PooModuleLoadReceipt] [PooModuleDescriptor])
+(def (poo-flow-module-loaded-modules-from-receipts receipts)
   (cond
    ((null? receipts) '())
-   ((poo-module-load-receipt-loaded? (car receipts))
-    (cons (poo-module-load-receipt-module (car receipts))
-          (poo-module-loaded-modules-from-receipts (cdr receipts))))
+   ((poo-flow-module-load-receipt-loaded? (car receipts))
+    (cons (poo-flow-module-load-receipt-module (car receipts))
+          (poo-flow-module-loaded-modules-from-receipts (cdr receipts))))
    (else
-    (poo-module-loaded-modules-from-receipts (cdr receipts)))))
+    (poo-flow-module-loaded-modules-from-receipts (cdr receipts)))))
 
 ;;; Boundary: source doctor surfaces loader evidence before descriptor diagnostics.
-;; POOObject <- [PooModuleLoaderBackend] [PooModuleSourceRef]
-(def (pooModuleSourceDoctorPresentation backends source-refs)
+;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] POOObject)
+(def (pooFlowModuleSourceDoctorPresentation backends source-refs)
   (let* ((load-receipts
-          (poo-module-load-source-receipts backends source-refs))
+         (poo-flow-module-load-source-receipts backends source-refs))
          (loaded-modules
-          (poo-module-loaded-modules-from-receipts load-receipts))
+          (poo-flow-module-loaded-modules-from-receipts load-receipts))
          (root-module
-          (if (null? loaded-modules) #f (car loaded-modules))))
-    (.o kind: poo-module-source-doctor-presentation-kind
+          (if (null? loaded-modules) #f (car loaded-modules)))
+         (missing-count-value
+          (poo-flow-module-load-receipts-missing-count load-receipts))
+         (load-status-value
+          (poo-flow-module-load-status source-refs load-receipts)))
+    (.o kind: poo-flow-module-source-doctor-presentation-kind
         source-count: (length source-refs)
         loaded-count: (length loaded-modules)
-        load-receipts: (map poo-module-load-receipt->alist load-receipts)
+        missing-count: missing-count-value
+        load-status: load-status-value
+        load-receipts: (map poo-flow-module-load-receipt->alist load-receipts)
         module-doctor:
         (if root-module
-          (poo-module-root-doctor-presentation root-module)
+          (poo-flow-module-root-doctor-presentation root-module)
           #f)
+        brand-name: poo-flow-brand-name
+        brand-group: poo-flow-brand-group
+        scheme-owner: poo-flow-scheme-owner
+        module-system-owner: poo-flow-module-system-owner
+        runtime-owner: "marlin-agent-core"
+        runtime-boundary-owner: "marlin-agent-core"
+        runtime-parses-scheme-source: #f
+        scheme-manufactures-runtime-handlers: #f
         runtime-executed: #f
         replayable: #t)))
+
+;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] POOObject)
+(def poo-flow-module-source-doctor-presentation
+  pooFlowModuleSourceDoctorPresentation)

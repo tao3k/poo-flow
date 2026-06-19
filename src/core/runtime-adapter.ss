@@ -73,7 +73,7 @@
         adapter-store-put
         adapter-store-get)
 
-;; AdapterResult <- RequestId Symbol Value ArtifactHandle Error
+;; : (-> RequestId Symbol Value ArtifactHandle Error AdapterResult)
 (defstruct adapter-result
   (request-id
    status
@@ -82,19 +82,19 @@
    error)
   transparent: #t)
 
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +runtime-request-schema+ 'poo-flow.runtime-request.v1)
 
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +runtime-response-schema+ 'poo-flow.runtime-response.v1)
 
-;; Symbol <- Unit
+;; : (-> Unit Symbol)
 (def +runtime-command-descriptor-schema+ 'poo-flow.runtime-command-descriptor.v1)
 
 ;;; Runtime responses are the durable schema projection for adapter results.
 ;;; The runner may still consume =adapter-result= directly, while Rust bridges
 ;;; and receipt stores can persist this stable alist-shaped response.
-;; RuntimeResponse <- RequestId Symbol Value ArtifactHandle Error Alist
+;; : (-> RequestId Symbol Value ArtifactHandle Error Alist RuntimeResponse)
 (defstruct runtime-response
   (request-id
    status
@@ -104,7 +104,7 @@
    metadata)
   transparent: #t)
 
-;; Alist <- RuntimeResponse
+;; : (-> RuntimeResponse Alist)
 (def (runtime-response->alist response)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id (runtime-response-request-id response))
@@ -114,7 +114,7 @@
         (cons 'error (runtime-response-error response))
         (cons 'metadata (runtime-response-metadata response))))
 
-;; RuntimeResponse <- AdapterResult [Alist]
+;; : (-> AdapterResult [Alist] RuntimeResponse)
 (def (adapter-result->runtime-response result . maybe-metadata)
   (make-runtime-response
    (adapter-result-request-id result)
@@ -124,18 +124,18 @@
    (adapter-result-error result)
    (if (null? maybe-metadata) '() (car maybe-metadata))))
 
-;; Alist <- AdapterResult
+;; : (-> AdapterResult Alist)
 (def (adapter-result->alist result)
   (runtime-response->alist (adapter-result->runtime-response result)))
 
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (runtime-alist-ref alist key default)
   (let (entry (assoc key alist))
     (if entry
       (cdr entry)
       default)))
 
-;; AdapterResult <- RuntimeResponse
+;; : (-> RuntimeResponse AdapterResult)
 (def (runtime-response->adapter-result response)
   (make-adapter-result
    (runtime-response-request-id response)
@@ -144,13 +144,13 @@
    (runtime-response-artifact-handle response)
    (runtime-response-error response)))
 
-;; Boolean <- RuntimeResponseAlistCandidate
+;; : (-> RuntimeResponseAlistCandidate Boolean)
 (def (runtime-response-alist? value)
   (and (list? value)
        (let (schema (assoc 'schema value))
          (and schema (eq? (cdr schema) +runtime-response-schema+)))))
 
-;; AdapterResult <- Alist Value
+;; : (-> Alist Value AdapterResult)
 (def (invalid-runtime-response envelope response)
   (make-adapter-result
    (runtime-alist-ref envelope 'request-id #f)
@@ -162,7 +162,7 @@
 
 ;;; Runtime command responses are normalized before the runner sees them, so
 ;;; callers can return either the durable schema or the internal adapter shape.
-;; AdapterResult <- Alist Value
+;; : (-> Alist Value AdapterResult)
 (def (normalize-runtime-response envelope response)
   (cond
    ((adapter-result? response)
@@ -185,7 +185,7 @@
 
 ;;; Function slots are the runtime boundary; Scheme policy calls these slots
 ;;; without owning the heavy implementation behind them.
-;; RuntimeAdapter <- Symbol [Symbol] Submitter Fetcher StorePutter StoreGetter
+;; : (-> Symbol [Symbol] Submitter Fetcher StorePutter StoreGetter RuntimeAdapter)
 (defstruct runtime-adapter
   (name
    capabilities
@@ -198,7 +198,7 @@
 ;;; Runtime commands describe the replaceable command/IPC boundary behind the
 ;;; Rust adapter.  The current Scheme tests can install a procedure command;
 ;;; later Rust or process-backed commands should keep this call shape stable.
-;; RuntimeCommand <- Symbol Symbol Invoker Alist
+;; : (-> Symbol Symbol Invoker Alist RuntimeCommand)
 (defstruct runtime-command
   (name
    kind
@@ -208,7 +208,7 @@
 
 ;;; Runtime command descriptors are inert CLI contracts. They make the future
 ;;; Rust executable boundary inspectable before the command is materialized.
-;; RuntimeCommandDescriptor <- Symbol Path ArgumentsBuilder Protocol Alist
+;; : (-> Symbol Path ArgumentsBuilder Protocol Alist RuntimeCommandDescriptor)
 (defstruct runtime-command-descriptor
   (name
    executable
@@ -217,14 +217,14 @@
    metadata)
   transparent: #t)
 
-;; RuntimeCommand <- Symbol Invoker [Alist]
+;; : (-> Symbol Invoker [Alist] RuntimeCommand)
 (def (make-procedure-runtime-command name invoker . maybe-metadata)
   (make-runtime-command name
                         'procedure
                         invoker
                         (if (null? maybe-metadata) '() (car maybe-metadata))))
 
-;; RuntimeResponseLike <- Alist Symbol Value Alist
+;; : (-> Alist Symbol Value Alist RuntimeResponseLike)
 (def (runtime-command-failure-response envelope code detail metadata)
   (list (cons 'schema +runtime-response-schema+)
         (cons 'request-id (runtime-alist-ref envelope 'request-id #f))
@@ -235,7 +235,7 @@
                            (cons 'detail detail)))
         (cons 'metadata metadata)))
 
-;; RuntimeCommand <- Symbol Path ArgumentsBuilder ResponseDecoder [Alist]
+;; : (-> Symbol Path ArgumentsBuilder ResponseDecoder [Alist] RuntimeCommand)
 (def (make-process-runtime-command name executable arguments response-decoder . maybe-metadata)
   (let (metadata (append (list (cons 'executable executable))
                          (if (null? maybe-metadata) '() (car maybe-metadata))))
@@ -254,7 +254,7 @@
 ;;; Stdout protocol commands print one runtime-response s-expression. This keeps
 ;;; process-backed tests close to the future Rust CLI contract without forcing
 ;;; each caller to install a custom decoder.
-;; RuntimeResponseLike <- Alist String
+;; : (-> Alist String RuntimeResponseLike)
 (def (runtime-command-read-response envelope stdout)
   (with-catch
    (lambda (failure)
@@ -265,7 +265,7 @@
    (lambda ()
      (call-with-input-string stdout read))))
 
-;; RuntimeCommand <- Symbol Path ArgumentsBuilder [Alist]
+;; : (-> Symbol Path ArgumentsBuilder [Alist] RuntimeCommand)
 (def (make-stdout-runtime-command name executable arguments . maybe-metadata)
   (apply make-process-runtime-command
          name
@@ -274,7 +274,7 @@
          runtime-command-read-response
          maybe-metadata))
 
-;; RuntimeCommandDescriptor <- Symbol Path ArgumentsBuilder [Alist]
+;; : (-> Symbol Path ArgumentsBuilder [Alist] RuntimeCommandDescriptor)
 (def (make-stdout-runtime-command-descriptor name executable arguments . maybe-metadata)
   (make-runtime-command-descriptor
    name
@@ -283,7 +283,7 @@
    'stdout-s-expression
    (if (null? maybe-metadata) '() (car maybe-metadata))))
 
-;; [String] <- RuntimeCommandDescriptor Alist
+;; : (-> RuntimeCommandDescriptor Alist [String])
 (def (runtime-command-descriptor-arguments-for descriptor envelope)
   (let (arguments (runtime-command-descriptor-arguments descriptor))
     (if (procedure? arguments)
@@ -292,7 +292,7 @@
 
 ;;; Descriptor manifests are the concrete CLI handoff for a request envelope:
 ;;; Rust can consume this data without knowing Scheme constructor details.
-;; Alist <- RuntimeCommandDescriptor Alist
+;; : (-> RuntimeCommandDescriptor Alist Alist)
 (def (runtime-command-descriptor->manifest descriptor envelope)
   (let ((arguments (runtime-command-descriptor-arguments-for descriptor envelope)))
     (list (cons 'schema +runtime-command-descriptor-schema+)
@@ -313,20 +313,20 @@
                             arguments))
           (cons 'metadata (runtime-command-descriptor-metadata descriptor)))))
 
-;; Boolean <- RuntimeCommandManifestCandidate
+;; : (-> RuntimeCommandManifestCandidate Boolean)
 (def (runtime-command-manifest? value)
   (and (list? value)
        (let (schema (assoc 'schema value))
          (and schema
               (eq? (cdr schema) +runtime-command-descriptor-schema+)))))
 
-;; Value <- RuntimeCommandManifest Symbol Value
+;; : (-> RuntimeCommandManifest Symbol Value Value)
 (def (runtime-command-manifest-ref manifest key default)
   (runtime-alist-ref manifest key default))
 
 ;;; Manifest argv is the concrete Rust/process command line.  If older
 ;;; manifests omit =argv=, it is reconstructed from executable and arguments.
-;; [String] <- RuntimeCommandManifest
+;; : (-> RuntimeCommandManifest [String])
 (def (runtime-command-manifest-argv manifest)
   (runtime-command-manifest-ref
    manifest
@@ -336,7 +336,7 @@
 
 ;;; A manifest is request-bound, so its envelope is reconstructed from the
 ;;; durable request fields captured when descriptor code exported the manifest.
-;; Alist <- RuntimeCommandManifest
+;; : (-> RuntimeCommandManifest Alist)
 (def (runtime-command-manifest-envelope manifest)
   (list (cons 'schema
               (runtime-command-manifest-ref manifest
@@ -360,7 +360,7 @@
         (cons 'frontier
               (runtime-command-manifest-ref manifest 'frontier '()))))
 
-;; AdapterResult <- RuntimeCommandManifest Symbol Value
+;; : (-> RuntimeCommandManifest Symbol Value AdapterResult)
 (def (runtime-command-manifest-failure manifest code detail)
   (make-adapter-result
    (runtime-command-manifest-ref manifest 'request-id #f)
@@ -372,7 +372,7 @@
 
 ;;; Manifest execution is the first local consumer for Rust CLI handoff data:
 ;;; it runs the stored argv and normalizes stdout through the declared protocol.
-;; AdapterResult <- RuntimeCommandManifest
+;; : (-> RuntimeCommandManifest AdapterResult)
 (def (run-runtime-command-manifest manifest)
   (cond
    ((not (runtime-command-manifest? manifest))
@@ -402,7 +402,7 @@
 
 ;;; Materializing a manifest as a command lets existing adapter tests consume a
 ;;; request-bound CLI manifest through the same RuntimeCommand slot.
-;; RuntimeCommand <- RuntimeCommandManifest
+;; : (-> RuntimeCommandManifest RuntimeCommand)
 (def (runtime-command-manifest->command manifest)
   (make-procedure-runtime-command
    (runtime-command-manifest-ref manifest 'name 'runtime-command-manifest)
@@ -413,7 +413,7 @@
 
 ;;; Descriptor materialization is the narrow replacement seam for Rust-backed
 ;;; commands: workflow code depends on protocol data, not constructor details.
-;; RuntimeCommand <- RuntimeCommandDescriptor
+;; : (-> RuntimeCommandDescriptor RuntimeCommand)
 (def (runtime-command-descriptor->command descriptor)
   (let ((metadata (append (list (cons 'protocol
                                       (runtime-command-descriptor-protocol descriptor)))
@@ -434,7 +434,7 @@
           metadata))
        metadata))))
 
-;; RuntimeResponseLike <- RuntimeCommandCandidate Alist
+;; : (-> RuntimeCommandCandidate Alist RuntimeResponseLike)
 (def (runtime-command-call command envelope)
   (cond
    ((runtime-command? command)
@@ -449,7 +449,7 @@
 
 ;;; The request-only adapter is deterministic evidence plumbing for tests and
 ;;; early control-plane validation.
-;; RuntimeAdapter <- Unit
+;; : (-> Unit RuntimeAdapter)
 (def (make-request-only-adapter)
   (make-runtime-adapter 'request-only
                         '(external)
@@ -460,7 +460,7 @@
 
 ;;; The Rust adapter is a Scheme-side handoff stub. It proves the request shape
 ;;; can cross the boundary without embedding the heavy runtime implementation.
-;; RuntimeAdapter <- [RuntimeCommand]
+;; : (-> [RuntimeCommand] RuntimeAdapter)
 (def (make-rust-adapter . maybe-command)
   (if (or (null? maybe-command) (not (car maybe-command)))
     (make-runtime-adapter 'rust
@@ -479,35 +479,35 @@
                               (rust-command-store-put command request))
                             rust-store-get))))
 
-;; Boolean <- RuntimeAdapter Symbol
+;; : (-> RuntimeAdapter Symbol Boolean)
 (def (adapter-supports? adapter capability)
   (and (memq capability (runtime-adapter-capabilities adapter)) #t))
 
-;; AdapterResult <- RuntimeAdapter ExecutionRequest
+;; : (-> RuntimeAdapter ExecutionRequest AdapterResult)
 (def (adapter-submit adapter request)
   ((runtime-adapter-submitter adapter) request))
 
-;; AdapterResult <- RuntimeAdapter RequestId
+;; : (-> RuntimeAdapter RequestId AdapterResult)
 (def (adapter-fetch adapter request-id)
   ((runtime-adapter-fetcher adapter) request-id))
 
-;; AdapterResult <- RuntimeAdapter ExecutionRequest
+;; : (-> RuntimeAdapter ExecutionRequest AdapterResult)
 (def (adapter-store-put adapter request)
   ((runtime-adapter-store-putter adapter) request))
 
-;; AdapterResult <- RuntimeAdapter ArtifactHandle
+;; : (-> RuntimeAdapter ArtifactHandle AdapterResult)
 (def (adapter-store-get adapter handle)
   ((runtime-adapter-store-getter adapter) handle))
 
-;; RequestId <- ExecutionRequest
+;; : (-> ExecutionRequest RequestId)
 (def (request-id request)
   (list 'request (execution-request-name request) (execution-request-kind request)))
 
-;; RequestId <- ExecutionRequest
+;; : (-> ExecutionRequest RequestId)
 (def (rust-request-id request)
   (list 'rust-request (execution-request-name request) (execution-request-kind request)))
 
-;; ArtifactHandle <- ExecutionRequest
+;; : (-> ExecutionRequest ArtifactHandle)
 (def (rust-artifact-handle request)
   (list 'rust-artifact
         (execution-request-plan-id request)
@@ -515,7 +515,7 @@
 
 ;;; The envelope is intentionally alist-shaped so Rust can deserialize the same
 ;;; data without understanding Gerbil structs.
-;; Alist <- ExecutionRequest [Symbol]
+;; : (-> ExecutionRequest [Symbol] Alist)
 (def (rust-request-envelope request . maybe-operation)
   (let ((operation (if (null? maybe-operation) 'submit (car maybe-operation))))
     (list (cons 'schema +runtime-request-schema+)
@@ -529,23 +529,23 @@
           (cons 'node-id (execution-request-node-id request))
           (cons 'frontier (execution-request-frontier request)))))
 
-;; AdapterResult <- ExecutionRequest
+;; : (-> ExecutionRequest AdapterResult)
 (def (request-only-submit request)
   (make-adapter-result (request-id request) 'requested request #f #f))
 
-;; AdapterResult <- RequestId
+;; : (-> RequestId AdapterResult)
 (def (request-only-fetch request-id)
   (make-adapter-result request-id 'requested #f #f #f))
 
-;; AdapterResult <- ExecutionRequest
+;; : (-> ExecutionRequest AdapterResult)
 (def (request-only-store-put request)
   (make-adapter-result (request-id request) 'requested request #f #f))
 
-;; AdapterResult <- ArtifactHandle
+;; : (-> ArtifactHandle AdapterResult)
 (def (request-only-store-get handle)
   (make-adapter-result (list 'store-get handle) 'requested #f handle #f))
 
-;; AdapterResult <- ExecutionRequest
+;; : (-> ExecutionRequest AdapterResult)
 (def (rust-submit request)
   (make-adapter-result (rust-request-id request)
                        'submitted
@@ -553,11 +553,11 @@
                        (rust-artifact-handle request)
                        #f))
 
-;; AdapterResult <- RequestId
+;; : (-> RequestId AdapterResult)
 (def (rust-fetch request-id)
   (make-adapter-result request-id 'submitted #f #f #f))
 
-;; AdapterResult <- ExecutionRequest
+;; : (-> ExecutionRequest AdapterResult)
 (def (rust-store-put request)
   (make-adapter-result (rust-request-id request)
                        'submitted
@@ -565,13 +565,13 @@
                        (rust-artifact-handle request)
                        #f))
 
-;; AdapterResult <- ArtifactHandle
+;; : (-> ArtifactHandle AdapterResult)
 (def (rust-store-get handle)
   (make-adapter-result (list 'rust-store-get handle) 'submitted #f handle #f))
 
 ;;; Runtime command invocation is the narrow process/IPC boundary: the command sees
 ;;; one stable request envelope and must return a normalizable response.
-;; AdapterResult <- RuntimeCommand Alist
+;; : (-> RuntimeCommand Alist AdapterResult)
 (def (runtime-command-result command envelope)
   (with-catch
    (lambda (failure)
@@ -585,10 +585,10 @@
    (lambda ()
      (normalize-runtime-response envelope (runtime-command-call command envelope)))))
 
-;; AdapterResult <- RuntimeCommand ExecutionRequest
+;; : (-> RuntimeCommand ExecutionRequest AdapterResult)
 (def (rust-command-submit command request)
   (runtime-command-result command (rust-request-envelope request)))
 
-;; AdapterResult <- RuntimeCommand ExecutionRequest
+;; : (-> RuntimeCommand ExecutionRequest AdapterResult)
 (def (rust-command-store-put command request)
   (runtime-command-result command (rust-request-envelope request 'store-put)))

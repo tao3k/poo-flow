@@ -53,18 +53,18 @@
 
 ;;; Config requirements describe what a runtime needs without loading or
 ;;; persisting the secret values themselves.
-;; ConfigRequirement <- Symbol Symbol Boolean
+;; : (-> Symbol Symbol Boolean ConfigRequirement)
 (defstruct config-requirement
   (source
    key
    secret)
   transparent: #t)
 
-;; Boolean <- ConfigRequirement
+;; : (-> ConfigRequirement Boolean)
 (def (config-requirement-secret? requirement)
   (config-requirement-secret requirement))
 
-;; Alist <- ConfigRequirement
+;; : (-> ConfigRequirement Alist)
 (def (config-requirement->alist requirement)
   (list (cons 'source (config-requirement-source requirement))
         (cons 'key (config-requirement-key requirement))
@@ -72,23 +72,23 @@
 
 ;;; Preflight reports only requirement identity and missing keys; raw values
 ;;; remain in the runtime adapter or caller-owned config source.
-;; ConfigPreflight <- [ConfigRequirement] [ConfigRequirement]
+;; : (-> [ConfigRequirement] [ConfigRequirement] ConfigPreflight)
 (defstruct config-preflight
   (requirements
    missing)
   transparent: #t)
 
-;; Symbol <- ConfigPreflight
+;; : (-> ConfigPreflight Symbol)
 (def (config-preflight-status preflight)
   (if (null? (config-preflight-missing preflight))
     'ok
     'missing))
 
-;; Boolean <- ConfigPreflight
+;; : (-> ConfigPreflight Boolean)
 (def (config-preflight-ok? preflight)
   (eq? (config-preflight-status preflight) 'ok))
 
-;; Alist <- ConfigPreflight
+;; : (-> ConfigPreflight Alist)
 (def (config-preflight->alist preflight)
   (list (cons 'status (config-preflight-status preflight))
         (cons 'requirements
@@ -100,20 +100,20 @@
 
 ;;; Config arguments mirror Funflow's configurable arguments while keeping
 ;;; source loading and secret materialization outside the Scheme control plane.
-;; ConfigArgument <- Symbol Value Boolean
+;; : (-> Symbol Value Boolean ConfigArgument)
 (defstruct config-argument
   (kind
    value
    secret)
   transparent: #t)
 
-;; Boolean <- ConfigArgument
+;; : (-> ConfigArgument Boolean)
 (def (config-argument-secret? argument)
   (config-argument-secret argument))
 
 ;;; Only env/file arguments produce key requirements; literal and placeholder
 ;;; arguments are already representable without config source lookup.
-;; MaybeConfigRequirement <- ConfigArgument
+;; : (-> ConfigArgument MaybeConfigRequirement)
 (def (config-argument->requirement argument)
   (let ((kind (config-argument-kind argument))
         (value (config-argument-value argument)))
@@ -125,7 +125,7 @@
 ;;; Requirement derivation is a filter-map over declaration arguments.
 ;;; The lambda branch keeps env/file ordering stable while dropping literals
 ;;; and placeholders that do not require caller-supplied config source keys.
-;; [ConfigRequirement] <- [ConfigArgument]
+;; : (-> [ConfigArgument] [ConfigRequirement])
 (def (config-arguments->requirements arguments)
   (cond
    ((null? arguments) '())
@@ -139,7 +139,7 @@
 ;;; Rendering keeps placeholder arguments as symbolic runtime references.
 ;;; Secret source-backed arguments render as redacted references so receipts and
 ;;; request envelopes do not persist raw secret values.
-;; Value <- Alist ConfigArgument
+;; : (-> Alist ConfigArgument Value)
 (def (render-config-argument source argument)
   (let ((kind (config-argument-kind argument))
         (value (config-argument-value argument)))
@@ -160,7 +160,7 @@
        (list (cons 'kind kind)
              (cons 'value value)))))))
 
-;; [Value] <- Alist [ConfigArgument]
+;; : (-> Alist [ConfigArgument] [Value])
 (def (render-config-arguments source arguments)
   (if (null? arguments)
     '()
@@ -169,7 +169,7 @@
 
 ;;; A run config is the inspectable data form of a Funflow-style configured
 ;;; execution entrypoint.
-;; RunConfigState <- Symbol Strategy RuntimeAdapter Alist TaskFamilyRegistry FlowDeclarationRegistry
+;; : (-> Symbol Strategy RuntimeAdapter Alist TaskFamilyRegistry FlowDeclarationRegistry RunConfigState)
 (defstruct run-config-state
   (name
    strategy
@@ -181,7 +181,7 @@
 
 ;;; Public config construction keeps existing callers on default POO registries
 ;;; while allowing extensions to install descriptor bundles at the run boundary.
-;; RunConfig <- Symbol Strategy RuntimeAdapter Alist [TaskFamilyRegistry] [FlowDeclarationRegistry]
+;; : (-> Symbol Strategy RuntimeAdapter Alist [TaskFamilyRegistry] [FlowDeclarationRegistry] RunConfig)
 (def (make-run-config name strategy adapter options . registries)
   (make-run-config-state name
                          strategy
@@ -194,52 +194,52 @@
                            default-flow-declaration-registry
                            (cadr registries))))
 
-;; Boolean <- RunConfigCandidate
+;; : (-> RunConfigCandidate Boolean)
 (def (run-config? config)
   (run-config-state? config))
 
-;; Symbol <- RunConfig
+;; : (-> RunConfig Symbol)
 (def (run-config-name config)
   (run-config-state-name config))
 
-;; Strategy <- RunConfig
+;; : (-> RunConfig Strategy)
 (def (run-config-strategy config)
   (run-config-state-strategy config))
 
-;; RuntimeAdapter <- RunConfig
+;; : (-> RunConfig RuntimeAdapter)
 (def (run-config-adapter config)
   (run-config-state-adapter config))
 
-;; Alist <- RunConfig
+;; : (-> RunConfig Alist)
 (def (run-config-options config)
   (run-config-state-options config))
 
-;; TaskFamilyRegistry <- RunConfig
+;; : (-> RunConfig TaskFamilyRegistry)
 (def (run-config-task-registry config)
   (run-config-state-task-registry config))
 
-;; FlowDeclarationRegistry <- RunConfig
+;; : (-> RunConfig FlowDeclarationRegistry)
 (def (run-config-flow-registry config)
   (run-config-state-flow-registry config))
 
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (run-config-option options key default)
   (let (entry (assoc key options))
     (if entry
       (cdr entry)
       default)))
 
-;; [ConfigRequirement] <- RunConfig
+;; : (-> RunConfig [ConfigRequirement])
 (def (run-config-config-requirements config)
   (run-config-option (run-config-options config) 'config-requirements '()))
 
-;; Alist <- RunConfig
+;; : (-> RunConfig Alist)
 (def (run-config-config-source config)
   (run-config-option (run-config-options config) 'config-source '()))
 
 ;;; Preflight keeps the Funflow-style missing-input check before execution.
 ;;; It checks caller-supplied source keys but does not read files or env vars.
-;; ConfigPreflight <- RunConfig
+;; : (-> RunConfig ConfigPreflight)
 (def (run-config-preflight config)
   (let ((requirements (run-config-config-requirements config))
         (source (run-config-config-source config)))
@@ -247,7 +247,7 @@
      requirements
      (missing-config-requirements requirements source))))
 
-;; Boolean <- RunConfig
+;; : (-> RunConfig Boolean)
 (def (run-config-validate-preflight config)
   (let (preflight (run-config-preflight config))
     (if (config-preflight-ok? preflight)
@@ -261,7 +261,7 @@
 
 ;;; The request-only config records adapter envelopes for tests without claiming
 ;;; to run store or external work.
-;; RunConfig <- Unit
+;; : (-> Unit RunConfig)
 (def (make-request-only-run-config)
   (make-run-config 'request-only
                    (make-local-eager-strategy)
@@ -270,7 +270,7 @@
 
 ;;; The Rust config selects the handoff adapter while Scheme keeps ownership of
 ;;; declaration, planning, and audit evidence.
-;; RunConfig <- [Alist]
+;; : (-> [Alist] RunConfig)
 (def (make-rust-run-config . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (command (run-config-option options 'runtime-command #f)))
@@ -281,7 +281,7 @@
 
 ;;; Lowering config through the existing runner keeps validation behavior
 ;;; identical for configured and direct execution.
-;; Runner <- RunConfig
+;; : (-> RunConfig Runner)
 (def (run-config->runner config)
   (make-runner (run-config-strategy config)
                (run-config-adapter config)
@@ -290,25 +290,25 @@
 
 ;;; Runtime ownership is derived from the selected adapter instead of copied
 ;;; into config options.
-;; Symbol <- RunConfig
+;; : (-> RunConfig Symbol)
 (def (run-config-runtime-owner config)
   (runtime-adapter-name (run-config-adapter config)))
 
 ;;; The configured entrypoint mirrors Funflow's run-with-config shape while
 ;;; reusing the normal runner interpreter and receipt schema.
-;; RunResult <- RunConfig Flow Input
+;; : (-> RunConfig Flow Input RunResult)
 (def (run-flow-with-config config flow input)
   (run-config-validate-preflight config)
   (runner-run (run-config->runner config) flow input))
 
-;; [Alist] <- [ConfigRequirement]
+;; : (-> [ConfigRequirement] [Alist])
 (def (config-requirements->alist requirements)
   (if (null? requirements)
     '()
     (cons (config-requirement->alist (car requirements))
           (config-requirements->alist (cdr requirements)))))
 
-;; [ConfigRequirement] <- [ConfigRequirement] Alist
+;; : (-> [ConfigRequirement] Alist [ConfigRequirement])
 (def (missing-config-requirements requirements source)
   (cond
    ((null? requirements) '())
@@ -320,7 +320,7 @@
 
 ;;; Literal requirements are already satisfied; file/env requirements are
 ;;; satisfied only by key presence in their source bucket.
-;; Boolean <- Alist ConfigRequirement
+;; : (-> Alist ConfigRequirement Boolean)
 (def (config-source-satisfies? source requirement)
   (let ((source-kind (config-requirement-source requirement))
         (key (config-requirement-key requirement)))
@@ -331,7 +331,7 @@
              (assoc key (cdr bucket))
              #t)))))
 
-;; Value <- Alist Symbol Symbol
+;; : (-> Alist Symbol Symbol Value)
 (def (config-source-ref source source-kind key)
   (let (bucket (assoc source-kind source))
     (if bucket
@@ -341,7 +341,7 @@
           (raise-missing-config-value source-kind key)))
       (raise-missing-config-value source-kind key))))
 
-;; Never <- Symbol Symbol
+;; : (-> Symbol Symbol Never)
 (def (raise-missing-config-value source-kind key)
   (raise-control-plane-failure
    'config

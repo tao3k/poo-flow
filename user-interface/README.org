@@ -1,10 +1,92 @@
-* POO Flow User Interface
-This root-level directory is the maintained downstream user configuration surface, not a test fixture and not package runtime source.
+* poo-flow User Interface
 
-The shape is POO Flow native:
-- =modules.ss= chooses hot-plug module groups, module ids, and flags;
-- =config.ss= sets flow, loop, and sandbox strategy values and exports the complete user config.
+** Doom-Style Init Layout
 
-There is no package layer here. Sandbox, loop, flow, and future capabilities enter through module selections and upstream realization in =src/modules=.
+Root =init.ss= is the downstream module selection file. It mirrors Doom's
+=doom!= block shape: list optional feature patches and private custom modules.
+Upstream =src/modules/user-interface/config.ss= creates the maintained =users=
+profile from those rows.
 
-Normal consumers should import =:poo-flow/user-interface/config= with the project root on =GERBIL_LOADPATH=.
+#+begin_src scheme
+(import :modules/user-interface/config)
+
+(def poo-flow-user-module-bundles
+  (poo-flow-init-module-bundles
+   :workflow
+   (funflow (+cicd (checks +parallel +typed-receipts)))
+   :sandbox
+   (nono-sandbox +nono +doctor)
+   (cubeSandbox +cube +doctor)
+   :custom
+   (my-module "./custom/my-module" +private +doctor)))
+#+end_src
+
+Root init does not contain object contracts, sandbox recipes, profile
+constructors, settings projection, package sync, descriptor realization, or
+runtime execution.
+
+** Root Surface
+
+The maintained downstream directory is intentionally small:
+
+- =init.ss= declares category/module/feature rows.
+- =custom/*/config.ss= declares user-maintained custom module bodies.
+
+Root =user-interface= does not own =objects.ss=, =config.ss=, or
+=modules/config.ss=. Those are upstream implementation surfaces now:
+
+- =src/modules/user-interface/objects.ss= owns user-interface object contracts.
+- =src/modules/user-interface/config.ss= owns profile/config projection helpers.
+- =src/modules/user-interface-case.ss= owns maintained case contracts.
+
+There is no package layer here. Sandbox, loop, flow, and future capabilities
+enter through module selections and upstream realization in =src/modules=.
+Consumers import declarations from =:poo-flow/user-interface/init= and project
+them through =:modules/user-interface/config=.
+
+** Profile Inspection
+
+Profile and doctor entrypoints are upstream data helpers generated from root
+declarations:
+
+- =pooFlowUserInterfaceProfile=
+- =pooFlowUserInterfaceProfileSet=
+- =pooFlowUserInterfaceSelectedProfile=
+- =pooFlowUserInterfaceProfileSetPresentation=
+- =pooFlowUserInterfaceProfileSetDoctorPresentation=
+- =pooFlowUserInterfaceConfig=
+- =poo-flow-default-sandbox-profile-presentation=
+
+They are inspection surfaces only. The root user-facing profile is named
+=users=. These helpers do not load packages, realize descriptors, or execute
+runtime hooks.
+
+Every config/profile presentation includes =presentation-trace=. The trace
+records projection stages such as =selected-modules=, =feature-facts=,
+=cicd-intents=, and =settings= with =runtime-executed = #f=. This is the
+user-interface observability hook for catching lazy POO slot recursion without
+adding print-based debugging.
+
+** Maintained Cases
+
+Case contracts are implemented upstream in
+=src/modules/user-interface-case.ss=. The root =user-interface= directory stays
+limited to declarations. =t/user-interface-case-test.ss= applies the upstream
+case contract to the real root init declaration and verifies module keys,
+settings, CI/CD intent, and trace observability without adding a =cases=
+directory here.
+
+** CI/CD Presentation
+
+CI/CD is a nested Funflow feature payload, not a separate top-level category.
+The user-facing effect is visible through profile/config presentations as
+=cicd-intents=:
+
+- checks: =+parallel= and =+typed-receipts=
+- artifacts: =+export=
+- release: =+manual-gate=
+- webhook: =+server=
+- runtime handoff: =runtime-command-manifest=
+
+All of these facts are declarative. Runtime execution remains owned by
+=marlin-agent-core=.

@@ -27,7 +27,7 @@
 ;;; Macro governance witness:
 ;;; - gerbil.pkg records =search runtime-source macro sugar module-sugar=.
 ;;; - This macro follows the same =defrules= naming-sugar pattern as profile builders.
-;; AgentSandboxRequestExpansion <- NamedAgentSandboxRequestSyntax
+;; : (-> NamedAgentSandboxRequestSyntax AgentSandboxRequestExpansion)
 (defrules agent-sandbox-request ()
   ((_ profile (field value) ...)
    (make-agent-sandbox-request-with

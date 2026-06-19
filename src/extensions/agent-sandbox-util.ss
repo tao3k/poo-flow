@@ -11,13 +11,13 @@
 
 ;;; Run-config and profile options stay alist-shaped so bridge commands can pass
 ;;; metadata without adding Scheme structs at every extension boundary.
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (agent-sandbox-option options key default)
   (agent-sandbox-alist-ref options key default))
 
 ;;; Shared alist lookup is the only place that treats absent optional extension
 ;;; fields as defaults. Profile, request, and bridge helpers therefore agree.
-;; Value <- Alist Symbol Value
+;; : (-> Alist Symbol Value Value)
 (def (agent-sandbox-alist-ref alist key default)
   (let (entry (and alist (assoc key alist)))
     (if entry
@@ -26,13 +26,13 @@
 
 ;;; Alist merge keeps task-local policy first. Downstream bridges that use
 ;;; assoc get task overrides before profile defaults.
-;; Alist <- Alist Alist
+;; : (-> Alist Alist Alist)
 (def (agent-sandbox-merge-alists primary secondary)
   (append (if primary primary '())
           (if secondary secondary '())))
 
 ;;; False means "use profile default".
 ;;; An empty alist is still an explicit task-level override.
-;; Value <- MaybeValue Value
+;; : (-> MaybeValue Value Value)
 (def (agent-sandbox-override value default)
   (if value value default))

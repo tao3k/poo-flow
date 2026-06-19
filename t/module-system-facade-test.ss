@@ -9,24 +9,24 @@
 (export module-system-facade-test)
 
 (def module-system-facade-test
-  (test-suite "poo module system facade"
+  (test-suite "poo-flow module system facade"
     (test-case "builds Marlin-style interface config descriptors"
       (let* ((interface
-              (poo-module-interface
+              (poo-flow-module-interface
                "WorkspaceProfile"
-               (.o workspace-root: (poo-string-default "workspace")
-                   surface: (poo-string-constant "poo-flow"))
+               (.o workspace-root: (poo-flow-string-default "workspace")
+                   surface: (poo-flow-string-constant "poo-flow"))
                '((owner . "poo-flow") (surface . "module-system"))))
-             (source (poo-local-source "modules/workspace.ss"))
+             (source (poo-flow-local-source "modules/workspace.ss"))
              (module
-              (pooModules
+              (poo-flow-modules
                interface
                (.o id: 'workspace
                    imports: '()
                    config:
                    (.o workspace-root: "demo"
                        surface: "poo-flow")
-                   extensions: (poo-extensions 'workspace-extension)
+                   extensions: (poo-flow-extensions 'workspace-extension)
                    scripts: (list 'workspace-script)
                    metadata: '((layer . "base"))
                    group: 'tools
@@ -41,35 +41,37 @@
                    '((before-init . (prepare-workspace))
                      (after-config . (publish-workspace)))
                    source-ref: source)))
-             (schemas (poo-module-option-schemas module))
-             (configs (poo-module-option-configs module))
-             (receipts (poo-module-option-validation-receipts module)))
-        (check-equal? (poo-module-descriptor? module) #t)
-        (check-equal? (poo-module-name module) 'workspace)
-        (check-equal? (poo-module-interface? (poo-module-interface-object module)) #t)
-        (check-equal? (cdr (assoc 'workspace-root (poo-module-options module)))
+             (schemas (poo-flow-module-option-schemas module))
+             (configs (poo-flow-module-option-configs module))
+             (receipts (poo-flow-module-option-validation-receipts module)))
+        (check-equal? (poo-flow-module-descriptor? module) #t)
+        (check-equal? (poo-flow-module-name module) 'workspace)
+        (check-equal? (poo-flow-module-interface?
+                       (poo-flow-module-interface-object module))
+                      #t)
+        (check-equal? (cdr (assoc 'workspace-root (poo-flow-module-options module)))
                       "demo")
-        (check-equal? (poo-module-extensions module) '(workspace-extension))
-        (check-equal? (poo-module-scripts module) '(workspace-script))
-        (check-equal? (poo-module-metadata module) '((layer . "base")))
-        (check-equal? (poo-module-group module) 'tools)
-        (check-equal? (poo-module-flags module) '(+fast +gerbil))
-        (check-equal? (poo-module-features module) '(poo c3))
-        (check-equal? (poo-module-depth-value module 'init) -10)
-        (check-equal? (poo-module-depth-value module 'config) 10)
-        (check-equal? (poo-module-phase-file module 'config) "config.ss")
-        (check-equal? (poo-module-hook-values module 'before-init)
+        (check-equal? (poo-flow-module-extensions module) '(workspace-extension))
+        (check-equal? (poo-flow-module-scripts module) '(workspace-script))
+        (check-equal? (poo-flow-module-metadata module) '((layer . "base")))
+        (check-equal? (poo-flow-module-group module) 'tools)
+        (check-equal? (poo-flow-module-flags module) '(+fast +gerbil))
+        (check-equal? (poo-flow-module-features module) '(poo c3))
+        (check-equal? (poo-flow-module-depth-value module 'init) -10)
+        (check-equal? (poo-flow-module-depth-value module 'config) 10)
+        (check-equal? (poo-flow-module-phase-file module 'config) "config.ss")
+        (check-equal? (poo-flow-module-hook-values module 'before-init)
                       '(prepare-workspace))
-        (check-equal? (poo-module-flag-enabled? module '+fast) #t)
-        (check-equal? (poo-module-active? module '+fast '-slow) #t)
-        (check-equal? (poo-module-active? module '+missing) #f)
-        (check-equal? (poo-module-source-ref=?
-                       (poo-module-descriptor-source-ref module)
+        (check-equal? (poo-flow-module-flag-enabled? module '+fast) #t)
+        (check-equal? (poo-flow-module-active? module '+fast '-slow) #t)
+        (check-equal? (poo-flow-module-active? module '+missing) #f)
+        (check-equal? (poo-flow-module-source-ref=?
+                       (poo-flow-module-descriptor-source-ref module)
                        source)
                       #t)
         (check-equal? (length schemas) 2)
         (check-equal? (length configs) 2)
-        (check-equal? (map poo-module-option-validation-receipt-code receipts)
+        (check-equal? (map poo-flow-module-option-validation-receipt-code receipts)
                       '(ok ok))))
     (test-case "inline imports join activation closure and workflow receipts"
       (let* ((child-task
@@ -79,54 +81,60 @@
                                            'rust-or-external-runtime
                                            'submit))
              (child
-              (make-poo-module-descriptor
+              (make-poo-flow-module-descriptor
                'child
                '()
                (make-task-family-registry 'child-tasks (list child-task))
                (make-flow-declaration-registry 'child-flows '())
                '((layer . "child"))))
              (interface
-              (poo-module-interface
+              (poo-flow-module-interface
                "RootProfile"
-               (.o surface: (poo-string-default "root"))
+               (.o surface: (poo-flow-string-default "root"))
                '((owner . "poo-flow"))))
              (root
-              (pooModules
+              (poo-flow-modules
                interface
                (.o id: 'root
                    imports:
-                   (poo-imports
-                    (poo-import ":modules/root#child" child))
+                   (poo-flow-imports
+                    (poo-flow-import ":modules/root#child" child))
                    config: (.o surface: "root")
                    flags: '(+root)
                    depth: (cons 10 10)
                    hooks: '((before-init . (root-hook)))
-                   extensions: (poo-extensions 'root-extension)
+                   extensions: (poo-flow-extensions 'root-extension)
                    scripts: (list 'root-script))))
-             (activation (activate-poo-modules (list root)))
-             (catalog (pooModuleCatalog root))
-             (eval-result (pooEvalModules catalog 'root '("runtime-hook")))
-             (evaluation (poo-module-evaluate root))
-             (presentation (pooModuleSystemPresentation
+             (activation (activate-poo-flow-modules (list root)))
+             (catalog (pooFlowModuleCatalog root))
+             (eval-result (poo-flow-eval-modules catalog 'root '("runtime-hook")))
+             (evaluation (poo-flow-module-evaluate root))
+             (presentation (poo-flow-module-system-presentation
                             catalog
                             'root
                             '("runtime-hook"))))
-        (check-equal? (poo-module-names (poo-module-activation-modules activation))
+        (check-equal? (poo-flow-module-names
+                       (poo-flow-module-activation-modules activation))
                       '(root child))
         (check-equal? (task-family-name
                        (task-family-for-kind-in
-                        (poo-module-activation-task-registry activation)
+                        (poo-flow-module-activation-task-registry activation)
                         'inline-job))
                       'inline-job)
         (check-equal? (.ref eval-result 'module-count) 2)
         (check-equal? (.ref eval-result 'hook-count) 1)
         (check-equal? (.ref evaluation 'init-module-ids) '(child root))
-        (check-equal? (pooModuleActive? catalog 'root '+root) #t)
-        (check-equal? (pooModuleActive? catalog 'root '+missing) #f)
+        (check-equal? (poo-flow-module-value-catalog-active? catalog 'root '+root) #t)
+        (check-equal? (poo-flow-module-value-catalog-active? catalog 'root '+missing) #f)
         (check-equal? (.ref eval-result 'extension-count) 1)
+        (check-equal? (poo-flow-module-group root) poo-flow-brand-group)
+        (check-equal? (.ref eval-result 'brand-name) poo-flow-brand-name)
+        (check-equal? (.ref eval-result 'scheme-owner)
+                      poo-flow-scheme-owner)
         (check-equal? (.ref presentation 'kind)
-                      poo-module-system-presentation-kind)
+                      poo-flow-module-system-presentation-kind)
+        (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
         (check-equal? (.ref presentation 'import-graph-owner)
-                      "poo-module-system")))))
+                      "poo-flow-module-system")))))
 
 (run-tests! module-system-facade-test)

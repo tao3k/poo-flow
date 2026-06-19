@@ -26,7 +26,7 @@
 
 ;;; Boundary: compose is the only higher-order role operation in this module.
 ;;; Invariant: derived roles share one mixing path with leftmost POO precedence.
-;; Role <- Unit
+;; : (-> Unit Role)
 (def control-plane-role
   (.o (name 'control-plane)
       (kind 'system)
@@ -35,7 +35,7 @@
       (control-plane-capability 'conceptual-model)
       (compose (lambda roles (apply .mix (append roles (list control-plane-role)))))))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def flow-role
   (.o (:: @ control-plane-role)
       (name 'flow)
@@ -43,7 +43,7 @@
       (responsibility 'workflow-composition)
       (flow-capability 'workflow-composition)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def branch-role
   (.o (:: @ control-plane-role)
       (name 'branch)
@@ -51,7 +51,7 @@
       (responsibility 'dag-fanout-join)
       (branch-capability 'dag-fanout-join)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def task-role
   (.o (:: @ control-plane-role)
       (name 'task)
@@ -59,14 +59,14 @@
       (responsibility 'work-intent)
       (task-capability 'work-intent)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def strategy-role
   (.o (:: @ control-plane-role)
       (name 'strategy)
       (kind 'policy)
       (responsibility 'execution-selection)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def execution-policy-role
   (.o (:: @ control-plane-role)
       (name 'execution-policy)
@@ -74,21 +74,21 @@
       (responsibility 'runtime-policy-handoff)
       (policy-capability 'runtime-policy-handoff)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def run-config-role
   (.o (:: @ control-plane-role)
       (name 'run-config)
       (kind 'configuration)
       (responsibility 'configured-runner-assembly)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def runner-role
   (.o (:: @ control-plane-role)
       (name 'runner)
       (kind 'interpreter)
       (responsibility 'plan-interpretation)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def runtime-adapter-role
   (.o (:: @ control-plane-role)
       (name 'runtime-adapter)
@@ -97,51 +97,51 @@
       (runtime-capability 'heavy-runtime-delegation)
       (runtime-owner 'rust-or-external-runtime)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def receipt-role
   (.o (:: @ control-plane-role)
       (name 'receipt)
       (kind 'evidence)
       (responsibility 'execution-explanation)))
 
-;; Role <- Unit
+;; : (-> Unit Role)
 (def replay-role
   (.o (:: @ control-plane-role)
       (name 'replay)
       (kind 'policy)
       (responsibility 'audit-validation)))
 
-;; Symbol <- Role
+;; : (-> Role Symbol)
 (def (role-name role)
   (.@ role name))
 
-;; Symbol <- Role
+;; : (-> Role Symbol)
 (def (role-kind role)
   (.@ role kind))
 
-;; Symbol <- Role
+;; : (-> Role Symbol)
 (def (role-responsibility role)
   (.@ role responsibility))
 
-;; Symbol <- Role
+;; : (-> Role Symbol)
 (def (role-runtime-owner role)
   (.@ role runtime-owner))
 
 ;;; Slot probing is the safe boundary for C3-composed role objects: descriptor
 ;;; callers can inspect inherited capabilities without assuming every role
 ;;; contributes the same slot set.
-;; Value <- Role Symbol Value
+;; : (-> Role Symbol Value Value)
 (def (role-slot/default role slot default)
   (if (and (role-object? role)
            (.slot? role slot))
     (.ref role slot)
     default))
 
-;; Role <- [Role]
+;; : (-> [Role] Role)
 (def (role-compose . roles)
   (apply (.@ control-plane-role compose) roles))
 
-;; Boolean <- Role
+;; : (-> Role Boolean)
 (def (role-object? role)
   (object? role))
 
@@ -149,7 +149,7 @@
 ;;; Data flow: each pair becomes the constant slot spec required by =.mix=.
 ;;; Invariant: callers use slot precedence so descriptors can override inherited
 ;;; role slots without falling back to lower-precedence defaults.
-;; [SlotSpec] <- Alist
+;; : (-> Alist [SlotSpec])
 (def (role-constant-slots alist)
   (map (lambda (entry) (cons (car entry) ($constant-slot-spec (cdr entry))))
        alist))
