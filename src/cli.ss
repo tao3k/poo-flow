@@ -2,8 +2,7 @@
 ;;; Boundary: CLI process entrypoints stay thin and delegate flow semantics to scripts.
 ;;; Invariant: `poo-flow run` starts a Gerbil process; it does not schedule flows.
 
-(import (only-in :std/misc/process run-process)
-        (only-in :std/srfi/1 filter fold))
+(import (only-in :std/misc/process run-process))
 
 (export poo-flow-cli-main
         main
@@ -21,7 +20,7 @@
   poo-flow help
 
 Commands:
-  run   Execute a Scheme file through gxi with the current poo-flow loadpath.
+  run   Execute a Scheme file through gxpkg env gxi in the poo-flow package context.
 ")
 
 ;; : (-> String Unit)
@@ -49,52 +48,6 @@ Commands:
     (cdr command-line-args)
     '()))
 
-;; : (-> (U #f String) Boolean)
-(def (poo-flow-cli-loadpath-part? part)
-  (and part (not (equal? part ""))))
-
-;; : (-> [String] String)
-;; poo-flow-cli-join-loadpath
-;;   : (-> [String] String)
-;;   | doc m%
-;;   | Collapse an ordered loadpath candidate list into a colon-separated
-;;   | string while dropping missing or empty path fragments.
-;;   | # Examples
-;;   | ```scheme
-;;   | (poo-flow-cli-join-loadpath '("src" "t")) => "src:t"
-;;   | (poo-flow-cli-join-loadpath (list "src" #f "")) => "src"
-;;   | ```
-;;   | result: the relative order of surviving fragments is preserved.
-(def (poo-flow-cli-join-loadpath parts)
-  (or (fold (lambda (part out)
-              (if out
-                (string-append out ":" part)
-                part))
-            #f
-            (filter poo-flow-cli-loadpath-part? parts))
-      ""))
-
-;; : (-> String)
-(def (poo-flow-cli-home-gerbil-lib)
-  (let (home (getenv "HOME" #f))
-    (if home
-      (string-append home "/.gerbil/lib")
-      #f)))
-
-;; : (-> String String)
-(def (poo-flow-cli-root-path leaf)
-  (string-append (current-directory) leaf))
-
-;; : (-> String)
-(def (poo-flow-cli-child-loadpath)
-  ;; The generated binary lives under .bin, but flow scripts import package
-  ;; modules. Keep repo src/t first and append caller-provided extension paths.
-  (poo-flow-cli-join-loadpath
-   (list (poo-flow-cli-root-path "src")
-         (poo-flow-cli-root-path "t")
-         (poo-flow-cli-home-gerbil-lib)
-         (getenv "GERBIL_LOADPATH" #f))))
-
 ;;; Boundary: child output is passed through as the run receipt surface.
 ;;; Intent: scripts own funflow construction; CLI only reports process status.
 ;; : (-> Path [String] Integer)
@@ -102,9 +55,8 @@ Commands:
   (let (status 0)
     (let (output
           (run-process
-           (append (list "env"
-                         (string-append "GERBIL_LOADPATH="
-                                        (poo-flow-cli-child-loadpath))
+           (append (list "gxpkg"
+                         "env"
                          "gxi"
                          file)
                    args)

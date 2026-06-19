@@ -11,7 +11,7 @@
 ;;; Policy evidence:
 ;;; - Descriptor tests assert each public accessor field.
 
-(import :core/api)
+(import :poo-flow/src/core/api)
 
 (export task-agent-sandbox-config
         task-agent-sandbox-config-ref

@@ -2,8 +2,8 @@
 ;;; Boundary: replay policy validates receipts against planned graph evidence.
 ;;; Invariant: replay validation never re-executes tasks or adapter requests.
 
-(import :core/plan
-        :core/receipt)
+(import :poo-flow/src/core/plan
+        :poo-flow/src/core/receipt)
 
 (export make-replay-report
         replay-report?

@@ -3,10 +3,10 @@
 ;;; Invariant: this module never polls, locks, writes state, or executes loops.
 
 (import (only-in :clan/poo/object .o .mix object?)
-        :core/roles
-        :core/failure
-        :loops/descriptor
-        :loops/strategy)
+        :poo-flow/src/core/roles
+        :poo-flow/src/core/failure
+        :poo-flow/src/loops/descriptor
+        :poo-flow/src/loops/strategy)
 
 (export +loop-governor-schema+
         +loop-governor-default-state-key+

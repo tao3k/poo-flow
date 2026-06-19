@@ -3,7 +3,7 @@
 ;;; Invariant: lazy plans never call loader handlers until explicitly forced.
 
 (import :std/test
-        :modules/module-system)
+        :poo-flow/src/modules/module-system)
 
 (export module-system-lazy-loader-test)
 

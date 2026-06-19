@@ -1,7 +1,7 @@
 (import :std/test
-        :core/api
-        :workflow/store
-        :project-policy-test)
+        :poo-flow/src/core/api
+        :poo-flow/src/workflow/store
+        :poo-flow/t/project-policy-test)
 
 (def pure-flow-test
   (test-suite "pure flow"

@@ -4,7 +4,7 @@
 
 (import :std/test
         (only-in :std/misc/process run-process)
-        :modules/nono-sandbox/c-binding)
+        :poo-flow/src/modules/nono-sandbox/c-binding)
 
 (export nono-sandbox-c-language-test)
 

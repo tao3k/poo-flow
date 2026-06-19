@@ -4,8 +4,8 @@
 
 (import :std/test
         (only-in :clan/poo/object .ref)
-        :modules/module-system
-        :user-interface-fixtures)
+        :poo-flow/src/modules/module-system
+        :poo-flow/t/user-interface-fixtures)
 
 (export user-interface-presentation-test)
 

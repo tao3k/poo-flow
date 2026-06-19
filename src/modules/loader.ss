@@ -4,11 +4,11 @@
 ;;; Intent: source loading stays separate from catalog resolution and activation.
 ;;; Parser policy should treat this file as the source-loader owner.
 
-(import :core/failure
-        :modules/source
-        :modules/descriptor
-        :modules/resolver
-        :modules/extension)
+(import :poo-flow/src/core/failure
+        :poo-flow/src/modules/source
+        :poo-flow/src/modules/descriptor
+        :poo-flow/src/modules/resolver
+        :poo-flow/src/modules/extension)
 
 (export make-poo-flow-module-loader-entry
         poo-flow-module-loader-entry?
@@ -333,7 +333,7 @@
            (poo-flow-make-lazy-load-plan backends source-ref metadata))
          (poo-flow-module-tree-source-refs module-root-path))))
 
-;;; Boundary: src/modules is a declared module tree, not a filesystem scan root.
+;;; Boundary: src/modules is a declared package module tree, not a filesystem scan root.
 ;; : Path
 (def poo-flow-src-modules-root "src/modules")
 

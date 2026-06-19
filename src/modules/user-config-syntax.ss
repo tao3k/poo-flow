@@ -6,10 +6,10 @@
                  current-expander-context
                  expander-context-id)
         (only-in :gerbil/expander/stx stx-source)
-        :modules/cubeSandbox/config
-        :modules/docker-sandbox/config
-        :modules/nono-sandbox/config
-        :modules/user-config)
+        :poo-flow/src/modules/cubeSandbox/config
+        :poo-flow/src/modules/docker-sandbox/config
+        :poo-flow/src/modules/nono-sandbox/config
+        :poo-flow/src/modules/user-config)
 
 (export poo-flow-module-bundles
         poo-flow-custom-module-bundles

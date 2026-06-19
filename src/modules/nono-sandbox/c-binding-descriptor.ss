@@ -6,9 +6,9 @@
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
 (import (only-in :clan/poo/object .ref .mix object?)
-        :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/profile)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/profile)
 
 (export +nono-c-binding-schema+
         +nono-c-binding-access-modes+

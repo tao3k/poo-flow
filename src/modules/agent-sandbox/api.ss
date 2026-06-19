@@ -1,25 +1,25 @@
 ;;; -*- Gerbil -*-
 ;;; Owner: Agent sandbox facade and task/flow opt-in live here.
 ;;; Boundary: profile, request, and bridge contracts live in leaf modules.
-;;; Import contract: users opt in through =:modules/agent-sandbox= exports.
+;;; Import contract: users opt in through =:poo-flow/src/modules/agent-sandbox= exports.
 ;;; Runtime contract: Marlin or another runtime owns real sandbox execution.
 ;;; Runtime contract: LLM calls, API/R surfaces, and C bindings stay out of Scheme.
 ;;; Policy evidence: tests should validate this facade plus leaf contracts.
 
-(import :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/profile
-        :modules/agent-sandbox/request
-        :modules/agent-sandbox/request-macro
-        :modules/agent-sandbox/bridge
-        :modules/agent-sandbox/marlin-interface)
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/request
+        :poo-flow/src/modules/agent-sandbox/request-macro
+        :poo-flow/src/modules/agent-sandbox/bridge
+        :poo-flow/src/modules/agent-sandbox/marlin-interface)
 
-(export (import: :modules/agent-sandbox/alist)
-        (import: :modules/agent-sandbox/profile)
-        (import: :modules/agent-sandbox/request)
-        (import: :modules/agent-sandbox/request-macro)
-        (import: :modules/agent-sandbox/bridge)
-        (import: :modules/agent-sandbox/marlin-interface)
+(export (import: :poo-flow/src/modules/agent-sandbox/alist)
+        (import: :poo-flow/src/modules/agent-sandbox/profile)
+        (import: :poo-flow/src/modules/agent-sandbox/request)
+        (import: :poo-flow/src/modules/agent-sandbox/request-macro)
+        (import: :poo-flow/src/modules/agent-sandbox/bridge)
+        (import: :poo-flow/src/modules/agent-sandbox/marlin-interface)
         agent-sandbox-task-family-descriptor
         make-agent-sandbox-task-family-registry
         agent-sandbox-enable-strategy

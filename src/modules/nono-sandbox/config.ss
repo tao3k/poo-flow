@@ -2,9 +2,9 @@
 ;;; Boundary: nono sandbox kernel module selection.
 ;;; Invariant: object inheritance and row extension live in objects.ss owners.
 
-(import :modules/nono-sandbox/objects
-        :modules/sandbox-core/objects
-        :modules/user-config-base)
+(import :poo-flow/src/modules/nono-sandbox/objects
+        :poo-flow/src/modules/sandbox-core/objects
+        :poo-flow/src/modules/user-config-base)
 
 (export poo-flow-nono-sandbox-module-bundles
         poo-flow-nono-sandbox-profile-config

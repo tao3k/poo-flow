@@ -2,10 +2,10 @@
 ;;; Boundary: strategies choose planning policy, not runtime execution.
 ;;; Invariant: heavy execution remains in runner/runtime-adapter code.
 
-(import :core/flow
-        :core/failure
-        :core/plan
-        :core/task)
+(import :poo-flow/src/core/flow
+        :poo-flow/src/core/failure
+        :poo-flow/src/core/plan
+        :poo-flow/src/core/task)
 
 (export make-strategy
         strategy?

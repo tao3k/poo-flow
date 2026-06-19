@@ -3,8 +3,8 @@
 ;;; Invariant: Scheme emits deterministic request/response data for adapters.
 
 (import :std/test
-        :core/api
-        :workflow/store)
+        :poo-flow/src/core/api
+        :poo-flow/src/workflow/store)
 
 (export runtime-bridge-test)
 

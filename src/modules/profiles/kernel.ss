@@ -2,19 +2,19 @@
 ;;; Boundary: upstream kernel profile for built-in POO Flow modules.
 ;;; Invariant: profiles compose kernel modules; no parallel registry owns rows.
 
-(import :modules/user-config
-        :modules/user-config-syntax
-        :modules/funflow/config
-        :modules/loop-governor/config
-        :modules/docker-sandbox/config
-        :modules/nono-sandbox/config
-        :modules/cubeSandbox/config)
+(import :poo-flow/src/modules/user-config
+        :poo-flow/src/modules/user-config-syntax
+        :poo-flow/src/modules/funflow/config
+        :poo-flow/src/modules/loop-governor/config
+        :poo-flow/src/modules/docker-sandbox/config
+        :poo-flow/src/modules/nono-sandbox/config
+        :poo-flow/src/modules/cubeSandbox/config)
 
-(export (import: :modules/funflow/config)
-        (import: :modules/loop-governor/config)
-        (import: :modules/docker-sandbox/config)
-        (import: :modules/nono-sandbox/config)
-        (import: :modules/cubeSandbox/config)
+(export (import: :poo-flow/src/modules/funflow/config)
+        (import: :poo-flow/src/modules/loop-governor/config)
+        (import: :poo-flow/src/modules/docker-sandbox/config)
+        (import: :poo-flow/src/modules/nono-sandbox/config)
+        (import: :poo-flow/src/modules/cubeSandbox/config)
         poo-flow-kernel-profile-module-bundles
         poo-flow-kernel-profile
         poo-flow-kernel-profile-set

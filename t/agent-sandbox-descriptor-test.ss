@@ -3,9 +3,9 @@
 ;;; Invariant: backend profile and bridge envelope behavior live in sibling tests.
 
 (import :std/test
-        :core/api
-        :modules/agent-sandbox/api
-        :modules/agent-sandbox/nono)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/api
+        :poo-flow/src/modules/agent-sandbox/nono)
 
 (export agent-sandbox-descriptor-test)
 

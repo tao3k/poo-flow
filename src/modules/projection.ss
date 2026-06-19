@@ -6,9 +6,9 @@
 ;; | PooModuleOptionValidationReceiptCandidate = Value
 
 (import (only-in :clan/poo/object .all-slots .o .@ .ref object?)
-        :modules/interface
-        :modules/descriptor
-        :modules/context)
+        :poo-flow/src/modules/interface
+        :poo-flow/src/modules/descriptor
+        :poo-flow/src/modules/context)
 
 (export make-poo-flow-module-option-config
         poo-flow-module-option-config?

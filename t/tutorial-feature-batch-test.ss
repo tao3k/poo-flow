@@ -3,12 +3,12 @@
 ;;; Invariant: each case maps to a visible Funflow notebook result or descriptor.
 
 (import :std/test
-        :core/api
-        :modules/custom-task
-        :modules/docker
-        :modules/text
-        :modules/workflow/flows
-        :modules/workflow/syntax)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/custom-task
+        :poo-flow/src/modules/docker
+        :poo-flow/src/modules/text
+        :poo-flow/src/modules/workflow/flows
+        :poo-flow/src/modules/workflow/syntax)
 
 ;; : (-> RunConfig Flow Input Value)
 (def (configured-run config flow input)

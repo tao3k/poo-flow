@@ -67,6 +67,53 @@ records projection stages such as =selected-modules=, =feature-facts=,
 user-interface observability hook for catching lazy POO slot recursion without
 adding print-based debugging.
 
+** POO Object Extension Example
+Custom module bodies can show POO object slot extension without exposing object contracts in =init.ss=. The maintained example is =custom/my-module/profiles/object-extension.ss=:
+#+begin_src scheme
+(use-module nono-sandbox
+  :config
+  (profiles
+   (agent/poo-object-extension
+    (network :override allowlisted "github.com" "crates.io")
+    (capabilities process-run filesystem-read filesystem-write tmpdir)
+    (capabilities :remove filesystem-write)
+    (capabilities :append cache-mount artifact-cache)
+    (resources
+     (filesystem . scoped)
+     (mounts
+      ((path . "/workspace/project")
+       (source . ".")
+       (target . "/workspace/project")
+       (mode . read-write)
+       (purpose . project-source))
+      ((path . "/workspace/project/.data")
+       (source . ".data")
+       (target . "/workspace/project/.data")
+       (mode . read)
+       (purpose . research-checkouts))
+      ((path . "/workspace/cache")
+       (source . ".cache/agent-semantic-protocol")
+       (target . "/workspace/cache")
+       (mode . read-write)
+       (purpose . semantic-cache))
+      ((path . "/workspace/config")
+       (source . "user-interface/custom/my-module")
+       (target . "/workspace/config")
+       (mode . read)
+       (purpose . user-config))
+      ((path . "/run/secrets")
+       (source . "$POO_FLOW_AGENT_SECRETS")
+       (target . "/run/secrets")
+       (mode . read)
+       (purpose . credentials)))
+     (cpu . 2))
+    (resources :append (memory . "4Gi") (timeout-ms . 300000))
+    (metadata (intent . poo-object-extension))
+    (metadata :append
+              (poo-object . objects.nono-sandbox.profile)
+              (slot-operators . (override append remove))))))
+#+end_src
+The user-facing rows stay declarative. Upstream =nono-sandbox= objects own validation and merge semantics, while the profile result demonstrates =:override=, =:remove=, and =:append= through POO field contributions.
 ** Maintained Cases
 
 Case contracts are implemented upstream in

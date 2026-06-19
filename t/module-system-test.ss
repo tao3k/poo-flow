@@ -3,8 +3,8 @@
 
 (import :std/test
         (only-in :clan/poo/object .o .ref)
-        :core/api
-        :modules/module-system)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/module-system)
 
 (export module-system-test)
 

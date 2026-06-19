@@ -3,8 +3,8 @@
 ;;; Invariant: scheduling, persistence, and execution stay in marlin-agent-core.
 
 (import (only-in :clan/poo/object .o .mix object?)
-        :core/roles
-        :core/failure)
+        :poo-flow/src/core/roles
+        :poo-flow/src/core/failure)
 
 (export +loop-pattern-schema+
         +loop-levels+

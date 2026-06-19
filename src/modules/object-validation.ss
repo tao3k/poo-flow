@@ -5,7 +5,7 @@
 
 (import :gerbil/gambit
         (only-in :std/srfi/1 append-map)
-        :modules/extension)
+        :poo-flow/src/modules/extension)
 
 (export poo-flow-module-object-validation-kind
         poo-flow-module-object-validation-schema

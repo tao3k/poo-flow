@@ -5,7 +5,7 @@
 ;;; Invariant: this module never starts a sandbox, opens ports, mounts paths, or
 ;;; resolves store items; it only preserves declarative resource intent.
 
-(import :core/api)
+(import :poo-flow/src/core/api)
 
 (export +sandbox-volume-modes+
         +sandbox-port-protocols+

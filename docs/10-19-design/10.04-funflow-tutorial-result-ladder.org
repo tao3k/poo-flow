@@ -456,6 +456,9 @@ Proof:
   runtime descriptor with Gerbil macros"=.
 
 *** 10.04.42 Stage 22: POO Tutorial Alignment Report
+Implementation update:
+- The report now records all 22 local result gate ids plus inert proof command strings, so manifest consumer, functional kernel, workflow macro, and alignment-report coverage are inspectable from one POO object.
+- The report now records a =source-index= and =runtime-gap-index= so each =.data/funflow= source can be mapped to local coverage status and remaining Rust/Marlin-owned runtime work.
 Reference result:
 - Funflow's tutorial surface is broader than a single file or workflow: the
   real user-facing outcomes span Tutorial1, QuickReference, Tutorial2,

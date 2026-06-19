@@ -2,46 +2,46 @@
 ;;; Boundary: public facade for the poo-flow module system.
 ;;; Invariant: implementation logic stays in the leaf owners below.
 
-(import :modules/interface
-        :modules/source
-        :modules/descriptor
-        :modules/context
-        :modules/diagnostics
-        :modules/observability
-        :modules/resolver
-        :modules/loader
-        :modules/projection
-        :modules/doctor
-        :modules/agent-sandbox/config
-        :modules/user-config
-        :modules/user-config-syntax
-        :modules/user-interface/config
-        :modules/user-interface-case
-        :modules/extension
-        :modules/objects
-        :modules/nono-sandbox/config
-        :modules/cubeSandbox/config
-        :modules/docker-sandbox/config
-        :modules/syntax)
+(import :poo-flow/src/modules/interface
+        :poo-flow/src/modules/source
+        :poo-flow/src/modules/descriptor
+        :poo-flow/src/modules/context
+        :poo-flow/src/modules/diagnostics
+        :poo-flow/src/modules/observability
+        :poo-flow/src/modules/resolver
+        :poo-flow/src/modules/loader
+        :poo-flow/src/modules/projection
+        :poo-flow/src/modules/doctor
+        :poo-flow/src/modules/agent-sandbox/config
+        :poo-flow/src/modules/user-config
+        :poo-flow/src/modules/user-config-syntax
+        :poo-flow/src/modules/user-interface/config
+        :poo-flow/src/modules/user-interface-case
+        :poo-flow/src/modules/extension
+        :poo-flow/src/modules/objects
+        :poo-flow/src/modules/nono-sandbox/config
+        :poo-flow/src/modules/cubeSandbox/config
+        :poo-flow/src/modules/docker-sandbox/config
+        :poo-flow/src/modules/syntax)
 
-(export (import: :modules/interface)
-        (import: :modules/source)
-        (import: :modules/descriptor)
-        (import: :modules/context)
-        (import: :modules/diagnostics)
-        (import: :modules/observability)
-        (import: :modules/resolver)
-        (import: :modules/loader)
-        (import: :modules/projection)
-        (import: :modules/doctor)
-        (import: :modules/agent-sandbox/config)
-        (import: :modules/user-config)
-        (import: :modules/user-config-syntax)
-        (import: :modules/user-interface/config)
-        (import: :modules/user-interface-case)
-        (import: :modules/extension)
-        (import: :modules/objects)
-        (import: :modules/nono-sandbox/config)
-        (import: :modules/cubeSandbox/config)
-        (import: :modules/docker-sandbox/config)
-        (import: :modules/syntax))
+(export (import: :poo-flow/src/modules/interface)
+        (import: :poo-flow/src/modules/source)
+        (import: :poo-flow/src/modules/descriptor)
+        (import: :poo-flow/src/modules/context)
+        (import: :poo-flow/src/modules/diagnostics)
+        (import: :poo-flow/src/modules/observability)
+        (import: :poo-flow/src/modules/resolver)
+        (import: :poo-flow/src/modules/loader)
+        (import: :poo-flow/src/modules/projection)
+        (import: :poo-flow/src/modules/doctor)
+        (import: :poo-flow/src/modules/agent-sandbox/config)
+        (import: :poo-flow/src/modules/user-config)
+        (import: :poo-flow/src/modules/user-config-syntax)
+        (import: :poo-flow/src/modules/user-interface/config)
+        (import: :poo-flow/src/modules/user-interface-case)
+        (import: :poo-flow/src/modules/extension)
+        (import: :poo-flow/src/modules/objects)
+        (import: :poo-flow/src/modules/nono-sandbox/config)
+        (import: :poo-flow/src/modules/cubeSandbox/config)
+        (import: :poo-flow/src/modules/docker-sandbox/config)
+        (import: :poo-flow/src/modules/syntax))

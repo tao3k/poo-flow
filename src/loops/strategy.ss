@@ -3,9 +3,9 @@
 ;;; Invariant: local execution here is harness-only validation, never production runtime.
 
 (import (only-in :clan/poo/object .o .mix object?)
-        :core/roles
-        :core/failure
-        :loops/descriptor)
+        :poo-flow/src/core/roles
+        :poo-flow/src/core/failure
+        :poo-flow/src/loops/descriptor)
 
 (export +loop-strategy-plan-schema+
         +loop-local-validation-default+

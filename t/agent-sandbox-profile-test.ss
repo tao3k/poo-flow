@@ -3,10 +3,10 @@
 ;;; Invariant: backend execution stays outside Scheme tests.
 
 (import :std/test
-        :core/api
-        :modules/agent-sandbox/api
-        :modules/agent-sandbox/nono
-        :modules/agent-sandbox/cube)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/api
+        :poo-flow/src/modules/agent-sandbox/nono
+        :poo-flow/src/modules/agent-sandbox/cube)
 
 ;; : (-> Value Alist AdapterResult)
 (def (runtime-result value artifact)

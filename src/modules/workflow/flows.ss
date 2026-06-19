@@ -12,9 +12,9 @@
 
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :std/srfi/1 filter-map fold)
-        :core/api
-        :modules/docker
-        :workflow/store)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/docker
+        :poo-flow/src/workflow/store)
 
 (export make-docker-store-run-config
         poo-flow-funflow-tutorial-alignment-schema
@@ -205,6 +205,112 @@
     '(make-process filesystem-build)
     '(real-make-execution real-hello-binary-output))))
 
+;; | PooFlowAlignmentGateProof = Alist
+
+;;; Boundary: gate proofs are report metadata, not test execution directives.
+;;; Keeping proof strings inert lets downstream tooling audit coverage safely.
+;; : (-> Symbol [String] PooFlowAlignmentGateProof)
+(def (alignment-gate-proof id proofs)
+  (list (cons 'id id)
+        (cons 'proofs proofs)))
+
+;;; Boundary: result gates track the repository proof ladder, not upstream files.
+;;; The catalog connects tutorial parity to concrete local verification commands.
+;; : (-> Unit [PooFlowAlignmentGateProof])
+(def (poo-flow-funflow-tutorial-alignment-gate-proofs)
+  (list
+   (alignment-gate-proof
+    'stage-1-minimal-flow
+    '("gxtest t/tutorial-result-test.ss: stage 1 tutorial1 minimal pure flow returns 2"))
+   (alignment-gate-proof
+    'stage-2-composition-and-greeting
+    '("gxtest t/tutorial-result-test.ss: stage 2 quick reference hello and composition results"))
+   (alignment-gate-proof
+    'stage-3-extension-behavior
+    '("gxtest t/tutorial-result-test.ss: stage 3 tutorial2 extension behavior repeats custom text"
+      "gxtest t/tutorial-feature-batch-test.ss: stage 12 tutorial2 custom task interpreter runs through extension"))
+   (alignment-gate-proof
+    'stage-4-word-count-pipeline
+    '("gxtest t/tutorial-result-test.ss: stage 4 word count exposes deterministic counts"
+      "gxtest t/tutorial-feature-batch-test.ss: stage 13 word count extension returns notebook counts"))
+   (alignment-gate-proof
+    'stage-5-external-config-fail-fast
+    '("gxtest t/tutorial-result-test.ss: stage 5 external config fails before runtime submission"))
+   (alignment-gate-proof
+    'stage-6-error-handling-try-boundary
+    '("gxtest t/tutorial-result-test.ss: stage 6 error handling try-flow routes thrown failures"
+      "gxtest t/functional-flow-kernel-test.ss: authors functional flows with hygienic Gerbil macros"))
+   (alignment-gate-proof
+    'stage-7-docker-cas-real-runtime
+    '("gxtest t/tutorial-runtime-result-test.ss: stage 7 docker process runtime command returns CCompilation visible result"
+      "gxtest t/docker-descriptor-test.ss: captures CCompilation-style docker payload"
+      "gxtest t/docker-descriptor-test.ss: captures ExternalConfig-style rendered arguments"))
+   (alignment-gate-proof
+    'stage-8-docker-artifact-handoff-to-store
+    '("gxtest t/tutorial-runtime-result-test.ss: stage 8 docker artifact feeds store manifest"))
+   (alignment-gate-proof
+    'stage-9-descriptor-declared-runtime-command
+    '("gxtest t/runtime-bridge-test.ss: stdout runtime command descriptor materializes process command"
+      "gxtest t/tutorial-runtime-result-test.ss: stage 9 descriptor command drives docker store workflow"))
+   (alignment-gate-proof
+    'stage-10-descriptor-manifest-for-rust-cli-handoff
+    '("gxtest t/runtime-bridge-test.ss: runtime command descriptor exports cli manifest"
+      "gxtest t/tutorial-runtime-result-test.ss: stage 10 descriptor manifest exposes rust cli handoff"))
+   (alignment-gate-proof
+    'stage-11-quick-reference-conditional-and-cache
+    '("gxtest t/tutorial-feature-batch-test.ss: stage 11 quick reference conditional and cached increment run"))
+   (alignment-gate-proof
+    'stage-12-tutorial2-custom-task-interpreter
+    '("gxtest t/tutorial-feature-batch-test.ss: stage 12 tutorial2 custom task interpreter runs through extension"))
+   (alignment-gate-proof
+    'stage-13-word-count-text-extension
+    '("gxtest t/tutorial-feature-batch-test.ss: stage 13 word count extension returns notebook counts"))
+   (alignment-gate-proof
+    'stage-14-ccompilation-and-tensorflow-descriptors
+    '("gxtest t/tutorial-feature-batch-test.ss: stage 14 ccompilation and tensorflow workflow descriptors are public"))
+   (alignment-gate-proof
+    'stage-15-error-handling-recovery-boundary
+    '("gxtest t/tutorial-feature-batch-test.ss: stage 15 error handling recovers local throw and adapter failure"))
+   (alignment-gate-proof
+    'stage-16-makefile-tool-workflow-descriptor
+    '("gxtest t/tutorial-feature-batch-test.ss: stage 16 makefile tool workflow descriptor is public"))
+   (alignment-gate-proof
+    'stage-17-makefile-tool-descriptor-runtime-result
+    '("gxtest t/tutorial-makefile-runtime-test.ss: stage 17 descriptor command drives makefile tool workflow"))
+   (alignment-gate-proof
+    'stage-18-makefile-tool-rust-cli-manifest
+    '("gxtest t/tutorial-makefile-runtime-test.ss: stage 18 makefile tool descriptor manifest exposes rust cli handoff"))
+   (alignment-gate-proof
+    'stage-19-runtime-manifest-consumer
+    '("gxtest t/runtime-manifest-test.ss: runtime command descriptor exports cli manifest"
+      "gxtest t/runtime-manifest-test.ss: runtime command manifest consumer executes stdout protocol"
+      "gxtest t/runtime-manifest-test.ss: runtime command manifest rejects unsupported protocol"))
+   (alignment-gate-proof
+    'stage-20-functional-flow-kernel-and-macro-authoring
+    '("gxtest t/functional-flow-kernel-test.ss: functional flow kernel"))
+   (alignment-gate-proof
+    'stage-21-workflow-module-macro-authoring
+    '("gxtest t/tutorial-feature-batch-test.ss: authors extension-owned workflows with Gerbil macros"
+      "gxtest t/tutorial-makefile-runtime-test.ss: authors makefile runtime descriptor with Gerbil macros"))
+   (alignment-gate-proof
+    'stage-22-poo-tutorial-alignment-report
+    '("gxtest t/funflow-tutorial-alignment-report-test.ss: funflow tutorial alignment report"))))
+
+;; : (-> PooFlowAlignmentGateProof Symbol)
+(def (alignment-gate-proof-id gate-proof)
+  (cdr (assoc 'id gate-proof)))
+
+;; : (-> PooFlowAlignmentGateProof [String])
+(def (alignment-gate-proof-commands gate-proof)
+  (cdr (assoc 'proofs gate-proof)))
+
+;;; Boundary: ids are projected from the proof catalog to prevent drift.
+;;; Downstream code should consume ids and proofs from the same source.
+;; : (-> Unit [Symbol])
+(def (poo-flow-funflow-tutorial-alignment-gate-ids)
+  (map alignment-gate-proof-id
+       (poo-flow-funflow-tutorial-alignment-gate-proofs)))
+
 ;; : (-> Symbol Alist Alist)
 (def (alignment-status-count-increment status counts)
   (cond
@@ -251,6 +357,15 @@
         0
         specs))
 
+;;; Boundary: gate proof count summarizes local verification coverage only.
+;;; It does not replace executing the tests listed in the proof catalog.
+;; : (-> [PooFlowAlignmentGateProof] Integer)
+(def (alignment-gate-proof-count gate-proofs)
+  (fold (lambda (gate-proof count)
+          (+ count (length (alignment-gate-proof-commands gate-proof))))
+        0
+        gate-proofs))
+
 ;; : (-> PooObject Alist)
 (def (alignment-spec-snapshot spec)
   (list (cons 'id (.ref spec 'id))
@@ -261,6 +376,49 @@
         (cons 'proofs (.ref spec 'proofs))
         (cons 'runtime-owned (.ref spec 'runtime-owned))
         (cons 'deferred (.ref spec 'deferred))))
+
+;;; Boundary: source entries are optimized for upstream-to-local lookup.
+;;; They deliberately omit proof strings so the index stays compact.
+;; : (-> PooObject Alist)
+(def (alignment-source-index-entry spec)
+  (list (cons 'source (.ref spec 'source))
+        (cons 'id (.ref spec 'id))
+        (cons 'status (.ref spec 'status))
+        (cons 'coverage (.ref spec 'coverage))))
+
+;;; Boundary: source index preserves tutorial source order from the spec table.
+;;; This is the fast path for checking which upstream file a report row covers.
+;; : (-> [PooObject] [Alist])
+(def (alignment-source-index specs)
+  (map alignment-source-index-entry specs))
+
+;;; Boundary: runtime-gap detection stays structural and data-only.
+;;; A gap means the source still delegates real work to Rust/Marlin runtime.
+;; : (-> PooObject Boolean)
+(def (alignment-runtime-gap-spec? spec)
+  (or (not (null? (.ref spec 'runtime-owned)))
+      (not (null? (.ref spec 'deferred)))))
+
+;;; Boundary: gap entries keep source, owner, and deferred output in one row.
+;;; This makes Docker/CAS/process/image gaps inspectable without running them.
+;; : (-> PooObject Alist)
+(def (alignment-runtime-gap-entry spec)
+  (list (cons 'source (.ref spec 'source))
+        (cons 'id (.ref spec 'id))
+        (cons 'status (.ref spec 'status))
+        (cons 'runtime-owned (.ref spec 'runtime-owned))
+        (cons 'deferred (.ref spec 'deferred))))
+
+;;; Boundary: runtime gap index is a report-only diagnostic projection.
+;;; It does not imply the Scheme side can execute the listed runtime work.
+;; : (-> [PooObject] [Alist])
+(def (alignment-runtime-gap-index specs)
+  (filter-map
+   (lambda (spec)
+     (if (alignment-runtime-gap-spec? spec)
+       (alignment-runtime-gap-entry spec)
+       #f))
+   specs))
 
 ;;; Boundary: aggregate observability is derived only from normalized spec rows.
 ;;; The map keeps row snapshots separate from report-level summary metadata.
@@ -274,7 +432,14 @@
          (status-counts-value (alignment-status-counts specs))
          (deferred-ids-value (alignment-deferred-ids specs))
          (proof-count-value (alignment-proof-count specs))
-         (spec-snapshots-value (map alignment-spec-snapshot specs)))
+         (gate-proofs-value
+          (poo-flow-funflow-tutorial-alignment-gate-proofs))
+         (gate-ids-value (map alignment-gate-proof-id gate-proofs-value))
+         (gate-proof-count-value
+          (alignment-gate-proof-count gate-proofs-value))
+         (spec-snapshots-value (map alignment-spec-snapshot specs))
+         (source-index-value (alignment-source-index specs))
+         (runtime-gap-index-value (alignment-runtime-gap-index specs)))
    (.o kind: (poo-flow-funflow-tutorial-alignment-report-kind)
        schema: (poo-flow-funflow-tutorial-alignment-schema)
         upstream: "tweag/funflow"
@@ -283,9 +448,16 @@
         source-count: source-count-value
         spec-ids: ids-value
         specs: spec-snapshots-value
+        source-index: source-index-value
         status-counts: status-counts-value
         deferred-ids: deferred-ids-value
+        runtime-gap-index: runtime-gap-index-value
+        runtime-gap-count: (length runtime-gap-index-value)
         proof-count: proof-count-value
+        gate-count: (length gate-ids-value)
+        gate-ids: gate-ids-value
+        gate-proofs: gate-proofs-value
+        gate-proof-count: gate-proof-count-value
         runtime-owner: "marlin-agent-core"
         runtime-executed: #f)))
 

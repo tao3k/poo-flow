@@ -5,7 +5,7 @@
 
 (import :std/test
         (only-in :clan/poo/object .o .ref)
-        :modules/module-system)
+        :poo-flow/src/modules/module-system)
 
 (export module-system-user-interface-test)
 

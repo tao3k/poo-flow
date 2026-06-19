@@ -2,9 +2,9 @@
 ;;; Boundary: non-mutating module doctor diagnostics.
 ;;; Invariant: diagnostics never change activation behavior.
 
-(import :core/task
-        :core/flow
-        :modules/descriptor)
+(import :poo-flow/src/core/task
+        :poo-flow/src/core/flow
+        :poo-flow/src/modules/descriptor)
 
 (export make-poo-flow-module-diagnostic
         poo-flow-module-diagnostic?

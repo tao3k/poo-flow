@@ -4,8 +4,8 @@
 ;;; Runtime contract: accepted field names are inert data until request assembly.
 ;;; Policy evidence: request facade re-exports these constants for stable callers.
 
-(import :core/api
-        :modules/agent-sandbox/alist)
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist)
 
 (export +agent-sandbox-request-schema+
         +agent-sandbox-request-field-names+

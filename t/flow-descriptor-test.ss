@@ -2,7 +2,7 @@
 ;;; Boundary: flow descriptor tests cover declaration policy, not execution.
 
 (import :std/test
-        :core/api)
+        :poo-flow/src/core/api)
 
 (def flow-descriptor-test
   (test-suite "flow declaration descriptors"

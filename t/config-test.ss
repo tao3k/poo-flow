@@ -3,7 +3,7 @@
 ;;; Invariant: failure details expose missing key identity, never config values.
 
 (import :std/test
-        :core/api)
+        :poo-flow/src/core/api)
 
 (export config-test)
 

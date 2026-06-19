@@ -11,10 +11,10 @@
 ;;; Policy evidence:
 ;;; - Profile and bridge tests assert both valid requests and failure codes.
 
-(import :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/profile
-        :modules/agent-sandbox/request-field)
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/request-field)
 
 (export agent-sandbox-request-validation-errors
         agent-sandbox-validate-request

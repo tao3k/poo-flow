@@ -13,7 +13,7 @@
 ;; | PooModuleSourceRefCandidate = Value
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :modules/interface)
+        :poo-flow/src/modules/interface)
 
 (export make-poo-flow-module-source-ref
         poo-flow-module-source-ref?

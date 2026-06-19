@@ -2,8 +2,8 @@
 ;;; Boundary: task-family descriptor tests stay separate from flow execution.
 
 (import :std/test
-        :core/api
-        :workflow/store)
+        :poo-flow/src/core/api
+        :poo-flow/src/workflow/store)
 
 (def task-family-descriptor-test
   (test-suite "task family descriptors"

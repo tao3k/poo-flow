@@ -3,8 +3,8 @@
 ;;; Invariant: only pure/scheme tasks carry an in-process executor.
 
 (import (only-in :clan/poo/object .mix .@ object?)
-        :core/roles
-        :core/failure)
+        :poo-flow/src/core/roles
+        :poo-flow/src/core/failure)
 
 (export make-task
         task?

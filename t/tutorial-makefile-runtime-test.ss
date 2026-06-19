@@ -3,9 +3,9 @@
 ;;; Invariant: tests emulate runtime responses without executing Makefile work.
 
 (import :std/test
-        :core/api
-        :modules/workflow/flows
-        :modules/workflow/syntax)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/workflow/flows
+        :poo-flow/src/modules/workflow/syntax)
 
 (export tutorial-makefile-runtime-test)
 

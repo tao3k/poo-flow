@@ -3,9 +3,9 @@
 ;;; Invariant: task execution is deferred to runner/runtime-adapter code.
 
 (import (only-in :clan/poo/object .mix .@ object?)
-        :core/roles
-        :core/failure
-        :core/task)
+        :poo-flow/src/core/roles
+        :poo-flow/src/core/failure
+        :poo-flow/src/core/task)
 
 (export make-flow
         flow?

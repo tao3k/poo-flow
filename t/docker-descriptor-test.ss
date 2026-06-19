@@ -3,9 +3,9 @@
 ;;; Invariant: Scheme never pulls images, mounts volumes, or executes Docker.
 
 (import :std/test
-        :core/api
-        :modules/docker
-        :modules/agent-sandbox/resource)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/docker
+        :poo-flow/src/modules/agent-sandbox/resource)
 
 (export docker-descriptor-test)
 

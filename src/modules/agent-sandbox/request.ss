@@ -9,14 +9,14 @@
 ;;; Policy evidence:
 ;;; - Agent-sandbox descriptor, bridge, and profile tests import this facade.
 
-(import :modules/agent-sandbox/request-field
-        :modules/agent-sandbox/request-validation
-        :modules/agent-sandbox/request-builder
-        :modules/agent-sandbox/request-macro
-        :modules/agent-sandbox/request-accessor)
+(import :poo-flow/src/modules/agent-sandbox/request-field
+        :poo-flow/src/modules/agent-sandbox/request-validation
+        :poo-flow/src/modules/agent-sandbox/request-builder
+        :poo-flow/src/modules/agent-sandbox/request-macro
+        :poo-flow/src/modules/agent-sandbox/request-accessor)
 
-(export (import: :modules/agent-sandbox/request-field)
-        (import: :modules/agent-sandbox/request-validation)
-        (import: :modules/agent-sandbox/request-builder)
-        (import: :modules/agent-sandbox/request-macro)
-        (import: :modules/agent-sandbox/request-accessor))
+(export (import: :poo-flow/src/modules/agent-sandbox/request-field)
+        (import: :poo-flow/src/modules/agent-sandbox/request-validation)
+        (import: :poo-flow/src/modules/agent-sandbox/request-builder)
+        (import: :poo-flow/src/modules/agent-sandbox/request-macro)
+        (import: :poo-flow/src/modules/agent-sandbox/request-accessor))

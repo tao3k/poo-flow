@@ -1,10 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: Docker sandbox kernel module selection.
-;;; Invariant: Docker task-flow extension remains in :modules/docker.
+;;; Invariant: Docker task-flow extension remains in :poo-flow/src/modules/docker.
 
-(import :modules/docker-sandbox/objects
-        :modules/sandbox-core/objects
-        :modules/user-config-base)
+(import :poo-flow/src/modules/docker-sandbox/objects
+        :poo-flow/src/modules/sandbox-core/objects
+        :poo-flow/src/modules/user-config-base)
 
 (export poo-flow-docker-sandbox-module-bundles
         poo-flow-docker-sandbox-profile-config

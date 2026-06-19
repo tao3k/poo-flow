@@ -2,8 +2,8 @@
 ;;; Boundary: hygienic authoring macros for the functional flow kernel.
 ;;; Invariant: macros expand to public flow/plan combinators, not a workflow DSL.
 
-(import :core/flow
-        :core/plan)
+(import :poo-flow/src/core/flow
+        :poo-flow/src/core/plan)
 
 (export defpoo-flow-arr
         defpoo-flow-identity

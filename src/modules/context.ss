@@ -4,7 +4,7 @@
 ;;; Intent: flag and phase helpers stay out of descriptor construction code.
 ;;; Parser policy should treat this file as the module context query owner.
 
-(import :modules/descriptor)
+(import :poo-flow/src/modules/descriptor)
 
 (export poo-flow-module-phase-file
         poo-flow-module-hook-values

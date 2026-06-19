@@ -3,7 +3,7 @@
 ;;; Invariant: cases consume config declarations; root user-interface files remain declarations only.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :modules/user-config)
+        :poo-flow/src/modules/user-config)
 
 (export poo-flow-user-interface-case-kind
         poo-flow-user-interface-case-default-setting-keys
@@ -47,6 +47,7 @@
     (loop . governor)
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)
+    (sandbox . docker-sandbox)
     (custom . my-module)))
 
 ;; : (-> Unit [Symbol])

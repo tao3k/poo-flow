@@ -7,7 +7,7 @@
         "user-interface-fixtures.ss"
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles)
-        :modules/module-system)
+        :poo-flow/src/modules/module-system)
 
 (export user-interface-config-core-case-test)
 

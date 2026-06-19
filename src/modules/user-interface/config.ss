@@ -2,17 +2,17 @@
 ;;; Boundary: upstream helpers for root user-interface declarations.
 ;;; Invariant: root user-interface files declare rows; this module projects them.
 
-(import :modules/agent-sandbox/config
-        :modules/profiles/kernel
-        :modules/user-config
-        :modules/user-config-syntax
-        :modules/user-interface/objects)
+(import :poo-flow/src/modules/agent-sandbox/config
+        :poo-flow/src/modules/profiles/kernel
+        :poo-flow/src/modules/user-config
+        :poo-flow/src/modules/user-config-syntax
+        :poo-flow/src/modules/user-interface/objects)
 
-(export (import: :modules/agent-sandbox/config)
-        (import: :modules/profiles/kernel)
-        (import: :modules/user-config)
-        (import: :modules/user-config-syntax)
-        (import: :modules/user-interface/objects)
+(export (import: :poo-flow/src/modules/agent-sandbox/config)
+        (import: :poo-flow/src/modules/profiles/kernel)
+        (import: :poo-flow/src/modules/user-config)
+        (import: :poo-flow/src/modules/user-config-syntax)
+        (import: :poo-flow/src/modules/user-interface/objects)
         poo-flow-user-interface-profile-name
         poo-flow-user-interface-profile-set-name
         pooFlowUserInterfaceProfile

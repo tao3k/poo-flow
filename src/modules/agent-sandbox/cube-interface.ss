@@ -5,10 +5,10 @@
 ;;; Policy evidence: Cube interface tests assert descriptor override and gates.
 
 (import (only-in :clan/poo/object .ref .mix object?)
-        :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/profile
-        :modules/agent-sandbox/bridge)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/bridge)
 
 (export +cube-interface-schema+
         +cube-interface-api-compatibilities+

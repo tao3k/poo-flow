@@ -4,18 +4,18 @@
 ;;; Responsibility: publish Marlin request envelopes for =govern-loop=.
 ;;; Responsibility: publish L1 report receipts with no write effects.
 ;;; Responsibility: publish runtime discovery manifests for Marlin.
-;;; Import boundary: this module may depend on =:loops/governor=.
-;;; Import boundary: this module may depend on =:core/failure=.
+;;; Import boundary: this module may depend on =:poo-flow/src/loops/governor=.
+;;; Import boundary: this module may depend on =:poo-flow/src/core/failure=.
 ;;; Import boundary: the core governor must not import Marlin wrappers.
-;;; Export boundary: =:loops/agent= re-exports this owner for callers.
+;;; Export boundary: =:poo-flow/src/loops/agent= re-exports this owner for callers.
 ;;; Runtime boundary: this module never polls or schedules loops.
 ;;; Runtime boundary: this module never locks or writes state.
 ;;; Runtime boundary: this module never executes connectors or starts loops.
 ;;; Parser evidence: owner-items expose schemas and projection functions here.
 ;;; Policy evidence: tests assert schemas, envelopes, receipts, and manifests.
 
-(import :core/failure
-        :loops/governor)
+(import :poo-flow/src/core/failure
+        :poo-flow/src/loops/governor)
 
 (export +loop-governor-marlin-request-schema+
         +loop-governor-marlin-abi-schema+

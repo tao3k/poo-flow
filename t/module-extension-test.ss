@@ -3,10 +3,10 @@
 ;;; of feature-specific workflow code.
 
 (import :std/test
-        :modules/module-system
-        :modules/objects
-        :modules/nono-sandbox/objects
-        :modules/cubeSandbox/objects)
+        :poo-flow/src/modules/module-system
+        :poo-flow/src/modules/objects
+        :poo-flow/src/modules/nono-sandbox/objects
+        :poo-flow/src/modules/cubeSandbox/objects)
 
 (export module-extension-test)
 

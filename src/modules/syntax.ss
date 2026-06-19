@@ -5,9 +5,9 @@
 ;;; Parser policy should treat this file as syntax over the public POO API.
 
 (import (only-in :clan/poo/object .mix .o)
-        :core/roles
-        :modules/descriptor
-        :modules/projection)
+        :poo-flow/src/core/roles
+        :poo-flow/src/modules/descriptor
+        :poo-flow/src/modules/projection)
 
 (export defpoo-flow-module-object-block
         poo-flow-module-option-block

@@ -2,9 +2,9 @@
 ;;; Boundary: CubeSandbox kernel module selection.
 ;;; Invariant: object inheritance and row extension live in objects.ss owners.
 
-(import :modules/cubeSandbox/objects
-        :modules/sandbox-core/objects
-        :modules/user-config-base)
+(import :poo-flow/src/modules/cubeSandbox/objects
+        :poo-flow/src/modules/sandbox-core/objects
+        :poo-flow/src/modules/user-config-base)
 
 (export poo-flow-cubeSandbox-module-bundles
         poo-flow-cubeSandbox-profile-config

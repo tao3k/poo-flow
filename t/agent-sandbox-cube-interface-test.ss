@@ -3,10 +3,10 @@
 ;;; Invariant: tests do not call Cube APIs or create remote sandboxes.
 
 (import :std/test
-        :core/api
-        :modules/agent-sandbox/api
-        :modules/agent-sandbox/cube
-        :modules/agent-sandbox/nono)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/api
+        :poo-flow/src/modules/agent-sandbox/cube
+        :poo-flow/src/modules/agent-sandbox/nono)
 
 (export agent-sandbox-cube-interface-test)
 

@@ -5,11 +5,11 @@
 ;;; Source contract: symbols mirror .data/nono/bindings/c/include/nono.h.
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
-(import :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/profile
-        :modules/agent-sandbox/bridge
-        :modules/nono-sandbox/c-binding-descriptor
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/bridge
+        :poo-flow/src/modules/nono-sandbox/c-binding-descriptor
         (only-in :std/misc/process run-process))
 
 (export +nono-c-binding-dry-run-receipt-schema+

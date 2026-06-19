@@ -4,19 +4,19 @@
 ;;; It never evaluates, imports, or opens the source ref payload.
 ;;; Intent: agents can trust resolver receipts as replayable evidence of selection order.
 ;;; Ownership: this file owns catalog-source lookup, activation snapshots, and run-config lowering.
-;;; Catalog lookup compares source refs that were built by src/modules/source.ss.
+;;; Catalog lookup compares source refs that were built by modules/source.ss.
 ;;; Activation receives descriptors that were already constructed by descriptor owners.
 ;;; The resolver may report missing sources, but it must not try to load them.
 ;;; Run-config lowering is the only place this owner touches core config values.
 ;;; Parser policy should treat this file as the resolver/activation owner.
 
-(import :core/failure
-        :core/task
-        :core/flow
-        :core/config
-        :modules/source
-        :modules/descriptor
-        :modules/diagnostics)
+(import :poo-flow/src/core/failure
+        :poo-flow/src/core/task
+        :poo-flow/src/core/flow
+        :poo-flow/src/core/config
+        :poo-flow/src/modules/source
+        :poo-flow/src/modules/descriptor
+        :poo-flow/src/modules/diagnostics)
 
 (export make-poo-flow-module-catalog-entry
         poo-flow-module-catalog-entry?

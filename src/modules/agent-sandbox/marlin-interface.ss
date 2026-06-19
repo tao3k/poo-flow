@@ -4,12 +4,12 @@
 ;;; Runtime contract: Marlin owns all native/Cube API execution after handoff.
 ;;; Policy evidence: dispatcher tests assert nono/Cube routing and failure gates.
 
-(import :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/profile
-        :modules/agent-sandbox/bridge
-        :modules/nono-sandbox/c-binding
-        :modules/agent-sandbox/cube-interface)
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/bridge
+        :poo-flow/src/modules/nono-sandbox/c-binding
+        :poo-flow/src/modules/agent-sandbox/cube-interface)
 
 (export +agent-sandbox-marlin-interface-schema+
         +agent-sandbox-marlin-admission-schema+

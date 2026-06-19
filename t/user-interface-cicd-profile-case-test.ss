@@ -3,8 +3,8 @@
 ;;; Invariant: cases stay declarative and do not execute release workflows.
 
 (import :std/test
-        :core/api
-        :modules/module-system)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/module-system)
 
 (export user-interface-cicd-profile-case-test)
 

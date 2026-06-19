@@ -12,3 +12,5 @@ devenv.local.yaml
 # Gerbil std/make output for the poo-flow executable.
 .bin
 .gerbil
+manifest.ss
+version.ss

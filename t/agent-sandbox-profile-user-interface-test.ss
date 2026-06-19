@@ -3,7 +3,7 @@
 
 (import :std/test
         (only-in :clan/poo/object .ref)
-        :modules/module-system)
+        :poo-flow/src/modules/module-system)
 
 (export agent-sandbox-profile-user-interface-test)
 

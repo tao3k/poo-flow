@@ -9,15 +9,15 @@
 ;; : (-> Unit Path)
 (def (poo-flow-cli-test-root)
   (cond
-   ((file-exists? "cli.ss") (current-directory))
-   ((file-exists? "../cli.ss") "..")
+   ((file-exists? "src/cli.ss") (current-directory))
+   ((file-exists? "../src/cli.ss") "..")
    (else (current-directory))))
 
 ;; : (-> [String] Pair)
 (def (run-poo-flow-cli args)
   (let (status 0)
     (let (output
-          (run-process (append '("env" "GERBIL_LOADPATH=src:t" "gxi" "cli.ss")
+          (run-process (append '("gxpkg" "env" "gxi" "src/cli.ss")
                                args)
                        directory: (poo-flow-cli-test-root)
                        stderr-redirection: #t

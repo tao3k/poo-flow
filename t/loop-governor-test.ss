@@ -3,8 +3,8 @@
 ;;; Invariant: runtime state is passed as inert facts and is never mutated.
 
 (import :std/test
-        :core/api
-        :loops/agent)
+        :poo-flow/src/core/api
+        :poo-flow/src/loops/agent)
 
 (export loop-governor-test)
 

@@ -2,8 +2,8 @@
 ;;; Boundary: Store tests align Scheme declarations with Funflow CAS concepts.
 
 (import :std/test
-        :core/api
-        :workflow/store)
+        :poo-flow/src/core/api
+        :poo-flow/src/workflow/store)
 
 (export store-funflow-alignment-test)
 

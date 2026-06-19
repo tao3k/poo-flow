@@ -2,8 +2,8 @@
 ;;; Boundary: planning produces inspectable control-plane artifacts.
 ;;; Invariant: execution stays in the runner/runtime-adapter layer.
 
-(import :core/flow
-        :core/task)
+(import :poo-flow/src/core/flow
+        :poo-flow/src/core/task)
 
 (export make-plan-node
         plan-node?

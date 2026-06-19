@@ -2,7 +2,7 @@
 ;;; Boundary: execution policies package strategy evidence for runtime handoff.
 ;;; Invariant: policies are immutable snapshots, not schedulers or executors.
 
-(import :core/strategy)
+(import :poo-flow/src/core/strategy)
 
 (export make-execution-policy
         execution-policy?

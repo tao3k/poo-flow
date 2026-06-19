@@ -3,7 +3,7 @@
 
 (import :std/test
         (only-in :clan/poo/object .@ .slot? .all-slots)
-        :core/api)
+        :poo-flow/src/core/api)
 
 (def descriptor-registry-test
   (test-suite "descriptor registries"

@@ -1,13 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; Owner: nono profile alignment lives in this backend module.
 ;;; Boundary: core provides schema, task, envelope, and adapter protocols.
-;;; Import contract: users opt in through =:modules/agent-sandbox/nono= for profile defaults.
+;;; Import contract: users opt in through =:poo-flow/src/modules/agent-sandbox/nono= for profile defaults.
 ;;; Runtime contract: this module emits profile data only.
 ;;; Runtime contract: nono session startup stays behind Marlin runtime commands.
 ;;; Runtime contract: credentials and LLM calls stay out of Scheme.
 ;;; Policy evidence: tests should import this module when they assert nono defaults.
 
-(import :modules/agent-sandbox/profile)
+(import :poo-flow/src/modules/agent-sandbox/profile)
 
 (export make-nono-agent-sandbox-profile-descriptor
         make-nono-agent-sandbox-profile)

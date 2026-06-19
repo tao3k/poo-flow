@@ -4,7 +4,7 @@
 
 (import :std/test
         (only-in :clan/poo/object .ref)
-        :modules/module-system
+        :poo-flow/src/modules/module-system
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles))
 
@@ -48,11 +48,11 @@
              (presentation
               (poo-flow-user-interface-case-presentation case-object))
              (modules (.ref presentation 'modules))
-             (custom-module (car (cddddr modules)))
+             (custom-module (cadr (cddddr modules)))
              (feature-facts (.ref presentation 'feature-facts))
-             (custom-fact (car (cddddr feature-facts)))
+             (custom-fact (cadr (cddddr feature-facts)))
              (cicd-intent (car (.ref presentation 'cicd-intents))))
-        (check-equal? (.ref presentation 'module-count) 5)
+        (check-equal? (.ref presentation 'module-count) 6)
         (check-equal? (.ref presentation 'module-keys)
                       (poo-flow-user-interface-case-expected-module-keys
                        case-object))
@@ -74,7 +74,7 @@
         (check-equal? (poo-flow-user-interface-case-alist-value
                        'declaration-index
                        custom-fact)
-                      4)
+                      5)
         (check-equal? (poo-flow-user-interface-case-alist-value
                        'declaration-phase
                        custom-fact)

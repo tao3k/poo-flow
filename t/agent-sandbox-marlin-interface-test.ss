@@ -3,11 +3,11 @@
 ;;; Invariant: tests do not execute nono, Cube, or Marlin runtime code.
 
 (import :std/test
-        :core/api
-        :modules/agent-sandbox/api
-        :modules/agent-sandbox/cube
-        :modules/agent-sandbox/nono
-        :modules/nono-sandbox/c-binding)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/api
+        :poo-flow/src/modules/agent-sandbox/cube
+        :poo-flow/src/modules/agent-sandbox/nono
+        :poo-flow/src/modules/nono-sandbox/c-binding)
 
 (export agent-sandbox-marlin-interface-test)
 

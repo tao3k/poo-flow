@@ -3,7 +3,7 @@
 ;;; Invariant: heavy runtime execution still belongs behind runtime adapters.
 
 (import :std/test
-        :core/api)
+        :poo-flow/src/core/api)
 
 (export functional-flow-kernel-test)
 

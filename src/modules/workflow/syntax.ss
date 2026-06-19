@@ -2,10 +2,10 @@
 ;;; Boundary: hygienic authoring macros for workflow module constructors.
 ;;; Invariant: macros expand to public module constructors, not a separate DSL runtime.
 
-(import :modules/custom-task
-        :modules/docker
-        :workflow/store
-        :modules/workflow/flows)
+(import :poo-flow/src/modules/custom-task
+        :poo-flow/src/modules/docker
+        :poo-flow/src/workflow/store
+        :poo-flow/src/modules/workflow/flows)
 
 (export defpoo-custom-repeat-flow
         defpoo-docker-flow

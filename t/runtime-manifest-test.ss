@@ -3,7 +3,7 @@
 ;;; Invariant: manifests remain request-bound so Rust can run the same argv.
 
 (import :std/test
-        :core/api)
+        :poo-flow/src/core/api)
 
 (export runtime-manifest-test)
 

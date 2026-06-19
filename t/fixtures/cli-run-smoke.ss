@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Smoke file executed by `poo-flow run` for functional flow validation.
 
-(import :core/api)
+(import :poo-flow/src/core/api)
 
 (def args (cddr (command-line)))
 (def input (if (null? args) 3 (string->number (car args))))

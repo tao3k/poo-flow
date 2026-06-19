@@ -3,7 +3,7 @@
 ;;; Invariant: each stage proves a user-visible result, not only an API shape.
 
 (import :std/test
-        :core/api)
+        :poo-flow/src/core/api)
 
 (export tutorial-result-test)
 

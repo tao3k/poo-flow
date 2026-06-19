@@ -1,13 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; Owner: WordCount tutorial alignment lives in this module.
 ;;; Boundary: core provides descriptor, strategy, runner, and adapter protocols.
-;;; Import contract: users opt in through =:modules/text= exports.
+;;; Import contract: users opt in through =:poo-flow/src/modules/text= exports.
 ;;; Runtime contract: this module emits WordCount task data only.
 ;;; Runtime contract: parsing, counting, and formatting stay local and deterministic.
 ;;; Runtime contract: file IO remains caller/runtime-owned.
 ;;; Policy evidence: tests should assert parsing, formatting, and task flow result.
 
-(import :core/api)
+(import :poo-flow/src/core/api)
 
 (export text-task-family-descriptor
         make-text-task-family-registry

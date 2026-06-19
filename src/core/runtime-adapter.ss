@@ -2,7 +2,7 @@
 ;;; Boundary: adapters normalize calls to heavy runtime implementations.
 ;;; Invariant: this module only defines the request-only placeholder adapter.
 
-(import :core/task
+(import :poo-flow/src/core/task
         (only-in :std/misc/process run-process))
 
 (export make-adapter-result

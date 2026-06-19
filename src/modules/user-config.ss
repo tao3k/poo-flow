@@ -1,14 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: user profile and doctor facade for the hot-plug config surface.
-;;; Invariant: selection/config primitives stay in :modules/user-config-base.
-;;; Descriptor realization stays in src/modules.
+;;; Invariant: selection/config primitives stay in :poo-flow/src/modules/user-config-base.
+;;; Descriptor realization stays in package-root modules.
 ;;; Intent: keep Doom-style user declarations inspectable before activation.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
-        :modules/interface
-        :modules/user-config-base)
+        :poo-flow/src/modules/interface
+        :poo-flow/src/modules/user-config-base)
 
-(export (import: :modules/user-config-base)
+(export (import: :poo-flow/src/modules/user-config-base)
         poo-flow-user-profile-kind
         poo-flow-user-profile-set-kind
         poo-flow-user-profile-diagnostic-kind

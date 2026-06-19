@@ -3,8 +3,8 @@
 ;;; Invariant: tests assert harness-only local validation, not runtime execution.
 
 (import :std/test
-        :core/api
-        :loops/agent)
+        :poo-flow/src/core/api
+        :poo-flow/src/loops/agent)
 
 (export loop-strategy-test)
 

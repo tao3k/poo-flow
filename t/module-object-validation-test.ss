@@ -3,14 +3,14 @@
 ;;; Gerbil harness structural validation vocabulary.
 
 (import :std/test
-        :modules/extension
-        :modules/object-validation
-        :modules/objects
-        :modules/sandbox-core/objects
-        :modules/user-interface/objects
-        :modules/nono-sandbox/objects
-        :modules/cubeSandbox/objects
-        :modules/docker-sandbox/objects)
+        :poo-flow/src/modules/extension
+        :poo-flow/src/modules/object-validation
+        :poo-flow/src/modules/objects
+        :poo-flow/src/modules/sandbox-core/objects
+        :poo-flow/src/modules/user-interface/objects
+        :poo-flow/src/modules/nono-sandbox/objects
+        :poo-flow/src/modules/cubeSandbox/objects
+        :poo-flow/src/modules/docker-sandbox/objects)
 
 (export module-object-validation-test)
 

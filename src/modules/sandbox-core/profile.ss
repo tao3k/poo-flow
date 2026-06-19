@@ -3,9 +3,9 @@
 ;;; Invariant: this is developer-owned object machinery, not a user module row.
 
 (import (only-in :clan/poo/object .o)
-        :modules/agent-sandbox/config
-        :modules/extension
-        :modules/objects)
+        :poo-flow/src/modules/agent-sandbox/config
+        :poo-flow/src/modules/extension
+        :poo-flow/src/modules/objects)
 
 (export poo-flow-sandbox-core-profile-object
         poo-flow-sandbox-profile-object-row-slot

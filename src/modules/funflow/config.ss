@@ -2,7 +2,7 @@
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
-(import :modules/user-config-base)
+(import :poo-flow/src/modules/user-config-base)
 
 (export poo-flow-funflow-cicd-default-payload
         poo-flow-funflow-module-bundles

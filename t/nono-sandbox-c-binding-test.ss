@@ -3,11 +3,11 @@
 ;;; Invariant: tests do not load or execute the C library.
 
 (import :std/test
-        :core/api
-        :modules/agent-sandbox/api
-        :modules/agent-sandbox/nono
-        :modules/agent-sandbox/cube
-        :modules/nono-sandbox/c-binding)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/api
+        :poo-flow/src/modules/agent-sandbox/nono
+        :poo-flow/src/modules/agent-sandbox/cube
+        :poo-flow/src/modules/nono-sandbox/c-binding)
 
 (export nono-sandbox-c-binding-test)
 

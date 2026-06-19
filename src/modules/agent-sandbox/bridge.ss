@@ -7,9 +7,9 @@
 ;;; Runtime contract: real sandbox execution stays behind runtime commands.
 ;;; Policy evidence: runtime command tests should assert this projection surface.
 
-(import :core/api
-        :modules/agent-sandbox/alist
-        :modules/agent-sandbox/request)
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/request)
 
 (export +agent-sandbox-bridge-schema+
         +agent-sandbox-runtime-manifest-schema+

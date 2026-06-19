@@ -3,7 +3,7 @@
 ;;; Invariant: trace construction never dereferences POO slots.
 
 (import :std/test
-        :modules/module-system)
+        :poo-flow/src/modules/module-system)
 
 (export module-system-observability-test)
 

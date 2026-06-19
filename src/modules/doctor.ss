@@ -5,12 +5,12 @@
 ;;; Parser policy should treat this file as the module-system doctor surface owner.
 
 (import (only-in :clan/poo/object .o .ref)
-        :modules/interface
-        :modules/source
-        :modules/descriptor
-        :modules/diagnostics
-        :modules/projection
-        :modules/loader)
+        :poo-flow/src/modules/interface
+        :poo-flow/src/modules/source
+        :poo-flow/src/modules/descriptor
+        :poo-flow/src/modules/diagnostics
+        :poo-flow/src/modules/projection
+        :poo-flow/src/modules/loader)
 
 (export poo-flow-module-doctor-presentation-kind
         poo-flow-module-source-doctor-presentation-kind

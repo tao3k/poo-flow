@@ -2,12 +2,12 @@
 ;;; Boundary: configured entrypoints assemble strategies and runtime adapters.
 ;;; Invariant: config data selects components but never executes workflow tasks.
 
-(import :core/failure
-        :core/strategy
-        :core/runtime-adapter
-        :core/task
-        :core/flow
-        :core/runner)
+(import :poo-flow/src/core/failure
+        :poo-flow/src/core/strategy
+        :poo-flow/src/core/runtime-adapter
+        :poo-flow/src/core/task
+        :poo-flow/src/core/flow
+        :poo-flow/src/core/runner)
 
 (export make-config-requirement
         config-requirement?

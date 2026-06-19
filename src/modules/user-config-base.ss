@@ -1,13 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: base user configuration facts for hot-plug module selection.
 ;;; Invariant: this module stays below profile/doctor presentation logic.
-;;; Descriptor realization stays in src/modules.
+;;; Descriptor realization stays in package-root modules.
 ;;; Intent: keep the downstream surface focused on POO Flow module activation.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :modules/interface
-        :modules/source
-        :modules/observability)
+        :poo-flow/src/modules/interface
+        :poo-flow/src/modules/source
+        :poo-flow/src/modules/observability)
 
 (export poo-flow-user-config-kind
         poo-flow-user-module-selection-kind

@@ -5,7 +5,7 @@
 (import :std/test
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
-        :modules/module-system)
+        :poo-flow/src/modules/module-system)
 
 (export user-interface-config-sandbox-case-test)
 

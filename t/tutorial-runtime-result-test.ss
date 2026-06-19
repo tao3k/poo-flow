@@ -3,10 +3,10 @@
 ;;; Invariant: these tests keep heavy runtime semantics behind command output.
 
 (import :std/test
-        :core/api
-        :modules/docker
-        :workflow/store
-        :modules/workflow/flows)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/docker
+        :poo-flow/src/workflow/store
+        :poo-flow/src/modules/workflow/flows)
 
 (export tutorial-runtime-result-test)
 

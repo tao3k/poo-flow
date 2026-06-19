@@ -1,13 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; Owner: Tutorial2 custom task alignment lives in this module.
 ;;; Boundary: core provides descriptor, strategy, runner, and adapter protocols.
-;;; Import contract: users opt in through =:modules/custom-task= exports.
+;;; Import contract: users opt in through =:poo-flow/src/modules/custom-task= exports.
 ;;; Runtime contract: this module emits Tutorial2 task data only.
 ;;; Runtime contract: repeat-task interpretation stays behind the local adapter.
 ;;; Runtime contract: scheduler and plan semantics stay out of this extension.
 ;;; Policy evidence: tests should assert registry, task shape, and interpreter result.
 
-(import :core/api)
+(import :poo-flow/src/core/api)
 
 (export custom-task-family-descriptor
         make-custom-task-family-registry

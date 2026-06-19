@@ -3,11 +3,12 @@
 ;;; Invariant: user fragments remain declarative module selections.
 
 (import :std/test
-        :modules/module-system
+        :poo-flow/src/modules/module-system
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-session-module
                  poo-flow-custom-my-module-task-module
-                 poo-flow-custom-my-module-cicd-module))
+                 poo-flow-custom-my-module-cicd-module
+                 poo-flow-custom-my-module-object-extension-module))
 
 (export user-interface-config-modules-test)
 
@@ -18,6 +19,10 @@
 ;; : (-> [PooSandboxProfile] Symbol PooSandboxProfile)
 (def (config-profile profiles name)
   (poo-flow-sandbox-profile-by-name profiles name))
+
+;; : (-> Alist Symbol Value)
+(def (test-ref alist key)
+  (cdr (assoc key alist)))
 
 ;; : TestSuite
 (def user-interface-config-modules-test
@@ -32,15 +37,26 @@
              (cicd-profiles
               (config-module-profiles
                (car poo-flow-custom-my-module-cicd-module)))
+             (object-extension-profiles
+              (config-module-profiles
+               (car poo-flow-custom-my-module-object-extension-module)))
              (session-profile
               (config-profile session-profiles 'agent/session))
              (task-cache-profile
               (config-profile task-profiles 'agent/task-cache))
              (build-profile
-              (config-profile cicd-profiles 'ci/build)))
+              (config-profile cicd-profiles 'ci/build))
+             (poo-object-profile
+              (config-profile object-extension-profiles
+                              'agent/poo-object-extension))
+             (poo-object-resources
+              (poo-flow-sandbox-profile-resource-policy poo-object-profile))
+             (poo-object-mounts
+              (test-ref poo-object-resources 'mounts)))
         (check-equal? (length session-profiles) 1)
         (check-equal? (length task-profiles) 2)
         (check-equal? (length cicd-profiles) 4)
+        (check-equal? (length object-extension-profiles) 1)
         (check-equal? (poo-flow-sandbox-profile-capabilities
                        session-profile)
                       '(process-run filesystem-read tmpdir cache-mount))
@@ -52,4 +68,62 @@
                         (timeout-ms . 180000)))
         (check-equal? (poo-flow-sandbox-profile-network-policy
                        build-profile)
-                      '(allowlisted "github.com" "crates.io"))))))
+                      '(allowlisted "github.com" "crates.io"))
+        (check-equal? (poo-flow-sandbox-profile-network-policy
+                       poo-object-profile)
+                      '(allowlisted "github.com" "crates.io"))
+        (check-equal? (poo-flow-sandbox-profile-capabilities
+                       poo-object-profile)
+                      '(process-run filesystem-read tmpdir cache-mount
+                        artifact-cache))
+        (check-equal? (poo-flow-sandbox-profile-resource-policy
+                       poo-object-profile)
+                      '((filesystem . scoped)
+                        (mounts
+                         ((path . "/workspace/project")
+                          (source . ".")
+                          (target . "/workspace/project")
+                          (mode . read-write)
+                          (purpose . project-source))
+                         ((path . "/workspace/project/.data")
+                          (source . ".data")
+                          (target . "/workspace/project/.data")
+                          (mode . read)
+                          (purpose . research-checkouts))
+                         ((path . "/workspace/cache")
+                          (source . ".cache/agent-semantic-protocol")
+                          (target . "/workspace/cache")
+                          (mode . read-write)
+                          (purpose . semantic-cache))
+                         ((path . "/workspace/config")
+                          (source . "user-interface/custom/my-module")
+                          (target . "/workspace/config")
+                          (mode . read)
+                          (purpose . user-config))
+                         ((path . "/run/secrets")
+                          (source . "$POO_FLOW_AGENT_SECRETS")
+                          (target . "/run/secrets")
+                          (mode . read)
+                          (purpose . credentials)))
+                        (cpu . 2)
+                        (memory . "4Gi")
+                        (timeout-ms . 300000)))
+        (check-equal? (length poo-object-mounts) 5)
+        (check-equal? (map (lambda (mount)
+                             (test-ref mount 'mode))
+                           poo-object-mounts)
+                      '(read-write read read-write read read))
+        (check-equal? (map (lambda (mount)
+                             (test-ref mount 'purpose))
+                           poo-object-mounts)
+                      '(project-source
+                        research-checkouts
+                        semantic-cache
+                        user-config
+                        credentials))
+        (check-equal? (poo-flow-sandbox-profile-metadata poo-object-profile)
+                      '((declared-by . poo-flow-user-interface)
+                        (runtime-executed . #f)
+                        (intent . poo-object-extension)
+                        (poo-object . objects.nono-sandbox.profile)
+                        (slot-operators . (override append remove))))))))

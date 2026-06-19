@@ -3,8 +3,8 @@
 
 (import :std/test
         (only-in :clan/poo/object .o .ref)
-        :core/api
-        :modules/module-system)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/module-system)
 
 (export module-system-facade-test)
 
@@ -98,7 +98,7 @@
                (.o id: 'root
                    imports:
                    (poo-flow-imports
-                    (poo-flow-import ":modules/root#child" child))
+                    (poo-flow-import ":poo-flow/src/modules/root#child" child))
                    config: (.o surface: "root")
                    flags: '(+root)
                    depth: (cons 10 10)

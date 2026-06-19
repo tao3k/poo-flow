@@ -3,7 +3,7 @@
 ;;; Invariant: tests inspect failure structs, not exception message text.
 
 (import :std/test
-        :core/api)
+        :poo-flow/src/core/api)
 
 (export failure-test)
 

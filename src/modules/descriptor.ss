@@ -3,12 +3,12 @@
 ;;; Invariant: descriptors are POO values and never load module sources.
 
 (import (only-in :clan/poo/object .o .mix .@ .ref object?)
-        :core/roles
-        :core/failure
-        :core/task
-        :core/flow
-        :modules/interface
-        :modules/source)
+        :poo-flow/src/core/roles
+        :poo-flow/src/core/failure
+        :poo-flow/src/core/task
+        :poo-flow/src/core/flow
+        :poo-flow/src/modules/interface
+        :poo-flow/src/modules/source)
 
 (export poo-flow-module-role
         poo-flow-module-descriptor-prototype

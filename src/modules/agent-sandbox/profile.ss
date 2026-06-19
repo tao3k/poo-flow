@@ -6,8 +6,8 @@
 ;;; Policy evidence: backend defaults should depend on this owner, not the facade.
 
 (import (only-in :clan/poo/object .@ .mix object?)
-        :core/api
-        :modules/agent-sandbox/alist)
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/alist)
 
 (export +agent-sandbox-profile-schema+
         agent-sandbox-profile-descriptor-prototype
