@@ -87,7 +87,8 @@
               '(schema governor-schema operation target transport governor))
         (cons 'optional-fields
               '(request-id abi-manifest contract state-facts open-patterns
-                blocked-patterns human-inbox-items runtime-boundary
+                blocked-patterns agent-judges agent-judge-nodes
+                human-inbox-items runtime-boundary
                 control-owner execution-owner metadata))
         (cons 'runtime-boundary
               '((local-execution . validation-only)
@@ -180,6 +181,16 @@
                    contract
                    'denied-patterns
                    '())))
+           (cons 'agent-judges
+                 (loop-governor-marlin-alist-ref
+                  contract
+                  'agent-judges
+                  '()))
+           (cons 'agent-judge-nodes
+                 (loop-governor-marlin-alist-ref
+                  contract
+                  'agent-judge-nodes
+                  '()))
            (cons 'human-inbox-items
                  (loop-governor-marlin-alist-ref
                   contract
@@ -230,6 +241,13 @@
                 (loop-governor-marlin-alist-ref envelope 'open-patterns '()))
           (cons 'blocked-patterns
                 (loop-governor-marlin-alist-ref envelope 'blocked-patterns '()))
+          (cons 'agent-judges
+                (loop-governor-marlin-alist-ref envelope 'agent-judges '()))
+          (cons 'agent-judge-nodes
+                (loop-governor-marlin-alist-ref
+                 envelope
+                 'agent-judge-nodes
+                 '()))
           (cons 'human-inbox-items
                 (loop-governor-marlin-alist-ref
                  envelope

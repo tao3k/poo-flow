@@ -355,6 +355,8 @@
 (def (poo-flow-module-objects-validation objects)
   (map poo-flow-module-object-validation objects))
 
+;;; Validation receipts stay list-shaped for callers that serialize reports;
+;;; the hash-table detail remains private to each object validation pass.
 ;; : (-> [HashTable] [Alist])
 (def (poo-flow-module-objects-validation->alist validations)
   (map poo-flow-module-object-validation->alist validations))

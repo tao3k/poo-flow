@@ -2,7 +2,18 @@
 ;;; Boundary: descriptor tests cover facade-level task family and accessors.
 ;;; Invariant: backend profile and bridge envelope behavior live in sibling tests.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/nono)
@@ -23,6 +34,9 @@
 (def (request-config request)
   (cadr (execution-request-request request)))
 
+;;; This suite protects descriptor defaults before backend-specific modules add
+;;; their own profile or runtime policy.
+;; : TestSuite
 (def agent-sandbox-descriptor-test
   (test-suite "agent sandbox task descriptor"
     (test-case "declares adapter-routed task family policy"

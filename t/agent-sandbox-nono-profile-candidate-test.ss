@@ -2,7 +2,18 @@
 ;;; Boundary: nono profile candidate tests cover backend-specific projection.
 ;;; Invariant: tests do not execute nono promote/apply or native sandbox code.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/profile-candidate
         :poo-flow/src/modules/agent-sandbox/nono-profile-candidate)

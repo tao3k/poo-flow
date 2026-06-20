@@ -6,9 +6,9 @@
            explanation: "Agent-sandbox backend profile macros must cite runtime-source guidance and expansion tests before changing transformer behavior."
            witness: "search runtime-source macro sugar module-sugar; t/agent-sandbox-profile-test.ss witnesses generated descriptor/profile constructors")
           (source-scope
-           roots: (".")
+           roots: ("src" "harness-policy" "user-interface")
            runtime-roots: (".")
-           explanation: "The Gerbil language project harness covers every .ss file in this package; the repository root is the package runtime root.")
+           explanation: "The Gerbil language project harness covers source owners under src, harness-policy, user-interface, and the default t test root; root generated files such as manifest.ss are not source owners.")
           (runtime-boundary
            heavy-owners: ("rust" "external-runtime")
            explanation: "CAS, Docker, subprocesses, parallel scheduling, and durable persistence are not Scheme-owned.")

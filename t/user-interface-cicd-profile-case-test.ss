@@ -2,7 +2,18 @@
 ;;; Boundary: CI/CD downstream sandbox profile cases live here.
 ;;; Invariant: cases stay declarative and do not execute release workflows.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-module)
@@ -11,6 +22,8 @@
 (export user-interface-cicd-profile-case-test)
 
 ;; : TestSuite
+;;; This suite protects the CI/CD profile case as an executable downstream
+;;; configuration story.
 (def user-interface-cicd-profile-case-test
   (test-suite "poo-flow user interface CI/CD sandbox profiles"
     (test-case "loads CI/CD sandbox profiles from root user-interface config"
@@ -20,6 +33,10 @@
               (cdr (poo-flow-user-module-selection-flag-entry
                     nono-config
                     ':config)))
+             (binding
+              (cdr (poo-flow-user-module-selection-flag-entry
+                    nono-config
+                    ':binding)))
              (check-profile
               (poo-flow-sandbox-profile-by-name profiles 'ci/check))
              (build-profile
@@ -29,6 +46,7 @@
              (promote-profile
               (poo-flow-sandbox-profile-by-name profiles
                                                 'cicd/artifact-promote)))
+        (check-equal? binding 'native-ffi)
         (check-equal? (length profiles) 4)
         (check-equal? (poo-flow-sandbox-profile-network-policy check-profile)
                       '(deny-by-default))
@@ -36,7 +54,15 @@
                       '(process-run filesystem-read filesystem-write tmpdir
                         cache-mount))
         (check-equal? (poo-flow-sandbox-profile-resource-policy check-profile)
-                      '((filesystem . scoped)
+                      '((filesystem
+                         (scope . project-workspace)
+                         (paths
+                          ((role . project-workspace)
+                           (source . ".")
+                           (project-marker . "gerbil.pkg")
+                           (target . "/workspace/project")
+                           (mode . read-only)))
+                         (access . read-only))
                         (cpu . 1)
                         (memory . "1Gi")
                         (timeout-ms . 90000)))
@@ -49,6 +75,42 @@
                         (scope . cicd)
                         (stage . promote)
                         (artifacts . consume)))))
+    (test-case "defaults nono use-module config to native FFI binding"
+      (let* ((nono-config
+              (car (use-module nono-sandbox
+                    :config
+                    (profiles
+                     (ci/check
+                      (network deny-by-default)
+                      (capabilities process-run filesystem-read tmpdir)
+                      (resources (filesystem
+                                  (scope . project-workspace)
+                                  (paths
+                                   ((role . project-workspace)
+                                    (source . ".")
+                                    (project-marker . "gerbil.pkg")
+                                    (target . "/workspace/project")
+                                    (mode . read-only)))))
+                      (metadata (intent . ci-check)))))))
+             (binding
+              (cdr (poo-flow-user-module-selection-flag-entry
+                    nono-config
+                    ':binding))))
+        (check-equal? binding 'native-ffi)))
+    (test-case "rejects empty filesystem sandbox marker in use-module profiles"
+      (let ((failure
+             (with-catch
+              (lambda (failure) failure)
+              (lambda ()
+                (use-module nono-sandbox
+                  :config
+                  (profiles
+                   (ci/unsafe
+                    (network deny-by-default)
+                    (capabilities process-run filesystem-read tmpdir)
+                    (resources (filesystem . scoped))
+                    (metadata (intent . ci-unsafe)))))))))
+        (check-equal? (error-object? failure) #t)))
     (test-case "rejects CI/CD resources without filesystem sandbox"
       (let* ((broken-config
               (car (use-module nono-sandbox

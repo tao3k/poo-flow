@@ -3,12 +3,11 @@
 ;;; Invariant: pure use-* declarations only; src/testing owns execution.
 
 ;;; This is a real downstream case, not a profile metadata extension. The user
-;;; interface declares the sandbox profile, isolation policy, and build command;
-;;; src/testing is responsible for interpreting those fields.
+;;; interface selects sandbox profile supers, then declares isolation
+;;; policy, command fields, and runner-local options.
 ;; : POOObject
-(use-live-case current-system-build
-  :module poo-flow-custom-my-module-cicd-module
-  :profile ci/build
+(use-module nono-sandbox  
+  :inherits ci/build
   :isolation
   ((mode . project-copy)
    (project-mount . isolated-copy)

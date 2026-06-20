@@ -2,7 +2,18 @@
 ;;; Boundary: bridge tests cover request envelopes and runtime command handoff.
 ;;; Invariant: profile descriptor defaults are tested in the profile owner.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api)
 
@@ -22,6 +33,9 @@
 (def (bridge-request-config request)
   (cadr (execution-request-request request)))
 
+;;; This suite locks bridge envelope behavior as executable policy evidence for
+;;; agent-sandbox runtime handoff changes.
+;; : TestSuite
 (def agent-sandbox-bridge-test
   (test-suite "agent sandbox bridge request"
     (test-case "captures backend-neutral request contract"

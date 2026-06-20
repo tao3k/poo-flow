@@ -21,7 +21,18 @@
 
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def test-poo-flow-user-module-bundles
-  poo-flow-kernel-profile-module-bundles)
+  (poo-flow-user-module-bundles-extend
+   poo-flow-kernel-profile-module-bundles
+   (poo-flow-init-module-bundles
+    :workflow
+    (loop-engine
+     (+governor +strategy +policy)
+     (+agent-judges
+      (auditor repo-audit-agent)
+      (verifier repo-verifier-agent)
+      (governor repo-governor))
+     (+human-audit +approval +changes-requested)
+     (+runtime +manifest-handoff)))))
 
 ;; : (-> Unit [PooUserModuleSelection])
 (def test-poo-flow-user-modules

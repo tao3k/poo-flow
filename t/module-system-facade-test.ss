@@ -1,13 +1,27 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: Marlin-style module facade tests stay separate from activation tests.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
         :poo-flow/src/modules/module-system)
 
 (export module-system-facade-test)
 
+;;; This suite protects the public module-system facade from leaking leaf-owner
+;;; implementation details.
+;; : TestSuite
 (def module-system-facade-test
   (test-suite "poo-flow module system facade"
     (test-case "builds Marlin-style interface config descriptors"

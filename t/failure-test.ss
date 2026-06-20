@@ -2,16 +2,31 @@
 ;;; Boundary: failure tests cover typed control-plane payloads.
 ;;; Invariant: tests inspect failure structs, not exception message text.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api)
 
 (export failure-test)
 
+;;; Failure capture keeps the tests on structured control-plane values instead
+;;; of process exits or rendered messages.
 ;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; Submit failure fixture preserves the request kind so receipt wrapping can be
+;;; checked after the adapter reports failure.
 ;; : (-> ExecutionRequest AdapterResult)
 (def (failing-submit request)
   (make-adapter-result '(failing-request)
@@ -21,6 +36,8 @@
                        (list (cons 'reason 'boom)
                              (cons 'request-kind (execution-request-kind request)))))
 
+;;; Runtime slot failure fixture keeps value propagation visible when the runner
+;;; converts backend failures into typed execution failures.
 ;; : (-> Value AdapterResult)
 (def (failing-runtime-slot value)
   (make-adapter-result '(failing-slot)
@@ -40,6 +57,9 @@
                         failing-submit
                         failing-runtime-slot))
 
+;;; This suite locks structured failure payloads so policy callers can inspect
+;;; errors without scraping text output.
+;; : TestSuite
 (def failure-test
   (test-suite "typed control-plane failures"
     (test-case "raises structured failure for unknown task family"

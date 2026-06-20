@@ -2,7 +2,18 @@
 ;;; Boundary: functional kernel tests cover Category/Arrow composition in Scheme.
 ;;; Invariant: heavy runtime execution still belongs behind runtime adapters.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api)
 
 (export functional-flow-kernel-test)
@@ -82,6 +93,9 @@
   macro-inc
   'symbol)
 
+;;; This suite covers pure flow composition as the kernel contract beneath
+;;; module and runtime adapters.
+;; : TestSuite
 (def functional-flow-kernel-test
   (test-suite "functional flow kernel"
     (test-case "exposes a POO category object for flow arrows"

@@ -1,0 +1,79 @@
+#+TITLE: 10.06.22 Doom Core Namespace Audit
+
+* 10.06.22 Doom Core Namespace Audit
+** 10.06.22.10 Reference Scope
+Local checkout:
+- =.data/doomemacs-core= cloned from [[https://github.com/doomemacs/core][doomemacs/core]].
+
+Focused files:
+- =lisp/lib/modules.el= for module registration and the =:user= virtual module.
+- =lisp/doom-lib.el= for the =doom!= user declaration macro.
+- =lisp/doom.el= for =doom-user-dir= and module search path defaults.
+- =lisp/lib/profiles.el= for profile loading as a separate concern.
+- =static/init.example.el= for the user-facing declaration shape.
+
+This audit studies namespace and module-system boundaries only. It does not
+copy Doom internals into =poo-flow=.
+
+** 10.06.22.20 Doom Boundary Pattern
+Doom keeps its module-system mechanics under core/library names:
+- =lisp/lib/modules.el= owns module table initialization and module metadata.
+- =doom-modules-initialize= registers virtual =(:doom . nil)= and =(:user . nil)=
+  modules before loading =$DOOMDIR/init.el=.
+- =doom-module--put= stores modules by =(group . name)= and metadata plist.
+- =doom-module-mplist-map= parses grouped user rows from the =doom!= body.
+- =lisp/lib/profiles.el= owns profiles separately from module mechanics.
+
+The important naming lesson is that =:user= is a virtual module and
+=doom-user-dir= is a user config directory. Doom does not name core module-system
+implementation files as "user interface" components.
+
+** 10.06.22.30 POO Flow Namespace Consequence
+=poo-flow= should keep three namespaces distinct:
+- =src/modules/modules-system/*= for module-system mechanics and root profile
+  projection helpers.
+- =src/modules/<domain>/*= for developer-owned built-in modules such as
+  =nono-sandbox=, =cubeSandbox=, =docker-sandbox=, =funflow=, and
+  =loop-governor=.
+- =user-interface/*= for downstream/user practice files such as =init.ss=,
+  =config.ss=, =objects.ss=, =custom/*=, =profiles/*=, and =cases/*=.
+
+The top-level =user-interface= directory can remain because it is the downstream
+practice surface. Core implementation paths under =src/modules= should not use
+=user-interface= as a namespace for module-system components.
+
+** 10.06.22.40 Applied Rename
+This audit validates the following source move:
+- =src/modules/user-config-base.ss= -> =src/modules/modules-system-base.ss=
+- =src/modules/user-interface/config.ss= ->
+  =src/modules/modules-system/user-profile.ss=
+- =src/modules/user-interface/objects.ss= ->
+  =src/modules/modules-system/root-objects.ss=
+
+The first move removes the misleading "user config base" owner name from the
+core =use-module= implementation. The second and third moves remove the
+=src/modules/user-interface= namespace that collided with the real downstream
+=user-interface= tree.
+
+** 10.06.22.50 Current Public Surface
+The current function names may still mention =UserInterface= where they describe
+the downstream root profile projection. That is acceptable as a transitional
+surface only when the owning source path is clear:
+- source owner: =modules-system=;
+- projected profile: downstream user declarations;
+- user files: top-level =user-interface/*=.
+
+Future renames should prefer =poo-flow-modules-system-*= for core mechanics and
+reserve =user-interface= for concrete downstream examples and documentation.
+
+** 10.06.22.60 Rules
+- Do not create compatibility modules at the old =src/modules/user-interface/*=
+  paths.
+- Do not place core loaders, root profile projection, or shared object contracts
+  under =src/modules/user-interface=.
+- Do not make =init.ss= load config bodies; =init.ss= remains the Doom-style
+  category/module/feature switchboard.
+- Use =load!= from config/profile/case files when a downstream user fragment
+  needs to include another Scheme file.
+- Keep the heavy runtime outside this repo; module activation should produce
+  inspectable POO descriptor/control-plane data.

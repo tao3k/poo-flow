@@ -68,41 +68,62 @@
 (def +agent-sandbox-profile-promotion-receipt-schema+
   'poo-flow.agent-sandbox-profile-promotion-receipt.v1)
 
-;; : (-> Unit [Symbol])
+;; : (-> Unit (List Symbol))
 (def +agent-sandbox-profile-candidate-choice-actions+
   '(grant suppress skip))
 
-;;; Contract declarations are macro-owned so new backends can declare required
-;;; fields once and reuse the same validation function shape as core profiles.
-;; : (-> CandidateContractSyntax CandidateContractDefinition)
+;;; Boundary:
+;;; - defagent-sandbox-profile-candidate-contract keeps backend required-field
+;;;   declarations as data before ordinary validation consumes them.
+;; defagent-sandbox-profile-candidate-contract
+;;   : (-> CandidateContractSyntax CandidateContractDefinition)
+;;   | type CandidateContractDefinition = Alist
+;;   | doc m%
+;;       `defagent-sandbox-profile-candidate-contract` binds field predicates for
+;;       profile candidate validation.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defagent-sandbox-profile-candidate-contract +required+
+;;         (backend-kind agent-sandbox-profile-candidate-present?))
+;;       ;; => +required+
+;;       ```
+;;     %
 (defrules defagent-sandbox-profile-candidate-contract ()
   ((_ name (field predicate) ...)
    (def name
      (list (cons 'field predicate) ...))))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxPresenceCandidate = (U Symbol String Pair Object Procedure Boolean)
+;; : (-> AgentSandboxPresenceCandidate Boolean)
 (def (agent-sandbox-profile-candidate-present? value)
   (and value #t))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidateSchemaCandidate = Symbol
+;; : (-> AgentSandboxProfileCandidateSchemaCandidate Boolean)
 (def (agent-sandbox-profile-candidate-schema? value)
   (eq? value +agent-sandbox-profile-candidate-schema+))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidatePatchSchemaCandidate = Symbol
+;; : (-> AgentSandboxProfileCandidatePatchSchemaCandidate Boolean)
 (def (agent-sandbox-profile-candidate-patch-schema? value)
   (eq? value +agent-sandbox-profile-candidate-patch-schema+))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxPromotionRequestSchemaCandidate = Symbol
+;; : (-> AgentSandboxPromotionRequestSchemaCandidate Boolean)
 (def (agent-sandbox-profile-promotion-request-schema? value)
   (eq? value +agent-sandbox-profile-promotion-request-schema+))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidateChoiceActionCandidate = Symbol
+;; : (-> AgentSandboxProfileCandidateChoiceActionCandidate Boolean)
 (def (agent-sandbox-profile-candidate-choice-action? value)
   (or (eq? value 'grant)
       (eq? value 'suppress)
       (eq? value 'skip)))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidateChoiceCandidate = Alist
+;; : (-> AgentSandboxProfileCandidateChoiceCandidate Boolean)
 (def (agent-sandbox-profile-candidate-choice? choice)
   (and (list? choice)
        (agent-sandbox-profile-candidate-choice-action?
@@ -112,7 +133,7 @@
        (agent-sandbox-profile-candidate-present?
         (agent-sandbox-alist-ref choice 'value #f))))
 
-;; : (-> [ProfileCandidateChoice] Boolean)
+;; : (-> (List ProfileCandidateChoice) Boolean)
 (def (agent-sandbox-profile-candidate-choice-list-tail? choices)
   (cond
    ((null? choices) #t)
@@ -121,7 +142,8 @@
     (agent-sandbox-profile-candidate-choice-list-tail? (cdr choices)))
    (else #f)))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidateChoiceListCandidate = (List ProfileCandidateChoice)
+;; : (-> AgentSandboxProfileCandidateChoiceListCandidate Boolean)
 (def (agent-sandbox-profile-candidate-choice-list? choices)
   (and (pair? choices)
        (agent-sandbox-profile-candidate-choice-list-tail? choices)))
@@ -132,9 +154,23 @@
   (source agent-sandbox-profile-candidate-present?)
   (choices agent-sandbox-profile-candidate-choice-list?))
 
-;;; Syntax sugar produces data only. Runtime validation remains in the ordinary
-;;; constructors so macro users and function users share the same contract gate.
-;; : (-> ProfileCandidateSyntax ProfileCandidate)
+;;; Boundary:
+;;; - agent-sandbox-profile-candidate is syntax sugar only; constructor
+;;;   validation stays shared with function callers.
+;; agent-sandbox-profile-candidate
+;;   : (-> ProfileCandidateSyntax ProfileCandidate)
+;;   | type ProfileCandidate = Alist
+;;   | doc m%
+;;       `agent-sandbox-profile-candidate` expands user syntax into normalized
+;;       profile candidate data.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (agent-sandbox-profile-candidate nono user-interface choices)
+;;       ;; => profile-candidate
+;;       ```
+;;     %
 (defrules agent-sandbox-profile-candidate ()
   ((_ backend-kind source choices (field value) ...)
    (make-agent-sandbox-profile-candidate
@@ -143,7 +179,23 @@
     choices
     (list (cons 'field value) ...))))
 
-;; : (-> ProfileCandidateChoiceSyntax ProfileCandidateChoice)
+;;; Boundary:
+;;; - agent-sandbox-profile-candidate-choice preserves choice action syntax
+;;;   while forwarding validation to the ordinary choice constructor.
+;; agent-sandbox-profile-candidate-choice
+;;   : (-> ProfileCandidateChoiceSyntax ProfileCandidateChoice)
+;;   | type ProfileCandidateChoice = Alist
+;;   | doc m%
+;;       `agent-sandbox-profile-candidate-choice` expands a candidate choice
+;;       declaration into normalized choice data.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (agent-sandbox-profile-candidate-choice grant (section resources))
+;;       ;; => profile-candidate-choice
+;;       ```
+;;     %
 (defrules agent-sandbox-profile-candidate-choice ()
   ((_ action (field value) ...)
    (make-agent-sandbox-profile-candidate-choice
@@ -166,6 +218,8 @@
 (def (agent-sandbox-profile-candidate-validator candidate)
   (agent-sandbox-validate-profile-candidate candidate))
 
+;;; Default patch projection classifies candidate choices into stable grant,
+;;; suppression, and skip buckets before backend-specific promotion begins.
 ;; : (-> ProfileCandidate ProfileCandidatePatch)
 (def (agent-sandbox-profile-candidate-default-patch-projector candidate)
   (let* ((valid-candidate (agent-sandbox-validate-profile-candidate candidate))
@@ -216,7 +270,7 @@
                             agent-sandbox-profile-candidate-default-promotion-projector)))
         execution-policy-role))
 
-;; : (-> Symbol Symbol Symbol [Alist] AgentSandboxProfileCandidateDescriptor)
+;; : (-> Symbol Symbol Symbol (List Alist) AgentSandboxProfileCandidateDescriptor)
 (def (make-agent-sandbox-profile-candidate-descriptor name
                                                       backend-kind
                                                       source
@@ -230,7 +284,8 @@
                  (if (null? maybe-overrides) '() (car maybe-overrides))))
         agent-sandbox-profile-candidate-descriptor-prototype))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidateDescriptorCandidate = Object
+;; : (-> AgentSandboxProfileCandidateDescriptorCandidate Boolean)
 (def (agent-sandbox-profile-candidate-descriptor? descriptor)
   (object? descriptor))
 
@@ -271,7 +326,7 @@
                 metadata)))
    options))
 
-;; : (-> AgentSandboxProfileCandidateDescriptor [ProfileCandidateChoice] [Alist] ProfileCandidate)
+;; : (-> AgentSandboxProfileCandidateDescriptor (List ProfileCandidateChoice) (List Alist) ProfileCandidate)
 (def (agent-sandbox-profile-candidate-descriptor->candidate descriptor
                                                             choices
                                                             . maybe-options)
@@ -288,7 +343,7 @@
     ((agent-sandbox-profile-candidate-descriptor-validator descriptor)
      candidate)))
 
-;; : (-> Symbol Symbol [ProfileCandidateChoice] [Alist] ProfileCandidate)
+;; : (-> Symbol Symbol (List ProfileCandidateChoice) (List Alist) ProfileCandidate)
 (def (make-agent-sandbox-profile-candidate backend-kind
                                            source
                                            choices
@@ -308,19 +363,22 @@
            (cons 'metadata
                  (agent-sandbox-option options 'metadata '()))))))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidateCandidate = Alist
+;; : (-> AgentSandboxProfileCandidateCandidate Boolean)
 (def (agent-sandbox-profile-candidate? value)
   (and (list? value)
        (agent-sandbox-profile-candidate-schema?
         (agent-sandbox-alist-ref value 'schema #f))))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfileCandidatePatchCandidate = Alist
+;; : (-> AgentSandboxProfileCandidatePatchCandidate Boolean)
 (def (agent-sandbox-profile-candidate-patch? value)
   (and (list? value)
        (agent-sandbox-profile-candidate-patch-schema?
         (agent-sandbox-alist-ref value 'schema #f))))
 
-;; : (-> Value Boolean)
+;; | AgentSandboxProfilePromotionRequestCandidate = Alist
+;; : (-> AgentSandboxProfilePromotionRequestCandidate Boolean)
 (def (agent-sandbox-profile-promotion-request? value)
   (and (list? value)
        (agent-sandbox-profile-promotion-request-schema?
@@ -336,7 +394,7 @@
 (def (agent-sandbox-profile-candidate-choice-action-is? choice action)
   (eq? (agent-sandbox-alist-ref choice 'action #f) action))
 
-;; : (-> [ProfileCandidateChoice] Symbol [ProfileCandidateChoice])
+;; : (-> (List ProfileCandidateChoice) Symbol (List ProfileCandidateChoice))
 (def (agent-sandbox-profile-candidate-choices-with-action choices action)
   (cond
    ((null? choices) '())
@@ -349,7 +407,7 @@
     (agent-sandbox-profile-candidate-choices-with-action
      (cdr choices) action))))
 
-;; : (-> [ProfileCandidateChoice] Fixnum [ValidationError])
+;; : (-> (List ProfileCandidateChoice) Fixnum (List ValidationError))
 (def (agent-sandbox-profile-candidate-choice-errors choices index)
   (cond
    ((null? choices) '())
@@ -369,7 +427,7 @@
           (agent-sandbox-profile-candidate-choice-errors
            (cdr choices) (+ index 1))))))
 
-;; : (-> ProfileCandidate [ValidationError])
+;; : (-> ProfileCandidate (List ValidationError))
 (def (agent-sandbox-profile-candidate-validation-errors candidate)
   (append
    (if (agent-sandbox-profile-candidate-schema?
@@ -395,7 +453,7 @@
        (list (cons 'errors errors)
              (cons 'candidate candidate))))))
 
-;; : (-> ProfilePromotionRequest [ValidationError])
+;; : (-> ProfilePromotionRequest (List ValidationError))
 (def (agent-sandbox-profile-promotion-request-validation-errors request)
   (append
    (if (agent-sandbox-profile-promotion-request-schema?
@@ -438,11 +496,11 @@
 (def (agent-sandbox-profile-candidate-command candidate)
   (agent-sandbox-profile-candidate-ref candidate 'command #f))
 
-;; : (-> ProfileCandidate [Observation])
+;; : (-> ProfileCandidate (List Observation))
 (def (agent-sandbox-profile-candidate-observations candidate)
   (agent-sandbox-profile-candidate-ref candidate 'observations '()))
 
-;; : (-> ProfileCandidate [ProfileCandidateChoice])
+;; : (-> ProfileCandidate (List ProfileCandidateChoice))
 (def (agent-sandbox-profile-candidate-choices candidate)
   (agent-sandbox-profile-candidate-ref candidate 'choices '()))
 
@@ -450,7 +508,7 @@
 (def (agent-sandbox-profile-candidate-metadata candidate)
   (agent-sandbox-profile-candidate-ref candidate 'metadata '()))
 
-;; : (-> ProfileCandidate [AgentSandboxProfileCandidateDescriptor] ProfileCandidatePatch)
+;; : (-> ProfileCandidate (List AgentSandboxProfileCandidateDescriptor) ProfileCandidatePatch)
 (def (agent-sandbox-profile-candidate->patch candidate . maybe-descriptor)
   (if (null? maybe-descriptor)
     (agent-sandbox-profile-candidate-default-patch-projector candidate)
@@ -458,7 +516,9 @@
       (car maybe-descriptor))
      candidate)))
 
-;; : (-> Value Value)
+;; | AgentSandboxCommandArgCandidate = (U Symbol String #f)
+;; | AgentSandboxCommandArgValue = (U String #f)
+;; : (-> AgentSandboxCommandArgCandidate AgentSandboxCommandArgValue)
 (def (agent-sandbox-profile-candidate-command-arg value)
   (cond
    ((not value) #f)
@@ -466,7 +526,7 @@
    ((symbol? value) (symbol->string value))
    (else value)))
 
-;; : (-> Symbol Value [String])
+;; : (-> Symbol Value (List String))
 (def (agent-sandbox-profile-candidate-nono-promote-argv mode draft-ref)
   (let ((draft-args
          (if draft-ref
@@ -480,7 +540,9 @@
      (else
       (append '("nono" "profile" "promote") draft-args)))))
 
-;; : (-> ProfileCandidate [Alist] ProfilePromotionRequest)
+;;; Nono promotion is the backend boundary: validated candidates become inert
+;;; argv/request data here, while runtime execution remains outside modules.
+;; : (-> ProfileCandidate (List Alist) ProfilePromotionRequest)
 (def (agent-sandbox-profile-candidate->nono-promote-request candidate
                                                             . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
@@ -518,6 +580,8 @@
        (list (cons 'backend-kind backend-kind)
              (cons 'candidate valid-candidate))))))
 
+;;; Promotion receipts keep request echo, runtime-executed state, and output
+;;; separate so dry-run and live runs can share the same downstream contract.
 ;; : (-> Boolean Symbol ProfilePromotionRequest [Alist] ProfilePromotionReceipt)
 (def (agent-sandbox-profile-promotion-receipt ok?
                                               status

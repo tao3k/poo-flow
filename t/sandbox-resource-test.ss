@@ -2,11 +2,25 @@
 ;;; Boundary: shared sandbox resources are backend-neutral POO data objects.
 ;;; Invariant: tests assert composition and projection only, never runtime setup.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/agent-sandbox/resource)
 
 (export sandbox-resource-test)
 
+;;; This suite anchors sandbox resource descriptors before backend-specific
+;;; modules extend them.
+;; : TestSuite
 (def sandbox-resource-test
   (test-suite "shared sandbox resources"
     (test-case "projects volume, port, and env bindings as runtime request data"

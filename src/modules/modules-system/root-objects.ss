@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: upstream POO objects for downstream user-interface declarations.
+;;; Boundary: module-system POO objects for downstream user declarations.
 ;;; Invariant: root user-interface files never own object contracts.
 
 (import :poo-flow/src/modules/object-core

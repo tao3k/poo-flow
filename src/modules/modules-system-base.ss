@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: base user configuration facts for hot-plug module selection.
+;;; Boundary: module-system base facts for hot-plug module selection.
 ;;; Invariant: this module stays below profile/doctor presentation logic.
 ;;; Descriptor realization stays in package-root modules.
 ;;; Intent: keep the downstream surface focused on POO Flow module activation.
@@ -39,6 +39,8 @@
         poo-flow-user-cicd-payload-section
         poo-flow-user-module-selection-cicd-intent
         poo-flow-user-config-cicd-intents
+        poo-flow-user-module-selection-loop-engine-intent
+        poo-flow-user-config-loop-engine-intents
         poo-flow-user-config-presentation-trace
         poo-flow-user-module-selection-feature-fact
         poo-flow-user-module-selection
@@ -48,8 +50,8 @@
         poo-flow-user-config-feature?
         poo-flow-user-config-feature-facts
         poo-flow-settings
-        poo-flow-use-module-group
-        poo-flow-use-module
+        poo-flow-modules-system-use-module-group
+        poo-flow-modules-system-use-module
         poo-flow-user-module-bundle
         poo-flow-user-module-when)
 
@@ -77,6 +79,7 @@
     "load!"
     "use-module"
     ":workflow"
+    "loop-engine"
     ":loop"
     ":sandbox"
     ":custom"
@@ -183,9 +186,10 @@
 ;;; `(use-module nono-sandbox ...)`, while the profile data still stores the
 ;;; canonical group/module key used by feature checks and presentation.
 ;; : (-> Symbol Symbol)
-(def (poo-flow-use-module-group module)
+(def (poo-flow-modules-system-use-module-group module)
   (cond
    ((eq? module 'funflow) 'flow)
+   ((eq? module 'loop-engine) 'flow)
    ((eq? module 'governor) 'loop)
    ((or (eq? module 'nono-sandbox)
         (eq? module 'cubeSandbox)
@@ -194,10 +198,10 @@
    (else 'custom)))
 
 ;; : (-> Symbol [UserModuleFlagEntry] [PooUserModuleSelection])
-(def (poo-flow-use-module module flags)
+(def (poo-flow-modules-system-use-module module flags)
   (list
    (poo-flow-user-module-selection
-    (poo-flow-use-module-group module)
+    (poo-flow-modules-system-use-module-group module)
     module
     flags)))
 
@@ -552,19 +556,92 @@
   (poo-flow-user-config-cicd-intents/add
    (poo-flow-user-config-modules config)))
 
+;;; Loop-engine sections keep workflow-owned loop configuration visible without
+;;; realizing loop descriptors or constructing a runtime request.
+;; : (-> PooUserModuleSelection Symbol [Value])
+(def (poo-flow-user-loop-engine-section selection section)
+  (let (entry (poo-flow-user-module-selection-flag-entry selection section))
+    (cond
+     ((and entry (pair? entry)) (cdr entry))
+     (entry (list entry))
+     (else '()))))
+
+;;; Loop-engine intents are the workflow-facing surface for configuring the
+;;; governor node graph from init.ss. The result is report-only contract data.
+;; : (-> PooUserModuleSelection MaybeAlist)
+(def (poo-flow-user-module-selection-loop-engine-intent selection)
+  (if (equal? (poo-flow-user-module-selection-key selection)
+              '(flow . loop-engine))
+    (list (cons 'key (poo-flow-user-module-selection-key selection))
+          (cons 'feature '+loop-engine)
+          (cons 'workflow-owned? #t)
+          (cons 'governor-derived? #t)
+          (cons 'use-case
+                (poo-flow-user-loop-engine-section selection '+use-case))
+          (cons 'use-cases
+                (poo-flow-user-loop-engine-section selection '+use-cases))
+          (cons 'governor
+                (poo-flow-user-loop-engine-section selection '+governor))
+          (cons 'agent-judges
+                (poo-flow-user-loop-engine-section selection '+agent-judges))
+          (cons 'human-audit
+                (poo-flow-user-loop-engine-section selection '+human-audit))
+          (cons 'schedule
+                (poo-flow-user-loop-engine-section selection '+schedule))
+          (cons 'state
+                (poo-flow-user-loop-engine-section selection '+state))
+          (cons 'sandbox
+                (poo-flow-user-loop-engine-section selection '+sandbox))
+          (cons 'budget
+                (poo-flow-user-loop-engine-section selection '+budget))
+          (cons 'observability
+                (poo-flow-user-loop-engine-section selection '+observability))
+          (cons 'runtime
+                (poo-flow-user-loop-engine-section selection '+runtime))
+          (cons 'contract 'poo-flow.loop-governor.v1)
+          (cons 'node-contract 'poo-flow.loop-governor.node.v1)
+          (cons 'runtime-handoff 'loop-governor-marlin-runtime-manifest)
+          (cons 'runtime-owner "marlin-agent-core")
+          (cons 'descriptor-realized? #f)
+          (cons 'runtime-executed #f))
+    #f))
+
+;;; Loop engine intents are collected with a recursive add/fold shape so module
+;;; selection order becomes the handoff order for later runtime descriptors.
+;; : (-> [PooUserModuleSelection] [Alist])
+(def (poo-flow-user-config-loop-engine-intents/add selected-modules)
+  (cond
+   ((null? selected-modules) '())
+   ((poo-flow-user-module-selection-loop-engine-intent (car selected-modules))
+    => (lambda (intent)
+         (cons intent
+               (poo-flow-user-config-loop-engine-intents/add
+                (cdr selected-modules)))))
+   (else
+    (poo-flow-user-config-loop-engine-intents/add (cdr selected-modules)))))
+
+;;; Config-level loop-engine intents let workflow docs and tests show the real
+;;; governor configuration result from `:workflow` without starting a loop.
+;; : (-> PooUserConfig [Alist])
+(def (poo-flow-user-config-loop-engine-intents config)
+  (poo-flow-user-config-loop-engine-intents/add
+   (poo-flow-user-config-modules config)))
+
 ;;; The trace is deterministic and strict. It is the first slot tests should
 ;;; inspect when a presentation hangs, because it does not call back into POO.
-;; : (-> [PooUserModuleSelection] [Alist] [Alist] [Symbol] [Alist])
+;; : (-> [PooUserModuleSelection] [Alist] [Alist] [Alist] [Symbol] [Alist])
 (def (poo-flow-user-config-presentation-trace
       selected-modules
       feature-fact-rows
       cicd-intent-rows
+      loop-engine-intent-rows
       public-setting-keys)
   (poo-flow-module-presentation-trace
    'user-config-presentation
    (list (cons 'selected-modules (length selected-modules))
          (cons 'feature-facts (length feature-fact-rows))
          (cons 'cicd-intents (length cicd-intent-rows))
+         (cons 'loop-engine-intents (length loop-engine-intent-rows))
          (cons 'settings (length public-setting-keys)))))
 
 ;;; Boundary: indexed feature facts preserve init.ss declaration order for help
@@ -703,7 +780,9 @@
     (let ((feature-fact-rows
            (poo-flow-user-config-feature-facts config))
           (cicd-intent-rows
-           (poo-flow-user-config-cicd-intents config)))
+           (poo-flow-user-config-cicd-intents config))
+          (loop-engine-intent-rows
+           (poo-flow-user-config-loop-engine-intents config)))
       (.o kind: poo-flow-user-config-presentation-kind
           module-count: (length selected-modules)
           module-keys: (poo-flow-user-config-module-keys config)
@@ -712,11 +791,14 @@
           feature-facts: feature-fact-rows
           cicd-intent-count: (length cicd-intent-rows)
           cicd-intents: cicd-intent-rows
+          loop-engine-intent-count: (length loop-engine-intent-rows)
+          loop-engine-intents: loop-engine-intent-rows
           presentation-trace:
           (poo-flow-user-config-presentation-trace
            selected-modules
            feature-fact-rows
            cicd-intent-rows
+           loop-engine-intent-rows
            public-setting-keys)
           setting-count: (length public-setting-keys)
           setting-keys: public-setting-keys

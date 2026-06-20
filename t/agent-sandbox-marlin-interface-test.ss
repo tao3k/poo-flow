@@ -2,7 +2,18 @@
 ;;; Boundary: Marlin interface tests cover backend dispatch envelopes.
 ;;; Invariant: tests do not execute nono, Cube, or Marlin runtime code.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/cube
@@ -15,6 +26,8 @@
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; This suite keeps Marlin handoff contracts executable without requiring the
+;;; Rust runtime to run in unit tests.
 (def agent-sandbox-marlin-interface-test
   (test-suite "agent sandbox Marlin interface"
     (test-case "dispatches nono requests to C binding handoff manifests"

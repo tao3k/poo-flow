@@ -4,7 +4,7 @@
 
 (import :poo-flow/src/modules/docker-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/user-config-base)
+        :poo-flow/src/modules/modules-system-base)
 
 (export poo-flow-docker-sandbox-module-bundles
         poo-flow-docker-sandbox-profile-config

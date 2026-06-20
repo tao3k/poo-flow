@@ -9,8 +9,8 @@
         poo-flow-nono-sandbox-profile-object
         poo-flow-nono-sandbox-module-objects)
 
-;;; Nono sandbox object data names the backend family and binding defaults; C
-;;; binding probes and runtime calls remain in their dedicated owners.
+;;; Nono sandbox object data names the backend family and native binding
+;;; default; native calls remain in their dedicated owner.
 ;; : PooModuleObject
 (def poo-flow-nono-sandbox-object
   (poo-flow-module-object
@@ -20,7 +20,7 @@
     (poo-flow-module-field-contract
      'backend 'Symbol 'override 'nono '((scope . nono-sandbox)))
     (poo-flow-module-field-contract
-     'binding 'Symbol 'override 'none '((scope . nono-sandbox))))
+     'binding 'Symbol 'override 'native-ffi '((scope . nono-sandbox))))
    '((namespace . objects.nono-sandbox)
      (domain . sandbox)
      (inherits . objects.shared.sandbox))))
@@ -50,7 +50,11 @@
      'capabilities 'List 'override '(process filesystem tmpdir)
      '((scope . nono-sandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
-     'resource-policy 'List 'override '((filesystem . scoped))
+     'resource-policy 'List 'override
+     '((filesystem
+        (scope . runtime)
+        (materialized-by . runtime)
+        (mounts . runtime)))
      '((scope . nono-sandbox) (dsl-row . resources)))
     (poo-flow-module-field-contract
      'metadata 'List 'append '()

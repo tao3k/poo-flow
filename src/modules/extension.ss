@@ -162,6 +162,8 @@
 (def (poo-flow-module-extension-member? value values)
   (and (member value values) #t))
 
+;;; Append keeps the base order stable and filters only duplicate extras, which
+;;; makes agent-authored list extensions deterministic across fixed-point runs.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct base extra)
   (append
@@ -170,6 +172,8 @@
              (not (poo-flow-module-extension-member? value base)))
            extra)))
 
+;;; Remove is value-based rather than positional so downstream patches can
+;;; delete inherited list elements without knowing the upstream list index.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-remove-elements values removed)
   (filter (lambda (value)

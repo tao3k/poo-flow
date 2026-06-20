@@ -4,7 +4,7 @@
 
 (import :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/user-config-base)
+        :poo-flow/src/modules/modules-system-base)
 
 (export poo-flow-cubeSandbox-module-bundles
         poo-flow-cubeSandbox-profile-config

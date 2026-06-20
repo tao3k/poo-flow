@@ -1,18 +1,34 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: module-system tests cover descriptor activation, not loading.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
         :poo-flow/src/modules/module-system)
 
 (export module-system-test)
 
+;;; Module activation failures are captured as structured values so tests can
+;;; assert missing-import payloads directly.
 ;; : (-> Thunk Value)
 (def (capture-module-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; This suite anchors descriptor activation as the canonical module-system
+;;; contract for higher-level user interface tests.
+;; : TestSuite
 (def module-system-test
   (test-suite "poo-flow module system"
     (test-case "activates module descriptor registries into run config"

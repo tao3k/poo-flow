@@ -11,7 +11,7 @@
         :poo-flow/src/modules/object-validation
         :poo-flow/src/modules/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/user-interface/objects
+        :poo-flow/src/modules/modules-system/root-objects
         :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/docker-sandbox/objects
@@ -135,6 +135,14 @@
                         validations)
                        'invalid-count)
                       0)))
+
+    (test-case "pins nono sandbox object binding to native FFI"
+      (let ((binding-field
+             (poo-flow-module-object-field poo-flow-nono-sandbox-object
+                                           'binding)))
+        (check-equal? (not (not binding-field)) #t)
+        (check-equal? (poo-flow-module-field-contract-default binding-field)
+                      'native-ffi)))
 
     (test-case "wraps load! object fragments with upstream object validation"
       (let* ((objects poo-flow-custom-module-object1-module)

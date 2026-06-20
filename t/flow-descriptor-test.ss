@@ -1,9 +1,23 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: flow descriptor tests cover declaration policy, not execution.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api)
 
+;;; This suite keeps flow declaration metadata executable independently from
+;;; runner scheduling behavior.
+;; : TestSuite
 (def flow-descriptor-test
   (test-suite "flow declaration descriptors"
     (test-case "declares POO-backed flow planning policy"

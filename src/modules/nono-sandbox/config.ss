@@ -4,9 +4,12 @@
 
 (import :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/user-config-base)
+        :poo-flow/src/modules/modules-system-base)
 
 (export poo-flow-nono-sandbox-module-bundles
+        +poo-flow-nono-sandbox-default-binding+
+        poo-flow-nono-sandbox-binding-config
+        poo-flow-nono-sandbox-config-flags
         poo-flow-nono-sandbox-profile-config
         poo-flow-nono-sandbox-profile
         poo-flow-nono-sandbox-profiles)
@@ -16,10 +19,26 @@
 (def poo-flow-nono-sandbox-module-bundles
   (list
    (poo-flow-user-module-bundle
-    (sandbox nono-sandbox +nono +doctor))))
+    (sandbox nono-sandbox +nono +native-ffi +doctor))))
+
+;; : Symbol
+(def +poo-flow-nono-sandbox-default-binding+ 'native-ffi)
+
+;;; Module-level binding flags are user-visible configuration facts. The
+;;; native FFI implementation remains in native.ss; this layer only records the
+;;; selected binding strategy for use-module/module presentation.
+;; : (-> Symbol Symbol)
+(def (poo-flow-nono-sandbox-binding-config binding-value)
+  binding-value)
+
+;; : (-> Symbol [PooSandboxProfile] [UserModuleFlagEntry])
+(def (poo-flow-nono-sandbox-config-flags binding-value profiles)
+  (list (cons ':binding
+              (poo-flow-nono-sandbox-binding-config binding-value))
+        (cons ':config profiles)))
 
 ;;; Backend wrappers pass their inherited profile object into sandbox-core; nono
-;;; C binding state never enters this user-facing macro path.
+;;; runtime state stays in native.ss while module flags record binding choice.
 ;; : (-> Symbol [SandboxProfileForm] PooSandboxProfile)
 (def (poo-flow-nono-sandbox-profile-config name-value forms)
   (poo-flow-sandbox-profile-object-config

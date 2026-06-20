@@ -2,7 +2,18 @@
 ;;; Boundary: tests custom user config fragments loaded by `load!`.
 ;;; Invariant: user fragments remain declarative module selections.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/module-system
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-session-module
@@ -25,6 +36,8 @@
   (cdr (assoc key alist)))
 
 ;; : TestSuite
+;;; This suite keeps module declarations in user config small while validation
+;;; remains owned by upstream modules.
 (def user-interface-config-modules-test
   (test-suite "poo-flow user interface config modules"
     (test-case "loads custom profile fragments with load!"
@@ -62,7 +75,15 @@
                       '(process-run filesystem-read tmpdir cache-mount))
         (check-equal? (poo-flow-sandbox-profile-resource-policy
                        task-cache-profile)
-                      '((filesystem . scoped)
+                      '((filesystem
+                         (scope . project-workspace)
+                         (paths
+                          ((role . project-workspace)
+                           (source . ".")
+                           (project-marker . "gerbil.pkg")
+                           (target . "/workspace/project")
+                           (mode . read-only)))
+                         (access . read-only))
                         (cpu . 2)
                         (memory . "2Gi")
                         (timeout-ms . 180000)))
@@ -78,10 +99,21 @@
                         artifact-cache))
         (check-equal? (poo-flow-sandbox-profile-resource-policy
                        poo-object-profile)
-                      '((filesystem . scoped)
+                      '((filesystem
+                         (scope . project-workspace)
+                         (paths
+                          ((role . project-workspace)
+                           (source . ".")
+                           (project-marker . "gerbil.pkg")
+                           (target . "/workspace/project")
+                           (mode . read-write)))
+                         (mounts . declared)
+                         (access . read-write))
                         (mounts
                          ((path . "/workspace/project")
+                          (role . project-workspace)
                           (source . ".")
+                          (project-marker . "gerbil.pkg")
                           (target . "/workspace/project")
                           (mode . read-write)
                           (purpose . project-source))
@@ -101,6 +133,7 @@
                           (mode . read)
                           (purpose . user-config))
                          ((path . "/run/secrets")
+                          (source-kind . env)
                           (source . "$POO_FLOW_AGENT_SECRETS")
                           (target . "/run/secrets")
                           (mode . read)

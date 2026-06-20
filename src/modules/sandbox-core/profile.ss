@@ -4,6 +4,9 @@
 
 (import (only-in :clan/poo/object .o)
         :poo-flow/src/modules/agent-sandbox/config
+        (only-in :poo-flow/src/modules/agent-sandbox/profile
+                 agent-sandbox-profile-resource-policy-filesystem-entry?
+                 agent-sandbox-profile-resource-policy-filesystem-diagnostics)
         :poo-flow/src/modules/extension
         :poo-flow/src/modules/object-core
         :poo-flow/src/modules/objects)
@@ -40,7 +43,11 @@
      'capabilities 'List 'override '(process-run filesystem-read tmpdir)
      '((scope . sandbox-core) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
-     'resource-policy 'List 'override '((filesystem . scoped))
+     'resource-policy 'List 'override
+     '((filesystem
+        (scope . runtime)
+        (materialized-by . runtime)
+        (mounts . runtime)))
      '((scope . sandbox-core) (dsl-row . resources)))
     (poo-flow-module-field-contract
      'metadata 'List 'append '()
@@ -148,6 +155,30 @@
 
 ;;; Validation rejects malformed rows before merge planning, keeping bad user
 ;;; fragments from becoming partial POO contributions.
+;; : (-> [AgentSandboxResourcePolicyEntry] Boolean)
+(def (poo-flow-sandbox-profile-object-unsafe-filesystem-resource? resources)
+  (cond
+   ((null? resources) #f)
+   ((not (pair? resources)) #f)
+   ((and (agent-sandbox-profile-resource-policy-filesystem-entry?
+          (car resources))
+         (not (null?
+               (agent-sandbox-profile-resource-policy-filesystem-diagnostics
+                resources))))
+    #t)
+   (else
+    (poo-flow-sandbox-profile-object-unsafe-filesystem-resource?
+     (cdr resources)))))
+
+;; : (-> PooModuleFieldContract [Value] Boolean)
+(def (poo-flow-sandbox-profile-object-field-value-safe? field value)
+  (if (eq? (poo-flow-module-field-contract-identity field) 'resource-policy)
+    (not (poo-flow-sandbox-profile-object-unsafe-filesystem-resource? value))
+    #t))
+
+;;; Row validation is the last user-interface gate before profile rows become
+;;; object contributions, so backend inheritance and unsafe filesystem policy
+;;; are rejected here with the original row preserved in the diagnostic.
 ;; : (-> PooModuleObject SandboxProfileForm SandboxProfileForm)
 (def (poo-flow-sandbox-profile-object-validate-row profile-object row)
   (cond
@@ -162,9 +193,30 @@
       (if (and field
                (poo-flow-module-field-contract-accepts?
                 field
+                (poo-flow-sandbox-profile-object-row-value row))
+               (poo-flow-sandbox-profile-object-field-value-safe?
+                field
                 (poo-flow-sandbox-profile-object-row-value row)))
         row
-        (error "sandbox profile config row is not in backend profile object"))))))
+        (error "sandbox profile config row is not in backend profile object"
+               (list (cons 'row row)
+                     (cons 'slot (and field
+                                      (poo-flow-module-field-contract-identity
+                                       field)))
+                     (cons 'value
+                           (poo-flow-sandbox-profile-object-row-value row))
+                     (cons 'accepted?
+                           (and field
+                                (poo-flow-module-field-contract-accepts?
+                                 field
+                                 (poo-flow-sandbox-profile-object-row-value
+                                  row))))
+                     (cons 'safe?
+                           (and field
+                                (poo-flow-sandbox-profile-object-field-value-safe?
+                                 field
+                                 (poo-flow-sandbox-profile-object-row-value
+                                  row)))))))))))
 
 ;;; Batch validation preserves the original row list so merge planning can keep
 ;;; user declaration order after all rows have passed the contract gate.

@@ -2,7 +2,18 @@
 ;;; Boundary: profile-set cases mirror Doom-style selection before realization.
 ;;; Doctor output is checked as POO data so user config remains declarative.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
         :poo-flow/src/modules/module-system)
@@ -10,6 +21,8 @@
 (export user-interface-profile-set-case-test)
 
 ;; : (-> Unit TestSuite)
+;;; This suite protects profile-set configuration as a downstream case composed
+;;; from upstream module contracts.
 (def user-interface-profile-set-case-test
   (test-suite "poo-flow user interface profile sets"
     (test-case "manages Doom-style profile sets before realization"

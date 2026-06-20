@@ -45,7 +45,11 @@
      '(process-run filesystem-read filesystem-write tmpdir)
      '((scope . docker-sandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
-     'resource-policy 'List 'override '((filesystem . volume))
+     'resource-policy 'List 'override
+     '((filesystem
+        (scope . volume)
+        (materialized-by . runtime)
+        (mounts . runtime)))
      '((scope . docker-sandbox) (dsl-row . resources))))
    '((namespace . objects.docker-sandbox)
      (domain . profile)

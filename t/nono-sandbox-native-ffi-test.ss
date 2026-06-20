@@ -2,7 +2,18 @@
 ;;; Boundary: native nono FFI tests call the C ABI through Gambit, not the CLI.
 ;;; Invariant: irreversible sandbox apply is never performed by this test.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/nono
@@ -32,6 +43,9 @@
     (capabilities '((allow-commands . ("sh"))))
     (metadata '((test . native-ffi))))))
 
+;;; This suite keeps native FFI receipt shape observable even when the library
+;;; is absent on a developer machine.
+;; : TestSuite
 (def nono-sandbox-native-ffi-test
   (test-suite "nono-sandbox native FFI"
     (test-case "skips cleanly when an explicit native library path is absent"

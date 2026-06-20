@@ -2,7 +2,18 @@
 ;;; Boundary: Cube interface tests cover Marlin-facing lifecycle manifests.
 ;;; Invariant: tests do not call Cube APIs or create remote sandboxes.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/cube
@@ -14,6 +25,9 @@
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; This suite keeps Cube backend projection checks isolated from generic
+;;; agent-sandbox descriptor coverage.
+;; : TestSuite
 (def agent-sandbox-cube-interface-test
   (test-suite "CubeSandbox interface contract"
     (test-case "declares POO descriptor for Marlin Cube API handoff"

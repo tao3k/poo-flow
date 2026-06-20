@@ -45,39 +45,52 @@
 (def +nono-c-binding-build-schema+
   'poo-flow.sandbox.nono-sandbox.c-binding.build.v1)
 
-;; : [String]
+;; : (List String)
 (def +nono-c-binding-default-adapter-include-dirs+
   '("bindings/nono-c"))
 
-;; : [String]
+;; : (List String)
 (def +nono-c-binding-default-upstream-include-dirs+
   '(".data/nono/bindings/c/include"))
 
-;; : [String]
+;; : (List String)
 (def +nono-c-binding-default-include-dirs+
   (append +nono-c-binding-default-adapter-include-dirs+
           +nono-c-binding-default-upstream-include-dirs+))
 
-;; : [String]
+;; : (List String)
 (def +nono-c-binding-default-compiler-options+
   '("-Qunused-arguments"))
 
-;; : [String]
+;; : (List String)
 (def +nono-c-binding-default-warning-options+
   '("-Wall" "-Wextra" "-Werror"))
 
-;; : (-> Value Boolean)
+;; | NonoCBindingPresentCandidate = (U Symbol String Pair Object Procedure Boolean)
+;; : (-> NonoCBindingPresentCandidate Boolean)
 (def (nono-c-binding-build-present? value)
   (and value #t))
 
-;; : (-> Value Boolean)
+;;; Boundary:
+;;; - nono-c-binding-string-list? keeps host compiler argv validation pure.
+;; nono-c-binding-string-list?
+;;   : (-> NonoCBindingStringListCandidate Boolean)
+;;   | type StringList = (List String)
+;;   | doc m%
+;;       `nono-c-binding-string-list? value` accepts only proper lists of strings.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (nono-c-binding-string-list? '("cc" "-Wall"))
+;;       ;; => #t
+;;       (nono-c-binding-string-list? '("cc" 1))
+;;       ;; => #f
+;;       ```
+;;     %
 (def (nono-c-binding-string-list? value)
   (and (list? value)
-       (let lp ((rest value))
-         (cond
-          ((null? rest) #t)
-          ((string? (car rest)) (lp (cdr rest)))
-          (else #f)))))
+       (andmap string? value)))
 
 ;; : (-> String String)
 (def (nono-c-binding-include-option include-dir)
@@ -110,7 +123,7 @@
                             nono-c-binding-validate-build)))
         execution-policy-role))
 
-;; : (-> [Alist] NonoCBindingBuild)
+;; : (-> (List Pair) NonoCBindingBuild)
 (def (make-nono-c-binding-build . maybe-overrides)
   (.mix slots: (role-constant-slots
                 (if (null? maybe-overrides) '() (car maybe-overrides)))
@@ -142,11 +155,11 @@
 (def (nono-c-binding-build-standard build)
   (nono-c-binding-build-slot build 'standard #f))
 
-;; : (-> NonoCBindingBuild [String])
+;; : (-> NonoCBindingBuild (List String))
 (def (nono-c-binding-build-compiler-options build)
   (nono-c-binding-build-slot build 'compiler-options '()))
 
-;; : (-> NonoCBindingBuild [String])
+;; : (-> NonoCBindingBuild (List String))
 (def (nono-c-binding-build-warning-options build)
   (nono-c-binding-build-slot build 'warning-options '()))
 
@@ -154,15 +167,15 @@
 (def (nono-c-binding-build-syntax-only? build)
   (nono-c-binding-build-slot build 'syntax-only? #t))
 
-;; : (-> NonoCBindingBuild [String])
+;; : (-> NonoCBindingBuild (List String))
 (def (nono-c-binding-build-adapter-include-dirs build)
   (nono-c-binding-build-slot build 'adapter-include-dirs '()))
 
-;; : (-> NonoCBindingBuild [String])
+;; : (-> NonoCBindingBuild (List String))
 (def (nono-c-binding-build-upstream-include-dirs build)
   (nono-c-binding-build-slot build 'upstream-include-dirs '()))
 
-;; : (-> NonoCBindingBuild [String])
+;; : (-> NonoCBindingBuild (List String))
 (def (nono-c-binding-build-include-dirs build)
   (nono-c-binding-build-slot build 'include-dirs '()))
 
@@ -175,7 +188,9 @@
   (list (cons 'kind kind)
         (cons 'path path)))
 
-;; : (-> Symbol [String] [Alist])
+;;; Required-dir inputs keep include directory expansion as a pure map from
+;;; paths to receipt rows, preserving index/order for later diagnostics.
+;; : (-> Symbol (List String) (List Alist))
 (def (nono-c-binding-build-required-dir-inputs kind paths)
   (map (lambda (path)
          (nono-c-binding-build-required-input kind path))
@@ -183,7 +198,7 @@
 
 ;;; Required inputs make the development checkout dependency explicit. Runtime
 ;;; receipts can report missing C headers before a compiler emits opaque errors.
-;; : (-> NonoCBindingBuild [Alist])
+;; : (-> NonoCBindingBuild (List Alist))
 (def (nono-c-binding-build-required-inputs build)
   (let (valid-build (nono-c-binding-validate-build build))
     (append
@@ -199,7 +214,7 @@
 
 ;;; Build contracts are serializable receipts for package checks and runtime
 ;;; smoke probes. They keep host compile policy out of the runtime manifest.
-;; : (-> NonoCBindingBuild [NonoCBindingDescriptor] Alist)
+;; : (-> NonoCBindingBuild (List NonoCBindingDescriptor) Alist)
 (def (nono-c-binding-build->contract build . maybe-descriptor)
   (let ((valid-build (nono-c-binding-validate-build build))
         (descriptor (if (null? maybe-descriptor)
@@ -233,7 +248,9 @@
                 (null? (nono-c-binding-build-input-validation-errors
                         valid-build))))))
 
-;; : (-> NonoCBindingBuild [ValidationError])
+;;; Descriptor validation reports contract fields before path checks so missing
+;;; checkout state does not mask malformed build descriptors.
+;; : (-> NonoCBindingBuild (List ValidationError))
 (def (nono-c-binding-build-validation-errors build)
   (if (nono-c-binding-build? build)
     (agent-sandbox-required-field-errors
@@ -278,7 +295,7 @@
        "invalid nono C binding build descriptor"
        (list (cons 'errors errors))))))
 
-;; : (-> Alist Integer [ValidationError])
+;; : (-> Alist Integer (List ValidationError))
 (def (nono-c-binding-build-input-validation-error input index)
   (let ((kind (agent-sandbox-alist-ref input 'kind #f))
         (path (agent-sandbox-alist-ref input 'path #f)))
@@ -296,19 +313,19 @@
                   (cons 'path path)
                   (cons 'code 'path-not-found)))))))
 
-;; : (-> [Alist] Integer [ValidationError])
+;;; Input validation maps paths and generated indexes together; callers get
+;;; stable row numbers without mutating the required-inputs receipt.
+;; : (-> (List Alist) Integer (List ValidationError))
 (def (nono-c-binding-build-inputs-validation-errors inputs index)
-  (if (null? inputs)
-    '()
-    (append
-     (nono-c-binding-build-input-validation-error (car inputs) index)
-     (nono-c-binding-build-inputs-validation-errors (cdr inputs)
-                                                    (+ index 1)))))
+  (apply append
+         (map nono-c-binding-build-input-validation-error
+              inputs
+              (iota (length inputs) index))))
 
 ;;; Input validation is deliberately separate from descriptor validation:
 ;;; package contracts may be inspected without a local nono checkout, while
 ;;; compile probes must fail before invoking the host C compiler.
-;; : (-> NonoCBindingBuild [ValidationError])
+;; : (-> NonoCBindingBuild (List ValidationError))
 (def (nono-c-binding-build-input-validation-errors build)
   (nono-c-binding-build-inputs-validation-errors
    (nono-c-binding-build-required-inputs build)
@@ -329,7 +346,7 @@
 ;;; The default command mirrors the package-managed C probe. It is argv data,
 ;;; not a shell string, so tests and runtime receipts can run it without
 ;;; escaping policy or command injection ambiguity.
-;; : (-> [NonoCBindingBuild] [String])
+;; : (-> (List NonoCBindingBuild) (List String))
 (def (nono-c-binding-build->probe-command . maybe-build)
   (let* ((build (nono-c-binding-validate-build-inputs
                  (if (null? maybe-build)
@@ -353,6 +370,6 @@
      include-options
      (list (nono-c-binding-build-probe-ref build)))))
 
-;; : (-> [NonoCBindingBuild] [String])
+;; : (-> (List NonoCBindingBuild) (List String))
 (def (nono-c-binding-compile-probe-command . maybe-build)
   (apply nono-c-binding-build->probe-command maybe-build))

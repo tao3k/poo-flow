@@ -1,10 +1,24 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: descriptor registries are policy extension surfaces.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .@ .slot? .all-slots)
         :poo-flow/src/core/api)
 
+;;; This suite keeps descriptor registry lookup behavior separate from concrete
+;;; workflow execution.
+;; : TestSuite
 (def descriptor-registry-test
   (test-suite "descriptor registries"
     (test-case "extends task family descriptors without editing defaults"

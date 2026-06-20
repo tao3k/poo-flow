@@ -2,7 +2,18 @@
 ;;; Boundary: tutorial result tests mirror Funflow's local/config outputs.
 ;;; Invariant: each stage proves a user-visible result, not only an API shape.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api)
 
 (export tutorial-result-test)
@@ -46,6 +57,7 @@
   (let (entry (assoc word counts))
     (if entry (cdr entry) 0)))
 
+;;; This suite keeps tutorial result contracts executable as examples evolve.
 (def tutorial-result-test
   (test-suite "funflow tutorial result ladder"
     (test-case "stage 1 tutorial1 minimal pure flow returns 2"

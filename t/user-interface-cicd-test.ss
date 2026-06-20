@@ -2,14 +2,29 @@
 ;;; Boundary: tests verify Funflow CI/CD user intent presentation.
 ;;; Invariant: CI/CD facts stay declarative and never execute adapters.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/modules/module-system
+        (only-in :poo-flow/user-interface/custom/my-module/config
+                 poo-flow-custom-my-module-cicd-case)
         :poo-flow/t/user-interface-fixtures)
 
 (export user-interface-cicd-test)
 
 ;; : (-> Unit TestSuite)
+;;; This suite keeps CI/CD user-interface assembly separate from runtime
+;;; execution.
 (def user-interface-cicd-test
   (test-suite "poo-flow user interface cicd payload"
     (test-case "presents Funflow CI/CD payload as user intent data"
@@ -30,6 +45,25 @@
         (check-equal? (alist-value 'runtime-owner intent)
                       "marlin-agent-core")
         (check-equal? (alist-value 'runtime-executed intent) #f)))
+    (test-case "loads downstream CI/CD case through load! and use-module"
+      (let* ((selection (car poo-flow-custom-my-module-cicd-case))
+             (inherits
+              (poo-flow-user-module-selection-flag-entry selection ':inherits))
+             (command
+              (poo-flow-user-module-selection-flag-entry selection ':command))
+             (nono
+              (poo-flow-user-module-selection-flag-entry selection ':nono)))
+        (check-equal? (poo-flow-user-module-selection-key selection)
+                      '(sandbox . nono-sandbox))
+        (check-equal? inherits '(:inherits . ci/build))
+        (check-equal? command
+                      '(:command
+                        (program . "gxpkg")
+                        (args . ("build"))))
+        (check-equal? nono
+                      '(:nono
+                        (network . blocked)
+                        (audit . disabled)))))
     (test-case "traces CI/CD presentation projection without runtime work"
       (let* ((presentation
               (pooFlowUserConfigPresentation

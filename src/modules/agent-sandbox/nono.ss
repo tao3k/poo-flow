@@ -25,7 +25,10 @@
    '((mode . proxy-only))
    '((filesystem . scoped)
      (credentials . injected))
-   '((filesystem . scoped)
+   '((filesystem
+      (scope . runtime)
+      (materialized-by . runtime)
+      (mounts . runtime))
      (startup . zero-latency))
    (lambda (profile-ref)
      (list (cons 'backend 'nono)

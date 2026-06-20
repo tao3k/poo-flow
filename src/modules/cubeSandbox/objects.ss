@@ -44,7 +44,10 @@
      'capabilities 'List 'override '(process-run filesystem-read cache-mount)
      '((scope . cubeSandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
-     'resource-policy 'List 'override '((filesystem . snapshot))
+     'resource-policy 'List 'override
+     '((filesystem
+        (scope . snapshot)
+        (snapshot . clone)))
      '((scope . cubeSandbox) (dsl-row . resources))))
    '((namespace . objects.cubeSandbox)
      (domain . profile)

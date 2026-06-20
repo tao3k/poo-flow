@@ -7,5 +7,7 @@
 (load! "profiles/session")
 (load! "profiles/task")
 (load! "profiles/cicd")
+(load! "profiles/loops")
 (load! "profiles/object-extension")
 (load! "cases/cicd")
+(load! "cases/loop-engine")

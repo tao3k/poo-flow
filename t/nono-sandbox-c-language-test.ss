@@ -2,7 +2,18 @@
 ;;; Boundary: C language tests prove the nono-sandbox binding is compiler-visible.
 ;;; Invariant: the probe checks headers and signatures but never links or applies nono.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :std/misc/process run-process)
         :poo-flow/src/modules/nono-sandbox/c-binding)
 

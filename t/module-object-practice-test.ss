@@ -1,7 +1,18 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/extension
         :poo-flow/src/modules/object-core)
 
@@ -13,6 +24,8 @@
     (if entry (cdr entry) #f)))
 
 ;; : TestSuite
+;;; This suite keeps object-extension examples executable as policy evidence for
+;;; downstream module authors.
 (def module-object-practice-test
   (test-suite "poo-flow module object best practices"
     (test-case "projects object-owned field contracts into the extension graph"

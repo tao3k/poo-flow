@@ -2,7 +2,18 @@
 ;;; Boundary: keep the public user-interface config test as a small aggregator.
 ;;; Scenario owners live in separate files so warning policy can isolate failures.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         "user-interface-config-modules-test.ss"
         "user-interface-cicd-profile-case-test.ss"
         "user-interface-config-core-case-test.ss"

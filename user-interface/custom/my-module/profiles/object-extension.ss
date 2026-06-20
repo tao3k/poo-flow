@@ -11,10 +11,21 @@
     (capabilities :remove filesystem-write)
     (capabilities :append cache-mount artifact-cache)
     (resources
-     (filesystem . scoped)
+     (filesystem
+      (scope . project-workspace)
+      (paths
+       ((role . project-workspace)
+        (source . ".")
+        (project-marker . "gerbil.pkg")
+        (target . "/workspace/project")
+        (mode . read-write)))
+      (mounts . declared)
+      (access . read-write))
      (mounts
       ((path . "/workspace/project")
+       (role . project-workspace)
        (source . ".")
+       (project-marker . "gerbil.pkg")
        (target . "/workspace/project")
        (mode . read-write)
        (purpose . project-source))
@@ -34,6 +45,7 @@
        (mode . read)
        (purpose . user-config))
       ((path . "/run/secrets")
+       (source-kind . env)
        (source . "$POO_FLOW_AGENT_SECRETS")
        (target . "/run/secrets")
        (mode . read)

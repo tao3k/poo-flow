@@ -2,26 +2,43 @@
 ;;; Boundary: loop-strategy tests cover policy selection and handoff projection.
 ;;; Invariant: tests assert harness-only local validation, not runtime execution.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/loops/agent)
 
 (export loop-strategy-test)
 
+;;; Local lookup makes strategy contract assertions independent of alist order.
 ;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; Name projection keeps priority-order assertions focused on selected pattern
+;;; identity rather than full descriptor payloads.
 ;; : (-> [Alist] [Symbol])
 (def (contract-pattern-names contracts)
   (map (lambda (contract) (test-ref contract 'name))
        contracts))
 
+;;; Failure capture keeps invalid strategy checks on structured policy errors.
 ;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; Pattern fixtures expose level and priority at construction sites so strategy
+;;; selection rules remain easy to audit.
 ;; : (-> Symbol Symbol Integer LoopPatternDescriptor)
 (def (test-pattern name level priority)
   (make-loop-pattern-descriptor
@@ -30,6 +47,9 @@
    (list (cons 'level level)
          (cons 'priority priority))))
 
+;;; This suite keeps loop strategy semantics stable for both eager and deferred
+;;; module execution paths.
+;; : TestSuite
 (def loop-strategy-test
   (test-suite "loop strategy policy selection"
     (test-case "selects priority-ordered patterns below autonomy ceiling"

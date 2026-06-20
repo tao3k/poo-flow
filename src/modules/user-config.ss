@@ -1,14 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: user profile and doctor facade for the hot-plug config surface.
-;;; Invariant: selection/config primitives stay in :poo-flow/src/modules/user-config-base.
+;;; Invariant: selection/config primitives stay in :poo-flow/src/modules/modules-system-base.
 ;;; Descriptor realization stays in package-root modules.
 ;;; Intent: keep Doom-style user declarations inspectable before activation.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
         :poo-flow/src/modules/interface
-        :poo-flow/src/modules/user-config-base)
+        :poo-flow/src/modules/modules-system-base)
 
-(export (import: :poo-flow/src/modules/user-config-base)
+(export (import: :poo-flow/src/modules/modules-system-base)
         poo-flow-user-profile-kind
         poo-flow-user-profile-set-kind
         poo-flow-user-profile-diagnostic-kind
@@ -564,6 +564,9 @@
         feature-facts: (.ref config-presentation 'feature-facts)
         cicd-intent-count: (.ref config-presentation 'cicd-intent-count)
         cicd-intents: (.ref config-presentation 'cicd-intents)
+        loop-engine-intent-count:
+        (.ref config-presentation 'loop-engine-intent-count)
+        loop-engine-intents: (.ref config-presentation 'loop-engine-intents)
         presentation-trace: (.ref config-presentation 'presentation-trace)
         setting-count: (.ref config-presentation 'setting-count)
         setting-keys: (.ref config-presentation 'setting-keys)
@@ -633,6 +636,9 @@
          (cicd-intent-rows
           (poo-flow-user-config-cicd-intents
            (pooFlowUserConfigFromProfile profile)))
+         (loop-engine-intent-rows
+          (poo-flow-user-config-loop-engine-intents
+           (pooFlowUserConfigFromProfile profile)))
          (public-setting-keys (poo-flow-user-profile-setting-keys profile)))
     (.o kind: poo-flow-user-profile-doctor-presentation-kind
         profile-name: (.ref doctor-report 'profile-name)
@@ -648,11 +654,14 @@
         feature-facts: feature-fact-rows
         cicd-intent-count: (length cicd-intent-rows)
         cicd-intents: cicd-intent-rows
+        loop-engine-intent-count: (length loop-engine-intent-rows)
+        loop-engine-intents: loop-engine-intent-rows
         presentation-trace:
         (poo-flow-user-config-presentation-trace
          profile-modules
          feature-fact-rows
          cicd-intent-rows
+         loop-engine-intent-rows
          public-setting-keys)
         setting-count: (length public-setting-keys)
         setting-keys: public-setting-keys

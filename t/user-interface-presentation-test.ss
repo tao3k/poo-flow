@@ -2,7 +2,18 @@
 ;;; Boundary: tests verify user-interface presentation receipts.
 ;;; Invariant: presentations stay report-only and never realize descriptors.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/modules/module-system
         :poo-flow/t/user-interface-fixtures)
@@ -10,6 +21,8 @@
 (export user-interface-presentation-test)
 
 ;; : (-> Unit TestSuite)
+;;; This suite keeps presentation output aligned with the declarative user
+;;; interface contract.
 (def user-interface-presentation-test
   (test-suite "poo-flow user interface presentation"
     (test-case "presents downstream config without descriptor realization"
@@ -26,18 +39,21 @@
              (modules (.ref presentation 'modules))
              (feature-facts (.ref presentation 'feature-facts))
              (cicd-intent (car (.ref presentation 'cicd-intents)))
+             (loop-engine-intent
+              (car (.ref presentation 'loop-engine-intents)))
              (trace (.ref presentation 'presentation-trace))
              (settings (.ref presentation 'settings)))
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'module-count) 5)
+        (check-equal? (.ref presentation 'module-count) 6)
         (check-equal? (.ref presentation 'module-keys)
                       '((flow . funflow)
                         (loop . governor)
                         (sandbox . nono-sandbox)
                         (sandbox . cubeSandbox)
-                        (sandbox . docker-sandbox)))
-        (check-equal? (.ref presentation 'feature-count) 5)
+                        (sandbox . docker-sandbox)
+                        (flow . loop-engine)))
+        (check-equal? (.ref presentation 'feature-count) 6)
         (check-equal? (alist-value 'declaration-index
                                    (car feature-facts))
                       0)
@@ -68,12 +84,29 @@
         (check-equal? (alist-value 'runtime-handoff cicd-intent)
                       'runtime-command-manifest)
         (check-equal? (alist-value 'runtime-executed cicd-intent) #f)
+        (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
+        (check-equal? (alist-value 'key loop-engine-intent)
+                      '(flow . loop-engine))
+        (check-equal? (alist-value 'workflow-owned? loop-engine-intent) #t)
+        (check-equal? (alist-value 'governor-derived? loop-engine-intent) #t)
+        (check-equal? (alist-value 'governor loop-engine-intent)
+                      '(+strategy +policy))
+        (check-equal? (alist-value 'agent-judges loop-engine-intent)
+                      '((auditor repo-audit-agent)
+                        (verifier repo-verifier-agent)
+                        (governor repo-governor)))
+        (check-equal? (alist-value 'human-audit loop-engine-intent)
+                      '(+approval +changes-requested))
+        (check-equal? (alist-value 'runtime-handoff loop-engine-intent)
+                      'loop-governor-marlin-runtime-manifest)
+        (check-equal? (alist-value 'runtime-executed loop-engine-intent) #f)
         (check-equal? (map (lambda (step) (alist-value 'stage step))
                            trace)
-                      '(selected-modules feature-facts cicd-intents settings))
+                      '(selected-modules feature-facts cicd-intents
+                        loop-engine-intents settings))
         (check-equal? (map (lambda (step) (alist-value 'runtime-executed step))
                            trace)
-                      '(#f #f #f #f))
+                      '(#f #f #f #f #f))
         (check-equal? (alist-value 'profile settings)
                       "developer")
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
@@ -124,20 +157,22 @@
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-profile-presentation-kind)
         (check-equal? (.ref presentation 'profile-name) 'developer)
-        (check-equal? (.ref presentation 'module-bundle-count) 5)
-        (check-equal? (.ref presentation 'module-count) 5)
+        (check-equal? (.ref presentation 'module-bundle-count) 6)
+        (check-equal? (.ref presentation 'module-count) 6)
         (check-equal? (.ref presentation 'config-presentation-kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'config-module-count) 5)
-        (check-equal? (.ref presentation 'feature-count) 5)
+        (check-equal? (.ref presentation 'config-module-count) 6)
+        (check-equal? (.ref presentation 'feature-count) 6)
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
+        (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value
                        'runtime-handoff
                        (car (.ref presentation 'cicd-intents)))
                       'runtime-command-manifest)
         (check-equal? (map (lambda (step) (alist-value 'stage step))
                            (.ref presentation 'presentation-trace))
-                      '(selected-modules feature-facts cicd-intents settings))
+                      '(selected-modules feature-facts cicd-intents
+                        loop-engine-intents settings))
         (check-equal? (alist-value 'declaration-index
                                    (car (.ref presentation 'feature-facts)))
                       0)
@@ -165,9 +200,10 @@
                       poo-flow-user-profile-doctor-presentation-kind)
         (check-equal? (.ref presentation 'doctor-status) 'ok)
         (check-equal? (.ref presentation 'diagnostic-count) 0)
-        (check-equal? (.ref presentation 'module-count) 5)
-        (check-equal? (.ref presentation 'feature-count) 5)
+        (check-equal? (.ref presentation 'module-count) 6)
+        (check-equal? (.ref presentation 'feature-count) 6)
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
+        (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value
                        'runtime-owner
                        (car (.ref presentation 'cicd-intents)))
@@ -176,6 +212,10 @@
                        'stage
                        (caddr (.ref presentation 'presentation-trace)))
                       'cicd-intents)
+        (check-equal? (alist-value
+                       'stage
+                       (cadddr (.ref presentation 'presentation-trace)))
+                      'loop-engine-intents)
         (check-equal? (alist-value 'declaration-index
                                    (car (.ref presentation 'feature-facts)))
                       0)

@@ -2,12 +2,25 @@
 ;;; Boundary: runtime bridge tests cover schema envelopes, not real Rust IO.
 ;;; Invariant: Scheme emits deterministic request/response data for adapters.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/workflow/store)
 
 (export runtime-bridge-test)
 
+;;; This suite protects runtime bridge receipts as data contracts between
+;;; Scheme control-plane code and external runtimes.
 (def runtime-bridge-test
   (test-suite "runtime bridge schema"
     (test-case "rust submit envelope carries schema and correlation ids"

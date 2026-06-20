@@ -2,7 +2,18 @@
 ;;; Boundary: makefile-tool runtime stages prove descriptor handoff behavior.
 ;;; Invariant: tests emulate runtime responses without executing Makefile work.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/workflow/flows
         :poo-flow/src/modules/workflow/syntax)
@@ -110,6 +121,9 @@
   (list (cons 'runtime-name "poo-flow-runtime")
         (cons 'tutorial 'macro-stage)))
 
+;;; This suite protects tutorial runtime receipts so documentation examples stay
+;;; aligned with executable behavior.
+;; : TestSuite
 (def tutorial-makefile-runtime-test
   (test-suite "funflow makefile-tool runtime result ladder"
     (test-case "stage 17 descriptor command drives makefile tool workflow"

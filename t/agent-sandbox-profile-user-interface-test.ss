@@ -1,12 +1,25 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: sandbox profile user interface stays on the module-system facade.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/modules/module-system)
 
 (export agent-sandbox-profile-user-interface-test)
 
+;;; These profiles model the downstream DSL surface that users edit, while
+;;; upstream modules remain responsible for validation and backend defaults.
 ;; : [PooSandboxProfile]
 (def user-sandbox-profiles
   (poo-flow-sandbox-profiles
@@ -14,7 +27,15 @@
     (backend nono)
     (network deny-by-default)
     (capabilities process-run filesystem-read filesystem-write tmpdir)
-    (resources (filesystem . scoped)
+    (resources (filesystem
+                (scope . project-workspace)
+                (paths
+                 ((role . project-workspace)
+                  (source . ".")
+                  (project-marker . "gerbil.pkg")
+                  (target . "/workspace/project")
+                  (mode . read-write)))
+                (access . read-write))
                (cpu . 2)
                (memory . "4Gi")
                (timeout-ms . 300000))
@@ -23,12 +44,17 @@
     (backend cubeSandbox cube-local)
     (network allowlisted "github.com" "crates.io")
     (capabilities process-run filesystem-read cache-mount)
-    (resources (filesystem . scoped)
+    (resources (filesystem
+                (scope . snapshot)
+                (snapshot . clone)
+                (access . read-only))
                (cpu . 4)
                (memory . "8Gi")
                (timeout-ms . 600000))
     (metadata (intent . ci-agent) (risk . hermetic)))))
 
+;;; The nono profile case exercises override/remove/append in one realistic
+;;; operator configuration without exposing backend implementation objects.
 ;; : PooUserModuleSelection
 (def user-nono-operator-module
   (car
@@ -40,13 +66,25 @@
        (capabilities process-run filesystem-read filesystem-write tmpdir)
        (capabilities :remove filesystem-write)
        (capabilities :append cache-mount)
-       (resources (filesystem . scoped) (cpu . 2) (memory . "4Gi"))
+       (resources (filesystem
+                   (scope . project-workspace)
+                   (paths
+                    ((role . project-workspace)
+                     (source . ".")
+                     (project-marker . "gerbil.pkg")
+                     (target . "/workspace/project")
+                     (mode . read-write)))
+                   (access . read-write))
+                  (cpu . 2)
+                  (memory . "4Gi"))
        (resources :append (timeout-ms . 300000))
        (metadata (intent . operator-demo)
                  (scope . profile))
        (metadata :append (stage . extension))
        (metadata :remove (scope . profile)))))))
 
+;;; The cube case keeps CI-style sandbox extension visible in the user-facing
+;;; module syntax.
 ;; : PooUserModuleSelection
 (def user-cube-build-module
   (car
@@ -59,6 +97,8 @@
        (metadata (intent . cube-build)
                  (scope . profile)))))))
 
+;;; The docker case verifies a second backend can use the same declarative
+;;; profile surface with different capability policy.
 ;; : PooUserModuleSelection
 (def user-docker-build-module
   (car
@@ -72,6 +112,8 @@
        (metadata (intent . docker-build)
                  (scope . profile)))))))
 
+;;; Local alist lookup keeps assertions readable while avoiding a dependency on
+;;; internal profile projection helpers.
 ;; : (-> Symbol Alist MaybeValue)
 (def (alist-value key entries)
   (cond
@@ -81,6 +123,8 @@
     (alist-value key (cdr entries)))))
 
 ;; : TestSuite
+;;; This suite exercises the downstream-facing profile syntax without exposing
+;;; backend implementation slots as part of the user contract.
 (def agent-sandbox-profile-user-interface-test
   (test-suite "poo-flow agent sandbox profile user interface"
     (test-case "declares nono and cubeSandbox profiles as inert user data"
@@ -125,7 +169,15 @@
                       '(process-run filesystem-read tmpdir cache-mount))
         (check-equal? (poo-flow-sandbox-profile-resource-policy
                        operator-profile)
-                      '((filesystem . scoped)
+                      '((filesystem
+                         (scope . project-workspace)
+                         (paths
+                          ((role . project-workspace)
+                           (source . ".")
+                           (project-marker . "gerbil.pkg")
+                           (target . "/workspace/project")
+                           (mode . read-write)))
+                         (access . read-write))
                         (cpu . 2)
                         (memory . "4Gi")
                         (timeout-ms . 300000)))
@@ -156,7 +208,9 @@
         (check-equal? (poo-flow-sandbox-profile-backend-kind cube-profile)
                       'cube)
         (check-equal? (poo-flow-sandbox-profile-resource-policy cube-profile)
-                      '((filesystem . snapshot)
+                      '((filesystem
+                         (scope . snapshot)
+                         (snapshot . clone))
                         (cpu . 4)
                         (memory . "8Gi")))
         (check-equal? (poo-flow-sandbox-profile-backend-kind docker-profile)
@@ -164,7 +218,10 @@
         (check-equal? (poo-flow-sandbox-profile-capabilities docker-profile)
                       '(process-run filesystem-read tmpdir))
         (check-equal? (poo-flow-sandbox-profile-resource-policy docker-profile)
-                      '((filesystem . volume)
+                      '((filesystem
+                         (scope . volume)
+                         (materialized-by . runtime)
+                         (mounts . runtime))
                         (cpu . 2)
                         (memory . "4Gi")))
         (check-equal? (alist-value
@@ -190,7 +247,15 @@
         (check-equal? (alist-value 'capabilities profile)
                       '(process-run filesystem-read filesystem-write tmpdir))
         (check-equal? (alist-value 'resource-policy profile)
-                      '((filesystem . scoped)
+                      '((filesystem
+                         (scope . project-workspace)
+                         (paths
+                          ((role . project-workspace)
+                           (source . ".")
+                           (project-marker . "gerbil.pkg")
+                           (target . "/workspace/project")
+                           (mode . read-write)))
+                         (access . read-write))
                         (cpu . 2)
                         (memory . "4Gi")
                         (timeout-ms . 300000)))))

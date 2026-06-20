@@ -2,7 +2,20 @@
 ;;; Boundary: live nono profile checks use native FFI, not the nono CLI.
 ;;; Invariant: irreversible sandbox apply is never performed by package tests.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
+        (only-in :poo-flow/user-interface/custom/my-module/config
+                 poo-flow-custom-my-module-cicd-module)
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/nono
         :poo-flow/src/modules/nono-sandbox/c-binding)
@@ -23,7 +36,15 @@
   '(process-run filesystem-read tmpdir))
 
 (def +custom-cicd-ci-check-resource-policy+
-  '((filesystem . scoped)
+  '((filesystem
+     (scope . project-workspace)
+     (paths
+      ((role . project-workspace)
+       (source . ".")
+       (project-marker . "gerbil.pkg")
+       (target . "/workspace/project")
+       (mode . read-only)))
+     (access . read-only))
     (cpu . 1)
     (memory . "1Gi")
     (timeout-ms . 90000)))
@@ -77,6 +98,13 @@
 (def (nono-live-cicd-receipt runtime-manifest)
   (nono-c-binding-native-live-test runtime-manifest))
 
+;; : (-> Unit PooUserModuleSelection)
+(def (custom-cicd-nono-selection)
+  (car poo-flow-custom-my-module-cicd-module))
+
+;;; This suite validates live-profile request shape while keeping irreversible
+;;; sandbox apply outside the test path.
+;; : TestSuite
 (def nono-sandbox-live-profile-test
   (test-suite "nono-sandbox native live user-interface profile"
     (test-case "normalizes custom ci/check profile into POO sandbox policy"
@@ -142,6 +170,32 @@
             (check-equal? (test-ref receipt 'capability-roundtrip-code) 0))
           (begin
             (check-equal? (test-ref receipt 'skipped?) #t)
+            (check-equal? (test-ref receipt 'skip-reason)
+                          'native-library-not-found)))))
+    (test-case "dispatches custom use-module binding to native nono FFI"
+      (let* ((selection (custom-cicd-nono-selection))
+             (runtime-manifest
+              (make-custom-cicd-ci-check-runtime-manifest))
+             (receipt
+              (nono-c-binding-selection-live-test selection runtime-manifest)))
+        (check-equal? (nono-c-binding-selection-binding selection)
+                      'native-ffi)
+        (check-equal? (test-ref receipt 'binding-source) 'use-module)
+        (check-equal? (test-ref receipt 'selection-binding) 'native-ffi)
+        (check-equal? (test-ref receipt 'selection-key)
+                      '(sandbox . nono-sandbox))
+        (check-equal? (test-ref receipt 'schema)
+                      +nono-c-binding-native-live-test-receipt-schema+)
+        (check-equal? (test-ref receipt 'cli-executed) #f)
+        (check-equal? (test-ref receipt 'runtime-executed) #f)
+        (check-equal? (test-ref receipt 'would-apply?) #f)
+        (if (test-ref receipt 'enabled?)
+          (begin
+            (check-equal? (test-ref receipt 'native-executed) #t)
+            (check-equal? (test-ref receipt 'apply-symbol)
+                          'nono_sandbox_apply))
+          (begin
+            (check-equal? (test-ref receipt 'native-executed) #f)
             (check-equal? (test-ref receipt 'skip-reason)
                           'native-library-not-found)))))))
 

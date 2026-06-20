@@ -2,7 +2,18 @@
 ;;; Boundary: tests verify maintained root user-interface cases.
 ;;; Invariant: cases are downstream declarations and report data, never runtime work.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/modules/module-system
         (only-in :poo-flow/user-interface/init
@@ -17,6 +28,8 @@
    (pooFlowUserInterfaceConfig poo-flow-user-module-bundles)))
 
 ;; : (-> Unit TestSuite)
+;;; This suite keeps downstream user-interface cases declarative while the
+;;; upstream module system owns validation.
 (def user-interface-case-test
   (test-suite "poo-flow user interface cases"
     (test-case "keeps developer case as an explicit root user-interface contract"
@@ -48,11 +61,13 @@
              (presentation
               (poo-flow-user-interface-case-presentation case-object))
              (modules (.ref presentation 'modules))
-             (custom-module (cadr (cddddr modules)))
+             (custom-module (caddr (cddddr modules)))
              (feature-facts (.ref presentation 'feature-facts))
-             (custom-fact (cadr (cddddr feature-facts)))
-             (cicd-intent (car (.ref presentation 'cicd-intents))))
-        (check-equal? (.ref presentation 'module-count) 6)
+             (custom-fact (caddr (cddddr feature-facts)))
+             (cicd-intent (car (.ref presentation 'cicd-intents)))
+             (loop-engine-intent
+              (car (.ref presentation 'loop-engine-intents))))
+        (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'module-keys)
                       (poo-flow-user-interface-case-expected-module-keys
                        case-object))
@@ -74,7 +89,7 @@
         (check-equal? (poo-flow-user-interface-case-alist-value
                        'declaration-index
                        custom-fact)
-                      5)
+                      6)
         (check-equal? (poo-flow-user-interface-case-alist-value
                        'declaration-phase
                        custom-fact)
@@ -110,6 +125,22 @@
         (check-equal? (poo-flow-user-interface-case-alist-value
                        'runtime-executed
                        cicd-intent)
+                      #f)
+        (check-equal? (poo-flow-user-interface-case-alist-value
+                       'key
+                       loop-engine-intent)
+                      '(flow . loop-engine))
+        (check-equal? (poo-flow-user-interface-case-alist-value
+                       'workflow-owned?
+                       loop-engine-intent)
+                      #t)
+        (check-equal? (poo-flow-user-interface-case-alist-value
+                       'runtime-handoff
+                       loop-engine-intent)
+                      'loop-governor-marlin-runtime-manifest)
+        (check-equal? (poo-flow-user-interface-case-alist-value
+                       'runtime-executed
+                       loop-engine-intent)
                       #f)))
     (test-case "exposes trace observability for the maintained case"
       (let* ((case-object (root-developer-case))

@@ -2,7 +2,18 @@
 ;;; Boundary: core cases exercise the thin declarative user-interface surface.
 ;;; These checks intentionally stop before sandbox realization or runtime work.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
         (only-in :poo-flow/user-interface/init
@@ -20,6 +31,8 @@
   (pooFlowUserConfigFromProfile root-poo-flow-user-profile))
 
 ;; : (-> Unit TestSuite)
+;;; This suite guards the core user config case as the minimal declarative
+;;; surface exposed to downstream users.
 (def user-interface-config-core-case-test
   (test-suite "poo-flow user interface core config"
     (test-case "keeps user practice config thin and inspectable"

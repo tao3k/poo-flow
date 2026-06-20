@@ -113,6 +113,64 @@ POO/C3 matters because a concrete pattern often mixes several of these roles:
 #+end_src
 
 The descriptor composition order becomes reviewable policy. For example, =loop-safety-role= and =loop-budget-role= must be later inspected as hard gates before =loop-maker-role= can request a write-capable runtime.
+
+** 10.06.07.65 POO Object Graph Fact Layer
+The loop layer should be understood as a configurable engineering surface over
+the =poo-flow= POO object graph, not as a scheduler, not as a source-text
+editing protocol, and not as a replacement for the configuration layer.
+
+The fact graph is composed from several POO object families:
+- root/user config objects declare validated configuration rows that agents may
+  safely modify through checked interfaces;
+- user/profile objects declare selected modules, features, and settings;
+- module objects declare extension boundaries and validation contracts;
+- workflow objects declare task composition, strategies, and receipts;
+- sandbox objects declare capabilities, mounts, resources, and backend intent;
+- loop pattern descriptors declare recurring agent control policy;
+- loop strategy plans select and order loop patterns under configured policy;
+- loop governor objects project multi-loop and multi-agent governance facts;
+- human audit loop objects project true human review, approval, escalation, and
+  sign-off state over the composed facts.
+
+For an agent, this is the important interface. The agent should inspect composed
+facts such as:
+- active modules and feature facts;
+- selected sandbox profile and filesystem mounts;
+- loop autonomy ceiling;
+- actionable loop patterns;
+- human gates;
+- agent auditor, verifier, and governor judgement policy;
+- local validation mode;
+- budget and denylist constraints;
+- runtime handoff target and contract schema.
+
+This gives =poo-flow= a stronger design than a fixed loop runner. A loop can be
+configured by composing POO roles, then projected into a handoff contract. The
+runtime may allocate timers, worktrees, connectors, and processes, but Scheme
+owns the policy object graph and its audit-friendly receipts.
+
+The configuration layer remains separate. =user-interface/init.ss= is a compact
+validated config surface for humans and agents. It is not the human projection
+layer. Human projection belongs to a human audit loop that reviews proposed
+configuration changes, profile facts, loop plans, sandbox deltas, manifests,
+and receipts before approval or escalation.
+
+The governor/human boundary separates decision responsibility, not POO
+lineage. =loop-governor= is the place for agent-side governance: an agent can
+act as auditor, another as verifier, and a third as governor, with mutual
+judgement recorded as policy facts. =human-audit= is a governor-derived human
+node where a real human enters the loop and records an approval, rejection,
+escalation, or requested change.
+
+This should be modeled as POO nodes rather than only as nested alists. The
+governor layer owns:
+- =loop-governor-node-role= for common governance participants;
+- =loop-governor-agent-node-role= for machine auditor/verifier/governor
+  participants;
+- =loop-governor-human-node-role= for human intervention points;
+- node contract projection so Marlin and doctor reports can inspect the graph
+  without parsing symbols.
+
 ** 10.06.07.70 Proposed Run Protocol
 The loop run protocol should be explicit data that can be described and validated by Scheme, then executed by =marlin-agent-core=:
 
@@ -134,9 +192,15 @@ The multi-loop problem should be a first-class descriptor bundle:
 - the governor reads all loop states before scheduling action;
 - static priority is a descriptor slot, not a hard-coded special case;
 - human inbox is a shared state projection;
+- agent judges are explicit policy facts for auditor/verifier/governor splits;
 - budget is aggregate across loops, not only per-pattern.
 
 C3 can compose default priority policies with repository-specific overrides. Runtime readiness still depends on current state, branch ownership, and budget counters, so the governor remains a policy interpreter rather than an inheritance algorithm. C4 can later strengthen this layer where suffix-preserving descriptor families matter.
+
+The governor can coordinate multiple agents and let agents judge each other.
+The human decision boundary is a separate =human-audit= object, but that object
+still inherits from the governor chain through POO/C3 and marks itself as a
+human node.
 ** 10.06.07.90 Rust Boundary
 The heavy implementation should stay outside Scheme and land in =marlin-agent-core= when it is operational:
 
@@ -172,8 +236,13 @@ The first two milestones are now represented in code:
 - =src/loops/descriptor.ss= defines =loop-pattern-descriptor= as POO/C3-composed policy data.
 - =src/loops/strategy.ss= defines =loop-strategy-plan= as a policy-selection layer over many loop patterns.
 - =src/loops/governor.ss= defines =loop-governor= as a multi-loop policy projection over strategy plans and supplied state facts.
+- =src/loops/governor.ss= also defines governor node roles and projects
+  =agent-judge-nodes= for multi-agent auditor/verifier/governor judgement.
+- =src/loops/human-audit.ss= defines =loop-human-audit= as a governor-derived human intervention node over governor facts and explicit decisions.
+- =user-interface/init.ss= can now configure =loop-engine= under =:workflow=,
+  producing report-only =loop-engine-intents= from the workflow surface.
 - =src/loops/agent.ss= is the public loop facade and exports descriptors plus strategy plans.
-- =t/loop-agent-descriptor-test.ss=, =t/loop-strategy-test.ss=, and =t/loop-governor-test.ss= cover the contract surface.
+- =t/loop-agent-descriptor-test.ss=, =t/loop-strategy-test.ss=, =t/loop-governor-test.ss=, and =t/loop-human-audit-test.ss= cover the contract surface.
 The strategy plan is intentionally not a runner. It performs these Scheme-owned steps:
 1. validate loop descriptors;
 2. filter descriptors by autonomy ceiling;
@@ -187,11 +256,24 @@ Local behavior in this repository is limited to:
   (allow-effects . #f))
 #+end_src
 That gives this repository enough executable surface for tests, stability checks, and performance probes without pretending to own timers, worktrees, connector IO, or production execution.
+
+The human audit layer is intentionally separate from =user-interface/init.ss=:
+- init/config rows remain validated configuration that agents may safely modify through checked interfaces;
+- human review items are projected from composed loop/governor facts;
+- =audit-node= projects the human audit object through the common governor node
+  contract;
+- human decisions are recorded as audit loop data such as =approved=, =rejected=, =escalated=, or =changes-requested=;
+- no audit contract mutates config, writes state, schedules work, or executes runtime effects.
+- audit roles inherit from the governor chain through POO/C3, then distinguish
+  human intervention with =governance-node-kind = human= and
+  =human-intervention = #t=.
+
 ** 10.06.07.120 Next Slice
 The next useful slice is not a scheduler. It is a small =loop-governor= policy descriptor that composes:
 - a static priority table;
 - a shared denylist;
 - an aggregate budget envelope;
+- agent judge policy for auditor/verifier/governor splits;
 - a state-key convention for =acting_on= collision checks;
 - a human inbox projection.
 The governor should still lower to data. The runtime owner for polling, locking, persistence, and concurrent execution remains =marlin-agent-core=.

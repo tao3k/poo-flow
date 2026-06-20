@@ -95,7 +95,8 @@
 (def (poo-flow-module-object-kind? value kind)
   (and (object? value) (equal? (.ref value 'kind) kind)))
 
-;; : (-> Value Boolean)
+;; | PooModuleAlistCandidate = (U Null Pair)
+;; : (-> PooModuleAlistCandidate Boolean)
 (def (poo-flow-module-alist? value)
   (cond ((null? value) #t)
         ((and (pair? value) (pair? (car value)))
@@ -246,6 +247,8 @@
     (error "poo-flow module field contribution violates its POO contract"
            contribution)))
 
+;;; Field contribution projection is a map because validation happens at each
+;;; contribution boundary before the generic extension graph sees operations.
 ;; : (-> [PooModuleFieldContribution] [PooModuleExtensionContribution])
 (def (poo-flow-module-field-contributions->extensions contributions)
   (map poo-flow-module-field-contribution->extension contributions))
@@ -488,6 +491,8 @@
 (def (poo-flow-module-object-constant-slot key value)
   (cons key ($constant-slot-spec value)))
 
+;;; Field slots are computed from the superclass chain, letting child objects
+;;; override or add fields without duplicating inherited object metadata.
 ;; : (-> [PooModuleFieldContract] PooModuleObjectSlotSpec)
 (def (poo-flow-module-object-fields-slot fields)
   (cons 'fields
@@ -512,13 +517,14 @@
            (cons (car fields)
                  (poo-flow-module-object-field-set (cdr fields) field))))))
 
+;;; Field merging folds extra contracts through field-set so replacement keeps
+;;; the same identity rule as object inheritance, without duplicating lookup.
 ;; : (-> [PooModuleFieldContract] [PooModuleFieldContract] [PooModuleFieldContract])
 (def (poo-flow-module-object-fields-merge base extra)
-  (cond ((null? extra) base)
-        (else
-         (poo-flow-module-object-fields-merge
-          (poo-flow-module-object-field-set base (car extra))
-          (cdr extra)))))
+  (foldl (lambda (field fields)
+           (poo-flow-module-object-field-set fields field))
+         base
+         extra))
 
 ;; : (-> [PooModuleObject] [PooModuleFieldContract])
 (def (poo-flow-module-object-inherited-fields inherits)
@@ -543,13 +549,15 @@
 ;;       ```
 ;;     %
 (def (poo-flow-module-object-field object identity)
-  (let field-ref ((fields (poo-flow-module-object-resolved-fields object)))
-    (cond ((null? fields) #f)
-          ((equal? (poo-flow-module-object-field-identity (car fields))
-                   identity)
-           (car fields))
-          (else (field-ref (cdr fields))))))
+  (let (matches
+        (filter (lambda (field)
+                  (equal? (poo-flow-module-object-field-identity field)
+                          identity))
+                (poo-flow-module-object-resolved-fields object)))
+    (if (null? matches) #f (car matches))))
 
+;;; Default slot materialization maps field contracts to slot values; override
+;;; rows only merge after every field identity has a contract-owned default.
 ;; : (-> PooModuleObject PooModuleSlotMap)
 (def (poo-flow-module-object-default-slots object)
   (map (lambda (field)
@@ -567,13 +575,14 @@
                      key
                      value)))))
 
+;;; Slot merging folds object rows through the alist setter, preserving the
+;;; first declaration order while allowing later rows to override by key.
 ;; : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
 (def (poo-flow-module-object-slots-merge base extra)
-  (cond ((null? extra) base)
-        (else
-         (poo-flow-module-object-slots-merge
-          (poo-flow-module-object-alist-set base (caar extra) (cdar extra))
-          (cdr extra)))))
+  (foldl (lambda (entry slots)
+           (poo-flow-module-object-alist-set slots (car entry) (cdr entry)))
+         base
+         extra))
 
 ;;; Object nodes are extension nodes seeded with field defaults; downstream
 ;;; contributions only need to provide changed slots.
@@ -598,6 +607,8 @@
              (poo-flow-module-object-identity object)
              (car entry)))))
 
+;;; Object contribution mapping preserves one field-contract lookup per user
+;;; row, keeping unknown fields as validation failures instead of silent slots.
 ;; : (-> PooModuleObject PooModuleObjectContributionEntries [PooModuleFieldContribution])
 (def (poo-flow-module-object-contributions object entries)
   (map (lambda (entry)

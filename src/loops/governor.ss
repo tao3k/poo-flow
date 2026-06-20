@@ -9,20 +9,40 @@
         :poo-flow/src/loops/strategy)
 
 (export +loop-governor-schema+
+        +loop-governor-node-schema+
         +loop-governor-default-state-key+
         +loop-governor-default-collision-policy+
         +loop-governor-default-aggregate-budget+
+        +loop-governor-default-agent-judges+
         +loop-governor-default-human-inbox+
         +loop-governor-default-handoff+
         loop-governor-role
+        loop-governor-node-role
+        loop-governor-agent-node-role
+        loop-governor-human-node-role
         loop-governor-priority-role
         loop-governor-state-role
         loop-governor-budget-role
         loop-governor-collision-role
+        loop-governor-agent-judge-role
         loop-governor-inbox-role
         loop-governor-handoff-role
+        loop-governor-node-prototype
+        make-loop-governor-agent-node
+        make-loop-governor-human-node
         loop-governor-prototype
         make-loop-governor
+        loop-governor-node?
+        loop-governor-node-slot
+        loop-governor-node-name
+        loop-governor-node-kind
+        loop-governor-node-responsibility
+        loop-governor-node-human-intervention?
+        loop-governor-node-control-owner
+        loop-governor-node-execution-owner
+        loop-governor-node-metadata
+        loop-governor-node->contract
+        loop-governor-node-contracts
         loop-governor?
         loop-governor-slot
         loop-governor-name
@@ -32,6 +52,8 @@
         loop-governor-aggregate-budget
         loop-governor-state-key
         loop-governor-collision-policy
+        loop-governor-agent-judges
+        loop-governor-agent-judge-nodes
         loop-governor-human-inbox
         loop-governor-handoff
         loop-governor-control-owner
@@ -57,6 +79,11 @@
 ;; : (-> Unit LoopGovernorSchema)
 (def +loop-governor-schema+ 'poo-flow.loop-governor.v1)
 
+;;; Node schema names one participant in the governor chain.
+;;; Agent and human nodes share the same projection surface.
+;; : (-> Unit LoopGovernorNodeSchema)
+(def +loop-governor-node-schema+ 'poo-flow.loop-governor.node.v1)
+
 ;;; The state-key default names the runtime field that Marlin should persist
 ;;; before an action loop mutates a branch, ticket, file set, or connector item.
 ;; : (-> Unit Alist)
@@ -78,6 +105,17 @@
 (def +loop-governor-default-aggregate-budget+
   '((max-actionable . 1)
     (max-attempts . 1)))
+
+;;; Agent judges describe governor-side review among agents. This is not human
+;;; approval; a separate human audit loop owns real human intervention.
+;; : (-> Unit Alist)
+(def +loop-governor-default-agent-judges+
+  '((mode . multi-agent-governance)
+    (judge-mode . mutual-review)
+    (human-intervention . #f)
+    (participants . ((auditor . agent-auditor)
+                     (verifier . agent-verifier)
+                     (governor . loop-governor)))))
 
 ;;; Human inbox is a projection channel for blocked or escalated loop facts.
 ;;; It is not a notification transport and does not contact users.
@@ -104,6 +142,37 @@
       (responsibility 'multi-loop-governance)
       (runtime-owner 'gerbil)
       (loop-capability 'governor-contract-projection)))
+
+;;; Boundary: governance nodes are POO participants in the governor chain.
+;;; They may be agent nodes or human nodes, but they share contract shape.
+;; : (-> Unit Role)
+(def loop-governor-node-role
+  (.o (:: @ loop-governor-role)
+      (name 'loop-governor-node)
+      (kind 'loop-control)
+      (responsibility 'governance-chain-node)
+      (loop-capability 'governance-node)
+      (loop-policy-slot 'governance-node)))
+
+;;; Boundary: agent nodes are machine judges such as auditor or verifier.
+;; : (-> Unit Role)
+(def loop-governor-agent-node-role
+  (.o (:: @ loop-governor-node-role)
+      (name 'loop-governor-agent-node)
+      (kind 'loop-policy)
+      (responsibility 'agent-governance-node)
+      (governance-node-kind 'agent)
+      (human-intervention #f)))
+
+;;; Boundary: human nodes keep governor lineage while marking human authority.
+;; : (-> Unit Role)
+(def loop-governor-human-node-role
+  (.o (:: @ loop-governor-node-role)
+      (name 'loop-governor-human-node)
+      (kind 'loop-control)
+      (responsibility 'human-governance-node)
+      (governance-node-kind 'human)
+      (human-intervention #t)))
 
 ;;; Boundary: priority stays a role so repository policy can override default
 ;;; ordering without changing descriptor or strategy constructors.
@@ -145,6 +214,16 @@
       (responsibility 'acting-on-collision-policy)
       (loop-policy-slot 'collision-policy)))
 
+;;; Boundary: agent judges are governor facts for multi-agent review.
+;;; Human approval remains owned by the separate human audit loop.
+;; : (-> Unit Role)
+(def loop-governor-agent-judge-role
+  (.o (:: @ loop-governor-role)
+      (name 'loop-governor-agent-judge)
+      (kind 'loop-policy)
+      (responsibility 'multi-agent-judgement-policy)
+      (loop-policy-slot 'agent-judges)))
+
 ;;; Boundary: inbox projection explains blocked work to humans as data.
 ;;; Delivery and acknowledgement remain outside the Scheme control plane.
 ;; : (-> Unit Role)
@@ -165,6 +244,56 @@
       (responsibility 'marlin-governor-contract)
       (loop-policy-slot 'handoff)))
 
+;;; Governance node prototype keeps participants in the POO graph instead of
+;;; flattening auditor/verifier/governor roles into ad hoc symbols.
+;; : (-> Unit LoopGovernorNodePrototype)
+(def loop-governor-node-prototype
+  (.mix slots: (role-constant-slots
+                (list (cons 'node-schema +loop-governor-node-schema+)
+                      (cons 'kind 'loop-governance-node)
+                      (cons 'name #f)
+                      (cons 'governance-node-kind 'agent)
+                      (cons 'governance-responsibility 'judge)
+                      (cons 'human-intervention #f)
+                      (cons 'control-owner 'gerbil)
+                      (cons 'execution-owner 'marlin-agent-core)
+                      (cons 'metadata '())))
+        loop-governor-node-role))
+
+;;; Agent governor nodes model machine-side judges such as auditor/verifier.
+;; : (-> Symbol Symbol [Alist] LoopGovernorNode)
+(def (make-loop-governor-agent-node name responsibility . maybe-overrides)
+  (.mix slots: (role-constant-slots
+                (append
+                 (list (cons 'name name)
+                       (cons 'governance-node-kind 'agent)
+                       (cons 'governance-responsibility responsibility)
+                       (cons 'human-intervention #f))
+                 (if (null? maybe-overrides) '() (car maybe-overrides))))
+        loop-governor-agent-node-role
+        loop-governor-node-prototype))
+
+;;; Human governor nodes retain governor lineage while marking human authority.
+;; : (-> Symbol Symbol [Alist] LoopGovernorNode)
+(def (make-loop-governor-human-node name responsibility . maybe-overrides)
+  (.mix slots: (role-constant-slots
+                (append
+                 (list (cons 'name name)
+                       (cons 'governance-node-kind 'human)
+                       (cons 'governance-responsibility responsibility)
+                       (cons 'human-intervention #t))
+                 (if (null? maybe-overrides) '() (car maybe-overrides))))
+        loop-governor-human-node-role
+        loop-governor-node-prototype))
+
+;;; Default agent judges are POO nodes so downstream contracts can inspect
+;;; the judge graph without parsing symbols from the aggregate policy alist.
+;; : (-> Unit [LoopGovernorNode])
+(def (loop-governor-default-agent-judge-nodes)
+  (list (make-loop-governor-agent-node 'agent-auditor 'audit)
+        (make-loop-governor-agent-node 'agent-verifier 'verify)
+        (make-loop-governor-agent-node 'loop-governor 'govern)))
+
 ;;; Governor prototype composes only policy roles and inert default slots.
 ;;; No slot stores runtime handles, timers, locks, or connector clients.
 ;; : (-> Unit LoopGovernorPrototype)
@@ -179,6 +308,9 @@
                       (cons 'aggregate-budget +loop-governor-default-aggregate-budget+)
                       (cons 'state-key +loop-governor-default-state-key+)
                       (cons 'collision-policy +loop-governor-default-collision-policy+)
+                      (cons 'agent-judges +loop-governor-default-agent-judges+)
+                      (cons 'agent-judge-nodes
+                            (loop-governor-default-agent-judge-nodes))
                       (cons 'human-inbox +loop-governor-default-human-inbox+)
                       (cons 'handoff +loop-governor-default-handoff+)
                       (cons 'control-owner 'gerbil)
@@ -186,6 +318,7 @@
                       (cons 'metadata '())))
         loop-governor-handoff-role
         loop-governor-inbox-role
+        loop-governor-agent-judge-role
         loop-governor-collision-role
         loop-governor-budget-role
         loop-governor-state-role
@@ -214,6 +347,69 @@
 ;; : (-> LoopGovernor Symbol LoopGovernorSlotValue LoopGovernorSlotValue)
 (def (loop-governor-slot governor slot default)
   (role-slot/default governor slot default))
+
+;; : (-> LoopGovernorNodeCandidate Boolean)
+(def (loop-governor-node? node)
+  (and (object? node)
+       (loop-governor-node-kind node)
+       #t))
+
+;; : (-> LoopGovernorNode Symbol Value Value)
+(def (loop-governor-node-slot node slot default)
+  (role-slot/default node slot default))
+
+;; : (-> LoopGovernorNode Symbol)
+(def (loop-governor-node-name node)
+  (loop-governor-node-slot node 'name #f))
+
+;; : (-> LoopGovernorNode Symbol)
+(def (loop-governor-node-kind node)
+  (loop-governor-node-slot node 'governance-node-kind #f))
+
+;; : (-> LoopGovernorNode Symbol)
+(def (loop-governor-node-responsibility node)
+  (let (specific
+        (loop-governor-node-slot node 'governance-responsibility #f))
+    (if specific
+      specific
+      (loop-governor-node-slot node 'responsibility #f))))
+
+;; : (-> LoopGovernorNode Boolean)
+(def (loop-governor-node-human-intervention? node)
+  (loop-governor-node-slot node 'human-intervention #f))
+
+;; : (-> LoopGovernorNode Symbol)
+(def (loop-governor-node-control-owner node)
+  (loop-governor-node-slot node 'control-owner #f))
+
+;; : (-> LoopGovernorNode Symbol)
+(def (loop-governor-node-execution-owner node)
+  (loop-governor-node-slot node 'execution-owner #f))
+
+;; : (-> LoopGovernorNode Alist)
+(def (loop-governor-node-metadata node)
+  (loop-governor-node-slot node 'metadata '()))
+
+;;; Node contracts are the common projection for agent judges and human nodes.
+;; : (-> LoopGovernorNode Alist)
+(def (loop-governor-node->contract node)
+  (list (cons 'schema +loop-governor-node-schema+)
+        (cons 'kind 'loop-governance-node)
+        (cons 'name (loop-governor-node-name node))
+        (cons 'governance-node-kind (loop-governor-node-kind node))
+        (cons 'governance-responsibility
+              (loop-governor-node-responsibility node))
+        (cons 'human-intervention
+              (loop-governor-node-human-intervention? node))
+        (cons 'control-owner (loop-governor-node-control-owner node))
+        (cons 'execution-owner (loop-governor-node-execution-owner node))
+        (cons 'metadata (loop-governor-node-metadata node))))
+
+;;; Node contract projection is a map over validated governance nodes, keeping
+;;; review/report consumers independent from the internal role object shape.
+;; : (-> [LoopGovernorNode] [Alist])
+(def (loop-governor-node-contracts nodes)
+  (map loop-governor-node->contract nodes))
 
 ;;; Governor alist lookup is local because state facts and policy slots share
 ;;; the same simple alist shape but stay semantically separate.
@@ -250,6 +446,14 @@
 ;; : (-> LoopGovernor Alist)
 (def (loop-governor-collision-policy governor)
   (loop-governor-slot governor 'collision-policy '()))
+
+;; : (-> LoopGovernor Alist)
+(def (loop-governor-agent-judges governor)
+  (loop-governor-slot governor 'agent-judges '()))
+
+;; : (-> LoopGovernor [LoopGovernorNode])
+(def (loop-governor-agent-judge-nodes governor)
+  (loop-governor-slot governor 'agent-judge-nodes '()))
 
 ;; : (-> LoopGovernor Alist)
 (def (loop-governor-human-inbox governor)
@@ -425,6 +629,18 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;; : (-> [Value] [ValidationError])
+(def (loop-governor-node-list-validation-errors nodes)
+  (cond
+   ((null? nodes) '())
+   ((loop-governor-node? (car nodes))
+    (loop-governor-node-list-validation-errors (cdr nodes)))
+   (else
+    (cons (list (cons 'field 'agent-judge-nodes)
+                (cons 'code 'not-loop-governor-node)
+                (cons 'value (car nodes)))
+          (loop-governor-node-list-validation-errors (cdr nodes))))))
+
 ;;; Validation folds strategy-plan errors under the governor boundary.
 ;;; Runtime state remains outside validation because it changes per handoff.
 ;; : (-> LoopGovernor [ValidationError])
@@ -452,7 +668,18 @@
        '()
        (list (list (cons 'field 'aggregate-budget)
                    (cons 'code 'max-actionable-not-integer)
-                   (cons 'value (loop-governor-budget-limit governor))))))
+                   (cons 'value (loop-governor-budget-limit governor)))))
+     (if (list? (loop-governor-agent-judges governor))
+       '()
+       (list (list (cons 'field 'agent-judges)
+                   (cons 'code 'not-list)
+                   (cons 'value (loop-governor-agent-judges governor)))))
+     (if (list? (loop-governor-agent-judge-nodes governor))
+       (loop-governor-node-list-validation-errors
+        (loop-governor-agent-judge-nodes governor))
+       (list (list (cons 'field 'agent-judge-nodes)
+                   (cons 'code 'not-list)
+                   (cons 'value (loop-governor-agent-judge-nodes governor))))))
     (list '((field . governor) (code . not-loop-governor)))))
 
 ;;; Validation is the only gate before governor contracts leave Scheme.
@@ -494,6 +721,11 @@
                 (loop-governor-collision-policy valid-governor))
           (cons 'aggregate-budget
                 (loop-governor-aggregate-budget valid-governor))
+          (cons 'agent-judges
+                (loop-governor-agent-judges valid-governor))
+          (cons 'agent-judge-nodes
+                (loop-governor-node-contracts
+                 (loop-governor-agent-judge-nodes valid-governor)))
           (cons 'shared-denylist
                 (loop-governor-shared-denylist valid-governor))
           (cons 'open-patterns
@@ -508,6 +740,8 @@
           (cons 'handoff (loop-governor-handoff valid-governor))
           (cons 'runtime-boundary
                 '((local-execution . validation-only)
+                  (agent-governance . loop-governor)
+                  (human-intervention . human-audit-loop)
                   (production-execution . marlin-agent-core)))
           (cons 'control-owner
                 (loop-governor-control-owner valid-governor))

@@ -56,11 +56,11 @@
     (car entries))
    (else (alignment-test-entry-by-runtime-owner owner (cdr entries)))))
 
-;;; Boundary: this suite is the public receipt for Funflow tutorial alignment.
-;;; Keep report-shape, source indexes, and runtime-gap assertions together so
-;;; Stage 22 fails in one owner when the POO report contract drifts.
-(def funflow-tutorial-alignment-report-test
-  (test-suite "funflow tutorial alignment report"
+;;; Boundary: this suite checks the top-level Funflow report contract and CI
+;;; receipt manifest without mixing in source-index details.
+;; : TestSuite
+(def funflow-tutorial-alignment-report-shape-test
+  (test-suite "funflow tutorial alignment report shape"
     (test-case "projects audited upstream tutorial coverage as a POO report"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
              (spec-snapshots (.ref report 'specs))
@@ -146,7 +146,13 @@
                                 (alignment-test-alist-ref ci-receipt-manifest
                                                           'commands))))
                       #t)
-        (check-equal? (.ref report 'runtime-executed) #f)))
+        (check-equal? (.ref report 'runtime-executed) #f)))))
+
+;;; Runtime-heavy tutorial gaps remain explicit so Scheme control-plane tests do
+;;; not pretend Docker, Tensorflow, C compilation, or Make are executed here.
+;; : TestSuite
+(def funflow-tutorial-alignment-runtime-gap-test
+  (test-suite "funflow tutorial alignment runtime gaps"
     (test-case "keeps runtime-heavy tutorial gaps explicit"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
              (specs (poo-flow-funflow-tutorial-alignment-specs))
@@ -177,7 +183,13 @@
                        (not
                         (member 'real-hello-binary-output
                                 (.ref makefile 'deferred))))
-                      #t)))
+                      #t)))))
+
+;;; Source and runtime-owner indexes are tested separately because they are the
+;;; lookup surface downstream diagnostics use.
+;; : TestSuite
+(def funflow-tutorial-alignment-index-test
+  (test-suite "funflow tutorial alignment indexes"
     (test-case "indexes upstream sources and runtime-owned gaps"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
              (source-index (.ref report 'source-index))
@@ -280,7 +292,13 @@
                                                           'deferred))))
                       #t)
         (check-equal? (alignment-test-alist-ref makefile 'status)
-                      'runtime-manifest-covered)))
+                      'runtime-manifest-covered)))))
+
+;;; Result-covered tutorial proof receipts stay in their own owner so changes in
+;;; proof payloads do not obscure index or gate failures.
+;; : TestSuite
+(def funflow-tutorial-alignment-proof-test
+  (test-suite "funflow tutorial alignment proofs"
     (test-case "keeps proof receipts attached to result-covered tutorial specs"
       (let* ((specs (poo-flow-funflow-tutorial-alignment-specs))
              (tutorial1 (alignment-test-spec-by-id 'tutorial1 specs))
@@ -302,7 +320,13 @@
                        (not
                         (member 'real-docker-echo-output
                                 (.ref external-config 'deferred))))
-                      #t)))
+                      #t)))))
+
+;;; Late-stage gate metadata is the Stage 22 closure receipt; keep it isolated
+;;; from tutorial source coverage assertions.
+;; : TestSuite
+(def funflow-tutorial-alignment-gate-test
+  (test-suite "funflow tutorial alignment gates"
     (test-case "keeps late-stage proof gates visible in report metadata"
       (let* ((report (poo-flow-funflow-tutorial-alignment-report))
              (gate-ids (.ref report 'gate-ids))
@@ -354,4 +378,19 @@
         (check-equal? (alignment-test-alist-ref stage22 'proofs)
                       '("gxtest t/funflow-tutorial-alignment-report-test.ss: funflow tutorial alignment report"))))))
 
-(run-tests! funflow-tutorial-alignment-report-test)
+;;; Aggregate export preserves the historical test symbol while keeping parser
+;;; owner spans small enough for R007.
+;; : TestSuite
+(def funflow-tutorial-alignment-report-test
+  (test-suite "funflow tutorial alignment report"
+    funflow-tutorial-alignment-report-shape-test
+    funflow-tutorial-alignment-runtime-gap-test
+    funflow-tutorial-alignment-index-test
+    funflow-tutorial-alignment-proof-test
+    funflow-tutorial-alignment-gate-test))
+
+(run-tests! funflow-tutorial-alignment-report-shape-test
+            funflow-tutorial-alignment-runtime-gap-test
+            funflow-tutorial-alignment-index-test
+            funflow-tutorial-alignment-proof-test
+            funflow-tutorial-alignment-gate-test)

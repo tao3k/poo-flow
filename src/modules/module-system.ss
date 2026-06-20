@@ -15,7 +15,7 @@
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/user-config
         :poo-flow/src/modules/user-config-syntax
-        :poo-flow/src/modules/user-interface/config
+        :poo-flow/src/modules/modules-system/user-profile
         :poo-flow/src/modules/user-interface-case
         :poo-flow/src/modules/extension
         :poo-flow/src/modules/object-core
@@ -38,7 +38,7 @@
         (import: :poo-flow/src/modules/agent-sandbox/config)
         (import: :poo-flow/src/modules/user-config)
         (import: :poo-flow/src/modules/user-config-syntax)
-        (import: :poo-flow/src/modules/user-interface/config)
+        (import: :poo-flow/src/modules/modules-system/user-profile)
         (import: :poo-flow/src/modules/user-interface-case)
         (import: :poo-flow/src/modules/extension)
         (import: :poo-flow/src/modules/object-core)

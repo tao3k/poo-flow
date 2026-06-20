@@ -40,6 +40,7 @@
         :poo-flow/t/tutorial-runtime-result-test
         :poo-flow/t/tutorial-result-test
         :poo-flow/t/user-interface-config-test
+        :poo-flow/t/user-interface-custom-loop-engine-test
         :poo-flow/t/user-interface-live-cicd-case-test
         :poo-flow/t/user-interface-cicd-test
         :poo-flow/t/user-interface-case-test

@@ -2,7 +2,18 @@
 ;;; Boundary: generic module extension tests keep POO fixed-point semantics out
 ;;; of feature-specific workflow code.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/module-system
         :poo-flow/src/modules/object-core
         :poo-flow/src/modules/objects
@@ -16,8 +27,10 @@
   (let (entry (assoc slot-name (poo-flow-module-extension-node-slots node)))
     (if entry (cdr entry) #f)))
 
+;;; This suite locks extension composition behavior for user-authored modules
+;;; without introducing a second module-system surface.
 ;; : TestSuite
-(def module-extension-test
+(def module-extension-fixed-point-test
   (test-suite "poo-flow module extension fixed point"
     (test-case "applies slot and child-node operations to a stable object graph"
       (let* ((build-node
@@ -133,8 +146,13 @@
         (check-equal? (slot-value resolved-root 'needs) '(test lint))
         (check-equal? (slot-value resolved-root 'features) '(sandbox ci))
         (check-equal? (slot-value resolved-root 'run)
-                      "gxi build.ss --optimized")))
+                      "gxi build.ss --optimized")))))
 
+;;; This suite keeps object inheritance and C3 precedence separate from the
+;;; slot-level fixed-point tests above.
+;; : TestSuite
+(def module-extension-object-inheritance-test
+  (test-suite "poo-flow module object inheritance"
     (test-case "inherits shared sandbox module objects for nono and cube"
       (let* ((shared-sandbox-object
               (poo-flow-module-object
@@ -269,8 +287,13 @@
                       'right-only)
         (check-equal? (poo-flow-module-field-contract-default
                        (poo-flow-module-object-field child-object 'root-only))
-                      'root-only)))
+                      'root-only)))))
 
+;;; This suite keeps inconsistent graph handling and real object namespace
+;;; merging apart from the inheritance examples.
+;; : TestSuite
+(def module-extension-object-merge-test
+  (test-suite "poo-flow module object merge"
     (test-case "rejects inconsistent gerbil-poo C3 module object graphs"
       (let* ((root-object
               (poo-flow-module-object
@@ -362,4 +385,15 @@
         (check-equal? (slot-value resolved-cube 'flags) '(doctor cube))
         (check-equal? (slot-value resolved-cube 'profile) 'strict)))))
 
-(run-tests! module-extension-test)
+;;; Aggregate export preserves the historical module-extension-test symbol while
+;;; the parser sees smaller suite owners.
+;; : TestSuite
+(def module-extension-test
+  (test-suite "poo-flow module extension"
+    module-extension-fixed-point-test
+    module-extension-object-inheritance-test
+    module-extension-object-merge-test))
+
+(run-tests! module-extension-fixed-point-test
+            module-extension-object-inheritance-test
+            module-extension-object-merge-test)

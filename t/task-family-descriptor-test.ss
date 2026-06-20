@@ -1,10 +1,24 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: task-family descriptor tests stay separate from flow execution.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/workflow/store)
 
+;;; This suite keeps task-family routing policy executable without invoking
+;;; runtime adapters, so descriptor regressions fail at the control-plane edge.
+;; : TestSuite
 (def task-family-descriptor-test
   (test-suite "task family descriptors"
     (test-case "declares POO-backed task family policy"

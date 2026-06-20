@@ -26,7 +26,9 @@
    '((filesystem . snapshot)
      (isolation . kvm)
      (api . e2b-compatible))
-   '((filesystem . snapshot)
+   '((filesystem
+      (scope . snapshot)
+      (snapshot . clone))
      (snapshot . clone)
      (resume . supported))
    (lambda (profile-ref)

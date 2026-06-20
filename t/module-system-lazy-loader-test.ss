@@ -2,18 +2,34 @@
 ;;; Boundary: lazy loader tests cover deferred source loading only.
 ;;; Invariant: lazy plans never call loader handlers until explicitly forced.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/module-system)
 
 (export module-system-lazy-loader-test)
 
+;;; Source reference fixture names the standard-library module without touching
+;;; filesystem-backed module loading.
 ;; : (-> Unit PooModuleSourceRef)
 (def loader-standard-library-source
   (poo-flow-standard-library-source 'standard/kernel))
 
+;;; Mutable call count is scoped to this owner to prove deferred loading without
+;;; reaching into loader internals.
 ;; : (-> Unit Integer)
 (def lazy-loader-call-count 0)
 
+;;; Module fixture is inert descriptor data used by the test loader backend.
 ;; : (-> Unit PooModuleDescriptor)
 (def loader-standard-library-module
   (make-empty-poo-flow-module-descriptor
@@ -21,6 +37,8 @@
    '()
    '((standard-library . #t))))
 
+;;; Loader backend fixture records calls and returns only the known standard
+;;; library module source.
 ;; : (-> Unit PooModuleLoaderBackend)
 (def user-standard-library-loader
   (make-poo-flow-module-loader-backend
@@ -33,6 +51,8 @@
        #f))
    '((library . standard))))
 
+;;; Plan predicate keeps assertions about deferred receipts compact and local to
+;;; the lazy-loader policy owner.
 ;; : (-> [PooFlowLazyLoadPlan] Boolean)
 (def (lazy-loader-plans-deferred? plans)
   (cond
@@ -44,7 +64,9 @@
     (lazy-loader-plans-deferred? (cdr plans)))
    (else #f)))
 
-;; : (-> Unit TestSuite)
+;;; This suite keeps lazy-loader planning observable without forcing modules to
+;;; load eagerly during configuration parsing.
+;; : TestSuite
 (def module-system-lazy-loader-test
   (test-suite "poo-flow module system lazy loader"
     (test-case "defers standard-library module loading until forced"

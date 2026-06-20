@@ -3,7 +3,18 @@
 ;;; Invariant: leaf owner names must not become part of the user contract.
 ;;; Intent: this file protects the surface that module authors actually call.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/modules/module-system)
 
@@ -145,6 +156,8 @@
   (not (not (member value values))))
 
 ;; : (-> Unit TestSuite)
+;;; This suite guards the compact user-facing module syntax from depending on
+;;; internal loader or registry owners.
 (def module-system-user-interface-test
   (test-suite "poo-flow module system user interface"
     (test-case "declares modules through the public facade only"

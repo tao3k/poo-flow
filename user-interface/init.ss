@@ -2,7 +2,7 @@
 ;;; Boundary: user-owned POO Flow init entrypoint.
 ;;; Invariant: this file lists enabled modules only; projections live upstream.
 
-(import :poo-flow/src/modules/user-interface/config)
+(import :poo-flow/src/modules/modules-system/user-profile)
 
 ;;; Doom-style init shape: module categories and optional feature patches only.
 ;;; Profile binding, settings, projection, package sync, export wiring, and
@@ -16,6 +16,14 @@
    (release +manual-gate)
    (webhook +server)
    (runtime +manifest-handoff)))
+ (loop-engine
+  (+governor +strategy +policy)
+  (+agent-judges
+   (auditor repo-audit-agent)
+   (verifier repo-verifier-agent)
+   (governor repo-governor))
+  (+human-audit +approval +changes-requested)
+  (+runtime +manifest-handoff))
  :sandbox
  (nono-sandbox +nono +doctor)
  (cubeSandbox +cube +doctor)

@@ -2,7 +2,18 @@
 ;;; Boundary: tests verify strict module-system observability traces.
 ;;; Invariant: trace construction never dereferences POO slots.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/modules/module-system)
 
 (export module-system-observability-test)
@@ -12,6 +23,8 @@
   (cdr (assoc key rows)))
 
 ;; : (-> Unit TestSuite)
+;;; This suite protects module observability receipts used to debug expansion
+;;; and lazy-load decisions.
 (def module-system-observability-test
   (test-suite "poo-flow module-system observability"
     (test-case "builds strict presentation trace rows"

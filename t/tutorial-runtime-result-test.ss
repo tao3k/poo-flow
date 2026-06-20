@@ -2,7 +2,18 @@
 ;;; Boundary: runtime tutorial stages prove Docker/Store handoff behavior.
 ;;; Invariant: these tests keep heavy runtime semantics behind command output.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/docker
         :poo-flow/src/workflow/store
@@ -83,6 +94,9 @@
            '(unexpected-request-kind)
            '(artifact unexpected-runtime-request)))))))))
 
+;;; This suite protects runtime result examples used by tutorial-level docs and
+;;; downstream agent prompts.
+;; : TestSuite
 (def tutorial-runtime-result-test
   (test-suite "funflow tutorial runtime result ladder"
     (test-case "stage 7 docker process runtime command returns CCompilation visible result"

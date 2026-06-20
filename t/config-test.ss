@@ -2,16 +2,32 @@
 ;;; Boundary: config tests cover preflight policy without reading real secrets.
 ;;; Invariant: failure details expose missing key identity, never config values.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api)
 
 (export config-test)
 
+;;; Capture stays local to this owner so failure-shape assertions inspect the
+;;; structured control-plane object rather than stderr or process status.
 ;; : (-> Thunk Value)
 (def (capture-config-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; This suite protects config preflight as a pure policy gate: required keys
+;;; are visible in diagnostics, while actual secret values never leave config.
+;; : TestSuite
 (def config-test
   (test-suite "external config policy"
     (test-case "reports missing keys without secret values"

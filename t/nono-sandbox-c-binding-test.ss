@@ -2,7 +2,18 @@
 ;;; Boundary: nono-sandbox C binding tests cover ABI contracts and manifest projection.
 ;;; Invariant: tests do not load or execute the C library.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/nono
@@ -15,6 +26,9 @@
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; This suite keeps C binding descriptor policy executable without compiling
+;;; or loading the native nono library.
+;; : TestSuite
 (def nono-sandbox-c-binding-test
   (test-suite "nono-sandbox C binding contract"
     (test-case "declares POO descriptor for the generated nono C ABI"

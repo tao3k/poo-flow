@@ -10,15 +10,12 @@
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/object-validation
-        :poo-flow/src/modules/user-config
-        (only-in :poo-flow/src/testing/user-interface-live-case-object
-                 use-live-case))
+        :poo-flow/src/modules/user-config)
 
 (export poo-flow-module-bundles
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
-        use-live-case
         load!
         poo-flow!
         poo-flow-profile-set
@@ -224,7 +221,7 @@
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives
-;;; in `poo-flow-use-module` upstream data helpers.
+;;; in `poo-flow-modules-system-use-module` upstream data helpers.
 ;; use-module
 ;;   : (-> Symbol UserModuleFlagEntry... [PooUserModuleSelection])
 ;;   | contract: maps a concrete module row into one inspectable bundle
@@ -237,33 +234,68 @@
 ;;       ```
 ;;     %
 (defsyntax (use-module stx)
-  (syntax-case stx (:config profiles nono-sandbox cubeSandbox docker-sandbox)
+  (syntax-case stx (:config profiles binding nono-sandbox cubeSandbox docker-sandbox
+                    :inherits :isolation :environment :command :nono)
+    ((_ nono-sandbox :config (binding binding-kind) (profiles profile-clause ...))
+     (syntax
+      (poo-flow-modules-system-use-module
+       'nono-sandbox
+       (poo-flow-nono-sandbox-config-flags
+        'binding-kind
+        (poo-flow-nono-sandbox-profiles profile-clause ...)))))
+    ((_ nono-sandbox :config (profiles profile-clause ...) (binding binding-kind))
+     (syntax
+      (poo-flow-modules-system-use-module
+       'nono-sandbox
+       (poo-flow-nono-sandbox-config-flags
+        'binding-kind
+        (poo-flow-nono-sandbox-profiles profile-clause ...)))))
+    ((_ nono-sandbox :config (binding binding-kind))
+     (syntax
+      (poo-flow-modules-system-use-module
+       'nono-sandbox
+       (poo-flow-nono-sandbox-config-flags 'binding-kind '()))))
     ((_ nono-sandbox :config (profiles profile-clause ...))
      (syntax
-      (poo-flow-use-module
+      (poo-flow-modules-system-use-module
        'nono-sandbox
-       (list
-        (cons ':config
-              (poo-flow-nono-sandbox-profiles profile-clause ...))))))
+       (poo-flow-nono-sandbox-config-flags
+        +poo-flow-nono-sandbox-default-binding+
+        (poo-flow-nono-sandbox-profiles profile-clause ...)))))
     ((_ cubeSandbox :config (profiles profile-clause ...))
      (syntax
-      (poo-flow-use-module
+      (poo-flow-modules-system-use-module
        'cubeSandbox
        (list
         (cons ':config
               (poo-flow-cubeSandbox-profiles profile-clause ...))))))
     ((_ docker-sandbox :config (profiles profile-clause ...))
      (syntax
-      (poo-flow-use-module
+      (poo-flow-modules-system-use-module
        'docker-sandbox
        (list
         (cons ':config
               (poo-flow-docker-sandbox-profiles profile-clause ...))))))
+    ((_ module
+        :inherits inherited-profile
+        :isolation isolation-clause
+        :environment environment-clause
+        :command command-clause
+        :nono nono-clause)
+     (syntax
+      (poo-flow-modules-system-use-module
+       'module
+       (list
+        (cons ':inherits 'inherited-profile)
+        (cons ':isolation 'isolation-clause)
+        (cons ':environment 'environment-clause)
+        (cons ':command 'command-clause)
+        (cons ':nono 'nono-clause)))))
     ((_ module :config bad-clause ...)
      (error "use-module :config expects (profiles ...)"))
     ((_ module flag ...)
      (syntax
-      (poo-flow-use-module 'module (list 'flag ...))))))
+      (poo-flow-modules-system-use-module 'module (list 'flag ...))))))
 
 ;;; Module bundle lists are the direct analogue of Doom's module rows: each row
 ;;; stays a separate bundle so diagnostics can preserve declaration order.

@@ -2,12 +2,25 @@
 ;;; Boundary: agent-sandbox profile tests cover profile descriptors and defaults.
 ;;; Invariant: backend execution stays outside Scheme tests.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/nono
         :poo-flow/src/modules/agent-sandbox/cube)
 
+;;; Fixture result mirrors runtime bridge receipts while keeping the profile
+;;; tests independent of an actual sandbox backend.
 ;; : (-> Value Alist AdapterResult)
 (def (runtime-result value artifact)
   (list (cons 'schema +runtime-response-schema+)
@@ -18,9 +31,22 @@
         (cons 'error #f)
         (cons 'metadata '((runtime . agent-sandbox-profile-test)))))
 
+;;; Request extraction stays local so assertions track the generated profile
+;;; config exactly as the adapter would receive it.
 ;; : (-> ExecutionRequest Alist)
 (def (request-config request)
   (cadr (execution-request-request request)))
+
+;;; Failure code projection keeps validation tests focused on structured error
+;;; contracts instead of full diagnostic payload ordering.
+;; : (-> ExecutionFailure [Symbol])
+(def (failure-error-codes failure)
+  (let (entry (assoc 'errors (execution-failure-detail failure)))
+    (if entry
+      (map (lambda (error)
+             (cdr (assoc 'code error)))
+           (cdr entry))
+      '())))
 
 (run-tests!
  (test-suite "agent sandbox profile descriptors"
@@ -38,7 +64,10 @@
                      '((filesystem . scoped)
                        (credentials . injected)))
        (check-equal? (agent-sandbox-profile-resource-policy nono)
-                     '((filesystem . scoped)
+                     '((filesystem
+                        (scope . runtime)
+                        (materialized-by . runtime)
+                        (mounts . runtime))
                        (startup . zero-latency)))
        (check-equal? (agent-sandbox-profile-backend-kind cube) 'cube)
        (check-equal? (agent-sandbox-profile-network-policy cube)
@@ -48,7 +77,9 @@
                        (isolation . kvm)
                        (api . e2b-compatible)))
        (check-equal? (agent-sandbox-profile-resource-policy cube)
-                     '((filesystem . snapshot)
+                     '((filesystem
+                        (scope . snapshot)
+                        (snapshot . clone))
                        (snapshot . clone)
                        (resume . supported)))))
    (test-case "uses POO profile descriptors for backend overrides"
@@ -61,7 +92,14 @@
               'base-profile
               '((mode . proxy-only))
               '((filesystem . scoped))
-              '((filesystem . scoped)
+              '((filesystem
+                 (scope . project-workspace)
+                 (paths
+                  ((role . project-workspace)
+                   (source . ".")
+                   (project-marker . "gerbil.pkg")
+                   (target . "/workspace/project")
+                   (mode . read-write))))
                 (startup . zero-latency))
               '((backend . custom))
               (list (cons 'backend-ref 'override-profile)
@@ -121,15 +159,57 @@
                          (lambda ()
                            (agent-sandbox-validate-profile
                             missing-filesystem-resource-profile))))
+            (unsafe-filesystem-marker-profile
+             (make-agent-sandbox-backend-profile
+              'nono
+              'unsafe-filesystem-marker
+              '()
+              '(process-run filesystem-read tmpdir)
+              '((filesystem . scoped)
+                (cpu . 1))
+              '()))
+            (unsafe-filesystem-marker-failure
+             (with-catch (lambda (failure) failure)
+                         (lambda ()
+                           (agent-sandbox-validate-profile
+                            unsafe-filesystem-marker-profile))))
             (filesystem-profile
              (make-agent-sandbox-backend-profile
               'nono
               'filesystem-profile
               '()
               '(process-run filesystem-read tmpdir)
-              '((filesystem . scoped)
+              '((filesystem
+                 (scope . project-workspace)
+                 (paths
+                  ((role . project-workspace)
+                   (source . ".")
+                   (project-marker . "gerbil.pkg")
+                   (target . "/workspace/project")
+                   (mode . read-only))))
                 (cpu . 1))
               '()))
+            (missing-static-source-profile
+             (make-agent-sandbox-backend-profile
+              'nono
+              'missing-static-source
+              '()
+              '(process-run filesystem-read tmpdir)
+              '((filesystem
+                 (scope . project-workspace)
+                 (paths
+                  ((role . project-workspace)
+                   (source . ".data/poo-flow-missing-source")
+                   (project-marker . "gerbil.pkg")
+                   (target . "/workspace/project")
+                   (mode . read-only))))
+                (cpu . 1))
+              '()))
+            (missing-static-source-failure
+             (with-catch (lambda (failure) failure)
+                         (lambda ()
+                           (agent-sandbox-validate-profile
+                            missing-static-source-profile))))
             (request-failure
              (with-catch (lambda (failure) failure)
                          (lambda ()
@@ -156,8 +236,19 @@
        (check-equal? (execution-failure-code
                       missing-filesystem-resource-failure)
                      'invalid-agent-sandbox-profile)
+       (check-equal? (execution-failure? unsafe-filesystem-marker-failure)
+                     #t)
+       (check-equal? (execution-failure-code
+                      unsafe-filesystem-marker-failure)
+                     'invalid-agent-sandbox-profile)
        (check-equal? (agent-sandbox-validate-profile filesystem-profile)
                      filesystem-profile)
+       (check-equal? (execution-failure? missing-static-source-failure)
+                     #t)
+       (check-equal? (not (not (memq 'invalid-static-source-path
+                                      (failure-error-codes
+                                       missing-static-source-failure))))
+                     #t)
        (check-equal? (execution-failure? request-failure) #t)
        (check-equal? (execution-failure-code request-failure)
                      'invalid-agent-sandbox-request)))
@@ -199,7 +290,14 @@
        (let* ((profile (make-nono-agent-sandbox-profile
                         'always-further/opencode
                         (list (cons 'resource-policy
-                                    '((filesystem . scoped)
+                                    '((filesystem
+                                       (scope . project-workspace)
+                                       (paths
+                                        ((role . project-workspace)
+                                         (source . ".")
+                                         (project-marker . "gerbil.pkg")
+                                         (target . "/workspace/project")
+                                         (mode . read-write))))
                                       (startup . zero-latency)
                                       (profile-timeout-ms . 120000))))))
               (command (lambda (envelope)
@@ -237,7 +335,14 @@
                          (credentials . injected)))
          (check-equal? (cdr (assoc 'resource-policy sandbox))
                        '((task-timeout-ms . 30000)
-                         (filesystem . scoped)
+                         (filesystem
+                          (scope . project-workspace)
+                          (paths
+                           ((role . project-workspace)
+                            (source . ".")
+                            (project-marker . "gerbil.pkg")
+                            (target . "/workspace/project")
+                            (mode . read-write))))
                          (startup . zero-latency)
                          (profile-timeout-ms . 120000)))
          (check-equal? (cdr (assoc 'metadata sandbox))

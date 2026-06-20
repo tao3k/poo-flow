@@ -2,26 +2,43 @@
 ;;; Boundary: loop-governor tests cover multi-loop policy projection only.
 ;;; Invariant: runtime state is passed as inert facts and is never mutated.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/loops/agent)
 
 (export loop-governor-test)
 
+;;; Local lookup keeps governor assertions about receipts explicit and stable.
 ;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; Field projection lets tests compare ordered governor decisions without
+;;; coupling to the full receipt shape.
 ;; : (-> [Alist] Symbol [Value])
 (def (test-field-values alists key)
   (map (lambda (alist) (test-ref alist key))
        alists))
 
+;;; Failure capture keeps invalid-governor assertions in structured data form.
 ;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; Pattern construction keeps priority and action keys visible at each call
+;;; site so selection behavior remains auditable.
 ;; : (-> Symbol Symbol Integer ActionKey LoopPatternDescriptor)
 (def (governor-test-pattern name level priority action-key)
   (make-loop-pattern-descriptor
@@ -49,16 +66,39 @@
      'repo-governor
      strategy
      (list (cons 'shared-denylist '("src/b"))
+           (cons 'agent-judges
+                 '((mode . multi-agent-governance)
+                   (judge-mode . mutual-review)
+                   (human-intervention . #f)
+                   (participants . ((auditor . repo-audit-agent)
+                                    (verifier . repo-verifier-agent)
+                                    (governor . repo-governor)))))
+           (cons 'agent-judge-nodes
+                 (list
+                  (make-loop-governor-agent-node
+                   'repo-audit-agent
+                   'audit)
+                  (make-loop-governor-agent-node
+                   'repo-verifier-agent
+                   'verify)
+                  (make-loop-governor-agent-node
+                   'repo-governor
+                   'govern)))
            (cons 'aggregate-budget
                  '((max-actionable . 1)
                    (max-attempts . 2)))
            (cons 'metadata '((source . loop-engineering)))))))
 
+;;; State fixtures stay compact so aggregate-budget tests can focus on matching
+;;; policy instead of unrelated loop metadata.
 ;; : (-> Unit [Alist])
 (def (governor-test-states)
   (list '((loop . other-loop)
           (acting_on . "src/a"))))
 
+;;; This suite protects governor decisions as deterministic control-plane data
+;;; before any runtime adapter interprets them.
+;; : TestSuite
 (def loop-governor-test
   (test-suite "loop governor policy descriptors"
     (test-case "projects open, conflicting, and denied loop patterns"
@@ -82,6 +122,30 @@
         (check-equal? (test-ref contract 'open-patterns) '(repair-c))
         (check-equal? (test-ref contract 'conflicting-patterns) '(repair-a))
         (check-equal? (test-ref contract 'denied-patterns) '(repair-b))
+        (check-equal? (test-ref (loop-governor-agent-judges governor)
+                                'judge-mode)
+                      'mutual-review)
+        (check-equal? (test-ref (test-ref contract 'agent-judges)
+                                'human-intervention)
+                      #f)
+        (check-equal? (test-field-values
+                       (test-ref contract 'agent-judge-nodes)
+                       'name)
+                      '(repo-audit-agent repo-verifier-agent repo-governor))
+        (check-equal? (test-field-values
+                       (test-ref contract 'agent-judge-nodes)
+                       'governance-responsibility)
+                      '(audit verify govern))
+        (check-equal? (test-field-values
+                       (test-ref contract 'agent-judge-nodes)
+                       'human-intervention)
+                      '(#f #f #f))
+        (check-equal? (test-ref (test-ref contract 'runtime-boundary)
+                                'agent-governance)
+                      'loop-governor)
+        (check-equal? (test-ref (test-ref contract 'runtime-boundary)
+                                'human-intervention)
+                      'human-audit-loop)
         (check-equal? (test-field-values
                        (test-ref contract 'human-inbox-items)
                        'reason)
@@ -145,6 +209,13 @@
         (check-equal? (test-ref envelope 'open-patterns) '(repair-c))
         (check-equal? (test-ref envelope 'blocked-patterns)
                       '(repair-a repair-b))
+        (check-equal? (test-ref (test-ref envelope 'agent-judges)
+                                'judge-mode)
+                      'mutual-review)
+        (check-equal? (test-field-values
+                       (test-ref envelope 'agent-judge-nodes)
+                       'governance-node-kind)
+                      '(agent agent agent))
         (check-equal? (test-ref contract 'open-patterns) '(repair-c))
         (check-equal? (test-ref (test-ref envelope 'runtime-boundary)
                                 'production-execution)
@@ -168,6 +239,13 @@
         (check-equal? (test-ref receipt 'schedules) '())
         (check-equal? (test-ref envelope 'schema)
                       +loop-governor-marlin-request-schema+)
+        (check-equal? (test-ref (test-ref receipt 'agent-judges)
+                                'human-intervention)
+                      #f)
+        (check-equal? (test-field-values
+                       (test-ref receipt 'agent-judge-nodes)
+                       'name)
+                      '(repo-audit-agent repo-verifier-agent repo-governor))
         (check-equal? (test-ref envelope 'operation) 'govern-loop)))
     (test-case "publishes runtime manifest discovery for Marlin governor requests"
       (let* ((governor (make-governor-fixture))

@@ -2,7 +2,18 @@
 ;;; Boundary: sandbox cases prove declarations stay data-only before realization.
 ;;; Backend descriptors are inspected as upstream module facts, not executed here.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
         :poo-flow/src/modules/module-system)
@@ -10,6 +21,8 @@
 (export user-interface-config-sandbox-case-test)
 
 ;; : (-> Unit TestSuite)
+;;; This suite protects sandbox configuration cases as declarative user-facing
+;;; data rather than backend implementation code.
 (def user-interface-config-sandbox-case-test
   (test-suite "poo-flow user interface sandbox config"
     (test-case "loads upstream agent sandbox profile defaults"

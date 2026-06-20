@@ -2,7 +2,18 @@
 ;;; Boundary: Docker descriptor tests cover tutorial-shaped request data only.
 ;;; Invariant: Scheme never pulls images, mounts volumes, or executes Docker.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/docker
         :poo-flow/src/modules/agent-sandbox/resource)
@@ -23,6 +34,9 @@
 (def (request-config request)
   (cadr (execution-request-request request)))
 
+;;; This suite protects Docker descriptor shape while sandbox execution remains
+;;; outside the Scheme unit-test boundary.
+;; : TestSuite
 (def docker-descriptor-test
   (test-suite "docker task descriptor"
     (test-case "captures CCompilation-style docker payload"

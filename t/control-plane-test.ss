@@ -1,8 +1,25 @@
-(import :std/test
+;;; Control-plane integration tests pin the Scheme receipt boundary.
+;;; They exercise policy projection without assuming runtime side effects.
+
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/workflow/store
         :poo-flow/t/project-policy-test)
 
+;;; This suite anchors the pure local runner path as the baseline for receipt
+;;; and child-node assertions.
+;; : TestSuite
 (def pure-flow-test
   (test-suite "pure flow"
     (test-case "runs pure tasks sequentially and records receipts"
@@ -18,6 +35,9 @@
         (check-equal? (receipt-status receipt) 'ok)
         (check-equal? (length (receipt-children receipt)) 2)))))
 
+;;; This suite protects the adapter boundary where external tasks become
+;;; request-only runtime envelopes.
+;; : TestSuite
 (def adapter-request-test
   (test-suite "adapter request boundary"
     (test-case "lowers external tasks into adapter requests"
@@ -51,6 +71,9 @@
         (check-equal? (receipt-policy child)
                       (execution-request-policy request))))))
 
+;;; This suite keeps Funflow-style smart constructors aligned with the lower
+;;; level flow and task descriptors.
+;; : TestSuite
 (def funflow-api-test
   (test-suite "funflow-style flow api"
     (test-case "builds and runs flow-level smart constructors"
@@ -86,6 +109,9 @@
         (check-equal? (execution-request-frontier request)
                       '((node compile 0 external compile)))))))
 
+;;; This suite exercises configured runner policy before backend runtimes see
+;;; the request.
+;; : TestSuite
 (def configured-runner-test
   (test-suite "configured runner"
     (test-case "runs through request-only config"
@@ -182,6 +208,9 @@
         (check-equal? (receipt-policy child)
                       (execution-request-policy request))))))
 
+;;; This suite protects branch flow receipt shape for parallel frontier
+;;; construction.
+;; : TestSuite
 (def branch-flow-test
   (test-suite "branch flow"
     (test-case "runs pure branches locally"
@@ -197,6 +226,9 @@
         (check-equal? (receipt-kind (caddr (receipt-children receipt))) 'branch)
         (check-equal? (receipt-output (caddr (receipt-children receipt))) '(4 6))))))
 
+;;; This suite keeps execution-plan lowering visible as data for scheduler and
+;;; observability checks.
+;; : TestSuite
 (def execution-plan-test
   (test-suite "execution plan"
     (test-case "strategy lowers flows into named plan nodes"
@@ -288,6 +320,9 @@
                       '((node fanout 0 branch-left left)
                         (node fanout 1 branch-right right)))))))
 
+;;; This suite guards strategy frontier behavior across eager and graph-aware
+;;; scheduling paths.
+;; : TestSuite
 (def strategy-frontier-test
   (test-suite "strategy frontier policy"
     (test-case "selects ready nodes from completed dependency ids"
@@ -335,6 +370,9 @@
         (check-equal? (receipt-frontier (caddr children))
                       '((node frontier-demo 2 pure label)))))))
 
+;;; This suite protects audit receipts used to explain policy and execution
+;;; decisions.
+;; : TestSuite
 (def receipt-audit-test
   (test-suite "receipt audit summary"
     (test-case "exports replay events in execution order"
@@ -394,6 +432,9 @@
                       '(request compile external))
         (check-equal? (cdr (assoc 'adapter-decision child-event)) 'request-only)))))
 
+;;; This suite keeps cache strategy semantics explicit in receipts rather than
+;;; hidden in runner state.
+;; : TestSuite
 (def strategy-cache-test
   (test-suite "strategy cache policy"
     (test-case "records cache bypass for no-cache task receipts"
@@ -417,6 +458,9 @@
                       'cache-output)
         (check-equal? (receipt-cache child) '(cache-miss inc pure 5 6))))))
 
+;;; This suite covers store cache behavior as a control-plane contract before
+;;; an external store backend is involved.
+;; : TestSuite
 (def store-cache-semantics-test
   (test-suite "store cache semantics"
     (test-case "exposes store operation semantics"
@@ -468,6 +512,9 @@
                         (store-get cache-handle)
                         cache-handle))))))
 
+;;; This suite keeps POO role projection aligned with the public workflow
+;;; surface.
+;; : TestSuite
 (def poo-role-test
   (test-suite "poo role descriptors"
     (test-case "declares control-plane roles as Gerbil POO objects"
@@ -490,6 +537,8 @@
         (check-equal? (role-name composed) 'runtime-adapter)
         (check-equal? (role-runtime-owner composed) 'rust-or-external-runtime)))))
 
+;;; The aggregate entrypoint keeps project-policy-test in the same process so
+;;; policy status reflects the complete control-plane suite.
 (run-tests! pure-flow-test
             adapter-request-test
             funflow-api-test

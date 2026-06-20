@@ -8,8 +8,8 @@
         :poo-flow/src/testing/user-interface-live-case-object
         (only-in :poo-flow/src/modules/agent-sandbox/api
                  agent-sandbox-profile-backend-kind
-                 agent-sandbox-profile-backend-ref
                  agent-sandbox-profile-metadata
+                 agent-sandbox-profile-network-policy
                  agent-sandbox-request
                  agent-sandbox-request->runtime-manifest
                  args
@@ -17,13 +17,10 @@
                  command
                  metadata
                  mounts
-                 network-policy
                  resource-policy
                  workdir)
         (only-in :poo-flow/src/modules/module-system
-                 poo-flow-sandbox-profile->profile
-                 poo-flow-sandbox-profile-by-name
-                 poo-flow-user-module-selection-flag-entry)
+                 poo-flow-sandbox-profile->profile)
         (only-in :poo-flow/src/modules/nono-sandbox/c-binding
                  +nono-c-binding-live-test-receipt-schema+
                  nono-c-binding-dry-run
@@ -32,6 +29,7 @@
 (export (import: :poo-flow/src/testing/user-interface-live-case-object)
         poo-flow-user-interface-live-case-profile
         poo-flow-user-interface-live-case-command
+        poo-flow-user-interface-live-case-request
         poo-flow-user-interface-live-case-planned-workspace
         poo-flow-user-interface-live-case-stage-project-copy
         poo-flow-user-interface-live-case-runtime-manifest
@@ -369,56 +367,78 @@
      (poo-flow-user-interface-live-case-nono-run-command live-case
                                                          workspace)))))
 
-;;; Profile lookup is intentionally the only bridge back into src/modules. The
-;;; live case names a user-facing profile; this helper resolves the already
-;;; validated sandbox profile before runtime manifest construction.
+;;; `:inherits` is the POO supers list. The live-case object itself inherits
+;;; sandbox profile slots, so projection does not perform a second lookup.
 ;; : (-> POOObject AgentSandboxProfile)
 (def (poo-flow-user-interface-live-case-profile live-case)
-  (let* ((module-selection
-          (car (poo-flow-user-interface-live-case-module-bundle live-case)))
-         (profiles
-          (cdr (poo-flow-user-module-selection-flag-entry
-                module-selection
-                ':config))))
-    (poo-flow-sandbox-profile->profile
-     (poo-flow-sandbox-profile-by-name
-      profiles
-      (poo-flow-user-interface-live-case-profile-name live-case)))))
+  (poo-flow-sandbox-profile->profile live-case))
+
+;;; Profile declarations use user-facing network rows such as
+;;; `(allowlisted "github.com")`; runtime manifests need the alist form consumed
+;;; by backend validators. This is a projection of inherited profile policy, not
+;;; a case-local policy declaration.
+;; : (-> POOObject AgentSandboxProfile NetworkPolicy)
+(def (poo-flow-user-interface-live-case-runtime-network-policy live-case profile)
+  (let (policy (poo-flow-user-interface-live-case-section-ref
+                live-case
+                'nono
+                'network-policy
+                (poo-flow-user-interface-live-case-section-ref
+                 live-case
+                 'nono
+                 'network
+                 (agent-sandbox-profile-network-policy profile))))
+    (cond
+     ((null? policy) '())
+     ((and (pair? policy) (pair? (car policy))) policy)
+     ((pair? policy) (list (cons 'mode (car policy))))
+     ((symbol? policy) (list (cons 'mode policy)))
+     (else '()))))
+
+;;; Cases inherit their selected sandbox profiles through POO supers. The case
+;;; contributes runtime fields and narrow request overrides only.
+;; : (-> POOObject String AgentSandboxRequest)
+(def (poo-flow-user-interface-live-case-request live-case workspace)
+  (let ((profile
+         (poo-flow-user-interface-live-case-profile live-case)))
+    (agent-sandbox-request
+     profile
+     (command "sh")
+     (args (list "-lc"
+                 (poo-flow-user-interface-live-case-build-script live-case
+                                                                 workspace)))
+     (workdir workspace)
+     (mounts (list (list (cons 'path workspace)
+                         (cons 'mode 'read-write)
+                         (cons 'purpose 'isolated-project-workspace))))
+     (network-policy
+      (poo-flow-user-interface-live-case-runtime-network-policy live-case
+                                                               profile))
+     (capabilities '((allow-commands . ("sh" "gxpkg"))))
+     (resource-policy '((timeout-ms . 600000)))
+     (metadata (list (cons 'check 'user-interface-live-case)
+                     (cons 'case
+                           (poo-flow-user-interface-live-case-name
+                            live-case))
+                     (cons 'supers
+                           (poo-flow-user-interface-live-case-super-names
+                            live-case))
+                     (cons 'project-isolated? #t)
+                     (cons 'host-project-mounted? #f)
+                     (cons 'environment-policy
+                           (poo-flow-user-interface-live-case-section-ref
+                            live-case
+                            'environment
+                            'policy
+                            'whitelist))
+                     (cons 'workspace workspace))))))
 
 ;;; The manifest mirrors the command receipt. It is intentionally reportable
 ;;; before execution so failing live cases still expose isolation facts.
 ;; : (-> POOObject String AgentSandboxRuntimeManifest)
 (def (poo-flow-user-interface-live-case-runtime-manifest live-case workspace)
-  (let ((profile
-         (poo-flow-user-interface-live-case-profile live-case)))
-    (agent-sandbox-request->runtime-manifest
-     (agent-sandbox-request
-      profile
-      (command "sh")
-      (args (list "-lc"
-                  (poo-flow-user-interface-live-case-build-script live-case
-                                                                  workspace)))
-      (workdir workspace)
-      (mounts (list (list (cons 'path workspace)
-                          (cons 'mode 'read-write)
-                          (cons 'purpose 'isolated-project-workspace))))
-      (network-policy '((mode . blocked)
-                        (source-policy . user-interface-live-case)))
-      (capabilities '((allow-commands . ("sh" "gxpkg"))))
-      (resource-policy '((timeout-ms . 600000)))
-      (metadata (list (cons 'check 'user-interface-live-case)
-                      (cons 'case
-                            (poo-flow-user-interface-live-case-name
-                             live-case))
-                      (cons 'project-isolated? #t)
-                      (cons 'host-project-mounted? #f)
-                      (cons 'environment-policy
-                            (poo-flow-user-interface-live-case-section-ref
-                             live-case
-                             'environment
-                             'policy
-                             'whitelist))
-                      (cons 'workspace workspace)))))))
+  (agent-sandbox-request->runtime-manifest
+   (poo-flow-user-interface-live-case-request live-case workspace)))
 
 ;;; Live cases are opt-in. The default test path proves declaration and receipt
 ;;; shape without performing a real sandbox build.
@@ -539,9 +559,8 @@
               (agent-sandbox-profile-metadata profile)))
         (check-equal? (poo-flow-user-interface-live-case? live-case) #t)
         (check-equal? (agent-sandbox-profile-backend-kind profile) 'nono)
-        (check-equal? (agent-sandbox-profile-backend-ref profile)
-                      (poo-flow-user-interface-live-case-profile-name
-                       live-case))
+        (check-equal? (poo-flow-user-interface-live-case-super-names live-case)
+                      '(ci/build))
         (check-equal? (poo-flow-user-interface-live-case-alist-ref
                        metadata-value
                        'live-case

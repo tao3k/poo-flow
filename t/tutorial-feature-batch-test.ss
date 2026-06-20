@@ -2,7 +2,18 @@
 ;;; Boundary: tutorial feature batch tests public APIs, not test-local helpers.
 ;;; Invariant: each case maps to a visible Funflow notebook result or descriptor.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/modules/custom-task
         :poo-flow/src/modules/docker

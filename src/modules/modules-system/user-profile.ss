@@ -1,18 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: upstream helpers for root user-interface declarations.
+;;; Boundary: module-system helpers for root user declaration profiles.
 ;;; Invariant: root user-interface files declare rows; this module projects them.
 
 (import :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/profiles/kernel
         :poo-flow/src/modules/user-config
         :poo-flow/src/modules/user-config-syntax
-        :poo-flow/src/modules/user-interface/objects)
+        :poo-flow/src/modules/modules-system/root-objects)
 
 (export (import: :poo-flow/src/modules/agent-sandbox/config)
         (import: :poo-flow/src/modules/profiles/kernel)
         (import: :poo-flow/src/modules/user-config)
         (import: :poo-flow/src/modules/user-config-syntax)
-        (import: :poo-flow/src/modules/user-interface/objects)
+        (import: :poo-flow/src/modules/modules-system/root-objects)
         poo-flow-user-interface-profile-name
         poo-flow-user-interface-profile-set-name
         pooFlowUserInterfaceProfile

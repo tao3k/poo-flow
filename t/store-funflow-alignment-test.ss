@@ -1,22 +1,39 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: Store tests align Scheme declarations with Funflow CAS concepts.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/workflow/store)
 
 (export store-funflow-alignment-test)
 
+;;; Payload lookup keeps store flow assertions focused on emitted contract
+;;; fields rather than alist traversal noise.
 ;; : (-> Symbol Alist Value)
 (def (store-test-payload-ref key payload)
   (let (entry (assoc key payload))
     (if entry (cdr entry) #f)))
 
+;;; Failure capture keeps store validation checks on typed control-plane errors.
 ;; : (-> Thunk Value)
 (def (store-test-capture-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; This suite keeps store-oriented funflow alignment executable without
+;;; requiring a backing artifact store.
+;; : TestSuite
 (def store-funflow-alignment-test
   (test-suite "store funflow alignment"
     (test-case "declares Funflow-style directory store arrows"

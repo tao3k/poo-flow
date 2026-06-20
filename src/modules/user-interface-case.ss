@@ -48,6 +48,7 @@
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)
     (sandbox . docker-sandbox)
+    (flow . loop-engine)
     (custom . my-module)))
 
 ;; : (-> Unit [Symbol])
@@ -55,6 +56,7 @@
   '(selected-modules
     feature-facts
     cicd-intents
+    loop-engine-intents
     settings))
 
 ;; : (-> MaybeValue String Boolean)

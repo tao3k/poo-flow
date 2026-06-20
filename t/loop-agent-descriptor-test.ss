@@ -2,21 +2,38 @@
 ;;; Boundary: loop-agent tests cover POO/C3 policy descriptors only.
 ;;; Invariant: scheduling and execution stay out of this test surface.
 
-(import :std/test
+(import (only-in :std/test
+                 check
+                 check-eq?
+                 check-equal?
+                 check-false
+                 check-not-equal?
+                 check-output
+                 check-true
+                 run-tests!
+                 test-case
+                 test-error
+                 test-suite)
         :poo-flow/src/core/api
         :poo-flow/src/loops/agent)
 
 (export loop-agent-descriptor-test)
 
+;;; Local lookup keeps descriptor assertions concise without depending on field
+;;; order in contract alists.
 ;; : (-> Alist Symbol Value)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; Failure capture keeps invalid descriptor checks on structured policy data.
 ;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
   (with-catch (lambda (failure) failure)
               thunk))
 
+;;; This suite keeps loop-agent descriptor policy executable without invoking
+;;; the loop governor runtime.
+;; : TestSuite
 (def loop-agent-descriptor-test
   (test-suite "loop-agent POO policy descriptors"
     (test-case "declares L1 report-only descriptor defaults"
