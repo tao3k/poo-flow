@@ -56,5 +56,6 @@
 ;;; Object catalogs are loader data for validation and auto-import planning.
 ;; : [PooModuleObject]
 (def poo-flow-cubeSandbox-module-objects
-  (list poo-flow-cubeSandbox-object
-        poo-flow-cubeSandbox-profile-object))
+  (poo-flow-require-module-objects-validation!
+   (list poo-flow-cubeSandbox-object
+         poo-flow-cubeSandbox-profile-object)))

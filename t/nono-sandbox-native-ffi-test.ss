@@ -1,0 +1,83 @@
+;;; -*- Gerbil -*-
+;;; Boundary: native nono FFI tests call the C ABI through Gambit, not the CLI.
+;;; Invariant: irreversible sandbox apply is never performed by this test.
+
+(import :std/test
+        :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/api
+        :poo-flow/src/modules/agent-sandbox/nono
+        :poo-flow/src/modules/nono-sandbox/c-binding)
+
+(export nono-sandbox-native-ffi-test)
+
+;; : (-> Alist Symbol Value)
+(def (test-ref alist key)
+  (cdr (assoc key alist)))
+
+;; : (-> Alist Symbol Value)
+(def (test-maybe-ref alist key)
+  (let (entry (assoc key alist))
+    (if entry (cdr entry) #f)))
+
+;; : (-> AgentSandboxRuntimeManifest)
+(def (make-native-ffi-test-runtime-manifest)
+  (agent-sandbox-request->runtime-manifest
+   (agent-sandbox-request
+    (make-nono-agent-sandbox-profile 'native/ffi-test)
+    (command "sh")
+    (args '("-lc" "printf native-ffi"))
+    (workdir ".")
+    (mounts '(((path . ".") (mode . read))))
+    (network-policy '((mode . blocked)))
+    (capabilities '((allow-commands . ("sh"))))
+    (metadata '((test . native-ffi))))))
+
+(def nono-sandbox-native-ffi-test
+  (test-suite "nono-sandbox native FFI"
+    (test-case "skips cleanly when an explicit native library path is absent"
+      (let* ((runtime-manifest (make-native-ffi-test-runtime-manifest))
+             (receipt
+              (nono-c-binding-native-live-test
+               runtime-manifest
+               '((library-path . "run/no-such-libnono_ffi.dylib")))))
+        (check-equal? (test-ref receipt 'schema)
+                      +nono-c-binding-native-live-test-receipt-schema+)
+        (check-equal? (test-ref receipt 'ok?) #t)
+        (check-equal? (test-ref receipt 'enabled?) #f)
+        (check-equal? (test-ref receipt 'skipped?) #t)
+        (check-equal? (test-ref receipt 'skip-reason)
+                      'native-library-not-found)
+        (check-equal? (test-ref receipt 'native-executed) #f)
+        (check-equal? (test-ref receipt 'cli-executed) #f)
+        (check-equal? (test-maybe-ref receipt 'command) #f)))
+    (test-case "calls native nono C ABI when libnono_ffi is available"
+      (let* ((runtime-manifest (make-native-ffi-test-runtime-manifest))
+             (receipt
+              (nono-c-binding-native-live-test runtime-manifest)))
+        (check-equal? (test-ref receipt 'schema)
+                      +nono-c-binding-native-live-test-receipt-schema+)
+        (check-equal? (test-ref receipt 'ok?) #t)
+        (check-equal? (test-ref receipt 'cli-executed) #f)
+        (check-equal? (test-ref receipt 'runtime-executed) #f)
+        (check-equal? (test-ref receipt 'would-apply?) #f)
+        (check-equal? (test-ref receipt 'irreversible-apply?) #f)
+        (check-equal? (test-maybe-ref receipt 'command) #f)
+        (if (test-ref receipt 'enabled?)
+          (begin
+            (check-equal? (test-ref receipt 'skipped?) #f)
+            (check-equal? (test-ref receipt 'native-executed) #t)
+            (check-equal? (test-ref receipt 'native-loaded?) #t)
+            (check-equal? (test-ref receipt 'apply-symbol)
+                          'nono_sandbox_apply)
+            (check-equal? (test-ref receipt 'apply-null-only?) #t)
+            (check-equal? (test-ref receipt 'apply-null-code)
+                          +nono-c-binding-native-apply-null-error-code+)
+            (check-equal? (test-ref receipt 'capability-roundtrip-code) 0)
+            (check-equal? (string? (test-ref receipt 'platform)) #t)
+            (check-equal? (string? (test-ref receipt 'details)) #t))
+          (begin
+            (check-equal? (test-ref receipt 'skipped?) #t)
+            (check-equal? (test-ref receipt 'skip-reason)
+                          'native-library-not-found)))))))
+
+(run-tests! nono-sandbox-native-ffi-test)

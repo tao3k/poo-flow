@@ -76,6 +76,7 @@
 ;; : [Symbol]
 (def +nono-c-binding-types+
   '(NonoErrorCode
+    NonoDiagnosticCode
     NonoCapabilitySourceTag
     NonoQueryStatus
     NonoQueryReason
@@ -95,6 +96,10 @@
     nono_clear_error
     nono_string_free
     nono_version
+    nono_last_diagnostic_code
+    nono_last_remediation_json
+    nono_session_diagnostic_report_to_json
+    nono_merge_diagnostic_report_json
     nono_capability_set_new
     nono_capability_set_free
     nono_capability_set_allow_path

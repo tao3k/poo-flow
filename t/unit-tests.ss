@@ -23,10 +23,13 @@
         :poo-flow/t/module-system-lazy-loader-test
         :poo-flow/t/module-system-observability-test
         :poo-flow/t/module-object-validation-test
+        :poo-flow/t/module-object-practice-test
         :poo-flow/t/module-system-user-interface-test
         :poo-flow/t/module-system-test
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
+        :poo-flow/t/nono-sandbox-native-ffi-test
+        :poo-flow/t/nono-sandbox-live-profile-test
         :poo-flow/t/runtime-bridge-test
         :poo-flow/t/runtime-manifest-test
         :poo-flow/t/sandbox-resource-test
@@ -37,6 +40,7 @@
         :poo-flow/t/tutorial-runtime-result-test
         :poo-flow/t/tutorial-result-test
         :poo-flow/t/user-interface-config-test
+        :poo-flow/t/user-interface-live-cicd-case-test
         :poo-flow/t/user-interface-cicd-test
         :poo-flow/t/user-interface-case-test
         :poo-flow/t/user-interface-presentation-test)

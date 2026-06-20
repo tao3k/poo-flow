@@ -36,6 +36,18 @@
                       ".data/nono/bindings/c/include/nono.h")
         (check-equal? (test-ref contract 'probe-ref)
                       "bindings/nono-c/poo_flow_nono_binding_probe.c")
+        (check-equal? (and (memq 'NonoDiagnosticCode
+                                 (test-ref contract 'types))
+                           #t)
+                      #t)
+        (check-equal? (and (memq 'nono_last_diagnostic_code
+                                 (test-ref contract 'functions))
+                           #t)
+                      #t)
+        (check-equal? (and (memq 'nono_session_diagnostic_report_to_json
+                                 (test-ref contract 'functions))
+                           #t)
+                      #t)
         (check-equal? (and (memq 'nono_capability_set_allow_path
                                  (test-ref contract 'functions))
                            #t)
@@ -46,6 +58,65 @@
                       #t)
         (check-equal? (nono-c-binding-descriptor-library override)
                       "nono_ffi_test")))
+    (test-case "declares POO build descriptor for the C compile probe"
+      (let* ((build (make-nono-c-binding-build))
+             (contract (nono-c-binding-build->contract build))
+             (binding (test-ref contract 'binding))
+             (required-inputs (test-ref contract 'required-inputs))
+             (override (make-nono-c-binding-build
+                        (list (cons 'compiler "cc")
+                              (cons 'upstream-include-dirs
+                                    '("/opt/nono/include"))
+                              (cons 'include-dirs
+                                    '("bindings/nono-c"
+                                      "/opt/nono/include")))))
+             (missing-upstream
+              (make-nono-c-binding-build
+               (list (cons 'upstream-include-dirs
+                           '("run/missing-nono-include"))
+                     (cons 'include-dirs
+                           '("bindings/nono-c"
+                             "run/missing-nono-include")))))
+             (missing-errors
+              (nono-c-binding-build-input-validation-errors
+               missing-upstream)))
+        (check-equal? (nono-c-binding-build? build) #t)
+        (check-equal? (test-ref contract 'schema)
+                      +nono-c-binding-build-schema+)
+        (check-equal? (test-ref binding 'library) "nono_ffi")
+        (check-equal? (test-ref contract 'compiler) "clang")
+        (check-equal? (test-ref contract 'standard) "c11")
+        (check-equal? (test-ref contract 'syntax-only?) #t)
+        (check-equal? (test-ref contract 'adapter-include-dirs)
+                      '("bindings/nono-c"))
+        (check-equal? (test-ref contract 'upstream-include-dirs)
+                      '(".data/nono/bindings/c/include"))
+        (check-equal? (test-ref contract 'include-dirs)
+                      '("bindings/nono-c"
+                        ".data/nono/bindings/c/include"))
+        (check-equal? (test-ref contract 'probe-ref)
+                      "bindings/nono-c/poo_flow_nono_binding_probe.c")
+        (check-equal? (map (lambda (input)
+                             (test-ref input 'kind))
+                           required-inputs)
+                      '(adapter-include-dir upstream-include-dir probe))
+        (check-equal? (test-ref contract 'inputs-ok?) #t)
+        (check-equal? (nono-c-binding-compile-probe-command)
+                      '("clang"
+                        "-Qunused-arguments"
+                        "-std=c11"
+                        "-Wall"
+                        "-Wextra"
+                        "-Werror"
+                        "-fsyntax-only"
+                        "-Ibindings/nono-c"
+                        "-I.data/nono/bindings/c/include"
+                        "bindings/nono-c/poo_flow_nono_binding_probe.c"))
+        (check-equal? (nono-c-binding-build-compiler override) "cc")
+        (check-equal? (nono-c-binding-build-upstream-include-dirs override)
+                      '("/opt/nono/include"))
+        (check-equal? (test-ref (car missing-errors) 'code)
+                      'path-not-found)))
     (test-case "projects nono runtime manifests into C capability plans"
       (let* ((profile (make-nono-agent-sandbox-profile
                        'always-further/opencode))
@@ -100,10 +171,16 @@
         (check-equal? (test-ref (test-ref manifest 'query-plan)
                                 'query-path)
                       'nono_query_context_query_path)
+        (check-equal? (test-ref (test-ref manifest 'diagnostic-plan)
+                                'last-code)
+                      'nono_last_diagnostic_code)
+        (check-equal? (test-ref (test-ref manifest 'diagnostic-plan)
+                                'session-report-json)
+                      'nono_session_diagnostic_report_to_json)
         (check-equal? (test-ref (test-ref manifest 'apply-plan)
                                 'apply)
                       'nono_sandbox_apply)))
-    (test-case "dry-runs and smoke-tests nono C binding manifests without applying sandbox"
+    (test-case "dry-runs and native-tests nono C binding manifests without applying sandbox"
       (let* ((request (agent-sandbox-request
                        (make-nono-agent-sandbox-profile
                         'always-further/opencode)
@@ -120,7 +197,13 @@
              (smoke
               (nono-c-binding-smoke-test
                runtime-manifest
-               '("sh" "-c" "printf nono-smoke"))))
+               '("sh" "-c" "printf nono-smoke")))
+             (live-skip
+              (nono-c-binding-native-live-test
+               runtime-manifest
+               '((library-path . "run/no-such-libnono_ffi.dylib"))))
+             (live-default
+              (nono-c-binding-native-live-test runtime-manifest)))
         (check-equal? (test-ref dry-run 'schema)
                       +nono-c-binding-dry-run-receipt-schema+)
         (check-equal? (test-ref dry-run 'ok?) #t)
@@ -137,6 +220,27 @@
         (check-equal? (test-ref smoke 'output) "nono-smoke")
         (check-equal? (test-ref smoke 'runtime-executed) #f)
         (check-equal? (test-ref (test-ref smoke 'dry-run) 'would-apply?)
+                      #f)
+        (check-equal? (test-ref live-skip 'schema)
+                      +nono-c-binding-native-live-test-receipt-schema+)
+        (check-equal? (test-ref live-skip 'ok?) #t)
+        (check-equal? (test-ref live-skip 'enabled?) #f)
+        (check-equal? (test-ref live-skip 'skipped?) #t)
+        (check-equal? (test-ref live-skip 'skip-reason)
+                      'native-library-not-found)
+        (check-equal? (test-ref live-skip 'native-executed) #f)
+        (check-equal? (test-ref live-skip 'cli-executed) #f)
+        (check-equal? (test-ref live-skip 'runtime-executed) #f)
+        (check-equal? (test-ref live-skip 'would-apply?) #f)
+        (check-equal? (test-ref live-default 'schema)
+                      +nono-c-binding-native-live-test-receipt-schema+)
+        (check-equal? (test-ref live-default 'ok?) #t)
+        (check-equal? (or (test-ref live-default 'enabled?)
+                          (test-ref live-default 'skipped?))
+                      #t)
+        (check-equal? (test-ref live-default 'cli-executed) #f)
+        (check-equal? (test-ref live-default 'runtime-executed) #f)
+        (check-equal? (test-ref live-default 'would-apply?)
                       #f)))
     (test-case "rejects non-nono and unsupported C binding policy"
       (let* ((cube-request

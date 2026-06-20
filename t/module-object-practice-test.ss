@@ -72,6 +72,101 @@
         (check-equal? (slot-value resolved-node 'capabilities)
                       '(filesystem-read process-run cache-mount))
         (check-equal? (slot-value resolved-node 'note)
-                      "object-core owns contract wrappers")))))
+                      "object-core owns contract wrappers")))
+
+    (test-case "wraps standard list and map transformers as object contracts"
+      (let* ((capabilities-field
+              (poo-flow-module-field-contract
+               'capabilities
+               'List
+               'override
+               '(filesystem-read process-run cache-mount)
+               '((scope . best-practice)
+                 (owner . object-core))))
+             (metadata-field
+              (poo-flow-module-field-contract
+               'metadata-map
+               'Map
+               'override
+               '((stage . default))
+               '((scope . best-practice)
+                 (owner . object-core))))
+             (practice-object
+              (poo-flow-module-object
+               'objects.practice.transformers
+               '()
+               (list capabilities-field metadata-field)
+               '((namespace . objects.practice)
+                 (domain . profile))))
+             (base-node
+              (poo-flow-module-object-node practice-object '() '()))
+             (append-contribution
+              (poo-flow-module-transformer-field-contribution
+               (poo-flow-module-object-identity practice-object)
+               capabilities-field
+               poo-flow-module-transformer-list-append-contract
+               '(network-access cache-mount)))
+             (remove-contribution
+              (poo-flow-module-transformer-field-contribution
+               (poo-flow-module-object-identity practice-object)
+               capabilities-field
+               poo-flow-module-transformer-list-remove-contract
+               '(process-run)))
+             (map-set-contribution
+              (poo-flow-module-transformer-field-contribution
+               (poo-flow-module-object-identity practice-object)
+               metadata-field
+               poo-flow-module-transformer-map-set-contract
+               '((stage . build)
+                 (owner . object-core))))
+             (merge-result
+              (poo-flow-module-config-mk-merge
+               base-node
+               (list append-contribution
+                     remove-contribution
+                     map-set-contribution)))
+             (resolved-node
+              (poo-flow-module-config-merge-result-root merge-result)))
+        (check-equal? (poo-flow-module-transformer-contract?
+                       poo-flow-module-transformer-list-append-contract)
+                      #t)
+        (check-equal? (poo-flow-module-transformer-contract-identity
+                       poo-flow-module-transformer-list-remove-contract)
+                      'list.remove)
+        (check-equal? (poo-flow-module-transformer-contract-idempotent?
+                       poo-flow-module-transformer-list-append-contract)
+                      #t)
+        (check-equal? (poo-flow-module-transformer-contract-diagnostics
+                       poo-flow-module-transformer-list-append-contract
+                       capabilities-field
+                       '(network-access))
+                      '())
+        (check-equal? (poo-flow-module-field-contribution-merge
+                       append-contribution)
+                      'append)
+        (check-equal? (poo-flow-module-field-contribution-merge
+                       remove-contribution)
+                      'remove)
+        (check-equal? (poo-flow-module-field-contribution-merge
+                       map-set-contribution)
+                      'override)
+        (check-equal? (poo-flow-module-transformer-contract-diagnostics
+                       poo-flow-module-transformer-map-set-contract
+                       capabilities-field
+                       '((stage . build)))
+                      '("transformer:map.set:field-kind-mismatch"))
+        (check-equal? (poo-flow-module-transformer-contract-diagnostics
+                       poo-flow-module-transformer-list-remove-contract
+                       capabilities-field
+                       'process-run)
+                      '("transformer:list.remove:argument-kind-mismatch"))
+        (check-equal? (poo-flow-module-config-merge-result-stable?
+                       merge-result)
+                      #t)
+        (check-equal? (slot-value resolved-node 'capabilities)
+                      '(filesystem-read cache-mount network-access))
+        (check-equal? (slot-value resolved-node 'metadata-map)
+                      '((stage . build)
+                        (owner . object-core)))))))
 
 (run-tests! module-object-practice-test)

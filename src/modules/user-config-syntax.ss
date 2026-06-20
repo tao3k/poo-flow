@@ -9,12 +9,16 @@
         :poo-flow/src/modules/cubeSandbox/config
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/nono-sandbox/config
-        :poo-flow/src/modules/user-config)
+        :poo-flow/src/modules/object-validation
+        :poo-flow/src/modules/user-config
+        (only-in :poo-flow/src/testing/user-interface-live-case-object
+                 use-live-case))
 
 (export poo-flow-module-bundles
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
+        use-live-case
         load!
         poo-flow!
         poo-flow-profile-set
@@ -44,12 +48,16 @@
             (path-length (and (string? path-value)
                               (string-length path-value)))
             (source-value (stx-source (syntax path)))
+            (form-source-value (stx-source stx))
+            (source-path
+             (lambda (value)
+               (cond
+                ((string? value) value)
+                ((and (pair? value) (string? (car value))) (car value))
+                (else #f))))
             (call-source-path/raw
-             (cond
-              ((string? source-value) source-value)
-              ((and (pair? source-value) (string? (car source-value)))
-               (car source-value))
-              (else #f)))
+             (or (source-path source-value)
+                 (source-path form-source-value)))
             (include-source-path
              (cond
               ((not (string? path-value))
@@ -109,6 +117,24 @@
              (lambda (segments fallback)
                (let loop ((rest segments) (last fallback))
                  (if (null? rest) last (loop (cdr rest) (car rest))))))
+            (object-fragment-path?
+             (lambda (segments)
+               (let loop ((rest segments))
+                 (cond
+                  ((null? rest) #f)
+                  ((or (string=? (car rest) "objects")
+                       (string=? (car rest) "objects.ss"))
+                   #t)
+                  (else (loop (cdr rest)))))))
+            (case-fragment-path?
+             (lambda (segments)
+               (let loop ((rest segments))
+                 (cond
+                  ((null? rest) #f)
+                  ((or (string=? (car rest) "cases")
+                       (string=? (car rest) "cases.ss"))
+                   #t)
+                  (else (loop (cdr rest)))))))
             (module-context-source-path
              (let* ((context-id
                      (expander-context-id (current-expander-context)))
@@ -160,13 +186,22 @@
              (drop-suffix ".ss"
                           (last-segment (path-segments include-source-path)
                                         "config")))
+            (objects-fragment?
+             (or (object-fragment-path? source-segments)
+                 (object-fragment-path? (path-segments include-source-path))
+                 (string=? load-name "objects")))
+            (case-fragment?
+             (or (case-fragment-path? source-segments)
+                 (case-fragment-path? (path-segments include-source-path))))
+            (binding-suffix
+             (if case-fragment? "-case" "-module"))
             (binding-name
              (string->symbol
               (string-append "poo-flow-custom-"
                              custom-module-name
                              "-"
                              load-name
-                             "-module")))
+                             binding-suffix)))
             (fragment-forms
              (read-fragment-forms fragment-source-path)))
        (with-syntax ((binding (datum->syntax (syntax ctx) binding-name))
@@ -174,11 +209,18 @@
                       (map (lambda (form)
                              (datum->syntax (syntax ctx) form))
                            fragment-forms)))
-         (syntax
-          (begin
-            (def binding
-              (begin fragment-form ...))
-            (export binding))))))))
+         (if objects-fragment?
+           (syntax
+            (begin
+              (def binding
+                (poo-flow-require-module-objects-validation!
+                 (begin fragment-form ...)))
+              (export binding)))
+           (syntax
+            (begin
+              (def binding
+                (begin fragment-form ...))
+              (export binding)))))))))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives

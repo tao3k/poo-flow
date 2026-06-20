@@ -65,5 +65,6 @@
 ;;; Object catalogs are validation and loader inputs; they do not load bindings.
 ;; : [PooModuleObject]
 (def poo-flow-nono-sandbox-module-objects
-  (list poo-flow-nono-sandbox-object
-        poo-flow-nono-sandbox-profile-object))
+  (poo-flow-require-module-objects-validation!
+   (list poo-flow-nono-sandbox-object
+         poo-flow-nono-sandbox-profile-object)))

@@ -27,6 +27,7 @@ static void
 poo_flow_nono_binding_probe_values(void)
 {
   enum NonoErrorCode code = NONO_ERROR_CODE_OK;
+  enum NonoDiagnosticCode diagnostic_code = NONO_DIAGNOSTIC_CODE_OTHER;
   struct NonoQueryResult query_result = {0};
   struct NonoSupportInfo support_info = {0};
   PooFlowNonoMountGrant mount = {
@@ -41,6 +42,7 @@ poo_flow_nono_binding_probe_values(void)
   };
 
   (void)code;
+  (void)diagnostic_code;
   (void)query_result;
   (void)support_info;
   (void)mount;
@@ -55,6 +57,10 @@ poo_flow_nono_binding_probe_api(void)
     .clear_error = nono_clear_error,
     .string_free = nono_string_free,
     .version = nono_version,
+    .last_diagnostic_code = nono_last_diagnostic_code,
+    .last_remediation_json = nono_last_remediation_json,
+    .session_diagnostic_report_to_json = nono_session_diagnostic_report_to_json,
+    .merge_diagnostic_report_json = nono_merge_diagnostic_report_json,
     .capability_set_new = nono_capability_set_new,
     .capability_set_free = nono_capability_set_free,
     .capability_set_allow_path = nono_capability_set_allow_path,

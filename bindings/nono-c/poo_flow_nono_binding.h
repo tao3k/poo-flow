@@ -20,6 +20,22 @@
 #define POO_FLOW_NONO_BINDING_HEADER "poo_flow_nono_binding.h"
 #define POO_FLOW_NONO_UPSTREAM_HEADER "nono.h"
 
+/*
+ * Source ABI compatibility declarations.
+ *
+ * always-further/nono exposes these functions from bindings/c/src/diagnostic.rs.
+ * Some generated headers may lag the Rust source until cbindgen is rerun; these
+ * compatible declarations keep the POO Flow probe tied to the source ABI.
+ */
+enum NonoDiagnosticCode nono_last_diagnostic_code(void);
+char *nono_last_remediation_json(void);
+char *nono_session_diagnostic_report_to_json(int32_t exit_code,
+                                             const char *denials_json,
+                                             const char *ipc_denials_json,
+                                             const char *violations_json);
+char *nono_merge_diagnostic_report_json(const char *session_json,
+                                        const char *proxy_diagnostics_json);
+
 typedef enum PooFlowNonoAccessMode {
   POO_FLOW_NONO_ACCESS_READ = NONO_ACCESS_MODE_READ,
   POO_FLOW_NONO_ACCESS_WRITE = NONO_ACCESS_MODE_WRITE,
@@ -49,6 +65,13 @@ typedef struct PooFlowNonoBindingApi {
   void (*clear_error)(void);
   void (*string_free)(char *);
   char *(*version)(void);
+  enum NonoDiagnosticCode (*last_diagnostic_code)(void);
+  char *(*last_remediation_json)(void);
+  char *(*session_diagnostic_report_to_json)(int32_t,
+                                             const char *,
+                                             const char *,
+                                             const char *);
+  char *(*merge_diagnostic_report_json)(const char *, const char *);
   struct NonoCapabilitySet *(*capability_set_new)(void);
   void (*capability_set_free)(struct NonoCapabilitySet *);
   enum NonoErrorCode (*capability_set_allow_path)(struct NonoCapabilitySet *,

@@ -8,3 +8,4 @@
 (load! "profiles/task")
 (load! "profiles/cicd")
 (load! "profiles/object-extension")
+(load! "cases/cicd")

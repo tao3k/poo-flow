@@ -1,0 +1,19 @@
+;;; -*- Gerbil -*-
+;;; Owner: native nono FFI extern interface.
+
+package: poo-flow/src/modules/nono-sandbox
+
+(export #t)
+(extern
+  nono_native_open
+  nono_native_close
+  nono_native_is_loaded
+  nono_native_last_error
+  nono_native_sandbox_is_supported
+  nono_native_support_is_supported
+  nono_native_support_platform
+  nono_native_support_details
+  nono_native_capability_roundtrip
+  nono_native_apply_null)
+
+(load-module "poo-flow/src/modules/nono-sandbox/_nono")

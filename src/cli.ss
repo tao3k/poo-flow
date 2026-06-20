@@ -2,7 +2,8 @@
 ;;; Boundary: CLI process entrypoints stay thin and delegate flow semantics to scripts.
 ;;; Invariant: `poo-flow run` starts a Gerbil process; it does not schedule flows.
 
-(import (only-in :std/misc/process run-process))
+(import :gerbil/gambit
+        (only-in :std/misc/process run-process))
 
 (export poo-flow-cli-main
         main
@@ -12,6 +13,12 @@
         poo-flow-cli-script-args
         poo-flow-cli-executable-args
         poo-flow-cli-usage)
+
+;; : String
+(def poo-flow-cli-local-source-loadpath ".")
+
+;; : String
+(def poo-flow-cli-local-compiled-loadpath ".gerbil/lib")
 
 ;; : (-> Unit String)
 (def (poo-flow-cli-usage)
@@ -48,6 +55,34 @@ Commands:
     (cdr command-line-args)
     '()))
 
+;; : (-> String)
+(def (poo-flow-cli-local-loadpath)
+  (if (file-exists? poo-flow-cli-local-compiled-loadpath)
+    (string-append poo-flow-cli-local-source-loadpath
+                   ":"
+                   poo-flow-cli-local-compiled-loadpath)
+    poo-flow-cli-local-source-loadpath))
+
+;; : (-> String)
+(def (poo-flow-cli-gerbil-loadpath)
+  (let ((current (getenv "GERBIL_LOADPATH" #f))
+        (local-loadpath (poo-flow-cli-local-loadpath)))
+    (if (and current (not (string=? current "")))
+      (string-append local-loadpath ":" current)
+      local-loadpath)))
+
+;; : (-> Path [String] [String])
+(def (poo-flow-cli-run-command file args)
+  (append
+   (list "env"
+         (string-append "GERBIL_LOADPATH="
+                        (poo-flow-cli-gerbil-loadpath))
+         "gxpkg"
+         "env"
+         "gxi"
+         file)
+   args))
+
 ;;; Boundary: child output is passed through as the run receipt surface.
 ;;; Intent: scripts own funflow construction; CLI only reports process status.
 ;; : (-> Path [String] Integer)
@@ -55,11 +90,7 @@ Commands:
   (let (status 0)
     (let (output
           (run-process
-           (append (list "gxpkg"
-                         "env"
-                         "gxi"
-                         file)
-                   args)
+           (poo-flow-cli-run-command file args)
            stderr-redirection: #t
            check-status:
            (lambda (exit-status _settings)

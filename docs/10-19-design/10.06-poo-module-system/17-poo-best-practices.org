@@ -6,19 +6,16 @@ It is intentionally practical. The goal is not to copy Doom Emacs, Haumea, or gr
 
 ** 10.06.17.20 Reference Signals
 The useful external patterns are:
-
 - Doom Emacs: small user-facing declarations with a richer upstream implementation.
 - Haumea/POP practice: separate loader/importer/layout concerns from final object composition.
 - grafonnix: one domain object per file, each =new= constructor returns a POP object, methods are extension functions, internal state is hidden, and final values are projected into plain data through =__unpop__=.
 
 The local grafonnix research checkout is:
-
 #+begin_src text
 .data/grafonnix
 #+end_src
 
 Relevant grafonnix files:
-
 - =flake.nix= aggregates the public =lib= surface.
 - =grafonnix/dashboard.nix= defines a dashboard object with methods such as =addPanel=, =addTemplate=, and =addLink=.
 - =grafonnix/row.nix= defines a row object with =addPanel= and =addPanels=.
@@ -27,7 +24,6 @@ Relevant grafonnix files:
 
 ** 10.06.17.30 Local Owner Rules
 The current =poo-flow= rule is:
-
 #+begin_src text
 extension graph primitives live in src/modules/extension.ss.
 object contracts and object-aware wrappers live in src/modules/object-core.ss.
@@ -37,7 +33,6 @@ user-interface files declare data only.
 #+end_src
 
 =src/modules/extension.ss= owns generic graph facts only:
-
 - extension nodes;
 - extension operations;
 - extension contributions;
@@ -45,7 +40,6 @@ user-interface files declare data only.
 - structural snapshots.
 
 =src/modules/object-core.ss= owns object semantics:
-
 - module object kind ids;
 - field contracts;
 - field contributions;
@@ -60,18 +54,20 @@ user-interface files declare data only.
 =poo-flow= must not copy the Gerbil harness proof vocabulary.
 
 The upstream dependency =gerbil-scheme-language-project-harness= owns structured POO evidence APIs such as:
-
 #+begin_src scheme
 poo-pattern-structural-validation
 #+end_src
 
 =src/modules/object-validation.ss= may build a source reference for the module object and may add local diagnostics for =poo-flow= object contracts, but it should call the upstream API for structural harness validation.
 
+Every module object catalog must be wrapped by =poo-flow-require-module-objects-validation!= before it is exported downstream. This makes object validation a module-loading gate, not an optional doctor report. Field contracts inside each object must also emit upstream =type-validation= harness evidence before user-interface config or backend profile rows can consume them.
+=load!= follows the same rule for object entrypoints. If a fragment is loaded from =objects.ss=, from an =objects/= directory, or as an =objects= fragment, the macro wraps the fragment result with =poo-flow-require-module-objects-validation!=. User-owned module objects therefore use the same upstream =gslph= TypeSpec and POO object validation path as first-party =src/modules/*/objects.ss= files.
+
+Validation receipts must also have a stable user-facing projection. =poo-flow-module-object-validation->alist= and =poo-flow-module-objects-validation-summary= expose field counts, invalid fields, invalid object identities, diagnostics, and upstream TypeSpec validation data without forcing user-interface code to inspect harness-private hash-table nesting.
 Do not reimplement local variants of =type-proof=, =relation-proof=, proof trees, or obligation engines in =poo-flow=. If a stronger formal validation surface is needed, extend the harness dependency first and then consume the exported API here.
 
 ** 10.06.17.40 Object Shape
 Every module object should have:
-
 - an identity under the =objects.*= namespace;
 - a narrow domain, such as =sandbox=, =profile=, or =workflow=;
 - explicit supers when it inherits behavior;
@@ -80,7 +76,6 @@ Every module object should have:
 - no backend execution side effects.
 
 Use Gerbil POO supers for inheritance:
-
 #+begin_src scheme
 (poo-flow-module-object
  'objects.nono-sandbox.profile
@@ -96,7 +91,6 @@ Do not implement a second recursive inheritance merge. Gerbil POO/C3 owns preced
 Transformers should be standard-library-shaped functions wrapped by POO object contracts.
 
 Good names are intentionally boring:
-
 - =list.append=
 - =list.remove=
 - =list.prepend=
@@ -106,7 +100,6 @@ Good names are intentionally boring:
 - =entity.insert-after=
 
 The user should not need to learn a private merge language. The system should lower each transformer into a typed object-owned contribution:
-
 #+begin_src scheme
 field contract + transformer args
 => field contribution
@@ -115,7 +108,6 @@ field contract + transformer args
 #+end_src
 
 Each transformer contract must state:
-
 - input kind;
 - argument kind;
 - output kind;
@@ -123,11 +115,17 @@ Each transformer contract must state:
 - identity key for entity lists;
 - diagnostic payload when validation fails.
 
+Implemented core transformer contracts live in =src/modules/object-core.ss=:
+- =poo-flow-module-transformer-list-append-contract= lowers =list.append= into a field contribution with =append= merge.
+- =poo-flow-module-transformer-list-remove-contract= lowers =list.remove= into a field contribution with =remove= merge.
+- =poo-flow-module-transformer-map-set-contract= lowers =map.set= into a field contribution with =override= merge over a standard association-list map value.
+
+This is intentionally not a second extension graph operation set. Transformer contracts validate agent/user repair payloads and then produce ordinary field contributions. The fixed-point engine still only sees extension primitives from =src/modules/extension.ss=.
+
 ** 10.06.17.60 User Interface Rule
 The downstream user interface should stay declarative.
 
 Preferred user shape:
-
 #+begin_src scheme
 (use-module nono-sandbox
   :config
@@ -138,12 +136,17 @@ Preferred user shape:
 #+end_src
 
 Row operators such as =:append= and =:remove= are implementation escape hatches. They are useful for tests and advanced repair cases, but they should not be the primary story.
+Custom object catalogs may be split into small files, but the entry remains declarative:
+#+begin_src scheme
+;;; objects.ss
+(load! "objects/sandbox-profile")
+#+end_src
+The loaded fragment returns a list of =poo-flow-module-object= values. It does not define doctor commands, runtime adapters, or backend execution. The =load!= macro applies the same validation gate as first-party object catalogs.
 
 ** 10.06.17.70 Diagnostics And Observability
 POO makes recursive extension easy, so diagnostics must be explicit.
 
 Every object-aware merge path should be able to report:
-
 - source object identity;
 - supers / prototype chain;
 - direct fields;
@@ -155,39 +158,45 @@ Every object-aware merge path should be able to report:
 - validation diagnostics.
 
 This is the object-system analogue of Doom's doctor commands, but it remains upstream-owned. User-interface files should call or receive diagnostics, not define them.
+Runtime backend projections should preserve the same repairability principle. For example, nono C binding capability plans must tolerate neutral symbolic capabilities such as =filesystem-read= beside backend extension pairs such as =allow-commands=; the backend filters only the pair-shaped extension entries before alist lookup.
 
 ** 10.06.17.80 Executable Guard
 The code-side guard for this document is:
-
 #+begin_src text
 t/module-object-practice-test.ss
+t/module-object-validation-test.ss
 #+end_src
 
-That test verifies the intended layering:
+They are imported by =t/unit-tests.ss= so the best-practice guard runs in the normal package test root.
 
+Those tests verify the intended layering:
 - field contracts are constructed from =object-core=;
 - object-owned rows become field contributions;
 - field contributions project into extension contributions;
 - config merge receipts preserve original contributions;
-- the final graph is produced by the generic fixed-point extension engine.
+- the final graph is produced by the generic fixed-point extension engine;
+- standard transformer contracts validate =list.append=, =list.remove=, and =map.set= before lowering to object-owned field contributions.
+- =load!= object fragments are wrapped by upstream object validation;
+- invalid TypeSpec field contracts fail through the upstream =gslph= type facade.
 
 This keeps the best practice executable. If future code moves contract wrappers back into =extension.ss=, this test and the import graph should fail loudly during review.
 
 ** 10.06.17.90 Anti-Patterns
 Do not:
-
 - put field contracts, profile prototypes, or transformer contracts in =extension.ss=;
 - let user-interface files define validation or doctor logic;
+- load object fragments without the =poo-flow-require-module-objects-validation!= gate;
 - create a second merge language when a standard list/map/entity transform name is enough;
 - hide object inheritance behind ad hoc alist recursion;
 - make backend runtime execution part of object construction;
 - add compatibility aliases for old object namespaces after a canonical owner exists.
 
-** 10.06.17.100 Next Implementation Step
-The next implementation slice is transformer contracts in =object-core=, backed by tests that start with =list.remove=, =list.append=, and =map.set=.
+** 10.06.17.100 Landed Implementation Slice
+The transformer contract slice is now implemented in =object-core= and guarded by =t/module-object-practice-test.ss=.
 
-The important design rule is already fixed:
-
+The important design rule remains fixed:
 #+begin_src text
 transformers are object-owned contract wrappers, not extension graph primitives.
 #+end_src
+
+The next implementation slice is to route advanced sandbox profile row repair cases through the canonical transformer contracts while keeping the primary user interface declarative. In practice, =:append=, =:remove=, and future repair operators should become syntax sugar over =list.append=, =list.remove=, and =map.set= contract application rather than another private merge language.

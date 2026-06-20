@@ -9,16 +9,19 @@
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/bridge
+        :poo-flow/src/modules/nono-sandbox/c-binding-build
         :poo-flow/src/modules/nono-sandbox/c-binding-descriptor
         (only-in :std/misc/process run-process))
 
 (export +nono-c-binding-dry-run-receipt-schema+
         +nono-c-binding-smoke-test-receipt-schema+
+        +nono-c-binding-live-test-receipt-schema+
         nono-c-binding-compile-probe-command
         nono-c-binding-runtime-manifest-validation-errors
         nono-c-binding-validate-runtime-manifest
         nono-c-binding-dry-run
         nono-c-binding-smoke-test
+        nono-c-binding-live-test
         nono-c-binding-runtime-manifest->manifest
         agent-sandbox-request->nono-c-binding-manifest
         agent-sandbox-execution-request->nono-c-binding-manifest)
@@ -35,20 +38,11 @@
 (def +nono-c-binding-smoke-test-receipt-schema+
   'poo-flow.sandbox.nono-sandbox.c-binding.smoke-test.v1)
 
-;;; The C probe command is direct argv data, not a shell wrapper. It mirrors the
-;;; previous syntax-only check while keeping `.bin` reserved for build outputs.
-;; : (-> Unit [String])
-(def (nono-c-binding-compile-probe-command)
-  '("clang"
-    "-Qunused-arguments"
-    "-std=c11"
-    "-Wall"
-    "-Wextra"
-    "-Werror"
-    "-fsyntax-only"
-    "-Ibindings/nono-c"
-    "-I.data/nono/bindings/c/include"
-    "bindings/nono-c/poo_flow_nono_binding_probe.c"))
+;;; Live receipts are PATH-gated. They run a harmless installed `nono` probe
+;;; when available, and otherwise record a skip instead of failing package tests.
+;; : (-> Unit Symbol)
+(def +nono-c-binding-live-test-receipt-schema+
+  'poo-flow.sandbox.nono-sandbox.c-binding.live-test.v1)
 
 ;;; Mount validation is deliberately stricter than the neutral request schema:
 ;;; the C ABI needs a UTF-8 path and one of the generated access constants.
@@ -242,14 +236,29 @@
   (lambda (value)
     (nono-c-binding-string-call stage function-name value)))
 
+;;; Neutral sandbox capabilities may contain symbolic grants such as
+;;; `filesystem-read`. Backend-specific command policies are pair-shaped
+;;; extension entries; filter before using alist lookup so both forms coexist.
+;; : (-> Capabilities Alist)
+(def (nono-c-binding-capability-extension-entries capabilities)
+  (cond
+   ((null? capabilities) '())
+   ((pair? (car capabilities))
+    (cons (car capabilities)
+          (nono-c-binding-capability-extension-entries (cdr capabilities))))
+   (else
+    (nono-c-binding-capability-extension-entries (cdr capabilities)))))
+
 ;;; String capability projection owns the optional extension keys that are not
 ;;; part of the neutral sandbox schema. Missing keys normalize to an empty list,
 ;;; so each caller receives a pure map over the backend-owned policy values.
 ;; : (-> Capabilities Symbol Symbol Symbol [Alist])
 (def (nono-c-binding-string-calls capabilities key stage function-name)
-  (map (nono-c-binding-string-call-mapper stage function-name)
-       (nono-c-binding-list-value
-        (agent-sandbox-alist-ref capabilities key '()))))
+  (let (extension-entries
+        (nono-c-binding-capability-extension-entries capabilities))
+    (map (nono-c-binding-string-call-mapper stage function-name)
+         (nono-c-binding-list-value
+          (agent-sandbox-alist-ref extension-entries key '())))))
 
 ;;; Capability plans are declarative C call sequences. They preserve ordering
 ;;; for a Rust/C runtime bridge while Scheme keeps ownership of validation and
@@ -357,6 +366,58 @@
           (cons 'would-apply? #f)
           (cons 'dry-run dry-run))))
 
+;;; Live probes are enabled by PATH discovery: if the command can be spawned,
+;;; its exit status determines success; if it cannot be spawned, the receipt is
+;;; an explicit skip. The default command is `nono --version`, not sandbox apply.
+;; nono-c-binding-live-test
+;;   : (-> RuntimeManifest [Command] Alist)
+;;   | contract: runs only an installed nono CLI probe; native sandbox apply is never called
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (nono-c-binding-live-test runtime-manifest)
+;;       ;; => live receipt, either enabled or skipped
+;;       ```
+;;     %
+(def (nono-c-binding-live-test runtime-manifest . maybe-command)
+  (let* ((dry-run (nono-c-binding-dry-run runtime-manifest))
+         (command (if (null? maybe-command)
+                    '("nono" "--version")
+                    (car maybe-command)))
+         (status 0)
+         (output-or-failure
+          (with-catch
+           (lambda (failure) failure)
+           (lambda ()
+             (run-process command
+                          stderr-redirection: #t
+                          check-status:
+                          (lambda (exit-status _settings)
+                            (set! status exit-status)))))))
+    (if (string? output-or-failure)
+      (list (cons 'schema +nono-c-binding-live-test-receipt-schema+)
+            (cons 'ok? (zero? status))
+            (cons 'enabled? #t)
+            (cons 'skipped? #f)
+            (cons 'status status)
+            (cons 'output output-or-failure)
+            (cons 'command command)
+            (cons 'live-executed #t)
+            (cons 'runtime-executed #f)
+            (cons 'would-apply? #f)
+            (cons 'dry-run dry-run))
+      (list (cons 'schema +nono-c-binding-live-test-receipt-schema+)
+            (cons 'ok? #t)
+            (cons 'enabled? #f)
+            (cons 'skipped? #t)
+            (cons 'skip-reason 'nono-not-found-on-path)
+            (cons 'command command)
+            (cons 'live-executed #f)
+            (cons 'runtime-executed #f)
+            (cons 'would-apply? #f)
+            (cons 'dry-run dry-run)))))
+
 ;;; Final projection packages the verified ABI contract, request policy, and
 ;;; query/apply/state entry points into one backend-owned manifest. Consumers
 ;;; can bind this data to C directly without reading Gerbil request internals
@@ -393,6 +454,13 @@
                   (query-path . nono_query_context_query_path)
                   (query-network . nono_query_context_query_network)
                   (result-string-free . nono_string_free)))
+          (cons 'diagnostic-plan
+                '((last-code . nono_last_diagnostic_code)
+                  (last-remediation-json . nono_last_remediation_json)
+                  (session-report-json .
+                   nono_session_diagnostic_report_to_json)
+                  (merge-report-json . nono_merge_diagnostic_report_json)
+                  (string-free . nono_string_free)))
           (cons 'apply-plan
                 '((apply . nono_sandbox_apply)
                   (support . nono_sandbox_is_supported)

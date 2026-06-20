@@ -154,3 +154,72 @@ requests and backend-specific adapters. That work belongs in
   POO Flow tests for this slice.
 - The request contract is explicit enough for Marlin to implement backend
   selection later without changing the Scheme task API.
+** 10.05.90 Native Binding Build Audit
+The =gerbil-mysql= reference package shows the correct Gerbil pattern for a
+real native FFI module:
+- =build.ss= imports =:std/build-script= and =:std/make=.
+- The build spec uses =gsc:= for a raw Gambit FFI file such as =db/_mysql.scm=.
+- The same target passes =-cc-options= and =-ld-options= through =cppflags= and
+  =ldflags= so package build owns native compiler and linker flags.
+- An =ssi:= target exposes the raw FFI module to Gerbil code.
+
+POO Flow should not copy that pattern for the current =nono= surface. The
+=nono= adapter in this repository is not a Scheme-owned FFI module; it is a
+host compile probe and a runtime handoff contract. Therefore:
+- =build.ss= remains responsible for Gerbil package lifecycle through
+  =clan/building=.
+- =src/modules/nono-sandbox/c-binding-descriptor.ss= owns the ABI inventory.
+- =src/modules/nono-sandbox/c-binding-build.ss= owns the POO build/probe object
+  and direct argv command for syntax-only host checks.
+- =src/modules/nono-sandbox/c-binding-runtime.ss= consumes that build object
+  when it needs a smoke-test command, but it still never links, dlopens, or
+  applies the native sandbox.
+
+If POO Flow later adds a real Gerbil FFI module, that slice should add a
+dedicated =gsc:= + =ssi:= pair and keep C flags in the package build spec, as
+=gerbil-mysql= does. Until then, modeling the nono probe as =gsc:= would be a
+false owner boundary.
+** 10.05.91 Nono C Probe Input Contract
+The =nono= C probe remains a syntax-only host check, but its input contract is
+now explicit:
+- package-owned adapter includes live under =bindings/nono-c=;
+- upstream generated includes default to =.data/nono/bindings/c/include= for
+  local development;
+- both include groups are POO build object slots and can be overridden by a
+  user or installer;
+- required build inputs are serialized into the build contract so receipts can
+  show missing paths before invoking =clang=;
+- probe command generation validates required inputs first and raises a typed
+  Scheme failure instead of relying on compiler diagnostics.
+
+This keeps the current slice below the full =gsc:= + =ssi:= FFI line while
+removing the hidden dependency on a particular =.data= checkout layout.
+** 10.05.92 Always-Further Nono Diagnostic ABI
+The =always-further/nono= C binding source currently exposes diagnostic helpers
+from =bindings/c/src/diagnostic.rs=:
+- =nono_last_diagnostic_code=
+- =nono_last_remediation_json=
+- =nono_session_diagnostic_report_to_json=
+- =nono_merge_diagnostic_report_json=
+
+POO Flow now includes these symbols in the nono C ABI descriptor, adapter
+header, compile probe, and runtime =diagnostic-plan=. This lets Marlin consume
+denial diagnostics and remediation JSON through the same handoff manifest as
+capability, query, apply, and state functions.
+
+The local generated =.data/nono/bindings/c/include/nono.h= may lag the Rust
+source until =cbindgen= is rerun. The POO Flow adapter header declares the
+diagnostic prototypes compatibly so the syntax-only probe stays tied to the
+source ABI while still including =nono.h= for shared types and constants.
+** 10.05.93 PATH-Gated Nono Live Test
+The nono live test is optional and environment-discovered:
+- the default live probe command is =nono --version=;
+- if the executable can be spawned from =PATH=, the receipt is enabled and the
+  command exit status determines success;
+- if the executable cannot be spawned, the receipt is skipped with
+  =nono-not-found-on-path=;
+- live probes never call =nono_sandbox_apply= and keep =would-apply?= false.
+
+This lets developer machines or CI images with =nono= installed exercise the
+real CLI presence path automatically while keeping ordinary package tests green
+on machines that only have the C headers and compiler probe inputs.

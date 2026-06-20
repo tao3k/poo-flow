@@ -57,5 +57,6 @@
 ;;; Object catalogs are inert loader inputs, not module activation effects.
 ;; : [PooModuleObject]
 (def poo-flow-docker-sandbox-module-objects
-  (list poo-flow-docker-sandbox-object
-        poo-flow-docker-sandbox-profile-object))
+  (poo-flow-require-module-objects-validation!
+   (list poo-flow-docker-sandbox-object
+         poo-flow-docker-sandbox-profile-object)))
