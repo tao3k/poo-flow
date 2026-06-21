@@ -4,9 +4,10 @@
 
 (import :poo-flow/src/modules/docker-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/modules-system-base)
+        :poo-flow/src/module-system/base)
 
 (export poo-flow-docker-sandbox-module-bundles
+        poo-flow-docker-sandbox-config-flags
         poo-flow-docker-sandbox-profile-config
         poo-flow-docker-sandbox-profile
         poo-flow-docker-sandbox-profiles)
@@ -18,6 +19,16 @@
   (list
    (poo-flow-user-module-bundle
     (sandbox docker-sandbox +docker +doctor))))
+
+;;; Module config flags keep the internal POO profile payload separate from the
+;;; user-authored config body shown by the user-interface presentation.
+;; : (-> [PooSandboxProfile] [UserModuleFlagEntry])
+(def (poo-flow-docker-sandbox-config-flags profiles . maybe-user-config)
+  (append
+   (list (cons ':config profiles))
+   (if (null? maybe-user-config)
+     '()
+     (list (cons ':user-config (car maybe-user-config))))))
 
 ;;; Backend wrappers pass their inherited profile object into sandbox-core; this
 ;;; keeps Docker-specific defaults out of the user-facing macro body.

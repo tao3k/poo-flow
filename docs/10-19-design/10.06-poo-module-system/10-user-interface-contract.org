@@ -16,16 +16,16 @@ execution.
 
 The user-interface layer mirrors Doom's module-selection block:
 
-- =src/modules/profiles/kernel.ss= composes the built-in kernel profile.
+- =src/module-system/profiles/kernel.ss= composes the built-in kernel profile.
 - =src/modules/funflow/config.ss= owns the Funflow module row.
 - =src/modules/loop-governor/config.ss= owns the loop governor row.
 - =src/modules/nono-sandbox/config.ss= owns the nono sandbox row.
 - =src/modules/cubeSandbox/config.ss= owns the CubeSandbox row.
-- =src/modules/user-interface/objects.ss= owns user-interface object contracts.
-- =src/modules/user-interface/config.ss= owns root declaration projection helpers.
+- =src/module-system/root-objects.ss= owns user-interface object contracts.
+- =src/module-system/root-profile.ss= owns root declaration projection helpers.
 
 =user-interface/init.ss= exports category/module/feature bundle rows. Upstream
-=src/modules/user-interface/config.ss= extends =poo-flow-kernel-profile= with
+=src/module-system/root-profile.ss= extends =poo-flow-kernel-profile= with
 those rows. Core workflow, loop, and sandbox rows stay upstream-owned in profile
 config files; users should not have to repeat them just to get a working
 profile.
@@ -42,15 +42,15 @@ management:
 
 - =poo-flow-profile-set= declares a named registry, a default profile, and profile values.
 - =poo-flow-init-module-bundles= is the normal root init entrypoint and creates inspectable bundle rows from category/module/feature declarations.
-- =pooFlowUserInterfaceProfile= turns root bundle rows into inspectable profile data.
-- =pooFlowUserInterfaceProfileSet= builds the canonical root profile registry.
-- =pooFlowUserInterfaceConfig= projects root bundle rows into config data.
-- =pooFlowUserInterfaceProfileSetPresentation= exposes selected/default profile metadata for inspection.
-- =pooFlowUserInterfaceProfileSetDoctorPresentation= reports duplicate profile names, empty registries, and missing defaults before activation.
+- =pooFlowRootProfile= turns root bundle rows into inspectable profile data.
+- =pooFlowRootProfileSet= builds the canonical root profile registry.
+- =pooFlowRootConfig= projects root bundle rows into config data.
+- =pooFlowRootProfileSetPresentation= exposes selected/default profile metadata for inspection.
+- =pooFlowRootProfileSetDoctorPresentation= reports duplicate profile names, empty registries, and missing defaults before activation.
 
-=src/modules/user-config.ss= owns profile/config data APIs.
-=src/modules/user-interface/config.ss= owns the root user-interface projection
-helpers. =src/modules/profiles/kernel.ss= owns the kernel profile set.
+=src/module-system/profile-config.ss= owns profile/config data APIs.
+=src/module-system/root-profile.ss= owns the root user-interface projection
+helpers. =src/module-system/profiles/kernel.ss= owns the kernel profile set.
 
 Root =user-interface/init.ss= should stay close to Doom's =init.el= ergonomics:
 the visible block groups only optional patches under category markers. Required
@@ -99,9 +99,9 @@ manager surface. The implementation remains Gerbil-native and data-first.
 The user contract is guarded by:
 
 - =t/user-interface-config-test.ss=
-- =t/user-interface-case-test.ss=
+- =t/declaration-case-test.ss=
 - =t/module-system-user-interface-test.ss=
 
 The root-facing tests import =:poo-flow/user-interface/init= for declarations
-and project them through =:modules/user-interface/config=. They must not depend
+and project them through =:poo-flow/src/module-system=. They must not depend
 on a root =:poo-flow/user-interface/config= facade.

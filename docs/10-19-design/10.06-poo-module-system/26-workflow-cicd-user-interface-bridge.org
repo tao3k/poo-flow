@@ -1,0 +1,200 @@
+#+TITLE: 10.06.26 Workflow CI/CD User Interface Bridge
+
+* 10.06.26.10 Question
+
+The current CI/CD check-map object proves the Scheme control-plane shape, but it
+is still reached through direct constructors. This audit asks how the public
+module interface should expose a workflow pipeline without turning sandbox
+live-cases into a second CI/CD DSL.
+
+* 10.06.26.20 Evidence
+
+The current module syntax boundary is thin and upstream-owned:
+
+- =src/module-system/init-syntax.ss= defines =use-module= and =load!=.
+- =use-module= currently handles sandbox =:config (profiles ...)= forms and a
+  generic live-case row with =:inherits=, =:isolation=, =:environment=,
+  =:command=, and =:nono=.
+- There is no =funflow :config (pipeline ...)= branch yet.
+- =src/module-system/base.ss= owns the =use-module= declaration contract gate
+  so category symbols such as =workflow= cannot silently become custom modules.
+- =load!= wraps downstream fragments so user files can keep declarations pure.
+
+The current CI/CD implementation is split into intent and concrete control-plane
+objects:
+
+- =src/modules/funflow/config.ss= owns the default =(+cicd ...)= feature payload.
+- =src/modules/workflow/cicd.ss= owns inert POO check and check-map objects.
+- =t/workflow-cicd-check-map-test.ss= proves receipt and runtime-manifest
+  readiness projection without execution.
+- =t/user-interface-cicd-test.ss= still proves the older user intent payload and
+  the sandbox live-case shape.
+
+The downstream configuration already has real profiles:
+
+- =user-interface/custom/my-module/profiles/cicd.ss= defines =ci/check=,
+  =ci/build=, =cd/release=, and =cicd/artifact-promote= with filesystem
+  resource policy.
+- =user-interface/custom/my-module/cases/cicd.ss= currently declares one
+  sandbox live-case inheriting =ci/build= and running =gxpkg build=.
+- =user-interface/custom/my-module/profiles/object-extension.ss= demonstrates
+  the POO slot-operator style for =:override=, =:append=, and =:remove=.
+
+The interface principles document fixes the macro contract:
+
+- macros expand into Gerbil bindings and POO values;
+- macros must not become a separate alist or record DSL;
+- macros must not resolve catalogs, activate modules, run tasks, or execute
+  flows;
+- Gerbil POO and C3 stay the core object composition mechanism.
+
+* 10.06.26.30 Rejected Route
+
+Do not extend the current sandbox live-case row into the workflow pipeline
+interface.
+
+The live-case row answers a different question: "run this command under this
+sandbox selection when the testing harness opts in." A workflow pipeline answers:
+"declare named checks, profile refs, artifact/cache/secret/result protocols, and
+runtime handoff readiness." Those should meet only at the profile reference and
+runtime handoff boundary.
+
+Concretely, this remains valid as a sandbox case:
+
+#+begin_src scheme
+(use-module nono-sandbox
+  :inherits ci/build
+  :isolation ...
+  :environment ...
+  :command ...
+  :nono ...)
+#+end_src
+
+It should not become the spelling for a check-map.
+
+* 10.06.26.40 Recommended Shape
+
+Add a Funflow-owned config constructor layer, then teach =use-module= one
+focused Funflow config branch. The workflow area is the category; the current
+module selection key stores that category as =flow=. =funflow= is the concrete
+module that the user can enable and configure.
+
+The public downstream shape should be:
+
+#+begin_src scheme
+(use-module funflow
+  :config
+  (pipeline default
+    (check build
+      :inherits ci/build
+      :command ("gxpkg" "build")
+      :artifacts (build-log)
+      :cache (gerbil-build-cache)
+      :result (read :lines)
+      :runtime manifest-handoff)
+    (check test
+      :inherits ci/check
+      :command ("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+      :artifacts (test-receipt)
+      :result (read :lines)
+      :runtime manifest-handoff)))
+#+end_src
+
+The macro expansion should construct a =poo-flow-cicd-check-map= through a new
+Funflow config helper. The helper should live beside the module owner, not in
+=module-system/base.ss=:
+
+- =src/modules/funflow/config.ss= owns the public pipeline config forms.
+- =src/modules/workflow/cicd.ss= keeps the shared workflow-domain POO check-map
+  object and projections until or unless it becomes Funflow-specific.
+- =src/module-system/init-syntax.ss= only recognizes the syntax and calls the
+  Funflow config helper.
+- =src/modules/funflow/config.ss= keeps the default =+cicd= feature payload.
+
+The branch should produce a normal =(flow . funflow)= module selection whose
+flags carry the POO check-map object, for example under =:config= or
+=:workflow-pipeline=. Presentation code can later count checks and expose
+runtime readiness, but it must keep =runtime-executed #f=.
+
+Every branch must pass the shared =use-module= contract before projection. The
+contract verifies that the target is a concrete module, not a category, and that
+the returned selection rows are POO user-module-selection objects with routed
+group keys and symbol-keyed flags.
+
+* 10.06.26.50 POO Inheritance Contract
+
+Use =:inherits= as the user-facing name because it is the POO supers concept at
+the interface layer.
+
+For the first bridge, =:inherits= may accept a single profile ref or a list of
+profile refs:
+
+#+begin_src scheme
+(check build
+  :inherits ci/build
+  ...)
+
+(check integration
+  :inherits (ci/check agent/poo-object-extension)
+  ...)
+#+end_src
+
+The workflow check-map should preserve the declared supers as object/reference
+data. It should not materialize sandbox descriptors in the macro. Later object
+resolution can use C3 composition and existing sandbox-core validation to merge
+or reject the final profile shape.
+
+Slot operations should stay object-local. If a check needs object extension, the
+pipeline form should eventually support the same vocabulary as profile objects:
+
+#+begin_src scheme
+(check build
+  :inherits ci/build
+  :artifacts (build-log)
+  :artifacts :append (binary-cache)
+  :cache :remove (legacy-cache)
+  ...)
+#+end_src
+
+This keeps delete/override/append semantics on POO object attributes rather than
+creating bespoke =remove-task= or =remove-node= APIs.
+
+* 10.06.26.60 Implementation Slices
+
+The next code slice should be milestone-sized, not file-by-file:
+
+1. Extend =src/modules/funflow/config.ss= with helpers that turn pipeline/check
+   clauses into =poo-flow-cicd-check-map= objects.
+2. Import that helper from =src/module-system/init-syntax.ss= and add only the
+   =funflow :config (pipeline ...)= syntax branch.
+3. Keep the =use-module= contract gate on the new branch so =(use-module
+   workflow :config ...)= fails as a category/module boundary error.
+4. Add a downstream case fragment, for example
+   =user-interface/custom/my-module/cases/funflow-cicd.ss=, loaded from
+   =custom/my-module/config.ss= with =load!=.
+5. Keep =cases/cicd.ss= as the sandbox live-case proof, not the pipeline proof.
+6. Add a focused user-interface test proving that =(use-module workflow
+   :config (pipeline ...))= is not the public route and =(use-module funflow
+   :config (pipeline ...))= returns a module selection carrying a POO check-map.
+7. Extend presentation only after the object path is stable, so the projection
+   can report check count, receipt count, and runtime-manifest readiness without
+   execution.
+
+* 10.06.26.70 Acceptance Criteria
+
+This bridge is complete when:
+
+- downstream code can write one compact =(use-module funflow :config
+  (pipeline ...))= form;
+- =(use-module workflow ...)= fails contract validation because =workflow= is a
+  category, not a concrete module;
+- the macro expands into POO objects, not alists as the semantic core;
+- the resulting selection preserves the =(flow . funflow)= module identity and
+  check-map object data;
+- =:inherits= preserves single or multiple supers as profile refs or objects;
+- receipts and runtime-manifest readiness remain available through
+  =src/modules/workflow/cicd.ss= projections;
+- Scheme does not execute commands, activate sandboxes, or resolve runtime
+  adapters;
+- focused tests pass through =gxpkg env gxtest= and the package build remains
+  package-manager-owned.

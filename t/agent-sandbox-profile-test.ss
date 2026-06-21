@@ -48,6 +48,12 @@
            (cdr entry))
       '())))
 
+;;; Local alist lookup keeps summary assertions focused on field contracts.
+;; : (-> Symbol Alist MaybeValue)
+(def (alist-value key entries)
+  (let (entry (and (list? entries) (assoc key entries)))
+    (if entry (cdr entry) #f)))
+
 (run-tests!
  (test-suite "agent sandbox profile descriptors"
    (test-case "builds backend profiles for nono and CubeSandbox"
@@ -82,6 +88,57 @@
                         (snapshot . clone))
                        (snapshot . clone)
                        (resume . supported)))))
+   (test-case "summarizes structured profiles for runtime handoff"
+     (let* ((profile
+             (make-agent-sandbox-backend-profile
+              'nono
+              'local-profile
+              '((mode . proxy-only))
+              '(process-run filesystem-read filesystem-write tmpdir)
+              '((filesystem
+                 (scope . project-workspace)
+                 (paths
+                  ((role . project-workspace)
+                   (source . ".")
+                   (project-marker . "gerbil.pkg")
+                   (target . "/workspace/project")
+                   (mode . read-write)))
+                 (access . read-write))
+                (cpu . 2)
+                (memory . "4Gi")
+                (timeout-ms . 300000))
+              '((intent . coding-agent))))
+            (summary (agent-sandbox-profile-runtime-summary profile))
+            (filesystem (alist-value 'filesystem summary))
+            (handoff (agent-sandbox-profile-handoff-summary profile))
+            (handoff-summary (alist-value 'runtime-summary handoff)))
+       (check-equal? (alist-value 'schema summary)
+                     +agent-sandbox-profile-runtime-summary-schema+)
+       (check-equal? (alist-value 'kind summary)
+                     'agent-sandbox-profile-runtime-summary)
+       (check-equal? (alist-value 'profile-ref summary)
+                     'local-profile)
+       (check-equal? (alist-value 'backend-kind summary) 'nono)
+       (check-equal? (alist-value 'capability-count summary) 4)
+       (check-equal? (alist-value 'resource-policy-count summary) 4)
+       (check-equal? (alist-value 'valid? summary) #t)
+       (check-equal? (alist-value 'validation-errors summary) '())
+       (check-equal? (alist-value 'declared? filesystem) #t)
+       (check-equal? (alist-value 'structured? filesystem) #t)
+       (check-equal? (alist-value 'scope filesystem) 'project-workspace)
+       (check-equal? (alist-value 'access filesystem) 'read-write)
+       (check-equal? (alist-value 'path-count filesystem) 1)
+       (check-equal? (alist-value 'diagnostics filesystem) '())
+       (check-equal? (alist-value 'schema handoff)
+                     +agent-sandbox-profile-handoff-summary-schema+)
+       (check-equal? (alist-value 'handoff-target handoff)
+                     "marlin-agent-core")
+       (check-equal? (alist-value 'handoff-contract handoff)
+                     'poo-flow.agent-sandbox-profile.runtime-handoff.v1)
+       (check-equal? (alist-value 'profile handoff) profile)
+       (check-equal? (alist-value 'schema handoff-summary)
+                     +agent-sandbox-profile-runtime-summary-schema+)
+       (check-equal? (alist-value 'runtime-executed handoff) #f)))
    (test-case "uses POO profile descriptors for backend overrides"
      (let* ((cube-descriptor
              (make-cube-agent-sandbox-profile-descriptor 'python-template))

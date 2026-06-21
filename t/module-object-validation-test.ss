@@ -7,11 +7,11 @@
                  test-case
                  check-equal?
                  run-tests!)
-        :poo-flow/src/modules/object-core
-        :poo-flow/src/modules/object-validation
-        :poo-flow/src/modules/objects
+        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/object-validation
+        :poo-flow/src/module-system/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/modules-system/root-objects
+        :poo-flow/src/module-system/root-objects
         :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/docker-sandbox/objects

@@ -15,10 +15,33 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/module-system
+        :poo-flow/src/module-system/facade
         :poo-flow/t/user-interface-fixtures)
 
 (export user-interface-presentation-test)
+
+;; : [Symbol]
+(def user-interface-presentation-trace-stages
+  '(selected-modules
+    feature-facts
+    cicd-intents
+    workflow-cicd-pipelines
+    workflow-cicd-runtime-readiness
+    workflow-cicd-runtime-command-manifest-maps
+    workflow-cicd-runtime-command-manifest-summaries
+    workflow-cicd-runtime-command-manifest-agreement
+    workflow-cicd-marlin-runtime-handoff-abis
+    workflow-cicd-receipts
+    loop-engine-intents
+    settings))
+
+;; : (-> [Alist] Symbol MaybeAlist)
+(def (user-interface-presentation-trace-stage trace stage)
+  (cond
+   ((null? trace) #f)
+   ((equal? (alist-value 'stage (car trace)) stage) (car trace))
+   (else
+    (user-interface-presentation-trace-stage (cdr trace) stage))))
 
 ;; : (-> Unit TestSuite)
 ;;; This suite keeps presentation output aligned with the declarative user
@@ -84,6 +107,21 @@
         (check-equal? (alist-value 'runtime-handoff cicd-intent)
                       'runtime-command-manifest)
         (check-equal? (alist-value 'runtime-executed cicd-intent) #f)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-runtime-command-manifest-agreement-valid?)
+                      #t)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-runtime-command-manifest-agreement-diagnostics)
+                      '())
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-abi-count)
+                      0)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-summary-count)
+                      0)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-summaries)
+                      '())
         (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value 'key loop-engine-intent)
                       '(flow . loop-engine))
@@ -102,11 +140,10 @@
         (check-equal? (alist-value 'runtime-executed loop-engine-intent) #f)
         (check-equal? (map (lambda (step) (alist-value 'stage step))
                            trace)
-                      '(selected-modules feature-facts cicd-intents
-                        loop-engine-intents settings))
+                      user-interface-presentation-trace-stages)
         (check-equal? (map (lambda (step) (alist-value 'runtime-executed step))
                            trace)
-                      '(#f #f #f #f #f))
+                      '(#f #f #f #f #f #f #f #f #f #f #f #f))
         (check-equal? (alist-value 'profile settings)
                       "developer")
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
@@ -164,6 +201,12 @@
         (check-equal? (.ref presentation 'config-module-count) 6)
         (check-equal? (.ref presentation 'feature-count) 6)
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-runtime-command-manifest-agreement-valid?)
+                      #t)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-abi-count)
+                      0)
         (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value
                        'runtime-handoff
@@ -171,8 +214,7 @@
                       'runtime-command-manifest)
         (check-equal? (map (lambda (step) (alist-value 'stage step))
                            (.ref presentation 'presentation-trace))
-                      '(selected-modules feature-facts cicd-intents
-                        loop-engine-intents settings))
+                      user-interface-presentation-trace-stages)
         (check-equal? (alist-value 'declaration-index
                                    (car (.ref presentation 'feature-facts)))
                       0)
@@ -203,6 +245,12 @@
         (check-equal? (.ref presentation 'module-count) 6)
         (check-equal? (.ref presentation 'feature-count) 6)
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-runtime-command-manifest-agreement-valid?)
+                      #t)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-abi-count)
+                      0)
         (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value
                        'runtime-owner
@@ -210,11 +258,15 @@
                       "marlin-agent-core")
         (check-equal? (alist-value
                        'stage
-                       (caddr (.ref presentation 'presentation-trace)))
+                       (user-interface-presentation-trace-stage
+                        (.ref presentation 'presentation-trace)
+                        'cicd-intents))
                       'cicd-intents)
         (check-equal? (alist-value
                        'stage
-                       (cadddr (.ref presentation 'presentation-trace)))
+                       (user-interface-presentation-trace-stage
+                        (.ref presentation 'presentation-trace)
+                        'loop-engine-intents))
                       'loop-engine-intents)
         (check-equal? (alist-value 'declaration-index
                                    (car (.ref presentation 'feature-facts)))

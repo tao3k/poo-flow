@@ -2,7 +2,7 @@
 
 * 10.06.04 poo-flow Module System Design
 ** 10.06.04.05 Current Implementation Delta
-The module system now includes the Marlin-style facade in =src/modules/module-system.ss= while preserving the existing descriptor/catalog/activation API.
+The module system now includes the Marlin-style facade in =src/module-system.ss= while preserving the existing descriptor/catalog/activation API.
 
 Implemented facade pieces:
 - =poo-module-interface= with schema and metadata slots;
@@ -44,8 +44,9 @@ activation
   -> lowers to run-config
 #+end_src
 
-The implementation lives in =src/modules/module-system.ss=. It imports core
-descriptor and config APIs, but core does not import or re-export it.
+The implementation lives under =src/module-system/*= and is re-exported by
+=src/module-system.ss=. It imports core descriptor and config APIs, but core
+does not import or re-export it.
 
 ** 10.06.04.20 Core Types
 *** PooModuleSourceRef
@@ -96,7 +97,7 @@ not read files, query package managers, or evaluate Scheme code.
 
 This keeps the boundary explicit:
 - loading belongs to a later source-loader layer;
-- resolving belongs to =src/modules/module-system.ss=;
+- resolving belongs to =src/module-system/resolver.ss=;
 - activation receives descriptor values only.
 
 ** 10.06.04.40 Activation Rules
@@ -132,7 +133,7 @@ The diagnostic surface is implemented as =poo-module-doctor=. It reports:
 Later diagnostics should include unused imports, runtime capability gaps after
 activation, and source-ref drift when filesystem or package loading is added.
 ** 10.06.04.70 Current Modular Owner Layout
-The implementation is now split under =src/modules/= instead of being held in core or in a single large file:
+The implementation is now split under =src/module-system/= instead of being held in core or mixed with concrete modules:
 - =interface.ss= owns Marlin-style interfaces, schema helpers, and object helpers;
 - =source.ss= owns source refs and structured imports;
 - =descriptor.ss= owns C3 role data, descriptors, imports, metadata slots, and closed-world import validation;
@@ -140,11 +141,10 @@ The implementation is now split under =src/modules/= instead of being held in co
 - =diagnostics.ss= owns doctor reports;
 - =resolver.ss= owns source catalog lookup, activation, and run-config lowering;
 - =loader.ss= owns pure source-ref loader backends and load receipts;
-- =projection.ss= owns schemas, validation receipts, runtime projections, value catalogs, and presentation receipts;
-- =merge.ss= owns Nix-style option merge receipts and final option alist projection;
+- =projection.ss= owns schemas, validation receipts, runtime projections, value catalogs, presentation receipts, and Nix-style option merge receipts;
 - =doctor.ss= owns user-facing module doctor and source doctor presentations;
-- =syntax.ss= owns user-facing macro sugar that expands to descriptor/catalog data;
-- =module-system.ss= remains a thin facade that re-exports the leaf owners.
+- =descriptor-syntax.ss= owns user-facing macro sugar that expands to descriptor/catalog data;
+- =src/module-system.ss= remains a thin facade that re-exports the leaf owners.
 
 The Doom/C3 interface additions are data-only:
 - descriptor slots now include =group=, =flags=, =features=, =depth=, =phase-files=, and =hooks=;
@@ -155,7 +155,7 @@ The Doom/C3 interface additions are data-only:
 
 This keeps the boundary stable: Scheme owns descriptor data and validation, while loader backends and runtime execution remain separate owners.
 ** 10.06.04.80 User Interface Contract
-The user-facing import is =:modules/module-system=. Users should not import leaf owners such as =:modules/context= or =:modules/projection= directly for normal module authoring.
+The user-facing import is =:poo-flow/src/module-system=. Users should not import leaf owners such as =:poo-flow/src/module-system/context= or =:poo-flow/src/module-system/projection= directly for normal module authoring.
 
 The public interface contract is:
 - declare profiles with =poo-module-interface= and string schema helpers;
@@ -170,14 +170,14 @@ The public interface contract is:
 - project pre-runtime doctor summaries with =pooModuleDoctorPresentation= and =pooModuleSourceDoctorPresentation=;
 - inspect user config mistakes through validation receipts rather than runtime exceptions.
 
-The regression owner for this contract is =t/module-system-user-interface-test.ss=. That test intentionally imports only =:modules/module-system= plus generic POO object accessors.
+The regression owner for this contract is =t/module-system-user-interface-test.ss=. That test intentionally imports only =:poo-flow/src/module-system= plus generic POO object accessors.
 ** 10.06.04.85 Maintained Downstream User Interface
 =user-interface/= is the root-level maintained user-interface directory. It is not a test fixture and it is not package runtime source.
 The directory models the thin handoff that downstream users see:
 - =init.ss= chooses hot-plug module groups, module ids, flags, and custom module entrypoints;
 - =custom/*/config.ss= is the downstream-owned custom module authoring space;
-- =src/modules/user-interface/config.ss= projects those root declarations into the canonical profile/config objects.
-This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/modules=. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
+- =src/module-system/user-profile.ss= projects those root declarations into the canonical profile/config objects.
+This borrows Doom's small user-facing feel without copying its package-management shape. POO Flow exposes modules, not packages: descriptor schemas, imports, loaders, catalogs, doctors, merge semantics, and sandbox realization stay in =src/module-system= or concrete =src/modules/<domain>= owners. Tests may verify this directory, but examples and user-facing configuration belong in root-level =user-interface/=.
 ** 10.06.04.90 Doom And Nix Design Boundary
 The detailed design principles are in [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]].
 
@@ -186,4 +186,4 @@ The short version:
 - learn Nix's option and merge semantics, not its syntax;
 - keep Gerbil POO and C3 as the implementation substrate;
 - add macro sugar only after the data API and user-interface tests exist;
-- require user-facing tests to import =:modules/module-system= only.
+- require user-facing tests to import =:poo-flow/src/module-system= only.

@@ -4,7 +4,7 @@
 ** 10.06.02.05 Current Migration Status
 Status: implemented for the shared module facade.
 
-=poo-flow= now carries the Marlin-inspired surface locally in =src/modules/module-system.ss=: =poo-module-interface=, =pooModules=, =poo-import=, =poo-imports=, =poo-local-source=, =poo-source-ref=, =pooEvalModules=, and =pooModuleSystemPresentation=. Direct symbol/string imports remain closed-world dependencies. Import specs with inline module profiles join the module closure before doctor or activation.
+=poo-flow= now carries the Marlin-inspired surface locally in =src/module-system.ss=, backed by owners under =src/module-system/*=: =poo-module-interface=, =pooModules=, =poo-import=, =poo-imports=, =poo-local-source=, =poo-source-ref=, =pooEvalModules=, and =pooModuleSystemPresentation=. Direct symbol/string imports remain closed-world dependencies. Import specs with inline module profiles join the module closure before doctor or activation.
 
 This deliberately does not copy Marlin's concrete policy-pack furniture or deck-runtime dependencies. =poo-flow= keeps task registries, flow registries, activation, and run-config lowering as local ownership boundaries.
 ** 10.06.02.10 Reference Scope

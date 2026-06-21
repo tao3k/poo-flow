@@ -274,3 +274,61 @@ Boundary result:
 - Users author with normal Scheme bindings and procedures.
 - The DAG receipt and manifest are named evidence artifacts.
 - Runtime work remains outside Scheme and is owned by =marlin-agent-core=.
+** 10.07.130 Functional + POO Strand Registry
+The upstream Funflow source shows the functional kernel as a host-language
+Arrow over named strands:
+- =RequiredStrands= includes =simple=, =store=, and =docker=.
+- =ExtendedFlow additionalStrands input output= prepends extension strands before
+  the required Funflow strands.
+- =RequiredCore= requires Arrow/ArrowChoice, recoverable errors, IO lifting, and
+  caching.
+
+The Scheme implementation now models that shape as POO metadata:
+- =flow-strand-descriptor-prototype= names a strand descriptor object.
+- =make-flow-strand-descriptor= declares one strand, its task families,
+  capabilities, route, interpreter owner, and whether it is required.
+- =default-flow-strand-registry= exposes the Funflow-like required strands:
+  =simple=, =store=, and =docker=.
+- =flow-category-strand-registry= makes the strand registry reachable from the
+  POO category object.
+- =flow-strand-registry-extend= appends a new strand and replaces a same-named
+  strand, giving POO extensions an override path without mutating defaults.
+
+Boundary:
+- Strands are declaration/policy objects, not runners.
+- Store and Docker remain adapter/runtime-owned.
+- Function composition stays in =src/core/flow.ss= through Category/Arrow
+  operations; extension ownership is represented through POO object slots and
+  C3-compatible descriptor supers.
+
+Proof:
+- =t/functional-flow-kernel-test.ss= checks the default strand registry,
+  Funflow-style core requirements, and POO override semantics for added strands.
+** 10.07.140 Kleisli Bind Landing
+This slice adds value-dependent flow composition to the Functional + POO kernel.
+
+Code landing:
+- =src/core/flow.ss= owns =kleisli-step=, =flow-bind=, and =flow-kleisli=.
+- =flow-category-prototype= now stores =bind= as a POO category slot, and
+  =flow-category-bind= dispatches through the selected category object.
+- =src/core/plan.ss= projects bind as a =kleisli= DAG node. It does not
+  statically expand the binder because the next flow depends on the source
+  value.
+- =src/core/runner.ss= interprets the =kleisli= node by running the source flow,
+  calling the binder with the source value, validating that the binder returns a
+  =flow=, and then running the returned flow.
+- =src/core/flow-syntax.ss= exposes =defpoo-flow-bind= and
+  =defpoo-flow-kleisli= for compact authoring.
+
+Boundary result:
+- Static =flow-then= remains the Category compose operation.
+- =flow-bind= is the Kleisli operation for dependent composition.
+- Dynamic execution evidence is preserved in a =kleisli= receipt with source and
+  bound child receipts.
+- A binder that returns anything other than a =flow= raises a structured
+  control-plane failure.
+
+Proof:
+#+begin_src sh
+gxpkg env gxtest t/functional-flow-kleisli-test.ss
+#+end_src

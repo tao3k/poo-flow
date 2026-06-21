@@ -9,7 +9,8 @@ architecture documents.
 
 The invariant is:
 
-- =src/modules= owns the upstream module system implementation.
+- =src/module-system= owns the upstream module system implementation.
+- =src/modules= owns concrete workflow and sandbox modules.
 - =user-interface= owns the downstream practice template.
 - =poo-flow= emits Scheme-side contracts, projections, receipts, and manifests.
 - =marlin-agent-core= owns backend execution, LLM/API integration, and runtime
@@ -22,8 +23,8 @@ Status: in progress.
 Current landed work:
 
 - =build.ss= uses the package build shape and supports =gxi build.ss compile=.
-- =src/modules/module-system.ss= is the public module-system facade.
-- =src/modules/user-config.ss= owns the thin downstream config projection.
+- =src/module-system.ss= is the public module-system facade.
+- =src/module-system/user-config.ss= owns the thin downstream config projection.
 - =src/modules/nono-sandbox/c-binding.ss= is split into descriptor and runtime
   owners under the sandbox category.
 
@@ -116,6 +117,6 @@ Do not publish transient implementation internals as harness guidance.
 
 Sync artifacts:
 
-- A downstream onboarding example using =user-interface/init.ss= plus =src/modules/user-interface/config.ss= projection helpers.
+- A downstream onboarding example using =user-interface/init.ss= plus =src/module-system/user-profile.ss= projection helpers.
 - Verification commands for =gxi build.ss compile= and =gxtest=.
 - A note that =.data= research checkouts remain reference material.

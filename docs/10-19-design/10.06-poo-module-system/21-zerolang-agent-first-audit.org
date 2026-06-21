@@ -100,7 +100,7 @@ important mapping is about authority and review boundaries, not surface syntax.
 The current =poo-flow= direction is mostly aligned:
 - =user-interface/init.ss= is already a small validated configuration surface.
 - =poo-flow!= short form keeps profile construction out of root init.
-- =src/modules/user-interface/config.ss= owns the maintained =users= profile.
+- =src/module-system/user-profile.ss= owns the maintained =users= profile.
 - profile presentations are shallow, replayable receipts with
   =runtime-executed = #f=.
 - doctor reports are pure declaration receipts and do not load packages,

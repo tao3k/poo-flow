@@ -5,6 +5,7 @@
 (import (only-in :clan/poo/object .o .mix object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
+        :poo-flow/src/core/agent-harness
         :poo-flow/src/loops/governor)
 
 (export +loop-human-audit-schema+
@@ -35,6 +36,8 @@
         loop-human-audit-review-items
         loop-human-audit-validation-errors
         validate-loop-human-audit
+        loop-human-audit->agent-operation
+        loop-human-audit->runtime-snapshot
         loop-human-audit->contract)
 
 ;;; Boundary: schema names the human audit review contract.
@@ -336,6 +339,96 @@
           (eq? (cdr entry) decision))
         (loop-human-audit-decisions audit))))
 
+;; : (-> [Alist] Boolean)
+(def (loop-human-audit-review-items-pending? review-items)
+  (cond
+   ((null? review-items) #f)
+   ((eq? (loop-human-audit-alist-ref (car review-items)
+                                     'decision
+                                     'pending)
+         'pending)
+    #t)
+   (else
+    (loop-human-audit-review-items-pending? (cdr review-items)))))
+
+;; : (-> [Alist] Symbol)
+(def (loop-human-audit-operation-status review-items)
+  (if (loop-human-audit-review-items-pending? review-items)
+    'waiting-human
+    'completed))
+
+;; : (-> LoopHumanAudit Symbol)
+(def (loop-human-audit-operation-id audit)
+  (string->symbol
+   (string-append
+    "human-audit:"
+    (symbol->string (loop-human-audit-name audit)))))
+
+;;; Human audit is projected as an agent operation so loop cases can hand the
+;;; same inert object family to CLI, UI, or runtime adapters. It is still
+;;; review-only data: no runtime work is submitted here.
+;; : (-> LoopHumanAudit [Alist] PooFlowAgentOperation)
+(def (loop-human-audit->agent-operation* audit review-items)
+  (make-poo-flow-agent-operation
+   (loop-human-audit-operation-id audit)
+   'human-audit
+   (list 'loop-human-audit (loop-human-audit-name audit))
+   #f
+   (list (cons 'schema +loop-human-audit-schema+)
+         (cons 'review-items review-items)
+         (cons 'decisions (loop-human-audit-decisions audit)))
+   +loop-human-audit-schema+
+   (list (cons 'target (loop-human-audit-execution-owner audit))
+         (cons 'mode 'review-loop)
+         (cons 'executes-runtime #f))
+   (loop-human-audit-operation-status review-items)
+   #f
+   (list (cons 'governor-derived
+               (loop-human-audit-governor-derived? audit))
+         (cons 'governance-node-kind
+               (loop-human-audit-governance-node-kind audit))
+         (cons 'decision-owner
+               (loop-human-audit-decision-owner audit)))))
+
+;; : (-> LoopHumanAudit PooFlowAgentOperation)
+(def (loop-human-audit->agent-operation audit)
+  (let* ((valid-audit (validate-loop-human-audit audit))
+         (review-items (loop-human-audit-review-items valid-audit)))
+    (loop-human-audit->agent-operation* valid-audit review-items)))
+
+;; : (-> LoopHumanAudit [Alist] PooFlowRuntimeSnapshot)
+(def (loop-human-audit->runtime-snapshot* audit review-items)
+  (make-poo-flow-runtime-snapshot
+   'human-audit
+   (loop-human-audit-name audit)
+   (loop-human-audit-operation-status review-items)
+   #f
+   (list (cons 'review-count (length review-items))
+         (cons 'approved-patterns
+               (loop-human-audit-patterns-by-decision audit 'approved))
+         (cons 'rejected-patterns
+               (loop-human-audit-patterns-by-decision audit 'rejected))
+         (cons 'escalated-patterns
+               (loop-human-audit-patterns-by-decision audit 'escalated))
+         (cons 'changed-requested-patterns
+               (loop-human-audit-patterns-by-decision
+                audit
+                'changes-requested)))
+   #f
+   '((stage . loop-human-audit->runtime-snapshot)
+     (runtime-executed . #f)
+     (projection-only . #t))
+   (list (cons 'operation-id
+               (loop-human-audit-operation-id audit))
+         (cons 'decision-owner
+               (loop-human-audit-decision-owner audit)))))
+
+;; : (-> LoopHumanAudit PooFlowRuntimeSnapshot)
+(def (loop-human-audit->runtime-snapshot audit)
+  (let* ((valid-audit (validate-loop-human-audit audit))
+         (review-items (loop-human-audit-review-items valid-audit)))
+    (loop-human-audit->runtime-snapshot* valid-audit review-items)))
+
 ;;; Contract projection is the human audit loop review surface.
 ;;; It records review state without writing config, state, or runtime effects.
 ;; : (-> LoopHumanAudit Alist)
@@ -344,7 +437,11 @@
          (governor (loop-human-audit-governor valid-audit))
          (state-facts (loop-human-audit-state-facts valid-audit))
          (governor-contract (loop-governor->contract governor state-facts))
-         (review-items (loop-human-audit-review-items valid-audit)))
+         (review-items (loop-human-audit-review-items valid-audit))
+         (agent-operation
+          (loop-human-audit->agent-operation* valid-audit review-items))
+         (runtime-snapshot
+          (loop-human-audit->runtime-snapshot* valid-audit review-items)))
     (list (cons 'schema +loop-human-audit-schema+)
           (cons 'kind 'loop-human-audit)
           (cons 'name (loop-human-audit-name valid-audit))
@@ -366,6 +463,10 @@
                 (loop-governor-node->contract valid-audit))
           (cons 'review-items review-items)
           (cons 'review-count (length review-items))
+          (cons 'agent-operation
+                (poo-flow-agent-operation->alist agent-operation))
+          (cons 'runtime-snapshot
+                (poo-flow-runtime-snapshot->alist runtime-snapshot))
           (cons 'decisions (loop-human-audit-decisions valid-audit))
           (cons 'approved-patterns
                 (loop-human-audit-patterns-by-decision valid-audit 'approved))

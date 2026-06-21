@@ -86,7 +86,7 @@ Nix is valuable because override and merge behavior are part of the module model
 - option override;
 - option conflict.
 
-These policies are schema vocabulary, not implicit alist order. =src/modules/merge.ss= projects them into receipts before runtime execution:
+These policies are schema vocabulary, not implicit alist order. =src/module-system/projection.ss= projects them into receipts before runtime execution:
 - append starts with the schema default and then dependency-to-root config values;
 - override uses the root-most configured value after dependency traversal;
 - conflict accepts identical values and returns an invalid receipt for divergent values;
@@ -100,8 +100,8 @@ The design rule is:
 - use POO objects for descriptor and interface values;
 - use C3 composition for role and prototype inheritance;
 - expose stable accessors for user-facing inspection;
-- keep leaf owners split under =src/modules=;
-- keep =:modules/module-system= as the only normal user import.
+- keep leaf owners split under =src/module-system=;
+- keep =:poo-flow/src/module-system= as the only normal user import.
 
 Macros should expand into Gerbil bindings and POO values in this system. They should not become an alternate runtime or a separate alist/record DSL.
 
@@ -116,7 +116,7 @@ Every user-facing macro must satisfy all of these rules:
 - Expansion does not activate modules.
 - Expansion does not run tasks or flows.
 - Expansion does not depend on hidden current-file module context.
-- Expansion has a focused test that imports only =:modules/module-system=.
+- Expansion has a focused test that imports only =:poo-flow/src/module-system=.
 
 This contract lets =poo-flow= borrow Doom's friendly Lisp surface while staying a Gerbil-hosted POO module system.
 
@@ -124,7 +124,7 @@ This contract lets =poo-flow= borrow Doom's friendly Lisp surface while staying 
 *** Layer 1: Explicit POO API
 Status: implemented.
 
-Users can already declare interfaces, modules, imports, catalogs, active checks, eval receipts, and presentation receipts through =:modules/module-system=.
+Users can already declare interfaces, modules, imports, catalogs, active checks, eval receipts, and presentation receipts through =:poo-flow/src/module-system=.
 
 *** Layer 2: Focused Hygienic Authoring Forms
 Status: partially implemented.
@@ -140,7 +140,7 @@ The =*-block= names avoid colliding with existing public accessors such as =poo-
 
 *** Layer 3: Nix-Style Merge Policy
 Status: implemented for first-pass projection semantics.
-Schema vocabulary and receipts now cover default, override, append, and conflict semantics. Macro authoring remains constrained to POO behavior that is tested through =:modules/module-system=.
+Schema vocabulary and receipts now cover default, override, append, and conflict semantics. Macro authoring remains constrained to POO behavior that is tested through =:poo-flow/src/module-system=.
 *** Layer 4: Loader Integration
 Status: future.
 
@@ -151,7 +151,7 @@ Every new user-facing interface must add or update tests in =t/module-system-use
 
 The required test shape is:
 
-- import =:modules/module-system=;
+- import =:poo-flow/src/module-system=;
 - avoid importing leaf owners;
 - construct values as a module author would;
 - assert descriptor shape through public accessors;
@@ -166,18 +166,18 @@ Implemented helpers and projections:
 - =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and =poo-option-merge=;
 - =poo-module-option-merge-receipts= for inspectable merge findings;
 - =poo-module-merged-option-alist= for valid final option values.
-The implemented merge owner is =src/modules/merge.ss=. It keeps append, override, conflict, constant, required, and missing-schema findings as inspectable data before runtime execution.
+The implemented merge owner is =src/module-system/projection.ss=. It keeps append, override, conflict, constant, required, and missing-schema findings as inspectable data before runtime execution.
 ** 10.06.06.90 Implemented Doctor Presentation Layer
 Status: implemented for first-pass user-facing summaries.
 Implemented helpers and projections:
 - =pooModuleDoctorPresentation= for value catalogs;
 - =pooModuleSourceDoctorPresentation= for source refs and loader backends;
 - doctor summaries for module ids, import graph, contribution counts, diagnostics, validation count, merge status, and merged options.
-The implemented doctor owner is =src/modules/doctor.ss=. It borrows Doom's inspectable doctor experience while preserving the data-only, no-runtime-execution boundary.
+The implemented doctor owner is =src/module-system/doctor.ss=. It borrows Doom's inspectable doctor experience while preserving the data-only, no-runtime-execution boundary.
 ** 10.06.06.100 Maintained User Interface
 Status: implemented.
-=user-interface/= is the root-level downstream configuration surface. It is intentionally thin: users choose modules in =modules.ss= and set flow, loop, sandbox, and strategy values in =config.ss=.
+=user-interface/= is the root-level downstream configuration surface. It is intentionally thin: users choose modules in =init.ss= and put custom module bodies under =custom/*/config.ss=.
 This is the POO Flow equivalent of a small user configuration shape:
 - downstream owns module enablement and flags;
 - downstream owns flow, loop, strategy, and sandbox option values;
-- upstream =src/modules= owns descriptor schemas, import realization, loader manifests, catalogs, doctors, and merge semantics.
+- upstream =src/module-system= owns descriptor schemas, import realization, loader manifests, catalogs, doctors, and merge semantics.

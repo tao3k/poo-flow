@@ -14,7 +14,7 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export module-system-observability-test)
 

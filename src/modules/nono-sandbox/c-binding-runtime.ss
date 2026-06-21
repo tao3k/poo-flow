@@ -2,7 +2,7 @@
 ;;; Owner: nono-sandbox C binding runtime manifest projection lives here.
 ;;; Boundary: this module emits capability plans and backend handoff manifests.
 ;;; Runtime contract: Marlin or another C runtime owns dlopen/FFI execution.
-;;; Source contract: symbols mirror .data/nono/bindings/c/include/nono.h.
+;;; Source contract: symbols mirror the package-owned bindings/nono-c/nono.h.
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
 (import :poo-flow/src/core/api

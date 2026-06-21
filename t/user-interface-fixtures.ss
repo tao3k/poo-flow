@@ -3,8 +3,8 @@
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
 (import (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/module-system
-        :poo-flow/src/modules/profiles/kernel)
+        :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/profiles/kernel)
 
 (export test-poo-flow-user-module-bundles
         test-poo-flow-user-modules

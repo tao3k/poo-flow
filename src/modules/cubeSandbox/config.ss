@@ -4,9 +4,10 @@
 
 (import :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/modules/modules-system-base)
+        :poo-flow/src/module-system/base)
 
 (export poo-flow-cubeSandbox-module-bundles
+        poo-flow-cubeSandbox-config-flags
         poo-flow-cubeSandbox-profile-config
         poo-flow-cubeSandbox-profile
         poo-flow-cubeSandbox-profiles)
@@ -17,6 +18,16 @@
   (list
    (poo-flow-user-module-bundle
     (sandbox cubeSandbox +cube +doctor))))
+
+;;; Module config flags carry both the validated internal profile list and the
+;;; raw user-authored config body used by user-interface presentation.
+;; : (-> [PooSandboxProfile] [UserModuleFlagEntry])
+(def (poo-flow-cubeSandbox-config-flags profiles . maybe-user-config)
+  (append
+   (list (cons ':config profiles))
+   (if (null? maybe-user-config)
+     '()
+     (list (cons ':user-config (car maybe-user-config))))))
 
 ;;; Backend wrappers pass their inherited profile object into sandbox-core; this
 ;;; keeps user syntax thin while object merge semantics stay centralized.

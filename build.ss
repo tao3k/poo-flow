@@ -7,10 +7,11 @@
 (import (only-in :gerbil/gambit
                  path-expand
                  string-append)
+        (only-in :std/build-script
+                 defbuild-script)
         (only-in :clan/building
                  all-gerbil-modules
-                 default-exclude
-                 init-build-environment!))
+                 default-exclude))
 
 ;;; clan/building owns package build-environment initialization and compilation.
 ;;; Non-module practice fragments stay out of the package build and are loaded
@@ -22,18 +23,21 @@
 ;;; present until native live tests opt in at runtime.
 ;; : (-> String)
 (def (nono-c-binding-include-option)
-  (string-append "-I" (path-expand ".data/nono/bindings/c/include")))
+  (string-append "-I" (path-expand "bindings/nono-c")))
 
 ;;; Build spec stays declarative: clan/building owns module discovery while the
 ;;; one native shim entry records the C header check needed by package compile.
-;; : (-> List)
-(def (spec)
+;; : BuildSpec
+(def +poo-flow-build-spec+
   (append
    `((gsc: "src/modules/nono-sandbox/_nono"
-            "-cc-options" ,(nono-c-binding-include-option)))
+            "-cc-options" ,(nono-c-binding-include-option))
+     (ssi: "src/modules/nono-sandbox/_nono")
+     "src/module-system/init-syntax")
    (all-gerbil-modules
     exclude: (append default-exclude
                      '("src/cli.ss"
+                       "src/module-system/init-syntax.ss"
                        "version.ss"
                        "t/fixtures/object-load-valid/parts/object1.ss"
                        "t/fixtures/negative/object-load-invalid/parts/object1.ss"))
@@ -50,7 +54,4 @@
      "user-interface/custom/my-module/config"
      (exe: "src/cli" bin: "poo-flow"))))
 
-(init-build-environment!
- deps: '("gerbil-poo"
-         "gslph")
- spec: spec)
+(defbuild-script +poo-flow-build-spec+)

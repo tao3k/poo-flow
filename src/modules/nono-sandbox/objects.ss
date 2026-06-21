@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: nono sandbox module objects.
 
-(import :poo-flow/src/modules/object-core
-        :poo-flow/src/modules/objects
+(import :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/objects
         :poo-flow/src/modules/sandbox-core/objects)
 
 (export poo-flow-nono-sandbox-object

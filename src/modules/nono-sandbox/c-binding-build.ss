@@ -51,7 +51,7 @@
 
 ;; : (List String)
 (def +nono-c-binding-default-upstream-include-dirs+
-  '(".data/nono/bindings/c/include"))
+  '())
 
 ;; : (List String)
 (def +nono-c-binding-default-include-dirs+
@@ -196,8 +196,9 @@
          (nono-c-binding-build-required-input kind path))
        paths))
 
-;;; Required inputs make the development checkout dependency explicit. Runtime
-;;; receipts can report missing C headers before a compiler emits opaque errors.
+;;; Required inputs make the package-owned C binding resources explicit.
+;;; Runtime receipts can report missing headers before a compiler emits opaque
+;;; errors, without depending on a research checkout under `.data`.
 ;; : (-> NonoCBindingBuild (List Alist))
 (def (nono-c-binding-build-required-inputs build)
   (let (valid-build (nono-c-binding-validate-build build))

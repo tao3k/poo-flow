@@ -276,6 +276,8 @@
               (make-flow-step-receipt runner plan strategy node step input frontier nested))))
      ((try-step? step)
       (run-try-step runner plan strategy node step input frontier))
+     ((kleisli-step? step)
+      (run-kleisli-step runner plan strategy node step input frontier))
      ((branch-step? step)
       (cons input
             (make-branch-receipt runner plan strategy node step input frontier)))
@@ -331,6 +333,74 @@
                         'ok
                         #f
                         children))))
+
+;;; Kleisli nodes are dynamic composition points: the source flow runs first,
+;;; then its value selects the next flow through the binder procedure.
+;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input [Id] StepResult)
+(def (run-kleisli-step runner plan strategy node step input frontier)
+  (let* ((source-result (runner-run runner (kleisli-step-source step) input))
+         (source-value (run-result-value source-result))
+         (source-receipt (run-result-receipt source-result))
+         (source-failed (first-failed-receipt source-receipt)))
+    (if source-failed
+      (cons source-value
+            (make-kleisli-receipt runner
+                                  plan
+                                  strategy
+                                  node
+                                  step
+                                  input
+                                  source-value
+                                  frontier
+                                  'failed
+                                  (receipt-error source-failed)
+                                  (list source-receipt)))
+      (let ((bound-flow ((kleisli-step-binder step) source-value)))
+        (if (flow? bound-flow)
+          (let* ((bound-result (runner-run runner bound-flow source-value))
+                 (bound-value (run-result-value bound-result))
+                 (bound-receipt (run-result-receipt bound-result))
+                 (bound-failed (first-failed-receipt bound-receipt)))
+            (cons bound-value
+                  (make-kleisli-receipt runner
+                                        plan
+                                        strategy
+                                        node
+                                        step
+                                        input
+                                        bound-value
+                                        frontier
+                                        (if bound-failed 'failed 'ok)
+                                        (if bound-failed
+                                          (receipt-error bound-failed)
+                                          #f)
+                                        (list source-receipt bound-receipt))))
+          (raise-control-plane-failure
+           'runner
+           'invalid-kleisli-binder-result
+           "kleisli binder did not return a flow"
+           (list (cons 'node-id (plan-node-id node))
+                 (cons 'step-name (kleisli-step-name step))
+                 (cons 'source-value source-value)
+                 (cons 'binder-result bound-flow))))))))
+
+;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Symbol Error [Receipt] Receipt)
+(def (make-kleisli-receipt runner plan strategy node step input output frontier status error children)
+  (make-receipt (execution-plan-flow-name plan)
+                (kleisli-step-name step)
+                'kleisli
+                (plan-node-id node)
+                (strategy-name strategy)
+                (runner-execution-policy->alist runner strategy frontier)
+                'local
+                #f
+                input
+                output
+                'no-cache
+                frontier
+                status
+                error
+                children))
 
 ;;; Projection keeps the protected flow's receipt tree when execution reached
 ;;; the runner, while local thrown failures still become receipt-free lefts.

@@ -9,6 +9,8 @@
         defpoo-flow-identity
         defpoo-flow-compose
         defpoo-flow-map
+        defpoo-flow-bind
+        defpoo-flow-kleisli
         defpoo-flow-fanout
         defpoo-flow-dag
         defpoo-flow-dag-artifacts
@@ -44,6 +46,20 @@
   ((_ binding flow-name source proc output-contract)
    (def binding
      (flow-map 'flow-name source proc output-contract))))
+
+;;; Boundary: define a Kleisli bind where the binder returns the next flow.
+;; : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+(defrules defpoo-flow-bind ()
+  ((_ binding flow-name source binder output-contract)
+   (def binding
+     (flow-bind 'flow-name source binder output-contract))))
+
+;;; Alias for users who want the category-theory name at the authoring layer.
+;; : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+(defrules defpoo-flow-kleisli ()
+  ((_ binding flow-name source binder output-contract)
+   (def binding
+     (flow-kleisli 'flow-name source binder output-contract))))
 
 ;;; Boundary: define Arrow-style fanout without selecting a scheduler.
 ;; : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)

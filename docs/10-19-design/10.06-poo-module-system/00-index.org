@@ -2,7 +2,7 @@
 ** 10.06.10 Purpose
 This document pack defines the module-system layer for =poo-flow=. The package is not a port of Doom Emacs and not a copy of Marlin's Gerbil module API. =poo-flow= remains the core control plane. External systems are reference material for interface shape, diagnostics, and modular organization.
 
-The implementation lives in =src/modules/module-system.ss=. It depends on core registries and config APIs, but core does not import or re-export it.
+The public facade lives in =src/module-system/facade.ss=. The implementation owners live under =src/module-system/*=; =src/modules/*= is reserved for concrete workflow and sandbox modules. The module system depends on core registries and config APIs, but core does not import or re-export it.
 ** 10.06.20 Reading Order
 - [[file:01-doom-core-audit.org][01 Doom Core Audit]]
 [[file:01-doom-core-audit.org][01 Doom Core Audit]]
@@ -23,13 +23,18 @@ The implementation lives in =src/modules/module-system.ss=. It depends on core r
 [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
 - [[file:17-poo-best-practices.org][17 POO Best Practices]]
 - [[file:22-doom-core-namespace-audit.org][22 Doom Core Namespace Audit]]
+- [[file:23-flue-agent-harness-audit.org][23 Flue Agent Harness Audit]]
+- [[file:24-agent-harness-session-run-design.org][24 Agent Harness, Session, Run, And Dispatch Design]]
+- [[file:25-funflow-cicd-check-map-gap-audit.org][25 Funflow CI/CD Check Map Gap Audit]]
+- [[file:26-workflow-cicd-user-interface-bridge.org][26 Workflow CI/CD User Interface Bridge]]
+- [[file:27-next-implementation-closure-plan.org][27 Next Implementation Closure Plan]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.
 - =src/core/task.ss= owns task-family descriptors and immutable task-family registries.
 - =src/core/flow.ss= owns flow-declaration descriptors and immutable flow-declaration registries.
 - =src/core/config.ss= accepts task and flow registries at the =run-config= boundary.
-- =src/modules/module-system.ss= owns source refs, catalog resolution, module activation, and import validation.
+- =src/module-system/facade.ss= and =src/module-system/*= own source refs, catalog resolution, module activation, and import validation.
 - =src/extensions/*= demonstrates descriptor bundles as extension modules.
 ** 10.06.40 Delivered Surface
 The implemented module-system surface includes:

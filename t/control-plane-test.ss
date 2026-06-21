@@ -17,6 +17,13 @@
         :poo-flow/src/workflow/store
         :poo-flow/t/project-policy-test)
 
+;;; Failure capture keeps configured-runner checks on structured values instead
+;;; of rendered exception text.
+;; : (-> Thunk Value)
+(def (control-plane-test-capture-failure thunk)
+  (with-catch (lambda (failure) failure)
+              thunk))
+
 ;;; This suite anchors the pure local runner path as the baseline for receipt
 ;;; and child-node assertions.
 ;; : TestSuite
@@ -193,6 +200,10 @@
                       'configured-task-families)
         (check-equal? (flow-declaration-registry-name (run-config-flow-registry config))
                       'configured-flow-declarations)
+        (check-equal? (run-config-registry-policy config)
+                      '((task-registry . configured-task-families)
+                        (flow-registry . configured-flow-declarations)))
+        (check-equal? (run-config-validate-registries config flow) #t)
         (check-equal? (task-family-registry-name (runner-task-registry runner))
                       'configured-task-families)
         (check-equal? (flow-declaration-registry-name (runner-flow-registry runner))
@@ -206,7 +217,57 @@
         (check-equal? (cdr (assoc 'flow-registry (execution-request-policy request)))
                       'configured-flow-declarations)
         (check-equal? (receipt-policy child)
-                      (execution-request-policy request))))))
+                      (execution-request-policy request))))
+    (test-case "fails configured validation when task registry lacks descriptor"
+      (let* ((docker-task (make-task 'build-image
+                                     'docker
+                                     '(docker build)
+                                     'artifact
+                                     'artifact
+                                     #f))
+             (flow (flow-compose 'missing-task-family
+                                 (list docker-task)
+                                 'artifact
+                                 'artifact))
+             (config (make-run-config 'missing-task-registry
+                                      (make-local-eager-strategy)
+                                      (make-request-only-adapter)
+                                      '((runtime . request-only))
+                                      default-task-family-registry
+                                      default-flow-declaration-registry))
+             (failure
+              (control-plane-test-capture-failure
+               (lambda ()
+                 (run-config-validate-registries config flow)))))
+        (check-equal? (execution-failure? failure) #t)
+        (check-equal? (execution-failure-owner failure) 'task-registry)
+        (check-equal? (execution-failure-code failure) 'unknown-task-family)
+        (check-equal? (cdr (assoc 'registry (execution-failure-detail failure)))
+                      'default-task-families)
+        (check-equal? (cdr (assoc 'kind (execution-failure-detail failure)))
+                      'docker)))
+    (test-case "fails configured validation when flow registry lacks descriptor"
+      (let* ((inc (pure-flow 'inc (lambda (x) (+ x 1)) 'number 'number))
+             (empty-flow-registry
+              (make-flow-declaration-registry 'empty-flow-declarations '()))
+             (config (make-run-config 'missing-flow-registry
+                                      (make-local-eager-strategy)
+                                      (make-request-only-adapter)
+                                      '((runtime . request-only))
+                                      default-task-family-registry
+                                      empty-flow-registry))
+             (failure
+              (control-plane-test-capture-failure
+               (lambda ()
+                 (run-config-validate-registries config inc)))))
+        (check-equal? (execution-failure? failure) #t)
+        (check-equal? (execution-failure-owner failure) 'flow-registry)
+        (check-equal? (execution-failure-code failure)
+                      'unknown-flow-declaration)
+        (check-equal? (cdr (assoc 'registry (execution-failure-detail failure)))
+                      'empty-flow-declarations)
+        (check-equal? (cdr (assoc 'kind (execution-failure-detail failure)))
+                      'task)))))
 
 ;;; This suite protects branch flow receipt shape for parallel frontier
 ;;; construction.

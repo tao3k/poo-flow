@@ -47,7 +47,7 @@
                       "bindings/nono-c/poo_flow_nono_binding.h")
         (check-equal? (test-ref contract 'header) "nono.h")
         (check-equal? (test-ref contract 'include-ref)
-                      ".data/nono/bindings/c/include/nono.h")
+                      "bindings/nono-c/nono.h")
         (check-equal? (test-ref contract 'probe-ref)
                       "bindings/nono-c/poo_flow_nono_binding_probe.c")
         (check-equal? (and (memq 'NonoDiagnosticCode
@@ -104,16 +104,15 @@
         (check-equal? (test-ref contract 'adapter-include-dirs)
                       '("bindings/nono-c"))
         (check-equal? (test-ref contract 'upstream-include-dirs)
-                      '(".data/nono/bindings/c/include"))
+                      '())
         (check-equal? (test-ref contract 'include-dirs)
-                      '("bindings/nono-c"
-                        ".data/nono/bindings/c/include"))
+                      '("bindings/nono-c"))
         (check-equal? (test-ref contract 'probe-ref)
                       "bindings/nono-c/poo_flow_nono_binding_probe.c")
         (check-equal? (map (lambda (input)
                              (test-ref input 'kind))
                            required-inputs)
-                      '(adapter-include-dir upstream-include-dir probe))
+                      '(adapter-include-dir probe))
         (check-equal? (test-ref contract 'inputs-ok?) #t)
         (check-equal? (nono-c-binding-compile-probe-command)
                       '("clang"
@@ -124,7 +123,6 @@
                         "-Werror"
                         "-fsyntax-only"
                         "-Ibindings/nono-c"
-                        "-I.data/nono/bindings/c/include"
                         "bindings/nono-c/poo_flow_nono_binding_probe.c"))
         (check-equal? (nono-c-binding-build-compiler override) "cc")
         (check-equal? (nono-c-binding-build-upstream-include-dirs override)

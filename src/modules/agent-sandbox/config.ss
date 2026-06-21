@@ -22,6 +22,8 @@
         poo-flow-sandbox-profile->profile
         poo-flow-sandbox-profile->alist
         poo-flow-sandbox-profile-runtime-intent
+        poo-flow-sandbox-profile-runtime-summary
+        poo-flow-sandbox-profile-handoff-summary
         poo-flow-sandbox-profile-names
         poo-flow-sandbox-profile-alists
         poo-flow-sandbox-profile-by-name
@@ -291,6 +293,27 @@
         (cons 'descriptor-realized? #f)
         (cons 'runtime-executed #f)))
 
+;;; Runtime summaries deliberately cross the validation boundary: callers get
+;;; the sandbox-owned summary of the realized agent profile, while the public
+;;; POO profile name remains visible for user-interface projections.
+;; : (-> PooSandboxProfile Alist)
+(def (poo-flow-sandbox-profile-runtime-summary profile)
+  (append
+   (list (cons 'profile-name (poo-flow-sandbox-profile-name profile))
+         (cons 'descriptor-realized? #t))
+   (agent-sandbox-profile-runtime-summary
+    (poo-flow-sandbox-profile->profile profile))))
+
+;;; Handoff summaries are the stricter bridge-facing form. Invalid profile rows
+;;; fail at the sandbox profile owner before workflow code sees them.
+;; : (-> PooSandboxProfile Alist)
+(def (poo-flow-sandbox-profile-handoff-summary profile)
+  (append
+   (list (cons 'profile-name (poo-flow-sandbox-profile-name profile))
+         (cons 'descriptor-realized? #t))
+   (agent-sandbox-profile-handoff-summary
+    (poo-flow-sandbox-profile->profile profile))))
+
 ;;; Name projection is kept separate from alist projection so tools can inspect
 ;;; selectable profiles without forcing full descriptor conversion.
 ;; : (-> [PooSandboxProfile] [Symbol])
@@ -323,6 +346,10 @@
       profile-names: (poo-flow-sandbox-profile-names profile-list)
       profiles: (poo-flow-sandbox-profile-alists profile-list)
       runtime-intents: (map poo-flow-sandbox-profile-runtime-intent profile-list)
+      runtime-summaries: (map poo-flow-sandbox-profile-runtime-summary
+                              profile-list)
+      handoff-summaries: (map poo-flow-sandbox-profile-handoff-summary
+                              profile-list)
       runtime-owner: "marlin-agent-core"
       package-management?: #f
       dependency-installation?: #f

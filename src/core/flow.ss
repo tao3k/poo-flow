@@ -5,7 +5,8 @@
 (import (only-in :clan/poo/object .mix .@ object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
-        :poo-flow/src/core/task)
+        :poo-flow/src/core/task
+        :poo-flow/src/core/flow-strand)
 
 (export make-flow
         flow?
@@ -52,6 +53,13 @@
         try-step-source
         try-step-input-contract
         try-step-output-contract
+        make-kleisli-step
+        kleisli-step?
+        kleisli-step-name
+        kleisli-step-source
+        kleisli-step-binder
+        kleisli-step-input-contract
+        kleisli-step-output-contract
         flow-compose
         task-flow
         pure-flow
@@ -70,6 +78,8 @@
         flow-branch
         flow-fanout
         flow-map
+        flow-bind
+        flow-kleisli
         flow-first
         flow-second
         flow-empty?
@@ -82,10 +92,12 @@
         flow-category-arrow
         flow-category-domain
         flow-category-codomain
+        flow-category-strand-registry
         flow-category-compose
         flow-category-identity
         flow-category-arr
         flow-category-map
+        flow-category-bind
         flow-category-fanout
         flow-category-first
         flow-category-second)
@@ -266,6 +278,18 @@
    output-contract)
   transparent: #t)
 
+;;; Kleisli steps keep dynamic flow selection in the flow kernel: the source
+;;; runs first, then the binder receives the source value and returns the next
+;;; flow. Runner owns execution because the next flow is value-dependent.
+;; : (-> Symbol Flow Procedure Contract Contract KleisliStep)
+(defstruct kleisli-step
+  (name
+   source
+   binder
+   input-contract
+   output-contract)
+  transparent: #t)
+
 ;; : (-> Step Symbol)
 ;; : (-> Symbol [Step] Contract Contract Flow)
 (def (flow-compose name steps input-contract output-contract)
@@ -423,6 +447,23 @@
                        (flow-output-contract source)
                        output-contract)))
 
+;;; Kleisli bind is intentionally a dynamic node instead of static
+;;; =flow-then=: the next flow is selected from the previous value.
+;; : (-> Symbol Flow Procedure Contract Flow)
+(def (flow-bind name source binder output-contract)
+  (flow-compose name
+                (list (make-kleisli-step name
+                                         source
+                                         binder
+                                         (flow-input-contract source)
+                                         output-contract))
+                (flow-input-contract source)
+                output-contract))
+
+;; : (-> Symbol Flow Procedure Contract Flow)
+(def (flow-kleisli name source binder output-contract)
+  (flow-bind name source binder output-contract))
+
 ;;; Arrow =first= applies a flow to the first element of a pair-shaped list and
 ;;; carries the second element through unchanged.
 ;; : (-> Symbol Flow Contract Flow)
@@ -534,9 +575,11 @@
                       (cons 'identity flow-identity)
                       (cons 'arr flow-arr)
                       (cons 'map flow-map)
+                      (cons 'bind flow-bind)
                       (cons 'fanout flow-fanout)
                       (cons 'first flow-first)
                       (cons 'second flow-second)
+                      (cons 'strand-registry default-flow-strand-registry)
                       (cons 'extension-policy 'functional-kernel)))
         flow-role))
 
@@ -573,6 +616,10 @@
 (def (flow-category-codomain category flow)
   ((.@ category codomain) flow))
 
+;; : (-> FlowCategory FlowStrandRegistry)
+(def (flow-category-strand-registry category)
+  (.@ category strand-registry))
+
 ;; : (-> FlowCategory Symbol Flow Flow Flow)
 (def (flow-category-compose category name left right)
   ((.@ category compose) name left right))
@@ -588,6 +635,10 @@
 ;; : (-> FlowCategory Symbol Flow Procedure Contract Flow)
 (def (flow-category-map category name source proc output-contract)
   ((.@ category map) name source proc output-contract))
+
+;; : (-> FlowCategory Symbol Flow Procedure Contract Flow)
+(def (flow-category-bind category name source binder output-contract)
+  ((.@ category bind) name source binder output-contract))
 
 ;; : (-> FlowCategory Symbol Flow Flow Flow)
 (def (flow-category-fanout category name left right)

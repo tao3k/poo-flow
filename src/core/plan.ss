@@ -409,6 +409,7 @@
    ((flow? step) 'flow)
    ((branch-step? step) 'branch)
    ((try-step? step) 'try)
+   ((kleisli-step? step) 'kleisli)
    (else (error "flow step is neither task nor flow" step))))
 
 ;; : (-> Step Symbol)
@@ -418,6 +419,7 @@
    ((flow? step) (flow-name step))
    ((branch-step? step) (branch-step-name step))
    ((try-step? step) (try-step-name step))
+   ((kleisli-step? step) (kleisli-step-name step))
    (else (error "flow step is neither task nor flow" step))))
 
 ;; : (-> ExecutionPlan Boolean)

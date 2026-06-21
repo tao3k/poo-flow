@@ -15,7 +15,7 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export module-system-facade-test)
 
@@ -149,6 +149,27 @@
                       poo-flow-module-system-presentation-kind)
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
         (check-equal? (.ref presentation 'import-graph-owner)
-                      "poo-flow-module-system")))))
+                      "poo-flow-module-system")
+        (check-equal? (.ref presentation 'runtime-capability-projection-kind)
+                      "poo-flow.modules.runtime-capability-projection.v1")
+        (check-equal? (.ref presentation 'runtime-object-family-count) 7)
+        (check-equal? (.ref presentation 'runtime-object-families)
+                      '(agent-profile
+                        agent-harness
+                        agent-session
+                        agent-operation
+                        workflow-run
+                        dispatch-receipt
+                        runtime-snapshot))
+        (check-equal? (member 'waiting-human
+                              (.ref presentation 'runtime-snapshot-statuses))
+                      '(waiting-human completed errored disconnected))
+        (check-equal? (member 'admit-dispatch
+                              (.ref presentation 'runtime-handoff-contracts))
+                      '(admit-dispatch
+                        open-agent-session
+                        execute-agent-operation
+                        stream-events
+                        read-runtime-snapshot))))))
 
 (run-tests! module-system-facade-test)

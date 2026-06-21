@@ -13,8 +13,8 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/modules/extension
-        :poo-flow/src/modules/object-core)
+        :poo-flow/src/module-system/extension
+        :poo-flow/src/module-system/object-core)
 
 (export module-object-practice-test)
 

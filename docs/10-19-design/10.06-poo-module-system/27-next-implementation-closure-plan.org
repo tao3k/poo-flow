@@ -1,0 +1,296 @@
+#+TITLE: 10.06.27 Next Implementation Closure Plan
+
+* 10.06.27 Next Implementation Closure Plan
+
+** 10.06.27.10 Purpose
+
+This document audits the next implementation push after the workflow CI/CD
+user-interface bridge landed. It is a closure plan, not a new design branch.
+
+The current direction remains:
+- Scheme owns POO declarations, object graphs, projections, policy snapshots,
+  traces, receipts, and report-only runtime handoff data.
+- Rust/Marlin owns heavy execution, process control, durable state, real
+  sandbox execution, and provider-specific adapters.
+
+The next work should therefore close the control-plane surface that lets agents
+inspect and validate a workflow handoff before any runtime executes.
+
+** 10.06.27.20 Current Closure Evidence
+
+The following surfaces are now implemented enough to treat as the current
+baseline:
+
+- =src/modules/workflow/cicd.ss= owns inert workflow CI/CD check and check-map
+  objects.
+- =src/modules/funflow/config.ss= lowers compact
+  =(use-module funflow :config (pipeline ...))= declarations into workflow
+  check maps.
+- =pooFlowUserConfigPresentation= exposes workflow CI/CD pipeline count,
+  readiness rows, receipt rows, runtime command manifest maps, compact manifest
+  summaries, sandbox runtime summaries, sandbox handoff summaries, unresolved
+  profile refs, and presentation trace stages.
+- =pooFlowUserProfilePresentation= and
+  =pooFlowUserProfileDoctorPresentation= forward the same workflow CI/CD
+  projection surface.
+- =src/module-system/declaration-case.ss= treats the expanded workflow CI/CD
+  trace stages as part of the maintained downstream declaration case.
+- Focused tests now cover Funflow pipeline lowering, workflow check maps,
+  user-interface CI/CD presentation, profile presentation, declaration cases,
+  unit aggregation, and project policy checks.
+
+This closes the earlier fixture-only gap: downstream user declarations can now
+reach report-only runtime command manifest data through the public module
+configuration surface.
+
+** 10.06.27.30 Remaining Risk Audit
+
+*** 10.06.27.31 P0: Documentation Drift
+
+Code has moved faster than the design documents.
+
+Risk:
+- =10.06.25= and =10.06.26= mention the bridge, but the newest compact
+  manifest summary and trace-stage closure are not yet captured as a final
+  status.
+- The index currently stops at 26, so a reader will not know the next closure
+  plan exists.
+
+Closure:
+- Add this 27 document to =00-index.org=.
+- Append short implementation status notes to 25/26 after code stabilization.
+- Keep all status notes explicit that Scheme still does not execute runtime
+  adapters.
+
+*** 10.06.27.32 P0: Current Slice Commit Readiness
+
+Risk:
+- The worktree contains many staged and unstaged changes across the module
+  system and sandbox/funflow surfaces.
+- Continuing implementation without an explicit closure boundary will make the
+  next failure hard to bisect.
+
+Closure:
+- Keep the current slice scoped to module-system presentation, workflow CI/CD
+  manifest summaries, trace stages, declaration-case expectations, and tests.
+- Before commit, run package-managed verification through =gxpkg build= and the
+  focused tests listed in 10.06.27.80.
+- Do not manually clean =.gerbil= output to repair stale state.
+
+*** 10.06.27.33 P1: Configured Registry Bridge
+
+Risk:
+- =10.02= and =10.03= still identify configured registries as the next Funflow
+  alignment gap.
+- CI/CD check maps now reach user presentation, but configured runner paths
+  still need to consume task-family and flow-declaration registries as explicit
+  run-config data.
+
+Closure:
+- Let run configs carry task-family registries and flow-declaration registries.
+- Thread configured registries through strategy planning and runner validation.
+- Emit typed control-plane failures when a configured workflow references an
+  unsupported task family or flow declaration.
+- Keep heavy scheduling, Docker/CAS, and durable persistence outside Scheme.
+
+*** 10.06.27.34 P1: Runtime Handoff Contract
+
+Risk:
+- Runtime command manifest maps are inspectable, but Marlin-facing handoff
+  semantics are still only a report-only shape.
+- Without a stable compact handoff contract, provider adapters may accidentally
+  learn Scheme internals or CI/CD-specific details.
+
+Closure:
+- Treat compact manifest summaries as the user/agent audit surface.
+- Treat full manifests as the runtime handoff payload.
+- Define the fields that Marlin must consume first: operation, request id,
+  argv, request payload, policy, runtime owner, handoff-required flag, and
+  runtime-executed flag.
+- Add validation that manifests and summaries agree on check identity, argv,
+  runtime owner, unresolved sandbox refs, and non-execution status.
+
+Status 2026-06-20:
+- M4 now exposes a stable Marlin-facing ABI projection from workflow CI/CD check-map runtime command manifests.
+- Scheme still only manufactures validated handoff data; it does not parse Scheme source inside Marlin or execute runtime adapters.
+*** 10.06.27.35 P2: Tutorial Result Ladder Resume Point
+
+Risk:
+- CI/CD bridge work can become self-contained and drift away from Funflow
+  tutorial-result parity.
+
+Closure:
+- Resume =10.04= at the runtime-heavy result gates only after P1 bridge
+  validation is stable.
+- The next tutorial-aligned implementation should be external config preflight
+  and runtime command handoff, not Docker execution in Scheme.
+- Docker/CAS visible results remain Rust/Marlin runtime targets.
+
+** 10.06.27.40 Recommended Milestones
+
+*** 10.06.27.41 M1: Close Current Workflow CI/CD Projection Slice
+
+Scope:
+- Update docs 25/26 with final status for compact manifest summaries and trace
+  stages.
+- Keep =workflow-cicd-runtime-command-manifest-summaries= as the compact audit
+  surface.
+- Keep full manifest maps available for runtime handoff inspection.
+
+Exit criteria:
+- User config, profile presentation, profile doctor presentation, and
+  declaration case all expose the same trace-stage sequence.
+- Tests assert both compact summary rows and trace counts.
+- No runtime execution is introduced.
+
+*** 10.06.27.42 M2: Add Manifest/Summary Agreement Validation
+
+Scope:
+- Add pure validation helpers for workflow CI/CD manifest maps and compact
+  summaries.
+- Validate that every manifest has exactly one summary row.
+- Validate check, argv, runtime owner, unresolved profile refs, and
+  =runtime-executed #f= agreement.
+
+Exit criteria:
+- Invalid manifest/summary pairs produce typed control-plane failures or
+  diagnostic rows.
+- Validation is callable from tests and presentation/doctor tooling without
+  executing adapters.
+
+Status 2026-06-20:
+- Implemented =workflow-cicd-runtime-command-manifest-agreement= as a report-only agreement receipt.
+- =pooFlowUserConfigPresentation=, =pooFlowUserProfilePresentation=, and =pooFlowUserProfileDoctorPresentation= now expose agreement validity and diagnostics.
+- The presentation trace includes =workflow-cicd-runtime-command-manifest-agreement= between compact summaries and receipts.
+- Negative tests mutate a compact summary =argv= and verify the agreement report emits =argv-mismatch= without executing adapters.
+
+*** 10.06.27.43 M3: Connect Configured Registries To Runner Validation
+
+Scope:
+- Move from presentation-only configured data into runner-owned config
+  validation.
+- Ensure run configs can carry task-family and flow-declaration registries.
+- Keep POO descriptors as the extension mechanism.
+
+Exit criteria:
+- A configured run validates descriptor availability before execution.
+- Missing task-family or flow-declaration registry entries fail before adapter
+  submission.
+- Existing local tutorial result tests still pass.
+
+Status 2026-06-20:
+- Implemented =run-config-registry-policy= so configured entries expose selected task-family and flow-declaration registries as report-only control-plane data.
+- Implemented =run-config-validate-registries= so configured runs can validate descriptor availability before submitting adapter requests.
+- =run-flow-with-config= now performs config-key preflight and registry validation before runner execution.
+- Tests cover configured registry success, missing task-family descriptor failure, and missing flow-declaration descriptor failure.
+
+*** 10.06.27.44 M4: Runtime Handoff ABI Landing For Marlin
+
+Scope:
+- Document and test the minimum handoff ABI Marlin must consume.
+- Keep ABI data alist/manifest shaped from Scheme; Rust can serialize or
+  normalize later.
+
+Exit criteria:
+- One workflow CI/CD manifest map can be exported as a stable handoff payload.
+- The exported payload carries only control-plane data and no Scheme POO object
+  internals.
+- Runtime execution remains =#f= in Scheme-side receipts.
+
+** 10.06.27.50 Next Code Slice
+
+The current code slice lands M4: a report-only runtime handoff ABI for Marlin.
+
+Status 2026-06-20:
+- Implemented =poo-flow-cicd-check-map->marlin-runtime-handoff-abi=.
+- Implemented =poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi=.
+- The ABI uses =+poo-flow-cicd-marlin-runtime-handoff-abi-schema+= and sets =runtime-owner= to =marlin-agent-core=.
+- Entries whitelist the Marlin-facing fields from runtime command manifests and preserve =handoff-required #t=, =runtime-executed #f=, =runtime-parses-scheme-source #f=, and =scheme-manufactures-runtime-handlers #f=.
+- =t/workflow-cicd-check-map-test.ss= now verifies the ABI map, dependency graph, entry payloads, argv, request data, policy refs, runtime owner, and non-execution flags.
+
+Reason:
+- M2 made compact summaries and full manifests agree before handoff.
+- M3 made configured registries visible and validated before adapter submission.
+- M4 should freeze the smallest Marlin-facing ABI that can consume those validated manifests.
+- It prepares the configured registry bridge by making handoff objects
+  trustworthy.
+
+- It keeps runtime execution outside Scheme while giving Rust a stable payload contract.
+
+Prior M2 owner files:
+- =src/modules/workflow/cicd.ss= for workflow-owned manifest/check-map
+  validation if the validation is check-map specific.
+- =src/module-system/base.ss= for user-config presentation validation if the
+  validation consumes module-selected manifest maps and summary rows.
+- =src/module-system/profile-config.ss= only forwards results; it should not own
+  validation logic.
+
+Prior M2 tests:
+- =t/workflow-cicd-check-map-test.ss= for workflow-owned manifest validation.
+- =t/user-interface-cicd-test.ss= for user-config manifest/summary agreement.
+- =t/user-interface-presentation-test.ss= for trace visibility.
+- =t/declaration-case-test.ss= for maintained downstream case closure.
+
+Current M4 owner files:
+- =src/modules/workflow/cicd.ss= for the workflow CI/CD handoff manifest payload.
+- =src/core/config.ss= for configured registry policy and validation evidence.
+- =src/core/runtime-adapter.ss= for existing runtime command manifest vocabulary.
+
+Current M4 tests:
+- =t/workflow-cicd-check-map-test.ss= for manifest ABI fields.
+- =t/control-plane-test.ss= for configured registry policy in runtime requests.
+- =t/user-interface-cicd-test.ss= for user-facing handoff summaries.
+*** 10.06.27.45 M5: User-Interface Marlin Handoff Projection
+Scope:
+- Reuse the workflow-owned Marlin handoff ABI instead of creating another runtime contract.
+- Project ABI rows from =pooFlowUserConfigPresentation= so agents can inspect handoff payloads from normal user config/profile surfaces.
+- Keep compact ABI summaries separate from full payload rows.
+- Extend profile and doctor presentations by forwarding the same config-level projection.
+Exit criteria:
+- A real downstream Funflow CI/CD user config projects to one Marlin handoff ABI row.
+- The ABI row carries per-check entries, =runtime-owner = "marlin-agent-core"=, and non-execution flags.
+- Generic presentation fixtures with CI/CD intent but no check-map still expose stable empty ABI rows.
+- No provider-specific CI/CD adapter or runtime execution is added.
+Status 2026-06-20:
+- Implemented user-config Marlin handoff ABI projection helpers in =src/module-system/base.ss=.
+- Forwarded the new projection through profile and doctor presentations in =src/module-system/profile-config.ss=.
+- Added a user-interface result gate in =t/user-interface-cicd-test.ss= that starts from downstream Funflow config and reaches ABI payload data.
+- Updated =t/user-interface-presentation-test.ss= trace stages and empty-fixture coverage.
+
+** 10.06.27.60 Do Not Do Next
+
+- Do not add GitHub/GitLab/Nix provider semantics in Scheme.
+- Do not make =nono-sandbox= live cases the CI/CD pipeline DSL.
+- Do not execute commands from presentation, doctor, trace, or validation code.
+- Do not introduce a second registry type parallel to core task/flow
+  registries.
+- Do not add compatibility aliases for old brand names or old module paths.
+
+** 10.06.27.70 Stage Order
+
+1. Documentation closure for current workflow CI/CD bridge.
+2. Manifest/summary agreement validation.
+3. Configured registry bridge into runner validation.
+4. Marlin runtime handoff ABI landing.
+5. User-interface Marlin handoff projection.
+6. Tutorial-result ladder resume at external config/runtime handoff.
+
+** 10.06.27.80 Verification Gate
+
+Before declaring the next slice complete, run:
+
+#+begin_src sh
+gxpkg build
+gxpkg env gxtest t/user-interface-cicd-test.ss
+gxpkg env gxtest t/user-interface-presentation-test.ss
+gxpkg env gxtest t/user-interface-config-presentation-test.ss
+gxpkg env gxtest t/declaration-case-test.ss
+gxpkg env gxtest t/workflow-cicd-check-map-test.ss
+gxpkg env gxtest t/funflow-config-pipeline-test.ss
+gxpkg env gxtest t/unit-tests.ss
+gxpkg env gxtest t/project-policy-test.ss
+git diff --check
+#+end_src
+
+Use =rtk --ultra-compact err= around noisy checks when the exact stdout is not
+the artifact being audited.

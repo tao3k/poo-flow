@@ -38,6 +38,16 @@
 ;; : TestSuite
 (def agent-sandbox-bridge-test
   (test-suite "agent sandbox bridge request"
+    (test-case "treats non-alist optional metadata as absent"
+      (check-equal? (agent-sandbox-alist-ref 'profile-default 'timeout-ms 30000)
+                    30000)
+      (check-equal? (agent-sandbox-alist-ref '((timeout-ms . 10000))
+                                             'timeout-ms
+                                             30000)
+                    10000)
+      (check-equal? (agent-sandbox-merge-alists 'task-local
+                                                '((timeout-ms . 30000)))
+                    '((timeout-ms . 30000))))
     (test-case "captures backend-neutral request contract"
       (let (seen-request #f)
         (let* ((command (lambda (envelope)

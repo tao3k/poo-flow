@@ -17,7 +17,7 @@
         :poo-flow/src/core/api
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-module)
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export user-interface-cicd-profile-case-test)
 

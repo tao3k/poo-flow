@@ -15,7 +15,7 @@
                  test-suite)
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export module-system-test)
 

@@ -6,7 +6,7 @@
 (import :gerbil/gambit
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/nono-sandbox/c-binding-runtime
-        :poo-flow/src/modules/modules-system-base
+        :poo-flow/src/module-system/base
         ./_nono)
 
 (export +nono-c-binding-native-live-test-receipt-schema+
@@ -37,10 +37,7 @@
          (library-path (agent-sandbox-alist-ref options 'library-path #f)))
     (if library-path
       (list library-path)
-      '(".data/nono/target/debug/libnono_ffi.dylib"
-        ".data/nono/target/release/libnono_ffi.dylib"
-        ".data/nono/target/debug/libnono_ffi.so"
-        ".data/nono/target/release/libnono_ffi.so"))))
+      '())))
 
 ;; nono-c-binding-native-resolve-library
 ;;   : (-> [Alist] (U String #f))

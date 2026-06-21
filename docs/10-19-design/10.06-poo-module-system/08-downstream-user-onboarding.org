@@ -19,29 +19,29 @@ The important behavior is not package-manager state. The important behavior is
 that downstream tests can resolve the =src= module tree and the harness package
 without creating repository-local package-manager state.
 
-** 10.06.08.30 GERBIL_LOADPATH
-Use an explicit load path for local tests:
+** 10.06.08.30 Package-Context Tests
+Use the Gerbil package CLI for local tests:
 #+begin_src sh
-GERBIL_LOADPATH=src:t gxtest t/unit-tests.ss
+gxpkg env gxtest t/unit-tests.ss
 #+end_src
 
 For focused downstream tests, keep the same shape and point the test file at the
 downstream suite:
 #+begin_src sh
-GERBIL_LOADPATH=src:t gxtest t/<downstream-test>.ss
+gxpkg env gxtest t/<downstream-test>.ss
 #+end_src
 
 Do not require callers to import =:poo-flow/user-interface/*= from the project
 root during package tests. Root practice files stay at the top level for user
-experiments and examples; stable tests should import =:modules/module-system=,
-=:loops/agent=, =:core/api=, or the relevant extension facade.
+experiments and examples; stable tests should import =:poo-flow/src/module-system=,
+=:poo-flow/src/core/api=, or the relevant concrete module facade.
 
 ** 10.06.08.40 gxtest And Policy Harness
 The normal verification ladder is:
 #+begin_src sh
-GERBIL_LOADPATH=src gxi build.ss compile
-GERBIL_LOADPATH=src:t gxtest t/unit-tests.ss
-GERBIL_LOADPATH=src:t gxtest t/project-policy-test.ss
+gxpkg build
+gxpkg env gxtest t/unit-tests.ss
+gxpkg env gxtest t/project-policy-test.ss
 #+end_src
 
 =t/project-policy-test.ss= runs the project harness policy surface. The harness

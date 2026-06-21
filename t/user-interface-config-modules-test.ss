@@ -14,7 +14,7 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/modules/module-system
+        :poo-flow/src/module-system/facade
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-session-module
                  poo-flow-custom-my-module-task-module

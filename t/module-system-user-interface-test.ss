@@ -16,7 +16,7 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export module-system-user-interface-test)
 

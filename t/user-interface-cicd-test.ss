@@ -3,24 +3,26 @@
 ;;; Invariant: CI/CD facts stay declarative and never execute adapters.
 
 (import (only-in :std/test
-                 check
-                 check-eq?
                  check-equal?
-                 check-false
-                 check-not-equal?
-                 check-output
-                 check-true
                  run-tests!
                  test-case
-                 test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/modules/module-system
+        :poo-flow/src/module-system/facade
         (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-cicd-case)
+                 poo-flow-custom-my-module-cicd-case
+                 poo-flow-custom-my-module-cicd-module
+                 poo-flow-custom-my-module-funflow-cicd-case)
         :poo-flow/t/user-interface-fixtures)
 
 (export user-interface-cicd-test)
+
+;; : (-> Unit PooUserConfig)
+(def (user-interface-cicd-funflow-config)
+  (pooFlowUserConfig
+   (append poo-flow-custom-my-module-cicd-module
+           poo-flow-custom-my-module-funflow-cicd-case)
+   (poo-flow-settings)))
 
 ;; : (-> Unit TestSuite)
 ;;; This suite keeps CI/CD user-interface assembly separate from runtime
@@ -76,6 +78,52 @@
         (check-equal? (alist-value 'stage cicd-step) 'cicd-intents)
         (check-equal? (alist-value 'count cicd-step) 1)
         (check-equal? (alist-value 'descriptor-realized? cicd-step) #f)
-        (check-equal? (alist-value 'runtime-executed cicd-step) #f)))))
+        (check-equal? (alist-value 'runtime-executed cicd-step) #f)))
+    (test-case "presents Funflow pipeline count"
+      (let ((presentation
+             (pooFlowUserConfigPresentation
+              (user-interface-cicd-funflow-config))))
+        (check-equal? (.ref presentation 'workflow-cicd-pipeline-count) 1)))
+    (test-case "projects user config into Marlin runtime handoff ABI"
+      (let* ((presentation
+              (pooFlowUserConfigPresentation
+               (user-interface-cicd-funflow-config)))
+             (abis (.ref presentation
+                         'workflow-cicd-marlin-runtime-handoff-abis))
+             (summaries
+              (.ref presentation
+                    'workflow-cicd-marlin-runtime-handoff-summaries))
+             (abi (car abis))
+             (summary (car summaries))
+             (entries (alist-value 'entries abi))
+             (entry (car entries))
+             (request (alist-value 'request entry)))
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-abi-count)
+                      1)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-summary-count)
+                      1)
+        (check-equal? (alist-value 'kind abi)
+                      'poo-flow.workflow.cicd.marlin-runtime-handoff-abi)
+        (check-equal? (alist-value 'runtime-owner abi)
+                      "marlin-agent-core")
+        (check-equal? (alist-value 'runtime-executed abi) #f)
+        (check-equal? (alist-value 'runtime-parses-scheme-source abi) #f)
+        (check-equal? (alist-value 'scheme-manufactures-runtime-handlers abi)
+                      #f)
+        (check-equal? (alist-value 'manifest-count abi) 3)
+        (check-equal? (length entries) 3)
+        (check-equal? (alist-value 'runtime-owner entry)
+                      "marlin-agent-core")
+        (check-equal? (alist-value 'runtime-executed entry) #f)
+        (check-equal? (alist-value 'kind request)
+                      'poo-flow.workflow.cicd.runtime-manifest-ready)
+        (check-equal? (alist-value 'kind summary)
+                      'workflow-cicd-marlin-runtime-handoff-abi-summary)
+        (check-equal? (alist-value 'entry-count summary) 3)
+        (check-equal? (alist-value 'runtime-owner summary)
+                      "marlin-agent-core")
+        (check-equal? (alist-value 'runtime-executed summary) #f)))))
 
 (run-tests! user-interface-cicd-test)

@@ -28,9 +28,19 @@ The boundary is:
 - concrete =(use-module ...)= rows select sandbox modules such as =nono-sandbox= and =cubeSandbox=;
 - =poo-flow-default-sandbox-profiles= declares upstream profile recipes consumed by those modules or their runtime bridges;
 - downstream user config may select or override profile names, but it should not own built-in backend policy rows;
-- =pooFlowSandboxProfilesPresentation= gives tools a shallow receipt with names, backend refs, and runtime handoff intent;
+- =pooFlowSandboxProfilesPresentation= gives tools a shallow receipt with names, backend refs, runtime handoff intent, runtime summaries, and handoff summaries;
 - =poo-flow-sandbox-profile->profile= projects one recipe into the existing validated sandbox profile contract;
+- =agent-sandbox-profile-runtime-summary= and =agent-sandbox-profile-handoff-summary= live under =src/modules/agent-sandbox/profile.ss= so workflow and loop code consume sandbox-owned projection data instead of reparsing resource policy rows;
 - no package installation, descriptor realization, or runtime command execution happens in the user interface layer.
+
+** 10.06.18.35 Runtime Summary Ownership
+Sandbox profile projection is owned by the sandbox modules, not by =loop-engine= or the module-system base presentation layer. The concrete split is:
+- =src/modules/sandbox-core/profile.ss= owns generic POO profile row resolution, inheritance, and merge operators;
+- =src/modules/agent-sandbox/config.ss= owns user-facing POO profile recipes and projects those recipes into validated agent sandbox profiles;
+- =src/modules/agent-sandbox/profile.ss= owns the contract-level runtime summary and handoff summary, including filesystem structure, diagnostics, validation status, and =runtime-executed #f= evidence.
+
+Workflow, CI, and loop-engine features should depend on these summaries as data. They should not infer filesystem mounts, backend refs, or validation state from raw user rows.
+=loop-engine= consumes sandbox summaries through a config-level catalog. If a loop declares =(profile . ci/build)= and the same config contributes a matching POO sandbox profile, the runtime manifest request carries =sandbox-runtime-summaries= and =sandbox-handoff-summaries=. If the profile ref is not visible in the config catalog, the manifest keeps =sandbox-unresolved-profile-refs= so an agent or doctor can report the missing profile without inventing a runtime policy.
 
 ** 10.06.18.40 POO Rule
 The public profile value stays a POO object. Alists are presentation products only. This follows the gerbil-poo policy surface: macros are thin syntax bridges, while object/protocol slots keep semantic state. Future nono and cubeSandbox specialization should therefore extend the profile object family or runtime bridge projection instead of making user init rows parse backend-specific strings.
@@ -40,9 +50,10 @@ Delivered in this slice:
 
 - =src/modules/agent-sandbox/config.ss= owns the profile DSL and presentation;
 - =src/modules/agent-sandbox/config.ss= owns the built-in =agent/nono= and =agent/cube= defaults;
-- =src/modules/user-interface/config.ss= exposes the upstream DSL and defaults to downstream init files;
+- =src/module-system/profile-config.ss= exposes the upstream DSL and defaults to downstream init files;
 - =user-interface/init.ss= remains a module-loading surface only;
-- =src/modules/user-interface/config.ss= builds the canonical =users= profile projection from root declarations;
-- focused tests cover inert recipes, upstream runtime intent presentation, and root config loading.
+- =src/module-system/profile-config.ss= builds the canonical =users= profile projection from root declarations;
+- =src/module-system/base.ss= projects loop-engine sandbox profile refs into sandbox-owned runtime/handoff summaries when the selected config exposes a matching profile catalog;
+- focused tests cover inert recipes, upstream runtime intent presentation, runtime summary projection, handoff summary projection, and root config loading.
 
 Next milestone: connect selected profile names to Funflow/CI runtime-command manifest projection so workflow nodes can request a sandbox profile without embedding backend-specific execution details in Scheme.

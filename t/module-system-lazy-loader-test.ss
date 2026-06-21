@@ -14,7 +14,7 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export module-system-lazy-loader-test)
 
@@ -153,7 +153,7 @@
               (poo-flow-lazy-load-plan-receipt (car plans)))
              (first-metadata
               (poo-flow-module-load-receipt-metadata first-receipt)))
-        (check-equal? (length plans) 12)
+        (check-equal? (length plans) 14)
         (check-equal? (car source-values)
                       "src/modules/agent-sandbox/config.ss")
         (check-equal? (if (member "src/modules/sandbox-core/objects.ss"
@@ -166,7 +166,22 @@
                         #t
                         #f)
                       #t)
-        (check-equal? (if (member "src/modules/user-interface/config.ss"
+        (check-equal? (if (member "src/module-system/profile-config.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (if (member "src/module-system/init-syntax.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (if (member "src/module-system/root-profile.ss"
+                                  source-values)
+                        #t
+                        #f)
+                      #t)
+        (check-equal? (if (member "src/module-system/declaration-case.ss"
                                   source-values)
                         #t
                         #f)

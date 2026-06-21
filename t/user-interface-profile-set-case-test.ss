@@ -16,7 +16,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         "user-interface-fixtures.ss"
-        :poo-flow/src/modules/module-system)
+        :poo-flow/src/module-system/facade)
 
 (export user-interface-profile-set-case-test)
 

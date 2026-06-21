@@ -41,10 +41,12 @@
         run-config-options
         run-config-task-registry
         run-config-flow-registry
+        run-config-registry-policy
         run-config-config-requirements
         run-config-config-source
         run-config-preflight
         run-config-validate-preflight
+        run-config-validate-registries
         make-request-only-run-config
         make-rust-run-config
         run-config->runner
@@ -222,6 +224,18 @@
 (def (run-config-flow-registry config)
   (run-config-state-flow-registry config))
 
+;;; Registry policy is the configured handoff receipt for descriptor bundles.
+;;; It is report-only data, so callers can inspect extension boundaries before
+;;; creating runtime adapter requests.
+;; : (-> RunConfig Alist)
+(def (run-config-registry-policy config)
+  (list (cons 'task-registry
+              (task-family-registry-name
+               (run-config-task-registry config)))
+        (cons 'flow-registry
+              (flow-declaration-registry-name
+               (run-config-flow-registry config)))))
+
 ;; : (-> Alist Symbol Value Value)
 (def (run-config-option options key default)
   (let (entry (assoc key options))
@@ -258,6 +272,13 @@
        "missing config keys"
        (config-preflight->alist preflight)
        #t))))
+
+;;; Registry validation lowers through the runner but stops before execution.
+;;; Missing task-family or flow-declaration descriptors therefore fail while
+;;; the system is still in the Scheme control plane.
+;; : (-> RunConfig Flow Boolean)
+(def (run-config-validate-registries config flow)
+  (runner-validate (run-config->runner config) flow))
 
 ;;; The request-only config records adapter envelopes for tests without claiming
 ;;; to run store or external work.
@@ -299,6 +320,7 @@
 ;; : (-> RunConfig Flow Input RunResult)
 (def (run-flow-with-config config flow input)
   (run-config-validate-preflight config)
+  (run-config-validate-registries config flow)
   (runner-run (run-config->runner config) flow input))
 
 ;; : (-> [ConfigRequirement] [Alist])

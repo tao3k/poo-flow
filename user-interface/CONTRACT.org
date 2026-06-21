@@ -11,7 +11,7 @@ The maintained kernel module implementations are upstream-owned under
 - =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
 
 =user-interface/init.ss= exports category/module/feature bundle rows, and
-upstream =src/modules/user-interface/config.ss= extends
+upstream =src/module-system/root-profile.ss= extends
 =poo-flow-kernel-profile= with those rows. Downstream users extend through
 =init.ss= and =custom/*/config.ss= instead of editing or repeating upstream
 kernel files.
@@ -24,15 +24,15 @@ identity.
 
 The files here stay declarative:
 
-- =init.ss= lists optional feature patches/custom modules through =poo-flow-init-module-bundles= category rows.
+- =init.ss= lists optional feature patches/custom modules through =poo-flow!= category rows.
 - =custom/*/config.ss= declares user-maintained custom module bodies.
 
 The implementation stays upstream:
 
-- =src/modules/user-interface/objects.ss= owns user-interface object contracts.
-- =src/modules/user-interface/config.ss= owns profile/config projection helpers.
-- =src/modules/user-interface-case.ss= owns case contracts for tools and tests.
-- module descriptors, loaders, merge rules, and runtime adapters remain in =src/modules= and other implementation owners.
+- =src/module-system/root-objects.ss= owns user-interface object contracts.
+- =src/module-system/root-profile.ss= owns profile/config projection helpers.
+- =src/module-system/declaration-case.ss= owns declaration case contracts for tools and tests.
+- module descriptors, loaders, merge rules, and runtime adapters remain in =src/module-system=, =src/modules=, and other implementation owners according to domain.
 
 * Public Entry Points
 
@@ -41,17 +41,17 @@ Downstream users should rely on root declarations plus upstream helpers:
 - =poo-flow-init-module-bundles=
 - =poo-flow-module-bundles=
 - =poo-flow-custom-module-bundles=
-- =pooFlowUserInterfaceProfile=
-- =pooFlowUserInterfaceProfileSet=
-- =pooFlowUserInterfaceProfileSetPresentation=
-- =pooFlowUserInterfaceProfileSetDoctorPresentation=
-- =pooFlowUserInterfaceSelectedProfile=
-- =pooFlowUserInterfaceConfig=
+- =pooFlowRootProfile=
+- =pooFlowRootProfileSet=
+- =pooFlowRootProfileSetPresentation=
+- =pooFlowRootProfileSetDoctorPresentation=
+- =pooFlowRootSelectedProfile=
+- =pooFlowRootConfig=
 - =poo-flow-user-module-selection=
 - =poo-flow-settings=
 - =pooFlowUserConfigPresentation=
-- =pooFlowRootUserInterfaceDeveloperCase=
-- =poo-flow-user-interface-case-presentation-matches?=
+- =pooFlowRootDeveloperDeclarationCase=
+- =poo-flow-declaration-case-presentation-matches?=
 
 The presentation surface exposes ownership metadata so agents can inspect the
 config without realizing descriptors or executing runtime hooks. Presentations

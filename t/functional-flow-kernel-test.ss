@@ -110,6 +110,72 @@
         (check-equal? (flow-category-arrow category) 'flow)
         (check-equal? (flow-category-domain category inc) 'number)
         (check-equal? (flow-category-codomain category inc) 'number)))
+    (test-case "exposes Funflow-style required strands as POO metadata"
+      (let* ((category default-flow-category)
+             (registry (flow-category-strand-registry category))
+             (simple (flow-strand-for-kind-in registry 'simple))
+             (store (flow-strand-for-kind-in registry 'store))
+             (docker (flow-strand-for-kind-in registry 'docker))
+             (snapshot (flow-strand-registry->alist registry)))
+        (check-equal? (flow-strand-registry? registry) #t)
+        (check-equal? (flow-strand-names registry)
+                      '(simple store docker))
+        (check-equal? (flow-strand-task-families simple)
+                      '(pure scheme))
+        (check-equal? (flow-strand-route simple) 'local)
+        (check-equal? (flow-strand-interpreter-owner store)
+                      'rust-or-external-runtime)
+        (check-equal? (flow-strand-route docker) 'adapter)
+        (check-equal? (flow-strand-required? docker) #t)
+        (check-equal? (functional-flow-alist-value 'runtime-executed snapshot)
+                      #f)
+        (check-equal? (flow-strand-registry-core-requirements registry)
+                      '(arrow
+                        arrow-choice
+                        error-throw
+                        error-try
+                        io-lift
+                        caching
+                        runtime-handoff))))
+    (test-case "extends flow strands with POO override semantics"
+      (let* ((word-count
+              (make-flow-strand-descriptor
+               'word-count
+               '(word-count external)
+               '(text-analysis runtime-command)
+               'adapter
+               'rust-or-external-runtime
+               #f))
+             (extended (flow-strand-registry-extend
+                        default-flow-strand-registry
+                        word-count))
+             (simple-override
+              (make-flow-strand-descriptor
+               'simple
+               '(pure scheme custom-simple)
+               '(pure-function io-continuation local-kleisli extension-hook)
+               'local
+               'gerbil
+               #t))
+             (overridden (flow-strand-registry-extend
+                          extended
+                          simple-override))
+             (word-count-entry (flow-strand-for-kind-in extended 'word-count))
+             (simple-entry (flow-strand-for-kind-in overridden 'simple)))
+        (check-equal? (flow-strand-names extended)
+                      '(simple store docker word-count))
+        (check-equal? (flow-strand-task-families word-count-entry)
+                      '(word-count external))
+        (check-equal? (flow-strand-required? word-count-entry) #f)
+        (check-equal? (flow-strand-names overridden)
+                      '(simple store docker word-count))
+        (check-equal? (flow-strand-task-families simple-entry)
+                      '(pure scheme custom-simple))
+        (check-equal? (flow-strand-capabilities simple-entry)
+                      '(pure-function
+                        io-continuation
+                        local-kleisli
+                        extension-hook))))
     (test-case "exposes Arrow first and second through the category object"
       (let* ((category default-flow-category)
              (inc (flow-category-arr category

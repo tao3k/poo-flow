@@ -2,7 +2,7 @@
 ;;; Owner: nono-sandbox C binding descriptor contract projection lives here.
 ;;; Boundary: this module emits ABI descriptor data only.
 ;;; Runtime contract: Marlin or another C runtime owns dlopen/FFI execution.
-;;; Source contract: symbols mirror .data/nono/bindings/c/include/nono.h.
+;;; Source contract: symbols mirror the package-owned bindings/nono-c/nono.h.
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
 (import (only-in :clan/poo/object .ref .mix object?)
@@ -181,8 +181,8 @@
                       (cons 'adapter-include-ref
                             "bindings/nono-c/poo_flow_nono_binding.h")
                       (cons 'header "nono.h")
-                      (cons 'include-ref ".data/nono/bindings/c/include/nono.h")
-                      (cons 'crate-ref ".data/nono/bindings/c")
+                      (cons 'include-ref "bindings/nono-c/nono.h")
+                      (cons 'crate-ref "bindings/nono-c")
                       (cons 'probe-ref
                             "bindings/nono-c/poo_flow_nono_binding_probe.c")
                       (cons 'types +nono-c-binding-types+)

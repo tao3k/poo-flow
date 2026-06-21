@@ -2,7 +2,7 @@
 ;;; Boundary: user-owned POO Flow init entrypoint.
 ;;; Invariant: this file lists enabled modules only; projections live upstream.
 
-(import :poo-flow/src/modules/modules-system/user-profile)
+(import :poo-flow/src/module-system/root-profile)
 
 ;;; Doom-style init shape: module categories and optional feature patches only.
 ;;; Profile binding, settings, projection, package sync, export wiring, and

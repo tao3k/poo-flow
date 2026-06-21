@@ -5,6 +5,7 @@
         :poo-flow/t/agent-sandbox-bridge-test
         :poo-flow/t/agent-sandbox-cube-interface-test
         :poo-flow/t/agent-sandbox-marlin-interface-test
+        :poo-flow/t/agent-harness-object-test
         :poo-flow/t/agent-sandbox-profile-test
         :poo-flow/t/agent-sandbox-profile-user-interface-test
         :poo-flow/t/cli-test
@@ -14,8 +15,11 @@
         :poo-flow/t/docker-descriptor-test
         :poo-flow/t/failure-test
         :poo-flow/t/flow-descriptor-test
+        :poo-flow/t/funflow-config-pipeline-test
         :poo-flow/t/funflow-tutorial-alignment-report-test
         :poo-flow/t/functional-flow-kernel-test
+        :poo-flow/t/functional-flow-kleisli-test
+        :poo-flow/t/workflow-cicd-check-map-test
         :poo-flow/t/loop-agent-descriptor-test
         :poo-flow/t/loop-governor-test
         :poo-flow/t/loop-strategy-test
@@ -43,5 +47,7 @@
         :poo-flow/t/user-interface-custom-loop-engine-test
         :poo-flow/t/user-interface-live-cicd-case-test
         :poo-flow/t/user-interface-cicd-test
-        :poo-flow/t/user-interface-case-test
+        :poo-flow/t/user-interface-cicd-runtime-projection-test
+        :poo-flow/t/user-interface-cicd-runtime-graph-test
+        :poo-flow/t/declaration-case-test
         :poo-flow/t/user-interface-presentation-test)
