@@ -93,6 +93,9 @@
              (summaries
               (.ref presentation
                     'workflow-cicd-marlin-runtime-handoff-summaries))
+             (bundle
+              (.ref presentation
+                    'workflow-cicd-marlin-handoff-receipt-bundle))
              (abi (car abis))
              (summary (car summaries))
              (entries (alist-value 'entries abi))
@@ -124,6 +127,19 @@
         (check-equal? (alist-value 'entry-count summary) 3)
         (check-equal? (alist-value 'runtime-owner summary)
                       "marlin-agent-core")
-        (check-equal? (alist-value 'runtime-executed summary) #f)))))
+        (check-equal? (alist-value 'runtime-executed summary) #f)
+        (check-equal? (alist-value 'kind bundle)
+                      'workflow-cicd-marlin-handoff-receipt-bundle)
+        (check-equal? (alist-value 'alignment-gate-id bundle)
+                      'stage-23-user-interface-marlin-handoff-projection)
+        (check-equal? (alist-value 'manifest-agreement-valid? bundle) #t)
+        (check-equal? (alist-value 'marlin-runtime-handoff-abi-count bundle)
+                      1)
+        (check-equal? (alist-value 'marlin-runtime-handoff-summary-count bundle)
+                      1)
+        (check-equal? (alist-value 'receipt-count bundle) 3)
+        (check-equal? (alist-value 'runtime-owner bundle)
+                      "marlin-agent-core")
+        (check-equal? (alist-value 'runtime-executed bundle) #f)))))
 
 (run-tests! user-interface-cicd-test)

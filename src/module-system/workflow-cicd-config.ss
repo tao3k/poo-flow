@@ -29,6 +29,8 @@
         poo-flow-user-config-workflow-cicd-marlin-runtime-handoff-abis
         poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary
         poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
+        poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+        poo-flow-user-config-workflow-cicd-marlin-handoff-receipt-bundle
         poo-flow-user-config-workflow-cicd-receipts
         poo-flow-user-alist-ref
         poo-flow-user-workflow-cicd-readiness-checks
@@ -248,6 +250,8 @@
        (poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
         manifest-maps)))
 
+;;; Runtime owner is pinned at the presentation boundary so user-facing receipts
+;;; do not drift from the Marlin handoff ABI when check-map internals change.
 ;; : RuntimeOwnerName
 (def +poo-flow-user-workflow-cicd-runtime-owner+ "marlin-agent-core")
 
@@ -561,6 +565,89 @@
   (map poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary
        abi-rows))
 
+;;; The handoff receipt bundle is the user-interface receipt-sized envelope for
+;;; Marlin handoff. It keeps the full ABI payload available while giving agents
+;;; one stable object to inspect for agreement, proof gate, and non-execution
+;;; evidence.
+;; : (-> [Alist] [Alist] Alist [Alist] [Alist] [Alist] Alist)
+(def (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+      manifest-maps
+      manifest-summaries
+      manifest-agreement
+      handoff-abis
+      handoff-summaries
+      receipts)
+  (list
+   (cons 'schema
+         'poo-flow.modules.workflow-cicd.marlin-handoff-receipt-bundle.v1)
+   (cons 'kind 'workflow-cicd-marlin-handoff-receipt-bundle)
+   (cons 'source 'poo-flow-user-config-presentation)
+   (cons 'alignment-gate-id
+         'stage-23-user-interface-marlin-handoff-projection)
+   (cons 'proof-command
+         "gxtest t/user-interface-cicd-test.ss: projects user config into Marlin runtime handoff ABI")
+   (cons 'presentation-fields
+         '(workflow-cicd-runtime-command-manifests
+           workflow-cicd-runtime-command-manifest-summaries
+           workflow-cicd-runtime-command-manifest-agreement
+           workflow-cicd-marlin-runtime-handoff-abis
+           workflow-cicd-marlin-runtime-handoff-summaries
+           workflow-cicd-receipts))
+   (cons 'runtime-owner +poo-flow-user-workflow-cicd-runtime-owner+)
+   (cons 'handoff-required (> (length handoff-abis) 0))
+   (cons 'runtime-executed #f)
+   (cons 'runtime-parses-scheme-source #f)
+   (cons 'scheme-manufactures-runtime-handlers #f)
+   (cons 'manifest-map-count (length manifest-maps))
+   (cons 'manifest-summary-count (length manifest-summaries))
+   (cons 'manifest-agreement-valid?
+         (poo-flow-user-alist-ref manifest-agreement 'valid? #f))
+   (cons 'manifest-agreement-diagnostics
+         (poo-flow-user-alist-ref manifest-agreement 'diagnostics '()))
+   (cons 'marlin-runtime-handoff-abi-count (length handoff-abis))
+   (cons 'marlin-runtime-handoff-summary-count (length handoff-summaries))
+   (cons 'receipt-count (length receipts))
+   (cons 'manifest-agreement-schema
+         (poo-flow-user-alist-ref manifest-agreement 'schema #f))
+   (cons 'manifest-agreement-row-count
+         (length (poo-flow-user-alist-ref manifest-agreement 'rows '())))
+   (cons 'marlin-runtime-handoff-entry-count
+         (apply +
+                (map (lambda (summary)
+                       (poo-flow-user-alist-ref summary 'entry-count 0))
+                     handoff-summaries)))))
+
+;;; Config-level bundle construction reuses the same projection path as the
+;;; presentation layer so tests can compare one receipt shape across surfaces.
+;; : (-> PooUserConfig Alist)
+(def (poo-flow-user-config-workflow-cicd-marlin-handoff-receipt-bundle
+      config)
+  (let* ((manifest-maps
+          (poo-flow-user-config-workflow-cicd-runtime-command-manifests
+           config))
+         (manifest-summaries
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
+           manifest-maps))
+         (manifest-agreement
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
+           manifest-maps
+           manifest-summaries))
+         (handoff-abis
+          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis
+           manifest-maps))
+         (handoff-summaries
+          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
+           handoff-abis))
+         (receipts
+          (poo-flow-user-config-workflow-cicd-receipts config)))
+    (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+     manifest-maps
+     manifest-summaries
+     manifest-agreement
+     handoff-abis
+     handoff-summaries
+     receipts)))
+
 ;;; Receipt accumulation preserves check-map declaration order while flattening
 ;;; per-check receipts into the presentation contract.
 ;; : (-> [PooFlowCicdCheckMap] [PooSandboxProfile] [Alist])
@@ -574,6 +661,8 @@
       (cdr check-maps)
       profile-catalog)))))
 
+;;; Config-level receipts resolve sandbox profiles through selected modules,
+;;; preserving user overrides before Marlin receives check receipts.
 ;; : (-> PooUserConfig [Alist])
 (def (poo-flow-user-config-workflow-cicd-receipts config)
   (let* ((selected-modules (poo-flow-user-config-modules config))

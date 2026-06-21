@@ -251,8 +251,9 @@ package's current Gerbil sources: build scripts, harness policy, runtime
 modules, API aggregation, and tests. =runtime-roots= remains =src= because that
 is the runtime loadpath root.
 
-The package-owned =harness-policy/gerbil.ss= file only supplies local threshold
-overrides. It does not disable the default harness policy suite.
+The package uses the default Gerbil harness policy suite. Local threshold
+overrides are not maintained in-tree; owner-size warnings should be fixed by
+splitting source boundaries instead of raising policy limits.
 
 Current receipt:
 - =asp gerbil-scheme check= reports =scope=full= and policy warnings across

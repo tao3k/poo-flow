@@ -63,6 +63,7 @@
     workflow-cicd-runtime-command-manifest-agreement
     workflow-cicd-marlin-runtime-handoff-abis
     workflow-cicd-receipts
+    workflow-cicd-marlin-handoff-receipt-bundle
     loop-engine-intents
     settings))
 

@@ -4,16 +4,13 @@
  policy: ((macro-governance
            allow-generated: #t
            explanation: "Agent-sandbox backend profile macros must cite runtime-source guidance and expansion tests before changing transformer behavior."
-           witness: "search runtime-source macro sugar module-sugar; t/agent-sandbox-profile-test.ss witnesses generated descriptor/profile constructors")
+          witness: "search runtime-source macro sugar module-sugar; t/agent-sandbox-profile-test.ss witnesses generated descriptor/profile constructors")
           (source-scope
-           roots: ("src" "harness-policy" "user-interface")
+           roots: ("src" "user-interface")
            runtime-roots: (".")
-           explanation: "The Gerbil language project harness covers source owners under src, harness-policy, user-interface, and the default t test root; root generated files such as manifest.ss are not source owners.")
+           explanation: "The Gerbil language project harness covers source owners under src, user-interface, and the default t test root; root generated files such as manifest.ss are not source owners.")
           (runtime-boundary
            heavy-owners: ("rust" "external-runtime")
            explanation: "CAS, Docker, subprocesses, parallel scheduling, and durable persistence are not Scheme-owned.")
-          (modularity-policy
-           config: "harness-policy/gerbil.ss"
-           explanation: "This package-owned config only supplies policy thresholds; the harness default policy suite remains enabled across the full source scope.")
           (poo-control-plane
            explanation: "Flow, task, strategy, runner, adapter, and receipt objects form the first Gerbil POO surface.")))

@@ -33,7 +33,9 @@
    `((gsc: "src/modules/nono-sandbox/_nono"
             "-cc-options" ,(nono-c-binding-include-option))
      (ssi: "src/modules/nono-sandbox/_nono")
-     "src/module-system/init-syntax")
+     "src/module-system/init-syntax"
+     "user-interface/init"
+     "user-interface/custom/my-module/config")
    (all-gerbil-modules
     exclude: (append default-exclude
                      '("src/cli.ss"
@@ -47,11 +49,8 @@
                     ".gerbil"
                     ".data"
                     "docs"
-                    "harness-policy"
                     "t/fixtures/negative"
                     "user-interface"))
-   '("user-interface/init"
-     "user-interface/custom/my-module/config"
-     (exe: "src/cli" bin: "poo-flow"))))
+   '((exe: "src/cli" bin: "poo-flow"))))
 
 (defbuild-script +poo-flow-build-spec+)

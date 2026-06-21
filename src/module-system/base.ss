@@ -33,6 +33,7 @@
                  poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/source
+        :poo-flow/src/module-system/entrypoints
         :poo-flow/src/module-system/observability)
 
 (export poo-flow-user-config-kind
@@ -89,82 +90,6 @@
 ;; : (-> Unit PooFlowUserConfigPresentationKind)
 (def poo-flow-user-config-presentation-kind
   "poo-flow.modules.user-config.presentation.v1")
-
-;;; Boundary: these names are the manual-facing declaration surface, not an
-;;; implementation map. Programmatic constructors stay in the API list below.
-;; : (-> Unit [String])
-(def poo-flow-user-config-public-entrypoints
-  '("poo-flow!"
-    "load!"
-    "use-module"
-    ":workflow"
-    "loop-engine"
-    ":loop"
-    ":sandbox"
-    ":custom"
-    ":config"
-    "profiles"
-    "poo-flow-profile"
-    "poo-flow-profile-set"
-    "poo-flow-profile-extend"
-    "poo-flow-sandbox-profile"
-    "poo-flow-sandbox-profiles"
-    "poo-flow-nono-sandbox-profile"
-    "poo-flow-nono-sandbox-profiles"
-    "poo-flow-cubeSandbox-profile"
-    "poo-flow-cubeSandbox-profiles"
-    "poo-flow-docker-sandbox-profile"
-    "poo-flow-docker-sandbox-profiles"))
-
-;;; Boundary: these names are the programmatic API exposed for tests, doctors,
-;;; presentations, and advanced module code. They should not be required in
-;;; everyday init.ss/config.ss files.
-;; : (-> Unit [String])
-(def poo-flow-user-config-api-entrypoints
-  '("poo-flow-module-bundles"
-    "poo-flow-custom-module-bundles"
-    "poo-flow-init-module-bundles"
-    "poo-flow-user-module-selection"
-    "poo-flow-user-custom-module-selection"
-    "poo-flow-user-module-selection-feature?"
-    "poo-flow-user-modules-feature?"
-    "poo-flow-user-config-feature?"
-    "poo-flow-user-config-feature-facts"
-    "poo-flow-user-module-bundle"
-    "poo-flow-use-module"
-    "poo-flow-user-module-when"
-    "poo-flow-settings"
-    "poo-flow-sandbox-profile->profile"
-    "pooFlowSandboxProfilesPresentation"
-    "pooFlowUserProfile"
-    "pooFlowUserProfileSet"
-    "pooFlowUserProfileExtend"
-    "pooFlowUserConfigFromProfile"
-    "pooFlowUserConfig"
-    "pooFlowUserConfigPresentation"
-    "poo-flow-user-workflow-cicd-runtime-command-manifest-agreement"
-    "poo-flow-user-config-workflow-cicd-runtime-command-manifest-agreement"
-    "poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis"
-    "poo-flow-user-config-workflow-cicd-marlin-runtime-handoff-abis"
-    "pooFlowUserProfilePresentation"
-    "pooFlowUserProfileSetPresentation"
-    "pooFlowUserProfileDoctor"
-    "pooFlowUserProfileDoctorPresentation"
-    "pooFlowUserProfileSetDoctor"
-    "pooFlowUserProfileSetDoctorPresentation"))
-
-;;; Boundary: user files own declarations; upstream owns realization and diagnostics.
-;; : (-> Unit Alist)
-(def poo-flow-user-config-boundary
-  '((user-owned . (module-selection settings presentation))
-    (module-system-owned . (descriptor-realization validation doctor))
-    (package-management . #f)
-    (dependency-installation . #f)
-    (declarative-module-selection-only . #t)
-    (brand-name . "poo-flow")
-    (scheme-owner . "poo-flow.scheme")
-    (runtime-owner . "marlin-agent-core")
-    (runtime-executed . #f)))
 
 ;;; Boundary: kind checks keep root user files independent of constructor identity.
 ;; : (-> POOObject String Boolean)

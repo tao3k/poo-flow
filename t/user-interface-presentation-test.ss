@@ -20,6 +20,8 @@
 
 (export user-interface-presentation-test)
 
+;;; Trace stage order is the presentation contract for downstream tooling; the
+;;; cases assert order without duplicating the projection implementation.
 ;; : [Symbol]
 (def user-interface-presentation-trace-stages
   '(selected-modules
@@ -32,9 +34,12 @@
     workflow-cicd-runtime-command-manifest-agreement
     workflow-cicd-marlin-runtime-handoff-abis
     workflow-cicd-receipts
+    workflow-cicd-marlin-handoff-receipt-bundle
     loop-engine-intents
     settings))
 
+;;; Trace lookup keeps assertions focused on stage names instead of relying on
+;;; positional indexes that would hide missing or reordered projection steps.
 ;; : (-> [Alist] Symbol MaybeAlist)
 (def (user-interface-presentation-trace-stage trace stage)
   (cond
@@ -43,12 +48,11 @@
    (else
     (user-interface-presentation-trace-stage (cdr trace) stage))))
 
+;;; Config presentation is the broadest receipt surface, covering module
+;;; switches, CI/CD handoff rows, loop-engine rows, and ownership boundaries.
 ;; : (-> Unit TestSuite)
-;;; This suite keeps presentation output aligned with the declarative user
-;;; interface contract.
-(def user-interface-presentation-test
-  (test-suite "poo-flow user interface presentation"
-    (test-case "presents downstream config without descriptor realization"
+(def user-interface-config-presentation-test
+  (test-case "presents downstream config without descriptor realization"
       (let* ((presentation
               (pooFlowUserConfigPresentation
                test-poo-flow-user-config
@@ -122,6 +126,14 @@
         (check-equal? (.ref presentation
                             'workflow-cicd-marlin-runtime-handoff-summaries)
                       '())
+        (let ((bundle
+               (.ref presentation
+                     'workflow-cicd-marlin-handoff-receipt-bundle)))
+          (check-equal? (alist-value 'kind bundle)
+                        'workflow-cicd-marlin-handoff-receipt-bundle)
+          (check-equal? (alist-value 'marlin-runtime-handoff-abi-count bundle)
+                        0)
+          (check-equal? (alist-value 'runtime-executed bundle) #f))
         (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value 'key loop-engine-intent)
                       '(flow . loop-engine))
@@ -143,7 +155,7 @@
                       user-interface-presentation-trace-stages)
         (check-equal? (map (lambda (step) (alist-value 'runtime-executed step))
                            trace)
-                      '(#f #f #f #f #f #f #f #f #f #f #f #f))
+                      '(#f #f #f #f #f #f #f #f #f #f #f #f #f))
         (check-equal? (alist-value 'profile settings)
                       "developer")
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
@@ -187,8 +199,13 @@
         (check-equal? (.ref presentation 'package-management?) #f)
         (check-equal? (.ref presentation 'dependency-installation?) #f)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f)))
-    (test-case "presents profile without descriptor realization"
+        (check-equal? (.ref presentation 'runtime-executed) #f))))
+
+;;; Profile presentation wraps the config projection while preserving the
+;;; higher-level Doom-style profile fields users inspect.
+;; : (-> Unit TestSuite)
+(def user-interface-profile-presentation-case-test
+  (test-case "presents profile without descriptor realization"
       (let* ((presentation
               (pooFlowUserProfilePresentation test-poo-flow-user-profile)))
         (check-equal? (.ref presentation 'kind)
@@ -207,6 +224,11 @@
         (check-equal? (.ref presentation
                             'workflow-cicd-marlin-runtime-handoff-abi-count)
                       0)
+        (check-equal? (alist-value
+                       'runtime-executed
+                       (.ref presentation
+                             'workflow-cicd-marlin-handoff-receipt-bundle))
+                      #f)
         (check-equal? (.ref presentation 'loop-engine-intent-count) 1)
         (check-equal? (alist-value
                        'runtime-handoff
@@ -228,8 +250,13 @@
                       #t)
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f)))
-    (test-case "doctors valid profile before realization"
+        (check-equal? (.ref presentation 'runtime-executed) #f))))
+
+;;; Doctor presentation verifies that valid profiles expose diagnostics and
+;;; projection rows without descriptor realization.
+;; : (-> Unit TestSuite)
+(def user-interface-profile-doctor-case-test
+  (test-case "doctors valid profile before realization"
       (let* ((doctor-report
               (pooFlowUserProfileDoctor test-poo-flow-user-profile))
              (presentation
@@ -278,8 +305,13 @@
                                 (.ref presentation 'api-entrypoints))))
                       #t)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f)))
-    (test-case "reports profile declaration mistakes like doctor output"
+        (check-equal? (.ref presentation 'runtime-executed) #f))))
+
+;;; Broken-profile doctor output is the regression guard for declaration
+;;; mistakes remaining visible as data instead of failing during presentation.
+;; : (-> Unit TestSuite)
+(def user-interface-broken-profile-doctor-case-test
+  (test-case "reports profile declaration mistakes like doctor output"
       (let* ((presentation
               (pooFlowUserProfileDoctorPresentation test-poo-flow-user-broken-profile))
              (diagnostics (.ref presentation 'profile-diagnostics)))
@@ -299,6 +331,16 @@
                        diagnostics)
                       #t)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
-        (check-equal? (.ref presentation 'runtime-executed) #f)))))
+        (check-equal? (.ref presentation 'runtime-executed) #f))))
+
+;; : (-> Unit TestSuite)
+;;; This suite keeps presentation output aligned with the declarative user
+;;; interface contract while each case remains a separately inspectable owner.
+(def user-interface-presentation-test
+  (test-suite "poo-flow user interface presentation"
+    user-interface-config-presentation-test
+    user-interface-profile-presentation-case-test
+    user-interface-profile-doctor-case-test
+    user-interface-broken-profile-doctor-case-test))
 
 (run-tests! user-interface-presentation-test)

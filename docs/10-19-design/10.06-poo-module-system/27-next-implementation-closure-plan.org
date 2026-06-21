@@ -281,7 +281,25 @@ Status 2026-06-20:
   registries.
 - Do not add compatibility aliases for old brand names or old module paths.
 
+*** 10.06.27.47 M7: Unified Handoff Receipt Bundle
+Scope:
+- Add a bounded =workflow-cicd-marlin-handoff-receipt-bundle= to the user config presentation.
+- Keep the bundle receipt-sized: schema, gate id, proof command, presentation fields, runtime flags, counts, manifest agreement status, diagnostics, and compact ABI summaries.
+- Do not duplicate full runtime handoff ABI rows or full receipt rows inside the bundle; those remain separate presentation fields.
+- Forward the same bundle through profile presentation and profile doctor presentation.
+- Bind the tutorial alignment stage-23 gate to the bundle field and expected bundle kind.
+Exit criteria:
+- =pooFlowUserConfigPresentation= exposes the bundle without realizing descriptors or executing runtime adapters.
+- Bundle access does not recurse through POO slot names; local bundle values use a distinct =...-row= binding before assignment to the public slot.
+- The presentation trace is strictly computed before object slot exposure so agents can inspect it without triggering lazy POO recursion.
+- =t/user-interface-cicd-test.ss= proves downstream Funflow config reaches the Marlin handoff bundle.
+- =t/user-interface-presentation-test.ss= proves empty-fixture presentation trace and bundle flags.
+- =t/funflow-tutorial-alignment-report-test.ss= proves the alignment gate points to the bundle field.
 ** 10.06.27.70 Stage Order
+M7 is now the active bridge closure between the user-interface handoff gate and later runtime-heavy tutorial promotion:
+1. Keep Stage 23 green as the user-interface Marlin handoff gate.
+2. Keep M7 green as the unified, bounded handoff receipt bundle.
+3. Promote tutorial runtime work only after Rust/Marlin consumes the manifest/bundle boundary and returns visible runtime-owned artifacts.
 
 1. Documentation closure for current workflow CI/CD bridge.
 2. Manifest/summary agreement validation.
@@ -292,6 +310,11 @@ Status 2026-06-20:
 7. Tutorial-result ladder resume at external config/runtime handoff.
 
 ** 10.06.27.80 Verification Gate
+M7 focused gates:
+- =gxpkg build=
+- =gxpkg env gxtest t/user-interface-cicd-test.ss=
+- =gxpkg env gxtest t/user-interface-presentation-test.ss=
+- =gxpkg env gxtest t/funflow-tutorial-alignment-report-test.ss=
 
 Before declaring the next slice complete, run:
 

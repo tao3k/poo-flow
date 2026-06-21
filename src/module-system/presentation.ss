@@ -28,6 +28,7 @@
       workflow-cicd-runtime-command-manifest-agreement-report
       workflow-cicd-marlin-runtime-handoff-abi-rows
       workflow-cicd-receipt-rows
+      workflow-cicd-marlin-handoff-receipt-bundle
       loop-engine-intent-rows
       public-setting-keys)
   (poo-flow-module-presentation-trace
@@ -54,6 +55,13 @@
                (length workflow-cicd-marlin-runtime-handoff-abi-rows))
          (cons 'workflow-cicd-receipts
                (length workflow-cicd-receipt-rows))
+         (cons 'workflow-cicd-marlin-handoff-receipt-bundle
+               (if (poo-flow-user-alist-ref
+                    workflow-cicd-marlin-handoff-receipt-bundle
+                    'runtime-executed
+                    #t)
+                 0
+                 1))
          (cons 'loop-engine-intents (length loop-engine-intent-rows))
          (cons 'settings (length public-setting-keys)))))
 ;;; User config presentation is the downstream-facing doctor view. It exposes
@@ -93,11 +101,34 @@
              workflow-cicd-marlin-runtime-handoff-abi-rows))
            (workflow-cicd-receipt-rows
             (poo-flow-user-config-workflow-cicd-receipts config))
+           (workflow-cicd-marlin-handoff-receipt-bundle-row
+            (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+             workflow-cicd-runtime-command-manifest-rows
+             workflow-cicd-runtime-command-manifest-summary-rows
+             workflow-cicd-runtime-command-manifest-agreement-report
+             workflow-cicd-marlin-runtime-handoff-abi-rows
+             workflow-cicd-marlin-runtime-handoff-abi-summary-rows
+             workflow-cicd-receipt-rows))
            (loop-engine-intent-rows
-            (poo-flow-user-config-loop-engine-intents config)))
-      (let (workflow-cicd-check-rows
-            (poo-flow-user-workflow-cicd-readiness-checks
-             workflow-cicd-readiness-rows))
+            (poo-flow-user-config-loop-engine-intents config))
+           (presentation-trace-rows
+            (poo-flow-user-config-presentation-trace
+             selected-modules
+             feature-fact-rows
+             cicd-intent-rows
+             workflow-cicd-check-maps
+             workflow-cicd-readiness-rows
+             workflow-cicd-runtime-command-manifest-rows
+             workflow-cicd-runtime-command-manifest-summary-rows
+             workflow-cicd-runtime-command-manifest-agreement-report
+             workflow-cicd-marlin-runtime-handoff-abi-rows
+             workflow-cicd-receipt-rows
+             workflow-cicd-marlin-handoff-receipt-bundle-row
+             loop-engine-intent-rows
+             public-setting-keys)))
+      (let ((workflow-cicd-check-rows
+             (poo-flow-user-workflow-cicd-readiness-checks
+              workflow-cicd-readiness-rows)))
         (.o kind: poo-flow-user-config-presentation-kind
             module-count: (length selected-modules)
             module-keys: (poo-flow-user-config-module-keys config)
@@ -198,20 +229,7 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'runtime-snapshot)
-          presentation-trace:
-          (poo-flow-user-config-presentation-trace
-           selected-modules
-           feature-fact-rows
-           cicd-intent-rows
-           workflow-cicd-check-maps
-           workflow-cicd-readiness-rows
-           workflow-cicd-runtime-command-manifest-rows
-           workflow-cicd-runtime-command-manifest-summary-rows
-           workflow-cicd-runtime-command-manifest-agreement-report
-           workflow-cicd-marlin-runtime-handoff-abi-rows
-           workflow-cicd-receipt-rows
-           loop-engine-intent-rows
-           public-setting-keys)
+          presentation-trace: presentation-trace-rows
           setting-count: (length public-setting-keys)
           setting-keys: public-setting-keys
           settings: (poo-flow-user-settings->alist setting-object public-setting-keys)
@@ -229,4 +247,11 @@
           dependency-installation?: #f
           descriptor-realized?: #f
           runtime-executed: #f
+          workflow-cicd-marlin-handoff-receipt-bundle:
+          workflow-cicd-marlin-handoff-receipt-bundle-row
+          workflow-cicd-marlin-handoff-receipt-bundle-runtime-executed:
+          (poo-flow-user-alist-ref
+           workflow-cicd-marlin-handoff-receipt-bundle-row
+           'runtime-executed
+           #f)
           replayable: #t)))))

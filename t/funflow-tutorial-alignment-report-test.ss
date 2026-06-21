@@ -166,6 +166,14 @@
                       'workflow-cicd-marlin-runtime-handoff-abis)
         (check-equal? (alignment-test-alist-ref
                        user-interface-handoff-result-gate
+                       'bundle-field)
+                      'workflow-cicd-marlin-handoff-receipt-bundle)
+        (check-equal? (alignment-test-alist-ref
+                       user-interface-handoff-result-gate
+                       'expected-bundle-kind)
+                      'workflow-cicd-marlin-handoff-receipt-bundle)
+        (check-equal? (alignment-test-alist-ref
+                       user-interface-handoff-result-gate
                        'runtime-owner)
                       "marlin-agent-core")
         (check-equal? (alignment-test-alist-ref
@@ -392,6 +400,9 @@
              (handoff-summaries
               (.ref presentation
                     'workflow-cicd-marlin-runtime-handoff-summaries))
+             (handoff-bundle
+              (.ref presentation
+                    'workflow-cicd-marlin-handoff-receipt-bundle))
              (handoff-abi (car handoff-abis))
              (handoff-summary (car handoff-summaries)))
         (check-equal? (not
@@ -451,7 +462,18 @@
         (check-equal? (alignment-test-alist-ref handoff-abi 'runtime-executed)
                       #f)
         (check-equal? (alignment-test-alist-ref handoff-summary 'entry-count)
-                      3)))))
+                      3)
+        (check-equal? (alignment-test-alist-ref handoff-bundle 'kind)
+                      'workflow-cicd-marlin-handoff-receipt-bundle)
+        (check-equal? (alignment-test-alist-ref handoff-bundle
+                                                'alignment-gate-id)
+                      'stage-23-user-interface-marlin-handoff-projection)
+        (check-equal? (alignment-test-alist-ref handoff-bundle
+                                                'marlin-runtime-handoff-abi-count)
+                      1)
+        (check-equal? (alignment-test-alist-ref handoff-bundle
+                                                'runtime-executed)
+                      #f)))))
 
 ;;; Aggregate export preserves the historical test symbol while keeping parser
 ;;; owner spans small enough for R007.
