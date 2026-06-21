@@ -11,7 +11,7 @@
 
 ;;; Run-config and profile options stay alist-shaped so bridge commands can pass
 ;;; metadata without adding Scheme structs at every extension boundary.
-;; : (-> Alist Symbol Value Value)
+;; : (-> AgentSandboxOptionRows Symbol DefaultOptionValue AgentSandboxOptionValue)
 (def (agent-sandbox-option options key default)
   (agent-sandbox-alist-ref options key default))
 
@@ -19,31 +19,36 @@
 ;;; symbolic policy names, or partial rows before a validator normalizes it.
 ;;; Lookup treats those values as absent so validators can report field-level
 ;;; errors instead of leaking a generic `assoc` exception from this helper.
-;; : (-> MaybeAlist Symbol Value Value)
+;; agent-sandbox-alist-ref
+;;   : (-> MaybeAgentSandboxOptionRows Symbol DefaultOptionValue AgentSandboxOptionValue)
+;;   | contract: lookup a key in optional alist-shaped extension metadata
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (agent-sandbox-alist-ref '((network . blocked)) 'network 'missing)
+;;       ;; => blocked
+;;       ```
+;;     %
 (def (agent-sandbox-alist-ref alist key default)
-  (let loop ((entries (if (list? alist) alist '())))
-    (cond
-     ((null? entries) default)
-     ((not (pair? entries)) default)
-     ((and (pair? (car entries))
-           (equal? (caar entries) key))
-      (cdar entries))
-     (else
-      (loop (cdr entries))))))
+  (let (entry (assoc key (agent-sandbox-normalize-alist alist)))
+    (if entry (cdr entry) default)))
 
-;; : (-> MaybeAlist Alist)
+;;; Normalization is intentionally lossy for non-pair fragments: callers use
+;;; this utility when they need alist semantics, not raw user syntax recovery.
+;; : (-> MaybeAgentSandboxOptionRows AgentSandboxOptionRows)
 (def (agent-sandbox-normalize-alist alist)
-  (if (list? alist) alist '()))
+  (if (list? alist) (filter pair? alist) '()))
 
 ;;; Alist merge keeps task-local policy first. Downstream bridges that use
 ;;; assoc get task overrides before profile defaults.
-;; : (-> MaybeAlist MaybeAlist Alist)
+;; : (-> MaybeAgentSandboxOptionRows MaybeAgentSandboxOptionRows AgentSandboxOptionRows)
 (def (agent-sandbox-merge-alists primary secondary)
   (append (agent-sandbox-normalize-alist primary)
           (agent-sandbox-normalize-alist secondary)))
 
 ;;; False means "use profile default".
 ;;; An empty alist is still an explicit task-level override.
-;; : (-> MaybeValue Value Value)
+;; : (-> MaybeTaskOverrideValue ProfileDefaultValue EffectiveSandboxValue)
 (def (agent-sandbox-override value default)
   (if value value default))

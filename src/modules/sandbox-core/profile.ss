@@ -117,6 +117,10 @@
 ;;; gets one canonical key so nested project/session/task derivations do not
 ;;; accumulate ambiguous repeated parent-profile pairs.
 ;; : (-> Alist [Symbol] Alist)
+;;; Metadata pruning is used only while deriving child profiles. It removes
+;;; fields that must be recomputed for the child, while leaving unrelated
+;;; policy annotations untouched.
+;; : (-> Alist [Symbol] Alist)
 (def (poo-flow-sandbox-profile-object-metadata-without metadata keys)
   (filter (lambda (entry)
             (not (and (pair? entry)
@@ -235,7 +239,9 @@
      (poo-flow-sandbox-profile-object-row-value row))))
 
 ;;; Validation rejects malformed rows before merge planning, keeping bad user
-;;; fragments from becoming partial POO contributions.
+;;; fragments from becoming partial POO contributions. The recursive scan is
+;;; deliberately narrow: only filesystem resource rows can fail the extra
+;;; project-workspace/path safety checks.
 ;; : (-> [AgentSandboxResourcePolicyEntry] Boolean)
 (def (poo-flow-sandbox-profile-object-unsafe-filesystem-resource? resources)
   (cond

@@ -8,6 +8,13 @@
                  check-equal?
                  run-tests!)
           (only-in :clan/poo/object .ref object?)
+          (only-in :poo-flow/src/module-system/facade
+                   pooFlowUserConfig
+                   pooFlowUserConfigPresentation
+                   poo-flow-settings)
+          (only-in :poo-flow/user-interface/custom/my-module/config
+                   poo-flow-custom-my-module-cicd-module
+                   poo-flow-custom-my-module-funflow-cicd-case)
           :poo-flow/src/modules/workflow/flows)
 
 (export funflow-tutorial-alignment-report-test)
@@ -56,6 +63,13 @@
     (car entries))
    (else (alignment-test-entry-by-runtime-owner owner (cdr entries)))))
 
+;; : (-> Unit PooUserConfig)
+(def (alignment-test-funflow-cicd-config)
+  (pooFlowUserConfig
+   (append poo-flow-custom-my-module-cicd-module
+           poo-flow-custom-my-module-funflow-cicd-case)
+   (poo-flow-settings)))
+
 ;;; Boundary: this suite checks the top-level Funflow report contract and CI
 ;;; receipt manifest without mixing in source-index details.
 ;; : TestSuite
@@ -71,6 +85,8 @@
              (handoff-readiness-summary
               (.ref report 'handoff-readiness-summary))
              (ci-receipt-manifest (.ref report 'ci-receipt-manifest))
+             (user-interface-handoff-result-gate
+              (.ref report 'user-interface-handoff-result-gate))
              (counts (.ref report 'status-counts)))
         (check-equal? (object? report) #t)
         (check-equal? (poo-flow-funflow-tutorial-alignment-report? report) #t)
@@ -91,8 +107,8 @@
                       2)
         (check-equal? (alignment-test-alist-ref counts 'descriptor-covered) 1)
         (check-equal? (> (.ref report 'proof-count) 15) #t)
-        (check-equal? (.ref report 'gate-count) 22)
-        (check-equal? (length (.ref report 'gate-proofs)) 22)
+        (check-equal? (.ref report 'gate-count) 23)
+        (check-equal? (length (.ref report 'gate-proofs)) 23)
         (check-equal? (> (.ref report 'gate-proof-count) 25) #t)
         (check-equal? (.ref report 'runtime-gap-count) 5)
         (check-equal? (.ref report 'runtime-owner) "marlin-agent-core")
@@ -130,10 +146,32 @@
                       #t)
         (check-equal? (length (alignment-test-alist-ref ci-receipt-manifest
                                                         'result-gates))
-                      7)
+                      8)
         (check-equal? (length (alignment-test-alist-ref ci-receipt-manifest
                                                         'commands))
-                      7)
+                      8)
+        (check-equal? (not
+                       (not
+                        (member "gxtest t/user-interface-cicd-test.ss"
+                                (alignment-test-alist-ref ci-receipt-manifest
+                                                          'commands))))
+                      #t)
+        (check-equal? (alignment-test-alist-ref
+                       user-interface-handoff-result-gate
+                       'gate-id)
+                      'stage-23-user-interface-marlin-handoff-projection)
+        (check-equal? (alignment-test-alist-ref
+                       user-interface-handoff-result-gate
+                       'presentation-field)
+                      'workflow-cicd-marlin-runtime-handoff-abis)
+        (check-equal? (alignment-test-alist-ref
+                       user-interface-handoff-result-gate
+                       'runtime-owner)
+                      "marlin-agent-core")
+        (check-equal? (alignment-test-alist-ref
+                       user-interface-handoff-result-gate
+                       'runtime-executed)
+                      #f)
         (check-equal? (not
                        (not
                         (member "gxi build.ss compile"
@@ -342,7 +380,20 @@
                        gate-proofs))
              (stage22 (alignment-test-gate-proof-by-id
                        'stage-22-poo-tutorial-alignment-report
-                       gate-proofs)))
+                       gate-proofs))
+             (stage23 (alignment-test-gate-proof-by-id
+                       'stage-23-user-interface-marlin-handoff-projection
+                       gate-proofs))
+             (presentation
+              (pooFlowUserConfigPresentation
+               (alignment-test-funflow-cicd-config)))
+             (handoff-abis
+              (.ref presentation 'workflow-cicd-marlin-runtime-handoff-abis))
+             (handoff-summaries
+              (.ref presentation
+                    'workflow-cicd-marlin-runtime-handoff-summaries))
+             (handoff-abi (car handoff-abis))
+             (handoff-summary (car handoff-summaries)))
         (check-equal? (not
                        (not
                         (member 'stage-19-runtime-manifest-consumer
@@ -363,7 +414,14 @@
                         (member 'stage-22-poo-tutorial-alignment-report
                                 gate-ids)))
                       #t)
+        (check-equal? (not
+                       (not
+                        (member
+                         'stage-23-user-interface-marlin-handoff-projection
+                         gate-ids)))
+                      #t)
         (check-equal? (not (not stage19)) #t)
+        (check-equal? (not (not stage23)) #t)
         (check-equal? (not
                        (not
                         (member "gxtest t/runtime-manifest-test.ss: runtime command manifest consumer executes stdout protocol"
@@ -376,7 +434,24 @@
                       #t)
         (check-equal? (length (alignment-test-alist-ref stage21 'proofs)) 2)
         (check-equal? (alignment-test-alist-ref stage22 'proofs)
-                      '("gxtest t/funflow-tutorial-alignment-report-test.ss: funflow tutorial alignment report"))))))
+                      '("gxtest t/funflow-tutorial-alignment-report-test.ss: funflow tutorial alignment report"))
+        (check-equal? (alignment-test-alist-ref stage23 'proofs)
+                      '("gxtest t/user-interface-cicd-test.ss: projects user config into Marlin runtime handoff ABI"
+                        "gxtest t/funflow-tutorial-alignment-report-test.ss: user-interface Marlin handoff result gate"))
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-abi-count)
+                      1)
+        (check-equal? (.ref presentation
+                            'workflow-cicd-marlin-runtime-handoff-summary-count)
+                      1)
+        (check-equal? (alignment-test-alist-ref handoff-abi 'kind)
+                      'poo-flow.workflow.cicd.marlin-runtime-handoff-abi)
+        (check-equal? (alignment-test-alist-ref handoff-abi 'runtime-owner)
+                      "marlin-agent-core")
+        (check-equal? (alignment-test-alist-ref handoff-abi 'runtime-executed)
+                      #f)
+        (check-equal? (alignment-test-alist-ref handoff-summary 'entry-count)
+                      3)))))
 
 ;;; Aggregate export preserves the historical test symbol while keeping parser
 ;;; owner spans small enough for R007.

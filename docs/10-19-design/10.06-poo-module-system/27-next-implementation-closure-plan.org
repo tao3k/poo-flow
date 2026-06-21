@@ -256,6 +256,21 @@ Status 2026-06-20:
 - Forwarded the new projection through profile and doctor presentations in =src/module-system/profile-config.ss=.
 - Added a user-interface result gate in =t/user-interface-cicd-test.ss= that starts from downstream Funflow config and reaches ABI payload data.
 - Updated =t/user-interface-presentation-test.ss= trace stages and empty-fixture coverage.
+*** 10.06.27.46 M6: Tutorial Alignment User-Interface Handoff Gate
+Scope:
+- Connect the M5 user-interface handoff projection back into the Funflow tutorial result ladder.
+- Keep =src/modules/workflow/flows.ss= as report/catalog owner; it records the gate but does not import or execute user custom config.
+- Use tests to prove a real downstream Funflow CI/CD config reaches Marlin ABI payload data through the user-interface presentation.
+Exit criteria:
+- =poo-flow-funflow-tutorial-alignment-report= exposes a stage-23 user-interface Marlin handoff gate.
+- The CI receipt manifest includes the user-interface handoff gate and proof command.
+- The focused alignment test asserts both report metadata and real user-config ABI projection.
+- Runtime execution remains =#f= and no provider-specific CI/CD adapter is introduced.
+Status 2026-06-20:
+- Added =stage-23-user-interface-marlin-handoff-projection= to tutorial alignment gate proofs.
+- Added =user-interface-handoff-result-gate= to the alignment report.
+- Extended the CI receipt manifest with the =user-interface-marlin-handoff= result gate and proof command.
+- Updated =t/funflow-tutorial-alignment-report-test.ss= to validate report metadata and the downstream Funflow CI/CD presentation ABI payload.
 
 ** 10.06.27.60 Do Not Do Next
 
@@ -273,7 +288,8 @@ Status 2026-06-20:
 3. Configured registry bridge into runner validation.
 4. Marlin runtime handoff ABI landing.
 5. User-interface Marlin handoff projection.
-6. Tutorial-result ladder resume at external config/runtime handoff.
+6. Tutorial alignment user-interface handoff gate.
+7. Tutorial-result ladder resume at external config/runtime handoff.
 
 ** 10.06.27.80 Verification Gate
 
@@ -287,6 +303,7 @@ gxpkg env gxtest t/user-interface-config-presentation-test.ss
 gxpkg env gxtest t/declaration-case-test.ss
 gxpkg env gxtest t/workflow-cicd-check-map-test.ss
 gxpkg env gxtest t/funflow-config-pipeline-test.ss
+gxpkg env gxtest t/funflow-tutorial-alignment-report-test.ss
 gxpkg env gxtest t/unit-tests.ss
 gxpkg env gxtest t/project-policy-test.ss
 git diff --check

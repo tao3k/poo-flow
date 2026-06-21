@@ -799,7 +799,7 @@
 ;; : RuntimeOwnerName
 (def +poo-flow-user-workflow-cicd-runtime-owner+ "marlin-agent-core")
 
-;; : (-> [Value] Boolean)
+;; : (-> [RuntimeExecutedFlag] Boolean)
 (def (poo-flow-user-list-all-false? values)
   (cond
    ((null? values) #t)

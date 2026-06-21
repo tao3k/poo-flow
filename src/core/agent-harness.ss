@@ -103,11 +103,13 @@
 
 ;;; Operation kind names are stable user/agent-facing vocabulary. Runtime
 ;;; adapters may lower them differently, but projections keep these symbols.
+;; : [AgentOperationKind]
 (def +poo-flow-agent-operation-kinds+
   '(prompt skill task shell fs-read fs-write compact governor-judge human-audit))
 
 ;;; Snapshots are shallow UI/CLI projections over richer receipts and runtime
 ;;; objects. They are not the canonical execution state.
+;; : [RuntimeSnapshotStatus]
 (def +poo-flow-runtime-snapshot-statuses+
   '(idle admitted connecting running blocked waiting-human completed errored disconnected))
 

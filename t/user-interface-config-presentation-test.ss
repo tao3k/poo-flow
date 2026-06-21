@@ -14,7 +14,7 @@
 
 (load! "../user-interface/custom/my-module/profiles/agent-sandbox-audit")
 
-;; : (-> Symbol Alist MaybeValue)
+;; : (-> Symbol PresentationAlist MaybePresentationValue)
 (def (alist-value key entries)
   (cond
    ((null? entries) #f)
@@ -22,7 +22,7 @@
    (else
     (alist-value key (cdr entries)))))
 
-;; : (-> [Value] Value)
+;; : (-> NonEmptyLineageSteps LineageStep)
 (def (last-value values)
   (if (null? (cdr values))
     (car values)

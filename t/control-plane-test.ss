@@ -598,8 +598,8 @@
         (check-equal? (role-name composed) 'runtime-adapter)
         (check-equal? (role-runtime-owner composed) 'rust-or-external-runtime)))))
 
-;;; The aggregate entrypoint keeps project-policy-test in the same process so
-;;; policy status reflects the complete control-plane suite.
+;;; The aggregate root keeps project-policy-test in the same process while
+;;; leaving pass/fail ownership to the std/test runner.
 (run-tests! pure-flow-test
             adapter-request-test
             funflow-api-test
@@ -612,6 +612,3 @@
             store-cache-semantics-test
             poo-role-test
             project-policy-test)
-
-(unless (zero? (project-policy-status))
-  (exit 1))

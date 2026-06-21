@@ -11,10 +11,14 @@
 
 (export agent-harness-object-test)
 
-;; : (-> Alist Symbol Value)
+;;; Test rows are total for the fields asserted below; missing keys should fail
+;;; loudly through assoc rather than silently returning #f.
+;; : (-> AgentHarnessTestRow Symbol AgentHarnessTestValue)
 (def (test-ref alist key)
   (cdr (assoc key alist)))
 
+;;; The suite covers the user-visible alist projection for each inert object
+;;; family, keeping runtime execution flags pinned to false.
 ;; : TestSuite
 (def agent-harness-object-test
   (test-suite "agent harness object families"

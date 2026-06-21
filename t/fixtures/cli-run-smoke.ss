@@ -25,6 +25,10 @@
 ;; : RunResult
 (def result (runner-run runner flow input))
 
-(display "poo-flow-run:")
-(write (run-result-value result))
-(newline)
+;; : (-> RunResult Unit)
+(def (emit-cli-smoke-result! result)
+  (display "poo-flow-run:")
+  (write (run-result-value result))
+  (newline))
+
+(emit-cli-smoke-result! result)

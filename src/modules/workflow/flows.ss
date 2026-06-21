@@ -294,7 +294,11 @@
       "gxtest t/tutorial-makefile-runtime-test.ss: authors makefile runtime descriptor with Gerbil macros"))
    (alignment-gate-proof
     'stage-22-poo-tutorial-alignment-report
-    '("gxtest t/funflow-tutorial-alignment-report-test.ss: funflow tutorial alignment report"))))
+    '("gxtest t/funflow-tutorial-alignment-report-test.ss: funflow tutorial alignment report"))
+   (alignment-gate-proof
+    'stage-23-user-interface-marlin-handoff-projection
+    '("gxtest t/user-interface-cicd-test.ss: projects user config into Marlin runtime handoff ABI"
+      "gxtest t/funflow-tutorial-alignment-report-test.ss: user-interface Marlin handoff result gate"))))
 
 ;; : (-> PooFlowAlignmentGateProof Symbol)
 (def (alignment-gate-proof-id gate-proof)
@@ -539,6 +543,7 @@
                 functional-flow-kernel
                 tutorial-feature-batch
                 tutorial-makefile-runtime
+                user-interface-marlin-handoff
                 package-compile
                 org-lint))
         (cons 'commands
@@ -547,8 +552,30 @@
                 "gxtest t/functional-flow-kernel-test.ss"
                 "gxtest t/tutorial-feature-batch-test.ss"
                 "gxtest t/tutorial-makefile-runtime-test.ss"
+                "gxtest t/user-interface-cicd-test.ss"
                 "gxi build.ss compile"
                 "asp org lint docs/10-19-design/10.04-funflow-tutorial-result-ladder.org"))))
+
+;;; Boundary: this gate describes the user-interface handoff proof introduced
+;;; after the workflow-owned Marlin ABI. It is metadata only; the actual user
+;;; config projection is asserted by tests, not executed by this report.
+;; : (-> Unit Alist)
+(def (alignment-user-interface-handoff-result-gate)
+  (list
+   (cons 'schema
+         'poo-flow.modules.funflow.tutorial-alignment.user-interface-handoff-gate.v1)
+   (cons 'gate-id 'stage-23-user-interface-marlin-handoff-projection)
+   (cons 'presentation-field 'workflow-cicd-marlin-runtime-handoff-abis)
+   (cons 'summary-field 'workflow-cicd-marlin-runtime-handoff-summaries)
+   (cons 'expected-abi-kind
+         'poo-flow.workflow.cicd.marlin-runtime-handoff-abi)
+   (cons 'runtime-owner "marlin-agent-core")
+   (cons 'handoff-required #t)
+   (cons 'runtime-executed #f)
+   (cons 'runtime-parses-scheme-source #f)
+   (cons 'scheme-manufactures-runtime-handlers #f)
+   (cons 'proof-command
+         "gxtest t/user-interface-cicd-test.ss: projects user config into Marlin runtime handoff ABI")))
 
 ;;; Boundary: runtime-gap detection stays structural and data-only.
 ;;; A gap means the source still delegates real work to Rust/Marlin runtime.
@@ -610,7 +637,9 @@
                                                 proof-count-value
                                                 gate-proof-count-value))
          (ci-receipt-manifest-value
-          (alignment-ci-receipt-manifest handoff-readiness-summary-value)))
+          (alignment-ci-receipt-manifest handoff-readiness-summary-value))
+         (user-interface-handoff-result-gate-value
+          (alignment-user-interface-handoff-result-gate)))
    (.o kind: (poo-flow-funflow-tutorial-alignment-report-kind)
        schema: (poo-flow-funflow-tutorial-alignment-schema)
         upstream: "tweag/funflow"
@@ -627,6 +656,8 @@
         runtime-owner-matrix: runtime-owner-matrix-value
         handoff-readiness-summary: handoff-readiness-summary-value
         ci-receipt-manifest: ci-receipt-manifest-value
+        user-interface-handoff-result-gate:
+        user-interface-handoff-result-gate-value
         runtime-gap-index: runtime-gap-index-value
         runtime-gap-count: (length runtime-gap-index-value)
         proof-count: proof-count-value
