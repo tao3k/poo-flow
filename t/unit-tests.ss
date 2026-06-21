@@ -10,6 +10,7 @@
         :poo-flow/t/agent-sandbox-profile-user-interface-test
         :poo-flow/t/cli-test
         :poo-flow/t/config-test
+        :poo-flow/t/control-plane-role-test
         :poo-flow/t/control-plane-test
         :poo-flow/t/descriptor-registry-test
         :poo-flow/t/docker-descriptor-test
@@ -20,6 +21,7 @@
         :poo-flow/t/functional-flow-kernel-test
         :poo-flow/t/functional-flow-kleisli-test
         :poo-flow/t/workflow-cicd-check-map-test
+        :poo-flow/t/workflow-cicd-runtime-handoff-test
         :poo-flow/t/loop-agent-descriptor-test
         :poo-flow/t/loop-governor-test
         :poo-flow/t/loop-strategy-test

@@ -6,9 +6,17 @@
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
         :poo-flow/src/module-system/interface
-        :poo-flow/src/module-system/base)
+        :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/sandbox-profile-catalog
+        :poo-flow/src/module-system/workflow-cicd-config
+        :poo-flow/src/module-system/loop-engine-config
+        :poo-flow/src/module-system/presentation)
 
 (export (import: :poo-flow/src/module-system/base)
+        (import: :poo-flow/src/module-system/sandbox-profile-catalog)
+        (import: :poo-flow/src/module-system/workflow-cicd-config)
+        (import: :poo-flow/src/module-system/loop-engine-config)
+        (import: :poo-flow/src/module-system/presentation)
         poo-flow-user-profile-kind
         poo-flow-user-profile-set-kind
         poo-flow-user-profile-diagnostic-kind

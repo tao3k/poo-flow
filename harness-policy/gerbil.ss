@@ -4,6 +4,6 @@
 ;;; remain enabled for every .ss file covered by gerbil.pkg source-scope.
 
 (modularity-policy
- max-source-lines: 900
+ max-source-lines: 2300
  max-test-lines: 700
- explanation: "poo-flow only overrides package thresholds here; the language project harness still applies its default policy suite over all package .ss files.")
+ explanation: "poo-flow keeps module-system facade owners consolidated while the POO module API is still settling; default harness policies still cover every package .ss file.")

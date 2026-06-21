@@ -111,6 +111,8 @@
     (void)
     (error message value)))
 
+;;; Profile refs may be a symbol, a POO object, or a nested inheritance list.
+;;; This validator keeps that shape declarative and avoids resolving profiles.
 ;; : (-> PooFlowCicdProfileRefCandidate Boolean)
 (def (poo-flow-cicd-profile-ref? value)
   (or (symbol? value)
@@ -119,12 +121,16 @@
            (list? value)
            (poo-flow-cicd-every? poo-flow-cicd-profile-ref? value))))
 
+;;; Commands must be non-empty argv vectors because runtime adapters consume
+;;; an executable plus arguments, not a shell string.
 ;; : (-> PooFlowCicdCommandCandidate Boolean)
 (def (poo-flow-cicd-command-vector? value)
   (and (pair? value)
        (list? value)
        (poo-flow-cicd-every? string? value)))
 
+;;; List slot validation is deliberately structural. Semantic meaning for
+;;; inputs, cache, secrets, and results is owned by later runtime projections.
 ;; : (-> String PooFlowCicdListCandidate Void)
 (def (poo-flow-cicd-require-list field value)
   (poo-flow-cicd-require
@@ -179,6 +185,8 @@
       runtime-executed: #f
       metadata: (if (null? maybe-metadata) '() (car maybe-metadata))))
 
+;;; Check predicates verify the public POO kind slot only. They do not inspect
+;;; command or sandbox semantics, which stay in constructor validation.
 ;; : (-> PooFlowCicdCheckCandidate Boolean)
 (def (poo-flow-cicd-check? value)
   (and (object? value)
@@ -203,6 +211,8 @@
   (and (list? values)
        (poo-flow-cicd-every? symbol? values)))
 
+;;; Alist lookup is total so invalid or partial pipeline declarations can still
+;;; produce diagnostics instead of aborting graph projection.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-cicd-alist-ref alist key default)
   (let (entry (assoc key alist))
@@ -271,16 +281,22 @@
 (def (poo-flow-cicd-check-map-checks check-map)
   (.ref check-map 'check-objects))
 
+;;; Symbol membership normalizes `member` results to Boolean facts for
+;;; dependency and profile ref diagnostics.
 ;; : (-> Symbol [Symbol] Boolean)
 (def (poo-flow-cicd-symbol-member? value values)
   (and (member value values) #t))
 
+;;; Symbol add preserves declaration order and keeps duplicate diagnostics
+;;; deterministic without switching to a hash set.
 ;; : (-> Symbol [Symbol] [Symbol])
 (def (poo-flow-cicd-symbol-add value values)
   (if (poo-flow-cicd-symbol-member? value values)
     values
     (append values (list value))))
 
+;;; Profile refs are an inheritance surface, not graph edges. This collector
+;;; flattens symbol refs and inline profile objects into runtime catalog names.
 ;; : (-> PooFlowCicdProfileRef [Symbol] [Symbol])
 (def (poo-flow-cicd-profile-refs/add profile refs)
   (cond
@@ -294,6 +310,8 @@
     (poo-flow-cicd-profile-refs/list-add profile refs))
    (else refs)))
 
+;;; Nested profile-ref lists preserve left-to-right inheritance order while
+;;; flattening the runtime-facing catalog refs.
 ;; : (-> [PooFlowCicdProfileRef] [Symbol] [Symbol])
 (def (poo-flow-cicd-profile-refs/list-add profiles refs)
   (cond
@@ -307,6 +325,8 @@
 (def (poo-flow-cicd-check-profile-refs check)
   (poo-flow-cicd-profile-refs/add (poo-flow-cicd-check-profile check) '()))
 
+;;; Sandbox profile lookup accepts inline POO profiles and catalog symbols. It
+;;; never constructs fallback profiles, so unresolved refs remain visible.
 ;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] MaybePooSandboxProfile)
 (def (poo-flow-cicd-profile-ref->sandbox-profile profile profile-catalog)
   (cond
@@ -315,6 +335,8 @@
     (poo-flow-sandbox-profile-by-name profile-catalog profile))
    (else #f)))
 
+;;; Runtime summaries follow profile inheritance recursively. Missing catalog
+;;; refs are skipped here and reported by the unresolved-ref projection.
 ;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
 (def (poo-flow-cicd-profile-runtime-summaries profile profile-catalog)
   (cond
@@ -337,6 +359,8 @@
    (poo-flow-cicd-check-profile check)
    (if (null? maybe-profile-catalog) '() (car maybe-profile-catalog))))
 
+;;; Handoff summaries mirror runtime summaries so both report paths preserve
+;;; the same inherited profile order.
 ;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
 (def (poo-flow-cicd-profile-handoff-summaries profile profile-catalog)
   (cond
@@ -359,6 +383,8 @@
    (poo-flow-cicd-check-profile check)
    (if (null? maybe-profile-catalog) '() (car maybe-profile-catalog))))
 
+;;; Unresolved profile refs are the safety signal for fake or incomplete CI
+;;; profiles. Inline POO profiles are already resolved and never reported.
 ;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Symbol])
 (def (poo-flow-cicd-profile-unresolved-refs profile profile-catalog)
   (cond
@@ -578,12 +604,17 @@
     '()
     (apply append (map proc values))))
 
+;;; Unresolved dependency refs are graph diagnostics, not constructor errors.
+;;; Keeping this local to one check lets the map-level report aggregate every
+;;; missing edge before a backend scheduler sees the pipeline.
 ;; : (-> PooFlowCicdCheck [Symbol] [Symbol])
 (def (poo-flow-cicd-check-unresolved-dependency-refs check check-names)
   (filter (lambda (dependency-ref)
             (not (poo-flow-cicd-symbol-member? dependency-ref check-names)))
           (poo-flow-cicd-check-dependency-refs check)))
 
+;;; Dependency edges are emitted as inert `from` and `to` facts. The runtime
+;;; scheduler can choose its own execution plan from the graph report later.
 ;; : (-> PooFlowCicdCheck [Alist])
 (def (poo-flow-cicd-check-dependency-edges check)
   (map (lambda (dependency-ref)
@@ -817,6 +848,8 @@
                         profile-catalog))
                      (poo-flow-cicd-check-map-checks check-map))))))
 
+;;; Policy lookup stays nested under the manifest policy field. The ABI wrapper
+;;; should not depend on incidental top-level keys from runtime descriptors.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-cicd-runtime-command-manifest-policy-ref manifest key default)
   (poo-flow-cicd-alist-ref
@@ -863,6 +896,8 @@
         (cons 'runtime-parses-scheme-source #f)
         (cons 'scheme-manufactures-runtime-handlers #f)))
 
+;;; Entry projection is a one-to-one map over command manifests. Keeping it a
+;;; map preserves order and prevents the ABI layer from inventing scheduler data.
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-cicd-runtime-command-manifests->marlin-handoff-entries
       manifests)
@@ -897,6 +932,8 @@
                 (poo-flow-cicd-runtime-command-manifests->marlin-handoff-entries
                  manifests)))))
 
+;;; The check-map shortcut keeps callers on the public POO object surface while
+;;; delegating ABI formation through the manifest-map boundary above.
 ;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check-map->marlin-runtime-handoff-abi check-map
                                                                . maybe-profile-catalog)

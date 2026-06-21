@@ -573,31 +573,6 @@
                         (store-get cache-handle)
                         cache-handle))))))
 
-;;; This suite keeps POO role projection aligned with the public workflow
-;;; surface.
-;; : TestSuite
-(def poo-role-test
-  (test-suite "poo role descriptors"
-    (test-case "declares control-plane roles as Gerbil POO objects"
-      (check-equal? (role-object? flow-role) #t)
-      (check-equal? (role-name flow-role) 'flow)
-      (check-equal? (role-kind branch-role) 'composition)
-      (check-equal? (role-kind strategy-role) 'policy)
-      (check-equal? (role-kind execution-policy-role) 'policy-envelope)
-      (check-equal? (role-kind run-config-role) 'configuration)
-      (check-equal? (role-kind replay-role) 'policy)
-      (check-equal? (role-runtime-owner runtime-adapter-role) 'rust-or-external-runtime)
-      (check-equal? (role-responsibility branch-role) 'dag-fanout-join)
-      (check-equal? (role-responsibility execution-policy-role) 'runtime-policy-handoff)
-      (check-equal? (role-responsibility run-config-role) 'configured-runner-assembly)
-      (check-equal? (role-responsibility replay-role) 'audit-validation)
-      (check-equal? (role-responsibility receipt-role) 'execution-explanation))
-    (test-case "composes role prototypes with leftmost precedence"
-      (let ((composed (role-compose runtime-adapter-role flow-role)))
-        (check-equal? (role-object? composed) #t)
-        (check-equal? (role-name composed) 'runtime-adapter)
-        (check-equal? (role-runtime-owner composed) 'rust-or-external-runtime)))))
-
 ;;; The aggregate root keeps project-policy-test in the same process while
 ;;; leaving pass/fail ownership to the std/test runner.
 (run-tests! pure-flow-test
@@ -610,5 +585,4 @@
             receipt-audit-test
             strategy-cache-test
             store-cache-semantics-test
-            poo-role-test
             project-policy-test)

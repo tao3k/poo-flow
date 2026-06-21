@@ -490,6 +490,8 @@
       (profile-name ... name)
       (profile-clause ...)))))
 
+;;; Public profile collection syntax is intentionally only a wrapper around the
+;;; build macro so `:derive` ordering remains fixed-point and POO-owned.
 ;; : (-> ProfileConfigFn ProfileDeriveFn ProfileRow... [PooSandboxProfile])
 (defrules poo-flow-sandbox-profile-object-profiles ()
   ((_ profile-config profile-derive-config)

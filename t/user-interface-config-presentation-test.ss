@@ -9,6 +9,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/presentation
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/modules/agent-sandbox/config)
 
