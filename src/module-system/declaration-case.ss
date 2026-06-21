@@ -55,8 +55,11 @@
 (def (poo-flow-declaration-case-default-trace-stages)
   '(selected-modules
     feature-facts
+    sandbox-profile-derivations
     cicd-intents
     workflow-cicd-pipelines
+    workflow-cicd-pipeline-runs
+    workflow-cicd-pipeline-results
     workflow-cicd-runtime-readiness
     workflow-cicd-runtime-command-manifest-maps
     workflow-cicd-runtime-command-manifest-summaries

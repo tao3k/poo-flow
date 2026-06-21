@@ -101,4 +101,63 @@
             project-profile
             'session/bad
             '((backend docker)))))
+        #t)))
+   (test-case "rejects non-symbol names before profile resolution"
+     (let (project-profile
+           (poo-flow-nono-sandbox-profile-config
+            'project/dev
+            '((metadata (project . marlin)))))
+       (check-equal?
+        (derivation-test-error?
+         (lambda ()
+           (poo-flow-sandbox-profile-object-derive
+            poo-flow-nono-sandbox-profile-object
+            project-profile
+            "session/bad"
+            '((metadata (session . bad))))))
+        #t)
+       (check-equal?
+        (derivation-test-error?
+         (lambda ()
+           (poo-flow-nono-sandbox-profile-config
+            "project/bad"
+            '((metadata (project . bad))))))
+        #t)))
+   (test-case "rejects non-profile parents during derivation"
+     (check-equal?
+      (derivation-test-error?
+       (lambda ()
+         (poo-flow-sandbox-profile-object-derive
+          poo-flow-nono-sandbox-profile-object
+          'not-a-profile
+          'session/bad-parent
+          '((metadata (session . bad-parent))))))
+      #t))
+   (test-case "rejects unknown rows through POO field validation"
+     (let (project-profile
+           (poo-flow-nono-sandbox-profile-config
+            'project/dev
+            '((metadata (project . marlin)))))
+       (check-equal?
+        (derivation-test-error?
+         (lambda ()
+           (poo-flow-sandbox-profile-object-derive
+            poo-flow-nono-sandbox-profile-object
+            project-profile
+            'session/unknown-row
+            '((unknown-row value)))))
+        #t)))
+   (test-case "rejects unsafe filesystem resources before runtime handoff"
+     (let (project-profile
+           (poo-flow-nono-sandbox-profile-config
+            'project/dev
+            '((metadata (project . marlin)))))
+       (check-equal?
+        (derivation-test-error?
+         (lambda ()
+           (poo-flow-sandbox-profile-object-derive
+            poo-flow-nono-sandbox-profile-object
+            project-profile
+            'session/unsafe-filesystem
+            '((resources filesystem)))))
         #t)))))

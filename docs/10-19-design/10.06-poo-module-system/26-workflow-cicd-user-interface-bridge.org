@@ -12,9 +12,8 @@ live-cases into a second CI/CD DSL.
 The current module syntax boundary is thin and upstream-owned:
 
 - =src/module-system/init-syntax.ss= defines =use-module= and =load!=.
-- =use-module= currently handles sandbox =:config (profiles ...)= forms and a
-  generic live-case row with =:inherits=, =:isolation=, =:environment=,
-  =:command=, and =:nono=.
+- =use-module= handles sandbox POO =.def= profile forms and a generic live-case
+  row with =:inherits=, =:isolation=, =:environment=, =:command=, and =:nono=.
 - There is no =funflow :config (pipeline ...)= branch yet.
 - =src/module-system/base.ss= owns the =use-module= declaration contract gate
   so category symbols such as =workflow= cannot silently become custom modules.
@@ -38,7 +37,7 @@ The downstream configuration already has real profiles:
 - =user-interface/custom/my-module/cases/cicd.ss= currently declares one
   sandbox live-case inheriting =ci/build= and running =gxpkg build=.
 - =user-interface/custom/my-module/profiles/object-extension.ss= demonstrates
-  the POO slot-operator style for =:override=, =:append=, and =:remove=.
+  the POO slot-transform style with =slot:=, ==>=, and ==>.+=.
 
 The interface principles document fixes the macro contract:
 
@@ -84,27 +83,39 @@ The public downstream shape should be:
 #+begin_src scheme
 (use-module funflow
   :config
-  (pipeline default
-    (check build
-      :inherits ci/build
-      :command ("gxpkg" "build")
-      :artifacts (build-log)
-      :cache (gerbil-build-cache)
-      :result (read :lines)
-      :runtime manifest-handoff)
-    (check test
-      :inherits ci/check
-      :command ("gxpkg" "env" "gxtest" "t/unit-tests.ss")
-      :artifacts (test-receipt)
-      :result (read :lines)
-      :runtime manifest-handoff)))
+  (.def (funflow/build @ funflow-check
+                       check-name profile-ref command-vector
+                       artifact-outputs cache-intents
+                       result-protocol runtime-mode)
+    check-name: 'build
+    profile-ref: 'ci/build
+    command-vector: '("gxpkg" "build")
+    artifact-outputs: '(build-log)
+    cache-intents: '(gerbil-build-cache)
+    result-protocol: '(read :lines)
+    runtime-mode: 'manifest-handoff)
+  (.def (funflow/test @ funflow-check
+                      check-name profile-ref command-vector
+                      artifact-outputs result-protocol runtime-mode
+                      dependency-refs)
+    check-name: 'test
+    profile-ref: 'ci/check
+    command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+    artifact-outputs: '(test-receipt)
+    result-protocol: '(read :lines)
+    runtime-mode: 'manifest-handoff
+    dependency-refs: '(build))
+  (.def (funflow/default @ funflow-pipeline pipeline-name checks)
+    pipeline-name: 'default
+    checks: (list funflow/build funflow/test)))
 #+end_src
 
 The macro expansion should construct a =poo-flow-cicd-check-map= through a new
 Funflow config helper. The helper should live beside the module owner, not in
 =module-system/base.ss=:
 
-- =src/modules/funflow/config.ss= owns the public pipeline config forms.
+- =src/modules/funflow/config.ss= owns the public POO prototypes:
+  =funflow-check= and =funflow-pipeline=.
 - =src/modules/workflow/cicd.ss= keeps the shared workflow-domain POO check-map
   object and projections until or unless it becomes Funflow-specific.
 - =src/module-system/init-syntax.ss= only recognizes the syntax and calls the
@@ -145,23 +156,27 @@ resolution can use C3 composition and existing sandbox-core validation to merge
 or reject the final profile shape.
 
 Slot operations should stay object-local. If a check needs object extension, the
-pipeline form should eventually support the same vocabulary as profile objects:
+pipeline form should eventually use named functional or POO-native helpers that
+lower into object attributes:
 
 #+begin_src scheme
-(check build
-  :inherits ci/build
-  :artifacts (build-log)
-  :artifacts :append (binary-cache)
-  :cache :remove (legacy-cache)
-  ...)
+(.def (funflow/build @ funflow-check
+                     profile-ref artifact-outputs cache-intents)
+  profile-ref: 'ci/build
+  artifact-outputs: '(build-log binary-cache)
+  cache-intents: '(gerbil-build-cache))
 #+end_src
 
-This keeps delete/override/append semantics on POO object attributes rather than
-creating bespoke =remove-task= or =remove-node= APIs.
+This keeps update semantics on POO object attributes rather than creating
+bespoke =remove-task= or =remove-node= APIs or public row operators.
 
 * 10.06.26.60 Implementation Slices
 
 The next code slice should be milestone-sized, not file-by-file:
+
+Superseded note: the row-style Funflow config branch described below has been
+removed. Current implementation uses native POO =.def= declarations with
+=funflow-check= and =funflow-pipeline= prototypes.
 
 1. Extend =src/modules/funflow/config.ss= with helpers that turn pipeline/check
    clauses into =poo-flow-cicd-check-map= objects.
@@ -183,6 +198,10 @@ The next code slice should be milestone-sized, not file-by-file:
 * 10.06.26.70 Acceptance Criteria
 
 This bridge is complete when:
+
+Current acceptance note: public Funflow config is now native POO
+=(use-module funflow (.def ...))= with =funflow-check= and =funflow-pipeline=.
+Legacy =:config= pipeline rows are no longer accepted.
 
 - downstream code can write one compact =(use-module funflow :config
   (pipeline ...))= form;

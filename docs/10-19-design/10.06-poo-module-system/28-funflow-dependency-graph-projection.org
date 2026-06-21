@@ -37,18 +37,26 @@ The compact shape now has a concrete projection:
 #+begin_src scheme
 (use-module funflow
   :config
-  (pipeline default
-    (check build
-      :inherits ci/build
-      :command ("gxpkg" "build")
-      :result (read :lines)
-      :runtime manifest-handoff)
-    (check test
-      :inherits ci/check
-      :needs (build)
-      :command ("gxpkg" "env" "gxtest" "t/unit-tests.ss")
-      :result (read :lines)
-      :runtime manifest-handoff)))
+  (.def (funflow/build @ funflow-check
+                       check-name profile-ref command-vector
+                       result-protocol runtime-mode)
+    check-name: 'build
+    profile-ref: 'ci/build
+    command-vector: '("gxpkg" "build")
+    result-protocol: '(read :lines)
+    runtime-mode: 'manifest-handoff)
+  (.def (funflow/test @ funflow-check
+                      check-name profile-ref command-vector
+                      dependency-refs result-protocol runtime-mode)
+    check-name: 'test
+    profile-ref: 'ci/check
+    command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+    dependency-refs: '(build)
+    result-protocol: '(read :lines)
+    runtime-mode: 'manifest-handoff)
+  (.def (funflow/default @ funflow-pipeline pipeline-name checks)
+    pipeline-name: 'default
+    checks: (list funflow/build funflow/test)))
 #+end_src
 
 The resulting dependency graph contains:

@@ -20,6 +20,8 @@ This is not a DSL track. It does not introduce an alist or record language for
 workflow authoring. Gerbil Scheme remains the host language, and Gerbil POO is
 the semantic object system.
 
+Functional programming is the preferred implementation style for the Scheme kernel. Funflow was introduced to keep the kernel centered on Category/Arrow-style composition, pure flow values, hygienic Gerbil authoring macros, and POO metadata for strategy selection. POO + functional programming is the non-negotiable core of this project; imperative schedulers, mutable runtime state, and backend-specific execution logic stay outside this Scheme layer.
+
 ** 10.07.10 Reference Evidence
 
 The local Gerbil POO checkout at =.data/gerbil-poo/fun.ss= defines functional

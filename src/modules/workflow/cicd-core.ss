@@ -6,6 +6,8 @@
 
 (export +poo-flow-cicd-check-map-schema+
         +poo-flow-cicd-check-receipt-schema+
+        +poo-flow-cicd-pipeline-run-schema+
+        +poo-flow-cicd-pipeline-result-schema+
         +poo-flow-cicd-runtime-manifest-readiness-schema+
         +poo-flow-cicd-marlin-runtime-handoff-abi-schema+
         +poo-flow-cicd-marlin-runtime-owner+
@@ -40,6 +42,18 @@
 ;; : Symbol
 (def +poo-flow-cicd-check-receipt-schema+
   'poo-flow.modules.workflow.cicd.check-receipt.v1)
+
+;;; Pipeline-run rows are declarative admission records. They prove ordering
+;;; and handoff readiness without claiming a backend executed any check.
+;; : Symbol
+(def +poo-flow-cicd-pipeline-run-schema+
+  'poo-flow.modules.workflow.cicd.pipeline-run.v1)
+
+;;; Pipeline-result rows summarize the declarative run outcome. A successful
+;;; result means "ready for Marlin handoff", not "commands completed".
+;; : Symbol
+(def +poo-flow-cicd-pipeline-result-schema+
+  'poo-flow.modules.workflow.cicd.pipeline-result.v1)
 
 ;; : Symbol
 (def +poo-flow-cicd-runtime-manifest-readiness-schema+
@@ -277,5 +291,4 @@
   (if (poo-flow-cicd-symbol-member? value values)
     values
     (append values (list value))))
-
 

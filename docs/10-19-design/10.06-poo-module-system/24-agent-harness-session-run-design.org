@@ -229,9 +229,14 @@ This contract is the boundary for =marlin-agent-core= or another backend runtime
 
 The current user-config projection exposes this handoff as report-only loop-engine
 data:
+- =agent-profile= projects named governor, reviewer, auditor, and human audit policy profiles;
+- =agent-harness= projects the inert runtime boundary for each named profile;
+- =agent-session= projects the session namespace and active operation references without becoming workflow runs;
+- =result-contract= projects structured reviewer, governor, and human-audit output expectations with report-only validation diagnostics;
 - =workflow-run= projects the finite workflow admission plan;
 - =dispatch-receipt= projects asynchronous input admission;
 - =agent-operation= projects the governor or human-audit node action;
+- =delegated-operation= names the governor, reviewer, auditor, and human audit gate while staying a projection over =agent-operation=;
 - =runtime-snapshot= projects the inspectable UI/CLI status.
 - =runtime-command-manifest= projects the concrete =runtime-adapter= CLI
   handoff envelope for =marlin-agent-core=.
@@ -243,6 +248,8 @@ without walking the full request payload.
 These projections live inside =pooFlowUserConfigPresentation= loop-engine intent
 rows, so custom user modules remain compact while downstream agents still see
 the full runtime boundary.
+The =delegated-operation= row deliberately does not add a new canonical runtime object family. It is the Flue-style readable operation view that ties the parent session, child delegated session reference, workflow run reference, named machine reviewer, named governor, and human audit policy together for agents.
+Implementation update: the active manifest family list now supersedes the earlier four-family wording. It carries =agent-profile=, =agent-harness=, =agent-session=, =workflow-run=, =dispatch-receipt=, =agent-operation=, and =runtime-snapshot= so agents can inspect the profile/harness/session boundary before runtime execution.
 *** 10.06.24.75 M5: User-Facing Examples
 Add one live presentation case and one non-executing runtime handoff case:
 

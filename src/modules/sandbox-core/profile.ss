@@ -2,10 +2,15 @@
 ;;; Boundary: sandbox category core profile object and projection helpers.
 ;;; Invariant: this is developer-owned object machinery, not a user module row.
 
-(import (only-in :clan/poo/object .o)
+(import :gerbil/gambit
+        (only-in :clan/poo/object .def .o .ref .slot? object?)
+        (only-in :gslph/src/extensions/facade
+                 poo-object-contract-validation
+                 poo-object-validation-valid?)
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/agent-sandbox/profile
                  agent-sandbox-profile-resource-policy-filesystem-entry?
+                 agent-sandbox-profile-resource-policy-has-structured-filesystem?
                  agent-sandbox-profile-resource-policy-filesystem-diagnostics)
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-core
@@ -16,6 +21,24 @@
         poo-flow-sandbox-profile-object-row-operator?
         poo-flow-sandbox-profile-object-row-operator
         poo-flow-sandbox-profile-object-row-value
+        poo-flow-sandbox-profile-object-authoring-diagnostic
+        poo-flow-sandbox-profile-object-row-contains-symbol?
+        poo-flow-sandbox-profile-object-runtime-executed-true?
+        poo-flow-sandbox-profile-object-row-authoring-diagnostics
+        poo-flow-sandbox-profile-object-authoring-diagnostics
+        poo-flow-runtime-volume-filesystem-prototype
+        poo-flow-runtime-volume-resources-prototype
+        poo-flow-sandbox-profile-prototype
+        poo-flow-sandbox-resources-prototype-contract-validation
+        poo-flow-sandbox-resources-prototype-contract-validation-valid?
+        poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+        poo-flow-sandbox-resources-prototype-contract-validation->alist
+        poo-flow-require-sandbox-resources-prototype-contract!
+        poo-flow-sandbox-prototype-slot-entry
+        poo-flow-sandbox-filesystem-prototype->resource-entry
+        poo-flow-sandbox-resources-prototype->resource-policy
+        poo-flow-sandbox-profile-prototype->profile
+        poo-flow-sandbox-profile-prototypes
         poo-flow-sandbox-profile-object-profiles
         poo-flow-sandbox-profile-object-profiles/build
         poo-flow-sandbox-profile-object-derive
@@ -61,6 +84,397 @@
      (developer-owned . #t)
      (inherits . objects.shared.sandbox))))
 
+;;; Runtime volume resources are first-class POO prototypes. Row operators can
+;;; still project into these slots, but the canonical authoring model is object
+;;; roots with direct slots and derived resources with `=>.+`, matching Gerbil
+;;; POO's prototype semantics.
+;; : PooSandboxFilesystemPrototype
+(.def poo-flow-runtime-volume-filesystem-prototype
+  scope: 'volume
+  materialized-by: 'runtime
+  mounts: 'runtime)
+
+;; : PooSandboxResourcesPrototype
+(.def poo-flow-runtime-volume-resources-prototype
+  filesystem: poo-flow-runtime-volume-filesystem-prototype
+  cpu: 2
+  memory: "4Gi")
+
+;; : PooSandboxResourcesPrototypeContractValidationKind
+(def poo-flow-sandbox-resources-prototype-contract-validation-kind
+  "poo-flow-sandbox-resources-prototype-contract-validation")
+
+;; : PooSandboxResourcesPrototypeContractValidationSchema
+(def poo-flow-sandbox-resources-prototype-contract-validation-schema
+  "poo-flow-sandbox-resources-prototype-contract-validation/v1")
+
+;; : (-> Pair... HashTable)
+(def (poo-flow-sandbox-contract-receipt . entries)
+  (let (table (make-hash-table))
+    (for-each
+     (lambda (entry)
+       (hash-put! table (car entry) (cdr entry)))
+     entries)
+    table))
+
+;; : (-> PooSandboxResourcesPrototype HashTable)
+(def (poo-flow-sandbox-resources-prototype-source-ref resources)
+  (poo-flow-sandbox-contract-receipt
+   (cons 'kind "dependency")
+   (cons 'manager "gerbil.pkg")
+   (cons 'dependency "github.com/tao3k/gerbil-scheme-language-project-harness")
+   (cons 'repository "github.com/tao3k/agent-semantic-protocols")
+   (cons 'localSource "languages/gerbil-scheme-language-project-harness")
+   (cons 'repositorySource "src/extensions/facade.ss")
+   (cons 'indexHint "gslph-extensions-facade")
+   (cons 'pathPolicy "package-dependency")
+   (cons 'selectorScheme "gerbil-poo")
+   (cons 'object 'PooSandboxResourcesPrototype)
+   (cons 'slots
+         (if (object? resources)
+           (append
+            (if (.slot? resources 'filesystem) '(filesystem) '())
+            (if (.slot? resources 'cpu) '(cpu) '())
+            (if (.slot? resources 'memory) '(memory) '())
+            (if (.slot? resources 'timeout-ms) '(timeout-ms) '()))
+           '()))))
+
+;; : (-> PooSandboxResourcesPrototype Symbol Value)
+(def (poo-flow-sandbox-resources-prototype-slot/default resources
+                                                           slot
+                                                           default)
+  (if (and (object? resources) (.slot? resources slot))
+    (with-catch
+     (lambda (_failure) default)
+     (lambda ()
+       (.ref resources slot)))
+    default))
+
+;; : (-> Symbol Symbol Symbol Value Alist HashTable)
+(def (poo-flow-sandbox-resources-prototype-field-contract field
+                                                           value-kind
+                                                           merge
+                                                           default
+                                                           metadata)
+  (poo-flow-sandbox-contract-receipt
+   (cons 'field field)
+   (cons 'identity field)
+   (cons 'valueKind value-kind)
+   (cons 'value-kind value-kind)
+   (cons 'merge merge)
+   (cons 'default default)
+   (cons 'metadata metadata)))
+
+;; : (-> PooSandboxResourcesPrototype [HashTable])
+(def (poo-flow-sandbox-resources-prototype-field-contracts resources)
+  (list
+   (poo-flow-sandbox-resources-prototype-field-contract
+    'filesystem
+    'PooSandboxFilesystemPrototype
+    'node-extend
+    (poo-flow-sandbox-resources-prototype-slot/default resources
+                                                        'filesystem
+                                                        #f)
+    '((scope . sandbox-core) (slot . filesystem)))
+   (poo-flow-sandbox-resources-prototype-field-contract
+    'cpu
+    'Number
+    'override
+    (poo-flow-sandbox-resources-prototype-slot/default resources 'cpu #f)
+    '((scope . sandbox-core) (slot . cpu)))
+   (poo-flow-sandbox-resources-prototype-field-contract
+    'memory
+    'String
+    'override
+    (poo-flow-sandbox-resources-prototype-slot/default resources 'memory #f)
+    '((scope . sandbox-core) (slot . memory)))
+   (poo-flow-sandbox-resources-prototype-field-contract
+    'timeout-ms
+    'Number
+    'override
+    (poo-flow-sandbox-resources-prototype-slot/default resources
+                                                        'timeout-ms
+                                                        #f)
+    '((scope . sandbox-core) (slot . timeout-ms) (optional . #t)))))
+
+;; : (-> Symbol String Dyn Alist)
+(def (poo-flow-sandbox-resources-prototype-diagnostic code message value)
+  (list (cons 'code code)
+        (cons 'message message)
+        (cons 'object 'PooSandboxResourcesPrototype)
+        (cons 'value value)))
+
+;; : (-> PooSandboxResourcesPrototype Symbol Boolean)
+(def (poo-flow-sandbox-resources-prototype-slot-readable? resources slot)
+  (and (object? resources)
+       (.slot? resources slot)
+       (with-catch
+        (lambda (_failure) #f)
+        (lambda ()
+          (.ref resources slot)
+          #t))))
+
+;; : (-> Symbol Symbol PooSandboxResourcesPrototype [Alist])
+(def (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics code
+                                                                        slot
+                                                                        resources)
+  (if (or (not (object? resources))
+          (not (.slot? resources slot))
+          (poo-flow-sandbox-resources-prototype-slot-readable? resources slot))
+    '()
+    (list
+     (poo-flow-sandbox-resources-prototype-diagnostic
+      code
+      "sandbox resources prototype slot exists but cannot be read through POO slot resolution"
+      resources))))
+
+;; : (-> PooSandboxResourcesPrototype [Alist])
+(def (poo-flow-sandbox-resources-prototype-local-diagnostics resources)
+  (if (not (object? resources))
+    (list
+     (poo-flow-sandbox-resources-prototype-diagnostic
+      'resources-prototype-not-object
+      "sandbox resources contract expects a POO object"
+      resources))
+    (append
+     (if (.slot? resources 'filesystem)
+       '()
+       (list
+        (poo-flow-sandbox-resources-prototype-diagnostic
+         'missing-filesystem-slot
+         "sandbox resources prototype must define filesystem"
+         resources)))
+     (if (.slot? resources 'cpu)
+       '()
+       (list
+        (poo-flow-sandbox-resources-prototype-diagnostic
+         'missing-cpu-slot
+         "sandbox resources prototype must define cpu"
+         resources)))
+     (if (.slot? resources 'memory)
+       '()
+       (list
+        (poo-flow-sandbox-resources-prototype-diagnostic
+         'missing-memory-slot
+         "sandbox resources prototype must define memory"
+         resources)))
+     (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+      'unreadable-filesystem-slot
+      'filesystem
+      resources)
+     (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+      'unreadable-cpu-slot
+      'cpu
+      resources)
+     (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+      'unreadable-memory-slot
+      'memory
+      resources)
+     (if (not (poo-flow-sandbox-resources-prototype-slot-readable?
+               resources
+               'filesystem))
+       '()
+       (if (agent-sandbox-profile-resource-policy-has-structured-filesystem?
+            (poo-flow-sandbox-resources-prototype->resource-policy resources))
+       '()
+       (list
+        (poo-flow-sandbox-resources-prototype-diagnostic
+         'filesystem-not-structured
+         "sandbox resources filesystem must project to a structured resource-policy entry"
+         (poo-flow-sandbox-resources-prototype->resource-policy
+          resources))))))))
+
+;; : (-> PooSandboxResourcesPrototype HashTable)
+(def (poo-flow-sandbox-resources-prototype-contract-validation resources)
+  (let* ((source-ref
+          (poo-flow-sandbox-resources-prototype-source-ref resources))
+         (harness-validation
+          (poo-object-contract-validation
+           'PooSandboxResourcesPrototype
+           (poo-flow-sandbox-resources-prototype-field-contracts resources)
+           source-ref))
+         (local-diagnostics
+          (poo-flow-sandbox-resources-prototype-local-diagnostics resources))
+         (diagnostics
+          (append local-diagnostics
+                  (hash-get harness-validation 'diagnostics)))
+         (valid? (and (null? diagnostics)
+                      (poo-object-validation-valid? harness-validation))))
+    (poo-flow-sandbox-contract-receipt
+     (cons 'kind
+           poo-flow-sandbox-resources-prototype-contract-validation-kind)
+     (cons 'schema
+           poo-flow-sandbox-resources-prototype-contract-validation-schema)
+     (cons 'object 'PooSandboxResourcesPrototype)
+     (cons 'valid valid?)
+     (cons 'sourceRef source-ref)
+     (cons 'harnessValidation harness-validation)
+     (cons 'diagnostics diagnostics)
+     (cons 'checkedSignals
+           '(upstream-poo-object-contract-validation
+             resources-prototype-object-shape
+             resources-required-slots
+             resources-structured-filesystem-projection)))))
+
+;; : (-> HashTable Boolean)
+(def (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+      validation)
+  (and (hash-table? validation)
+       (hash-get validation 'valid)))
+
+;; : (-> HashTable [Alist])
+(def (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+      validation)
+  (hash-get validation 'diagnostics))
+
+;; : (-> HashTable Alist)
+(def (poo-flow-sandbox-resources-prototype-contract-validation->alist
+      validation)
+  (let ((harness-validation (hash-get validation 'harnessValidation))
+        (diagnostics (hash-get validation 'diagnostics)))
+    (list
+     (cons 'kind (hash-get validation 'kind))
+     (cons 'schema (hash-get validation 'schema))
+     (cons 'object (hash-get validation 'object))
+     (cons 'valid (hash-get validation 'valid))
+     (cons 'diagnostics diagnostics)
+     (cons 'diagnostic-count (length diagnostics))
+     (cons 'harness-kind (hash-get harness-validation 'kind))
+     (cons 'harness-valid (hash-get harness-validation 'valid))
+     (cons 'checked-signals (hash-get validation 'checkedSignals)))))
+
+;; : (-> PooSandboxResourcesPrototype PooSandboxResourcesPrototype)
+(def (poo-flow-require-sandbox-resources-prototype-contract! resources)
+  (let (validation
+        (poo-flow-sandbox-resources-prototype-contract-validation resources))
+    (if (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+         validation)
+      resources
+      (error "sandbox resources prototype failed typed contract validation"
+             validation))))
+
+;;; The neutral sandbox profile prototype is backend-agnostic. Backend modules
+;;; extend it rather than rewriting a resource-policy alist from scratch.
+;; : PooSandboxProfilePrototype
+(.def poo-flow-sandbox-profile-prototype
+  backend-kind: 'sandbox
+  backend-ref: 'sandbox-profile
+  network-policy: '(deny-by-default)
+  capabilities: '(process-run filesystem-read tmpdir)
+  resources: poo-flow-runtime-volume-resources-prototype
+  metadata: '((declared-by . poo-flow-poo-prototype)
+              (runtime-executed . #f)))
+
+;; : (-> Object Symbol [Pair])
+(def (poo-flow-sandbox-prototype-slot-entry prototype slot)
+  (if (.slot? prototype slot)
+    (list (cons slot (.ref prototype slot)))
+    '()))
+
+;;; Filesystem projection is the ABI edge: the user-facing value is a POO
+;;; prototype, while agent-sandbox runtime contracts still consume plain rows.
+;; : (-> PooSandboxFilesystemPrototype AgentSandboxResourcePolicyEntry)
+(def (poo-flow-sandbox-filesystem-prototype->resource-entry filesystem)
+  (cons 'filesystem
+        (append
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'scope)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'materialized-by)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'mounts)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'paths)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'access)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'snapshot)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'volume))))
+
+;;; Resource projection keeps the slot vocabulary explicit so adding a new
+;;; resource axis becomes a prototype-slot decision, not an alist DSL fork.
+;; : (-> PooSandboxResourcesPrototype ResourcePolicy)
+(def (poo-flow-sandbox-resources-prototype->resource-policy resources)
+  (append
+   (if (.slot? resources 'filesystem)
+     (list
+      (poo-flow-sandbox-filesystem-prototype->resource-entry
+       (.ref resources 'filesystem)))
+     '())
+   (poo-flow-sandbox-prototype-slot-entry resources 'cpu)
+   (poo-flow-sandbox-prototype-slot-entry resources 'memory)
+   (poo-flow-sandbox-prototype-slot-entry resources 'timeout-ms)))
+
+;;; Profile projection is report-only control-plane data. It materializes the
+;;; POO profile prototype as the existing public sandbox profile object without
+;;; executing Docker, nono, Cube, or Marlin runtime work.
+;; : (-> PooSandboxProfilePrototype Symbol Value)
+(def (poo-flow-sandbox-profile-prototype-slot/default prototype slot default)
+  (if (.slot? prototype slot)
+    (.ref prototype slot)
+    default))
+
+;;; Public user profiles use `network` and `resources`; older internal
+;;; projections may still carry `network-policy` and `resource-policy`.
+;; : (-> PooSandboxProfilePrototype Symbol Symbol Value)
+(def (poo-flow-sandbox-profile-prototype-slot/either prototype
+                                                     public-slot
+                                                     internal-slot
+                                                     default)
+  (cond
+   ((.slot? prototype public-slot) (.ref prototype public-slot))
+   ((.slot? prototype internal-slot) (.ref prototype internal-slot))
+   (else default)))
+
+;;; Resource slots may already be materialized rows or a POO resource object.
+;;; User-facing `.def` profiles should prefer the POO object form.
+;; : (-> Value ResourcePolicy)
+(def (poo-flow-sandbox-resources-value->resource-policy resources)
+  (if (object? resources)
+    (poo-flow-sandbox-resources-prototype->resource-policy
+     (poo-flow-require-sandbox-resources-prototype-contract! resources))
+    resources))
+
+;; : (-> Symbol PooSandboxProfilePrototype PooSandboxProfile)
+(def (poo-flow-sandbox-profile-prototype->profile name-value prototype)
+  (let* ((backend-ref-value
+          (poo-flow-sandbox-profile-prototype-slot/default
+           prototype
+           'backend-ref
+           #f))
+         (resources
+          (poo-flow-sandbox-profile-prototype-slot/either
+           prototype
+           'resources
+           'resource-policy
+           '())))
+    (.o kind: poo-flow-sandbox-profile-kind
+        name: name-value
+        backend-kind: (poo-flow-sandbox-profile-prototype-slot/default
+                       prototype
+                       'backend-kind
+                       'sandbox)
+        backend-ref: (if backend-ref-value backend-ref-value name-value)
+        network-policy: (poo-flow-sandbox-profile-prototype-slot/either
+                         prototype
+                         'network
+                         'network-policy
+                         '(deny-by-default))
+        capabilities: (poo-flow-sandbox-profile-prototype-slot/default
+                       prototype
+                       'capabilities
+                       '(process-run filesystem-read tmpdir))
+        resource-policy: (poo-flow-sandbox-resources-value->resource-policy
+                          resources)
+        metadata: (poo-flow-sandbox-profile-prototype-slot/default
+                   prototype
+                   'metadata
+                   '()))))
+
+;;; Native POO profile declaration lists keep names visible in user files while
+;;; still returning the same sandbox profile objects expected by runtime
+;;; manifests and presentation projections.
+;; : (-> (ProfileName PooSandboxProfilePrototype)... [PooSandboxProfile])
+(defrules poo-flow-sandbox-profile-prototypes ()
+  ((_)
+   '())
+  ((_ (name prototype) ...)
+   (list (poo-flow-sandbox-profile-prototype->profile 'name prototype) ...)))
+
 ;;; Row keys are the user syntax vocabulary; slots are the POO object contract
 ;;; vocabulary. Keeping this table here prevents backend wrappers from drifting.
 ;; : (-> Symbol MaybeSymbol)
@@ -99,6 +513,101 @@
   (let* ((tail (cdr row))
          (operator (poo-flow-sandbox-profile-object-row-operator row)))
     (if operator (cdr tail) tail)))
+
+;;; Authoring diagnostics are report-only facts for enforcing the POO-native
+;;; programming contract. They do not reject rows; structural validation below
+;;; remains the hard gate before merge planning.
+;; : (-> Symbol SandboxProfileForm Alist ValidationError)
+(def (poo-flow-sandbox-profile-object-authoring-diagnostic code row payload)
+  (append
+   (list (cons 'field 'profile-row)
+         (cons 'code code)
+         (cons 'row row))
+   payload))
+
+;; : (-> Value Symbol Boolean)
+(def (poo-flow-sandbox-profile-object-row-contains-symbol? value target)
+  (cond
+   ((eq? value target) #t)
+   ((pair? value)
+    (or (poo-flow-sandbox-profile-object-row-contains-symbol? (car value)
+                                                              target)
+        (poo-flow-sandbox-profile-object-row-contains-symbol? (cdr value)
+                                                              target)))
+   (else #f)))
+
+;; : (-> Value Boolean)
+(def (poo-flow-sandbox-profile-object-runtime-executed-true? value)
+  (cond
+   ((not (pair? value)) #f)
+   ((and (pair? (car value))
+         (eq? (caar value) 'runtime-executed)
+         (eq? (cdar value) #t))
+    #t)
+   (else
+    (or (poo-flow-sandbox-profile-object-runtime-executed-true? (car value))
+        (poo-flow-sandbox-profile-object-runtime-executed-true? (cdr value))))))
+
+;;; Row authoring diagnostics turn gerbil-poo best practices into inspectable
+;;; facts: row operators are advanced escape hatches, raw compute hooks are not
+;;; a user interface, and runtime-executed markers must remain report-only.
+;; : (-> PooModuleObject SandboxProfileForm [ValidationError])
+(def (poo-flow-sandbox-profile-object-row-authoring-diagnostics
+      profile-object
+      row)
+  (let* ((field (poo-flow-sandbox-profile-object-row-field profile-object row))
+         (slot (and field (poo-flow-module-field-contract-identity field)))
+         (operator (and (pair? row)
+                        (poo-flow-sandbox-profile-object-row-operator row)))
+         (value (if (and row (pair? row))
+                  (poo-flow-sandbox-profile-object-row-value row)
+                  row)))
+    (append
+     (if operator
+       (list
+        (poo-flow-sandbox-profile-object-authoring-diagnostic
+         'advanced-row-operator
+         row
+         (list (cons 'slot slot)
+               (cons 'operator operator)
+               (cons 'recommendation 'named-prototype-extension))))
+       '())
+     (if (or (poo-flow-sandbox-profile-object-row-contains-symbol? row
+                                                                   ':compute)
+             (poo-flow-sandbox-profile-object-row-contains-symbol? row
+                                                                   '$computed-slot-spec)
+             (poo-flow-sandbox-profile-object-row-contains-symbol? row
+                                                                   'lambda))
+       (list
+        (poo-flow-sandbox-profile-object-authoring-diagnostic
+         'raw-compute-hook
+         row
+         (list (cons 'slot slot)
+               (cons 'recommendation 'poo-slot-operator-or-helper))))
+       '())
+     (if (poo-flow-sandbox-profile-object-runtime-executed-true? value)
+       (list
+        (poo-flow-sandbox-profile-object-authoring-diagnostic
+         'runtime-executed-marker
+         row
+         (list (cons 'slot slot)
+               (cons 'expected '#f))))
+       '()))))
+
+;; : (-> PooModuleObject [SandboxProfileForm] [ValidationError])
+(def (poo-flow-sandbox-profile-object-authoring-diagnostics profile-object
+                                                            forms)
+  (cond
+   ((null? forms) '())
+   ((not (pair? forms)) '())
+   (else
+    (append
+     (poo-flow-sandbox-profile-object-row-authoring-diagnostics
+      profile-object
+      (car forms))
+     (poo-flow-sandbox-profile-object-authoring-diagnostics
+      profile-object
+      (cdr forms))))))
 
 ;;; Option lookup is scoped to derivation/config helper options. User profile
 ;;; rows still pass through field-contract validation before merge planning.
@@ -416,6 +925,12 @@
                         'resource-policy)
       metadata: (poo-flow-sandbox-profile-object-slot node 'metadata)))
 
+;; : (-> Value Boolean)
+(def (poo-flow-sandbox-profile-object-profile? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (equal? (.ref value 'kind) poo-flow-sandbox-profile-kind)))
+
 ;;; Backend config modules call this with their inherited POO profile object.
 ;;; This is the only constructor that turns profile rows into merged profiles.
 ;; : (-> PooModuleObject Symbol Symbol [SandboxProfileForm] PooSandboxProfile)
@@ -446,7 +961,7 @@
     (cond
      ((not (symbol? name-value))
       (error "derived sandbox profile name must be a symbol"))
-     ((not (poo-flow-sandbox-profile? parent-profile))
+     ((not (poo-flow-sandbox-profile-object-profile? parent-profile))
       (error "derived sandbox profile parent must be a POO sandbox profile"))
      (else
       (poo-flow-sandbox-profile-object-resolve

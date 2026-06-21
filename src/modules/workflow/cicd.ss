@@ -8,6 +8,8 @@
 
 (export +poo-flow-cicd-check-map-schema+
         +poo-flow-cicd-check-receipt-schema+
+        +poo-flow-cicd-pipeline-run-schema+
+        +poo-flow-cicd-pipeline-result-schema+
         +poo-flow-cicd-runtime-manifest-readiness-schema+
         +poo-flow-cicd-marlin-runtime-handoff-abi-schema+
         +poo-flow-cicd-marlin-runtime-owner+
@@ -32,6 +34,10 @@
         poo-flow-cicd-check-sandbox-handoff-summaries
         poo-flow-cicd-check-sandbox-unresolved-profile-refs
         poo-flow-cicd-check-map->dependency-graph
+        poo-flow-cicd-check->pipeline-run-step
+        poo-flow-cicd-check-map->pipeline-run
+        poo-flow-cicd-pipeline-run->result
+        poo-flow-cicd-check-map->pipeline-result
         poo-flow-cicd-check->receipt
         poo-flow-cicd-check-map->receipts
         poo-flow-cicd-check->runtime-manifest-readiness

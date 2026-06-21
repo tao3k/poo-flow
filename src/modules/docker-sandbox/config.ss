@@ -9,7 +9,9 @@
 (export poo-flow-docker-sandbox-module-bundles
         poo-flow-docker-sandbox-config-flags
         poo-flow-docker-sandbox-profile-config
+        poo-flow-docker-sandbox-profile-derive-config
         poo-flow-docker-sandbox-profile
+        poo-flow-docker-sandbox-profile-derive
         poo-flow-docker-sandbox-profiles)
 
 ;;; Docker is exposed as a sandbox module row; concrete container operations
@@ -40,6 +42,20 @@
    name-value
    forms))
 
+;;; Derived Docker profiles reuse the sandbox-core POO derivation path; this
+;;; module only supplies the backend profile object.
+;; : (-> PooSandboxProfile Symbol [SandboxProfileForm] Alist PooSandboxProfile)
+(def (poo-flow-docker-sandbox-profile-derive-config parent-profile
+                                                    name-value
+                                                    forms
+                                                    options)
+  (poo-flow-sandbox-profile-object-derive
+   poo-flow-docker-sandbox-profile-object
+   parent-profile
+   name-value
+   forms
+   options))
+
 ;;; Profile row macros are syntax-only quotation; object validation and POO
 ;;; merge/remove semantics are owned by sandbox-core.
 ;; : (-> Symbol SandboxProfileForm... PooSandboxProfile)
@@ -47,12 +63,30 @@
   ((_ name form ...)
    (poo-flow-docker-sandbox-profile-config 'name '(form ...))))
 
+;;; Backend-specific shorthand over the shared sandbox-core POO derive helper.
+;; : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+(defrules poo-flow-docker-sandbox-profile-derive ()
+  ((_ parent name (option ...) form ...)
+   (poo-flow-docker-sandbox-profile-derive-config
+    parent
+    'name
+    '(form ...)
+    '(option ...)))
+  ((_ parent name form ...)
+   (poo-flow-docker-sandbox-profile-derive-config
+    parent
+    'name
+    '(form ...)
+    '())))
+
 ;;; Docker profile collections preserve declaration order for config receipts
 ;;; and runtime handoff planning.
 ;; : (-> DockerSandboxProfileRow... [PooSandboxProfile])
 (defrules poo-flow-docker-sandbox-profiles ()
   ((_)
    '())
-  ((_ (name form ...) profile-clause ...)
-   (cons (poo-flow-docker-sandbox-profile name form ...)
-         (poo-flow-docker-sandbox-profiles profile-clause ...))))
+  ((_ profile-clause ...)
+   (poo-flow-sandbox-profile-object-profiles
+    poo-flow-docker-sandbox-profile-config
+    poo-flow-docker-sandbox-profile-derive-config
+    profile-clause ...)))

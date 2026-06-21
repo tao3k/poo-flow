@@ -11,6 +11,10 @@
         :poo-flow/src/modules/workflow/cicd-sandbox)
 
 (export poo-flow-cicd-check-map->dependency-graph
+        poo-flow-cicd-check->pipeline-run-step
+        poo-flow-cicd-check-map->pipeline-run
+        poo-flow-cicd-pipeline-run->result
+        poo-flow-cicd-check-map->pipeline-result
         poo-flow-cicd-check->receipt
         poo-flow-cicd-check-map->receipts
         poo-flow-cicd-check-map->runtime-manifest-readiness
@@ -349,6 +353,241 @@
             (cons 'valid? (null? diagnostics))
             (cons 'runtime-executed #f)))))
 
+;;; A step is admitted only when the declarative graph accepts its dependency
+;;; path and sandbox profile refs are resolved. This is not execution state.
+;; : (-> Alist Alist Symbol Symbol)
+(def (poo-flow-cicd-pipeline-run-step-status graph readiness check-name)
+  (cond
+   ((not (poo-flow-cicd-alist-ref graph 'valid? #f)) 'blocked)
+   ((not (null? (poo-flow-cicd-alist-ref
+                 readiness
+                 'sandbox-unresolved-profile-refs
+                 '())))
+    'blocked)
+   ((poo-flow-cicd-symbol-member?
+     check-name
+     (poo-flow-cicd-alist-ref graph 'ready-order '()))
+    'admitted)
+   (else 'blocked)))
+
+;;; Pipeline-run diagnostics keep graph errors and sandbox errors distinct.
+;;; Agents can decide whether to edit dependencies or profile bindings first.
+;; : (-> Alist Alist Symbol [Symbol])
+(def (poo-flow-cicd-pipeline-run-step-diagnostics graph readiness check-name)
+  (append
+   (if (poo-flow-cicd-alist-ref graph 'valid? #f)
+     '()
+     '(blocked-dependency-graph))
+   (if (null? (poo-flow-cicd-alist-ref
+               readiness
+               'sandbox-unresolved-profile-refs
+               '()))
+     '()
+     '(unresolved-sandbox-profile-refs))
+   (if (or (not (poo-flow-cicd-alist-ref graph 'valid? #f))
+           (poo-flow-cicd-symbol-member?
+            check-name
+            (poo-flow-cicd-alist-ref graph 'ready-order '())))
+     '()
+     '(blocked-dependency-order))))
+
+;;; Pipeline-run steps wrap the existing readiness row with pipeline admission
+;;; facts so users can see a concrete run plan without running the command.
+;; : (-> PooFlowCicdCheck Alist [PooSandboxProfile] Alist)
+(def (poo-flow-cicd-check->pipeline-run-step check
+                                             graph
+                                             . maybe-profile-catalog)
+  (poo-flow-cicd-require "pipeline run step requires a cicd check"
+                         (poo-flow-cicd-check? check)
+                         check)
+  (let* ((profile-catalog (if (null? maybe-profile-catalog)
+                            '()
+                            (car maybe-profile-catalog)))
+         (readiness
+          (poo-flow-cicd-check->runtime-manifest-readiness
+           check
+           profile-catalog))
+         (check-name (poo-flow-cicd-check-name check))
+         (status
+          (poo-flow-cicd-pipeline-run-step-status
+           graph
+           readiness
+           check-name))
+         (unresolved-profile-refs
+          (poo-flow-cicd-alist-ref
+           readiness
+           'sandbox-unresolved-profile-refs
+           '()))
+         (diagnostics
+          (poo-flow-cicd-pipeline-run-step-diagnostics
+           graph
+           readiness
+           check-name)))
+    (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
+          (cons 'kind 'poo-flow.workflow.cicd.pipeline-run-step)
+          (cons 'check check-name)
+          (cons 'status status)
+          (cons 'handoff-ready
+                (and (eq? status 'admitted)
+                     (null? unresolved-profile-refs)))
+          (cons 'profile (poo-flow-cicd-check-profile check))
+          (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
+          (cons 'dependency-refs
+                (poo-flow-cicd-check-dependency-refs check))
+          (cons 'command (poo-flow-cicd-check-command check))
+          (cons 'argv (poo-flow-cicd-check-command check))
+          (cons 'runtime (poo-flow-cicd-check-runtime check))
+          (cons 'result (.ref check 'result-protocol))
+          (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+          (cons 'sandbox-unresolved-profile-refs unresolved-profile-refs)
+          (cons 'diagnostics diagnostics)
+          (cons 'valid? (and (eq? status 'admitted)
+                             (null? diagnostics)))
+          (cons 'runtime-readiness readiness)
+          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+          (cons 'runtime-executed #f))))
+
+;;; Unique diagnostic projection preserves first-seen order while removing
+;;; repeated step diagnostics from large pipelines.
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (poo-flow-cicd-symbol-list-unique/fold values seen)
+  (cond
+   ((null? values) seen)
+   (else
+    (poo-flow-cicd-symbol-list-unique/fold
+     (cdr values)
+     (poo-flow-cicd-symbol-add (car values) seen)))))
+
+;; : (-> [Symbol] [Symbol])
+(def (poo-flow-cicd-symbol-list-unique values)
+  (poo-flow-cicd-symbol-list-unique/fold values '()))
+
+;;; Step diagnostics are aggregated at the pipeline level so result rows can be
+;;; audited without traversing every step.
+;; : (-> [Alist] [Symbol])
+(def (poo-flow-cicd-pipeline-run-steps-diagnostics steps)
+  (cond
+   ((null? steps) '())
+   (else
+    (append
+     (poo-flow-cicd-alist-ref (car steps) 'diagnostics '())
+     (poo-flow-cicd-pipeline-run-steps-diagnostics (cdr steps))))))
+
+;;; Pipeline diagnostics merge graph, step, and blocked-step facts into a
+;;; stable report-only list for user-interface and agent editing loops.
+;; : (-> Alist [Alist] [Symbol] [Symbol])
+(def (poo-flow-cicd-pipeline-run-diagnostics graph steps blocked-steps)
+  (poo-flow-cicd-symbol-list-unique
+   (append
+    (poo-flow-cicd-alist-ref graph 'diagnostics '())
+    (poo-flow-cicd-pipeline-run-steps-diagnostics steps)
+    (if (null? blocked-steps) '() '(blocked-steps)))))
+
+;;; Pipeline run status is a control-plane admission result. It stays blocked
+;;; when graph diagnostics or sandbox refs prevent a clean Marlin handoff.
+;; : (-> Alist [Alist] Symbol)
+(def (poo-flow-cicd-pipeline-run-status graph steps)
+  (if (and (poo-flow-cicd-alist-ref graph 'valid? #f)
+           (null? (filter (lambda (step)
+                            (not (eq? (poo-flow-cicd-alist-ref
+                                       step
+                                       'status
+                                       'blocked)
+                                      'admitted)))
+                          steps)))
+    'admitted
+    'blocked))
+
+;;; The pipeline run is the concrete, inspectable plan produced from a
+;;; check-map. It includes DAG order, steps, and handoff status but no output.
+;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] Alist)
+(def (poo-flow-cicd-check-map->pipeline-run check-map . maybe-profile-catalog)
+  (poo-flow-cicd-require "pipeline run requires a cicd check-map"
+                         (poo-flow-cicd-check-map? check-map)
+                         check-map)
+  (let* ((profile-catalog (if (null? maybe-profile-catalog)
+                            '()
+                            (car maybe-profile-catalog)))
+         (graph (poo-flow-cicd-check-map->dependency-graph check-map))
+         (steps
+          (map (lambda (check)
+                 (poo-flow-cicd-check->pipeline-run-step
+                  check
+                  graph
+                  profile-catalog))
+               (poo-flow-cicd-check-map-checks check-map)))
+         (blocked-steps
+          (map (lambda (step) (poo-flow-cicd-alist-ref step 'check #f))
+               (filter (lambda (step)
+                         (not (eq? (poo-flow-cicd-alist-ref
+                                    step
+                                    'status
+                                    'blocked)
+                                   'admitted)))
+                       steps)))
+         (status (poo-flow-cicd-pipeline-run-status graph steps))
+         (diagnostics
+          (poo-flow-cicd-pipeline-run-diagnostics
+           graph
+           steps
+           blocked-steps)))
+    (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
+          (cons 'kind 'poo-flow.workflow.cicd.pipeline-run)
+          (cons 'check-map (poo-flow-cicd-check-map-name check-map))
+          (cons 'status status)
+          (cons 'step-count (length steps))
+          (cons 'steps steps)
+          (cons 'ready-order
+                (poo-flow-cicd-alist-ref graph 'ready-order '()))
+          (cons 'blocked-steps blocked-steps)
+          (cons 'diagnostics diagnostics)
+          (cons 'dependency-graph graph)
+          (cons 'handoff-required #t)
+          (cons 'handoff-ready (and (eq? status 'admitted)
+                                    (null? diagnostics)))
+          (cons 'valid? (null? diagnostics))
+          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+          (cons 'runtime-executed #f))))
+
+;;; Pipeline results summarize the projected run. They are the tutorial-facing
+;;; "what would this produce" surface before a runtime returns real outputs.
+;; : (-> Alist Alist)
+(def (poo-flow-cicd-pipeline-run->result run)
+  (let* ((blocked-steps
+          (poo-flow-cicd-alist-ref run 'blocked-steps '()))
+         (diagnostics
+          (poo-flow-cicd-alist-ref run 'diagnostics '()))
+         (handoff-ready
+          (and (eq? (poo-flow-cicd-alist-ref run 'status 'blocked)
+                    'admitted)
+               (null? diagnostics))))
+    (list (cons 'schema +poo-flow-cicd-pipeline-result-schema+)
+          (cons 'kind 'poo-flow.workflow.cicd.pipeline-result)
+          (cons 'check-map (poo-flow-cicd-alist-ref run 'check-map #f))
+          (cons 'status (if handoff-ready 'handoff-ready 'blocked))
+          (cons 'pipeline-run-status
+                (poo-flow-cicd-alist-ref run 'status 'blocked))
+          (cons 'step-count (poo-flow-cicd-alist-ref run 'step-count 0))
+          (cons 'ready-order (poo-flow-cicd-alist-ref run 'ready-order '()))
+          (cons 'blocked-steps blocked-steps)
+          (cons 'diagnostics diagnostics)
+          (cons 'valid? handoff-ready)
+          (cons 'handoff-required #t)
+          (cons 'handoff-ready handoff-ready)
+          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+          (cons 'runtime-executed #f))))
+
+;;; The check-map shortcut keeps callers on the public object surface when they
+;;; only need the result projection rather than the full run step payload.
+;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] Alist)
+(def (poo-flow-cicd-check-map->pipeline-result check-map
+                                                . maybe-profile-catalog)
+  (let (profile-catalog (if (null? maybe-profile-catalog)
+                          '()
+                          (car maybe-profile-catalog)))
+    (poo-flow-cicd-pipeline-run->result
+     (poo-flow-cicd-check-map->pipeline-run check-map profile-catalog))))
+
 ;;; The map is the whole data-flow: each POO check becomes one immutable
 ;;; receipt row, preserving order without a hand-written accumulator.
 ;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] [Alist])
@@ -510,4 +749,3 @@
      (poo-flow-cicd-check-map->runtime-command-manifests
       check-map
       profile-catalog))))
-

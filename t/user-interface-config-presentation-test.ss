@@ -29,6 +29,13 @@
     (car values)
     (last-value (cdr values))))
 
+;; : (-> (-> Unit Value) Boolean)
+(def (presentation-test-error? thunk)
+  (with-catch (lambda (_failure) #t)
+              (lambda ()
+                (thunk)
+                #f)))
+
 (run-tests!
  (test-suite "user-interface config presentation"
    (test-case "shows an independent custom-module profile fragment as user config"
@@ -38,6 +45,10 @@
             (presentation (pooFlowUserConfigPresentation config))
             (module-row (car (.ref presentation 'modules)))
             (feature-row (car (.ref presentation 'feature-facts)))
+            (sandbox-profile-derivations
+             (.ref presentation 'sandbox-profile-derivations))
+            (session-derivation (car sandbox-profile-derivations))
+            (branch-derivation (cadr sandbox-profile-derivations))
             (visible-flags (alist-value 'flags module-row))
             (feature-flags (alist-value 'flags feature-row))
             (selection
@@ -57,65 +68,94 @@
        (check-equal? visible-flags
                      '((:config
                         (binding native-ffi)
-                        (profiles
-                         (agent/audit-base
-                          (network deny-by-default)
-                          (capabilities process-run
-                                        filesystem-read
-                                        filesystem-write
-                                        tmpdir)
-                          (resources (filesystem
-                                      (scope . project-workspace)
-                                      (paths
-                                       ((role . project-workspace)
-                                        (source . ".")
-                                        (project-marker . "gerbil.pkg")
-                                        (target . "/workspace/project")
-                                        (mode . read-write)))
-                                      (access . read-write))
-                                     (cpu . 2)
-                                     (memory . "4Gi")
-                                     (timeout-ms . 300000))
-                          (metadata (intent . agent-audit-base)
-                                    (scope . custom-module)
-                                    (split . project)))
-                         (agent/audit-session
-                          (:derive agent/audit-base
-                                   (scope . session)
-                                   (scope-ref . "agent-session"))
-                          (network allowlisted "github.com")
-                          (capabilities :append cache-mount)
-                          (resources :append
-                                     (session-root . ".codex/session")
-                                     (session-mode . shared-worktree))
-                          (metadata :append
-                                    (intent . agent-audit-session)
-                                    (split . session)))
-                         (agent/audit-branch
-                          (:derive agent/audit-session
-                                   (scope . branch)
-                                   (scope-ref . "feature/agent-sandbox-audit"))
-                          (capabilities :remove filesystem-write)
-                          (resources :override
-                                     (filesystem
-                                      (scope . branch-worktree)
-                                      (paths
-                                       ((role . branch-worktree)
-                                        (source . ".")
-                                        (project-marker . "gerbil.pkg")
-                                        (target . "/workspace/project")
-                                        (mode . read-only)))
-                                      (access . read-only))
-                                     (cpu . 1)
-                                     (memory . "2Gi")
-                                     (timeout-ms . 180000))
-                          (metadata (intent . agent-audit-branch)
-                                    (scope . custom-module)
-                                    (split . branch)))))))
+                        (.def (agent/audit-base
+                               @
+                               nono-sandbox-profile
+                               network
+                               capabilities
+                               resources
+                               metadata)
+                              network: (deny-network)
+                              capabilities: audit-base-capabilities
+                              resources: =>.+ readwrite-project-workspace-resources
+                              metadata: =>
+                              (lambda (super-metadata)
+                                (append super-metadata audit-base-metadata)))
+                        (.def (agent/audit-session
+                               @
+                               agent/audit-base
+                               network
+                               capabilities
+                               resources
+                               metadata)
+                              network: (allowlisted-network "github.com")
+                              capabilities: =>
+                              (lambda (super-capabilities)
+                                (append super-capabilities cache-capabilities))
+                              resources: =>.+ runtime-volume-resources
+                              (metadata (super-metadata)
+                                (profile-derivation-metadata
+                                 (super-metadata)
+                                 audit-session-name
+                                 audit-base-name
+                                 session-scope
+                                 "agent-session"
+                                 audit-session-metadata)))
+                        (.def (agent/audit-branch
+                               @
+                               agent/audit-session
+                               network
+                               capabilities
+                               resources
+                               metadata)
+                              network: (deny-network)
+                              capabilities: audit-branch-capabilities
+                              resources: =>.+ readonly-project-workspace-resources
+                              (metadata (super-metadata)
+                                (profile-derivation-metadata
+                                 (super-metadata)
+                                 audit-branch-name
+                                 audit-session-name
+                                 branch-scope
+                                 "feature/agent-sandbox-audit"
+                                 audit-branch-metadata))))))
        (check-equal? feature-flags visible-flags)
        (check-equal? (alist-value ':binding visible-flags) #f)
        (check-equal? (alist-value ':user-config visible-flags) #f)
        (check-equal? (alist-value 'kind (alist-value ':config visible-flags))
+                     #f)
+       (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
+                     2)
+       (check-equal? (alist-value 'module session-derivation)
+                     'nono-sandbox)
+       (check-equal? (alist-value 'profile-name session-derivation)
+                     'agent/audit-session)
+       (check-equal? (alist-value 'parent-profile session-derivation)
+                     'agent/audit-base)
+       (check-equal? (alist-value 'scope session-derivation)
+                     'session)
+       (check-equal? (alist-value 'scope-ref session-derivation)
+                     "agent-session")
+       (check-equal? (alist-value 'derivation-depth session-derivation)
+                     1)
+       (check-equal? (alist-value 'profile-name branch-derivation)
+                     'agent/audit-branch)
+       (check-equal? (alist-value 'parent-profile branch-derivation)
+                     'agent/audit-session)
+       (check-equal? (alist-value 'scope branch-derivation)
+                     'branch)
+       (check-equal? (alist-value 'scope-ref branch-derivation)
+                     "feature/agent-sandbox-audit")
+       (check-equal? (alist-value 'derivation-depth branch-derivation)
+                     2)
+       (check-equal? (length (alist-value 'derivation-path branch-derivation))
+                     2)
+       (check-equal? (alist-value 'kind branch-derivation) #f)
+       (check-equal? (alist-value 'runtime-owner branch-derivation)
+                     "marlin-agent-core")
+       (check-equal? (alist-value 'descriptor-realized? branch-derivation)
+                     #f)
+       (check-equal? (alist-value 'runtime-executed branch-derivation)
                      #f)
        (check-equal? (poo-flow-sandbox-profile? base-profile) #t)
        (check-equal? (poo-flow-sandbox-profile-backend-kind session-profile)
@@ -134,4 +174,14 @@
        (check-equal? (alist-value 'scope last-lineage-step) 'branch)
        (check-equal? (alist-value 'scope-ref last-lineage-step)
                      "feature/agent-sandbox-audit")
-       (check-equal? (alist-value ':binding internal-flags) 'native-ffi)))))
+       (check-equal? (alist-value ':binding internal-flags) 'native-ffi)))
+   (test-case "rejects user-layer derive parents that are not POO profiles"
+     (let (not-profile 'not-a-poo-profile)
+       (check-equal?
+        (presentation-test-error?
+         (lambda ()
+           (use-module nono-sandbox
+             (.def (agent/bad-parent @ not-profile)
+               metadata: => (lambda (super-metadata)
+                              super-metadata)))))
+        #t)))))

@@ -22,6 +22,8 @@ is the brand name. Bare =poo= remains only a Scheme/API prefix for Gerbil POO
 helpers and should not be used as the user-visible product or module group
 identity.
 
+The downstream surface follows the project invariant: POO Flow is 100% POO-native and functional-first. Users extend upstream-owned objects and functional flow constructors; they do not author a parallel alist/record DSL, expose raw merge code, or maintain direct =(lambda (self super) ...)= compute hooks as normal configuration.
+
 The files here stay declarative:
 
 - =init.ss= lists optional feature patches/custom modules through =poo-flow!= category rows.

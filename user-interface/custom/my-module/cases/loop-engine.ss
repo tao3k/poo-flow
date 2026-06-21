@@ -21,5 +21,13 @@
   (+state (store . file) (path . "loop-state/current-system-build.org"))
   (+sandbox (profile . ci/build) (isolation . project-copy))
   (+budget (max-actionable . 1) (max-attempts . 1))
+  (+result
+   (default . poo-flow.loop-governor.node-result.v1)
+   (auditor . poo-flow.loop-governor.audit-result.v1)
+   (verifier . poo-flow.loop-governor.review-result.v1)
+   (governor . poo-flow.loop-governor.governor-result.v1)
+   (human-audit . poo-flow.loop-governor.human-audit-decision.v1)
+   (format . structured-alist)
+   (required-fields decision summary evidence))
   (+observability (receipt . l2-guarded-handoff))
   (+runtime +manifest-handoff))

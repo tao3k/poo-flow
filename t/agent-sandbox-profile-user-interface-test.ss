@@ -13,7 +13,7 @@
                  test-case
                  test-error
                  test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/facade)
 
 (export agent-sandbox-profile-user-interface-test)
@@ -53,64 +53,128 @@
                (timeout-ms . 600000))
     (metadata (intent . ci-agent) (risk . hermetic)))))
 
-;;; The nono profile case exercises override/remove/append in one realistic
-;;; operator configuration without exposing backend implementation objects.
+;;; The nono profile case exercises POO slot override and inherited-slot
+;;; transforms without exposing backend implementation objects.
+;; : Capabilities
+(def user-nono-operator-cache-capabilities
+  '(cache-mount))
+
+;; : Metadata
+(def user-nono-operator-metadata
+  '((intent . operator-demo)
+    (stage . extension)))
+
 ;; : PooUserModuleSelection
 (def user-nono-operator-module
   (car
    (use-module nono-sandbox
-     :config
-     (profiles
-      (agent/operator
-       (network :override allowlisted "github.com" "crates.io")
-       (capabilities process-run filesystem-read filesystem-write tmpdir)
-       (capabilities :remove filesystem-write)
-       (capabilities :append cache-mount)
-       (resources (filesystem
-                   (scope . project-workspace)
-                   (paths
-                    ((role . project-workspace)
-                     (source . ".")
-                     (project-marker . "gerbil.pkg")
-                     (target . "/workspace/project")
-                     (mode . read-write)))
-                   (access . read-write))
-                  (cpu . 2)
-                  (memory . "4Gi"))
-       (resources :append (timeout-ms . 300000))
-       (metadata (intent . operator-demo)
-                 (scope . profile))
-       (metadata :append (stage . extension))
-       (metadata :remove (scope . profile)))))))
+     (.def (agent/operator @ nono-sandbox-profile
+                           network capabilities resources metadata)
+       network: (allowlisted-network "github.com" "crates.io")
+       capabilities: => (lambda (super-capabilities)
+                          (append super-capabilities
+                                  user-nono-operator-cache-capabilities))
+       resources: =>.+ readwrite-project-workspace-resources
+       metadata: => (lambda (super-metadata)
+                      (append super-metadata
+                              user-nono-operator-metadata))))))
 
 ;;; The cube case keeps CI-style sandbox extension visible in the user-facing
 ;;; module syntax.
+;; : PooSandboxFilesystemPrototype
+(def user-cube-snapshot-filesystem
+  (.o scope: 'snapshot
+      snapshot: 'clone))
+
+;; : PooSandboxResourcesPrototype
+(def user-cube-build-resources
+  (.o filesystem: user-cube-snapshot-filesystem
+      cpu: 4
+      memory: "8Gi"
+      timeout-ms: 600000))
+
+;; : Metadata
+(def user-cube-base-metadata
+  '((intent . cube-base)
+    (scope . profile)))
+
+;; : Metadata
+(def user-cube-build-metadata
+  '((intent . cube-build)
+    (stage . build)))
+
 ;; : PooUserModuleSelection
 (def user-cube-build-module
   (car
    (use-module cubeSandbox
-     :config
-     (profiles
-      (ci/cube
-       (network allowlisted "github.com" "crates.io")
-       (resources :append (cpu . 4) (memory . "8Gi"))
-       (metadata (intent . cube-build)
-                 (scope . profile)))))))
+     (.def (ci/cube-base @ cubeSandbox-profile
+                         network resources metadata)
+       network: (allowlisted-network "github.com" "crates.io")
+       resources: user-cube-build-resources
+       metadata: => (lambda (super-metadata)
+                      (append super-metadata
+                              user-cube-base-metadata)))
+
+     (.def (ci/cube @ ci/cube-base
+                    metadata)
+       (metadata (super-metadata)
+         (profile-derivation-metadata
+          (super-metadata)
+          'ci/cube
+          'ci/cube-base
+          'session
+          "cube-build"
+          user-cube-build-metadata))))))
 
 ;;; The docker case verifies a second backend can use the same declarative
 ;;; profile surface with different capability policy.
+;; : PooSandboxFilesystemPrototype
+(def user-docker-volume-filesystem
+  (.o scope: 'volume
+      materialized-by: 'runtime
+      mounts: 'runtime))
+
+;; : PooSandboxResourcesPrototype
+(def user-docker-volume-resources
+  (.o filesystem: user-docker-volume-filesystem
+      cpu: 2
+      memory: "4Gi"))
+
+;; : Metadata
+(def user-docker-base-metadata
+  '((intent . docker-base)
+    (scope . profile)))
+
+;; : Metadata
+(def user-docker-build-metadata
+  '((intent . docker-build)
+    (stage . build)))
+
 ;; : PooUserModuleSelection
 (def user-docker-build-module
   (car
    (use-module docker-sandbox
-     :config
-     (profiles
-      (ci/docker
-       (network allowlisted "ghcr.io")
-       (capabilities :remove filesystem-write)
-       (resources :append (cpu . 2) (memory . "4Gi"))
-       (metadata (intent . docker-build)
-                 (scope . profile)))))))
+     (.def (ci/docker-base @ docker-sandbox-profile
+                           network capabilities resources metadata)
+       network: (allowlisted-network "ghcr.io")
+       capabilities: '(process-run filesystem-read filesystem-write tmpdir)
+       resources: =>.+ readwrite-project-workspace-resources
+       metadata: => (lambda (super-metadata)
+                      (append super-metadata
+                              user-docker-base-metadata)))
+
+     (.def (ci/docker @ ci/docker-base
+                      capabilities resources metadata)
+       capabilities: '(process-run filesystem-read tmpdir)
+       resources: user-docker-volume-resources
+       (metadata (super-metadata)
+         (profile-derivation-metadata
+          (super-metadata)
+          'ci/docker
+          'ci/docker-base
+          'branch
+          "docker-build"
+          user-docker-build-metadata))))))
 
 ;;; Local alist lookup keeps assertions readable while avoiding a dependency on
 ;;; internal profile projection helpers.
@@ -122,9 +186,17 @@
    (else
     (alist-value key (cdr entries)))))
 
-;; : TestSuite
+;;; Inheritance metadata is append-only in these cases; the last derivation row
+;;; is the concrete child profile step asserted by the profile tests.
+;; : (-> [Value] Value)
+(def (last-value values)
+  (if (null? (cdr values))
+    (car values)
+    (last-value (cdr values))))
+
 ;;; This suite exercises the downstream-facing profile syntax without exposing
 ;;; backend implementation slots as part of the user contract.
+;; : TestSuite
 (def agent-sandbox-profile-user-interface-test
   (test-suite "poo-flow agent sandbox profile user interface"
     (test-case "declares nono and cubeSandbox profiles as inert user data"
@@ -143,7 +215,7 @@
                       'cube-local)
         (check-equal? (poo-flow-sandbox-profile-network-policy cube-profile)
                       '(allowlisted "github.com" "crates.io"))))
-    (test-case "applies profile row operators through nono object validation"
+    (test-case "applies POO slot transforms through nono object validation"
       (let* ((profile-payload
               (poo-flow-user-module-selection-flag-entry
                user-nono-operator-module
@@ -182,8 +254,9 @@
                         (memory . "4Gi")
                         (timeout-ms . 300000)))
         (check-equal? (poo-flow-sandbox-profile-metadata operator-profile)
-                      '((declared-by . poo-flow-user-interface)
+                      '((declared-by . poo-flow-poo-prototype)
                         (runtime-executed . #f)
+                        (backend . nono-sandbox)
                         (intent . operator-demo)
                         (stage . extension)))))
     (test-case "applies profile inheritance for cube and docker sandbox objects"
@@ -198,7 +271,17 @@
              (cube-profile
               (poo-flow-sandbox-profile-by-name cube-profiles 'ci/cube))
              (docker-profile
-              (poo-flow-sandbox-profile-by-name docker-profiles 'ci/docker)))
+              (poo-flow-sandbox-profile-by-name docker-profiles 'ci/docker))
+             (cube-lineage
+              (alist-value
+               'derivation-path
+               (poo-flow-sandbox-profile-metadata cube-profile)))
+             (docker-lineage
+              (alist-value
+               'derivation-path
+               (poo-flow-sandbox-profile-metadata docker-profile)))
+             (cube-step (last-value cube-lineage))
+             (docker-step (last-value docker-lineage)))
         (check-equal? (poo-flow-user-module-selection-key
                        user-cube-build-module)
                       '(sandbox . cubeSandbox))
@@ -212,7 +295,12 @@
                          (scope . snapshot)
                          (snapshot . clone))
                         (cpu . 4)
-                        (memory . "8Gi")))
+                        (memory . "8Gi")
+                        (timeout-ms . 600000)))
+        (check-equal? (alist-value 'parent-profile cube-step)
+                      'ci/cube-base)
+        (check-equal? (alist-value 'scope cube-step) 'session)
+        (check-equal? (alist-value 'scope-ref cube-step) "cube-build")
         (check-equal? (poo-flow-sandbox-profile-backend-kind docker-profile)
                       'docker)
         (check-equal? (poo-flow-sandbox-profile-capabilities docker-profile)
@@ -221,9 +309,13 @@
                       '((filesystem
                          (scope . volume)
                          (materialized-by . runtime)
-                         (mounts . runtime))
+                        (mounts . runtime))
                         (cpu . 2)
                         (memory . "4Gi")))
+        (check-equal? (alist-value 'parent-profile docker-step)
+                      'ci/docker-base)
+        (check-equal? (alist-value 'scope docker-step) 'branch)
+        (check-equal? (alist-value 'scope-ref docker-step) "docker-build")
         (check-equal? (alist-value
                        'backend-kind
                        (poo-flow-sandbox-profile->profile cube-profile))

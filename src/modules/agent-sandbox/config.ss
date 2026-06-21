@@ -266,6 +266,18 @@
   (agent-sandbox-profile-descriptor->profile
    (poo-flow-sandbox-profile->descriptor profile)))
 
+;;; Runtime summaries must be report-only: they project enough profile shape for
+;;; validation diagnostics without raising the strict handoff failure path.
+;; : (-> PooSandboxProfile AgentSandboxProfile)
+(def (poo-flow-sandbox-profile->unchecked-profile profile)
+  (make-agent-sandbox-backend-profile
+   (poo-flow-sandbox-profile-backend-kind profile)
+   (poo-flow-sandbox-profile-backend-ref profile)
+   (poo-flow-sandbox-profile-network-policy profile)
+   (poo-flow-sandbox-profile-capabilities profile)
+   (poo-flow-sandbox-profile-resource-policy profile)
+   (poo-flow-sandbox-profile-metadata profile)))
+
 ;;; Alist conversion is presentation-only. Keeping it separate from the POO
 ;;; recipe avoids flattening the extension point that nono/cubeSandbox can use.
 ;; : (-> PooSandboxProfile Alist)
@@ -302,7 +314,7 @@
    (list (cons 'profile-name (poo-flow-sandbox-profile-name profile))
          (cons 'descriptor-realized? #t))
    (agent-sandbox-profile-runtime-summary
-    (poo-flow-sandbox-profile->profile profile))))
+    (poo-flow-sandbox-profile->unchecked-profile profile))))
 
 ;;; Handoff summaries are the stricter bridge-facing form. Invalid profile rows
 ;;; fail at the sandbox profile owner before workflow code sees them.

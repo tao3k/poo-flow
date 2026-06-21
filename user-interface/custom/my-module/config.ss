@@ -12,3 +12,4 @@
 (load! "cases/cicd")
 (load! "cases/funflow-cicd")
 (load! "cases/loop-engine")
+(load! "cases/poo-introspection")

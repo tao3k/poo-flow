@@ -3,25 +3,127 @@
 ;;; Invariant: presentation is read-only and never realizes descriptors or runtimes.
 
 (import (only-in :clan/poo/object .o)
+        (only-in :poo-flow/src/modules/agent-sandbox/config
+                 poo-flow-sandbox-profile?
+                 poo-flow-sandbox-profile-name
+                 poo-flow-sandbox-profile-backend-kind
+                 poo-flow-sandbox-profile-backend-ref
+                 poo-flow-sandbox-profile-metadata)
         (only-in :poo-flow/src/modules/workflow/cicd
                  poo-flow-cicd-check-map-name)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/observability
         :poo-flow/src/module-system/workflow-cicd-config
+        :poo-flow/src/module-system/workflow-cicd-pipeline-run-config
         :poo-flow/src/module-system/loop-engine-config)
 
-(export poo-flow-user-config-presentation-trace
+(export poo-flow-user-config-sandbox-profile-derivations
+        poo-flow-user-config-presentation-trace
         pooFlowUserConfigPresentation)
+
+;;; Sandbox profile derivation presentation is intentionally separate from
+;;; visible `:config`: users see their authored DSL in module flags, while this
+;;; section exposes resolved POO lineage for agent/session/branch handoff.
+;; : (-> [Alist] MaybeAlist)
+(def (poo-flow-user-sandbox-profile-derivation-last-step derivation-path)
+  (cond
+   ((null? derivation-path) #f)
+   ((null? (cdr derivation-path)) (car derivation-path))
+   (else
+    (poo-flow-user-sandbox-profile-derivation-last-step
+     (cdr derivation-path)))))
+
+;; : (-> PooSandboxProfile [Alist])
+(def (poo-flow-user-sandbox-profile-derivation-path profile)
+  (let ((derivation-path
+         (poo-flow-user-alist-ref
+          (poo-flow-sandbox-profile-metadata profile)
+          'derivation-path
+          '())))
+    (if (list? derivation-path) derivation-path '())))
+
+;; : (-> PooUserModuleSelection PooSandboxProfile MaybeAlist)
+(def (poo-flow-user-sandbox-profile-derivation-row selection profile)
+  (let* ((module-key (poo-flow-user-module-selection-key selection))
+         (derivation-path
+          (poo-flow-user-sandbox-profile-derivation-path profile))
+         (last-step
+          (poo-flow-user-sandbox-profile-derivation-last-step
+           derivation-path)))
+    (if last-step
+      (list
+       (cons 'key module-key)
+       (cons 'group (car module-key))
+       (cons 'module (cdr module-key))
+       (cons 'profile-name (poo-flow-sandbox-profile-name profile))
+       (cons 'backend-kind (poo-flow-sandbox-profile-backend-kind profile))
+       (cons 'backend-ref (poo-flow-sandbox-profile-backend-ref profile))
+       (cons 'parent-profile
+             (poo-flow-user-alist-ref last-step 'parent-profile #f))
+       (cons 'scope (poo-flow-user-alist-ref last-step 'scope #f))
+       (cons 'scope-ref (poo-flow-user-alist-ref last-step 'scope-ref #f))
+       (cons 'derivation-depth (length derivation-path))
+       (cons 'derivation-path derivation-path)
+       (cons 'runtime-owner "marlin-agent-core")
+       (cons 'descriptor-realized? #f)
+       (cons 'runtime-executed #f))
+      #f)))
+
+;; : (-> PooUserModuleSelection [PooSandboxProfile])
+(def (poo-flow-user-module-selection-sandbox-config-profiles selection)
+  (let ((entry (poo-flow-user-module-selection-flag-entry selection ':config)))
+    (if (and entry (pair? entry))
+      (filter poo-flow-sandbox-profile? (cdr entry))
+      '())))
+
+;; : (-> PooUserModuleSelection [PooSandboxProfile] [Alist])
+(def (poo-flow-user-module-selection-sandbox-profile-derivations/add
+      selection
+      profiles)
+  (cond
+   ((null? profiles) '())
+   (else
+    (let ((row (poo-flow-user-sandbox-profile-derivation-row
+                selection
+                (car profiles))))
+      (if row
+        (cons row
+              (poo-flow-user-module-selection-sandbox-profile-derivations/add
+               selection
+               (cdr profiles)))
+        (poo-flow-user-module-selection-sandbox-profile-derivations/add
+         selection
+         (cdr profiles)))))))
+
+;; : (-> PooUserModuleSelection [Alist])
+(def (poo-flow-user-module-selection-sandbox-profile-derivations selection)
+  (poo-flow-user-module-selection-sandbox-profile-derivations/add
+   selection
+   (poo-flow-user-module-selection-sandbox-config-profiles selection)))
+
+;; : (-> [PooUserModuleSelection] [Alist])
+(def (poo-flow-user-config-sandbox-profile-derivations selected-modules)
+  (cond
+   ((null? selected-modules) '())
+   (else
+    (append
+     (poo-flow-user-module-selection-sandbox-profile-derivations
+      (car selected-modules))
+     (poo-flow-user-config-sandbox-profile-derivations
+      (cdr selected-modules))))))
 
 ;;; The trace is deterministic and strict. It is the first slot tests should
 ;;; inspect when a presentation hangs, because it does not call back into POO.
-;; : (-> [PooUserModuleSelection] [Alist] [Alist] [PooFlowCicdCheckMap] [Alist] [Alist] [Alist] Alist [Alist] [Alist] [Symbol] [Alist])
+;; : (-> [PooUserModuleSelection] [Alist] [Alist] [Alist] [PooFlowCicdCheckMap] [Alist] [Alist] [Alist] [Alist] [Alist] Alist [Alist] [Alist] [Symbol] [Alist])
 (def (poo-flow-user-config-presentation-trace
       selected-modules
       feature-fact-rows
+      sandbox-profile-derivation-rows
       cicd-intent-rows
       workflow-cicd-check-maps
+      workflow-cicd-pipeline-run-rows
+      workflow-cicd-pipeline-result-rows
       workflow-cicd-readiness-rows
       workflow-cicd-runtime-command-manifest-rows
       workflow-cicd-runtime-command-manifest-summary-rows
@@ -35,9 +137,15 @@
    'user-config-presentation
    (list (cons 'selected-modules (length selected-modules))
          (cons 'feature-facts (length feature-fact-rows))
+         (cons 'sandbox-profile-derivations
+               (length sandbox-profile-derivation-rows))
          (cons 'cicd-intents (length cicd-intent-rows))
          (cons 'workflow-cicd-pipelines
                (length workflow-cicd-check-maps))
+         (cons 'workflow-cicd-pipeline-runs
+               (length workflow-cicd-pipeline-run-rows))
+         (cons 'workflow-cicd-pipeline-results
+               (length workflow-cicd-pipeline-result-rows))
          (cons 'workflow-cicd-runtime-readiness
                (length workflow-cicd-readiness-rows))
          (cons 'workflow-cicd-runtime-command-manifest-maps
@@ -77,10 +185,17 @@
          (if (null? maybe-setting-keys) '() (car maybe-setting-keys))))
     (let* ((feature-fact-rows
             (poo-flow-user-config-feature-facts config))
+           (sandbox-profile-derivation-rows
+            (poo-flow-user-config-sandbox-profile-derivations
+             selected-modules))
            (cicd-intent-rows
             (poo-flow-user-config-cicd-intents config))
            (workflow-cicd-check-maps
             (poo-flow-user-config-workflow-cicd-check-maps config))
+           (workflow-cicd-pipeline-run-rows
+            (poo-flow-user-config-workflow-cicd-pipeline-runs config))
+           (workflow-cicd-pipeline-result-rows
+            (poo-flow-user-config-workflow-cicd-pipeline-results config))
            (workflow-cicd-readiness-rows
             (poo-flow-user-config-workflow-cicd-runtime-readiness config))
            (workflow-cicd-runtime-command-manifest-rows
@@ -115,8 +230,11 @@
             (poo-flow-user-config-presentation-trace
              selected-modules
              feature-fact-rows
+             sandbox-profile-derivation-rows
              cicd-intent-rows
              workflow-cicd-check-maps
+             workflow-cicd-pipeline-run-rows
+             workflow-cicd-pipeline-result-rows
              workflow-cicd-readiness-rows
              workflow-cicd-runtime-command-manifest-rows
              workflow-cicd-runtime-command-manifest-summary-rows
@@ -135,11 +253,20 @@
             modules: (map poo-flow-user-module-selection->alist selected-modules)
             feature-count: (length selected-modules)
             feature-facts: feature-fact-rows
+            sandbox-profile-derivation-count:
+            (length sandbox-profile-derivation-rows)
+            sandbox-profile-derivations: sandbox-profile-derivation-rows
             cicd-intent-count: (length cicd-intent-rows)
             cicd-intents: cicd-intent-rows
             workflow-cicd-pipeline-count: (length workflow-cicd-check-maps)
             workflow-cicd-pipelines:
             (map poo-flow-cicd-check-map-name workflow-cicd-check-maps)
+            workflow-cicd-pipeline-run-count:
+            (length workflow-cicd-pipeline-run-rows)
+            workflow-cicd-pipeline-runs: workflow-cicd-pipeline-run-rows
+            workflow-cicd-pipeline-result-count:
+            (length workflow-cicd-pipeline-result-rows)
+            workflow-cicd-pipeline-results: workflow-cicd-pipeline-result-rows
             workflow-cicd-runtime-readiness-count:
             (length workflow-cicd-readiness-rows)
             workflow-cicd-runtime-readiness: workflow-cicd-readiness-rows
@@ -192,6 +319,26 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'runtime-handoff-facts)
+          loop-engine-workflow-agreements:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'workflow-agreement)
+          loop-engine-result-contracts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'result-contract)
+          loop-engine-agent-profiles:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'agent-profiles)
+          loop-engine-agent-harnesses:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'agent-harnesses)
+          loop-engine-agent-sessions:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'agent-sessions)
           loop-engine-workflow-runs:
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
@@ -204,6 +351,10 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'agent-operation)
+          loop-engine-delegated-operations:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'delegated-operation)
           loop-engine-runtime-command-manifests:
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
@@ -220,6 +371,10 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'sandbox-handoff-summaries)
+          loop-engine-sandbox-handoff-agreements:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'sandbox-handoff-agreement)
           loop-engine-sandbox-unresolved-profile-refs:
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows

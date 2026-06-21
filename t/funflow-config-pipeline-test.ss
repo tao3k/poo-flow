@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: Funflow pipeline config syntax lowers to workflow CI/CD POO data.
+;;; Boundary: Funflow POO config syntax lowers to workflow CI/CD POO data.
 ;;; Invariant: tests inspect declarations and receipts only; no runtime work.
 
 (import (only-in :std/test
@@ -46,26 +46,41 @@
     (error-object? failure)))
 
 ;;; The direct fixture is the public contract we want downstream users to copy:
-;;; `funflow` is the module, while `workflow` stays an invalid category name.
+;;; `funflow` is the module, and object declarations are native Gerbil POO.
 ;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-test-direct-selection)
   (use-module funflow
     :config
-    (pipeline default
-      (check build
-        :inherits ci/build
-        :command ("gxpkg" "build")
-        :artifacts (build-log)
-        :cache (gerbil-build-cache)
-        :result (read :lines)
-        :runtime manifest-handoff)
-      (check integration
-        :inherits (ci/check agent/poo-object-extension)
-        :needs (build)
-        :command ("gxpkg" "env" "gxtest" "t/unit-tests.ss")
-        :artifacts (test-receipt)
-        :result (read :lines)
-        :runtime manifest-handoff))))
+    (.def (funflow-test/build @ funflow-check
+                              check-name profile-ref command-vector
+                              artifact-outputs cache-intents result-protocol
+                              runtime-mode)
+      check-name: 'build
+      profile-ref: 'ci/build
+      command-vector: '("gxpkg" "build")
+      artifact-outputs: '(build-log)
+      cache-intents: '(gerbil-build-cache)
+      result-protocol: '(read :lines)
+      runtime-mode: 'manifest-handoff)
+
+    (.def (funflow-test/integration @ funflow-check
+                                    check-name profile-ref command-vector
+                                    artifact-outputs result-protocol
+                                    runtime-mode dependency-refs)
+      check-name: 'integration
+      profile-ref: '(ci/check agent/poo-object-extension)
+      command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+      artifact-outputs: '(test-receipt)
+      result-protocol: '(read :lines)
+      runtime-mode: 'manifest-handoff
+      dependency-refs: '(build))
+
+    (.def (funflow-test/default @ funflow-pipeline
+                                pipeline-name checks metadata)
+      pipeline-name: 'default
+      checks: (list funflow-test/build funflow-test/integration)
+      metadata: '((scenario . direct-test)
+                  (authoring-style . gerbil-poo-native)))))
 
 ;;; These profiles are local catalog fixtures for projection tests, not runtime
 ;;; sandbox launches; they let CI/CD inherit concrete filesystem policy while
@@ -114,8 +129,8 @@
 ;;; category remains invalid as a module, and the produced check-map stays inert.
 ;; : TestSuite
 (def funflow-config-pipeline-test
-  (test-suite "funflow config pipeline"
-    (test-case "lowers funflow pipeline config into a POO check-map"
+  (test-suite "funflow POO config pipeline"
+    (test-case "lowers funflow POO config into a POO check-map"
       (let* ((selection (car (funflow-config-test-direct-selection)))
              (flags (poo-flow-user-module-selection-flags selection))
              (pipeline
@@ -214,19 +229,23 @@
             (pipeline default))
           #f))
        #t))
-    (test-case "rejects non-symbol funflow pipeline dependency refs"
+    (test-case "rejects non-symbol funflow POO dependency refs"
       (check-equal?
        (funflow-config-test-error?
         (lambda ()
           (use-module funflow
             :config
-            (pipeline default
-              (check test
-                :inherits ci/check
-                :needs ("build")
-                :command ("gxpkg" "build")
-                :result (read :lines)
-                :runtime manifest-handoff)))
+            (.def (funflow-test/bad @ funflow-check
+                                    check-name profile-ref command-vector
+                                    dependency-refs)
+              check-name: 'bad
+              profile-ref: 'ci/check
+              command-vector: '("gxpkg" "build")
+              dependency-refs: '("build"))
+            (.def (funflow-test/bad-pipeline @ funflow-pipeline
+                                             pipeline-name checks)
+              pipeline-name: 'bad
+              checks: (list funflow-test/bad)))
           #f))
        #t))
     (test-case "loads downstream funflow cicd case through load!"

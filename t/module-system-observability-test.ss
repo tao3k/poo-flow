@@ -77,6 +77,70 @@
         (check-equal? (module-observability-test-alist-value
                        'path
                        repeat-step)
-                      '(selected-modules selected-modules))))))
+                      '(selected-modules selected-modules))))
+    (test-case "observes POO slot initializer self references"
+      (let* ((observations
+              (poo-flow-poo-slot-authoring-observations
+               'poo-introspection-slot-receipt
+               (list (cons 'slot 'slot)
+                     (cons 'object? 'poo-object?)
+                     (cons 'present? 'slot-present?)
+                     (cons 'value 'slot-current-value))))
+             (bad (car observations))
+             (shadow (cadr observations))
+             (good (caddr observations))
+             (detail (module-observability-test-alist-value 'detail bad)))
+        (check-equal? (module-observability-test-alist-value 'kind bad)
+                      poo-flow-poo-slot-authoring-observation-kind)
+        (check-equal? (module-observability-test-alist-value 'scope bad)
+                      'poo-introspection-slot-receipt)
+        (check-equal? (module-observability-test-alist-value 'slot bad)
+                      'slot)
+        (check-equal? (module-observability-test-alist-value 'initializer bad)
+                      'slot)
+        (check-equal? (module-observability-test-alist-value 'status bad)
+                      'self-referential-slot-initializer)
+        (check-equal? (module-observability-test-alist-value
+                       'code
+                       detail)
+                      'poo-slot-initializer-shadows-slot)
+        (check-equal? (module-observability-test-alist-value 'status shadow)
+                      'primitive-shadow-slot)
+        (check-equal? (module-observability-test-alist-value
+                       'code
+                       (module-observability-test-alist-value
+                        'detail
+                        shadow))
+                      'poo-slot-shadows-poo-primitive)
+        (check-equal? (module-observability-test-alist-value 'status good)
+                      'ok)
+        (check-equal? (module-observability-test-alist-value 'detail good)
+                      '())
+        (check-equal? (poo-flow-poo-slot-authoring-summary
+                       'poo-introspection-slot-receipt
+                       observations)
+                      (list
+                       (cons 'kind poo-flow-poo-slot-authoring-summary-kind)
+                       (cons 'scope 'poo-introspection-slot-receipt)
+                       (cons 'observation-count 4)
+                       (cons 'statuses
+                             '(self-referential-slot-initializer
+                               primitive-shadow-slot
+                               ok
+                               ok))
+                       (cons 'diagnostic-count 2)
+                       (cons 'diagnostics
+                             (list
+                              (module-observability-test-alist-value
+                               'detail
+                               bad)
+                              (module-observability-test-alist-value
+                               'detail
+                               shadow)))
+                       (cons 'descriptor-realized? #f)
+                       (cons 'runtime-executed #f)))
+        (check-equal? (poo-flow-poo-slot-authoring-diagnostics
+                       (list good))
+                      '())))))
 
 (run-tests! module-system-observability-test)

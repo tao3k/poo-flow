@@ -1,121 +1,91 @@
 * 10.06.16 POO Native User Interface Audit
-
 ** 10.06.16.10 Purpose
-This note audits the downstream =user-interface/custom/my-module/profiles/cicd.ss=
+This note audits the downstream =user-interface/custom/my-module/profiles/*.ss=
 shape against the actual POO source used by this repository.
 
-The source of truth for POO in this workspace is the installed Gerbil package
-under =.gerbil=, not a research checkout:
-
-- =.gerbil/lib/clan/poo/object.ssi=
-- =.gerbil/lib/clan/poo/object.ssxi.ss=
-- =.gerbil/lib/clan/list.ssxi.ss=
+POO-native is a hard project rule, not an optimization target. A user-facing
+shape is acceptable only when it lowers into Gerbil POO object composition,
+prototype precedence, slot operators, or named POO-native helpers. Raw
+alist/record authoring and exposed =(lambda (self super) ...)= compute snippets
+are implementation escape hatches, not the recommended interface.
 
 ** 10.06.16.20 Local POO Source Evidence
-=.gerbil/lib/clan/poo/object.ssi= imports
-=c3-compute-precedence-list= from =:clan/list=. The generated interface also
-exposes =compute-precedence-list!=, =compute-slot-funs!=,
-=make-object=, =$constant-slot-spec=, and =$computed-slot-spec=.
+=.data/gerbil-poo/object.ss= and the installed =clan/poo/object= package expose
+the object model that =poo-flow= should use directly:
+- objects carry supers, slots, defaults, instances, precedence lists, and slot
+  functions;
+- slot resolution is already backed by C3 through =clan/list=;
+- =.def=, =.o=, ==>=, and ==>.+= are the native authoring vocabulary.
 
-=.gerbil/lib/clan/poo/object.ssxi.ss= exposes an object with =supers=,
-=slots=, =defaults=, =%instance=, =%precedence-list=, =%slot-funs=, and
-=%all-slots=. This confirms that native POO composition already has an explicit
-precedence list and slot-function layer. =poo-flow= should depend on that
-instead of reimplementing C3.
-
-=.gerbil/lib/clan/list.ssxi.ss= exposes =c3-select-next= and
-=c3-compute-precedence-list=. That is the local dependency behind POO object
-linearization.
+=poo-flow= should depend on that instead of reimplementing C3 or presenting a
+second profile DSL to users.
 
 ** 10.06.16.30 Current Good Landing
-=src/modules/extension.ss= now makes =poo-flow-module-object= a Gerbil POO
-object with inherited objects passed as =supers:=. The =fields= slot is a
-computed slot: it calls =superfun= and merges the inherited field contracts with
-the current object's direct field contracts.
+=src/modules/sandbox-core/profile-interface.ss= owns public sandbox profile
+prototypes and reusable resource prototypes. Backend files such as
+=src/modules/nono-sandbox/profile-interface.ss= extend those prototypes with
+ordinary Gerbil POO supers.
 
-This is the correct POO/C3 landing for module object schemas:
-
-- object precedence is owned by =clan/poo/object= and =clan/list=;
-- field contract merging is a local domain projection;
-- validation and profile construction consume resolved fields rather than
-  computing a second object hierarchy.
-
-** 10.06.16.40 User Interface Audit
-=user-interface/custom/my-module/profiles/cicd.ss= is mostly declarative:
+Downstream files now write this shape:
 
 #+begin_src scheme
 (use-module nono-sandbox
-  :config
-  (profiles
-   (ci/check ...)
-   (ci/build ...)
-   (cd/release ...)))
+  (.def (ci/check @ nono-sandbox-profile
+                  network capabilities resources metadata)
+    network: (deny-network)
+    resources: =>.+ readonly-project-workspace-resources
+    metadata: => (lambda (super-metadata)
+                   (append super-metadata check-metadata)))
+
+  (.def (ci/build @ ci/check
+                  capabilities resources metadata)
+    capabilities: => (lambda (super-capabilities)
+                       (append super-capabilities
+                               '(filesystem-write cache-mount)))
+    resources: =>.+ readwrite-project-workspace-resources
+    metadata: => (lambda (super-metadata)
+                   (append super-metadata build-metadata))))
 #+end_src
 
-That part is acceptable for a downstream file. The user declares profile names,
-network policy, capabilities, resource policy, and metadata. It does not run
-workflows.
+This is acceptable downstream configuration because the user declares profile
+objects, super prototypes, slots, and inherited-slot transforms. It does not run
+workflows or realize runtime descriptors.
 
-The weaker surface appears in companion examples such as
-=profiles/object-extension.ss= and =profiles/session.ss=:
+** 10.06.16.40 Removed Surface
+The old sandbox profile row DSL is not public compatibility surface:
+- =(use-module nono-sandbox :config (profiles ...))=
+- row operators such as =:append=, =:remove=, and =:override=
+- raw resource-policy alists as normal authoring
+- naked =(lambda (self super) ...)= compute hooks
 
-#+begin_src scheme
-(capabilities :remove filesystem-write)
-(capabilities :append cache-mount)
-(metadata :remove (scope . profile))
-#+end_src
+Those forms can remain only as historical notes, diagnostics, or materialized
+ABI/runtime data. The ordinary user and agent path is POO =.def=.
 
-These row operators are technically valid because upstream converts each row
-into a =poo-flow-module-field-contribution=. However, they expose contribution
-operations as the everyday user vocabulary. That is not the best POO practice.
-It makes users manually edit merge behavior instead of composing prototypes.
-
-** 10.06.16.50 Better POO Direction
-The daily user interface should make POO composition visible at the object
-level, not at the row-operator level.
-
-Preferred shape:
-
+** 10.06.16.50 Current POO Direction
+The daily user interface makes POO composition visible at the object level:
 - upstream owns profile prototype objects;
-- downstream selects or extends named profile prototypes;
-- direct row operators remain an advanced escape hatch;
-- doctor/presentation output explains the resolved prototype chain and field
+- downstream extends named profile prototypes with =.def=;
+- direct row operators are replaced by POO slot transforms;
+- doctor/presentation output explains resolved prototype chains and field
   sources.
 
-The target user story is:
-
-#+begin_src scheme
-(use-module nono-sandbox
-  :config
-  (profiles
-   (ci/check
-    (:extends cicd/check)
-    (metadata (stage . check)))
-   (ci/build
-    (:extends cicd/build)
-    (metadata (stage . build)))))
-#+end_src
-
-This still needs a narrow implementation pass. The important boundary is that
-=:extends= should lower into Gerbil POO object composition upstream. It should
-not become another ad hoc recursive merge DSL.
+The important boundary is that extension is Gerbil POO object composition, not
+another recursive merge DSL.
 
 ** 10.06.16.60 Implementation Implications
-Next implementation slice:
-
-1. Add an upstream profile-prototype object layer under
+The current implementation should preserve these constraints:
+1. Keep the upstream profile-prototype object layer under
    =src/modules/sandbox-core=.
-2. Teach backend sandbox config modules to resolve =(:extends prototype-name)=
-   through Gerbil POO supers.
-3. Add doctor output that shows prototype chain, direct rows, resolved fields,
-   and whether row operators were used.
-4. Move row-operator-heavy examples out of the primary downstream path.
-5. Keep existing =:append=, =:remove=, and =:override= tests as advanced
-   compatibility tests, not as the recommended user-facing style.
+2. Keep backend sandbox config modules on native =.def= profile objects.
+3. Keep doctor output showing prototype chain, direct slots, resolved fields,
+   and non-primary authoring diagnostics.
+4. Keep row-operator-heavy examples out of the primary downstream path.
+5. Keep =:append=, =:remove=, and =:override= only as historical/diagnostic
+   vocabulary, not as the recommended user-facing style.
 
 ** 10.06.16.70 Decision
-Do not rewrite =cicd.ss= into a raw =.o= object expression. That would be POO
-internally but worse as a user interface.
+Do not rewrite downstream profiles into raw =.o= object expressions or a hidden
+wrapper DSL. The public spelling is Gerbil POO =.def= inside =use-module=.
 
-Do introduce a POO-native profile prototype layer so the user interface can stay
-declarative while the implementation remains native Gerbil POO/C3.
+Keep the user interface declarative by exposing upstream profile prototypes and
+native slot transforms while the implementation remains native Gerbil POO/C3.

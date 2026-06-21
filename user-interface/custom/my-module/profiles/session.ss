@@ -2,27 +2,16 @@
 ;;; Boundary: downstream session sandbox profile declarations.
 ;;; Invariant: included by ../config.ss; it declares data only.
 
-(use-module nono-sandbox
-  :config
-  (profiles
-   (agent/session
-    (network :override allowlisted "github.com" "crates.io")
-    (capabilities process-run filesystem-read filesystem-write tmpdir)
-    (capabilities :remove filesystem-write)
-    (capabilities :append cache-mount)
-    (resources (filesystem
-                (scope . project-workspace)
-                (paths
-                 ((role . project-workspace)
-                  (source . ".")
-                  (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
-                  (mode . read-write)))
-                (access . read-write))
-               (cpu . 2)
-               (memory . "4Gi"))
-    (resources :append (timeout-ms . 300000))
-    (metadata (intent . coding-agent)
-              (scope . session))
-    (metadata :append (stage . interactive))
-    (metadata :remove (scope . session)))))
+(let ((session-capabilities
+       '(process-run filesystem-read tmpdir cache-mount))
+      (session-metadata
+       '((intent . coding-agent)
+         (scope . session)
+         (stage . interactive))))
+  (use-module nono-sandbox
+    (.def (agent/session @ nono-sandbox-profile)
+      network: (allowlisted-network "github.com" "crates.io")
+      capabilities: session-capabilities
+      resources: =>.+ runtime-volume-resources
+      metadata: => (lambda (super-metadata)
+                     (append super-metadata session-metadata)))))

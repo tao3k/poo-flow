@@ -6,10 +6,17 @@
                  current-expander-context
                  expander-context-id)
         (only-in :gerbil/expander/stx stx-source)
+        (only-in :clan/poo/object .o)
+        :poo-flow/src/module-system/observability
         :poo-flow/src/modules/cubeSandbox/config
+        :poo-flow/src/modules/cubeSandbox/profile-interface
         :poo-flow/src/modules/docker-sandbox/config
+        :poo-flow/src/modules/docker-sandbox/profile-interface
         :poo-flow/src/modules/funflow/config
         :poo-flow/src/modules/nono-sandbox/config
+        :poo-flow/src/modules/nono-sandbox/profile-interface
+        :poo-flow/src/modules/sandbox-core/profile
+        :poo-flow/src/modules/sandbox-core/profile-interface
         :poo-flow/src/module-system/object-validation
         :poo-flow/src/module-system/profile-config
         :poo-flow/src/module-system/use-module-contract)
@@ -22,7 +29,13 @@
         poo-flow!
         poo-flow-profile-set
         poo-flow-profile-extend
-        poo-flow-profile)
+        poo-flow-profile
+        (import: :poo-flow/src/modules/cubeSandbox/profile-interface)
+        (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
+        (import: :poo-flow/src/modules/funflow/config)
+        (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
+        (import: :poo-flow/src/module-system/observability)
+        (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
 ;;; Doom-style config fragments are declaration includes, not runtime module
 ;;; loading. Extensionless paths mirror Doom's `load!` surface; the macro wraps
@@ -237,70 +250,119 @@
 ;;     %
 (defsyntax (use-module stx)
   (syntax-case stx (:config profiles binding workflow funflow nono-sandbox cubeSandbox docker-sandbox
-                    pipeline
+                    .def
                     :inherits :isolation :environment :command :nono)
-    ((_ funflow :config (pipeline pipeline-name check-clause ...))
+    ((_ funflow
+        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+              slot-def ...)
+        ...)
      (syntax
-      (poo-flow-modules-system-use-module/contract
-       'funflow
-       (poo-flow-funflow-config-flags
-        (poo-flow-funflow-pipeline-config
-         'pipeline-name
-         '(check-clause ...))
-        '((pipeline pipeline-name check-clause ...))))))
+      (let* ((prototype-name
+              (.o (:: prototype-self prototype-super prototype-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'funflow
+         (poo-flow-funflow-poo-config-flags
+          (list prototype-name ...)
+          '((.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                  slot-def ...)
+            ...))))))
+    ((_ funflow
+        :config
+        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+              slot-def ...)
+        ...)
+     (syntax
+      (let* ((prototype-name
+              (.o (:: prototype-self prototype-super prototype-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'funflow
+         (poo-flow-funflow-poo-config-flags
+          (list prototype-name ...)
+          '(:config
+            (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                  slot-def ...)
+            ...))))))
     ((_ workflow :config bad-clause ...)
      (syntax
       (poo-flow-modules-system-use-module/contract
        'workflow
        '())))
-    ((_ nono-sandbox :config (binding binding-kind) (profiles profile-clause ...))
+    ((_ nono-sandbox
+        (binding binding-kind)
+        (.def (profile-name profile-self profile-super profile-slot ...)
+              slot-def ...)
+        ...)
      (syntax
-      (poo-flow-modules-system-use-module/contract
-       'nono-sandbox
-       (poo-flow-nono-sandbox-config-flags
-        'binding-kind
-        (poo-flow-nono-sandbox-profiles profile-clause ...)
-        '((binding binding-kind)
-          (profiles profile-clause ...))))))
-    ((_ nono-sandbox :config (profiles profile-clause ...) (binding binding-kind))
+      (let* ((profile-name
+              (.o (:: profile-self profile-super profile-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'nono-sandbox
+         (poo-flow-nono-sandbox-config-flags
+          'binding-kind
+          (poo-flow-sandbox-profile-prototypes
+           (profile-name profile-name) ...)
+          '((binding binding-kind)
+            (.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
+            ...))))))
+    ((_ nono-sandbox
+        (.def (profile-name profile-self profile-super profile-slot ...)
+              slot-def ...)
+        ...)
      (syntax
-      (poo-flow-modules-system-use-module/contract
-       'nono-sandbox
-       (poo-flow-nono-sandbox-config-flags
-        'binding-kind
-        (poo-flow-nono-sandbox-profiles profile-clause ...)
-        '((profiles profile-clause ...)
-          (binding binding-kind))))))
-    ((_ nono-sandbox :config (binding binding-kind))
+      (let* ((profile-name
+              (.o (:: profile-self profile-super profile-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'nono-sandbox
+         (poo-flow-nono-sandbox-config-flags
+          +poo-flow-nono-sandbox-default-binding+
+          (poo-flow-sandbox-profile-prototypes
+           (profile-name profile-name) ...)
+          '((.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
+            ...))))))
+    ((_ cubeSandbox
+        (.def (profile-name profile-self profile-super profile-slot ...)
+              slot-def ...)
+        ...)
      (syntax
-      (poo-flow-modules-system-use-module/contract
-       'nono-sandbox
-       (poo-flow-nono-sandbox-config-flags
-        'binding-kind
-        '()
-        '((binding binding-kind))))))
-    ((_ nono-sandbox :config (profiles profile-clause ...))
+      (let* ((profile-name
+              (.o (:: profile-self profile-super profile-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'cubeSandbox
+         (poo-flow-cubeSandbox-config-flags
+          (poo-flow-sandbox-profile-prototypes
+           (profile-name profile-name) ...)
+          '((.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
+            ...))))))
+    ((_ docker-sandbox
+        (.def (profile-name profile-self profile-super profile-slot ...)
+              slot-def ...)
+        ...)
      (syntax
-      (poo-flow-modules-system-use-module/contract
-       'nono-sandbox
-       (poo-flow-nono-sandbox-config-flags
-        +poo-flow-nono-sandbox-default-binding+
-        (poo-flow-nono-sandbox-profiles profile-clause ...)
-        '((profiles profile-clause ...))))))
-    ((_ cubeSandbox :config (profiles profile-clause ...))
-     (syntax
-      (poo-flow-modules-system-use-module/contract
-       'cubeSandbox
-       (poo-flow-cubeSandbox-config-flags
-        (poo-flow-cubeSandbox-profiles profile-clause ...)
-        '((profiles profile-clause ...))))))
-    ((_ docker-sandbox :config (profiles profile-clause ...))
-     (syntax
-      (poo-flow-modules-system-use-module/contract
-       'docker-sandbox
-       (poo-flow-docker-sandbox-config-flags
-        (poo-flow-docker-sandbox-profiles profile-clause ...)
-        '((profiles profile-clause ...))))))
+      (let* ((profile-name
+              (.o (:: profile-self profile-super profile-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'docker-sandbox
+         (poo-flow-docker-sandbox-config-flags
+          (poo-flow-sandbox-profile-prototypes
+           (profile-name profile-name) ...)
+          '((.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
+            ...))))))
     ((_ module
         :inherits inherited-profile
         :isolation isolation-clause
@@ -317,7 +379,7 @@
         (cons ':command 'command-clause)
         (cons ':nono 'nono-clause)))))
     ((_ module :config bad-clause ...)
-     (error "use-module :config expects module-specific config such as funflow (pipeline ...) or sandbox (profiles ...)"))
+     (error "use-module :config DSL has been removed; module configs use native POO .def forms"))
     ((_ module flag ...)
      (syntax
       (poo-flow-modules-system-use-module/contract 'module (list 'flag ...))))))

@@ -14,6 +14,10 @@
         +poo-flow-user-loop-engine-runtime-command-executable+
         +poo-flow-user-loop-engine-runtime-command-name+
         +poo-flow-user-loop-engine-runtime-object-families+
+        +poo-flow-user-loop-engine-result-contract+
+        +poo-flow-user-loop-engine-default-result-contract+
+        +poo-flow-user-loop-engine-result-contract-roles+
+        +poo-flow-user-loop-engine-sandbox-handoff-agreement-contract+
         +poo-flow-user-loop-engine-handoff-contracts+
         poo-flow-user-loop-engine-intent-ref
         poo-flow-user-loop-engine-section-ref
@@ -33,6 +37,7 @@
         poo-flow-user-loop-engine-sandbox-runtime-summaries
         poo-flow-user-loop-engine-sandbox-handoff-summaries
         poo-flow-user-loop-engine-sandbox-unresolved-profile-refs
+        poo-flow-user-loop-engine-sandbox-handoff-agreement
         poo-flow-user-loop-engine-runtime-id
         poo-flow-user-loop-engine-intent-workflow-ref)
 
@@ -60,6 +65,27 @@
 (def +poo-flow-user-loop-engine-runtime-command-contract+
   'poo-flow.loop-governor.runtime-command-manifest.v1)
 
+;;; Result contracts are schema identifiers for reviewer output. They stay
+;;; separate from the runtime-command manifest so agents can audit structured
+;;; result expectations before Marlin executes an operation.
+;; : Symbol
+(def +poo-flow-user-loop-engine-result-contract+
+  'poo-flow.loop-governor.result-contract.v1)
+
+;; : Symbol
+(def +poo-flow-user-loop-engine-default-result-contract+
+  'poo-flow.loop-governor.node-result.v1)
+
+;; : [Symbol]
+(def +poo-flow-user-loop-engine-result-contract-roles+
+  '(default auditor verifier reviewer governor human-audit))
+
+;;; Sandbox handoff agreement is the loop-engine receipt that compares declared
+;;; refs, runtime summaries, and bridge-ready handoff summaries without raising.
+;; : Symbol
+(def +poo-flow-user-loop-engine-sandbox-handoff-agreement-contract+
+  'poo-flow.loop-engine.sandbox-handoff-agreement.v1)
+
 ;;; The command name is stable receipt vocabulary for handoff manifests, not an
 ;;; executable selector or shell command.
 ;; : Symbol
@@ -78,7 +104,10 @@
 ;;; must understand when it consumes a loop-engine handoff.
 ;; : [Symbol]
 (def +poo-flow-user-loop-engine-runtime-object-families+
-  '(workflow-run
+  '(agent-profile
+    agent-harness
+    agent-session
+    workflow-run
     dispatch-receipt
     agent-operation
     runtime-snapshot))
@@ -236,11 +265,18 @@
 (def (poo-flow-user-loop-engine-sandbox-profile-ref->handoff-summary
       profile-ref
       profile-catalog)
-  (let (profile
-        (poo-flow-user-loop-engine-sandbox-profile-ref->profile
-         profile-ref
-         profile-catalog))
-    (and profile (poo-flow-sandbox-profile-handoff-summary profile))))
+  (let* ((profile
+          (poo-flow-user-loop-engine-sandbox-profile-ref->profile
+           profile-ref
+           profile-catalog))
+         (runtime-summary
+          (and profile (poo-flow-sandbox-profile-runtime-summary profile))))
+    (and profile
+         (poo-flow-user-loop-engine-intent-ref
+          runtime-summary
+          'valid?
+          #f)
+         (poo-flow-sandbox-profile-handoff-summary profile))))
 
 ;;; Runtime summary collection preserves reference order and skips missing
 ;;; profiles; unresolved refs are recorded by a sibling diagnostic pass.
@@ -298,6 +334,98 @@
           (poo-flow-user-loop-engine-sandbox-unresolved-profile-refs
            (cdr refs)
            profile-catalog)))))
+
+;;; Invalid runtime summaries stay reportable facts. They are not filtered out
+;;; of the intent because doctor and handoff agreement need the validation rows.
+;; : (-> [Alist] [Alist])
+(def (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries summaries)
+  (cond
+   ((null? summaries) '())
+   ((poo-flow-user-loop-engine-intent-ref (car summaries) 'valid? #f)
+    (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries
+     (cdr summaries)))
+   (else
+    (cons
+     (car summaries)
+     (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries
+      (cdr summaries))))))
+
+;;; Agreement diagnostics are aggregate rows so profile doctor can present one
+;;; actionable sandbox issue per loop intent instead of one row per mount.
+;; : (-> [Symbol] [Alist] [Alist] [Symbol] [Alist])
+(def (poo-flow-user-loop-engine-sandbox-handoff-agreement-diagnostics
+      refs
+      runtime-summaries
+      handoff-summaries
+      unresolved-refs)
+  (let ((invalid-runtime-summaries
+         (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries
+          runtime-summaries)))
+    (append
+     (if (null? unresolved-refs)
+       '()
+       (list
+        (list (cons 'field 'sandbox-profile-refs)
+              (cons 'code 'unresolved-sandbox-profile-refs)
+              (cons 'profile-refs unresolved-refs))))
+     (if (null? invalid-runtime-summaries)
+       '()
+       (list
+        (list (cons 'field 'sandbox-runtime-summaries)
+              (cons 'code 'invalid-sandbox-runtime-summaries)
+              (cons 'summary-count (length invalid-runtime-summaries))
+              (cons 'summaries invalid-runtime-summaries))))
+     (if (= (length refs)
+            (+ (length handoff-summaries)
+               (length unresolved-refs)
+               (length invalid-runtime-summaries)))
+       '()
+       (list
+        (list (cons 'field 'sandbox-handoff-summaries)
+              (cons 'code 'sandbox-handoff-summary-count-mismatch)
+              (cons 'profile-ref-count (length refs))
+              (cons 'handoff-summary-count (length handoff-summaries))
+              (cons 'unresolved-profile-ref-count
+                    (length unresolved-refs))
+              (cons 'invalid-runtime-summary-count
+                    (length invalid-runtime-summaries))))))))
+
+;;; The agreement is the stable loop-engine view over sandbox readiness. It is
+;;; report-only and total; invalid profiles become diagnostics instead of throws.
+;; : (-> [Symbol] [Alist] [Alist] [Symbol] Alist)
+(def (poo-flow-user-loop-engine-sandbox-handoff-agreement
+      refs
+      runtime-summaries
+      handoff-summaries
+      unresolved-refs)
+  (let* ((invalid-runtime-summaries
+          (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries
+           runtime-summaries))
+         (diagnostics
+          (poo-flow-user-loop-engine-sandbox-handoff-agreement-diagnostics
+           refs
+           runtime-summaries
+           handoff-summaries
+           unresolved-refs)))
+    (list
+     (cons 'kind 'loop-engine-sandbox-handoff-agreement)
+     (cons 'contract
+           +poo-flow-user-loop-engine-sandbox-handoff-agreement-contract+)
+     (cons 'profile-refs refs)
+     (cons 'profile-ref-count (length refs))
+     (cons 'runtime-summary-count (length runtime-summaries))
+     (cons 'handoff-summary-count (length handoff-summaries))
+     (cons 'unresolved-profile-refs unresolved-refs)
+     (cons 'unresolved-profile-ref-count (length unresolved-refs))
+     (cons 'invalid-runtime-summaries invalid-runtime-summaries)
+     (cons 'invalid-runtime-summary-count
+           (length invalid-runtime-summaries))
+     (cons 'diagnostic-count (length diagnostics))
+     (cons 'diagnostics diagnostics)
+     (cons 'valid? (null? diagnostics))
+     (cons 'handoff-ready? (null? diagnostics))
+     (cons 'runtime-owner "marlin-agent-core")
+     (cons 'runtime-executed #f))))
 
 ;; : (-> Symbol String Symbol)
 (def (poo-flow-user-loop-engine-runtime-id use-case-name suffix)

@@ -21,7 +21,27 @@
         poo-flow-module-observation-stage/alist
         poo-flow-module-observation->alist
         poo-flow-module-presentation-trace
-        poo-flow-module-presentation-trace/add)
+        poo-flow-module-presentation-trace/add
+        poo-flow-poo-slot-authoring-observation-kind
+        make-poo-flow-poo-slot-authoring-observation
+        poo-flow-poo-slot-authoring-observation?
+        poo-flow-poo-slot-authoring-observation-scope
+        poo-flow-poo-slot-authoring-observation-slot
+        poo-flow-poo-slot-authoring-observation-initializer
+        poo-flow-poo-slot-authoring-observation-status
+        poo-flow-poo-slot-authoring-observation-detail
+        poo-flow-poo-slot-authoring-observation-descriptor-realized?
+        poo-flow-poo-slot-authoring-observation-runtime-executed?
+        poo-flow-poo-slot-authoring-self-reference?
+        poo-flow-poo-slot-authoring-primitive-slot?
+        poo-flow-poo-slot-authoring-status
+        poo-flow-poo-slot-authoring-observation/alist
+        poo-flow-poo-slot-authoring-observations
+        poo-flow-poo-slot-authoring-summary-kind
+        poo-flow-poo-slot-authoring-observation-ok?
+        poo-flow-poo-slot-authoring-statuses
+        poo-flow-poo-slot-authoring-diagnostics
+        poo-flow-poo-slot-authoring-summary)
 
 ;;; Observation kind ids are shared by doctor, user-config, and future CLI
 ;;; surfaces so tooling can recognize one trace vocabulary across projections.
@@ -138,3 +158,147 @@
 ;; : (-> Symbol [Pair] [Alist])
 (def (poo-flow-module-presentation-trace scope stage-counts)
   (poo-flow-module-presentation-trace/add scope stage-counts '()))
+
+;;; POO authoring observations inspect source-shaped slot bindings, not POO
+;;; objects. This catches `.o slot: slot` style self references before a `.ref`
+;;; path can recurse or allocate during debugging.
+;; : (-> Unit PooFlowPooSlotAuthoringObservationKind)
+(def poo-flow-poo-slot-authoring-observation-kind
+  "poo-flow.poo-slot-authoring-observation.v1")
+
+;; : (-> Symbol Symbol Value Symbol Alist Boolean Boolean PooFlowPooSlotAuthoringObservation)
+(defstruct poo-flow-poo-slot-authoring-observation
+  (scope
+   slot
+   initializer
+   status
+   detail
+   descriptor-realized?
+   runtime-executed?)
+  transparent: #t)
+
+;; : (-> Symbol Value Boolean)
+(def (poo-flow-poo-slot-authoring-self-reference? slot initializer)
+  (and (symbol? slot)
+       (symbol? initializer)
+       (eq? slot initializer)))
+
+;; : (-> Symbol Boolean)
+(def (poo-flow-poo-slot-authoring-primitive-slot? slot)
+  (and (symbol? slot)
+       (let (slot-name (symbol->string slot))
+         (or (string=? slot-name ".o")
+             (string=? slot-name ".def")
+             (string=? slot-name ".ref")
+             (string=? slot-name ".slot?")
+             (string=? slot-name "object?")))))
+
+;; : (-> Symbol Value Symbol)
+(def (poo-flow-poo-slot-authoring-status slot initializer)
+  (cond
+   ((poo-flow-poo-slot-authoring-self-reference? slot initializer)
+    'self-referential-slot-initializer)
+   ((poo-flow-poo-slot-authoring-primitive-slot? slot)
+    'primitive-shadow-slot)
+   (else 'ok)))
+
+;; : (-> Symbol Value Alist)
+(def (poo-flow-poo-slot-authoring-detail slot initializer)
+  (cond
+   ((poo-flow-poo-slot-authoring-self-reference? slot initializer)
+    (list (cons 'code 'poo-slot-initializer-shadows-slot)
+          (cons 'rule 'poo-slot-initializer-must-not-shadow-slot-name)
+          (cons 'slot slot)
+          (cons 'initializer initializer)
+          (cons 'recommendation 'rename-local-or-wrap-in-helper)))
+   ((poo-flow-poo-slot-authoring-primitive-slot? slot)
+    (list (cons 'code 'poo-slot-shadows-poo-primitive)
+          (cons 'rule 'poo-slot-must-not-shadow-poo-primitive)
+          (cons 'slot slot)
+          (cons 'initializer initializer)
+          (cons 'recommendation 'rename-slot-or-use-result-prefix)))
+   (else '())))
+
+;; : (-> Symbol Symbol Value PooFlowPooSlotAuthoringObservation)
+(def (poo-flow-poo-slot-authoring-observation/make scope slot initializer)
+  (make-poo-flow-poo-slot-authoring-observation
+   scope
+   slot
+   initializer
+   (poo-flow-poo-slot-authoring-status slot initializer)
+   (poo-flow-poo-slot-authoring-detail slot initializer)
+   #f
+   #f))
+
+;; : (-> PooFlowPooSlotAuthoringObservation Alist)
+(def (poo-flow-poo-slot-authoring-observation->alist observation)
+  (list (cons 'kind poo-flow-poo-slot-authoring-observation-kind)
+        (cons 'scope
+              (poo-flow-poo-slot-authoring-observation-scope observation))
+        (cons 'slot
+              (poo-flow-poo-slot-authoring-observation-slot observation))
+        (cons 'initializer
+              (poo-flow-poo-slot-authoring-observation-initializer
+               observation))
+        (cons 'status
+              (poo-flow-poo-slot-authoring-observation-status observation))
+        (cons 'detail
+              (poo-flow-poo-slot-authoring-observation-detail observation))
+        (cons 'descriptor-realized?
+              (poo-flow-poo-slot-authoring-observation-descriptor-realized?
+               observation))
+        (cons 'runtime-executed
+              (poo-flow-poo-slot-authoring-observation-runtime-executed?
+               observation))))
+
+;; : (-> Symbol Pair Alist)
+(def (poo-flow-poo-slot-authoring-observation/alist scope slot-initializer)
+   (poo-flow-poo-slot-authoring-observation->alist
+   (poo-flow-poo-slot-authoring-observation/make
+    scope
+    (car slot-initializer)
+    (cdr slot-initializer))))
+
+;; : (-> Symbol [Pair] [Alist])
+(def (poo-flow-poo-slot-authoring-observations scope slot-initializers)
+  (map (lambda (slot-initializer)
+         (poo-flow-poo-slot-authoring-observation/alist scope
+                                                        slot-initializer))
+       slot-initializers))
+
+;; : (-> Unit PooFlowPooSlotAuthoringSummaryKind)
+(def poo-flow-poo-slot-authoring-summary-kind
+  "poo-flow.poo-slot-authoring-summary.v1")
+
+;; : (-> Alist Boolean)
+(def (poo-flow-poo-slot-authoring-observation-ok? observation)
+  (eq? (cdr (assoc 'status observation)) 'ok))
+
+;; : (-> [Alist] [Symbol])
+(def (poo-flow-poo-slot-authoring-statuses observations)
+  (map (lambda (observation) (cdr (assoc 'status observation)))
+       observations))
+
+;; : (-> [Alist] [Alist])
+(def (poo-flow-poo-slot-authoring-diagnostics observations)
+  (cond
+   ((null? observations) '())
+   ((poo-flow-poo-slot-authoring-observation-ok? (car observations))
+    (poo-flow-poo-slot-authoring-diagnostics (cdr observations)))
+   (else
+    (cons (cdr (assoc 'detail (car observations)))
+          (poo-flow-poo-slot-authoring-diagnostics (cdr observations))))))
+
+;; : (-> Symbol [Alist] Alist)
+(def (poo-flow-poo-slot-authoring-summary scope observations)
+  (let ((diagnostics
+         (poo-flow-poo-slot-authoring-diagnostics observations)))
+    (list (cons 'kind poo-flow-poo-slot-authoring-summary-kind)
+          (cons 'scope scope)
+          (cons 'observation-count (length observations))
+          (cons 'statuses
+                (poo-flow-poo-slot-authoring-statuses observations))
+          (cons 'diagnostic-count (length diagnostics))
+          (cons 'diagnostics diagnostics)
+          (cons 'descriptor-realized? #f)
+          (cons 'runtime-executed #f))))

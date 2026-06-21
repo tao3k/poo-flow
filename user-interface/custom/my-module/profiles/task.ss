@@ -2,43 +2,30 @@
 ;;; Boundary: downstream task sandbox profile declarations.
 ;;; Invariant: included by ../config.ss; it declares data only.
 
-(use-module nono-sandbox
-  :config
-  (profiles
-   (agent/task
-    (network deny-by-default)
-    (capabilities process-run filesystem-read tmpdir)
-    (resources (filesystem
-                (scope . project-workspace)
-                (paths
-                 ((role . project-workspace)
-                  (source . ".")
-                  (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
-                  (mode . read-only)))
-                (access . read-only))
-               (cpu . 1)
-               (memory . "1Gi")
-               (timeout-ms . 90000))
-    (metadata (intent . task-sandbox)
-              (stage . task)
-              (runtime-executed . #f)))
-   (agent/task-cache
-    (network allowlisted "github.com")
-    (capabilities process-run filesystem-read tmpdir)
-    (capabilities :append cache-mount)
-    (resources (filesystem
-                (scope . project-workspace)
-                (paths
-                 ((role . project-workspace)
-                  (source . ".")
-                  (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
-                  (mode . read-only)))
-                (access . read-only))
-               (cpu . 2)
-               (memory . "2Gi"))
-    (resources :append (timeout-ms . 180000))
-    (metadata (intent . task-cache)
-              (stage . task)
-              (cache . cargo)))))
+(let ((task-capabilities
+       '(process-run filesystem-read tmpdir))
+      (cache-capabilities
+       '(cache-mount))
+      (task-metadata
+       '((intent . task-sandbox)
+         (stage . task)
+         (runtime-executed . #f)))
+      (task-cache-metadata
+       '((intent . task-cache)
+         (stage . task)
+         (cache . cargo))))
+  (use-module nono-sandbox
+    (.def (agent/task @ nono-sandbox-profile)
+      network: (deny-network)
+      capabilities: task-capabilities
+      resources: =>.+ readonly-project-workspace-resources
+      metadata: => (lambda (super-metadata)
+                     (append super-metadata task-metadata)))
+
+    (.def (agent/task-cache @ agent/task)
+      network: (allowlisted-network "github.com")
+      capabilities: => (lambda (super-capabilities)
+                         (append super-capabilities cache-capabilities))
+      resources: =>.+ runtime-volume-resources
+      metadata: => (lambda (super-metadata)
+                     (append super-metadata task-cache-metadata)))))

@@ -2,13 +2,22 @@
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
-(import :poo-flow/src/module-system/base
+(import (only-in :clan/poo/object .o .ref .slot? object?)
+        :poo-flow/src/module-system/base
         :poo-flow/src/modules/workflow/cicd)
 
 (export poo-flow-funflow-cicd-default-payload
+        +poo-flow-funflow-workflow-agreement-contract+
+        funflow-check
+        funflow-pipeline
         poo-flow-funflow-config-flags
-        poo-flow-funflow-pipeline-config
-        poo-flow-funflow-pipeline-check-config
+        poo-flow-funflow-poo-check?
+        poo-flow-funflow-poo-pipeline?
+        poo-flow-funflow-poo-check->cicd-check
+        poo-flow-funflow-poo-pipeline->check-map
+        poo-flow-funflow-poo-config-flags
+        poo-flow-funflow-workflow-ref?
+        poo-flow-funflow-workflow-agreement
         poo-flow-funflow-pipeline-runtime-command-manifests
         poo-flow-funflow-module-bundles
         poo-upstream-flow-funflow-module-bundles)
@@ -24,37 +33,104 @@
     (webhook +server)
     (runtime +manifest-handoff)))
 
-;;; Pipeline clause parsing is intentionally shallow: Funflow owns the public
-;;; syntax and check-map construction, while sandbox profile refs and runtime
-;;; descriptors remain unresolved until later module/object validation.
+;;; Workflow agreement is Funflow-owned vocabulary. Loop engines can reference
+;;; these refs, but the validity of a Funflow workflow stays with this module.
+;; : Symbol
+(def +poo-flow-funflow-workflow-agreement-contract+
+  'poo-flow.funflow.workflow-agreement.v1)
+
+;; : Symbol
+(def +poo-flow-funflow-check-prototype-kind+
+  'poo-flow.funflow.check.prototype)
+
+;; : Symbol
+(def +poo-flow-funflow-pipeline-prototype-kind+
+  'poo-flow.funflow.pipeline.prototype)
+
+;; : PooFlowFunflowCheckPrototype
+(def funflow-check
+  (.o kind: +poo-flow-funflow-check-prototype-kind+
+      check-name: #f
+      profile-ref: #f
+      command-vector: '()
+      input-bindings: '()
+      config-sources: '()
+      artifact-outputs: '()
+      cache-intents: '()
+      secret-requirements: '()
+      result-protocol: '()
+      runtime-mode: 'manifest-handoff
+      dependency-refs: '()
+      observability: #f
+      observes: '()
+      guards: '()
+      report: #f
+      metadata: '()
+      runtime-executed: #f))
+
+;; : PooFlowFunflowPipelinePrototype
+(def funflow-pipeline
+  (.o kind: +poo-flow-funflow-pipeline-prototype-kind+
+      pipeline-name: #f
+      checks: '()
+      metadata: '()
+      runtime-executed: #f))
+
+;; : (-> Symbol Boolean)
+(def (poo-flow-funflow-workflow-ref? workflow-ref)
+  (or (eq? workflow-ref 'funflow)
+      (eq? workflow-ref 'funflow-cicd)))
+
+;; : (-> [PooFlowCicdCheckMap] [Symbol])
+(def (poo-flow-funflow-check-map-names check-maps)
+  (cond
+   ((null? check-maps) '())
+   (else
+    (cons (poo-flow-cicd-check-map-name (car check-maps))
+          (poo-flow-funflow-check-map-names (cdr check-maps))))))
+
+;;; `funflow-cicd` requires at least one declared pipeline/check-map. Plain
+;;; non-Funflow refs remain valid but explicitly outside Funflow ownership.
+;; : (-> Symbol [PooFlowCicdCheckMap] [Alist])
+(def (poo-flow-funflow-workflow-agreement-diagnostics workflow-ref check-maps)
+  (cond
+   ((and (eq? workflow-ref 'funflow-cicd)
+         (null? check-maps))
+    (list
+     (list (cons 'field 'workflow-ref)
+           (cons 'code 'missing-funflow-workflow-pipeline)
+           (cons 'workflow-ref workflow-ref))))
+   (else '())))
+
+;;; The agreement is report-only data that lets loop-engine handoff receipts
+;;; prove whether a workflow ref is backed by a Funflow-owned pipeline.
+;; : (-> Symbol [PooFlowCicdCheckMap] Alist)
+(def (poo-flow-funflow-workflow-agreement workflow-ref check-maps)
+  (let ((diagnostics
+         (poo-flow-funflow-workflow-agreement-diagnostics
+          workflow-ref
+          check-maps)))
+    (list
+     (cons 'kind 'funflow-workflow-agreement)
+     (cons 'contract +poo-flow-funflow-workflow-agreement-contract+)
+     (cons 'workflow-ref workflow-ref)
+     (cons 'funflow-owned? (poo-flow-funflow-workflow-ref? workflow-ref))
+     (cons 'pipeline-count (length check-maps))
+     (cons 'pipeline-names (poo-flow-funflow-check-map-names check-maps))
+     (cons 'diagnostic-count (length diagnostics))
+     (cons 'diagnostics diagnostics)
+     (cons 'valid? (null? diagnostics))
+     (cons 'runtime-owner "marlin-agent-core")
+     (cons 'runtime-executed #f))))
+
+;;; POO-native check and pipeline objects stay shallow: Funflow owns the public
+;;; prototype surface, while sandbox profile refs and runtime descriptors remain
+;;; unresolved until later module/object validation.
 ;; : (-> String Boolean Value Void)
 (def (poo-flow-funflow-require message ok? value)
   (if ok?
     (void)
     (error message value)))
-
-;; : (-> Symbol List Value Value)
-(def (poo-flow-funflow-plist-ref key clauses default)
-  (cond
-   ((null? clauses) default)
-   ((not (pair? clauses)) default)
-   ((eq? (car clauses) key)
-    (if (pair? (cdr clauses))
-      (cadr clauses)
-      default))
-   ((pair? (cdr clauses))
-    (poo-flow-funflow-plist-ref key (cddr clauses) default))
-   (else default)))
-
-;; : (-> List Boolean)
-(def (poo-flow-funflow-plist-shape? clauses)
-  (cond
-   ((null? clauses) #t)
-   ((and (pair? clauses)
-         (symbol? (car clauses))
-         (pair? (cdr clauses)))
-    (poo-flow-funflow-plist-shape? (cddr clauses)))
-   (else #f)))
 
 ;;; Funflow `:needs` names other checks in the same pipeline. Object/profile
 ;;; inheritance stays in `:inherits` so the two extension axes do not blur.
@@ -67,75 +143,130 @@
     (poo-flow-funflow-symbol-list? (cdr values)))
    (else #f)))
 
-;; : (-> Value [Symbol])
-(def (poo-flow-funflow-needs->refs needs)
-  (cond
-   ((not needs) '())
-   ((symbol? needs) (list needs))
-   ((list? needs)
-    (poo-flow-funflow-require
-     "funflow pipeline :needs list must contain only symbols"
-     (poo-flow-funflow-symbol-list? needs)
-     needs)
-    needs)
-   (else
-    (error "funflow pipeline :needs must be a symbol or list" needs))))
+;; : (-> Value Boolean)
+(def (poo-flow-funflow-poo-check? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind) +poo-flow-funflow-check-prototype-kind+)))
 
-;;; Check rows map directly to the shared workflow CI/CD object. The user-facing
-;;; `:inherits` name is preserved as the profile-ref slot so future C3 profile
-;;; resolution can compose one or many supers without this parser doing it.
-;; : (-> FunflowPipelineCheckForm PooFlowCicdCheck)
-(def (poo-flow-funflow-pipeline-check-config check-form)
+;; : (-> Value Boolean)
+(def (poo-flow-funflow-poo-pipeline? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind) +poo-flow-funflow-pipeline-prototype-kind+)))
+
+;; : (-> Symbol Value [Pair])
+(def (poo-flow-funflow-optional-metadata key value)
+  (if value
+    (list (cons key value))
+    '()))
+
+;; : (-> Symbol List [Pair])
+(def (poo-flow-funflow-list-metadata key values)
+  (if (null? values)
+    '()
+    (list (cons key values))))
+
+;; : (-> PooFlowFunflowCheckPrototype Alist)
+(def (poo-flow-funflow-poo-check-metadata check)
+  (let ((dependency-refs (.ref check 'dependency-refs))
+        (metadata (.ref check 'metadata)))
+    (poo-flow-funflow-require
+     "funflow POO check dependency-refs must be a list of symbols"
+     (poo-flow-funflow-symbol-list? dependency-refs)
+     dependency-refs)
+    (poo-flow-funflow-require
+     "funflow POO check metadata must be an alist"
+     (list? metadata)
+     metadata)
+    (append
+     (list (cons 'source 'funflow-poo-prototype)
+           (cons 'check (.ref check 'check-name))
+           (cons 'dependency-refs dependency-refs))
+     (poo-flow-funflow-optional-metadata
+      'observability
+      (.ref check 'observability))
+     (poo-flow-funflow-list-metadata
+      'observes
+      (.ref check 'observes))
+     (poo-flow-funflow-list-metadata
+      'guards
+      (.ref check 'guards))
+     (poo-flow-funflow-optional-metadata
+      'report
+      (.ref check 'report))
+     metadata)))
+
+;; : (-> PooFlowFunflowCheckPrototype PooFlowCicdCheck)
+(def (poo-flow-funflow-poo-check->cicd-check check)
   (poo-flow-funflow-require
-   "funflow pipeline check must be (check name ...)"
-   (and (pair? check-form)
-        (eq? (car check-form) 'check)
-        (pair? (cdr check-form))
-        (symbol? (cadr check-form)))
-   check-form)
-  (let* ((name (cadr check-form))
-         (clauses (cddr check-form))
-         (dependency-refs
-          (poo-flow-funflow-needs->refs
-           (poo-flow-funflow-plist-ref ':needs clauses '()))))
-    (poo-flow-funflow-require
-     "funflow pipeline check clauses must be keyword/value pairs"
-     (poo-flow-funflow-plist-shape? clauses)
-     check-form)
-    (poo-flow-cicd-check
-     name
-     (poo-flow-funflow-plist-ref ':inherits clauses #f)
-     (poo-flow-funflow-plist-ref ':command clauses '())
-     (poo-flow-funflow-plist-ref ':inputs clauses '())
-     (poo-flow-funflow-plist-ref ':config clauses '())
-     (poo-flow-funflow-plist-ref ':artifacts clauses '())
-     (poo-flow-funflow-plist-ref ':cache clauses '())
-     (poo-flow-funflow-plist-ref ':secrets clauses '())
-     (poo-flow-funflow-plist-ref ':result clauses '())
-     (poo-flow-funflow-plist-ref ':runtime clauses 'manifest-handoff)
-     (list (cons 'source 'funflow-pipeline)
-           (cons 'check name)
-           (cons 'dependency-refs dependency-refs)))))
+   "funflow config object must extend funflow-check"
+   (poo-flow-funflow-poo-check? check)
+   check)
+  (poo-flow-cicd-check
+   (.ref check 'check-name)
+   (.ref check 'profile-ref)
+   (.ref check 'command-vector)
+   (.ref check 'input-bindings)
+   (.ref check 'config-sources)
+   (.ref check 'artifact-outputs)
+   (.ref check 'cache-intents)
+   (.ref check 'secret-requirements)
+   (.ref check 'result-protocol)
+   (.ref check 'runtime-mode)
+   (poo-flow-funflow-poo-check-metadata check)))
 
-;; : (-> [FunflowPipelineCheckForm] [PooFlowCicdCheck])
-(def (poo-flow-funflow-pipeline-checks checks)
+;; : (-> [PooFlowFunflowCheckPrototype] [PooFlowCicdCheck])
+(def (poo-flow-funflow-poo-checks->cicd-checks checks)
   (cond
    ((null? checks) '())
    ((pair? checks)
-    (cons (poo-flow-funflow-pipeline-check-config (car checks))
-          (poo-flow-funflow-pipeline-checks (cdr checks))))
+    (cons (poo-flow-funflow-poo-check->cicd-check (car checks))
+          (poo-flow-funflow-poo-checks->cicd-checks (cdr checks))))
    (else
-    (error "funflow pipeline checks must be a list" checks))))
+    (error "funflow POO pipeline checks slot must be a list" checks))))
 
-;; : (-> Symbol [FunflowPipelineCheckForm] PooFlowCicdCheckMap)
-(def (poo-flow-funflow-pipeline-config name checks . maybe-metadata)
-  (poo-flow-cicd-check-map
-   name
-   (poo-flow-funflow-pipeline-checks checks)
-   (if (null? maybe-metadata)
-     (list (cons 'source 'funflow-config)
-           (cons 'pipeline name))
-     (car maybe-metadata))))
+;; : (-> PooFlowFunflowPipelinePrototype PooFlowCicdCheckMap)
+(def (poo-flow-funflow-poo-pipeline->check-map pipeline)
+  (poo-flow-funflow-require
+   "funflow config object must extend funflow-pipeline"
+   (poo-flow-funflow-poo-pipeline? pipeline)
+   pipeline)
+  (let ((pipeline-name (.ref pipeline 'pipeline-name))
+        (metadata (.ref pipeline 'metadata)))
+    (poo-flow-funflow-require
+     "funflow POO pipeline metadata must be an alist"
+     (list? metadata)
+     metadata)
+    (poo-flow-cicd-check-map
+     pipeline-name
+     (poo-flow-funflow-poo-checks->cicd-checks
+      (.ref pipeline 'checks))
+     (append
+      (list (cons 'source 'funflow-poo-config)
+            (cons 'pipeline pipeline-name))
+      metadata))))
+
+;; : (-> [PooFlowFunflowConfigPrototype] [PooFlowCicdCheckMap])
+(def (poo-flow-funflow-poo-config-pipelines prototypes)
+  (cond
+   ((null? prototypes) '())
+   ((poo-flow-funflow-poo-pipeline? (car prototypes))
+    (cons (poo-flow-funflow-poo-pipeline->check-map (car prototypes))
+          (poo-flow-funflow-poo-config-pipelines (cdr prototypes))))
+   ((pair? prototypes)
+    (poo-flow-funflow-poo-config-pipelines (cdr prototypes)))
+   (else
+    (error "funflow POO config prototypes must be a list" prototypes))))
+
+;; : (-> [PooFlowFunflowConfigPrototype] Alist [UserModuleFlagEntry])
+(def (poo-flow-funflow-poo-config-flags prototypes user-config)
+  (let (pipelines (poo-flow-funflow-poo-config-pipelines prototypes))
+    (poo-flow-funflow-require
+     "funflow POO config must define exactly one funflow-pipeline"
+     (= (length pipelines) 1)
+     prototypes)
+    (poo-flow-funflow-config-flags (car pipelines) user-config)))
 
 ;;; Funflow owns the public pipeline object, while workflow/cicd owns the
 ;;; runtime-command manifest projection shape.

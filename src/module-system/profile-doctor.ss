@@ -5,6 +5,7 @@
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/loop-engine-config
         :poo-flow/src/module-system/profile-core)
 
 (export pooFlowUserProfileDoctor
@@ -176,6 +177,136 @@
         (poo-flow-user-profile-name profile)
         (list (cons 'setting-keys missing)))))))
 
+;;; Loop-engine result contracts are user-authored structured output
+;;; expectations. Doctor reports invalid shapes before activation so agents can
+;;; repair the profile without waiting for runtime manifest inspection.
+;; : (-> PooUserProfile Alist [PooUserProfileDiagnostic])
+(def (poo-flow-user-profile-loop-engine-result-contract-diagnostic
+      profile
+      intent)
+  (let* ((result-contract
+          (poo-flow-user-profile-alist-ref intent 'result-contract '()))
+         (valid?
+          (poo-flow-user-profile-alist-ref result-contract 'valid? #t))
+         (diagnostic-count
+          (poo-flow-user-profile-alist-ref
+           result-contract
+           'diagnostic-count
+           0))
+         (diagnostics
+          (poo-flow-user-profile-alist-ref
+           result-contract
+           'diagnostics
+           '())))
+    (if valid?
+      '()
+      (list
+       (poo-flow-user-profile-diagnostic
+        'error
+        'invalid-loop-engine-result-contract
+        (poo-flow-user-profile-name profile)
+        (list
+         (cons 'module-key
+               (poo-flow-user-profile-alist-ref intent 'key #f))
+         (cons 'use-case
+               (poo-flow-user-profile-alist-ref intent 'use-case #f))
+         (cons 'use-cases
+               (poo-flow-user-profile-alist-ref intent 'use-cases '()))
+         (cons 'diagnostic-count diagnostic-count)
+         (cons 'diagnostics diagnostics)))))))
+
+;;; The fold is deliberately separate from profile declaration diagnostics:
+;;; loop-engine checks depend on the config projection but still stay report-only.
+;; : (-> PooUserProfile [Alist] [PooUserProfileDiagnostic])
+(def (poo-flow-user-profile-loop-engine-result-contract-diagnostics/add
+      profile
+      intents)
+  (cond
+   ((null? intents) '())
+   (else
+    (append
+     (poo-flow-user-profile-loop-engine-result-contract-diagnostic
+      profile
+      (car intents))
+     (poo-flow-user-profile-loop-engine-result-contract-diagnostics/add
+      profile
+      (cdr intents))))))
+
+;; : (-> PooUserProfile [PooUserProfileDiagnostic])
+(def (poo-flow-user-profile-loop-engine-result-contract-diagnostics profile)
+  (poo-flow-user-profile-loop-engine-result-contract-diagnostics/add
+   profile
+   (poo-flow-user-config-loop-engine-intents
+    (pooFlowUserConfigFromProfile profile))))
+
+;;; Sandbox handoff agreement diagnostics promote unresolved or invalid sandbox
+;;; profiles into doctor status while keeping profile projection report-only.
+;; : (-> PooUserProfile Alist [PooUserProfileDiagnostic])
+(def (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostic
+      profile
+      intent)
+  (let* ((agreement
+          (poo-flow-user-profile-alist-ref
+           intent
+           'sandbox-handoff-agreement
+           '()))
+         (valid?
+          (poo-flow-user-profile-alist-ref agreement 'valid? #t))
+         (diagnostics
+          (poo-flow-user-profile-alist-ref agreement 'diagnostics '())))
+    (if valid?
+      '()
+      (list
+       (poo-flow-user-profile-diagnostic
+        'error
+        'invalid-loop-engine-sandbox-handoff
+        (poo-flow-user-profile-name profile)
+        (list
+         (cons 'module-key
+               (poo-flow-user-profile-alist-ref intent 'key #f))
+         (cons 'use-case
+               (poo-flow-user-profile-alist-ref intent 'use-case #f))
+         (cons 'use-cases
+               (poo-flow-user-profile-alist-ref intent 'use-cases '()))
+         (cons 'profile-refs
+               (poo-flow-user-profile-alist-ref
+                agreement
+                'profile-refs
+                '()))
+         (cons 'unresolved-profile-refs
+               (poo-flow-user-profile-alist-ref
+                agreement
+                'unresolved-profile-refs
+                '()))
+         (cons 'invalid-runtime-summary-count
+               (poo-flow-user-profile-alist-ref
+                agreement
+                'invalid-runtime-summary-count
+                0))
+         (cons 'diagnostics diagnostics)))))))
+
+;; : (-> PooUserProfile [Alist] [PooUserProfileDiagnostic])
+(def (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostics/add
+      profile
+      intents)
+  (cond
+   ((null? intents) '())
+   (else
+    (append
+     (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostic
+      profile
+      (car intents))
+     (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostics/add
+      profile
+      (cdr intents))))))
+
+;; : (-> PooUserProfile [PooUserProfileDiagnostic])
+(def (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostics profile)
+  (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostics/add
+   profile
+   (poo-flow-user-config-loop-engine-intents
+    (pooFlowUserConfigFromProfile profile))))
+
 ;;; Empty profile registries are errors because no default profile can be
 ;;; selected for downstream init-style composition.
 ;; : (-> PooUserProfileSet [PooUserProfileDiagnostic])
@@ -230,7 +361,9 @@
    (poo-flow-user-profile-empty-diagnostics profile)
    (poo-flow-user-profile-empty-bundle-diagnostics profile)
    (poo-flow-user-profile-duplicate-module-diagnostics profile)
-   (poo-flow-user-profile-missing-setting-diagnostics profile)))
+   (poo-flow-user-profile-missing-setting-diagnostics profile)
+   (poo-flow-user-profile-loop-engine-result-contract-diagnostics profile)
+   (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostics profile)))
 
 ;;; Profile set diagnostics validate the registry layer separately from each
 ;;; profile's module/settings declaration.
@@ -309,4 +442,3 @@
 ;; : (-> PooUserProfileSetDoctorReport Boolean)
 (def (poo-flow-user-profile-set-doctor-ok? report)
   (.ref report 'doctor-ok))
-

@@ -17,6 +17,14 @@
 
 (export user-interface-cicd-test)
 
+;; : (-> [Alist] Symbol MaybeAlist)
+(def (user-interface-cicd-trace-stage trace stage)
+  (cond
+   ((null? trace) #f)
+   ((equal? (alist-value 'stage (car trace)) stage) (car trace))
+   (else
+    (user-interface-cicd-trace-stage (cdr trace) stage))))
+
 ;; : (-> Unit PooUserConfig)
 (def (user-interface-cicd-funflow-config)
   (pooFlowUserConfig
@@ -73,7 +81,8 @@
                '(surface profile flow-mode loop-strategy
                  sandbox-policy sandbox-backends mode-lock)))
              (trace (.ref presentation 'presentation-trace))
-             (cicd-step (caddr trace)))
+             (cicd-step
+              (user-interface-cicd-trace-stage trace 'cicd-intents)))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (alist-value 'stage cicd-step) 'cicd-intents)
         (check-equal? (alist-value 'count cicd-step) 1)

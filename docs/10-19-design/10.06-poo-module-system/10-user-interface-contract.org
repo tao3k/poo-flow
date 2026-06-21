@@ -12,7 +12,13 @@ doctor, and presentation data. Root user files do not own settings projection,
 object contracts, descriptor realization, package sync, loaders, or runtime
 execution.
 
-** 10.06.10.05 Upstream Kernel Profile Layout
+** 10.06.10.05 POO Native Functional Contract
+
+POO Flow's user interface must stay 100% POO-native and functional-first. The normal downstream path composes upstream POO objects, prototype rows, category/module/feature declarations, and hygienic functional helpers. It must not expose raw alist DSLs, record DSLs, ad hoc merge languages, or direct =(lambda (self super) ...)= compute hooks as the everyday extension surface.
+
+Funflow alignment exists to keep workflow authoring on the functional programming route: Gerbil Scheme owns pure flow composition, object metadata, strategy selection, and report-only validation; Rust/Marlin owns scheduling, subprocesses, Docker, CAS, durable state, and artifact realization. New user-facing APIs should therefore read as POO object extension plus functional flow composition, not as backend configuration scripts.
+
+** 10.06.10.06 Upstream Kernel Profile Layout
 
 The user-interface layer mirrors Doom's module-selection block:
 
@@ -35,7 +41,7 @@ rows and under =user-interface/custom= for custom module bodies. Direct
 =(use-module ...)= helper rows belong to config/helper code, not the root init
 block.
 
-** 10.06.10.06 Doom-Style Profile Set Contract
+** 10.06.10.07 Doom-Style Profile Set Contract
 
 POO Flow borrows Doom's profile registry shape without copying package
 management:

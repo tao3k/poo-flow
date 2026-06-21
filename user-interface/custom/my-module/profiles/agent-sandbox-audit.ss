@@ -2,58 +2,64 @@
 ;;; Boundary: audit-friendly downstream agent sandbox profile declarations.
 ;;; Invariant: loaded by tests as an independent fragment; it does not execute.
 
-(use-module nono-sandbox
-  :config
-  (binding native-ffi)
-  (profiles
-   (agent/audit-base
-    (network deny-by-default)
-    (capabilities process-run filesystem-read filesystem-write tmpdir)
-    (resources (filesystem
-                (scope . project-workspace)
-                (paths
-                 ((role . project-workspace)
-                  (source . ".")
-                  (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
-                  (mode . read-write)))
-                (access . read-write))
-               (cpu . 2)
-               (memory . "4Gi")
-               (timeout-ms . 300000))
-    (metadata (intent . agent-audit-base)
-              (scope . custom-module)
-              (split . project)))
-   (agent/audit-session
-    (:derive agent/audit-base
-             (scope . session)
-             (scope-ref . "agent-session"))
-    (network allowlisted "github.com")
-    (capabilities :append cache-mount)
-    (resources :append
-               (session-root . ".codex/session")
-               (session-mode . shared-worktree))
-    (metadata :append
-              (intent . agent-audit-session)
-              (split . session)))
-   (agent/audit-branch
-    (:derive agent/audit-session
-             (scope . branch)
-             (scope-ref . "feature/agent-sandbox-audit"))
-    (capabilities :remove filesystem-write)
-    (resources :override
-               (filesystem
-                (scope . branch-worktree)
-                (paths
-                 ((role . branch-worktree)
-                  (source . ".")
-                  (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
-                  (mode . read-only)))
-                (access . read-only))
-               (cpu . 1)
-               (memory . "2Gi")
-               (timeout-ms . 180000))
-    (metadata (intent . agent-audit-branch)
-              (scope . custom-module)
-              (split . branch)))))
+(let ((audit-base-capabilities
+       '(process-run filesystem-read filesystem-write tmpdir))
+      (audit-branch-capabilities
+       '(process-run filesystem-read tmpdir cache-mount))
+      (cache-capabilities
+       '(cache-mount))
+      (audit-base-metadata
+       '((intent . agent-audit-base)
+         (scope . custom-module)
+         (split . project)))
+      (audit-session-metadata
+       '((intent . agent-audit-session)
+         (split . session)))
+      (audit-branch-metadata
+       '((intent . agent-audit-branch)
+         (scope . custom-module)
+         (split . branch)))
+      (audit-session-name 'agent/audit-session)
+      (audit-base-name 'agent/audit-base)
+      (audit-branch-name 'agent/audit-branch)
+      (session-scope 'session)
+      (branch-scope 'branch))
+  (use-module nono-sandbox
+    (binding native-ffi)
+
+    (.def (agent/audit-base @ nono-sandbox-profile
+                            network capabilities resources metadata)
+      network: (deny-network)
+      capabilities: audit-base-capabilities
+      resources: =>.+ readwrite-project-workspace-resources
+      metadata: => (lambda (super-metadata)
+                     (append super-metadata audit-base-metadata)))
+
+    (.def (agent/audit-session @ agent/audit-base
+                               network capabilities resources metadata)
+      network: (allowlisted-network "github.com")
+      capabilities: => (lambda (super-capabilities)
+                         (append super-capabilities cache-capabilities))
+      resources: =>.+ runtime-volume-resources
+      (metadata (super-metadata)
+        (profile-derivation-metadata
+         (super-metadata)
+         audit-session-name
+         audit-base-name
+         session-scope
+         "agent-session"
+         audit-session-metadata)))
+
+    (.def (agent/audit-branch @ agent/audit-session
+                              network capabilities resources metadata)
+      network: (deny-network)
+      capabilities: audit-branch-capabilities
+      resources: =>.+ readonly-project-workspace-resources
+      (metadata (super-metadata)
+        (profile-derivation-metadata
+         (super-metadata)
+         audit-branch-name
+         audit-session-name
+         branch-scope
+         "feature/agent-sandbox-audit"
+         audit-branch-metadata)))))

@@ -22,6 +22,14 @@
    (verifier repo-verifier-agent)
    (governor repo-governor))
   (+human-audit +approval +rejection +changes-requested)
+  (+result
+   (default . poo-flow.loop-governor.profile-node-result.v1)
+   (auditor . poo-flow.loop-governor.profile-audit-result.v1)
+   (verifier . poo-flow.loop-governor.profile-review-result.v1)
+   (governor . poo-flow.loop-governor.profile-governor-result.v1)
+   (human-audit . poo-flow.loop-governor.profile-human-audit-decision.v1)
+   (format . structured-alist)
+   (required-fields decision summary evidence action-items))
   (+schedule
    (repo-doctor . manual)
    (pull-request-review . on-pr)
