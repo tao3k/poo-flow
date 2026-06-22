@@ -323,6 +323,10 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'workflow-agreement)
+          loop-engine-receipt-contracts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'receipt-contracts)
           loop-engine-result-contracts:
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
@@ -355,6 +359,26 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'delegated-operation)
+          loop-engine-lineage-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'lineage-receipt)
+          loop-engine-selector-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'selector-receipt)
+          loop-engine-resource-dispatch-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'resource-dispatch-receipt)
+          loop-engine-capability-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'capability-receipt)
+          loop-engine-memory-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'memory-receipt)
           loop-engine-runtime-command-manifests:
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows

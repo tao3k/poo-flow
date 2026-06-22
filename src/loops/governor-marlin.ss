@@ -15,12 +15,22 @@
 ;;; Policy evidence: tests assert schemas, envelopes, receipts, and manifests.
 
 (import :poo-flow/src/core/failure
+        (only-in :poo-flow/src/module-system/loop-engine-core
+                 +poo-flow-user-loop-engine-handoff-contracts+
+                 +poo-flow-user-loop-engine-receipt-contracts+
+                 +poo-flow-user-loop-engine-runtime-command-arguments+
+                 +poo-flow-user-loop-engine-runtime-command-contract+
+                 +poo-flow-user-loop-engine-runtime-command-executable+
+                 +poo-flow-user-loop-engine-runtime-command-name+
+                 +poo-flow-user-loop-engine-runtime-object-families+)
         :poo-flow/src/loops/governor)
 
 (export +loop-governor-marlin-request-schema+
         +loop-governor-marlin-abi-schema+
         +loop-governor-l1-run-receipt-schema+
         +loop-governor-marlin-runtime-manifest-schema+
+        +loop-governor-marlin-loop-engine-discovery-schema+
+        loop-governor-marlin-loop-engine-discovery
         loop-governor-marlin-abi-manifest
         loop-governor-marlin-request-envelope-validation-errors
         validate-loop-governor-marlin-request-envelope
@@ -52,6 +62,12 @@
 (def +loop-governor-marlin-runtime-manifest-schema+
   'poo-flow.loop-governor.marlin-runtime-manifest.v1)
 
+;;; Boundary: loop-engine discovery is metadata for Marlin handoff consumers.
+;;; Intent: consumers find receipt families without guessing Scheme internals.
+;; : (-> Unit LoopGovernorMarlinLoopEngineDiscoverySchema)
+(def +loop-governor-marlin-loop-engine-discovery-schema+
+  'poo-flow.loop-engine.marlin-discovery.v1)
+
 ;;; Boundary: Marlin projections keep alist probing local to avoid exporting
 ;;; core governor internals only for ABI wrapper assembly.
 ;; : (-> Alist Symbol AlistValue AlistValue)
@@ -68,6 +84,33 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;;; Boundary: this table is shared discovery for the newer loop-engine handoff.
+;;; Invariant: it references the loop-engine constants instead of duplicating
+;;; receipt contracts, object families, or command-shape vocabulary.
+;; : (-> Unit Alist)
+(def (loop-governor-marlin-loop-engine-discovery)
+  (list
+   (cons 'schema +loop-governor-marlin-loop-engine-discovery-schema+)
+   (cons 'kind 'loop-engine-marlin-discovery)
+   (cons 'operation 'loop-engine-runtime-handoff)
+   (cons 'runtime-command-contract
+         +poo-flow-user-loop-engine-runtime-command-contract+)
+   (cons 'runtime-command-name
+         +poo-flow-user-loop-engine-runtime-command-name+)
+   (cons 'runtime-command-executable
+         +poo-flow-user-loop-engine-runtime-command-executable+)
+   (cons 'runtime-command-arguments
+         +poo-flow-user-loop-engine-runtime-command-arguments+)
+   (cons 'handoff-contracts
+         +poo-flow-user-loop-engine-handoff-contracts+)
+   (cons 'object-families
+         +poo-flow-user-loop-engine-runtime-object-families+)
+   (cons 'receipt-contracts
+         +poo-flow-user-loop-engine-receipt-contracts+)
+   (cons 'control-owner 'gerbil)
+   (cons 'execution-owner 'marlin-agent-core)
+   (cons 'runtime-executed #f)))
+
 ;;; Boundary: ABI manifest publishes the stable marlin-agent-core field set.
 ;;; Invariant: this metadata describes contract shape and never runs a loop.
 ;; : (-> Unit Alist)
@@ -83,12 +126,17 @@
               +loop-governor-l1-run-receipt-schema+)
         (cons 'runtime-manifest-schema
               +loop-governor-marlin-runtime-manifest-schema+)
+        (cons 'loop-engine-discovery-schema
+              +loop-governor-marlin-loop-engine-discovery-schema+)
+        (cons 'loop-engine-discovery
+              (loop-governor-marlin-loop-engine-discovery))
         (cons 'required-fields
               '(schema governor-schema operation target transport governor))
         (cons 'optional-fields
               '(request-id abi-manifest contract state-facts open-patterns
                 blocked-patterns agent-judges agent-judge-nodes
-                human-inbox-items runtime-boundary
+                human-inbox-items runtime-boundary loop-engine-discovery
+                object-families receipt-contracts runtime-command-contract
                 control-owner execution-owner metadata))
         (cons 'runtime-boundary
               '((local-execution . validation-only)
@@ -161,6 +209,8 @@
            (cons 'request-id request-id)
            (cons 'abi-manifest
                  (loop-governor-marlin-abi-manifest))
+           (cons 'loop-engine-discovery
+                 (loop-governor-marlin-loop-engine-discovery))
            (cons 'target
                  (loop-governor-marlin-alist-ref handoff 'target #f))
            (cons 'transport
@@ -301,6 +351,14 @@
           (cons 'request-envelope envelope)
           (cons 'abi-manifest
                 (loop-governor-marlin-alist-ref envelope 'abi-manifest '()))
+          (cons 'loop-engine-discovery
+                (loop-governor-marlin-loop-engine-discovery))
+          (cons 'object-families
+                +poo-flow-user-loop-engine-runtime-object-families+)
+          (cons 'receipt-contracts
+                +poo-flow-user-loop-engine-receipt-contracts+)
+          (cons 'runtime-command-contract
+                +poo-flow-user-loop-engine-runtime-command-contract+)
           (cons 'receipt-schema +loop-governor-l1-run-receipt-schema+)
           (cons 'target
                 (loop-governor-marlin-alist-ref envelope 'target #f))

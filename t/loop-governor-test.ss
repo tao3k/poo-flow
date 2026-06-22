@@ -31,6 +31,13 @@
   (map (lambda (alist) (test-ref alist key))
        alists))
 
+;; : (-> Symbol [Symbol] Boolean)
+(def (test-symbol-member? needle values)
+  (cond
+   ((null? values) #f)
+   ((eq? needle (car values)) #t)
+   (else (test-symbol-member? needle (cdr values)))))
+
 ;;; Failure capture keeps invalid-governor assertions in structured data form.
 ;; : (-> Thunk Value)
 (def (capture-control-plane-failure thunk)
@@ -199,10 +206,21 @@
                       +loop-governor-schema+)
         (check-equal? (test-ref manifest 'schema)
                       +loop-governor-marlin-abi-schema+)
+        (check-equal? (test-ref (test-ref manifest 'loop-engine-discovery)
+                                'schema)
+                      +loop-governor-marlin-loop-engine-discovery-schema+)
+        (check-equal? (test-ref (test-ref
+                                  (test-ref manifest 'loop-engine-discovery)
+                                  'receipt-contracts)
+                                'memory-receipt)
+                      'poo-flow.loop-engine.memory-receipt.v1)
         (check-equal? (test-ref manifest 'required-fields)
                       '(schema governor-schema operation target transport
                         governor))
         (check-equal? (test-ref envelope 'operation) 'govern-loop)
+        (check-equal? (test-ref (test-ref envelope 'loop-engine-discovery)
+                                'runtime-command-name)
+                      'loop-engine-runtime-handoff)
         (check-equal? (test-ref envelope 'request-id) 'request-1)
         (check-equal? (test-ref envelope 'target) 'marlin-agent-core)
         (check-equal? (test-ref envelope 'transport) 'scheme-abi)
@@ -256,7 +274,8 @@
                states
                'manifest-1))
              (envelope (test-ref manifest 'request-envelope))
-             (abi (test-ref manifest 'abi-manifest)))
+             (abi (test-ref manifest 'abi-manifest))
+             (discovery (test-ref manifest 'loop-engine-discovery)))
         (check-equal? (test-ref manifest 'schema)
                       +loop-governor-marlin-runtime-manifest-schema+)
         (check-equal? (test-ref manifest 'bridge) 'runtime-manifest)
@@ -265,10 +284,26 @@
                       +loop-governor-marlin-request-schema+)
         (check-equal? (test-ref manifest 'receipt-schema)
                       +loop-governor-l1-run-receipt-schema+)
+        (check-equal? (test-ref manifest 'runtime-command-contract)
+                      'poo-flow.loop-governor.runtime-command-manifest.v1)
+        (check-equal? (test-ref manifest 'receipt-contracts)
+                      (test-ref discovery 'receipt-contracts))
+        (check-equal? (test-ref (test-ref manifest 'receipt-contracts)
+                                'memory-receipt)
+                      'poo-flow.loop-engine.memory-receipt.v1)
+        (check-equal?
+         (test-symbol-member? 'memory-receipt
+                              (test-ref manifest 'object-families))
+         #t)
+        (check-equal? (test-ref discovery 'runtime-command-executable)
+                      "marlin-agent-core")
+        (check-equal? (test-ref discovery 'runtime-executed) #f)
         (check-equal? (test-ref manifest 'target) 'marlin-agent-core)
         (check-equal? (test-ref envelope 'request-id) 'manifest-1)
         (check-equal? (test-ref abi 'schema)
-                      +loop-governor-marlin-abi-schema+)))
+                      +loop-governor-marlin-abi-schema+)
+        (check-equal? (test-ref abi 'loop-engine-discovery)
+                      discovery)))
     (test-case "rejects invalid Marlin request envelopes"
       (let (failure
             (capture-control-plane-failure

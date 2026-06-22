@@ -281,19 +281,24 @@ It should immediately show the inspectable result:
    (artifacts +export)
    (release +manual-gate)
    (runtime +manifest-handoff)))
- (loop-engine
-  (+governor +strategy +policy)
-  (+agent-judges
-   (auditor repo-audit-agent)
-   (verifier repo-verifier-agent)
-   (governor repo-governor))
-  (+human-audit +approval +changes-requested)
-  (+runtime +manifest-handoff))
+ (loop-engine)
  :sandbox
  (nono-sandbox +nono +doctor)
  (cubeSandbox +cube +doctor)
  :custom
  (my-module "./custom/my-module" +private +doctor))
+#+end_src
+
+Detailed loop configuration is not written as init-row flags. It belongs in a
+POO-native module config:
+
+#+begin_src scheme
+(use-module loop-engine
+  :config
+  (.def (repo-loop @ loop-engine-use-case name)
+    name: 'repo-doctor)
+  (.def (repo-profile @ loop-engine-profile use-case)
+    use-case: repo-loop))
 #+end_src
 
 Then the guide should show the resolved =users= profile, doctor status,

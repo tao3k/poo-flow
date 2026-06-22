@@ -64,9 +64,7 @@
              (custom-module (caddr (cddddr modules)))
              (feature-facts (.ref presentation 'feature-facts))
              (custom-fact (caddr (cddddr feature-facts)))
-             (cicd-intent (car (.ref presentation 'cicd-intents)))
-             (loop-engine-intent
-              (car (.ref presentation 'loop-engine-intents))))
+             (cicd-intent (car (.ref presentation 'cicd-intents))))
         (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'module-keys)
                       (poo-flow-declaration-case-expected-module-keys
@@ -126,22 +124,8 @@
                        'runtime-executed
                        cicd-intent)
                       #f)
-        (check-equal? (poo-flow-declaration-case-alist-value
-                       'key
-                       loop-engine-intent)
-                      '(flow . loop-engine))
-        (check-equal? (poo-flow-declaration-case-alist-value
-                       'workflow-owned?
-                       loop-engine-intent)
-                      #t)
-        (check-equal? (poo-flow-declaration-case-alist-value
-                       'runtime-handoff
-                       loop-engine-intent)
-                      'loop-governor-marlin-runtime-manifest)
-        (check-equal? (poo-flow-declaration-case-alist-value
-                       'runtime-executed
-                       loop-engine-intent)
-                      #f)))
+        (check-equal? (.ref presentation 'loop-engine-intent-count) 0)
+        (check-equal? (.ref presentation 'loop-engine-intents) '())))
     (test-case "exposes trace observability for the maintained case"
       (let* ((case-object (root-developer-case))
              (presentation

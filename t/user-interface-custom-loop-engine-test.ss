@@ -53,7 +53,27 @@
     workflow-run
     dispatch-receipt
     agent-operation
+    lineage-receipt
+    selector-receipt
+    resource-dispatch-receipt
+    capability-receipt
+    memory-receipt
     runtime-snapshot))
+
+;; : Alist
+(def expected-loop-engine-receipt-contracts
+  '((lineage-receipt
+     . poo-flow.loop-engine.lineage-receipt.v1)
+    (selector-receipt
+     . poo-flow.loop-engine.selector-receipt.v1)
+    (resource-dispatch-receipt
+     . poo-flow.loop-engine.resource-dispatch-receipt.v1)
+    (capability-receipt
+     . poo-flow.loop-engine.capability-receipt.v1)
+    (memory-receipt
+     . poo-flow.loop-engine.memory-receipt.v1)
+    (sandbox-handoff-agreement
+     . poo-flow.loop-engine.sandbox-handoff-agreement.v1)))
 
 ;; : Symbol
 (def expected-loop-engine-human-audit-result-contract
@@ -76,13 +96,85 @@
 ;; : [PooUserModuleSelection]
 (def custom-loop-invalid-result-module
   (use-module loop-engine
-    (+use-case invalid-result-loop (workflow . funflow-cicd))
-    (+human-audit +manual-gate)
-    (+result
-     (human-audit bad-contract)
-     (format structured alist)
-     (required-fields))
-    (+runtime +manifest-handoff)))
+    :config
+    (.def (invalid-result-loop @ loop-engine-use-case name workflow)
+      name: 'invalid-result-loop
+      workflow: 'funflow-cicd)
+
+    (.def (invalid-result-human-audit @ loop-engine-human-audit actions)
+      actions: '(+manual-gate))
+
+    (.def (invalid-result-contract @ loop-engine-result
+                                   human-audit format required-fields)
+      human-audit: 'bad-contract
+      format: 'structured-alist
+      required-fields: '())
+
+    (.def (invalid-result-runtime @ loop-engine-runtime capabilities)
+      capabilities: '(+manifest-handoff))
+
+    (.def (invalid-result-profile @ loop-engine-profile
+                                  use-case human-audit result runtime)
+      use-case: invalid-result-loop
+      human-audit: invalid-result-human-audit
+      result: invalid-result-contract
+      runtime: invalid-result-runtime)))
+
+;;; Invalid POO slot fixture covers fail-fast structural validation before
+;;; malformed objects can be lowered into intent rows or manifests.
+;; : (-> [PooUserModuleSelection])
+(def (custom-loop-invalid-poo-slot-module)
+  (use-module loop-engine
+    :config
+    (.def (invalid-poo-slot-loop @ loop-engine-use-case name workflow)
+      name: 'invalid-poo-slot-loop
+      workflow: 'funflow-cicd)
+
+    (.def (invalid-poo-slot-governor @ loop-engine-governor capabilities)
+      capabilities: '+strategy)
+
+    (.def (invalid-poo-slot-profile @ loop-engine-profile
+                                     use-case governor)
+      use-case: invalid-poo-slot-loop
+      governor: invalid-poo-slot-governor)))
+
+;;; Memory policy slot validation is intentionally structural: recall and
+;;; commit must be symbol lists before the runtime manifest is projected.
+;; : (-> [PooUserModuleSelection])
+(def (custom-loop-invalid-memory-slot-module)
+  (use-module loop-engine
+    :config
+    (.def (invalid-memory-slot-loop @ loop-engine-use-case name workflow)
+      name: 'invalid-memory-slot-loop
+      workflow: 'funflow-cicd)
+
+    (.def (invalid-memory-slot-policy @ loop-engine-memory-policy recall)
+      recall: 'bad-recall)
+
+    (.def (invalid-memory-slot-profile @ loop-engine-profile
+                                        use-case memory-policy)
+      use-case: invalid-memory-slot-loop
+      memory-policy: invalid-memory-slot-policy)))
+
+;;; Invalid capability backend fixture protects the sandbox backend contract:
+;;; user-facing backend names are sandbox modules, not the Marlin runtime owner.
+;; : [PooUserModuleSelection]
+(def custom-loop-invalid-capability-module
+  (use-module loop-engine
+    :config
+    (.def (invalid-capability-loop @ loop-engine-use-case name workflow)
+      name: 'invalid-capability-loop
+      workflow: 'funflow-cicd)
+
+    (.def (invalid-capability-policy @ loop-engine-capability-policy
+                                      backend required)
+      backend: 'marlin-sandbox
+      required: '(command-run))
+
+    (.def (invalid-capability-profile @ loop-engine-profile
+                                      use-case capability-policy)
+      use-case: invalid-capability-loop
+      capability-policy: invalid-capability-policy)))
 
 ;;; Custom loop fixtures are tested through the same config presentation used
 ;;; by downstream user declarations. This helper avoids constructing a module
@@ -145,6 +237,25 @@
                     '((repo-doctor . agent/task)
                       (pull-request-review . agent/task-cache)
                       (release-approval . ci/build)))
+      (check-equal? (test-ref (test-ref intent 'lineage-policy)
+                              'lineage-kind)
+                    'profile-loop)
+      (check-equal? (test-ref (test-ref intent 'selector-policy)
+                              'selected-branch)
+                    'repo-doctor)
+      (check-equal? (test-ref (test-ref intent 'resource-policy)
+                              'dispatch-groups)
+                    '(((inspect-policy write-report) . serial)
+                      ((run-harness) . serial)))
+      (check-equal? (test-ref (test-ref intent 'capability-policy)
+                              'optional)
+                    '(stream-events memory-recall compression-handoff))
+      (check-equal? (test-ref (test-ref intent 'memory-policy)
+                              'scope)
+                    'profile)
+      (check-equal? (test-ref (test-ref intent 'memory-policy)
+                              'commit)
+                    '(audit-summary selected-branch release-decision))
       (check-equal? (test-ref intent 'result)
                     '((default
                        . poo-flow.loop-governor.profile-node-result.v1)
@@ -199,6 +310,31 @@
   (check-equal? (test-ref intent 'sandbox)
                 '((profile . ci/build)
                   (isolation . project-copy)))
+  (check-equal? (test-ref (test-ref intent 'lineage-policy)
+                          'parent-session-refs)
+                '(incoming-ci-request-session))
+  (check-equal? (test-ref (test-ref intent 'lineage-policy)
+                          'lineage-kind)
+                'guarded-handoff)
+  (check-equal? (test-ref (test-ref intent 'selector-policy)
+                          'selected-branch)
+                'current-system-build-loop)
+  (check-equal? (test-ref (test-ref intent 'resource-policy)
+                          'dispatch-groups)
+                '(((run-shell-command) . serial)
+                  ((write-workspace-file read-workspace-file) . serial)))
+  (check-equal? (test-ref (test-ref intent 'capability-policy)
+                          'required)
+                '(command-run files-read files-write))
+  (check-equal? (test-ref (test-ref intent 'capability-policy)
+                          'unsupported-behavior)
+                'handoff-diagnostic)
+  (check-equal? (test-ref (test-ref intent 'memory-policy)
+                          'recall)
+                '(last-user-message build-context prior-failure))
+  (check-equal? (test-ref (test-ref intent 'memory-policy)
+                          'retention)
+                'report-only)
   (check-equal? (test-ref intent 'result)
                 '((default . poo-flow.loop-governor.node-result.v1)
                   (auditor . poo-flow.loop-governor.audit-result.v1)
@@ -222,7 +358,15 @@
         (sandbox-agreement (test-ref intent 'sandbox-handoff-agreement))
         (agent-profiles (test-ref intent 'agent-profiles))
         (agent-harnesses (test-ref intent 'agent-harnesses))
-        (agent-sessions (test-ref intent 'agent-sessions)))
+        (agent-sessions (test-ref intent 'agent-sessions))
+        (lineage-receipt (test-ref intent 'lineage-receipt))
+        (selector-receipt (test-ref intent 'selector-receipt))
+        (resource-dispatch-receipt
+         (test-ref intent 'resource-dispatch-receipt))
+        (capability-receipt
+         (test-ref intent 'capability-receipt))
+        (memory-receipt
+         (test-ref intent 'memory-receipt)))
     (check-equal? (test-ref handoff 'contract)
                   'poo-flow.loop-governor.runtime-handoff.v1)
     (check-equal? (test-ref handoff 'workflow-ref) 'funflow-cicd)
@@ -257,9 +401,41 @@
     (check-equal? (test-ref (test-ref (car agent-sessions) 'metadata)
                             'runtime-executed)
                   #f)
+    (check-equal? (test-ref lineage-receipt 'lineage-kind)
+                  'guarded-handoff)
+    (check-equal? (test-ref selector-receipt 'selected-branch)
+                  'current-system-build-loop)
+    (check-equal? (test-ref resource-dispatch-receipt 'dispatch-groups)
+                  '(((run-shell-command) . serial)
+                    ((write-workspace-file read-workspace-file) . serial)))
+    (check-equal? (test-ref capability-receipt 'backend) 'nono-sandbox)
+    (check-equal? (test-ref capability-receipt 'supported-backends)
+                  '(nono-sandbox cube-sandbox))
+    (check-equal? (test-ref capability-receipt 'valid?) #t)
+    (check-equal? (test-ref capability-receipt 'diagnostics) '())
+    (check-equal? (test-ref capability-receipt 'required)
+                  '(command-run files-read files-write))
+    (check-equal? (test-ref capability-receipt 'sandbox-ref) 'ci/build)
+    (check-equal? (test-ref memory-receipt 'store) 'project-memory)
+    (check-equal? (test-ref memory-receipt 'scope) 'session)
+    (check-equal? (test-ref memory-receipt 'recall)
+                  '(last-user-message build-context prior-failure))
+    (check-equal? (test-ref memory-receipt 'commit)
+                  '(decision-summary evidence-index handoff-receipt))
+    (check-equal? (test-ref memory-receipt 'retention) 'report-only)
+    (check-equal? (test-ref memory-receipt 'runtime-executed) #f)
     (check-equal? (test-ref handoff 'agent-profiles) agent-profiles)
     (check-equal? (test-ref handoff 'agent-harnesses) agent-harnesses)
     (check-equal? (test-ref handoff 'agent-sessions) agent-sessions)
+    (check-equal? (test-ref handoff 'receipt-contracts)
+                  expected-loop-engine-receipt-contracts)
+    (check-equal? (test-ref handoff 'lineage-receipt) lineage-receipt)
+    (check-equal? (test-ref handoff 'selector-receipt) selector-receipt)
+    (check-equal? (test-ref handoff 'resource-dispatch-receipt)
+                  resource-dispatch-receipt)
+    (check-equal? (test-ref handoff 'capability-receipt)
+                  capability-receipt)
+    (check-equal? (test-ref handoff 'memory-receipt) memory-receipt)
     (check-equal? (test-ref handoff 'result-contract) result-contract)
     (check-equal? (test-ref handoff 'runtime-executed) #f)))
 
@@ -355,6 +531,36 @@
                 #t)
   (check-equal? (test-ref runtime-manifest-request 'object-families)
                 expected-loop-engine-object-families)
+  (check-equal? (test-ref runtime-manifest-request 'receipt-contracts)
+                expected-loop-engine-receipt-contracts)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'lineage-receipt)
+                          'lineage-kind)
+                'guarded-handoff)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'selector-receipt)
+                          'selected-branch)
+                'current-system-build-loop)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'resource-dispatch-receipt)
+                          'runtime-executed)
+                #f)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'capability-receipt)
+                          'unsupported-behavior)
+                'handoff-diagnostic)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'capability-receipt)
+                          'valid?)
+                #t)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'memory-receipt)
+                          'commit)
+                '(decision-summary evidence-index handoff-receipt))
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'memory-receipt)
+                          'runtime-executed)
+                #f)
   (check-equal? (test-field-values (test-ref runtime-manifest-request
                                              'agent-profiles)
                                    'name)
@@ -390,6 +596,8 @@
                 'loop-engine-handoff)
   (check-equal? (test-ref runtime-manifest-summary 'object-families)
                 expected-loop-engine-object-families)
+  (check-equal? (test-ref runtime-manifest-summary 'receipt-contracts)
+                expected-loop-engine-receipt-contracts)
   (check-equal? (test-ref intent 'runtime-executed) #f))
 
 ;;; Presentation assertions verify the public doctor view exposes the same
@@ -411,6 +619,8 @@
                 (test-ref intent 'agent-profiles))
   (check-equal? (car (.ref presentation 'loop-engine-result-contracts))
                 (test-ref intent 'result-contract))
+  (check-equal? (car (.ref presentation 'loop-engine-receipt-contracts))
+                expected-loop-engine-receipt-contracts)
   (check-equal? (car (.ref presentation
                             'loop-engine-sandbox-handoff-agreements))
                 (test-ref intent 'sandbox-handoff-agreement))
@@ -434,6 +644,26 @@
                                   'loop-engine-delegated-operations))
                           'runtime-executed)
                 #f)
+  (check-equal? (test-ref (car (.ref presentation
+                                  'loop-engine-lineage-receipts))
+                          'lineage-kind)
+                'guarded-handoff)
+  (check-equal? (test-ref (car (.ref presentation
+                                  'loop-engine-selector-receipts))
+                          'selected-branch)
+                'current-system-build-loop)
+  (check-equal? (test-ref (car (.ref presentation
+                                  'loop-engine-resource-dispatch-receipts))
+                          'runtime-executed)
+                #f)
+  (check-equal? (test-ref (car (.ref presentation
+                                  'loop-engine-capability-receipts))
+                          'backend)
+                'nono-sandbox)
+  (check-equal? (test-ref (car (.ref presentation
+                                  'loop-engine-memory-receipts))
+                          'store)
+                'project-memory)
   (check-equal? (test-ref (car (.ref presentation
                                   'loop-engine-runtime-command-manifests))
                           'operation)
@@ -461,17 +691,74 @@
            (diagnostics
             (test-ref result-contract 'diagnostics)))
       (check-equal? (test-ref result-contract 'valid?) #f)
-      (check-equal? (test-ref result-contract 'diagnostic-count) 3)
+      (check-equal? (test-ref result-contract 'diagnostic-count) 1)
       (check-equal? (test-field-values diagnostics 'code)
-                    '(invalid-result-contract-role
-                      invalid-result-required-fields
-                      invalid-result-format))
+                    '(invalid-result-required-fields))
       (check-equal? (test-ref (test-ref runtime-manifest-request
                                          'result-contract)
                               'valid?)
                     #f)
       (check-equal? (car (.ref presentation 'loop-engine-result-contracts))
                     result-contract)
+      (check-equal? (test-ref intent 'runtime-executed) #f))))
+
+;;; POO object slot contracts fail before presentation can emit bad intent rows.
+;; : TestCase
+(def user-interface-custom-loop-engine-invalid-poo-slot-case
+  (test-case "rejects invalid loop-engine POO object slot types"
+    (check-equal?
+     (with-catch
+      (lambda (_) #t)
+      (lambda ()
+        (custom-loop-presentation (custom-loop-invalid-poo-slot-module))
+        #f))
+     #t)))
+
+;;; Memory policy gets the same POO slot contract treatment as other loop
+;;; objects: malformed recall/commit declarations never become receipts.
+;; : TestCase
+(def user-interface-custom-loop-engine-invalid-memory-slot-case
+  (test-case "rejects invalid loop-engine memory-policy slot types"
+    (check-equal?
+     (with-catch
+      (lambda (_) #t)
+      (lambda ()
+        (custom-loop-presentation
+         (custom-loop-invalid-memory-slot-module))
+        #f))
+     #t)))
+
+;;; Capability policy validates backend names as sandbox backends. Marlin is the
+;;; runtime owner, not a sandbox backend value.
+;; : TestCase
+(def user-interface-custom-loop-engine-invalid-capability-case
+  (test-case "diagnoses invalid loop-engine capability backend"
+    (let* ((presentation
+            (custom-loop-presentation custom-loop-invalid-capability-module))
+           (intent
+            (car (.ref presentation 'loop-engine-intents)))
+           (capability-receipt
+            (test-ref intent 'capability-receipt))
+           (runtime-manifest
+            (test-ref intent 'runtime-command-manifest))
+           (runtime-manifest-request
+            (test-ref runtime-manifest 'request))
+           (diagnostics
+            (test-ref capability-receipt 'diagnostics)))
+      (check-equal? (test-ref capability-receipt 'backend) 'marlin-sandbox)
+      (check-equal? (test-ref capability-receipt 'valid?) #f)
+      (check-equal? (test-ref capability-receipt 'diagnostic-count) 1)
+      (check-equal? (test-field-values diagnostics 'code)
+                    '(unsupported-capability-backend))
+      (check-equal? (test-ref capability-receipt 'supported-backends)
+                    '(nono-sandbox cube-sandbox))
+      (check-equal? (test-ref (test-ref runtime-manifest-request
+                                         'capability-receipt)
+                              'valid?)
+                    #f)
+      (check-equal? (car (.ref presentation
+                            'loop-engine-capability-receipts))
+                    capability-receipt)
       (check-equal? (test-ref intent 'runtime-executed) #f))))
 
 ;;; The concrete case is the Flue-alignment proof: one compact loop-engine row
@@ -504,6 +791,9 @@
   (test-suite "poo-flow custom user-interface loop-engine cases"
     user-interface-custom-loop-engine-profile-case
     user-interface-custom-loop-engine-concrete-case
-    user-interface-custom-loop-engine-invalid-result-case))
+    user-interface-custom-loop-engine-invalid-result-case
+    user-interface-custom-loop-engine-invalid-poo-slot-case
+    user-interface-custom-loop-engine-invalid-memory-slot-case
+    user-interface-custom-loop-engine-invalid-capability-case))
 
 (run-tests! user-interface-custom-loop-engine-test)

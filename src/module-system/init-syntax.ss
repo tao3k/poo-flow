@@ -15,6 +15,7 @@
         :poo-flow/src/modules/funflow/config
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/nono-sandbox/profile-interface
+        :poo-flow/src/module-system/loop-engine-config
         :poo-flow/src/modules/sandbox-core/profile
         :poo-flow/src/modules/sandbox-core/profile-interface
         :poo-flow/src/module-system/object-validation
@@ -33,6 +34,7 @@
         (import: :poo-flow/src/modules/cubeSandbox/profile-interface)
         (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
         (import: :poo-flow/src/modules/funflow/config)
+        (import: :poo-flow/src/module-system/loop-engine-config)
         (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
         (import: :poo-flow/src/module-system/observability)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
@@ -249,7 +251,7 @@
 ;;       ```
 ;;     %
 (defsyntax (use-module stx)
-  (syntax-case stx (:config profiles binding workflow funflow nono-sandbox cubeSandbox docker-sandbox
+  (syntax-case stx (:config profiles binding workflow funflow loop-engine nono-sandbox cubeSandbox docker-sandbox
                     .def
                     :inherits :isolation :environment :command :nono)
     ((_ funflow
@@ -291,6 +293,26 @@
       (poo-flow-modules-system-use-module/contract
        'workflow
        '())))
+    ((_ loop-engine
+        :config
+        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+              slot-def ...)
+        ...)
+     (syntax
+      (let* ((prototype-name
+              (.o (:: prototype-self prototype-super prototype-slot ...)
+                  slot-def ...))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'loop-engine
+         (poo-flow-user-loop-engine-poo-config-flags
+          (list prototype-name ...)
+          '(:config
+            (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                  slot-def ...)
+            ...))))))
+    ((_ loop-engine bad-clause ...)
+     (error "loop-engine config DSL has been removed; use (use-module loop-engine :config (.def ...))"))
     ((_ nono-sandbox
         (binding binding-kind)
         (.def (profile-name profile-self profile-super profile-slot ...)
@@ -485,7 +507,7 @@
 ;;       ;; => bundles
 ;;       ```
 ;;     %
-(defrules poo-flow-init-flow-bundles (:workflow :loop :sandbox :custom)
+(defrules poo-flow-init-flow-bundles (:workflow :loop :sandbox :custom loop-engine)
   ((_)
    '())
   ((_ :workflow init-clause ...)
@@ -496,6 +518,12 @@
    (poo-flow-init-sandbox-bundles init-clause ...))
   ((_ :custom init-clause ...)
    (poo-flow-init-custom-bundles init-clause ...))
+  ((_ (loop-engine flag flag-rest ...) init-clause ...)
+   (error "loop-engine init row config DSL has been removed; use use-module loop-engine :config with native POO .def forms"))
+  ((_ (loop-engine) init-clause ...)
+   (cons (poo-flow-user-module-bundle
+          (flow loop-engine))
+         (poo-flow-init-flow-bundles init-clause ...)))
   ((_ (module flag ...) init-clause ...)
    (cons (poo-flow-user-module-bundle
           (flow module flag ...))

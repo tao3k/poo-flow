@@ -57,13 +57,30 @@
 ;; : [PooUserModuleSelection]
 (def user-interface-invalid-loop-result-module
   (use-module loop-engine
-    (+use-case invalid-loop-result (workflow . funflow-cicd))
-    (+human-audit +manual-gate)
-    (+result
-     (human-audit bad-contract)
-     (format structured alist)
-     (required-fields))
-    (+runtime +manifest-handoff)))
+    :config
+    (.def (invalid-loop-result @ loop-engine-use-case name workflow)
+      name: 'invalid-loop-result
+      workflow: 'funflow-cicd)
+
+    (.def (invalid-loop-result-human-audit @ loop-engine-human-audit
+                                           actions)
+      actions: '(+manual-gate))
+
+    (.def (invalid-loop-result-contract @ loop-engine-result
+                                        human-audit format required-fields)
+      human-audit: 'bad-contract
+      format: 'structured-alist
+      required-fields: '())
+
+    (.def (invalid-loop-result-runtime @ loop-engine-runtime capabilities)
+      capabilities: '(+manifest-handoff))
+
+    (.def (invalid-loop-result-profile @ loop-engine-profile
+                                       use-case human-audit result runtime)
+      use-case: invalid-loop-result
+      human-audit: invalid-loop-result-human-audit
+      result: invalid-loop-result-contract
+      runtime: invalid-loop-result-runtime)))
 
 ;; : PooUserProfile
 (def user-interface-invalid-loop-result-profile
@@ -101,9 +118,22 @@
 ;; : [PooUserModuleSelection]
 (def user-interface-invalid-sandbox-loop-module
   (use-module loop-engine
-    (+use-case invalid-sandbox-loop (workflow . funflow-cicd))
-    (+sandbox (profile . ci/build))
-    (+runtime +manifest-handoff)))
+    :config
+    (.def (invalid-sandbox-loop @ loop-engine-use-case name workflow)
+      name: 'invalid-sandbox-loop
+      workflow: 'funflow-cicd)
+
+    (.def (invalid-sandbox-loop-sandbox @ loop-engine-sandbox profile)
+      profile: 'ci/build)
+
+    (.def (invalid-sandbox-loop-runtime @ loop-engine-runtime capabilities)
+      capabilities: '(+manifest-handoff))
+
+    (.def (invalid-sandbox-loop-profile @ loop-engine-profile
+                                        use-case sandbox runtime)
+      use-case: invalid-sandbox-loop
+      sandbox: invalid-sandbox-loop-sandbox
+      runtime: invalid-sandbox-loop-runtime)))
 
 ;; : PooUserProfile
 (def user-interface-invalid-sandbox-profile
@@ -462,7 +492,7 @@
                        diagnostics)
                       #t)
         (check-equal? (alist-value 'valid? result-contract) #f)
-        (check-equal? (alist-value 'diagnostic-count result-contract) 3)
+        (check-equal? (alist-value 'diagnostic-count result-contract) 1)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f))))
 

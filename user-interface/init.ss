@@ -16,14 +16,7 @@
    (release +manual-gate)
    (webhook +server)
    (runtime +manifest-handoff)))
- (loop-engine
-  (+governor +strategy +policy)
-  (+agent-judges
-   (auditor repo-audit-agent)
-   (verifier repo-verifier-agent)
-   (governor repo-governor))
-  (+human-audit +approval +changes-requested)
-  (+runtime +manifest-handoff))
+ (loop-engine)
  :sandbox
  (nono-sandbox +nono +doctor)
  (cubeSandbox +cube +doctor)

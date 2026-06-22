@@ -23,16 +23,35 @@
 (def test-poo-flow-user-module-bundles
   (poo-flow-user-module-bundles-extend
    poo-flow-kernel-profile-module-bundles
-   (poo-flow-init-module-bundles
-    :workflow
-    (loop-engine
-     (+governor +strategy +policy)
-     (+agent-judges
-      (auditor repo-audit-agent)
-      (verifier repo-verifier-agent)
-      (governor repo-governor))
-     (+human-audit +approval +changes-requested)
-     (+runtime +manifest-handoff)))))
+   (list
+    (use-module loop-engine
+      :config
+      (.def (test-loop @ loop-engine-use-case name)
+        name: 'test-loop)
+
+      (.def (test-loop-governor @ loop-engine-governor capabilities)
+        capabilities: '(+strategy +policy))
+
+      (.def (test-loop-judges @ loop-engine-agent-judges
+                              auditor verifier governor)
+        auditor: 'repo-audit-agent
+        verifier: 'repo-verifier-agent
+        governor: 'repo-governor)
+
+      (.def (test-loop-human-audit @ loop-engine-human-audit actions)
+        actions: '(+approval +changes-requested))
+
+      (.def (test-loop-runtime @ loop-engine-runtime capabilities)
+        capabilities: '(+manifest-handoff))
+
+      (.def (test-loop-profile @ loop-engine-profile
+                               use-case governor agent-judges
+                               human-audit runtime)
+        use-case: test-loop
+        governor: test-loop-governor
+        agent-judges: test-loop-judges
+        human-audit: test-loop-human-audit
+        runtime: test-loop-runtime)))))
 
 ;; : (-> Unit [PooUserModuleSelection])
 (def test-poo-flow-user-modules

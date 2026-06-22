@@ -226,7 +226,7 @@ Future placement object shape:
 - projection emits runtime handoff facts;
 - runtime validates and executes outside Scheme.
 
-*** 10.06.28.05.03 Presentation and Runtime Boundary
+*** 10.06.28.05.05 Presentation and Runtime Boundary
 
 POO Flow's =pooFlowUserConfigPresentation= already exposes a broad report-only
 surface: selected modules, feature facts, CI/CD pipelines, runtime command
@@ -240,6 +240,88 @@ collects those facts into one value before projection.
 The CI/CD Marlin handoff bundle is a good precedent: it packages manifest maps,
 summaries, agreement diagnostics, ABI counts, receipt counts, and runtime owner
 while keeping =runtime-executed #f=. Session receipts should follow that shape.
+
+*** 10.06.28.05.06 Runtime Loop Evidence Update
+
+The follow-up AST audit of =.data/OpenRath= at
+=fc0ee661d8173770ab46816a93045e86650c3e5a= adds three concrete details that
+matter for POO Flow.
+
+First, OpenRath's public =run_session_loop= is a lazy runtime handoff wrapper.
+It synchronizes pending sessions, creates an output =Session= seeded from the
+user chunks, binds any live sandbox, registers the parent and output sessions,
+submits an async coroutine to the runtime, stores a =LazyValue= on the output
+session, and only synchronizes immediately when lazy execution is disabled.
+
+This maps directly to POO Flow's Scheme/Rust boundary: Scheme should be able to
+build a session or loop receipt that names the pending runtime request, lineage,
+placement, and output handle without executing it.
+
+Second, OpenRath's async loop has a small stable state machine:
+
+- merge tool schemas for the loop;
+- build chat messages from agent head plus newly rendered tail chunks;
+- call the provider executor;
+- append an assistant row;
+- if tool calls exist, dispatch one tool round and continue;
+- stop on accepted finish reasons;
+- mark lineage as truncated when the max tool-round budget is exhausted.
+
+This should become a report-only =loop-engine-runtime-round= receipt in POO
+Flow, not a Scheme executor. The object should expose round index, request
+shape, finish reason, tool-call count, truncation flag, and runtime owner.
+
+Third, OpenRath's tool dispatch groups calls by =tool.resource_key(args)=. Calls
+with the same resource key are serialized; independent resource keys can run in
+parallel. This is a stronger design input than a generic =max-parallel= knob.
+POO Flow should model it as a POO-native resource/collision policy object under
+=loop-engine=:
+
+- =resource-key=: symbolic or computed key description;
+- =collision-policy=: =serial=, =parallel=, or =runtime-owned=;
+- =tool-ref=: model-visible tool name;
+- =sandbox-profile-ref=: runtime placement;
+- =receipt-contract=: report-only dispatch result contract.
+
+The immediate implementation implication is for the current POO-native
+=loop-engine= surface: add resource/collision policy as an object extension
+rather than reintroducing row DSL flags. The user-facing shape should remain
+=use-module loop-engine :config (.def ...)=.
+
+*** 10.06.28.05.07 Lineage, Selector, and Tool Policy Evidence
+
+The deeper OpenRath pass adds three useful constraints for POO Flow's next loop-engine step.
+
+First, OpenRath's lineage layer is explicit session metadata. The AST evidence from =src/rath/session/graph/recording.py= shows =LineageRecorder.stamp_new_session= stamping =parent_session_ids=, =lineage_operator=, =lineage_kind=, and =lineage_extras=. =LineageJournal= records visit order, while =src/rath/session/graph/export.py= projects sessions to JSONL rows with id, parents, operator, kind, extras, chunk count, and cumulative usage.
+
+For POO Flow this means lineage should be an inert POO object family, not a runtime side effect hidden in the executor. The report-only receipt should expose parent session refs, lineage kind, operator name, and extras before Marlin executes anything.
+
+Second, OpenRath's =Selector= is itself a workflow. Its =forward= asks =select_session= for an index and returns either the chosen workflow or an empty workflow. That makes selection a normal compositional step, not a special scheduler primitive.
+
+For POO Flow this maps to a POO-native =loop-engine-selector-policy= object. Scheme should describe candidate use cases, judge inputs, fallback policy, and the selected branch reference in receipts. Runtime scoring and model calls remain Marlin-owned.
+
+Third, OpenRath's tool layer puts collision semantics on the tool object. =FlowToolCall.resource_key= defaults to a global or safe key, while system tools refine that key for shell execution, code execution, and path-oriented file operations.
+
+For POO Flow this confirms that =loop-engine-resource-policy= should be object-local and extensible. A tool reference should be able to carry a symbolic resource key, a collision class, and an intended dispatch ordering. The Scheme side can project serial/parallel receipt groups, but it must not execute or schedule the tools itself.
+
+*** 10.06.28.05.08 Backend, Memory, and Compression Evidence
+
+The second source pass adds runtime-owner evidence below the session, selector, and tool-policy layer:
+
+- =src/rath/backend/capabilities.py:9-31= names backend isolation and capability facts as data.
+- =src/rath/backend/abc.py:35-207= separates =BackendSandboxSpec=, =BackendSandbox=, and =Backend=. The sandbox owns acquire/release reference counting and dispatch delegation; the backend owns async open, close, and dispatch.
+- =src/rath/backend/opensandbox.py:211-596= shows the concrete OpenSandbox backend: workspace volume bind fallback, per-sandbox execution locks, per-path or per-handle filesystem locks, command/files/code dispatch, and timeout/error normalization.
+- =src/rath/memory/capabilities.py:11-33= and =src/rath/memory/abc.py:30-200= mirror the backend split for memory: capability facts, store specs, store lifecycle, supported ops, and dispatch.
+- =src/rath/flow/memory_inject.py:35-105= keeps recall injection behind a policy protocol. =DefaultRecallInjection= reads the last user message, dispatches a find op, converts hits to chunks, and degrades to no injected chunks on failure or unsupported results.
+- =src/rath/session/compress.py:32-164= and =src/rath/flow/compressor.py:14-36= model compression as a workflow transformation that creates a new session and records lineage, not as an in-place log mutation.
+
+For POO Flow, this is not a reason to implement backend lifecycle, locks, stores, or compression execution in Scheme. It is evidence for additional POO-native policy objects:
+
+- =loop-engine-capability-policy= for sandbox backend capability expectations.
+- =loop-engine-memory-policy= for recall, commit, store-scope, and ranking expectations.
+- =loop-engine-compression-policy= for summary/compression handoff and lineage receipt expectations.
+
+The first implementation slice should remain report-only. Scheme now projects capability and memory receipts as inert facts. Compression receipts remain next work. Marlin owns refcounts, backend handles, locks, timeout behavior, memory store mutation, recall execution, commit execution, ranking, retention, and actual compression execution. Capability backend values are sandbox backend contracts, not runtime owners: the accepted public values are =nono-sandbox= and =cube-sandbox=.
 
 ** 10.06.28.06 Gap Analysis
 
@@ -256,7 +338,8 @@ Needed objects:
 - =session/lineage=: parent ids, branch kind, derivation reason;
 - =session/placement=: sandbox profile reference plus projection status;
 - =session/usage=: token/runtime/resource usage receipt;
-- =session/handoff=: Marlin runtime manifest and result contract.
+- =session/handoff=: Marlin runtime manifest and result contract;
+- =session/pending=: lazy runtime request handle and synchronization status.
 
 *** 10.06.28.06.02 Session Graph Operations
 
@@ -314,6 +397,7 @@ Acceptance tests:
 - object validation rejects invalid chunk rows and cyclic lineage;
 - user-interface case builds a project workspace session by inheritance;
 - presentation exposes session count, lineage graph, and placement summary;
+- pending runtime receipts expose request id, output session id, and lazy status;
 - no runtime executed flag flips to true.
 
 *** 10.06.28.07.02 Milestone B: Placement Projection
@@ -338,6 +422,8 @@ Acceptance tests:
 - an agent object transforms one session intent into another receipt;
 - selector object records candidate workflows and selected route as data;
 - governance policy and sandbox placement are inherited through POO supers;
+- loop-engine resource collision policy serializes same-key tool refs at the
+  receipt level while leaving execution runtime-owned;
 - tests prove no Scheme runtime execution occurs.
 
 *** 10.06.28.07.04 Milestone D: Example Ladder

@@ -137,7 +137,7 @@ The Flue learning loop is closed for the current Scheme-side scope. =poo-flow= n
 - =agent-profile=, =agent-harness=, =agent-session=, =workflow-run=, =dispatch-receipt=, =agent-operation=, and =runtime-snapshot= are separate inert object families.
 - =loop-engine= user declarations project runtime handoff facts, command manifests, and snapshot rows without realizing descriptors.
 - named governor, reviewer, auditor, and =human-audit= gates are visible as =agent-profile=, =agent-harness=, =agent-session=, and =delegated-operation= projections over the control-plane object graph.
-- =+result= declarations project structured reviewer and human-audit result contracts into profiles, operations, delegated operations, manifests, and presentation rows, including report-only validation diagnostics for malformed declarations.
+- =loop-engine-result= POO objects project structured reviewer and human-audit result contracts into profiles, operations, delegated operations, manifests, and presentation rows, including report-only validation diagnostics for malformed declarations.
 - presentation exposes =loop-engine-delegated-operations= so agents can inspect the Flue-style delegation boundary from user config.
 
 Runtime execution, durable events, sandbox process control, and deployment integration remain outside this milestone. They are runtime/backend responsibilities and are intentionally not implemented in Scheme here.
