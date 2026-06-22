@@ -9,6 +9,9 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/facade
+        (only-in :poo-flow/src/loops/governor-marlin
+                 +loop-governor-marlin-loop-engine-discovery-schema+
+                 loop-governor-marlin-loop-engine-discovery)
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-loop-engine-case))
 
@@ -113,6 +116,37 @@
                 expected-loop-engine-object-families)
   (check-equal? (test-ref runtime-manifest-summary 'receipt-contracts)
                 expected-loop-engine-receipt-contracts))
+
+;;; Discovery assertions keep the legacy govern-loop ABI manifest and the newer
+;;; runtime handoff manifest on one vocabulary surface for Marlin consumers.
+;; : (-> Alist Alist Alist)
+(def (check-custom-loop-runtime-manifest-discovery runtime-manifest
+                                                   runtime-manifest-request
+                                                   runtime-manifest-summary)
+  (let (discovery (loop-governor-marlin-loop-engine-discovery))
+    (check-equal? (test-ref discovery 'schema)
+                  +loop-governor-marlin-loop-engine-discovery-schema+)
+    (check-equal? (test-ref discovery 'kind)
+                  'loop-engine-marlin-discovery)
+    (check-equal? (test-ref discovery 'runtime-command-contract)
+                  (test-ref runtime-manifest-request 'contract))
+    (check-equal? (test-ref discovery 'runtime-command-executable)
+                  (test-ref runtime-manifest 'executable))
+    (check-equal? (test-ref discovery 'object-families)
+                  expected-loop-engine-object-families)
+    (check-equal? (test-ref discovery 'object-families)
+                  (test-ref runtime-manifest-request 'object-families))
+    (check-equal? (test-ref discovery 'object-families)
+                  (test-ref runtime-manifest-summary 'object-families))
+    (check-equal? (test-ref discovery 'receipt-contracts)
+                  expected-loop-engine-receipt-contracts)
+    (check-equal? (test-ref discovery 'receipt-contracts)
+                  (test-ref runtime-manifest-request 'receipt-contracts))
+    (check-equal? (test-ref discovery 'receipt-contracts)
+                  (test-ref runtime-manifest-summary 'receipt-contracts))
+    (check-equal? (test-ref discovery 'control-owner) 'gerbil)
+    (check-equal? (test-ref discovery 'execution-owner) 'marlin-agent-core)
+    (check-equal? (test-ref discovery 'runtime-executed) #f)))
 
 ;;; Manifest request contract assertions keep result and object-family schema
 ;;; checks separate from concrete policy receipt checks.
@@ -233,6 +267,10 @@
             (test-ref intent 'runtime-command-manifest-summary)))
       (check-custom-loop-runtime-manifest-descriptor
        runtime-manifest
+       runtime-manifest-summary)
+      (check-custom-loop-runtime-manifest-discovery
+       runtime-manifest
+       runtime-manifest-request
        runtime-manifest-summary)
       (check-custom-loop-runtime-manifest-request-contracts
        runtime-manifest-request)

@@ -253,7 +253,7 @@
                    tokens_estimate outcome)
     retention-window: 'rolling-fourteen-days
     slow-signals: '(budget-over-80 repeated-false-positive)
-    pause-signals: '(reviewer-absence repeated-escalation)
+    pause-signals: '(main-red reviewer-absence repeated-escalation)
     kill-signals: '(incident cost-exceeds-value))
 
   (.def (repo-loop-safety-policy @ loop-engine-safety-policy-extension
@@ -270,7 +270,8 @@
                        "t/"
                        "docs/"
                        "user-interface/")
-    human-gates: '(release-risk secrets-touch protected-branch)
+    human-gates: '(red-ci-handoff release-risk secrets-touch
+                   protected-branch)
     connector-scopes: '(issues-read pull-requests-read actions-read)
     auto-merge: 'never
     max-attempts: 2)
