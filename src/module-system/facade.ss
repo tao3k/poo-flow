@@ -17,6 +17,7 @@
         :poo-flow/src/module-system/sandbox-profile-catalog
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/loop-engine-config
+        :poo-flow/src/module-system/loop-engine-policy-extension
         :poo-flow/src/module-system/presentation
         :poo-flow/src/module-system/profile-config
         :poo-flow/src/module-system/init-syntax
@@ -46,6 +47,7 @@
         (import: :poo-flow/src/module-system/sandbox-profile-catalog)
         (import: :poo-flow/src/module-system/workflow-cicd-config)
         (import: :poo-flow/src/module-system/loop-engine-config)
+        (import: :poo-flow/src/module-system/loop-engine-policy-extension)
         (import: :poo-flow/src/module-system/presentation)
         (import: :poo-flow/src/module-system/profile-config)
         (import: :poo-flow/src/module-system/init-syntax)

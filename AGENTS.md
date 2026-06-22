@@ -19,6 +19,7 @@
   - `rtk --ultra-compact err gxpkg build`
   - `rtk --ultra-compact err gxpkg env gxtest t/agent-sandbox-profile-candidate-test.ss`
 - If `gxpkg clean` or `gxpkg build` fails because `build.ss` lacks a package-manager command, fix the package CLI integration in `build.ss` instead of cleaning generated files by hand.
+- Root `t/*.ss` test modules are part of the package build spec so aggregate imports such as `:poo-flow/t/user-interface-custom-loop-engine-test` do not read stale generated state. Keep `t/fixtures/` excluded from package compilation.
 - After changing agent-sandbox profile or nono bindings, run the focused package-context tests:
   - `gxpkg env gxtest t/agent-sandbox-profile-candidate-test.ss`
   - `gxpkg env gxtest t/agent-sandbox-nono-profile-candidate-test.ss`

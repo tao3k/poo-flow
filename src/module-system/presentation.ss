@@ -34,6 +34,9 @@
     (poo-flow-user-sandbox-profile-derivation-last-step
      (cdr derivation-path)))))
 
+;;; Derivation path reads only package-side profile metadata. It deliberately
+;;; ignores runtime descriptor state because sandbox materialization belongs to
+;;; Marlin and should not leak into user presentation.
 ;; : (-> PooSandboxProfile [Alist])
 (def (poo-flow-user-sandbox-profile-derivation-path profile)
   (let ((derivation-path
@@ -43,6 +46,8 @@
           '())))
     (if (list? derivation-path) derivation-path '())))
 
+;;; A derivation row is the user-facing trace from a selected module to the
+;;; profile lineage that produced its sandbox handoff candidate.
 ;; : (-> PooUserModuleSelection PooSandboxProfile MaybeAlist)
 (def (poo-flow-user-sandbox-profile-derivation-row selection profile)
   (let* ((module-key (poo-flow-user-module-selection-key selection))
@@ -70,6 +75,8 @@
        (cons 'runtime-executed #f))
       #f)))
 
+;;; Only authored sandbox profiles inside `:config` are eligible for lineage
+;;; presentation; auxiliary module flags must not synthesize sandbox rows.
 ;; : (-> PooUserModuleSelection [PooSandboxProfile])
 (def (poo-flow-user-module-selection-sandbox-config-profiles selection)
   (let ((entry (poo-flow-user-module-selection-flag-entry selection ':config)))
@@ -77,6 +84,8 @@
       (filter poo-flow-sandbox-profile? (cdr entry))
       '())))
 
+;;; Row accumulation preserves module selection order so profile derivation
+;;; diagnostics line up with the order a user wrote in `use-module :config`.
 ;; : (-> PooUserModuleSelection [PooSandboxProfile] [Alist])
 (def (poo-flow-user-module-selection-sandbox-profile-derivations/add
       selection
@@ -96,12 +105,16 @@
          selection
          (cdr profiles)))))))
 
+;;; Module-level derivation projection is a pure presentation helper: it turns
+;;; resolved sandbox profiles into trace rows without realizing descriptors.
 ;; : (-> PooUserModuleSelection [Alist])
 (def (poo-flow-user-module-selection-sandbox-profile-derivations selection)
   (poo-flow-user-module-selection-sandbox-profile-derivations/add
    selection
    (poo-flow-user-module-selection-sandbox-config-profiles selection)))
 
+;;; Config-level derivations are flattened for the public presentation object so
+;;; downstream agents can audit every sandbox lineage from a single slot.
 ;; : (-> [PooUserModuleSelection] [Alist])
 (def (poo-flow-user-config-sandbox-profile-derivations selected-modules)
   (cond
@@ -312,6 +325,9 @@
             (poo-flow-user-workflow-cicd-checks-field-values
              workflow-cicd-check-rows
              'sandbox-unresolved-profile-refs)
+          ;; Loop-engine presentation fields intentionally mirror the runtime
+          ;; handoff payload. They give users and agents one doctor surface for
+          ;; audit/report data while preserving the no-execution Scheme boundary.
           loop-engine-intent-count: (length loop-engine-intent-rows)
           loop-engine-intents: loop-engine-intent-rows
           loop-engine-runtime-handoff-count: (length loop-engine-intent-rows)
@@ -379,6 +395,14 @@
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows
            'memory-receipt)
+          loop-engine-compression-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'compression-receipt)
+          loop-engine-policy-extension-receipts:
+          (poo-flow-user-loop-engine-intents-field-values
+           loop-engine-intent-rows
+           'policy-extension-receipts)
           loop-engine-runtime-command-manifests:
           (poo-flow-user-loop-engine-intents-field-values
            loop-engine-intent-rows

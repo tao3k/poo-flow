@@ -22,6 +22,7 @@
         :poo-flow/t/functional-flow-kleisli-test
         :poo-flow/t/workflow-cicd-check-map-test
         :poo-flow/t/workflow-cicd-runtime-handoff-test
+        :poo-flow/t/loop-engine-policy-extension-test
         :poo-flow/t/loop-agent-descriptor-test
         :poo-flow/t/loop-governor-test
         :poo-flow/t/loop-strategy-test
@@ -49,6 +50,12 @@
         :poo-flow/t/tutorial-runtime-result-test
         :poo-flow/t/tutorial-result-test
         :poo-flow/t/user-interface-config-test
+        :poo-flow/t/user-interface-custom-loop-engine-capability-test
+        :poo-flow/t/user-interface-custom-loop-engine-memory-policy-test
+        :poo-flow/t/user-interface-custom-loop-engine-profile-test
+        :poo-flow/t/user-interface-custom-loop-engine-result-contract-test
+        :poo-flow/t/user-interface-custom-loop-engine-runtime-manifest-test
+        :poo-flow/t/user-interface-custom-loop-engine-slot-contract-test
         :poo-flow/t/user-interface-custom-loop-engine-test
         :poo-flow/t/user-interface-custom-loop-sandbox-agreement-test
         :poo-flow/t/user-interface-custom-loop-workflow-agreement-test

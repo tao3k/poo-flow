@@ -3,20 +3,9 @@
 ;;; Invariant: this owner emits Marlin handoff data and never executes runtime work.
 
 (import (only-in :poo-flow/src/core/agent-harness
-                 make-poo-flow-agent-harness
-                 make-poo-flow-agent-operation
-                 make-poo-flow-agent-profile
-                 make-poo-flow-agent-session
-                 make-poo-flow-dispatch-receipt
                  make-poo-flow-runtime-snapshot
-                 make-poo-flow-workflow-run
-                 poo-flow-agent-harness->alist
-                 poo-flow-agent-operation->alist
-                 poo-flow-agent-profile->alist
-                 poo-flow-agent-session->alist
-                 poo-flow-dispatch-receipt->alist
                  poo-flow-runtime-snapshot->alist
-                 poo-flow-workflow-run->alist)
+                 )
         (only-in :poo-flow/src/core/runtime-adapter
                  +runtime-request-schema+
                  make-stdout-runtime-command-descriptor
@@ -29,6 +18,8 @@
         :poo-flow/src/module-system/sandbox-profile-catalog
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/loop-engine-core
+        :poo-flow/src/module-system/loop-engine-runtime-base
+        :poo-flow/src/module-system/loop-engine-runtime-agent
         :poo-flow/src/module-system/loop-engine-result-contract)
 
 (export poo-flow-user-module-selection-loop-engine-intent
@@ -60,228 +51,6 @@
         poo-flow-user-loop-engine-intent-policy
         poo-flow-user-loop-engine-intent-runtime-projections
         poo-flow-user-config-loop-engine-intents/add)
-
-;;; The first configured judge is the default runtime target so simple
-;;; single-agent loops do not need an explicit governor role.
-;; : (-> List Symbol)
-(def (poo-flow-user-loop-engine-primary-agent agent-judges)
-  (cond
-   ((null? agent-judges) 'loop-governor-agent)
-   ((and (pair? (car agent-judges))
-         (pair? (cdr (car agent-judges))))
-    (cadr (car agent-judges)))
-   ((pair? (car agent-judges)) (cdr (car agent-judges)))
-   (else (car agent-judges))))
-
-;;; Human-audit declarations change admission state before any backend runtime
-;;; receives the request; Scheme only records the waiting state.
-;; : (-> Alist Symbol)
-(def (poo-flow-user-loop-engine-intent-status intent)
-  (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
-    'admitted
-    'waiting-human))
-
-;;; Operation kind mirrors the same human gate so downstream receipts can be
-;;; audited without inspecting the raw user module sections.
-;; : (-> Alist Symbol)
-(def (poo-flow-user-loop-engine-intent-operation-kind intent)
-  (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
-    'governor-judge
-    'human-audit))
-
-;;; Judge rows come from user flags, not a validated schema, so role lookup has
-;;; to accept both list-shaped and dotted entries while keeping defaults stable.
-;; : (-> [Value] Symbol Value Value)
-(def (poo-flow-user-loop-engine-agent-judge-ref agent-judges role default-value)
-  (cond
-   ((null? agent-judges) default-value)
-   ((and (pair? (car agent-judges))
-         (equal? (caar agent-judges) role))
-    (let (row (car agent-judges))
-      (cond
-       ((null? (cdr row)) default-value)
-       ((pair? (cdr row)) (cadr row))
-       (else (cdr row)))))
-   (else
-    (poo-flow-user-loop-engine-agent-judge-ref
-     (cdr agent-judges)
-     role
-     default-value))))
-
-;;; Role/name normalization is shared by profile, harness, and session
-;;; projection so every downstream row receives the same naming decision.
-;; : (-> Value MaybePair)
-(def (poo-flow-user-loop-engine-agent-judge-pair row)
-  (cond
-   ((not (pair? row)) #f)
-   ((not (symbol? (car row))) #f)
-   ((null? (cdr row)) #f)
-   ((pair? (cdr row)) (cons (car row) (cadr row)))
-   (else (cons (car row) (cdr row)))))
-
-;;; Invalid judge rows are skipped rather than repaired; malformed user config
-;;; should stay visible in the original intent while projections remain total.
-;; : (-> [Value] [Pair])
-(def (poo-flow-user-loop-engine-agent-judge-pairs agent-judges)
-  (cond
-   ((null? agent-judges) '())
-   ((poo-flow-user-loop-engine-agent-judge-pair (car agent-judges))
-    => (lambda (role-ref)
-         (cons role-ref
-               (poo-flow-user-loop-engine-agent-judge-pairs
-                (cdr agent-judges)))))
-   (else
-    (poo-flow-user-loop-engine-agent-judge-pairs (cdr agent-judges)))))
-
-;;; Loop-engine agent boundaries use the first declared sandbox profile as a
-;;; policy reference only. Actual sandbox realization remains backend-owned.
-;; : (-> Alist MaybeSymbol)
-(def (poo-flow-user-loop-engine-intent-primary-sandbox-profile intent)
-  (let (refs (poo-flow-user-loop-engine-intent-ref
-              intent
-              'sandbox-profile-refs
-              '()))
-    (if (null? refs) #f (car refs))))
-
-;;; Human audit is modeled as a named profile beside machine judges so agents
-;;; can inspect the same profile/harness/session graph for both reviewer types.
-;; : (-> Alist [Pair])
-(def (poo-flow-user-loop-engine-intent-agent-profile-refs intent)
-  (append
-   (poo-flow-user-loop-engine-agent-judge-pairs
-    (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '()))
-   (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
-     '()
-     (list (cons 'human-audit 'human-audit)))))
-
-;;; The operation-level adapter is the only result-contract function that needs
-;;; operation-kind. The full contract packet lives in loop-engine-result-contract.
-;; : (-> Alist Symbol)
-(def (poo-flow-user-loop-engine-intent-operation-result-contract intent)
-  (if (eq? (poo-flow-user-loop-engine-intent-operation-kind intent)
-           'human-audit)
-    (poo-flow-user-loop-engine-intent-role-result-contract
-     intent
-     'human-audit)
-    (poo-flow-user-loop-engine-intent-role-result-contract
-     intent
-     'governor)))
-
-;;; Workflow agreement is Funflow-owned data cached on the intent. The fallback
-;;; keeps older loop-engine rows presentable while still using Funflow's rules.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-workflow-agreement intent)
-  (poo-flow-user-loop-engine-intent-ref
-   intent
-   'workflow-agreement
-    (poo-flow-funflow-workflow-agreement
-     (poo-flow-user-loop-engine-intent-workflow-ref intent)
-     '())))
-
-;;; Runtime intent is the compact policy pointer embedded in profiles,
-;;; harnesses, receipts, and operations before a backend materializes them.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-runtime-intent intent)
-  (list
-   (cons 'runtime-handoff
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'runtime-handoff
-          'loop-governor-marlin-runtime-manifest))
-   (cons 'runtime-owner
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'runtime-owner
-          "marlin-agent-core"))
-   (cons 'handoff-contracts +poo-flow-user-loop-engine-handoff-contracts+)
-   (cons 'runtime-command-contract
-         +poo-flow-user-loop-engine-runtime-command-contract+)
-   (cons 'result-contract
-         (poo-flow-user-loop-engine-intent-result-contract intent))
-   (cons 'object-families
-         +poo-flow-user-loop-engine-runtime-object-families+)
-   (cons 'receipt-contracts
-         +poo-flow-user-loop-engine-receipt-contracts+)
-   (cons 'workflow-ref
-         (poo-flow-user-loop-engine-intent-workflow-ref intent))
-   (cons 'workflow-agreement
-         (poo-flow-user-loop-engine-intent-workflow-agreement intent))
-   (cons 'lineage-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'lineage-policy '()))
-   (cons 'selector-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'selector-policy '()))
-   (cons 'resource-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'resource-policy '()))
-   (cons 'capability-policy
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'capability-policy
-          '()))
-   (cons 'memory-policy
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'memory-policy
-          '()))
-   (cons 'executes-runtime #f)))
-
-;;; Policy projection is the loop-engine guardrail packet. It keeps governor,
-;;; human audit, sandbox, budget, and observability rows together so Marlin sees
-;;; one coherent handoff policy instead of scattered presentation fields.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-policy intent)
-  (list
-   (cons 'governor
-         (poo-flow-user-loop-engine-intent-ref intent 'governor '()))
-   (cons 'human-audit
-         (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
-   (cons 'sandbox
-         (poo-flow-user-loop-engine-intent-ref intent 'sandbox '()))
-   (cons 'sandbox-profile-refs
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'sandbox-profile-refs
-          '()))
-   (cons 'sandbox-runtime-summaries
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'sandbox-runtime-summaries
-          '()))
-        (cons 'sandbox-handoff-summaries
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'sandbox-handoff-summaries
-          '()))
-   (cons 'sandbox-handoff-agreement
-         (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
-          intent))
-   (cons 'sandbox-unresolved-profile-refs
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'sandbox-unresolved-profile-refs
-          '()))
-   (cons 'workflow-agreement
-         (poo-flow-user-loop-engine-intent-workflow-agreement intent))
-   (cons 'lineage-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'lineage-policy '()))
-   (cons 'selector-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'selector-policy '()))
-   (cons 'resource-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'resource-policy '()))
-   (cons 'capability-policy
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'capability-policy
-          '()))
-   (cons 'memory-policy
-         (poo-flow-user-loop-engine-intent-ref
-          intent
-          'memory-policy
-          '()))
-   (cons 'budget
-         (poo-flow-user-loop-engine-intent-ref intent 'budget '()))
-   (cons 'observability
-         (poo-flow-user-loop-engine-intent-ref intent 'observability '()))
-   (cons 'runtime-executed #f)))
 
 ;;; Runtime envelopes are the largest loop-engine handoff object. They carry
 ;;; workflow, sandbox, and operation facts as inert request data for Marlin.
@@ -345,6 +114,14 @@
                    intent))
             (cons 'memory-receipt
                   (poo-flow-user-loop-engine-intent-memory-receipt intent))
+            (cons 'compression-receipt
+                  (poo-flow-user-loop-engine-intent-compression-receipt
+                   intent))
+            (cons 'policy-extension-receipts
+                  (poo-flow-user-loop-engine-intent-ref
+                   intent
+                   'policy-extension-receipts
+                   '()))
             (cons 'runtime-snapshot
                   (poo-flow-user-loop-engine-intent-runtime-snapshot intent))
             (cons 'sandbox-profile-refs
@@ -427,311 +204,6 @@
            (poo-flow-user-loop-engine-intent-ref manifest 'argv '()))
      (cons 'runtime-executed #f))))
 
-;;; Agent profiles are shallow policy rows. They name the selected reviewer or
-;;; governor role but leave model choice, tool execution, and sandbox startup to
-;;; the runtime handoff.
-;; : (-> Alist Pair Alist)
-(def (poo-flow-user-loop-engine-intent-agent-profile intent role-ref)
-  (let ((role (car role-ref))
-        (profile-name (cdr role-ref)))
-    (poo-flow-agent-profile->alist
-     (make-poo-flow-agent-profile
-      profile-name
-      'runtime-selected
-      (list 'loop-engine role)
-      '()
-      '(loop-engine)
-      (poo-flow-user-loop-engine-intent-primary-sandbox-profile intent)
-      (list (cons 'role role)
-            (cons 'governor
-                  (poo-flow-user-loop-engine-intent-ref intent 'governor '()))
-            (cons 'result-contract
-                  (poo-flow-user-loop-engine-intent-role-result-contract
-                   intent
-                   role))
-            (cons 'human-audit
-                  (poo-flow-user-loop-engine-intent-ref
-                   intent
-                   'human-audit
-                   '())))
-      '()
-      (poo-flow-user-loop-engine-intent-ref intent 'budget '())
-      (poo-flow-user-loop-engine-intent-ref intent 'observability '())
-      (list (cons 'source 'user-config-loop-engine)
-            (cons 'profile-role role)
-            (cons 'runtime-owner "marlin-agent-core")
-            (cons 'runtime-executed #f))))))
-
-;;; Profile projection preserves user declaration order so presentation output
-;;; and runtime manifests can be compared without sorting.
-;; : (-> Alist [Alist])
-(def (poo-flow-user-loop-engine-intent-agent-profiles intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-intent-agent-profile intent role-ref))
-       (poo-flow-user-loop-engine-intent-agent-profile-refs intent)))
-
-;;; Harness rows describe an initialized-agent boundary without constructing
-;;; it. They carry runtime intent and sandbox policy references as receipt data.
-;; : (-> Alist Pair Alist)
-(def (poo-flow-user-loop-engine-intent-agent-harness intent role-ref)
-  (let* ((use-case-name
-          (poo-flow-user-loop-engine-intent-use-case-name intent))
-         (role (car role-ref))
-         (profile-name (cdr role-ref))
-         (harness-id
-          (poo-flow-user-loop-engine-runtime-id
-           use-case-name
-           (string-append (symbol->string role) "-harness"))))
-    (poo-flow-agent-harness->alist
-     (make-poo-flow-agent-harness
-      harness-id
-      profile-name
-      (poo-flow-user-loop-engine-intent-primary-sandbox-profile intent)
-      (poo-flow-user-loop-engine-intent-runtime-intent intent)
-      '(execute-agent-operation stream-events read-runtime-snapshot)
-      (list 'loop-engine use-case-name role)
-      (poo-flow-user-loop-engine-intent-ref intent 'observability '())
-      #f
-      (list (cons 'source 'user-config-loop-engine)
-            (cons 'profile-role role)
-            (cons 'runtime-owner "marlin-agent-core")
-            (cons 'runtime-executed #f))))))
-
-;;; Harness projection is one row per named profile so multi-agent governor
-;;; configurations remain explicit in the handoff packet.
-;; : (-> Alist [Alist])
-(def (poo-flow-user-loop-engine-intent-agent-harnesses intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-intent-agent-harness intent role-ref))
-       (poo-flow-user-loop-engine-intent-agent-profile-refs intent)))
-
-;;; Session rows keep delegated work separate from workflow runs. The active
-;;; operation ref points at the control-plane operation, not an executed turn.
-;; : (-> Alist Pair Alist)
-(def (poo-flow-user-loop-engine-intent-agent-session intent role-ref)
-  (let* ((use-case-name
-          (poo-flow-user-loop-engine-intent-use-case-name intent))
-         (role (car role-ref))
-         (session-name
-          (poo-flow-user-loop-engine-runtime-id
-           use-case-name
-           (string-append (symbol->string role) "-session")))
-         (harness-id
-          (poo-flow-user-loop-engine-runtime-id
-           use-case-name
-           (string-append (symbol->string role) "-harness")))
-         (operation-id
-          (poo-flow-user-loop-engine-runtime-id use-case-name "operation")))
-    (poo-flow-agent-session->alist
-     (make-poo-flow-agent-session
-      session-name
-      harness-id
-      (poo-flow-user-loop-engine-intent-status intent)
-      operation-id
-      (list 'loop-engine-conversation use-case-name role)
-      '((retention . parent-owned))
-      (list operation-id)
-      (list (cons 'source 'user-config-loop-engine)
-            (cons 'profile-role role)
-            (cons 'workflow-run-ref
-                  (poo-flow-user-loop-engine-runtime-id
-                   use-case-name
-                   "workflow-run"))
-            (cons 'runtime-owner "marlin-agent-core")
-            (cons 'runtime-executed #f))))))
-
-;;; Session projection gives every named profile a stable namespace that agents
-;;; can audit before a backend opens durable conversation state.
-;; : (-> Alist [Alist])
-(def (poo-flow-user-loop-engine-intent-agent-sessions intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-intent-agent-session intent role-ref))
-       (poo-flow-user-loop-engine-intent-agent-profile-refs intent)))
-
-;;; The workflow-run projection is an admission plan for runtime lowering. It
-;;; is not evidence that a workflow has started.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-workflow-run intent)
-  (let* ((use-case-name
-          (poo-flow-user-loop-engine-intent-use-case-name intent))
-         (run-id
-          (poo-flow-user-loop-engine-runtime-id use-case-name "workflow-run")))
-    (poo-flow-workflow-run->alist
-     (make-poo-flow-workflow-run
-      run-id
-      (poo-flow-user-loop-engine-intent-workflow-ref intent)
-      (list (cons 'use-case
-                  (poo-flow-user-loop-engine-intent-ref intent 'use-case '()))
-            (cons 'use-cases
-                  (poo-flow-user-loop-engine-intent-ref intent 'use-cases '())))
-      (poo-flow-user-loop-engine-intent-status intent)
-      (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '())
-      (list 'loop-engine-events use-case-name)
-      '()
-      #f
-      #f
-      #f
-      (list (cons 'source 'user-config-loop-engine)
-            (cons 'runtime-owner "marlin-agent-core")
-            (cons 'runtime-executed #f))))))
-
-;;; Dispatch receipts are projected separately from workflow runs so async
-;;; agent input does not pretend to be a terminal workflow result.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-dispatch-receipt intent)
-  (let* ((use-case-name
-          (poo-flow-user-loop-engine-intent-use-case-name intent))
-         (target-agent
-          (poo-flow-user-loop-engine-primary-agent
-           (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '()))))
-    (poo-flow-dispatch-receipt->alist
-     (make-poo-flow-dispatch-receipt
-      (poo-flow-user-loop-engine-runtime-id use-case-name "dispatch")
-      target-agent
-      (poo-flow-user-loop-engine-runtime-id use-case-name "runtime-instance")
-      (poo-flow-user-loop-engine-runtime-id use-case-name "session")
-      (list 'loop-engine-payload use-case-name)
-      #f
-      'admitted
-      (poo-flow-user-loop-engine-intent-runtime-intent intent)
-      (list (cons 'source 'user-config-loop-engine)
-            (cons 'runtime-owner "marlin-agent-core")
-            (cons 'runtime-executed #f))))))
-
-;;; Agent operations capture the node-level action: governor judge by default,
-;;; or human-audit when the user declares a manual loop gate.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-agent-operation intent)
-  (let* ((use-case-name
-          (poo-flow-user-loop-engine-intent-use-case-name intent))
-         (operation-kind
-          (poo-flow-user-loop-engine-intent-operation-kind intent)))
-    (poo-flow-agent-operation->alist
-     (make-poo-flow-agent-operation
-      (poo-flow-user-loop-engine-runtime-id use-case-name "operation")
-      operation-kind
-      (poo-flow-user-loop-engine-runtime-id use-case-name "session")
-      (poo-flow-user-loop-engine-runtime-id use-case-name "workflow-run")
-      (list (cons 'use-case
-                  (poo-flow-user-loop-engine-intent-ref intent 'use-case '()))
-            (cons 'governor
-                  (poo-flow-user-loop-engine-intent-ref intent 'governor '()))
-            (cons 'agent-judges
-                  (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '()))
-            (cons 'human-audit
-                  (poo-flow-user-loop-engine-intent-ref intent 'human-audit '())))
-      (poo-flow-user-loop-engine-intent-operation-result-contract intent)
-      (poo-flow-user-loop-engine-intent-runtime-intent intent)
-      (poo-flow-user-loop-engine-intent-status intent)
-      #f
-      (list (cons 'source 'user-config-loop-engine)
-            (cons 'runtime-owner "marlin-agent-core")
-            (cons 'runtime-executed #f))))))
-
-;;; Delegated operations are the Flue-style readable view over the canonical
-;;; agent-operation row. They name the governor, reviewer, and human audit gate
-;;; without claiming Scheme has executed the node.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-delegated-operation intent)
-  (let* ((use-case-name
-          (poo-flow-user-loop-engine-intent-use-case-name intent))
-         (agent-judges
-          (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '()))
-         (governor-agent
-          (poo-flow-user-loop-engine-agent-judge-ref
-           agent-judges
-           'governor
-           'loop-governor-agent))
-         (explicit-reviewer-agent
-          (poo-flow-user-loop-engine-agent-judge-ref
-           agent-judges
-           'reviewer
-           #f))
-         (reviewer-agent
-          (if explicit-reviewer-agent
-            explicit-reviewer-agent
-            (poo-flow-user-loop-engine-agent-judge-ref
-             agent-judges
-             'verifier
-             (poo-flow-user-loop-engine-agent-judge-ref
-              agent-judges
-              'auditor
-              'loop-reviewer-agent))))
-         (auditor-agent
-          (poo-flow-user-loop-engine-agent-judge-ref
-           agent-judges
-           'auditor
-           reviewer-agent))
-         (human-audit
-          (poo-flow-user-loop-engine-intent-ref intent 'human-audit '())))
-    (list
-     (cons 'kind 'delegated-operation)
-     (cons 'contract 'poo-flow.loop-engine.delegated-operation.v1)
-     (cons 'source 'user-config-loop-engine)
-     (cons 'object-family 'agent-operation)
-     (cons 'operation-ref
-           (poo-flow-user-loop-engine-runtime-id use-case-name "operation"))
-     (cons 'operation-kind
-           (poo-flow-user-loop-engine-intent-operation-kind intent))
-     (cons 'workflow-run-ref
-           (poo-flow-user-loop-engine-runtime-id use-case-name "workflow-run"))
-     (cons 'session-ref
-           (poo-flow-user-loop-engine-runtime-id use-case-name "session"))
-     (cons 'child-session-ref
-           (poo-flow-user-loop-engine-runtime-id
-            use-case-name
-            "delegate-session"))
-     (cons 'workflow-ref
-           (poo-flow-user-loop-engine-intent-workflow-ref intent))
-     (cons 'governor-agent governor-agent)
-     (cons 'reviewer-agent reviewer-agent)
-     (cons 'reviewer-role
-           (if explicit-reviewer-agent 'reviewer 'verifier))
-     (cons 'auditor-agent auditor-agent)
-     (cons 'human-audit human-audit)
-     (cons 'human-audit-profile
-           (if (null? human-audit) #f 'human-audit))
-     (cons 'human-audit-required?
-           (not (null? human-audit)))
-     (cons 'result-contract
-           (poo-flow-user-loop-engine-intent-result-contract intent))
-     (cons 'structured-result-contract
-           (poo-flow-user-loop-engine-intent-operation-result-contract
-            intent))
-     (cons 'runtime-intent
-           (poo-flow-user-loop-engine-intent-runtime-intent intent))
-     (cons 'status
-           (poo-flow-user-loop-engine-intent-status intent))
-     (cons 'descriptor-realized? #f)
-     (cons 'runtime-owner "marlin-agent-core")
-     (cons 'runtime-executed #f))))
-
-;;; Runtime consumers may receive older intent rows without the agreement slot;
-;;; this accessor makes sandbox readiness total and keeps snapshot/handoff code
-;;; from re-encoding agreement shape in multiple places.
-;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement intent)
-  (poo-flow-user-loop-engine-intent-ref
-   intent
-   'sandbox-handoff-agreement
-   (poo-flow-user-loop-engine-sandbox-handoff-agreement
-    (poo-flow-user-loop-engine-intent-ref
-     intent
-     'sandbox-profile-refs
-     '())
-    (poo-flow-user-loop-engine-intent-ref
-     intent
-     'sandbox-runtime-summaries
-     '())
-    (poo-flow-user-loop-engine-intent-ref
-     intent
-     'sandbox-handoff-summaries
-     '())
-    (poo-flow-user-loop-engine-intent-ref
-     intent
-     'sandbox-unresolved-profile-refs
-     '()))))
-
 ;;; Runtime snapshots expose the sandbox agreement as the handoff readiness
 ;;; source of truth. This prevents a loop from looking ready when a sandbox
 ;;; profile is unresolved or only available as an invalid runtime summary.
@@ -753,7 +225,9 @@
          (capability-receipt
           (poo-flow-user-loop-engine-intent-capability-receipt intent))
          (memory-receipt
-          (poo-flow-user-loop-engine-intent-memory-receipt intent))
+         (poo-flow-user-loop-engine-intent-memory-receipt intent))
+         (compression-receipt
+          (poo-flow-user-loop-engine-intent-compression-receipt intent))
          (sandbox-agreement
           (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
            intent))
@@ -776,6 +250,7 @@
                 (cons 'resource-dispatch-receipt resource-dispatch-receipt)
                 (cons 'capability-receipt capability-receipt)
                 (cons 'memory-receipt memory-receipt)
+                (cons 'compression-receipt compression-receipt)
                 (cons 'sandbox-handoff-agreement sandbox-agreement)
                 (cons 'runtime-executed #f))))
     (poo-flow-runtime-snapshot->alist
@@ -913,10 +388,14 @@
 
 ;;; Capability receipts are OpenRath-inspired backend expectation facts. They
 ;;; do not probe, open, or validate a backend; Marlin consumes them later.
-;; : (-> Alist Alist)
+;;; Supported backends are a validation vocabulary only; Scheme never creates
+;;; the sandbox backend and still leaves all runtime realization to Marlin.
+;; : [Symbol]
 (def +poo-flow-user-loop-engine-capability-supported-backends+
   '(nono-sandbox cube-sandbox))
 
+;;; Backend support keeps current public contracts limited to cube-sandbox and
+;;; nono-sandbox while accepting the historical cubeSandbox spelling as input.
 ;; : (-> Symbol Boolean)
 (def (poo-flow-user-loop-engine-capability-backend-supported? backend)
   (or (not backend)
@@ -924,6 +403,8 @@
             +poo-flow-user-loop-engine-capability-supported-backends+)
       (eq? backend 'cubeSandbox)))
 
+;;; Diagnostics are payload rows for users and ABI consumers. An empty result
+;;; means the policy vocabulary is valid, not that a backend probe succeeded.
 ;; : (-> Symbol [Alist])
 (def (poo-flow-user-loop-engine-capability-diagnostics backend)
   (if (poo-flow-user-loop-engine-capability-backend-supported? backend)
@@ -936,6 +417,9 @@
       (cons 'supported
             +poo-flow-user-loop-engine-capability-supported-backends+)))))
 
+;;; Capability receipt is self-contained so Marlin can reject unsupported
+;;; backend intent without inspecting the original profile object graph.
+;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-capability-receipt intent)
   (let ((use-case-name
          (poo-flow-user-loop-engine-intent-use-case-name intent))
@@ -990,19 +474,55 @@
 
 ;;; Memory receipts declare recall and commit policy without reading, ranking,
 ;;; writing, or retaining memory in Scheme. Marlin owns the memory store.
+;; : (-> [Alist] Symbol Alist)
+(def (poo-flow-user-loop-engine-memory-policy-for-use-case
+      memory-policies
+      use-case-name)
+  (cond
+   ((null? memory-policies) '())
+   ((and (pair? memory-policies)
+         (equal? (poo-flow-user-loop-engine-intent-ref
+                  (car memory-policies)
+                  'use-case
+                  #f)
+                 use-case-name))
+    (car memory-policies))
+   ((pair? memory-policies)
+    (poo-flow-user-loop-engine-memory-policy-for-use-case
+     (cdr memory-policies)
+     use-case-name))
+   (else '())))
+
+;;; Memory receipt binds the selected use-case to one declared policy and leaves
+;;; recall, commit, retention, and store mutation to the Marlin execution layer.
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-memory-receipt intent)
-  (let ((use-case-name
-         (poo-flow-user-loop-engine-intent-use-case-name intent))
-        (memory-policy
-         (poo-flow-user-loop-engine-intent-ref intent 'memory-policy '())))
+  (let* ((use-case-name
+          (poo-flow-user-loop-engine-intent-use-case-name intent))
+         (memory-policies
+          (poo-flow-user-loop-engine-intent-ref intent 'memory-policies '()))
+         (memory-policy
+          (poo-flow-user-loop-engine-memory-policy-for-use-case
+           memory-policies
+           use-case-name)))
     (list
      (cons 'kind 'memory-receipt)
      (cons 'contract 'poo-flow.loop-engine.memory-receipt.v1)
+     (cons 'selected-use-case use-case-name)
+     (cons 'use-case
+           (poo-flow-user-loop-engine-intent-ref
+            memory-policy
+            'use-case
+            #f))
      (cons 'store
            (poo-flow-user-loop-engine-intent-ref
             memory-policy
             'store
+            #f))
+     (cons 'state-path
+           (poo-flow-user-loop-engine-intent-ref
+            memory-policy
+            'state-path
             #f))
      (cons 'scope
            (poo-flow-user-loop-engine-intent-ref
@@ -1030,8 +550,58 @@
             'retention
             'report-only))
      (cons 'policy memory-policy)
+     (cons 'policies memory-policies)
      (cons 'session-ref
            (poo-flow-user-loop-engine-runtime-id use-case-name "session"))
+     (cons 'runtime-owner "marlin-agent-core")
+     (cons 'runtime-executed #f))))
+
+;;; Compression receipts describe the handoff shape for transcript/session
+;;; compaction. Scheme never summarizes, mutates, or creates sessions here.
+;; : (-> Alist Alist)
+(def (poo-flow-user-loop-engine-intent-compression-receipt intent)
+  (let ((use-case-name
+         (poo-flow-user-loop-engine-intent-use-case-name intent))
+        (compression-policy
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'compression-policy
+          '())))
+    (list
+     (cons 'kind 'compression-receipt)
+     (cons 'contract 'poo-flow.loop-engine.compression-receipt.v1)
+     (cons 'strategy
+           (poo-flow-user-loop-engine-intent-ref
+            compression-policy
+            'strategy
+            #f))
+     (cons 'trigger
+           (poo-flow-user-loop-engine-intent-ref
+            compression-policy
+            'trigger
+            #f))
+     (cons 'summary-format
+           (poo-flow-user-loop-engine-intent-ref
+            compression-policy
+            'summary-format
+            #f))
+     (cons 'lineage-kind
+           (poo-flow-user-loop-engine-intent-ref
+            compression-policy
+            'lineage-kind
+            'compressed-session))
+     (cons 'retention
+           (poo-flow-user-loop-engine-intent-ref
+            compression-policy
+            'retention
+            'report-only))
+     (cons 'policy compression-policy)
+     (cons 'source-session-ref
+           (poo-flow-user-loop-engine-runtime-id use-case-name "session"))
+     (cons 'compressed-session-ref
+           (poo-flow-user-loop-engine-runtime-id
+            use-case-name
+            "compressed-session"))
      (cons 'runtime-owner "marlin-agent-core")
      (cons 'runtime-executed #f))))
 
@@ -1078,6 +648,13 @@
          (poo-flow-user-loop-engine-intent-capability-receipt intent))
    (cons 'memory-receipt
          (poo-flow-user-loop-engine-intent-memory-receipt intent))
+   (cons 'compression-receipt
+         (poo-flow-user-loop-engine-intent-compression-receipt intent))
+   (cons 'policy-extension-receipts
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'policy-extension-receipts
+          '()))
    (cons 'runtime-command-manifest
          (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))
    (cons 'runtime-command-manifest-summary
@@ -1119,10 +696,15 @@
           intent
           'capability-policy
           '()))
-   (cons 'memory-policy
+   (cons 'memory-policies
          (poo-flow-user-loop-engine-intent-ref
           intent
-          'memory-policy
+          'memory-policies
+          '()))
+   (cons 'compression-policy
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'compression-policy
           '()))
    (cons 'runtime
          (poo-flow-user-loop-engine-intent-ref intent 'runtime '()))
@@ -1170,6 +752,13 @@
          (poo-flow-user-loop-engine-intent-capability-receipt intent))
    (cons 'memory-receipt
          (poo-flow-user-loop-engine-intent-memory-receipt intent))
+   (cons 'compression-receipt
+         (poo-flow-user-loop-engine-intent-compression-receipt intent))
+   (cons 'policy-extension-receipts
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'policy-extension-receipts
+          '()))
    (cons 'runtime-command-manifest
          (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))
    (cons 'runtime-command-manifest-summary

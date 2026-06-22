@@ -16,6 +16,7 @@
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/nono-sandbox/profile-interface
         :poo-flow/src/module-system/loop-engine-config
+        :poo-flow/src/module-system/loop-engine-policy-extension
         :poo-flow/src/modules/sandbox-core/profile
         :poo-flow/src/modules/sandbox-core/profile-interface
         :poo-flow/src/module-system/object-validation
@@ -35,6 +36,7 @@
         (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
         (import: :poo-flow/src/modules/funflow/config)
         (import: :poo-flow/src/module-system/loop-engine-config)
+        (import: :poo-flow/src/module-system/loop-engine-policy-extension)
         (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
         (import: :poo-flow/src/module-system/observability)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))

@@ -106,13 +106,24 @@
     unsupported-behavior: 'handoff-diagnostic)
 
   (.def (current-system-build-memory-policy @ loop-engine-memory-policy
-                                            store scope recall commit
-                                            ranking retention)
+                                            use-case store state-path scope
+                                            recall commit ranking retention)
+    use-case: 'current-system-build-loop
     store: 'project-memory
+    state-path: "loop-state/current-system-build.org"
     scope: 'session
     recall: '(last-user-message build-context prior-failure)
     commit: '(decision-summary evidence-index handoff-receipt)
     ranking: 'recency
+    retention: 'report-only)
+
+  (.def (current-system-build-compression-policy
+         @ loop-engine-compression-policy
+         strategy trigger summary-format lineage-kind retention)
+    strategy: 'handoff-summary
+    trigger: 'after-human-audit
+    summary-format: 'structured-alist
+    lineage-kind: 'compressed-ci-session
     retention: 'report-only)
 
   (.def (current-system-build-profile @ loop-engine-profile
@@ -121,7 +132,7 @@
                                       result observability runtime
                                       lineage-policy selector-policy
                                       resource-policy capability-policy
-                                      memory-policy)
+                                      memory-policies compression-policy)
     use-case: current-system-build-loop
     governor: current-system-build-governor
     agent-judges: current-system-build-judges
@@ -137,4 +148,5 @@
     selector-policy: current-system-build-selector
     resource-policy: current-system-build-resource-policy
     capability-policy: current-system-build-capability-policy
-    memory-policy: current-system-build-memory-policy))
+    memory-policies: (list current-system-build-memory-policy)
+    compression-policy: current-system-build-compression-policy))

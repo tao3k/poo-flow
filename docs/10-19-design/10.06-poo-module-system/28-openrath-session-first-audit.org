@@ -321,7 +321,7 @@ For POO Flow, this is not a reason to implement backend lifecycle, locks, stores
 - =loop-engine-memory-policy= for recall, commit, store-scope, and ranking expectations.
 - =loop-engine-compression-policy= for summary/compression handoff and lineage receipt expectations.
 
-The first implementation slice should remain report-only. Scheme now projects capability and memory receipts as inert facts. Compression receipts remain next work. Marlin owns refcounts, backend handles, locks, timeout behavior, memory store mutation, recall execution, commit execution, ranking, retention, and actual compression execution. Capability backend values are sandbox backend contracts, not runtime owners: the accepted public values are =nono-sandbox= and =cube-sandbox=.
+The first implementation slice should remain report-only. Scheme now projects capability, memory, and compression receipts as inert facts. Marlin owns refcounts, backend handles, locks, timeout behavior, memory store mutation, recall execution, commit execution, ranking, retention, transcript summarization, compressed session creation, and actual compression execution. Capability backend values are sandbox backend contracts, not runtime owners: the accepted public values are =nono-sandbox= and =cube-sandbox=.
 
 ** 10.06.28.06 Gap Analysis
 

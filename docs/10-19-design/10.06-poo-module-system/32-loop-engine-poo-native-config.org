@@ -85,24 +85,31 @@ OpenRath's session model sharpens that next scenario into three POO-native objec
 - =loop-engine-selector-policy=: declares candidate use cases, judge inputs, fallback behavior, and selected branch reference without running the scoring loop in Scheme.
 - =loop-engine-resource-policy=: declares symbolic resource keys, collision classes, and intended serial/parallel dispatch groups on tool references.
 - =loop-engine-capability-policy=: declares sandbox backend capability expectations with validated backend names.
-- =loop-engine-memory-policy=: declares store/scope, recall keys, commit keys, ranking, and retention expectations without reading or writing memory in Scheme.
+- =loop-engine-memory-policy=: declares one use-case-specific memory policy with store/scope, state path, recall keys, commit keys, ranking, and retention expectations without reading or writing memory in Scheme. Profiles compose these as the =memory-policies= list.
+- =loop-engine-compression-policy=: declares compression strategy, trigger, summary format, lineage kind, and retention expectations without summarizing or mutating sessions in Scheme.
+- =loop-engine-policy-extension=: declares the generic operational policy extension base that projects report-only receipts through =policy-extension-receipts=. The runtime core treats it as an extension collection, not as a hard-coded policy family.
+- =loop-engine-coordination-policy-extension=, =loop-engine-observability-policy-extension=, and =loop-engine-safety-policy-extension=: concrete POO-native extension prototypes over the generic base. They set receipt defaults and declare policy-family slots while preserving one runtime collection.
 
 These policy objects stay inside =(use-module loop-engine :config (.def ...))=. They are not alist/record DSL clauses, not scheduler commands, and not compatibility branches for the removed row config.
 
-Implementation update: the OpenRath-derived policy objects are now implemented as POO-native profile slots and report-only receipts. =loop-engine-lineage-policy= projects =lineage-receipt=, =loop-engine-selector-policy= projects =selector-receipt=, =loop-engine-resource-policy= projects =resource-dispatch-receipt=, =loop-engine-capability-policy= projects =capability-receipt=, and =loop-engine-memory-policy= projects =memory-receipt=.
+Implementation update: the OpenRath-derived policy objects are now implemented as POO-native profile slots and report-only receipts. =loop-engine-lineage-policy= projects =lineage-receipt=, =loop-engine-selector-policy= projects =selector-receipt=, =loop-engine-resource-policy= projects =resource-dispatch-receipt=, =loop-engine-capability-policy= projects =capability-receipt=, =loop-engine-memory-policy= objects under =memory-policies= project =memory-receipt=, =loop-engine-compression-policy= projects =compression-receipt=, and policy extension objects under =policy-extensions= project the generic =policy-extension-receipts= collection. Coordination, observability, and safety are now concrete POO sub-prototypes rather than fields on the generic base.
 
 * Marlin ABI Surface
 
 The loop-engine runtime manifest exposes two different tables for Marlin:
 
-- =object-families=: the report-only object families carried by the handoff request, including =lineage-receipt=, =selector-receipt=, =resource-dispatch-receipt=, =capability-receipt=, and =memory-receipt=.
-- =receipt-contracts=: the stable schema ids for report-only receipt rows. This includes lineage, selector, resource-dispatch, capability, memory, and sandbox handoff agreement contracts.
+- =object-families=: the report-only object families carried by the handoff request, including =lineage-receipt=, =selector-receipt=, =resource-dispatch-receipt=, =capability-receipt=, =memory-receipt=, =compression-receipt=, and =policy-extension-receipt=.
+- =receipt-contracts=: the stable schema ids for report-only receipt rows. This includes lineage, selector, resource-dispatch, capability, memory, compression, generic policy-extension, and sandbox handoff agreement contracts.
 
 This split is intentional. =runtime-handoff-contracts= names operations that Marlin may implement, such as =start-workflow-run= and =read-runtime-snapshot=. =receipt-contracts= names inert data schemas that Scheme projects for audit and handoff. Scheme must not use receipt contracts as executable commands.
 
 The public presentation exposes the same =receipt-contracts= table so downstream agents can validate the manifest shape without walking every runtime request payload.
 
-OpenRath's backend, memory, and compression layers suggest manifest extensions, but not Scheme runtime implementations. =loop-engine-capability-policy= validates backend values as sandbox backend names: =nono-sandbox= and =cube-sandbox= are accepted; =marlin-agent-core= remains the runtime owner, not a sandbox backend. =loop-engine-memory-policy= is report-only: Marlin owns durable memory stores, recall execution, commit execution, ranking, retention, and mutation. =loop-engine-compression-policy= remains the next policy object to add.
+OpenRath's backend, memory, compression, and operational policy layers suggest manifest extensions, but not Scheme runtime implementations. =loop-engine-capability-policy= validates backend values as sandbox backend names: =nono-sandbox= and =cube-sandbox= are accepted; =marlin-agent-core= remains the runtime owner, not a sandbox backend. =memory-policies= are report-only and use-case-scoped: Scheme validates membership and duplicate use-case conflicts, then the =memory-receipt= exposes the selected policy plus the complete policy list. Marlin owns durable memory stores, recall execution, commit execution, ranking, retention, and mutation. =loop-engine-compression-policy= is also report-only: Marlin owns transcript summarization, compressed session creation, session lineage writes, and retention enforcement. =policy-extensions= are generic report-only receipts for operational policy families such as coordination, observability, and safety. Concrete POO sub-prototypes provide family-specific slots; Marlin consumes the receipt collection and owns execution, state mutation, scheduling, and conflict enforcement.
+
+The legacy =govern-loop= Marlin ABI manifest now carries a =loop-engine-discovery= table that references the same loop-engine runtime command contract, object families, and receipt contracts used by runtime handoff manifests. This keeps downstream consumers on one discovery surface without copying receipt contracts into a second source.
+
+The package build spec now includes root =t/*.ss= test modules as a separate test build slice while still excluding =t/fixtures=. This makes =gxpkg clean= and =gxpkg build= authoritative for stale =:poo-flow/t/...= imports used by =t/unit-tests.ss=.
 
 * Verification
 
