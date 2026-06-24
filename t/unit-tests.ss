@@ -26,6 +26,7 @@
         :poo-flow/t/loop-agent-descriptor-test
         :poo-flow/t/loop-agent-descriptor-performance-test
         :poo-flow/t/loop-governor-test
+        :poo-flow/t/loop-strategy-performance-test
         :poo-flow/t/loop-strategy-test
         :poo-flow/t/module-system-facade-test
         :poo-flow/t/module-system-lazy-loader-test

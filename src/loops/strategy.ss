@@ -182,6 +182,11 @@
 (def (loop-strategy-local-validation plan)
   (loop-strategy-slot plan 'local-validation '()))
 
+;; : (-> Alist Boolean)
+(def (loop-strategy-local-validation-policy-harness-only? policy)
+  (and (eq? (loop-strategy-alist-ref policy 'mode #f) 'harness-only)
+       (eq? (loop-strategy-alist-ref policy 'allow-effects #t) #f)))
+
 ;;; Boundary: handoff metadata describes the downstream runtime contract.
 ;; : (-> LoopStrategyPlan Alist)
 (def (loop-strategy-handoff plan)
@@ -207,9 +212,8 @@
 ;;; Boundary: this predicate prevents tests from becoming production execution.
 ;; : (-> LoopStrategyPlan Boolean)
 (def (loop-strategy-local-validation-harness-only? plan)
-  (let (policy (loop-strategy-local-validation plan))
-    (and (eq? (loop-strategy-alist-ref policy 'mode #f) 'harness-only)
-         (eq? (loop-strategy-alist-ref policy 'allow-effects #t) #f))))
+  (loop-strategy-local-validation-policy-harness-only?
+   (loop-strategy-local-validation plan)))
 
 ;;; Autonomy ceilings are policy gates, not scheduler readiness checks. They
 ;;; keep future L3 patterns out of current L1/L2 contract projections.
@@ -267,19 +271,27 @@
          '()
          descriptors))
 
+;; : (-> [LoopPatternDescriptor] Symbol [LoopPatternDescriptor])
+(def (loop-strategy-selected-patterns/from-fields patterns ceiling)
+  (loop-sort-patterns
+   (loop-filter
+    (lambda (descriptor)
+      (loop-pattern-within-ceiling? descriptor ceiling))
+    patterns)))
+
 ;;; Boundary: selected patterns are validated, filtered by autonomy ceiling, and sorted.
 ;;; Selected patterns are the complete pre-runtime candidate set after static
 ;;; level gating and priority ranking.
 ;;; Marlin still decides actual execution from the handoff contract.
 ;; : (-> LoopStrategyPlan [LoopPatternDescriptor])
 (def (loop-strategy-selected-patterns plan)
-  (let* ((valid-plan (validate-loop-strategy-plan plan))
-         (ceiling (loop-strategy-level-ceiling valid-plan)))
-    (loop-sort-patterns
-     (loop-filter
-      (lambda (descriptor)
-        (loop-pattern-within-ceiling? descriptor ceiling))
-      (loop-strategy-patterns valid-plan)))))
+  (let ((name (loop-strategy-name plan))
+        (patterns (loop-strategy-patterns plan))
+        (level-ceiling (loop-strategy-level-ceiling plan))
+        (local-validation (loop-strategy-local-validation plan)))
+    (validate-loop-strategy-plan/fields
+     plan name patterns level-ceiling local-validation)
+    (loop-strategy-selected-patterns/from-fields patterns level-ceiling)))
 
 ;;; Actionable patterns exclude L1 report-only loops so strategy plans can show
 ;;; advisory loops and write-capable loops in separate contract fields.
@@ -343,28 +355,35 @@
 ;;; descriptor failures all become doctor-friendly data before any handoff.
 ;; : (-> LoopStrategyPlan [ValidationError])
 (def (loop-strategy-validation-errors plan)
+  (loop-strategy-validation-errors/fields
+   plan
+   (loop-strategy-name plan)
+   (loop-strategy-patterns plan)
+   (loop-strategy-level-ceiling plan)
+   (loop-strategy-local-validation plan)))
+
+;; : (-> LoopStrategyPlan Symbol [LoopPatternDescriptor] Symbol Alist [ValidationError])
+(def (loop-strategy-validation-errors/fields plan name patterns level-ceiling local-validation)
   (if (loop-strategy-plan? plan)
     (append
-     (loop-strategy-required-field-error 'name (loop-strategy-name plan))
-     (if (list? (loop-strategy-patterns plan))
+     (loop-strategy-required-field-error 'name name)
+     (if (list? patterns)
        '()
        (list (list (cons 'field 'patterns)
                    (cons 'code 'not-list)
-                   (cons 'value (loop-strategy-patterns plan)))))
-     (if (loop-pattern-level? (loop-strategy-level-ceiling plan))
+                   (cons 'value patterns))))
+     (if (loop-pattern-level? level-ceiling)
        '()
        (list (list (cons 'field 'level-ceiling)
                    (cons 'code 'unsupported-level)
-                   (cons 'value (loop-strategy-level-ceiling plan)))))
-     (if (loop-strategy-local-validation-harness-only? plan)
+                   (cons 'value level-ceiling))))
+     (if (loop-strategy-local-validation-policy-harness-only? local-validation)
        '()
        (list (list (cons 'field 'local-validation)
                    (cons 'code 'local-execution-must-be-harness-only)
-                   (cons 'value (loop-strategy-local-validation plan)))))
+                   (cons 'value local-validation))))
      (loop-strategy-pattern-validation-errors
-      (if (list? (loop-strategy-patterns plan))
-        (loop-strategy-patterns plan)
-        '())
+      (if (list? patterns) patterns '())
       0))
     (list '((field . plan) (code . not-loop-strategy-plan)))))
 
@@ -373,7 +392,21 @@
 ;;; control plane, so test harnesses do not parse ad hoc strategy errors.
 ;; : (-> LoopStrategyPlan LoopStrategyPlan)
 (def (validate-loop-strategy-plan plan)
-  (let (errors (loop-strategy-validation-errors plan))
+  (let (errors
+        (loop-strategy-validation-errors plan))
+    (if (null? errors)
+      plan
+      (raise-control-plane-failure
+       'loop-strategy
+       'invalid-loop-strategy-plan
+       "invalid loop strategy plan"
+       (list (cons 'errors errors))))))
+
+;; : (-> LoopStrategyPlan Symbol [LoopPatternDescriptor] Symbol Alist LoopStrategyPlan)
+(def (validate-loop-strategy-plan/fields plan name patterns level-ceiling local-validation)
+  (let (errors
+        (loop-strategy-validation-errors/fields
+         plan name patterns level-ceiling local-validation))
     (if (null? errors)
       plan
       (raise-control-plane-failure
@@ -391,30 +424,43 @@
 ;;; Invariant: contract data can be tested locally, but Marlin owns the run.
 ;; : (-> LoopStrategyPlan Alist)
 (def (loop-strategy-plan->contract plan)
-  (let* ((valid-plan (validate-loop-strategy-plan plan))
-         (selected-patterns (loop-strategy-selected-patterns valid-plan))
-         (actionable-patterns (loop-strategy-actionable-patterns valid-plan))
+  (let* ((name (loop-strategy-name plan))
+         (patterns (loop-strategy-patterns plan))
+         (selection (loop-strategy-selection plan))
+         (level-ceiling (loop-strategy-level-ceiling plan))
+         (local-validation (loop-strategy-local-validation plan))
+         (handoff (loop-strategy-handoff plan))
+         (control-owner (loop-strategy-control-owner plan))
+         (execution-owner (loop-strategy-execution-owner plan))
+         (metadata (loop-strategy-metadata plan)))
+    (validate-loop-strategy-plan/fields
+     plan name patterns level-ceiling local-validation)
+    (let* ((selected-patterns
+            (loop-strategy-selected-patterns/from-fields
+             patterns
+             level-ceiling))
+           (actionable-patterns
+            (loop-filter loop-pattern-actionable? selected-patterns))
          (next-pattern (if (null? actionable-patterns)
                          #f
                          (car actionable-patterns))))
-    (list (cons 'schema +loop-strategy-plan-schema+)
-          (cons 'kind 'loop-strategy-plan)
-          (cons 'name (loop-strategy-name valid-plan))
-          (cons 'selection (loop-strategy-selection valid-plan))
-          (cons 'level-ceiling (loop-strategy-level-ceiling valid-plan))
-          (cons 'pattern-count (length (loop-strategy-patterns valid-plan)))
-          (cons 'selected-patterns
-                (map loop-pattern-descriptor->contract selected-patterns))
-          (cons 'actionable-patterns
-                (loop-pattern-names actionable-patterns))
-          (cons 'next-pattern
-                (if next-pattern (loop-pattern-name next-pattern) #f))
-          (cons 'local-validation
-                (loop-strategy-local-validation valid-plan))
-          (cons 'handoff (loop-strategy-handoff valid-plan))
-          (cons 'runtime-boundary
-                '((local-execution . validation-only)
-                  (production-execution . marlin-agent-core)))
-          (cons 'control-owner (loop-strategy-control-owner valid-plan))
-          (cons 'execution-owner (loop-strategy-execution-owner valid-plan))
-          (cons 'metadata (loop-strategy-metadata valid-plan)))))
+      (list (cons 'schema +loop-strategy-plan-schema+)
+            (cons 'kind 'loop-strategy-plan)
+            (cons 'name name)
+            (cons 'selection selection)
+            (cons 'level-ceiling level-ceiling)
+            (cons 'pattern-count (length patterns))
+            (cons 'selected-patterns
+                  (map loop-pattern-descriptor->contract selected-patterns))
+            (cons 'actionable-patterns
+                  (loop-pattern-names actionable-patterns))
+            (cons 'next-pattern
+                  (if next-pattern (loop-pattern-name next-pattern) #f))
+            (cons 'local-validation local-validation)
+            (cons 'handoff handoff)
+            (cons 'runtime-boundary
+                  '((local-execution . validation-only)
+                    (production-execution . marlin-agent-core)))
+            (cons 'control-owner control-owner)
+            (cons 'execution-owner execution-owner)
+            (cons 'metadata metadata)))))
