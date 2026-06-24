@@ -140,35 +140,38 @@
 (def (pooFlowUserProfileSetPresentation profile-set)
   (let ((selected-profile
          (poo-flow-user-profile-set-default-profile profile-set)))
-    (.o kind: poo-flow-user-profile-set-presentation-kind
-        profile-set-name: (poo-flow-user-profile-set-name profile-set)
-        default-profile-name:
-        (poo-flow-user-profile-set-default-profile-name profile-set)
-        selected-profile-name:
-        (if selected-profile
-          (poo-flow-user-profile-name selected-profile)
-          #f)
-        selected-profile?:
-        (not (not selected-profile))
-        profile-count:
-        (length (poo-flow-user-profile-set-profiles profile-set))
-        profile-names: (poo-flow-user-profile-set-profile-names profile-set)
-        profiles:
-        (map poo-flow-user-profile-summary->alist
-             (poo-flow-user-profile-set-profiles profile-set))
-        user-entrypoints: poo-flow-user-config-public-entrypoints
-        api-entrypoints: poo-flow-user-config-api-entrypoints
-        boundary: poo-flow-user-config-boundary
-        brand-name: poo-flow-brand-name
-        brand-group: poo-flow-brand-group
-        scheme-owner: poo-flow-scheme-owner
-        module-system-owner: poo-flow-module-system-owner
-        runtime-owner: "marlin-agent-core"
-        package-management?: #f
-        dependency-installation?: #f
-        descriptor-realized?: #f
-        runtime-executed: #f
-        replayable: #t)))
+    (object<-alist
+     (list
+      (cons 'kind poo-flow-user-profile-set-presentation-kind)
+      (cons 'profile-set-name
+            (poo-flow-user-profile-set-name profile-set))
+      (cons 'default-profile-name
+            (poo-flow-user-profile-set-default-profile-name profile-set))
+      (cons 'selected-profile-name
+            (if selected-profile
+              (poo-flow-user-profile-name selected-profile)
+              #f))
+      (cons 'selected-profile? (not (not selected-profile)))
+      (cons 'profile-count
+            (length (poo-flow-user-profile-set-profiles profile-set)))
+      (cons 'profile-names
+            (poo-flow-user-profile-set-profile-names profile-set))
+      (cons 'profiles
+            (map poo-flow-user-profile-summary->alist
+                 (poo-flow-user-profile-set-profiles profile-set)))
+      (cons 'user-entrypoints poo-flow-user-config-public-entrypoints)
+      (cons 'api-entrypoints poo-flow-user-config-api-entrypoints)
+      (cons 'boundary poo-flow-user-config-boundary)
+      (cons 'brand-name poo-flow-brand-name)
+      (cons 'brand-group poo-flow-brand-group)
+      (cons 'scheme-owner poo-flow-scheme-owner)
+      (cons 'module-system-owner poo-flow-module-system-owner)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'package-management? #f)
+      (cons 'dependency-installation? #f)
+      (cons 'descriptor-realized? #f)
+      (cons 'runtime-executed #f)
+      (cons 'replayable #t)))))
 
 ;;; Doctor presentation combines high-level profile facts with shallow
 ;;; diagnostics, keeping the report inspectable for downstream config tooling.
@@ -441,32 +444,33 @@
   (let* ((doctor-report (pooFlowUserProfileSetDoctor profile-set))
          (selected-profile
           (poo-flow-user-profile-set-default-profile profile-set)))
-    (.o kind: poo-flow-user-profile-set-doctor-presentation-kind
-        profile-set-name: (.ref doctor-report 'profile-set-name)
-        default-profile-name: (.ref doctor-report 'default-profile-name)
-        selected-profile-name:
-        (if selected-profile
-          (poo-flow-user-profile-name selected-profile)
-          #f)
-        selected-profile?:
-        (not (not selected-profile))
-        doctor-status: (.ref doctor-report 'doctor-status)
-        doctor-ok: (.ref doctor-report 'doctor-ok)
-        diagnostic-count: (.ref doctor-report 'diagnostic-count)
-        profile-diagnostics: (.ref doctor-report 'profile-diagnostics)
-        profile-count:
-        (length (poo-flow-user-profile-set-profiles profile-set))
-        profile-names: (.ref doctor-report 'profile-names)
-        user-entrypoints: poo-flow-user-config-public-entrypoints
-        api-entrypoints: poo-flow-user-config-api-entrypoints
-        boundary: poo-flow-user-config-boundary
-        brand-name: poo-flow-brand-name
-        brand-group: poo-flow-brand-group
-        scheme-owner: poo-flow-scheme-owner
-        module-system-owner: poo-flow-module-system-owner
-        runtime-owner: "marlin-agent-core"
-        package-management?: #f
-        dependency-installation?: #f
-        descriptor-realized?: #f
-        runtime-executed: #f
-        replayable: #t)))
+    (object<-alist
+     (list
+      (cons 'kind poo-flow-user-profile-set-doctor-presentation-kind)
+      (cons 'profile-set-name (.ref doctor-report 'profile-set-name))
+      (cons 'default-profile-name (.ref doctor-report 'default-profile-name))
+      (cons 'selected-profile-name
+            (if selected-profile
+              (poo-flow-user-profile-name selected-profile)
+              #f))
+      (cons 'selected-profile? (not (not selected-profile)))
+      (cons 'doctor-status (.ref doctor-report 'doctor-status))
+      (cons 'doctor-ok (.ref doctor-report 'doctor-ok))
+      (cons 'diagnostic-count (.ref doctor-report 'diagnostic-count))
+      (cons 'profile-diagnostics (.ref doctor-report 'profile-diagnostics))
+      (cons 'profile-count
+            (length (poo-flow-user-profile-set-profiles profile-set)))
+      (cons 'profile-names (.ref doctor-report 'profile-names))
+      (cons 'user-entrypoints poo-flow-user-config-public-entrypoints)
+      (cons 'api-entrypoints poo-flow-user-config-api-entrypoints)
+      (cons 'boundary poo-flow-user-config-boundary)
+      (cons 'brand-name poo-flow-brand-name)
+      (cons 'brand-group poo-flow-brand-group)
+      (cons 'scheme-owner poo-flow-scheme-owner)
+      (cons 'module-system-owner poo-flow-module-system-owner)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'package-management? #f)
+      (cons 'dependency-installation? #f)
+      (cons 'descriptor-realized? #f)
+      (cons 'runtime-executed #f)
+      (cons 'replayable #t)))))

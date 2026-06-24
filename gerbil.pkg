@@ -7,8 +7,8 @@
           witness: "search runtime-source macro sugar module-sugar; t/agent-sandbox-profile-test.ss witnesses generated descriptor/profile constructors")
           (source-scope
            roots: ("src" "user-interface")
-           runtime-roots: (".")
-           explanation: "The Gerbil language project harness covers source owners under src, user-interface, and the default t test root; root generated files such as manifest.ss are not source owners.")
+           runtime-roots: ("src")
+           explanation: "The Gerbil language project harness parses source owners under src, user-interface, and the default t test root; only src is runtime-owned, while user-interface fragments are loaded declarative module configuration and root generated files such as manifest.ss are not source owners.")
           (runtime-boundary
            heavy-owners: ("rust" "external-runtime")
            explanation: "CAS, Docker, subprocesses, parallel scheduling, and durable persistence are not Scheme-owned.")

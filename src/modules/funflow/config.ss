@@ -2,7 +2,7 @@
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
-(import (only-in :clan/poo/object .o .ref .slot? object?)
+(import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
         :poo-flow/src/module-system/base
         :poo-flow/src/modules/workflow/cicd)
 
@@ -49,24 +49,26 @@
 
 ;; : PooFlowFunflowCheckPrototype
 (def funflow-check
-  (.o kind: +poo-flow-funflow-check-prototype-kind+
-      check-name: #f
-      profile-ref: #f
-      command-vector: '()
-      input-bindings: '()
-      config-sources: '()
-      artifact-outputs: '()
-      cache-intents: '()
-      secret-requirements: '()
-      result-protocol: '()
-      runtime-mode: 'manifest-handoff
-      dependency-refs: '()
-      observability: #f
-      observes: '()
-      guards: '()
-      report: #f
-      metadata: '()
-      runtime-executed: #f))
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-funflow-check-prototype-kind+)
+    (cons 'check-name #f)
+    (cons 'profile-ref #f)
+    (cons 'command-vector '())
+    (cons 'input-bindings '())
+    (cons 'config-sources '())
+    (cons 'artifact-outputs '())
+    (cons 'cache-intents '())
+    (cons 'secret-requirements '())
+    (cons 'result-protocol '())
+    (cons 'runtime-mode 'manifest-handoff)
+    (cons 'dependency-refs '())
+    (cons 'observability #f)
+    (cons 'observes '())
+    (cons 'guards '())
+    (cons 'report #f)
+    (cons 'metadata '())
+    (cons 'runtime-executed #f))))
 
 ;; : PooFlowFunflowPipelinePrototype
 (def funflow-pipeline
@@ -126,7 +128,7 @@
 ;;; POO-native check and pipeline objects stay shallow: Funflow owns the public
 ;;; prototype surface, while sandbox profile refs and runtime descriptors remain
 ;;; unresolved until later module/object validation.
-;; : (-> String Boolean Value Void)
+;; : (forall (a) (-> String Boolean a Void))
 (def (poo-flow-funflow-require message ok? value)
   (if ok?
     (void)
@@ -143,19 +145,19 @@
     (poo-flow-funflow-symbol-list? (cdr values)))
    (else #f)))
 
-;; : (-> Value Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-funflow-poo-check? value)
   (and (object? value)
        (.slot? value 'kind)
        (eq? (.ref value 'kind) +poo-flow-funflow-check-prototype-kind+)))
 
-;; : (-> Value Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-funflow-poo-pipeline? value)
   (and (object? value)
        (.slot? value 'kind)
        (eq? (.ref value 'kind) +poo-flow-funflow-pipeline-prototype-kind+)))
 
-;; : (-> Symbol Value [Pair])
+;; : (forall (a) (-> Symbol a [Pair]))
 (def (poo-flow-funflow-optional-metadata key value)
   (if value
     (list (cons key value))

@@ -798,79 +798,94 @@
 
 ;;; Loop-engine intents are the workflow-facing surface for configuring the
 ;;; governor node graph from init.ss. The result is report-only contract data.
+;; : (-> PooUserModuleSelection Boolean)
+(def (poo-flow-user-module-selection-loop-engine? selection)
+  (equal? (poo-flow-user-module-selection-key selection)
+          '(flow . loop-engine)))
+
+;; : (-> [Value] [PooSandboxProfile])
+(def (poo-flow-user-loop-engine-context-profile-catalog context)
+  (if (null? context)
+    poo-flow-default-sandbox-profiles
+    (car context)))
+
+;; : (-> [Value] [PooFlowCicdCheckMap])
+(def (poo-flow-user-loop-engine-context-workflow-check-maps context)
+  (if (or (null? context) (null? (cdr context)))
+    '()
+    (cadr context)))
+
+;; : (-> PooUserModuleSelection Alist Alist)
+(def (poo-flow-user-loop-engine-base-intent selection poo-intent-fields)
+  (append
+   (list (cons 'key
+               (poo-flow-user-module-selection-key selection))
+         (cons 'feature '+loop-engine)
+         (cons 'workflow-owned? #t)
+         (cons 'governor-derived? #t))
+   poo-intent-fields
+   (list
+    (cons 'contract 'poo-flow.loop-governor.v1)
+    (cons 'node-contract 'poo-flow.loop-governor.node.v1)
+    (cons 'descriptor-realized? #f)
+    (cons 'runtime-executed #f))))
+
+;; : (-> Alist [PooSandboxProfile] [PooFlowCicdCheckMap] Alist)
+(def (poo-flow-user-loop-engine-enriched-intent base-intent
+                                                profile-catalog
+                                                workflow-check-maps)
+  (let* ((sandbox-profile-refs
+          (poo-flow-user-loop-engine-sandbox-profile-refs base-intent))
+         (sandbox-runtime-summaries
+          (poo-flow-user-loop-engine-sandbox-runtime-summaries
+           sandbox-profile-refs
+           profile-catalog))
+         (sandbox-handoff-summaries
+          (poo-flow-user-loop-engine-sandbox-handoff-summaries
+           sandbox-profile-refs
+           profile-catalog))
+         (sandbox-unresolved-profile-refs
+          (poo-flow-user-loop-engine-sandbox-unresolved-profile-refs
+           sandbox-profile-refs
+           profile-catalog))
+         (sandbox-handoff-agreement
+          (poo-flow-user-loop-engine-sandbox-handoff-agreement
+           sandbox-profile-refs
+           sandbox-runtime-summaries
+           sandbox-handoff-summaries
+           sandbox-unresolved-profile-refs))
+         (workflow-agreement
+          (poo-flow-funflow-workflow-agreement
+           (poo-flow-user-loop-engine-intent-workflow-ref base-intent)
+           workflow-check-maps))
+         (intent
+          (append
+           base-intent
+           (list
+            (cons 'workflow-agreement workflow-agreement)
+            (cons 'sandbox-profile-refs sandbox-profile-refs)
+            (cons 'sandbox-runtime-summaries sandbox-runtime-summaries)
+            (cons 'sandbox-handoff-summaries sandbox-handoff-summaries)
+            (cons 'sandbox-handoff-agreement sandbox-handoff-agreement)
+            (cons 'sandbox-unresolved-profile-refs
+                  sandbox-unresolved-profile-refs)))))
+    (append intent
+            (poo-flow-user-loop-engine-intent-runtime-projections intent))))
+
 ;; : (-> PooUserModuleSelection [PooSandboxProfile] MaybeAlist)
 (def (poo-flow-user-module-selection-loop-engine-intent selection
                                                        . maybe-context)
-  (if (equal? (poo-flow-user-module-selection-key selection)
-              '(flow . loop-engine))
-    (let (poo-intent-fields
-          (poo-flow-user-loop-engine-selection-poo-intent selection))
-      (if poo-intent-fields
-        (let* ((profile-catalog
-                (if (null? maybe-context)
-                  poo-flow-default-sandbox-profiles
-                  (car maybe-context)))
-               (workflow-check-maps
-                (if (or (null? maybe-context)
-                        (null? (cdr maybe-context)))
-                  '()
-                  (cadr maybe-context)))
-               (base-intent
-                (append
-                 (list (cons 'key
-                             (poo-flow-user-module-selection-key selection))
-                       (cons 'feature '+loop-engine)
-                       (cons 'workflow-owned? #t)
-                       (cons 'governor-derived? #t))
-                 poo-intent-fields
-                 (list
-                  (cons 'contract 'poo-flow.loop-governor.v1)
-                  (cons 'node-contract 'poo-flow.loop-governor.node.v1)
-                  (cons 'descriptor-realized? #f)
-                  (cons 'runtime-executed #f))))
-               (sandbox-profile-refs
-                (poo-flow-user-loop-engine-sandbox-profile-refs base-intent))
-               (sandbox-runtime-summaries
-                (poo-flow-user-loop-engine-sandbox-runtime-summaries
-                 sandbox-profile-refs
-                 profile-catalog))
-               (sandbox-handoff-summaries
-                (poo-flow-user-loop-engine-sandbox-handoff-summaries
-                 sandbox-profile-refs
-                 profile-catalog))
-               (sandbox-unresolved-profile-refs
-                (poo-flow-user-loop-engine-sandbox-unresolved-profile-refs
-                 sandbox-profile-refs
-                 profile-catalog))
-               (sandbox-handoff-agreement
-                (poo-flow-user-loop-engine-sandbox-handoff-agreement
-                 sandbox-profile-refs
-                 sandbox-runtime-summaries
-                 sandbox-handoff-summaries
-                 sandbox-unresolved-profile-refs))
-               (workflow-agreement
-                (poo-flow-funflow-workflow-agreement
-                 (poo-flow-user-loop-engine-intent-workflow-ref base-intent)
-                 workflow-check-maps))
-               (intent
-                (append
-                 base-intent
-                 (list
-                  (cons 'workflow-agreement workflow-agreement)
-                  (cons 'sandbox-profile-refs sandbox-profile-refs)
-                  (cons 'sandbox-runtime-summaries
-                        sandbox-runtime-summaries)
-                  (cons 'sandbox-handoff-summaries
-                        sandbox-handoff-summaries)
-                  (cons 'sandbox-handoff-agreement
-                        sandbox-handoff-agreement)
-                  (cons 'sandbox-unresolved-profile-refs
-                        sandbox-unresolved-profile-refs)))))
-          (append intent
-                  (poo-flow-user-loop-engine-intent-runtime-projections
-                   intent)))
-        #f))
-    #f))
+  (and (poo-flow-user-module-selection-loop-engine? selection)
+       (let (poo-intent-fields
+             (poo-flow-user-loop-engine-selection-poo-intent selection))
+         (and poo-intent-fields
+              (poo-flow-user-loop-engine-enriched-intent
+               (poo-flow-user-loop-engine-base-intent selection
+                                                      poo-intent-fields)
+               (poo-flow-user-loop-engine-context-profile-catalog
+                maybe-context)
+               (poo-flow-user-loop-engine-context-workflow-check-maps
+                maybe-context))))))
 
 ;;; Loop engine intents are collected with a recursive add/fold shape so module
 ;;; selection order becomes the handoff order for later runtime descriptors.

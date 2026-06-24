@@ -14,5 +14,7 @@
  (optimizationFocus . "ordered POO extension contribution traversal")
  (inputShape . "one contribution creates children and a later contribution targets the created child")
  (expectedRepair . "preserve contribution order when batching or indexing extension traversals")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance semantics))

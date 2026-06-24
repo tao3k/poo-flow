@@ -2,7 +2,7 @@
 ;;; Boundary: upstream case contracts for downstream declaration practice files.
 ;;; Invariant: cases consume config declarations; root user-facing files remain declarations only.
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/module-system/profile-config)
 
 (export poo-flow-declaration-case-kind
@@ -111,21 +111,23 @@
       expected-trace-stage-list)
   (let ((presentation-value
          (pooFlowUserConfigPresentation config-value setting-key-list)))
-    (.o kind: poo-flow-declaration-case-kind
-        name: name-value
-        case-file: case-file-path
-        init-file: init-file-path
-        custom-module-file: custom-module-file-path
-        config: config-value
-        presentation: presentation-value
-        expected-setting-keys: setting-key-list
-        expected-module-keys: expected-module-key-list
-        expected-trace-stages: expected-trace-stage-list
-        declaration-owned?: #t
-        declarative-only?: #t
-        runtime-owner: "marlin-agent-core"
-        descriptor-realized?: #f
-        runtime-executed: #f)))
+    (object<-alist
+     (list
+      (cons 'kind poo-flow-declaration-case-kind)
+      (cons 'name name-value)
+      (cons 'case-file case-file-path)
+      (cons 'init-file init-file-path)
+      (cons 'custom-module-file custom-module-file-path)
+      (cons 'config config-value)
+      (cons 'presentation presentation-value)
+      (cons 'expected-setting-keys setting-key-list)
+      (cons 'expected-module-keys expected-module-key-list)
+      (cons 'expected-trace-stages expected-trace-stage-list)
+      (cons 'declaration-owned? #t)
+      (cons 'declarative-only? #t)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'descriptor-realized? #f)
+      (cons 'runtime-executed #f)))))
 
 ;;; This is a maintained template for the root practice interface. The concrete
 ;;; downstream declarations still live in user-interface/init.ss and custom modules.

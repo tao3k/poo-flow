@@ -334,6 +334,95 @@
                         #f
                         children))))
 
+;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Receipt StepResult)
+(def (run-kleisli-source-failure-result runner
+                                       plan
+                                       strategy
+                                       node
+                                       step
+                                       input
+                                       source-value
+                                       frontier
+                                       source-receipt
+                                       source-failed)
+  (cons source-value
+        (make-kleisli-receipt runner
+                              plan
+                              strategy
+                              node
+                              step
+                              input
+                              source-value
+                              frontier
+                              'failed
+                              (receipt-error source-failed)
+                              (list source-receipt))))
+
+;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Receipt Flow StepResult)
+(def (run-kleisli-bound-flow-result runner
+                                   plan
+                                   strategy
+                                   node
+                                   step
+                                   input
+                                   source-value
+                                   frontier
+                                   source-receipt
+                                   bound-flow)
+  (let* ((bound-result (runner-run runner bound-flow source-value))
+         (bound-value (run-result-value bound-result))
+         (bound-receipt (run-result-receipt bound-result))
+         (bound-failed (first-failed-receipt bound-receipt)))
+    (cons bound-value
+          (make-kleisli-receipt runner
+                                plan
+                                strategy
+                                node
+                                step
+                                input
+                                bound-value
+                                frontier
+                                (if bound-failed 'failed 'ok)
+                                (if bound-failed
+                                  (receipt-error bound-failed)
+                                  #f)
+                                (list source-receipt bound-receipt)))))
+
+;; : (-> PlanNode KleisliStep Value Value Failure)
+(def (raise-invalid-kleisli-binder-result node step source-value bound-flow)
+  (raise-control-plane-failure
+   'runner
+   'invalid-kleisli-binder-result
+   "kleisli binder did not return a flow"
+   (list (cons 'node-id (plan-node-id node))
+         (cons 'step-name (kleisli-step-name step))
+         (cons 'source-value source-value)
+         (cons 'binder-result bound-flow))))
+
+;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Receipt StepResult)
+(def (run-kleisli-bound-result runner
+                              plan
+                              strategy
+                              node
+                              step
+                              input
+                              source-value
+                              frontier
+                              source-receipt)
+  (let (bound-flow ((kleisli-step-binder step) source-value))
+    (if (flow? bound-flow)
+      (run-kleisli-bound-flow-result runner
+                                    plan
+                                    strategy
+                                    node
+                                    step
+                                    input
+                                    source-value
+                                    frontier
+                                    source-receipt
+                                    bound-flow)
+      (raise-invalid-kleisli-binder-result node step source-value bound-flow))))
+
 ;;; Kleisli nodes are dynamic composition points: the source flow runs first,
 ;;; then its value selects the next flow through the binder procedure.
 ;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input [Id] StepResult)
@@ -343,46 +432,25 @@
          (source-receipt (run-result-receipt source-result))
          (source-failed (first-failed-receipt source-receipt)))
     (if source-failed
-      (cons source-value
-            (make-kleisli-receipt runner
-                                  plan
-                                  strategy
-                                  node
-                                  step
-                                  input
-                                  source-value
-                                  frontier
-                                  'failed
-                                  (receipt-error source-failed)
-                                  (list source-receipt)))
-      (let ((bound-flow ((kleisli-step-binder step) source-value)))
-        (if (flow? bound-flow)
-          (let* ((bound-result (runner-run runner bound-flow source-value))
-                 (bound-value (run-result-value bound-result))
-                 (bound-receipt (run-result-receipt bound-result))
-                 (bound-failed (first-failed-receipt bound-receipt)))
-            (cons bound-value
-                  (make-kleisli-receipt runner
+      (run-kleisli-source-failure-result runner
                                         plan
                                         strategy
                                         node
                                         step
                                         input
-                                        bound-value
+                                        source-value
                                         frontier
-                                        (if bound-failed 'failed 'ok)
-                                        (if bound-failed
-                                          (receipt-error bound-failed)
-                                          #f)
-                                        (list source-receipt bound-receipt))))
-          (raise-control-plane-failure
-           'runner
-           'invalid-kleisli-binder-result
-           "kleisli binder did not return a flow"
-           (list (cons 'node-id (plan-node-id node))
-                 (cons 'step-name (kleisli-step-name step))
-                 (cons 'source-value source-value)
-                 (cons 'binder-result bound-flow))))))))
+                                        source-receipt
+                                        source-failed)
+      (run-kleisli-bound-result runner
+                               plan
+                               strategy
+                               node
+                               step
+                               input
+                               source-value
+                               frontier
+                               source-receipt))))
 
 ;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Symbol Error [Receipt] Receipt)
 (def (make-kleisli-receipt runner plan strategy node step input output frontier status error children)

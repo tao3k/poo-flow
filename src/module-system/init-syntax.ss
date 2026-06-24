@@ -245,34 +245,31 @@
 ;;; in `poo-flow-modules-system-use-module` upstream data helpers.
 (begin-syntax
   (def (poo-flow-syntax-list->list stx)
-    (let loop ((rest stx) (out '()))
-      (syntax-case rest ()
-        (() (reverse out))
-        ((head . tail)
-         (loop (syntax tail) (cons (syntax head) out)))
-        (_ #f))))
+    (syntax->list stx))
+
+  (def (poo-flow-simple-keyword-slot-specs/elements ctx elements)
+    (match elements
+      ([] '())
+      ([slot-key slot-value . more]
+       (let (key (syntax->datum slot-key))
+         (and (keyword? key)
+              (let (rest
+                    (poo-flow-simple-keyword-slot-specs/elements ctx more))
+                (and rest
+                     (cons (list (datum->syntax
+                                  ctx
+                                  (string->symbol (keyword->string key)))
+                                 slot-value)
+                           rest))))))
+      (else #f)))
 
   (def (poo-flow-simple-keyword-slot-specs ctx slot-specs)
-    (let loop ((rest slot-specs) (out '()))
-      (syntax-case rest ()
-        (() (reverse out))
-        ((slot-key slot-value . more)
-         (let (key (syntax->datum (syntax slot-key)))
-           (if (keyword? key)
-             (loop (syntax more)
-                   (cons (list (datum->syntax
-                                ctx
-                                (string->symbol (keyword->string key)))
-                               (syntax slot-value))
-                         out))
-             #f)))
-        (_ #f))))
+    (let (elements (poo-flow-syntax-list->list slot-specs))
+      (and elements
+           (poo-flow-simple-keyword-slot-specs/elements ctx elements))))
 
   (def (poo-flow-all? values)
-    (cond
-     ((null? values) #t)
-     ((car values) (poo-flow-all? (cdr values)))
-     (else #f))))
+    (not (member #f values))))
 
 ;; use-module
 ;;   : (-> Symbol UserModuleFlagEntry... [PooUserModuleSelection])

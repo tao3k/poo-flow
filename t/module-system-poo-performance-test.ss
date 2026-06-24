@@ -11,6 +11,16 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run)
+        (only-in :clan/poo/object
+                 .all-slots
+                 .def
+                 .get
+                 .mix
+                 .o
+                 .putdefault!
+                 .ref
+                 .setslot!
+                 $constant-slot-spec)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-validation)
@@ -140,6 +150,56 @@
   (if (benchmark-fixture-contract-pass? fixture)
     (benchmark-run fixture thunk)
     (error "poo performance fixture contract failed" fixture)))
+
+;; : [Symbol]
+(def poo-performance-required-form-evidence
+  '(.o .def defpoo))
+
+;; : [Symbol]
+(def poo-performance-required-usage-call-evidence
+  '(.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
+
+;; : (-> [Symbol] Symbol Boolean)
+(def (poo-performance-symbol-member? values value)
+  (let loop ((remaining values))
+    (cond
+     ((null? remaining) #f)
+     ((eq? (car remaining) value) #t)
+     (else (loop (cdr remaining))))))
+
+;; : (-> Alist Symbol [Symbol] Boolean)
+(def (poo-performance-evidence-covers? fixture key required)
+  (let (values (benchmark-fixture-ref fixture key))
+    (and (list? values)
+         (let loop ((remaining required))
+           (if (null? remaining)
+             #t
+             (and (poo-performance-symbol-member? values (car remaining))
+                  (loop (cdr remaining))))))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-api-evidence-contract-pass? fixture)
+  (and (poo-performance-evidence-covers?
+        fixture
+        'pooFormEvidence
+        poo-performance-required-form-evidence)
+       (poo-performance-evidence-covers?
+        fixture
+        'pooUsageCallEvidence
+        poo-performance-required-usage-call-evidence)))
+
+;; : (-> Alist)
+(def (poo-performance-api-usage-call-receipt)
+  (let (object (.mix (.o (color 'blue))
+                     (.o (name 'poo-api-evidence)
+                         (field-count 2))))
+    (.putdefault! object 'fallback 'defaulted)
+    (.setslot! object dynamic ($constant-slot-spec 'slot-added-through-api))
+    (list (cons 'name (.ref object 'name))
+          (cons 'color (.get object color))
+          (cons 'fallback (.get object fallback))
+          (cons 'dynamic (.get object dynamic))
+          (cons 'slots (.all-slots object)))))
 
 ;; : (-> Alist Symbol Value Value)
 (def (poo-performance-slot-ref/default slots key default-value)
@@ -372,7 +432,23 @@
       (check-equal?
        (map benchmark-fixture-memory-contract-pass?
             poo-performance-fixtures)
+       '(#t #t #t #t #t #t #t #t #t #t #t))
+      (check-equal?
+       (map poo-performance-api-evidence-contract-pass?
+            poo-performance-fixtures)
        '(#t #t #t #t #t #t #t #t #t #t #t)))
+
+    (test-case "keeps POO benchmark evidence anchored to gerbil-poo APIs"
+      (let (receipt (poo-performance-api-usage-call-receipt))
+        (check-equal? (cdr (assoc 'name receipt)) 'poo-api-evidence)
+        (check-equal? (cdr (assoc 'color receipt)) 'blue)
+        (check-equal? (cdr (assoc 'fallback receipt)) 'defaulted)
+        (check-equal? (cdr (assoc 'dynamic receipt)) 'slot-added-through-api)
+        (check-equal?
+         (poo-performance-symbol-member?
+          (cdr (assoc 'slots receipt))
+          'dynamic)
+         #t)))
 
     (test-case "constructs large module objects at one boundary"
       (let* ((field-count 600)

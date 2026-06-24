@@ -94,61 +94,91 @@
 ;;; The module-system key is the canonical category/module pair. Validating it
 ;;; here prevents `(use-module workflow ...)` from degrading into a custom row.
 ;; : (-> Symbol PooUserModuleSelectionCandidate [Alist])
+(def (poo-flow-use-module-contract-diagnostic/unless valid?
+                                                        code
+                                                        message
+                                                        module
+                                                        value)
+  (if valid?
+    '()
+    (list
+     (poo-flow-use-module-contract-diagnostic code message module value))))
+
+;; : (-> Symbol Symbol Symbol [Alist])
+(def (poo-flow-use-module-contract-group-mismatch-diagnostics module
+                                                              group
+                                                              selected-module)
+  (let (expected-group
+        (and (symbol? selected-module)
+             (poo-flow-modules-system-use-module-group selected-module)))
+    (poo-flow-use-module-contract-diagnostic/unless
+     (and (symbol? group)
+          expected-group
+          (eq? group expected-group))
+     'use-module-group-mismatch
+     "use-module selection group must match module routing"
+     module
+     (list (cons 'group group)
+           (cons 'module selected-module)
+           (cons 'expected-group expected-group)))))
+
+;; : (-> Symbol Symbol [Alist])
+(def (poo-flow-use-module-contract-category-module-diagnostics module
+                                                               selected-module)
+  (if (and (symbol? selected-module)
+           (poo-flow-use-module-category-symbol? selected-module))
+    (list
+     (poo-flow-use-module-contract-diagnostic
+      'use-module-selection-category-as-module
+      "use-module selection stores a category where a module is required"
+      module
+      selected-module))
+    '()))
+
+;; : (-> Symbol Symbol Symbol [Alist])
+(def (poo-flow-use-module-contract-selection-field-diagnostics module
+                                                               group
+                                                               selected-module
+                                                               flags)
+  (append
+   (poo-flow-use-module-contract-diagnostic/unless
+    (symbol? group)
+    'use-module-group-not-symbol
+    "use-module selection group must be a symbol"
+    module
+    group)
+   (poo-flow-use-module-contract-diagnostic/unless
+    (symbol? selected-module)
+    'use-module-selected-module-not-symbol
+    "use-module selection module must be a symbol"
+    module
+    selected-module)
+   (poo-flow-use-module-contract-category-module-diagnostics
+    module
+    selected-module)
+   (poo-flow-use-module-contract-group-mismatch-diagnostics
+    module
+    group
+    selected-module)
+   (poo-flow-use-module-contract-diagnostic/unless
+    (poo-flow-use-module-flag-list? flags)
+    'use-module-flags-invalid
+    "use-module selection flags must be symbols or symbol-keyed entries"
+    module
+    flags)))
+
+;; : (-> Symbol PooUserModuleSelectionCandidate [Alist])
 (def (poo-flow-use-module-contract-selection-diagnostics module selection)
   (if (poo-flow-user-module-selection? selection)
     (let* ((key (poo-flow-user-module-selection-key selection))
            (group (car key))
            (selected-module (cdr key))
-           (flags (poo-flow-user-module-selection-flags selection))
-           (expected-group
-            (and (symbol? selected-module)
-                 (poo-flow-modules-system-use-module-group selected-module))))
-      (append
-       (if (symbol? group)
-         '()
-         (list
-          (poo-flow-use-module-contract-diagnostic
-           'use-module-group-not-symbol
-           "use-module selection group must be a symbol"
-           module
-           group)))
-       (if (symbol? selected-module)
-         '()
-         (list
-          (poo-flow-use-module-contract-diagnostic
-           'use-module-selected-module-not-symbol
-           "use-module selection module must be a symbol"
-           module
-           selected-module)))
-       (if (and (symbol? selected-module)
-                (poo-flow-use-module-category-symbol? selected-module))
-         (list
-          (poo-flow-use-module-contract-diagnostic
-           'use-module-selection-category-as-module
-           "use-module selection stores a category where a module is required"
-           module
-           selected-module))
-         '())
-       (if (and (symbol? group)
-                expected-group
-                (eq? group expected-group))
-         '()
-         (list
-          (poo-flow-use-module-contract-diagnostic
-           'use-module-group-mismatch
-           "use-module selection group must match module routing"
-           module
-           (list (cons 'group group)
-                 (cons 'module selected-module)
-                 (cons 'expected-group expected-group)))))
-       (if (poo-flow-use-module-flag-list? flags)
-         '()
-         (list
-          (poo-flow-use-module-contract-diagnostic
-           'use-module-flags-invalid
-           "use-module selection flags must be symbols or symbol-keyed entries"
-           module
-           flags)))))
+           (flags (poo-flow-user-module-selection-flags selection)))
+      (poo-flow-use-module-contract-selection-field-diagnostics
+       module
+       group
+       selected-module
+       flags))
     (list
      (poo-flow-use-module-contract-diagnostic
       'use-module-selection-not-object

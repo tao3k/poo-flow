@@ -1,5 +1,9 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: gxtest enters the package through this stable test root.
+;;; Boundary: gxtest enters the package through this stable unit test root.
+;;; Performance gates live in t/performance-tests.ss so ordinary unit runs do
+;;; not load large benchmark fixtures.
+;;; Integration workflows live in t/integration-tests.ss.
+;;; Harness-backed structural contracts live in t/contract-tests.ss.
 
 (import :poo-flow/t/agent-sandbox-descriptor-test
         :poo-flow/t/agent-sandbox-bridge-test
@@ -7,7 +11,6 @@
         :poo-flow/t/agent-sandbox-marlin-interface-test
         :poo-flow/t/agent-harness-object-test
         :poo-flow/t/agent-sandbox-profile-test
-        :poo-flow/t/agent-sandbox-profile-user-interface-test
         :poo-flow/t/cli-test
         :poo-flow/t/config-test
         :poo-flow/t/control-plane-role-test
@@ -16,58 +19,20 @@
         :poo-flow/t/docker-descriptor-test
         :poo-flow/t/failure-test
         :poo-flow/t/flow-descriptor-test
-        :poo-flow/t/funflow-config-pipeline-test
-        :poo-flow/t/funflow-tutorial-alignment-report-test
         :poo-flow/t/functional-flow-kernel-test
         :poo-flow/t/functional-flow-kleisli-test
-        :poo-flow/t/workflow-cicd-check-map-test
-        :poo-flow/t/workflow-cicd-runtime-handoff-test
         :poo-flow/t/loop-engine-policy-extension-test
         :poo-flow/t/loop-agent-descriptor-test
-        :poo-flow/t/loop-agent-descriptor-performance-test
         :poo-flow/t/loop-governor-test
-        :poo-flow/t/loop-strategy-performance-test
         :poo-flow/t/loop-strategy-test
-        :poo-flow/t/module-system-facade-test
         :poo-flow/t/module-system-lazy-loader-test
         :poo-flow/t/module-system-observability-test
-        :poo-flow/t/module-system-poo-performance-test
-        :poo-flow/t/module-object-validation-test
         :poo-flow/t/module-object-practice-test
-        :poo-flow/t/module-system-user-interface-test
         :poo-flow/t/module-system-test
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
         :poo-flow/t/nono-sandbox-native-ffi-test
-        :poo-flow/t/nono-sandbox-live-profile-test
-        :poo-flow/t/runtime-bridge-test
-        :poo-flow/t/runtime-manifest-test
-        :poo-flow/t/sandbox-core-profile-authoring-diagnostics-test
-        :poo-flow/t/sandbox-core-resource-contract-test
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-object-test
         :poo-flow/t/session-transform-test
-        :poo-flow/t/session-transform-performance-test
-        :poo-flow/t/store-funflow-alignment-test
-        :poo-flow/t/task-family-descriptor-test
-        :poo-flow/t/tutorial-feature-batch-test
-        :poo-flow/t/tutorial-makefile-runtime-test
-        :poo-flow/t/tutorial-runtime-result-test
-        :poo-flow/t/tutorial-result-test
-        :poo-flow/t/user-interface-config-test
-        :poo-flow/t/user-interface-custom-loop-engine-capability-test
-        :poo-flow/t/user-interface-custom-loop-engine-memory-policy-test
-        :poo-flow/t/user-interface-custom-loop-engine-profile-test
-        :poo-flow/t/user-interface-custom-loop-engine-result-contract-test
-        :poo-flow/t/user-interface-custom-loop-engine-runtime-manifest-test
-        :poo-flow/t/user-interface-custom-loop-engine-slot-contract-test
-        :poo-flow/t/user-interface-custom-loop-engine-test
-        :poo-flow/t/user-interface-custom-loop-sandbox-agreement-test
-        :poo-flow/t/user-interface-custom-loop-workflow-agreement-test
-        :poo-flow/t/user-interface-live-cicd-case-test
-        :poo-flow/t/user-interface-cicd-test
-        :poo-flow/t/user-interface-cicd-pipeline-run-test
-        :poo-flow/t/user-interface-cicd-runtime-projection-test
-        :poo-flow/t/user-interface-cicd-runtime-graph-test
-        :poo-flow/t/declaration-case-test
-        :poo-flow/t/user-interface-presentation-test)
+        :poo-flow/t/task-family-descriptor-test)

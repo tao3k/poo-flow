@@ -3,7 +3,7 @@
 ;;; Invariant: sessions describe chunks, lineage, placement, and handoff intent;
 ;;; they never execute runtime work in Scheme.
 
-(import (only-in :clan/poo/object .o .ref object?))
+(import (only-in :clan/poo/object .o .ref object? object<-alist))
 
 (export poo-flow-session-require
         poo-flow-session-every?
@@ -43,7 +43,7 @@
 
 ;;; Validation returns the original value so constructors can keep compact
 ;;; sequential guard clauses before building report-only session rows.
-;; : (-> String Boolean Value Value)
+;; : (forall (a) (-> String Boolean a a))
 (def (poo-flow-session-require message condition value)
   (if condition
     value
@@ -61,14 +61,14 @@
 
 ;;; Alist lookup is shared by chunk rows and tests because chunks remain simple
 ;;; wire data while session values are POO objects.
-;; : (-> Symbol Alist Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-session-alist-ref entries key default)
   (let (entry (assoc key entries))
     (if entry (cdr entry) default)))
 
 ;;; Compact optional diagnostic rows without depending on a broader list
 ;;; library in this low-level user-interface module.
-;; : (-> [MaybeValue] [Value])
+;; : (forall (a) (-> (List (U #f a)) (List a)))
 (def (poo-flow-session-compact values)
   (cond
    ((null? values) '())
@@ -102,7 +102,8 @@
 
 ;;; Chunk predicates stay alist-based by design: a session may contain many
 ;;; chunks, so each row must be cheap to validate inside graph traversals.
-;; : (-> Value Boolean)
+;; : (-> SessionDatum Boolean)
+;; | type SessionDatum = Any
 (def (poo-flow-session-chunk? value)
   (and (list? value)
        (eq? (poo-flow-session-alist-ref value 'kind #f)
@@ -152,7 +153,8 @@
         lineage-metadata: lineage-metadata-value
         lineage-runtime-executed: #f)))
 
-;; : (-> Value Boolean)
+;; : (-> SessionDatum Boolean)
+;; | type SessionDatum = Any
 (def (poo-flow-session-lineage? value)
   (and (object? value)
        (eq? (.ref value 'lineage-kind)
@@ -188,7 +190,7 @@
         placement-metadata: placement-metadata-value
         placement-runtime-executed: #f)))
 
-;; : (-> Value Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-session-placement? value)
   (and (object? value)
        (eq? (.ref value 'placement-kind)
@@ -277,7 +279,7 @@
    (poo-flow-session-profile-runtime-summary profile-ref profile)
    '((handoff-required . #t))))
 
-;; : (-> Symbol Symbol Any Alist)
+;; : (-> Symbol Symbol POOObject Alist)
 (def (poo-flow-session-placement-summary-failure profile-ref phase failure)
   (list (cons 'kind 'poo-flow.session.placement.diagnostic)
         (cons 'status 'summary-failed)
@@ -405,7 +407,7 @@
         metadata: session-metadata-value
         runtime-executed: #f)))
 
-;; : (-> Value Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-session? value)
   (and (object? value)
        (eq? (.ref value 'kind) 'poo-flow.session.value)))
@@ -437,28 +439,30 @@
   (poo-flow-session-require "session handoff requires a session"
                             (poo-flow-session? session)
                             session)
-  (.o kind: 'poo-flow.session.handoff
-      schema: 'poo-flow.modules.session.handoff.v1
-      source: 'poo-flow-session-presentation
-      session-id: (poo-flow-session-id session)
-      chunk-count: (length (poo-flow-session-chunks session))
-      placement-profile-ref:
-      (poo-flow-session-placement-profile-ref
-       (poo-flow-session-value-placement session))
-      placement-resolved?:
-      (poo-flow-session-placement-resolved?
-       (poo-flow-session-value-placement session))
-      placement-diagnostics:
-      (poo-flow-session-placement-diagnostics
-       (poo-flow-session-value-placement session))
-      runtime-owner: "marlin-agent-core"
-      handoff-required: #t
-      runtime-executed: #f
-      runtime-parses-scheme-source: #f
-      scheme-manufactures-runtime-handlers: #f
-      metadata: (if (null? maybe-metadata) '() (car maybe-metadata))))
+  (object<-alist
+   (list
+    (cons 'kind 'poo-flow.session.handoff)
+    (cons 'schema 'poo-flow.modules.session.handoff.v1)
+    (cons 'source 'poo-flow-session-presentation)
+    (cons 'session-id (poo-flow-session-id session))
+    (cons 'chunk-count (length (poo-flow-session-chunks session)))
+    (cons 'placement-profile-ref
+          (poo-flow-session-placement-profile-ref
+           (poo-flow-session-value-placement session)))
+    (cons 'placement-resolved?
+          (poo-flow-session-placement-resolved?
+           (poo-flow-session-value-placement session)))
+    (cons 'placement-diagnostics
+          (poo-flow-session-placement-diagnostics
+           (poo-flow-session-value-placement session)))
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'handoff-required #t)
+    (cons 'runtime-executed #f)
+    (cons 'runtime-parses-scheme-source #f)
+    (cons 'scheme-manufactures-runtime-handlers #f)
+    (cons 'metadata (if (null? maybe-metadata) '() (car maybe-metadata))))))
 
-;; : (-> Value Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-session-handoff? value)
   (and (object? value)
        (eq? (.ref value 'kind) 'poo-flow.session.handoff)))
@@ -482,6 +486,15 @@
 (def (poo-flow-session-graph-edge-pairs sessions)
   (apply append (map poo-flow-session-lineage-edge-pairs sessions)))
 
+;; : (-> [PooSession] HashTable)
+(def (poo-flow-session-index sessions)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (session)
+       (hash-put! index (poo-flow-session-id session) session))
+     sessions)
+    index))
+
 ;;; Cycle detection walks parent links by session id only. Missing parents are
 ;;; treated as external roots so partial user-interface cases remain inspectable.
 ;; : (-> [PooSession] Symbol [Symbol] Boolean)
@@ -497,19 +510,47 @@
             sessions
             parent-id
             (cons session-id path)))
-         (poo-flow-session-lineage-parent-session-ids
-          (poo-flow-session-value-lineage session)))
+          (poo-flow-session-lineage-parent-session-ids
+           (poo-flow-session-value-lineage session)))
         #t)))))
+
+;; : (-> HashTable HashTable Symbol Boolean)
+(def (poo-flow-session-graph-acyclic-from-index? session-index visit-states session-id)
+  (let (state (hash-get visit-states session-id))
+    (cond
+     ((eq? state 'visiting) #f)
+     ((eq? state 'done) #t)
+     (else
+      (let (session (hash-get session-index session-id))
+        (if session
+          (begin
+            (hash-put! visit-states session-id 'visiting)
+            (let (acyclic?
+                  (poo-flow-session-every?
+                   (lambda (parent-id)
+                     (poo-flow-session-graph-acyclic-from-index?
+                      session-index
+                      visit-states
+                      parent-id))
+                   (poo-flow-session-lineage-parent-session-ids
+                    (poo-flow-session-value-lineage session))))
+              (if acyclic?
+                (hash-put! visit-states session-id 'done)
+                #f)
+              acyclic?))
+          #t))))))
 
 ;; : (-> [PooSession] Boolean)
 (def (poo-flow-session-graph-acyclic? sessions)
-  (poo-flow-session-every?
-   (lambda (session)
-     (poo-flow-session-graph-acyclic-from?
-      sessions
-      (poo-flow-session-id session)
-      '()))
-   sessions))
+  (let ((session-index (poo-flow-session-index sessions))
+        (visit-states (make-hash-table)))
+    (poo-flow-session-every?
+     (lambda (session)
+       (poo-flow-session-graph-acyclic-from-index?
+        session-index
+        visit-states
+        (poo-flow-session-id session)))
+     sessions)))
 
 ;;; The graph presentation is intentionally compact. It exposes ids, edges,
 ;;; placement refs, and runtime flags without embedding the full session object
@@ -523,32 +564,34 @@
    "session graph presentation entries must be sessions"
    (poo-flow-session-every? poo-flow-session? sessions)
    sessions)
-  (.o kind: 'poo-flow.session.graph.presentation
-      schema: 'poo-flow.modules.session.graph-presentation.v1
-      session-count: (length sessions)
-      session-ids: (map poo-flow-session-id sessions)
-      chunk-count:
-      (apply + (map (lambda (session)
-                      (length (poo-flow-session-chunks session)))
-                    sessions))
-      lineage-edge-pairs: (poo-flow-session-graph-edge-pairs sessions)
-      acyclic?: (poo-flow-session-graph-acyclic? sessions)
-      placement-profile-refs:
-      (map (lambda (session)
-             (poo-flow-session-placement-profile-ref
-              (poo-flow-session-value-placement session)))
-           sessions)
-      placement-resolved?:
-      (map (lambda (session)
-             (poo-flow-session-placement-resolved?
-              (poo-flow-session-value-placement session)))
-           sessions)
-      placement-diagnostics:
-      (map (lambda (session)
-             (poo-flow-session-placement-diagnostics
-              (poo-flow-session-value-placement session)))
-           sessions)
-      runtime-owner: "marlin-agent-core"
-      runtime-executed: #f
-      descriptor-realized?: #f
-      replayable: #t))
+  (object<-alist
+   (list
+    (cons 'kind 'poo-flow.session.graph.presentation)
+    (cons 'schema 'poo-flow.modules.session.graph-presentation.v1)
+    (cons 'session-count (length sessions))
+    (cons 'session-ids (map poo-flow-session-id sessions))
+    (cons 'chunk-count
+          (apply + (map (lambda (session)
+                          (length (poo-flow-session-chunks session)))
+                        sessions)))
+    (cons 'lineage-edge-pairs (poo-flow-session-graph-edge-pairs sessions))
+    (cons 'acyclic? (poo-flow-session-graph-acyclic? sessions))
+    (cons 'placement-profile-refs
+          (map (lambda (session)
+                 (poo-flow-session-placement-profile-ref
+                  (poo-flow-session-value-placement session)))
+               sessions))
+    (cons 'placement-resolved?
+          (map (lambda (session)
+                 (poo-flow-session-placement-resolved?
+                  (poo-flow-session-value-placement session)))
+               sessions))
+    (cons 'placement-diagnostics
+          (map (lambda (session)
+                 (poo-flow-session-placement-diagnostics
+                  (poo-flow-session-value-placement session)))
+               sessions))
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'runtime-executed #f)
+    (cons 'descriptor-realized? #f)
+    (cons 'replayable #t))))

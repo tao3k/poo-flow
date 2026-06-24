@@ -263,12 +263,54 @@
 ;;; order keeps later extension objects authoritative for same-name strands.
 ;; : (-> FlowStrandRegistry [FlowStrandDescriptor] FlowStrandRegistry)
 (def (flow-strand-registry-merge registry descriptors)
-  (cond
-   ((null? descriptors) registry)
-   (else
-    (flow-strand-registry-merge
-     (flow-strand-registry-extend registry (car descriptors))
-     (cdr descriptors)))))
+  (if (null? descriptors)
+    registry
+    (let ((base-seen (make-hash-table))
+          (base-first (make-hash-table))
+          (override-seen (make-hash-table))
+          (overrides (make-hash-table))
+          (new-seen (make-hash-table))
+          (replacement-used (make-hash-table)))
+      (for-each
+       (lambda (descriptor)
+         (let (key (flow-strand-name descriptor))
+           (if (not (hash-get base-seen key))
+             (begin
+               (hash-put! base-seen key #t)
+               (hash-put! base-first key descriptor))
+             #f)))
+       (flow-strand-registry-descriptors registry))
+      (let loop-extra ((remaining descriptors)
+                       (new-keys '()))
+        (if (null? remaining)
+          (make-flow-strand-registry
+           (flow-strand-registry-name registry)
+           (append
+            (map (lambda (descriptor)
+                   (let (key (flow-strand-name descriptor))
+                     (if (and (hash-get override-seen key)
+                              (not (hash-get replacement-used key)))
+                       (begin
+                         (hash-put! replacement-used key #t)
+                         (hash-get overrides key))
+                       descriptor)))
+                 (flow-strand-registry-descriptors registry))
+            (map (lambda (key)
+                   (hash-get overrides key))
+                 (reverse new-keys)))
+           (flow-strand-registry-core-requirements registry))
+          (let* ((descriptor (car remaining))
+                 (key (flow-strand-name descriptor))
+                 (next-new-keys
+                  (if (or (hash-get base-seen key)
+                          (hash-get new-seen key))
+                    new-keys
+                    (begin
+                      (hash-put! new-seen key #t)
+                      (cons key new-keys)))))
+            (hash-put! override-seen key #t)
+            (hash-put! overrides key descriptor)
+            (loop-extra (cdr remaining) next-new-keys)))))))
 
 ;;; Default descriptors stay available as a value list for tests and docs that
 ;;; do not need the full registry envelope.

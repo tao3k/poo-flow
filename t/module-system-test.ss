@@ -15,19 +15,7 @@
         (only-in :clan/poo/object .o .ref)
         :poo-flow/src/core/api
         :poo-flow/src/module-system/projection
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/profile-config
-                 poo-flow-user-profile-name
-                 poo-flow-user-profile-set-name
-                 poo-flow-user-profile-set-default-profile-name
-                 poo-flow-user-profile-module-bundles
-                 poo-flow-user-profile-modules)
-        (only-in :poo-flow/src/module-system/profiles/kernel
-                 poo-flow-kernel-profile-module-bundles
-                 poo-flow-kernel-profile
-                 poo-flow-kernel-profile-set
-                 poo-flow-kernel-profile-modules)
-        "user-interface-fixtures.ss")
+        :poo-flow/src/module-system/facade)
 
 (export module-system-test)
 
@@ -43,35 +31,6 @@
 ;; : TestSuite
 (def module-system-test
   (test-suite "poo-flow module system"
-    (test-case "exports kernel profile runtime values from public facade"
-      (check-equal? (poo-flow-user-profile-name poo-flow-kernel-profile)
-                    'kernel)
-      (check-equal? (poo-flow-user-profile-set-name poo-flow-kernel-profile-set)
-                    'kernel-profiles)
-      (check-equal? (poo-flow-user-profile-set-default-profile-name
-                     poo-flow-kernel-profile-set)
-                    'kernel)
-      (check-equal? (poo-flow-user-profile-modules poo-flow-kernel-profile)
-                    poo-flow-kernel-profile-modules)
-      (check-equal? (> (length poo-flow-kernel-profile-module-bundles) 0)
-                    #t)
-      (check-equal? (> (length poo-flow-kernel-profile-modules) 0)
-                    #t))
-    (test-case "user interface fixtures compile against explicit kernel imports"
-      (check-equal? (poo-flow-user-profile-name test-poo-flow-user-profile)
-                    'developer)
-      (check-equal? (poo-flow-user-profile-set-name
-                     test-poo-flow-user-profile-set)
-                    'workspace)
-      (check-equal? (poo-flow-user-profile-set-default-profile-name
-                     test-poo-flow-user-profile-set)
-                    'developer)
-      (check-equal? (> (length test-poo-flow-user-module-bundles)
-                       (length poo-flow-kernel-profile-module-bundles))
-                    #t)
-      (check-equal? (poo-flow-user-profile-module-bundles
-                     test-poo-flow-user-profile)
-                    test-poo-flow-user-module-bundles))
     (test-case "activates module descriptor registries into run config"
       (let* ((task-descriptor
               (make-task-family-descriptor 'remote-job

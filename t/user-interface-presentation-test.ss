@@ -18,7 +18,7 @@
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/profile-config
-        :poo-flow/t/user-interface-fixtures)
+        "user-interface-fixtures.ss")
 
 (export user-interface-presentation-test)
 

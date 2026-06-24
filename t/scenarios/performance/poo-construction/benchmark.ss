@@ -14,5 +14,7 @@
  (optimizationFocus . "large module object construction")
  (inputShape . "large stable field-contract list")
  (expectedRepair . "construct one POO module object at the boundary")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

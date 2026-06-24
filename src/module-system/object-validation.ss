@@ -8,6 +8,7 @@
                  poo-object-field-contract-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
+        (only-in :std/sugar filter-map foldl)
         :poo-flow/src/module-system/object-core)
 
 (export poo-flow-module-object-validation-kind
@@ -88,11 +89,25 @@
 ;;; `resolved-field-identities` is the observed C3 result from gerbil-poo.
 ;; : (-> PooModuleObject [Symbol])
 (def (poo-flow-module-object-inheritance-chain object)
+  (poo-flow-module-object-inheritance-chain/onto object '()))
+
+;; : (-> [PooModuleObject] [Symbol] [Symbol])
+(def (poo-flow-module-object-inheritance-chains/onto objects tail)
+  (if (null? objects)
+    tail
+    (poo-flow-module-object-inheritance-chain/onto
+     (car objects)
+     (poo-flow-module-object-inheritance-chains/onto
+      (cdr objects)
+      tail))))
+
+;; : (-> PooModuleObject [Symbol] [Symbol])
+(def (poo-flow-module-object-inheritance-chain/onto object tail)
   (cons
    (poo-flow-module-object-identity object)
-   (apply append
-          (map poo-flow-module-object-inheritance-chain
-               (poo-flow-module-object-inherits object)))))
+   (poo-flow-module-object-inheritance-chains/onto
+    (poo-flow-module-object-inherits object)
+    tail)))
 
 ;; : (-> Symbol [Symbol] Boolean)
 (def (poo-flow-module-symbol-member? value values)
@@ -438,20 +453,19 @@
 (def (duplicate-identities identities)
   (let ((seen (make-hash-table))
         (duplicates (make-hash-table)))
-    (let loop ((rest identities)
-               (result '()))
-      (cond
-       ((null? rest)
-        (reverse result))
-       ((hash-key? seen (car rest))
-        (if (hash-key? duplicates (car rest))
-          (loop (cdr rest) result)
-          (begin
-            (hash-put! duplicates (car rest) #t)
-            (loop (cdr rest) (cons (car rest) result)))))
-       (else
-        (hash-put! seen (car rest) #t)
-        (loop (cdr rest) result))))))
+    (reverse
+     (foldl (lambda (identity result)
+              (if (hash-key? seen identity)
+                (if (hash-key? duplicates identity)
+                  result
+                  (begin
+                    (hash-put! duplicates identity #t)
+                    (cons identity result)))
+                (begin
+                  (hash-put! seen identity #t)
+                  result)))
+            '()
+            identities))))
 
 ;;; Object diagnostics stay intentionally narrow: only object-local metadata and
 ;;; C3-resolved identity collisions are checked here.
@@ -660,13 +674,11 @@
 
 ;; : (-> [HashTable] [Symbol])
 (def (poo-flow-module-invalid-object-identities validations)
-  (cond
-   ((null? validations) '())
-   ((poo-flow-module-object-validation-valid? (car validations))
-    (poo-flow-module-invalid-object-identities (cdr validations)))
-   (else
-    (cons (hash-get (car validations) 'object)
-          (poo-flow-module-invalid-object-identities (cdr validations))))))
+  (filter-map
+   (lambda (validation)
+     (and (not (poo-flow-module-object-validation-valid? validation))
+          (hash-get validation 'object)))
+   validations))
 
 ;; : (-> [HashTable] Symbol [Value])
 (def (poo-flow-module-validation-values validations key)
@@ -674,45 +686,74 @@
 
 ;; : (-> [HashTable] HashTable)
 (def (poo-flow-module-objects-validation-summary validations)
-  (let (invalid-objects
-        (poo-flow-module-invalid-object-identities validations))
-    (receipt
-     (cons 'kind "poo-flow-module-objects-validation-summary")
-     (cons 'schema poo-flow-module-object-validation-schema)
-     (cons 'object-count (length validations))
-     (cons 'object-identities
-           (poo-flow-module-validation-values validations 'object))
-     (cons 'inheritance-chains
-           (poo-flow-module-validation-values validations 'inheritance-chain))
-     (cons 'direct-field-counts
-           (poo-flow-module-validation-values validations 'direct-field-count))
-     (cons 'direct-field-identities
-           (poo-flow-module-validation-values validations
-                                             'direct-field-identities))
-     (cons 'resolved-field-counts
-           (poo-flow-module-validation-values validations 'resolved-field-count))
-     (cons 'resolved-field-identities
-           (poo-flow-module-validation-values validations
-                                             'resolved-field-identities))
-     (cons 'field-origins
-           (poo-flow-module-validation-values validations 'field-origins))
-     (cons 'inheritance-counts
-           (poo-flow-module-validation-values validations 'inherit-count))
-     (cons 'validation-phases
-           (poo-flow-module-validation-values validations 'validationPhases))
-     (cons 'invalid-count (length invalid-objects))
-     (cons 'invalid-objects invalid-objects)
-     (cons 'valid (null? invalid-objects))
-     (cons 'checkedSignals
-           '(object-catalog-validation-contract
-             object-catalog-debug-contract
-             object-catalog-field-origin-contract
-             object-catalog-inheritance-chain-contract
-             object-catalog-phase-contract
-             object-catalog-counts
-             object-catalog-invalid-identities))
-     (cons 'descriptor-realized? #f)
-     (cons 'runtime-executed #f))))
+  (let loop ((remaining validations)
+             (object-count 0)
+             (object-identities '())
+             (inheritance-chains '())
+             (direct-field-counts '())
+             (direct-field-identities '())
+             (resolved-field-counts '())
+             (resolved-field-identities '())
+             (field-origins '())
+             (inheritance-counts '())
+             (validation-phases '())
+             (invalid-count 0)
+             (invalid-objects '()))
+    (if (null? remaining)
+      (receipt
+       (cons 'kind "poo-flow-module-objects-validation-summary")
+       (cons 'schema poo-flow-module-object-validation-schema)
+       (cons 'object-count object-count)
+       (cons 'object-identities (reverse object-identities))
+       (cons 'inheritance-chains (reverse inheritance-chains))
+       (cons 'direct-field-counts (reverse direct-field-counts))
+       (cons 'direct-field-identities (reverse direct-field-identities))
+       (cons 'resolved-field-counts (reverse resolved-field-counts))
+       (cons 'resolved-field-identities (reverse resolved-field-identities))
+       (cons 'field-origins (reverse field-origins))
+       (cons 'inheritance-counts (reverse inheritance-counts))
+       (cons 'validation-phases (reverse validation-phases))
+       (cons 'invalid-count invalid-count)
+       (cons 'invalid-objects (reverse invalid-objects))
+       (cons 'valid (= invalid-count 0))
+       (cons 'checkedSignals
+             '(object-catalog-validation-contract
+               object-catalog-debug-contract
+               object-catalog-field-origin-contract
+               object-catalog-inheritance-chain-contract
+               object-catalog-phase-contract
+               object-catalog-counts
+               object-catalog-invalid-identities))
+       (cons 'descriptor-realized? #f)
+       (cons 'runtime-executed #f))
+      (let* ((validation (car remaining))
+             (valid?
+              (poo-flow-module-object-validation-valid? validation))
+             (object-identity (hash-get validation 'object)))
+        (loop
+         (cdr remaining)
+         (+ object-count 1)
+         (cons object-identity object-identities)
+         (cons (hash-get validation 'inheritance-chain)
+               inheritance-chains)
+         (cons (hash-get validation 'direct-field-count)
+               direct-field-counts)
+         (cons (hash-get validation 'direct-field-identities)
+               direct-field-identities)
+         (cons (hash-get validation 'resolved-field-count)
+               resolved-field-counts)
+         (cons (hash-get validation 'resolved-field-identities)
+               resolved-field-identities)
+         (cons (hash-get validation 'field-origins)
+               field-origins)
+         (cons (hash-get validation 'inherit-count)
+               inheritance-counts)
+         (cons (hash-get validation 'validationPhases)
+               validation-phases)
+         (if valid? invalid-count (+ invalid-count 1))
+         (if valid?
+           invalid-objects
+           (cons object-identity invalid-objects)))))))
 
 ;;; Catalog loading calls this gate so invalid module objects fail before a
 ;;; user-facing declarative configuration is projected.

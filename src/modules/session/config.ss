@@ -26,19 +26,23 @@
          poo-flow-default-sandbox-profiles
          maybe-metadata))
 
-;;; Public session declaration syntax. The macro keeps user cases close to the
-;;; OpenRath tutorial shape while expanding to ordinary POO session objects.
+;; session
+;;   : (-> Syntax PooSessionValue)
+;;   | doc m%
+;;       `session` keeps user-facing session declarations close to the
+;;       OpenRath tutorial shape while expanding to ordinary POO session
+;;       objects.
 ;;
-;;   (session custom/root
-;;     (chunk request user "Run checks.")
-;;     (lineage root)
-;;     (placement agent/nono)
-;;     (metadata (source . user-interface)))
-;;
-;;   (session custom/branch
-;;     (chunk review assistant "Review receipt.")
-;;     (lineage fork custom/root)
-;;     (placement agent/nono))
+;;       # Examples
+;;       ```scheme
+;;       (session custom/root
+;;         (chunk request user "Run checks.")
+;;         (lineage root)
+;;         (placement agent/nono)
+;;         (metadata (source . user-interface)))
+;;       ;; => poo-session-value
+;;       ```
+;;     %
 (defrules session (chunk lineage placement metadata)
   ((_ session-id
       (chunk chunk-id role content)
@@ -65,18 +69,39 @@
     (poo-flow-session-lineage 'session-id '(parent-id ...) 'branch-kind)
     (poo-flow-session-default-placement 'profile-ref))))
 
-;;; Graph presentation syntax mirrors the declaration form: users list session
-;;; values and receive the existing report-only graph receipt.
+;; session-graph
+;;   : (-> Syntax PooSessionGraphPresentation)
+;;   | doc m%
+;;       `session-graph` mirrors the declaration form: users list session values
+;;       and receive the existing report-only graph receipt.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (session-graph root-session branch-session)
+;;       ;; => pooFlowSessionGraphPresentation receipt
+;;       ```
+;;     %
 (defrules session-graph ()
   ((_ session-value ...)
    (pooFlowSessionGraphPresentation
     (list session-value ...))))
 
-;;; Public transform syntax keeps the agent-flow layer declarative. It creates
-;;; a POO transform spec and never invokes a provider.
-;;;
-;;; Memory intents are POO objects too. They describe runtime memory recall or
-;;; commit requests without reaching into a memory backend from Scheme.
+;; session-memory-intent
+;;   : (-> Syntax PooSessionMemoryIntent)
+;;   | doc m%
+;;       `session-memory-intent` describes runtime memory recall or commit
+;;       requests without reaching into a memory backend from Scheme.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (session-memory-intent recall-plan
+;;         (store session-store)
+;;         (scope current-session)
+;;         (recall prior-task)
+;;         (commit review-only))
+;;       ;; => poo-flow-session-memory-intent
+;;       ```
+;;     %
 (defrules session-memory-intent (store scope recall commit metadata)
   ((_ intent-name
       (store store-ref)
@@ -103,6 +128,21 @@
     '(recall-key ...)
     'commit-policy)))
 
+;; session-transform
+;;   : (-> Syntax PooSessionTransform)
+;;   | doc m%
+;;       `session-transform` keeps the agent-flow layer declarative. It creates
+;;       a POO transform spec and never invokes a provider.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (session-transform review
+;;         (intent review-session)
+;;         (description "Review the session")
+;;         (capabilities search query))
+;;       ;; => poo-flow-session-transform
+;;       ```
+;;     %
 (defrules session-transform (intent description capabilities memory-intents metadata)
   ((_ transform-name
       (intent intent-value)
@@ -149,8 +189,19 @@
     description-value
     '(capability ...))))
 
-;;; Applying a transform derives a new session value and receipt. Runtime work
-;;; remains in the handoff intent emitted by the receipt.
+;; transform-session
+;;   : (-> Syntax PooSessionTransformReceipt)
+;;   | doc m%
+;;       `transform-session` derives a new session value and receipt. Runtime
+;;       work remains in the handoff intent emitted by the receipt.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (transform-session review root-session reviewed-session
+;;         (chunk review assistant "Reviewed."))
+;;       ;; => poo-flow-session-transform-receipt
+;;       ```
+;;     %
 (defrules transform-session (chunk metadata)
   ((_ transform source-session derived-session-id
       (chunk chunk-id role content)

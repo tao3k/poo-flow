@@ -4,7 +4,8 @@
 (import (only-in :clan/poo/object
                  .o
                  .ref
-                 object?))
+                 object?)
+        (only-in :std/sugar foldl))
 
 (export poo-flow-module-extension-node-kind
         poo-flow-module-extension-operation-kind
@@ -163,28 +164,55 @@
 (def (poo-flow-module-extension-member? value values)
   (and (member value values) #t))
 
+;; : (-> [PooModuleSlotValue] HashTable)
+(def (poo-flow-module-extension-value-index values)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (value)
+       (hash-put! index value #t))
+     values)
+    index))
+
 ;;; Append keeps the base order stable and filters only duplicate extras, which
 ;;; makes agent-authored list extensions deterministic across fixed-point runs.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct base extra)
-  (let loop ((remaining extra) (added '()))
-    (cond
-     ((null? remaining)
-      (if (null? added)
-        base
-        (append base (reverse added))))
-     ((poo-flow-module-extension-member? (car remaining) base)
-      (loop (cdr remaining) added))
-     (else
-      (loop (cdr remaining) (cons (car remaining) added))))))
+  (if (null? extra)
+    base
+    (poo-flow-module-extension-append-distinct/indexed
+     base
+     extra
+     (poo-flow-module-extension-value-index base))))
+
+;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
+(def (poo-flow-module-extension-append-distinct/indexed base extra seen)
+  (let (added
+        (foldl (lambda (value result)
+                 (if (hash-get seen value)
+                   result
+                   (begin
+                     (hash-put! seen value #t)
+                     (cons value result))))
+               '()
+               extra))
+    (if (null? added)
+      base
+      (append base (reverse added)))))
 
 ;;; Remove is value-based rather than positional so downstream patches can
 ;;; delete inherited list elements without knowing the upstream list index.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-remove-elements values removed)
-  (filter (lambda (value)
-            (not (poo-flow-module-extension-member? value removed)))
-          values))
+  (if (null? removed)
+    values
+    (let (removed-index (poo-flow-module-extension-value-index removed))
+      (reverse
+       (foldl (lambda (value kept)
+                (if (hash-get removed-index value)
+                  kept
+                  (cons value kept)))
+              '()
+              values)))))
 
 ;; : (-> PooModuleSlotValue [PooModuleSlotValue])
 (def (poo-flow-module-extension-list-value value)
@@ -192,10 +220,25 @@
         ((list? value) value)
         (else (list value))))
 
+;; : (-> PooModuleSlotEntry Symbol)
+(def (poo-flow-module-extension-entry-key entry)
+  (car entry))
+
+;; : (-> PooModuleSlotEntry PooModuleSlotValue)
+(def (poo-flow-module-extension-entry-value entry)
+  (cdr entry))
+
+;; : (-> Symbol PooModuleSlotValue PooModuleSlotEntry)
+(def (poo-flow-module-extension-entry key value)
+  (cons key value))
+
 ;; : (-> PooModuleSlotMap Symbol PooModuleSlotValue PooModuleSlotMap)
 (def (poo-flow-module-extension-alist-set entries key value)
-  (cond ((null? entries) (list (cons key value)))
-        ((equal? (caar entries) key) (cons (cons key value) (cdr entries)))
+  (cond ((null? entries)
+         (list (poo-flow-module-extension-entry key value)))
+        ((equal? (poo-flow-module-extension-entry-key (car entries)) key)
+         (cons (poo-flow-module-extension-entry key value)
+               (cdr entries)))
         (else (cons (car entries)
                     (poo-flow-module-extension-alist-set (cdr entries) key value)))))
 
@@ -218,7 +261,21 @@
          (car children))
         (else (poo-flow-module-extension-child-ref (cdr children) identity))))
 
-;; : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
+;; poo-flow-module-extension-slots-merge
+;;   : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
+;;   | doc m%
+;;       `poo-flow-module-extension-slots-merge base extra` overlays slot
+;;       values from `extra` while preserving the first-seen slot order from
+;;       `base`; new slot keys are appended in first override order.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-slots-merge
+;;        '((mode . dev) (features . (base)))
+;;        '((mode . prod) (extra . #t)))
+;;       ;; => ((mode . prod) (features base) (extra . #t))
+;;       ```
+;;     %
 (def (poo-flow-module-extension-slots-merge base extra)
   (let ((base-seen (make-hash-table))
         (override-seen (make-hash-table))
@@ -227,25 +284,31 @@
         (replacement-used (make-hash-table)))
     (for-each
      (lambda (entry)
-       (hash-put! base-seen (car entry) #t))
+       (hash-put! base-seen
+                  (poo-flow-module-extension-entry-key entry)
+                  #t))
      base)
     (let loop ((entries extra) (new-keys '()))
       (if (null? entries)
         (append
          (map (lambda (entry)
-                (let (key (car entry))
+                (let (key (poo-flow-module-extension-entry-key entry))
                   (if (and (hash-get override-seen key)
                            (not (hash-get replacement-used key)))
                     (begin
                       (hash-put! replacement-used key #t)
-                      (cons key (hash-get overrides key)))
+                      (poo-flow-module-extension-entry
+                       key
+                       (hash-get overrides key)))
                     entry)))
               base)
          (map (lambda (key)
-                (cons key (hash-get overrides key)))
+                (poo-flow-module-extension-entry
+                 key
+                 (hash-get overrides key)))
               (reverse new-keys)))
         (let* ((entry (car entries))
-               (key (car entry))
+               (key (poo-flow-module-extension-entry-key entry))
                (next-new-keys
                 (if (or (hash-get base-seen key)
                         (hash-get new-seen key))
@@ -254,7 +317,9 @@
                     (hash-put! new-seen key #t)
                     (cons key new-keys)))))
           (hash-put! override-seen key #t)
-          (hash-put! overrides key (cdr entry))
+          (hash-put! overrides
+                     key
+                     (poo-flow-module-extension-entry-value entry))
           (loop (cdr entries) next-new-keys))))))
 
 ;; : (-> PooModuleExtensionNode PooModuleExtensionNode PooModuleExtensionNode)
@@ -280,7 +345,23 @@
                (poo-flow-module-extension-children-merge-one (cdr children)
                                                              extra-child)))))
 
-;; : (-> [PooModuleExtensionNode] [PooModuleExtensionNode] [PooModuleExtensionNode])
+;; poo-flow-module-extension-children-merge
+;;   : (-> (List PooModuleExtensionNode) (List PooModuleExtensionNode) (List PooModuleExtensionNode))
+;;   | doc m%
+;;       `poo-flow-module-extension-children-merge children extra-children`
+;;       merges children by node identity, preserving existing child order and
+;;       appending identities that appear only in `extra-children`.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (map poo-flow-module-extension-node-identity
+;;            (poo-flow-module-extension-children-merge
+;;             (list (poo-flow-module-extension-node 'root [] []))
+;;             (list (poo-flow-module-extension-node 'root '((role . main)) [])
+;;                   (poo-flow-module-extension-node 'leaf [] []))))
+;;       ;; => (root leaf)
+;;       ```
+;;     %
 (def (poo-flow-module-extension-children-merge children extra-children)
   (if (null? extra-children)
     children
@@ -438,42 +519,134 @@
    (poo-flow-module-extension-flush-slot-overrides node reversed-overrides)
    reversed-children))
 
-;; : (-> PooModuleExtensionNode [PooModuleExtensionOperation] PooModuleExtensionNode)
+;; : (-> PooModuleExtensionOperation Boolean)
+(def (poo-flow-module-extension-slot-append-operation? operation)
+  (eq? (poo-flow-module-extension-operation-action operation)
+       'slot-append))
+
+;; : (-> Boolean MaybeSymbol [PooModuleSlotValue] [PooModuleExtensionOperation] [PooModuleExtensionOperation])
+(def (poo-flow-module-extension-flush-slot-append pending? slot reversed-values output)
+  (if pending?
+    (cons (poo-flow-module-extension-slot-append
+           slot
+           (reverse reversed-values))
+          output)
+    output))
+
+;; poo-flow-module-extension-coalesce-slot-appends
+;;   : (-> [PooModuleExtensionOperation] [PooModuleExtensionOperation])
+;;   | doc m%
+;;       `poo-flow-module-extension-coalesce-slot-appends` folds adjacent slot
+;;       appends for the same slot into one append batch before operations are
+;;       applied to the extension node.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-coalesce-slot-appends operations)
+;;       ;; => coalesced-operations
+;;       ```
+;;     %
+(def (poo-flow-module-extension-coalesce-slot-appends operations)
+  (let loop ((remaining operations)
+             (pending? #f)
+             (pending-slot #f)
+             (pending-values '())
+             (output '()))
+    (if (null? remaining)
+      (reverse
+       (poo-flow-module-extension-flush-slot-append pending?
+                                                    pending-slot
+                                                    pending-values
+                                                    output))
+      (let (operation (car remaining))
+        (if (poo-flow-module-extension-slot-append-operation? operation)
+          (let* ((slot (poo-flow-module-extension-operation-slot operation))
+                 (values
+                  (poo-flow-module-extension-list-value
+                   (poo-flow-module-extension-operation-value operation))))
+            (if (and pending?
+                     (equal? pending-slot slot))
+              (loop (cdr remaining)
+                    #t
+                    pending-slot
+                    (foldl cons pending-values values)
+                    output)
+              (loop (cdr remaining)
+                    #t
+                    slot
+                    (reverse values)
+                    (poo-flow-module-extension-flush-slot-append
+                     pending?
+                     pending-slot
+                     pending-values
+                     output))))
+          (loop (cdr remaining)
+                #f
+                #f
+                '()
+                (cons operation
+                      (poo-flow-module-extension-flush-slot-append
+                       pending?
+                       pending-slot
+                       pending-values
+                       output))))))))
+
+;; : (-> PooModuleExtensionOperation PooModuleExtensionOperationState
+;;       PooModuleExtensionOperationState)
+;; | type PooModuleExtensionOperationState =
+;;     (Tuple PooModuleExtensionNode
+;;            [PooModuleExtensionNode]
+;;            [PooModuleSlotOverride])
+(def (poo-flow-module-extension-operation-state operation state)
+  (match state
+    ([current pending-node-extends pending-slot-overrides]
+     (let (action (poo-flow-module-extension-operation-action operation))
+       (cond
+        ((eq? action 'node-extend)
+         [current
+          (cons (poo-flow-module-extension-operation-node operation)
+                pending-node-extends)
+          pending-slot-overrides])
+        ((eq? action 'slot-override)
+         [current
+          pending-node-extends
+          (cons (cons (poo-flow-module-extension-operation-slot operation)
+                      (poo-flow-module-extension-operation-value operation))
+                pending-slot-overrides)])
+        (else
+         [(poo-flow-module-extension-apply-operation
+           (poo-flow-module-extension-flush-pending current
+                                                    pending-node-extends
+                                                    pending-slot-overrides)
+           operation)
+          '()
+          '()]))))))
+
+;; poo-flow-module-extension-apply-operations
+;;   : (-> PooModuleExtensionNode (List PooModuleExtensionOperation) PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-apply-operations node operations` applies
+;;       an operation stream to one node, coalescing adjacent node extensions
+;;       and slot overrides before flushing them into the graph.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-node-slots
+;;        (poo-flow-module-extension-apply-operations
+;;         (poo-flow-module-extension-node 'root '((features . (base))) [])
+;;         (list (poo-flow-module-extension-slot-append 'features '(extra))
+;;               (poo-flow-module-extension-slot-override 'mode 'strict))))
+;;       ;; => ((features base extra) (mode . strict))
+;;       ```
+;;     %
 (def (poo-flow-module-extension-apply-operations node operations)
-  (let loop ((current node)
-             (remaining operations)
-             (pending-node-extends '())
-             (pending-slot-overrides '()))
-    (cond
-     ((null? remaining)
-      (poo-flow-module-extension-flush-pending current
-                                               pending-node-extends
-                                               pending-slot-overrides))
-     ((eq? (poo-flow-module-extension-operation-action (car remaining))
-           'node-extend)
-      (loop current
-            (cdr remaining)
-            (cons (poo-flow-module-extension-operation-node (car remaining))
-                  pending-node-extends)
-            pending-slot-overrides))
-     ((eq? (poo-flow-module-extension-operation-action (car remaining))
-           'slot-override)
-      (loop current
-            (cdr remaining)
-            pending-node-extends
-            (cons (cons (poo-flow-module-extension-operation-slot (car remaining))
-                        (poo-flow-module-extension-operation-value (car remaining)))
-                  pending-slot-overrides)))
-     (else
-      (loop
-       (poo-flow-module-extension-apply-operation
-        (poo-flow-module-extension-flush-pending current
-                                                 pending-node-extends
-                                                 pending-slot-overrides)
-        (car remaining))
-       (cdr remaining)
-       '()
-       '())))))
+  (match (foldl poo-flow-module-extension-operation-state
+                [node '() '()]
+                (poo-flow-module-extension-coalesce-slot-appends operations))
+    ([current pending-node-extends pending-slot-overrides]
+     (poo-flow-module-extension-flush-pending current
+                                              pending-node-extends
+                                              pending-slot-overrides))))
 
 ;; : (-> PooModuleExtensionOperation Boolean)
 (def (poo-flow-module-extension-local-operation? operation)
@@ -490,14 +663,9 @@
          (poo-flow-module-extension-local-operations? (cdr operations)))
         (else #f)))
 
-;; : (-> [Value] [Value] [Value])
+;; : (forall (a) (-> (List a) (List a) (List a)))
 (def (poo-flow-module-extension-reverse-onto values tail)
-  (let loop ((remaining values)
-             (result tail))
-    (if (null? remaining)
-      result
-      (loop (cdr remaining)
-            (cons (car remaining) result)))))
+  (foldl cons tail values))
 
 ;; : (-> Boolean MaybeSymbol [PooModuleExtensionOperation] [PooModuleExtensionContribution] [PooModuleExtensionContribution])
 (def (poo-flow-module-extension-flush-coalesced pending? target reversed-operations output)
@@ -508,7 +676,32 @@
           output)
     output))
 
-;; : (-> [PooModuleExtensionContribution] [PooModuleExtensionContribution])
+;; poo-flow-module-extension-coalesce-local-contributions
+;;   : (-> (List PooModuleExtensionContribution) (List PooModuleExtensionContribution))
+;;   | doc m%
+;;       `poo-flow-module-extension-coalesce-local-contributions contributions`
+;;       combines adjacent local contributions for the same target so fixed
+;;       point extension passes apply one compact operation batch per target.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (map (lambda (contribution)
+;;              (list (poo-flow-module-extension-contribution-target contribution)
+;;                    (map poo-flow-module-extension-operation-action
+;;                         (poo-flow-module-extension-contribution-operations
+;;                          contribution))))
+;;            (poo-flow-module-extension-coalesce-local-contributions
+;;             (list
+;;              (poo-flow-module-extension-contribution
+;;               'root
+;;               (list (poo-flow-module-extension-slot-override 'mode 'strict)))
+;;              (poo-flow-module-extension-contribution
+;;               'root
+;;               (list (poo-flow-module-extension-slot-append 'features
+;;                                                           '(extra)))))))
+;;       ;; => ((root (slot-override slot-append)))
+;;       ```
+;;     %
 (def (poo-flow-module-extension-coalesce-local-contributions contributions)
   (let loop ((remaining contributions)
              (pending? #f)

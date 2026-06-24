@@ -14,5 +14,7 @@
  (optimizationFocus . "repeated field lookup")
  (inputShape . "contribution entries over a large object field set")
  (expectedRepair . "build one resolved field index inside the contribution boundary")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

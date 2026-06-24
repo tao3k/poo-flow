@@ -14,5 +14,7 @@
  (optimizationFocus . "loop-local object graph iteration")
  (inputShape . "stable object graph root reused across scalar loops")
  (expectedRepair . "materialize the objects node and child index once before repeated lookup work")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

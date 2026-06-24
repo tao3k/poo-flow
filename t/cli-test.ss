@@ -19,7 +19,8 @@
   (test-suite "poo-flow cli"
     (test-case "prints help without loading the user interface graph"
       (check-equal? (poo-flow-cli-run '("help")) 0)
-      (check-equal? (string? (poo-flow-cli-usage)) #t))
+      (let (usage (poo-flow-cli-usage))
+        (check-equal? (string? usage) #t)))
 
     (test-case "expands the unit test root into bounded leaf tests"
       (let (files (poo-flow-cli-expand-test-args '("t/unit-tests.ss")))

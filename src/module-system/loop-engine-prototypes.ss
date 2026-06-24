@@ -2,7 +2,7 @@
 ;;; Boundary: public loop-engine POO prototype objects.
 ;;; Invariant: prototypes are declaration data and never execute runtime work.
 
-(import (only-in :clan/poo/object .o))
+(import (only-in :clan/poo/object .o object<-alist))
 
 (export +poo-flow-user-loop-engine-use-case-prototype-kind+
         +poo-flow-user-loop-engine-governor-prototype-kind+
@@ -306,26 +306,28 @@
 ;;; `:config`; all other objects feed slots on this profile.
 ;; : PooFlowLoopEngineProfilePrototype
 (def loop-engine-profile
-  (.o kind: +poo-flow-user-loop-engine-profile-prototype-kind+
-      profile-name: #f
-      use-case: #f
-      use-cases: '()
-      governor: #f
-      agent-judges: #f
-      human-audit: #f
-      schedule: #f
-      state: #f
-      sandbox: #f
-      budget: #f
-      result: #f
-      observability: #f
-      runtime: #f
-      lineage-policy: #f
-      selector-policy: #f
-      resource-policy: #f
-      capability-policy: #f
-      memory-policies: '()
-      compression-policy: #f
-      policy-extensions: '()
-      metadata: '()
-      runtime-executed: #f))
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-user-loop-engine-profile-prototype-kind+)
+    (cons 'profile-name #f)
+    (cons 'use-case #f)
+    (cons 'use-cases '())
+    (cons 'governor #f)
+    (cons 'agent-judges #f)
+    (cons 'human-audit #f)
+    (cons 'schedule #f)
+    (cons 'state #f)
+    (cons 'sandbox #f)
+    (cons 'budget #f)
+    (cons 'result #f)
+    (cons 'observability #f)
+    (cons 'runtime #f)
+    (cons 'lineage-policy #f)
+    (cons 'selector-policy #f)
+    (cons 'resource-policy #f)
+    (cons 'capability-policy #f)
+    (cons 'memory-policies '())
+    (cons 'compression-policy #f)
+    (cons 'policy-extensions '())
+    (cons 'metadata '())
+    (cons 'runtime-executed #f))))

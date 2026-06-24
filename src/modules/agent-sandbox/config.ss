@@ -2,7 +2,7 @@
 ;;; Boundary: user-facing agent sandbox profile declarations.
 ;;; Invariant: profiles are inert data until a runtime bridge consumes them.
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/modules/agent-sandbox/profile)
 
 (export poo-flow-sandbox-profile-kind
@@ -353,21 +353,24 @@
 ;;; slot resolution can otherwise capture the slot name and recurse on read.
 ;; : (-> [PooSandboxProfile] POOObject)
 (def (pooFlowSandboxProfilesPresentation profile-list)
-  (.o kind: poo-flow-sandbox-profiles-presentation-kind
-      profile-count: (length profile-list)
-      profile-names: (poo-flow-sandbox-profile-names profile-list)
-      profiles: (poo-flow-sandbox-profile-alists profile-list)
-      runtime-intents: (map poo-flow-sandbox-profile-runtime-intent profile-list)
-      runtime-summaries: (map poo-flow-sandbox-profile-runtime-summary
-                              profile-list)
-      handoff-summaries: (map poo-flow-sandbox-profile-handoff-summary
-                              profile-list)
-      runtime-owner: "marlin-agent-core"
-      package-management?: #f
-      dependency-installation?: #f
-      descriptor-realized?: #f
-      runtime-executed: #f
-      replayable: #t))
+  (object<-alist
+   (list
+    (cons 'kind poo-flow-sandbox-profiles-presentation-kind)
+    (cons 'profile-count (length profile-list))
+    (cons 'profile-names (poo-flow-sandbox-profile-names profile-list))
+    (cons 'profiles (poo-flow-sandbox-profile-alists profile-list))
+    (cons 'runtime-intents
+          (map poo-flow-sandbox-profile-runtime-intent profile-list))
+    (cons 'runtime-summaries
+          (map poo-flow-sandbox-profile-runtime-summary profile-list))
+    (cons 'handoff-summaries
+          (map poo-flow-sandbox-profile-handoff-summary profile-list))
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'package-management? #f)
+    (cons 'dependency-installation? #f)
+    (cons 'descriptor-realized? #f)
+    (cons 'runtime-executed #f)
+    (cons 'replayable #t))))
 
 ;; : [Symbol]
 (def poo-flow-default-sandbox-profile-names

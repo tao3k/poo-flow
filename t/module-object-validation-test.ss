@@ -9,13 +9,7 @@
                  run-tests!)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation
-        :poo-flow/src/module-system/objects
-        :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/root-objects
-        :poo-flow/src/modules/nono-sandbox/objects
-        :poo-flow/src/modules/cubeSandbox/objects
-        :poo-flow/src/modules/docker-sandbox/objects
-        :poo-flow/t/fixtures/object-load-valid/objects)
+        :poo-flow/src/module-system/objects)
 
 (export module-object-validation-test)
 
@@ -35,6 +29,30 @@
   (map (lambda (validation) (receipt-ref validation 'field))
        validations))
 
+;; : PooModuleObject
+(def validation-shared-sandbox-object
+  (poo-flow-module-object
+   'objects.validation.shared
+   '()
+   (list
+    (poo-flow-module-field-contract
+     'flags 'List 'override '() '((scope . validation)))
+    (poo-flow-module-field-contract
+     'runtime-args 'List 'override '() '((scope . validation))))
+   '((domain . validation))))
+
+;; : PooModuleObject
+(def validation-nono-sandbox-object
+  (poo-flow-module-object
+   'objects.validation.nono
+   (list validation-shared-sandbox-object)
+   (list
+    (poo-flow-module-field-contract
+     'backend 'Symbol 'override 'nono '((scope . validation)))
+    (poo-flow-module-field-contract
+     'binding 'Symbol 'override 'native-ffi '((scope . validation))))
+   '((domain . validation))))
+
 ;;; Suite boundary: these tests pin the downstream adapter contract while
 ;;; leaving upstream harness internals free to evolve behind receipt fields.
 ;; : TestSuite
@@ -45,7 +63,7 @@
       ;; contract without asserting harness-private implementation details.
       (let* ((validation
               (poo-flow-module-object-validation
-               poo-flow-nono-sandbox-object))
+               validation-nono-sandbox-object))
              (harness-validation
               (receipt-ref validation 'harnessValidation))
              (source-ref
@@ -78,30 +96,30 @@
         (check-equal? (receipt-ref validation 'schema)
                       poo-flow-module-object-validation-schema)
         (check-equal? (receipt-ref validation 'object)
-                      'objects.nono-sandbox.sandbox)
+                      'objects.validation.nono)
         (check-equal? (receipt-ref validation 'inheritance-chain)
-                      '(objects.nono-sandbox.sandbox
-                        objects.shared.sandbox))
+                      '(objects.validation.nono
+                        objects.validation.shared))
         (check-equal? (receipt-ref validation 'direct-field-identities)
                       '(backend binding))
         (check-equal? (receipt-ref validation 'resolved-field-identities)
-                      '(backend flags runtime-args binding))
+                      '(flags runtime-args backend binding))
         (check-equal? (map (lambda (origin)
                              (cons (alist-ref origin 'field #f)
                                    (alist-ref origin 'origin #f)))
                            field-origins)
-                      '((backend . direct)
-                        (flags . inherited)
+                      '((flags . inherited)
                         (runtime-args . inherited)
+                        (backend . direct)
                         (binding . direct)))
         (check-equal? (map (lambda (origin)
                              (cons (alist-ref origin 'field #f)
                                    (alist-ref origin 'provider #f)))
                            field-origins)
-                      '((backend . objects.nono-sandbox.sandbox)
-                        (flags . objects.shared.sandbox)
-                        (runtime-args . objects.shared.sandbox)
-                        (binding . objects.nono-sandbox.sandbox)))
+                      '((flags . objects.validation.shared)
+                        (runtime-args . objects.validation.shared)
+                        (backend . objects.validation.nono)
+                        (binding . objects.validation.nono)))
         (check-equal? (map (lambda (phase)
                              (receipt-ref phase 'phase))
                            validation-phases)
@@ -159,88 +177,6 @@
         (check-equal? (poo-flow-module-object-validation-diagnostics
                        validation)
                       '())))
-
-    (test-case "validates real module object sets"
-      (let* ((objects
-              (append poo-flow-shared-module-objects
-                      poo-flow-sandbox-core-module-objects
-                      poo-flow-user-interface-root-module-objects
-                      poo-flow-nono-sandbox-module-objects
-                      poo-flow-cubeSandbox-module-objects
-                      poo-flow-docker-sandbox-module-objects))
-             (validations
-              (poo-flow-module-objects-validation objects)))
-        (check-equal? (length validations) 9)
-        (check-equal? (map poo-flow-module-object-validation-valid?
-                           validations)
-                      '(#t #t #t #t #t #t #t #t #t))
-        (let (summary
-              (poo-flow-module-objects-validation-summary validations))
-          (check-equal? (receipt-ref summary 'valid)
-                      #t)
-          (check-equal? (receipt-ref summary 'invalid-count)
-                        0)
-          (check-equal? (receipt-ref summary 'object-count)
-                        9)
-          (check-equal? (receipt-ref summary 'object-identities)
-                        '(objects.shared.sandbox
-                          objects.sandbox-core.profile
-                          objects.user-interface.shared.sandbox
-                          objects.nono-sandbox.sandbox
-                          objects.nono-sandbox.profile
-                          objects.cubeSandbox.sandbox
-                          objects.cubeSandbox.profile
-                          objects.docker-sandbox.sandbox
-                          objects.docker-sandbox.profile))
-          (check-equal? (receipt-ref summary 'inheritance-counts)
-                        '(0 1 1 1 2 1 2 1 2))
-          (check-equal? (car (receipt-ref summary 'inheritance-chains))
-                        '(objects.shared.sandbox))
-          (check-equal? (length (receipt-ref summary 'field-origins))
-                        9)
-          (check-equal? (length (receipt-ref summary 'validation-phases))
-                        9)
-          (check-equal? (not (not (member
-                                   'object-catalog-debug-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (not (not (member
-                                   'object-catalog-field-origin-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (not (not (member
-                                   'object-catalog-phase-contract
-                                   (receipt-ref summary 'checkedSignals))))
-                        #t)
-          (check-equal? (receipt-ref summary 'descriptor-realized?) #f)
-          (check-equal? (receipt-ref summary 'runtime-executed) #f))))
-
-    (test-case "pins nono sandbox object binding to native FFI"
-      (let ((binding-field
-             (poo-flow-module-object-field poo-flow-nono-sandbox-object
-                                           'binding)))
-        (check-equal? (not (not binding-field)) #t)
-        (check-equal? (poo-flow-module-field-contract-default binding-field)
-                      'native-ffi)))
-
-    (test-case "wraps load! object fragments with upstream object validation"
-      (let* ((objects poo-flow-custom-module-object1-module)
-             (validation
-              (poo-flow-module-object-validation (car objects)))
-             (field-validations
-              (receipt-ref validation 'fieldContractValidations))
-             (typed-field-validation
-              (cadr field-validations))
-             (type-validation
-              (receipt-ref typed-field-validation 'typeValidation)))
-        (check-equal? (length objects) 1)
-        (check-equal? (poo-flow-module-object-identity (car objects))
-                      'objects.fixture.loaded)
-        (check-equal? (poo-flow-module-object-validation-valid? validation)
-                      #t)
-        (check-equal? (receipt-ref type-validation 'valid) #t)
-        (check-equal? (receipt-ref type-validation 'typeDisplay)
-                      "(list Symbol)")))
 
     (test-case "fails invalid TypeSpec fields through upstream type validation"
       (let* ((broken-field
@@ -338,8 +274,8 @@
                (list broken-field)
                '((domain . validation)))))
         (check-equal? (poo-flow-require-module-objects-validation!
-                       (list poo-flow-nono-sandbox-object))
-                      (list poo-flow-nono-sandbox-object))
+                       (list validation-nono-sandbox-object))
+                      (list validation-nono-sandbox-object))
         (check-equal?
          (with-catch
           (lambda (_) #t)

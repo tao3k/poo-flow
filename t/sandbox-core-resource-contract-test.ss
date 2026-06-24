@@ -7,7 +7,7 @@
                  run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/modules/sandbox-core/profile)
+        :poo-flow/src/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
 

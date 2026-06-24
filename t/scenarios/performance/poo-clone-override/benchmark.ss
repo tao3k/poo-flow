@@ -15,5 +15,7 @@
  (optimizationFocus . "loop-local clone override")
  (inputShape . "many override slots applied to stable POO object defaults")
  (expectedRepair . "materialize stable default slots once and apply one final node clone override")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance clone))

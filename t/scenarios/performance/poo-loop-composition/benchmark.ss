@@ -14,5 +14,7 @@
  (optimizationFocus . "grouped POO object catalog composition")
  (inputShape . "many object field contributions spread across object children")
  (expectedRepair . "group contributions by target and apply one final merge boundary per child")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

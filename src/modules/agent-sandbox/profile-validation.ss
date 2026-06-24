@@ -342,6 +342,21 @@
     (agent-sandbox-profile-resource-policy-filesystem-entry
      (cdr resource-policy)))))
 
+;; : (-> MaybeAgentSandboxPaths [ValidationError])
+(def (agent-sandbox-profile-resource-path-diagnostics paths)
+  (if paths
+    (agent-sandbox-profile-filesystem-paths-diagnostics paths)
+    '()))
+
+;; : (-> MaybeAgentSandboxMounts MaybeAgentSandboxMounts [ValidationError])
+(def (agent-sandbox-profile-resource-mount-diagnostics mounts top-level-mounts)
+  (cond
+   ((list? mounts)
+    (agent-sandbox-profile-filesystem-mounts-diagnostics mounts))
+   ((eq? mounts 'declared)
+    (agent-sandbox-profile-filesystem-mounts-diagnostics top-level-mounts))
+   (else '())))
+
 ;;; Materialization diagnostics are the structured sandbox gate: a filesystem
 ;;; scope is only valid when at least one concrete anchor can produce it.
 ;; : (-> AgentSandboxFilesystemResourceSpec ResourcePolicy [ValidationError])
@@ -359,17 +374,11 @@
          (materialized-by
           (agent-sandbox-alist-ref spec 'materialized-by #f))
          (path-errors
-          (if paths
-            (agent-sandbox-profile-filesystem-paths-diagnostics paths)
-            '()))
+          (agent-sandbox-profile-resource-path-diagnostics paths))
          (mount-errors
-         (cond
-           ((list? mounts)
-            (agent-sandbox-profile-filesystem-mounts-diagnostics mounts))
-           ((eq? mounts 'declared)
-            (agent-sandbox-profile-filesystem-mounts-diagnostics
-             top-level-mounts))
-           (else '())))
+          (agent-sandbox-profile-resource-mount-diagnostics
+           mounts
+           top-level-mounts))
          (has-path-anchor? (and paths #t))
          (has-mount-anchor?
           (or (list? mounts) (eq? mounts 'declared)))
@@ -491,4 +500,3 @@
        "invalid agent sandbox profile"
        (list (cons 'errors errors)
              (cons 'profile profile))))))
-

@@ -2,7 +2,7 @@
 ;;; Boundary: workflow CI/CD POO check and check-map objects.
 ;;; Invariant: declarations validate shape but never execute commands.
 
-(import (only-in :clan/poo/object .o .ref object?))
+(import (only-in :clan/poo/object .o .ref object? object<-alist))
 
 (export +poo-flow-cicd-check-map-schema+
         +poo-flow-cicd-check-receipt-schema+
@@ -167,20 +167,22 @@
   (poo-flow-cicd-require "cicd check runtime must be a symbol"
                          (symbol? runtime)
                          runtime)
-  (.o kind: (poo-flow-cicd-check-kind)
-      schema: +poo-flow-cicd-check-map-schema+
-      check-name: name
-      profile-ref: profile
-      command-vector: command
-      input-bindings: inputs
-      config-sources: config
-      artifact-outputs: artifacts
-      cache-intents: cache
-      secret-requirements: secrets
-      result-protocol: result
-      runtime-mode: runtime
-      runtime-executed: #f
-      metadata: (if (null? maybe-metadata) '() (car maybe-metadata))))
+  (object<-alist
+   (list
+    (cons 'kind (poo-flow-cicd-check-kind))
+    (cons 'schema +poo-flow-cicd-check-map-schema+)
+    (cons 'check-name name)
+    (cons 'profile-ref profile)
+    (cons 'command-vector command)
+    (cons 'input-bindings inputs)
+    (cons 'config-sources config)
+    (cons 'artifact-outputs artifacts)
+    (cons 'cache-intents cache)
+    (cons 'secret-requirements secrets)
+    (cons 'result-protocol result)
+    (cons 'runtime-mode runtime)
+    (cons 'runtime-executed #f)
+    (cons 'metadata (if (null? maybe-metadata) '() (car maybe-metadata))))))
 
 ;;; Check predicates verify the public POO kind slot only. They do not inspect
 ;;; command or sandbox semantics, which stay in constructor validation.
@@ -291,4 +293,3 @@
   (if (poo-flow-cicd-symbol-member? value values)
     values
     (append values (list value))))
-

@@ -4,7 +4,7 @@
 ;;; Intent: borrow Doom's doctor ergonomics while keeping POO values explicit.
 ;;; Parser policy should treat this file as the module-system doctor surface owner.
 
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .o .ref object<-alist)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/source
         :poo-flow/src/module-system/descriptor
@@ -127,28 +127,32 @@
          (evaluation-value (poo-flow-module-evaluate root-module))
          (validation-receipts
          (.ref evaluation-value 'validation-receipts)))
-    (.o kind: poo-flow-module-doctor-presentation-kind
-        root-module-id: (poo-flow-module-name root-module)
-        module-ids: (poo-flow-module-names closed-modules)
-        doctor-status: (poo-flow-module-doctor-report-status doctor-report)
-        doctor-ok: (poo-flow-module-doctor-ok? doctor-report)
-        diagnostics:
-        (map poo-flow-module-diagnostic->alist
-             (poo-flow-module-doctor-report-diagnostics doctor-report))
-        import-graph: (poo-flow-module-import-graph closed-modules)
-        contributions: (poo-flow-module-contribution-summaries closed-modules)
-        validation-receipt-count: (length validation-receipts)
-        module-evaluation-kind: (.ref evaluation-value 'kind)
-        brand-name: poo-flow-brand-name
-        brand-group: poo-flow-brand-group
-        scheme-owner: poo-flow-scheme-owner
-        module-system-owner: poo-flow-module-system-owner
-        runtime-owner: "marlin-agent-core"
-        runtime-boundary-owner: "marlin-agent-core"
-        runtime-parses-scheme-source: #f
-        scheme-manufactures-runtime-handlers: #f
-        runtime-executed: #f
-        replayable: #t)))
+    (object<-alist
+     (list
+      (cons 'kind poo-flow-module-doctor-presentation-kind)
+      (cons 'root-module-id (poo-flow-module-name root-module))
+      (cons 'module-ids (poo-flow-module-names closed-modules))
+      (cons 'doctor-status
+            (poo-flow-module-doctor-report-status doctor-report))
+      (cons 'doctor-ok (poo-flow-module-doctor-ok? doctor-report))
+      (cons 'diagnostics
+            (map poo-flow-module-diagnostic->alist
+                 (poo-flow-module-doctor-report-diagnostics doctor-report)))
+      (cons 'import-graph (poo-flow-module-import-graph closed-modules))
+      (cons 'contributions
+            (poo-flow-module-contribution-summaries closed-modules))
+      (cons 'validation-receipt-count (length validation-receipts))
+      (cons 'module-evaluation-kind (.ref evaluation-value 'kind))
+      (cons 'brand-name poo-flow-brand-name)
+      (cons 'brand-group poo-flow-brand-group)
+      (cons 'scheme-owner poo-flow-scheme-owner)
+      (cons 'module-system-owner poo-flow-module-system-owner)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-boundary-owner "marlin-agent-core")
+      (cons 'runtime-parses-scheme-source #f)
+      (cons 'scheme-manufactures-runtime-handlers #f)
+      (cons 'runtime-executed #f)
+      (cons 'replayable #t)))))
 
 ;;; Boundary: value-catalog doctor mirrors system presentation root selection.
 ;;; Intent: callers can inspect already-built module values without invoking source loaders.
@@ -188,26 +192,29 @@
           (poo-flow-module-load-receipts-missing-count load-receipts))
          (load-status-value
           (poo-flow-module-load-status source-refs load-receipts)))
-    (.o kind: poo-flow-module-source-doctor-presentation-kind
-        source-count: (length source-refs)
-        loaded-count: (length loaded-modules)
-        missing-count: missing-count-value
-        load-status: load-status-value
-        load-receipts: (map poo-flow-module-load-receipt->alist load-receipts)
-        module-doctor:
-        (if root-module
-          (poo-flow-module-root-doctor-presentation root-module)
-          #f)
-        brand-name: poo-flow-brand-name
-        brand-group: poo-flow-brand-group
-        scheme-owner: poo-flow-scheme-owner
-        module-system-owner: poo-flow-module-system-owner
-        runtime-owner: "marlin-agent-core"
-        runtime-boundary-owner: "marlin-agent-core"
-        runtime-parses-scheme-source: #f
-        scheme-manufactures-runtime-handlers: #f
-        runtime-executed: #f
-        replayable: #t)))
+    (object<-alist
+     (list
+      (cons 'kind poo-flow-module-source-doctor-presentation-kind)
+      (cons 'source-count (length source-refs))
+      (cons 'loaded-count (length loaded-modules))
+      (cons 'missing-count missing-count-value)
+      (cons 'load-status load-status-value)
+      (cons 'load-receipts
+            (map poo-flow-module-load-receipt->alist load-receipts))
+      (cons 'module-doctor
+            (if root-module
+              (poo-flow-module-root-doctor-presentation root-module)
+              #f))
+      (cons 'brand-name poo-flow-brand-name)
+      (cons 'brand-group poo-flow-brand-group)
+      (cons 'scheme-owner poo-flow-scheme-owner)
+      (cons 'module-system-owner poo-flow-module-system-owner)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-boundary-owner "marlin-agent-core")
+      (cons 'runtime-parses-scheme-source #f)
+      (cons 'scheme-manufactures-runtime-handlers #f)
+      (cons 'runtime-executed #f)
+      (cons 'replayable #t)))))
 
 ;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] POOObject)
 (def poo-flow-module-source-doctor-presentation

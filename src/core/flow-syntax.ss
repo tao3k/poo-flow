@@ -18,69 +18,155 @@
         defpoo-flow-first
         defpoo-flow-second)
 
-;;; Boundary: define a pure arrow flow with an identifier-owned flow name.
-;;; The procedure and contracts remain caller expressions.
-;; : (-> Identifier Identifier ProcedureExpr ContractExpr ContractExpr FlowBinding)
+;; defpoo-flow-arr
+;;   : (-> Identifier Identifier ProcedureExpr ContractExpr ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-arr` defines a pure arrow flow with an identifier-owned
+;;       flow name while leaving the procedure and contracts as caller
+;;       expressions.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-arr parse-flow parse-request parse request-contract result-contract)
+;;       ;; => flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-arr ()
   ((_ binding flow-name proc input-contract output-contract)
    (def binding
      (flow-arr 'flow-name proc input-contract output-contract))))
 
-;;; Boundary: define a category identity flow.
-;; : (-> Identifier Identifier ContractExpr FlowBinding)
+;; defpoo-flow-identity
+;;   : (-> Identifier Identifier ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-identity` defines a category identity flow for one
+;;       contract boundary.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-identity id-flow identity request-contract)
+;;       ;; => identity flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-identity ()
   ((_ binding flow-name contract)
    (def binding
      (flow-identity 'flow-name contract))))
 
-;;; Boundary: define sequential composition over already-built flows.
-;; : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
+;; defpoo-flow-compose
+;;   : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-compose` defines sequential composition over already-built
+;;       flows.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-compose checked-flow checked parse-flow validate-flow)
+;;       ;; => composed flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-compose ()
   ((_ binding flow-name left right)
    (def binding
      (flow-then 'flow-name left right))))
 
-;;; Boundary: define a functional output map over an existing flow.
-;; : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+;; defpoo-flow-map
+;;   : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-map` defines a functional output map over an existing
+;;       flow.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-map rendered render checked-flow render-result output-contract)
+;;       ;; => mapped flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-map ()
   ((_ binding flow-name source proc output-contract)
    (def binding
      (flow-map 'flow-name source proc output-contract))))
 
-;;; Boundary: define a Kleisli bind where the binder returns the next flow.
-;; : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+;; defpoo-flow-bind
+;;   : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-bind` defines a Kleisli bind where the binder returns the
+;;       next flow.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-bind routed route source-flow choose-flow output-contract)
+;;       ;; => bound flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-bind ()
   ((_ binding flow-name source binder output-contract)
    (def binding
      (flow-bind 'flow-name source binder output-contract))))
 
-;;; Alias for users who want the category-theory name at the authoring layer.
-;; : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+;; defpoo-flow-kleisli
+;;   : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-kleisli` is the authoring-layer alias for the Kleisli bind
+;;       form.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-kleisli routed route source-flow choose-flow output-contract)
+;;       ;; => bound flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-kleisli ()
   ((_ binding flow-name source binder output-contract)
    (def binding
      (flow-kleisli 'flow-name source binder output-contract))))
 
-;;; Boundary: define Arrow-style fanout without selecting a scheduler.
-;; : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
+;; defpoo-flow-fanout
+;;   : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-fanout` defines Arrow-style fanout without selecting a
+;;       scheduler.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-fanout split-flow split left-flow right-flow)
+;;       ;; => fanout flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-fanout ()
   ((_ binding flow-name left right)
    (def binding
      (flow-fanout 'flow-name left right))))
 
-;;; Boundary: define a functional DAG flow as Arrow fanout.  This is the
-;;; user-facing Funflow-style DAG entrypoint; receipt and manifest projection
-;;; stay separate so users can name those artifacts deliberately.
-;; : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
+;; defpoo-flow-dag
+;;   : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-dag` defines a functional DAG flow as Arrow fanout while
+;;       keeping receipt and manifest projection separate.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-dag dag-flow dag left-flow right-flow)
+;;       ;; => dag flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-dag ()
   ((_ binding flow-name left right)
    (def binding
      (flow-fanout 'flow-name left right))))
 
-;;; Boundary: define report-only DAG artifacts for an existing flow binding.
-;;; The flow remains ordinary Scheme data; the artifacts expose graph evidence
-;;; and Marlin discovery without executing runtime work.
-;; : (-> Identifier Identifier FlowExpr RequestIdExpr DagArtifactBindings)
+;; defpoo-flow-dag-artifacts
+;;   : (-> Identifier Identifier FlowExpr RequestIdExpr DagArtifactBindings)
+;;   | doc m%
+;;       `defpoo-flow-dag-artifacts` defines report-only DAG artifacts for an
+;;       existing flow binding without executing runtime work.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-dag-artifacts receipt manifest dag-flow request-id)
+;;       ;; => artifact bindings
+;;       ```
+;;     %
 (defrules defpoo-flow-dag-artifacts ()
   ((_ receipt-binding manifest-binding source request-id)
    (begin
@@ -89,22 +175,50 @@
      (def manifest-binding
        (flow->dag-runtime-manifest source request-id)))))
 
-;;; Boundary: define a Funflow-style try boundary over an existing flow.
-;; : (-> Identifier Identifier FlowExpr FlowBinding)
+;; defpoo-flow-try
+;;   : (-> Identifier Identifier FlowExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-try` defines a Funflow-style try boundary over an existing
+;;       flow.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-try guarded-flow guarded source-flow)
+;;       ;; => try flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-try ()
   ((_ binding flow-name source)
    (def binding
      (try-flow 'flow-name source))))
 
-;;; Boundary: define Arrow first over a pair-shaped value.
-;; : (-> Identifier Identifier FlowExpr ContractExpr FlowBinding)
+;; defpoo-flow-first
+;;   : (-> Identifier Identifier FlowExpr ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-first` defines Arrow `first` over a pair-shaped value.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-first first-flow first source-flow second-contract)
+;;       ;; => first flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-first ()
   ((_ binding flow-name source second-contract)
    (def binding
      (flow-first 'flow-name source second-contract))))
 
-;;; Boundary: define Arrow second over a pair-shaped value.
-;; : (-> Identifier Identifier FlowExpr ContractExpr FlowBinding)
+;; defpoo-flow-second
+;;   : (-> Identifier Identifier FlowExpr ContractExpr FlowBinding)
+;;   | doc m%
+;;       `defpoo-flow-second` defines Arrow `second` over a pair-shaped value.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-second second-flow second source-flow first-contract)
+;;       ;; => second flow binding
+;;       ```
+;;     %
 (defrules defpoo-flow-second ()
   ((_ binding flow-name source first-contract)
    (def binding

@@ -331,6 +331,14 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-strategy-field-validation-error/unless valid? field code value)
+  (if valid?
+    '()
+    (list (list (cons 'field field)
+                (cons 'code code)
+                (cons 'value value)))))
+
 ;;; Pattern validation nests descriptor findings under the strategy index so a
 ;;; downstream doctor can point at the bad loop entry without parsing strings.
 ;; : (-> [LoopPatternDescriptor] Nat [ValidationError])
@@ -367,21 +375,21 @@
   (if (loop-strategy-plan? plan)
     (append
      (loop-strategy-required-field-error 'name name)
-     (if (list? patterns)
-       '()
-       (list (list (cons 'field 'patterns)
-                   (cons 'code 'not-list)
-                   (cons 'value patterns))))
-     (if (loop-pattern-level? level-ceiling)
-       '()
-       (list (list (cons 'field 'level-ceiling)
-                   (cons 'code 'unsupported-level)
-                   (cons 'value level-ceiling))))
-     (if (loop-strategy-local-validation-policy-harness-only? local-validation)
-       '()
-       (list (list (cons 'field 'local-validation)
-                   (cons 'code 'local-execution-must-be-harness-only)
-                   (cons 'value local-validation))))
+     (loop-strategy-field-validation-error/unless
+      (list? patterns)
+      'patterns
+      'not-list
+      patterns)
+     (loop-strategy-field-validation-error/unless
+      (loop-pattern-level? level-ceiling)
+      'level-ceiling
+      'unsupported-level
+      level-ceiling)
+     (loop-strategy-field-validation-error/unless
+      (loop-strategy-local-validation-policy-harness-only? local-validation)
+      'local-validation
+      'local-execution-must-be-harness-only
+      local-validation)
      (loop-strategy-pattern-validation-errors
       (if (list? patterns) patterns '())
       0))

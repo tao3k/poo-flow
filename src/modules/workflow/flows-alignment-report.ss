@@ -2,7 +2,7 @@
 ;;; Boundary: Funflow tutorial alignment report projections.
 ;;; Invariant: report rows summarize proof metadata and runtime gaps without execution.
 
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .o .ref object<-alist)
         (only-in :std/srfi/1 filter-map fold)
         :poo-flow/src/modules/workflow/flows-alignment-specs)
 
@@ -336,31 +336,33 @@
           (alignment-ci-receipt-manifest handoff-readiness-summary-value))
          (user-interface-handoff-result-gate-value
           (alignment-user-interface-handoff-result-gate)))
-   (.o kind: (poo-flow-funflow-tutorial-alignment-report-kind)
-       schema: (poo-flow-funflow-tutorial-alignment-schema)
-        upstream: "tweag/funflow"
-        upstream-revision: "356bc675"
-        audited-surface: "funflow-tutorial/notebooks plus funflow-examples/makefile-tool"
-        source-count: source-count-value
-        spec-ids: ids-value
-        specs: spec-snapshots-value
-        source-index: source-index-value
-        source-proof-index: source-proof-index-value
-        status-source-matrix: status-source-matrix-value
-        status-counts: status-counts-value
-        deferred-ids: deferred-ids-value
-        runtime-owner-matrix: runtime-owner-matrix-value
-        handoff-readiness-summary: handoff-readiness-summary-value
-        ci-receipt-manifest: ci-receipt-manifest-value
-        user-interface-handoff-result-gate:
-        user-interface-handoff-result-gate-value
-        runtime-gap-index: runtime-gap-index-value
-        runtime-gap-count: (length runtime-gap-index-value)
-        proof-count: proof-count-value
-        gate-count: (length gate-ids-value)
-        gate-ids: gate-ids-value
-        gate-proofs: gate-proofs-value
-        gate-proof-count: gate-proof-count-value
-        runtime-owner: "marlin-agent-core"
-        runtime-executed: #f)))
-
+   (object<-alist
+    (list
+     (cons 'kind (poo-flow-funflow-tutorial-alignment-report-kind))
+     (cons 'schema (poo-flow-funflow-tutorial-alignment-schema))
+     (cons 'upstream "tweag/funflow")
+     (cons 'upstream-revision "356bc675")
+     (cons 'audited-surface
+           "funflow-tutorial/notebooks plus funflow-examples/makefile-tool")
+     (cons 'source-count source-count-value)
+     (cons 'spec-ids ids-value)
+     (cons 'specs spec-snapshots-value)
+     (cons 'source-index source-index-value)
+     (cons 'source-proof-index source-proof-index-value)
+     (cons 'status-source-matrix status-source-matrix-value)
+     (cons 'status-counts status-counts-value)
+     (cons 'deferred-ids deferred-ids-value)
+     (cons 'runtime-owner-matrix runtime-owner-matrix-value)
+     (cons 'handoff-readiness-summary handoff-readiness-summary-value)
+     (cons 'ci-receipt-manifest ci-receipt-manifest-value)
+     (cons 'user-interface-handoff-result-gate
+           user-interface-handoff-result-gate-value)
+     (cons 'runtime-gap-index runtime-gap-index-value)
+     (cons 'runtime-gap-count (length runtime-gap-index-value))
+     (cons 'proof-count proof-count-value)
+     (cons 'gate-count (length gate-ids-value))
+     (cons 'gate-ids gate-ids-value)
+     (cons 'gate-proofs gate-proofs-value)
+     (cons 'gate-proof-count gate-proof-count-value)
+     (cons 'runtime-owner "marlin-agent-core")
+     (cons 'runtime-executed #f)))))

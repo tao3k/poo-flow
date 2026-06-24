@@ -14,5 +14,7 @@
  (optimizationFocus . "large module object catalog validation")
  (inputShape . "many objects sharing inherited field contracts")
  (expectedRepair . "index field origins once per object during validation")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

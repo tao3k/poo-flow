@@ -324,15 +324,7 @@ Commands:
 
 ;; : (String -> (OrFalse Fixnum))
 (def (poo-flow-cli-last-slash-index text)
-  (let ((length (string-length text)))
-    (let loop ((index 0)
-               (last #f))
-      (cond
-       ((>= index length) last)
-       ((char=? (string-ref text index) #\/)
-        (loop (+ index 1) index))
-       (else
-        (loop (+ index 1) last))))))
+  (string-rindex text #\/))
 
 ;; : (String -> String)
 (def (poo-flow-cli-test-file->suite file)
@@ -493,6 +485,40 @@ Commands:
       +poo-flow-cli-default-test-batch-size+)))
 
 ;; : ([String] -> Integer)
+(def (poo-flow-cli-write-build-spec spec)
+  (write spec)
+  (newline)
+  0)
+
+;; : (String [String] -> Integer)
+(def (poo-flow-cli-build-spec-module module-file rest)
+  (let (spec (poo-flow-cli-module-spec module-file rest))
+    (if spec
+      (poo-flow-cli-write-build-spec spec)
+      (poo-flow-cli-reject-native-module-build! module-file))))
+
+;; : ([String] [String] -> Integer)
+(def (poo-flow-cli-build-spec-command args rest)
+  (let (module-file (poo-flow-cli-module-arg rest))
+    (if module-file
+      (poo-flow-cli-build-spec-module module-file rest)
+      (poo-flow-cli-reject-package-build! args))))
+
+;; : (String [String] -> Integer)
+(def (poo-flow-cli-build-compile-module module-file rest)
+  (let (argv (poo-flow-cli-module-gxc-argv module-file rest))
+    (if argv
+      (poo-flow-cli-run-inherited argv)
+      (poo-flow-cli-reject-native-module-build! module-file))))
+
+;; : ([String] [String] -> Integer)
+(def (poo-flow-cli-build-compile-command args rest)
+  (let (module-file (poo-flow-cli-module-arg rest))
+    (if module-file
+      (poo-flow-cli-build-compile-module module-file rest)
+      (poo-flow-cli-reject-package-build! args))))
+
+;; : ([String] -> Integer)
 (def (poo-flow-cli-build args)
   (match args
     (["meta"]
@@ -500,24 +526,9 @@ Commands:
      (newline)
      0)
     (["spec" . rest]
-     (let (module-file (poo-flow-cli-module-arg rest))
-       (if module-file
-         (let (spec (poo-flow-cli-module-spec module-file rest))
-           (if spec
-             (begin
-               (write spec)
-               (newline)
-               0)
-             (poo-flow-cli-reject-native-module-build! module-file)))
-         (poo-flow-cli-reject-package-build! args))))
+     (poo-flow-cli-build-spec-command args rest))
     (["compile" . rest]
-     (let (module-file (poo-flow-cli-module-arg rest))
-       (if module-file
-         (let (argv (poo-flow-cli-module-gxc-argv module-file rest))
-           (if argv
-             (poo-flow-cli-run-inherited argv)
-             (poo-flow-cli-reject-native-module-build! module-file)))
-         (poo-flow-cli-reject-package-build! args))))
+     (poo-flow-cli-build-compile-command args rest))
     (_ (poo-flow-cli-reject-package-build! args))))
 
 ;; : ([String] Number -> Unit)
@@ -627,34 +638,51 @@ Commands:
   75)
 
 ;; : (Integer [String] -> Integer)
+(def (poo-flow-cli-accept-or-reject-rss-threshold! rss-bytes max-bytes elapsed)
+  (poo-flow-cli-display-rss-receipt rss-bytes max-bytes elapsed)
+  (if (> rss-bytes max-bytes)
+    (poo-flow-cli-reject-rss-threshold! rss-bytes max-bytes)
+    0))
+
+;; : (Integer Number String -> Integer)
+(def (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
+  (let ((rss-bytes (poo-flow-cli-max-rss-bytes output))
+        (max-bytes (poo-flow-cli-megabytes->bytes max-megabytes)))
+    (if rss-bytes
+      (poo-flow-cli-accept-or-reject-rss-threshold!
+       rss-bytes
+       max-bytes
+       elapsed)
+      (poo-flow-cli-reject-rss-parse! output))))
+
+;; : (Integer [String] -> Integer)
+(def (poo-flow-cli-perf-rss-measured-files max-megabytes files)
+  (let* ((started-at (time->seconds (current-time)))
+         (result (poo-flow-cli-run-captured
+                  (poo-flow-cli-perf-rss-argv files)))
+         (elapsed (- (time->seconds (current-time)) started-at))
+         (status (car result))
+         (output (cdr result)))
+    (display output)
+    (force-output)
+    (if (= status 0)
+      (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
+      status)))
+
+;; : (Integer [String] -> Integer)
+(def (poo-flow-cli-perf-rss-validated-files max-megabytes files)
+  (let (validation-status (poo-flow-cli-validate-test-files files))
+    (if (= validation-status 0)
+      (poo-flow-cli-perf-rss-measured-files max-megabytes files)
+      validation-status)))
+
+;; : (Integer [String] -> Integer)
 (def (poo-flow-cli-perf-rss-files max-megabytes files)
-  (cond
-   ((not (file-exists? "/usr/bin/time"))
-    (poo-flow-cli-error "poo-flow perf rss: /usr/bin/time is required for RSS gates")
-    69)
-   (else
-    (let (validation-status (poo-flow-cli-validate-test-files files))
-      (if (= validation-status 0)
-        (let* ((started-at (time->seconds (current-time)))
-               (result (poo-flow-cli-run-captured
-                        (poo-flow-cli-perf-rss-argv files)))
-               (elapsed (- (time->seconds (current-time)) started-at))
-               (status (car result))
-               (output (cdr result)))
-          (display output)
-          (force-output)
-          (if (= status 0)
-            (let ((rss-bytes (poo-flow-cli-max-rss-bytes output))
-                  (max-bytes (poo-flow-cli-megabytes->bytes max-megabytes)))
-              (if rss-bytes
-                (begin
-                  (poo-flow-cli-display-rss-receipt rss-bytes max-bytes elapsed)
-                  (if (> rss-bytes max-bytes)
-                    (poo-flow-cli-reject-rss-threshold! rss-bytes max-bytes)
-                    0))
-                (poo-flow-cli-reject-rss-parse! output)))
-            status))
-        validation-status)))))
+  (if (file-exists? "/usr/bin/time")
+    (poo-flow-cli-perf-rss-validated-files max-megabytes files)
+    (begin
+      (poo-flow-cli-error "poo-flow perf rss: /usr/bin/time is required for RSS gates")
+      69)))
 
 ;; : ([String] -> Integer)
 (def (poo-flow-cli-perf-rss args)

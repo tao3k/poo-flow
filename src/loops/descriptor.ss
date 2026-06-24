@@ -394,6 +394,14 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-field-validation-error/unless valid? field code value)
+  (if valid?
+    '()
+    (list (list (cons 'field field)
+                (cons 'code code)
+                (cons 'value value)))))
+
 ;; : (-> LoopPatternDescriptor Alist [ValidationError])
 (def (loop-pattern-validation-errors/slots descriptor slots)
   (loop-pattern-validation-errors/fields
@@ -410,20 +418,21 @@
     (append
      (loop-required-field-error 'name name)
      (loop-required-field-error 'goal goal)
-     (if (loop-pattern-level? level)
-       '()
-       (list (list (cons 'field 'level)
-                   (cons 'code 'unsupported-level)
-                   (cons 'value level))))
-     (if (integer? priority)
-       '()
-       (list (list (cons 'field 'priority)
-                   (cons 'code 'not-integer)
-                   (cons 'value priority))))
-     (if (list? policy-order)
-       '()
-       (list (list (cons 'field 'policy-order)
-                   (cons 'code 'not-list)))))
+     (loop-field-validation-error/unless
+      (loop-pattern-level? level)
+      'level
+      'unsupported-level
+      level)
+     (loop-field-validation-error/unless
+      (integer? priority)
+      'priority
+      'not-integer
+      priority)
+     (loop-field-validation-error/unless
+      (list? policy-order)
+      'policy-order
+      'not-list
+      policy-order))
     (list '((field . descriptor) (code . not-loop-pattern-descriptor)))))
 
 ;; : (-> LoopPatternDescriptor [ValidationError])

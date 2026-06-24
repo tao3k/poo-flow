@@ -36,6 +36,12 @@
      (entry (list entry))
      (else '()))))
 
+;; : (-> Alist [Symbol])
+(def (poo-flow-user-loop-engine-use-case-row-name-list row)
+  (if (and (pair? row) (symbol? (car row)))
+    (list (car row))
+    '()))
+
 ;;; Profile intent projection is the sole join point for object rows, policy
 ;;; rows, policy-extension receipts, and runtime ownership facts. Keeping this
 ;;; normalized alist report-only lets presentation and runtime manifest code
@@ -57,9 +63,7 @@
           (poo-flow-user-loop-engine-poo-use-cases->rows use-cases))
          (use-case-names
           (append
-           (if (and (pair? use-case-row) (symbol? (car use-case-row)))
-             (list (car use-case-row))
-             '())
+           (poo-flow-user-loop-engine-use-case-row-name-list use-case-row)
            (poo-flow-user-loop-engine-use-case-names/add use-case-rows)))
          (runtime (.ref profile 'runtime))
          (metadata (.ref profile 'metadata)))

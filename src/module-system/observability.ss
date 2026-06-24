@@ -183,15 +183,16 @@
        (symbol? initializer)
        (eq? slot initializer)))
 
+;; : [Symbol]
+(def +poo-flow-poo-slot-authoring-primitive-slots+
+  '(.o .def .ref .slot? object?))
+
 ;; : (-> Symbol Boolean)
 (def (poo-flow-poo-slot-authoring-primitive-slot? slot)
   (and (symbol? slot)
-       (let (slot-name (symbol->string slot))
-         (or (string=? slot-name ".o")
-             (string=? slot-name ".def")
-             (string=? slot-name ".ref")
-             (string=? slot-name ".slot?")
-             (string=? slot-name "object?")))))
+       (if (member slot +poo-flow-poo-slot-authoring-primitive-slots+)
+         #t
+         #f)))
 
 ;; : (-> Symbol Value Symbol)
 (def (poo-flow-poo-slot-authoring-status slot initializer)

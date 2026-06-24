@@ -264,13 +264,19 @@
          (governor (loop-human-audit-governor valid-audit))
          (state-facts (loop-human-audit-state-facts valid-audit))
          (contract (loop-governor->contract governor state-facts)))
+    (loop-human-audit-review-items/from-governor-contract
+     valid-audit
+     contract)))
+
+;; : (-> LoopHumanAudit Alist [Alist])
+(def (loop-human-audit-review-items/from-governor-contract audit contract)
     (append
      (map (lambda (pattern)
-            (loop-human-audit-open-pattern->review-item valid-audit pattern))
+            (loop-human-audit-open-pattern->review-item audit pattern))
           (loop-human-audit-alist-ref contract 'open-patterns '()))
      (map (lambda (item)
-            (loop-human-audit-inbox-item->review-item valid-audit item))
-          (loop-human-audit-alist-ref contract 'human-inbox-items '())))))
+            (loop-human-audit-inbox-item->review-item audit item))
+          (loop-human-audit-alist-ref contract 'human-inbox-items '()))))
 
 ;; : (-> Symbol Value [ValidationError])
 (def (loop-human-audit-required-field-error field value)
@@ -278,6 +284,29 @@
     '()
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
+
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-human-audit-field-validation-error/unless valid? field code value)
+  (if valid?
+    '()
+    (list (list (cons 'field field)
+                (cons 'code code)
+                (cons 'value value)))))
+
+;; : (-> LoopGovernor [ValidationError])
+(def (loop-human-audit-governor-validation-errors governor)
+  (if (loop-governor? governor)
+    (loop-governor-validation-errors governor)
+    (list (list (cons 'field 'governor)
+                (cons 'code 'not-loop-governor)))))
+
+;; : (-> [Alist] [ValidationError])
+(def (loop-human-audit-decisions-field-validation-errors decisions)
+  (if (list? decisions)
+    (loop-human-audit-decision-validation-errors decisions)
+    (list (list (cons 'field 'decisions)
+                (cons 'code 'not-list)
+                (cons 'value decisions)))))
 
 ;; : (-> [Alist] [ValidationError])
 (def (loop-human-audit-decision-validation-errors decisions)
@@ -300,22 +329,15 @@
      (loop-human-audit-required-field-error
       'name
       (loop-human-audit-name audit))
-     (if (loop-governor? (loop-human-audit-governor audit))
-       (loop-governor-validation-errors
-        (loop-human-audit-governor audit))
-       (list (list (cons 'field 'governor)
-                   (cons 'code 'not-loop-governor))))
-     (if (list? (loop-human-audit-state-facts audit))
-       '()
-       (list (list (cons 'field 'state-facts)
-                   (cons 'code 'not-list)
-                   (cons 'value (loop-human-audit-state-facts audit)))))
-     (if (list? (loop-human-audit-decisions audit))
-       (loop-human-audit-decision-validation-errors
-        (loop-human-audit-decisions audit))
-       (list (list (cons 'field 'decisions)
-                   (cons 'code 'not-list)
-                   (cons 'value (loop-human-audit-decisions audit))))))
+     (loop-human-audit-governor-validation-errors
+      (loop-human-audit-governor audit))
+     (loop-human-audit-field-validation-error/unless
+      (list? (loop-human-audit-state-facts audit))
+      'state-facts
+      'not-list
+      (loop-human-audit-state-facts audit))
+     (loop-human-audit-decisions-field-validation-errors
+      (loop-human-audit-decisions audit)))
     (list '((field . audit) (code . not-loop-human-audit)))))
 
 ;; : (-> LoopHumanAudit LoopHumanAudit)
@@ -437,7 +459,10 @@
          (governor (loop-human-audit-governor valid-audit))
          (state-facts (loop-human-audit-state-facts valid-audit))
          (governor-contract (loop-governor->contract governor state-facts))
-         (review-items (loop-human-audit-review-items valid-audit))
+         (review-items
+          (loop-human-audit-review-items/from-governor-contract
+           valid-audit
+           governor-contract))
          (agent-operation
           (loop-human-audit->agent-operation* valid-audit review-items))
          (runtime-snapshot

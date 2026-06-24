@@ -335,14 +335,65 @@
       manifests
       (cdr summaries))))))
 
-;;; Agreement rows compare one manifest to its compact audit summary. The row
-;;; records each invariant separately so docs and tests can point at drift.
+;; poo-flow-user-workflow-cicd-summary-count-diagnostics
+;;   : (-> Integer (List Symbol))
+;;   | doc m%
+;;       `poo-flow-user-workflow-cicd-summary-count-diagnostics` records summary
+;;       cardinality drift before manifest fields are compared.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-user-workflow-cicd-summary-count-diagnostics 0)
+;;       ;; => (missing-summary)
+;;       ```
+;;     %
+(def (poo-flow-user-workflow-cicd-summary-count-diagnostics summary-count)
+  (cond
+   ((= summary-count 1) '())
+   ((= summary-count 0) '(missing-summary))
+   (else '(duplicate-summary))))
+
+;; : (-> Boolean Boolean Symbol [Symbol])
+(def (poo-flow-user-workflow-cicd-mismatch-diagnostics summary-present?
+                                                              match?
+                                                              code)
+  (if (or (not summary-present?) match?)
+    '()
+    (list code)))
+
+;; : (-> Integer Boolean Boolean Boolean Boolean Boolean Boolean [Symbol])
+(def (poo-flow-user-workflow-cicd-runtime-command-agreement-diagnostics
+      summary-count
+      summary-present?
+      check-match?
+      argv-match?
+      runtime-owner-match?
+      unresolved-profile-refs-match?
+      runtime-executed-match?)
+  (append
+   (poo-flow-user-workflow-cicd-summary-count-diagnostics summary-count)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? check-match? 'check-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? argv-match? 'argv-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? runtime-owner-match? 'runtime-owner-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present?
+    unresolved-profile-refs-match?
+    'unresolved-profile-refs-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? runtime-executed-match? 'runtime-executed-mismatch)))
+
+;;; Boundary:
+;;; - Agreement rows are audit data only; they never execute CI commands.
+;;; - Manifest and summary fields stay separate so each drift reason is visible.
 ;; : (-> Alist MaybeAlist Integer Alist)
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement-row
       manifest
       summary
       summary-count)
-  (let* ((summary-row (if summary summary '()))
+  (let* ((summary-row (or summary '()))
          (request (poo-flow-user-alist-ref manifest 'request '()))
          (policy (poo-flow-user-alist-ref manifest 'policy '()))
          (metadata (poo-flow-user-alist-ref manifest 'metadata '()))
@@ -391,26 +442,14 @@
                                                 #t)
                        #f)))
          (diagnostics
-          (append
-           (cond
-            ((= summary-count 1) '())
-            ((= summary-count 0) '(missing-summary))
-            (else '(duplicate-summary)))
-           (if (or (not summary-present?) check-match?)
-             '()
-             '(check-mismatch))
-           (if (or (not summary-present?) argv-match?)
-             '()
-             '(argv-mismatch))
-           (if (or (not summary-present?) runtime-owner-match?)
-             '()
-             '(runtime-owner-mismatch))
-           (if (or (not summary-present?) unresolved-profile-refs-match?)
-             '()
-             '(unresolved-profile-refs-mismatch))
-           (if (or (not summary-present?) runtime-executed-match?)
-             '()
-             '(runtime-executed-mismatch)))))
+          (poo-flow-user-workflow-cicd-runtime-command-agreement-diagnostics
+           summary-count
+           summary-present?
+           check-match?
+           argv-match?
+           runtime-owner-match?
+           unresolved-profile-refs-match?
+           runtime-executed-match?)))
     (list
      (cons 'kind
            'workflow-cicd-runtime-command-manifest-agreement-row)

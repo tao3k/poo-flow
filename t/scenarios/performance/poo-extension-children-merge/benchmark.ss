@@ -14,5 +14,7 @@
  (optimizationFocus . "indexed POO extension child merge")
  (inputShape . "many extension children with overlapping extra child identities")
  (expectedRepair . "index child identities and merge accumulated overrides once per child")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

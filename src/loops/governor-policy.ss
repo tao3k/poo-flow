@@ -5,7 +5,8 @@
 (import :poo-flow/src/core/failure
         :poo-flow/src/loops/descriptor
         :poo-flow/src/loops/strategy
-        :poo-flow/src/loops/governor-core)
+        :poo-flow/src/loops/governor-core
+        (only-in :std/sugar foldl))
 
 (export loop-governor-state-field
         loop-governor-budget-limit
@@ -78,6 +79,45 @@
     (cons (car values)
           (loop-governor-take-at-most (- limit 1) (cdr values))))))
 
+;; : (-> LoopGovernor [Alist] Alist)
+(def (loop-governor-classify-patterns valid-governor states)
+  (let* ((groups
+          (foldl
+           (lambda (descriptor groups)
+             (let* ((open (car groups))
+                    (conflicting (cadr groups))
+                    (denied (caddr groups))
+                    (denied?
+                     (loop-governor-pattern-denied? valid-governor descriptor))
+                    (conflicted?
+                     (loop-governor-pattern-conflicted?
+                      valid-governor
+                      states
+                      descriptor)))
+               (list
+                (if (and (not denied?) (not conflicted?))
+                  (cons descriptor open)
+                  open)
+                (if conflicted?
+                  (cons descriptor conflicting)
+                  conflicting)
+                (if denied?
+                  (cons descriptor denied)
+                  denied))))
+           '(() () ())
+           (loop-strategy-actionable-patterns
+            (loop-governor-strategy valid-governor))))
+         (open (car groups))
+         (conflicting (cadr groups))
+         (denied (caddr groups)))
+    (list
+     (cons 'open-patterns
+           (loop-governor-take-at-most
+            (loop-governor-budget-limit valid-governor)
+            (reverse open)))
+     (cons 'conflicting-patterns (reverse conflicting))
+     (cons 'denied-patterns (reverse denied)))))
+
 ;;; Denylist checks both action keys and pattern names so policy authors can
 ;;; block a target scope or a named loop with the same slot.
 ;; : (-> LoopGovernor LoopPatternDescriptor Boolean)
@@ -108,38 +148,30 @@
 ;; : (-> LoopGovernor [LoopPatternDescriptor])
 (def (loop-governor-denied-patterns governor)
   (let (valid-governor (validate-loop-governor governor))
-    (loop-governor-filter
-     (lambda (descriptor)
-       (loop-governor-pattern-denied? valid-governor descriptor))
-     (loop-strategy-actionable-patterns
-      (loop-governor-strategy valid-governor)))))
+    (loop-governor-alist-ref
+     (loop-governor-classify-patterns valid-governor '())
+     'denied-patterns
+     '())))
 
 ;;; Conflict projection consumes runtime state facts as an argument.
 ;;; Callers can test state behavior without starting a scheduler.
 ;; : (-> LoopGovernor [Alist] [LoopPatternDescriptor])
 (def (loop-governor-conflicting-patterns governor states)
   (let (valid-governor (validate-loop-governor governor))
-    (loop-governor-filter
-     (lambda (descriptor)
-       (loop-governor-pattern-conflicted? valid-governor states descriptor))
-     (loop-strategy-actionable-patterns
-      (loop-governor-strategy valid-governor)))))
+    (loop-governor-alist-ref
+     (loop-governor-classify-patterns valid-governor states)
+     'conflicting-patterns
+     '())))
 
 ;;; Open patterns are recommendations after static denylist and state conflict
 ;;; checks, then clipped by the aggregate max-actionable budget.
 ;; : (-> LoopGovernor [Alist] [LoopPatternDescriptor])
 (def (loop-governor-open-patterns governor states)
   (let (valid-governor (validate-loop-governor governor))
-    (loop-governor-take-at-most
-     (loop-governor-budget-limit valid-governor)
-     (loop-governor-filter
-      (lambda (descriptor)
-        (and (not (loop-governor-pattern-denied? valid-governor descriptor))
-             (not (loop-governor-pattern-conflicted? valid-governor
-                                                     states
-                                                     descriptor))))
-      (loop-strategy-actionable-patterns
-       (loop-governor-strategy valid-governor))))))
+    (loop-governor-alist-ref
+     (loop-governor-classify-patterns valid-governor states)
+     'open-patterns
+     '())))
 
 ;; : (-> Symbol LoopPatternDescriptor ActionKey Alist)
 (def (loop-governor-inbox-item reason descriptor action-key)
@@ -151,20 +183,28 @@
 ;;; The inbox target is a later runtime or UI concern.
 ;; : (-> LoopGovernor [Alist] [Alist])
 (def (loop-governor-human-inbox-items governor states)
-  (let (valid-governor (validate-loop-governor governor))
-    (append
-     (map (lambda (descriptor)
-            (loop-governor-inbox-item
-             'shared-denylist
-             descriptor
-             (loop-governor-pattern-action-key descriptor)))
-          (loop-governor-denied-patterns valid-governor))
-     (map (lambda (descriptor)
-            (loop-governor-inbox-item
-             'acting-on-conflict
-             descriptor
-             (loop-governor-pattern-action-key descriptor)))
-          (loop-governor-conflicting-patterns valid-governor states)))))
+  (let* ((valid-governor (validate-loop-governor governor))
+         (classified
+          (loop-governor-classify-patterns valid-governor states)))
+    (loop-governor-human-inbox-items/from-patterns
+     (loop-governor-alist-ref classified 'denied-patterns '())
+     (loop-governor-alist-ref classified 'conflicting-patterns '()))))
+
+;; : (-> [LoopPatternDescriptor] [LoopPatternDescriptor] [Alist])
+(def (loop-governor-human-inbox-items/from-patterns denied-patterns conflicting-patterns)
+  (append
+   (map (lambda (descriptor)
+          (loop-governor-inbox-item
+           'shared-denylist
+           descriptor
+           (loop-governor-pattern-action-key descriptor)))
+        denied-patterns)
+   (map (lambda (descriptor)
+          (loop-governor-inbox-item
+           'acting-on-conflict
+           descriptor
+           (loop-governor-pattern-action-key descriptor)))
+        conflicting-patterns)))
 
 ;;; Required errors use the same alist shape as strategy validation.
 ;;; That keeps governor findings composable with existing doctor output.
@@ -174,6 +214,34 @@
     '()
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
+
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-governor-field-validation-error/unless valid? field code value)
+  (if valid?
+    '()
+    (list (list (cons 'field field)
+                (cons 'code code)
+                (cons 'value value)))))
+
+;; : (-> LoopStrategyPlan [ValidationError])
+(def (loop-governor-strategy-validation-errors strategy)
+  (if (loop-strategy-plan? strategy)
+    (let (strategy-errors (loop-strategy-validation-errors strategy))
+      (if (null? strategy-errors)
+        '()
+        (list (list (cons 'field 'strategy)
+                    (cons 'code 'invalid-strategy)
+                    (cons 'errors strategy-errors)))))
+    (list (list (cons 'field 'strategy)
+                (cons 'code 'not-loop-strategy-plan)))))
+
+;; : (-> [LoopGovernorNode] [ValidationError])
+(def (loop-governor-agent-judge-node-field-errors nodes)
+  (if (list? nodes)
+    (loop-governor-node-list-validation-errors nodes)
+    (list (list (cons 'field 'agent-judge-nodes)
+                (cons 'code 'not-list)
+                (cons 'value nodes)))))
 
 ;; : (-> [Value] [ValidationError])
 (def (loop-governor-node-list-validation-errors nodes)
@@ -194,38 +262,25 @@
   (if (loop-governor? governor)
     (append
      (loop-governor-required-field-error 'name (loop-governor-name governor))
-     (if (loop-strategy-plan? (loop-governor-strategy governor))
-       (let (strategy-errors
-             (loop-strategy-validation-errors
-              (loop-governor-strategy governor)))
-         (if (null? strategy-errors)
-           '()
-           (list (list (cons 'field 'strategy)
-                       (cons 'code 'invalid-strategy)
-                       (cons 'errors strategy-errors)))))
-       (list (list (cons 'field 'strategy)
-                   (cons 'code 'not-loop-strategy-plan))))
-     (if (symbol? (loop-governor-state-field governor))
-       '()
-       (list (list (cons 'field 'state-key)
-                   (cons 'code 'field-not-symbol)
-                   (cons 'value (loop-governor-state-field governor)))))
-     (if (integer? (loop-governor-budget-limit governor))
-       '()
-       (list (list (cons 'field 'aggregate-budget)
-                   (cons 'code 'max-actionable-not-integer)
-                   (cons 'value (loop-governor-budget-limit governor)))))
-     (if (list? (loop-governor-agent-judges governor))
-       '()
-       (list (list (cons 'field 'agent-judges)
-                   (cons 'code 'not-list)
-                   (cons 'value (loop-governor-agent-judges governor)))))
-     (if (list? (loop-governor-agent-judge-nodes governor))
-       (loop-governor-node-list-validation-errors
-        (loop-governor-agent-judge-nodes governor))
-       (list (list (cons 'field 'agent-judge-nodes)
-                   (cons 'code 'not-list)
-                   (cons 'value (loop-governor-agent-judge-nodes governor))))))
+     (loop-governor-strategy-validation-errors
+      (loop-governor-strategy governor))
+     (loop-governor-field-validation-error/unless
+      (symbol? (loop-governor-state-field governor))
+      'state-key
+      'field-not-symbol
+      (loop-governor-state-field governor))
+     (loop-governor-field-validation-error/unless
+      (integer? (loop-governor-budget-limit governor))
+      'aggregate-budget
+      'max-actionable-not-integer
+      (loop-governor-budget-limit governor))
+     (loop-governor-field-validation-error/unless
+      (list? (loop-governor-agent-judges governor))
+      'agent-judges
+      'not-list
+      (loop-governor-agent-judges governor))
+     (loop-governor-agent-judge-node-field-errors
+      (loop-governor-agent-judge-nodes governor)))
     (list '((field . governor) (code . not-loop-governor)))))
 
 ;;; Validation is the only gate before governor contracts leave Scheme.
@@ -253,11 +308,16 @@
 (def (loop-governor->contract governor states)
   (let* ((valid-governor (validate-loop-governor governor))
          (strategy (loop-governor-strategy valid-governor))
-         (open-patterns (loop-governor-open-patterns valid-governor states))
+         (classified
+          (loop-governor-classify-patterns valid-governor states))
+         (open-patterns
+          (loop-governor-alist-ref classified 'open-patterns '()))
          (conflicting-patterns
-          (loop-governor-conflicting-patterns valid-governor states))
+          (loop-governor-alist-ref classified 'conflicting-patterns '()))
          (denied-patterns
-          (loop-governor-denied-patterns valid-governor)))
+          (loop-governor-alist-ref classified 'denied-patterns '()))
+         (agent-judge-nodes
+          (loop-governor-agent-judge-nodes valid-governor)))
     (list (cons 'schema +loop-governor-schema+)
           (cons 'kind 'loop-governor)
           (cons 'name (loop-governor-name valid-governor))
@@ -270,8 +330,7 @@
           (cons 'agent-judges
                 (loop-governor-agent-judges valid-governor))
           (cons 'agent-judge-nodes
-                (loop-governor-node-contracts
-                 (loop-governor-agent-judge-nodes valid-governor)))
+                (loop-governor-node-contracts agent-judge-nodes))
           (cons 'shared-denylist
                 (loop-governor-shared-denylist valid-governor))
           (cons 'open-patterns
@@ -281,7 +340,9 @@
           (cons 'denied-patterns
                 (loop-governor-pattern-names denied-patterns))
           (cons 'human-inbox-items
-                (loop-governor-human-inbox-items valid-governor states))
+                (loop-governor-human-inbox-items/from-patterns
+                 denied-patterns
+                 conflicting-patterns))
           (cons 'human-inbox (loop-governor-human-inbox valid-governor))
           (cons 'handoff (loop-governor-handoff valid-governor))
           (cons 'runtime-boundary
@@ -294,4 +355,3 @@
           (cons 'execution-owner
                 (loop-governor-execution-owner valid-governor))
           (cons 'metadata (loop-governor-metadata valid-governor)))))
-

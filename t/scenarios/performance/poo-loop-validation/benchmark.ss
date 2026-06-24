@@ -14,5 +14,7 @@
  (optimizationFocus . "loop-local validation")
  (inputShape . "stable module object shape")
  (expectedRepair . "validate once before repeated scalar work")
+ (pooFormEvidence . (.o .def defpoo))
+ (pooUsageCallEvidence . (.ref .get .mix .o .def .putdefault! .setslot! setslots! .all-slots))
  (measurementPhases prepare-fixture measure-best assert-time-gate assert-memory-gate)
  (tags poo module-system performance))

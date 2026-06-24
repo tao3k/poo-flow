@@ -9,6 +9,7 @@
                  make-object
                  $constant-slot-spec
                  $computed-slot-spec)
+        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension)
 
 (export poo-flow-module-object-kind
@@ -514,32 +515,51 @@
 (def (poo-flow-module-config-member? value values)
   (and (member value values) #t))
 
+;; : (-> [PooModuleSlotValue] HashTable)
+(def (poo-flow-module-config-value-index values)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (value)
+       (hash-put! index value #t))
+     values)
+    index))
+
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-config-append-distinct base extra)
-  (cond
-   ((null? extra) base)
-   ((null? (cdr extra))
-    (let (value (car extra))
-      (if (poo-flow-module-config-member? value base)
-        base
-        (append base (list value)))))
-   (else
-    (let loop ((remaining extra) (added '()))
-      (cond
-       ((null? remaining)
-        (if (null? added)
-          base
-          (append base (reverse added))))
-       ((poo-flow-module-config-member? (car remaining) base)
-        (loop (cdr remaining) added))
-       (else
-        (loop (cdr remaining) (cons (car remaining) added))))))))
+  (if (null? extra)
+    base
+    (poo-flow-module-config-append-distinct/indexed
+     base
+     extra
+     (poo-flow-module-config-value-index base))))
+
+;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
+(def (poo-flow-module-config-append-distinct/indexed base extra seen)
+  (let (added
+        (foldl (lambda (value result)
+                 (if (hash-get seen value)
+                   result
+                   (begin
+                     (hash-put! seen value #t)
+                     (cons value result))))
+               '()
+               extra))
+    (if (null? added)
+      base
+      (append base (reverse added)))))
 
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-config-remove-elements values removed)
-  (filter (lambda (value)
-            (not (poo-flow-module-config-member? value removed)))
-          values))
+  (if (null? removed)
+    values
+    (let (removed-index (poo-flow-module-config-value-index removed))
+      (reverse
+       (foldl (lambda (value kept)
+                (if (hash-get removed-index value)
+                  kept
+                  (cons value kept)))
+              '()
+              values)))))
 
 ;; : (-> PooModuleSlotValue [PooModuleSlotValue])
 (def (poo-flow-module-config-list-value value)
@@ -554,7 +574,7 @@
       (eq? merge 'prepend)
       (eq? merge 'remove)))
 
-;; : (-> Symbol Any Any Any)
+;; : (-> Symbol PooModuleSlotValue PooModuleSlotValue PooModuleSlotValue)
 (def (poo-flow-module-config-merged-slot-value merge current value)
   (cond
    ((eq? merge 'override) value)
@@ -572,7 +592,19 @@
      (poo-flow-module-config-list-value value)))
    (else current)))
 
-;; : (-> Symbol PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+;; poo-flow-module-config-fast-slot-merge/in-order
+;;   : (-> Symbol PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+;;   | doc m%
+;;       `poo-flow-module-config-fast-slot-merge/in-order` applies field
+;;       contributions while preserving slot order and allocating only when a
+;;       value actually changes.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-config-fast-slot-merge/in-order node slots fields)
+;;       ;; => maybe-updated-slots
+;;       ```
+;;     %
 (def (poo-flow-module-config-fast-slot-merge/in-order node-identity slots contributions)
   (let ((head '())
         (tail #f)
@@ -647,11 +679,96 @@
                             (or changed? value-changed?)))))
                 #f)))))))))
 
-;; : (-> PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+;; : (-> HashTable Symbol Value)
+(def (poo-flow-module-config-slot-key-hash-ref table key)
+  (hash-get table key))
+
+;; poo-flow-module-config-fast-slot-merge/sparse
+;;   : (-> Symbol PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+;;   | doc m%
+;;       `poo-flow-module-config-fast-slot-merge/sparse` handles sparse or
+;;       repeated slot updates with hash-indexed state while keeping append and
+;;       remove semantics equivalent to the ordered merge path.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-config-fast-slot-merge/sparse node slots fields)
+;;       ;; => maybe-updated-slots
+;;       ```
+;;     %
 (def (poo-flow-module-config-fast-slot-merge/sparse node-identity slots contributions)
   (let ((seen (make-hash-table))
         (updated (make-hash-table))
-        (updates (make-hash-table)))
+        (updates (make-hash-table))
+        (value-indexes (make-hash-table))
+        (append-active (make-hash-table))
+        (append-bases (make-hash-table))
+        (append-additions (make-hash-table)))
+    (def (slot-value-index key current)
+      (let (index (poo-flow-module-config-slot-key-hash-ref value-indexes key))
+        (if index
+          index
+          (let (next-index
+                (poo-flow-module-config-value-index
+                 (poo-flow-module-config-list-value current)))
+            (hash-put! value-indexes key next-index)
+            next-index))))
+    (def (record-slot-value-index! key value)
+      (hash-put! value-indexes
+                 key
+                 (poo-flow-module-config-value-index
+                  (poo-flow-module-config-list-value value))))
+    (def (materialize-append-state key)
+      (let ((base (poo-flow-module-config-slot-key-hash-ref
+                   append-bases
+                   key))
+            (additions (poo-flow-module-config-slot-key-hash-ref
+                        append-additions
+                        key)))
+        (if (null? additions)
+          base
+          (append base (reverse additions)))))
+    (def (flush-append-state! key)
+      (if (poo-flow-module-config-slot-key-hash-ref append-active key)
+        (let (value (materialize-append-state key))
+          (hash-put! updates key value)
+          (hash-put! append-active key #f)
+          (record-slot-value-index! key value)
+          value)
+        (poo-flow-module-config-slot-key-hash-ref updates key)))
+    (def (resolved-slot-update key)
+      (if (poo-flow-module-config-slot-key-hash-ref append-active key)
+        (flush-append-state! key)
+        (poo-flow-module-config-slot-key-hash-ref updates key)))
+    (def (append-slot-value! key current value)
+      (let ((current-list (poo-flow-module-config-list-value current))
+            (extra (poo-flow-module-config-list-value value))
+            (active? (poo-flow-module-config-slot-key-hash-ref
+                      append-active
+                      key)))
+        (when (not active?)
+          (hash-put! append-active key #t)
+          (hash-put! append-bases key current-list)
+          (hash-put! append-additions key '())
+          (hash-put! updates key current-list))
+        (let (seen-values (slot-value-index key current-list))
+          (let loop ((remaining extra)
+                     (additions
+                      (poo-flow-module-config-slot-key-hash-ref
+                       append-additions
+                       key))
+                     (changed? #f))
+            (cond
+             ((null? remaining)
+              (hash-put! append-additions key additions)
+              changed?)
+             ((hash-get seen-values (car remaining))
+              (loop (cdr remaining) additions changed?))
+             (else
+              (hash-put! seen-values (car remaining) #t)
+              (loop (cdr remaining)
+                    (cons (car remaining) additions)
+                    #t)))))))
     (let init ((remaining slots))
       (cond
        ((null? remaining)
@@ -664,12 +781,14 @@
               (append
                (map (lambda (entry)
                       (let (key (car entry))
-                        (if (hash-get updated key)
-                          (cons key (hash-get updates key))
+                        (if (poo-flow-module-config-slot-key-hash-ref
+                             updated
+                             key)
+                          (cons key (resolved-slot-update key))
                           entry)))
                     slots)
                (map (lambda (key)
-                      (cons key (hash-get updates key)))
+                      (cons key (resolved-slot-update key)))
                     (reverse new-order))))
             (let* ((contribution (car rest))
                    (vector-contribution?
@@ -710,7 +829,9 @@
               (if (and (equal? target node-identity)
                        valid?
                        (poo-flow-module-config-slot-merge-action? merge))
-                (let* ((entry (hash-get seen key))
+                (let* ((entry (poo-flow-module-config-slot-key-hash-ref
+                               seen
+                               key))
                        (known? (and entry #t))
                        (next-new-order
                         (if known?
@@ -720,28 +841,51 @@
                             (cons key new-order))))
                        (current
                         (cond
-                         ((hash-get updated key)
-                          (hash-get updates key))
+                         ((poo-flow-module-config-slot-key-hash-ref
+                           updated
+                           key)
+                          (if (and (not (eq? merge 'append))
+                                   (poo-flow-module-config-slot-key-hash-ref
+                                    append-active
+                                    key))
+                            (flush-append-state! key)
+                            (poo-flow-module-config-slot-key-hash-ref
+                             updates
+                             key)))
                          (known? (cdr entry))
                          (else '())))
-                       (next-value
-                        (poo-flow-module-config-merged-slot-value
-                         merge
-                         current
-                         value))
-                       (value-changed?
-                        (not (or (eq? next-value current)
-                                 (equal? next-value current))))
-                       (next-changed?
-                        (or changed?
-                            (not known?)
-                            value-changed?)))
-                  (when (or (not known?) value-changed?)
-                    (hash-put! updated key #t)
-                    (hash-put! updates key next-value))
-                  (apply-contributions (cdr rest)
-                                       next-new-order
-                                       next-changed?))
+                       (append-merge? (eq? merge 'append)))
+                  (if append-merge?
+                    (let* ((value-changed?
+                            (append-slot-value! key current value))
+                           (next-changed?
+                            (or changed?
+                                (not known?)
+                                value-changed?)))
+                      (when (or (not known?) value-changed?)
+                        (hash-put! updated key #t))
+                      (apply-contributions (cdr rest)
+                                           next-new-order
+                                           next-changed?))
+                    (let* ((next-value
+                            (poo-flow-module-config-merged-slot-value
+                             merge
+                             current
+                             value))
+                           (value-changed?
+                            (not (or (eq? next-value current)
+                                     (equal? next-value current))))
+                           (next-changed?
+                            (or changed?
+                                (not known?)
+                                value-changed?)))
+                      (when (or (not known?) value-changed?)
+                        (hash-put! updated key #t)
+                        (hash-put! updates key next-value)
+                        (record-slot-value-index! key next-value))
+                      (apply-contributions (cdr rest)
+                                           next-new-order
+                                           next-changed?))))
                 #f)))))
        ((hash-get seen (caar remaining)) #f)
        (else
@@ -854,11 +998,15 @@
     (for-each
      (lambda (field)
        (let (identity (poo-flow-module-object-field-identity field))
-         (if (hash-get index identity)
+         (if (poo-flow-module-object-identity-hash-ref index identity)
            index
            (hash-put! index identity field))))
      fields)
     index))
+
+;; : (-> HashTable Symbol Value)
+(def (poo-flow-module-object-identity-hash-ref table identity)
+  (hash-get table identity))
 
 ;; : (-> [PooModuleFieldContract] PooModuleFieldContract [PooModuleFieldContract])
 (def (poo-flow-module-object-field-set fields field)
@@ -871,9 +1019,19 @@
            (cons (car fields)
                  (poo-flow-module-object-field-set (cdr fields) field))))))
 
-;;; Field merging folds extra contracts through field-set so replacement keeps
-;;; the same identity rule as object inheritance, without duplicating lookup.
-;; : (-> [PooModuleFieldContract] [PooModuleFieldContract] [PooModuleFieldContract])
+;; poo-flow-module-object-fields-merge
+;;   : (-> [PooModuleFieldContract] [PooModuleFieldContract] [PooModuleFieldContract])
+;;   | doc m%
+;;       `poo-flow-module-object-fields-merge` folds extra contracts through
+;;       field identity replacement so inheritance and explicit field override
+;;       use the same ordering rule.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-object-fields-merge base-fields extra-fields)
+;;       ;; => merged-fields
+;;       ```
+;;     %
 (def (poo-flow-module-object-fields-merge base extra)
   (let ((base-seen (make-hash-table))
         (override-seen (make-hash-table))
@@ -892,22 +1050,32 @@
          (map (lambda (field)
                 (let (identity
                       (poo-flow-module-object-field-identity field))
-                  (if (and (hash-get override-seen identity)
-                           (not (hash-get replacement-used identity)))
+                  (if (and (poo-flow-module-object-identity-hash-ref
+                            override-seen
+                            identity)
+                           (not (poo-flow-module-object-identity-hash-ref
+                                 replacement-used
+                                 identity)))
                     (begin
                       (hash-put! replacement-used identity #t)
-                      (hash-get overrides identity))
+                      (poo-flow-module-object-identity-hash-ref
+                       overrides
+                       identity))
                     field)))
               base)
          (map (lambda (identity)
-                (hash-get overrides identity))
+                (poo-flow-module-object-identity-hash-ref overrides identity))
               (reverse new-identities)))
         (let* ((field (car fields))
                (identity
                 (poo-flow-module-object-field-identity field))
                (next-new-identities
-                (if (or (hash-get base-seen identity)
-                        (hash-get new-seen identity))
+                (if (or (poo-flow-module-object-identity-hash-ref
+                         base-seen
+                         identity)
+                        (poo-flow-module-object-identity-hash-ref
+                         new-seen
+                         identity))
                   new-identities
                   (begin
                     (hash-put! new-seen identity #t)
@@ -936,7 +1104,7 @@
 
 ;; : (-> HashTable Symbol MaybePooModuleFieldContract)
 (def (poo-flow-module-object-field/index field-index identity)
-  (hash-get field-index identity))
+  (poo-flow-module-object-identity-hash-ref field-index identity))
 
 ;; : (-> [PooModuleFieldContract] Symbol MaybePooModuleFieldContract)
 (def (poo-flow-module-object-field/in-fields fields identity)
@@ -983,9 +1151,19 @@
                      key
                      value)))))
 
-;;; Slot merging folds object rows through the alist setter, preserving the
-;;; first declaration order while allowing later rows to override by key.
-;; : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
+;; poo-flow-module-object-slots-merge
+;;   : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
+;;   | doc m%
+;;       `poo-flow-module-object-slots-merge` folds object rows through the
+;;       alist setter, preserving first declaration order while allowing later
+;;       rows to override by key.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-object-slots-merge base-slots extra-slots)
+;;       ;; => merged-slots
+;;       ```
+;;     %
 (def (poo-flow-module-object-slots-merge base extra)
   (let ((base-seen (make-hash-table))
         (override-seen (make-hash-table))
@@ -1001,21 +1179,35 @@
         (append
          (map (lambda (entry)
                 (let (key (car entry))
-                  (if (and (hash-get override-seen key)
-                           (not (hash-get replacement-used key)))
+                  (if (and (poo-flow-module-config-slot-key-hash-ref
+                            override-seen
+                            key)
+                           (not (poo-flow-module-config-slot-key-hash-ref
+                                 replacement-used
+                                 key)))
                     (begin
                       (hash-put! replacement-used key #t)
-                      (cons key (hash-get overrides key)))
+                      (cons key
+                            (poo-flow-module-config-slot-key-hash-ref
+                             overrides
+                             key)))
                     entry)))
               base)
          (map (lambda (key)
-                (cons key (hash-get overrides key)))
+                (cons key
+                      (poo-flow-module-config-slot-key-hash-ref
+                       overrides
+                       key)))
               (reverse new-keys)))
         (let* ((entry (car entries))
                (key (car entry))
                (next-new-keys
-                (if (or (hash-get base-seen key)
-                        (hash-get new-seen key))
+                (if (or (poo-flow-module-config-slot-key-hash-ref
+                         base-seen
+                         key)
+                        (poo-flow-module-config-slot-key-hash-ref
+                         new-seen
+                         key))
                   new-keys
                   (begin
                     (hash-put! new-seen key #t)
@@ -1103,7 +1295,7 @@
 
 ;; : (-> HashTable Symbol MaybePooModuleExtensionNode)
 (def (poo-flow-module-objects-ref/index objects-index identity)
-  (hash-get objects-index identity))
+  (poo-flow-module-object-identity-hash-ref objects-index identity))
 
 ;; : (-> PooModuleExtensionNode Symbol MaybePooModuleExtensionNode)
 (def (poo-flow-module-objects-ref objects-node identity)
@@ -1111,7 +1303,19 @@
    (poo-flow-module-extension-node-children objects-node)
    identity))
 
-;; : (-> [PooModuleFieldContribution] HashTable)
+;; poo-flow-module-objects-contributions-by-target
+;;   : (-> [PooModuleFieldContribution] HashTable)
+;;   | doc m%
+;;       `poo-flow-module-objects-contributions-by-target` groups field
+;;       contributions by target identity so extension children can be updated
+;;       without repeatedly scanning the full contribution list.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-objects-contributions-by-target contributions)
+;;       ;; => target-contribution-table
+;;       ```
+;;     %
 (def (poo-flow-module-objects-contributions-by-target contributions)
   (let (groups (make-hash-table))
     (let loop ((remaining contributions))
@@ -1128,52 +1332,53 @@
                        (list contribution)))
           (loop (cdr remaining)))))))
 
-;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
-(def (poo-flow-module-objects-fast-extension-result objects-node contributions)
-  (if (not (equal? (poo-flow-module-extension-node-identity objects-node)
-                   poo-flow-module-objects-root-identity))
-    #f
-    (let ((groups
-           (poo-flow-module-objects-contributions-by-target contributions))
-          (slots
-           (poo-flow-module-extension-node-slots objects-node))
-          (children
-           (poo-flow-module-extension-node-children objects-node)))
-      (let loop ((remaining children)
-                 (next-children '())
-                 (changed? #f))
-        (if (null? remaining)
-          (poo-flow-module-extension-result
-           (poo-flow-module-extension-node
-            poo-flow-module-objects-root-identity
-            slots
-            (reverse next-children))
-           (if changed? 1 0)
-           #t)
-          (let* ((child (car remaining))
-                 (target
-                  (poo-flow-module-extension-node-identity child))
-                 (target-contributions
-                  (hash-get groups target)))
-            (if target-contributions
-              (let (child-result
-                    (poo-flow-module-config-fast-extension-result
-                     child
-                     (reverse target-contributions)))
-                (if child-result
+;; : (-> HashTable MaybeFastExtensionChildState PooModuleExtensionNode MaybeFastExtensionChildState)
+(def (poo-flow-module-objects-fast-extension-child-state groups state child)
+  (and state
+       (let* ((next-children (car state))
+              (changed? (cdr state))
+              (target (poo-flow-module-extension-node-identity child))
+              (target-contributions (hash-get groups target)))
+         (if target-contributions
+           (let (child-result
+                 (poo-flow-module-config-fast-extension-result
+                  child
+                  (reverse target-contributions)))
+             (and child-result
                   (let ((next-child
                          (poo-flow-module-extension-result-root child-result))
                         (child-changed?
                          (> (poo-flow-module-extension-result-iterations
                              child-result)
                             0)))
-                    (loop (cdr remaining)
-                          (cons next-child next-children)
-                          (or changed? child-changed?)))
-                  #f))
-              (loop (cdr remaining)
-                    (cons child next-children)
-                    changed?))))))))
+                    (cons (cons next-child next-children)
+                          (or changed? child-changed?)))))
+           (cons (cons child next-children) changed?)))))
+
+;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
+(def (poo-flow-module-objects-fast-extension-result objects-node contributions)
+  (and (equal? (poo-flow-module-extension-node-identity objects-node)
+               poo-flow-module-objects-root-identity)
+       (let* ((groups
+               (poo-flow-module-objects-contributions-by-target contributions))
+              (slots
+               (poo-flow-module-extension-node-slots objects-node))
+              (state
+               (foldl (lambda (child state)
+                        (poo-flow-module-objects-fast-extension-child-state
+                         groups
+                         state
+                         child))
+                      (cons '() #f)
+                      (poo-flow-module-extension-node-children objects-node))))
+         (and state
+              (poo-flow-module-extension-result
+               (poo-flow-module-extension-node
+                poo-flow-module-objects-root-identity
+                slots
+                (reverse (car state)))
+               (if (cdr state) 1 0)
+               #t)))))
 
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] PooModuleConfigMergeResult)
 (def (poo-flow-module-objects-mk-merge/node objects-node contributions)
