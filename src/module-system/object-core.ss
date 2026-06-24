@@ -67,10 +67,14 @@
         poo-flow-module-object-resolved-fields
         poo-flow-module-object-field
         poo-flow-module-object-default-slots
+        poo-flow-module-object-node/default-slots
         poo-flow-module-object-node
         poo-flow-module-object-contributions
         poo-flow-module-objects-node
+        poo-flow-module-objects-index
+        poo-flow-module-objects-ref/index
         poo-flow-module-objects-ref
+        poo-flow-module-objects-mk-merge/node
         poo-flow-module-objects-mk-merge)
 
 ;; : PooModuleObjectKindId
@@ -934,6 +938,16 @@
 (def (poo-flow-module-object-field/index field-index identity)
   (hash-get field-index identity))
 
+;; : (-> [PooModuleFieldContract] Symbol MaybePooModuleFieldContract)
+(def (poo-flow-module-object-field/in-fields fields identity)
+  (cond
+   ((null? fields) #f)
+   ((equal? (poo-flow-module-object-field-identity (car fields))
+            identity)
+    (car fields))
+   (else
+    (poo-flow-module-object-field/in-fields (cdr fields) identity))))
+
 ;; poo-flow-module-object-field
 ;;   : (-> PooModuleObject Symbol MaybePooModuleFieldContract)
 ;;   | contract: resolves inherited fields before selecting by identity
@@ -946,8 +960,8 @@
 ;;       ```
 ;;     %
 (def (poo-flow-module-object-field object identity)
-  (poo-flow-module-object-field/index
-   (poo-flow-module-object-resolved-field-index object)
+  (poo-flow-module-object-field/in-fields
+   (poo-flow-module-object-resolved-fields object)
    identity))
 
 ;;; Default slot materialization maps field contracts to slot values; override
@@ -1013,12 +1027,20 @@
 ;;; Object nodes are extension nodes seeded with field defaults; downstream
 ;;; contributions only need to provide changed slots.
 ;; : (-> PooModuleObject PooModuleSlotMap [PooModuleExtensionNode] PooModuleExtensionNode)
-(def (poo-flow-module-object-node object slots children)
+(def (poo-flow-module-object-node/default-slots object default-slots slots children)
   (poo-flow-module-extension-node
    (poo-flow-module-object-identity object)
    (poo-flow-module-object-slots-merge
-    (poo-flow-module-object-default-slots object)
+    default-slots
     slots)
+   children))
+
+;; : (-> PooModuleObject PooModuleSlotMap [PooModuleExtensionNode] PooModuleExtensionNode)
+(def (poo-flow-module-object-node object slots children)
+  (poo-flow-module-object-node/default-slots
+   object
+   (poo-flow-module-object-default-slots object)
+   slots
    children))
 
 ;; : (-> PooModuleObject Pair PooModuleFieldContribution)
@@ -1068,14 +1090,33 @@
           (poo-flow-module-object-node object '() '()))
         objects)))
 
+;; : (-> PooModuleExtensionNode HashTable)
+(def (poo-flow-module-objects-index objects-node)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (child)
+       (hash-put! index
+                  (poo-flow-module-extension-node-identity child)
+                  child))
+     (poo-flow-module-extension-node-children objects-node))
+    index))
+
+;; : (-> HashTable Symbol MaybePooModuleExtensionNode)
+(def (poo-flow-module-objects-ref/index objects-index identity)
+  (hash-get objects-index identity))
+
 ;; : (-> PooModuleExtensionNode Symbol MaybePooModuleExtensionNode)
 (def (poo-flow-module-objects-ref objects-node identity)
   (poo-flow-module-extension-child-ref
    (poo-flow-module-extension-node-children objects-node)
    identity))
 
+;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] PooModuleConfigMergeResult)
+(def (poo-flow-module-objects-mk-merge/node objects-node contributions)
+  (poo-flow-module-config-mk-merge objects-node contributions))
+
 ;; : (-> [PooModuleObject] [PooModuleFieldContribution] PooModuleConfigMergeResult)
 (def (poo-flow-module-objects-mk-merge objects contributions)
-  (poo-flow-module-config-mk-merge
+  (poo-flow-module-objects-mk-merge/node
    (poo-flow-module-objects-node objects)
    contributions))
