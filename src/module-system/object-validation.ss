@@ -16,6 +16,12 @@
         poo-flow-module-field-contract-validation-kind
         poo-flow-module-object-validation-source-ref
         poo-flow-module-field-contract-validation-source-ref
+        poo-flow-module-object-direct-field-identities
+        poo-flow-module-object-resolved-field-identities
+        poo-flow-module-object-inheritance-chain
+        poo-flow-module-object-field-origin
+        poo-flow-module-object-field-origins
+        poo-flow-module-object-validation-phases
         poo-flow-module-object-harness-validation
         poo-flow-module-field-contract-validation
         poo-flow-module-field-contract-validation-valid?
@@ -64,6 +70,116 @@
            (cons 'message message)
            (cons 'subject subject)
            (cons 'evidence evidence)))
+
+;; : (-> [PooModuleFieldContract] [Symbol])
+(def (poo-flow-module-field-identities fields)
+  (map poo-flow-module-field-contract-identity fields))
+
+;; : (-> PooModuleObject [Symbol])
+(def (poo-flow-module-object-direct-field-identities object)
+  (poo-flow-module-field-identities
+   (poo-flow-module-object-fields object)))
+
+;; : (-> PooModuleObject [Symbol])
+(def (poo-flow-module-object-resolved-field-identities object)
+  (poo-flow-module-field-identities
+   (poo-flow-module-object-resolved-fields object)))
+
+;;; This is the declared ancestry closure. The field order in
+;;; `resolved-field-identities` is the observed C3 result from gerbil-poo.
+;; : (-> PooModuleObject [Symbol])
+(def (poo-flow-module-object-inheritance-chain object)
+  (cons
+   (poo-flow-module-object-identity object)
+   (apply append
+          (map poo-flow-module-object-inheritance-chain
+               (poo-flow-module-object-inherits object)))))
+
+;; : (-> Symbol [Symbol] Boolean)
+(def (poo-flow-module-symbol-member? value values)
+  (cond
+   ((null? values) #f)
+   ((eq? value (car values)) #t)
+   (else
+    (poo-flow-module-symbol-member? value (cdr values)))))
+
+;; : (-> PooModuleObject Symbol MaybePooModuleObject)
+(def (poo-flow-module-object-find-field-provider object field-identity)
+  (if (poo-flow-module-symbol-member?
+       field-identity
+       (poo-flow-module-object-direct-field-identities object))
+    object
+    (let loop ((supers (poo-flow-module-object-inherits object)))
+      (cond
+       ((null? supers) #f)
+       ((poo-flow-module-object-find-field-provider (car supers)
+                                                    field-identity)
+        => (lambda (provider) provider))
+       (else
+        (loop (cdr supers)))))))
+
+;; : (-> PooModuleObject PooModuleFieldContract Alist)
+(def (poo-flow-module-object-field-origin object field)
+  (let* ((field-identity
+          (poo-flow-module-field-contract-identity field))
+         (provider
+          (poo-flow-module-object-find-field-provider object field-identity))
+         (provider-identity
+          (and provider (poo-flow-module-object-identity provider))))
+    (list
+     (cons 'field field-identity)
+     (cons 'origin
+           (if (eq? provider object) 'direct 'inherited))
+     (cons 'provider provider-identity)
+     (cons 'value-kind
+           (poo-flow-module-field-contract-value-kind field))
+     (cons 'merge
+           (poo-flow-module-field-contract-merge field))
+     (cons 'metadata
+           (poo-flow-module-field-contract-metadata field)))))
+
+;; : (-> PooModuleObject [Alist])
+(def (poo-flow-module-object-field-origins object)
+  (map (lambda (field)
+         (poo-flow-module-object-field-origin object field))
+       (poo-flow-module-object-resolved-fields object)))
+
+;; : (-> PooModuleObject HashTable [HashTable] [HashTable] [HashTable])
+(def (poo-flow-module-object-validation-phases object
+                                               harness-validation
+                                               field-contract-validations
+                                               local-diagnostics)
+  (list
+   (receipt
+    (cons 'phase 'source-reference)
+    (cons 'status 'ok)
+    (cons 'owner (poo-flow-module-object-identity object))
+    (cons 'detail
+          (poo-flow-module-object-validation-source-ref object)))
+   (receipt
+    (cons 'phase 'harness-object-contract)
+    (cons 'status
+          (if (poo-object-validation-valid? harness-validation) 'ok 'invalid))
+    (cons 'owner (poo-flow-module-object-identity object))
+    (cons 'diagnostic-count
+          (length (hash-get harness-validation 'diagnostics))))
+   (receipt
+    (cons 'phase 'field-contracts)
+    (cons 'status
+          (if (field-contract-validations-valid?
+               field-contract-validations)
+            'ok
+            'invalid))
+    (cons 'owner (poo-flow-module-object-identity object))
+    (cons 'field-count (length field-contract-validations))
+    (cons 'invalid-fields
+          (poo-flow-module-invalid-field-identities
+           field-contract-validations)))
+   (receipt
+    (cons 'phase 'local-object-diagnostics)
+    (cons 'status (if (null? local-diagnostics) 'ok 'invalid))
+    (cons 'owner (poo-flow-module-object-identity object))
+    (cons 'diagnostic-count (length local-diagnostics)))))
 
 ;;; Local object metadata is the only metadata gate that stays in poo-flow;
 ;;; field metadata shape is validated by the upstream object facade.
@@ -283,6 +399,12 @@
          (diagnostics
           (append local-diagnostics
                   (hash-get harness-validation 'diagnostics)))
+         (validation-phases
+          (poo-flow-module-object-validation-phases
+           object
+           harness-validation
+           field-contract-validations
+           local-diagnostics))
          (valid? (and (null? diagnostics)
                       (poo-object-validation-valid? harness-validation)
                       (field-contract-validations-valid?
@@ -291,16 +413,39 @@
      (cons 'kind poo-flow-module-object-validation-kind)
      (cons 'schema poo-flow-module-object-validation-schema)
      (cons 'object (poo-flow-module-object-identity object))
+     (cons 'inherits
+           (map poo-flow-module-object-identity
+                (poo-flow-module-object-inherits object)))
+     (cons 'inheritance-chain
+           (poo-flow-module-object-inheritance-chain object))
+     (cons 'inherit-count
+           (length (poo-flow-module-object-inherits object)))
+     (cons 'direct-field-count
+           (length (poo-flow-module-object-fields object)))
+     (cons 'direct-field-identities
+           (poo-flow-module-object-direct-field-identities object))
+     (cons 'resolved-field-count
+           (length (poo-flow-module-object-resolved-fields object)))
+     (cons 'resolved-field-identities
+           (poo-flow-module-object-resolved-field-identities object))
+     (cons 'field-origins
+           (poo-flow-module-object-field-origins object))
+     (cons 'metadata (poo-flow-module-object-metadata object))
      (cons 'sourceRef source-ref)
      (cons 'harnessValidation harness-validation)
      (cons 'fieldContractValidations field-contract-validations)
+     (cons 'validationPhases validation-phases)
      (cons 'valid valid?)
      (cons 'diagnostics diagnostics)
      (cons 'checkedSignals
            '(upstream-poo-object-contract-validation
              upstream-poo-object-field-contract-validation
              object-metadata-shape
-             resolved-field-identity)))))
+             resolved-field-identity
+             object-contract-debug-receipt
+             object-field-origin-contract
+             object-inheritance-chain-contract
+             object-validation-phase-contract)))))
 
 ;; : (-> PooFlowModuleObjectValidationReceipt Boolean)
 (def (poo-flow-module-object-validation? value)
@@ -337,6 +482,21 @@
     (list (cons 'kind (hash-get validation 'kind))
           (cons 'schema (hash-get validation 'schema))
           (cons 'object (hash-get validation 'object))
+          (cons 'inherits (hash-get validation 'inherits))
+          (cons 'inheritance-chain
+                (hash-get validation 'inheritance-chain))
+          (cons 'inherit-count (hash-get validation 'inherit-count))
+          (cons 'direct-field-count
+                (hash-get validation 'direct-field-count))
+          (cons 'direct-field-identities
+                (hash-get validation 'direct-field-identities))
+          (cons 'resolved-field-count
+                (hash-get validation 'resolved-field-count))
+          (cons 'resolved-field-identities
+                (hash-get validation 'resolved-field-identities))
+          (cons 'field-origins
+                (hash-get validation 'field-origins))
+          (cons 'metadata (hash-get validation 'metadata))
           (cons 'valid (hash-get validation 'valid))
           (cons 'diagnostics (hash-get validation 'diagnostics))
           (cons 'diagnostic-count
@@ -345,6 +505,8 @@
           (cons 'invalid-fields
                 (poo-flow-module-invalid-field-identities field-validations))
           (cons 'checked-signals (hash-get validation 'checkedSignals))
+          (cons 'validation-phases
+                (hash-get validation 'validationPhases))
           (cons 'field-validations
                 (map poo-flow-module-field-contract-validation->alist
                      field-validations)))))
@@ -371,6 +533,10 @@
     (cons (hash-get (car validations) 'object)
           (poo-flow-module-invalid-object-identities (cdr validations))))))
 
+;; : (-> [HashTable] Symbol [Value])
+(def (poo-flow-module-validation-values validations key)
+  (map (lambda (validation) (hash-get validation key)) validations))
+
 ;; : (-> [HashTable] HashTable)
 (def (poo-flow-module-objects-validation-summary validations)
   (let (invalid-objects
@@ -379,9 +545,39 @@
      (cons 'kind "poo-flow-module-objects-validation-summary")
      (cons 'schema poo-flow-module-object-validation-schema)
      (cons 'object-count (length validations))
+     (cons 'object-identities
+           (poo-flow-module-validation-values validations 'object))
+     (cons 'inheritance-chains
+           (poo-flow-module-validation-values validations 'inheritance-chain))
+     (cons 'direct-field-counts
+           (poo-flow-module-validation-values validations 'direct-field-count))
+     (cons 'direct-field-identities
+           (poo-flow-module-validation-values validations
+                                             'direct-field-identities))
+     (cons 'resolved-field-counts
+           (poo-flow-module-validation-values validations 'resolved-field-count))
+     (cons 'resolved-field-identities
+           (poo-flow-module-validation-values validations
+                                             'resolved-field-identities))
+     (cons 'field-origins
+           (poo-flow-module-validation-values validations 'field-origins))
+     (cons 'inheritance-counts
+           (poo-flow-module-validation-values validations 'inherit-count))
+     (cons 'validation-phases
+           (poo-flow-module-validation-values validations 'validationPhases))
      (cons 'invalid-count (length invalid-objects))
      (cons 'invalid-objects invalid-objects)
-     (cons 'valid (null? invalid-objects)))))
+     (cons 'valid (null? invalid-objects))
+     (cons 'checkedSignals
+           '(object-catalog-validation-contract
+             object-catalog-debug-contract
+             object-catalog-field-origin-contract
+             object-catalog-inheritance-chain-contract
+             object-catalog-phase-contract
+             object-catalog-counts
+             object-catalog-invalid-identities))
+     (cons 'descriptor-realized? #f)
+     (cons 'runtime-executed #f))))
 
 ;;; Catalog loading calls this gate so invalid module objects fail before a
 ;;; user-facing declarative configuration is projected.

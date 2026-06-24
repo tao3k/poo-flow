@@ -379,8 +379,8 @@
         (append
          (poo-flow-sandbox-prototype-slot-entry filesystem 'scope)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'materialized-by)
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'mounts)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'paths)
+         (poo-flow-sandbox-prototype-slot-entry filesystem 'mounts)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'access)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'snapshot)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'volume))))
@@ -395,6 +395,7 @@
       (poo-flow-sandbox-filesystem-prototype->resource-entry
        (.ref resources 'filesystem)))
      '())
+   (poo-flow-sandbox-prototype-slot-entry resources 'mounts)
    (poo-flow-sandbox-prototype-slot-entry resources 'cpu)
    (poo-flow-sandbox-prototype-slot-entry resources 'memory)
    (poo-flow-sandbox-prototype-slot-entry resources 'timeout-ms)))

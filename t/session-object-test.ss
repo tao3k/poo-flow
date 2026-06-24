@@ -49,6 +49,25 @@
    session-placement
    '((intent . build-review))))
 
+;; : PooSession
+(def session-macro-root
+  (session macro/root
+    (chunk request user "Run package checks.")
+    (lineage root)
+    (placement agent/nono)
+    (metadata (intent . tutorial-ladder)
+              (source . macro-test))))
+
+;; : PooSession
+(def session-macro-child
+  (session macro/child
+    (chunk review assistant "Review the session receipt.")
+    (lineage fork macro/root)
+    (placement agent/nono)
+    (metadata (intent . tutorial-ladder)
+              (source . macro-test)
+              (branch . review))))
+
 ;;; Cycle fixtures are intentionally invalid graph data. They verify the graph
 ;;; presenter reports acyclicity instead of throwing during construction.
 ;; : PooSession
@@ -135,6 +154,29 @@
                       'missing-profile)
         (check-equal? (poo-flow-session-placement-runtime-summary
                        session-missing-placement)
-                      '())))))
+                      '())))
+    (test-case "declares sessions through compact user syntax"
+      (let ((presentation
+             (session-graph session-macro-root session-macro-child))
+            (child-placement
+             (poo-flow-session-value-placement session-macro-child)))
+        (check-equal? (poo-flow-session-id session-macro-root)
+                      'macro/root)
+        (check-equal? (poo-flow-session-lineage-parent-session-ids
+                       (poo-flow-session-value-lineage session-macro-child))
+                      '(macro/root))
+        (check-equal? (poo-flow-session-alist-ref
+                       (poo-flow-session-metadata session-macro-child)
+                       'branch
+                       #f)
+                      'review)
+        (check-equal? (poo-flow-session-placement-profile-ref child-placement)
+                      'agent/nono)
+        (check-equal? (poo-flow-session-placement-resolved? child-placement)
+                      #t)
+        (check-equal? (.ref presentation 'session-ids)
+                      '(macro/root macro/child))
+        (check-equal? (.ref presentation 'lineage-edge-pairs)
+                      '((macro/root . macro/child)))))))
 
 (run-tests! session-object-test)

@@ -13,3 +13,4 @@
 (load! "cases/funflow-cicd")
 (load! "cases/loop-engine")
 (load! "cases/poo-introspection")
+(load! "cases/session-transform")

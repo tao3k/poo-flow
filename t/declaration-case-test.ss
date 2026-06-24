@@ -15,7 +15,27 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-user-config-presentation-kind
+                 poo-flow-user-config?)
+        (only-in :poo-flow/src/module-system/declaration-case
+                 pooFlowRootDeveloperDeclarationCase
+                 poo-flow-declaration-case?
+                 poo-flow-declaration-case-name
+                 poo-flow-declaration-case-case-file
+                 poo-flow-declaration-case-init-file
+                 poo-flow-declaration-case-custom-module-file
+                 poo-flow-declaration-case-config
+                 poo-flow-declaration-case-presentation
+                 poo-flow-declaration-case-expected-setting-keys
+                 poo-flow-declaration-case-expected-module-keys
+                 poo-flow-declaration-case-expected-trace-stages
+                 poo-flow-declaration-case-alist-value
+                 poo-flow-declaration-case-trace-stages
+                 poo-flow-declaration-case-trace-safe?
+                 poo-flow-declaration-case-presentation-matches?)
+        (only-in :poo-flow/src/module-system/root-profile
+                 pooFlowRootConfig)
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles))
 
@@ -26,6 +46,15 @@
 (def (root-developer-case)
   (pooFlowRootDeveloperDeclarationCase
    (pooFlowRootConfig poo-flow-user-module-bundles)))
+
+;; : (-> [Alist] Pair MaybeAlist)
+(def (poo-flow-declaration-case-find-entry entries key)
+  (cond
+   ((null? entries) #f)
+   ((equal? (poo-flow-declaration-case-alist-value 'key (car entries)) key)
+    (car entries))
+   (else
+    (poo-flow-declaration-case-find-entry (cdr entries) key))))
 
 ;; : (-> Unit TestSuite)
 ;;; This suite keeps downstream declaration cases declarative while the
@@ -61,11 +90,17 @@
              (presentation
               (poo-flow-declaration-case-presentation case-object))
              (modules (.ref presentation 'modules))
-             (custom-module (caddr (cddddr modules)))
+             (custom-module
+              (poo-flow-declaration-case-find-entry
+               modules
+               '(custom . my-module)))
              (feature-facts (.ref presentation 'feature-facts))
-             (custom-fact (caddr (cddddr feature-facts)))
+             (custom-fact
+              (poo-flow-declaration-case-find-entry
+               feature-facts
+               '(custom . my-module)))
              (cicd-intent (car (.ref presentation 'cicd-intents))))
-        (check-equal? (.ref presentation 'module-count) 7)
+        (check-equal? (.ref presentation 'module-count) 8)
         (check-equal? (.ref presentation 'module-keys)
                       (poo-flow-declaration-case-expected-module-keys
                        case-object))
@@ -87,7 +122,7 @@
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-index
                        custom-fact)
-                      6)
+                      7)
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-phase
                        custom-fact)

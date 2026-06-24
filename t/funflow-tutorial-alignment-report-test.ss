@@ -8,10 +8,11 @@
                  check-equal?
                  run-tests!)
           (only-in :clan/poo/object .ref object?)
-          (only-in :poo-flow/src/module-system/facade
+          (only-in :poo-flow/src/module-system/base
                    pooFlowUserConfig
-                   pooFlowUserConfigPresentation
                    poo-flow-settings)
+          (only-in :poo-flow/src/module-system/presentation
+                   pooFlowUserConfigPresentation)
           (only-in :poo-flow/user-interface/custom/my-module/config
                    poo-flow-custom-my-module-cicd-module
                    poo-flow-custom-my-module-funflow-cicd-case)

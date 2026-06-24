@@ -9,6 +9,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax
         (only-in :poo-flow/src/loops/governor-marlin
                  +loop-governor-marlin-loop-engine-discovery-schema+
                  loop-governor-marlin-loop-engine-discovery)

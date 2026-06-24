@@ -8,6 +8,8 @@
                  check-equal?
                  run-tests!)
         :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-pipeline-runtime-command-manifests)

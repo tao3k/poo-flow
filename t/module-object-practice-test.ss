@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: executable POO best-practice guard for module object layering.
 
-(import (only-in :std/test
+(import :gerbil/gambit
+        (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -22,6 +23,58 @@
 (def (slot-value node slot-name)
   (let (entry (assoc slot-name (poo-flow-module-extension-node-slots node)))
     (if entry (cdr entry) #f)))
+
+;; : (-> Integer (-> Integer Value) [Value])
+(def (large-object-build-list count make-value)
+  (let loop ((index 0) (values '()))
+    (if (= index count)
+      (reverse values)
+      (loop (+ index 1)
+            (cons (make-value index) values)))))
+
+;; : (-> (-> Any) Rational)
+(def (elapsed-ms thunk)
+  (let ((start-jiffy (current-jiffy)))
+    (thunk)
+    (/ (* (- (current-jiffy) start-jiffy) 1000)
+       (jiffies-per-second))))
+
+;; : (-> Integer (-> Any) Rational)
+(def (best-elapsed-ms attempts thunk)
+  (let loop ((remaining attempts)
+             (best #f))
+    (if (= remaining 0)
+      best
+      (let (elapsed (elapsed-ms thunk))
+        (loop (- remaining 1)
+              (if (or (not best) (< elapsed best))
+                elapsed
+                best))))))
+
+;; : (-> Integer Symbol)
+(def (large-object-field-name index)
+  (string->symbol
+   (string-append "field-" (number->string index))))
+
+;; : (-> Integer PooModuleFieldContract)
+(def (large-object-field index)
+  (poo-flow-module-field-contract
+   (large-object-field-name index)
+   'Any
+   'override
+   #f
+   '((scope . large-object-performance)
+     (owner . object-core))))
+
+;; : (-> Integer PooModuleFieldContract)
+(def (large-object-list-field index)
+  (poo-flow-module-field-contract
+   (large-object-field-name index)
+   'List
+   'append
+   '()
+   '((scope . large-object-performance)
+     (owner . object-core))))
 
 ;; : TestSuite
 ;;; This suite keeps object-extension examples executable as policy evidence for
@@ -86,6 +139,113 @@
                       '(filesystem-read process-run cache-mount))
         (check-equal? (slot-value resolved-node 'note)
                       "object-core owns contract wrappers")))
+
+    (test-case "keeps large object contribution projection linear"
+      (let* ((field-count 1000)
+             (fields
+              (large-object-build-list field-count large-object-field))
+             (practice-object
+              (poo-flow-module-object
+               'objects.practice.large
+               '()
+               fields
+               '((namespace . objects.practice)
+                 (domain . performance))))
+             (entries
+              (large-object-build-list
+               field-count
+               (lambda (index)
+                 (cons (large-object-field-name index)
+                       (list index)))))
+             (start-jiffy (current-jiffy))
+             (contributions
+              (poo-flow-module-object-contributions practice-object entries))
+             (elapsed-ms
+              (/ (* (- (current-jiffy) start-jiffy) 1000)
+                 (jiffies-per-second)))
+             (best-ms
+              (best-elapsed-ms
+               5
+               (lambda ()
+                 (poo-flow-module-object-contributions practice-object
+                                                       entries)))))
+        (check-equal? (length contributions) field-count)
+        (check-equal? (poo-flow-module-field-contract-identity
+                       (poo-flow-module-field-contribution-field
+                        (car contributions)))
+                      'field-0)
+        (check-equal? (poo-flow-module-field-contribution-value
+                       (car contributions))
+                      '(0))
+        (check-equal? (< elapsed-ms 1000) #t)
+        (check-equal? (< best-ms 100) #t)))
+
+    (test-case "keeps large object slot config merge bounded"
+      (let* ((field-count 1000)
+             (fields
+              (large-object-build-list field-count large-object-list-field))
+             (practice-object
+              (poo-flow-module-object
+               'objects.practice.large-merge
+               '()
+               fields
+               '((namespace . objects.practice)
+                 (domain . performance))))
+             (base-entries
+              (large-object-build-list
+               field-count
+               (lambda (index)
+                 (cons (large-object-field-name index)
+                       (list index)))))
+             (append-entries
+              (large-object-build-list
+               field-count
+               (lambda (index)
+                 (cons (large-object-field-name index)
+                       (list (+ index field-count))))))
+             (base-node
+              (poo-flow-module-object-node practice-object base-entries '()))
+             (contributions
+              (poo-flow-module-object-contributions practice-object
+                                                    append-entries))
+             (noop-contributions
+              (poo-flow-module-object-contributions practice-object
+                                                    base-entries))
+             (start-jiffy (current-jiffy))
+             (merge-result
+              (poo-flow-module-config-mk-merge base-node contributions))
+             (elapsed-ms
+              (/ (* (- (current-jiffy) start-jiffy) 1000)
+                 (jiffies-per-second)))
+             (best-ms
+              (best-elapsed-ms
+               5
+               (lambda ()
+                 (poo-flow-module-config-mk-merge base-node contributions))))
+             (noop-best-ms
+              (best-elapsed-ms
+               5
+               (lambda ()
+                 (poo-flow-module-config-mk-merge base-node
+                                                  noop-contributions))))
+             (noop-result
+              (poo-flow-module-config-mk-merge base-node noop-contributions))
+             (resolved-node
+              (poo-flow-module-config-merge-result-root merge-result)))
+        (check-equal? (poo-flow-module-config-merge-result-stable?
+                       merge-result)
+                      #t)
+        (check-equal? (length (poo-flow-module-extension-node-slots
+                               resolved-node))
+                      field-count)
+        (check-equal? (slot-value resolved-node 'field-0)
+                      '(0 1000))
+        (check-equal? (poo-flow-module-config-merge-result-iterations
+                       noop-result)
+                      0)
+        (check-equal? (< elapsed-ms 1000) #t)
+        (check-equal? (< best-ms 100) #t)
+        (check-equal? (< noop-best-ms 50) #t)))
 
     (test-case "wraps standard list and map transformers as object contracts"
       (let* ((capabilities-field

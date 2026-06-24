@@ -4,6 +4,8 @@
 
 (import (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/profile-config
         :poo-flow/src/module-system/profiles/kernel)
 
 (export test-poo-flow-user-module-bundles

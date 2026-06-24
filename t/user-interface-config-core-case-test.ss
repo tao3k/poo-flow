@@ -18,7 +18,11 @@
         "user-interface-fixtures.ss"
         (only-in :poo-flow/user-interface/init
                  poo-flow-user-module-bundles)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/module-system/profile-config
+        :poo-flow/src/module-system/root-profile
+        :poo-flow/src/module-system/use-module-contract)
 
 (export user-interface-config-core-case-test)
 
@@ -33,6 +37,7 @@
 ;; : (-> Unit [Pair])
 (def expected-poo-flow-core-module-keys
   '((flow . funflow)
+    (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)
     (sandbox . cubeSandbox)
@@ -73,12 +78,12 @@
                     'developer)
       (check-equal? (length (poo-flow-user-profile-module-bundles
                              test-poo-flow-user-profile))
-                    6)
+                    7)
       (check-equal? (poo-flow-user-config? test-poo-flow-user-config) #t)
       (check-equal? (poo-flow-user-config-module-keys test-poo-flow-user-config)
                     expected-poo-flow-core-module-keys))
     (test-case "builds profile module bundles and conditional gates"
-      (check-equal? (length test-poo-flow-user-modules) 6)
+      (check-equal? (length test-poo-flow-user-modules) 7)
       (check-equal? (poo-flow-user-module-selection-key
                      (car (use-module nono-sandbox +nono +doctor)))
                     '(sandbox . nono-sandbox))
@@ -156,7 +161,7 @@
                                    '(custom . my-module)))
              (custom-source
               (poo-flow-user-module-selection-source-ref custom-module)))
-        (check-equal? (length custom-modules) 6)
+        (check-equal? (length custom-modules) 7)
         (check-equal? (poo-flow-user-module-selection-key custom-module)
                       '(custom . my-module))
         (check-equal? (poo-flow-user-module-selection-flags custom-module)
@@ -169,7 +174,7 @@
         (check-equal? (alist-value 'entrypoint custom-fact)
                       "./custom/my-module/config.ss")
         (check-equal? (alist-value 'declaration-index custom-fact)
-                      5)
+                      6)
         (check-equal? (alist-value 'declaration-phase custom-fact)
                       'init-selection)
         (check-equal? (alist-value 'package-management? custom-fact)
@@ -196,9 +201,9 @@
                       #t)
         (check-equal? (length (poo-flow-user-profile-module-bundles
                                root-poo-flow-user-profile))
-                      7)
+                      8)
         (check-equal? (length poo-flow-user-module-bundles) 5)
-        (check-equal? (length root-modules) 7)
+        (check-equal? (length root-modules) 8)
         (check-equal? (poo-flow-user-config-module-keys root-poo-flow-user-config)
                       expected-poo-flow-root-module-keys)
         (check-equal? (poo-flow-user-module-selection-flags root-flow-module)

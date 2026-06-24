@@ -3,11 +3,7 @@
 ;;; Invariant: sessions describe chunks, lineage, placement, and handoff intent;
 ;;; they never execute runtime work in Scheme.
 
-(import (only-in :clan/poo/object .o .ref object?)
-        (only-in :poo-flow/src/modules/agent-sandbox/config
-                 poo-flow-sandbox-profile-by-name
-                 poo-flow-sandbox-profile-handoff-summary
-                 poo-flow-sandbox-profile-runtime-summary))
+(import (only-in :clan/poo/object .o .ref object?))
 
 (export poo-flow-session-require
         poo-flow-session-every?
@@ -217,6 +213,54 @@
 (def (poo-flow-session-placement-handoff-summary placement)
   (.ref placement 'placement-handoff-summary))
 
+;;; Session placement resolves against POO profile recipes without importing the
+;;; full sandbox config layer. Strict descriptor validation stays at the sandbox
+;;; owner; this object layer only records catalog linkage and report-only slots.
+;; : (-> POOObject Symbol Value Value)
+(def (poo-flow-session-profile-slot profile key default-value)
+  (with-catch
+   (lambda (_failure) default-value)
+   (lambda ()
+     (.ref profile key))))
+
+;; : (-> POOObject Symbol)
+(def (poo-flow-session-profile-name profile)
+  (poo-flow-session-profile-slot profile 'name #f))
+
+;; : (-> [POOObject] Symbol MaybePOOObject)
+(def (poo-flow-session-profile-by-name profiles name)
+  (cond
+   ((null? profiles) #f)
+   ((eq? (poo-flow-session-profile-name (car profiles)) name)
+    (car profiles))
+   (else
+    (poo-flow-session-profile-by-name (cdr profiles) name))))
+
+;; : (-> Symbol POOObject Alist)
+(def (poo-flow-session-profile-runtime-summary profile-ref profile)
+  (list (cons 'profile-name (poo-flow-session-profile-name profile))
+        (cons 'profile-ref profile-ref)
+        (cons 'backend-kind
+              (poo-flow-session-profile-slot profile 'backend-kind 'unknown))
+        (cons 'backend-ref
+              (poo-flow-session-profile-slot profile 'backend-ref 'unknown))
+        (cons 'network-policy
+              (poo-flow-session-profile-slot profile 'network-policy '()))
+        (cons 'capabilities
+              (poo-flow-session-profile-slot profile 'capabilities '()))
+        (cons 'resource-policy
+              (poo-flow-session-profile-slot profile 'resource-policy '()))
+        (cons 'runtime-owner "marlin-agent-core")
+        (cons 'catalog-resolved? #t)
+        (cons 'descriptor-realized? #f)
+        (cons 'runtime-executed #f)))
+
+;; : (-> Symbol POOObject Alist)
+(def (poo-flow-session-profile-handoff-summary profile-ref profile)
+  (append
+   (poo-flow-session-profile-runtime-summary profile-ref profile)
+   '((handoff-required . #t))))
+
 ;; : (-> Symbol Symbol Any Alist)
 (def (poo-flow-session-placement-summary-failure profile-ref phase failure)
   (list (cons 'kind 'poo-flow.session.placement.diagnostic)
@@ -234,7 +278,7 @@
 
 ;;; Summary projection is report-only. A malformed sandbox profile becomes a
 ;;; diagnostic row instead of aborting session graph construction.
-;; : (-> Symbol Symbol Procedure PooSandboxProfile Pair)
+;; : (-> Symbol Symbol Procedure POOObject Pair)
 (def (poo-flow-session-placement-summary profile-ref phase summarizer profile)
   (with-catch
    (lambda (failure)
@@ -244,7 +288,7 @@
             phase
             failure)))
    (lambda ()
-     (cons (summarizer profile) #f))))
+     (cons (summarizer profile-ref profile) #f))))
 
 ;;; Resolve a placement ref against an existing sandbox profile catalog. The
 ;;; returned value is still a placement mixin prototype; it records validation
@@ -258,7 +302,7 @@
                             (list? profiles)
                             profiles)
   (let* ((profile-ref-value profile-ref)
-         (profile (poo-flow-sandbox-profile-by-name profiles profile-ref-value))
+         (profile (poo-flow-session-profile-by-name profiles profile-ref-value))
          (placement-metadata-value
           (if (null? maybe-metadata) '() (car maybe-metadata))))
     (if profile
@@ -266,13 +310,13 @@
               (poo-flow-session-placement-summary
                profile-ref-value
                'runtime-summary
-               poo-flow-sandbox-profile-runtime-summary
+               poo-flow-session-profile-runtime-summary
                profile))
              (handoff-result
               (poo-flow-session-placement-summary
                profile-ref-value
                'handoff-summary
-               poo-flow-sandbox-profile-handoff-summary
+               poo-flow-session-profile-handoff-summary
                profile))
              (runtime-summary-value (car runtime-result))
              (handoff-summary-value (car handoff-result))

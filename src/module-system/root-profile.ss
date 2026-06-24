@@ -2,18 +2,23 @@
 ;;; Boundary: module-system helpers for root user declaration profiles.
 ;;; Invariant: root user-interface files declare rows; this module projects them.
 
-(import :poo-flow/src/modules/agent-sandbox/config
-        :poo-flow/src/module-system/profiles/kernel
-        :poo-flow/src/module-system/profile-config
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/root-objects)
+(import (only-in :poo-flow/src/module-system/profiles/kernel-core
+                 poo-flow-kernel-profile)
+        (only-in :poo-flow/src/module-system/profile-core
+                 pooFlowUserProfileExtend
+                 pooFlowUserProfileSet
+                 poo-flow-user-profile-set-default-profile
+                 poo-flow-user-profile-modules
+                 poo-flow-user-profile-settings
+                 poo-flow-user-profile-setting-keys
+                 pooFlowUserConfigFromProfile)
+        (only-in :poo-flow/src/module-system/profile-presentation
+                 pooFlowUserProfileSetPresentation
+                 pooFlowUserProfileSetDoctorPresentation)
+        (only-in :poo-flow/src/module-system/presentation
+                 pooFlowUserConfigPresentation))
 
-(export (import: :poo-flow/src/modules/agent-sandbox/config)
-        (import: :poo-flow/src/module-system/profiles/kernel)
-        (import: :poo-flow/src/module-system/profile-config)
-        (import: :poo-flow/src/module-system/init-syntax)
-        (import: :poo-flow/src/module-system/root-objects)
-        poo-flow-root-profile-name
+(export poo-flow-root-profile-name
         poo-flow-root-profile-set-name
         pooFlowRootProfile
         pooFlowRootProfileSet

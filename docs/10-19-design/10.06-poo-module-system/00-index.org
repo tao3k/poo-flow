@@ -35,6 +35,12 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:33-loop-engine-memory-profile-audit.org][33 Loop Engine Memory Profile Audit]]
 - [[file:34-loop-operations-coordination-audit.org][34 Loop Operations Coordination Audit]]
 - [[file:35-next-loop-engine-delivery-plan.org][35 Next Loop Engine Delivery Plan]]
+- [[file:36-session-user-interface-ladder.org][36 Session User Interface Ladder]]
+[[file:36-session-user-interface-ladder.org][36 Session User Interface Ladder]]
+- [[file:37-session-core-module.org][37 Session Core Module]]
+- [[file:38-openrath-session-core-next-plan.org][38 OpenRath Session Core Next Plan]]
+- [[file:39-gerbil-build-optimization-audit.org][39 Gerbil Build Optimization Audit]]
+- [[file:40-module-registry-scale-architecture.org][40 Module Registry Scale Architecture]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.

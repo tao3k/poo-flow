@@ -86,6 +86,41 @@ Explicit DAG/topological planning for workflow execution, implemented outside th
 #+end_src
 
 This division is important for the Rust boundary too. =marlin-agent-core= remains the heavy execution substrate for CAS, subprocesses, persistence, and parallel scheduling, while Scheme/POO owns high-level policy and descriptor composition order.
+** 10.06.03.29 C3 Is Not A Safety Boundary
+
+C3 only decides precedence. It answers "which parent or slot wins first" and
+does not understand whether the winning policy is safe.
+
+That distinction is a hard design boundary for =poo-flow=. If a task policy is
+ordered before a security policy and ordinary =override= is allowed to close or
+weaken security slots, C3 will deterministically produce the wrong result. The
+linearization is stable, but stability is not safety.
+
+The control-plane split is:
+
+#+begin_src text
+POO       expresses independently-authored policy fragments.
+C3        determines their deterministic composition order.
+validator checks whether the composed object is legal.
+Marlin    executes the final validated policy.
+#+end_src
+
+The validator owns the safety semantics that C3 deliberately does not know:
+
+- slot values must pass typed contract validation before projection;
+- safety and budget gates are hard gates before a maker may request write
+  capability;
+- denylist-like fields use union or monotonic accumulation, not ordinary
+  overwrite;
+- permissions may be narrowed but not expanded by lower-priority task profiles;
+- budgets may be tightened but not arbitrarily loosened;
+- human gates may be added or escalated, but an ordinary task policy cannot
+  remove them.
+
+This is the same boundary as the runtime split: Scheme/POO makes the policy
+object graph inspectable, C3 makes composition deterministic, and the validator
+rejects unsafe composition before any Marlin-side execution request exists.
+
 ** 10.06.03.30 Slot Ownership Rule
 The first implementation keeps slot ownership explicit:
 - module descriptor owns =name=, =imports=, =task-registry=, =flow-registry=, and =options=;

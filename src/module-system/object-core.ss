@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: POO module object core contracts and object-aware wrappers.
 
-(import (only-in :clan/poo/object
+(import :gerbil/gambit
+        (only-in :clan/poo/object
                  .o
                  .ref
                  object?
@@ -168,49 +169,87 @@
 ;;; merge behavior while the contribution carries target and value.
 ;; : (-> Symbol PooModuleFieldContract PooModuleFieldValue PooModuleFieldContribution)
 (def (poo-flow-module-field-contribution target field value)
-  (let ((target-value target)
-        (field-value field)
-        (value-value value))
-    (.o kind: poo-flow-module-field-contribution-kind
-        target: target-value
-        field: field-value
-        value: value-value)))
+  (let* ((target-value target)
+         (field-value field)
+         (value-value value)
+         (field-contract? (poo-flow-module-field-contract? field-value))
+         (field-identity-value
+          (if field-contract?
+            (poo-flow-module-field-contract-identity field-value)
+            field-value))
+         (field-merge-value
+          (if field-contract?
+            (poo-flow-module-field-contract-merge field-value)
+            'override))
+         (field-value-kind-value
+          (if field-contract?
+            (poo-flow-module-field-contract-value-kind field-value)
+            'Any)))
+    (vector poo-flow-module-field-contribution-kind
+            target-value
+            field-value
+            value-value
+            field-identity-value
+            field-merge-value
+            field-value-kind-value
+            field-contract?)))
+
+;; : (-> PooModuleFieldContributionCandidate Boolean)
+(def (poo-flow-module-field-contribution-vector? value)
+  (and (vector? value)
+       (= (vector-length value) 8)
+       (equal? (vector-ref value 0)
+               poo-flow-module-field-contribution-kind)))
 
 ;; : (-> PooModuleFieldContributionCandidate Boolean)
 (def (poo-flow-module-field-contribution? value)
-  (poo-flow-module-object-kind? value poo-flow-module-field-contribution-kind))
+  (or (poo-flow-module-field-contribution-vector? value)
+      (poo-flow-module-object-kind? value poo-flow-module-field-contribution-kind)))
 
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-target contribution)
-  (.ref contribution 'target))
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 1)
+    (.ref contribution 'target)))
 ;; : (-> PooModuleFieldContribution PooModuleFieldContract)
 (def (poo-flow-module-field-contribution-field contribution)
-  (.ref contribution 'field))
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 2)
+    (.ref contribution 'field)))
 ;; : (-> PooModuleFieldContribution PooModuleFieldValue)
 (def (poo-flow-module-field-contribution-value contribution)
-  (.ref contribution 'value))
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 3)
+    (.ref contribution 'value)))
+;; : (-> PooModuleFieldContribution Boolean)
+(def (poo-flow-module-field-contribution-field-contract? contribution)
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 7)
+    (.ref contribution 'field-contract-p)))
+;; : (-> PooModuleFieldContribution Symbol)
+(def (poo-flow-module-field-contribution-field-value-kind contribution)
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 6)
+    (.ref contribution 'field-value-kind)))
 
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-field-identity contribution)
-  (let (field (poo-flow-module-field-contribution-field contribution))
-    (if (poo-flow-module-field-contract? field)
-      (poo-flow-module-field-contract-identity field)
-      field)))
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 4)
+    (.ref contribution 'field-identity)))
 
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-merge contribution)
-  (let (field (poo-flow-module-field-contribution-field contribution))
-    (if (poo-flow-module-field-contract? field)
-      (poo-flow-module-field-contract-merge field)
-      'override)))
+  (if (poo-flow-module-field-contribution-vector? contribution)
+    (vector-ref contribution 5)
+    (.ref contribution 'field-merge)))
 
 ;; : (-> PooModuleFieldContribution Boolean)
 (def (poo-flow-module-field-contribution-valid? contribution)
-  (let (field (poo-flow-module-field-contribution-field contribution))
-    (or (not (poo-flow-module-field-contract? field))
-        (poo-flow-module-field-contract-accepts?
-         field
-         (poo-flow-module-field-contribution-value contribution)))))
+  (or (not (poo-flow-module-field-contribution-field-contract? contribution))
+      (poo-flow-module-value-kind-accepts?
+       (poo-flow-module-field-contribution-field-value-kind contribution)
+       (poo-flow-module-field-contribution-value contribution))))
 
 ;;; Contribution conversion is the only place field merge names become graph
 ;;; operations, keeping custom objects independent from merge internals.
@@ -240,12 +279,42 @@
 
 ;; : (-> PooModuleFieldContribution PooModuleExtensionContribution)
 (def (poo-flow-module-field-contribution->extension contribution)
-  (if (poo-flow-module-field-contribution-valid? contribution)
-    (poo-flow-module-extension-contribution
-     (poo-flow-module-field-contribution-target contribution)
-     (list (poo-flow-module-field-contribution-operation contribution)))
-    (error "poo-flow module field contribution violates its POO contract"
-           contribution)))
+  (let* ((target
+          (poo-flow-module-field-contribution-target contribution))
+         (value
+          (poo-flow-module-field-contribution-value contribution))
+         (field-contract?
+          (poo-flow-module-field-contribution-field-contract? contribution))
+         (valid?
+          (or (not field-contract?)
+              (poo-flow-module-value-kind-accepts?
+               (poo-flow-module-field-contribution-field-value-kind
+                contribution)
+               value)))
+         (field-identity
+          (poo-flow-module-field-contribution-field-identity contribution))
+         (merge
+          (poo-flow-module-field-contribution-merge contribution))
+         (operation
+          (cond
+           ((eq? merge 'override)
+            (poo-flow-module-extension-slot-override field-identity value))
+           ((eq? merge 'append)
+            (poo-flow-module-extension-slot-append field-identity value))
+           ((eq? merge 'prepend)
+            (poo-flow-module-extension-slot-prepend field-identity value))
+           ((eq? merge 'remove)
+            (poo-flow-module-extension-slot-remove field-identity value))
+           ((eq? merge 'node-extend)
+            (poo-flow-module-extension-node-extend value))
+           ((eq? merge 'node-remove)
+            (poo-flow-module-extension-node-remove value))
+           (else
+            (poo-flow-module-extension-slot-override field-identity value)))))
+    (if valid?
+      (poo-flow-module-extension-contribution target (list operation))
+      (error "poo-flow module field contribution violates its POO contract"
+             contribution))))
 
 ;;; Field contribution projection is a map because validation happens at each
 ;;; contribution boundary before the generic extension graph sees operations.
@@ -437,12 +506,281 @@
   (poo-flow-module-extension-result-stable?
    (poo-flow-module-config-merge-result-extension-result result)))
 
+;; : (-> PooModuleSlotValue [PooModuleSlotValue] Boolean)
+(def (poo-flow-module-config-member? value values)
+  (and (member value values) #t))
+
+;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-config-append-distinct base extra)
+  (cond
+   ((null? extra) base)
+   ((null? (cdr extra))
+    (let (value (car extra))
+      (if (poo-flow-module-config-member? value base)
+        base
+        (append base (list value)))))
+   (else
+    (let loop ((remaining extra) (added '()))
+      (cond
+       ((null? remaining)
+        (if (null? added)
+          base
+          (append base (reverse added))))
+       ((poo-flow-module-config-member? (car remaining) base)
+        (loop (cdr remaining) added))
+       (else
+        (loop (cdr remaining) (cons (car remaining) added))))))))
+
+;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-config-remove-elements values removed)
+  (filter (lambda (value)
+            (not (poo-flow-module-config-member? value removed)))
+          values))
+
+;; : (-> PooModuleSlotValue [PooModuleSlotValue])
+(def (poo-flow-module-config-list-value value)
+  (cond ((null? value) '())
+        ((list? value) value)
+        (else (list value))))
+
+;; : (-> Symbol Boolean)
+(def (poo-flow-module-config-slot-merge-action? merge)
+  (or (eq? merge 'override)
+      (eq? merge 'append)
+      (eq? merge 'prepend)
+      (eq? merge 'remove)))
+
+;; : (-> Symbol Any Any Any)
+(def (poo-flow-module-config-merged-slot-value merge current value)
+  (cond
+   ((eq? merge 'override) value)
+   ((eq? merge 'append)
+    (poo-flow-module-config-append-distinct
+     (poo-flow-module-config-list-value current)
+     (poo-flow-module-config-list-value value)))
+   ((eq? merge 'prepend)
+    (poo-flow-module-config-append-distinct
+     (poo-flow-module-config-list-value value)
+     (poo-flow-module-config-list-value current)))
+   ((eq? merge 'remove)
+    (poo-flow-module-config-remove-elements
+     (poo-flow-module-config-list-value current)
+     (poo-flow-module-config-list-value value)))
+   (else current)))
+
+;; : (-> Symbol PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+(def (poo-flow-module-config-fast-slot-merge/in-order node-identity slots contributions)
+  (let ((head '())
+        (tail #f)
+        (seen (make-hash-table)))
+    (def (append-entry! entry)
+      (let (cell (cons entry '()))
+        (if tail
+          (begin
+            (set-cdr! tail cell)
+            (set! tail cell))
+          (begin
+            (set! head cell)
+            (set! tail cell)))))
+    (def (copy-prefix! stop)
+      (let copy ((remaining slots))
+        (when (not (eq? remaining stop))
+          (append-entry! (car remaining))
+          (copy (cdr remaining)))))
+    (let loop ((remaining-slots slots)
+               (remaining-contributions contributions)
+               (changed? #f))
+      (cond
+       ((null? remaining-slots)
+        (if (null? remaining-contributions)
+          (if changed?
+            head
+            slots)
+          #f))
+       ((null? remaining-contributions) #f)
+       (else
+        (let ((entry (car remaining-slots))
+              (contribution (car remaining-contributions)))
+          (if (not (poo-flow-module-field-contribution-vector? contribution))
+            #f
+            (let* ((target (vector-ref contribution 1))
+                   (value (vector-ref contribution 3))
+                   (key (vector-ref contribution 4))
+                   (slot-key (car entry))
+                   (merge (vector-ref contribution 5))
+                   (value-kind (vector-ref contribution 6))
+                   (field-contract? (vector-ref contribution 7))
+                   (valid?
+                    (or (not field-contract?)
+                        (poo-flow-module-value-kind-accepts?
+                         value-kind
+                         value))))
+              (if (and (equal? target node-identity)
+                       valid?
+                       (poo-flow-module-config-slot-merge-action? merge)
+                       (equal? key slot-key))
+                (if (hash-get seen slot-key)
+                  #f
+                  (begin
+                    (hash-put! seen slot-key #t)
+                    (let* ((current (cdr entry))
+                           (next-value
+                            (poo-flow-module-config-merged-slot-value
+                             merge
+                             current
+                             value))
+                           (value-changed?
+                            (not (or (eq? next-value current)
+                                     (equal? next-value current)))))
+                      (when (and value-changed? (not changed?))
+                        (copy-prefix! remaining-slots))
+                      (when (or changed? value-changed?)
+                        (append-entry! (if value-changed?
+                                         (cons key next-value)
+                                         entry)))
+                      (loop (cdr remaining-slots)
+                            (cdr remaining-contributions)
+                            (or changed? value-changed?)))))
+                #f)))))))))
+
+;; : (-> PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+(def (poo-flow-module-config-fast-slot-merge/sparse node-identity slots contributions)
+  (let ((seen (make-hash-table))
+        (updated (make-hash-table))
+        (updates (make-hash-table)))
+    (let init ((remaining slots))
+      (cond
+       ((null? remaining)
+        (let apply-contributions ((rest contributions)
+                                  (new-order '())
+                                  (changed? #f))
+          (if (null? rest)
+            (if (and (not changed?) (null? new-order))
+              slots
+              (append
+               (map (lambda (entry)
+                      (let (key (car entry))
+                        (if (hash-get updated key)
+                          (cons key (hash-get updates key))
+                          entry)))
+                    slots)
+               (map (lambda (key)
+                      (cons key (hash-get updates key)))
+                    (reverse new-order))))
+            (let* ((contribution (car rest))
+                   (vector-contribution?
+                    (poo-flow-module-field-contribution-vector? contribution))
+                   (target
+                    (if vector-contribution?
+                      (vector-ref contribution 1)
+                      (poo-flow-module-field-contribution-target
+                       contribution)))
+                   (value
+                    (if vector-contribution?
+                      (vector-ref contribution 3)
+                      (poo-flow-module-field-contribution-value
+                       contribution)))
+                   (field-contract?
+                    (if vector-contribution?
+                      (vector-ref contribution 7)
+                      (poo-flow-module-field-contribution-field-contract?
+                       contribution)))
+                   (valid?
+                    (or (not field-contract?)
+                        (poo-flow-module-value-kind-accepts?
+                         (if vector-contribution?
+                           (vector-ref contribution 6)
+                           (poo-flow-module-field-contribution-field-value-kind
+                            contribution))
+                         value)))
+                   (key
+                    (if vector-contribution?
+                      (vector-ref contribution 4)
+                      (poo-flow-module-field-contribution-field-identity
+                       contribution)))
+                   (merge
+                    (if vector-contribution?
+                      (vector-ref contribution 5)
+                      (poo-flow-module-field-contribution-merge
+                       contribution))))
+              (if (and (equal? target node-identity)
+                       valid?
+                       (poo-flow-module-config-slot-merge-action? merge))
+                (let* ((entry (hash-get seen key))
+                       (known? (and entry #t))
+                       (next-new-order
+                        (if known?
+                          new-order
+                          (begin
+                            (hash-put! seen key (cons key #f))
+                            (cons key new-order))))
+                       (current
+                        (cond
+                         ((hash-get updated key)
+                          (hash-get updates key))
+                         (known? (cdr entry))
+                         (else '())))
+                       (next-value
+                        (poo-flow-module-config-merged-slot-value
+                         merge
+                         current
+                         value))
+                       (value-changed?
+                        (not (or (eq? next-value current)
+                                 (equal? next-value current))))
+                       (next-changed?
+                        (or changed?
+                            (not known?)
+                            value-changed?)))
+                  (when (or (not known?) value-changed?)
+                    (hash-put! updated key #t)
+                    (hash-put! updates key next-value))
+                  (apply-contributions (cdr rest)
+                                       next-new-order
+                                       next-changed?))
+                #f)))))
+       ((hash-get seen (caar remaining)) #f)
+       (else
+       (hash-put! seen (caar remaining) (car remaining))
+       (init (cdr remaining)))))))
+
+;; : (-> PooModuleSlotMap [PooModuleFieldContribution] MaybePooModuleSlotMap)
+(def (poo-flow-module-config-fast-slot-merge node-identity slots contributions)
+  (or (poo-flow-module-config-fast-slot-merge/in-order
+       node-identity
+       slots
+       contributions)
+      (poo-flow-module-config-fast-slot-merge/sparse
+       node-identity
+       slots
+       contributions)))
+
+;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
+(def (poo-flow-module-config-fast-extension-result base contributions)
+  (let ((children (poo-flow-module-extension-node-children base))
+        (node-identity (poo-flow-module-extension-node-identity base))
+        (slots (poo-flow-module-extension-node-slots base)))
+    (if (null? children)
+      (let (merged-slots
+            (poo-flow-module-config-fast-slot-merge
+             node-identity
+             slots
+             contributions))
+        (if merged-slots
+          (poo-flow-module-extension-result
+           (poo-flow-module-extension-node node-identity merged-slots '())
+           (if (equal? merged-slots slots) 0 1)
+           #t)
+          #f))
+      #f)))
+
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] PooModuleConfigMergeResult)
 (def (poo-flow-module-config-mk-merge base contributions)
   (poo-flow-module-config-merge-result
-   (poo-flow-module-extension-fixed-point
-    base
-    (poo-flow-module-field-contributions->extensions contributions))
+   (or (poo-flow-module-config-fast-extension-result base contributions)
+       (poo-flow-module-extension-fixed-point
+        base
+        (poo-flow-module-field-contributions->extensions contributions)))
    contributions))
 
 ;;; Module objects are POO-side schemas. They can inherit fields, but they do
@@ -506,6 +844,18 @@
     (poo-flow-module-field-contract-identity field)
     field))
 
+;; : (-> [PooModuleFieldContract] HashTable)
+(def (poo-flow-module-object-field-index fields)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (field)
+       (let (identity (poo-flow-module-object-field-identity field))
+         (if (hash-get index identity)
+           index
+           (hash-put! index identity field))))
+     fields)
+    index))
+
 ;; : (-> [PooModuleFieldContract] PooModuleFieldContract [PooModuleFieldContract])
 (def (poo-flow-module-object-field-set fields field)
   (let (field-identity (poo-flow-module-object-field-identity field))
@@ -521,10 +871,46 @@
 ;;; the same identity rule as object inheritance, without duplicating lookup.
 ;; : (-> [PooModuleFieldContract] [PooModuleFieldContract] [PooModuleFieldContract])
 (def (poo-flow-module-object-fields-merge base extra)
-  (foldl (lambda (field fields)
-           (poo-flow-module-object-field-set fields field))
-         base
-         extra))
+  (let ((base-seen (make-hash-table))
+        (override-seen (make-hash-table))
+        (overrides (make-hash-table))
+        (new-seen (make-hash-table))
+        (replacement-used (make-hash-table)))
+    (for-each
+     (lambda (field)
+       (hash-put! base-seen
+                  (poo-flow-module-object-field-identity field)
+                  #t))
+     base)
+    (let loop ((fields extra) (new-identities '()))
+      (if (null? fields)
+        (append
+         (map (lambda (field)
+                (let (identity
+                      (poo-flow-module-object-field-identity field))
+                  (if (and (hash-get override-seen identity)
+                           (not (hash-get replacement-used identity)))
+                    (begin
+                      (hash-put! replacement-used identity #t)
+                      (hash-get overrides identity))
+                    field)))
+              base)
+         (map (lambda (identity)
+                (hash-get overrides identity))
+              (reverse new-identities)))
+        (let* ((field (car fields))
+               (identity
+                (poo-flow-module-object-field-identity field))
+               (next-new-identities
+                (if (or (hash-get base-seen identity)
+                        (hash-get new-seen identity))
+                  new-identities
+                  (begin
+                    (hash-put! new-seen identity #t)
+                    (cons identity new-identities)))))
+          (hash-put! override-seen identity #t)
+          (hash-put! overrides identity field)
+          (loop (cdr fields) next-new-identities))))))
 
 ;; : (-> [PooModuleObject] [PooModuleFieldContract])
 (def (poo-flow-module-object-inherited-fields inherits)
@@ -535,7 +921,18 @@
 
 ;; : (-> PooModuleObject [PooModuleFieldContract])
 (def (poo-flow-module-object-resolved-fields object)
-  (.ref object 'fields))
+  (if (null? (poo-flow-module-object-inherits object))
+    (poo-flow-module-object-fields object)
+    (.ref object 'fields)))
+
+;; : (-> PooModuleObject HashTable)
+(def (poo-flow-module-object-resolved-field-index object)
+  (poo-flow-module-object-field-index
+   (poo-flow-module-object-resolved-fields object)))
+
+;; : (-> HashTable Symbol MaybePooModuleFieldContract)
+(def (poo-flow-module-object-field/index field-index identity)
+  (hash-get field-index identity))
 
 ;; poo-flow-module-object-field
 ;;   : (-> PooModuleObject Symbol MaybePooModuleFieldContract)
@@ -549,12 +946,9 @@
 ;;       ```
 ;;     %
 (def (poo-flow-module-object-field object identity)
-  (let (matches
-        (filter (lambda (field)
-                  (equal? (poo-flow-module-object-field-identity field)
-                          identity))
-                (poo-flow-module-object-resolved-fields object)))
-    (if (null? matches) #f (car matches))))
+  (poo-flow-module-object-field/index
+   (poo-flow-module-object-resolved-field-index object)
+   identity))
 
 ;;; Default slot materialization maps field contracts to slot values; override
 ;;; rows only merge after every field identity has a contract-owned default.
@@ -579,10 +973,42 @@
 ;;; first declaration order while allowing later rows to override by key.
 ;; : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
 (def (poo-flow-module-object-slots-merge base extra)
-  (foldl (lambda (entry slots)
-           (poo-flow-module-object-alist-set slots (car entry) (cdr entry)))
-         base
-         extra))
+  (let ((base-seen (make-hash-table))
+        (override-seen (make-hash-table))
+        (overrides (make-hash-table))
+        (new-seen (make-hash-table))
+        (replacement-used (make-hash-table)))
+    (for-each
+     (lambda (entry)
+       (hash-put! base-seen (car entry) #t))
+     base)
+    (let loop ((entries extra) (new-keys '()))
+      (if (null? entries)
+        (append
+         (map (lambda (entry)
+                (let (key (car entry))
+                  (if (and (hash-get override-seen key)
+                           (not (hash-get replacement-used key)))
+                    (begin
+                      (hash-put! replacement-used key #t)
+                      (cons key (hash-get overrides key)))
+                    entry)))
+              base)
+         (map (lambda (key)
+                (cons key (hash-get overrides key)))
+              (reverse new-keys)))
+        (let* ((entry (car entries))
+               (key (car entry))
+               (next-new-keys
+                (if (or (hash-get base-seen key)
+                        (hash-get new-seen key))
+                  new-keys
+                  (begin
+                    (hash-put! new-seen key #t)
+                    (cons key new-keys)))))
+          (hash-put! override-seen key #t)
+          (hash-put! overrides key (cdr entry))
+          (loop (cdr entries) next-new-keys))))))
 
 ;;; Object nodes are extension nodes seeded with field defaults; downstream
 ;;; contributions only need to provide changed slots.
@@ -607,13 +1033,29 @@
              (poo-flow-module-object-identity object)
              (car entry)))))
 
+;; : (-> PooModuleObject HashTable Pair PooModuleFieldContribution)
+(def (poo-flow-module-object-contribution/index object field-index entry)
+  (let (field (hash-get field-index (car entry)))
+    (if field
+      (poo-flow-module-field-contribution
+       (poo-flow-module-object-identity object)
+       field
+       (cdr entry))
+      (error "unknown poo-flow module object field"
+             (poo-flow-module-object-identity object)
+             (car entry)))))
+
 ;;; Object contribution mapping preserves one field-contract lookup per user
 ;;; row, keeping unknown fields as validation failures instead of silent slots.
 ;; : (-> PooModuleObject PooModuleObjectContributionEntries [PooModuleFieldContribution])
 (def (poo-flow-module-object-contributions object entries)
-  (map (lambda (entry)
-         (poo-flow-module-object-contribution object entry))
-       entries))
+  (let (field-index
+        (poo-flow-module-object-resolved-field-index object))
+    (map (lambda (entry)
+           (poo-flow-module-object-contribution/index object
+                                                      field-index
+                                                      entry))
+         entries)))
 
 ;;; The object namespace is a regular extension graph root, so object removal
 ;;; and extension use the same fixed-point merge path as runtime modules.

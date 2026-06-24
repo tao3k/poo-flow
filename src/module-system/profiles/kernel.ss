@@ -2,15 +2,24 @@
 ;;; Boundary: upstream kernel profile for built-in POO Flow modules.
 ;;; Invariant: profiles compose kernel modules; no parallel registry owns rows.
 
-(import :poo-flow/src/module-system/profile-config
-        :poo-flow/src/module-system/init-syntax
+(import (only-in :poo-flow/src/module-system/base
+                 poo-flow-settings)
+        (only-in :poo-flow/src/module-system/profile-core
+                 pooFlowUserProfile
+                 pooFlowUserProfileSet
+                 poo-flow-user-profile-modules)
+        (only-in :poo-flow/src/module-system/profile-presentation
+                 pooFlowUserProfileSetPresentation
+                 pooFlowUserProfileSetDoctorPresentation)
         :poo-flow/src/modules/funflow/config
+        :poo-flow/src/modules/session-core/config
         :poo-flow/src/modules/loop-governor/config
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/cubeSandbox/config)
 
 (export (import: :poo-flow/src/modules/funflow/config)
+        (import: :poo-flow/src/modules/session-core/config)
         (import: :poo-flow/src/modules/loop-governor/config)
         (import: :poo-flow/src/modules/docker-sandbox/config)
         (import: :poo-flow/src/modules/nono-sandbox/config)
@@ -18,21 +27,20 @@
         poo-flow-kernel-profile-module-bundles
         poo-flow-kernel-profile
         poo-flow-kernel-profile-set
+        poo-flow-kernel-profile-modules
         poo-flow-kernel-profile-set-presentation
-        poo-flow-kernel-profile-set-doctor
-        poo-flow-kernel-profile-modules)
+        poo-flow-kernel-profile-set-doctor)
 
-;;; Kernel profile bundles are loaded through profile composition.
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def poo-flow-kernel-profile-module-bundles
   (append
    poo-flow-funflow-module-bundles
+   poo-flow-session-core-module-bundles
    poo-flow-loop-governor-module-bundles
    poo-flow-nono-sandbox-module-bundles
    poo-flow-cubeSandbox-module-bundles
    poo-flow-docker-sandbox-module-bundles))
 
-;;; The kernel profile is inspectable user-profile data, not descriptor activation.
 ;; : (-> Unit PooUserProfile)
 (def poo-flow-kernel-profile
   (pooFlowUserProfile
@@ -46,14 +54,16 @@
      profile
      profile-kind)))
 
-;;; Kernel profile set mirrors Doom's profiles.el registry shape while staying
-;;; upstream-owned and declarative.
 ;; : (-> Unit PooUserProfileSet)
 (def poo-flow-kernel-profile-set
-  (poo-flow-profile-set kernel-profiles
-   (default kernel)
-   (profiles
-    poo-flow-kernel-profile)))
+  (pooFlowUserProfileSet
+   'kernel-profiles
+   'kernel
+   (list poo-flow-kernel-profile)))
+
+;; : (-> Unit [PooUserModuleSelection])
+(def poo-flow-kernel-profile-modules
+  (poo-flow-user-profile-modules poo-flow-kernel-profile))
 
 ;; : (-> Unit POOObject)
 (def (poo-flow-kernel-profile-set-presentation)
@@ -62,7 +72,3 @@
 ;; : (-> Unit POOObject)
 (def (poo-flow-kernel-profile-set-doctor)
   (pooFlowUserProfileSetDoctorPresentation poo-flow-kernel-profile-set))
-
-;; : (-> Unit [PooUserModuleSelection])
-(def poo-flow-kernel-profile-modules
-  (poo-flow-user-profile-modules poo-flow-kernel-profile))

@@ -6,8 +6,7 @@
 
 (import (only-in :clan/poo/object .mix .o)
         :poo-flow/src/core/roles
-        :poo-flow/src/module-system/descriptor
-        :poo-flow/src/module-system/projection)
+        :poo-flow/src/module-system/projection-catalog)
 
 (export defpoo-flow-module-object-block
         poo-flow-module-option-block

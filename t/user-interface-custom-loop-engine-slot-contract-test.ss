@@ -7,7 +7,8 @@
                  run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax)
 
 (export user-interface-custom-loop-engine-slot-contract-test)
 

@@ -2,10 +2,10 @@
 ;;; Boundary: inert agent harness/session/run object families.
 ;;; Invariant: constructors and projections never execute runtime work.
 
-(import :poo-flow/src/core/receipt)
+(import :poo-flow/src/core/agent-harness-vocabulary
+        :poo-flow/src/core/receipt)
 
-(export +poo-flow-agent-operation-kinds+
-        +poo-flow-runtime-snapshot-statuses+
+(export (import: :poo-flow/src/core/agent-harness-vocabulary)
         make-poo-flow-agent-profile
         poo-flow-agent-profile?
         poo-flow-agent-profile-name
@@ -55,7 +55,6 @@
         poo-flow-agent-operation-status
         poo-flow-agent-operation-receipt
         poo-flow-agent-operation-metadata
-        poo-flow-agent-operation-kind?
         poo-flow-agent-operation-delegated-task?
         poo-flow-agent-operation->alist
         make-poo-flow-workflow-run
@@ -94,32 +93,11 @@
         poo-flow-runtime-snapshot-error-summary
         poo-flow-runtime-snapshot-presentation-trace
         poo-flow-runtime-snapshot-metadata
-        poo-flow-runtime-snapshot-status?
         poo-flow-runtime-snapshot->alist
         poo-flow-receipt->workflow-run
         poo-flow-workflow-run->snapshot
         poo-flow-agent-session->snapshot
         poo-flow-dispatch-receipt->snapshot)
-
-;;; Operation kind names are stable user/agent-facing vocabulary. Runtime
-;;; adapters may lower them differently, but projections keep these symbols.
-;; : [AgentOperationKind]
-(def +poo-flow-agent-operation-kinds+
-  '(prompt skill task shell fs-read fs-write compact governor-judge human-audit))
-
-;;; Snapshots are shallow UI/CLI projections over richer receipts and runtime
-;;; objects. They are not the canonical execution state.
-;; : [RuntimeSnapshotStatus]
-(def +poo-flow-runtime-snapshot-statuses+
-  '(idle admitted connecting running blocked waiting-human completed errored disconnected))
-
-;; : (-> Symbol Boolean)
-(def (poo-flow-agent-operation-kind? kind)
-  (and (member kind +poo-flow-agent-operation-kinds+) #t))
-
-;; : (-> Symbol Boolean)
-(def (poo-flow-runtime-snapshot-status? status)
-  (and (member status +poo-flow-runtime-snapshot-statuses+) #t))
 
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-agent-harness-alist-ref entries key default-value)

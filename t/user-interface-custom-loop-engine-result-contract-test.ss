@@ -8,7 +8,8 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax)
 
 (export user-interface-custom-loop-engine-result-contract-test)
 

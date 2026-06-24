@@ -11,10 +11,11 @@
                  check-output
                  check-true
                  run-tests!
-                 test-case
-                 test-error
-                 test-suite)
+        test-case
+        test-error
+        test-suite)
         :poo-flow/src/module-system/facade
+        :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-session-module
                  poo-flow-custom-my-module-task-module
@@ -155,8 +156,11 @@
                         user-config
                         credentials))
         (check-equal? (poo-flow-sandbox-profile-metadata poo-object-profile)
-                      '((declared-by . poo-flow-user-interface)
+                      '((declared-by . poo-flow-poo-prototype)
                         (runtime-executed . #f)
+                        (backend . nono-sandbox)
                         (intent . poo-object-extension)
+                        (scope . demo)
                         (poo-object . objects.nono-sandbox.profile)
-                        (slot-operators . (override append remove))))))))
+                        (slot-operators . (override append remove))
+                        (authoring-style . native-gerbil-poo)))))))

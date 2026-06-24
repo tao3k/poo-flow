@@ -172,12 +172,16 @@ runtime API. Scheme names the desired placement and validates the catalog
 projection; Rust/Marlin or another backend still owns actual sandbox
 realization.
 
-The current user-interface case is:
+The current user-interface case is now compact declaration syntax:
 #+begin_src scheme
-(def custom-session-placement
-  (poo-flow-session-placement-resolve
-   'agent/nono
-   poo-flow-default-sandbox-profiles))
+(def custom-session-root
+  (session custom/session-root
+    (chunk request user
+           "Run the POO Flow package checks and keep receipts.")
+    (lineage root)
+    (placement agent/nono)
+    (metadata (source . user-interface)
+              (case . openrath-session-first))))
 #+end_src
 
 The important design constraint is that placement is not a nested POO child

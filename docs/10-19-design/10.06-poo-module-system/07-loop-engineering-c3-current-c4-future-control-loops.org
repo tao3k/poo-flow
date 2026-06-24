@@ -114,6 +114,29 @@ POO/C3 matters because a concrete pattern often mixes several of these roles:
 
 The descriptor composition order becomes reviewable policy. For example, =loop-safety-role= and =loop-budget-role= must be later inspected as hard gates before =loop-maker-role= can request a write-capable runtime.
 
+That inspection is a validator boundary, not a C3 boundary. C3 can make
+conflicting loop roles deterministic, but it cannot know that a write-capable
+maker profile is unsafe without a safety gate, budget ceiling, denylist, and
+human handoff policy.
+
+Required monotonic validation rules for loop pattern descriptors:
+
+- safety and budget roles must be present before any maker role can request
+  write permissions;
+- denylist entries accumulate by union and cannot be removed by ordinary task
+  policy;
+- permissions can only narrow after the safety role has run;
+- budgets can only tighten after the budget role has run;
+- human gates can only be added or escalated by task/profile policy;
+- typed slot contracts run before descriptor projection so invalid resource,
+  policy, or loop fields fail before Marlin execution.
+
+The intended execution chain is:
+
+#+begin_src text
+POO role graph -> C3 precedence -> validator hard gate -> Marlin runtime request
+#+end_src
+
 ** 10.06.07.65 POO Object Graph Fact Layer
 The loop layer should be understood as a configurable engineering surface over
 the =poo-flow= POO object graph, not as a scheduler, not as a source-text

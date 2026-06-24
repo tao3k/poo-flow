@@ -14,18 +14,23 @@
        '((intent . task-cache)
          (stage . task)
          (cache . cargo))))
-  (use-module nono-sandbox
-    (.def (agent/task @ nono-sandbox-profile)
-      network: (deny-network)
-      capabilities: task-capabilities
-      resources: =>.+ readonly-project-workspace-resources
-      metadata: => (lambda (super-metadata)
-                     (append super-metadata task-metadata)))
+  (let (task-cache-resources
+        (.o (:: @ readonly-project-workspace-resources)
+            cpu: 2
+            memory: "2Gi"
+            timeout-ms: 180000))
+    (use-module nono-sandbox
+      (.def (agent/task @ nono-sandbox-profile)
+        network: (deny-network)
+        capabilities: task-capabilities
+        resources: =>.+ readonly-project-workspace-resources
+        metadata: => (lambda (super-metadata)
+                       (append super-metadata task-metadata)))
 
-    (.def (agent/task-cache @ agent/task)
-      network: (allowlisted-network "github.com")
-      capabilities: => (lambda (super-capabilities)
-                         (append super-capabilities cache-capabilities))
-      resources: =>.+ runtime-volume-resources
-      metadata: => (lambda (super-metadata)
-                     (append super-metadata task-cache-metadata)))))
+      (.def (agent/task-cache @ agent/task)
+        network: (allowlisted-network "github.com")
+        capabilities: => (lambda (super-capabilities)
+                           (append super-capabilities cache-capabilities))
+        resources: =>.+ task-cache-resources
+        metadata: => (lambda (super-metadata)
+                       (append super-metadata task-cache-metadata))))))

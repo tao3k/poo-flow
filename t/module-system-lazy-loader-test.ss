@@ -10,13 +10,43 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/source
+        :poo-flow/src/module-system/descriptor
+        :poo-flow/src/module-system/extension
+        :poo-flow/src/module-system/loader
+        :poo-flow/src/module-system/loader-tree)
 
 (export module-system-lazy-loader-test)
+
+;; : (-> (-> Any) Rational)
+(def (module-registry-elapsed-ms thunk)
+  (let ((start-jiffy (current-jiffy)))
+    (thunk)
+    (/ (* (- (current-jiffy) start-jiffy) 1000)
+       (jiffies-per-second))))
+
+;; : (-> Integer (-> Any) Rational)
+(def (module-registry-best-elapsed-ms attempts thunk)
+  (let loop ((remaining attempts)
+             (best #f))
+    (if (= remaining 0)
+      best
+      (let (elapsed (module-registry-elapsed-ms thunk))
+        (loop (- remaining 1)
+              (if (or (not best) (< elapsed best))
+                elapsed
+                best))))))
+
+;; : (-> Integer (-> Integer Value) [Value])
+(def (module-registry-build-list count make-value)
+  (let loop ((index 0) (values '()))
+    (if (= index count)
+      (reverse values)
+      (loop (+ index 1)
+            (cons (make-value index) values)))))
 
 ;;; Source reference fixture names the standard-library module without touching
 ;;; filesystem-backed module loading.
@@ -69,6 +99,30 @@
 ;; : TestSuite
 (def module-system-lazy-loader-test
   (test-suite "poo-flow module system lazy loader"
+    (test-case "expands large module registry manifests without loading modules"
+      (let* ((module-count 500)
+             (module-roots
+              (module-registry-build-list
+               module-count
+               (lambda (index)
+                 (string-append "src/modules/generated-"
+                                (number->string index)))))
+             (source-refs
+              (apply append
+                     (map poo-flow-module-tree-source-refs
+                          module-roots)))
+             (best-ms
+              (module-registry-best-elapsed-ms
+               5
+               (lambda ()
+                 (apply append
+                        (map poo-flow-module-tree-source-refs
+                             module-roots))))))
+        (check-equal? (length source-refs) (* module-count 2))
+        (check-equal? (poo-flow-module-source-ref-value (car source-refs))
+                      "src/modules/generated-0/config.ss")
+        (check-equal? (< best-ms 50) #t)))
+
     (test-case "defers standard-library module loading until forced"
       (set! lazy-loader-call-count 0)
       (let* ((backends (list user-standard-library-loader))
@@ -317,5 +371,3 @@
                       '("user-interface/objects.ss"
                         "user-interface/modules/config.ss"))
         (check-equal? lazy-loader-call-count 0)))))
-
-(run-tests! module-system-lazy-loader-test)

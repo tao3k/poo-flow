@@ -1,0 +1,65 @@
+* 10.06.39 Gerbil Build Optimization Audit
+:PROPERTIES:
+** 10.06.39.10 Finding: =std/make= Parallelism Starts Late
+:PROPERTIES:
+Gerbil =std/make= computes =settings-parallelize= through =gerbil-build-cores=. When =parallelize:= is left as =#t=, Gerbil reads =GERBIL_BUILD_CORES= and falls back to =0=, which becomes one worker at build time. Passing =GERBIL_BUILD_CORES= is therefore the normal package-level way to opt into local parallelism.
+
+The worker model still has an important limit: =make-build= first normalizes the build spec, creates completion/timestamp tables, imports spec modules under a mutex, checks dependency timestamps, then pushes buildable specs to a work channel. The worker count only helps after that import/dependency phase.
+
+For =poo-flow=, the expensive section is not only =gsc= compilation. The heavy module-system and POO macro modules make the pre-worker expander/import phase large enough to look like a single-threaded stall.
+** 10.06.39.20 Finding: Thin Package Builds Depend On Clean Package Roots
+:PROPERTIES:
+=.data/gerbil-poo/build.ss= is the right package-level reference for a normal Gerbil library. It imports =:clan/building=, defines a small =spec= around =all-gerbil-modules=, applies one special build option to =io=, conses one test helper, and delegates the rest to =init-build-environment!=.
+
+=.data/gerbil-utils/build.ss= is slightly larger only because it bootstraps =:clan/building= itself and defines extra multicall commands for Nix/Docker publishing. Its package surface is still discovered through =clan/building#all-gerbil-modules= with a small conventional boundary.
+
+The lesson for =poo-flow= is not that every project needs a giant explicit stage list. The lesson is that a Gerbil package can keep =build.ss= simple when the package root contains package modules, tests that are meant to compile, and a small number of explicit special entries. If the repository root also contains research checkouts, generated state, user examples, docs, and fixtures, then =build.ss= becomes a boundary-repair layer. That is a project structure smell.
+** 10.06.39.25 Measurement: Reference Simplicity Is Not The Same As Always-Fast Builds
+:PROPERTIES:
+With =GERBIL_BUILD_CORES=8=, the local reference checkouts behaved as follows on 2026-06-22:
+- =.data/gerbil-poo=: first measured =gxpkg build= finished in 324s; a second run was stopped after 247s with no useful additional evidence.
+- =.data/gerbil-utils=: first measured =gxpkg build= finished in 377s; a second run finished in 58s.
+
+This means build-file simplicity and build speed must be analyzed separately. =clan/building= gives a small, conventional package entry point and lets =std/make= use =GERBIL_BUILD_CORES=. It does not make a cold or timestamp-invalid Gerbil compilation free. The durable engineering improvement for =poo-flow= is therefore:
+1. keep =build.ss= thin and package-manager-owned;
+2. keep package discovery positive by scanning the intended include dirs;
+3. reduce expensive POO/macro expansion in hot modules;
+4. use =GERBIL_BUILD_CORES= for parallel compiler work instead of custom thread orchestration in =build.ss=.
+** 10.06.39.30 Finding: Gerbil Bootstrap Uses Direct Compiler Groups
+:PROPERTIES:
+Gerbil bootstrap is a different path. =src/build/build1.ss= imports =:gerbil/compiler=, defines explicit module groups, calls =compile-module= for each module with =parallel: #t=, then flushes =gsc= work once with =execute-pending-compile-jobs!=. =src/build/build-bach.ss= and =src/build/build-libgerbil.ss= go further by creating explicit Scheme/C/object tasks and using wait groups or pending compile jobs.
+
+That strategy avoids =std/make='s package dependency tables, but it recompiles the selected modules. It is suitable for bootstrap or a deliberate full rebuild mode, not as the default =gxpkg build= path for normal package iteration.
+** 10.06.39.40 POO Flow Build Direction
+:PROPERTIES:
+The correct next implementation is:
+1. Keep default =gxpkg build= on =std/make= so package clean/build semantics and incremental checks stay intact.
+2. Use =:clan/building= as the normal package build facade, matching =gerbil-poo= and =gerbil-utils=.
+3. Keep =build.ss= responsible only for package include dirs and true special targets: the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface that must be package-managed.
+4. Treat =src= and root =t= as the ordinary package surface. =.data=, docs, generated state, user examples, and fixtures stay out because they are not included, not because the build file carries a long negative directory list.
+5. Keep direct =compile-module= as an opt-in full-rebuild diagnostic strategy only, useful for measuring Gerbil bootstrap-style behavior or diagnosing =std/make= graph overhead.
+6. Continue reducing heavy POO macro expansion in module-system files. The earlier =object<-alist= fixes are aligned with this because they reduce compile-time expansion pressure before any build runner optimization starts.
+
+The core mistake to avoid is treating batch size or a hand-written giant stage list as the architecture. Build scripts should expose package boundaries; they should not become a second source tree model.
+** 10.06.39.50 Finding: POO Construction Can Be A Compile-Time Hot Path
+:PROPERTIES:
+The build slowdown is not only a runner problem. Large POO object literals can become expensive macro-expansion work when a module constructs broad nested objects with =.o= at compile time. The problem showed up most clearly in presentation/profile modules: the compiler spent substantial time in expander, hash, table, and GC code before useful =gsc= parallel work began.
+
+For package modules that produce large mostly-data POO values, prefer a smaller macro-expansion surface:
+1. Use =object<-alist= for broad, data-shaped object construction.
+2. Keep =.o= for compact, idiomatic user-facing objects and small prototypes.
+3. Split large presentation/profile objects into named POO fragments when the fragments have independent meaning.
+4. Avoid hot-path repeated =.ref= traversal through nested child POO objects; derive rows or summaries once, then pass stable values forward.
+5. Keep POO extension semantics intact. The optimization target is macro expansion and construction shape, not replacing POO with raw alists in public APIs.
+
+This fits the existing POO rules: public extension surfaces remain POO-native, but implementation modules should choose the POO construction form with the smallest compile-time footprint that still preserves object/prototype semantics.
+** 10.06.39.60 Implementation Step: Thin =poo-flow= Build Entry
+:PROPERTIES:
+The current build implementation has been corrected toward the =gerbil-poo= / =gerbil-utils= pattern:
+- =build.ss= imports the clan filesystem/building helpers, but ordinary source discovery is project-owned and positive: scan only the include dirs that define the package surface;
+- package discovery is positive: runtime modules come from =src=, and package-managed tests come from the root layer of =t=;
+- =t/fixtures= stays out because the =t= include is non-recursive;
+- the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface remain explicit build-spec entries;
+- =GERBIL_BUILD_CORES= remains the normal parallelism knob, matching the reference packages and avoiding custom thread logic in =build.ss=.
+
+The next refinement is structural: keep future package-owned modules under explicit include surfaces. If a new tree needs package compilation, it should be added as an include surface with a clear reason instead of expanding a negative exclude list.

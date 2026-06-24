@@ -234,6 +234,22 @@ Presentations should show:
 
 Doctor output should prefer these facts over dumping nested objects. The goal is to make C3 and slot resolution inspectable without forcing users to learn the implementation layout.
 
+** 10.06.29.142 Observability Contract Policy
+Object observability is a validation contract, not a POO slot. Do not add debug
+slots, debug mixins, or per-=objects.ss= debug variables just to inspect module
+object catalogs.
+
+The normal path is:
+1. =objects.ss= declares POO module objects only.
+2. =object-validation.ss= reads the object through the existing validation
+   boundary.
+3. The validation receipt exposes direct fields, resolved fields, field origins,
+   inheritance chains, validation phases, runtime flags, and diagnostics.
+4. Doctor and presentation code consume the plain receipt projection.
+
+This keeps observability outside POO lazy slot resolution while still making C3
+composition inspectable. If a debug feature needs to dereference objects, place
+it behind a validation or doctor contract and return plain receipt data.
 ** 10.06.29.145 Executable Guard Landing
 
 The first executable guard for these rules is now in =src/modules/sandbox-core/profile.ss=:

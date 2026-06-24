@@ -29,6 +29,7 @@
         :poo-flow/t/module-system-facade-test
         :poo-flow/t/module-system-lazy-loader-test
         :poo-flow/t/module-system-observability-test
+        :poo-flow/t/module-system-poo-performance-test
         :poo-flow/t/module-object-validation-test
         :poo-flow/t/module-object-practice-test
         :poo-flow/t/module-system-user-interface-test
@@ -43,6 +44,7 @@
         :poo-flow/t/sandbox-core-resource-contract-test
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-object-test
+        :poo-flow/t/session-transform-test
         :poo-flow/t/store-funflow-alignment-test
         :poo-flow/t/task-family-descriptor-test
         :poo-flow/t/tutorial-feature-batch-test

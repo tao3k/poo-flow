@@ -29,6 +29,7 @@
         poo-flow-module-extension-apply-contribution
         poo-flow-module-extension-apply-contributions
         poo-flow-module-extension-fixed-point
+        poo-flow-module-extension-result
         poo-flow-module-extension-result?
         poo-flow-module-extension-result-root
         poo-flow-module-extension-result-iterations
@@ -166,11 +167,16 @@
 ;;; makes agent-authored list extensions deterministic across fixed-point runs.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct base extra)
-  (append
-   base
-   (filter (lambda (value)
-             (not (poo-flow-module-extension-member? value base)))
-           extra)))
+  (let loop ((remaining extra) (added '()))
+    (cond
+     ((null? remaining)
+      (if (null? added)
+        base
+        (append base (reverse added))))
+     ((poo-flow-module-extension-member? (car remaining) base)
+      (loop (cdr remaining) added))
+     (else
+      (loop (cdr remaining) (cons (car remaining) added))))))
 
 ;;; Remove is value-based rather than positional so downstream patches can
 ;;; delete inherited list elements without knowing the upstream list index.

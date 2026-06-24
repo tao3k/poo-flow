@@ -12,9 +12,11 @@
                  run-tests!
                  test-case
                  test-error
-                 test-suite)
+        test-suite)
         (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/facade)
+        :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/modules/agent-sandbox/config)
 
 (export agent-sandbox-profile-user-interface-test)
 

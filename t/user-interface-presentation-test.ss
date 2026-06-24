@@ -16,6 +16,7 @@
                  test-suite)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/profile-config
         :poo-flow/t/user-interface-fixtures)
 
@@ -28,6 +29,7 @@
   '(selected-modules
     feature-facts
     sandbox-profile-derivations
+    session-core-intents
     cicd-intents
     workflow-cicd-pipelines
     workflow-cicd-pipeline-runs
@@ -170,19 +172,37 @@
              (settings (.ref presentation 'settings)))
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'module-count) 6)
+        (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'module-keys)
                       '((flow . funflow)
+                        (session . session-core)
                         (loop . governor)
                         (sandbox . nono-sandbox)
                         (sandbox . cubeSandbox)
                         (sandbox . docker-sandbox)
                         (flow . loop-engine)))
-        (check-equal? (.ref presentation 'feature-count) 6)
+        (check-equal? (.ref presentation 'feature-count) 7)
         (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
                       '())
+        (check-equal? (.ref presentation 'session-core-intent-count) 1)
+        (check-equal? (alist-value 'key
+                                   (car (.ref presentation
+                                             'session-core-intents)))
+                      '(session . session-core))
+        (check-equal? (alist-value 'flags
+                                   (car (.ref presentation
+                                             'session-core-intents)))
+                      '(+lineage +placement +handoff +graph +transform +doctor))
+        (check-equal? (alist-value 'transform-enabled?
+                                   (car (.ref presentation
+                                             'session-core-intents)))
+                      #t)
+        (check-equal? (alist-value 'runtime-executed
+                                   (car (.ref presentation
+                                             'session-core-intents)))
+                      #f)
         (check-equal? (alist-value 'declaration-index
                                    (car feature-facts))
                       0)
@@ -278,7 +298,7 @@
                       user-interface-presentation-trace-stages)
         (check-equal? (map (lambda (step) (alist-value 'runtime-executed step))
                            trace)
-                      '(#f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f))
+                      '(#f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f))
         (check-equal? (alist-value 'profile settings)
                       "developer")
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)
@@ -334,16 +354,21 @@
         (check-equal? (.ref presentation 'kind)
                       poo-flow-user-profile-presentation-kind)
         (check-equal? (.ref presentation 'profile-name) 'developer)
-        (check-equal? (.ref presentation 'module-bundle-count) 6)
-        (check-equal? (.ref presentation 'module-count) 6)
+        (check-equal? (.ref presentation 'module-bundle-count) 7)
+        (check-equal? (.ref presentation 'module-count) 7)
         (check-equal? (.ref presentation 'config-presentation-kind)
                       poo-flow-user-config-presentation-kind)
-        (check-equal? (.ref presentation 'config-module-count) 6)
-        (check-equal? (.ref presentation 'feature-count) 6)
+        (check-equal? (.ref presentation 'config-module-count) 7)
+        (check-equal? (.ref presentation 'feature-count) 7)
         (check-equal? (.ref presentation 'sandbox-profile-derivation-count)
                       0)
         (check-equal? (.ref presentation 'sandbox-profile-derivations)
                       '())
+        (check-equal? (.ref presentation 'session-core-intent-count) 1)
+        (check-equal? (alist-value 'key
+                                   (car (.ref presentation
+                                             'session-core-intents)))
+                      '(session . session-core))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (.ref presentation
                             'workflow-cicd-runtime-command-manifest-agreement-valid?)
@@ -413,8 +438,9 @@
                       poo-flow-user-profile-doctor-presentation-kind)
         (check-equal? (.ref presentation 'doctor-status) 'ok)
         (check-equal? (.ref presentation 'diagnostic-count) 0)
-        (check-equal? (.ref presentation 'module-count) 6)
-        (check-equal? (.ref presentation 'feature-count) 6)
+        (check-equal? (.ref presentation 'module-count) 7)
+        (check-equal? (.ref presentation 'feature-count) 7)
+        (check-equal? (.ref presentation 'session-core-intent-count) 1)
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (.ref presentation
                             'workflow-cicd-runtime-command-manifest-agreement-valid?)

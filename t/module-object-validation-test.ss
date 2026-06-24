@@ -23,6 +23,11 @@
 (def (receipt-ref receipt key)
   (hash-get receipt key))
 
+;; : (-> Alist Symbol Value Value)
+(def (alist-ref entries key default)
+  (let (entry (assoc key entries))
+    (if entry (cdr entry) default)))
+
 ;;; Receipt projection boundary: keep the field list assertion independent from
 ;;; harness-private receipt nesting.
 ;; : (-> [HashTable] [Symbol])
@@ -57,8 +62,14 @@
               (receipt-ref first-field-validation 'structuralValidation))
              (first-field-type-validation
               (receipt-ref first-field-validation 'typeValidation))
+             (field-origins
+              (receipt-ref validation 'field-origins))
+             (validation-phases
+              (receipt-ref validation 'validationPhases))
              (harness-checked-signals
               (receipt-ref harness-validation 'checkedSignals))
+             (checked-signals
+              (receipt-ref validation 'checkedSignals))
              (harness-dependency
               (receipt-ref source-ref 'dependency)))
         (check-equal? (poo-flow-module-object-validation? validation) #t)
@@ -68,6 +79,36 @@
                       poo-flow-module-object-validation-schema)
         (check-equal? (receipt-ref validation 'object)
                       'objects.nono-sandbox.sandbox)
+        (check-equal? (receipt-ref validation 'inheritance-chain)
+                      '(objects.nono-sandbox.sandbox
+                        objects.shared.sandbox))
+        (check-equal? (receipt-ref validation 'direct-field-identities)
+                      '(backend binding))
+        (check-equal? (receipt-ref validation 'resolved-field-identities)
+                      '(backend flags runtime-args binding))
+        (check-equal? (map (lambda (origin)
+                             (cons (alist-ref origin 'field #f)
+                                   (alist-ref origin 'origin #f)))
+                           field-origins)
+                      '((backend . direct)
+                        (flags . inherited)
+                        (runtime-args . inherited)
+                        (binding . direct)))
+        (check-equal? (map (lambda (origin)
+                             (cons (alist-ref origin 'field #f)
+                                   (alist-ref origin 'provider #f)))
+                           field-origins)
+                      '((backend . objects.nono-sandbox.sandbox)
+                        (flags . objects.shared.sandbox)
+                        (runtime-args . objects.shared.sandbox)
+                        (binding . objects.nono-sandbox.sandbox)))
+        (check-equal? (map (lambda (phase)
+                             (receipt-ref phase 'phase))
+                           validation-phases)
+                      '(source-reference
+                        harness-object-contract
+                        field-contracts
+                        local-object-diagnostics))
         (check-equal? (receipt-ref harness-validation 'kind)
                       "poo-object-contract-validation")
         (check-equal? (receipt-ref harness-validation 'schema)
@@ -103,6 +144,14 @@
                                  (field-contract-validation-fields
                                   field-contract-validations))))
                       #t)
+        (check-equal? (not (not (member
+                                 'object-field-origin-contract
+                                 checked-signals)))
+                      #t)
+        (check-equal? (not (not (member
+                                 'object-validation-phase-contract
+                                 checked-signals)))
+                      #t)
         (check-equal? harness-dependency
                       "github.com/tao3k/gerbil-scheme-language-project-harness")
         (check-equal? (poo-flow-module-object-validation-valid? validation)
@@ -125,16 +174,46 @@
         (check-equal? (map poo-flow-module-object-validation-valid?
                            validations)
                       '(#t #t #t #t #t #t #t #t #t))
-        (check-equal? (receipt-ref
-                       (poo-flow-module-objects-validation-summary
-                        validations)
-                       'valid)
+        (let (summary
+              (poo-flow-module-objects-validation-summary validations))
+          (check-equal? (receipt-ref summary 'valid)
                       #t)
-        (check-equal? (receipt-ref
-                       (poo-flow-module-objects-validation-summary
-                        validations)
-                       'invalid-count)
-                      0)))
+          (check-equal? (receipt-ref summary 'invalid-count)
+                        0)
+          (check-equal? (receipt-ref summary 'object-count)
+                        9)
+          (check-equal? (receipt-ref summary 'object-identities)
+                        '(objects.shared.sandbox
+                          objects.sandbox-core.profile
+                          objects.user-interface.shared.sandbox
+                          objects.nono-sandbox.sandbox
+                          objects.nono-sandbox.profile
+                          objects.cubeSandbox.sandbox
+                          objects.cubeSandbox.profile
+                          objects.docker-sandbox.sandbox
+                          objects.docker-sandbox.profile))
+          (check-equal? (receipt-ref summary 'inheritance-counts)
+                        '(0 1 1 1 2 1 2 1 2))
+          (check-equal? (car (receipt-ref summary 'inheritance-chains))
+                        '(objects.shared.sandbox))
+          (check-equal? (length (receipt-ref summary 'field-origins))
+                        9)
+          (check-equal? (length (receipt-ref summary 'validation-phases))
+                        9)
+          (check-equal? (not (not (member
+                                   'object-catalog-debug-contract
+                                   (receipt-ref summary 'checkedSignals))))
+                        #t)
+          (check-equal? (not (not (member
+                                   'object-catalog-field-origin-contract
+                                   (receipt-ref summary 'checkedSignals))))
+                        #t)
+          (check-equal? (not (not (member
+                                   'object-catalog-phase-contract
+                                   (receipt-ref summary 'checkedSignals))))
+                        #t)
+          (check-equal? (receipt-ref summary 'descriptor-realized?) #f)
+          (check-equal? (receipt-ref summary 'runtime-executed) #f))))
 
     (test-case "pins nono sandbox object binding to native FFI"
       (let ((binding-field

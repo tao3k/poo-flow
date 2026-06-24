@@ -1,0 +1,51 @@
+* 10.06.37 Session Core Module
+** 10.06.37.10 Purpose
+=session-core= is the upstream module-system row for POO Flow session work. It makes session lineage, placement, handoff, graph, transform, and doctor intent visible in module presentation without realizing a runtime descriptor.
+This keeps the OpenRath-inspired session-first direction concrete while preserving POO Flow's boundary: Scheme owns POO objects, functional composition, validation, strategy, and receipts; Marlin or another runtime owns execution.
+** 10.06.37.20 Delivered Code Owners
+- =src/modules/session-core/config.ss= owns the built-in module bundle.
+- =src/module-system/session-core-config.ss= owns report-only intent rows.
+- =src/module-system/presentation.ss= projects config-level session-core rows.
+- =src/module-system/profile-presentation.ss= forwards profile and doctor rows.
+- =src/module-system/declaration-case.ss= records the root declaration contract.
+The module key is =(session . session-core)=. It is intentionally not a sandbox backend and not a workflow descriptor.
+** 10.06.37.30 User Shape
+The compact module row is:
+#+begin_src scheme
+(use-module session-core
+  +lineage
+  +placement
+  +handoff
+  +graph
+  +transform
+  +doctor)
+#+end_src
+The built-in kernel profile enables the same feature set through =poo-flow-session-core-module-bundles=, so ordinary profile presentation exposes one =session-core-intents= row by default.
+** 10.06.37.40 Presentation Contract
+A session-core intent row contains:
+- =kind=: =poo-flow.session-core.intent=
+- =key=: =(session . session-core)=
+- =flags=: selected feature flags
+- =lineage-enabled?=, =placement-enabled?=, =handoff-enabled?=, =graph-enabled?=, =transform-enabled?=, and =doctor-enabled?=
+- =runtime-owner=: =marlin-agent-core=
+- =descriptor-realized?=: =#f=
+- =runtime-executed=: =#f=
+This row is part of =pooFlowUserConfigPresentation=, =pooFlowUserProfilePresentation=, and =pooFlowUserProfileDoctorPresentation=.
+** 10.06.37.50 POO Boundary
+=session-core= does not introduce a second session model. It enables the existing POO session value layer in =src/modules/session/config.ss= and keeps extension on prototype/mixin paths:
+- session chunks remain cheap receipt rows;
+- lineage and placement remain POO composition facts;
+- session transforms derive new session values and handoff intents without provider execution;
+- sandbox placement resolves against existing profile catalogs;
+- runtime handoff remains explicit and report-only.
+** 10.06.37.60 Verification
+Focused package-context gates:
+#+begin_src sh
+gxpkg env gxc src/modules/session/transform.ss src/modules/session/config.ss
+gxpkg env gxc src/modules/session-core/config.ss src/module-system/session-core-config.ss
+gxpkg env gxc src/module-system/presentation.ss src/module-system/profile-presentation.ss
+gxpkg env gxtest t/session-transform-test.ss
+gxpkg env gxtest t/user-interface-presentation-test.ss
+gxpkg env gxtest t/declaration-case-test.ss
+gxpkg env gxtest t/user-interface-config-modules-test.ss
+#+end_src

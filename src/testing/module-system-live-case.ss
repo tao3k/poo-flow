@@ -19,7 +19,7 @@
                  mounts
                  resource-policy
                  workdir)
-        (only-in :poo-flow/src/module-system/facade
+        (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile->profile)
         (only-in :poo-flow/src/modules/nono-sandbox/c-binding
                  +nono-c-binding-live-test-receipt-schema+
