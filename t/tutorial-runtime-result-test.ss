@@ -298,5 +298,3 @@
         (check-equal? (cdr (assoc 'metadata manifest))
                       '((tutorial . stage-10)
                         (runtime . rust-cli-compatible)))))))
-
-(run-tests! tutorial-runtime-result-test)

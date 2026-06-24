@@ -109,5 +109,3 @@
       (check-equal? (flow-name kleisli-macro-kleisli) 'kleisli-macro-kleisli)
       (check-equal? (kleisli-run kleisli-macro-bound 3) 8)
       (check-equal? (kleisli-run kleisli-macro-kleisli 2) 6))))
-
-(run-tests! functional-flow-kleisli-test)

@@ -107,5 +107,3 @@
         (check-equal? (execution-failure-owner failure) 'loop-pattern)
         (check-equal? (execution-failure-code failure)
                       'invalid-loop-pattern-descriptor)))))
-
-(run-tests! loop-agent-descriptor-test)

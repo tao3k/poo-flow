@@ -7,15 +7,14 @@
                  check-equal?
                  check-false
                  check-not-equal?
-                 check-output
-                 check-true
-                 run-tests!
-                 test-case
-                 test-error
-                 test-suite)
+        check-output
+        check-true
+        run-tests!
+        test-case
+        test-error
+        test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/workflow/store
-        :poo-flow/t/project-policy-test)
+        :poo-flow/src/workflow/store)
 
 ;;; Failure capture keeps configured-runner checks on structured values instead
 ;;; of rendered exception text.
@@ -573,8 +572,8 @@
                         (store-get cache-handle)
                         cache-handle))))))
 
-;;; The aggregate root keeps project-policy-test in the same process while
-;;; leaving pass/fail ownership to the std/test runner.
+;;; Policy checks run as their own root leaf test; this file keeps the
+;;; control-plane receipt boundary focused.
 (run-tests! pure-flow-test
             adapter-request-test
             funflow-api-test
@@ -584,5 +583,4 @@
             strategy-frontier-test
             receipt-audit-test
             strategy-cache-test
-            store-cache-semantics-test
-            project-policy-test)
+            store-cache-semantics-test)

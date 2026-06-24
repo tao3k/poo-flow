@@ -1111,9 +1111,78 @@
    (poo-flow-module-extension-node-children objects-node)
    identity))
 
+;; : (-> [PooModuleFieldContribution] HashTable)
+(def (poo-flow-module-objects-contributions-by-target contributions)
+  (let (groups (make-hash-table))
+    (let loop ((remaining contributions))
+      (if (null? remaining)
+        groups
+        (let* ((contribution (car remaining))
+               (target
+                (poo-flow-module-field-contribution-target contribution))
+               (group (hash-get groups target)))
+          (hash-put! groups
+                     target
+                     (if group
+                       (cons contribution group)
+                       (list contribution)))
+          (loop (cdr remaining)))))))
+
+;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
+(def (poo-flow-module-objects-fast-extension-result objects-node contributions)
+  (if (not (equal? (poo-flow-module-extension-node-identity objects-node)
+                   poo-flow-module-objects-root-identity))
+    #f
+    (let ((groups
+           (poo-flow-module-objects-contributions-by-target contributions))
+          (slots
+           (poo-flow-module-extension-node-slots objects-node))
+          (children
+           (poo-flow-module-extension-node-children objects-node)))
+      (let loop ((remaining children)
+                 (next-children '())
+                 (changed? #f))
+        (if (null? remaining)
+          (poo-flow-module-extension-result
+           (poo-flow-module-extension-node
+            poo-flow-module-objects-root-identity
+            slots
+            (reverse next-children))
+           (if changed? 1 0)
+           #t)
+          (let* ((child (car remaining))
+                 (target
+                  (poo-flow-module-extension-node-identity child))
+                 (target-contributions
+                  (hash-get groups target)))
+            (if target-contributions
+              (let (child-result
+                    (poo-flow-module-config-fast-extension-result
+                     child
+                     (reverse target-contributions)))
+                (if child-result
+                  (let ((next-child
+                         (poo-flow-module-extension-result-root child-result))
+                        (child-changed?
+                         (> (poo-flow-module-extension-result-iterations
+                             child-result)
+                            0)))
+                    (loop (cdr remaining)
+                          (cons next-child next-children)
+                          (or changed? child-changed?)))
+                  #f))
+              (loop (cdr remaining)
+                    (cons child next-children)
+                    changed?))))))))
+
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] PooModuleConfigMergeResult)
 (def (poo-flow-module-objects-mk-merge/node objects-node contributions)
-  (poo-flow-module-config-mk-merge objects-node contributions))
+  (let (fast-result
+        (poo-flow-module-objects-fast-extension-result objects-node
+                                                       contributions))
+    (if fast-result
+      (poo-flow-module-config-merge-result fast-result contributions)
+      (poo-flow-module-config-mk-merge objects-node contributions))))
 
 ;; : (-> [PooModuleObject] [PooModuleFieldContribution] PooModuleConfigMergeResult)
 (def (poo-flow-module-objects-mk-merge objects contributions)

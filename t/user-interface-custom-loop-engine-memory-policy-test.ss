@@ -97,5 +97,3 @@
   (test-suite "poo-flow custom loop-engine memory-policy contracts"
     user-interface-custom-loop-engine-duplicate-memory-policy-case
     user-interface-custom-loop-engine-unmatched-memory-policy-case))
-
-(run-tests! user-interface-custom-loop-engine-memory-policy-test)

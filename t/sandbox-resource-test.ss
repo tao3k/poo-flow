@@ -90,5 +90,3 @@
                         ((name . MODE)
                          (value . "debug")
                          (source . literal))))))))
-
-(run-tests! sandbox-resource-test)

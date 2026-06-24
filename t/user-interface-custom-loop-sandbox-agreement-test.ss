@@ -196,5 +196,3 @@
   (test-suite "poo-flow custom user-interface loop sandbox agreement"
     user-interface-custom-loop-engine-sandbox-case
     user-interface-custom-loop-engine-invalid-sandbox-case))
-
-(run-tests! user-interface-custom-loop-sandbox-agreement-test)

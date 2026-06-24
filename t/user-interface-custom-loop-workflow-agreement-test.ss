@@ -113,5 +113,3 @@
   (test-suite "poo-flow custom user-interface loop workflow agreement"
     custom-loop-workflow-missing-funflow-case
     custom-loop-workflow-funflow-backed-case))
-
-(run-tests! user-interface-custom-loop-workflow-agreement-test)

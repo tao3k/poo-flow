@@ -27,10 +27,7 @@
                  poo-flow-kernel-profile
                  poo-flow-kernel-profile-set
                  poo-flow-kernel-profile-modules)
-        (only-in :poo-flow/t/user-interface-fixtures
-                 test-poo-flow-user-module-bundles
-                 test-poo-flow-user-profile
-                 test-poo-flow-user-profile-set))
+        "user-interface-fixtures.ss")
 
 (export module-system-test)
 
@@ -282,5 +279,3 @@
         (check-equal? (execution-failure-code failure) 'missing-module-source)
         (check-equal? (cdr (assoc 'catalog detail)) 'empty-catalog)
         (check-equal? (cdr (assoc 'value source-shape)) "missing.ss")))))
-
-(run-tests! module-system-test)

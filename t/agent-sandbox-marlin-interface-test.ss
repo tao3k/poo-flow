@@ -169,5 +169,3 @@
         (check-equal? (execution-failure? failure) #t)
         (check-equal? (execution-failure-code failure)
                       'invalid-agent-sandbox-marlin-interface-manifest)))))
-
-(run-tests! agent-sandbox-marlin-interface-test)

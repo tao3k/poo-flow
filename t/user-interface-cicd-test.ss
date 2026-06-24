@@ -152,5 +152,3 @@
         (check-equal? (alist-value 'runtime-owner bundle)
                       "marlin-agent-core")
         (check-equal? (alist-value 'runtime-executed bundle) #f)))))
-
-(run-tests! user-interface-cicd-test)

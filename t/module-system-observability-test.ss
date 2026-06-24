@@ -142,5 +142,3 @@
         (check-equal? (poo-flow-poo-slot-authoring-diagnostics
                        (list good))
                       '())))))
-
-(run-tests! module-system-observability-test)

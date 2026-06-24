@@ -346,5 +346,3 @@
         (lambda ()
           (poo-flow-cicd-check-map 'bad '(not-a-check))))
        #t))))
-
-(run-tests! workflow-cicd-runtime-handoff-test)

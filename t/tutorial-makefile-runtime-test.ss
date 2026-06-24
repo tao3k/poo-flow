@@ -271,5 +271,3 @@
                         "Makefile"
                         "--sources"
                         "(\"main.cpp\" \"hello.cpp\" \"factorial.cpp\")"))))))
-
-(run-tests! tutorial-makefile-runtime-test)

@@ -250,5 +250,3 @@
           readiness
           'runtime-executed)
          #f)))))
-
-(run-tests! user-interface-cicd-runtime-graph-test)

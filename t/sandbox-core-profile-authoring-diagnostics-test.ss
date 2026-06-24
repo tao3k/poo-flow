@@ -64,5 +64,3 @@
         (check-equal? (alist-value 'expected (cadr diagnostics)) #f)
         (check-equal? (alist-value 'recommendation (caddr diagnostics))
                       'poo-slot-operator-or-helper)))))
-
-(run-tests! sandbox-core-profile-authoring-diagnostics-test)

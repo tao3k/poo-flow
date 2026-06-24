@@ -209,5 +209,3 @@
         (check-equal? (cicd-test-alist-ref build-receipt
                                            'sandbox-runtime-summaries)
                       sandbox-summaries)))))
-
-(run-tests! workflow-cicd-check-map-test)

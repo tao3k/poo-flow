@@ -69,5 +69,3 @@
                       '((node fanout 0 branch-left left)
                         (node fanout 1 branch-right right)
                         (node fanout 2 branch fanout)))))))
-
-(run-tests! flow-descriptor-test)

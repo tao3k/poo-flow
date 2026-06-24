@@ -128,5 +128,3 @@
         (check-equal? (cicd-graph-test-alist-ref cycle-graph
                                                  'runtime-executed)
                       #f)))))
-
-(run-tests! workflow-cicd-dependency-graph-test)

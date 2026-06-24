@@ -184,5 +184,3 @@
         (check-equal? (execution-failure-code failure)
                       'invalid-agent-sandbox-execution-request))))
   )
-
-(run-tests! agent-sandbox-bridge-test)

@@ -125,5 +125,3 @@
         (check-equal?
          (not (not (member 'argv-mismatch row-diagnostics)))
          #t)))))
-
-(run-tests! user-interface-cicd-runtime-projection-test)

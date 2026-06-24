@@ -189,5 +189,3 @@
           (check-equal? (execution-request-input seen-request) input)
           (check-equal? (cdr (assoc 'image docker)) "alpine:latest")
           (check-equal? (cdr (assoc 'output-policy docker)) 'cas-item))))))
-
-(run-tests! docker-descriptor-test)

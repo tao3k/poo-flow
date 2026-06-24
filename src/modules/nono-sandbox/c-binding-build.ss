@@ -120,7 +120,8 @@
                       (cons 'probe-ref
                             "bindings/nono-c/poo_flow_nono_binding_probe.c")
                       (cons 'validator
-                            nono-c-binding-validate-build)))
+                            (lambda (build)
+                              (nono-c-binding-validate-build build)))))
         execution-policy-role))
 
 ;; : (-> (List Pair) NonoCBindingBuild)

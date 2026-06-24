@@ -39,5 +39,3 @@
         (check-equal? (cdr (assoc 'probe-ref contract))
                       "bindings/nono-c/poo_flow_nono_binding_probe.c")
         (check-equal? (run-nono-c-binding-compile-probe) "")))))
-
-(run-tests! nono-sandbox-c-language-test)

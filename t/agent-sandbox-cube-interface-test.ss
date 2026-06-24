@@ -126,5 +126,3 @@
         (check-equal? (execution-failure? mode-failure) #t)
         (check-equal? (execution-failure-code mode-failure)
                       'invalid-cube-interface-manifest)))))
-
-(run-tests! agent-sandbox-cube-interface-test)

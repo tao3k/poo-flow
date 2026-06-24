@@ -93,5 +93,3 @@
             (check-equal? (test-ref receipt 'skipped?) #t)
             (check-equal? (test-ref receipt 'skip-reason)
                           'native-library-not-found)))))))
-
-(run-tests! nono-sandbox-native-ffi-test)

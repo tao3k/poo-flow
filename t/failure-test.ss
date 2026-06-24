@@ -197,5 +197,3 @@
                                         'done)))
         (check-equal? (try-right? result) #t)
         (check-equal? (try-result-value result) 'done)))))
-
-(run-tests! failure-test)

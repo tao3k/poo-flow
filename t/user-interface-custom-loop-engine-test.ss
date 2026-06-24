@@ -498,5 +498,3 @@
 (def user-interface-custom-loop-engine-test
   (test-suite "poo-flow custom user-interface loop-engine cases"
     user-interface-custom-loop-engine-concrete-case))
-
-(run-tests! user-interface-custom-loop-engine-test)

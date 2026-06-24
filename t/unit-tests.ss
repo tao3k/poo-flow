@@ -45,6 +45,7 @@
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-object-test
         :poo-flow/t/session-transform-test
+        :poo-flow/t/session-transform-performance-test
         :poo-flow/t/store-funflow-alignment-test
         :poo-flow/t/task-family-descriptor-test
         :poo-flow/t/tutorial-feature-batch-test

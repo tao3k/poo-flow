@@ -170,5 +170,3 @@
 (def user-interface-custom-loop-engine-profile-test
   (test-suite "poo-flow custom loop-engine profile declarations"
     user-interface-custom-loop-engine-profile-case))
-
-(run-tests! user-interface-custom-loop-engine-profile-test)

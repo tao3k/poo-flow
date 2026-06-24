@@ -12,8 +12,8 @@
 
 (export session-transform-test)
 
-;; : POOObject
-(def session-transform-test-profile
+;; : (-> POOObject)
+(def (make-session-transform-test-profile)
   (.o name: 'agent/nono
       backend-kind: 'nono
       backend-ref: 'nono-sandbox
@@ -24,8 +24,8 @@
                           (access . read-write)))
       metadata: '((source . session-transform-test))))
 
-;; : PooSession
-(def session-transform-root
+;; : (-> PooSession)
+(def (make-session-transform-root)
   (poo-flow-session-value
    'session-transform/root
    (list (poo-flow-session-chunk
@@ -38,13 +38,13 @@
     'root)
    (poo-flow-session-placement-resolve
     'agent/nono
-    (list session-transform-test-profile)
+    (list (make-session-transform-test-profile))
     '((case . session-transform)))
    '((intent . agent-flow)
       (case . session-transform))))
 
-;; : PooSessionMemoryIntent
-(def review-memory-intent
+;; : (-> PooSessionMemoryIntent)
+(def (make-review-memory-intent)
   (poo-flow-session-memory-intent
    'review-memory
    'session/memory
@@ -53,21 +53,21 @@
    'commit-derived-session
    '((source . session-transform-test))))
 
-;; : PooSessionTransform
-(def review-transform
+;; : (-> PooSessionTransform)
+(def (make-review-transform)
   (poo-flow-session-transform
    'review-agent
    'review
    "Review a session receipt and derive a follow-up session."
    '(+provider-handoff +receipt-only +session-derivation)
    '((source . session-transform-test))
-   (list review-memory-intent)))
+   (list (make-review-memory-intent))))
 
-;; : PooSessionTransformReceipt
-(def review-transform-receipt
+;; : (-> PooSessionTransformReceipt)
+(def (make-review-transform-receipt)
   (poo-flow-session-transform-apply
-   review-transform
-   session-transform-root
+   (make-review-transform)
+   (make-session-transform-root)
    'session-transform/review
    (list (poo-flow-session-chunk
           'review
@@ -80,6 +80,8 @@
 (def session-transform-test
   (test-suite "poo-flow report-only session transforms"
     (test-case "declares transform specs without runtime execution"
+      (let* ((review-memory-intent (make-review-memory-intent))
+             (review-transform (make-review-transform)))
       (check-equal? (poo-flow-session-transform? review-transform) #t)
       (check-equal? (poo-flow-session-transform-name review-transform)
                     'review-agent)
@@ -111,9 +113,11 @@
       (check-equal? (poo-flow-session-transform-runtime-owner
                      review-transform)
                     "marlin-agent-core")
-      (check-equal? (.ref review-transform 'runtime-executed) #f))
+      (check-equal? (.ref review-transform 'runtime-executed) #f)))
     (test-case "applies transforms as derived sessions and receipts"
-      (let* ((derived-session
+      (let* ((review-transform-receipt
+              (make-review-transform-receipt))
+             (derived-session
               (poo-flow-session-transform-receipt-derived-session
                review-transform-receipt))
              (handoff-intent
@@ -195,5 +199,3 @@
                        'placement-resolved?
                        #f)
                       #t)))))
-
-(run-tests! session-transform-test)

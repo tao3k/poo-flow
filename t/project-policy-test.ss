@@ -1,15 +1,12 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: project policy must be visible from package tests, not only ASP.
-;;; Invariant: the installed harness package owns the native check API.
+;;; Invariant: the installed harness CLI owns the policy check process.
 
-(import (only-in :gerbil/gambit
-                 with-output-to-string)
+(import (only-in :std/misc/process run-process)
         (only-in :std/test
                  test-suite
                  test-case
                  check-equal?)
-        (only-in :gslph/src/commands/check
-                 check-main)
         (only-in :std/srfi/13 string-contains))
 
 (export project-policy-test
@@ -26,9 +23,12 @@
   (or project-policy-result
       (let (status 0)
         (let (output
-              (with-output-to-string
-               (lambda ()
-                 (set! status (check-main '("--workspace" "." "--full"))))))
+              (run-process
+               '("gslph" "check" "--workspace" "t/project-policy-test.ss")
+               stderr-redirection: #t
+               check-status:
+               (lambda (exit-status _settings)
+                 (set! status exit-status))))
           (set! project-policy-result (cons status output))
           project-policy-result))))
 

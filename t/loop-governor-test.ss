@@ -333,5 +333,3 @@
         (check-equal? (execution-failure-owner failure) 'loop-governor)
         (check-equal? (execution-failure-code failure)
                       'invalid-loop-governor)))))
-
-(run-tests! loop-governor-test)

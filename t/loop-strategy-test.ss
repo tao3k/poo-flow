@@ -152,5 +152,3 @@
         (check-equal? (execution-failure-owner failure) 'loop-strategy)
         (check-equal? (execution-failure-code failure)
                       'invalid-loop-strategy-plan)))))
-
-(run-tests! loop-strategy-test)

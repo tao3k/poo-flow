@@ -394,5 +394,3 @@
         (check-equal? (alist-value 'schema cube-handoff-summary)
                       'poo-flow.agent-sandbox-profile.runtime-summary.v1)
         (check-equal? (.ref presentation 'runtime-executed) #f)))))
-
-(run-tests! agent-sandbox-profile-user-interface-test)

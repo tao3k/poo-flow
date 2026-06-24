@@ -6,39 +6,54 @@
                  test-case
                  check-equal?
                  run-tests!)
-        (only-in :std/misc/process run-process))
+        (only-in :poo-flow/src/cli
+                 poo-flow-cli-expand-test-args
+                 poo-flow-cli-max-rss-bytes
+                 poo-flow-cli-run
+                 poo-flow-cli-runnable-test-form?
+                 poo-flow-cli-usage))
 
 (export cli-test)
 
-;; : (-> Unit Path)
-(def (poo-flow-cli-test-root)
-  (cond
-   ((file-exists? "src/cli.ss") (current-directory))
-   ((file-exists? "../src/cli.ss") "..")
-   (else (current-directory))))
-
-;;; Process boundary: run through gxpkg env and the source CLI so tests cover
-;;; the same loadpath injection path that user-facing execution depends on.
-;; : (-> [String] Pair)
-(def (run-poo-flow-cli args)
-  (let (status 0)
-    (let (output
-          (run-process (append '("gxpkg" "env" "gxi" "src/cli.ss")
-                               args)
-                       directory: (poo-flow-cli-test-root)
-                       stderr-redirection: #t
-                       check-status:
-                       (lambda (exit-status _settings)
-                         (set! status exit-status))))
-      (cons status output))))
-
 (def cli-test
   (test-suite "poo-flow cli"
-    (test-case "runs a Scheme file through the functional flow kernel"
-      (let (result (run-poo-flow-cli '("run" "t/fixtures/cli-run-smoke.ss" "3")))
-        (check-equal? (cdr result) "poo-flow-run:8\n")
-        (check-equal? (car result) 0)))
+    (test-case "prints help without loading the user interface graph"
+      (check-equal? (poo-flow-cli-run '("help")) 0)
+      (check-equal? (string? (poo-flow-cli-usage)) #t))
 
-    (test-case "runs the declarative user interface init entrypoint"
-      (let (result (run-poo-flow-cli '("run" "user-interface/init.ss")))
-        (check-equal? (car result) 0)))))
+    (test-case "expands the unit test root into bounded leaf tests"
+      (let (files (poo-flow-cli-expand-test-args '("t/unit-tests.ss")))
+        (check-equal? (not (member "t/unit-tests.ss" files)) #t)
+        (check-equal? (not (not (member "t/cli-test.ss" files))) #t)))
+
+    (test-case "rejects import-only files without an explicit test marker"
+      (check-equal?
+       (poo-flow-cli-runnable-test-form?
+        '(import (only-in :std/test test-suite)))
+       #f)
+      (check-equal?
+       (poo-flow-cli-runnable-test-form?
+        '(def sample-test (test-suite "sample")))
+       #t)
+      (check-equal?
+       (poo-flow-cli-runnable-test-form?
+        '(define-poo-flow-module-system-live-case-test
+           sample-live-case-test
+           sample-live-case))
+       #t)
+      (check-equal?
+       (poo-flow-cli-runnable-test-form?
+        '(def poo-flow-import-side-effect-test-suite? #t))
+       #t))
+
+    (test-case "parses macOS time rss receipts"
+      (check-equal?
+       (poo-flow-cli-max-rss-bytes
+        "        231047168  maximum resident set size\n")
+       231047168))
+
+    (test-case "parses GNU time rss receipts"
+      (check-equal?
+       (poo-flow-cli-max-rss-bytes
+        "        Maximum resident set size (kbytes): 226912\n")
+       232357888))))

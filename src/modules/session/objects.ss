@@ -24,6 +24,7 @@
         poo-flow-session-placement-diagnostics
         poo-flow-session-placement-runtime-summary
         poo-flow-session-placement-handoff-summary
+        poo-flow-session-placement-copy
         poo-flow-session-placement-resolve
         poo-flow-session-value
         poo-flow-session?
@@ -212,6 +213,21 @@
 ;; : (-> PooSessionPlacement Alist)
 (def (poo-flow-session-placement-handoff-summary placement)
   (.ref placement 'placement-handoff-summary))
+
+;;; Project the placement slots out of a composed session before reusing them as
+;;; a prototype. Re-inheriting a full session object would recursively drag the
+;;; source session graph into derived sessions.
+;; : (-> PooSessionPlacement PooSessionPlacement)
+(def (poo-flow-session-placement-copy placement)
+  (.o placement-kind: (.ref placement 'placement-kind)
+      placement-schema: (.ref placement 'placement-schema)
+      placement-profile-ref: (.ref placement 'placement-profile-ref)
+      placement-resolved?: (.ref placement 'placement-resolved?)
+      placement-diagnostics: (.ref placement 'placement-diagnostics)
+      placement-runtime-summary: (.ref placement 'placement-runtime-summary)
+      placement-handoff-summary: (.ref placement 'placement-handoff-summary)
+      placement-metadata: (.ref placement 'placement-metadata)
+      placement-runtime-executed: (.ref placement 'placement-runtime-executed)))
 
 ;;; Session placement resolves against POO profile recipes without importing the
 ;;; full sandbox config layer. Strict descriptor validation stays at the sandbox
@@ -408,7 +424,7 @@
 
 ;; : (-> PooSession PooSessionPlacement)
 (def (poo-flow-session-value-placement session)
-  session)
+  (poo-flow-session-placement-copy session))
 
 ;; : (-> PooSession Alist)
 (def (poo-flow-session-metadata session)

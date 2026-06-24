@@ -287,5 +287,3 @@
 (def user-interface-custom-loop-engine-runtime-manifest-test
   (test-suite "poo-flow custom loop-engine runtime manifest"
     user-interface-custom-loop-engine-runtime-manifest-case))
-
-(run-tests! user-interface-custom-loop-engine-runtime-manifest-test)

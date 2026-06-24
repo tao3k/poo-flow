@@ -81,5 +81,3 @@
         (check-equal? (execution-plan-node-ids plan)
                       '((node inc 0 pure inc)))
         (check-equal? (length flow-declaration-descriptors) 4)))))
-
-(run-tests! descriptor-registry-test)

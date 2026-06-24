@@ -193,5 +193,3 @@
         (check-equal? (execution-failure-owner failure) 'loop-human-audit)
         (check-equal? (execution-failure-code failure)
                       'invalid-loop-human-audit)))))
-
-(run-tests! loop-human-audit-test)

@@ -334,5 +334,3 @@
                       #f)
         (check-equal? (.ref eval-result 'module-count) 2))))
   )
-
-(run-tests! module-system-user-interface-test)

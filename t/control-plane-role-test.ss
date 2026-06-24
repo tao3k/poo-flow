@@ -39,5 +39,3 @@
         (check-equal? (role-name composed) 'runtime-adapter)
         (check-equal? (role-runtime-owner composed)
                       'rust-or-external-runtime)))))
-
-(run-tests! poo-role-test)

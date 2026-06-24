@@ -349,5 +349,3 @@
       (check-equal? (try-left? (kernel-run macro-try #!void)) #t)
       (check-equal? (kernel-run macro-first '(3 tag)) '(4 tag))
       (check-equal? (kernel-run macro-second '(tag 3)) '(tag 4)))))
-
-(run-tests! functional-flow-kernel-test)

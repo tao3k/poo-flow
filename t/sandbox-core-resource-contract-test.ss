@@ -147,5 +147,3 @@
         (check-equal?
          (diagnostic-codes (receipt-ref validation 'diagnostics))
          '(filesystem-not-structured))))))
-
-(run-tests! sandbox-core-resource-contract-test)

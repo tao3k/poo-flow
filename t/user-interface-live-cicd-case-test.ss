@@ -24,5 +24,3 @@
 (define-poo-flow-module-system-live-case-test
   user-interface-live-cicd-case-test
   poo-flow-user-interface-live-cicd-case)
-
-(run-tests! user-interface-live-cicd-case-test)

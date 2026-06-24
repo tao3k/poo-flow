@@ -176,5 +176,3 @@
                       #t)
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))))
-
-(run-tests! declaration-case-test)

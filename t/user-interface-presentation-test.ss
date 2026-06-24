@@ -593,5 +593,3 @@
     user-interface-invalid-loop-result-doctor-case-test
     user-interface-invalid-sandbox-profile-doctor-case-test
     user-interface-broken-profile-doctor-case-test))
-
-(run-tests! user-interface-presentation-test)

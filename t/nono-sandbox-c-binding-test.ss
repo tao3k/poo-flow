@@ -283,5 +283,3 @@
         (check-equal? (execution-failure? mode-failure) #t)
         (check-equal? (execution-failure-code mode-failure)
                       'invalid-nono-c-binding-manifest)))))
-
-(run-tests! nono-sandbox-c-binding-test)

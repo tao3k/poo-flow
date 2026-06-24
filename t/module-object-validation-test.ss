@@ -347,5 +347,3 @@
             (poo-flow-require-module-object-validation! broken-object)
             #f))
          #t)))))
-
-(run-tests! module-object-validation-test)

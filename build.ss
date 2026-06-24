@@ -51,6 +51,10 @@
     (ssi: "src/modules/nono-sandbox/_nono")))
 
 ;; : BuildSpec
+(def +poo-flow-cli-library-build-spec+
+  '((gxc: "src/cli.ss")))
+
+;; : BuildSpec
 (def +poo-flow-cli-entry-module-build-spec+
   '((gxc: "user-interface/init")
     (gxc: "user-interface/custom/my-module/config")))
@@ -155,8 +159,10 @@
 (def (poo-flow-package-build-spec options)
   (if (poo-flow-native-build-options? options)
     (append +poo-flow-ffi-build-spec+
+            (poo-flow-runtime-build-spec options)
             (poo-flow-entry-build-spec options))
-    (poo-flow-runtime-build-spec options)))
+    (append (poo-flow-runtime-build-spec options)
+            +poo-flow-cli-library-build-spec+)))
 
 ;; : (List -> BuildSpec)
 (def (poo-flow-package-and-test-spec options)
@@ -296,7 +302,11 @@
 
 ;; : (List -> Void)
 (def (poo-flow-package-compile options)
-  (poo-flow-make "package" (poo-flow-compile-build-spec options) options))
+  (if (poo-flow-test-build-options? options)
+    (begin
+      (poo-flow-make "package" (poo-flow-package-build-spec options) options)
+      (poo-flow-make "tests" (poo-flow-test-build-spec options) options))
+    (poo-flow-make "package" (poo-flow-compile-build-spec options) options)))
 
 ;; : (-> Void)
 (def (poo-flow-clean)

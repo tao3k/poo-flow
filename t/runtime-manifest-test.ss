@@ -114,5 +114,3 @@
                       'bad-manifest-request)
         (check-equal? (cdr (assoc 'code (adapter-result-error adapter-result)))
                       'unsupported-runtime-command-manifest-protocol)))))
-
-(run-tests! runtime-manifest-test)

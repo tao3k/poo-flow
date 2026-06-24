@@ -341,5 +341,3 @@
         (check-equal? (slot-value resolved-node 'metadata-map)
                       '((stage . build)
                         (owner . object-core)))))))
-
-(run-tests! module-object-practice-test)

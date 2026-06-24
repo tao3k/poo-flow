@@ -178,5 +178,3 @@
                       '(macro/root macro/child))
         (check-equal? (.ref presentation 'lineage-edge-pairs)
                       '((macro/root . macro/child)))))))
-
-(run-tests! session-object-test)

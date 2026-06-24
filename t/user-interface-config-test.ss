@@ -30,5 +30,3 @@
     user-interface-config-core-case-test
     user-interface-config-sandbox-case-test
     user-interface-profile-set-case-test))
-
-(run-tests! user-interface-config-test)

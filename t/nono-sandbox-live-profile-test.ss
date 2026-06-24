@@ -14,8 +14,7 @@
                  test-case
                  test-error
                  test-suite)
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-cicd-module)
+        (only-in :clan/poo/object .o)
         :poo-flow/src/modules/agent-sandbox/api
         :poo-flow/src/modules/agent-sandbox/nono
         :poo-flow/src/modules/nono-sandbox/c-binding)
@@ -100,7 +99,13 @@
 
 ;; : (-> Unit PooUserModuleSelection)
 (def (custom-cicd-nono-selection)
-  (car poo-flow-custom-my-module-cicd-module))
+  (.o kind: "poo-flow.modules.user-selection.v1"
+      user-group: 'sandbox
+      user-module: 'nono-sandbox
+      selection-flags: '(+native-ffi)
+      source-ref: 'none
+      entrypoint: 'none
+      enabled?: #t))
 
 ;;; This suite validates live-profile request shape while keeping irreversible
 ;;; sandbox apply outside the test path.
@@ -198,5 +203,3 @@
             (check-equal? (test-ref receipt 'native-executed) #f)
             (check-equal? (test-ref receipt 'skip-reason)
                           'native-library-not-found)))))))
-
-(run-tests! nono-sandbox-live-profile-test)

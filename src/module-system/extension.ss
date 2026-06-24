@@ -220,11 +220,42 @@
 
 ;; : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
 (def (poo-flow-module-extension-slots-merge base extra)
-  (cond ((null? extra) base)
-        (else
-         (poo-flow-module-extension-slots-merge
-          (poo-flow-module-extension-alist-set base (caar extra) (cdar extra))
-          (cdr extra)))))
+  (let ((base-seen (make-hash-table))
+        (override-seen (make-hash-table))
+        (overrides (make-hash-table))
+        (new-seen (make-hash-table))
+        (replacement-used (make-hash-table)))
+    (for-each
+     (lambda (entry)
+       (hash-put! base-seen (car entry) #t))
+     base)
+    (let loop ((entries extra) (new-keys '()))
+      (if (null? entries)
+        (append
+         (map (lambda (entry)
+                (let (key (car entry))
+                  (if (and (hash-get override-seen key)
+                           (not (hash-get replacement-used key)))
+                    (begin
+                      (hash-put! replacement-used key #t)
+                      (cons key (hash-get overrides key)))
+                    entry)))
+              base)
+         (map (lambda (key)
+                (cons key (hash-get overrides key)))
+              (reverse new-keys)))
+        (let* ((entry (car entries))
+               (key (car entry))
+               (next-new-keys
+                (if (or (hash-get base-seen key)
+                        (hash-get new-seen key))
+                  new-keys
+                  (begin
+                    (hash-put! new-seen key #t)
+                    (cons key new-keys)))))
+          (hash-put! override-seen key #t)
+          (hash-put! overrides key (cdr entry))
+          (loop (cdr entries) next-new-keys))))))
 
 ;; : (-> PooModuleExtensionNode PooModuleExtensionNode PooModuleExtensionNode)
 (def (poo-flow-module-extension-node-merge base extra)

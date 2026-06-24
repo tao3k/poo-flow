@@ -172,6 +172,24 @@
      (cons (poo-performance-field-name index)
            (+ index 1000)))))
 
+;; : (-> [PooModuleObject] Integer [PooModuleFieldContribution])
+(def (poo-performance-catalog-contributions objects field-count)
+  (let (entries (poo-performance-contribution-entries field-count))
+    (let loop-object ((remaining objects)
+                      (contributions '()))
+      (if (null? remaining)
+        (reverse contributions)
+        (let loop-contribution
+          ((remaining-contributions
+            (poo-flow-module-object-contributions (car remaining) entries))
+           (next-contributions contributions))
+          (if (null? remaining-contributions)
+            (loop-object (cdr remaining) next-contributions)
+            (loop-contribution
+             (cdr remaining-contributions)
+             (cons (car remaining-contributions)
+                   next-contributions))))))))
+
 ;; : (-> Integer Integer PooModuleSlotMap)
 (def (poo-performance-override-slots count key-span)
   (poo-performance-build-list
@@ -373,14 +391,17 @@
         (check-equal? (benchmark-receipt-pass? receipt) #t)))
 
     (test-case "composes object contributions through one merge boundary"
-      (let* ((field-count 200)
-             (object (poo-performance-module-object field-count))
+      (let* ((object-count 32)
+             (field-count 80)
+             (objects
+              (poo-performance-module-object-catalog object-count field-count))
              (objects-node
-              (poo-flow-module-objects-node (list object)))
-             (entries
-              (poo-performance-contribution-entries field-count))
+              (poo-flow-module-objects-node objects))
              (contributions
-              (poo-flow-module-object-contributions object entries))
+              (poo-performance-catalog-contributions objects field-count))
+             (result
+              (poo-flow-module-objects-mk-merge/node objects-node
+                                                   contributions))
             (receipt
               (poo-performance-run-gate
                poo-performance-composition-fixture
@@ -388,11 +409,10 @@
                  (poo-flow-module-objects-mk-merge/node
                   objects-node
                   contributions)))))
-        (check-equal? (length contributions) field-count)
+        (check-equal? (length contributions) (* object-count field-count))
         (check-equal?
-         (poo-flow-module-config-merge-result-stable?
-          (poo-flow-module-objects-mk-merge/node
-           objects-node
-           contributions))
+         (poo-flow-module-config-merge-result-stable? result)
          #t)
+        (check-equal? (poo-flow-module-config-merge-result-iterations result)
+                      1)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

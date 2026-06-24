@@ -124,5 +124,3 @@
     user-interface-custom-loop-engine-invalid-poo-slot-case
     user-interface-custom-loop-engine-invalid-memory-slot-case
     user-interface-custom-loop-engine-invalid-compression-slot-case))
-
-(run-tests! user-interface-custom-loop-engine-slot-contract-test)

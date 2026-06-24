@@ -231,5 +231,3 @@
         (check-equal? (adapter-result-status adapter-result) 'failed)
         (check-equal? (cdr (assoc 'code (adapter-result-error adapter-result)))
                       'invalid-runtime-command)))))
-
-(run-tests! runtime-bridge-test)

@@ -7,11 +7,8 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-loops-module))
+        (only-in :clan/poo/object .o)
+        :poo-flow/src/module-system/loop-engine-policy-extension)
 
 (export loop-engine-policy-extension-test)
 
@@ -31,52 +28,76 @@
    ((equal? (test-ref (car rows) key) value) (car rows))
    (else (test-row-by-field (cdr rows) key value))))
 
-;;; Presentation construction uses the same public config wrapper as downstream
-;;; modules so the test proves user-level extension objects, not private helpers.
-;; : (-> [PooUserModuleSelection] POOObject)
-(def (custom-loop-presentation module-bundle)
-  (pooFlowUserConfigPresentation
-   (pooFlowUserConfig
-    (poo-flow-user-module-bundles->modules (list module-bundle))
-    (poo-flow-settings))))
-
-;;; Intent lookup stays behind the public presentation boundary while giving
-;;; family-specific cases a shared fixture.
-;; : (-> Alist)
-(def (custom-loop-policy-extension-intent)
-  (car (.ref (custom-loop-presentation
-              poo-flow-custom-my-module-loops-module)
-             'loop-engine-intents)))
-
-;;; Receipt lookup is the family-test entrypoint: each concrete extension is
-;;; still asserted through the generic policy-extension receipt collection.
+;;; The receipt test owns the policy-extension lowering boundary directly. Full
+;;; user-interface presentation propagation is covered by the runtime manifest
+;;; and presentation tests.
 ;; : (-> [Alist])
 (def (custom-loop-policy-extension-receipts)
-  (test-ref (custom-loop-policy-extension-intent)
-            'policy-extension-receipts))
+  (poo-flow-user-loop-engine-poo-policy-extensions->receipts
+   (list
+    (.o (:: @ loop-engine-coordination-policy-extension)
+        name: 'repo-loop-coordination
+        scope: 'profile
+        priority: '(ci-sweeper
+                    dependency-sweeper
+                    post-merge-cleanup
+                    issue-triage
+                    daily-triage)
+        state-files: '((daily-triage . "STATE.md")
+                       (ci-sweeper . "ci-sweeper-state.md")
+                       (issue-triage . "issue-triage-state.md")
+                       (dependency-sweeper
+                        . "dependency-sweeper-state.md")
+                       (post-merge-cleanup . "post-merge-state.md"))
+        acting-on-key: 'acting_on
+        conflict-action: 'skip-and-log
+        branch-lock-scope: 'branch-or-pr
+        human-inbox: "STATE.md#Human Inbox")
+    (.o (:: @ loop-engine-observability-policy-extension)
+        name: 'repo-loop-observability
+        scope: 'profile
+        run-log: "loop-run-log.md"
+        run-log-schema: '((run_id . symbol)
+                          (pattern . symbol)
+                          (duration_s . integer)
+                          (items_found . integer)
+                          (actions_taken . integer)
+                          (escalations . integer)
+                          (tokens_estimate . integer)
+                          (outcome . symbol))
+        budget-path: "STATE.md#Loop Budget"
+        metric-keys: '(duration_s items_found actions_taken escalations
+                       tokens_estimate outcome)
+        retention-window: 'rolling-fourteen-days
+        slow-signals: '(budget-over-80 repeated-false-positive)
+        pause-signals: '(main-red reviewer-absence repeated-escalation)
+        kill-signals: '(incident cost-exceeds-value))
+    (.o (:: @ loop-engine-safety-policy-extension)
+        name: 'repo-loop-safety
+        scope: 'profile
+        denylist-paths: '(".env"
+                          ".env.local"
+                          "secrets/"
+                          ".github/workflows/release.yml")
+        allowlist-paths: '("src/"
+                           "t/"
+                           "docs/"
+                           "user-interface/")
+        human-gates: '(red-ci-handoff release-risk secrets-touch
+                       protected-branch)
+        connector-scopes: '(issues-read pull-requests-read actions-read)
+        auto-merge: 'never
+        max-attempts: 2))))
 
 ;;; Malformed extension slots fail before runtime manifests can carry ambiguous
 ;;; policy receipts.
-;; : (-> [PooUserModuleSelection])
-(def (custom-loop-invalid-policy-extension-slot-module)
-  (use-module loop-engine
-    :config
-    (.def (invalid-policy-extension-loop @ loop-engine-use-case
-                                         name workflow)
-      name: 'invalid-policy-extension-loop
-      workflow: 'funflow-cicd)
-
-    (.def (invalid-policy-extension @ loop-engine-policy-extension
-                                    name receipt-kind contract priority)
+;; : (-> PooFlowLoopEnginePolicyExtensionPrototype)
+(def (custom-loop-invalid-policy-extension)
+  (.o (:: @ loop-engine-policy-extension)
       name: 'invalid-policy-extension
       receipt-kind: 'coordination-receipt
       contract: 'poo-flow.loop-engine.coordination-receipt.v1
-      priority: 'bad-priority)
-
-    (.def (invalid-policy-extension-profile @ loop-engine-profile
-                                            use-case policy-extensions)
-      use-case: invalid-policy-extension-loop
-      policy-extensions: (list invalid-policy-extension))))
+      priority: 'bad-priority))
 
 ;;; Coordination coverage proves cross-loop ownership and collision facts are
 ;;; carried as inert policy receipts rather than Scheme locks.
@@ -166,31 +187,26 @@
       (check-equal? (test-ref safety-receipt 'runtime-executed)
                     #f))))
 
-;;; Propagation coverage keeps the family tests separate from the invariant
-;;; that every extension receipt reaches handoff, manifest, and presentation.
+;;; Collection coverage keeps the family tests separate from the invariant
+;;; that every extension receipt is lowered through the generic receipt list.
 ;; : TestCase
-(def loop-engine-policy-extension-propagation-case
-  (test-case "propagates policy-extension receipts through handoff surfaces"
-    (let* ((presentation
-            (custom-loop-presentation
-             poo-flow-custom-my-module-loops-module))
-           (intent (car (.ref presentation 'loop-engine-intents)))
-           (receipts (test-ref intent 'policy-extension-receipts))
-           (manifest-request
-            (test-ref (test-ref intent 'runtime-command-manifest)
-                      'request))
-           (handoff (test-ref intent 'runtime-handoff-facts)))
-      (check-equal? (test-ref handoff 'policy-extension-receipts)
-                    receipts)
-      (check-equal? (test-ref manifest-request 'policy-extension-receipts)
-                    receipts)
-      (check-equal? (car (.ref presentation
-                              'loop-engine-policy-extension-receipts))
-                    receipts))))
+(def loop-engine-policy-extension-collection-case
+  (test-case "lowers policy-extension receipts through the generic collection"
+    (let (receipts (custom-loop-policy-extension-receipts))
+      (check-equal? (map (lambda (receipt) (test-ref receipt 'kind))
+                         receipts)
+                    '(coordination-receipt
+                      observability-receipt
+                      safety-receipt))
+      (check-equal? (map (lambda (receipt)
+                           (test-ref receipt 'runtime-owner))
+                         receipts)
+                    '("marlin-agent-core"
+                      "marlin-agent-core"
+                      "marlin-agent-core")))))
 
-;;; Invalid-slot coverage keeps policy-extension mixins honest: user-facing POO
-;;; declarations must fail at presentation time before any runtime handoff row
-;;; can be assembled from malformed slot values.
+;;; Invalid-slot coverage keeps policy-extension mixins honest: malformed slot
+;;; values must fail before any runtime handoff row can be assembled.
 ;; : TestCase
 (def loop-engine-policy-extension-invalid-slot-case
   (test-case "rejects invalid loop-engine policy-extension slot types"
@@ -198,8 +214,8 @@
      (with-catch
       (lambda (_) #t)
       (lambda ()
-        (custom-loop-presentation
-         (custom-loop-invalid-policy-extension-slot-module))
+        (poo-flow-user-loop-engine-poo-policy-extensions->receipts
+         (list (custom-loop-invalid-policy-extension)))
         #f))
      #t)))
 
@@ -211,7 +227,5 @@
     loop-engine-policy-extension-coordination-case
     loop-engine-policy-extension-observability-case
     loop-engine-policy-extension-safety-case
-    loop-engine-policy-extension-propagation-case
+    loop-engine-policy-extension-collection-case
     loop-engine-policy-extension-invalid-slot-case))
-
-(run-tests! loop-engine-policy-extension-test)

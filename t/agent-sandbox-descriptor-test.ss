@@ -113,5 +113,3 @@
         (check-equal? (task-agent-sandbox-output-policy task) 'artifact)
         (check-equal? (task-agent-sandbox-metadata task) '((backend . cube))))))
   )
-
-(run-tests! agent-sandbox-descriptor-test)

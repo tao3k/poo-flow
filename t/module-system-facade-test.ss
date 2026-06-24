@@ -174,5 +174,3 @@
                         execute-agent-operation
                         stream-events
                         read-runtime-snapshot))))))
-
-(run-tests! module-system-facade-test)

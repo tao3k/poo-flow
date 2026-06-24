@@ -251,5 +251,3 @@
         (check-equal? (pipeline-run-test-ref sandbox-result 'blocked-steps)
                       '(unsafe))
         (check-equal? (pipeline-run-test-ref sandbox-result 'valid?) #f)))))
-
-(run-tests! user-interface-cicd-pipeline-run-test)

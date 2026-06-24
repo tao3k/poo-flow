@@ -113,5 +113,3 @@
                        funflow-readiness-metadata
                        'observability)
                       #f)))))
-
-(run-tests! user-interface-poo-introspection-case-test)

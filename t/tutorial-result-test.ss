@@ -171,5 +171,3 @@
         (check-equal? (adapter-result-value result) "runtime-result")
         (check-equal? (adapter-result-artifact-handle result)
                       '(artifact tutorial))))))
-
-(run-tests! tutorial-result-test)

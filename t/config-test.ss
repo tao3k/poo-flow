@@ -102,5 +102,3 @@
         (check-equal? (assoc 'value (caddr rendered)) #f)
         (check-equal? (cadddr rendered) "config-path")
         (check-equal? (cdr (assoc 'placeholder (car (cddddr rendered)))) 'input)))))
-
-(run-tests! config-test)

@@ -46,5 +46,3 @@
         (check-equal? (task-adapter-operation-in registry put) 'store-put)
         (check-equal? (task-adapter-operation-in registry get) 'store-get)
         (check-equal? (task-adapter-operation external) 'submit)))))
-
-(run-tests! task-family-descriptor-test)

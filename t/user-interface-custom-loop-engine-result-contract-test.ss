@@ -97,5 +97,3 @@
 (def user-interface-custom-loop-engine-result-contract-test
   (test-suite "poo-flow custom loop-engine result contract"
     user-interface-custom-loop-engine-invalid-result-case))
-
-(run-tests! user-interface-custom-loop-engine-result-contract-test)

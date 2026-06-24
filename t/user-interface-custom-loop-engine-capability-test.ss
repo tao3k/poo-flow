@@ -94,5 +94,3 @@
 (def user-interface-custom-loop-engine-capability-test
   (test-suite "poo-flow custom loop-engine capability policy"
     user-interface-custom-loop-engine-invalid-capability-case))
-
-(run-tests! user-interface-custom-loop-engine-capability-test)

@@ -71,51 +71,60 @@
     (poo-flow-session-require "session memory metadata must be a list"
                               (list? metadata-value)
                               metadata-value)
-    (.o kind: 'poo-flow.session.memory-intent
-        schema: 'poo-flow.modules.session.memory-intent.v1
-        intent-name: intent-name
-        store-ref: store-ref
-        scope: scope
-        recall: recall
-        commit-policy: commit-policy
-        runtime-owner: "marlin-agent-core"
-        handoff-required: #t
-        descriptor-realized?: #f
-        runtime-executed: #f
-        metadata: metadata-value)))
+    (list (cons 'kind 'poo-flow.session.memory-intent)
+          (cons 'schema 'poo-flow.modules.session.memory-intent.v1)
+          (cons 'intent-name intent-name)
+          (cons 'store-ref store-ref)
+          (cons 'scope scope)
+          (cons 'recall recall)
+          (cons 'commit-policy commit-policy)
+          (cons 'runtime-owner "marlin-agent-core")
+          (cons 'handoff-required #t)
+          (cons 'descriptor-realized? #f)
+          (cons 'runtime-executed #f)
+          (cons 'metadata metadata-value))))
+
+;; : (-> PooSessionMemoryIntent Symbol Value Value)
+(def (poo-flow-session-memory-intent-ref intent key default)
+  (if (object? intent)
+    (.ref intent key)
+    (poo-flow-session-alist-ref intent key default)))
 
 ;; : (-> Value Boolean)
 (def (poo-flow-session-memory-intent? value)
-  (and (object? value)
-       (eq? (.ref value 'kind) 'poo-flow.session.memory-intent)))
+  (or (and (object? value)
+           (eq? (.ref value 'kind) 'poo-flow.session.memory-intent))
+      (and (list? value)
+           (eq? (poo-flow-session-alist-ref value 'kind #f)
+                'poo-flow.session.memory-intent))))
 
 ;; : (-> PooSessionMemoryIntent Symbol)
 (def (poo-flow-session-memory-intent-name intent)
-  (.ref intent 'intent-name))
+  (poo-flow-session-memory-intent-ref intent 'intent-name #f))
 
 ;; : (-> PooSessionMemoryIntent Symbol)
 (def (poo-flow-session-memory-intent-store-ref intent)
-  (.ref intent 'store-ref))
+  (poo-flow-session-memory-intent-ref intent 'store-ref #f))
 
 ;; : (-> PooSessionMemoryIntent Symbol)
 (def (poo-flow-session-memory-intent-scope intent)
-  (.ref intent 'scope))
+  (poo-flow-session-memory-intent-ref intent 'scope #f))
 
 ;; : (-> PooSessionMemoryIntent [Symbol/String])
 (def (poo-flow-session-memory-intent-recall intent)
-  (.ref intent 'recall))
+  (poo-flow-session-memory-intent-ref intent 'recall '()))
 
 ;; : (-> PooSessionMemoryIntent Symbol)
 (def (poo-flow-session-memory-intent-commit-policy intent)
-  (.ref intent 'commit-policy))
+  (poo-flow-session-memory-intent-ref intent 'commit-policy #f))
 
 ;; : (-> PooSessionMemoryIntent String)
 (def (poo-flow-session-memory-intent-runtime-owner intent)
-  (.ref intent 'runtime-owner))
+  (poo-flow-session-memory-intent-ref intent 'runtime-owner "marlin-agent-core"))
 
 ;; : (-> PooSessionMemoryIntent Alist)
 (def (poo-flow-session-memory-intent-metadata intent)
-  (.ref intent 'metadata))
+  (poo-flow-session-memory-intent-ref intent 'metadata '()))
 
 ;; : (-> PooSessionMemoryIntent Alist)
 (def (poo-flow-session-memory-intent-handoff intent)
@@ -278,27 +287,60 @@
 ;;; Runtime memory effects stay behind the handoff. The receipt records what
 ;;; would be recalled or committed by the runtime owner.
 ;; : (-> PooSessionMemoryIntent PooSessionTransform PooSession PooSession PooSessionMemoryReceipt)
+(def (poo-flow-session-memory-receipt-row memory-intent
+                                          transform
+                                          source-session
+                                          derived-session)
+  (list
+   (cons 'kind 'poo-flow.session.memory.receipt)
+   (cons 'schema 'poo-flow.modules.session.memory.receipt.v1)
+   (cons 'intent-name (poo-flow-session-memory-intent-name memory-intent))
+   (cons 'store-ref (poo-flow-session-memory-intent-store-ref memory-intent))
+   (cons 'scope (poo-flow-session-memory-intent-scope memory-intent))
+   (cons 'recall (poo-flow-session-memory-intent-recall memory-intent))
+   (cons 'commit-policy (poo-flow-session-memory-intent-commit-policy
+                         memory-intent))
+   (cons 'transform-name (poo-flow-session-transform-name transform))
+   (cons 'source-session-id (poo-flow-session-id source-session))
+   (cons 'derived-session-id (poo-flow-session-id derived-session))
+   (cons 'runtime-owner (poo-flow-session-memory-intent-runtime-owner
+                         memory-intent))
+   (cons 'handoff-required #t)
+   (cons 'descriptor-realized? #f)
+   (cons 'runtime-executed #f)
+   (cons 'metadata (poo-flow-session-memory-intent-metadata memory-intent))))
+
+;; : (-> Alist PooSessionMemoryReceipt)
+(def (poo-flow-session-memory-receipt-row->object row)
+  (.o kind: (poo-flow-session-alist-ref row 'kind #f)
+      schema: (poo-flow-session-alist-ref row 'schema #f)
+      intent-name: (poo-flow-session-alist-ref row 'intent-name #f)
+      store-ref: (poo-flow-session-alist-ref row 'store-ref #f)
+      scope: (poo-flow-session-alist-ref row 'scope #f)
+      recall: (poo-flow-session-alist-ref row 'recall '())
+      commit-policy: (poo-flow-session-alist-ref row 'commit-policy #f)
+      transform-name: (poo-flow-session-alist-ref row 'transform-name #f)
+      source-session-id: (poo-flow-session-alist-ref row 'source-session-id #f)
+      derived-session-id: (poo-flow-session-alist-ref row 'derived-session-id #f)
+      runtime-owner: (poo-flow-session-alist-ref row 'runtime-owner
+                                                 "marlin-agent-core")
+      handoff-required: (poo-flow-session-alist-ref row 'handoff-required #t)
+      descriptor-realized?: (poo-flow-session-alist-ref
+                             row 'descriptor-realized? #f)
+      runtime-executed: (poo-flow-session-alist-ref row 'runtime-executed #f)
+      metadata: (poo-flow-session-alist-ref row 'metadata '())))
+
+;; : (-> PooSessionMemoryIntent PooSessionTransform PooSession PooSession PooSessionMemoryReceipt)
 (def (poo-flow-session-memory-receipt memory-intent
                                       transform
                                       source-session
                                       derived-session)
-  (.o kind: 'poo-flow.session.memory.receipt
-      schema: 'poo-flow.modules.session.memory.receipt.v1
-      intent-name: (poo-flow-session-memory-intent-name memory-intent)
-      store-ref: (poo-flow-session-memory-intent-store-ref memory-intent)
-      scope: (poo-flow-session-memory-intent-scope memory-intent)
-      recall: (poo-flow-session-memory-intent-recall memory-intent)
-      commit-policy: (poo-flow-session-memory-intent-commit-policy
-                      memory-intent)
-      transform-name: (poo-flow-session-transform-name transform)
-      source-session-id: (poo-flow-session-id source-session)
-      derived-session-id: (poo-flow-session-id derived-session)
-      runtime-owner: (poo-flow-session-memory-intent-runtime-owner
-                      memory-intent)
-      handoff-required: #t
-      descriptor-realized?: #f
-      runtime-executed: #f
-      metadata: (poo-flow-session-memory-intent-metadata memory-intent)))
+  (poo-flow-session-memory-receipt-row->object
+   (poo-flow-session-memory-receipt-row
+    memory-intent
+    transform
+    source-session
+    derived-session)))
 
 ;;; Apply a transform in the control plane. The output is a receipt object with
 ;;; an inspectable derived session; runtime providers still receive only the
@@ -357,9 +399,11 @@
            transform
            source-session
            derived-session-value))
+         (derived-placement-value
+          (poo-flow-session-value-placement derived-session-value))
          (memory-receipts-value
           (map (lambda (memory-intent)
-                 (poo-flow-session-memory-receipt
+                 (poo-flow-session-memory-receipt-row
                   memory-intent
                   transform
                   source-session
@@ -372,7 +416,27 @@
         source-session-id: source-session-id-value
         derived-session-id: derived-session-id-value
         parent-session-ids: (list source-session-id-value)
-        derived-session: derived-session-value
+        derived-session-chunks: chunks
+        derived-session-metadata:
+        (poo-flow-session-metadata derived-session-value)
+        derived-session-branch-kind: 'transform
+        placement-profile-ref:
+        (poo-flow-session-placement-profile-ref
+         derived-placement-value)
+        placement-resolved?:
+        (poo-flow-session-placement-resolved?
+         derived-placement-value)
+        placement-diagnostics:
+        (poo-flow-session-placement-diagnostics
+         derived-placement-value)
+        placement-runtime-summary:
+        (poo-flow-session-placement-runtime-summary
+         derived-placement-value)
+        placement-handoff-summary:
+        (poo-flow-session-placement-handoff-summary
+         derived-placement-value)
+        placement-metadata:
+        (.ref derived-placement-value 'placement-metadata)
         source-chunk-count: (length (poo-flow-session-chunks source-session))
         derived-chunk-count: (length chunks)
         handoff-intent: handoff-intent-value
@@ -391,7 +455,25 @@
 
 ;; : (-> PooSessionTransformReceipt PooSession)
 (def (poo-flow-session-transform-receipt-derived-session receipt)
-  (.ref receipt 'derived-session))
+  (let ((derived-session-id (.ref receipt 'derived-session-id))
+        (parent-session-ids (.ref receipt 'parent-session-ids)))
+    (poo-flow-session-value
+     derived-session-id
+     (.ref receipt 'derived-session-chunks)
+     (poo-flow-session-lineage
+      derived-session-id
+      parent-session-ids
+      (.ref receipt 'derived-session-branch-kind))
+     (.o placement-kind: 'poo-flow.session.placement
+         placement-schema: 'poo-flow.modules.session.placement.v1
+         placement-profile-ref: (.ref receipt 'placement-profile-ref)
+         placement-resolved?: (.ref receipt 'placement-resolved?)
+         placement-diagnostics: (.ref receipt 'placement-diagnostics)
+         placement-runtime-summary: (.ref receipt 'placement-runtime-summary)
+         placement-handoff-summary: (.ref receipt 'placement-handoff-summary)
+         placement-metadata: (.ref receipt 'placement-metadata)
+         placement-runtime-executed: #f)
+     (.ref receipt 'derived-session-metadata))))
 
 ;; : (-> PooSessionTransformReceipt Alist)
 (def (poo-flow-session-transform-receipt-handoff-intent receipt)
@@ -399,7 +481,8 @@
 
 ;; : (-> PooSessionTransformReceipt [PooSessionMemoryReceipt])
 (def (poo-flow-session-transform-receipt-memory-receipts receipt)
-  (.ref receipt 'memory-receipts))
+  (map poo-flow-session-memory-receipt-row->object
+       (.ref receipt 'memory-receipts)))
 
 ;; : (-> Value Boolean)
 (def (poo-flow-session-memory-receipt? value)

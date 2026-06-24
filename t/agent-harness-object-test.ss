@@ -169,5 +169,3 @@
         (check-equal? (test-ref metadata 'event-count) 1)
         (check-equal? (test-ref snapshot 'subject-kind) 'workflow-run)
         (check-equal? (test-ref snapshot 'status) 'completed)))))
-
-(run-tests! agent-harness-object-test)
