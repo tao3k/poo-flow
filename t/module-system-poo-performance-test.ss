@@ -77,6 +77,30 @@
 (def poo-performance-composition-fixture
   (poo-performance-load-fixture poo-performance-composition-fixture-path))
 
+;; : String
+(def poo-performance-extension-children-merge-fixture-path
+  "t/scenarios/performance/poo-extension-children-merge/benchmark.ss")
+;; : Alist
+(def poo-performance-extension-children-merge-fixture
+  (poo-performance-load-fixture
+   poo-performance-extension-children-merge-fixture-path))
+
+;; : String
+(def poo-performance-cross-contribution-targeting-fixture-path
+  "t/scenarios/performance/poo-cross-contribution-targeting/benchmark.ss")
+;; : Alist
+(def poo-performance-cross-contribution-targeting-fixture
+  (poo-performance-load-fixture
+   poo-performance-cross-contribution-targeting-fixture-path))
+
+;; : String
+(def poo-performance-local-contribution-coalescing-fixture-path
+  "t/scenarios/performance/poo-local-contribution-coalescing/benchmark.ss")
+;; : Alist
+(def poo-performance-local-contribution-coalescing-fixture
+  (poo-performance-load-fixture
+   poo-performance-local-contribution-coalescing-fixture-path))
+
 ;; : [String]
 (def poo-performance-fixture-paths
   (list poo-performance-construction-fixture-path
@@ -86,6 +110,9 @@
         poo-performance-object-iteration-fixture-path
         poo-performance-clone-override-fixture-path
         poo-performance-field-lookup-fixture-path
+        poo-performance-extension-children-merge-fixture-path
+        poo-performance-cross-contribution-targeting-fixture-path
+        poo-performance-local-contribution-coalescing-fixture-path
         poo-performance-composition-fixture-path))
 
 ;; : [Alist]
@@ -97,6 +124,9 @@
         poo-performance-object-iteration-fixture
         poo-performance-clone-override-fixture
         poo-performance-field-lookup-fixture
+        poo-performance-extension-children-merge-fixture
+        poo-performance-cross-contribution-targeting-fixture
+        poo-performance-local-contribution-coalescing-fixture
         poo-performance-composition-fixture))
 
 ;; : (-> Alist Boolean)
@@ -110,6 +140,11 @@
   (if (benchmark-fixture-contract-pass? fixture)
     (benchmark-run fixture thunk)
     (error "poo performance fixture contract failed" fixture)))
+
+;; : (-> Alist Symbol Value Value)
+(def (poo-performance-slot-ref/default slots key default-value)
+  (let (entry (assoc key slots))
+    (if entry (cdr entry) default-value)))
 
 ;; : (-> Integer (-> Integer Value) [Value])
 (def (poo-performance-build-list count make-value)
@@ -236,11 +271,91 @@
                 (loop-identity (cdr remaining-identities)
                                identity-count))))))))))
 
+;; : (-> Integer Symbol)
+(def (poo-performance-extension-child-name index)
+  (string->symbol
+   (string-append "extension-child-" (number->string index))))
+
+;; : (-> Integer Integer PooModuleExtensionNode)
+(def (poo-performance-extension-child index slot-offset)
+  (poo-flow-module-extension-node
+   (poo-performance-extension-child-name index)
+   (list (cons 'value (+ slot-offset index)))
+   '()))
+
+;; : (-> Integer Integer [PooModuleExtensionNode])
+(def (poo-performance-extension-children count slot-offset)
+  (poo-performance-build-list
+   count
+   (lambda (index)
+     (poo-performance-extension-child index slot-offset))))
+
+;; : (-> Integer PooModuleExtensionNode)
+(def (poo-performance-extension-merge-root count)
+  (poo-flow-module-extension-node
+   'extension-root
+   '((kind . extension-merge-root))
+   (poo-performance-extension-children count 1000)))
+
+;; : (-> Integer Integer [PooModuleExtensionOperation])
+(def (poo-performance-extension-node-extend-operations count key-span)
+  (poo-performance-build-list
+   count
+   (lambda (index)
+     (poo-flow-module-extension-node-extend
+      (poo-flow-module-extension-node
+       (poo-performance-extension-child-name (modulo index key-span))
+       (list (cons 'value (+ 2000 index)))
+       '())))))
+
+;; : (-> Integer Symbol)
+(def (poo-performance-cross-contribution-child-name index)
+  (string->symbol
+   (string-append "cross-contribution-child-" (number->string index))))
+
+;; : (-> Integer PooModuleExtensionNode)
+(def (poo-performance-cross-contribution-child index)
+  (poo-flow-module-extension-node
+   (poo-performance-cross-contribution-child-name index)
+   (list (cons 'created-order index))
+   '()))
+
+;; : (-> Integer [PooModuleExtensionOperation])
+(def (poo-performance-cross-contribution-create-operations count)
+  (poo-performance-build-list
+   count
+   (lambda (index)
+     (poo-flow-module-extension-node-extend
+      (poo-performance-cross-contribution-child index)))))
+
+;; : (-> Integer Symbol [PooModuleExtensionContribution])
+(def (poo-performance-cross-contribution-targeting-contributions child-count target)
+  (list
+   (poo-flow-module-extension-contribution
+    'extension-root
+    (poo-performance-cross-contribution-create-operations child-count))
+   (poo-flow-module-extension-contribution
+    target
+    (list (poo-flow-module-extension-slot-override 'targeted? #t)
+          (poo-flow-module-extension-slot-override 'target-phase 'same-pass)))))
+
+;; : (-> Symbol Integer [PooModuleExtensionContribution])
+(def (poo-performance-local-slot-contributions target count)
+  (poo-performance-build-list
+   count
+   (lambda (index)
+     (poo-flow-module-extension-contribution
+      target
+      (list
+       (poo-flow-module-extension-slot-override
+        (poo-performance-field-name index)
+        index))))))
+
 ;; : TestSuite
 (def module-system-poo-performance-test
   (test-suite "poo-flow module system POO performance"
     (test-case "keeps every POO performance fixture inside upstream benchmark contract"
-      (check-equal? (length poo-performance-fixtures) 8)
+      (check-equal? (length poo-performance-fixtures) 11)
       (check-equal?
        (map (lambda (fixture)
               (benchmark-fixture-ref fixture 'sourcePath))
@@ -248,16 +363,16 @@
        poo-performance-fixture-paths)
       (check-equal?
        (map benchmark-fixture-contract-pass? poo-performance-fixtures)
-       '(#t #t #t #t #t #t #t #t))
+       '(#t #t #t #t #t #t #t #t #t #t #t))
       (check-equal?
        (map (lambda (fixture)
               (benchmark-fixture-ref fixture 'maxRssMb))
             poo-performance-fixtures)
-       '(512 512 512 512 512 512 512 512))
+       '(512 512 512 512 512 512 512 512 512 512 512))
       (check-equal?
        (map benchmark-fixture-memory-contract-pass?
             poo-performance-fixtures)
-       '(#t #t #t #t #t #t #t #t)))
+       '(#t #t #t #t #t #t #t #t #t #t #t)))
 
     (test-case "constructs large module objects at one boundary"
       (let* ((field-count 600)
@@ -388,6 +503,108 @@
           (poo-flow-module-object-field object 'field-599))
          'field-599)
         (check-equal? (length entries) field-count)
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))
+
+    (test-case "merges extension children through indexed override boundary"
+      (let* ((base-count 500)
+             (extra-count 1600)
+             (key-span 700)
+             (base (poo-performance-extension-merge-root base-count))
+             (operations
+              (poo-performance-extension-node-extend-operations extra-count
+                                                                key-span))
+             (contribution
+              (poo-flow-module-extension-contribution 'extension-root
+                                                      operations))
+             (merged
+              (poo-flow-module-extension-apply-contribution base
+                                                            contribution))
+             (receipt
+              (poo-performance-run-gate
+               poo-performance-extension-children-merge-fixture
+               (lambda ()
+                 (poo-flow-module-extension-apply-contribution
+                  base
+                  contribution)))))
+        (check-equal?
+         (length (poo-flow-module-extension-node-children merged))
+         key-span)
+        (check-equal?
+         (cdar
+          (poo-flow-module-extension-node-slots
+           (car (poo-flow-module-extension-node-children merged))))
+         3400)
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))
+
+    (test-case "preserves same-pass targeting after cross contribution child creation"
+      (let* ((child-count 900)
+             (target
+              (poo-performance-cross-contribution-child-name 640))
+             (base (poo-performance-extension-merge-root 0))
+             (contributions
+              (poo-performance-cross-contribution-targeting-contributions
+               child-count
+               target))
+             (merged
+              (poo-flow-module-extension-apply-contributions base
+                                                             contributions))
+             (target-child
+              (poo-flow-module-extension-child-ref
+               (poo-flow-module-extension-node-children merged)
+               target))
+             (receipt
+              (poo-performance-run-gate
+               poo-performance-cross-contribution-targeting-fixture
+               (lambda ()
+                 (poo-flow-module-extension-apply-contributions
+                  base
+                  contributions)))))
+        (check-equal?
+         (length (poo-flow-module-extension-node-children merged))
+         child-count)
+        (check-equal?
+         (poo-performance-slot-ref/default
+          (poo-flow-module-extension-node-slots target-child)
+          'targeted?
+          #f)
+         #t)
+        (check-equal?
+         (poo-performance-slot-ref/default
+          (poo-flow-module-extension-node-slots target-child)
+          'target-phase
+          #f)
+         'same-pass)
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))
+
+    (test-case "coalesces adjacent local contributions before graph traversal"
+      (let* ((child-count 900)
+             (contribution-count 900)
+             (base (poo-performance-extension-merge-root child-count))
+             (contributions
+              (poo-performance-local-slot-contributions 'extension-root
+                                                        contribution-count))
+             (merged
+              (poo-flow-module-extension-apply-contributions base
+                                                             contributions))
+             (receipt
+              (poo-performance-run-gate
+               poo-performance-local-contribution-coalescing-fixture
+               (lambda ()
+                 (poo-flow-module-extension-apply-contributions
+                  base
+                  contributions)))))
+        (check-equal?
+         (length (poo-flow-module-extension-node-children merged))
+         child-count)
+        (check-equal?
+         (length (poo-flow-module-extension-node-slots merged))
+         (+ contribution-count 1))
+        (check-equal?
+         (poo-performance-slot-ref/default
+          (poo-flow-module-extension-node-slots merged)
+          'field-640
+          #f)
+         640)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))
 
     (test-case "composes object contributions through one merge boundary"

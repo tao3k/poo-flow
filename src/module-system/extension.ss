@@ -282,11 +282,57 @@
 
 ;; : (-> [PooModuleExtensionNode] [PooModuleExtensionNode] [PooModuleExtensionNode])
 (def (poo-flow-module-extension-children-merge children extra-children)
-  (cond ((null? extra-children) children)
-        (else
-         (poo-flow-module-extension-children-merge
-          (poo-flow-module-extension-children-merge-one children (car extra-children))
-          (cdr extra-children)))))
+  (if (null? extra-children)
+    children
+    (let ((base-seen (make-hash-table))
+          (base-first (make-hash-table))
+          (override-seen (make-hash-table))
+          (overrides (make-hash-table))
+          (new-seen (make-hash-table))
+          (replacement-used (make-hash-table)))
+      (for-each
+       (lambda (child)
+         (let (key (poo-flow-module-extension-node-identity child))
+           (if (not (hash-get base-seen key))
+             (begin
+               (hash-put! base-seen key #t)
+               (hash-put! base-first key child))
+             #f)))
+       children)
+      (let loop-extra ((remaining extra-children)
+                       (new-keys '()))
+        (if (null? remaining)
+          (append
+           (map (lambda (child)
+                  (let (key (poo-flow-module-extension-node-identity child))
+                    (if (and (hash-get override-seen key)
+                             (not (hash-get replacement-used key)))
+                      (begin
+                        (hash-put! replacement-used key #t)
+                        (hash-get overrides key))
+                      child)))
+                children)
+           (map (lambda (key)
+                  (hash-get overrides key))
+                (reverse new-keys)))
+          (let* ((child (car remaining))
+                 (key (poo-flow-module-extension-node-identity child))
+                 (current (hash-get overrides key))
+                 (base-child (hash-get base-first key))
+                 (seed (if current current base-child))
+                 (next-new-keys
+                  (if (or (hash-get base-seen key)
+                          (hash-get new-seen key))
+                    new-keys
+                    (begin
+                      (hash-put! new-seen key #t)
+                      (cons key new-keys)))))
+            (hash-put! override-seen key #t)
+            (hash-put! overrides key
+                       (if seed
+                         (poo-flow-module-extension-node-merge seed child)
+                         child))
+            (loop-extra (cdr remaining) next-new-keys)))))))
 
 ;; : (-> [PooModuleExtensionNode] Symbol [PooModuleExtensionNode])
 (def (poo-flow-module-extension-children-remove children identity)
@@ -364,13 +410,148 @@
         (poo-flow-module-extension-operation-target operation))))
      (else node))))
 
+;; : (-> PooModuleExtensionNode [PooModuleExtensionNode] PooModuleExtensionNode)
+(def (poo-flow-module-extension-flush-node-extends node reversed-children)
+  (if (null? reversed-children)
+    node
+    (poo-flow-module-extension-replace-node
+     node
+     (poo-flow-module-extension-node-slots node)
+     (poo-flow-module-extension-children-merge
+      (poo-flow-module-extension-node-children node)
+      (reverse reversed-children)))))
+
+;; : (-> PooModuleExtensionNode PooModuleSlotMap PooModuleExtensionNode)
+(def (poo-flow-module-extension-flush-slot-overrides node reversed-overrides)
+  (if (null? reversed-overrides)
+    node
+    (poo-flow-module-extension-replace-node
+     node
+     (poo-flow-module-extension-slots-merge
+      (poo-flow-module-extension-node-slots node)
+      (reverse reversed-overrides))
+     (poo-flow-module-extension-node-children node))))
+
+;; : (-> PooModuleExtensionNode [PooModuleExtensionNode] PooModuleSlotMap PooModuleExtensionNode)
+(def (poo-flow-module-extension-flush-pending node reversed-children reversed-overrides)
+  (poo-flow-module-extension-flush-node-extends
+   (poo-flow-module-extension-flush-slot-overrides node reversed-overrides)
+   reversed-children))
+
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionOperation] PooModuleExtensionNode)
 (def (poo-flow-module-extension-apply-operations node operations)
-  (cond ((null? operations) node)
-        (else
-         (poo-flow-module-extension-apply-operations
-          (poo-flow-module-extension-apply-operation node (car operations))
-          (cdr operations)))))
+  (let loop ((current node)
+             (remaining operations)
+             (pending-node-extends '())
+             (pending-slot-overrides '()))
+    (cond
+     ((null? remaining)
+      (poo-flow-module-extension-flush-pending current
+                                               pending-node-extends
+                                               pending-slot-overrides))
+     ((eq? (poo-flow-module-extension-operation-action (car remaining))
+           'node-extend)
+      (loop current
+            (cdr remaining)
+            (cons (poo-flow-module-extension-operation-node (car remaining))
+                  pending-node-extends)
+            pending-slot-overrides))
+     ((eq? (poo-flow-module-extension-operation-action (car remaining))
+           'slot-override)
+      (loop current
+            (cdr remaining)
+            pending-node-extends
+            (cons (cons (poo-flow-module-extension-operation-slot (car remaining))
+                        (poo-flow-module-extension-operation-value (car remaining)))
+                  pending-slot-overrides)))
+     (else
+      (loop
+       (poo-flow-module-extension-apply-operation
+        (poo-flow-module-extension-flush-pending current
+                                                 pending-node-extends
+                                                 pending-slot-overrides)
+        (car remaining))
+       (cdr remaining)
+       '()
+       '())))))
+
+;; : (-> PooModuleExtensionOperation Boolean)
+(def (poo-flow-module-extension-local-operation? operation)
+  (let (action (poo-flow-module-extension-operation-action operation))
+    (or (eq? action 'slot-override)
+        (eq? action 'slot-append)
+        (eq? action 'slot-prepend)
+        (eq? action 'slot-remove))))
+
+;; : (-> [PooModuleExtensionOperation] Boolean)
+(def (poo-flow-module-extension-local-operations? operations)
+  (cond ((null? operations) #t)
+        ((poo-flow-module-extension-local-operation? (car operations))
+         (poo-flow-module-extension-local-operations? (cdr operations)))
+        (else #f)))
+
+;; : (-> [Value] [Value] [Value])
+(def (poo-flow-module-extension-reverse-onto values tail)
+  (let loop ((remaining values)
+             (result tail))
+    (if (null? remaining)
+      result
+      (loop (cdr remaining)
+            (cons (car remaining) result)))))
+
+;; : (-> Boolean MaybeSymbol [PooModuleExtensionOperation] [PooModuleExtensionContribution] [PooModuleExtensionContribution])
+(def (poo-flow-module-extension-flush-coalesced pending? target reversed-operations output)
+  (if pending?
+    (cons (poo-flow-module-extension-contribution
+           target
+           (reverse reversed-operations))
+          output)
+    output))
+
+;; : (-> [PooModuleExtensionContribution] [PooModuleExtensionContribution])
+(def (poo-flow-module-extension-coalesce-local-contributions contributions)
+  (let loop ((remaining contributions)
+             (pending? #f)
+             (pending-target #f)
+             (pending-operations '())
+             (output '()))
+    (if (null? remaining)
+      (reverse
+       (poo-flow-module-extension-flush-coalesced pending?
+                                                  pending-target
+                                                  pending-operations
+                                                  output))
+      (let* ((contribution (car remaining))
+             (target (poo-flow-module-extension-contribution-target contribution))
+             (operations
+              (poo-flow-module-extension-contribution-operations contribution)))
+        (if (poo-flow-module-extension-local-operations? operations)
+          (if (and pending?
+                   (equal? pending-target target))
+            (loop (cdr remaining)
+                  #t
+                  pending-target
+                  (poo-flow-module-extension-reverse-onto operations
+                                                          pending-operations)
+                  output)
+            (loop (cdr remaining)
+                  #t
+                  target
+                  (reverse operations)
+                  (poo-flow-module-extension-flush-coalesced pending?
+                                                             pending-target
+                                                             pending-operations
+                                                             output)))
+          (loop (cdr remaining)
+                #f
+                #f
+                '()
+                (cons contribution
+                      (poo-flow-module-extension-flush-coalesced
+                       pending?
+                       pending-target
+                       pending-operations
+                       output))))))))
 
 ;;; Contribution application recurses through children after the current target
 ;;; has been patched, which keeps parent and child updates in one graph walk.
@@ -391,12 +572,18 @@
           (poo-flow-module-extension-node-children current)))))
 
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionNode)
-(def (poo-flow-module-extension-apply-contributions node contributions)
+(def (poo-flow-module-extension-apply-contributions/coalesced node contributions)
   (cond ((null? contributions) node)
         (else
-         (poo-flow-module-extension-apply-contributions
+         (poo-flow-module-extension-apply-contributions/coalesced
           (poo-flow-module-extension-apply-contribution node (car contributions))
           (cdr contributions)))))
+
+;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionNode)
+(def (poo-flow-module-extension-apply-contributions node contributions)
+  (poo-flow-module-extension-apply-contributions/coalesced
+   node
+   (poo-flow-module-extension-coalesce-local-contributions contributions)))
 
 ;;; Snapshot comparison keeps fixed-point convergence structural and independent
 ;;; of POO object identity or lazy slot internals.
