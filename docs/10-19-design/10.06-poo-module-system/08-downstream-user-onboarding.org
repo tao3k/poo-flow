@@ -41,14 +41,15 @@ The normal verification ladder is:
 #+begin_src sh
 gxpkg build
 gxpkg env gxtest t/unit-tests.ss
-gxpkg env gxtest t/project-policy-test.ss
 #+end_src
 
-=t/project-policy-test.ss= runs the project harness policy surface. The harness
-is expected to cover the current project, not only a single model file. A clean
-result looks like:
+=t/unit-tests.ss= includes the project harness policy surface through the
+dependency-provided =make-project-policy-test= API. The harness loads the
+=build.ss= source coverage declaration, so the policy gate covers the declared
+project source roots instead of a single test file. A clean direct report looks
+like:
 #+begin_src text
-[gerbil-check] status=pass scope=full ... findings=0
+[gerbil-gxtest] status=pass files=... definitions=... findings=0
 #+end_src
 
 ** 10.06.08.50 root user-interface/*

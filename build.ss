@@ -47,8 +47,7 @@
   '("t/unit-tests.ss"
     "t/contract-tests.ss"
     "t/integration-tests.ss"
-    "t/performance-tests.ss"
-    "t/project-policy-test.ss"))
+    "t/performance-tests.ss"))
 
 ;; : (Listof String)
 (def +poo-flow-special-source-files+

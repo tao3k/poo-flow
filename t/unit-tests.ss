@@ -5,7 +5,9 @@
 ;;; Integration workflows live in t/integration-tests.ss.
 ;;; Harness-backed structural contracts live in t/contract-tests.ss.
 
-(import :poo-flow/t/agent-sandbox-descriptor-test
+(import (only-in :gslph/src/policy/gxtest
+                 make-project-policy-test)
+        :poo-flow/t/agent-sandbox-descriptor-test
         :poo-flow/t/agent-sandbox-bridge-test
         :poo-flow/t/agent-sandbox-cube-interface-test
         :poo-flow/t/agent-sandbox-marlin-interface-test
@@ -32,8 +34,12 @@
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
         :poo-flow/t/nono-sandbox-native-ffi-test
-        :poo-flow/t/project-policy-test
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-object-test
         :poo-flow/t/session-transform-test
         :poo-flow/t/task-family-descriptor-test)
+
+(export package-policy-test)
+
+(def package-policy-test
+  (make-project-policy-test "."))
