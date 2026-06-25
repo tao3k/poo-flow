@@ -125,7 +125,7 @@
    (else
     (error "live case :inherits must be a symbol or list of symbols" value))))
 
-;; : (-> PooUserModuleSelection Symbol Symbol Pair)
+;; : (-> PooUserModuleSelection Symbol Symbol LiveCaseConfigSection)
 (def (poo-flow-module-system-live-case-config-section selection flag section)
   (cons section
         (poo-flow-module-system-live-case-flag-value selection flag)))
@@ -197,11 +197,11 @@
       (poo-flow-module-system-live-case-alist-entry-value entry)
       default)))
 
-;; : (-> Alist Symbol Pair)
+;; : (-> Alist Symbol MaybeLiveCaseConfigEntry)
 (def (poo-flow-module-system-live-case-alist-entry entries key)
   (assoc key entries))
 
-;; : (-> Pair Value)
+;; : (-> LiveCaseConfigEntry Value)
 (def (poo-flow-module-system-live-case-alist-entry-value entry)
   (cdr entry))
 

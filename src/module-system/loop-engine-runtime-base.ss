@@ -70,7 +70,7 @@
 
 ;;; Role/name normalization is shared by profile, harness, and session
 ;;; projection so every downstream row receives the same naming decision.
-;; : (-> Value MaybePair)
+;; : (-> Value MaybeAgentJudgeRef)
 (def (poo-flow-user-loop-engine-agent-judge-pair row)
   (and (pair? row)
        (symbol? (poo-flow-user-loop-engine-agent-judge-role row))
@@ -79,11 +79,11 @@
               (cons (poo-flow-user-loop-engine-agent-judge-role row)
                     (poo-flow-user-loop-engine-agent-judge-value tail))))))
 
-;; : (-> Pair Symbol)
+;; : (-> AgentJudgeRow Symbol)
 (def (poo-flow-user-loop-engine-agent-judge-role row)
   (car row))
 
-;; : (-> Pair Value)
+;; : (-> AgentJudgeRow AgentJudgeTail)
 (def (poo-flow-user-loop-engine-agent-judge-tail row)
   (cdr row))
 
@@ -93,7 +93,7 @@
 
 ;;; Invalid judge rows are skipped rather than repaired; malformed user config
 ;;; should stay visible in the original intent while projections remain total.
-;; : (-> [Value] [Pair])
+;; : (-> [Value] [AgentJudgeRef])
 (def (poo-flow-user-loop-engine-agent-judge-pairs agent-judges)
   (cond
    ((null? agent-judges) '())
@@ -117,7 +117,7 @@
 
 ;;; Human audit is modeled as a named profile beside machine judges so agents
 ;;; can inspect the same profile/harness/session graph for both reviewer types.
-;; : (-> Alist [Pair])
+;; : (-> Alist [AgentProfileRef])
 (def (poo-flow-user-loop-engine-intent-agent-profile-refs intent)
   (append
    (poo-flow-user-loop-engine-agent-judge-pairs

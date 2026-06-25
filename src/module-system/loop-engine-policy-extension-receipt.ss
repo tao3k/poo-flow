@@ -7,11 +7,11 @@
 
 (export poo-flow-user-loop-engine-poo-policy-extensions->receipts)
 
-;; : (-> Symbol Value [Pair])
+;; : (-> Symbol Value PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-optional-row key value)
   (if value (list (cons key value)) '()))
 
-;; : (-> Symbol Value [Pair])
+;; : (-> Symbol Value PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-optional-list-row key value)
   (if (null? value) '() (list (cons key value))))
 
@@ -110,7 +110,7 @@
    (else
     (error "unknown loop-engine policy-extension projection slot" slot))))
 
-;; : (-> PooFlowLoopEnginePolicyExtensionPrototype Symbol [Pair])
+;; : (-> PooFlowLoopEnginePolicyExtensionPrototype Symbol PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-slot->row
       policy-extension
       slot)
@@ -129,7 +129,7 @@
          value)))
     '()))
 
-;; : (-> PooFlowLoopEnginePolicyExtensionPrototype [Symbol] [Pair])
+;; : (-> PooFlowLoopEnginePolicyExtensionPrototype [Symbol] PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-slots->rows
       policy-extension
       slots)

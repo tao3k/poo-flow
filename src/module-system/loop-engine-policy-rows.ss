@@ -21,7 +21,7 @@
 
 ;;; Lineage policy rows expose parent-session and export intent as declarative
 ;;; facts. Scheme validates shape but does not open or traverse sessions.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-lineage-policy->rows lineage-policy)
   (cond
    ((not lineage-policy) '())
@@ -68,7 +68,7 @@
 
 ;;; Selector policy rows keep branch candidates and fallback declarative.
 ;;; Runtime scoring or model-backed routing happens after Marlin consumes them.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-selector-policy->rows selector-policy)
   (cond
    ((not selector-policy) '())
@@ -105,7 +105,7 @@
 
 ;;; Resource policy rows describe tool/resource collision classes for later
 ;;; dispatch planning. Scheme preserves the declared groups without scheduling.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-resource-policy->rows resource-policy)
   (cond
    ((not resource-policy) '())
@@ -146,7 +146,7 @@
 
 ;;; Capability policy rows record backend requirements as handoff diagnostics.
 ;;; They do not probe the selected sandbox backend from Scheme.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-capability-policy->rows capability-policy)
   (cond
    ((not capability-policy) '())
@@ -189,7 +189,7 @@
 
 ;;; Memory policy rows are keyed by use-case so a profile can describe several
 ;;; loop branches without making Scheme choose a memory store.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineMemoryPolicyRow)
 (def (poo-flow-user-loop-engine-poo-memory-policy->rows memory-policy)
   (cond
    ((not memory-policy) '())
@@ -264,7 +264,7 @@
 
 ;;; Memory policy accumulation rejects duplicates early so Marlin receives one
 ;;; unambiguous state policy for each declared use-case.
-;; : (-> [Pair] [Symbol] [Symbol] [Pair])
+;; : (-> [PooFlowLoopEngineMemoryPolicyPrototype] [Symbol] [Symbol] [PooFlowLoopEngineMemoryPolicyRow])
 (def (poo-flow-user-loop-engine-poo-memory-policies->rows/add
       memory-policies
       use-case-names
@@ -296,7 +296,7 @@
 
 ;;; Memory policy lowering starts with an empty seen set; callers pass the
 ;;; profile-derived use-case names so this owner stays profile-agnostic.
-;; : (-> [Pair] [Symbol] [Pair])
+;; : (-> [PooFlowLoopEngineMemoryPolicyPrototype] [Symbol] [PooFlowLoopEngineMemoryPolicyRow])
 (def (poo-flow-user-loop-engine-poo-memory-policies->rows
       memory-policies
       use-case-names)
@@ -307,7 +307,7 @@
 
 ;;; Compression policy rows describe handoff compaction strategy. Scheme keeps
 ;;; the declared plan as data and never summarizes session content here.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-compression-policy->rows
       compression-policy)
   (cond

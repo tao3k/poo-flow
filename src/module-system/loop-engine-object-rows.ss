@@ -25,7 +25,7 @@
 
 ;;; Use-case rows are the named branch declarations consumed by selector,
 ;;; memory, and runtime handoff projections.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineUseCaseRow)
 (def (poo-flow-user-loop-engine-poo-use-case->row use-case)
   (poo-flow-user-loop-engine-require
    "loop-engine use-case config object must extend loop-engine-use-case"
@@ -61,7 +61,7 @@
 
 ;;; Use-case lists preserve declaration order because selector defaults and
 ;;; presentation rows use that same order downstream.
-;; : (-> [PooFlowLoopEngineUseCasePrototype] [Pair])
+;; : (-> [PooFlowLoopEngineUseCasePrototype] [PooFlowLoopEngineUseCaseRow])
 (def (poo-flow-user-loop-engine-poo-use-cases->rows use-cases)
   (cond
    ((null? use-cases) '())
@@ -94,13 +94,13 @@
 
 ;;; Judge rows use list shape to preserve the role/name distinction in alist
 ;;; presentation without treating agent names as executable selectors.
-;; : (-> Symbol Value [Pair])
+;; : (-> Symbol Value [PooFlowLoopEngineRoleRow])
 (def (poo-flow-user-loop-engine-judge-row role value)
   (if value (list (list role value)) '()))
 
 ;;; Agent-judge rows name the human and model roles that Marlin may bind later.
 ;;; Scheme only validates the optional symbol slots.
-;; : (-> Value [Pair])
+;; : (-> Value [PooFlowLoopEngineRoleRow])
 (def (poo-flow-user-loop-engine-poo-agent-judges->rows agent-judges)
   (cond
    ((not agent-judges) '())
@@ -154,7 +154,7 @@
 
 ;;; Schedule rows are trigger metadata only; timers and recurrence are runtime
 ;;; or external scheduler responsibilities.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-schedule->rows schedule)
   (cond
    ((not schedule) '())
@@ -180,7 +180,7 @@
 
 ;;; State rows name stores and paths as handoff facts. They do not read or
 ;;; mutate state files in the Scheme control plane.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-state->rows state)
   (cond
    ((not state) '())
@@ -209,7 +209,7 @@
 
 ;;; Sandbox rows collect profile references and per-use-case overrides for the
 ;;; sandbox agreement owner; they do not start containers or processes.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-sandbox->rows sandbox)
   (cond
    ((not sandbox) '())
@@ -243,7 +243,7 @@
 
 ;;; Budget rows express declarative limits for runtime enforcement. Scheme only
 ;;; preserves the configured numbers.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-budget->rows budget)
   (cond
    ((not budget) '())
@@ -274,13 +274,13 @@
 
 ;;; Result role rows preserve role-specific result contracts while keeping a
 ;;; compact alist representation for downstream validators.
-;; : (-> Symbol Value [Pair])
+;; : (-> Symbol Value [PooFlowLoopEngineRoleRow])
 (def (poo-flow-user-loop-engine-result-role-row role value)
   (if value (list (cons role value)) '()))
 
 ;;; Result rows are schema references only. Validation of concrete result
 ;;; payloads remains a runtime or ABI consumer responsibility.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-result->rows result)
   (cond
    ((not result) '())
@@ -329,7 +329,7 @@
 
 ;;; Observability rows expose receipt and run-log preferences as data so the
 ;;; runtime can decide how to materialize traces.
-;; : (-> Value [Pair])
+;; : (-> Value PooFlowLoopEngineFlatRow)
 (def (poo-flow-user-loop-engine-poo-observability->rows observability)
   (cond
    ((not observability) '())
