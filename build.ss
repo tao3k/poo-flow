@@ -10,6 +10,8 @@
 ;;; perf gates should call direct gxc or the compiled build runner instead.
 
 (import :clan/building
+        (only-in :gslph/src/build-api/source-coverage
+                 gslph-source-coverage)
         (only-in :clan/filesystem
                  find-files
                  path-is-script?)
@@ -18,9 +20,10 @@
                  path-expand
                  pretty-print
                  string=?
-                 string-append)
-        (only-in :gerbil/compiler/driver
-                 compile-module)
+                 string-append
+                 ##cpu-count)
+        (only-in :gerbil/compiler/base
+                 __available-cores)
         (only-in :std/make
                  make
                  make-clean)
@@ -53,6 +56,11 @@
     "src/cli.ss"
     "main.ss"
     "manifest.ss"))
+
+(gslph-source-coverage
+ roots: '("src" "user-interface")
+ runtime-roots: +poo-flow-runtime-include-dirs+
+ explanation: "POO Flow runtime owners live under src; user-interface modules are declarative package sources that still need policy coverage.")
 
 ;; : BuildSpec
 (def +poo-flow-ffi-build-spec+
@@ -151,9 +159,7 @@
 
 ;; : (List -> [String])
 (def (poo-flow-test-modules options)
-  (if (poo-flow-all-test-modules-build-options? options)
-    (poo-flow-all-test-modules)
-    +poo-flow-test-root-files+))
+  (poo-flow-all-test-modules))
 
 ;; : (String List -> BuildSpec)
 (def (poo-flow-gxc-target file options)
@@ -202,10 +208,16 @@
                 (> cores 0)
                 cores)))))
 
-;; : (-> (Or Fixnum Bool))
-(def (poo-flow-package-parallelize)
+;; : (-> Fixnum)
+(def (poo-flow-package-worker-count)
   (or (poo-flow-package-cores-from-env "GERBIL_BUILD_CORES")
-      #t))
+      (max 1 (##cpu-count))))
+
+;; : (-> Fixnum)
+(def (poo-flow-package-parallelize)
+  (let (worker-count (poo-flow-package-worker-count))
+    (set! __available-cores worker-count)
+    worker-count))
 
 ;; : (List -> List)
 (def (poo-flow-make-options options)
@@ -247,23 +259,6 @@
          srcdir: (poo-flow-package-srcdir)
          (poo-flow-package-options options)))
 
-;; : (String -> Void)
-(def (poo-flow-compile-test-module file)
-  (display "... compile ")
-  (display file)
-  (newline)
-  (force-output)
-  (compile-module file [invoke-gsc: #t optimize: #f parallel: #f]))
-
-;; : ([String] -> Void)
-(def (poo-flow-compile-test-modules files)
-  (display "... poo-flow compile tests targets=")
-  (display (length files))
-  (display " compile-module")
-  (newline)
-  (force-output)
-  (for-each poo-flow-compile-test-module files))
-
 ;; : (String BuildSpec -> Void)
 (def (poo-flow-make-clean label stage)
   (poo-flow-package-message "clean" label stage)
@@ -284,8 +279,6 @@
        (lp rest [debug: #t . options]))
       (["--tests" . rest]
        (lp rest [build-tests: #t . options]))
-      (["--all-test-modules" . rest]
-       (lp rest [build-all-test-modules: #t . options]))
       (["--verbose" . rest]
        (lp rest [verbose: 9 . options]))
       (["-V" . rest]
@@ -322,13 +315,6 @@
     ([] #f)))
 
 ;; : (List -> Bool)
-(def (poo-flow-all-test-modules-build-options? options)
-  (match options
-    ([build-all-test-modules: value . _] value)
-    ([_ _ . rest] (poo-flow-all-test-modules-build-options? rest))
-    ([] #f)))
-
-;; : (List -> Bool)
 (def (poo-flow-native-build-options? options)
   (or (poo-flow-release-build-options? options)
       (poo-flow-optimized-build-options? options)
@@ -344,9 +330,7 @@
 
 ;; : (List -> Void)
 (def (poo-flow-package-compile options)
-  (if (poo-flow-test-build-options? options)
-    (poo-flow-compile-test-modules (poo-flow-test-modules options))
-    (poo-flow-make "package" (poo-flow-compile-build-spec options) options)))
+  (poo-flow-make "package" (poo-flow-compile-build-spec options) options))
 
 ;; : (-> Void)
 (def (poo-flow-clean)
