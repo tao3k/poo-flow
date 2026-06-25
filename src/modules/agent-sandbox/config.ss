@@ -66,18 +66,21 @@
 
 ;;; A one-symbol backend row such as `(backend nono)` means both backend kind
 ;;; and backend ref are `nono`; explicit refs let cubeSandbox name a profile.
-;; : (-> [SandboxProfileForm] Pair)
+;; : (-> [SandboxProfileForm] (Values Symbol Symbol))
 (def (poo-flow-sandbox-profile-backend-values forms)
   (let* ((backend-form
           (poo-flow-sandbox-profile-form 'backend
                                          forms
                                          '(backend nono nono-sandbox)))
-         (values (poo-flow-sandbox-profile-tail backend-form))
-         (backend-kind (if (null? values) 'nono (car values)))
-         (backend-ref (if (or (null? values) (null? (cdr values)))
+         (backend-payload (poo-flow-sandbox-profile-tail backend-form))
+         (backend-kind (if (null? backend-payload)
+                         'nono
+                         (car backend-payload)))
+         (backend-ref (if (or (null? backend-payload)
+                              (null? (cdr backend-payload)))
                         backend-kind
-                        (cadr values))))
-    (cons backend-kind backend-ref)))
+                        (cadr backend-payload))))
+    (values backend-kind backend-ref)))
 
 ;;; List-form projection preserves user order and avoids inventing defaults
 ;;; for rows that should remain owned by upstream sandbox policy.
@@ -92,30 +95,32 @@
 ;;; into POO slots and leaves descriptor validation to the bridge boundary.
 ;; : (-> Symbol [SandboxProfileForm] POOObject)
 (def (poo-flow-sandbox-profile-config name-value forms)
-  (let (backend-values (poo-flow-sandbox-profile-backend-values forms))
-    (.o kind: poo-flow-sandbox-profile-kind
-        name: name-value
-        backend-kind: (car backend-values)
-        backend-ref: (cdr backend-values)
-        network-policy: (poo-flow-sandbox-profile-list-form
-                         'network
+  (call-with-values
+    (lambda () (poo-flow-sandbox-profile-backend-values forms))
+    (lambda (backend-kind backend-ref)
+      (.o kind: poo-flow-sandbox-profile-kind
+          name: name-value
+          backend-kind: backend-kind
+          backend-ref: backend-ref
+          network-policy: (poo-flow-sandbox-profile-list-form
+                           'network
+                           forms
+                           '(deny-by-default))
+          capabilities: (poo-flow-sandbox-profile-list-form
+                         'capabilities
                          forms
-                         '(deny-by-default))
-        capabilities: (poo-flow-sandbox-profile-list-form
-                       'capabilities
-                       forms
-                       '(process filesystem tmpdir))
-        resource-policy: (poo-flow-sandbox-profile-list-form
-                          'resources
-                          forms
-                          '())
-        metadata: (append
-                   '((declared-by . poo-flow-user-interface)
-                     (runtime-executed . #f))
-                   (poo-flow-sandbox-profile-list-form
-                    'metadata
-                    forms
-                    '())))))
+                         '(process filesystem tmpdir))
+          resource-policy: (poo-flow-sandbox-profile-list-form
+                            'resources
+                            forms
+                            '())
+          metadata: (append
+                     '((declared-by . poo-flow-user-interface)
+                       (runtime-executed . #f))
+                     (poo-flow-sandbox-profile-list-form
+                      'metadata
+                      forms
+                      '()))))))
 
 ;;; Bass-style profile rows are just data recipes. The macro is deliberately a
 ;;; thin syntax bridge; semantic state lives in the POO profile object slots.
