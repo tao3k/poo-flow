@@ -32,6 +32,7 @@
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
         :poo-flow/t/nono-sandbox-native-ffi-test
+        :poo-flow/t/project-policy-test
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-object-test
         :poo-flow/t/session-transform-test
