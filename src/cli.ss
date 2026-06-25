@@ -5,9 +5,17 @@
 ;;; remain owned by gxpkg build.
 
 (import :gerbil/gambit
-        :poo-flow/src/cli-support/support
+        (rename-in :poo-flow/src/cli-support/support
+                   (poo-flow-cli-max-rss-bytes
+                    cli-support-max-rss-bytes))
         :poo-flow/src/cli-support/build
-        :poo-flow/src/cli-support/test)
+        (rename-in :poo-flow/src/cli-support/test
+                   (poo-flow-cli-expand-test-args
+                    cli-support-expand-test-args)
+                   (poo-flow-cli-read-unit-test-files
+                    cli-support-read-unit-test-files)
+                   (poo-flow-cli-runnable-test-form?
+                    cli-support-runnable-test-form?)))
 
 (export poo-flow-cli-main
         main
@@ -39,6 +47,22 @@ Commands:
   test   Run focused tests through the compiled module runner.
   perf   Run focused performance gates around the test runner.
 ")
+
+;; : (-> [String] [String])
+(def (poo-flow-cli-expand-test-args args)
+  (cli-support-expand-test-args args))
+
+;; : (-> Unit [String])
+(def (poo-flow-cli-read-unit-test-files)
+  (cli-support-read-unit-test-files))
+
+;; : (-> Object Boolean)
+(def (poo-flow-cli-runnable-test-form? form)
+  (cli-support-runnable-test-form? form))
+
+;; : (-> String MaybeInteger)
+(def (poo-flow-cli-max-rss-bytes output)
+  (cli-support-max-rss-bytes output))
 
 ;; : (-> String [String] Integer)
 (def (poo-flow-cli-run-command command rest)
