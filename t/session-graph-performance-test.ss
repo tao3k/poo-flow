@@ -11,6 +11,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/modules/session/objects
                  poo-flow-session-chunk
                  poo-flow-session-lineage
@@ -27,14 +28,6 @@
 ;; : Alist
 (def session-graph-presentation-fixture
   (call-with-input-file session-graph-presentation-fixture-path read))
-
-;; : (-> Integer (-> Integer Value) [Value])
-(def (session-graph-performance-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
 
 ;; : (-> Integer Symbol)
 (def (session-graph-performance-session-id index)
@@ -61,7 +54,7 @@
 
 ;; : (-> Integer [PooSession])
 (def (session-graph-performance-sessions count)
-  (session-graph-performance-build-list
+  (poo-flow-performance-build-list
    count
    session-graph-performance-session))
 

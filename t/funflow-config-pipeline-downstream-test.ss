@@ -9,22 +9,20 @@
 
 (export run-funflow-config-pipeline-downstream-checks)
 
+;; : Boolean
 (def poo-flow-import-side-effect-test-suite? #t)
 
+;; : (-> Alist Symbol Object)
 (def (funflow-config-downstream-alist-ref alist key)
   (let (entry (assoc key alist))
     (if entry (cdr entry) #f)))
 
+;; : (-> Alist Symbol Object)
 (def (funflow-config-downstream-flag flags key)
-  (cond
-   ((null? flags) #f)
-   ((and (pair? (car flags))
-         (eq? (caar flags) key))
-    (cdar flags))
-   ((pair? flags)
-    (funflow-config-downstream-flag (cdr flags) key))
-   (else #f)))
+  (let (entry (assoc key flags))
+    (if entry (cdr entry) #f)))
 
+;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-downstream-selection)
   (use-module funflow
     :config
@@ -76,6 +74,7 @@
       metadata: '((scenario . funflow-cicd)
                   (authoring-style . gerbil-poo-native)))))
 
+;; : (-> Unit [PooSandboxProfile])
 (def (funflow-config-downstream-sandbox-profiles)
   (poo-flow-sandbox-profiles
    (ci/build
@@ -115,6 +114,7 @@
     (metadata (intent . funflow-ci-check)
               (scope . funflow-test)))))
 
+;; : (-> Unit Symbol)
 (def (run-funflow-config-pipeline-downstream-checks)
   (let* ((selection (car (funflow-config-downstream-selection)))
          (pipeline

@@ -10,7 +10,9 @@
         :poo-flow/src/core/strategy
         :poo-flow/src/core/policy
         :poo-flow/src/core/runtime-adapter
-        :poo-flow/src/core/replay)
+        :poo-flow/src/core/replay
+        :poo-flow/src/core/runner-support/validation
+        :poo-flow/src/core/runner-support/receipt)
 
 (export make-run-result
         run-result?
@@ -126,36 +128,6 @@
               (execution-plan-nodes plan))
     #t))
 
-;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter PlanNode Boolean)
-(def (validate-plan-node task-registry strategy adapter node)
-  (validate-step task-registry strategy adapter (plan-node-step node)))
-
-;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter Step Boolean)
-(def (validate-step task-registry strategy adapter step)
-  (when (task? step)
-    (validate-task task-registry strategy adapter step)))
-
-;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter Task Boolean)
-(def (validate-task task-registry strategy adapter task)
-  (let ((capability (task-capability-in task-registry task)))
-    (unless (memq capability (strategy-capabilities strategy))
-      (raise-control-plane-failure
-       'runner
-       'unsupported-task-capability
-       "strategy does not support task kind"
-       (list (cons 'strategy (strategy-name strategy))
-             (cons 'capability capability)
-             (cons 'task-kind (task-kind task)))))
-    (when (task-adapter-routed?-in task-registry task)
-      (unless (adapter-supports? adapter capability)
-        (raise-control-plane-failure
-         'runner
-         'unsupported-adapter-capability
-         "adapter does not support task kind"
-         (list (cons 'adapter (runtime-adapter-name adapter))
-               (cons 'capability capability)
-               (cons 'task-kind (task-kind task))))))))
-
 ;; : (-> Runner Policy)
 (def (runner-registry-policy runner)
   (list (cons 'task-registry
@@ -225,24 +197,6 @@
          (make-try-left (receipt-error failed))
          (make-try-right (run-result-value result)))))
    make-try-left))
-
-;;; Invariant:
-;;; - Receipt trees preserve nested subflow and adapter evidence.
-;;; - The first failed receipt is the recovery target closest to execution.
-;; : (-> Receipt MaybeReceipt)
-(def (first-failed-receipt receipt)
-  (if (receipt-failed? receipt)
-    receipt
-    (first-failed-receipt-in (receipt-children receipt))))
-
-;; : (-> [Receipt] MaybeReceipt)
-(def (first-failed-receipt-in receipts)
-  (if (null? receipts)
-    #f
-    (let (failed (first-failed-receipt (car receipts)))
-      (if failed
-        failed
-        (first-failed-receipt-in (cdr receipts))))))
 
 ;;; Boundary: this recursive driver is the topology interpreter loop.
 ;;; Invariant: completed ids are audit state for frontier receipts, while the

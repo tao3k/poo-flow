@@ -7,6 +7,7 @@
                  run-tests!
                  test-case
                  test-suite)
+        (only-in :std/srfi/1 filter-map)
         :poo-flow/src/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
@@ -42,29 +43,24 @@
 (def (receipt-ref receipt key)
   (hash-get receipt key))
 
-;; : (-> Alist Symbol Value)
+;; : (-> Alist Symbol Object Object)
 (def (alist-ref/default entries key default-value)
-  (cond
-   ((null? entries) default-value)
-   ((equal? key (caar entries)) (cdar entries))
-   (else
-    (alist-ref/default (cdr entries) key default-value))))
+  (let (entry (assoc key entries))
+    (if entry (cdr entry) default-value)))
 
-;; : (-> Value Value)
+;; : (-> Object Object)
 (def (diagnostic-code diagnostic)
   (if (list? diagnostic)
     (alist-ref/default diagnostic 'code #f)
     #f))
 
-;; : (-> [Value] [Value])
+;; : (-> [Object] [Object])
 (def (diagnostic-codes diagnostics)
-  (cond
-   ((null? diagnostics) '())
-   (else
-    (let (code (diagnostic-code (car diagnostics)))
-      (if code
-        (cons code (diagnostic-codes (cdr diagnostics)))
-        (diagnostic-codes (cdr diagnostics)))))))
+  (filter-map diagnostic-code diagnostics))
+
+;; : (-> Object [Object] Boolean)
+(def (diagnostic-member? diagnostic diagnostics)
+  (if (member diagnostic diagnostics) #t #f))
 
 ;; : (-> Thunk Boolean)
 (def (contract-error? thunk)
@@ -104,9 +100,9 @@
           validation)
          #f)
         (check-equal?
-         (not (not (member
-                    "field:cpu:default-not-compatible-with-type:Number"
-                    diagnostics)))
+         (diagnostic-member?
+          "field:cpu:default-not-compatible-with-type:Number"
+          diagnostics)
          #t)
         (check-equal?
          (contract-error?

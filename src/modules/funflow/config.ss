@@ -2,7 +2,8 @@
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
-(import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
+(import (only-in :std/sugar filter-map)
+        (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
         :poo-flow/src/module-system/base
         :poo-flow/src/modules/workflow/cicd)
 
@@ -251,15 +252,14 @@
 
 ;; : (-> [PooFlowFunflowConfigPrototype] [PooFlowCicdCheckMap])
 (def (poo-flow-funflow-poo-config-pipelines prototypes)
-  (cond
-   ((null? prototypes) '())
-   ((poo-flow-funflow-poo-pipeline? (car prototypes))
-    (cons (poo-flow-funflow-poo-pipeline->check-map (car prototypes))
-          (poo-flow-funflow-poo-config-pipelines (cdr prototypes))))
-   ((pair? prototypes)
-    (poo-flow-funflow-poo-config-pipelines (cdr prototypes)))
-   (else
-    (error "funflow POO config prototypes must be a list" prototypes))))
+  (if (list? prototypes)
+    (filter-map poo-flow-funflow-poo-config-pipeline prototypes)
+    (error "funflow POO config prototypes must be a list" prototypes)))
+
+;; : (-> PooFlowFunflowConfigPrototype MaybePooFlowCicdCheckMap)
+(def (poo-flow-funflow-poo-config-pipeline prototype)
+  (and (poo-flow-funflow-poo-pipeline? prototype)
+       (poo-flow-funflow-poo-pipeline->check-map prototype)))
 
 ;; : (-> [PooFlowFunflowConfigPrototype] Alist [UserModuleFlagEntry])
 (def (poo-flow-funflow-poo-config-flags prototypes user-config)

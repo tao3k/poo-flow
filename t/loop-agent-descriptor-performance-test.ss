@@ -10,6 +10,8 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        (only-in :std/srfi/1 fold)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor
                  loop-pattern-descriptor->contract))
@@ -29,14 +31,6 @@
   (if (benchmark-fixture-contract-pass? fixture)
     (benchmark-run fixture thunk)
     (error "loop descriptor performance fixture contract failed" fixture)))
-
-;; : (-> Integer (-> Integer Value) [Value])
-(def (loop-descriptor-performance-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
 
 ;; : (-> Integer Symbol)
 (def (loop-descriptor-performance-name index)
@@ -72,7 +66,7 @@
 
 ;; : (-> Integer [LoopPatternDescriptor])
 (def (loop-descriptor-performance-descriptors count)
-  (loop-descriptor-performance-build-list
+  (poo-flow-performance-build-list
    count
    loop-descriptor-performance-descriptor))
 
@@ -80,21 +74,29 @@
 (def (loop-descriptor-performance-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> LoopPatternDescriptor Integer)
+(def (loop-descriptor-performance-contract-priority descriptor)
+  (loop-descriptor-performance-ref
+   (loop-pattern-descriptor->contract descriptor)
+   'priority))
+
+;; : (-> [LoopPatternDescriptor] Pair)
+(def (loop-descriptor-performance-summary-state descriptors)
+  (fold (lambda (descriptor state)
+          (cons (+ (car state) 1)
+                (+ (cdr state)
+                   (loop-descriptor-performance-contract-priority
+                    descriptor))))
+        (cons 0 0)
+        descriptors))
+
+;;; Intent: summarize contract projection over a large descriptor list.
+;;; Boundary: fold state is internal; callers receive an alist fixture summary.
 ;; : (-> [LoopPatternDescriptor] Alist)
 (def (loop-descriptor-performance-project-contract-summary descriptors)
-  (let loop ((remaining descriptors)
-             (count 0)
-             (priority-sum 0))
-    (if (null? remaining)
-      (list (cons 'count count)
-            (cons 'priority-sum priority-sum))
-      (let* ((contract
-              (loop-pattern-descriptor->contract (car remaining)))
-             (priority
-              (loop-descriptor-performance-ref contract 'priority)))
-        (loop (cdr remaining)
-              (+ count 1)
-              (+ priority-sum priority))))))
+  (let (state (loop-descriptor-performance-summary-state descriptors))
+    (list (cons 'count (car state))
+          (cons 'priority-sum (cdr state)))))
 
 ;; : TestSuite
 (def loop-agent-descriptor-performance-test

@@ -180,21 +180,16 @@
 
 ;;; Local alist lookup keeps assertions readable while avoiding a dependency on
 ;;; internal profile projection helpers.
-;; : (-> Symbol Alist MaybeValue)
+;; : (-> Symbol Alist Object)
 (def (alist-value key entries)
-  (cond
-   ((null? entries) #f)
-   ((equal? key (caar entries)) (cdar entries))
-   (else
-    (alist-value key (cdr entries)))))
+  (let (entry (assoc key entries))
+    (if entry (cdr entry) #f)))
 
 ;;; Inheritance metadata is append-only in these cases; the last derivation row
 ;;; is the concrete child profile step asserted by the profile tests.
-;; : (-> [Value] Value)
+;; : (-> [Object] Object)
 (def (last-value values)
-  (if (null? (cdr values))
-    (car values)
-    (last-value (cdr values))))
+  (car (reverse values)))
 
 ;;; This suite exercises the downstream-facing profile syntax without exposing
 ;;; backend implementation slots as part of the user contract.

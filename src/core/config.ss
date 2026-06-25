@@ -2,7 +2,8 @@
 ;;; Boundary: configured entrypoints assemble strategies and runtime adapters.
 ;;; Invariant: config data selects components but never executes workflow tasks.
 
-(import :poo-flow/src/core/failure
+(import (only-in :std/sugar filter)
+        :poo-flow/src/core/failure
         :poo-flow/src/core/strategy
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/core/task
@@ -332,13 +333,9 @@
 
 ;; : (-> [ConfigRequirement] Alist [ConfigRequirement])
 (def (missing-config-requirements requirements source)
-  (cond
-   ((null? requirements) '())
-   ((config-source-satisfies? source (car requirements))
-    (missing-config-requirements (cdr requirements) source))
-   (else
-    (cons (car requirements)
-          (missing-config-requirements (cdr requirements) source)))))
+  (filter (lambda (requirement)
+            (not (config-source-satisfies? source requirement)))
+          requirements))
 
 ;;; Literal requirements are already satisfied; file/env requirements are
 ;;; satisfied only by key presence in their source bucket.
@@ -348,20 +345,34 @@
         (key (config-requirement-key requirement)))
     (if (eq? source-kind 'literal)
       #t
-      (let (bucket (assoc source-kind source))
+      (let (bucket (config-source-bucket source source-kind))
         (and bucket
-             (assoc key (cdr bucket))
+             (config-source-entry bucket key)
              #t)))))
 
 ;; : (-> Alist Symbol Symbol Value)
 (def (config-source-ref source source-kind key)
-  (let (bucket (assoc source-kind source))
-    (if bucket
-      (let (entry (assoc key (cdr bucket)))
-        (if entry
-          (cdr entry)
-          (raise-missing-config-value source-kind key)))
+  (let* ((bucket (config-source-bucket source source-kind))
+         (entry (and bucket (config-source-entry bucket key))))
+    (if entry
+      (config-source-entry-value entry)
       (raise-missing-config-value source-kind key))))
+
+;; : (-> Alist Symbol Pair)
+(def (config-source-bucket source source-kind)
+  (assoc source-kind source))
+
+;; : (-> Pair Alist)
+(def (config-source-bucket-entries bucket)
+  (cdr bucket))
+
+;; : (-> Pair Symbol Pair)
+(def (config-source-entry bucket key)
+  (assoc key (config-source-bucket-entries bucket)))
+
+;; : (-> Pair Value)
+(def (config-source-entry-value entry)
+  (cdr entry))
 
 ;; : (-> Symbol Symbol Never)
 (def (raise-missing-config-value source-kind key)

@@ -36,13 +36,19 @@
 ;;; resulting alist into the common candidate contract.
 ;; : (-> Alist Symbol Value Value)
 (def (nono-why-json-ref why key default)
-  (let (entry (and why (assoc key why)))
+  (let (entry (nono-why-json-entry why key))
     (if entry
-      (cdr entry)
-      (let (string-entry (and why (assoc (symbol->string key) why)))
-        (if string-entry
-          (cdr string-entry)
-          default)))))
+      (nono-why-json-entry-value entry)
+      default)))
+
+;; : (-> Alist Symbol Pair)
+(def (nono-why-json-entry why key)
+  (or (and why (assoc key why))
+      (and why (assoc (symbol->string key) why))))
+
+;; : (-> Pair Value)
+(def (nono-why-json-entry-value entry)
+  (cdr entry))
 
 ;; : (-> Value Symbol Boolean)
 (def (nono-why-json-symbol=? value symbol)

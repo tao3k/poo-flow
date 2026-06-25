@@ -2,7 +2,8 @@
 ;;; Boundary: loop-engine runtime handoff projection for module-system config.
 ;;; Invariant: this owner emits Marlin handoff data and never executes runtime work.
 
-(import (only-in :poo-flow/src/core/agent-harness
+(import (only-in :std/sugar filter-map)
+        (only-in :poo-flow/src/core/agent-harness
                  make-poo-flow-runtime-snapshot
                  poo-flow-runtime-snapshot->alist
                  )
@@ -897,22 +898,22 @@
          (if (null? maybe-workflow-check-maps)
            '()
            (car maybe-workflow-check-maps))))
-  (cond
-   ((null? selected-modules) '())
-   ((poo-flow-user-module-selection-loop-engine-intent (car selected-modules)
-                                                       profile-catalog
-                                                       workflow-check-maps)
-    => (lambda (intent)
-         (cons intent
-               (poo-flow-user-config-loop-engine-intents/add
-                (cdr selected-modules)
-                profile-catalog
-                workflow-check-maps))))
-   (else
-    (poo-flow-user-config-loop-engine-intents/add
-     (cdr selected-modules)
-     profile-catalog
-     workflow-check-maps)))))
+    (filter-map
+     (lambda (selection)
+       (poo-flow-user-config-loop-engine-intent
+        selection
+        profile-catalog
+        workflow-check-maps))
+     selected-modules)))
+
+;; : (-> PooUserModuleSelection [PooSandboxProfile] [PooFlowCicdCheckMap] MaybeAlist)
+(def (poo-flow-user-config-loop-engine-intent selection
+                                              profile-catalog
+                                              workflow-check-maps)
+  (poo-flow-user-module-selection-loop-engine-intent
+   selection
+   profile-catalog
+   workflow-check-maps))
 
 ;;; Config-level loop-engine intents let workflow docs and tests show the real
 ;;; governor configuration result from `:workflow` without starting a loop.

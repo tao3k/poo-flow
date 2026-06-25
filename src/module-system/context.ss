@@ -17,12 +17,18 @@
 
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-module-alist-ref/default alist key default-value)
-  (cond
-   ((null? alist) default-value)
-   ((and (pair? (car alist)) (equal? (caar alist) key))
-    (cdar alist))
-   (else
-    (poo-flow-module-alist-ref/default (cdr alist) key default-value))))
+  (let (entry (poo-flow-module-alist-entry alist key))
+    (if entry
+      (poo-flow-module-alist-entry-value entry)
+      default-value)))
+
+;; : (-> Alist Symbol Pair)
+(def (poo-flow-module-alist-entry alist key)
+  (assoc key alist))
+
+;; : (-> Pair Value)
+(def (poo-flow-module-alist-entry-value entry)
+  (cdr entry))
 
 ;;; Boundary: phase lookup returns metadata and never attempts file access.
 ;; : (-> PooModuleDescriptor Symbol [Default] MaybePhaseFile)

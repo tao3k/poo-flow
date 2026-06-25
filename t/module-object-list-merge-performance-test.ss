@@ -10,6 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/module-system/extension
                  poo-flow-module-extension-node-slots)
         (only-in :poo-flow/src/module-system/object-core
@@ -46,21 +47,13 @@
 (def (module-object-list-merge-ref alist key)
   (cdr (assoc key alist)))
 
-;; : (-> Integer (-> Integer Value) [Value])
-(def (module-object-list-merge-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
-
 ;; : (-> Integer Integer)
 (def (module-object-list-merge-capability index)
   index)
 
 ;; : (-> Integer Integer Integer [Integer])
 (def (module-object-list-merge-batch start size step)
-  (module-object-list-merge-build-list
+  (poo-flow-performance-build-list
    size
    (lambda (index)
      (module-object-list-merge-capability
@@ -68,7 +61,7 @@
 
 ;; : (-> Integer Integer Integer [PooModuleFieldContribution])
 (def (module-object-list-merge-contributions batch-count batch-size overlap-step)
-  (module-object-list-merge-build-list
+  (poo-flow-performance-build-list
    batch-count
    (lambda (batch-index)
      (poo-flow-module-field-contribution
@@ -79,7 +72,7 @@
        batch-size
        1)))))
 
-;; : (-> [Value] Value)
+;; : (-> [Object] Object)
 (def (module-object-list-merge-last values)
   (if (null? (cdr values))
     (car values)

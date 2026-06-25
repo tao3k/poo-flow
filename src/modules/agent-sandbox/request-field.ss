@@ -4,7 +4,8 @@
 ;;; Runtime contract: accepted field names are inert data until request assembly.
 ;;; Policy evidence: request facade re-exports these constants for stable callers.
 
-(import :poo-flow/src/core/api
+(import (only-in :std/sugar filter-map)
+        :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist)
 
 (export +agent-sandbox-request-schema+
@@ -39,19 +40,29 @@
 ;;; normalization merges profile defaults into the runtime-facing shape.
 ;; : (-> FieldAlist [ValidationError])
 (def (agent-sandbox-request-field-contract-errors fields)
+  (filter-map agent-sandbox-request-field-contract-error fields))
+
+;; : (-> FieldEntry MaybeValidationError)
+(def (agent-sandbox-request-field-contract-error field)
   (cond
-   ((null? fields) '())
-   ((and (pair? (car fields))
-         (agent-sandbox-request-builder-field? (car (car fields))))
-    (agent-sandbox-request-field-contract-errors (cdr fields)))
-   ((pair? (car fields))
-    (cons (list (cons 'field (car (car fields)))
-                (cons 'code 'unsupported-field))
-          (agent-sandbox-request-field-contract-errors (cdr fields))))
+   ((not (pair? field))
+    (agent-sandbox-request-field-error field 'malformed-field))
+   ((agent-sandbox-request-builder-field?
+     (agent-sandbox-request-field-name field))
+    #f)
    (else
-    (cons (list (cons 'field (car fields))
-                (cons 'code 'malformed-field))
-          (agent-sandbox-request-field-contract-errors (cdr fields))))))
+    (agent-sandbox-request-field-error
+     (agent-sandbox-request-field-name field)
+     'unsupported-field))))
+
+;; : (-> FieldEntry Symbol)
+(def (agent-sandbox-request-field-name field)
+  (car field))
+
+;; : (-> FieldDatum Symbol ValidationError)
+(def (agent-sandbox-request-field-error field code)
+  (list (cons 'field field)
+        (cons 'code code)))
 
 ;;; Field validation is the first gate for the higher-level request macro:
 ;;; accepted fields are explicit, but value-level semantics remain request-owned.

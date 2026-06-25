@@ -10,6 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor)
         (only-in :poo-flow/src/loops/strategy
@@ -34,14 +35,6 @@
 (def (loop-human-audit-performance-ref alist key)
   (cdr (assoc key alist)))
 
-;; : (-> Integer (-> Integer Value) [Value])
-(def (loop-human-audit-performance-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
-
 ;; : (-> Integer String)
 (def (loop-human-audit-performance-action-key index)
   (string-append "src/audit/" (number->string index)))
@@ -60,20 +53,20 @@
 
 ;; : (-> Integer [LoopPatternDescriptor])
 (def (loop-human-audit-performance-patterns count)
-  (loop-human-audit-performance-build-list
+  (poo-flow-performance-build-list
    count
    loop-human-audit-performance-pattern))
 
 ;; : (-> Integer Integer [String])
 (def (loop-human-audit-performance-action-keys start count)
-  (loop-human-audit-performance-build-list
+  (poo-flow-performance-build-list
    count
    (lambda (offset)
      (loop-human-audit-performance-action-key (+ start offset)))))
 
 ;; : (-> Integer Integer [Alist])
 (def (loop-human-audit-performance-states start count)
-  (loop-human-audit-performance-build-list
+  (poo-flow-performance-build-list
    count
    (lambda (offset)
      (list (cons 'acting_on

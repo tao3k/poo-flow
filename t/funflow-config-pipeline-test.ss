@@ -7,8 +7,10 @@
 
 (export funflow-config-pipeline-import-ok)
 
-;;; The focused modules execute their checks on import. Keeping this aggregate
-;;; in-process preserves coverage for the loader/expander memory boundary.
+;; Focused modules execute their checks on import; this aggregate preserves
+;; loader/expander memory coverage without adding runtime assertions.
+;; : Boolean
 (def poo-flow-import-side-effect-test-suite? #t)
 
+;; : Symbol
 (def funflow-config-pipeline-import-ok 'ok)

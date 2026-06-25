@@ -10,6 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor)
         (only-in :poo-flow/src/loops/strategy
@@ -33,14 +34,6 @@
 (def (loop-governor-performance-ref alist key)
   (cdr (assoc key alist)))
 
-;; : (-> Integer (-> Integer Value) [Value])
-(def (loop-governor-performance-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
-
 ;; : (-> Integer String)
 (def (loop-governor-performance-action-key index)
   (string-append "src/generated/" (number->string index)))
@@ -59,20 +52,20 @@
 
 ;; : (-> Integer [LoopPatternDescriptor])
 (def (loop-governor-performance-patterns count)
-  (loop-governor-performance-build-list
+  (poo-flow-performance-build-list
    count
    loop-governor-performance-pattern))
 
 ;; : (-> Integer Integer [String])
 (def (loop-governor-performance-action-keys start count)
-  (loop-governor-performance-build-list
+  (poo-flow-performance-build-list
    count
    (lambda (offset)
      (loop-governor-performance-action-key (+ start offset)))))
 
 ;; : (-> Integer Integer [Alist])
 (def (loop-governor-performance-states start count)
-  (loop-governor-performance-build-list
+  (poo-flow-performance-build-list
    count
    (lambda (offset)
      (list (cons 'acting_on

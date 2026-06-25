@@ -72,12 +72,24 @@
 ;;; projection so every downstream row receives the same naming decision.
 ;; : (-> Value MaybePair)
 (def (poo-flow-user-loop-engine-agent-judge-pair row)
-  (cond
-   ((not (pair? row)) #f)
-   ((not (symbol? (car row))) #f)
-   ((null? (cdr row)) #f)
-   ((pair? (cdr row)) (cons (car row) (cadr row)))
-   (else (cons (car row) (cdr row)))))
+  (and (pair? row)
+       (symbol? (poo-flow-user-loop-engine-agent-judge-role row))
+       (let (tail (poo-flow-user-loop-engine-agent-judge-tail row))
+         (and (not (null? tail))
+              (cons (poo-flow-user-loop-engine-agent-judge-role row)
+                    (poo-flow-user-loop-engine-agent-judge-value tail))))))
+
+;; : (-> Pair Symbol)
+(def (poo-flow-user-loop-engine-agent-judge-role row)
+  (car row))
+
+;; : (-> Pair Value)
+(def (poo-flow-user-loop-engine-agent-judge-tail row)
+  (cdr row))
+
+;; : (-> AgentJudgeTail AgentJudgeValue)
+(def (poo-flow-user-loop-engine-agent-judge-value tail)
+  (if (pair? tail) (car tail) tail))
 
 ;;; Invalid judge rows are skipped rather than repaired; malformed user config
 ;;; should stay visible in the original intent while projections remain total.

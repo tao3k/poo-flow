@@ -10,6 +10,8 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        (only-in :std/srfi/1 fold)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/module-system/object-core
                  poo-flow-module-object)
         (only-in :poo-flow/src/module-system/object-validation
@@ -36,19 +38,16 @@
 
 ;; : (-> Integer PooModuleObject)
 (def (module-object-inheritance-chain-build count)
-  (let loop ((index 0)
-             (parent #f))
-    (if (= index count)
-      parent
-      (let (object
-            (poo-flow-module-object
-             (module-object-inheritance-chain-name index)
-             (if parent (list parent) '())
-             '()
-             '()))
-        (loop (+ index 1) object)))))
+  (fold (lambda (index parent)
+          (poo-flow-module-object
+           (module-object-inheritance-chain-name index)
+           (if parent (list parent) '())
+           '()
+           '()))
+        #f
+        (poo-flow-performance-build-list count (lambda (index) index))))
 
-;; : (-> [Value] Value)
+;; : (-> [Object] Object)
 (def (module-object-inheritance-chain-last values)
   (if (null? (cdr values))
     (car values)

@@ -2,7 +2,8 @@
 ;;; Boundary: loop-engine sandbox profile refs and handoff agreement receipts.
 ;;; Invariant: missing or invalid profiles become diagnostics, never runtime IO.
 
-(import (only-in :poo-flow/src/modules/agent-sandbox/config
+(import (only-in :std/sugar filter)
+        (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile-by-name
                  poo-flow-sandbox-profile-handoff-summary
                  poo-flow-sandbox-profile-runtime-summary)
@@ -185,16 +186,12 @@
 ;;; of the intent because doctor and handoff agreement need the validation rows.
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries summaries)
-  (cond
-   ((null? summaries) '())
-   ((poo-flow-user-loop-engine-intent-ref (car summaries) 'valid? #f)
-    (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries
-     (cdr summaries)))
-   (else
-    (cons
-     (car summaries)
-     (poo-flow-user-loop-engine-invalid-sandbox-runtime-summaries
-      (cdr summaries))))))
+  (filter poo-flow-user-loop-engine-invalid-sandbox-runtime-summary?
+          summaries))
+
+;; : (-> Alist Boolean)
+(def (poo-flow-user-loop-engine-invalid-sandbox-runtime-summary? summary)
+  (not (poo-flow-user-loop-engine-intent-ref summary 'valid? #f)))
 
 ;;; Agreement diagnostics are aggregate rows so profile doctor can present one
 ;;; actionable sandbox issue per loop intent instead of one row per mount.

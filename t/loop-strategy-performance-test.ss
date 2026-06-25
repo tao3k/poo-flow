@@ -10,6 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor)
         (only-in :poo-flow/src/loops/strategy
@@ -29,14 +30,6 @@
 ;; : (-> Alist Symbol Value)
 (def (loop-strategy-performance-ref alist key)
   (cdr (assoc key alist)))
-
-;; : (-> Integer (-> Integer Value) [Value])
-(def (loop-strategy-performance-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
 
 ;; : (-> Integer Symbol)
 (def (loop-strategy-performance-name index)
@@ -67,7 +60,7 @@
 
 ;; : (-> Integer [LoopPatternDescriptor])
 (def (loop-strategy-performance-patterns count)
-  (loop-strategy-performance-build-list
+  (poo-flow-performance-build-list
    count
    loop-strategy-performance-pattern))
 

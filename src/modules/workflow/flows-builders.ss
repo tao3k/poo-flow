@@ -2,7 +2,8 @@
 ;;; Boundary: composed workflow builders for Docker, Store, Tensorflow, and makefile examples.
 ;;; Invariant: builders produce descriptors and runtime command manifests only.
 
-(import :poo-flow/src/core/api
+(import (only-in :std/sugar filter)
+        :poo-flow/src/core/api
         :poo-flow/src/modules/docker
         :poo-flow/src/workflow/store)
 
@@ -22,23 +23,31 @@
 ;;; caller metadata through without owning Docker or Store schema validation.
 ;; : (-> Alist Symbol Value Value)
 (def (workflow-option options key default)
-  (let (entry (assoc key options))
+  (let (entry (workflow-option-entry options key))
     (if entry
-      (cdr entry)
+      (workflow-option-entry-value entry)
       default)))
+
+;; : (-> Alist Symbol Pair)
+(def (workflow-option-entry options key)
+  (assoc key options))
+
+;; : (-> Pair Value)
+(def (workflow-option-entry-value entry)
+  (cdr entry))
 
 ;;; Boundary:
 ;;; - Option filtering keeps control callbacks out of exported descriptor metadata.
 ;;; - Metadata remains inert data for runtime manifests.
 ;; : (-> Alist Symbol Alist)
 (def (workflow-options-without options key)
-  (cond
-   ((null? options) '())
-   ((eq? (car (car options)) key)
-    (workflow-options-without (cdr options) key))
-   (else
-    (cons (car options)
-          (workflow-options-without (cdr options) key)))))
+  (filter (lambda (entry)
+            (not (workflow-option-entry-key? entry key)))
+          options))
+
+;; : (-> Pair Symbol Boolean)
+(def (workflow-option-entry-key? entry key)
+  (eq? (car entry) key))
 
 ;;; Boundary:
 ;;; - Runtime manifests are argv-shaped, so every projected value becomes text.
@@ -201,12 +210,13 @@
                                         'runtime-name
                                         "makefile-tool")))
     (lambda (envelope)
-      (let* ((request (cdr (assoc 'request envelope)))
+      (let* ((request (workflow-envelope-ref envelope 'request #f))
              (operation (cadr (execution-request-request request)))
              (payload (caddr (execution-request-request request)))
              (base (list runtime-name
                          "--request-id"
-                         (workflow-cli-string (cdr (assoc 'request-id envelope)))
+                         (workflow-cli-string
+                          (workflow-envelope-ref envelope 'request-id #f))
                          "--plan-id"
                          (workflow-cli-string (execution-request-plan-id request))
                          "--operation"
@@ -237,6 +247,13 @@
           (else
            (list "--payload" (workflow-cli-string payload)))))))))
 
+;; : (-> Alist Symbol Value Value)
+(def (workflow-envelope-ref envelope key default)
+  (let (entry (workflow-option-entry envelope key))
+    (if entry
+      (workflow-option-entry-value entry)
+      default)))
+
 ;;; Boundary:
 ;;; - The descriptor is inert until materialized by runtime-adapter code.
 ;;; - Tests may override =arguments= to emulate a runtime response through /bin/echo.
@@ -254,4 +271,3 @@
                                             executable
                                             arguments
                                             metadata)))
-

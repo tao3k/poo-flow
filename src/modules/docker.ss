@@ -8,7 +8,8 @@
 ;;; Dependency: generic sandbox resources live in =:poo-flow/src/modules/agent-sandbox/resource=.
 ;;; Policy evidence: tests should trust the installed module registry.
 
-(import :poo-flow/src/core/api
+(import (only-in :std/sugar foldl)
+        :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/resource)
 
 (export docker-task-family-descriptor
@@ -144,14 +145,17 @@
 
 ;; : (-> Alist Alist Alist)
 (def (docker-args-vals-append-left-biased left right)
-  (if (null? right)
-    left
-    (let ((entry (car right)))
-      (if (docker-arg-key-seen? (car entry) left)
-        (docker-args-vals-append-left-biased left (cdr right))
-        (docker-args-vals-append-left-biased
-         (append left (list entry))
-         (cdr right))))))
+  (foldl docker-args-vals-append-one left right))
+
+;; : (-> Pair Alist Alist)
+(def (docker-args-vals-append-one entry args)
+  (if (docker-arg-key-seen? (docker-arg-key entry) args)
+    args
+    (append args (list entry))))
+
+;; : (-> Pair Symbol)
+(def (docker-arg-key entry)
+  (car entry))
 
 ;;; Boundary: Funflow's DockerTaskInput semigroup is left-biased for duplicate
 ;;; mounts and placeholder values, so earlier composition layers keep priority.

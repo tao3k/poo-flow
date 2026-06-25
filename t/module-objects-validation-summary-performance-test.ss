@@ -7,10 +7,12 @@
                  check-equal?
                  test-case
                  test-suite)
+        (only-in :std/srfi/1 first last)
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/module-system/object-validation
                  poo-flow-module-objects-validation-summary))
 
@@ -66,31 +68,48 @@
     (module-objects-validation-summary-put! table 'valid valid?)
     table))
 
-;; : (-> Integer (-> Integer Value) [Value])
-(def (module-objects-validation-summary-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
-
 ;; : (-> Integer [HashTable])
 (def (module-objects-validation-summary-validations count)
-  (module-objects-validation-summary-build-list
+  (poo-flow-performance-build-list
    count
    module-objects-validation-summary-validation))
 
+;; : (-> HashTable [Symbol])
+(def (module-objects-validation-summary-object-identities summary)
+  (hash-get summary 'object-identities))
+
+;; : (-> HashTable [Symbol])
+(def (module-objects-validation-summary-invalid-objects summary)
+  (hash-get summary 'invalid-objects))
+
+;; : (-> HashTable Symbol Pair)
+(def (module-objects-validation-summary-field summary key)
+  (cons key (hash-get summary key)))
+
+;; : (-> HashTable [Pair])
+(def (module-objects-validation-summary-core-fields summary)
+  (map (lambda (key)
+         (module-objects-validation-summary-field summary key))
+       '(object-count invalid-count valid runtime-executed)))
+
+;; : (-> HashTable Pair)
+(def (module-objects-validation-summary-first-object-field summary)
+  (cons 'first-object
+        (first
+         (module-objects-validation-summary-object-identities summary))))
+
+;; : (-> HashTable Pair)
+(def (module-objects-validation-summary-last-invalid-field summary)
+  (cons 'last-invalid
+        (last
+         (module-objects-validation-summary-invalid-objects summary))))
+
 ;; : (-> HashTable Alist)
 (def (module-objects-validation-summary-snapshot summary)
-  (list (cons 'object-count (hash-get summary 'object-count))
-        (cons 'invalid-count (hash-get summary 'invalid-count))
-        (cons 'valid (hash-get summary 'valid))
-        (cons 'runtime-executed (hash-get summary 'runtime-executed))
-        (cons 'first-object
-              (car (hash-get summary 'object-identities)))
-        (cons 'last-invalid
-              (let (invalids (hash-get summary 'invalid-objects))
-                (car (reverse invalids))))))
+  (append (module-objects-validation-summary-core-fields summary)
+          (list
+           (module-objects-validation-summary-first-object-field summary)
+           (module-objects-validation-summary-last-invalid-field summary))))
 
 ;; : (-> Alist Symbol Value)
 (def (module-objects-validation-summary-ref alist key)

@@ -18,6 +18,20 @@
         defpoo-flow-first
         defpoo-flow-second)
 
+;; defpoo-flow-define-binding-macro
+;;   : (-> Identifier Identifier SyntaxList MacroDefinition)
+;;   | doc m%
+;;       Internal macro family generator for public flow binding forms. It
+;;       keeps the hygienic quoting/binding pattern in one place while each
+;;       exported macro still names its constructor and argument surface.
+;;     %
+(defrules defpoo-flow-define-binding-macro ()
+  ((_ macro-name constructor (arg ...))
+   (defrules macro-name ()
+     ((_ binding flow-name arg ...)
+      (def binding
+        (constructor 'flow-name arg ...))))))
+
 ;; defpoo-flow-arr
 ;;   : (-> Identifier Identifier ProcedureExpr ContractExpr ContractExpr FlowBinding)
 ;;   | doc m%
@@ -31,10 +45,10 @@
 ;;       ;; => flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-arr ()
-  ((_ binding flow-name proc input-contract output-contract)
-   (def binding
-     (flow-arr 'flow-name proc input-contract output-contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-arr
+ flow-arr
+ (proc input-contract output-contract))
 
 ;; defpoo-flow-identity
 ;;   : (-> Identifier Identifier ContractExpr FlowBinding)
@@ -48,10 +62,10 @@
 ;;       ;; => identity flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-identity ()
-  ((_ binding flow-name contract)
-   (def binding
-     (flow-identity 'flow-name contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-identity
+ flow-identity
+ (contract))
 
 ;; defpoo-flow-compose
 ;;   : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
@@ -65,10 +79,10 @@
 ;;       ;; => composed flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-compose ()
-  ((_ binding flow-name left right)
-   (def binding
-     (flow-then 'flow-name left right))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-compose
+ flow-then
+ (left right))
 
 ;; defpoo-flow-map
 ;;   : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
@@ -82,10 +96,10 @@
 ;;       ;; => mapped flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-map ()
-  ((_ binding flow-name source proc output-contract)
-   (def binding
-     (flow-map 'flow-name source proc output-contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-map
+ flow-map
+ (source proc output-contract))
 
 ;; defpoo-flow-bind
 ;;   : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
@@ -99,10 +113,10 @@
 ;;       ;; => bound flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-bind ()
-  ((_ binding flow-name source binder output-contract)
-   (def binding
-     (flow-bind 'flow-name source binder output-contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-bind
+ flow-bind
+ (source binder output-contract))
 
 ;; defpoo-flow-kleisli
 ;;   : (-> Identifier Identifier FlowExpr ProcedureExpr ContractExpr FlowBinding)
@@ -116,10 +130,10 @@
 ;;       ;; => bound flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-kleisli ()
-  ((_ binding flow-name source binder output-contract)
-   (def binding
-     (flow-kleisli 'flow-name source binder output-contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-kleisli
+ flow-kleisli
+ (source binder output-contract))
 
 ;; defpoo-flow-fanout
 ;;   : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
@@ -133,10 +147,10 @@
 ;;       ;; => fanout flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-fanout ()
-  ((_ binding flow-name left right)
-   (def binding
-     (flow-fanout 'flow-name left right))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-fanout
+ flow-fanout
+ (left right))
 
 ;; defpoo-flow-dag
 ;;   : (-> Identifier Identifier FlowExpr FlowExpr FlowBinding)
@@ -150,10 +164,10 @@
 ;;       ;; => dag flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-dag ()
-  ((_ binding flow-name left right)
-   (def binding
-     (flow-fanout 'flow-name left right))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-dag
+ flow-fanout
+ (left right))
 
 ;; defpoo-flow-dag-artifacts
 ;;   : (-> Identifier Identifier FlowExpr RequestIdExpr DagArtifactBindings)
@@ -187,10 +201,10 @@
 ;;       ;; => try flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-try ()
-  ((_ binding flow-name source)
-   (def binding
-     (try-flow 'flow-name source))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-try
+ try-flow
+ (source))
 
 ;; defpoo-flow-first
 ;;   : (-> Identifier Identifier FlowExpr ContractExpr FlowBinding)
@@ -203,10 +217,10 @@
 ;;       ;; => first flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-first ()
-  ((_ binding flow-name source second-contract)
-   (def binding
-     (flow-first 'flow-name source second-contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-first
+ flow-first
+ (source second-contract))
 
 ;; defpoo-flow-second
 ;;   : (-> Identifier Identifier FlowExpr ContractExpr FlowBinding)
@@ -219,7 +233,7 @@
 ;;       ;; => second flow binding
 ;;       ```
 ;;     %
-(defrules defpoo-flow-second ()
-  ((_ binding flow-name source first-contract)
-   (def binding
-     (flow-second 'flow-name source first-contract))))
+(defpoo-flow-define-binding-macro
+ defpoo-flow-second
+ flow-second
+ (source first-contract))

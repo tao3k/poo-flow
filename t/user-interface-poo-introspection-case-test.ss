@@ -23,15 +23,10 @@
 
 ;; : (-> [UserModuleFlagEntry] Symbol Value)
 (def (poo-introspection-test-flag flags key)
-  (cond
-   ((null? flags) #f)
-   ((and (pair? (car flags))
-         (eq? (caar flags) key))
-    (cdar flags))
-   ((pair? flags)
-    (poo-introspection-test-flag (cdr flags) key))
-   (else #f)))
+  (let (entry (assoc key flags))
+    (if entry (cdr entry) #f)))
 
+;; : TestSuite
 (def user-interface-poo-introspection-case-test
   (test-suite "poo-flow user interface POO authoring gate case"
     (test-case "loads as a formal funflow module configuration"

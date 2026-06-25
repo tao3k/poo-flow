@@ -7,17 +7,21 @@
 
 (export run-funflow-config-pipeline-error-checks)
 
+;; : Boolean
 (def poo-flow-import-side-effect-test-suite? #t)
 
+;; : (-> (-> Unit Object) Boolean)
 (def (funflow-config-error? thunk)
   (let (failure (with-catch (lambda (failure) failure) thunk))
     (error-object? failure)))
 
+;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-workflow-category-selection)
   (use-module workflow
     :config
     (pipeline default)))
 
+;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-bad-dependency-selection)
   (use-module funflow
     :config
@@ -33,6 +37,7 @@
       pipeline-name: 'bad
       checks: (list funflow-test/bad))))
 
+;; : (-> Unit Symbol)
 (def (run-funflow-config-pipeline-error-checks)
   (check-equal?
    (funflow-config-error?

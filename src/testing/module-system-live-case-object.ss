@@ -190,14 +190,20 @@
 ;;; nested declarative clauses without depending on runtime config readers.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-module-system-live-case-alist-ref entries key default)
-  (cond
-   ((not (list? entries)) default)
-   ((null? entries) default)
-   ((and (pair? (car entries))
-         (equal? (caar entries) key))
-    (cdar entries))
-   (else
-    (poo-flow-module-system-live-case-alist-ref (cdr entries) key default))))
+  (let (entry
+        (and (list? entries)
+             (poo-flow-module-system-live-case-alist-entry entries key)))
+    (if entry
+      (poo-flow-module-system-live-case-alist-entry-value entry)
+      default)))
+
+;; : (-> Alist Symbol Pair)
+(def (poo-flow-module-system-live-case-alist-entry entries key)
+  (assoc key entries))
+
+;; : (-> Pair Value)
+(def (poo-flow-module-system-live-case-alist-entry-value entry)
+  (cdr entry))
 
 ;; : (-> POOObject Symbol Value Value)
 (def (poo-flow-module-system-live-case-config-ref live-case key default)

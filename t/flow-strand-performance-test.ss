@@ -10,6 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/performance
         (only-in :poo-flow/src/core/flow-strand
                  default-flow-strand-registry
                  flow-strand-for-kind-in
@@ -33,14 +34,6 @@
 (def (flow-strand-performance-ref alist key)
   (cdr (assoc key alist)))
 
-;; : (-> Integer (-> Integer Value) [Value])
-(def (flow-strand-performance-build-list count make-value)
-  (let loop ((index 0) (values '()))
-    (if (= index count)
-      (reverse values)
-      (loop (+ index 1)
-            (cons (make-value index) values)))))
-
 ;; : (-> Integer Symbol)
 (def (flow-strand-performance-name index)
   (string->symbol
@@ -58,7 +51,7 @@
 
 ;; : (-> Integer [FlowStrandDescriptor])
 (def (flow-strand-performance-descriptors count)
-  (flow-strand-performance-build-list
+  (poo-flow-performance-build-list
    count
    flow-strand-performance-descriptor))
 

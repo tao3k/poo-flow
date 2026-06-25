@@ -12,22 +12,20 @@
 
 (export run-funflow-config-pipeline-direct-checks)
 
+;; : Boolean
 (def poo-flow-import-side-effect-test-suite? #t)
 
+;; : (-> Alist Symbol Object)
 (def (funflow-config-direct-alist-ref alist key)
   (let (entry (assoc key alist))
     (if entry (cdr entry) #f)))
 
+;; : (-> Alist Symbol Object)
 (def (funflow-config-direct-flag flags key)
-  (cond
-   ((null? flags) #f)
-   ((and (pair? (car flags))
-         (eq? (caar flags) key))
-    (cdar flags))
-   ((pair? flags)
-    (funflow-config-direct-flag (cdr flags) key))
-   (else #f)))
+  (let (entry (assoc key flags))
+    (if entry (cdr entry) #f)))
 
+;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-direct-selection)
   (use-module funflow
     :config
@@ -62,6 +60,7 @@
       metadata: '((scenario . direct-test)
                   (authoring-style . gerbil-poo-native)))))
 
+;; : (-> Unit [PooSandboxProfile])
 (def (funflow-config-direct-sandbox-profiles)
   (poo-flow-sandbox-profiles
    (ci/build
@@ -101,6 +100,7 @@
     (metadata (intent . funflow-ci-check)
               (scope . funflow-test)))))
 
+;; : (-> Unit Symbol)
 (def (run-funflow-config-pipeline-direct-checks)
   (let* ((selection (car (funflow-config-direct-selection)))
          (flags (poo-flow-user-module-selection-flags selection))
