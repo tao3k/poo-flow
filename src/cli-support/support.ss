@@ -19,6 +19,7 @@
         poo-flow-cli-run-file
         poo-flow-cli-run-inherited
         poo-flow-cli-run-captured
+        poo-flow-cli-gerbil-env-vars-argv
         poo-flow-cli-gerbil-env-argv
         poo-flow-cli-string-prefix?
         poo-flow-cli-string-suffix?
@@ -124,13 +125,18 @@
       (cons (poo-flow-cli-exit-code status) output))))
 
 ;; : (-> String [String] [String])
-(def (poo-flow-cli-gerbil-env-argv executable args)
+(def (poo-flow-cli-gerbil-env-vars-argv env-bindings executable args)
   (append
    (list "env"
          (string-append "GERBIL_LOADPATH="
-                        (poo-flow-cli-gerbil-loadpath))
-         executable)
+                        (poo-flow-cli-gerbil-loadpath)))
+   env-bindings
+   (list executable)
    args))
+
+;; : (-> String [String] [String])
+(def (poo-flow-cli-gerbil-env-argv executable args)
+  (poo-flow-cli-gerbil-env-vars-argv [] executable args))
 
 ;; : (-> String String Boolean)
 (def (poo-flow-cli-string-prefix? prefix text)

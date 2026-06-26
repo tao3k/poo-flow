@@ -3,17 +3,17 @@
 
 (import :gerbil/gambit
         :poo-flow/src/cli-support/support
-        (only-in :std/srfi/1 filter-map fold take drop unfold)
-        (only-in :std/srfi/13 string-concatenate))
+        (only-in :std/srfi/1 filter-map fold take drop unfold))
 
 (export poo-flow-cli-expand-test-args
         poo-flow-cli-read-unit-test-files
         poo-flow-cli-runnable-test-form?
-        poo-flow-cli-test-policy-file-path
+        poo-flow-cli-policy-test-file
+        poo-flow-cli-test-files-env-binding
         poo-flow-cli-test
         poo-flow-cli-perf)
 
-;; : (-> Unit [String])
+;; : (-> Unit String)
 (def (poo-flow-cli-unit-test-root)
   "t/unit-tests.ss")
 
@@ -36,130 +36,6 @@
                           (string-length prefix)
                           (string-length module-name))
                ".ss")))))
-
-;; : (-> String String)
-(def (poo-flow-cli-test-file-without-extension file)
-  (if (poo-flow-cli-string-suffix? ".ss" file)
-    (substring file 0 (- (string-length file) 3))
-    file))
-
-;; : (-> String String)
-(def (poo-flow-cli-test-file->module file)
-  (string-append ":poo-flow/"
-                 (poo-flow-cli-test-file-without-extension file)))
-
-;; : (-> String MaybeFixnum)
-(def (poo-flow-cli-last-slash-index text)
-  (string-rindex text #\/))
-
-;; : (-> String String)
-(def (poo-flow-cli-test-file->suite file)
-  (let* ((module-path (poo-flow-cli-test-file-without-extension file))
-         (slash (poo-flow-cli-last-slash-index module-path))
-         (start (if slash (+ slash 1) 0)))
-    (substring module-path start (string-length module-path))))
-
-;; : (-> [String] String)
-(def (poo-flow-cli-test-imports-expression files)
-  (string-concatenate
-   (map (lambda (file)
-          (string-append " " (poo-flow-cli-test-file->module file)))
-        files)))
-
-;; : (-> [String] String)
-(def (poo-flow-cli-top-level-run-tests-form? form)
-  (and (pair? form)
-       (eq? (car form) 'run-tests!)))
-
-;; : (-> String Boolean)
-(def (poo-flow-cli-file-runs-tests-on-import? file)
-  (and (file-exists? file)
-       (call-with-input-file file
-         (lambda (port)
-           (let loop ()
-             (let (form (read port))
-               (cond
-                ((eof-object? form) #f)
-                ((poo-flow-cli-top-level-run-tests-form? form) #t)
-                (else (loop)))))))))
-
-;; : (-> Object MaybeString)
-(def (poo-flow-cli-export-test-suite-name entry)
-  (and (symbol? entry)
-       (let (name (symbol->string entry))
-         (and (poo-flow-cli-string-suffix? "-test" name)
-              name))))
-
-;; : (-> Object [String])
-(def (poo-flow-cli-export-form-test-suite-names form)
-  (if (and (pair? form)
-           (eq? (car form) 'export))
-    (filter-map poo-flow-cli-export-test-suite-name (cdr form))
-    []))
-
-;; : (-> String [String])
-(def (poo-flow-cli-file-exported-test-suites file)
-  (if (file-exists? file)
-    (call-with-input-file file
-      (lambda (port)
-        (let loop ((suites []))
-          (let (form (read port))
-            (if (eof-object? form)
-              (reverse suites)
-              (loop (append (poo-flow-cli-export-form-test-suite-names form)
-                            suites)))))))
-    []))
-
-;; : (-> String String)
-(def (poo-flow-cli-file-test-suite-names file)
-  (let (exported (poo-flow-cli-file-exported-test-suites file))
-    (if (null? exported)
-      (list (poo-flow-cli-test-file->suite file))
-      exported)))
-
-;; : (-> String String)
-(def (poo-flow-cli-run-suite-expression suite)
-  (string-append " (run-tests! " suite ")"))
-
-;; : (-> String String)
-(def (poo-flow-cli-test-run-expression file)
-  (if (poo-flow-cli-file-runs-tests-on-import? file)
-    ""
-    (string-concatenate
-     (map poo-flow-cli-run-suite-expression
-          (poo-flow-cli-file-test-suite-names file)))))
-
-;; : (-> [String] String)
-(def (poo-flow-cli-test-runs-expression files)
-  (string-concatenate
-   (map (lambda (file)
-          (poo-flow-cli-test-run-expression file))
-        files)))
-
-;; : (-> [String] String)
-(def (poo-flow-cli-test-files-expression files)
-  (string-append "'("
-                 (string-concatenate
-                  (map (lambda (file)
-                         (string-append " " (object->string file)))
-                       files))
-                 ")"))
-
-;; : (-> [String] String)
-(def (poo-flow-cli-test-policy-expression files)
-  (string-append " (run-tests! (make-policy-test \".\" "
-                 (poo-flow-cli-test-files-expression files)
-                 "))"))
-
-;; : (-> [String] String)
-(def (poo-flow-cli-test-expression files)
-  (string-append "(begin (import :std/test"
-                 " (only-in :gslph/src/policy/gxtest make-policy-test)"
-                 (poo-flow-cli-test-imports-expression files)
-                 ")"
-                 (poo-flow-cli-test-runs-expression files)
-                 (poo-flow-cli-test-policy-expression files)
-                 ")"))
 
 ;; : (-> [Object] [String])
 (def (poo-flow-cli-unit-test-files-from-imports specs)
@@ -285,52 +161,31 @@
    (else
     (poo-flow-cli-reject-empty-test-file! (car files)))))
 
-;; : (-> [String] String)
-(def (poo-flow-cli-test-policy-file-content files)
-  (string-append
-   ";;; -*- Gerbil -*-\n"
-   ";;; Generated by poo-flow test; do not commit.\n"
-   "(import (only-in :gslph/src/policy/gxtest make-policy-test))\n"
-   "(export poo-flow-cli-policy-test)\n"
-   "(def poo-flow-cli-policy-test\n"
-   "  (make-policy-test \".\" "
-   (poo-flow-cli-test-files-expression files)
-   "))\n"))
+;; : String
+(def +poo-flow-cli-test-files-env+
+  "POO_FLOW_TEST_FILES")
 
-;; : (-> String)
-(def (poo-flow-cli-test-policy-dir)
-  ".gerbil/tmp/poo-flow-test")
+;; : (-> Unit String)
+(def (poo-flow-cli-policy-test-file)
+  "t/poo-flow-policy-test.ss")
 
-;; : (-> Unit Void)
-(def (poo-flow-cli-ensure-test-policy-dir!)
-  (create-directory* (poo-flow-cli-test-policy-dir)))
-
-;; : (-> String)
-(def (poo-flow-cli-test-policy-file-path)
-  (string-append (poo-flow-cli-test-policy-dir)
-                 "/poo-flow-policy-"
-                 (object->string (time->seconds (current-time)))
-                 ".ss"))
+;; : (-> Datum String)
+(def (poo-flow-cli-write-datum value)
+  (call-with-output-string ""
+    (lambda (port) (write value port))))
 
 ;; : (-> [String] String)
-(def (poo-flow-cli-write-test-policy-file files)
-  (let (path (poo-flow-cli-test-policy-file-path))
-    (poo-flow-cli-ensure-test-policy-dir!)
-    (call-with-output-file path
-      (lambda (port)
-        (display (poo-flow-cli-test-policy-file-content files) port)))
-    path))
+(def (poo-flow-cli-test-files-env-binding files)
+  (string-append +poo-flow-cli-test-files-env+
+                 "="
+                 (poo-flow-cli-write-datum files)))
 
-;; : (-> MaybeString Unit)
-(def (poo-flow-cli-delete-file-if-exists file)
-  (when (and file (file-exists? file))
-    (delete-file file)))
-
-;; : (-> [String] String [String])
-(def (poo-flow-cli-test-argv files policy-file)
-  (poo-flow-cli-gerbil-env-argv
+;; : (-> [String] [String])
+(def (poo-flow-cli-test-argv files)
+  (poo-flow-cli-gerbil-env-vars-argv
+   [(poo-flow-cli-test-files-env-binding files)]
    "gxtest"
-   (append files [policy-file])))
+   (append files [(poo-flow-cli-policy-test-file)])))
 
 ;; : (-> Unit Integer)
 (def (poo-flow-cli-default-test-batch-size)
@@ -377,21 +232,14 @@
   (write files)
   (newline)
   (force-output)
-  (let (policy-file #f)
-    (dynamic-wind
-      (lambda ()
-        (set! policy-file (poo-flow-cli-write-test-policy-file files)))
-      (lambda ()
-        (let* ((started-at (time->seconds (current-time)))
-               (status (poo-flow-cli-run-inherited
-                        (poo-flow-cli-test-argv files policy-file)))
-               (elapsed (- (time->seconds (current-time)) started-at)))
-          (if (= status 0)
-            (poo-flow-cli-display-test-receipt files elapsed)
-            (poo-flow-cli-display-test-failure files elapsed status))
-          status))
-      (lambda ()
-        (poo-flow-cli-delete-file-if-exists policy-file)))))
+  (let* ((started-at (time->seconds (current-time)))
+         (status (poo-flow-cli-run-inherited
+                  (poo-flow-cli-test-argv files)))
+         (elapsed (- (time->seconds (current-time)) started-at)))
+    (if (= status 0)
+      (poo-flow-cli-display-test-receipt files elapsed)
+      (poo-flow-cli-display-test-failure files elapsed status))
+    status))
 
 ;; : (-> [String] Integer Integer)
 (def (poo-flow-cli-batch-width files batch-size)
@@ -438,10 +286,10 @@
    (darwin (list "/usr/bin/time" "-l"))
    (else (list "/usr/bin/time" "-v"))))
 
-;; : (-> [String] String [String])
-(def (poo-flow-cli-perf-rss-argv files policy-file)
+;; : (-> [String] [String])
+(def (poo-flow-cli-perf-rss-argv files)
   (append (poo-flow-cli-perf-rss-time-argv)
-          (poo-flow-cli-test-argv files policy-file)))
+          (poo-flow-cli-test-argv files)))
 
 ;; : (-> Integer Integer Number Void)
 (def (poo-flow-cli-display-rss-receipt rss-bytes max-bytes elapsed)
@@ -488,24 +336,17 @@
 
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-measured-files max-megabytes files)
-  (let (policy-file #f)
-    (dynamic-wind
-      (lambda ()
-        (set! policy-file (poo-flow-cli-write-test-policy-file files)))
-      (lambda ()
-        (let* ((started-at (time->seconds (current-time)))
-               (result (poo-flow-cli-run-captured
-                        (poo-flow-cli-perf-rss-argv files policy-file)))
-               (elapsed (- (time->seconds (current-time)) started-at))
-               (status (car result))
-               (output (cdr result)))
-          (display output)
-          (force-output)
-          (if (= status 0)
-            (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
-            status)))
-      (lambda ()
-        (poo-flow-cli-delete-file-if-exists policy-file)))))
+  (let* ((started-at (time->seconds (current-time)))
+         (result (poo-flow-cli-run-captured
+                  (poo-flow-cli-perf-rss-argv files)))
+         (elapsed (- (time->seconds (current-time)) started-at))
+         (status (car result))
+         (output (cdr result)))
+    (display output)
+    (force-output)
+    (if (= status 0)
+      (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
+      status)))
 
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-validated-files max-megabytes files)

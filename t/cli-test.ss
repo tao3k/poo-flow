@@ -17,7 +17,8 @@
                  poo-flow-cli-string-contains?
                  poo-flow-cli-string-prefix?)
         (only-in :poo-flow/src/cli-support/test
-                 poo-flow-cli-test-policy-file-path))
+                 poo-flow-cli-policy-test-file
+                 poo-flow-cli-test-files-env-binding))
 
 (export cli-test)
 
@@ -53,15 +54,20 @@
         '(def poo-flow-import-side-effect-test-suite? #t))
        #t))
 
-    (test-case "keeps generated policy files out of the binary directory"
-      (let ((path (poo-flow-cli-test-policy-file-path))
-            (prefix ".gerbil/tmp/poo-flow-test/"))
+    (test-case "passes policy file scope as data to the static gxtest bridge"
+      (let* ((files '("t/agent-sandbox-descriptor-test.ss"))
+             (binding (poo-flow-cli-test-files-env-binding files))
+             (prefix "POO_FLOW_TEST_FILES="))
         (check-equal?
-         (substring path 0 (string-length prefix))
-         prefix)
+         (poo-flow-cli-policy-test-file)
+         "t/poo-flow-policy-test.ss")
         (check-equal?
-         (not (equal? (substring path 0 (string-length ".bin/"))
-                      ".bin/"))
+         (poo-flow-cli-string-prefix? prefix binding)
+         #t)
+        (check-equal?
+         (poo-flow-cli-string-contains?
+          "t/agent-sandbox-descriptor-test.ss"
+          binding)
          #t)))
 
     (test-case "uses package-local Gerbil loadpath for focused commands"
