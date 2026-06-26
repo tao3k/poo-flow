@@ -197,8 +197,8 @@ jobs:
             nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
           }
           GERBIL_BUILD_CORES="$(build_cores)" gxpkg env ./build.ss compile --release --optimized
-          test -x .bin/poo-flow
-          .bin/poo-flow --help >/tmp/poo-flow-help.txt
+          test -x .gerbil/bin/poo-flow
+          .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
           test -s /tmp/poo-flow-help.txt
 
       - name: Package provider binary
@@ -208,7 +208,7 @@ jobs:
           target="$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
           rm -rf package
           mkdir -p package/bin package/src
-          cp .bin/poo-flow package/bin/poo-flow
+          cp .gerbil/bin/poo-flow package/bin/poo-flow
           cp -R src/. package/src/
           cp build.ss gerbil.pkg package/
           chmod +x "package/bin/${BINARY}"

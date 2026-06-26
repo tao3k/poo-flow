@@ -230,6 +230,8 @@
          (if objects-fragment?
            (syntax
             (begin
+              (import :poo-flow/src/module-system/object-core
+                      :poo-flow/src/module-system/object-validation)
               (def binding
                 (poo-flow-require-module-objects-validation!
                  (begin fragment-form ...)))

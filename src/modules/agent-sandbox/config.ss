@@ -97,11 +97,11 @@
 (def (poo-flow-sandbox-profile-config name-value forms)
   (call-with-values
     (lambda () (poo-flow-sandbox-profile-backend-values forms))
-    (lambda (backend-kind backend-ref)
+    (lambda (backend-kind-value backend-ref-value)
       (.o kind: poo-flow-sandbox-profile-kind
           name: name-value
-          backend-kind: backend-kind
-          backend-ref: backend-ref
+          backend-kind: backend-kind-value
+          backend-ref: backend-ref-value
           network-policy: (poo-flow-sandbox-profile-list-form
                            'network
                            forms

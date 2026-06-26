@@ -184,14 +184,14 @@ jobs:
             nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
           }
           GERBIL_BUILD_CORES="$(build_cores)" gxpkg env ./build.ss compile --release --optimized
-          test -x .bin/poo-flow
-          .bin/poo-flow --help >/tmp/poo-flow-help.txt
+          test -x .gerbil/bin/poo-flow
+          .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
           test -s /tmp/poo-flow-help.txt
 
       - name: Run package test roots through poo-flow
         shell: bash
         run: |
           set -euo pipefail
-          .bin/poo-flow test t/unit-tests.ss
-          .bin/poo-flow test t/contract-tests.ss
-          .bin/poo-flow test t/integration-tests.ss
+          .gerbil/bin/poo-flow test t/unit-tests.ss
+          .gerbil/bin/poo-flow test t/contract-tests.ss
+          .gerbil/bin/poo-flow test t/integration-tests.ss
