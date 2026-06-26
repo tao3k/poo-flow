@@ -183,12 +183,22 @@ jobs:
                       ln -s "$gambit_root/$gambit_dir" "$runtime_prefix/$gambit_dir"
                     fi
                   done
+                  if [ -d "$gambit_root/lib" ] && [ -d "$runtime_prefix/lib" ]; then
+                    for gambit_lib in "$gambit_root"/lib/libgambit*; do
+                      [ -e "$gambit_lib" ] || continue
+                      target="$runtime_prefix/lib/$(basename "$gambit_lib")"
+                      rm -f "$target"
+                      ln -s "$gambit_lib" "$target"
+                    done
+                  fi
                 fi
               done
               test -d "$runtime_prefix/include"
               test -x "$runtime_prefix/bin/gambuild-C"
+              ls "$runtime_prefix"/lib/libgambit* >/dev/null
               echo "Gambit include: $runtime_prefix/include"
               echo "Gambit builder: $runtime_prefix/bin/gambuild-C"
+              echo "Gambit library: $runtime_prefix/lib/libgambit*"
             }
 
             seen_runtime_prefixes=""
