@@ -82,7 +82,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/Homebrew
-          key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-v1
+          key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-v2
           restore-keys: |
             homebrew-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-
 
@@ -92,7 +92,8 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE: 1
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
-          brew list --formula gambit-scheme >/dev/null 2>&1 && brew unlink gambit-scheme || true
+          brew install gambit-scheme
+          brew unlink gambit-scheme || true
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
           brew install gerbil-scheme jq openssl pkg-config sqlite zlib
           brew link --overwrite gerbil-scheme
@@ -169,20 +170,21 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
             gerbil_real_prefix="$(cd "$GERBIL_PREFIX" && pwd -P)"
-            gsc_path="$(command -v gsc || true)"
-            if [ -z "$gsc_path" ] && [ -x "$GERBIL_PREFIX/bin/gsc" ]; then
-              gsc_path="$GERBIL_PREFIX/bin/gsc"
-            fi
+            gsc_path="$GERBIL_PREFIX/bin/gsc"
             if [ -n "$gsc_path" ]; then
+              gsc_real_path="$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$gsc_path")"
+              gsc_runtime_prefix="$(cd "$(dirname "$gsc_real_path")/.." && pwd -P)"
               mkdir -p "$gerbil_real_prefix/v0.18.2/bin"
               ln -sf "$gsc_path" "$gerbil_real_prefix/v0.18.2/bin/gsc"
+            else
+              gsc_runtime_prefix="$gerbil_real_prefix/v0.18.2"
             fi
             gambit_prefix="$(brew --prefix gambit-scheme 2>/dev/null || true)"
             if [ -n "$gambit_prefix" ]; then
-              mkdir -p "$gerbil_real_prefix/v0.18.2"
+              mkdir -p "$gsc_runtime_prefix"
               for gambit_dir in include lib; do
-                if [ -d "$gambit_prefix/$gambit_dir" ] && [ ! -e "$gerbil_real_prefix/v0.18.2/$gambit_dir" ]; then
-                  ln -s "$gambit_prefix/$gambit_dir" "$gerbil_real_prefix/v0.18.2/$gambit_dir"
+                if [ -d "$gambit_prefix/$gambit_dir" ] && [ ! -e "$gsc_runtime_prefix/$gambit_dir" ]; then
+                  ln -s "$gambit_prefix/$gambit_dir" "$gsc_runtime_prefix/$gambit_dir"
                 fi
               done
             fi
@@ -199,9 +201,9 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg') }}
+          key: gerbil-pkg-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg') }}
           restore-keys: |
-            gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-
+            gerbil-pkg-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         env:
@@ -244,21 +246,46 @@ jobs:
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils.manifest"
             gxpkg retag >/dev/null 2>&1 || true
           }
-          link_legacy_gerbil_utils_package() {
-            local src=".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils"
+          link_package() {
+            local pkg="$1"
+            local repo="$2"
+            local ref="${3:-}"
+            local src=".gerbil/pkg/$pkg"
             mkdir -p "$(dirname "$src")"
-            git clone https://github.com/mighty-gerbils/gerbil-utils.git "$src"
-            gxpkg link git.cons.io/mighty-gerbils/gerbil-utils "$src"
-            GERBIL_BUILD_CORES="$(build_cores)" gxpkg build git.cons.io/mighty-gerbils/gerbil-utils
+            git clone "$repo" "$src"
+            if [ -n "$ref" ]; then
+              git -C "$src" checkout "$ref"
+            fi
+            gxpkg link "$pkg" "$src"
+          }
+          build_package() {
+            GERBIL_BUILD_CORES="$(build_cores)" gxpkg build "$1"
+          }
+          install_gerbil_package_dependencies() {
+            link_package \
+              github.com/mighty-gerbils/gerbil-utils \
+              https://github.com/mighty-gerbils/gerbil-utils.git
+            gxpkg link \
+              git.cons.io/mighty-gerbils/gerbil-utils \
+              ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils"
+            build_package git.cons.io/mighty-gerbils/gerbil-utils
+            link_package \
+              github.com/mighty-gerbils/gerbil-poo \
+              https://github.com/mighty-gerbils/gerbil-poo.git \
+              f4b322299830acbd1cd5b91984c4107ac56bdac3
+            build_package github.com/mighty-gerbils/gerbil-poo
+            link_package \
+              github.com/tao3k/gerbil-scheme-language-project-harness \
+              https://github.com/tao3k/gerbil-scheme-language-project-harness.git \
+              16036d84bb4d9ec29bd14c7426eec2f8ceac8223
+            build_package github.com/tao3k/gerbil-scheme-language-project-harness
           }
           mkdir -p "$HOME/.gerbil/pkg"
-          gxpkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           if [ "$GERBIL_PKG_CACHE_HIT" = "true" ]; then
             echo "Using cached Gerbil package dependencies"
           else
             reset_stale_package_cache
-            link_legacy_gerbil_utils_package
-            GERBIL_BUILD_CORES="$(build_cores)" gxpkg deps --install
+            install_gerbil_package_dependencies
           fi
           gxpkg list
 
