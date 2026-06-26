@@ -34,18 +34,11 @@
                 (poo-performance-run-gate
                   poo-performance-construction-fixture
                  (lambda ()
-                   (poo-performance-module-object field-count))))
-               (best-ms
-                (benchmark-fixture-ref receipt 'elapsedMs)))
+                   (poo-performance-module-object field-count)))))
           (check-equal? (poo-flow-module-object-identity object)
                         'performance-object)
           (check-equal? (length (poo-flow-module-object-fields object))
                         field-count)
-          (check-equal? (< best-ms
-                           (benchmark-fixture-ref
-                            poo-performance-construction-fixture
-                            'maxTotalMs))
-                        #t)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestCase

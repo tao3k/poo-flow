@@ -1,4 +1,4 @@
-((maxTotalMs . 100)
+((max_total . 100ms)
  (maxCollectMs . 1000)
  (maxParseMs . 750)
  (maxFileMs . 250)
