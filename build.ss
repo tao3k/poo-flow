@@ -12,10 +12,8 @@
 (import :clan/building
         (only-in :gslph/src/build-api/source-coverage
                  gslph-source-coverage)
-        (only-in :clan/filesystem
-                 find-files
-                 path-is-script?)
         (only-in :gerbil/gambit
+                 current-directory
                  getenv
                  path-expand
                  pretty-print
@@ -26,9 +24,7 @@
                  __available-cores)
         (only-in :std/make
                  make
-                 make-clean)
-        (only-in :std/misc/path
-                 path-extension-is?))
+                 make-clean))
 
 ;; : (-> String)
 (def (nono-c-binding-include-option)
@@ -41,6 +37,10 @@
 ;; : (Listof String)
 (def +poo-flow-test-include-dirs+
   '("t"))
+
+;; : (Listof String)
+(def +poo-flow-test-exclude-dirs+
+  '("fixtures"))
 
 ;; : (Listof String)
 (def +poo-flow-test-root-files+
@@ -106,55 +106,51 @@
   (poo-flow-cli-entry-build-spec options))
 
 ;; : (String -> Bool)
-(def (poo-flow-package-source-file? file)
-  (and (path-extension-is? file ".ss")
-       (not (path-is-script? file))
-       (not (member file +poo-flow-special-source-files+))))
-
-;; : (String String -> Bool)
-(def (poo-flow-string-prefix? prefix text)
-  (let ((prefix-length (string-length prefix))
-        (text-length (string-length text)))
-    (and (<= prefix-length text-length)
-         (string=? (substring text 0 prefix-length) prefix))))
-
-;; : (String String -> Bool)
-(def (poo-flow-direct-child? dir file)
-  (let (prefix (string-append dir "/"))
-    (and (poo-flow-string-prefix? prefix file)
-         (let lp ((index (string-length prefix)))
-           (cond
-            ((= index (string-length file)) #t)
-            ((char=? (string-ref file index) #\/) #f)
-            (else (lp (+ index 1))))))))
+;; : (forall (a) (-> String (-> a) a))
+(def (poo-flow-with-directory directory thunk)
+  (let (previous (current-directory))
+    (dynamic-wind
+      (lambda () (current-directory directory))
+      thunk
+      (lambda () (current-directory previous)))))
 
 ;; : (String -> Bool)
-(def (poo-flow-root-test-source-file? file)
-  (and (poo-flow-package-source-file? file)
-       (poo-flow-direct-child? "t" file)))
+(def (poo-flow-root-module-path? path)
+  (let loop ((index 0))
+    (cond
+     ((= index (string-length path)) #t)
+     ((char=? (string-ref path index) #\/) #f)
+     (else (loop (+ index 1))))))
 
-;; : ([String] Bool (String -> Bool) -> [String])
-(def (poo-flow-find-package-modules dirs recursive? source-file?)
+;; : (String (Listof String) Bool -> (Listof String))
+(def (poo-flow-module-files dir exclude-dirs root-only?)
+  (poo-flow-with-directory dir
+    (lambda ()
+      (let (modules (all-gerbil-modules exclude-dirs: exclude-dirs))
+        (map (lambda (path) (string-append dir "/" path))
+             (if root-only?
+               (filter poo-flow-root-module-path? modules)
+               modules))))))
+
+;; : ((Listof String) (Listof String) Bool -> (Listof String))
+(def (poo-flow-package-modules dirs exclude-dirs root-only?)
   (apply append
          (map (lambda (dir)
-                (find-files dir
-                            source-file?
-                            recurse?: (lambda (_) recursive?)))
+                (poo-flow-module-files dir exclude-dirs root-only?))
               dirs)))
 
 ;; : (-> [String])
 (def (poo-flow-runtime-modules)
-  (poo-flow-find-package-modules
-   +poo-flow-runtime-include-dirs+
-   #t
-   poo-flow-package-source-file?))
+  (filter (lambda (file)
+            (not (member file +poo-flow-special-source-files+)))
+          (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)))
 
 ;; : (-> [String])
 (def (poo-flow-all-test-modules)
-  (poo-flow-find-package-modules
+  (poo-flow-package-modules
    +poo-flow-test-include-dirs+
-   #t
-   poo-flow-root-test-source-file?))
+   +poo-flow-test-exclude-dirs+
+   #t))
 
 ;; : (List -> [String])
 (def (poo-flow-test-modules options)
@@ -324,7 +320,7 @@
   (if (poo-flow-release-build-options? options)
     (poo-flow-package-build-spec options)
     (if (poo-flow-test-build-options? options)
-      (poo-flow-test-build-spec options)
+      (poo-flow-package-and-test-spec options)
       (poo-flow-package-build-spec options))))
 
 ;; : (List -> Void)

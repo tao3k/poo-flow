@@ -68,4 +68,5 @@
         loop-governor-human-inbox-items
         loop-governor-validation-errors
         validate-loop-governor
+        loop-governor->contract/validated
         loop-governor->contract)

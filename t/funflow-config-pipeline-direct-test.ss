@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: direct Funflow POO config lowers to CI/CD runtime facts.
 
-(import (only-in :std/test check-equal?)
+(import (only-in :std/sugar match)
+        (only-in :std/test check-equal?)
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/workflow-cicd-config
@@ -12,18 +13,18 @@
 
 (export run-funflow-config-pipeline-direct-checks)
 
-;; : Boolean
-(def poo-flow-import-side-effect-test-suite? #t)
+'poo-flow-import-side-effect-test-suite?
 
-;; : (-> Alist Symbol Object)
+;; : (-> List Symbol Object)
 (def (funflow-config-direct-alist-ref alist key)
-  (let (entry (assoc key alist))
-    (if entry (cdr entry) #f)))
-
-;; : (-> Alist Symbol Object)
-(def (funflow-config-direct-flag flags key)
-  (let (entry (assoc key flags))
-    (if entry (cdr entry) #f)))
+  (match alist
+    ([[(? symbol? row-key) . row-value] . rest]
+     (if (eq? row-key key)
+       row-value
+       (funflow-config-direct-alist-ref rest key)))
+    ([_ . rest]
+     (funflow-config-direct-alist-ref rest key))
+    (else #f)))
 
 ;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-direct-selection)
@@ -105,7 +106,7 @@
   (let* ((selection (car (funflow-config-direct-selection)))
          (flags (poo-flow-user-module-selection-flags selection))
          (pipeline
-          (funflow-config-direct-flag flags ':workflow-pipeline))
+          (funflow-config-direct-alist-ref flags ':workflow-pipeline))
          (checks (poo-flow-cicd-check-map-checks pipeline))
          (integration-check (cadr checks))
          (receipts

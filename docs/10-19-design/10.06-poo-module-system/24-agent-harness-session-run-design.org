@@ -275,5 +275,5 @@ Avoid testing private helpers when a presentation or receipt contract already ex
 1. Whether =agent-harness= should live under =src/agent= or =src/runtime= in Scheme.
 2. Whether =workflow-run= belongs beside existing =src/workflow= store code or under a new =src/runtime= boundary.
 3. Whether snapshot status names should be symbols only or a validated enum object.
-4. How much of result schema validation should use =gslph= structured checks in the first implementation.
+4. How much of result schema validation should use harness API structured checks in the first implementation.
 5. Whether the first runtime handoff manifest should be a new object family or extend existing runtime-command manifest projection.

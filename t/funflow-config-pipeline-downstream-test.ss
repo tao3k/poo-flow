@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: downstream-shaped Funflow POO config lowers to readiness facts.
 
-(import (only-in :std/test check-equal?)
+(import (only-in :std/sugar match)
+        (only-in :std/test check-equal?)
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/modules/agent-sandbox/config
@@ -9,18 +10,18 @@
 
 (export run-funflow-config-pipeline-downstream-checks)
 
-;; : Boolean
-(def poo-flow-import-side-effect-test-suite? #t)
+'poo-flow-import-side-effect-test-suite?
 
-;; : (-> Alist Symbol Object)
+;; : (-> List Symbol Object)
 (def (funflow-config-downstream-alist-ref alist key)
-  (let (entry (assoc key alist))
-    (if entry (cdr entry) #f)))
-
-;; : (-> Alist Symbol Object)
-(def (funflow-config-downstream-flag flags key)
-  (let (entry (assoc key flags))
-    (if entry (cdr entry) #f)))
+  (match alist
+    ([[(? symbol? row-key) . row-value] . rest]
+     (if (eq? row-key key)
+       row-value
+       (funflow-config-downstream-alist-ref rest key)))
+    ([_ . rest]
+     (funflow-config-downstream-alist-ref rest key))
+    (else #f)))
 
 ;; : (-> Unit [PooUserModuleSelection])
 (def (funflow-config-downstream-selection)
@@ -118,7 +119,7 @@
 (def (run-funflow-config-pipeline-downstream-checks)
   (let* ((selection (car (funflow-config-downstream-selection)))
          (pipeline
-          (funflow-config-downstream-flag
+          (funflow-config-downstream-alist-ref
            (poo-flow-user-module-selection-flags selection)
            ':workflow-pipeline))
          (readiness

@@ -196,7 +196,7 @@ gxpkg env gxtest t/user-interface-cicd-test.ss
 gxpkg env gxtest t/declaration-case-test.ss
 gxpkg env gxtest t/user-interface-presentation-test.ss
 gxpkg env gxtest t/unit-tests.ss
-gxpkg env gxtest t/project-policy-test.ss
+poo-flow test t/unit-tests.ss
 #+end_src
 
 The aggregate trace contract now includes =sandbox-profile-derivations= between

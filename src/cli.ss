@@ -107,7 +107,9 @@ Commands:
 
 ;;; Native executable entrypoint. Keep the entry path command-line based; direct
 ;;; test calls should exercise `poo-flow-cli-run`/`poo-flow-cli-main`.
-;; : (-> Unit Void)
-(def (main)
+;; : (-> String ... Void)
+(def (main . args)
   (poo-flow-cli-main
-   (poo-flow-cli-executable-args (command-line))))
+   (if (null? args)
+     (poo-flow-cli-executable-args (command-line))
+     args)))

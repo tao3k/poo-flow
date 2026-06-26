@@ -38,6 +38,7 @@
         validate-loop-human-audit
         loop-human-audit->agent-operation
         loop-human-audit->runtime-snapshot
+        loop-human-audit-contract-from-governor-contract
         loop-human-audit->contract)
 
 ;;; Boundary: schema names the human audit review contract.
@@ -263,7 +264,7 @@
   (let* ((valid-audit (validate-loop-human-audit audit))
          (governor (loop-human-audit-governor valid-audit))
          (state-facts (loop-human-audit-state-facts valid-audit))
-         (contract (loop-governor->contract governor state-facts)))
+         (contract (loop-governor->contract/validated governor state-facts)))
     (loop-human-audit-review-items/from-governor-contract
      valid-audit
      contract)))
@@ -297,6 +298,13 @@
 (def (loop-human-audit-governor-validation-errors governor)
   (if (loop-governor? governor)
     (loop-governor-validation-errors governor)
+    (list (list (cons 'field 'governor)
+                (cons 'code 'not-loop-governor)))))
+
+;; : (-> LoopGovernor [ValidationError])
+(def (loop-human-audit-governor-contract-validation-errors governor)
+  (if (loop-governor? governor)
+    '()
     (list (list (cons 'field 'governor)
                 (cons 'code 'not-loop-governor)))))
 
@@ -340,9 +348,38 @@
       (loop-human-audit-decisions audit)))
     (list '((field . audit) (code . not-loop-human-audit)))))
 
+;; : (-> LoopHumanAudit [ValidationError])
+(def (loop-human-audit-validation-errors/contract-facts audit)
+  (if (loop-human-audit? audit)
+    (append
+     (loop-human-audit-required-field-error
+      'name
+      (loop-human-audit-name audit))
+     (loop-human-audit-governor-contract-validation-errors
+      (loop-human-audit-governor audit))
+     (loop-human-audit-field-validation-error/unless
+      (list? (loop-human-audit-state-facts audit))
+      'state-facts
+      'not-list
+      (loop-human-audit-state-facts audit))
+     (loop-human-audit-decisions-field-validation-errors
+      (loop-human-audit-decisions audit)))
+    (list '((field . audit) (code . not-loop-human-audit)))))
+
 ;; : (-> LoopHumanAudit LoopHumanAudit)
 (def (validate-loop-human-audit audit)
   (let (errors (loop-human-audit-validation-errors audit))
+    (if (null? errors)
+      audit
+      (raise-control-plane-failure
+       'loop-human-audit
+       'invalid-loop-human-audit
+       "invalid loop human audit"
+       (list (cons 'errors errors))))))
+
+;; : (-> LoopHumanAudit LoopHumanAudit)
+(def (validate-loop-human-audit/contract-facts audit)
+  (let (errors (loop-human-audit-validation-errors/contract-facts audit))
     (if (null? errors)
       audit
       (raise-control-plane-failure
@@ -453,12 +490,11 @@
 
 ;;; Contract projection is the human audit loop review surface.
 ;;; It records review state without writing config, state, or runtime effects.
-;; : (-> LoopHumanAudit Alist)
-(def (loop-human-audit->contract audit)
-  (let* ((valid-audit (validate-loop-human-audit audit))
-         (governor (loop-human-audit-governor valid-audit))
-         (state-facts (loop-human-audit-state-facts valid-audit))
-         (governor-contract (loop-governor->contract governor state-facts))
+;; : (-> LoopHumanAudit Alist Alist)
+(def (loop-human-audit->contract/validated-governor-contract
+      valid-audit
+      governor-contract)
+  (let* ((state-facts (loop-human-audit-state-facts valid-audit))
          (review-items
           (loop-human-audit-review-items/from-governor-contract
            valid-audit
@@ -513,3 +549,20 @@
           (cons 'decision-owner (loop-human-audit-decision-owner valid-audit))
           (cons 'execution-owner (loop-human-audit-execution-owner valid-audit))
           (cons 'metadata (loop-human-audit-metadata valid-audit)))))
+
+;; : (-> LoopHumanAudit Alist Alist)
+(def (loop-human-audit-contract-from-governor-contract audit governor-contract)
+  (loop-human-audit->contract/validated-governor-contract
+   (validate-loop-human-audit/contract-facts audit)
+   governor-contract))
+
+;; : (-> LoopHumanAudit Alist)
+(def (loop-human-audit->contract audit)
+  (let* ((valid-audit (validate-loop-human-audit audit))
+         (governor (loop-human-audit-governor valid-audit))
+         (state-facts (loop-human-audit-state-facts valid-audit))
+         (governor-contract
+          (loop-governor->contract/validated governor state-facts)))
+    (loop-human-audit->contract/validated-governor-contract
+     valid-audit
+     governor-contract)))

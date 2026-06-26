@@ -1,0 +1,98 @@
+#+TITLE: POO Flow
+
+* GitHub Description
+Scheme-driven higher-order strategy control plane built on functional composition and Gerbil POO prototype objects for agent loops, workflows, CI/CD, deploy, sandbox, and policy systems.
+
+* Overview
+=poo-flow= is a Gerbil Scheme control plane for higher-order strategy systems.
+It combines functional flow composition with Gerbil POO prototype objects so
+policies, profiles, modules, workflows, and loop descriptors can be expressed as
+inspectable values before they are handed to heavier runtimes.
+
+The project is not only an agent-loop or workflow-configuration library. Its
+intended surface is broader:
+
+- agent loop policy and governance;
+- workflow and task descriptor composition;
+- CI/CD pipeline and deploy strategy configuration;
+- sandbox/profile/resource policy;
+- module and feature activation;
+- validated strategy projection for Rust, Marlin, or other execution backends.
+
+Scheme owns the high-level control plane: object prototypes, functional
+composition, validation, extension, projection, and user configuration. Heavy
+execution remains outside this layer.
+
+* Core Direction
+The current design is centered on two ideas:
+
+1. Functional composition should describe flow shape, strategy values, and
+   pure transformations.
+2. Gerbil POO prototype objects should describe extensible policy objects,
+   module objects, profile objects, and descriptor inheritance.
+
+Public extension APIs should stay POO-native. Raw alist DSLs, ad hoc patch
+languages, and untyped mutation hooks are not the normal user interface.
+
+* POO, C3, And C4
+=poo-flow= currently relies on Gerbil POO and C3-style deterministic composition
+for descriptor inheritance and role precedence. This is useful when several
+independently-authored policy fragments apply to the same object and the system
+must know which inherited slot wins.
+
+C3/C4 do not schedule workflow execution. They decide precedence in composed
+objects. Workflow lowering, dependency edges, ready-node selection, retries, and
+parallel execution remain runtime concerns.
+
+C4 is a forward-compatibility target for the Gerbil 0.19 line. Until that runtime
+is the project baseline, README-level claims should treat C4 as future support,
+not as a current runtime guarantee.
+
+* Runtime Boundary
+The intended execution chain is:
+
+#+begin_src text
+functional strategy values
+  -> POO prototype object graph
+  -> deterministic role/slot precedence
+  -> typed validation and safety checks
+  -> runtime projection
+  -> Marlin, Rust, or external executor
+#+end_src
+
+This keeps language responsibilities clear. Scheme is used where Lisp and POO
+are strong: high-level policy, extensibility, inspectable configuration, and
+macro-assisted user interfaces. Rust or other runtimes should own subprocesses,
+CAS, persistence, heavy scheduling, and parallel execution.
+
+* Docs
+The design record lives under =docs/10-19-design=. Use these as entry points:
+
+- [[file:docs/10-19-design/10.06-poo-module-system/00-index.org][10.06 poo-flow Module System]]
+- [[file:docs/10-19-design/10.01-gerbil-poo-funflow-control-plane.org][10.01 Gerbil POO Funflow Control Plane]]
+- [[file:docs/10-19-design/10.06-poo-module-system/03-gerbil-scheme-c3-foundation.org][10.06.03 Gerbil Scheme C3 Foundation]]
+- [[file:docs/10-19-design/10.06-poo-module-system/29-gerbil-poo-programming-guidelines.org][10.06.29 Gerbil POO Programming Guidelines]]
+
+* Project Shape
+The important source areas are:
+
+- =src/core/= for flow, task, plan, role, policy, receipt, and runner concepts;
+- =src/module-system/= for module activation, object validation, profiles,
+  projection, observability, and user-facing module forms;
+- =src/modules/= for concrete workflow, sandbox, session, loop, and backend
+  modules;
+- =user-interface/= for example downstream configuration surfaces;
+- =docs/10-19-design/= for the design record and upstream research audits;
+- =t/= for package-managed tests.
+
+* Non-Goals
+=poo-flow= should not become:
+
+- a shell-script collection;
+- a raw data DSL with POO hidden behind it;
+- a replacement for Rust/Marlin execution infrastructure;
+- a scheduler encoded through inheritance linearization;
+- a place where safety policy is assumed from precedence alone.
+
+POO/C3 makes composition deterministic. Validation decides whether the composed
+object is legal and safe to project.

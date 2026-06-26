@@ -20,6 +20,7 @@
         loop-governor-human-inbox-items
         loop-governor-validation-errors
         validate-loop-governor
+        loop-governor->contract/validated
         loop-governor->contract)
 
 ;;; State field lookup exposes the runtime snapshot key as a first-class policy
@@ -60,6 +61,19 @@
    (else
     (loop-governor-member? value (cdr values)))))
 
+;; : (-> [Value] HashTable)
+(def (loop-governor-value-set values)
+  (let (table (make-hash-table))
+    (for-each
+     (lambda (value)
+       (hash-put! table value #t))
+     values)
+    table))
+
+;; : (-> HashTable Value Boolean)
+(def (loop-governor-set-member? table value)
+  (and value (hash-get table value)))
+
 ;; : (-> Predicate [Value] [Value])
 (def (loop-governor-filter predicate values)
   (cond
@@ -81,19 +95,42 @@
 
 ;; : (-> LoopGovernor [Alist] Alist)
 (def (loop-governor-classify-patterns valid-governor states)
-  (let* ((groups
+  (let* ((strategy (loop-governor-strategy valid-governor))
+         (selected-patterns
+          (loop-strategy-selected-patterns/from-fields
+           (loop-strategy-patterns strategy)
+           (loop-strategy-level-ceiling strategy)))
+         (actionable-patterns
+          (loop-governor-filter loop-pattern-actionable? selected-patterns))
+         (denylist (loop-governor-shared-denylist valid-governor))
+         (state-action-keys
+          (loop-governor-filter
+           (lambda (state-action-key)
+             state-action-key)
+           (map (lambda (state)
+                  (loop-governor-state-action-key valid-governor state))
+                states)))
+         (denylist-set (loop-governor-value-set denylist))
+         (state-action-key-set
+          (loop-governor-value-set state-action-keys))
+         (budget-limit (loop-governor-budget-limit valid-governor))
+         (groups
           (foldl
            (lambda (descriptor groups)
              (let* ((open (car groups))
                     (conflicting (cadr groups))
                     (denied (caddr groups))
+                    (action-key
+                     (loop-governor-pattern-action-key descriptor))
+                    (pattern-name (loop-pattern-name descriptor))
                     (denied?
-                     (loop-governor-pattern-denied? valid-governor descriptor))
+                     (or (loop-governor-set-member? denylist-set action-key)
+                         (loop-governor-set-member? denylist-set pattern-name)))
                     (conflicted?
-                     (loop-governor-pattern-conflicted?
-                      valid-governor
-                      states
-                      descriptor)))
+                     (and action-key
+                          (loop-governor-set-member?
+                           state-action-key-set
+                           action-key))))
                (list
                 (if (and (not denied?) (not conflicted?))
                   (cons descriptor open)
@@ -105,15 +142,16 @@
                   (cons descriptor denied)
                   denied))))
            '(() () ())
-           (loop-strategy-actionable-patterns
-            (loop-governor-strategy valid-governor))))
+           actionable-patterns))
          (open (car groups))
          (conflicting (cadr groups))
          (denied (caddr groups)))
     (list
+     (cons 'selected-patterns selected-patterns)
+     (cons 'actionable-patterns actionable-patterns)
      (cons 'open-patterns
            (loop-governor-take-at-most
-            (loop-governor-budget-limit valid-governor)
+            budget-limit
             (reverse open)))
      (cons 'conflicting-patterns (reverse conflicting))
      (cons 'denied-patterns (reverse denied)))))
@@ -302,12 +340,41 @@
 (def (loop-governor-pattern-names descriptors)
   (map loop-pattern-name descriptors))
 
+;;; Governor contracts need strategy identity and ordered names, not 600 full
+;;; descriptor contracts. Full descriptor projection stays on the strategy API.
+;; : (-> LoopStrategyPlan [LoopPatternDescriptor] [LoopPatternDescriptor] Alist)
+(def (loop-governor-strategy-summary strategy selected-patterns actionable-patterns)
+  (let (next-pattern
+        (if (null? actionable-patterns)
+          #f
+          (car actionable-patterns)))
+    (list (cons 'schema +loop-strategy-plan-schema+)
+          (cons 'kind 'loop-strategy-plan)
+          (cons 'projection 'compact-governor-view)
+          (cons 'name (loop-strategy-name strategy))
+          (cons 'selection (loop-strategy-selection strategy))
+          (cons 'level-ceiling (loop-strategy-level-ceiling strategy))
+          (cons 'pattern-count (length (loop-strategy-patterns strategy)))
+          (cons 'selected-patterns
+                (loop-governor-pattern-names selected-patterns))
+          (cons 'actionable-patterns
+                (loop-governor-pattern-names actionable-patterns))
+          (cons 'next-pattern
+                (if next-pattern (loop-pattern-name next-pattern) #f))
+          (cons 'local-validation (loop-strategy-local-validation strategy))
+          (cons 'handoff (loop-strategy-handoff strategy))
+          (cons 'runtime-boundary
+                '((local-execution . validation-only)
+                  (production-execution . marlin-agent-core)))
+          (cons 'control-owner (loop-strategy-control-owner strategy))
+          (cons 'execution-owner (loop-strategy-execution-owner strategy))
+          (cons 'metadata (loop-strategy-metadata strategy)))))
+
 ;;; Contract projection is the governor handoff surface for Marlin.
 ;;; It includes state-derived facts but performs no runtime transition.
 ;; : (-> LoopGovernor [Alist] Alist)
-(def (loop-governor->contract governor states)
-  (let* ((valid-governor (validate-loop-governor governor))
-         (strategy (loop-governor-strategy valid-governor))
+(def (loop-governor->contract/validated valid-governor states)
+  (let* ((strategy (loop-governor-strategy valid-governor))
          (classified
           (loop-governor-classify-patterns valid-governor states))
          (open-patterns
@@ -316,12 +383,20 @@
           (loop-governor-alist-ref classified 'conflicting-patterns '()))
          (denied-patterns
           (loop-governor-alist-ref classified 'denied-patterns '()))
+         (selected-patterns
+          (loop-governor-alist-ref classified 'selected-patterns '()))
+         (actionable-patterns
+          (loop-governor-alist-ref classified 'actionable-patterns '()))
          (agent-judge-nodes
           (loop-governor-agent-judge-nodes valid-governor)))
     (list (cons 'schema +loop-governor-schema+)
           (cons 'kind 'loop-governor)
           (cons 'name (loop-governor-name valid-governor))
-          (cons 'strategy (loop-strategy-plan->contract strategy))
+          (cons 'strategy
+                (loop-governor-strategy-summary
+                 strategy
+                 selected-patterns
+                 actionable-patterns))
           (cons 'state-key (loop-governor-state-key valid-governor))
           (cons 'collision-policy
                 (loop-governor-collision-policy valid-governor))
@@ -355,3 +430,9 @@
           (cons 'execution-owner
                 (loop-governor-execution-owner valid-governor))
           (cons 'metadata (loop-governor-metadata valid-governor)))))
+
+;; : (-> LoopGovernor [Alist] Alist)
+(def (loop-governor->contract governor states)
+  (loop-governor->contract/validated
+   (validate-loop-governor governor)
+   states))

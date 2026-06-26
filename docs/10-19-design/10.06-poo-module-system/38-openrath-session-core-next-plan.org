@@ -272,7 +272,7 @@ gxpkg env gxc <changed-source-files> <changed-test-files>
 gxpkg env gxtest <focused-test>
 gxpkg env gxtest t/user-interface-presentation-test.ss
 gxpkg env gxtest t/declaration-case-test.ss
-gxpkg env gxtest t/project-policy-test.ss
+poo-flow test t/unit-tests.ss
 asp org lint docs/10-19-design/10.06-poo-module-system/00-index.org <changed-doc>
 #+end_src
 ** 10.06.38.160 Current Implementation Status

@@ -27,5 +27,5 @@
   - `poo-flow test t/agent-sandbox-profile-candidate-test.ss`
   - `poo-flow test t/agent-sandbox-nono-profile-candidate-test.ss`
   - `poo-flow test t/nono-sandbox-c-binding-test.ss`
-- `t/project-policy-test.ss` may emit warning diagnostics while still exiting 0. Treat new warnings as follow-up work, but do not bypass the package CLI flow.
+- `poo-flow test` injects the Gerbil harness policy into the same gxtest batch with the expanded test file scope. Do not add separate project-policy tests or duplicate file-policy suites in root manifest files; repair new policy warnings in the same package CLI flow.
 - Follow the Gerbil POO programming rules in `docs/10-19-design/10.06-poo-module-system/29-gerbil-poo-programming-guidelines.org`. In particular, model extension surfaces as POO prototypes/mixins and avoid hot-path `.ref` reads of nested child POO objects.

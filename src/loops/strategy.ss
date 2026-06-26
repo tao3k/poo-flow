@@ -3,6 +3,7 @@
 ;;; Invariant: local execution here is harness-only validation, never production runtime.
 
 (import (only-in :clan/poo/object .o .mix object?)
+        (only-in :std/srfi/95 sort)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/loops/descriptor)
@@ -30,6 +31,7 @@
         loop-strategy-local-validation-harness-only?
         loop-pattern-within-ceiling?
         loop-pattern-prioritized-before?
+        loop-strategy-selected-patterns/from-fields
         loop-strategy-selected-patterns
         loop-strategy-actionable-patterns
         loop-strategy-human-gated-patterns
@@ -249,27 +251,11 @@
    (else
     (loop-filter predicate (cdr values)))))
 
-;;; Boundary: insert keeps the sorted prefix stable for equal-priority descriptors.
-;;; Insert preserves the already-ranked prefix and is intentionally small:
-;;; priority comparison is isolated in =loop-pattern-prioritized-before?=.
-;; : (-> LoopPatternDescriptor [LoopPatternDescriptor] [LoopPatternDescriptor])
-(def (loop-insert-pattern descriptor sorted)
-  (cond
-   ((null? sorted) (list descriptor))
-   ((loop-pattern-prioritized-before? descriptor (car sorted))
-    (cons descriptor sorted))
-   (else
-    (cons (car sorted)
-          (loop-insert-pattern descriptor (cdr sorted))))))
-
-;;; Strategy selection uses a pure insertion fold so ordering is deterministic
-;;; without mutating descriptors or carrying runtime scheduler state.
+;;; Strategy selection uses the stdlib stable sort so large generated policy
+;;; plans do not pay quadratic insertion cost during contract projection.
 ;; : (-> [LoopPatternDescriptor] [LoopPatternDescriptor])
 (def (loop-sort-patterns descriptors)
-  (foldr (lambda (descriptor sorted)
-           (loop-insert-pattern descriptor sorted))
-         '()
-         descriptors))
+  (sort descriptors loop-pattern-prioritized-before?))
 
 ;; : (-> [LoopPatternDescriptor] Symbol [LoopPatternDescriptor])
 (def (loop-strategy-selected-patterns/from-fields patterns ceiling)

@@ -177,7 +177,7 @@ Each implementation slice should keep the package-managed flow:
 - =gxpkg env gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=
 - =gxpkg env gxtest t/loop-engine-policy-extension-test.ss=
 - =gxpkg env gxtest t/unit-tests.ss=
-- =gxpkg env gxtest t/project-policy-test.ss=
+- =poo-flow test t/unit-tests.ss=
 
 Run =gxpkg build= after changing package module ownership, new root test
 modules, or any import path that affects =:poo-flow/t/...= aggregate imports.

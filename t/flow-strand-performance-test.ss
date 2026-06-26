@@ -15,8 +15,8 @@
                  default-flow-strand-registry
                  flow-strand-for-kind-in
                  flow-strand-names
+                 flow-strand-registry-descriptors
                  flow-strand-registry-merge
-                 flow-strand-registry->alist
                  flow-strand-task-families
                  make-flow-strand-descriptor))
 
@@ -57,27 +57,17 @@
 
 ;; : (-> FlowStrandRegistry Alist)
 (def (flow-strand-performance-summary registry)
-  (let (snapshot (flow-strand-registry->alist registry))
+  (let ((names (flow-strand-names registry))
+        (descriptors (flow-strand-registry-descriptors registry)))
     (list (cons 'strand-count
-                (length (flow-strand-performance-ref snapshot 'strand-names)))
+                (length names))
           (cons 'descriptor-count
-                (length (flow-strand-performance-ref snapshot 'descriptors)))
-          (cons 'runtime-executed
-                (flow-strand-performance-ref snapshot 'runtime-executed)))))
+                (length descriptors))
+          (cons 'runtime-executed #f))))
 
-;; : (-> Integer Alist)
-(def (flow-strand-performance-merge-summary count)
-  (let* ((descriptors
-          (append
-           (flow-strand-performance-descriptors count)
-           (list (make-flow-strand-descriptor
-                  'simple
-                  '(pure scheme generated-override)
-                  '(pure-function io-continuation local-kleisli extension-hook)
-                  'local
-                  'gerbil
-                  #t))))
-         (registry
+;; : (-> [FlowStrandDescriptor] Alist)
+(def (flow-strand-performance-merge-summary/descriptors descriptors)
+  (let* ((registry
           (flow-strand-registry-merge
            default-flow-strand-registry
            descriptors))
@@ -86,17 +76,45 @@
     (cons (cons 'simple-task-families (flow-strand-task-families simple))
           summary)))
 
+;; : (-> Integer Alist)
+(def (flow-strand-performance-merge-summary count)
+  (flow-strand-performance-merge-summary/descriptors
+   (append
+    (flow-strand-performance-descriptors count)
+    (list (make-flow-strand-descriptor
+           'simple
+           '(pure scheme generated-override)
+           '(pure-function io-continuation local-kleisli extension-hook)
+           'local
+           'gerbil
+           #t)))))
+
 ;; : TestSuite
 (def flow-strand-performance-test
   (test-suite "flow strand performance"
     (test-case "keeps large strand registry merge inside benchmark contract"
       (let* ((extension-count 900)
-             (summary (flow-strand-performance-merge-summary extension-count))
+             (descriptors
+              (append
+               (flow-strand-performance-descriptors extension-count)
+               (list (make-flow-strand-descriptor
+                      'simple
+                      '(pure scheme generated-override)
+                      '(pure-function
+                        io-continuation
+                        local-kleisli
+                        extension-hook)
+                      'local
+                      'gerbil
+                      #t))))
+             (summary
+              (flow-strand-performance-merge-summary/descriptors descriptors))
              (receipt
               (benchmark-run
                flow-strand-registry-merge-fixture
                (lambda ()
-                 (flow-strand-performance-merge-summary extension-count)))))
+                 (flow-strand-performance-merge-summary/descriptors
+                  descriptors)))))
         (check-equal?
          (benchmark-fixture-contract-pass? flow-strand-registry-merge-fixture)
          #t)

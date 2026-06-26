@@ -328,7 +328,7 @@ gxpkg env gxtest t/workflow-cicd-check-map-test.ss
 gxpkg env gxtest t/funflow-config-pipeline-test.ss
 gxpkg env gxtest t/funflow-tutorial-alignment-report-test.ss
 gxpkg env gxtest t/unit-tests.ss
-gxpkg env gxtest t/project-policy-test.ss
+poo-flow test t/unit-tests.ss
 git diff --check
 #+end_src
 
