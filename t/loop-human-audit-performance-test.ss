@@ -19,9 +19,7 @@
                  make-loop-governor)
         (only-in :poo-flow/src/loops/governor
                  loop-governor->contract)
-        (only-in :poo-flow/src/loops/human-audit
-                 make-loop-human-audit
-                 loop-human-audit-contract-from-governor-contract))
+        :poo-flow/src/loops/human-audit)
 
 (export loop-human-audit-performance-test)
 
@@ -36,6 +34,13 @@
 ;; : (-> Alist Symbol Value)
 (def (loop-human-audit-performance-ref alist key)
   (cdr (assoc key alist)))
+
+;; : (-> Alist Void)
+(def (loop-human-audit-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] loop-human-audit-contract-projection ")
+  (write receipt)
+  (newline)
+  (force-output))
 
 ;; : (-> Integer String)
 (def (loop-human-audit-performance-action-key index)
@@ -92,12 +97,10 @@
                    (max-attempts . 2)))
            (cons 'metadata '((source . loop-human-audit-performance-test)))))))
 
-;; : (-> LoopHumanAudit Alist Alist)
-(def (loop-human-audit-performance-contract-summary audit governor-contract)
+;; : (-> LoopHumanAudit Alist)
+(def (loop-human-audit-performance-contract-summary audit)
   (let (contract
-        (loop-human-audit-contract-from-governor-contract
-         audit
-         governor-contract))
+        (loop-human-audit->contract audit))
     (list (cons 'review-count
                 (loop-human-audit-performance-ref contract 'review-count))
           (cons 'open-count
@@ -122,25 +125,22 @@
               (loop-human-audit-performance-governor pattern-count))
              (states
               (loop-human-audit-performance-states 50 50))
+             (governor-contract
+              (loop-governor->contract governor states))
              (audit
               (make-loop-human-audit
                'large-human-audit
                governor
                states
-               '()))
-             (governor-contract
-              (loop-governor->contract governor states))
+               '()
+               (list (cons 'governor-contract governor-contract))))
              (summary
-              (loop-human-audit-performance-contract-summary
-               audit
-               governor-contract))
+              (loop-human-audit-performance-contract-summary audit))
              (receipt
               (benchmark-run
                loop-human-audit-contract-projection-fixture
                (lambda ()
-                 (loop-human-audit-performance-contract-summary
-                  audit
-                  governor-contract)))))
+                 (loop-human-audit-performance-contract-summary audit)))))
         (check-equal?
          (benchmark-fixture-contract-pass?
           loop-human-audit-contract-projection-fixture)
@@ -157,4 +157,5 @@
         (check-equal?
          (loop-human-audit-performance-ref summary 'runtime-kind)
          'runtime-snapshot)
+        (loop-human-audit-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

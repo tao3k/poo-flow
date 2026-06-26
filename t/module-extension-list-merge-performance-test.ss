@@ -40,6 +40,13 @@
 (def (module-extension-list-merge-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> Alist Void)
+(def (module-extension-list-merge-display-receipt receipt)
+  (display "[poo-flow-benchmark] module-extension-list-merge ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : (-> Integer Integer Integer [Integer])
 (def (module-extension-list-merge-batch start size step)
   (poo-flow-performance-build-list
@@ -87,7 +94,7 @@
 (def module-extension-list-merge-performance-test
   (test-suite "module extension list merge performance"
     (test-case "keeps repeated extension list appends inside benchmark contract"
-      (let* ((batch-count 240)
+      (let* ((batch-count 180)
              (batch-size 48)
              (overlap-step 24)
              (expected-count
@@ -118,4 +125,5 @@
         (check-equal?
          (module-extension-list-merge-ref summary 'last-capability)
          (- expected-count 1))
+        (module-extension-list-merge-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

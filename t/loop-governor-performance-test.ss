@@ -34,6 +34,13 @@
 (def (loop-governor-performance-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> Alist Void)
+(def (loop-governor-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] loop-governor-contract-projection ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : (-> Integer String)
 (def (loop-governor-performance-action-key index)
   (string-append "src/generated/" (number->string index)))
@@ -140,4 +147,5 @@
         (check-equal?
          (loop-governor-performance-ref summary 'agent-node-count)
          3)
+        (loop-governor-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

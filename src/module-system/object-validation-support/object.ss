@@ -16,6 +16,8 @@
         object-diagnostics/resolved-fields
         object-diagnostics/resolved-identities
         poo-flow-module-object-validation
+        poo-flow-module-object-validation/field-cache
+        poo-flow-module-object-validation/catalog-caches
         poo-flow-module-object-validation?
         poo-flow-module-object-validation-valid?
         poo-flow-module-object-validation-diagnostics
@@ -96,6 +98,16 @@
 ;;; downstream catalog gates that the generic harness cannot know about.
 ;; : (-> PooModuleObject HashTable)
 (def (poo-flow-module-object-validation object)
+  (poo-flow-module-object-validation/field-cache object #f))
+
+;; : (-> PooModuleObject MaybeHashTable HashTable)
+(def (poo-flow-module-object-validation/field-cache object field-cache)
+  (poo-flow-module-object-validation/catalog-caches object field-cache #f))
+
+;; : (-> PooModuleObject MaybeHashTable MaybeHashTable HashTable)
+(def (poo-flow-module-object-validation/catalog-caches object
+                                                       field-cache
+                                                       harness-cache)
   (let* ((inherits
           (poo-flow-module-object-inherits object))
          (direct-fields
@@ -118,14 +130,26 @@
            direct-field-identities
            resolved-field-identities))
          (harness-validation
-          (poo-flow-module-object-harness-validation/harness-fields
-           object
-           harness-fields
-           source-ref))
+          (if harness-cache
+            (poo-flow-module-object-harness-validation/resolved-fields/cache
+             object
+             resolved-fields
+             harness-fields
+             source-ref
+             harness-cache)
+            (poo-flow-module-object-harness-validation/harness-fields
+             object
+             harness-fields
+             source-ref)))
          (field-contract-validations
-          (poo-flow-module-object-field-contract-validations/harness-fields
-           object
-           harness-fields))
+          (if field-cache
+            (poo-flow-module-object-field-contract-validations/resolved-fields/cache
+             object
+             resolved-fields
+             field-cache)
+            (poo-flow-module-object-field-contract-validations/harness-fields
+             object
+             harness-fields)))
          (local-diagnostics
           (object-diagnostics/resolved-identities
            object

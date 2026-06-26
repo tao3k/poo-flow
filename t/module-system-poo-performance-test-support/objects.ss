@@ -16,6 +16,15 @@
 
 (export module-system-poo-performance-objects-test)
 
+;; : (-> Alist Unit)
+(def (module-system-poo-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] ")
+  (write (benchmark-fixture-ref receipt 'feature))
+  (display " ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : TestCase
 (def module-system-poo-performance-construction-case
   (test-case "constructs large module objects at one boundary"
@@ -89,6 +98,7 @@
           (check-equal? (hash-get summary 'valid) #t)
           (check-equal? (car (hash-get summary 'resolved-field-counts))
                         160)
+          (module-system-poo-performance-display-receipt receipt)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestCase

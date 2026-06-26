@@ -115,6 +115,13 @@
 (def (module-objects-validation-summary-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> Alist Unit)
+(def (module-objects-validation-summary-display-receipt receipt)
+  (display "[poo-flow-benchmark] module-objects-validation-summary ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : TestSuite
 (def module-objects-validation-summary-performance-test
   (test-suite "module objects validation summary performance"
@@ -126,8 +133,8 @@
               (benchmark-run
                module-objects-validation-summary-fixture
                (lambda ()
-                 (module-objects-validation-summary-snapshot
-                  (poo-flow-module-objects-validation-summary validations)))))
+                  (module-objects-validation-summary-snapshot
+                   (poo-flow-module-objects-validation-summary validations)))))
              (summary
               (module-objects-validation-summary-snapshot
                (poo-flow-module-objects-validation-summary validations))))
@@ -152,4 +159,5 @@
         (check-equal?
          (module-objects-validation-summary-ref summary 'last-invalid)
          (module-objects-validation-summary-name 4990))
+        (module-objects-validation-summary-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

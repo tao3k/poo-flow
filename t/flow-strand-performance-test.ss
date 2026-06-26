@@ -14,7 +14,6 @@
         (only-in :poo-flow/src/core/flow-strand
                  default-flow-strand-registry
                  flow-strand-for-kind-in
-                 flow-strand-names
                  flow-strand-registry-descriptors
                  flow-strand-registry-merge
                  flow-strand-task-families
@@ -33,6 +32,13 @@
 ;; : (-> Alist Symbol Value)
 (def (flow-strand-performance-ref alist key)
   (cdr (assoc key alist)))
+
+;; : (-> Alist Void)
+(def (flow-strand-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] flow-strand-registry-merge ")
+  (write receipt)
+  (newline)
+  (force-output))
 
 ;; : (-> Integer Symbol)
 (def (flow-strand-performance-name index)
@@ -57,10 +63,9 @@
 
 ;; : (-> FlowStrandRegistry Alist)
 (def (flow-strand-performance-summary registry)
-  (let ((names (flow-strand-names registry))
-        (descriptors (flow-strand-registry-descriptors registry)))
+  (let (descriptors (flow-strand-registry-descriptors registry))
     (list (cons 'strand-count
-                (length names))
+                (length descriptors))
           (cons 'descriptor-count
                 (length descriptors))
           (cons 'runtime-executed #f))))
@@ -130,4 +135,5 @@
         (check-equal?
          (flow-strand-performance-ref summary 'runtime-executed)
          #f)
+        (flow-strand-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

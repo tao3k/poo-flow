@@ -31,6 +31,13 @@
 (def (loop-strategy-performance-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> Alist Void)
+(def (loop-strategy-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] loop-strategy-contract-projection ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : (-> Integer Symbol)
 (def (loop-strategy-performance-name index)
   (string->symbol
@@ -115,4 +122,5 @@
         (check-equal?
          (loop-strategy-performance-ref summary 'next-pattern)
          'loop-strategy-pattern-1)
+        (loop-strategy-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

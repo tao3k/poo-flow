@@ -40,7 +40,7 @@
 
 ;; : (Listof String)
 (def +poo-flow-test-exclude-dirs+
-  '("fixtures"))
+  '("fixtures" "scenarios"))
 
 ;; : (Listof String)
 (def +poo-flow-test-root-files+
@@ -150,7 +150,7 @@
   (poo-flow-package-modules
    +poo-flow-test-include-dirs+
    +poo-flow-test-exclude-dirs+
-   #t))
+   #f))
 
 ;; : (List -> [String])
 (def (poo-flow-test-modules options)

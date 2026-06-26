@@ -31,6 +31,13 @@
 (def (module-object-inheritance-chain-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> Alist Void)
+(def (module-object-inheritance-chain-display-receipt receipt)
+  (display "[poo-flow-benchmark] module-object-inheritance-chain ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : (-> Integer Symbol)
 (def (module-object-inheritance-chain-name index)
   (string->symbol
@@ -85,4 +92,5 @@
         (check-equal?
          (module-object-inheritance-chain-ref summary 'last-node)
          (module-object-inheritance-chain-name 0))
+        (module-object-inheritance-chain-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

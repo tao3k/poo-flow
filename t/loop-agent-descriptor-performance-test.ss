@@ -74,6 +74,13 @@
 (def (loop-descriptor-performance-ref alist key)
   (cdr (assoc key alist)))
 
+;; : (-> Alist Void)
+(def (loop-descriptor-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] loop-descriptor-contract-projection ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : (-> LoopPatternDescriptor Integer)
 (def (loop-descriptor-performance-contract-priority descriptor)
   (loop-descriptor-performance-ref
@@ -133,4 +140,5 @@
         (check-equal?
          (loop-descriptor-performance-ref first-contract 'priority)
          10)
+        (loop-descriptor-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

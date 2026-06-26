@@ -22,7 +22,13 @@
 
 ;; : (-> [PooModuleObject] [HashTable])
 (def (poo-flow-module-objects-validation objects)
-  (map poo-flow-module-object-validation objects))
+  (let ((field-cache (make-hash-table))
+        (harness-cache (make-hash-table)))
+    (map (lambda (object)
+           (poo-flow-module-object-validation/catalog-caches object
+                                                            field-cache
+                                                            harness-cache))
+         objects)))
 
 ;;; Validation receipts stay list-shaped for callers that serialize reports;
 ;;; the hash-table detail remains private to each object validation pass.

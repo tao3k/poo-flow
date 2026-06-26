@@ -18,7 +18,8 @@
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
                  poo-flow-module-object
-                 poo-flow-module-objects-mk-merge
+                 poo-flow-module-objects-mk-merge/node
+                 poo-flow-module-objects-node
                  poo-flow-module-objects-ref))
 
 (export module-object-list-merge-performance-test)
@@ -43,9 +44,20 @@
    (list module-object-list-merge-field)
    '()))
 
+;; : PooModuleExtensionNode
+(def module-object-list-merge-objects-node
+  (poo-flow-module-objects-node (list module-object-list-merge-object)))
+
 ;; : (-> Alist Symbol Value)
 (def (module-object-list-merge-ref alist key)
   (cdr (assoc key alist)))
+
+;; : (-> Alist Void)
+(def (module-object-list-merge-display-receipt receipt)
+  (display "[poo-flow-benchmark] module-object-list-merge ")
+  (write receipt)
+  (newline)
+  (force-output))
 
 ;; : (-> Integer Integer)
 (def (module-object-list-merge-capability index)
@@ -81,8 +93,8 @@
 ;; : (-> [PooModuleFieldContribution] Alist)
 (def (module-object-list-merge-summary/from-contributions contributions)
   (let* ((result
-          (poo-flow-module-objects-mk-merge
-           (list module-object-list-merge-object)
+          (poo-flow-module-objects-mk-merge/node
+           module-object-list-merge-objects-node
            contributions))
          (root (poo-flow-module-config-merge-result-root result))
          (node (poo-flow-module-objects-ref root 'large.module.object))
@@ -137,4 +149,5 @@
         (check-equal?
          (module-object-list-merge-ref summary 'last-capability)
          (module-object-list-merge-capability (- expected-count 1)))
+        (module-object-list-merge-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

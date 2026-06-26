@@ -14,14 +14,17 @@
         poo-flow-module-object-harness-validation
         poo-flow-module-object-harness-validation/resolved-fields
         poo-flow-module-object-harness-validation/harness-fields
+        poo-flow-module-object-harness-validation/resolved-fields/cache
         poo-flow-module-field-contract-validation
         poo-flow-module-field-contract-validation/harness-field
+        poo-flow-module-field-contract-validation/cached
         poo-flow-module-field-contract-validation-valid?
         poo-flow-module-type-validation->alist
         poo-flow-module-field-contract-validation->alist
         field-contract-validations-valid?
         poo-flow-module-object-field-contract-validations
         poo-flow-module-object-field-contract-validations/resolved-fields
+        poo-flow-module-object-field-contract-validations/resolved-fields/cache
         poo-flow-module-object-field-contract-validations/harness-fields
         duplicate-identities)
 
@@ -75,6 +78,38 @@
    harness-fields
    source-ref))
 
+;; : (-> PooModuleObject HashTable HashTable)
+(def (poo-flow-module-object-harness-validation-cache-receipt object cached)
+  (receipt
+   (cons 'kind (hash-get cached 'kind))
+   (cons 'schema (hash-get cached 'schema))
+   (cons 'object (poo-flow-module-object-identity object))
+   (cons 'valid (hash-get cached 'valid))
+   (cons 'diagnostics (hash-get cached 'diagnostics))
+   (cons 'checkedSignals (hash-get cached 'checkedSignals))))
+
+;; : (-> PooModuleObject [PooModuleFieldContract] [HashTable] HashTable HashTable)
+(def (poo-flow-module-object-harness-validation/resolved-fields/cache
+      object
+      resolved-fields
+      harness-fields
+      source-ref
+      cache)
+  (cond ((hash-get cache resolved-fields)
+         => (lambda (cached)
+              (poo-flow-module-object-harness-validation-cache-receipt
+               object
+               cached)))
+        (else
+         (let (validation
+               (poo-flow-module-object-harness-validation/harness-fields
+                object
+                harness-fields
+                source-ref))
+           (if (poo-object-validation-valid? validation)
+             (hash-put! cache resolved-fields validation))
+           validation))))
+
 ;; : (-> PooModuleObject PooModuleFieldContract HashTable)
 (def (poo-flow-module-field-contract-validation object field)
   (poo-flow-module-field-contract-validation/harness-field
@@ -92,6 +127,38 @@
     (hash-get harness-field 'field)
     (hash-get harness-field 'valueKind)
     (hash-get harness-field 'merge))))
+
+;; : (-> PooModuleObject PooModuleFieldContract HashTable HashTable)
+(def (poo-flow-module-field-contract-validation-cache-receipt object
+                                                              field
+                                                              cached)
+  (receipt
+   (cons 'kind (hash-get cached 'kind))
+   (cons 'schema (hash-get cached 'schema))
+   (cons 'object (poo-flow-module-object-identity object))
+   (cons 'field (poo-flow-module-field-contract-identity field))
+   (cons 'valueKind (poo-flow-module-field-contract-value-kind field))
+   (cons 'merge (poo-flow-module-field-contract-merge field))
+   (cons 'valid (hash-get cached 'valid))
+   (cons 'diagnostics (hash-get cached 'diagnostics))
+   (cons 'checkedSignals (hash-get cached 'checkedSignals))
+   (cons 'typeValidation (hash-get cached 'typeValidation))))
+
+;; : (-> PooModuleObject PooModuleFieldContract HashTable HashTable)
+(def (poo-flow-module-field-contract-validation/cached object field cache)
+  (cond ((hash-get cache field)
+         => (lambda (cached)
+              (poo-flow-module-field-contract-validation-cache-receipt
+               object
+               field
+               cached)))
+        (else
+         (let (validation (poo-flow-module-field-contract-validation
+                           object
+                           field))
+           (if (poo-flow-module-field-contract-validation-valid? validation)
+             (hash-put! cache field validation))
+           validation))))
 
 ;; : (-> HashTable Boolean)
 (def (poo-flow-module-field-contract-validation-valid? validation)
@@ -159,6 +226,17 @@
    object
    (map poo-flow-module-field-contract->harness-field
         resolved-fields)))
+
+;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [HashTable])
+(def (poo-flow-module-object-field-contract-validations/resolved-fields/cache
+      object
+      resolved-fields
+      cache)
+  (map (lambda (field)
+         (poo-flow-module-field-contract-validation/cached object
+                                                          field
+                                                          cache))
+       resolved-fields))
 
 ;; : (-> PooModuleObject [HashTable] [HashTable])
 (def (poo-flow-module-object-field-contract-validations/harness-fields object
