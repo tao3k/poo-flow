@@ -266,7 +266,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg') }}
+          key: gerbil-pkg-v2-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Build native binary
         shell: bash

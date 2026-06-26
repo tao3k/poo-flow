@@ -239,7 +239,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
+          key: gerbil-pkg-v2-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Clean package outputs
         run: gxpkg clean
