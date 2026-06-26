@@ -160,9 +160,23 @@ jobs:
 
             link_gambit_runtime() {
               runtime_prefix="$1"
-              mkdir -p "$runtime_prefix"
+              mkdir -p "$runtime_prefix" "$runtime_prefix/bin"
               for gambit_root in "$gambit_prefix" "$gambit_cellar_prefix"; do
                 if [ -n "$gambit_root" ]; then
+                  if [ -d "$gambit_root/bin" ]; then
+                    for gambit_bin in "$gambit_root"/bin/*; do
+                      [ -e "$gambit_bin" ] || continue
+                      gambit_name="$(basename "$gambit_bin")"
+                      target="$runtime_prefix/bin/$gambit_name"
+                      if [ "$gambit_name" = "gsc" ] && [ -e "$target" ]; then
+                        continue
+                      fi
+                      if [ -L "$target" ] || [ ! -e "$target" ]; then
+                        rm -rf "$target"
+                        ln -s "$gambit_bin" "$target"
+                      fi
+                    done
+                  fi
                   for gambit_dir in include lib; do
                     if [ -d "$gambit_root/$gambit_dir" ] && { [ -L "$runtime_prefix/$gambit_dir" ] || [ ! -e "$runtime_prefix/$gambit_dir" ]; }; then
                       rm -rf "$runtime_prefix/$gambit_dir"
@@ -172,7 +186,9 @@ jobs:
                 fi
               done
               test -d "$runtime_prefix/include"
+              test -x "$runtime_prefix/bin/gambuild-C"
               echo "Gambit include: $runtime_prefix/include"
+              echo "Gambit builder: $runtime_prefix/bin/gambuild-C"
             }
 
             seen_runtime_prefixes=""
