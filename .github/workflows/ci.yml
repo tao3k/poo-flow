@@ -143,13 +143,13 @@ jobs:
           if [ "$RUNNER_OS" = "macOS" ]; then
             gerbil_real_prefix="$(cd "$GERBIL_PREFIX" && pwd -P)"
             gsc_path="$GERBIL_PREFIX/bin/gsc"
-            if [ -n "$gsc_path" ]; then
+            runtime_prefixes="$gerbil_real_prefix/v0.18.2"
+            if [ -x "$gsc_path" ]; then
               gsc_real_path="$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$gsc_path")"
               gsc_runtime_prefix="$(cd "$(dirname "$gsc_real_path")/.." && pwd -P)"
+              runtime_prefixes="$gsc_runtime_prefix $runtime_prefixes"
               mkdir -p "$gerbil_real_prefix/v0.18.2/bin"
               ln -sf "$gsc_path" "$gerbil_real_prefix/v0.18.2/bin/gsc"
-            else
-              gsc_runtime_prefix="$gerbil_real_prefix/v0.18.2"
             fi
             gambit_prefix="$(brew --prefix gambit-scheme 2>/dev/null || true)"
             gambit_cellar="$(brew --cellar gambit-scheme 2>/dev/null || true)"
@@ -157,19 +157,32 @@ jobs:
             if [ -n "$gambit_cellar" ] && [ -d "$gambit_cellar" ]; then
               gambit_cellar_prefix="$(find "$gambit_cellar" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)"
             fi
-            mkdir -p "$gsc_runtime_prefix"
-            for gambit_root in "$gambit_prefix" "$gambit_cellar_prefix"; do
-              if [ -n "$gambit_root" ]; then
-                for gambit_dir in include lib; do
-                  if [ -d "$gambit_root/$gambit_dir" ] && { [ -L "$gsc_runtime_prefix/$gambit_dir" ] || [ ! -e "$gsc_runtime_prefix/$gambit_dir" ]; }; then
-                    rm -rf "$gsc_runtime_prefix/$gambit_dir"
-                    ln -s "$gambit_root/$gambit_dir" "$gsc_runtime_prefix/$gambit_dir"
-                  fi
-                done
-              fi
+
+            link_gambit_runtime() {
+              runtime_prefix="$1"
+              mkdir -p "$runtime_prefix"
+              for gambit_root in "$gambit_prefix" "$gambit_cellar_prefix"; do
+                if [ -n "$gambit_root" ]; then
+                  for gambit_dir in include lib; do
+                    if [ -d "$gambit_root/$gambit_dir" ] && { [ -L "$runtime_prefix/$gambit_dir" ] || [ ! -e "$runtime_prefix/$gambit_dir" ]; }; then
+                      rm -rf "$runtime_prefix/$gambit_dir"
+                      ln -s "$gambit_root/$gambit_dir" "$runtime_prefix/$gambit_dir"
+                    fi
+                  done
+                fi
+              done
+              test -d "$runtime_prefix/include"
+              echo "Gambit include: $runtime_prefix/include"
+            }
+
+            seen_runtime_prefixes=""
+            for runtime_prefix in $runtime_prefixes; do
+              case " $seen_runtime_prefixes " in
+                *" $runtime_prefix "*) continue ;;
+              esac
+              seen_runtime_prefixes="$seen_runtime_prefixes $runtime_prefix"
+              link_gambit_runtime "$runtime_prefix"
             done
-            test -d "$gsc_runtime_prefix/include"
-            echo "Gambit include: $gsc_runtime_prefix/include"
           fi
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
           "$GERBIL_PREFIX/bin/gxi" --version
