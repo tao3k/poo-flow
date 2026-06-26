@@ -143,11 +143,22 @@ jobs:
 
       - name: Activate Gerbil
         run: |
+          set -euo pipefail
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          echo "GERBIL_GSC=$GERBIL_PREFIX/bin/gsc" >> "$GITHUB_ENV"
+          gsc_wrapper="$RUNNER_TEMP/gerbil-gsc"
+          {
+            printf '#!/bin/sh\n'
+            printf 'exec "%s" "-:~~bin=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX/bin"
+          } > "$gsc_wrapper"
+          chmod +x "$gsc_wrapper"
+          echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
           "$GERBIL_PREFIX/bin/gxi" --version
           "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
-          "$GERBIL_PREFIX/bin/gsc" -v
+          "$gsc_wrapper" -v
+          tmp_smoke="$(mktemp -d)"
+          printf '(display "ok")\n' > "$tmp_smoke/gsc-smoke.scm"
+          "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
+          test -f "$tmp_smoke/gsc-smoke.o1"
           "$GERBIL_PREFIX/bin/gxi" -e '(displayln "gerbil-ready")'
           "$GERBIL_PREFIX/bin/gxpkg" list
 
