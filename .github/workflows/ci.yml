@@ -30,7 +30,7 @@ jobs:
       GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/${{ matrix.gerbil-label }}
     steps:
       - name: Checkout poo-flow
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.0
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -51,7 +51,7 @@ jobs:
       - name: Restore Homebrew cache
         if: runner.os == 'macOS'
         id: homebrew-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6.1.0
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
@@ -86,7 +86,7 @@ jobs:
 
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6.1.0
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
@@ -94,7 +94,7 @@ jobs:
       - name: Restore Gerbil install cache
         if: matrix.gerbil-install == 'source'
         id: gerbil-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
           key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
@@ -125,7 +125,7 @@ jobs:
 
       - name: Save Gerbil install cache
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
           key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
@@ -164,7 +164,7 @@ jobs:
 
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6.1.0
         with:
           path: |
             ~/.gerbil/pkg
@@ -270,7 +270,7 @@ jobs:
 
       - name: Save Gerbil package dependency cache
         if: steps.gerbil-pkg-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6.1.0
         with:
           path: |
             ~/.gerbil/pkg
