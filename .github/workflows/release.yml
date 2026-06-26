@@ -167,6 +167,17 @@ jobs:
 
       - name: Activate Gerbil
         run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            gerbil_real_prefix="$(cd "$GERBIL_PREFIX" && pwd -P)"
+            gsc_path="$(command -v gsc || true)"
+            if [ -z "$gsc_path" ] && [ -x "$GERBIL_PREFIX/bin/gsc" ]; then
+              gsc_path="$GERBIL_PREFIX/bin/gsc"
+            fi
+            if [ -n "$gsc_path" ]; then
+              mkdir -p "$gerbil_real_prefix/v0.18.2/bin"
+              ln -sf "$gsc_path" "$gerbil_real_prefix/v0.18.2/bin/gsc"
+            fi
+          fi
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
           "$GERBIL_PREFIX/bin/gxi" --version
           "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
@@ -209,6 +220,8 @@ jobs:
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-poo" \
               ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils" \
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils"
+            rm -f "$HOME/.gerbil/pkg/manifest.ss" ".gerbil/pkg/manifest.ss"
+            gxpkg retag >/dev/null 2>&1 || true
           }
           link_legacy_gerbil_utils_package() {
             local src=".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils"
