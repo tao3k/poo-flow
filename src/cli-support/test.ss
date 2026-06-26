@@ -9,6 +9,7 @@
 (export poo-flow-cli-expand-test-args
         poo-flow-cli-read-unit-test-files
         poo-flow-cli-runnable-test-form?
+        poo-flow-cli-test-policy-file-path
         poo-flow-cli-test
         poo-flow-cli-perf)
 
@@ -297,14 +298,24 @@
    "))\n"))
 
 ;; : (-> String)
+(def (poo-flow-cli-test-policy-dir)
+  ".gerbil/tmp/poo-flow-test")
+
+;; : (-> Unit Void)
+(def (poo-flow-cli-ensure-test-policy-dir!)
+  (create-directory* (poo-flow-cli-test-policy-dir)))
+
+;; : (-> String)
 (def (poo-flow-cli-test-policy-file-path)
-  (string-append ".bin/poo-flow-policy-"
+  (string-append (poo-flow-cli-test-policy-dir)
+                 "/poo-flow-policy-"
                  (object->string (time->seconds (current-time)))
                  ".ss"))
 
 ;; : (-> [String] String)
 (def (poo-flow-cli-write-test-policy-file files)
   (let (path (poo-flow-cli-test-policy-file-path))
+    (poo-flow-cli-ensure-test-policy-dir!)
     (call-with-output-file path
       (lambda (port)
         (display (poo-flow-cli-test-policy-file-content files) port)))

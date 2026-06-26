@@ -11,7 +11,9 @@
                  poo-flow-cli-max-rss-bytes
                  poo-flow-cli-run
                  poo-flow-cli-runnable-test-form?
-                 poo-flow-cli-usage))
+                 poo-flow-cli-usage)
+        (only-in :poo-flow/src/cli-support/test
+                 poo-flow-cli-test-policy-file-path))
 
 (export cli-test)
 
@@ -46,6 +48,17 @@
        (poo-flow-cli-runnable-test-form?
         '(def poo-flow-import-side-effect-test-suite? #t))
        #t))
+
+    (test-case "keeps generated policy files out of the binary directory"
+      (let ((path (poo-flow-cli-test-policy-file-path))
+            (prefix ".gerbil/tmp/poo-flow-test/"))
+        (check-equal?
+         (substring path 0 (string-length prefix))
+         prefix)
+        (check-equal?
+         (not (equal? (substring path 0 (string-length ".bin/"))
+                      ".bin/"))
+         #t)))
 
     (test-case "parses macOS time rss receipts"
       (check-equal?
