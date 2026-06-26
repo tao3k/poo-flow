@@ -180,14 +180,24 @@ jobs:
               gsc_runtime_prefix="$gerbil_real_prefix/v0.18.2"
             fi
             gambit_prefix="$(brew --prefix gambit-scheme 2>/dev/null || true)"
-            if [ -n "$gambit_prefix" ]; then
-              mkdir -p "$gsc_runtime_prefix"
-              for gambit_dir in include lib; do
-                if [ -d "$gambit_prefix/$gambit_dir" ] && [ ! -e "$gsc_runtime_prefix/$gambit_dir" ]; then
-                  ln -s "$gambit_prefix/$gambit_dir" "$gsc_runtime_prefix/$gambit_dir"
-                fi
-              done
+            gambit_cellar="$(brew --cellar gambit-scheme 2>/dev/null || true)"
+            gambit_cellar_prefix=""
+            if [ -n "$gambit_cellar" ] && [ -d "$gambit_cellar" ]; then
+              gambit_cellar_prefix="$(find "$gambit_cellar" -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)"
             fi
+            mkdir -p "$gsc_runtime_prefix"
+            for gambit_root in "$gambit_prefix" "$gambit_cellar_prefix"; do
+              if [ -n "$gambit_root" ]; then
+                for gambit_dir in include lib; do
+                  if [ -d "$gambit_root/$gambit_dir" ] && { [ -L "$gsc_runtime_prefix/$gambit_dir" ] || [ ! -e "$gsc_runtime_prefix/$gambit_dir" ]; }; then
+                    rm -rf "$gsc_runtime_prefix/$gambit_dir"
+                    ln -s "$gambit_root/$gambit_dir" "$gsc_runtime_prefix/$gambit_dir"
+                  fi
+                done
+              fi
+            done
+            test -d "$gsc_runtime_prefix/include"
+            echo "Gambit include: $gsc_runtime_prefix/include"
           fi
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
           "$GERBIL_PREFIX/bin/gxi" --version
