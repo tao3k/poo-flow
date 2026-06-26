@@ -148,7 +148,7 @@ jobs:
           gsc_wrapper="$RUNNER_TEMP/gerbil-gsc"
           {
             printf '#!/bin/sh\n'
-            printf 'exec "%s" "-:~~bin=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX/bin"
+            printf 'exec "%s" "-:~~=%s,~~bin=%s,~~include=%s,~~lib=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX" "$GERBIL_PREFIX/bin" "$GERBIL_PREFIX/include" "$GERBIL_PREFIX/lib"
           } > "$gsc_wrapper"
           chmod +x "$gsc_wrapper"
           echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
