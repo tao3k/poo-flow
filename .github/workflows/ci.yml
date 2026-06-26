@@ -149,6 +149,15 @@ jobs:
               mkdir -p "$gerbil_real_prefix/v0.18.2/bin"
               ln -sf "$gsc_path" "$gerbil_real_prefix/v0.18.2/bin/gsc"
             fi
+            gambit_prefix="$(brew --prefix gambit-scheme 2>/dev/null || true)"
+            if [ -n "$gambit_prefix" ]; then
+              mkdir -p "$gerbil_real_prefix/v0.18.2"
+              for gambit_dir in include lib; do
+                if [ -d "$gambit_prefix/$gambit_dir" ] && [ ! -e "$gerbil_real_prefix/v0.18.2/$gambit_dir" ]; then
+                  ln -s "$gambit_prefix/$gambit_dir" "$gerbil_real_prefix/v0.18.2/$gambit_dir"
+                fi
+              done
+            fi
           fi
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
           "$GERBIL_PREFIX/bin/gxi" --version
@@ -193,7 +202,19 @@ jobs:
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-poo" \
               ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils" \
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils"
-            rm -f "$HOME/.gerbil/pkg/manifest.ss" ".gerbil/pkg/manifest.ss"
+            rm -f \
+              "$HOME/.gerbil/pkg/manifest.ss" \
+              "$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness.manifest" \
+              "$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo.manifest" \
+              "$HOME/.gerbil/pkg/github.com/mighty-gerbils/gerbil-poo.manifest" \
+              "$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils.manifest" \
+              "$HOME/.gerbil/pkg/github.com/mighty-gerbils/gerbil-utils.manifest" \
+              ".gerbil/pkg/manifest.ss" \
+              ".gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness.manifest" \
+              ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo.manifest" \
+              ".gerbil/pkg/github.com/mighty-gerbils/gerbil-poo.manifest" \
+              ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils.manifest" \
+              ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils.manifest"
             gxpkg retag >/dev/null 2>&1 || true
           }
           link_legacy_gerbil_utils_package() {
