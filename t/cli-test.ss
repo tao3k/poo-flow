@@ -12,6 +12,10 @@
                  poo-flow-cli-run
                  poo-flow-cli-runnable-test-form?
                  poo-flow-cli-usage)
+        (only-in :poo-flow/src/cli-support/support
+                 poo-flow-cli-gerbil-env-argv
+                 poo-flow-cli-string-contains?
+                 poo-flow-cli-string-prefix?)
         (only-in :poo-flow/src/cli-support/test
                  poo-flow-cli-test-policy-file-path))
 
@@ -59,6 +63,19 @@
          (not (equal? (substring path 0 (string-length ".bin/"))
                       ".bin/"))
          #t)))
+
+    (test-case "uses package-local Gerbil loadpath for focused commands"
+      (let (loadpath (cadr (poo-flow-cli-gerbil-env-argv
+                            "gxc"
+                            '("src/module-system/module-registry.ss"))))
+        (check-equal?
+         (poo-flow-cli-string-prefix?
+          "GERBIL_LOADPATH=.:.gerbil/lib"
+          loadpath)
+         #t)
+        (check-equal?
+         (poo-flow-cli-string-contains? "~/.gerbil/lib" loadpath)
+         #f)))
 
     (test-case "parses macOS time rss receipts"
       (check-equal?

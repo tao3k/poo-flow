@@ -24,8 +24,7 @@
   (let (status 0)
     (let (output
           (run-process (append (list "env"
-                                     (string-append "GERBIL_LOADPATH=.:"
-                                                    (path-expand "~/.gerbil/lib"))
+                                     "GERBIL_LOADPATH=.:.gerbil/lib"
                                      "gxi"
                                      "src/cli.ss")
                                args)

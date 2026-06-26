@@ -31,8 +31,8 @@
   ".")
 
 ;; : (-> Unit String)
-(def (poo-flow-cli-user-compiled-loadpath)
-  (path-expand "~/.gerbil/lib"))
+(def (poo-flow-cli-package-compiled-loadpath)
+  ".gerbil/lib")
 
 ;; : (-> String Void)
 (def (poo-flow-cli-error message)
@@ -61,11 +61,9 @@
 
 ;; : (-> Unit String)
 (def (poo-flow-cli-local-loadpath)
-  (if (file-exists? (poo-flow-cli-user-compiled-loadpath))
-    (string-append (poo-flow-cli-local-source-loadpath)
-                   ":"
-                   (poo-flow-cli-user-compiled-loadpath))
-    (poo-flow-cli-local-source-loadpath)))
+  (string-append (poo-flow-cli-local-source-loadpath)
+                 ":"
+                 (poo-flow-cli-package-compiled-loadpath)))
 
 ;; : (-> Unit String)
 (def (poo-flow-cli-gerbil-loadpath)

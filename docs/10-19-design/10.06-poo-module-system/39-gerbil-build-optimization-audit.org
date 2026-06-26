@@ -57,12 +57,25 @@ This fits the existing POO rules: public extension surfaces remain POO-native, b
 :PROPERTIES:
 The current build implementation has been corrected toward the =gerbil-poo= / =gerbil-utils= pattern:
 - =build.ss= imports the clan filesystem/building helpers, but ordinary source discovery is project-owned and positive: scan only the include dirs that define the package surface;
-- package discovery is positive: runtime modules come from =src=, and package-managed tests come from the root layer of =t=;
-- =t/fixtures= stays out because the =t= include is non-recursive;
+- package discovery is positive: runtime modules come from =src=, and package-managed tests come from =t= while =fixtures= and =scenarios= stay outside broad discovery;
+- integration-only fixture wrappers such as =t/fixtures/object-load-valid/objects.ss= are explicit test build-spec entries, so fixture source remains outside package scanning while package-local imports have real compiler artifacts;
 - the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface remain explicit build-spec entries;
 - =GERBIL_BUILD_CORES= remains the normal parallelism knob, matching the reference packages and avoiding custom thread logic in =build.ss=.
+- focused CLI compiler/test gates use the project package-local =.gerbil/lib= loadpath and never depend on a user's =~/.gerbil/lib= cache. This is fixed as benchmark scenario =GERBIL-SCHEME-AGENT-R039= under =t/scenarios/performance/focused-build-loadpath/benchmark.ss=: the optimization is not raw speed alone, but moving the focused build surface toward Gerbil/gxpkg's package-local build model while preventing stale user-cache artifacts from entering the compiler path.
+- package-local test compilation stays owned by =gxpkg env=. A bare =direnv exec . printenv GERBIL_PATH= returns no package path, while =direnv exec . gxpkg env printenv GERBIL_PATH= returns the project-local =.gerbil= directory. =build.ss= therefore must not compute its own local cache path; it rejects package compile/clean when =GERBIL_PATH= is missing and lets =gxpkg env= provide the package-local environment. The old direct path was measured at =103.54s= and emitted artifacts under =~/.gerbil/lib=; =gxpkg env ./build.ss compile --tests= measured =69.73s= before this pass and =69.15s= after it, with package-local output under =.gerbil/lib=.
 
 The next refinement is structural: keep future package-owned modules under explicit include surfaces. If a new tree needs package compilation, it should be added as an include surface with a clear reason instead of expanding a negative exclude list.
+** 10.06.39.65 Field Receipt: Package Status Fast Path
+:PROPERTIES: The next measured split was between package compilation and no-op status checks:
+- =direnv exec . gxpkg env gxi -e '(display "ok")'= measured about =2.49s=, while direct =gxi= measured about =0.14s= and =direnv exec . gxi= about =0.71s=. This made =gxpkg env= wrapper startup a real no-op floor.
+- =gxpkg env ./build.ss compile --tests --force= refreshed package-local test artifacts and a build-cache receipt in =21.43s=.
+- A repeated =gxpkg env ./build.ss compile --tests= skipped =std/make= compilation but still measured about =4.06s= to =4.53s= because it loads the interpreted =build.ss= entry and its heavy build imports.
+- =./.gerbil/bin/poo-flow build package-status --tests= consumed the package-local =poo-flow-build-cache v1= receipt directly and measured about =0.19s= as a real process. The in-process benchmark scenario =GERBIL-SCHEME-AGENT-R040= measured =1.315ms=.
+
+The build-cache receipt is written only by the slow package owner after a successful compile. It records source and output paths under =.gerbil/lib/poo-flow/.compile-package-tests.stamp=. The compiled CLI fast path only verifies that receipt: missing stamp, old stamp format, newer source, or missing output returns stale with the repair command =gxpkg env ./build.ss compile --tests --force=.
+
+This keeps the ownership boundary clear. =std/make= and =gxpkg env= still own package compilation; the compiled CLI owns cheap status checks for agents deciding whether that package compile is necessary.
+
 ** 10.06.39.70 Field Report: Durable POO Performance Work
 :PROPERTIES:
 The most useful optimization evidence from this pass was not a single faster build command. It was the separation of four different failure modes that had been collapsed into one "Gerbil is slow" symptom:

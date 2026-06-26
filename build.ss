@@ -10,10 +10,15 @@
 ;;; perf gates should call direct gxc or the compiled build runner instead.
 
 (import :clan/building
+        (only-in :gslph/src/build-api/package-receipt
+                 gslph-package-build-receipt-status
+                 gslph-package-build-receipt-status-ref
+                 gslph-package-build-receipt-write)
         (only-in :gslph/src/build-api/source-coverage
                  gslph-source-coverage)
         (only-in :gerbil/gambit
                  current-directory
+                 file-exists?
                  getenv
                  path-expand
                  pretty-print
@@ -41,6 +46,11 @@
 ;; : (Listof String)
 (def +poo-flow-test-exclude-dirs+
   '("fixtures" "scenarios"))
+
+;; Fixture wrappers stay out of broad test discovery, but integration tests may
+;; declare specific source fixtures that need package-local import artifacts.
+(def +poo-flow-test-fixture-source-files+
+  '("t/fixtures/object-load-valid/objects.ss"))
 
 ;; : (Listof String)
 (def +poo-flow-test-root-files+
@@ -147,14 +157,18 @@
 
 ;; : (-> [String])
 (def (poo-flow-all-test-modules)
-  (poo-flow-package-modules
-   +poo-flow-test-include-dirs+
-   +poo-flow-test-exclude-dirs+
-   #f))
+  (append
+   (poo-flow-package-modules
+    +poo-flow-test-include-dirs+
+    +poo-flow-test-exclude-dirs+
+    #f)
+   +poo-flow-test-fixture-source-files+))
 
 ;; : (List -> [String])
 (def (poo-flow-test-modules options)
-  (poo-flow-all-test-modules))
+  (if (poo-flow-all-test-build-options? options)
+    (poo-flow-all-test-modules)
+    +poo-flow-test-root-files+))
 
 ;; : (String List -> BuildSpec)
 (def (poo-flow-gxc-target file options)
@@ -194,6 +208,11 @@
 (def (poo-flow-package-srcdir)
   (path-expand "."))
 
+;; : (-> Void)
+(def (poo-flow-package-require-gxpkg-env!)
+  (unless (getenv "GERBIL_PATH" #f)
+    (error "poo-flow package builds require gxpkg env; run gxpkg env ./build.ss compile --tests")))
+
 ;; : (-> String (OrFalse Fixnum))
 (def (poo-flow-package-cores-from-env name)
   (let (value (getenv name #f))
@@ -218,6 +237,10 @@
 (def (poo-flow-make-options options)
   (match options
     ([build-tests: _ . rest]
+     (poo-flow-make-options rest))
+    ([build-all-tests: _ . rest]
+     (poo-flow-make-options rest))
+    ([force: _ . rest]
      (poo-flow-make-options rest))
     ([key value . rest]
      (cons key
@@ -247,19 +270,187 @@
   (newline)
   (force-output))
 
+;; : ((a -> Bool) [a] -> Bool)
+(def (poo-flow-all? pred xs)
+  (match xs
+    ([] #t)
+    ([x . rest]
+     (and (pred x) (poo-flow-all? pred rest)))))
+
+;; : ((a -> Bool) [a] -> Bool)
+(def (poo-flow-any? pred xs)
+  (match xs
+    ([] #f)
+    ([x . rest]
+     (or (pred x) (poo-flow-any? pred rest)))))
+
+;; : (-> String)
+(def (poo-flow-package-libdir)
+  (path-expand "lib" (getenv "GERBIL_PATH")))
+
+;; : (-> String)
+(def (poo-flow-package-libdir-prefix)
+  (path-expand "poo-flow" (poo-flow-package-libdir)))
+
+;; : (List -> String)
+(def (poo-flow-stage-cache-stamp-path options)
+  (path-expand
+   (cond
+    ((poo-flow-all-test-build-options? options) ".compile-package-all-tests.stamp")
+    ((poo-flow-test-build-options? options) ".compile-package-tests.stamp")
+    (else ".compile-package.stamp"))
+   (poo-flow-package-libdir-prefix)))
+
+;; : (BuildSpec -> String)
+(def (poo-flow-diagnostic-source-path spec)
+  (match spec
+    ([gxc: file . _] (path-expand file (poo-flow-package-srcdir)))
+    (_ #f)))
+
+;; : (BuildSpec -> [String])
+(def (poo-flow-stage-source-files stage)
+  (let lp ((rest stage) (sources []))
+    (match rest
+      ([] (append (reverse sources)
+                  (map (lambda (file)
+                         (path-expand file (poo-flow-package-srcdir)))
+                       '("build.ss" "gerbil.pkg"))))
+      ([spec . rest]
+       (let (source (poo-flow-diagnostic-source-path spec))
+         (if source
+           (lp rest (cons source sources))
+           (lp rest sources)))))))
+
+;; : (BuildSpec -> Bool)
+(def (poo-flow-diagnostic-gxc-spec? spec)
+  (match spec
+    ([gxc: . _] #t)
+    (_ #f)))
+
+;; : (BuildSpec -> [String])
+(def (poo-flow-diagnostic-outputs spec)
+  (match spec
+    ([gxc: file . _] (poo-flow-diagnostic-gxc-outputs file))
+    (_ [])))
+
+;; : (BuildSpec -> [String])
+(def (poo-flow-diagnostic-missing-outputs spec)
+  (filter (lambda (output) (not (file-exists? output)))
+          (poo-flow-diagnostic-outputs spec)))
+
+;; : (BuildSpec -> Bool)
+(def (poo-flow-diagnostic-output-clean? spec)
+  (null? (poo-flow-diagnostic-missing-outputs spec)))
+
+;; : (BuildSpec List -> Bool)
+(def (poo-flow-stage-cacheable? stage options)
+  (and (not (poo-flow-native-build-options? options))
+       (poo-flow-all? poo-flow-diagnostic-gxc-spec? stage)))
+
+;; : (BuildSpec List -> Bool)
+(def (poo-flow-stage-cache-valid? stage options)
+  (let* ((stamp (poo-flow-stage-cache-stamp-path options))
+         (sources (poo-flow-stage-source-files stage))
+         (outputs (apply append (map poo-flow-diagnostic-outputs stage)))
+         (status (gslph-package-build-receipt-status
+                  stamp
+                  expected-sources: sources
+                  expected-outputs: outputs)))
+    (and (not (poo-flow-force-build-options? options))
+         (poo-flow-stage-cacheable? stage options)
+         (eq? (gslph-package-build-receipt-status-ref status 'status 'stale)
+              'current))))
+
+;; : (BuildSpec List -> Void)
+(def (poo-flow-stage-cache-touch! stage options)
+  (when (poo-flow-stage-cacheable? stage options)
+    (gslph-package-build-receipt-write
+     (poo-flow-stage-cache-stamp-path options)
+     (poo-flow-stage-source-files stage)
+     (apply append (map poo-flow-diagnostic-outputs stage)))))
+
 ;; : (String BuildSpec List -> Void)
 (def (poo-flow-make label stage options)
-  (poo-flow-package-message "compile" label stage)
-  (apply make stage
-         srcdir: (poo-flow-package-srcdir)
-         (poo-flow-package-options options)))
+  (poo-flow-package-require-gxpkg-env!)
+  (if (poo-flow-stage-cache-valid? stage options)
+    (begin
+      (poo-flow-package-message "skip" label stage)
+      (display "|note kind=build-cache message=\"package-local gxc direct outputs are current; skipped std/make no-op rebuild\"")
+      (newline))
+    (begin
+      (poo-flow-package-message "compile" label stage)
+      (apply make stage
+             srcdir: (poo-flow-package-srcdir)
+             (poo-flow-package-options options))
+      (poo-flow-stage-cache-touch! stage options))))
 
 ;; : (String BuildSpec -> Void)
 (def (poo-flow-make-clean label stage)
+  (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "clean" label stage)
   (apply make-clean stage
          srcdir: (poo-flow-package-srcdir)
          (poo-flow-package-options [])))
+
+;; : (String -> [String])
+(def (poo-flow-diagnostic-gxc-outputs file)
+  [(path-expand (string-append file "i")
+                (poo-flow-package-libdir-prefix))])
+
+;; : (BuildSpec -> String)
+(def (poo-flow-diagnostic-label spec)
+  (match spec
+    ([gxc: file . _] file)
+    ([gsc: file . _] file)
+    ([ssi: file . _] file)
+    ([(or exe: static-exe: optimized-exe: optimized-static-exe:) file . _] file)
+    (_ "unsupported")))
+
+;; : (BuildSpec [String] -> Void)
+(def (poo-flow-diagnostic-display-missing spec missing)
+  (display "|stale reason=missing-output spec=")
+  (write (poo-flow-diagnostic-label spec))
+  (display " missing=")
+  (write missing)
+  (newline))
+
+;; : (List -> Void)
+(def (poo-flow-diagnose-build-spec options)
+  (poo-flow-package-require-gxpkg-env!)
+  (let ((stage (poo-flow-compile-build-spec options))
+        (gxc-count 0)
+        (missing-count 0)
+        (clean-count 0)
+        (unsupported-count 0))
+    (for-each
+     (lambda (spec)
+       (cond
+        ((poo-flow-diagnostic-gxc-spec? spec)
+         (set! gxc-count (+ gxc-count 1))
+         (let (missing (poo-flow-diagnostic-missing-outputs spec))
+           (if (null? missing)
+             (set! clean-count (+ clean-count 1))
+             (begin
+               (set! missing-count (+ missing-count 1))
+               (poo-flow-diagnostic-display-missing spec missing)))))
+        (else
+         (set! unsupported-count (+ unsupported-count 1)))))
+     stage)
+    (display "[poo-flow-build-diagnose]")
+    (display " targets=")
+    (display (length stage))
+    (display " gxc=")
+    (display gxc-count)
+    (display " directOutputClean=")
+    (display clean-count)
+    (display " missingOutput=")
+    (display missing-count)
+    (display " unsupported=")
+    (display unsupported-count)
+    (newline)
+    (when (and (= missing-count 0) (> gxc-count 0))
+      (display "|note kind=inference message=\"direct gxc .ssi outputs exist; repeated rebuilds point to dependency timestamp/import freshness rather than missing direct outputs\"")
+      (newline))))
 
 ;; : (List -> List)
 (def (poo-flow-package-parse-options opts)
@@ -274,6 +465,10 @@
        (lp rest [debug: #t . options]))
       (["--tests" . rest]
        (lp rest [build-tests: #t . options]))
+      (["--all-tests" . rest]
+       (lp rest [build-all-tests: #t build-tests: #t . options]))
+      (["--force" . rest]
+       (lp rest [force: #t . options]))
       (["--verbose" . rest]
        (lp rest [verbose: 9 . options]))
       (["-V" . rest]
@@ -310,6 +505,20 @@
     ([] #f)))
 
 ;; : (List -> Bool)
+(def (poo-flow-all-test-build-options? options)
+  (match options
+    ([build-all-tests: value . _] value)
+    ([_ _ . rest] (poo-flow-all-test-build-options? rest))
+    ([] #f)))
+
+;; : (List -> Bool)
+(def (poo-flow-force-build-options? options)
+  (match options
+    ([force: value . _] value)
+    ([_ _ . rest] (poo-flow-force-build-options? rest))
+    ([] #f)))
+
+;; : (List -> Bool)
 (def (poo-flow-native-build-options? options)
   (or (poo-flow-release-build-options? options)
       (poo-flow-optimized-build-options? options)
@@ -333,10 +542,12 @@
 
 (def (main . args)
   (match args
-    (["meta"] (write '("spec" "compile" "clean")) (newline))
+    (["meta"] (write '("spec" "compile" "diagnose" "clean")) (newline))
     (["spec" . options]
      (pretty-print (poo-flow-compile-build-spec
                     (poo-flow-package-parse-options options))))
+    (["diagnose" . options]
+     (poo-flow-diagnose-build-spec (poo-flow-package-parse-options options)))
     (["compile" . options] (poo-flow-package-compile (poo-flow-package-parse-options options)))
     (["clean"] (poo-flow-clean))
     ([] (poo-flow-package-compile []))))

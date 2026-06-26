@@ -2,7 +2,8 @@
 ;;; Boundary: gxtest enters large benchmark fixtures through this performance root.
 ;;; Invariant: unit tests can run without loading performance fixture datasets.
 
-(import :poo-flow/t/flow-strand-performance-test
+(import :poo-flow/t/cli-build-performance-test
+        :poo-flow/t/flow-strand-performance-test
         :poo-flow/t/loop-agent-descriptor-performance-test
         :poo-flow/t/loop-governor-performance-test
         :poo-flow/t/loop-human-audit-performance-test
