@@ -92,8 +92,8 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE: 1
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
-          brew unlink gambit-scheme || true
-          brew unlink ghostscript || true
+          brew list --formula gambit-scheme >/dev/null 2>&1 && brew unlink gambit-scheme || true
+          brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
           brew install gerbil-scheme jq openssl pkg-config sqlite zlib
           brew link --overwrite gerbil-scheme
 
@@ -169,7 +169,7 @@ jobs:
         run: |
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
           "$GERBIL_PREFIX/bin/gxi" --version
-          "$GERBIL_PREFIX/bin/gxpkg" version
+          "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
           "$GERBIL_PREFIX/bin/gxi" -e '(displayln "gerbil-ready")'
 
       - name: Restore Gerbil package dependency cache
