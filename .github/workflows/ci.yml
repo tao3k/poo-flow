@@ -270,7 +270,7 @@ jobs:
           key: gerbil-pkg-v3-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Clean package outputs
-        run: gxpkg clean
+        run: gxpkg env ./build.ss clean
 
       - name: Build package
         run: |
