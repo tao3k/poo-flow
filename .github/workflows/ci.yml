@@ -169,9 +169,9 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-v4-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
+          key: gerbil-pkg-v5-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
           restore-keys: |
-            gerbil-pkg-v4-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-
+            gerbil-pkg-v5-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         env:
@@ -245,6 +245,10 @@ jobs:
               https://github.com/mighty-gerbils/gerbil-poo.git \
               f4b322299830acbd1cd5b91984c4107ac56bdac3
             build_package github.com/mighty-gerbils/gerbil-poo
+            gxpkg link \
+              git.cons.io/mighty-gerbils/gerbil-poo \
+              ".gerbil/src/github.com/mighty-gerbils/gerbil-poo"
+            build_package git.cons.io/mighty-gerbils/gerbil-poo
             harness_ref="$(
               awk -F'[@"]' '/github.com\/tao3k\/gerbil-scheme-language-project-harness@/ { print $3; exit }' gerbil.pkg
             )"
@@ -271,7 +275,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-v4-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
+          key: gerbil-pkg-v5-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Clean package outputs
         run: gxpkg env ./build.ss clean
