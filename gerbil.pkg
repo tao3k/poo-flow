@@ -1,5 +1,5 @@
 (package: poo-flow
- depend: ("github.com/mighty-gerbils/gerbil-poo"
+ depend: ("git.cons.io/mighty-gerbils/gerbil-poo"
          "github.com/tao3k/gerbil-scheme-language-project-harness@9bb26696baa33e8ede8897d910a75e77c98f1025")
  policy: ((macro-governance
            allow-generated: #t
