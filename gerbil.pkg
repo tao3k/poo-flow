@@ -1,6 +1,6 @@
 (package: poo-flow
  depend: ("github.com/mighty-gerbils/gerbil-poo"
-         "github.com/tao3k/gerbil-scheme-language-project-harness@893f495ffe10bafd74412c93406501df88e3d83b")
+         "github.com/tao3k/gerbil-scheme-language-project-harness@0466e420cd7e5ba66dd89904e86816f7f9642d1a")
  policy: ((macro-governance
            allow-generated: #t
            explanation: "Agent-sandbox backend profile macros must cite runtime-source guidance and expansion tests before changing transformer behavior."
