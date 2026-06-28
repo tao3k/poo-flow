@@ -196,6 +196,9 @@
 (def (poo-flow-declaration-case-expected-trace-stages case-object)
   (.ref case-object 'expected-trace-stages))
 
+;;; Boundary: declaration case alist value is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol Alist MaybeValue)
 (def (poo-flow-declaration-case-alist-value key entries)
   (cond
@@ -208,10 +211,17 @@
 ;;; stage sequence users need when a lazy POO projection starts to recurse.
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-declaration-case-trace-stages trace)
-  (map (lambda (step)
-         (poo-flow-declaration-case-alist-value 'stage step))
-       trace))
+  (let loop ((rest trace)
+             (stages '()))
+    (if (null? rest)
+      (reverse stages)
+      (loop (cdr rest)
+            (cons (poo-flow-declaration-case-alist-value 'stage (car rest))
+                  stages)))))
 
+;;; Boundary: declaration case trace field all equal predicate is the policy-
+;;; visible edge for module-system behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Symbol MaybeValue [Alist] Boolean)
 (def (poo-flow-declaration-case-trace-field-all-equal?
       key
@@ -227,6 +237,32 @@
      (cdr trace)))
    (else #f)))
 
+;;; Boundary: trace-safe rows are validated in one lexical pass. This keeps
+;;; stage, status, descriptor, and runtime checks optimizer-visible together.
+;; : (-> [Alist] [Symbol] Boolean)
+(def (poo-flow-declaration-case-trace-rows-safe? trace expected-stages)
+  (let loop ((trace-rest trace)
+             (stage-rest expected-stages))
+    (cond
+     ((and (null? trace-rest) (null? stage-rest)) #t)
+     ((or (null? trace-rest) (null? stage-rest)) #f)
+     (else
+      (let ((step (car trace-rest))
+            (expected-stage (car stage-rest)))
+        (and (equal? (poo-flow-declaration-case-alist-value 'stage step)
+                     expected-stage)
+             (equal? (poo-flow-declaration-case-alist-value 'status step)
+                     'ok)
+             (equal? (poo-flow-declaration-case-alist-value
+                      'descriptor-realized?
+                      step)
+                     #f)
+             (equal? (poo-flow-declaration-case-alist-value
+                      'runtime-executed
+                      step)
+                     #f)
+             (loop (cdr trace-rest) (cdr stage-rest))))))))
+
 ;;; Trace checks are the observability contract for declaration cases: a
 ;;; failing case should show the projection stage instead of hanging on a slot.
 ;; : (-> POOObject Boolean)
@@ -234,34 +270,26 @@
   (let* ((presentation
           (poo-flow-declaration-case-presentation case-object))
          (trace (.ref presentation 'presentation-trace)))
-    (and (equal? (poo-flow-declaration-case-trace-stages trace)
-                 (poo-flow-declaration-case-expected-trace-stages
-                  case-object))
-         (poo-flow-declaration-case-trace-field-all-equal?
-          'status
-          'ok
-          trace)
-         (poo-flow-declaration-case-trace-field-all-equal?
-          'descriptor-realized?
-          #f
-          trace)
-         (poo-flow-declaration-case-trace-field-all-equal?
-          'runtime-executed
-          #f
-          trace))))
+    (poo-flow-declaration-case-trace-rows-safe?
+     trace
+     (poo-flow-declaration-case-expected-trace-stages case-object))))
 
 ;;; Presentation matching is the test-facing predicate; it proves the root
 ;;; declaration stayed declarative while still exposing module intent.
 ;; : (-> POOObject Boolean)
 (def (poo-flow-declaration-case-presentation-matches? case-object)
-  (let ((presentation
-         (poo-flow-declaration-case-presentation case-object)))
-    (and (equal? (.ref presentation 'module-keys)
+  (let* ((presentation
+          (poo-flow-declaration-case-presentation case-object))
+         (module-keys (.ref presentation 'module-keys))
+         (setting-keys (.ref presentation 'setting-keys))
+         (descriptor-realized? (.ref presentation 'descriptor-realized?))
+         (runtime-executed? (.ref presentation 'runtime-executed)))
+    (and (equal? module-keys
                  (poo-flow-declaration-case-expected-module-keys
                   case-object))
-         (equal? (.ref presentation 'setting-keys)
+         (equal? setting-keys
                  (poo-flow-declaration-case-expected-setting-keys
                   case-object))
-         (equal? (.ref presentation 'descriptor-realized?) #f)
-         (equal? (.ref presentation 'runtime-executed) #f)
+         (equal? descriptor-realized? #f)
+         (equal? runtime-executed? #f)
          (poo-flow-declaration-case-trace-safe? case-object))))

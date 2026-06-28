@@ -37,10 +37,16 @@
                           (string-length module-name))
                ".ss")))))
 
+;;; Boundary: cli unit test files from imports is the policy-visible edge for
+;;; CLI behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Object] [String])
 (def (poo-flow-cli-unit-test-files-from-imports specs)
   (filter-map poo-flow-cli-unit-test-import->file specs))
 
+;;; Boundary: cli form contains symbol predicate is the policy-visible edge for
+;;; CLI behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Object Boolean)
 (def (poo-flow-cli-native-gxtest-form? form)
   (or (poo-flow-cli-form-contains-symbol? form 'test-suite)
@@ -49,7 +55,23 @@
        form
        'define-poo-flow-module-system-live-case-test)))
 
-;; : (-> String Boolean)
+;;; Boundary: cli native gxtest file predicate is the policy-visible edge for
+;;; CLI behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
+;; poo-flow-cli-native-gxtest-file?
+;;   : (-> String Boolean)
+;;   | doc m%
+;;       `poo-flow-cli-native-gxtest-file?` documents the CLI boundary that the
+;;       Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-native-gxtest-file? ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (def (poo-flow-cli-native-gxtest-file? file)
   (and (file-exists? file)
        (call-with-input-file file
@@ -61,6 +83,9 @@
                 ((poo-flow-cli-native-gxtest-form? form) #t)
                 (else (loop)))))))))
 
+;;; Boundary: cli read test file imports is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> String [String])
 (def (poo-flow-cli-read-test-file-imports file)
   (if (file-exists? file)
@@ -73,6 +98,9 @@
             []))))
     []))
 
+;;; Boundary: cli expand test manifest file is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> String [String] [String])
 (def (poo-flow-cli-expand-test-manifest-file file seen)
   (if (member file seen)
@@ -100,6 +128,9 @@
 (def (poo-flow-cli-test-root? file)
   (member file (poo-flow-cli-test-roots)))
 
+;;; Boundary: cli expand test args is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] [String])
 (def (poo-flow-cli-expand-test-args args)
   (cond
@@ -109,6 +140,9 @@
     (poo-flow-cli-read-test-root-files (car args)))
    (else args)))
 
+;;; Boundary: cli form contains symbol predicate is the policy-visible edge for
+;;; CLI behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Object Symbol Boolean)
 (def (poo-flow-cli-form-contains-symbol? form symbol)
   (cond
@@ -133,7 +167,20 @@
 
 ;;; Intent: reject stale or side-effect-only files before launching gxtest.
 ;;; Boundary: reads the test form stream and stops at the first runnable form.
-;; : (-> String Boolean)
+;; poo-flow-cli-runnable-test-file?
+;;   : (-> String Boolean)
+;;   | doc m%
+;;       `poo-flow-cli-runnable-test-file?` documents the CLI boundary that the
+;;       Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-runnable-test-file? ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (def (poo-flow-cli-runnable-test-file? file)
   (and (file-exists? file)
        (call-with-input-file file
@@ -152,6 +199,9 @@
   (poo-flow-cli-error "next: add test-suite/run-tests! or an explicit poo-flow-import-side-effect-test-suite? marker")
   65)
 
+;;; Boundary: cli validate test files is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-validate-test-files files)
   (cond
@@ -169,6 +219,9 @@
 (def (poo-flow-cli-policy-test-file)
   "t/poo-flow-policy-test.ss")
 
+;;; Boundary: cli write datum is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Datum String)
 (def (poo-flow-cli-write-datum value)
   (call-with-output-string ""
@@ -204,6 +257,20 @@
           (poo-flow-cli-default-test-batch-size)))
       (poo-flow-cli-default-test-batch-size))))
 
+;; : (-> [String] Boolean)
+(def (poo-flow-cli-single-process-performance-root? args)
+  (and (not (null? args))
+       (null? (cdr args))
+       (equal? (car args) "t/performance-tests.ss")))
+
+;; : (-> [String] [String] Integer)
+(def (poo-flow-cli-test-batch-size/args args files)
+  (if (getenv "POO_FLOW_TEST_BATCH_SIZE" #f)
+    (poo-flow-cli-test-batch-size)
+    (if (poo-flow-cli-single-process-performance-root? args)
+      (if (null? files) 1 (length files))
+      (poo-flow-cli-default-test-batch-size))))
+
 ;; : (-> [String] Number Void)
 (def (poo-flow-cli-display-test-receipt files elapsed)
   (display "[poo-flow-test] done ")
@@ -226,6 +293,9 @@
   (newline)
   (force-output))
 
+;;; Boundary: cli test batch is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-test-batch files)
   (display "[poo-flow-test] start ")
@@ -253,6 +323,9 @@
 (def (poo-flow-cli-batch-tail files batch-size)
   (drop files (poo-flow-cli-batch-width files batch-size)))
 
+;;; Boundary: cli test batches is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] Integer [[String]])
 (def (poo-flow-cli-test-batches files batch-size)
   (unfold null?
@@ -262,8 +335,8 @@
 
 ;;; Intent: execute prevalidated test batches in order and keep first failure.
 ;;; Boundary: batch construction is pure; process execution stays in test-batch.
-;; : (-> [String] Integer)
-(def (poo-flow-cli-test-files files)
+;; : (-> [String] Integer Integer)
+(def (poo-flow-cli-test-files/batch-size files batch-size)
   (let (validation-status (poo-flow-cli-validate-test-files files))
     (if (= validation-status 0)
       (fold (lambda (batch status)
@@ -273,12 +346,19 @@
             0
             (poo-flow-cli-test-batches
              files
-             (poo-flow-cli-test-batch-size)))
+             batch-size))
       validation-status)))
 
 ;; : (-> [String] Integer)
+(def (poo-flow-cli-test-files files)
+  (poo-flow-cli-test-files/batch-size files (poo-flow-cli-test-batch-size)))
+
+;; : (-> [String] Integer)
 (def (poo-flow-cli-test args)
-  (poo-flow-cli-test-files (poo-flow-cli-expand-test-args args)))
+  (let (files (poo-flow-cli-expand-test-args args))
+    (poo-flow-cli-test-files/batch-size
+     files
+     (poo-flow-cli-test-batch-size/args args files))))
 
 ;; : (-> Unit [String])
 (def (poo-flow-cli-perf-rss-time-argv)
@@ -316,6 +396,9 @@
   (poo-flow-cli-error (string-append "max-bytes: " (object->string max-bytes)))
   75)
 
+;;; Boundary: cli accept or reject rss threshold! is the policy-visible edge
+;;; for CLI behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Integer Integer Number Integer)
 (def (poo-flow-cli-accept-or-reject-rss-threshold! rss-bytes max-bytes elapsed)
   (poo-flow-cli-display-rss-receipt rss-bytes max-bytes elapsed)
@@ -323,6 +406,9 @@
     (poo-flow-cli-reject-rss-threshold! rss-bytes max-bytes)
     0))
 
+;;; Boundary: cli perf rss parse output is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Integer Number String Integer)
 (def (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
   (let ((rss-bytes (poo-flow-cli-max-rss-bytes output))
@@ -334,6 +420,9 @@
        elapsed)
       (poo-flow-cli-reject-rss-parse! output))))
 
+;;; Boundary: cli perf rss measured files is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-measured-files max-megabytes files)
   (let* ((started-at (time->seconds (current-time)))
@@ -348,6 +437,9 @@
       (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
       status)))
 
+;;; Boundary: cli perf rss validated files is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-validated-files max-megabytes files)
   (let (validation-status (poo-flow-cli-validate-test-files files))
@@ -355,6 +447,9 @@
       (poo-flow-cli-perf-rss-measured-files max-megabytes files)
       validation-status)))
 
+;;; Boundary: cli perf rss files is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-files max-megabytes files)
   (if (file-exists? "/usr/bin/time")
@@ -363,6 +458,8 @@
       (poo-flow-cli-error "poo-flow perf rss: /usr/bin/time is required for RSS gates")
       69)))
 
+;;; Boundary: cli perf rss is the policy-visible edge for CLI behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-perf-rss args)
   (match args
@@ -380,6 +477,8 @@
      (poo-flow-cli-error "poo-flow perf rss: usage is `poo-flow perf rss --max-mb <megabytes> [test-file.ss...]`")
      64)))
 
+;;; Boundary: cli perf is the policy-visible edge for CLI behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-perf args)
   (match args

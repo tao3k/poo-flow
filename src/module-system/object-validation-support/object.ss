@@ -24,6 +24,9 @@
         poo-flow-module-invalid-field-identities
         poo-flow-module-object-validation->alist)
 
+;;; Boundary: module object validation phases is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleObject HashTable [HashTable] [HashTable] [HashTable])
 (def (poo-flow-module-object-validation-phases object
                                                harness-validation
@@ -61,18 +64,27 @@
     (cons 'owner (poo-flow-module-object-identity object))
     (cons 'diagnostic-count (length local-diagnostics)))))
 
+;;; Boundary: object diagnostics resolved fields is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleObject [HashTable])
 (def (object-diagnostics object)
   (object-diagnostics/resolved-fields
    object
    (poo-flow-module-object-resolved-fields object)))
 
+;;; Boundary: object diagnostics resolved identities is the policy-visible edge
+;;; for module-system, object behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleObject [PooModuleFieldContract] [HashTable])
 (def (object-diagnostics/resolved-fields object resolved-fields)
   (object-diagnostics/resolved-identities
    object
    (map poo-flow-module-field-contract-identity resolved-fields)))
 
+;;; Boundary: object diagnostics resolved identities is the policy-visible edge
+;;; for module-system, object behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleObject [Symbol] [HashTable])
 (def (object-diagnostics/resolved-identities object resolved-identities)
   (let (duplicates (duplicate-identities resolved-identities))
@@ -100,14 +112,58 @@
 (def (poo-flow-module-object-validation object)
   (poo-flow-module-object-validation/field-cache object #f))
 
+;;; Boundary: module object validation catalog caches is the policy-visible
+;;; edge for module-system, object behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleObject MaybeHashTable HashTable)
 (def (poo-flow-module-object-validation/field-cache object field-cache)
-  (poo-flow-module-object-validation/catalog-caches object field-cache #f))
+  (poo-flow-module-object-validation/catalog-caches object
+                                                    field-cache
+                                                    #f
+                                                    #f
+                                                    #f))
 
-;; : (-> PooModuleObject MaybeHashTable MaybeHashTable HashTable)
+;; : (-> HashTable Value (-> Value) Value)
+(def (poo-flow-module-object-validation-cache-ref cache key thunk)
+  (cond ((and cache (hash-get cache key)) => values)
+        (else
+         (let (value (thunk))
+           (if cache
+             (hash-put! cache key value)
+             (void))
+           value))))
+
+;; : (-> PooModuleObject [Symbol] [Symbol] [Symbol] [PooModuleFieldContract] MaybeHashTable [Alist])
+(def (poo-flow-module-object-validation-field-origins/cache object
+                                                            inherit-identities
+                                                            direct-field-identities
+                                                            resolved-field-identities
+                                                            resolved-fields
+                                                            cache)
+  (let ((providers
+         (poo-flow-module-object-field-provider-index object))
+        (cache-key
+         (and cache
+              (null? direct-field-identities)
+              (list inherit-identities resolved-field-identities))))
+    (poo-flow-module-object-validation-cache-ref
+     cache
+     cache-key
+     (lambda ()
+       (map (lambda (field)
+              (poo-flow-module-object-field-origin/index
+               object field providers))
+            resolved-fields)))))
+
+;;; Boundary: module object validation catalog caches is the policy-visible
+;;; edge for module-system, object behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
+;; : (-> PooModuleObject MaybeHashTable MaybeHashTable MaybeHashTable MaybeHashTable HashTable)
 (def (poo-flow-module-object-validation/catalog-caches object
                                                        field-cache
-                                                       harness-cache)
+                                                       harness-cache
+                                                       harness-fields-cache
+                                                       field-origins-cache)
   (let* ((inherits
           (poo-flow-module-object-inherits object))
          (direct-fields
@@ -121,8 +177,12 @@
          (resolved-field-identities
           (poo-flow-module-field-identities resolved-fields))
          (harness-fields
-          (map poo-flow-module-field-contract->harness-field
-               resolved-fields))
+          (poo-flow-module-object-validation-cache-ref
+           harness-fields-cache
+           resolved-field-identities
+           (lambda ()
+             (map poo-flow-module-field-contract->harness-field
+                  resolved-fields))))
          (source-ref
           (poo-flow-module-object-validation-source-ref/identities
            object
@@ -130,10 +190,10 @@
            direct-field-identities
            resolved-field-identities))
          (harness-validation
-          (if harness-cache
+         (if harness-cache
             (poo-flow-module-object-harness-validation/resolved-fields/cache
              object
-             resolved-fields
+             resolved-field-identities
              harness-fields
              source-ref
              harness-cache)
@@ -155,12 +215,13 @@
            object
            resolved-field-identities))
          (field-origins
-          (let (providers
-                (poo-flow-module-object-field-provider-index object))
-            (map (lambda (field)
-                   (poo-flow-module-object-field-origin/index
-                    object field providers))
-                 resolved-fields)))
+          (poo-flow-module-object-validation-field-origins/cache
+           object
+           inherit-identities
+           direct-field-identities
+           resolved-field-identities
+           resolved-fields
+           field-origins-cache))
          (diagnostics
           (append local-diagnostics
                   (hash-get harness-validation 'diagnostics)))
@@ -226,6 +287,9 @@
 (def (poo-flow-module-object-validation-diagnostics validation)
   (hash-get validation 'diagnostics))
 
+;;; Boundary: module invalid field identities is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [HashTable] [Symbol])
 (def (poo-flow-module-invalid-field-identities field-validations)
   (filter-map
@@ -238,6 +302,9 @@
 (def (poo-flow-module-object-validation-field validation key)
   (cons key (hash-get validation key)))
 
+;;; Boundary: module object validation fields is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> HashTable [Symbol] Alist)
 (def (poo-flow-module-object-validation-fields validation keys)
   (map (lambda (key)

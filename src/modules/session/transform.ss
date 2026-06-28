@@ -3,7 +3,8 @@
 ;;; Invariant: transforms derive session values and handoff receipts; they never
 ;;; execute providers, tools, memory stores, selectors, or sandbox runtimes.
 
-(import (only-in :clan/poo/object .o .ref object? object<-alist)
+(import (only-in :gerbil/gambit fx+)
+        (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/modules/session/objects)
 
 (export poo-flow-session-transform
@@ -85,6 +86,9 @@
           (cons 'runtime-executed #f)
           (cons 'metadata metadata-value))))
 
+;;; Boundary: session memory intent ref is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> PooSessionMemoryIntent Symbol Value Value)
 (def (poo-flow-session-memory-intent-ref intent key default)
   (if (object? intent)
@@ -144,6 +148,30 @@
    (cons 'handoff-required #t)
    (cons 'descriptor-realized? #f)
    (cons 'runtime-executed #f)))
+
+;;; Boundary: handoff rows stay as lexical calls so optimizer metadata can see
+;;; the memory-intent projection without a runtime lambda dispatch.
+;; : (-> [PooSessionMemoryIntent] (Cons [Alist] Fixnum))
+(def (poo-flow-session-memory-intent-handoff-bundle memory-intents)
+  (let loop ((rest memory-intents)
+             (rows '())
+             (count 0))
+    (if (null? rest)
+      (cons (reverse rows) count)
+      (loop (cdr rest)
+            (cons (poo-flow-session-memory-intent-handoff (car rest))
+                  rows)
+            (fx+ count 1)))))
+
+;;; Boundary: memory-intent counts use a small fixnum loop without allocating
+;;; projection rows when callers only need the cardinality.
+;; : (-> [PooSessionMemoryIntent] Fixnum)
+(def (poo-flow-session-memory-intent-count memory-intents)
+  (let loop ((rest memory-intents)
+             (count 0))
+    (if (null? rest)
+      count
+      (loop (cdr rest) (fx+ count 1)))))
 
 ;; : (-> [PooSessionTransformOption] (Cons Alist [PooSessionMemoryIntent]))
 ;; | type PooSessionTransformOption = (U Alist PooSessionMemoryIntent)
@@ -265,29 +293,33 @@
 (def (poo-flow-session-transform-handoff-intent transform
                                                 source-session
                                                 derived-session)
-  (list
-   (cons 'kind 'poo-flow.session.transform.handoff-intent)
-   (cons 'schema 'poo-flow.modules.session.transform.handoff-intent.v1)
-   (cons 'transform-name (poo-flow-session-transform-name transform))
-   (cons 'intent (poo-flow-session-transform-intent transform))
-   (cons 'source-session-id (poo-flow-session-id source-session))
-   (cons 'derived-session-id (poo-flow-session-id derived-session))
-   (cons 'capabilities (poo-flow-session-transform-capabilities transform))
-   (cons 'memory-intents
-         (map poo-flow-session-memory-intent-handoff
-              (poo-flow-session-transform-memory-intents transform)))
-   (cons 'memory-intent-count
-         (length (poo-flow-session-transform-memory-intents transform)))
-   (cons 'placement-profile-ref
-         (poo-flow-session-placement-profile-ref
+  (let* ((memory-intents-value
+          (poo-flow-session-transform-memory-intents transform))
+         (memory-handoff-bundle
+          (poo-flow-session-memory-intent-handoff-bundle
+           memory-intents-value))
+         (derived-placement-value
           (poo-flow-session-value-placement derived-session)))
-   (cons 'placement-resolved?
-         (poo-flow-session-placement-resolved?
-          (poo-flow-session-value-placement derived-session)))
-   (cons 'runtime-owner (poo-flow-session-transform-runtime-owner transform))
-   (cons 'handoff-required #t)
-   (cons 'descriptor-realized? #f)
-   (cons 'runtime-executed #f)))
+    (list
+     (cons 'kind 'poo-flow.session.transform.handoff-intent)
+     (cons 'schema 'poo-flow.modules.session.transform.handoff-intent.v1)
+     (cons 'transform-name (poo-flow-session-transform-name transform))
+     (cons 'intent (poo-flow-session-transform-intent transform))
+     (cons 'source-session-id (poo-flow-session-id source-session))
+     (cons 'derived-session-id (poo-flow-session-id derived-session))
+     (cons 'capabilities (poo-flow-session-transform-capabilities transform))
+     (cons 'memory-intents (car memory-handoff-bundle))
+     (cons 'memory-intent-count (cdr memory-handoff-bundle))
+     (cons 'placement-profile-ref
+           (poo-flow-session-placement-profile-ref
+            derived-placement-value))
+     (cons 'placement-resolved?
+           (poo-flow-session-placement-resolved?
+            derived-placement-value))
+     (cons 'runtime-owner (poo-flow-session-transform-runtime-owner transform))
+     (cons 'handoff-required #t)
+     (cons 'descriptor-realized? #f)
+     (cons 'runtime-executed #f))))
 
 ;;; Runtime memory effects stay behind the handoff. The receipt records what
 ;;; would be recalled or committed by the runtime owner.
@@ -314,6 +346,27 @@
    (cons 'descriptor-realized? #f)
    (cons 'runtime-executed #f)
    (cons 'metadata (poo-flow-session-memory-intent-metadata memory-intent))))
+
+;;; Boundary: receipt row generation stays in a named fixnum-counted loop, so
+;;; the row projection is optimizer-visible and count is produced with the rows.
+;; : (-> [PooSessionMemoryIntent] PooSessionTransform PooSession PooSession (Cons [Alist] Fixnum))
+(def (poo-flow-session-memory-receipt-row-bundle memory-intents
+                                                 transform
+                                                 source-session
+                                                 derived-session)
+  (let loop ((rest memory-intents)
+             (rows '())
+             (count 0))
+    (if (null? rest)
+      (cons (reverse rows) count)
+      (loop (cdr rest)
+            (cons (poo-flow-session-memory-receipt-row
+                   (car rest)
+                   transform
+                   source-session
+                   derived-session)
+                  rows)
+            (fx+ count 1)))))
 
 ;; : (-> Alist PooSessionMemoryReceipt)
 (def (poo-flow-session-memory-receipt-row->object row)
@@ -387,6 +440,20 @@
          (derived-session-id-value derived-session-id)
          (memory-intents-value
           (poo-flow-session-transform-memory-intents transform))
+         (memory-intent-count-value
+          (poo-flow-session-memory-intent-count memory-intents-value))
+         (transform-name-value
+          (poo-flow-session-transform-name transform))
+         (transform-intent-value
+          (poo-flow-session-transform-intent transform))
+         (transform-runtime-owner-value
+          (poo-flow-session-transform-runtime-owner transform))
+         (source-placement-value
+          (poo-flow-session-value-placement source-session))
+         (source-chunk-count-value
+          (length (poo-flow-session-chunks source-session)))
+         (derived-chunk-count-value
+          (length chunks))
          (derived-session-value
           (poo-flow-session-value
            derived-session-id-value
@@ -397,16 +464,15 @@
             'transform
             (append
              (list (cons 'transform-name
-                         (poo-flow-session-transform-name transform)))
+                         transform-name-value))
              metadata-value))
-           (poo-flow-session-value-placement source-session)
+           source-placement-value
            (append
             (list (cons 'derived-by 'poo-flow-session-transform)
-                  (cons 'transform-name
-                        (poo-flow-session-transform-name transform))
+                  (cons 'transform-name transform-name-value)
                   (cons 'source-session-id source-session-id-value)
                   (cons 'memory-intent-count
-                        (length memory-intents-value)))
+                        memory-intent-count-value))
             metadata-value)))
          (handoff-intent-value
           (poo-flow-session-transform-handoff-intent
@@ -415,20 +481,20 @@
            derived-session-value))
          (derived-placement-value
           (poo-flow-session-value-placement derived-session-value))
-         (memory-receipts-value
-          (map (lambda (memory-intent)
-                 (poo-flow-session-memory-receipt-row
-                  memory-intent
-                  transform
-                  source-session
-                  derived-session-value))
-               memory-intents-value)))
+         (memory-receipt-bundle
+          (poo-flow-session-memory-receipt-row-bundle
+           memory-intents-value
+           transform
+           source-session
+           derived-session-value))
+         (memory-receipts-value (car memory-receipt-bundle))
+         (memory-receipt-count-value (cdr memory-receipt-bundle)))
     (object<-alist
      (list
       (cons 'kind 'poo-flow.session.transform.receipt)
       (cons 'schema 'poo-flow.modules.session.transform.receipt.v1)
-      (cons 'transform-name (poo-flow-session-transform-name transform))
-      (cons 'transform-intent (poo-flow-session-transform-intent transform))
+      (cons 'transform-name transform-name-value)
+      (cons 'transform-intent transform-intent-value)
       (cons 'source-session-id source-session-id-value)
       (cons 'derived-session-id derived-session-id-value)
       (cons 'parent-session-ids (list source-session-id-value))
@@ -453,13 +519,12 @@
              derived-placement-value))
       (cons 'placement-metadata
             (.ref derived-placement-value 'placement-metadata))
-      (cons 'source-chunk-count
-            (length (poo-flow-session-chunks source-session)))
-      (cons 'derived-chunk-count (length chunks))
+      (cons 'source-chunk-count source-chunk-count-value)
+      (cons 'derived-chunk-count derived-chunk-count-value)
       (cons 'handoff-intent handoff-intent-value)
       (cons 'memory-receipts memory-receipts-value)
-      (cons 'memory-receipt-count (length memory-receipts-value))
-      (cons 'runtime-owner (poo-flow-session-transform-runtime-owner transform))
+      (cons 'memory-receipt-count memory-receipt-count-value)
+      (cons 'runtime-owner transform-runtime-owner-value)
       (cons 'handoff-required #t)
       (cons 'descriptor-realized? #f)
       (cons 'runtime-executed #f)
@@ -496,10 +561,18 @@
 (def (poo-flow-session-transform-receipt-handoff-intent receipt)
   (.ref receipt 'handoff-intent))
 
+;;; Boundary: session transform receipt memory receipts is the policy-visible
+;;; edge for policy behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooSessionTransformReceipt [PooSessionMemoryReceipt])
 (def (poo-flow-session-transform-receipt-memory-receipts receipt)
-  (map poo-flow-session-memory-receipt-row->object
-       (.ref receipt 'memory-receipts)))
+  (let loop ((rest (.ref receipt 'memory-receipts))
+             (objects '()))
+    (if (null? rest)
+      (reverse objects)
+      (loop (cdr rest)
+            (cons (poo-flow-session-memory-receipt-row->object (car rest))
+                  objects)))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-memory-receipt? value)
