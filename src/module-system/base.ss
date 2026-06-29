@@ -344,11 +344,17 @@
     (poo-flow-user-module-bundles->modules base-bundles)
     (poo-flow-user-module-bundles->modules extra-bundles))))
 
+;;; Boundary: user module selection source ref is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> POOObject MaybePooModuleSourceRef)
 (def (poo-flow-user-module-selection-source-ref selection)
   (let ((source-ref (.ref selection 'source-ref)))
     (if (eq? source-ref 'none) #f source-ref)))
 
+;;; Boundary: user module selection entrypoint is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> POOObject MaybePath)
 (def (poo-flow-user-module-selection-entrypoint selection)
   (let ((entrypoint (.ref selection 'entrypoint)))
@@ -404,6 +410,12 @@
       (equal? flag-key ':config)
       (equal? flag-key ':user-config)))
 
+;;; Boundary: user module selection presentation flags is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;;; Boundary: user module selection presentation flags drop config is the
+;;; policy-visible edge for module-system behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> [UserModuleFlagEntry] [UserModuleFlagEntry])
 (def (poo-flow-user-module-selection-presentation-flags/drop-config flags)
   (cond
@@ -418,6 +430,9 @@
           (poo-flow-user-module-selection-presentation-flags/drop-config
            (cdr flags))))))
 
+;;; Boundary: user module selection presentation flags is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooUserModuleSelection [UserModuleFlagEntry])
 (def (poo-flow-user-module-selection-presentation-flags selection)
   (let* ((flags (poo-flow-user-module-selection-flags selection))
@@ -530,6 +545,9 @@
    (poo-flow-user-config-modules config)
    0))
 
+;;; Boundary: user module selection source ref to alist is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooUserModuleSelection MaybeAlist)
 (def (poo-flow-user-module-selection-source-ref->alist selection)
   (let ((source-ref (poo-flow-user-module-selection-source-ref selection)))

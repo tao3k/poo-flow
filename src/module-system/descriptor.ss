@@ -480,6 +480,9 @@
     (cons (poo-flow-module-name (car modules))
           (poo-flow-module-names (cdr modules)))))
 
+;;; Boundary: module member name predicate is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> ModuleName [ModuleName] Boolean)
 (def (poo-flow-module-member-name? value names)
   (cond
@@ -495,6 +498,9 @@
     (.ref import-value 'profile)
     import-value))
 
+;;; Boundary: module import config is the policy-visible edge for module-system
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ModuleImportValue MaybePooModuleDescriptor)
 (def (poo-flow-module-import-config import-value)
   (let (profile (poo-flow-module-import-profile import-value))
@@ -508,6 +514,9 @@
     (or (symbol? profile)
         (string? profile))))
 
+;;; Boundary: module import name is the policy-visible edge for module-system
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ModuleImportValue ModuleName)
 (def (poo-flow-module-import-name import-value)
   (let (profile (poo-flow-module-import-profile import-value))
@@ -534,6 +543,9 @@
     (poo-flow-module-import-configs (cdr imports)))))
 
 ;;; Boundary: only direct names are missing imports; inline profiles are closure members.
+;;; Boundary: module missing imports for name is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol ModuleImportList [Symbol] [MissingModuleImport])
 (def (poo-flow-module-missing-imports-for-name module-name imports available-names)
   (cond
@@ -579,6 +591,9 @@
    (poo-flow-module-imports descriptor)
    available-names))
 
+;;; Boundary: module missing imports from is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleDescriptor] [Symbol] [MissingModuleImport])
 (def (poo-flow-module-missing-imports-from modules available-names)
   (if (null? modules)
@@ -607,6 +622,9 @@
        (list (cons 'missing missing))))))
 
 ;;; Boundary: aggregation is append-only; conflict policy belongs to diagnostics.
+;;; Boundary: module all task descriptors is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleDescriptor] [TaskFamilyDescriptor])
 (def (poo-flow-module-all-task-descriptors modules)
   (if (null? modules)

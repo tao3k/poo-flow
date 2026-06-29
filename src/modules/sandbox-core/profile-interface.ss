@@ -82,6 +82,9 @@
 (def (profile-metadata-remove-key? key keys)
   (and (member key keys) #t))
 
+;;; Boundary: profile metadata without is the policy-visible edge for sandbox,
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist [Symbol] Alist)
 (def (profile-metadata-without metadata keys)
   (filter (lambda (entry)
@@ -89,11 +92,17 @@
                       (profile-metadata-remove-key? (car entry) keys))))
           metadata))
 
+;;; Boundary: profile derivation path is the policy-visible edge for sandbox,
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist [Alist])
 (def (profile-derivation-path metadata)
   (let (entry (assoc 'derivation-path metadata))
     (if (and entry (list? (cdr entry))) (cdr entry) '())))
 
+;;; Boundary: profile derivation step is the policy-visible edge for sandbox,
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Symbol Symbol Value Alist)
 (def (profile-derivation-step profile-name parent-profile scope scope-ref)
   (append
@@ -105,6 +114,9 @@
      (list (cons 'scope-ref scope-ref))
      '())))
 
+;;; Boundary: profile derivation metadata is the policy-visible edge for
+;;; sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Alist Symbol Symbol Symbol Value Alist... Alist)
 (def (profile-derivation-metadata parent-metadata
                                   profile-name

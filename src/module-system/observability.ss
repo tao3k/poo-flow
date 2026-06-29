@@ -187,6 +187,9 @@
 (def +poo-flow-poo-slot-authoring-primitive-slots+
   '(.o .def .ref .slot? object?))
 
+;;; Boundary: poo slot authoring primitive slot predicate is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol Boolean)
 (def (poo-flow-poo-slot-authoring-primitive-slot? slot)
   (and (symbol? slot)
@@ -194,6 +197,9 @@
          #t
          #f)))
 
+;;; Boundary: poo slot authoring status is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Value Symbol)
 (def (poo-flow-poo-slot-authoring-status slot initializer)
   (cond
@@ -203,6 +209,9 @@
     'primitive-shadow-slot)
    (else 'ok)))
 
+;;; Boundary: poo slot authoring detail is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Value Alist)
 (def (poo-flow-poo-slot-authoring-detail slot initializer)
   (cond
@@ -260,6 +269,9 @@
     (car slot-initializer)
     (cdr slot-initializer))))
 
+;;; Boundary: poo slot authoring observations is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol [Pair] [Alist])
 (def (poo-flow-poo-slot-authoring-observations scope slot-initializers)
   (map (lambda (slot-initializer)
@@ -275,11 +287,17 @@
 (def (poo-flow-poo-slot-authoring-observation-ok? observation)
   (eq? (cdr (assoc 'status observation)) 'ok))
 
+;;; Boundary: poo slot authoring statuses is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-poo-slot-authoring-statuses observations)
   (map (lambda (observation) (cdr (assoc 'status observation)))
        observations))
 
+;;; Boundary: poo slot authoring diagnostics is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-poo-slot-authoring-diagnostics observations)
   (cond

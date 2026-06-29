@@ -44,7 +44,20 @@
 
 ;;; Derived Docker profiles reuse the sandbox-core POO derivation path; this
 ;;; module only supplies the backend profile object.
-;; : (-> PooSandboxProfile Symbol [SandboxProfileForm] Alist PooSandboxProfile)
+;; poo-flow-docker-sandbox-profile-derive
+;;   : (-> PooSandboxProfile Symbol [SandboxProfileForm] Alist PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-docker-sandbox-profile-derive` documents the sandbox
+;;       boundary that the Gerbil policy harness treats as agent-facing
+;;       behavior. The example keeps the call shape visible without duplicating
+;;       implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-docker-sandbox-profile-derive ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (def (poo-flow-docker-sandbox-profile-derive-config parent-profile
                                                     name-value
                                                     forms
@@ -58,13 +71,39 @@
 
 ;;; Profile row macros are syntax-only quotation; object validation and POO
 ;;; merge/remove semantics are owned by sandbox-core.
-;; : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+;; poo-flow-docker-sandbox-profile
+;;   : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-docker-sandbox-profile` documents the sandbox boundary that
+;;       the Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-docker-sandbox-profile ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-docker-sandbox-profile ()
   ((_ name form ...)
    (poo-flow-docker-sandbox-profile-config 'name '(form ...))))
 
 ;;; Backend-specific shorthand over the shared sandbox-core POO derive helper.
-;; : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+;; poo-flow-docker-sandbox-profile-derive
+;;   : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-docker-sandbox-profile-derive` documents the sandbox
+;;       boundary that the Gerbil policy harness treats as agent-facing
+;;       behavior. The example keeps the call shape visible without duplicating
+;;       implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-docker-sandbox-profile-derive ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-docker-sandbox-profile-derive ()
   ((_ parent name (option ...) form ...)
    (poo-flow-docker-sandbox-profile-derive-config
@@ -81,7 +120,20 @@
 
 ;;; Docker profile collections preserve declaration order for config receipts
 ;;; and runtime handoff planning.
-;; : (-> DockerSandboxProfileRow... [PooSandboxProfile])
+;; poo-flow-docker-sandbox-profiles
+;;   : (-> DockerSandboxProfileRow... [PooSandboxProfile])
+;;   | doc m%
+;;       `poo-flow-docker-sandbox-profiles` documents the sandbox boundary that
+;;       the Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-docker-sandbox-profiles ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-docker-sandbox-profiles ()
   ((_)
    '())

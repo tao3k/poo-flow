@@ -89,6 +89,10 @@
   (let ((lowered (lower-steps flow-name steps '() 0)))
     (car lowered)))
 
+;;; Boundary: step name is the policy-visible edge for core behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
+;;; Boundary: step kind is the policy-visible edge for core behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Symbol Nat Step [Id] PlanNode)
 (def (step->plan-node flow-name ordinal step dependencies)
   (let* ((kind (step-kind step))
@@ -118,6 +122,8 @@
             (cadr lowered-rest)
             (caddr lowered-rest)))))
 
+;;; Boundary: lower step is the policy-visible edge for core behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Symbol Step [Id] Nat LoweredStep)
 (def (lower-step flow-name step previous-terminal-ids ordinal)
   (if (branch-step? step)
@@ -370,6 +376,9 @@
       (execution-plan->dag-runtime-manifest plan)
       (execution-plan->dag-runtime-manifest plan (car maybe-request-id)))))
 
+;;; Boundary: select plan nodes is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Predicate [PlanNode] [PlanNode])
 (def (select-plan-nodes predicate nodes)
   (cond
@@ -380,6 +389,9 @@
    (else
     (select-plan-nodes predicate (cdr nodes)))))
 
+;;; Boundary: id has dependent predicate is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Id [[Id Id]] Boolean)
 (def (id-has-dependent? id edges)
   (cond
@@ -387,6 +399,9 @@
    ((equal? id (car (car edges))) #t)
    (else (id-has-dependent? id (cdr edges)))))
 
+;;; Boundary: id member predicate is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Id [Id] Boolean)
 (def (id-member? id ids)
   (cond
@@ -394,6 +409,9 @@
    ((equal? id (car ids)) #t)
    (else (id-member? id (cdr ids)))))
 
+;;; Boundary: ids subset predicate is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Id] [Id] Boolean)
 (def (ids-subset? candidate-ids available-ids)
   (cond
@@ -402,6 +420,8 @@
     (ids-subset? (cdr candidate-ids) available-ids))
    (else #f)))
 
+;;; Boundary: step kind is the policy-visible edge for core behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Step Symbol)
 (def (step-kind step)
   (cond
@@ -412,6 +432,8 @@
    ((kleisli-step? step) 'kleisli)
    (else (error "flow step is neither task nor flow" step))))
 
+;;; Boundary: step name is the policy-visible edge for core behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Step Symbol)
 (def (step-name step)
   (cond

@@ -79,6 +79,9 @@
          (cons 'row row))
    payload))
 
+;;; Boundary: sandbox profile object row contains symbol predicate is the
+;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> Value Symbol Boolean)
 (def (poo-flow-sandbox-profile-object-row-contains-symbol? value target)
   (cond
@@ -112,6 +115,9 @@
     (poo-flow-sandbox-profile-object-row-value row)
     row))
 
+;;; Boundary: sandbox profile object row authoring diagnostics is the policy-
+;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleObject SandboxProfileForm [ValidationError])
 (def (poo-flow-sandbox-profile-object-row-authoring-diagnostics
       profile-object
@@ -153,6 +159,9 @@
                (cons 'expected '#f))))
        '()))))
 
+;;; Boundary: sandbox profile object authoring diagnostics is the policy-
+;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleObject [SandboxProfileForm] [ValidationError])
 (def (poo-flow-sandbox-profile-object-authoring-diagnostics profile-object
                                                             forms)

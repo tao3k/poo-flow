@@ -7,12 +7,18 @@
 
 (export docker-sandbox-profile)
 
+;;; Boundary: docker sandbox profile is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 (def +docker-sandbox-profile-backend-kind+ 'docker)
 (def +docker-sandbox-profile-capabilities+
   '(process-run filesystem-read filesystem-write tmpdir))
 (def +docker-sandbox-profile-metadata+
   '((backend . docker-sandbox)))
 
+;;; Boundary: docker sandbox profile is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : PooSandboxProfilePrototype
 (def docker-sandbox-profile
   (.o (:: @ sandbox-profile)

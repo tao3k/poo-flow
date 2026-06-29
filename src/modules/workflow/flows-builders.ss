@@ -247,6 +247,9 @@
           (else
            (list "--payload" (workflow-cli-string payload)))))))))
 
+;;; Boundary: workflow envelope ref is the policy-visible edge for workflow
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist Symbol Value Value)
 (def (workflow-envelope-ref envelope key default)
   (let (entry (workflow-option-entry envelope key))

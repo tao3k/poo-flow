@@ -2,10 +2,6 @@
 ;;; Boundary: object validation catalog summaries and require gates.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/extensions/facade
-                 poo-object-field-contract-validation
-                 poo-object-contract-validation
-                 poo-object-validation-valid?)
         (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts

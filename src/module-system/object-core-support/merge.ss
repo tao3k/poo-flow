@@ -67,6 +67,8 @@
 (def (poo-flow-module-config-member? value values)
   (and (member value values) #t))
 
+;;; Value indexes make append/remove membership checks O(1) per value and keep
+;;; list-order preservation separate from duplicate detection.
 ;; : (-> [PooModuleSlotValue] HashTable)
 (def (poo-flow-module-config-value-index values)
   (let (index (make-hash-table))
@@ -76,6 +78,8 @@
      values)
     index))
 
+;;; Distinct append preserves the original base list and pays the hash-index
+;;; setup only when there is an extra list to merge.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-config-append-distinct base extra)
   (if (null? extra)
@@ -85,6 +89,8 @@
      extra
      (poo-flow-module-config-value-index base))))
 
+;;; Indexed append is the inner hot path: it accumulates unseen values in
+;;; reverse and performs one ordered append after the scan.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
 (def (poo-flow-module-config-append-distinct/indexed base extra seen)
   (let (added
@@ -100,6 +106,8 @@
       base
       (append base (reverse added)))))
 
+;;; Removal mirrors append by indexing the removal set first, so kept values
+;;; preserve source order without repeated linear membership scans.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-config-remove-elements values removed)
   (if (null? removed)
@@ -113,6 +121,8 @@
               '()
               values)))))
 
+;;; Slot merge operators accept scalar and list payloads; normalizing here keeps
+;;; append/prepend/remove semantics identical across user input shapes.
 ;; : (-> PooModuleSlotValue [PooModuleSlotValue])
 (def (poo-flow-module-config-list-value value)
   (cond ((null? value) '())
@@ -126,6 +136,8 @@
       (eq? merge 'prepend)
       (eq? merge 'remove)))
 
+;;; Merge dispatch is total: unknown actions leave the current slot unchanged,
+;;; while list-style actions normalize both sides before combining.
 ;; : (-> Symbol PooModuleSlotValue PooModuleSlotValue PooModuleSlotValue)
 (def (poo-flow-module-config-merged-slot-value merge current value)
   (cond
@@ -316,11 +328,24 @@
               changed?)
              ((hash-get seen-values (car remaining))
               (loop (cdr remaining) additions changed?))
-             (else
-              (hash-put! seen-values (car remaining) #t)
-              (loop (cdr remaining)
+            (else
+             (hash-put! seen-values (car remaining) #t)
+             (loop (cdr remaining)
                     (cons (car remaining) additions)
                     #t)))))))
+    (def (materialize-updated-slots new-order)
+      (append
+       (map (lambda (entry)
+              (let (key (car entry))
+                (if (poo-flow-module-config-slot-key-hash-ref
+                     updated
+                     key)
+                  (cons key (resolved-slot-update key))
+                  entry)))
+            slots)
+       (map (lambda (key)
+              (cons key (resolved-slot-update key)))
+            (reverse new-order))))
     (let init ((remaining slots))
       (cond
        ((null? remaining)
@@ -330,18 +355,7 @@
           (if (null? rest)
             (if (and (not changed?) (null? new-order))
               slots
-              (append
-               (map (lambda (entry)
-                      (let (key (car entry))
-                        (if (poo-flow-module-config-slot-key-hash-ref
-                             updated
-                             key)
-                          (cons key (resolved-slot-update key))
-                          entry)))
-                    slots)
-               (map (lambda (key)
-                      (cons key (resolved-slot-update key)))
-                    (reverse new-order))))
+              (materialize-updated-slots new-order))
             (let* ((contribution (car rest))
                    (vector-contribution?
                     (poo-flow-module-field-contribution-vector? contribution))
@@ -455,6 +469,8 @@
        slots
        contributions)))
 
+;;; The fast extension result is valid only for childless nodes; child graphs
+;;; require the general fixed-point path to preserve recursive semantics.
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
 (def (poo-flow-module-config-fast-extension-result base contributions)
   (let ((children (poo-flow-module-extension-node-children base))

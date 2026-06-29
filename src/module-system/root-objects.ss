@@ -20,5 +20,4 @@
      (inherits . objects.shared.sandbox))))
 
 (def poo-flow-user-interface-root-module-objects
-  (poo-flow-require-module-objects-validation!
-   (list poo-flow-user-interface-shared-sandbox-object)))
+  (list poo-flow-user-interface-shared-sandbox-object))

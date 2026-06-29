@@ -40,6 +40,9 @@
         (cons 'target (poo-flow-module-diagnostic-target diagnostic))
         (cons 'detail (poo-flow-module-diagnostic-detail diagnostic))))
 
+;;; Boundary: module diagnostic key member predicate is the policy-visible edge
+;;; for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> DiagnosticKey [DiagnosticKey] Boolean)
 (def (poo-flow-module-diagnostic-key-member? value values)
   (cond
@@ -186,6 +189,9 @@
             (poo-flow-module-duplicate-option-diagnostics closed-modules)
             (poo-flow-module-empty-contribution-diagnostics closed-modules))))
 
+;;; Boundary: module diagnostics with severity is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> DiagnosticSeverity [PooModuleDiagnostic] [PooModuleDiagnostic])
 (def (poo-flow-module-diagnostics-with-severity severity diagnostics)
   (cond

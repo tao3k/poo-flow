@@ -285,6 +285,9 @@
                 0))
          (cons 'diagnostics diagnostics)))))))
 
+;;; Boundary: user profile loop engine sandbox handoff diagnostics add is the
+;;; policy-visible edge for module-system behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooUserProfile [Alist] [PooUserProfileDiagnostic])
 (def (poo-flow-user-profile-loop-engine-sandbox-handoff-diagnostics/add
       profile

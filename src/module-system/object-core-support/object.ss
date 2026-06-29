@@ -104,12 +104,16 @@
          (lambda (_self superfun)
            (poo-flow-module-object-fields-merge (superfun) fields)))))
 
+;;; Field identity accepts contracts and raw symbols so lookup paths share one
+;;; boundary between parsed field contracts and caller-provided keys.
 ;; : (-> (U PooModuleFieldContract Symbol) Symbol)
 (def (poo-flow-module-object-field-identity field)
   (if (poo-flow-module-field-contract? field)
     (poo-flow-module-field-contract-identity field)
     field))
 
+;;; Field indexes keep the first declaration authoritative for lookup while
+;;; ordered merge code handles replacement and append materialization.
 ;; : (-> [PooModuleFieldContract] HashTable)
 (def (poo-flow-module-object-field-index fields)
   (let (index (make-hash-table))
@@ -126,6 +130,8 @@
 (def (poo-flow-module-object-identity-hash-ref table identity)
   (hash-get table identity))
 
+;;; Field set is the small-list replacement path used before hash indexes are
+;;; worth materializing, preserving inherited field order.
 ;; : (-> [PooModuleFieldContract] PooModuleFieldContract [PooModuleFieldContract])
 (def (poo-flow-module-object-field-set fields field)
   (let (field-identity (poo-flow-module-object-field-identity field))
@@ -162,28 +168,30 @@
                   (poo-flow-module-object-field-identity field)
                   #t))
      base)
+    (def (finish new-identities)
+      (append
+       (map (lambda (field)
+              (let (identity
+                    (poo-flow-module-object-field-identity field))
+                (if (and (poo-flow-module-object-identity-hash-ref
+                          override-seen
+                          identity)
+                         (not (poo-flow-module-object-identity-hash-ref
+                               replacement-used
+                               identity)))
+                  (begin
+                    (hash-put! replacement-used identity #t)
+                    (poo-flow-module-object-identity-hash-ref
+                     overrides
+                     identity))
+                  field)))
+            base)
+       (map (lambda (identity)
+              (poo-flow-module-object-identity-hash-ref overrides identity))
+            (reverse new-identities))))
     (let loop ((fields extra) (new-identities '()))
       (if (null? fields)
-        (append
-         (map (lambda (field)
-                (let (identity
-                      (poo-flow-module-object-field-identity field))
-                  (if (and (poo-flow-module-object-identity-hash-ref
-                            override-seen
-                            identity)
-                           (not (poo-flow-module-object-identity-hash-ref
-                                 replacement-used
-                                 identity)))
-                    (begin
-                      (hash-put! replacement-used identity #t)
-                      (poo-flow-module-object-identity-hash-ref
-                       overrides
-                       identity))
-                    field)))
-              base)
-         (map (lambda (identity)
-                (poo-flow-module-object-identity-hash-ref overrides identity))
-              (reverse new-identities)))
+        (finish new-identities)
         (let* ((field (car fields))
                (identity
                 (poo-flow-module-object-field-identity field))
@@ -202,6 +210,8 @@
           (hash-put! overrides identity field)
           (loop (cdr fields) next-new-identities))))))
 
+;;; Inherited field resolution builds a synthetic object so direct and inherited
+;;; schemas both pass through the same computed-slot semantics.
 ;; : (-> [PooModuleObject] [PooModuleFieldContract])
 (def (poo-flow-module-object-inherited-fields inherits)
   (if (null? inherits)
@@ -209,6 +219,8 @@
     (poo-flow-module-object-resolved-fields
      (poo-flow-module-object 'objects.inherited.fields inherits '() '()))))
 
+;;; Resolved fields avoid POO slot evaluation for leaf objects and only consult
+;;; computed inheritance state when the object has parents.
 ;; : (-> PooModuleObject [PooModuleFieldContract])
 (def (poo-flow-module-object-resolved-fields object)
   (if (null? (poo-flow-module-object-inherits object))
@@ -224,6 +236,8 @@
 (def (poo-flow-module-object-field/index field-index identity)
   (poo-flow-module-object-identity-hash-ref field-index identity))
 
+;;; Linear field lookup is retained for one-off access; repeated contribution
+;;; mapping should use the indexed lookup path.
 ;; : (-> [PooModuleFieldContract] Symbol MaybePooModuleFieldContract)
 (def (poo-flow-module-object-field/in-fields fields identity)
   (cond
@@ -259,6 +273,8 @@
                (poo-flow-module-field-contract-default field)))
        (poo-flow-module-object-resolved-fields object)))
 
+;;; Slot alist replacement preserves the first key position and updates only
+;;; the matching row, matching extension slot merge order.
 ;; : (-> PooModuleSlotMap Symbol PooModuleSlotValue PooModuleSlotMap)
 (def (poo-flow-module-object-alist-set entries key value)
   (cond ((null? entries) (list (cons key value)))
@@ -292,31 +308,33 @@
      (lambda (entry)
        (hash-put! base-seen (car entry) #t))
      base)
+    (def (finish new-keys)
+      (append
+       (map (lambda (entry)
+              (let (key (car entry))
+                (if (and (poo-flow-module-config-slot-key-hash-ref
+                          override-seen
+                          key)
+                         (not (poo-flow-module-config-slot-key-hash-ref
+                               replacement-used
+                               key)))
+                  (begin
+                    (hash-put! replacement-used key #t)
+                    (cons key
+                          (poo-flow-module-config-slot-key-hash-ref
+                           overrides
+                           key)))
+                  entry)))
+            base)
+       (map (lambda (key)
+              (cons key
+                    (poo-flow-module-config-slot-key-hash-ref
+                     overrides
+                     key)))
+            (reverse new-keys))))
     (let loop ((entries extra) (new-keys '()))
       (if (null? entries)
-        (append
-         (map (lambda (entry)
-                (let (key (car entry))
-                  (if (and (poo-flow-module-config-slot-key-hash-ref
-                            override-seen
-                            key)
-                           (not (poo-flow-module-config-slot-key-hash-ref
-                                 replacement-used
-                                 key)))
-                    (begin
-                      (hash-put! replacement-used key #t)
-                      (cons key
-                            (poo-flow-module-config-slot-key-hash-ref
-                             overrides
-                             key)))
-                    entry)))
-              base)
-         (map (lambda (key)
-                (cons key
-                      (poo-flow-module-config-slot-key-hash-ref
-                       overrides
-                       key)))
-              (reverse new-keys)))
+        (finish new-keys)
         (let* ((entry (car entries))
                (key (car entry))
                (next-new-keys
@@ -353,6 +371,8 @@
    slots
    children))
 
+;;; Object contribution converts one user slot row into a typed field
+;;; contribution and fails loudly when the object schema has no such field.
 ;; : (-> PooModuleObject Pair PooModuleFieldContribution)
 (def (poo-flow-module-object-contribution object entry)
   (let (field (poo-flow-module-object-field object (car entry)))
@@ -365,6 +385,8 @@
              (poo-flow-module-object-identity object)
              (car entry)))))
 
+;;; Indexed contribution conversion keeps large object updates from rescanning
+;;; resolved fields for every user-provided row.
 ;; : (-> PooModuleObject HashTable Pair PooModuleFieldContribution)
 (def (poo-flow-module-object-contribution/index object field-index entry)
   (let (field (hash-get field-index (car entry)))
@@ -400,6 +422,8 @@
           (poo-flow-module-object-node object '() '()))
         objects)))
 
+;;; Object indexes materialize the catalog identity boundary once so inherit and
+;;; merge callers can resolve child nodes without repeated child scans.
 ;; : (-> PooModuleExtensionNode HashTable)
 (def (poo-flow-module-objects-index objects-node)
   (let (index (make-hash-table))
@@ -450,6 +474,8 @@
                        (list contribution)))
           (loop (cdr remaining)))))))
 
+;;; Fast child state updates only children that have grouped contributions while
+;;; preserving untouched child nodes and tracking whether any merge changed.
 ;; : (-> HashTable MaybeFastExtensionChildState PooModuleExtensionNode MaybeFastExtensionChildState)
 (def (poo-flow-module-objects-fast-extension-child-state groups state child)
   (and state
@@ -473,6 +499,8 @@
                           (or changed? child-changed?)))))
            (cons (cons child next-children) changed?)))))
 
+;;; Fast extension result is valid only for the objects root; other roots fall
+;;; back to the generic fixed-point merge contract.
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
 (def (poo-flow-module-objects-fast-extension-result objects-node contributions)
   (and (equal? (poo-flow-module-extension-node-identity objects-node)
@@ -498,6 +526,8 @@
                (if (cdr state) 1 0)
                #t)))))
 
+;;; Merge-node entrypoint prefers the objects-root fast path and delegates to
+;;; the generic extension merge when the shape is outside that proven boundary.
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] PooModuleConfigMergeResult)
 (def (poo-flow-module-objects-mk-merge/node objects-node contributions)
   (let (fast-result

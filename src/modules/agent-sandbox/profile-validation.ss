@@ -39,6 +39,9 @@
 (def (agent-sandbox-profile-required-value? value)
   (and value #t))
 
+;;; Boundary: agent sandbox profile validation errors is the policy-visible
+;;; edge for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> AgentSandboxProfile [ValidationError])
 (def (agent-sandbox-profile-validation-errors profile)
   (append
@@ -68,6 +71,9 @@
     (agent-sandbox-profile-filesystem-capability? (car capability)))
    (else #f)))
 
+;;; Boundary: agent sandbox profile capabilities have filesystem predicate is
+;;; the policy-visible edge for sandbox behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> Capabilities Boolean)
 (def (agent-sandbox-profile-capabilities-have-filesystem? capabilities)
   (cond
@@ -78,6 +84,9 @@
     (agent-sandbox-profile-capabilities-have-filesystem? (cdr capabilities)))))
 
 ;; | AgentSandboxResourcePolicyEntry = (U Symbol Pair)
+;;; Boundary: agent sandbox profile resource policy filesystem entry is the
+;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> AgentSandboxResourcePolicyEntry Boolean)
 (def (agent-sandbox-profile-resource-policy-filesystem-entry? resource)
   (cond
@@ -87,6 +96,9 @@
     (eq? (car resource) 'filesystem))
    (else #f)))
 
+;;; Boundary: agent sandbox profile resource policy has filesystem predicate is
+;;; the policy-visible edge for sandbox behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> ResourcePolicy Boolean)
 (def (agent-sandbox-profile-resource-policy-has-filesystem? resource-policy)
   (cond
@@ -98,6 +110,9 @@
     (agent-sandbox-profile-resource-policy-has-filesystem?
      (cdr resource-policy)))))
 
+;;; Boundary: agent sandbox profile resource policy spec has key predicate is
+;;; the policy-visible edge for sandbox behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> AgentSandboxFilesystemResourceSpec Symbol Boolean)
 (def (agent-sandbox-profile-resource-policy-spec-has-key? spec key)
   (cond
@@ -193,6 +208,9 @@
        (agent-sandbox-profile-string-prefix? "$" value)
        (> (string-length value) 1)))
 
+;;; Boundary: agent sandbox profile path join is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> String String String)
 (def (agent-sandbox-profile-path-join base path)
   (if (string=? base ".")
@@ -252,6 +270,9 @@
                    (cons 'entry entry)))))
      (else '()))))
 
+;;; Boundary: agent sandbox profile target path diagnostics is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Alist [ValidationError])
 (def (agent-sandbox-profile-target-path-diagnostics entry)
   (let (target (agent-sandbox-profile-path-entry-ref 'target entry #f))
@@ -263,6 +284,9 @@
              (list (cons 'target target)
                    (cons 'entry entry)))))))
 
+;;; Boundary: agent sandbox profile filesystem path entry diagnostics is the
+;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Alist [ValidationError])
 (def (agent-sandbox-profile-filesystem-path-entry-diagnostics entry)
   (if (list? entry)
@@ -278,6 +302,9 @@
        (eq? (agent-sandbox-profile-path-entry-ref 'role entry #f)
             'project-workspace)))
 
+;;; Boundary: agent sandbox profile paths have project workspace predicate is
+;;; the policy-visible edge for sandbox behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> [Alist] Boolean)
 (def (agent-sandbox-profile-paths-have-project-workspace? entries)
   (cond
@@ -301,6 +328,9 @@
            (map agent-sandbox-profile-filesystem-path-entry-diagnostics
                 entries)))))
 
+;;; Boundary: agent sandbox profile filesystem mount entry diagnostics is the
+;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Alist [ValidationError])
 (def (agent-sandbox-profile-filesystem-mount-entry-diagnostics entry)
   (if (list? entry)
@@ -330,6 +360,9 @@
                                                         default)
   (agent-sandbox-alist-ref resource-policy key default))
 
+;;; Boundary: agent sandbox profile resource policy filesystem entry is the
+;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> ResourcePolicy MaybeAgentSandboxResourcePolicyEntry)
 (def (agent-sandbox-profile-resource-policy-filesystem-entry resource-policy)
   (cond
@@ -342,12 +375,18 @@
     (agent-sandbox-profile-resource-policy-filesystem-entry
      (cdr resource-policy)))))
 
+;;; Boundary: agent sandbox profile resource path diagnostics is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> MaybeAgentSandboxPaths [ValidationError])
 (def (agent-sandbox-profile-resource-path-diagnostics paths)
   (if paths
     (agent-sandbox-profile-filesystem-paths-diagnostics paths)
     '()))
 
+;;; Boundary: agent sandbox profile resource mount diagnostics is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> MaybeAgentSandboxMounts MaybeAgentSandboxMounts [ValidationError])
 (def (agent-sandbox-profile-resource-mount-diagnostics mounts top-level-mounts)
   (cond
@@ -412,6 +451,9 @@
               'missing-filesystem-materialization
               (list (cons 'filesystem spec))))))))
 
+;;; Boundary: agent sandbox profile resource policy filesystem diagnostics is
+;;; the policy-visible edge for sandbox behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> ResourcePolicy [ValidationError])
 (def (agent-sandbox-profile-resource-policy-filesystem-diagnostics
       resource-policy)
@@ -443,6 +485,9 @@
        (agent-sandbox-profile-resource-policy-spec-has-anchor?
         (cdr resource))))
 
+;;; Boundary: agent sandbox profile resource policy has structured filesystem
+;;; predicate is the policy-visible edge for sandbox behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> ResourcePolicy Boolean)
 (def (agent-sandbox-profile-resource-policy-has-structured-filesystem?
       resource-policy)

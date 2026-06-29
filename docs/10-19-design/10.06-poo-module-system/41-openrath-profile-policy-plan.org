@@ -1,0 +1,242 @@
+* 10.06.41 OpenRath Profile Policy Plan
+
+** 10.06.41.10 Source Snapshot
+
+The OpenRath research checkout was refreshed under:
+
+#+begin_src text
+.data/openRath
+#+end_src
+
+Latest local revision after fetch:
+
+#+begin_src text
+ab884ab532e5139835c098213f3433016fb28deb 2026-06-24T17:12:54+08:00 ci(opensandbox): restore --reruns lost in v1.2.0 prep
+#+end_src
+
+This checkout is research input only. =poo-flow= should not copy
+OpenRath's Python class model. The useful parts are the interface boundaries
+around agent params, workflow registration, session-loop execution, backend
+capabilities, sandbox specs, memory-policy injection, and structured tool
+failures.
+
+** 10.06.41.20 OpenRath Evidence
+
+The important OpenRath owners are:
+
+- =src/rath/flow/agent.py=: =Agent= binds provider/model, tools, optional
+  memory, a =MemoryInjectionPolicy=, and a session-loop call.
+- =src/rath/flow/workflow.py=: =Workflow= collects =AgentParam= values
+  through attribute assignment and leaves orchestration to =forward=.
+- =src/rath/session/loop.py=: =SessionLoopExecutor= is a protocol for
+  completion, tool dispatch, and tool-schema projection.
+- =src/rath/backend/abc.py=: =BackendSandboxSpec= is a user-facing optional
+  sandbox request with =image=, =entrypoint=, =env=, =timeout=, and
+  =working_dir=.
+- =src/rath/backend/capabilities.py=: =Capabilities= is a static
+  backend-class-level capability description.
+- =src/rath/backend/opensandbox.py=: =OpenSandboxBackend= publishes static
+  capabilities, supported calls, cheap availability checks, and dispatch
+  behavior.
+- =src/rath/flow/memory_inject.py=: =MemoryInjectionPolicy= is a strategy
+  object, and =DefaultRecallInjection= keeps recall failures non-fatal.
+- =src/rath/backend/results.py=: =ToolExecutionFailure= is a structured
+  failure value returned to the loop instead of always throwing.
+
+The useful shape is:
+
+#+begin_src text
+profile/spec intent -> capability check -> executor/backend dispatch -> structured result
+#+end_src
+
+The part to avoid is making Python-style classes or attribute assignment the
+=poo-flow= user model. Our surface should remain POO-native and functional.
+
+** 10.06.41.30 Current =poo-flow= Baseline
+
+=poo-flow= already has the right lower-level profile pieces:
+
+- =src/modules/sandbox-core/profile-support/authoring.ss= owns row slots, row
+  operators, row merge shape, and authoring diagnostics.
+- =src/modules/sandbox-core/profile-support/derivation.ss= owns derivation
+  metadata and row validation, including filesystem-resource safety checks.
+- =src/modules/sandbox-core/profile-support/resolve.ss= owns profile object
+  resolution, row contribution merge, profile derivation, and profile
+  collection.
+- =src/core/policy.ss= owns the current =execution-policy= shape: strategy,
+  cache policy, failure policy, capabilities, and frontier.
+- =src/module-system/object-validation.ss= owns object/field contract
+  validation and summary projection.
+
+The current gap is not a missing row operator. The gap is a first-class
+profile-policy layer that explains why a profile is legal for a backend, which
+capabilities it requires, which safety rules are monotonic, and how validation
+failures are projected.
+
+** 10.06.41.40 Design Direction
+
+Model profile policy as POO objects, not as a new raw alist DSL.
+
+Profile policy should be a composable object family with slots for:
+
+- =required-capabilities=: command, filesystem, code interpreter, network,
+  persistence, or backend-specific capabilities.
+- =backend-intent=: backend kind, optional image, entrypoint, environment,
+  timeout, working directory, and placement hints.
+- =resource-policy=: filesystem, network, env, mounts, budget, and isolation
+  requirements.
+- =safety-policy=: deny entries, human gates, write capability, production
+  access, and irreversible-action gates.
+- =failure-policy=: structured failure kind, severity, recoverability, and
+  report-only versus hard-error behavior.
+- =projection-policy=: how a valid profile lowers into backend handoff data
+  without executing it.
+
+Composition must use POO/C3-style precedence for role and slot ordering, but
+safety is not decided by precedence. Safety is decided by validation phases
+after composition.
+
+** 10.06.41.50 Validation Phases
+
+Adopt a multi-phase profile-policy validator:
+
+1. =authoring=: row syntax, operator validity, known slots, and backend row
+   ownership.
+2. =composition=: POO supers, row contribution merge, derivation metadata, and
+   profile lineage.
+3. =capability=: compare required capabilities against backend capability
+   objects.
+4. =resource=: filesystem, network, env, and resource contract validation,
+   including path existence where the policy declares a concrete workspace
+   path.
+5. =safety=: monotonic rules for permission narrowing, denylist union, budget
+   tightening, and human-gate escalation.
+6. =projection=: backend handoff shape is complete enough for Marlin/Rust
+   without running the backend.
+
+Validation output should be structured diagnostics, not ad hoc error strings:
+
+#+begin_src text
+(kind phase severity profile slot source detail recoverable?)
+#+end_src
+
+This mirrors OpenRath's structured =ToolExecutionFailure= idea while keeping
+=poo-flow= on the Scheme control-plane side.
+
+** 10.06.41.60 Capability Registry Plan
+
+Add a Scheme-side backend capability registry. It should be report-only and
+static by default, like OpenRath's =Capabilities=:
+
+- backend kind.
+- isolation level.
+- supports command.
+- supports filesystem.
+- supports code interpreter.
+- supports network.
+- supports persistence.
+- max sandboxes or concurrency hint.
+- cold-start hint.
+- availability check receipt.
+
+Backend modules such as nono, cube, docker, and future opensandbox-like
+backends should publish capability objects. Profiles then require capabilities
+rather than naming backend behavior implicitly.
+
+The registry must not perform runtime work. Availability checks should remain
+cheap and diagnostic. Real execution still belongs outside =poo-flow=.
+
+** 10.06.41.70 Milestone Plan
+
+Milestone 1: Profile Policy Data Model
+
+- Add a POO-native profile-policy object family.
+- Define capability, resource, safety, failure, and projection policy slots.
+- Keep existing row operators; do not add a second patch language.
+
+Milestone 2: Capability Registry
+
+- Add static backend capability objects for existing sandbox backends.
+- Wire capability lookups into sandbox profile validation.
+- Project capability mismatch diagnostics.
+
+Current landing:
+
+- =src/modules/sandbox-core/profile-support/policy.ss= owns the POO-native
+  backend capability objects, profile-policy objects, validation receipts, and
+  projection receipts.
+- =src/modules/sandbox-core/profile-support/prototype.ss= adds
+  =backend-capability= and =profile-policy= object slots to the shared profile
+  object.
+- =src/modules/sandbox-core/profile-support/resolve.ss= validates final
+  composed profile capabilities against the backend capability object before
+  returning a public sandbox profile.
+- =src/modules/{nono-sandbox,docker-sandbox,cubeSandbox}/objects.ss= publish
+  backend capability objects and wire them into their backend profile objects.
+- =src/modules/agent-sandbox/config.ss= projects profile-policy receipts into
+  user-facing profile presentation data, including =policy-projections=,
+  =policy-valid?=, and =policy-diagnostics=.
+- =t/sandbox-profile-policy-test.ss= covers capability objects, structured
+  diagnostics, resolution hard gates, and projection receipts.
+- =t/agent-sandbox-profile-user-interface-test.ss= covers the user-facing
+  presentation receipt shape.
+- =build.ss= now includes the =poo-flow= executable entrypoint in the default
+  package spec so focused agent gates have a package-owned CLI target.
+
+Milestone 3: Structured Diagnostics
+
+- Replace broad profile-policy errors with phase, kind, and severity
+  diagnostics.
+- Preserve hard errors where tests expect them, but make the report path
+  structured.
+- Add presentation rows for diagnostics and derivation lineage.
+
+Milestone 4: Monotonic Safety Rules
+
+- Define merge laws for sensitive fields.
+- Deny rules accumulate by union.
+- Permissions narrow, never widen, after safety policy applies.
+- Budgets tighten unless an explicit privileged policy allows loosening.
+- Human gates can be added or escalated, not silently removed.
+- Filesystem access requires declared mounts and concrete path validation when
+  path scope is concrete.
+
+Milestone 5: Backend Projection Receipts
+
+- Add a projection-only handoff object for Marlin/Rust backend execution.
+- Include capability receipts, availability receipts, and policy diagnostics.
+- Keep runtime execution outside the Scheme validator.
+
+Milestone 6: User Profile Surface
+
+- Update user-interface custom cases so profiles inherit from real module
+  profile objects rather than restating fake profile fragments.
+- Keep =init.ss= as module and feature activation.
+- Keep profile policy authoring in =objects.ss= and loaded object files.
+
+** 10.06.41.80 Implementation Owners
+
+The likely owners are:
+
+- =src/modules/sandbox-core/profile.ss=: public profile-policy facade and
+  exports.
+- =src/modules/sandbox-core/profile-support/authoring.ss=: policy row slots,
+  row diagnostics, and authoring checks.
+- =src/modules/sandbox-core/profile-support/derivation.ss=: lineage,
+  monotonic safety validation, and inherited profile-policy checks.
+- =src/modules/sandbox-core/profile-support/resolve.ss=: composed object
+  resolution and projection-only handoff construction.
+- =src/modules/*/objects.ss=: backend capability objects for concrete modules.
+- =src/module-system/object-validation.ss=: shared structured diagnostic
+  projection and summary formatting.
+- =user-interface/custom/*=: real user-facing profile examples and policy
+  fixtures.
+
+** 10.06.41.90 Non-Goals
+
+- Do not make OpenRath a dependency of =poo-flow=.
+- Do not move backend execution into Scheme.
+- Do not invent a second raw patch DSL beside POO object extension and existing
+  row operators.
+- Do not make availability checks perform expensive runtime provisioning.
+- Do not let profile inheritance silently widen safety-critical access.

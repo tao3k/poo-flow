@@ -7,12 +7,18 @@
 
 (export nono-sandbox-profile)
 
+;;; Boundary: nono sandbox profile is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 (def +nono-sandbox-profile-backend-kind+ 'nono)
 (def +nono-sandbox-profile-capabilities+
   '(process-run filesystem-read tmpdir))
 (def +nono-sandbox-profile-metadata+
   '((backend . nono-sandbox)))
 
+;;; Boundary: nono sandbox profile is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : PooSandboxProfilePrototype
 (def nono-sandbox-profile
   (.o (:: @ sandbox-profile)

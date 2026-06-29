@@ -102,6 +102,9 @@
       schemas: (.o)
       metadata: '()))
 
+;;; Boundary: module kind= predicate is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ModuleKind ModuleKind Boolean)
 (def (poo-flow-module-kind=? value expected)
   (cond
@@ -116,6 +119,9 @@
   (and (object? object)
        (member slot-name (.all-slots object))))
 
+;;; Boundary: module object ref default is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> POOConfigRecord Symbol ConfigSlotValue ConfigSlotValue)
 (def (poo-flow-module-object-ref/default object slot-name default-value)
   (if (poo-flow-module-object-has-slot? object slot-name)

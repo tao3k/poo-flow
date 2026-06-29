@@ -2,11 +2,11 @@
 ;;; Boundary: harness-backed field contract validation.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/extensions/facade
+        (only-in :gslph/src/extensions/poo-object-validation
                  poo-object-field-contract-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
-        (only-in :std/sugar filter-map foldl)
+        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts)
 

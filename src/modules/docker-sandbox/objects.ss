@@ -6,6 +6,7 @@
         :poo-flow/src/modules/sandbox-core/objects)
 
 (export poo-flow-docker-sandbox-object
+        poo-flow-docker-sandbox-backend-capability
         poo-flow-docker-sandbox-profile-object
         poo-flow-docker-sandbox-module-objects)
 
@@ -24,6 +25,10 @@
    '((namespace . objects.docker-sandbox)
      (domain . sandbox)
      (inherits . objects.shared.sandbox))))
+
+;; : PooSandboxBackendCapability
+(def poo-flow-docker-sandbox-backend-capability
+  poo-flow-sandbox-backend-capability/docker)
 
 ;;; The Docker profile object combines sandbox-core rows with Docker defaults,
 ;;; so user profile extension remains pure POO merge/remove behavior.
@@ -45,6 +50,10 @@
      '(process-run filesystem-read filesystem-write tmpdir)
      '((scope . docker-sandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
+     'backend-capability 'Object 'override
+     poo-flow-docker-sandbox-backend-capability
+     '((scope . docker-sandbox) (owned-by . module-config)))
+    (poo-flow-module-field-contract
      'resource-policy 'List 'override
      '((filesystem
         (scope . volume)
@@ -61,6 +70,5 @@
 ;;; Object catalogs are inert loader inputs, not module activation effects.
 ;; : [PooModuleObject]
 (def poo-flow-docker-sandbox-module-objects
-  (poo-flow-require-module-objects-validation!
-   (list poo-flow-docker-sandbox-object
-         poo-flow-docker-sandbox-profile-object)))
+  (list poo-flow-docker-sandbox-object
+        poo-flow-docker-sandbox-profile-object))

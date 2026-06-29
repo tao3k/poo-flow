@@ -24,6 +24,13 @@
 ;;       Internal macro family generator for public flow binding forms. It
 ;;       keeps the hygienic quoting/binding pattern in one place while each
 ;;       exported macro still names its constructor and argument surface.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-define-binding-macro defpoo-flow-arr flow-arr
+;;         (proc input-contract output-contract))
+;;       ;; => macro definition for an arrow-flow binding form
+;;       ```
 ;;     %
 (defrules defpoo-flow-define-binding-macro ()
   ((_ macro-name constructor (arg ...))

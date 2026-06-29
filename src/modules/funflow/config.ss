@@ -84,6 +84,9 @@
   (or (eq? workflow-ref 'funflow)
       (eq? workflow-ref 'funflow-cicd)))
 
+;;; Boundary: funflow check map names is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooFlowCicdCheckMap] [Symbol])
 (def (poo-flow-funflow-check-map-names check-maps)
   (cond
@@ -158,12 +161,18 @@
        (.slot? value 'kind)
        (eq? (.ref value 'kind) +poo-flow-funflow-pipeline-prototype-kind+)))
 
+;;; Boundary: funflow optional metadata is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (forall (a) (-> Symbol a [Pair]))
 (def (poo-flow-funflow-optional-metadata key value)
   (if value
     (list (cons key value))
     '()))
 
+;;; Boundary: funflow list metadata is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol List [Pair])
 (def (poo-flow-funflow-list-metadata key values)
   (if (null? values)
@@ -219,6 +228,9 @@
    (.ref check 'runtime-mode)
    (poo-flow-funflow-poo-check-metadata check)))
 
+;;; Boundary: funflow poo checks to cicd checks is the policy-visible edge for
+;;; policy behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooFlowFunflowCheckPrototype] [PooFlowCicdCheck])
 (def (poo-flow-funflow-poo-checks->cicd-checks checks)
   (cond
@@ -250,6 +262,9 @@
             (cons 'pipeline pipeline-name))
       metadata))))
 
+;;; Boundary: funflow poo config pipelines is the policy-visible edge for
+;;; policy behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooFlowFunflowConfigPrototype] [PooFlowCicdCheckMap])
 (def (poo-flow-funflow-poo-config-pipelines prototypes)
   (if (list? prototypes)

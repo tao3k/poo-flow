@@ -87,6 +87,9 @@
 (def (poo-flow-user-loop-engine-agent-judge-tail row)
   (cdr row))
 
+;;; Boundary: user loop engine agent judge value is the policy-visible edge for
+;;; module-system, loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> AgentJudgeTail AgentJudgeValue)
 (def (poo-flow-user-loop-engine-agent-judge-value tail)
   (if (pair? tail) (car tail) tail))

@@ -170,6 +170,9 @@
               (sandbox-env-bindings->request
                (sandbox-resource-set-env resource-set)))))
 
+;;; Boundary: sandbox volume mount seen predicate is the policy-visible edge
+;;; for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> MountPath [SandboxVolumeBinding] Boolean)
 (def (sandbox-volume-mount-seen? mount bindings)
   (cond
@@ -193,6 +196,9 @@
          (append left (list binding))
          (cdr right))))))
 
+;;; Boundary: sandbox port seen predicate is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> SandboxPortBinding [SandboxPortBinding] Boolean)
 (def (sandbox-port-seen? binding bindings)
   (cond
@@ -217,6 +223,9 @@
          (append left (list binding))
          (cdr right))))))
 
+;;; Boundary: sandbox env name seen predicate is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol [SandboxEnvBinding] Boolean)
 (def (sandbox-env-name-seen? name bindings)
   (cond

@@ -128,6 +128,9 @@
 (def (adapter-result->alist result)
   (runtime-response->alist (adapter-result->runtime-response result)))
 
+;;; Boundary: runtime alist ref is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Alist Symbol Value Value)
 (def (runtime-alist-ref alist key default)
   (let (entry (assoc key alist))

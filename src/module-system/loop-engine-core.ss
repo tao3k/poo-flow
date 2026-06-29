@@ -36,6 +36,9 @@
      (entry (list entry))
      (else '()))))
 
+;;; Boundary: user loop engine use case row name list is the policy-visible
+;;; edge for module-system, loop, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Alist [Symbol])
 (def (poo-flow-user-loop-engine-use-case-row-name-list row)
   (if (and (pair? row) (symbol? (car row)))

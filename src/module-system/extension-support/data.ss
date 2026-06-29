@@ -180,6 +180,9 @@
 (def (poo-flow-module-extension-member? value values)
   (and (member value values) #t))
 
+;;; Boundary: module extension value index is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleSlotValue] HashTable)
 (def (poo-flow-module-extension-value-index values)
   (let (index (make-hash-table))
@@ -200,6 +203,9 @@
      extra
      (poo-flow-module-extension-value-index base))))
 
+;;; Boundary: module extension append distinct indexed is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct/indexed base extra seen)
   (let (added
@@ -230,6 +236,9 @@
               '()
               values)))))
 
+;;; Boundary: module extension list value is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleSlotValue [PooModuleSlotValue])
 (def (poo-flow-module-extension-list-value value)
   (cond ((null? value) '())
@@ -248,6 +257,9 @@
 (def (poo-flow-module-extension-entry key value)
   (cons key value))
 
+;;; Boundary: module extension alist set is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> PooModuleSlotMap Symbol PooModuleSlotValue PooModuleSlotMap)
 (def (poo-flow-module-extension-alist-set entries key value)
   (cond ((null? entries)
@@ -258,6 +270,9 @@
         (else (cons (car entries)
                     (poo-flow-module-extension-alist-set (cdr entries) key value)))))
 
+;;; Boundary: module extension alist ref default is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleSlotMap Symbol PooModuleSlotValue PooModuleSlotValue)
 (def (poo-flow-module-extension-alist-ref/default entries key default-value)
   (let (entry (assoc key entries))
@@ -270,6 +285,9 @@
    slots
    children))
 
+;;; Boundary: module extension child ref is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooModuleExtensionNode] Symbol MaybePooModuleExtensionNode)
 (def (poo-flow-module-extension-child-ref children identity)
   (cond ((null? children) #f)

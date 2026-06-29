@@ -6,6 +6,7 @@
         :poo-flow/src/modules/sandbox-core/objects)
 
 (export poo-flow-cubeSandbox-object
+        poo-flow-cubeSandbox-backend-capability
         poo-flow-cubeSandbox-profile-object
         poo-flow-cubeSandbox-module-objects)
 
@@ -24,6 +25,10 @@
    '((namespace . objects.cubeSandbox)
      (domain . sandbox)
      (inherits . objects.shared.sandbox))))
+
+;; : PooSandboxBackendCapability
+(def poo-flow-cubeSandbox-backend-capability
+  poo-flow-sandbox-backend-capability/cube)
 
 ;;; The profile object uses C3 inheritance from sandbox-core plus CubeSandbox
 ;;; backend defaults, letting user rows override only declared slots.
@@ -44,6 +49,10 @@
      'capabilities 'List 'override '(process-run filesystem-read cache-mount)
      '((scope . cubeSandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
+     'backend-capability 'Object 'override
+     poo-flow-cubeSandbox-backend-capability
+     '((scope . cubeSandbox) (owned-by . module-config)))
+    (poo-flow-module-field-contract
      'resource-policy 'List 'override
      '((filesystem
         (scope . snapshot)
@@ -59,6 +68,5 @@
 ;;; Object catalogs are loader data for validation and auto-import planning.
 ;; : [PooModuleObject]
 (def poo-flow-cubeSandbox-module-objects
-  (poo-flow-require-module-objects-validation!
-   (list poo-flow-cubeSandbox-object
-         poo-flow-cubeSandbox-profile-object)))
+  (list poo-flow-cubeSandbox-object
+        poo-flow-cubeSandbox-profile-object))

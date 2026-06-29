@@ -15,6 +15,9 @@
         poo-flow-module-depth-before?
         poo-flow-module-phase-order)
 
+;;; Boundary: module alist ref default is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-module-alist-ref/default alist key default-value)
   (let (entry (poo-flow-module-alist-entry alist key))
@@ -48,6 +51,9 @@
          '()))
     (if (list? value) value (list value))))
 
+;;; Boundary: module flag key is the policy-visible edge for module-system
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ModuleFlag String)
 (def (poo-flow-module-flag-key flag)
   (if (symbol? flag) (symbol->string flag) flag))
@@ -59,6 +65,9 @@
          (> (string-length key) 0)
          (char=? (string-ref key 0) #\-))))
 
+;;; Boundary: module positive flag is the policy-visible edge for module-system
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ModuleFlag ModuleFlag)
 (def (poo-flow-module-positive-flag flag)
   (let (key (poo-flow-module-flag-key flag))
@@ -72,6 +81,9 @@
   (equal? (poo-flow-module-flag-key left)
           (poo-flow-module-flag-key right)))
 
+;;; Boundary: module flag present predicate is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [ModuleFlag] ModuleFlag Boolean)
 (def (poo-flow-module-flag-present? flags flag)
   (cond
@@ -104,6 +116,9 @@
   (and (poo-flow-module-descriptor? descriptor)
        (poo-flow-module-flags-enabled? descriptor required-flags)))
 
+;;; Boundary: module depth part is the policy-visible edge for module-system
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ModuleDepth Symbol Number)
 (def (poo-flow-module-depth-part depth phase)
   (let (value
@@ -125,6 +140,9 @@
   (< (poo-flow-module-depth-value left phase)
      (poo-flow-module-depth-value right phase)))
 
+;;; Boundary: module insert by depth is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> PooModuleDescriptor [PooModuleDescriptor] Symbol [PooModuleDescriptor])
 (def (poo-flow-module-insert-by-depth module modules phase)
   (cond
@@ -135,6 +153,9 @@
     (cons (car modules)
           (poo-flow-module-insert-by-depth module (cdr modules) phase)))))
 
+;;; Boundary: module phase order add is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooModuleDescriptor] [PooModuleDescriptor] Symbol [PooModuleDescriptor])
 (def (poo-flow-module-phase-order/add modules sorted phase)
   (if (null? modules)

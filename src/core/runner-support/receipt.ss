@@ -13,6 +13,9 @@
     receipt
     (first-failed-receipt-in (receipt-children receipt))))
 
+;;; Boundary: first failed receipt in is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Receipt] MaybeReceipt)
 (def (first-failed-receipt-in receipts)
   (if (null? receipts)

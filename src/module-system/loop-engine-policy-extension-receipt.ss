@@ -7,10 +7,16 @@
 
 (export poo-flow-user-loop-engine-poo-policy-extensions->receipts)
 
+;;; Boundary: user loop engine policy extension optional row is the policy-
+;;; visible edge for module-system, loop behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> Symbol Value PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-optional-row key value)
   (if value (list (cons key value)) '()))
 
+;;; Boundary: user loop engine policy extension optional list row is the
+;;; policy-visible edge for module-system, loop behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> Symbol Value PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-optional-list-row key value)
   (if (null? value) '() (list (cons key value))))
@@ -110,6 +116,9 @@
    (else
     (error "unknown loop-engine policy-extension projection slot" slot))))
 
+;;; Boundary: user loop engine policy extension slot to row is the policy-
+;;; visible edge for module-system, loop behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooFlowLoopEnginePolicyExtensionPrototype Symbol PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-slot->row
       policy-extension
@@ -129,6 +138,9 @@
          value)))
     '()))
 
+;;; Boundary: user loop engine policy extension slots to rows is the policy-
+;;; visible edge for module-system, loop behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooFlowLoopEnginePolicyExtensionPrototype [Symbol] PooFlowPolicyExtensionReceiptRows)
 (def (poo-flow-user-loop-engine-policy-extension-slots->rows
       policy-extension
@@ -193,6 +205,9 @@
      "loop-engine policy-extensions slot entries must extend loop-engine-policy-extension"
      policy-extension))))
 
+;;; Boundary: user loop engine poo policy extensions to receipts is the policy-
+;;; visible edge for module-system, loop behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> [Value] [Alist])
 (def (poo-flow-user-loop-engine-poo-policy-extensions->receipts
       policy-extensions)

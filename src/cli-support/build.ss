@@ -9,6 +9,9 @@
 
 (export poo-flow-cli-build)
 
+;;; Boundary: cli arg present predicate is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> String [String] Boolean)
 (def (poo-flow-cli-arg-present? flag args)
   (cond
@@ -16,6 +19,9 @@
    ((equal? (car args) flag) #t)
    (else (poo-flow-cli-arg-present? flag (cdr args)))))
 
+;;; Boundary: cli module arg is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] MaybeString)
 (def (poo-flow-cli-module-arg args)
   (match args
@@ -44,12 +50,18 @@
   (poo-flow-cli-error "next: gxpkg build -R -O")
   70)
 
+;;; Boundary: cli module gxc argv is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> String [String] MaybeStringList)
 (def (poo-flow-cli-module-gxc-argv module-file args)
   (if (poo-flow-cli-native-module-build? args)
     #f
     (poo-flow-cli-gerbil-env-argv "gxc" [module-file])))
 
+;;; Boundary: cli module spec is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> String [String] MaybeBuildSpec)
 (def (poo-flow-cli-module-spec module-file args)
   (if (poo-flow-cli-native-module-build? args)
@@ -67,6 +79,9 @@
 (def (poo-flow-cli-package-cache-dir)
   (path-expand ".gerbil/lib/poo-flow"))
 
+;;; Boundary: cli package cache mode is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] String)
 (def (poo-flow-cli-package-cache-mode args)
   (cond
@@ -74,6 +89,9 @@
    ((poo-flow-cli-package-tests? args) "tests")
    (else "package")))
 
+;;; Boundary: cli package cache stamp path is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] String)
 (def (poo-flow-cli-package-cache-stamp-path args)
   (path-expand
@@ -83,16 +101,153 @@
     (else ".compile-package.stamp"))
    (poo-flow-cli-package-cache-dir)))
 
+;;; Boundary: cli package compile command is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] String)
 (def (poo-flow-cli-package-compile-command args)
   (cond
    ((poo-flow-cli-package-all-tests? args)
-    "gxpkg env ./build.ss compile --all-tests --force")
+    "gxpkg env ./build.ss compile --all-tests")
    ((poo-flow-cli-package-tests? args)
-    "gxpkg env ./build.ss compile --tests --force")
+    "gxpkg env ./build.ss compile --tests")
    (else
-    "gxpkg env ./build.ss compile --force")))
+    "gxpkg env ./build.ss compile")))
 
+;; : [String]
+(def +poo-flow-cli-binary-source-files+
+  '("build.ss"
+    "src/cli.ss"
+    "src/cli-support/build.ss"
+    "src/cli-support/support.ss"
+    "src/cli-support/test.ss"))
+
+;; : (-> String)
+(def (poo-flow-cli-binary-dir)
+  (path-expand ".gerbil/bin"))
+
+;; : (-> String)
+(def (poo-flow-cli-binary-path)
+  (path-expand "poo-flow" (poo-flow-cli-binary-dir)))
+
+;; : (-> String)
+(def (poo-flow-cli-binary-launcher-scheme-path)
+  (path-expand "poo-flow-launcher.ss" (poo-flow-cli-binary-dir)))
+
+;; : (-> String String)
+(def (poo-flow-cli-binary-compile-command)
+  "gxpkg env ./build.ss compile --cli")
+
+;; : (-> String MaybeNumber)
+(def (poo-flow-cli-file-mtime-seconds path)
+  (and (file-exists? path)
+       (time->seconds
+        (file-info-last-modification-time (file-info path)))))
+
+;; : ([String] Number Fixnum -> Alist)
+(def (poo-flow-cli-source-mtime-summary paths newest missing)
+  (match paths
+    ([]
+     (list (cons 'newest newest)
+           (cons 'missing missing)))
+    ([path . rest]
+     (let (mtime (poo-flow-cli-file-mtime-seconds path))
+       (if mtime
+         (poo-flow-cli-source-mtime-summary
+          rest
+          (if (> mtime newest) mtime newest)
+          missing)
+         (poo-flow-cli-source-mtime-summary
+          rest
+          newest
+          (+ missing 1)))))))
+
+;; : (Alist Symbol a -> a)
+(def (poo-flow-cli-alist-ref alist key default)
+  (let (pair (assoc key alist))
+    (if pair (cdr pair) default)))
+
+;; : (-> Alist)
+(def (poo-flow-cli-binary-status)
+  (let* ((binary (poo-flow-cli-binary-path))
+         (binary-mtime (poo-flow-cli-file-mtime-seconds binary))
+         (launcher-scheme (poo-flow-cli-binary-launcher-scheme-path))
+         (launcher-scheme-mtime (poo-flow-cli-file-mtime-seconds launcher-scheme))
+         (source-summary
+          (poo-flow-cli-source-mtime-summary
+           +poo-flow-cli-binary-source-files+
+           0
+           0))
+         (source-newest (poo-flow-cli-alist-ref source-summary 'newest 0))
+         (missing-sources (poo-flow-cli-alist-ref source-summary 'missing 0)))
+    (cond
+     ((not binary-mtime)
+      (append
+       (list (cons 'status 'stale)
+             (cons 'reason 'missing-binary)
+             (cons 'path binary))
+       source-summary))
+     ((not launcher-scheme-mtime)
+      (append
+       (list (cons 'status 'stale)
+             (cons 'reason 'missing-launcher)
+             (cons 'path binary)
+             (cons 'launcher launcher-scheme)
+             (cons 'binary-mtime binary-mtime))
+       source-summary))
+     ((> missing-sources 0)
+      (append
+       (list (cons 'status 'stale)
+             (cons 'reason 'missing-source)
+             (cons 'path binary)
+             (cons 'binary-mtime binary-mtime))
+       source-summary))
+     ((or (> source-newest binary-mtime)
+          (> source-newest launcher-scheme-mtime))
+      (append
+       (list (cons 'status 'stale)
+             (cons 'reason 'source-newer)
+             (cons 'path binary)
+             (cons 'launcher launcher-scheme)
+             (cons 'binary-mtime binary-mtime)
+             (cons 'launcher-mtime launcher-scheme-mtime))
+       source-summary))
+     (else
+      (append
+       (list (cons 'status 'current)
+             (cons 'path binary)
+             (cons 'launcher launcher-scheme)
+             (cons 'binary-mtime binary-mtime)
+             (cons 'launcher-mtime launcher-scheme-mtime))
+       source-summary)))))
+
+;; : (Alist -> Void)
+(def (poo-flow-cli-write-binary-status status)
+  (display "|binary scope=cli status=")
+  (display
+   (symbol->string
+    (poo-flow-cli-alist-ref status 'status 'stale)))
+  (display " sources=")
+  (display (length +poo-flow-cli-binary-source-files+))
+  (display " missingSources=")
+  (display (poo-flow-cli-alist-ref status 'missing 0))
+  (display " path=")
+  (write (poo-flow-cli-alist-ref status 'path (poo-flow-cli-binary-path)))
+  (display " launcher=")
+  (write (poo-flow-cli-alist-ref
+          status
+          'launcher
+          (poo-flow-cli-binary-launcher-scheme-path)))
+  (newline)
+  (let (reason (poo-flow-cli-alist-ref status 'reason #f))
+    (when reason
+      (display "|binary reason=")
+      (display (symbol->string reason))
+      (newline))))
+
+;;; Boundary: cli write package status is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] Alist Integer)
 (def (poo-flow-cli-write-package-status args status)
   (let ((state (gslph-package-build-receipt-status-ref status 'status 'stale))
@@ -102,7 +257,8 @@
         (stamp (gslph-package-build-receipt-status-ref
                 status
                 'stamp
-                (poo-flow-cli-package-cache-stamp-path args))))
+                (poo-flow-cli-package-cache-stamp-path args)))
+        (binary-status (poo-flow-cli-binary-status)))
     (display "[poo-flow-build-status] scope=package")
     (display " mode=")
     (display (poo-flow-cli-package-cache-mode args))
@@ -119,11 +275,20 @@
       (display "|reason kind=")
       (display (symbol->string reason))
       (newline))
-    (when (not (eq? state 'current))
+    (poo-flow-cli-write-binary-status binary-status)
+    (cond
+     ((not (eq? state 'current))
       (display "|next command=")
       (write (poo-flow-cli-package-compile-command args))
-      (newline))
-    (if (eq? state 'current) 0 70)))
+      (newline)
+      70)
+     ((not (eq? (poo-flow-cli-alist-ref binary-status 'status 'stale)
+                'current))
+      (display "|next command=")
+      (write (poo-flow-cli-binary-compile-command))
+      (newline)
+      70)
+     (else 0))))
 
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-build-package-status args)
@@ -138,6 +303,9 @@
   (newline)
   0)
 
+;;; Boundary: cli build spec module is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> String [String] Integer)
 (def (poo-flow-cli-build-spec-module module-file rest)
   (let (spec (poo-flow-cli-module-spec module-file rest))
@@ -145,6 +313,9 @@
       (poo-flow-cli-write-build-spec spec)
       (poo-flow-cli-reject-native-module-build! module-file))))
 
+;;; Boundary: cli build spec command is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] [String] Integer)
 (def (poo-flow-cli-build-spec-command args rest)
   (let (module-file (poo-flow-cli-module-arg rest))
@@ -152,6 +323,9 @@
       (poo-flow-cli-build-spec-module module-file rest)
       (poo-flow-cli-reject-package-build! args))))
 
+;;; Boundary: cli build compile module is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> String [String] Integer)
 (def (poo-flow-cli-build-compile-module module-file rest)
   (let (argv (poo-flow-cli-module-gxc-argv module-file rest))
@@ -159,13 +333,18 @@
       (poo-flow-cli-run-inherited argv)
       (poo-flow-cli-reject-native-module-build! module-file))))
 
+;;; Boundary: cli build compile command is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [String] [String] Integer)
 (def (poo-flow-cli-build-compile-command args rest)
   (let (module-file (poo-flow-cli-module-arg rest))
     (if module-file
       (poo-flow-cli-build-compile-module module-file rest)
-      (poo-flow-cli-reject-package-build! args))))
+      (poo-flow-cli-build-package-status rest))))
 
+;;; Boundary: cli build is the policy-visible edge for CLI behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-build args)
   (match args

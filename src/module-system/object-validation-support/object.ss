@@ -2,11 +2,9 @@
 ;;; Boundary: object-level diagnostics and validation receipts.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/extensions/facade
-                 poo-object-field-contract-validation
-                 poo-object-contract-validation
+        (only-in :gslph/src/extensions/poo-object-validation
                  poo-object-validation-valid?)
-        (only-in :std/sugar filter-map foldl)
+        (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
         :poo-flow/src/module-system/object-validation-support/harness)
@@ -32,13 +30,25 @@
                                                harness-validation
                                                field-contract-validations
                                                local-diagnostics)
+  (poo-flow-module-object-validation-phases/source-ref
+   object
+   (poo-flow-module-object-validation-source-ref object)
+   harness-validation
+   field-contract-validations
+   local-diagnostics))
+
+;; : (-> PooModuleObject HashTable HashTable [HashTable] [HashTable] [HashTable])
+(def (poo-flow-module-object-validation-phases/source-ref object
+                                                          source-ref
+                                                          harness-validation
+                                                          field-contract-validations
+                                                          local-diagnostics)
   (list
    (receipt
     (cons 'phase 'source-reference)
     (cons 'status 'ok)
     (cons 'owner (poo-flow-module-object-identity object))
-    (cons 'detail
-          (poo-flow-module-object-validation-source-ref object)))
+    (cons 'detail source-ref))
    (receipt
     (cons 'phase 'harness-object-contract)
     (cons 'status
@@ -133,6 +143,16 @@
              (void))
            value))))
 
+(def (poo-flow-module-object-validation-field-origins object resolved-fields)
+  (let (providers
+        (poo-flow-module-object-field-provider-index object))
+    (map (lambda (field)
+           (poo-flow-module-object-field-origin/index
+            object
+            field
+            providers))
+         resolved-fields)))
+
 ;; : (-> PooModuleObject [Symbol] [Symbol] [Symbol] [PooModuleFieldContract] MaybeHashTable [Alist])
 (def (poo-flow-module-object-validation-field-origins/cache object
                                                             inherit-identities
@@ -140,20 +160,21 @@
                                                             resolved-field-identities
                                                             resolved-fields
                                                             cache)
-  (let ((providers
-         (poo-flow-module-object-field-provider-index object))
-        (cache-key
+  (let (cache-key
          (and cache
               (null? direct-field-identities)
-              (list inherit-identities resolved-field-identities))))
-    (poo-flow-module-object-validation-cache-ref
-     cache
-     cache-key
-     (lambda ()
-       (map (lambda (field)
-              (poo-flow-module-object-field-origin/index
-               object field providers))
-            resolved-fields)))))
+              (list inherit-identities resolved-field-identities)))
+    (if cache-key
+      (poo-flow-module-object-validation-cache-ref
+       cache
+       cache-key
+       (lambda ()
+         (poo-flow-module-object-validation-field-origins
+          object
+          resolved-fields)))
+      (poo-flow-module-object-validation-field-origins
+       object
+       resolved-fields))))
 
 ;;; Boundary: module object validation catalog caches is the policy-visible
 ;;; edge for module-system, object behavior, keeping validation, lookup, or
@@ -226,8 +247,9 @@
           (append local-diagnostics
                   (hash-get harness-validation 'diagnostics)))
          (validation-phases
-          (poo-flow-module-object-validation-phases
+          (poo-flow-module-object-validation-phases/source-ref
            object
+           source-ref
            harness-validation
            field-contract-validations
            local-diagnostics))

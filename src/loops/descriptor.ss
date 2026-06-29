@@ -242,6 +242,9 @@
 (def (loop-pattern-descriptor-slot descriptor slot default)
   (role-slot/default descriptor slot default))
 
+;;; Boundary: loop alist ref is the policy-visible edge for loop behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Alist Symbol AlistValue AlistValue)
 (def (loop-alist-ref alist key default)
   (cond
@@ -332,6 +335,9 @@
 (def (loop-pattern-level? level)
   (and (memq level +loop-levels+) #t))
 
+;;; Boundary: loop pattern level rank is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Nat)
 (def (loop-pattern-level-rank level)
   (case level
@@ -387,6 +393,9 @@
         (cons 'execution-owner (loop-pattern-execution-owner descriptor))
         (cons 'metadata (loop-pattern-metadata descriptor))))
 
+;;; Boundary: loop required field error is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol FieldValue [ValidationError])
 (def (loop-required-field-error field value)
   (if value
@@ -394,6 +403,9 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;;; Boundary: loop field validation error unless is the policy-visible edge for
+;;; loop behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
 (def (loop-field-validation-error/unless valid? field code value)
   (if valid?
@@ -402,6 +414,9 @@
                 (cons 'code code)
                 (cons 'value value)))))
 
+;;; Boundary: loop pattern validation errors fields is the policy-visible edge
+;;; for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopPatternDescriptor Alist [ValidationError])
 (def (loop-pattern-validation-errors/slots descriptor slots)
   (loop-pattern-validation-errors/fields
@@ -412,6 +427,9 @@
    (loop-alist-ref slots 'priority #f)
    (loop-alist-ref slots 'policy-order '())))
 
+;;; Boundary: loop pattern validation errors fields is the policy-visible edge
+;;; for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopPatternDescriptor Symbol String Symbol Integer [Symbol] [ValidationError])
 (def (loop-pattern-validation-errors/fields descriptor name goal level priority policy-order)
   (if (loop-pattern-descriptor? descriptor)
@@ -441,6 +459,9 @@
    descriptor
    (loop-pattern-descriptor-projection-slots descriptor)))
 
+;;; Boundary: validate loop pattern descriptor slots is the policy-visible edge
+;;; for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopPatternDescriptor Alist LoopPatternDescriptor)
 (def (validate-loop-pattern-descriptor/slots descriptor slots)
   (let (errors
@@ -453,6 +474,9 @@
        "invalid loop pattern descriptor"
        (list (cons 'errors errors))))))
 
+;;; Boundary: validate loop pattern descriptor fields is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopPatternDescriptor Symbol String Symbol Integer [Symbol] LoopPatternDescriptor)
 (def (validate-loop-pattern-descriptor/fields descriptor name goal level priority policy-order)
   (let (errors

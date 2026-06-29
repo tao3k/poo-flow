@@ -22,7 +22,19 @@
         poo-flow-module-extension-fixed-point-step
         poo-flow-module-extension-fixed-point)
 
-;; : (-> PooModuleExtensionNode [PooModuleExtensionOperation] PooModuleExtensionNode)
+;; poo-flow-module-extension-apply-operations
+;;   : (-> PooModuleExtensionNode (List PooModuleExtensionOperation) PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-apply-operations` coalesces slot append
+;;       operations before applying pending node extension and slot override
+;;       batches to one extension node.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-apply-operations node operations)
+;;       ;; => node with coalesced local slot operations applied
+;;       ```
+;;     %
 (def (poo-flow-module-extension-apply-operations node operations)
   (match (foldl poo-flow-module-extension-operation-state
                 [node '() '()]
@@ -40,14 +52,20 @@
         (eq? action 'slot-prepend)
         (eq? action 'slot-remove))))
 
+;;; Local batches may be coalesced only when every operation stays within the
+;;; current target; graph-wide operations must force a contribution boundary.
 ;; : (-> [PooModuleExtensionOperation] Boolean)
 (def (poo-flow-module-extension-local-operations? operations)
   (andmap poo-flow-module-extension-local-operation? operations))
 
+;;; Reversing into an existing tail is the hot append-free path for pending
+;;; operation stacks, preserving order without allocating intermediate appends.
 ;; : (forall (a) (-> (List a) (List a) (List a)))
 (def (poo-flow-module-extension-reverse-onto values tail)
   (foldl cons tail values))
 
+;;; Flushing is guarded by the pending flag so empty coalescing state never
+;;; creates synthetic contributions or changes target ordering.
 ;; : (-> Boolean MaybeSymbol [PooModuleExtensionOperation] [PooModuleExtensionContribution] [PooModuleExtensionContribution])
 (def (poo-flow-module-extension-flush-coalesced pending? target reversed-operations output)
   (if pending?
@@ -57,6 +75,8 @@
           output)
     output))
 
+;;; Contribution coalescing keeps adjacent same-target local operations in one
+;;; batch and flushes as soon as the target or operation scope changes.
 ;; : (-> PooModuleExtensionCoalesceState PooModuleExtensionContribution PooModuleExtensionCoalesceState)
 (def (poo-flow-module-extension-coalesce-contribution-state state contribution)
   (match state
@@ -89,6 +109,8 @@
                  pending-operations
                  output))])))))
 
+;;; Output materialization is the only place the reversed coalescing accumulator
+;;; is exposed, keeping the state tuple append-free during the fold.
 ;; : (-> PooModuleExtensionCoalesceState [PooModuleExtensionContribution])
 (def (poo-flow-module-extension-coalesce-state-output state)
   (match state
@@ -152,6 +174,8 @@
             (poo-flow-module-extension-apply-contribution child contribution))
           (poo-flow-module-extension-node-children current)))))
 
+;;; The coalesced path assumes contribution order is already compacted, so it
+;;; can fold directly over graph updates without another normalization pass.
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionNode)
 (def (poo-flow-module-extension-apply-contributions/coalesced node contributions)
   (foldl (lambda (contribution current)
@@ -180,10 +204,14 @@
   (poo-flow-module-extension-local-operations?
    (poo-flow-module-extension-contribution-operations contribution)))
 
+;;; Fixed-point fast paths only use local contribution batches when every
+;;; contribution is local; mixed graph operations must fall back to iteration.
 ;; : (-> [PooModuleExtensionContribution] Boolean)
 (def (poo-flow-module-extension-local-contributions? contributions)
   (andmap poo-flow-module-extension-local-contribution? contributions))
 
+;;; Root slot append fast path is valid only for the current root identity and
+;;; pure slot append payloads, avoiding child traversal.
 ;; : (-> Symbol PooModuleExtensionContribution Boolean)
 (def (poo-flow-module-extension-root-slot-append-contribution? node-identity
                                                               contribution)
@@ -193,6 +221,8 @@
                (poo-flow-module-extension-contribution-operations
                 contribution))))
 
+;;; All root append contributions must satisfy the same identity guard before
+;;; the batch can bypass fixed-point graph traversal.
 ;; : (-> Symbol [PooModuleExtensionContribution] Boolean)
 (def (poo-flow-module-extension-root-slot-append-contributions? node-identity
                                                                 contributions)
@@ -202,7 +232,19 @@
              contribution))
           contributions))
 
-;; : (-> PooModuleSlotMap [PooModuleExtensionContribution] Pair)
+;; poo-flow-module-extension-fast-slot-append-slots
+;;   : (-> PooModuleSlotMap (List PooModuleExtensionContribution) Pair)
+;;   | doc m%
+;;       `poo-flow-module-extension-fast-slot-append-slots` materializes the
+;;       root-only slot append fast path by indexing existing values once,
+;;       collecting new additions in reverse, and preserving slot order.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-fast-slot-append-slots slots contributions)
+;;       ;; => pair of updated slots and changed? flag
+;;       ```
+;;     %
 (def (poo-flow-module-extension-fast-slot-append-slots slots contributions)
   (let ((base-seen (make-hash-table))
         (new-seen (make-hash-table))
@@ -275,26 +317,26 @@
         (if (null? extra)
           base
           (append base (reverse extra)))))
+    (def (materialize-slots new-order)
+      (append
+       (map (lambda (entry)
+              (let (key (poo-flow-module-extension-entry-key entry))
+                (if (slot-active? key)
+                  (poo-flow-module-extension-entry
+                   key
+                   (materialize-slot key))
+                  entry)))
+            slots)
+       (map (lambda (key)
+              (poo-flow-module-extension-entry key (materialize-slot key)))
+            (reverse new-order))))
     (let loop-contributions ((remaining-contributions contributions)
                              (new-order '())
                              (changed? #f))
       (if (null? remaining-contributions)
         (if (and (not changed?) (null? new-order))
           (cons slots #f)
-          (cons
-           (append
-            (map (lambda (entry)
-                   (let (key (poo-flow-module-extension-entry-key entry))
-                     (if (slot-active? key)
-                       (poo-flow-module-extension-entry
-                        key
-                        (materialize-slot key))
-                       entry)))
-                 slots)
-            (map (lambda (key)
-                   (poo-flow-module-extension-entry key (materialize-slot key)))
-                 (reverse new-order)))
-           #t))
+          (cons (materialize-slots new-order) #t))
         (let loop-operations
             ((remaining-operations
               (poo-flow-module-extension-contribution-operations
@@ -317,6 +359,8 @@
                  next-new-order)
                (or next-changed? operation-changed?)))))))))
 
+;;; This root-only shortcut converts the slot append pair into a stable result
+;;; without walking children, preserving the iteration count contract.
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] MaybePooModuleExtensionResult)
 (def (poo-flow-module-extension-fast-root-slot-append-result base contributions)
   (let ((node-identity (poo-flow-module-extension-node-identity base))
@@ -336,6 +380,8 @@
             (if (cdr state) 1 0)
             #t)))))
 
+;;; Fast local evaluation returns a result only when local checks prove that one
+;;; non-recursive application is equivalent to the fixed-point loop.
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] MaybePooModuleExtensionResult)
 (def (poo-flow-module-extension-fast-local-result base contributions)
   (or (poo-flow-module-extension-fast-root-slot-append-result base
@@ -352,9 +398,19 @@
                 1)
               #t)))))
 
-;;; Fixed-point stepping is isolated so policy can see bounded recursion without
-;;; mistaking it for a general-purpose list transform.
-;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] Integer PooModuleExtensionResult)
+;; poo-flow-module-extension-fixed-point-step
+;;   : (-> PooModuleExtensionNode (List PooModuleExtensionContribution) Integer PooModuleExtensionResult)
+;;   | doc m%
+;;       `poo-flow-module-extension-fixed-point-step` performs one bounded
+;;       fixed-point pass and recurs only when the node snapshot changes,
+;;       returning an unstable result after the iteration cap.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-fixed-point-step node contributions 0)
+;;       ;; => extension result with stable? reflecting the bounded pass
+;;       ```
+;;     %
 (def (poo-flow-module-extension-fixed-point-step current contributions iteration)
   (let (next (poo-flow-module-extension-apply-contributions current contributions))
     (cond

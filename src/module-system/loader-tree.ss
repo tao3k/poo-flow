@@ -55,6 +55,9 @@
 ;; : PooFlowModuleAutoImportRootIdentity
 (def poo-flow-module-auto-import-root-identity 'auto-imports)
 
+;;; Boundary: loader alist ref default is the policy-visible edge for module-
+;;; system behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> PooModuleLoaderMetadata Symbol PooModuleLoaderMetadataValue PooModuleLoaderMetadataValue)
 (def (poo-flow-loader-alist-ref/default entries key default-value)
   (let (entry (assoc key entries))

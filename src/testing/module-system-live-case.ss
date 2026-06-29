@@ -50,6 +50,9 @@
       output-or-failure
       default)))
 
+;;; Boundary: module system live case host platform is the policy-visible edge
+;;; for module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Unit Symbol)
 (def (poo-flow-module-system-live-case-host-platform)
   (let (output
@@ -63,6 +66,9 @@
   (and (string? value)
        (> (string-length value) 0)))
 
+;;; Boundary: module system live case path join is the policy-visible edge for
+;;; module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> String String String)
 (def (poo-flow-module-system-live-case-path-join left right)
   (cond
@@ -124,6 +130,9 @@
 (def (poo-flow-module-system-live-case-shell-quote value)
   (string-append "'" value "'"))
 
+;;; Boundary: module system live case shell join is the policy-visible edge for
+;;; module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [ShellLiteral] ShellCommandFragment)
 (def (poo-flow-module-system-live-case-shell-join values)
   (cond
@@ -136,6 +145,9 @@
      " "
      (poo-flow-module-system-live-case-shell-join (cdr values))))))
 
+;;; Boundary: module system live case env clear join is the policy-visible edge
+;;; for module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [EnvironmentVariableName] ShellCommandFragment)
 (def (poo-flow-module-system-live-case-env-clear-join keys)
   (cond
@@ -148,6 +160,9 @@
      "= "
      (poo-flow-module-system-live-case-env-clear-join (cdr keys))))))
 
+;;; Boundary: module system live case rsync exclude join is the policy-visible
+;;; edge for module-system, test harness behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> [RsyncExcludePattern] ShellCommandFragment)
 (def (poo-flow-module-system-live-case-rsync-exclude-join values)
   (cond
@@ -293,6 +308,9 @@
      " "
      (poo-flow-module-system-live-case-shell-join program-args))))
 
+;;; Boundary: module system live case read args is the policy-visible edge for
+;;; module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [String] [String])
 (def (poo-flow-module-system-live-case-read-args paths)
   (cond
@@ -315,6 +333,9 @@
     'read-paths
     '())))
 
+;;; Boundary: module system live case network args is the policy-visible edge
+;;; for module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> POOObject [String])
 (def (poo-flow-module-system-live-case-network-args live-case)
   (case (poo-flow-module-system-live-case-section-ref
@@ -326,6 +347,9 @@
      '("--block-net"))
     (else '())))
 
+;;; Boundary: module system live case audit args is the policy-visible edge for
+;;; module-system, test harness behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> POOObject [String])
 (def (poo-flow-module-system-live-case-audit-args live-case)
   (case (poo-flow-module-system-live-case-section-ref

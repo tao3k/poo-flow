@@ -12,6 +12,7 @@
                  agent-sandbox-profile-resource-policy-filesystem-diagnostics)
         :poo-flow/src/modules/sandbox-core/resource-contract
         :poo-flow/src/modules/sandbox-core/profile-support/prototype
+        :poo-flow/src/modules/sandbox-core/profile-support/policy
         :poo-flow/src/modules/sandbox-core/profile-support/authoring
         :poo-flow/src/modules/sandbox-core/profile-support/derivation)
 
@@ -26,6 +27,10 @@
         poo-flow-sandbox-profile-object-profiles/build
         poo-flow-sandbox-profile-object-profiles)
 
+;;; Boundary: sandbox profile object slot is the policy-visible edge for
+;;; sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;; : (-> PooModuleExtensionNode Symbol Value)
 (def (poo-flow-sandbox-profile-object-slot node key)
   (let (entry (assoc key (poo-flow-module-extension-node-slots node)))
     (if entry
@@ -43,6 +48,9 @@
    (list (cons 'profile-name name-value)
          (cons 'backend-kind backend-kind)
          (cons 'backend-ref name-value)
+         (cons 'backend-capability
+               (poo-flow-sandbox-backend-capability-ref backend-kind))
+         (cons 'profile-policy poo-flow-sandbox-profile-policy/default)
          (cons 'metadata
                '((declared-by . poo-flow-user-interface)
                  (runtime-executed . #f))))
@@ -66,6 +74,10 @@
           (poo-flow-sandbox-profile-object-option options
                                                   'backend-ref
                                                   name-value))
+    (cons 'backend-capability
+          (poo-flow-sandbox-backend-capability-ref
+           (poo-flow-sandbox-profile-backend-kind parent-profile)))
+    (cons 'profile-policy poo-flow-sandbox-profile-policy/default)
     (cons 'network-policy
           (poo-flow-sandbox-profile-network-policy parent-profile))
     (cons 'capabilities
@@ -107,18 +119,38 @@
 ;;; recipe consumed by presentation and runtime handoff code.
 ;; : (-> Symbol PooModuleExtensionNode PooSandboxProfile)
 (def (poo-flow-sandbox-profile-object->profile name-value node)
-  (.o kind: poo-flow-sandbox-profile-kind
-      name: name-value
-      backend-kind: (poo-flow-sandbox-profile-object-slot node 'backend-kind)
-      backend-ref: (poo-flow-sandbox-profile-object-slot node 'backend-ref)
-      network-policy: (poo-flow-sandbox-profile-object-slot
-                       node
-                       'network-policy)
-      capabilities: (poo-flow-sandbox-profile-object-slot node 'capabilities)
-      resource-policy: (poo-flow-sandbox-profile-object-slot
-                        node
-                        'resource-policy)
-      metadata: (poo-flow-sandbox-profile-object-slot node 'metadata)))
+  (let* ((backend-kind
+          (poo-flow-sandbox-profile-object-slot node 'backend-kind))
+         (backend-ref
+          (poo-flow-sandbox-profile-object-slot node 'backend-ref))
+         (capabilities
+          (poo-flow-sandbox-profile-object-slot node 'capabilities))
+         (backend-capability
+          (poo-flow-sandbox-profile-object-slot node 'backend-capability))
+         (profile-policy
+          (poo-flow-sandbox-profile-object-slot node 'profile-policy))
+         (validation
+          (poo-flow-sandbox-profile-policy-validation
+           name-value
+           backend-kind
+           backend-ref
+           backend-capability
+           profile-policy
+           capabilities)))
+    (if (poo-flow-sandbox-profile-policy-validation-valid? validation)
+      (.o kind: poo-flow-sandbox-profile-kind
+          name: name-value
+          backend-kind: backend-kind
+          backend-ref: backend-ref
+          network-policy: (poo-flow-sandbox-profile-object-slot
+                           node
+                           'network-policy)
+          capabilities: capabilities
+          resource-policy: (poo-flow-sandbox-profile-object-slot
+                            node
+                            'resource-policy)
+          metadata: (poo-flow-sandbox-profile-object-slot node 'metadata))
+      (error "sandbox profile policy validation failed" validation))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-sandbox-profile-object-profile? value)

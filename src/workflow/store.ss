@@ -57,6 +57,9 @@
    runtime-executed)
   transparent: #t)
 
+;;; Boundary: store task adapter dispatch is the policy-visible edge for
+;;; workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Task AdapterOperation)
 (def (store-task-adapter-dispatch task)
   (cond
@@ -78,12 +81,18 @@
                                'rust-or-external-runtime
                                store-task-adapter-dispatch))
 
+;;; Boundary: make store task family registry is the policy-visible edge for
+;;; workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-store-task-family-registry . maybe-registry)
   (task-family-registry-extend
    (if (null? maybe-registry) default-task-family-registry (car maybe-registry))
    store-task-family-descriptor))
 
+;;; Boundary: capabilities with is the policy-visible edge for workflow
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
@@ -118,6 +127,9 @@
                         (runtime-adapter-store-putter adapter)
                         (runtime-adapter-store-getter adapter)))
 
+;;; Boundary: store option is the policy-visible edge for workflow behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Alist Symbol Value Value)
 (def (store-option options key default)
   (let (entry (assoc key options))
@@ -125,6 +137,9 @@
       (cdr entry)
       default)))
 
+;;; Boundary: make store run config is the policy-visible edge for workflow
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Alist] RunConfig)
 (def (make-store-run-config . maybe-options)
   (let (options (if (null? maybe-options) '() (car maybe-options)))
@@ -137,6 +152,9 @@
                      (make-store-task-family-registry)
                      default-flow-declaration-registry)))
 
+;;; Boundary: make store rust run config is the policy-visible edge for
+;;; workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] RunConfig)
 (def (make-store-rust-run-config . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
@@ -162,6 +180,9 @@
     (task-request-operation task)
     #f))
 
+;;; Boundary: task store payload is the policy-visible edge for workflow
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Task (U Payload #f))
 (def (task-store-payload task)
   (if (eq? (task-kind task) 'store)
@@ -207,6 +228,9 @@
               'cas-item
               'abs-dir))
 
+;;; Boundary: store flow primary task is the policy-visible edge for workflow
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Flow Task)
 (def (store-flow-primary-task flow)
   (let (steps (flow-steps flow))

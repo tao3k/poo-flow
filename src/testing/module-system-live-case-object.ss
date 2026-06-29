@@ -32,6 +32,9 @@
 (def (poo-flow-module-system-live-case-slot key value)
   (cons key ($constant-slot-spec value)))
 
+;;; Boundary: module system live case module profiles is the policy-visible
+;;; edge for module-system, object, test harness behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> [PooUserModuleSelection] [PooSandboxProfile])
 (def (poo-flow-module-system-live-case-module-profiles module-bundle)
   (let* ((module-selection
@@ -45,6 +48,9 @@
       (cdr config-entry)
       (error "live case module bundle has no :config profiles"))))
 
+;;; Boundary: module system live case profile super is the policy-visible edge
+;;; for module-system, object, test harness behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> [PooSandboxProfile] Symbol PooSandboxProfile)
 (def (poo-flow-module-system-live-case-profile-super profiles name)
   (let (profile (poo-flow-sandbox-profile-by-name profiles name))
@@ -52,6 +58,9 @@
       profile
       (error "live case inherited profile not found" name))))
 
+;;; Boundary: module system live case profile supers is the policy-visible edge
+;;; for module-system, object, test harness behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> [PooSandboxProfile] [Symbol] [PooSandboxProfile])
 (def (poo-flow-module-system-live-case-profile-supers profiles names)
   (if (null? names)
@@ -110,6 +119,9 @@
               "src/testing/module-system-live-case.ss")
              (poo-flow-module-system-live-case-slot 'runtime-executed #f)))))
 
+;;; Boundary: module system live case flag value is the policy-visible edge for
+;;; module-system, object, test harness behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooUserModuleSelection Symbol Value)
 (def (poo-flow-module-system-live-case-flag-value selection flag)
   (let (entry (poo-flow-user-module-selection-flag-entry selection flag))
@@ -117,6 +129,9 @@
       (cdr entry)
       (error "live case module selection missing required flag" flag))))
 
+;;; Boundary: module system live case inherits list is the policy-visible edge
+;;; for module-system, object, test harness behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> Value [Symbol])
 (def (poo-flow-module-system-live-case-inherits-list value)
   (cond

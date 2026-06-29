@@ -76,6 +76,9 @@
 (def (agent-sandbox-profile-metadata profile)
   (agent-sandbox-profile-ref profile 'metadata '()))
 
+;;; Boundary: agent sandbox profile list count is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> MaybeList Integer)
 (def (agent-sandbox-profile-list-count value)
   (if (list? value) (length value) 0))

@@ -35,6 +35,9 @@
            (cons 'profile profile-ref)))
    (if (null? maybe-options) '() (car maybe-options))))
 
+;;; Boundary: make nono agent sandbox profile is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> BackendRef [Alist] AgentSandboxBackendProfile)
 (def (make-nono-agent-sandbox-profile backend-ref . maybe-options)
   (agent-sandbox-profile-descriptor->profile

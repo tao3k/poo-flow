@@ -42,6 +42,9 @@
 (def (agent-sandbox-request-field-contract-errors fields)
   (filter-map agent-sandbox-request-field-contract-error fields))
 
+;;; Boundary: agent sandbox request field contract error is the policy-visible
+;;; edge for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> FieldEntry MaybeValidationError)
 (def (agent-sandbox-request-field-contract-error field)
   (cond

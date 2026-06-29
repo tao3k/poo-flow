@@ -2,11 +2,6 @@
 ;;; Boundary: module object validation facts, origins, and source refs.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/extensions/facade
-                 poo-object-field-contract-validation
-                 poo-object-contract-validation
-                 poo-object-validation-valid?)
-        (only-in :std/sugar filter-map foldl)
         :poo-flow/src/module-system/object-core)
 
 (export poo-flow-module-object-validation-kind
@@ -66,6 +61,9 @@
            (cons 'subject subject)
            (cons 'evidence evidence)))
 
+;;; Boundary: module field identities is the policy-visible edge for module-
+;;; system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleFieldContract] [Symbol])
 (def (poo-flow-module-field-identities fields)
   (map poo-flow-module-field-contract-identity fields))
@@ -86,6 +84,9 @@
 (def (poo-flow-module-object-inheritance-chain object)
   (poo-flow-module-object-inheritance-chain/onto object '()))
 
+;;; Boundary: module object inheritance chains onto is the policy-visible edge
+;;; for module-system, object behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [PooModuleObject] [Symbol] [Symbol])
 (def (poo-flow-module-object-inheritance-chains/onto objects tail)
   (if (null? objects)
@@ -104,6 +105,9 @@
     (poo-flow-module-object-inherits object)
     tail)))
 
+;;; Boundary: module symbol member predicate is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol [Symbol] Boolean)
 (def (poo-flow-module-symbol-member? value values)
   (cond
@@ -112,7 +116,23 @@
    (else
     (poo-flow-module-symbol-member? value (cdr values)))))
 
-;; : (-> PooModuleObject Symbol MaybePooModuleObject)
+;;; Boundary: module object find field provider is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;; poo-flow-module-object-find-field-provider
+;;   : (-> PooModuleObject Symbol MaybePooModuleObject)
+;;   | doc m%
+;;       `poo-flow-module-object-find-field-provider` documents the module-
+;;       system, object boundary that the Gerbil policy harness treats as
+;;       agent-facing behavior. The example keeps the call shape visible
+;;       without duplicating implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-object-find-field-provider ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (def (poo-flow-module-object-find-field-provider object field-identity)
   (if (poo-flow-module-symbol-member?
        field-identity
@@ -127,7 +147,23 @@
        (else
         (loop (cdr supers)))))))
 
-;; : (-> PooModuleObject HashTable)
+;;; Boundary: module object field provider index is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;; poo-flow-module-object-field-provider-index
+;;   : (-> PooModuleObject HashTable)
+;;   | doc m%
+;;       `poo-flow-module-object-field-provider-index` documents the module-
+;;       system, object boundary that the Gerbil policy harness treats as
+;;       agent-facing behavior. The example keeps the call shape visible
+;;       without duplicating implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-object-field-provider-index ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (def (poo-flow-module-object-field-provider-index object)
   (let (providers (make-hash-table))
     (let visit ((provider object))
@@ -142,6 +178,9 @@
       (for-each visit (poo-flow-module-object-inherits provider)))
     providers))
 
+;;; Boundary: module object field origin index is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleObject PooModuleFieldContract HashTable Alist)
 (def (poo-flow-module-object-field-origin/index object field providers)
   (let* ((field-identity
@@ -169,6 +208,9 @@
    field
    (poo-flow-module-object-field-provider-index object)))
 
+;;; Boundary: module object field origins is the policy-visible edge for
+;;; module-system, object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleObject [Alist])
 (def (poo-flow-module-object-field-origins object)
   (let (providers

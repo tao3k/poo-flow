@@ -20,7 +20,6 @@
         :poo-flow/src/module-system/loop-engine-policy-extension
         :poo-flow/src/modules/sandbox-core/profile
         :poo-flow/src/modules/sandbox-core/profile-interface
-        :poo-flow/src/module-system/object-validation
         :poo-flow/src/module-system/profile-config
         :poo-flow/src/module-system/use-module-contract)
 
@@ -230,11 +229,9 @@
          (if objects-fragment?
            (syntax
             (begin
-              (import :poo-flow/src/module-system/object-core
-                      :poo-flow/src/module-system/object-validation)
+              (import :poo-flow/src/module-system/object-core)
               (def binding
-                (poo-flow-require-module-objects-validation!
-                 (begin fragment-form ...)))
+                (begin fragment-form ...))
               (export binding)))
            (syntax
             (begin

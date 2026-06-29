@@ -46,6 +46,9 @@
 (def (flow-declaration-descriptor-supers role-supers)
   (cons flow-declaration-descriptor-prototype role-supers))
 
+;;; Boundary: make flow declaration descriptor is the policy-visible edge for
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Symbol PlannerPolicy ExtensionPolicy [Role] FlowDeclarationDescriptor)
 (def (make-flow-declaration-descriptor descriptor-name descriptor-kind descriptor-planner descriptor-extension-policy . maybe-role-supers)
   (let (role-supers (if (null? maybe-role-supers) '() (car maybe-role-supers)))
@@ -153,6 +156,9 @@
 (def (flow-declaration-capability descriptor slot default)
   (role-slot/default descriptor slot default))
 
+;;; Boundary: find flow declaration is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol [FlowDeclarationDescriptor] MaybeFlowDeclarationDescriptor)
 (def (find-flow-declaration kind descriptors)
   (cond
@@ -160,6 +166,9 @@
    ((eq? kind (flow-declaration-kind (car descriptors))) (car descriptors))
    (else (find-flow-declaration kind (cdr descriptors)))))
 
+;;; Boundary: flow declaration for kind in is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> FlowDeclarationRegistry Symbol FlowDeclarationDescriptor)
 (def (flow-declaration-for-kind-in registry kind)
   (let ((descriptor (find-flow-declaration

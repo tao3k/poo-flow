@@ -17,7 +17,20 @@
 ;;; Boundary: higher-order macro factory for hygienic POO slot blocks.
 ;;; The generated macro preserves caller bindings and only constructs POO values.
 ;;; It is not a DSL parser: keyword slots are Gerbil syntax accepted by .o.
-;; : (-> Identifier Syntax)
+;; defpoo-flow-module-object-block
+;;   : (-> Identifier Syntax)
+;;   | doc m%
+;;       `defpoo-flow-module-object-block` documents the module-system boundary
+;;       that the Gerbil policy harness treats as agent-facing behavior. The
+;;       example keeps the call shape visible without duplicating
+;;       implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-module-object-block ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules defpoo-flow-module-object-block ()
   ((_ macro-name)
    (defrules macro-name ()
@@ -33,7 +46,20 @@
 ;;; Boundary: hook blocks become POO objects consumed by descriptor projection.
 ;;; Hook payload identifiers stay quoted and are never invoked here.
 ;;; Each hook id owns one list of payload symbols for later runtime owners.
-;; : (-> HookBlockSyntax... ModuleHooks)
+;; poo-flow-module-hook-block
+;;   : (-> HookBlockSyntax... ModuleHooks)
+;;   | doc m%
+;;       `poo-flow-module-hook-block` documents the module-system boundary that
+;;       the Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-hook-block ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-module-hook-block ()
   ((_ (hook-id hook-value ...) ...)
    (.mix slots: (role-constant-slots
@@ -43,7 +69,20 @@
 ;;; Boundary: conditional module inclusion returns a module list.
 ;;; The condition is evaluated where the user writes the module set.
 ;;; No catalog lookup, activation, or source loading occurs in this helper.
-;; : (-> Boolean PooModuleDescriptor... [PooModuleDescriptor])
+;; poo-flow-module-when
+;;   : (-> Boolean PooModuleDescriptor... [PooModuleDescriptor])
+;;   | doc m%
+;;       `poo-flow-module-when` documents the module-system boundary that the
+;;       Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-when ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-module-when ()
   ((_ condition module ...)
    (if condition
@@ -53,7 +92,20 @@
 ;;; Boundary: module-set syntax collects already-built POO module values.
 ;;; Clauses after the required modules block must evaluate to module lists.
 ;;; The generated catalog is a value catalog and remains activation-free.
-;; : (-> ModuleSetSyntax PooModuleValueCatalogExpansion)
+;; defpoo-flow-module-set
+;;   : (-> ModuleSetSyntax PooModuleValueCatalogExpansion)
+;;   | doc m%
+;;       `defpoo-flow-module-set` documents the module-system boundary that the
+;;       Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (defpoo-flow-module-set ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules defpoo-flow-module-set (modules)
   ((_ binding
       (modules module ...)

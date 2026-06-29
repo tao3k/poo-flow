@@ -36,6 +36,9 @@
    (cons 'descriptor-realized? #f)
    (cons 'runtime-executed #f)))
 
+;;; Boundary: user profile presentation copy slots is the policy-visible edge
+;;; for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> POOObject [Symbol] Alist)
 (def (poo-flow-user-profile-presentation-copy-slots source keys)
   (map (lambda (key) (cons key (.ref source key))) keys))

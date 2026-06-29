@@ -259,9 +259,19 @@
     descriptor)
    (flow-strand-registry-core-requirements registry)))
 
-;;; Merge is the batch form used by module profiles: applying descriptors in
-;;; order keeps later extension objects authoritative for same-name strands.
-;; : (-> FlowStrandRegistry [FlowStrandDescriptor] FlowStrandRegistry)
+;; flow-strand-registry-merge
+;;   : (-> FlowStrandRegistry (List FlowStrandDescriptor) FlowStrandRegistry)
+;;   | doc m%
+;;       `flow-strand-registry-merge` applies module profile descriptors in
+;;       order, preserving existing descriptor order while letting later
+;;       same-name descriptors replace the first visible registry entry.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (flow-strand-registry-merge registry extension-descriptors)
+;;       ;; => registry with deterministic descriptor override order
+;;       ```
+;;     %
 (def (flow-strand-registry-merge registry descriptors)
   (if (null? descriptors)
     registry
@@ -280,25 +290,27 @@
                (hash-put! base-first key descriptor))
              #f)))
        (flow-strand-registry-descriptors registry))
+      (def (finish new-keys)
+        (make-flow-strand-registry
+         (flow-strand-registry-name registry)
+         (append
+          (map (lambda (descriptor)
+                 (let (key (flow-strand-name descriptor))
+                   (if (and (hash-get override-seen key)
+                            (not (hash-get replacement-used key)))
+                     (begin
+                       (hash-put! replacement-used key #t)
+                       (hash-get overrides key))
+                     descriptor)))
+               (flow-strand-registry-descriptors registry))
+          (map (lambda (key)
+                 (hash-get overrides key))
+               (reverse new-keys)))
+         (flow-strand-registry-core-requirements registry)))
       (let loop-extra ((remaining descriptors)
                        (new-keys '()))
         (if (null? remaining)
-          (make-flow-strand-registry
-           (flow-strand-registry-name registry)
-           (append
-            (map (lambda (descriptor)
-                   (let (key (flow-strand-name descriptor))
-                     (if (and (hash-get override-seen key)
-                              (not (hash-get replacement-used key)))
-                       (begin
-                         (hash-put! replacement-used key #t)
-                         (hash-get overrides key))
-                       descriptor)))
-                 (flow-strand-registry-descriptors registry))
-            (map (lambda (key)
-                   (hash-get overrides key))
-                 (reverse new-keys)))
-           (flow-strand-registry-core-requirements registry))
+          (finish new-keys)
           (let* ((descriptor (car remaining))
                  (key (flow-strand-name descriptor))
                  (next-new-keys

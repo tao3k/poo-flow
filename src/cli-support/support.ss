@@ -40,6 +40,9 @@
   (display message (current-error-port))
   (newline (current-error-port)))
 
+;;; Boundary: cli exit code is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Integer Integer)
 (def (poo-flow-cli-exit-code status)
   (cond
@@ -47,6 +50,9 @@
    ((> status 255) (quotient status 256))
    (else status)))
 
+;;; Boundary: cli script args is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] [String])
 (def (poo-flow-cli-script-args command-line-args)
   (if (and (pair? command-line-args)
@@ -54,6 +60,9 @@
     (cddr command-line-args)
     '()))
 
+;;; Boundary: cli executable args is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] [String])
 (def (poo-flow-cli-executable-args command-line-args)
   (if (pair? command-line-args)
@@ -66,10 +75,42 @@
                  ":"
                  (poo-flow-cli-package-compiled-loadpath)))
 
+;; : (-> MaybeString)
+(def (poo-flow-cli-user-package-compiled-loadpath)
+  (let (home (getenv "HOME" #f))
+    (and home (path-expand ".gerbil/lib" home))))
+
+;; : (MaybeString [String] -> [String])
+(def (poo-flow-cli-cons-existing-loadpath path paths)
+  (if (and path (not (string=? path "")) (file-exists? path))
+    (cons path paths)
+    paths))
+
+;; : ([String] -> String)
+(def (poo-flow-cli-join-loadpath paths)
+  (match paths
+    ([] "")
+    ([path] path)
+    ([path . rest]
+     (string-append path ":" (poo-flow-cli-join-loadpath rest)))))
+
+;; : (-> String)
+(def (poo-flow-cli-default-loadpath)
+  (poo-flow-cli-join-loadpath
+   (reverse
+    (poo-flow-cli-cons-existing-loadpath
+     (poo-flow-cli-user-package-compiled-loadpath)
+     (poo-flow-cli-cons-existing-loadpath
+      (poo-flow-cli-package-compiled-loadpath)
+      [(poo-flow-cli-local-source-loadpath)])))))
+
+;;; Boundary: cli gerbil loadpath is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Unit String)
 (def (poo-flow-cli-gerbil-loadpath)
   (let ((current (getenv "GERBIL_LOADPATH" #f))
-        (local-loadpath (poo-flow-cli-local-loadpath)))
+        (local-loadpath (poo-flow-cli-default-loadpath)))
     (if (and current (not (string=? current "")))
       (string-append local-loadpath ":" current)
       local-loadpath)))
@@ -101,6 +142,9 @@
       (display output)
       (poo-flow-cli-exit-code status))))
 
+;;; Boundary: cli run inherited is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-run-inherited argv)
   (let (status 0)
@@ -113,6 +157,9 @@
                    (set! status exit-status)))
     (poo-flow-cli-exit-code status)))
 
+;;; Boundary: cli run captured is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [String] Pair)
 (def (poo-flow-cli-run-captured argv)
   (let (status 0)
@@ -171,6 +218,9 @@
   (let (length (string-length text))
     (or (string-index text #\newline start length) length)))
 
+;;; Boundary: cli leading number is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> String MaybeInteger)
 (def (poo-flow-cli-leading-number text)
   (let* ((length (string-length text))
@@ -186,6 +236,9 @@
 (def (poo-flow-cli-find-char text ch start length)
   (string-index text ch start length))
 
+;;; Boundary: cli number after char is the policy-visible edge for CLI
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> String Char MaybeInteger)
 (def (poo-flow-cli-number-after-char text ch)
   (let* ((length (string-length text))
@@ -198,6 +251,9 @@
           #f))
       #f)))
 
+;;; Boundary: cli rss line bytes is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> String MaybeInteger)
 (def (poo-flow-cli-rss-line-bytes line)
   (cond

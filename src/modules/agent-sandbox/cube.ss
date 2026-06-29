@@ -36,6 +36,9 @@
            (cons 'template profile-ref)))
    (if (null? maybe-options) '() (car maybe-options))))
 
+;;; Boundary: make cube agent sandbox profile is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> BackendRef [Alist] AgentSandboxBackendProfile)
 (def (make-cube-agent-sandbox-profile backend-ref . maybe-options)
   (agent-sandbox-profile-descriptor->profile

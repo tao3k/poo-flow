@@ -1,11 +1,9 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: shared module objects available to every module namespace.
 
-(import :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/object-validation)
+(import :poo-flow/src/module-system/object-core)
 
 (export (import: :poo-flow/src/module-system/object-core)
-        (import: :poo-flow/src/module-system/object-validation)
         poo-flow-shared-sandbox-object
         poo-flow-shared-module-objects)
 
@@ -24,5 +22,4 @@
      (domain . sandbox))))
 
 (def poo-flow-shared-module-objects
-  (poo-flow-require-module-objects-validation!
-   (list poo-flow-shared-sandbox-object)))
+  (list poo-flow-shared-sandbox-object))

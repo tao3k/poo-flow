@@ -126,6 +126,9 @@
        (list (cons 'backend-kind backend-kind)
              (cons 'runtime-manifest runtime-manifest)))))))
 
+;;; Boundary: agent sandbox marlin handoff kind is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol Symbol)
 (def (agent-sandbox-marlin-handoff-kind backend-kind)
   (cond
@@ -230,6 +233,9 @@
             agent-sandbox-marlin-handoff-manifest?)))
     (list '((field . admission-envelope) (code . not-alist)))))
 
+;;; Boundary: agent sandbox marlin validate admission envelope is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Alist MarlinAdmissionEnvelope)
 (def (agent-sandbox-marlin-validate-admission-envelope envelope)
   (let (errors

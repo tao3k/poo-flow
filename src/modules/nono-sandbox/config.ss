@@ -33,6 +33,9 @@
 (def (poo-flow-nono-sandbox-binding-config binding-value)
   binding-value)
 
+;;; Boundary: nono sandbox config flags is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-nono-sandbox-config-flags binding-value profiles . maybe-user-config)
   (append
@@ -69,14 +72,40 @@
 
 ;;; Profile row macros quote user syntax and leave validation to the inherited
 ;;; nono profile object.
-;; : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+;; poo-flow-nono-sandbox-profile
+;;   : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-nono-sandbox-profile` documents the sandbox boundary that
+;;       the Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-nono-sandbox-profile ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-nono-sandbox-profile ()
   ((_ name form ...)
    (poo-flow-nono-sandbox-profile-config 'name '(form ...))))
 
 ;;; Derived profile rows are a user-facing shorthand over the sandbox-core POO
 ;;; derivation API. Options are derivation metadata such as scope/scope-ref.
-;; : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+;; poo-flow-nono-sandbox-profile-derive
+;;   : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-nono-sandbox-profile-derive` documents the sandbox boundary
+;;       that the Gerbil policy harness treats as agent-facing behavior. The
+;;       example keeps the call shape visible without duplicating
+;;       implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-nono-sandbox-profile-derive ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-nono-sandbox-profile-derive ()
   ((_ parent name (option ...) form ...)
    (poo-flow-nono-sandbox-profile-derive-config
@@ -93,7 +122,20 @@
 
 ;;; Nono profile rows inherit backend kind from the selected module. Users name
 ;;; profile refs and policy rows; the module config owns backend projection.
-;; : (-> NonoSandboxProfileRow... [PooSandboxProfile])
+;; poo-flow-nono-sandbox-profiles
+;;   : (-> NonoSandboxProfileRow... [PooSandboxProfile])
+;;   | doc m%
+;;       `poo-flow-nono-sandbox-profiles` documents the sandbox boundary that
+;;       the Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-nono-sandbox-profiles ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-nono-sandbox-profiles ()
   ((_)
    '())

@@ -81,6 +81,9 @@
    missing)
   transparent: #t)
 
+;;; Boundary: config preflight status is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ConfigPreflight Symbol)
 (def (config-preflight-status preflight)
   (if (null? (config-preflight-missing preflight))
@@ -91,6 +94,9 @@
 (def (config-preflight-ok? preflight)
   (eq? (config-preflight-status preflight) 'ok))
 
+;;; Boundary: config requirements to alist is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ConfigPreflight Alist)
 (def (config-preflight->alist preflight)
   (list (cons 'status (config-preflight-status preflight))
@@ -163,6 +169,9 @@
        (list (cons 'kind kind)
              (cons 'value value)))))))
 
+;;; Boundary: render config arguments is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist [ConfigArgument] [Value])
 (def (render-config-arguments source arguments)
   (if (null? arguments)
@@ -213,6 +222,9 @@
 (def (run-config-adapter config)
   (run-config-state-adapter config))
 
+;;; Boundary: run config option is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> RunConfig Alist)
 (def (run-config-options config)
   (run-config-state-options config))
@@ -237,6 +249,9 @@
               (flow-declaration-registry-name
                (run-config-flow-registry config)))))
 
+;;; Boundary: run config option is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Alist Symbol Value Value)
 (def (run-config-option options key default)
   (let (entry (assoc key options))
@@ -262,6 +277,9 @@
      requirements
      (missing-config-requirements requirements source))))
 
+;;; Boundary: run config validate preflight is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> RunConfig Boolean)
 (def (run-config-validate-preflight config)
   (let (preflight (run-config-preflight config))
@@ -324,6 +342,9 @@
   (run-config-validate-registries config flow)
   (runner-run (run-config->runner config) flow input))
 
+;;; Boundary: config requirements to alist is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [ConfigRequirement] [Alist])
 (def (config-requirements->alist requirements)
   (if (null? requirements)
@@ -331,6 +352,9 @@
     (cons (config-requirement->alist (car requirements))
           (config-requirements->alist (cdr requirements)))))
 
+;;; Boundary: missing config requirements is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [ConfigRequirement] Alist [ConfigRequirement])
 (def (missing-config-requirements requirements source)
   (filter (lambda (requirement)
@@ -350,6 +374,9 @@
              (config-source-entry bucket key)
              #t)))))
 
+;;; Boundary: config source ref is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Alist Symbol Symbol Value)
 (def (config-source-ref source source-kind key)
   (let* ((bucket (config-source-bucket source source-kind))

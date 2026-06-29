@@ -245,6 +245,9 @@
 (def (poo-flow-session-profile-name profile)
   (poo-flow-session-profile-slot profile 'name #f))
 
+;;; Boundary: session profile by name is the policy-visible edge for object
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [POOObject] Symbol MaybePOOObject)
 (def (poo-flow-session-profile-by-name profiles name)
   (cond
@@ -467,6 +470,9 @@
   (and (object? value)
        (eq? (.ref value 'kind) 'poo-flow.session.handoff)))
 
+;;; Boundary: session by id is the policy-visible edge for object behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [PooSession] Symbol MaybePooSession)
 (def (poo-flow-session-by-id sessions session-id)
   (cond
@@ -475,6 +481,9 @@
    (else
     (poo-flow-session-by-id (cdr sessions) session-id))))
 
+;;; Boundary: session lineage edge pairs is the policy-visible edge for object
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> PooSession [Pair])
 (def (poo-flow-session-lineage-edge-pairs session)
   (map (lambda (parent-id)
@@ -482,10 +491,16 @@
        (poo-flow-session-lineage-parent-session-ids
         (poo-flow-session-value-lineage session))))
 
+;;; Boundary: session graph edge pairs is the policy-visible edge for object
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooSession] [Pair])
 (def (poo-flow-session-graph-edge-pairs sessions)
   (apply append (map poo-flow-session-lineage-edge-pairs sessions)))
 
+;;; Boundary: session index is the policy-visible edge for object behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> [PooSession] HashTable)
 (def (poo-flow-session-index sessions)
   (let (index (make-hash-table))
@@ -514,6 +529,9 @@
            (poo-flow-session-value-lineage session)))
         #t)))))
 
+;;; Boundary: session graph acyclic from index predicate is the policy-visible
+;;; edge for object behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> HashTable HashTable Symbol Boolean)
 (def (poo-flow-session-graph-acyclic-from-index? session-index visit-states session-id)
   (let (state (hash-get visit-states session-id))
@@ -540,6 +558,9 @@
               acyclic?))
           #t))))))
 
+;;; Boundary: session graph acyclic predicate is the policy-visible edge for
+;;; object behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [PooSession] Boolean)
 (def (poo-flow-session-graph-acyclic? sessions)
   (let ((session-index (poo-flow-session-index sessions))

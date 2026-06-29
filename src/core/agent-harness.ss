@@ -99,6 +99,9 @@
         poo-flow-agent-session->snapshot
         poo-flow-dispatch-receipt->snapshot)
 
+;;; Boundary: agent harness alist ref is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-agent-harness-alist-ref entries key default-value)
   (let (entry (assoc key entries))
@@ -327,6 +330,9 @@
               (poo-flow-runtime-snapshot-presentation-trace snapshot))
         (cons 'metadata (poo-flow-runtime-snapshot-metadata snapshot))))
 
+;;; Boundary: receipt workflow status is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Symbol)
 (def (poo-flow-receipt-workflow-status status)
   (cond

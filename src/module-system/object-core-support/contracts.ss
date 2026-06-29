@@ -93,6 +93,9 @@
          (poo-flow-module-alist? (cdr value)))
         (else #f)))
 
+;;; Boundary: module value kind accepts predicate is the policy-visible edge
+;;; for module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleKindId PooModuleFieldValueCandidate Boolean)
 (def (poo-flow-module-value-kind-accepts? value-kind value)
   (cond ((eq? value-kind 'Any) #t)
@@ -195,38 +198,59 @@
   (or (poo-flow-module-field-contribution-vector? value)
       (poo-flow-module-object-kind? value poo-flow-module-field-contribution-kind)))
 
+;;; Boundary: module field contribution target is the policy-visible edge for
+;;; module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-target contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 1)
     (.ref contribution 'target)))
+;;; Boundary: module field contribution field is the policy-visible edge for
+;;; module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution PooModuleFieldContract)
 (def (poo-flow-module-field-contribution-field contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 2)
     (.ref contribution 'field)))
+;;; Boundary: module field contribution value is the policy-visible edge for
+;;; module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution PooModuleFieldValue)
 (def (poo-flow-module-field-contribution-value contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 3)
     (.ref contribution 'value)))
+;;; Boundary: module field contribution field contract predicate is the policy-
+;;; visible edge for module-system, object, core behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Boolean)
 (def (poo-flow-module-field-contribution-field-contract? contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 7)
     (.ref contribution 'field-contract-p)))
+;;; Boundary: module field contribution field value kind is the policy-visible
+;;; edge for module-system, object, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-field-value-kind contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 6)
     (.ref contribution 'field-value-kind)))
 
+;;; Boundary: module field contribution field identity is the policy-visible
+;;; edge for module-system, object, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-field-identity contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 4)
     (.ref contribution 'field-identity)))
 
+;;; Boundary: module field contribution merge is the policy-visible edge for
+;;; module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-merge contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
@@ -266,6 +290,9 @@
      (else
       (poo-flow-module-extension-slot-override field-identity value)))))
 
+;;; Boundary: module field contribution to extension is the policy-visible edge
+;;; for module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution PooModuleExtensionContribution)
 (def (poo-flow-module-field-contribution->extension contribution)
   (let* ((target
@@ -422,6 +449,9 @@
    ":"
    (symbol->string code)))
 
+;;; Boundary: module transformer contract diagnostics is the policy-visible
+;;; edge for module-system, object, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooModuleTransformerContract PooModuleFieldContract PooModuleFieldValue [String])
 (def (poo-flow-module-transformer-contract-diagnostics transformer field value)
   (append
@@ -447,6 +477,9 @@
           field
           value)))
 
+;;; Boundary: module transformer field contribution is the policy-visible edge
+;;; for module-system, object, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Symbol PooModuleFieldContract PooModuleTransformerContract PooModuleFieldValue PooModuleFieldContribution)
 (def (poo-flow-module-transformer-field-contribution target field transformer value)
   (if (poo-flow-module-transformer-contract-valid? transformer field value)

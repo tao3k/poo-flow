@@ -150,6 +150,9 @@
 (def (loop-human-audit-slot audit slot default)
   (role-slot/default audit slot default))
 
+;;; Boundary: loop human audit alist ref is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Alist Symbol Value Value)
 (def (loop-human-audit-alist-ref alist key default)
   (cond
@@ -165,6 +168,9 @@
    (else
     (loop-human-audit-member? value (cdr values)))))
 
+;;; Boundary: loop human audit filter is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Predicate [Value] [Value])
 (def (loop-human-audit-filter predicate values)
   (cond
@@ -231,6 +237,9 @@
 (def (loop-human-audit-decision? decision)
   (loop-human-audit-member? decision +loop-human-audit-decisions+))
 
+;;; Boundary: loop human audit decision ref is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> LoopHumanAudit Symbol Symbol Symbol)
 (def (loop-human-audit-decision-ref audit pattern default)
   (let (found (assoc pattern (loop-human-audit-decisions audit)))
@@ -273,6 +282,9 @@
      valid-audit
      contract)))
 
+;;; Boundary: loop human audit review items from governor contract is the
+;;; policy-visible edge for loop behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> LoopHumanAudit Alist [Alist])
 (def (loop-human-audit-review-items/from-governor-contract audit contract)
     (append
@@ -283,6 +295,9 @@
             (loop-human-audit-inbox-item->review-item audit item))
           (loop-human-audit-alist-ref contract 'human-inbox-items '()))))
 
+;;; Boundary: loop human audit required field error is the policy-visible edge
+;;; for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol Value [ValidationError])
 (def (loop-human-audit-required-field-error field value)
   (if value
@@ -290,6 +305,9 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;;; Boundary: loop human audit field validation error unless is the policy-
+;;; visible edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
 (def (loop-human-audit-field-validation-error/unless valid? field code value)
   (if valid?
@@ -298,6 +316,9 @@
                 (cons 'code code)
                 (cons 'value value)))))
 
+;;; Boundary: loop human audit governor validation errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopGovernor [ValidationError])
 (def (loop-human-audit-governor-validation-errors governor)
   (if (loop-governor? governor)
@@ -305,6 +326,9 @@
     (list (list (cons 'field 'governor)
                 (cons 'code 'not-loop-governor)))))
 
+;;; Boundary: loop human audit governor contract validation errors is the
+;;; policy-visible edge for loop behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> LoopGovernor [ValidationError])
 (def (loop-human-audit-governor-contract-validation-errors governor)
   (if (loop-governor? governor)
@@ -312,6 +336,9 @@
     (list (list (cons 'field 'governor)
                 (cons 'code 'not-loop-governor)))))
 
+;;; Boundary: loop human audit governor contract field validation errors is the
+;;; policy-visible edge for loop behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> MaybeAlist [ValidationError])
 (def (loop-human-audit-governor-contract-field-validation-errors contract)
   (if (or (not contract) (list? contract))
@@ -320,6 +347,12 @@
                 (cons 'code 'not-list)
                 (cons 'value contract)))))
 
+;;; Boundary: loop human audit decision validation errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;;; Boundary: loop human audit decisions field validation errors is the policy-
+;;; visible edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] [ValidationError])
 (def (loop-human-audit-decisions-field-validation-errors decisions)
   (if (list? decisions)
@@ -328,6 +361,9 @@
                 (cons 'code 'not-list)
                 (cons 'value decisions)))))
 
+;;; Boundary: loop human audit decision validation errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] [ValidationError])
 (def (loop-human-audit-decision-validation-errors decisions)
   (cond
@@ -362,6 +398,9 @@
       (loop-human-audit-decisions audit)))
     (list '((field . audit) (code . not-loop-human-audit)))))
 
+;;; Boundary: loop human audit validation errors contract facts is the policy-
+;;; visible edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopHumanAudit [ValidationError])
 (def (loop-human-audit-validation-errors/contract-facts audit)
   (if (loop-human-audit? audit)
@@ -382,6 +421,9 @@
       (loop-human-audit-decisions audit)))
     (list '((field . audit) (code . not-loop-human-audit)))))
 
+;;; Boundary: validate loop human audit is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> LoopHumanAudit LoopHumanAudit)
 (def (validate-loop-human-audit audit)
   (let (errors (loop-human-audit-validation-errors audit))
@@ -393,6 +435,9 @@
        "invalid loop human audit"
        (list (cons 'errors errors))))))
 
+;;; Boundary: validate loop human audit contract facts is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopHumanAudit LoopHumanAudit)
 (def (validate-loop-human-audit/contract-facts audit)
   (let (errors (loop-human-audit-validation-errors/contract-facts audit))
@@ -414,6 +459,9 @@
           (eq? (cdr entry) decision))
         (loop-human-audit-decisions audit))))
 
+;;; Boundary: loop human audit review items pending predicate is the policy-
+;;; visible edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] Boolean)
 (def (loop-human-audit-review-items-pending? review-items)
   (cond
@@ -426,6 +474,9 @@
    (else
     (loop-human-audit-review-items-pending? (cdr review-items)))))
 
+;;; Boundary: loop human audit operation status is the policy-visible edge for
+;;; loop behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Alist] Symbol)
 (def (loop-human-audit-operation-status review-items)
   (if (loop-human-audit-review-items-pending? review-items)
@@ -566,6 +617,9 @@
           (cons 'execution-owner (loop-human-audit-execution-owner valid-audit))
           (cons 'metadata (loop-human-audit-metadata valid-audit)))))
 
+;;; Boundary: loop human audit to contract is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> LoopHumanAudit Alist)
 (def (loop-human-audit->contract audit)
   (let* ((provided-governor-contract

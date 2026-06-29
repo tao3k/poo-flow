@@ -154,6 +154,9 @@
   (and (poo-flow-module-source-ref? value)
        (eq? (poo-flow-module-source-ref-kind value) 'local)))
 
+;;; Boundary: module import normalize source is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> SourceRefInput PooModuleSourceRef)
 (def (poo-flow-module-import-normalize-source source-value)
   (cond

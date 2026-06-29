@@ -22,6 +22,9 @@
    source
    (if (null? maybe-options) '() (car maybe-options))))
 
+;;; Boundary: make nono agent sandbox profile candidate is the policy-visible
+;;; edge for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol [ProfileCandidateChoice] [Alist] ProfileCandidate)
 (def (make-nono-agent-sandbox-profile-candidate source
                                                 choices
@@ -56,12 +59,18 @@
       (and (string? value)
            (string=? value (symbol->string symbol)))))
 
+;;; Boundary: nono why json choice action is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Value Symbol)
 (def (nono-why-json-choice-action status)
   (if (nono-why-json-symbol=? status 'denied)
     'grant
     'skip))
 
+;;; Boundary: nono why json choice section is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Value Symbol)
 (def (nono-why-json-choice-section reason)
   (if (or (nono-why-json-symbol=? reason 'path_not_granted)
@@ -92,6 +101,12 @@
           (cons 'source (nono-why-json-ref why 'source #f))
           (cons 'raw why))))
 
+;;; Boundary: nono why json to agent sandbox profile candidate is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
+;;; Boundary: nono why json to agent sandbox profile candidate choice is the
+;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> NonoWhyJsonAlist [Alist] ProfileCandidateChoice)
 (def (nono-why-json->agent-sandbox-profile-candidate-choice why
                                                             . maybe-options)
@@ -103,6 +118,9 @@
      (list (cons 'section (nono-why-json-choice-section reason))
            (cons 'value (nono-why-json-choice-value why options))))))
 
+;;; Boundary: nono why json to agent sandbox profile candidate is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> NonoWhyJsonAlist [Alist] ProfileCandidate)
 (def (nono-why-json->agent-sandbox-profile-candidate why . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))

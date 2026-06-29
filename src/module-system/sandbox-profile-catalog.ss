@@ -23,6 +23,9 @@
    (else
     (poo-flow-user-module-selection-sandbox-profiles/filter (cdr values)))))
 
+;;; Boundary: user module selection sandbox profiles is the policy-visible edge
+;;; for sandbox, module-system behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooUserModuleSelection [PooSandboxProfile])
 (def (poo-flow-user-module-selection-sandbox-profiles selection)
   (let (entry (poo-flow-user-module-selection-flag-entry selection ':config))
@@ -30,6 +33,9 @@
       (poo-flow-user-module-selection-sandbox-profiles/filter (cdr entry))
       '())))
 
+;;; Boundary: user config sandbox profile catalog add is the policy-visible
+;;; edge for sandbox, module-system behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [PooUserModuleSelection] [PooSandboxProfile])
 (def (poo-flow-user-config-sandbox-profile-catalog/add selected-modules)
   (cond

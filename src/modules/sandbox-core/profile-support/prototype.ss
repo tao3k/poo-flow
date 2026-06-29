@@ -10,7 +10,8 @@
         (only-in :poo-flow/src/modules/agent-sandbox/profile-validation
                  agent-sandbox-profile-resource-policy-filesystem-entry?
                  agent-sandbox-profile-resource-policy-filesystem-diagnostics)
-        :poo-flow/src/modules/sandbox-core/resource-contract)
+        :poo-flow/src/modules/sandbox-core/resource-contract
+        :poo-flow/src/modules/sandbox-core/profile-support/policy)
 
 (export poo-flow-sandbox-core-profile-object
         poo-flow-sandbox-profile-prototype
@@ -44,6 +45,14 @@
     (poo-flow-module-field-contract
      'capabilities 'List 'override '(process-run filesystem-read tmpdir)
      '((scope . sandbox-core) (dsl-row . capabilities)))
+    (poo-flow-module-field-contract
+     'backend-capability 'Object 'override
+     poo-flow-sandbox-backend-capability/sandbox
+     '((scope . sandbox-core) (owned-by . module-config)))
+    (poo-flow-module-field-contract
+     'profile-policy 'Object 'override
+     poo-flow-sandbox-profile-policy/default
+     '((scope . sandbox-core) (owned-by . policy-object)))
     (poo-flow-module-field-contract
      'resource-policy 'List 'override
      '((filesystem
@@ -93,6 +102,9 @@
    ((.slot? prototype internal-slot) (.ref prototype internal-slot))
    (else default)))
 
+;;; Boundary: sandbox profile prototype to profile is the policy-visible edge
+;;; for sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol PooSandboxProfilePrototype PooSandboxProfile)
 (def (poo-flow-sandbox-profile-prototype->profile name-value prototype)
   (let* ((backend-ref-value

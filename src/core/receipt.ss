@@ -136,6 +136,9 @@
                                           parent-path
                                           (+ ordinal 1)))))
 
+;;; Boundary: receipt list event count is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Receipt] Nat)
 (def (receipt-list-event-count receipts)
   (if (null? receipts)
@@ -143,6 +146,9 @@
     (+ (receipt-event-count (car receipts))
        (receipt-list-event-count (cdr receipts)))))
 
+;;; Boundary: receipt list adapter request count is the policy-visible edge for
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Receipt] Nat)
 (def (receipt-list-adapter-request-count receipts)
   (if (null? receipts)

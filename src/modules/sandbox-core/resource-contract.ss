@@ -4,7 +4,7 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .ref .slot? object?)
-        (only-in :gslph/src/extensions/facade
+        (only-in :gslph/src/extensions/poo-object-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?))
 
@@ -42,6 +42,9 @@
 (def poo-flow-sandbox-resources-prototype-contract-validation-schema
   "poo-flow-sandbox-resources-prototype-contract-validation/v1")
 
+;;; Boundary: sandbox contract receipt is the policy-visible edge for sandbox,
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Pair... HashTable)
 (def (poo-flow-sandbox-contract-receipt . entries)
   (let (table (make-hash-table))
@@ -51,6 +54,9 @@
      entries)
     table))
 
+;;; Boundary: sandbox resource spec has key predicate is the policy-visible
+;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> AgentSandboxFilesystemResourceSpec Symbol Boolean)
 (def (poo-flow-sandbox-resource-spec-has-key? spec key)
   (cond
@@ -79,6 +85,9 @@
        (poo-flow-sandbox-resource-spec-has-key? (cdr resource) 'scope)
        (poo-flow-sandbox-resource-spec-has-anchor? (cdr resource))))
 
+;;; Boundary: sandbox resource policy has structured filesystem predicate is
+;;; the policy-visible edge for sandbox, core behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> ResourcePolicy Boolean)
 (def (poo-flow-sandbox-resource-policy-has-structured-filesystem?
       resource-policy)
@@ -95,10 +104,16 @@
 (def +poo-flow-sandbox-resources-prototype-slots+
   '(filesystem cpu memory timeout-ms))
 
+;;; Boundary: sandbox resources prototype slot if present is the policy-visible
+;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype Symbol [Symbol])
 (def (poo-flow-sandbox-resources-prototype-slot-if-present resources slot)
   (if (.slot? resources slot) [slot] '()))
 
+;;; Boundary: sandbox resources prototype present slots is the policy-visible
+;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype [Symbol])
 (def (poo-flow-sandbox-resources-prototype-present-slots resources)
   (if (object? resources)
@@ -126,6 +141,9 @@
    (cons 'slots
          (poo-flow-sandbox-resources-prototype-present-slots resources))))
 
+;;; Boundary: sandbox resources prototype slot default is the policy-visible
+;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype Symbol Value)
 (def (poo-flow-sandbox-resources-prototype-slot/default resources
                                                            slot
@@ -191,6 +209,9 @@
         (cons 'object 'PooSandboxResourcesPrototype)
         (cons 'value value)))
 
+;;; Boundary: sandbox resources prototype slot readable predicate is the
+;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype Symbol Boolean)
 (def (poo-flow-sandbox-resources-prototype-slot-readable? resources slot)
   (and (object? resources)
@@ -201,6 +222,9 @@
           (.ref resources slot)
           #t))))
 
+;;; Boundary: sandbox resources prototype slot readability diagnostics is the
+;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> Symbol Symbol PooSandboxResourcesPrototype [Alist])
 (def (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics code
                                                                         slot
@@ -215,6 +239,9 @@
       "sandbox resources prototype slot exists but cannot be read through POO slot resolution"
       resources))))
 
+;;; Boundary: sandbox resources prototype missing slot diagnostics is the
+;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype [Alist])
 (def (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics resources
                                                                     slot
@@ -228,6 +255,9 @@
       message
       resources))))
 
+;;; Boundary: sandbox prototype slot entry is the policy-visible edge for
+;;; sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Object Symbol [Pair])
 (def (poo-flow-sandbox-prototype-slot-entry prototype slot)
   (if (.slot? prototype slot)
@@ -246,6 +276,9 @@
          (poo-flow-sandbox-prototype-slot-entry filesystem 'snapshot)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'volume))))
 
+;;; Boundary: sandbox resources prototype to resource policy is the policy-
+;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype ResourcePolicy)
 (def (poo-flow-sandbox-resources-prototype->resource-policy resources)
   (append
@@ -259,6 +292,9 @@
    (poo-flow-sandbox-prototype-slot-entry resources 'memory)
    (poo-flow-sandbox-prototype-slot-entry resources 'timeout-ms)))
 
+;;; Boundary: sandbox resources prototype structured filesystem diagnostics is
+;;; the policy-visible edge for sandbox, core behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype [Alist])
 (def (poo-flow-sandbox-resources-prototype-structured-filesystem-diagnostics
       resources)
@@ -277,6 +313,9 @@
           "sandbox resources filesystem must project to a structured resource-policy entry"
           resource-policy))))))
 
+;;; Boundary: sandbox resources prototype local diagnostics is the policy-
+;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype [Alist])
 (def (poo-flow-sandbox-resources-prototype-local-diagnostics resources)
   (if (not (object? resources))
@@ -375,6 +414,9 @@
      (cons 'harness-valid (hash-get harness-validation 'valid))
      (cons 'checked-signals (hash-get validation 'checkedSignals)))))
 
+;;; Boundary: require sandbox resources prototype contract! is the policy-
+;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype PooSandboxResourcesPrototype)
 (def (poo-flow-require-sandbox-resources-prototype-contract! resources)
   (let (validation
@@ -385,6 +427,9 @@
       (error "sandbox resources prototype failed typed contract validation"
              validation))))
 
+;;; Boundary: sandbox resources value to resource policy is the policy-visible
+;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Value ResourcePolicy)
 (def (poo-flow-sandbox-resources-value->resource-policy resources)
   (if (object? resources)

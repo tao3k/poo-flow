@@ -355,6 +355,9 @@
 (def (loop-governor-node-kind node)
   (loop-governor-node-slot node 'governance-node-kind #f))
 
+;;; Boundary: loop governor node responsibility is the policy-visible edge for
+;;; loop, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopGovernorNode Symbol)
 (def (loop-governor-node-responsibility node)
   (let (specific

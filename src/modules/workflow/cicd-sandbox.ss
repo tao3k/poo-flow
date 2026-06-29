@@ -74,6 +74,9 @@
          (list (poo-flow-sandbox-profile-runtime-summary sandbox-profile))))
    (else '())))
 
+;;; Boundary: cicd check sandbox runtime summaries is the policy-visible edge
+;;; for sandbox, workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] [Alist])
 (def (poo-flow-cicd-check-sandbox-runtime-summaries check
                                                     . maybe-profile-catalog)
@@ -98,6 +101,9 @@
          (list (poo-flow-sandbox-profile-handoff-summary sandbox-profile))))
    (else '())))
 
+;;; Boundary: cicd check sandbox handoff summaries is the policy-visible edge
+;;; for sandbox, workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] [Alist])
 (def (poo-flow-cicd-check-sandbox-handoff-summaries check
                                                     . maybe-profile-catalog)
@@ -124,6 +130,9 @@
                 profile)))
    (else '())))
 
+;;; Boundary: cicd check sandbox unresolved profile refs is the policy-visible
+;;; edge for sandbox, workflow behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] [Symbol])
 (def (poo-flow-cicd-check-sandbox-unresolved-profile-refs
       check

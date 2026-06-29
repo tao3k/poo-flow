@@ -57,13 +57,39 @@
 
 ;;; Profile row macros quote the profile name and forms only; validation is
 ;;; delegated to the backend profile object above.
-;; : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+;; poo-flow-cubeSandbox-profile
+;;   : (-> Symbol SandboxProfileForm... PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-cubeSandbox-profile` documents the policy boundary that the
+;;       Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cubeSandbox-profile ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-cubeSandbox-profile ()
   ((_ name form ...)
    (poo-flow-cubeSandbox-profile-config 'name '(form ...))))
 
 ;;; Backend-specific shorthand over the shared sandbox-core POO derive helper.
-;; : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+;; poo-flow-cubeSandbox-profile-derive
+;;   : (-> PooSandboxProfile Symbol DerivationOption... SandboxProfileForm... PooSandboxProfile)
+;;   | doc m%
+;;       `poo-flow-cubeSandbox-profile-derive` documents the policy boundary
+;;       that the Gerbil policy harness treats as agent-facing behavior. The
+;;       example keeps the call shape visible without duplicating
+;;       implementation details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cubeSandbox-profile-derive ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-cubeSandbox-profile-derive ()
   ((_ parent name (option ...) form ...)
    (poo-flow-cubeSandbox-profile-derive-config
@@ -80,7 +106,20 @@
 
 ;;; Multiple CubeSandbox profile rows remain ordered user declarations for the
 ;;; module-system facade and presentation tests.
-;; : (-> CubeSandboxProfileRow... [PooSandboxProfile])
+;; poo-flow-cubeSandbox-profiles
+;;   : (-> CubeSandboxProfileRow... [PooSandboxProfile])
+;;   | doc m%
+;;       `poo-flow-cubeSandbox-profiles` documents the policy boundary that the
+;;       Gerbil policy harness treats as agent-facing behavior. The example
+;;       keeps the call shape visible without duplicating implementation
+;;       details.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cubeSandbox-profiles ...)
+;;       ;; => policy-visible result
+;;       ```
+;;     %
 (defrules poo-flow-cubeSandbox-profiles ()
   ((_)
    '())

@@ -38,6 +38,9 @@
           (cons 'descriptor-realized? #f)
           (cons 'runtime-executed #f))))
 
+;;; Boundary: user config session core intents add is the policy-visible edge
+;;; for module-system, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooUserModuleSelection] [Alist])
 (def (poo-flow-user-config-session-core-intents/add selections)
   (filter-map poo-flow-user-config-session-core-intent selections))

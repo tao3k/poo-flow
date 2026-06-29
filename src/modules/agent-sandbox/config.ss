@@ -3,7 +3,8 @@
 ;;; Invariant: profiles are inert data until a runtime bridge consumes them.
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/modules/agent-sandbox/profile)
+        :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/sandbox-core/profile-support/policy)
 
 (export poo-flow-sandbox-profile-kind
         poo-flow-sandbox-profiles-presentation-kind
@@ -21,6 +22,11 @@
         poo-flow-sandbox-profile->descriptor
         poo-flow-sandbox-profile->profile
         poo-flow-sandbox-profile->alist
+        poo-flow-sandbox-profile-backend-capability
+        poo-flow-sandbox-profile-policy-validation-receipt
+        poo-flow-sandbox-profile-policy-projection-receipt
+        poo-flow-sandbox-profile-policy-projections-valid?
+        poo-flow-sandbox-profile-policy-presentation-diagnostics
         poo-flow-sandbox-profile-runtime-intent
         poo-flow-sandbox-profile-runtime-summary
         poo-flow-sandbox-profile-handoff-summary
@@ -296,19 +302,96 @@
         (cons 'resource-policy (poo-flow-sandbox-profile-resource-policy profile))
         (cons 'metadata (poo-flow-sandbox-profile-metadata profile))))
 
+;;; Backend capability receipts are static control-plane facts. They make
+;;; OpenRath-style capability boundaries visible without selecting a runtime.
+;; : (-> PooSandboxProfile PooSandboxBackendCapability)
+(def (poo-flow-sandbox-profile-backend-capability profile)
+  (poo-flow-sandbox-backend-capability-ref
+   (poo-flow-sandbox-profile-backend-kind profile)))
+
+;;; Policy validation is report-only for public user profiles. Backend profile
+;;; objects can hard-gate resolution, while presentation keeps diagnostics
+;;; visible for users and agents.
+;; : (-> PooSandboxProfile Alist)
+(def (poo-flow-sandbox-profile-policy-validation-receipt profile)
+  (poo-flow-sandbox-profile-policy-validation
+   (poo-flow-sandbox-profile-name profile)
+   (poo-flow-sandbox-profile-backend-kind profile)
+   (poo-flow-sandbox-profile-backend-ref profile)
+   (poo-flow-sandbox-profile-backend-capability profile)
+   poo-flow-sandbox-profile-policy/default
+   (poo-flow-sandbox-profile-capabilities profile)))
+
+;; : (-> PooSandboxProfile Alist)
+(def (poo-flow-sandbox-profile-policy-projection-receipt profile)
+  (poo-flow-sandbox-profile-policy-projection
+   (poo-flow-sandbox-profile-name profile)
+   (poo-flow-sandbox-profile-backend-kind profile)
+   (poo-flow-sandbox-profile-backend-ref profile)
+   (poo-flow-sandbox-profile-backend-capability profile)
+   poo-flow-sandbox-profile-policy/default
+   (poo-flow-sandbox-profile-capabilities profile)))
+
+;; : (-> Alist Symbol Value)
+(def (poo-flow-sandbox-profile-policy-receipt-ref receipt key default-value)
+  (let (entry (assoc key receipt))
+    (if entry (cdr entry) default-value)))
+
+;; : (-> Alist Boolean)
+(def (poo-flow-sandbox-profile-policy-projection-valid? projection)
+  (poo-flow-sandbox-profile-policy-receipt-ref projection 'valid? #f))
+
+;; : (-> [Alist] Boolean)
+(def (poo-flow-sandbox-profile-policy-projections-valid? projections)
+  (cond
+   ((null? projections) #t)
+   ((poo-flow-sandbox-profile-policy-projection-valid? (car projections))
+    (poo-flow-sandbox-profile-policy-projections-valid? (cdr projections)))
+   (else #f)))
+
+;; : (-> Alist [Alist])
+(def (poo-flow-sandbox-profile-policy-projection-diagnostics projection)
+  (let (validation
+        (poo-flow-sandbox-profile-policy-receipt-ref
+         projection
+         'validation
+         '()))
+    (poo-flow-sandbox-profile-policy-receipt-ref
+     validation
+     'diagnostics
+     '())))
+
+;; : (-> [Alist] [Alist])
+(def (poo-flow-sandbox-profile-policy-presentation-diagnostics projections)
+  (if (null? projections)
+    '()
+    (append
+     (poo-flow-sandbox-profile-policy-projection-diagnostics
+      (car projections))
+     (poo-flow-sandbox-profile-policy-presentation-diagnostics
+      (cdr projections)))))
+
 ;;; Runtime intent is a receipt shape for agents and CLI tooling. It names the
 ;;; backend handoff target without manufacturing a runtime command in Scheme.
 ;; : (-> PooSandboxProfile Alist)
 (def (poo-flow-sandbox-profile-runtime-intent profile)
-  (list (cons 'profile-name (poo-flow-sandbox-profile-name profile))
-        (cons 'backend-kind (poo-flow-sandbox-profile-backend-kind profile))
-        (cons 'backend-ref (poo-flow-sandbox-profile-backend-ref profile))
-        (cons 'network-policy (poo-flow-sandbox-profile-network-policy profile))
-        (cons 'capabilities (poo-flow-sandbox-profile-capabilities profile))
-        (cons 'resource-policy (poo-flow-sandbox-profile-resource-policy profile))
-        (cons 'runtime-owner "marlin-agent-core")
-        (cons 'descriptor-realized? #f)
-        (cons 'runtime-executed #f)))
+  (let ((policy-projection
+         (poo-flow-sandbox-profile-policy-projection-receipt profile)))
+    (list (cons 'profile-name (poo-flow-sandbox-profile-name profile))
+          (cons 'backend-kind (poo-flow-sandbox-profile-backend-kind profile))
+          (cons 'backend-ref (poo-flow-sandbox-profile-backend-ref profile))
+          (cons 'network-policy
+                (poo-flow-sandbox-profile-network-policy profile))
+          (cons 'capabilities (poo-flow-sandbox-profile-capabilities profile))
+          (cons 'resource-policy
+                (poo-flow-sandbox-profile-resource-policy profile))
+          (cons 'policy-projection policy-projection)
+          (cons 'policy-valid?
+                (poo-flow-sandbox-profile-policy-projection-valid?
+                 policy-projection))
+          (cons 'runtime-owner "marlin-agent-core")
+          (cons 'descriptor-realized? #f)
+          (cons 'runtime-executed #f))))
 
 ;;; Runtime summaries deliberately cross the validation boundary: callers get
 ;;; the sandbox-owned summary of the realized agent profile, while the public
@@ -358,24 +441,33 @@
 ;;; slot resolution can otherwise capture the slot name and recurse on read.
 ;; : (-> [PooSandboxProfile] POOObject)
 (def (pooFlowSandboxProfilesPresentation profile-list)
-  (object<-alist
-   (list
-    (cons 'kind poo-flow-sandbox-profiles-presentation-kind)
-    (cons 'profile-count (length profile-list))
-    (cons 'profile-names (poo-flow-sandbox-profile-names profile-list))
-    (cons 'profiles (poo-flow-sandbox-profile-alists profile-list))
-    (cons 'runtime-intents
-          (map poo-flow-sandbox-profile-runtime-intent profile-list))
-    (cons 'runtime-summaries
-          (map poo-flow-sandbox-profile-runtime-summary profile-list))
-    (cons 'handoff-summaries
-          (map poo-flow-sandbox-profile-handoff-summary profile-list))
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'package-management? #f)
-    (cons 'dependency-installation? #f)
-    (cons 'descriptor-realized? #f)
-    (cons 'runtime-executed #f)
-    (cons 'replayable #t))))
+  (let (policy-projections
+        (map poo-flow-sandbox-profile-policy-projection-receipt profile-list))
+    (object<-alist
+     (list
+      (cons 'kind poo-flow-sandbox-profiles-presentation-kind)
+      (cons 'profile-count (length profile-list))
+      (cons 'profile-names (poo-flow-sandbox-profile-names profile-list))
+      (cons 'profiles (poo-flow-sandbox-profile-alists profile-list))
+      (cons 'runtime-intents
+            (map poo-flow-sandbox-profile-runtime-intent profile-list))
+      (cons 'runtime-summaries
+            (map poo-flow-sandbox-profile-runtime-summary profile-list))
+      (cons 'handoff-summaries
+            (map poo-flow-sandbox-profile-handoff-summary profile-list))
+      (cons 'policy-projections policy-projections)
+      (cons 'policy-valid?
+            (poo-flow-sandbox-profile-policy-projections-valid?
+             policy-projections))
+      (cons 'policy-diagnostics
+            (poo-flow-sandbox-profile-policy-presentation-diagnostics
+             policy-projections))
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'package-management? #f)
+      (cons 'dependency-installation? #f)
+      (cons 'descriptor-realized? #f)
+      (cons 'runtime-executed #f)
+      (cons 'replayable #t)))))
 
 ;; : [Symbol]
 (def poo-flow-default-sandbox-profile-names

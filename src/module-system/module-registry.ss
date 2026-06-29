@@ -111,12 +111,18 @@
 (def poo-flow-module-category-names
   '(modules flow loop sandbox custom))
 
+;;; Boundary: module registry member predicate is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleRegistryValue [PooModuleRegistryValue] Boolean)
 (def (poo-flow-module-registry-member? value values)
   (cond ((null? values) #f)
         ((equal? value (car values)) #t)
         (else (poo-flow-module-registry-member? value (cdr values)))))
 
+;;; Boundary: module registry alist ref default is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleRegistryMetadata Symbol PooModuleRegistryMetadataValue PooModuleRegistryMetadataValue)
 (def (poo-flow-module-registry-alist-ref/default entries key default-value)
   (let (entry (assoc key entries))
@@ -282,6 +288,9 @@
      responsibility
      (poo-flow-user-tree-source-denied-responsibilities source-ref)))))
 
+;;; Boundary: user tree source policy violations is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooModuleSourceRef [Symbol] [Symbol])
 (def (poo-flow-user-tree-source-policy-violations source-ref responsibilities)
   (cond ((null? responsibilities) '())

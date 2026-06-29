@@ -6,6 +6,7 @@
         :poo-flow/src/modules/sandbox-core/objects)
 
 (export poo-flow-nono-sandbox-object
+        poo-flow-nono-sandbox-backend-capability
         poo-flow-nono-sandbox-profile-object
         poo-flow-nono-sandbox-module-objects)
 
@@ -24,6 +25,10 @@
    '((namespace . objects.nono-sandbox)
      (domain . sandbox)
      (inherits . objects.shared.sandbox))))
+
+;; : PooSandboxBackendCapability
+(def poo-flow-nono-sandbox-backend-capability
+  poo-flow-sandbox-backend-capability/nono)
 
 ;;; The nono profile object specializes sandbox-core through C3 inheritance, so
 ;;; legacy nono defaults and shared profile rows merge through one object path.
@@ -50,6 +55,10 @@
      'capabilities 'List 'override '(process filesystem tmpdir)
      '((scope . nono-sandbox) (dsl-row . capabilities)))
     (poo-flow-module-field-contract
+     'backend-capability 'Object 'override
+     poo-flow-nono-sandbox-backend-capability
+     '((scope . nono-sandbox) (owned-by . module-config)))
+    (poo-flow-module-field-contract
      'resource-policy 'List 'override
      '((filesystem
         (scope . runtime)
@@ -69,6 +78,5 @@
 ;;; Object catalogs are validation and loader inputs; they do not load bindings.
 ;; : [PooModuleObject]
 (def poo-flow-nono-sandbox-module-objects
-  (poo-flow-require-module-objects-validation!
-   (list poo-flow-nono-sandbox-object
-         poo-flow-nono-sandbox-profile-object)))
+  (list poo-flow-nono-sandbox-object
+        poo-flow-nono-sandbox-profile-object))

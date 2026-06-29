@@ -124,6 +124,9 @@
                               (nono-c-binding-validate-build build)))))
         execution-policy-role))
 
+;;; Boundary: make nono c binding build is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> (List Pair) NonoCBindingBuild)
 (def (make-nono-c-binding-build . maybe-overrides)
   (.mix slots: (role-constant-slots
@@ -134,6 +137,9 @@
 (def (nono-c-binding-build? build)
   (object? build))
 
+;;; Boundary: nono c binding build slot is the policy-visible edge for sandbox
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> NonoCBindingBuild Symbol Value Value)
 (def (nono-c-binding-build-slot build slot default)
   (if (nono-c-binding-build? build)
@@ -286,6 +292,9 @@
            (cons 'probe-ref string?)))
     (list '((field . build) (code . not-poo-object)))))
 
+;;; Boundary: nono c binding validate build is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> NonoCBindingBuild NonoCBindingBuild)
 (def (nono-c-binding-validate-build build)
   (let (errors (nono-c-binding-build-validation-errors build))
@@ -297,6 +306,9 @@
        "invalid nono C binding build descriptor"
        (list (cons 'errors errors))))))
 
+;;; Boundary: nono c binding build input validation error is the policy-visible
+;;; edge for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Alist Integer (List ValidationError))
 (def (nono-c-binding-build-input-validation-error input index)
   (let ((kind (agent-sandbox-alist-ref input 'kind #f))
@@ -333,6 +345,9 @@
    (nono-c-binding-build-required-inputs build)
    0))
 
+;;; Boundary: nono c binding validate build inputs is the policy-visible edge
+;;; for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> NonoCBindingBuild NonoCBindingBuild)
 (def (nono-c-binding-validate-build-inputs build)
   (let ((valid-build (nono-c-binding-validate-build build))

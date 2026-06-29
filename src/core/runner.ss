@@ -312,6 +312,7 @@
                               (receipt-error source-failed)
                               (list source-receipt))))
 
+;;; Boundary: run kleisli bound flow result is the policy-visible edge for core behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Receipt Flow StepResult)
 (def (run-kleisli-bound-flow-result runner
                                    plan
@@ -353,6 +354,7 @@
          (cons 'source-value source-value)
          (cons 'binder-result bound-flow))))
 
+;;; Boundary: run kleisli bound result is the policy-visible edge for core behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Receipt StepResult)
 (def (run-kleisli-bound-result runner
                               plan
@@ -551,6 +553,7 @@
      #t))
    (else #f)))
 
+;;; Boundary: adapter receipt status is the policy-visible edge for core behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> MaybeExecutionFailure AdapterResult Symbol)
 (def (adapter-receipt-status failure adapter-result)
   (if failure

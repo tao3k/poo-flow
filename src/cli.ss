@@ -64,26 +64,36 @@ Commands:
 (def (poo-flow-cli-max-rss-bytes output)
   (cli-support-max-rss-bytes output))
 
+;;; Boundary: cli run command is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
+;;; Boundary: cli run command is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
+;;; Boundary: cli run command is the policy-visible edge for CLI behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> String [String] Integer)
 (def (poo-flow-cli-run-command command rest)
-  (cond
-   ((equal? command "run")
-    (if (null? rest)
-      (begin
-        (poo-flow-cli-error "poo-flow run: missing <file>.ss")
-        (display (poo-flow-cli-usage) (current-error-port))
-        64)
-      (poo-flow-cli-run-file (car rest) (cdr rest))))
-   ((equal? command "build")
-    (poo-flow-cli-build rest))
-   ((equal? command "test")
-    (poo-flow-cli-test rest))
-   ((equal? command "perf")
-    (poo-flow-cli-perf rest))
-   (else
-    (poo-flow-cli-error (string-append "poo-flow: unknown command " command))
-    (display (poo-flow-cli-usage) (current-error-port))
-    64)))
+  (parameterize ((current-error-port (current-error-port)))
+    (cond
+     ((equal? command "run")
+      (if (null? rest)
+        (begin
+          (poo-flow-cli-error "poo-flow run: missing <file>.ss")
+          (display (poo-flow-cli-usage) (current-error-port))
+          64)
+        (poo-flow-cli-run-file (car rest) (cdr rest))))
+     ((equal? command "build")
+      (poo-flow-cli-build rest))
+     ((equal? command "test")
+      (poo-flow-cli-test rest))
+     ((equal? command "perf")
+      (poo-flow-cli-perf rest))
+     (else
+      (poo-flow-cli-error (string-append "poo-flow: unknown command " command))
+      (display (poo-flow-cli-usage) (current-error-port))
+      64))))
 
 ;;; Boundary: command dispatch is intentionally small until Marlin owns execution.
 ;; : (-> [String] Integer)

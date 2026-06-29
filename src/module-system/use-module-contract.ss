@@ -49,6 +49,9 @@
       (and (pair? value)
            (symbol? (car value)))))
 
+;;; Boundary: use module flag list predicate is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> UserModuleFlagListCandidate Boolean)
 (def (poo-flow-use-module-flag-list? values)
   (cond
@@ -122,6 +125,9 @@
            (cons 'module selected-module)
            (cons 'expected-group expected-group)))))
 
+;;; Boundary: use module contract category module diagnostics is the policy-
+;;; visible edge for module-system behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Symbol Symbol [Alist])
 (def (poo-flow-use-module-contract-category-module-diagnostics module
                                                                selected-module)
@@ -167,6 +173,9 @@
     module
     flags)))
 
+;;; Boundary: use module contract selection diagnostics is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol PooUserModuleSelectionCandidate [Alist])
 (def (poo-flow-use-module-contract-selection-diagnostics module selection)
   (if (poo-flow-user-module-selection? selection)
@@ -186,6 +195,9 @@
       module
       selection))))
 
+;;; Boundary: use module contract selections diagnostics is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol [PooUserModuleSelection] [Alist])
 (def (poo-flow-use-module-contract-selections-diagnostics module selections)
   (cond
@@ -239,6 +251,9 @@
   (let (entry (assoc 'valid validation))
     (and entry (cdr entry))))
 
+;;; Boundary: use module contract validation diagnostics is the policy-visible
+;;; edge for module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooUseModuleContractValidation [Alist])
 (def (poo-flow-use-module-contract-validation-diagnostics validation)
   (let (entry (assoc 'diagnostics validation))

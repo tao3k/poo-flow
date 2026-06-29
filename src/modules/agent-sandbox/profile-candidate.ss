@@ -133,6 +133,7 @@
        (agent-sandbox-profile-candidate-present?
         (agent-sandbox-alist-ref choice 'value #f))))
 
+;;; Boundary: agent sandbox profile candidate choice list tail predicate is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> (List ProfileCandidateChoice) Boolean)
 (def (agent-sandbox-profile-candidate-choice-list-tail? choices)
   (cond
@@ -143,6 +144,8 @@
    (else #f)))
 
 ;; | AgentSandboxProfileCandidateChoiceListCandidate = (List ProfileCandidateChoice)
+;;; Boundary: make agent sandbox profile candidate is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
+;;; Boundary: make agent sandbox profile candidate choice is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> AgentSandboxProfileCandidateChoiceListCandidate Boolean)
 (def (agent-sandbox-profile-candidate-choice-list? choices)
   (and (pair? choices)
@@ -202,6 +205,7 @@
     'action
     (list (cons 'field value) ...))))
 
+;;; Boundary: make agent sandbox profile candidate choice is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> ProfileCandidateChoiceAction Alist ProfileCandidateChoice)
 (def (make-agent-sandbox-profile-candidate-choice action fields)
   (let (choice (cons (cons 'action action)
@@ -214,6 +218,7 @@
        "invalid agent sandbox profile candidate choice"
        (list (cons 'choice choice))))))
 
+;;; Boundary: agent sandbox validate profile candidate is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> ProfileCandidate ProfileCandidate)
 (def (agent-sandbox-profile-candidate-validator candidate)
   (agent-sandbox-validate-profile-candidate candidate))
@@ -270,6 +275,9 @@
                             agent-sandbox-profile-candidate-default-promotion-projector)))
         execution-policy-role))
 
+;;; Boundary: make agent sandbox profile candidate descriptor is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Symbol Symbol Symbol (List Alist) AgentSandboxProfileCandidateDescriptor)
 (def (make-agent-sandbox-profile-candidate-descriptor name
                                                       backend-kind
@@ -326,6 +334,7 @@
                 metadata)))
    options))
 
+;;; Boundary: agent sandbox profile candidate descriptor to candidate is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> AgentSandboxProfileCandidateDescriptor (List ProfileCandidateChoice) (List Alist) ProfileCandidate)
 (def (agent-sandbox-profile-candidate-descriptor->candidate descriptor
                                                             choices
@@ -343,6 +352,7 @@
     ((agent-sandbox-profile-candidate-descriptor-validator descriptor)
      candidate)))
 
+;;; Boundary: make agent sandbox profile candidate is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Symbol Symbol (List ProfileCandidateChoice) (List Alist) ProfileCandidate)
 (def (make-agent-sandbox-profile-candidate backend-kind
                                            source
@@ -394,6 +404,7 @@
 (def (agent-sandbox-profile-candidate-choice-action-is? choice action)
   (eq? (agent-sandbox-alist-ref choice 'action #f) action))
 
+;;; Boundary: agent sandbox profile candidate choices with action is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> (List ProfileCandidateChoice) Symbol (List ProfileCandidateChoice))
 (def (agent-sandbox-profile-candidate-choices-with-action choices action)
   (cond
@@ -407,6 +418,9 @@
     (agent-sandbox-profile-candidate-choices-with-action
      (cdr choices) action))))
 
+;;; Boundary: agent sandbox profile candidate choice errors is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> (List ProfileCandidateChoice) Fixnum (List ValidationError))
 (def (agent-sandbox-profile-candidate-choice-errors choices index)
   (cond
@@ -427,6 +441,9 @@
           (agent-sandbox-profile-candidate-choice-errors
            (cdr choices) (+ index 1))))))
 
+;;; Boundary: agent sandbox profile candidate validation errors is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> ProfileCandidate (List ValidationError))
 (def (agent-sandbox-profile-candidate-validation-errors candidate)
   (append
@@ -441,6 +458,7 @@
     (agent-sandbox-alist-ref candidate 'choices '())
     0)))
 
+;;; Boundary: agent sandbox validate profile candidate is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> ProfileCandidate ProfileCandidate)
 (def (agent-sandbox-validate-profile-candidate candidate)
   (let (errors (agent-sandbox-profile-candidate-validation-errors candidate))
@@ -453,6 +471,7 @@
        (list (cons 'errors errors)
              (cons 'candidate candidate))))))
 
+;;; Boundary: agent sandbox profile promotion request validation errors is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> ProfilePromotionRequest (List ValidationError))
 (def (agent-sandbox-profile-promotion-request-validation-errors request)
   (append
@@ -464,6 +483,9 @@
     request
     +agent-sandbox-profile-promotion-request-required-fields+)))
 
+;;; Boundary: agent sandbox validate profile promotion request is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> ProfilePromotionRequest ProfilePromotionRequest)
 (def (agent-sandbox-validate-profile-promotion-request request)
   (let (errors (agent-sandbox-profile-promotion-request-validation-errors request))
@@ -508,6 +530,7 @@
 (def (agent-sandbox-profile-candidate-metadata candidate)
   (agent-sandbox-profile-candidate-ref candidate 'metadata '()))
 
+;;; Boundary: agent sandbox profile candidate to patch is the policy-visible edge for sandbox behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> ProfileCandidate (List AgentSandboxProfileCandidateDescriptor) ProfileCandidatePatch)
 (def (agent-sandbox-profile-candidate->patch candidate . maybe-descriptor)
   (if (null? maybe-descriptor)
@@ -526,6 +549,9 @@
    ((symbol? value) (symbol->string value))
    (else value)))
 
+;;; Boundary: agent sandbox profile candidate nono promote argv is the policy-
+;;; visible edge for sandbox behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Symbol Value (List String))
 (def (agent-sandbox-profile-candidate-nono-promote-argv mode draft-ref)
   (let ((draft-args

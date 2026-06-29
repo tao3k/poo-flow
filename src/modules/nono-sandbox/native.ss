@@ -31,6 +31,9 @@
 ;; : Integer
 (def +nono-c-binding-native-apply-null-error-code+ -12)
 
+;;; Boundary: nono c binding native library candidates is the policy-visible
+;;; edge for sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Alist] [String])
 (def (nono-c-binding-native-library-candidates . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
@@ -71,6 +74,9 @@
           (cons 'status status)
           (cons 'loaded? (= (nono_native_is_loaded) 1)))))
 
+;;; Boundary: nono c binding selection binding is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> PooUserModuleSelection Symbol)
 (def (nono-c-binding-selection-binding selection)
   (let (entry (poo-flow-user-module-selection-flag-entry selection ':binding))
@@ -174,6 +180,9 @@
         (cons 'open open-receipt)
         (cons 'dry-run (nono-c-binding-dry-run runtime-manifest))))
 
+;;; Boundary: nono c binding native safe string is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> String)
 (def (nono-c-binding-native-safe-string value)
   (if (string? value) value ""))

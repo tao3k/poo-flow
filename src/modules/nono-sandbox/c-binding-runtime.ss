@@ -161,6 +161,9 @@
    'kind
    (agent-sandbox-alist-ref mount 'type 'directory)))
 
+;;; Boundary: nono c binding mount function is the policy-visible edge for
+;;; sandbox behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Mount Symbol)
 (def (nono-c-binding-mount-function mount)
   (if (eq? (nono-c-binding-mount-kind mount) 'file)

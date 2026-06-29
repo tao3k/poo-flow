@@ -137,6 +137,9 @@
   (poo-flow-user-config-workflow-cicd-check-maps/add
    (poo-flow-user-config-modules config)))
 
+;;; Boundary: user workflow cicd runtime readiness add is the policy-visible
+;;; edge for module-system, workflow behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [PooFlowCicdCheckMap] [PooSandboxProfile] [Alist])
 (def (poo-flow-user-workflow-cicd-runtime-readiness/add check-maps
                                                         profile-catalog)
@@ -160,6 +163,9 @@
      (poo-flow-user-config-workflow-cicd-check-maps config)
      profile-catalog)))
 
+;;; Boundary: user workflow cicd runtime command manifests add is the policy-
+;;; visible edge for module-system, workflow behavior, keeping validation,
+;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> [PooFlowCicdCheckMap] [PooSandboxProfile] [Alist])
 (def (poo-flow-user-workflow-cicd-runtime-command-manifests/add
       check-maps
@@ -353,6 +359,9 @@
    ((= summary-count 0) '(missing-summary))
    (else '(duplicate-summary))))
 
+;;; Boundary: user workflow cicd mismatch diagnostics is the policy-visible
+;;; edge for module-system, workflow behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> Boolean Boolean Symbol [Symbol])
 (def (poo-flow-user-workflow-cicd-mismatch-diagnostics summary-present?
                                                               match?
@@ -471,6 +480,9 @@
      (cons 'diagnostics diagnostics)
      (cons 'valid? (null? diagnostics)))))
 
+;;; Boundary: user workflow cicd runtime command manifest agreement rows is the
+;;; policy-visible edge for module-system, workflow behavior, keeping
+;;; validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> [Alist] [Alist] [Alist])
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement-rows
       manifests
@@ -496,6 +508,10 @@
         (cdr manifests)
         summaries))))))
 
+;;; Boundary: user workflow cicd runtime command manifest agreement row
+;;; diagnostics is the policy-visible edge for module-system, workflow
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement-row-diagnostics
       rows)

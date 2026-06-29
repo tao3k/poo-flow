@@ -28,6 +28,15 @@
 ;;   | doc m%
 ;;       `poo-flow-module-extension-slots-merge` merges slot rows by key while
 ;;       preserving first declaration order and applying the last override.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-slots-merge
+;;        (list (poo-flow-module-extension-entry 'mode 'strict))
+;;        (list (poo-flow-module-extension-entry 'mode 'relaxed)
+;;              (poo-flow-module-extension-entry 'features '(extra))))
+;;       ;; => ((mode . relaxed) (features extra))
+;;       ```
 ;;     %
 (def (poo-flow-module-extension-slots-merge base extra)
   (let ((base-seen (make-hash-table))
@@ -35,47 +44,63 @@
         (overrides (make-hash-table))
         (new-seen (make-hash-table))
         (replacement-used (make-hash-table)))
+    (def (entry-slot entry)
+      (poo-flow-module-extension-entry-key entry))
     (for-each
      (lambda (entry)
        (hash-put! base-seen
-                  (poo-flow-module-extension-entry-key entry)
+                  (entry-slot entry)
                   #t))
      base)
-    (let loop ((entries extra) (new-keys '()))
-      (if (null? entries)
-        (append
-         (map (lambda (entry)
-                (let (key (poo-flow-module-extension-entry-key entry))
-                  (if (and (hash-get override-seen key)
-                           (not (hash-get replacement-used key)))
-                    (begin
-                      (hash-put! replacement-used key #t)
-                      (poo-flow-module-extension-entry
-                       key
-                       (hash-get overrides key)))
-                    entry)))
-              base)
-         (map (lambda (key)
-                (poo-flow-module-extension-entry
-                 key
-                 (hash-get overrides key)))
-              (reverse new-keys)))
-        (let* ((entry (car entries))
-               (key (poo-flow-module-extension-entry-key entry))
-               (next-new-keys
-                (if (or (hash-get base-seen key)
-                        (hash-get new-seen key))
-                  new-keys
+    (def (finish new-order)
+      (append
+       (map (lambda (entry)
+              (let (slot (entry-slot entry))
+                (if (and (hash-get override-seen slot)
+                         (not (hash-get replacement-used slot)))
                   (begin
-                    (hash-put! new-seen key #t)
-                    (cons key new-keys)))))
-          (hash-put! override-seen key #t)
+                    (hash-put! replacement-used slot #t)
+                    (poo-flow-module-extension-entry
+                     slot
+                     (hash-get overrides slot)))
+                  entry)))
+            base)
+       (map (lambda (slot)
+              (poo-flow-module-extension-entry
+               slot
+               (hash-get overrides slot)))
+            (reverse new-order))))
+    (let loop ((entries extra) (new-order '()))
+      (if (null? entries)
+        (finish new-order)
+        (let* ((entry (car entries))
+               (slot (entry-slot entry))
+               (next-new-order
+                (if (or (hash-get base-seen slot)
+                        (hash-get new-seen slot))
+                  new-order
+                  (begin
+                    (hash-put! new-seen slot #t)
+                    (cons slot new-order)))))
+          (hash-put! override-seen slot #t)
           (hash-put! overrides
-                     key
+                     slot
                      (poo-flow-module-extension-entry-value entry))
-          (loop (cdr entries) next-new-keys))))))
+          (loop (cdr entries) next-new-order))))))
 
-;; : (-> PooModuleExtensionNode PooModuleExtensionNode PooModuleExtensionNode)
+;; poo-flow-module-extension-node-merge
+;;   : (-> PooModuleExtensionNode PooModuleExtensionNode PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-node-merge` combines two nodes with the
+;;       same identity by merging slots and children through the extension
+;;       merge rules used by inheritance and contribution application.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-node-merge base-node extension-node)
+;;       ;; => merged extension node
+;;       ```
+;;     %
 (def (poo-flow-module-extension-node-merge base extra)
   (poo-flow-module-extension-node
    (poo-flow-module-extension-node-identity base)
@@ -86,7 +111,19 @@
     (poo-flow-module-extension-node-children base)
     (poo-flow-module-extension-node-children extra))))
 
-;; : (-> [PooModuleExtensionNode] PooModuleExtensionNode [PooModuleExtensionNode])
+;; poo-flow-module-extension-children-merge-one
+;;   : (-> (List PooModuleExtensionNode) PooModuleExtensionNode (List PooModuleExtensionNode))
+;;   | doc m%
+;;       `poo-flow-module-extension-children-merge-one` merges one child into
+;;       an ordered child list by identity, replacing the first matching child
+;;       and appending when the identity is new.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-children-merge-one children extra-child)
+;;       ;; => children with extra-child merged by identity
+;;       ```
+;;     %
 (def (poo-flow-module-extension-children-merge-one children extra-child)
   (cond ((null? children) (list extra-child))
         ((equal? (poo-flow-module-extension-node-identity (car children))
@@ -133,42 +170,55 @@
                (hash-put! base-first key child))
              #f)))
        children)
-      (let loop-extra ((remaining extra-children)
-                       (new-keys '()))
-        (if (null? remaining)
-          (append
-           (map (lambda (child)
-                  (let (key (poo-flow-module-extension-node-identity child))
-                    (if (and (hash-get override-seen key)
-                             (not (hash-get replacement-used key)))
-                      (begin
-                        (hash-put! replacement-used key #t)
-                        (hash-get overrides key))
-                      child)))
-                children)
-           (map (lambda (key)
-                  (hash-get overrides key))
-                (reverse new-keys)))
-          (let* ((child (car remaining))
-                 (key (poo-flow-module-extension-node-identity child))
-                 (current (hash-get overrides key))
-                 (base-child (hash-get base-first key))
-                 (seed (if current current base-child))
-                 (next-new-keys
-                  (if (or (hash-get base-seen key)
-                          (hash-get new-seen key))
-                    new-keys
+      (def (finish new-order)
+        (append
+         (map (lambda (child)
+                (let (identity (poo-flow-module-extension-node-identity child))
+                  (if (and (hash-get override-seen identity)
+                           (not (hash-get replacement-used identity)))
                     (begin
-                      (hash-put! new-seen key #t)
-                      (cons key new-keys)))))
-            (hash-put! override-seen key #t)
-            (hash-put! overrides key
+                      (hash-put! replacement-used identity #t)
+                      (hash-get overrides identity))
+                    child)))
+              children)
+         (map (lambda (identity)
+                (hash-get overrides identity))
+              (reverse new-order))))
+      (let loop-extra ((remaining extra-children)
+                       (new-order '()))
+        (if (null? remaining)
+          (finish new-order)
+          (let* ((child (car remaining))
+                 (identity (poo-flow-module-extension-node-identity child))
+                 (current (hash-get overrides identity))
+                 (base-child (hash-get base-first identity))
+                 (seed (if current current base-child))
+                 (next-new-order
+                  (if (or (hash-get base-seen identity)
+                          (hash-get new-seen identity))
+                    new-order
+                    (begin
+                      (hash-put! new-seen identity #t)
+                      (cons identity new-order)))))
+            (hash-put! override-seen identity #t)
+            (hash-put! overrides identity
                        (if seed
                          (poo-flow-module-extension-node-merge seed child)
                          child))
-            (loop-extra (cdr remaining) next-new-keys)))))))
+            (loop-extra (cdr remaining) next-new-order)))))))
 
-;; : (-> [PooModuleExtensionNode] Symbol [PooModuleExtensionNode])
+;; poo-flow-module-extension-children-remove
+;;   : (-> (List PooModuleExtensionNode) Symbol (List PooModuleExtensionNode))
+;;   | doc m%
+;;       `poo-flow-module-extension-children-remove` removes children matching
+;;       one identity while preserving the order of every remaining child.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-children-remove children 'obsolete)
+;;       ;; => children without the obsolete identity
+;;       ```
+;;     %
 (def (poo-flow-module-extension-children-remove children identity)
   (cond ((null? children) '())
         ((equal? (poo-flow-module-extension-node-identity (car children)) identity)
@@ -177,9 +227,19 @@
          (cons (car children)
                (poo-flow-module-extension-children-remove (cdr children) identity)))))
 
-;;; List slot operations normalize scalar input before merge, so user-facing
-;;; feature rows can pass either one value or a list value consistently.
-;; : (-> PooModuleExtensionNode PooModuleExtensionOperation Boolean PooModuleExtensionNode)
+;; poo-flow-module-extension-apply-slot-list-op
+;;   : (-> PooModuleExtensionNode PooModuleExtensionOperation Boolean PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-apply-slot-list-op` normalizes scalar and
+;;       list operation values before appending or prepending distinct slot
+;;       members, keeping feature rows deterministic.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-apply-slot-list-op node operation #t)
+;;       ;; => node with normalized distinct list-slot values
+;;       ```
+;;     %
 (def (poo-flow-module-extension-apply-slot-list-op node operation append?)
   (let* ((slot (poo-flow-module-extension-operation-slot operation))
          (current (poo-flow-module-extension-list-value
@@ -196,9 +256,19 @@
       (poo-flow-module-extension-node-slots node) slot next)
      (poo-flow-module-extension-node-children node))))
 
-;;; Operation application is deliberately total: unknown operation names leave
-;;; the node unchanged so extension doctors can report policy mistakes later.
-;; : (-> PooModuleExtensionNode PooModuleExtensionOperation PooModuleExtensionNode)
+;; poo-flow-module-extension-apply-operation
+;;   : (-> PooModuleExtensionNode PooModuleExtensionOperation PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-apply-operation` dispatches one extension
+;;       operation against a node. Unknown actions leave the node unchanged so
+;;       validation and doctor commands can report policy mistakes later.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-apply-operation node operation)
+;;       ;; => node after one total extension operation dispatch
+;;       ```
+;;     %
 (def (poo-flow-module-extension-apply-operation node operation)
   (let (action (poo-flow-module-extension-operation-action operation))
     (cond
@@ -244,7 +314,18 @@
         (poo-flow-module-extension-operation-target operation))))
      (else node))))
 
-;; : (-> PooModuleExtensionNode [PooModuleExtensionNode] PooModuleExtensionNode)
+;; poo-flow-module-extension-flush-node-extends
+;;   : (-> PooModuleExtensionNode (List PooModuleExtensionNode) PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-flush-node-extends` materializes reversed
+;;       pending node extensions into a node through child merge semantics.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-flush-node-extends node reversed-children)
+;;       ;; => node with pending child extensions merged
+;;       ```
+;;     %
 (def (poo-flow-module-extension-flush-node-extends node reversed-children)
   (if (null? reversed-children)
     node
@@ -255,7 +336,18 @@
       (poo-flow-module-extension-node-children node)
       (reverse reversed-children)))))
 
-;; : (-> PooModuleExtensionNode PooModuleSlotMap PooModuleExtensionNode)
+;; poo-flow-module-extension-flush-slot-overrides
+;;   : (-> PooModuleExtensionNode PooModuleSlotMap PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-flush-slot-overrides` materializes reversed
+;;       pending slot override rows through deterministic slot merge semantics.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-flush-slot-overrides node reversed-overrides)
+;;       ;; => node with pending slot overrides merged
+;;       ```
+;;     %
 (def (poo-flow-module-extension-flush-slot-overrides node reversed-overrides)
   (if (null? reversed-overrides)
     node
@@ -266,18 +358,54 @@
       (reverse reversed-overrides))
      (poo-flow-module-extension-node-children node))))
 
-;; : (-> PooModuleExtensionNode [PooModuleExtensionNode] PooModuleSlotMap PooModuleExtensionNode)
+;; poo-flow-module-extension-flush-pending
+;;   : (-> PooModuleExtensionNode (List PooModuleExtensionNode) PooModuleSlotMap PooModuleExtensionNode)
+;;   | doc m%
+;;       `poo-flow-module-extension-flush-pending` commits delayed node
+;;       extensions and slot overrides into the current node before an
+;;       operation that cannot be coalesced is applied.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-flush-pending node children overrides)
+;;       ;; => node with pending child and slot batches materialized
+;;       ```
+;;     %
 (def (poo-flow-module-extension-flush-pending node reversed-children reversed-overrides)
   (poo-flow-module-extension-flush-node-extends
    (poo-flow-module-extension-flush-slot-overrides node reversed-overrides)
    reversed-children))
 
-;; : (-> PooModuleExtensionOperation Boolean)
+;; poo-flow-module-extension-slot-append-operation?
+;;   : (-> PooModuleExtensionOperation Boolean)
+;;   | doc m%
+;;       `poo-flow-module-extension-slot-append-operation?` selects slot append
+;;       operations for the coalescing pass without inspecting unrelated
+;;       operation payload fields.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-slot-append-operation? operation)
+;;       ;; => #t when operation action is slot-append
+;;       ```
+;;     %
 (def (poo-flow-module-extension-slot-append-operation? operation)
   (eq? (poo-flow-module-extension-operation-action operation)
        'slot-append))
 
-;; : (-> Boolean MaybeSymbol [PooModuleSlotValue] [PooModuleExtensionOperation] [PooModuleExtensionOperation])
+;; poo-flow-module-extension-flush-slot-append
+;;   : (-> Boolean MaybeSymbol (List PooModuleSlotValue) (List PooModuleExtensionOperation) (List PooModuleExtensionOperation))
+;;   | doc m%
+;;       `poo-flow-module-extension-flush-slot-append` emits the pending slot
+;;       append batch when coalescing switches slots or reaches the end of the
+;;       operation stream.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-flush-slot-append pending? slot values output)
+;;       ;; => output with pending append operation prepended when active
+;;       ```
+;;     %
 (def (poo-flow-module-extension-flush-slot-append pending? slot reversed-values output)
   (if pending?
     (cons (poo-flow-module-extension-slot-append
@@ -344,12 +472,23 @@
                        pending-values
                        output))))))))
 
-;; : (-> PooModuleExtensionOperation PooModuleExtensionOperationState
-;;       PooModuleExtensionOperationState)
-;; | type PooModuleExtensionOperationState =
-;;     (Tuple PooModuleExtensionNode
-;;            [PooModuleExtensionNode]
-;;            [PooModuleSlotOverride])
+;; poo-flow-module-extension-operation-state
+;;   : (-> PooModuleExtensionOperation PooModuleExtensionOperationState PooModuleExtensionOperationState)
+;;   | type PooModuleExtensionOperationState =
+;;       (Tuple PooModuleExtensionNode
+;;              (List PooModuleExtensionNode)
+;;              (List PooModuleSlotOverride))
+;;   | doc m%
+;;       `poo-flow-module-extension-operation-state` folds one operation into
+;;       the pending operation state, delaying node extensions and slot
+;;       overrides until a non-coalescible operation requires a flush.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-module-extension-operation-state operation state)
+;;       ;; => updated operation fold state
+;;       ```
+;;     %
 (def (poo-flow-module-extension-operation-state operation state)
   (match state
     ([current pending-node-extends pending-slot-overrides]

@@ -120,6 +120,9 @@
                                   completed-node-ids)
           (receipt-policy-reasons child expected-node-id)))
 
+;;; Boundary: child node id reasons is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Receipt Id [Reason])
 (def (child-node-id-reasons child expected-node-id)
   (let ((observed (receipt-node-id child)))
@@ -155,6 +158,9 @@
                                   (receipt-frontier receipt)
                                   (policy-ref 'frontier policy)))))
 
+;;; Boundary: policy field reasons is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Label Symbol Value Value [Reason])
 (def (policy-field-reasons label field expected observed)
   (if (equal? expected observed)
@@ -168,6 +174,9 @@
   (append (summary-event-count-reasons summary receipt)
           (summary-adapter-count-reasons summary receipt)))
 
+;;; Boundary: summary event count reasons is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> RunSummary Receipt [Reason])
 (def (summary-event-count-reasons summary receipt)
   (let ((expected (receipt-event-count receipt))
@@ -176,6 +185,9 @@
       '()
       (list (list 'event-count-mismatch expected observed)))))
 
+;;; Boundary: summary adapter count reasons is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> RunSummary Receipt [Reason])
 (def (summary-adapter-count-reasons summary receipt)
   (let ((expected (receipt-adapter-request-count receipt))

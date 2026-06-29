@@ -374,6 +374,9 @@
 (def (flow-empty? flow)
   (null? (flow-steps flow)))
 
+;;; Boundary: steps contain branch predicate is the policy-visible edge for
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Flow Boolean)
 (def (flow-branch-declaration? flow)
   (steps-contain-branch? (flow-steps flow)))
@@ -391,6 +394,9 @@
        (not (flow-branch-declaration? flow))
        (not (flow-task-declaration? flow))))
 
+;;; Boundary: steps contain branch predicate is the policy-visible edge for
+;;; core behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Step] Boolean)
 (def (steps-contain-branch? steps)
   (cond

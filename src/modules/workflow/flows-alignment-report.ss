@@ -8,6 +8,9 @@
 
 (export poo-flow-funflow-tutorial-alignment-report)
 
+;;; Boundary: alignment status count increment is the policy-visible edge for
+;;; workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol Alist Alist)
 (def (alignment-status-count-increment status counts)
   (cond
@@ -29,6 +32,9 @@
         '()
         specs))
 
+;;; Boundary: alignment status count ref is the policy-visible edge for
+;;; workflow behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Symbol Alist Integer)
 (def (alignment-status-count-ref status counts)
   (let (entry (assoc status counts))

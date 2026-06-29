@@ -89,6 +89,9 @@
   (and (object? value)
        (equal? (.ref value 'kind) expected-kind)))
 
+;;; Boundary: user profile alist ref is the policy-visible edge for module-
+;;; system, core behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-user-profile-alist-ref entries key default-value)
   (let (entry (assoc key entries))

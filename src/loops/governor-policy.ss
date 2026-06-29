@@ -53,6 +53,9 @@
                            (loop-governor-state-field governor)
                            #f))
 
+;;; Boundary: loop governor member predicate is the policy-visible edge for
+;;; loop behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> ActionKey [ActionKey] Boolean)
 (def (loop-governor-member? value values)
   (cond
@@ -61,6 +64,9 @@
    (else
     (loop-governor-member? value (cdr values)))))
 
+;;; Boundary: loop governor value set is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [Value] HashTable)
 (def (loop-governor-value-set values)
   (let (table (make-hash-table))
@@ -74,6 +80,9 @@
 (def (loop-governor-set-member? table value)
   (and value (hash-get table value)))
 
+;;; Boundary: loop governor filter is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Predicate [Value] [Value])
 (def (loop-governor-filter predicate values)
   (cond
@@ -84,6 +93,9 @@
    (else
     (loop-governor-filter predicate (cdr values)))))
 
+;;; Boundary: loop governor take at most is the policy-visible edge for loop
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Nat [Value] [Value])
 (def (loop-governor-take-at-most limit values)
   (cond
@@ -93,6 +105,9 @@
     (cons (car values)
           (loop-governor-take-at-most (- limit 1) (cdr values))))))
 
+;;; Boundary: loop governor classify patterns is the policy-visible edge for
+;;; loop behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> LoopGovernor [Alist] Alist)
 (def (loop-governor-classify-patterns valid-governor states)
   (let* ((strategy (loop-governor-strategy valid-governor))
@@ -228,6 +243,9 @@
      (loop-governor-alist-ref classified 'denied-patterns '())
      (loop-governor-alist-ref classified 'conflicting-patterns '()))))
 
+;;; Boundary: loop governor human inbox items from patterns is the policy-
+;;; visible edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [LoopPatternDescriptor] [LoopPatternDescriptor] [Alist])
 (def (loop-governor-human-inbox-items/from-patterns denied-patterns conflicting-patterns)
   (append
@@ -253,6 +271,9 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;;; Boundary: loop governor field validation error unless is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
 (def (loop-governor-field-validation-error/unless valid? field code value)
   (if valid?
@@ -261,6 +282,9 @@
                 (cons 'code code)
                 (cons 'value value)))))
 
+;;; Boundary: loop governor strategy validation errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopStrategyPlan [ValidationError])
 (def (loop-governor-strategy-validation-errors strategy)
   (if (loop-strategy-plan? strategy)
@@ -273,6 +297,12 @@
     (list (list (cons 'field 'strategy)
                 (cons 'code 'not-loop-strategy-plan)))))
 
+;;; Boundary: loop governor node list validation errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
+;;; Boundary: loop governor agent judge node field errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [LoopGovernorNode] [ValidationError])
 (def (loop-governor-agent-judge-node-field-errors nodes)
   (if (list? nodes)
@@ -281,6 +311,9 @@
                 (cons 'code 'not-list)
                 (cons 'value nodes)))))
 
+;;; Boundary: loop governor node list validation errors is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [Value] [ValidationError])
 (def (loop-governor-node-list-validation-errors nodes)
   (cond

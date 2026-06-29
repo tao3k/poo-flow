@@ -81,6 +81,9 @@
 (def docker-task-family-descriptor
   (make-task-family-descriptor 'docker 'docker 'adapter 'rust-or-external-runtime 'submit))
 
+;;; Boundary: make docker task family registry is the policy-visible edge for
+;;; policy behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> [TaskFamilyRegistry] TaskFamilyRegistry)
 (def (make-docker-task-family-registry . maybe-registry)
   (task-family-registry-extend (if (null? maybe-registry)
@@ -139,14 +142,26 @@
       (cdr entry)
       default)))
 
+;;; Boundary: docker arg key seen predicate is the policy-visible edge for
+;;; policy behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol Alist Boolean)
 (def (docker-arg-key-seen? key args)
   (if (assoc key args) #t #f))
 
+;;; Boundary: docker args vals append one is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
+;;; Boundary: docker args vals append left biased is the policy-visible edge
+;;; for policy behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Alist Alist Alist)
 (def (docker-args-vals-append-left-biased left right)
   (foldl docker-args-vals-append-one left right))
 
+;;; Boundary: docker args vals append one is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Pair Alist Alist)
 (def (docker-args-vals-append-one entry args)
   (if (docker-arg-key-seen? (docker-arg-key entry) args)
@@ -217,6 +232,9 @@
     (cadr (task-request task))
     #f))
 
+;;; Boundary: task docker config ref is the policy-visible edge for policy
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Task Symbol Value Value)
 (def (task-docker-config-ref task key default)
   (let ((config (task-docker-config task)))

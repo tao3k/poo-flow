@@ -257,6 +257,9 @@
 (def (loop-sort-patterns descriptors)
   (sort descriptors loop-pattern-prioritized-before?))
 
+;;; Boundary: loop strategy selected patterns from fields is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [LoopPatternDescriptor] Symbol [LoopPatternDescriptor])
 (def (loop-strategy-selected-patterns/from-fields patterns ceiling)
   (loop-sort-patterns
@@ -317,6 +320,9 @@
     (list (list (cons 'field field)
                 (cons 'code 'required)))))
 
+;;; Boundary: loop strategy field validation error unless is the policy-visible
+;;; edge for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
 (def (loop-strategy-field-validation-error/unless valid? field code value)
   (if valid?
@@ -356,6 +362,9 @@
    (loop-strategy-level-ceiling plan)
    (loop-strategy-local-validation plan)))
 
+;;; Boundary: loop strategy validation errors fields is the policy-visible edge
+;;; for loop behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> LoopStrategyPlan Symbol [LoopPatternDescriptor] Symbol Alist [ValidationError])
 (def (loop-strategy-validation-errors/fields plan name patterns level-ceiling local-validation)
   (if (loop-strategy-plan? plan)
@@ -396,6 +405,9 @@
        "invalid loop strategy plan"
        (list (cons 'errors errors))))))
 
+;;; Boundary: validate loop strategy plan fields is the policy-visible edge for
+;;; loop behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> LoopStrategyPlan Symbol [LoopPatternDescriptor] Symbol Alist LoopStrategyPlan)
 (def (validate-loop-strategy-plan/fields plan name patterns level-ceiling local-validation)
   (let (errors

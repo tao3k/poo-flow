@@ -220,6 +220,9 @@
         (poo-flow-module-loaded-receipt (car backends) source-ref module)
         (poo-flow-module-load-source-receipt (cdr backends) source-ref))))))
 
+;;; Boundary: module load source receipts is the policy-visible edge for
+;;; module-system behavior, keeping validation, lookup, or projection
+;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] [PooModuleLoadReceipt])
 (def (poo-flow-module-load-source-receipts backends source-refs)
   (if (null? source-refs)

@@ -195,6 +195,9 @@
 (def (task-family-adapter-dispatch descriptor)
   (.@ descriptor adapter-dispatch))
 
+;;; Boundary: find task family is the policy-visible edge for core behavior,
+;;; keeping validation, lookup, or projection responsibilities centralized for
+;;; callers.
 ;; : (-> Symbol [TaskFamilyDescriptor] MaybeTaskFamilyDescriptor)
 (def (find-task-family kind descriptors)
   (cond
@@ -202,6 +205,9 @@
    ((eq? kind (task-family-name (car descriptors))) (car descriptors))
    (else (find-task-family kind (cdr descriptors)))))
 
+;;; Boundary: task family for kind in is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Symbol TaskFamilyDescriptor)
 (def (task-family-for-kind-in registry kind)
   (let ((descriptor (find-task-family kind (task-family-registry-descriptors registry))))
@@ -301,6 +307,9 @@
     (cadr (task-request task))
     #f))
 
+;;; Boundary: task request payload is the policy-visible edge for core
+;;; behavior, keeping validation, lookup, or projection responsibilities
+;;; centralized for callers.
 ;; : (-> Task (U Payload #f))
 (def (task-request-payload task)
   (if (and (pair? (task-request task))

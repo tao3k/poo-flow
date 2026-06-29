@@ -804,12 +804,18 @@
   (equal? (poo-flow-user-module-selection-key selection)
           '(flow . loop-engine)))
 
+;;; Boundary: user loop engine context profile catalog is the policy-visible
+;;; edge for module-system, loop behavior, keeping validation, lookup, or
+;;; projection responsibilities centralized for callers.
 ;; : (-> [Value] [PooSandboxProfile])
 (def (poo-flow-user-loop-engine-context-profile-catalog context)
   (if (null? context)
     poo-flow-default-sandbox-profiles
     (car context)))
 
+;;; Boundary: user loop engine context workflow check maps is the policy-
+;;; visible edge for module-system, loop behavior, keeping validation, lookup,
+;;; or projection responsibilities centralized for callers.
 ;; : (-> [Value] [PooFlowCicdCheckMap])
 (def (poo-flow-user-loop-engine-context-workflow-check-maps context)
   (if (or (null? context) (null? (cdr context)))
