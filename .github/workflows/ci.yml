@@ -162,23 +162,6 @@ jobs:
           "$GERBIL_PREFIX/bin/gxi" -e '(displayln "gerbil-ready")'
           "$GERBIL_PREFIX/bin/gxpkg" list
 
-      - name: Prepare Gerbil package dependency cache key
-        run: |
-          set -euo pipefail
-          mkdir -p .ci
-          gxpkg dir -a git.cons.io/mighty-gerbils/gerbil-directory
-          gxpkg dir > .ci/gxpkg-dir.txt
-          curl -fsSL \
-            https://git.cons.io/mighty-gerbils/gerbil-directory/raw/branch/main/package-list \
-            -o .ci/gxpkg-package-list
-          {
-            cat gerbil.pkg
-            printf '\n--- gxpkg-dir ---\n'
-            cat .ci/gxpkg-dir.txt
-            printf '\n--- package-list ---\n'
-            cat .ci/gxpkg-package-list
-          } > .ci/gerbil-pkg-cache-key.txt
-
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
         uses: actions/cache/restore@v6.1.0
@@ -186,14 +169,26 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('.ci/gerbil-pkg-cache-key.txt') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.gerbil/pkg"
-          gxpkg dir
-          gxpkg deps -i
+          gxpkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          package_cache_ready=false
+          if [ -d .gerbil/lib ]; then
+            if gxi -e '(begin (import :clan/base :clan/poo/object) (displayln "gerbil-package-cache-ready"))'; then
+              package_cache_ready=true
+            else
+              echo "Cached Gerbil packages are missing compiled dependency libraries; rebuilding"
+            fi
+          fi
+          if [ "$package_cache_ready" = "true" ]; then
+            echo "Using cached Gerbil package dependency build products"
+          else
+            gxpkg deps --install
+          fi
           gxpkg list
 
       - name: Save Gerbil package dependency cache
@@ -203,7 +198,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('.ci/gerbil-pkg-cache-key.txt') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Clean package outputs
         run: gxpkg env ./build.ss clean
