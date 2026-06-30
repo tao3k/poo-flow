@@ -3,7 +3,8 @@
 
 (import :gerbil/gambit
         :poo-flow/src/cli-support/support
-        (only-in :std/srfi/1 filter-map fold take drop unfold))
+        (only-in :std/srfi/1 filter-map fold take drop unfold)
+        (only-in :std/srfi/13 string-prefix?))
 
 (export poo-flow-cli-expand-test-args
         poo-flow-cli-read-unit-test-files
@@ -29,7 +30,7 @@
   (and (symbol? spec)
        (let ((module-name (symbol->string spec))
              (prefix ":poo-flow/t/"))
-         (and (poo-flow-cli-string-prefix? prefix module-name)
+         (and (string-prefix? prefix module-name)
               (string-append
                "t/"
                (substring module-name

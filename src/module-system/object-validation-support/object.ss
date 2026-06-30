@@ -143,6 +143,7 @@
              (void))
            value))))
 
+;; : (-> PooModuleObject [PooModuleFieldContract] [Alist])
 (def (poo-flow-module-object-validation-field-origins object resolved-fields)
   (let (providers
         (poo-flow-module-object-field-provider-index object))

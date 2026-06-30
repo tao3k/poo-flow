@@ -207,17 +207,22 @@
    (else
     (poo-flow-declaration-case-alist-value key (cdr entries)))))
 
-;;; The map projection keeps trace rows in presentation order, preserving the
-;;; stage sequence users need when a lazy POO projection starts to recurse.
+;; poo-flow-declaration-case-trace-stages
+;;   : (-> [Alist] [Symbol])
+;;   | doc m%
+;;       Project trace rows into their stage sequence in presentation order.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-declaration-case-trace-stages trace-rows)
+;;       ;; => stage-symbols
+;;       ```
+;;     %
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-declaration-case-trace-stages trace)
-  (let loop ((rest trace)
-             (stages '()))
-    (if (null? rest)
-      (reverse stages)
-      (loop (cdr rest)
-            (cons (poo-flow-declaration-case-alist-value 'stage (car rest))
-                  stages)))))
+  (map (lambda (row)
+         (poo-flow-declaration-case-alist-value 'stage row))
+       trace))
 
 ;;; Boundary: declaration case trace field all equal predicate is the policy-
 ;;; visible edge for module-system behavior, keeping validation, lookup, or
@@ -237,31 +242,39 @@
      (cdr trace)))
    (else #f)))
 
-;;; Boundary: trace-safe rows are validated in one lexical pass. This keeps
-;;; stage, status, descriptor, and runtime checks optimizer-visible together.
+;; poo-flow-declaration-case-trace-rows-safe?
+;;   : (-> [Alist] [Symbol] Boolean)
+;;   | doc m%
+;;       Validate trace rows against expected stages while requiring every row
+;;       to stay report-only and descriptor-unrealized.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-declaration-case-trace-rows-safe? trace expected-stages)
+;;       ;; => #t
+;;       ```
+;;     %
+;; : (-> [Alist] [Symbol] Boolean)
+(def (poo-flow-declaration-case-trace-row-safe? row expected-stage)
+  (and (equal? (poo-flow-declaration-case-alist-value 'stage row)
+               expected-stage)
+       (equal? (poo-flow-declaration-case-alist-value 'status row)
+               'ok)
+       (equal? (poo-flow-declaration-case-alist-value
+                'descriptor-realized?
+                row)
+               #f)
+       (equal? (poo-flow-declaration-case-alist-value
+                'runtime-executed
+                row)
+               #f)))
+
 ;; : (-> [Alist] [Symbol] Boolean)
 (def (poo-flow-declaration-case-trace-rows-safe? trace expected-stages)
-  (let loop ((trace-rest trace)
-             (stage-rest expected-stages))
-    (cond
-     ((and (null? trace-rest) (null? stage-rest)) #t)
-     ((or (null? trace-rest) (null? stage-rest)) #f)
-     (else
-      (let ((step (car trace-rest))
-            (expected-stage (car stage-rest)))
-        (and (equal? (poo-flow-declaration-case-alist-value 'stage step)
-                     expected-stage)
-             (equal? (poo-flow-declaration-case-alist-value 'status step)
-                     'ok)
-             (equal? (poo-flow-declaration-case-alist-value
-                      'descriptor-realized?
-                      step)
-                     #f)
-             (equal? (poo-flow-declaration-case-alist-value
-                      'runtime-executed
-                      step)
-                     #f)
-             (loop (cdr trace-rest) (cdr stage-rest))))))))
+  (and (= (length trace) (length expected-stages))
+       (andmap poo-flow-declaration-case-trace-row-safe?
+               trace
+               expected-stages)))
 
 ;;; Trace checks are the observability contract for declaration cases: a
 ;;; failing case should show the projection stage instead of hanging on a slot.

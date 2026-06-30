@@ -5,6 +5,7 @@
 
 (import (only-in :gerbil/gambit fx+)
         (only-in :clan/poo/object .o .ref object? object<-alist)
+        (only-in :std/sugar foldl)
         :poo-flow/src/modules/session/objects)
 
 (export poo-flow-session-transform
@@ -149,29 +150,44 @@
    (cons 'descriptor-realized? #f)
    (cons 'runtime-executed #f)))
 
-;;; Boundary: handoff rows stay as lexical calls so optimizer metadata can see
-;;; the memory-intent projection without a runtime lambda dispatch.
+;; poo-flow-session-memory-intent-handoff-bundle
+;;   : (-> [PooSessionMemoryIntent] (Cons [Alist] Fixnum))
+;;   | doc m%
+;;       Project memory intents into report-only handoff rows while returning
+;;       the row count in the same public bundle protocol.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-session-memory-intent-handoff-bundle intents)
+;;       ;; => (handoff-rows . count)
+;;       ```
+;;     %
 ;; : (-> [PooSessionMemoryIntent] (Cons [Alist] Fixnum))
 (def (poo-flow-session-memory-intent-handoff-bundle memory-intents)
-  (let loop ((rest memory-intents)
-             (rows '())
-             (count 0))
-    (if (null? rest)
-      (cons (reverse rows) count)
-      (loop (cdr rest)
-            (cons (poo-flow-session-memory-intent-handoff (car rest))
-                  rows)
-            (fx+ count 1)))))
+  (let (bundle
+        (foldl (lambda (intent result)
+                 (cons (cons (poo-flow-session-memory-intent-handoff intent)
+                             (car result))
+                       (fx+ (cdr result) 1)))
+               (cons '() 0)
+               memory-intents))
+    (cons (reverse (car bundle)) (cdr bundle))))
 
-;;; Boundary: memory-intent counts use a small fixnum loop without allocating
-;;; projection rows when callers only need the cardinality.
+;; poo-flow-session-memory-intent-count
+;;   : (-> [PooSessionMemoryIntent] Fixnum)
+;;   | doc m%
+;;       Return the cardinality of memory intents when callers do not need to
+;;       allocate handoff rows.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-session-memory-intent-count intents)
+;;       ;; => count
+;;       ```
+;;     %
 ;; : (-> [PooSessionMemoryIntent] Fixnum)
 (def (poo-flow-session-memory-intent-count memory-intents)
-  (let loop ((rest memory-intents)
-             (count 0))
-    (if (null? rest)
-      count
-      (loop (cdr rest) (fx+ count 1)))))
+  (length memory-intents))
 
 ;; : (-> [PooSessionTransformOption] (Cons Alist [PooSessionMemoryIntent]))
 ;; | type PooSessionTransformOption = (U Alist PooSessionMemoryIntent)
@@ -347,26 +363,36 @@
    (cons 'runtime-executed #f)
    (cons 'metadata (poo-flow-session-memory-intent-metadata memory-intent))))
 
-;;; Boundary: receipt row generation stays in a named fixnum-counted loop, so
-;;; the row projection is optimizer-visible and count is produced with the rows.
+;; poo-flow-session-memory-receipt-row-bundle
+;;   : (-> [PooSessionMemoryIntent] PooSessionTransform PooSession PooSession (Cons [Alist] Fixnum))
+;;   | doc m%
+;;       Project memory intents into receipt rows for a derived session and
+;;       return the row count with the same bundle protocol.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-session-memory-receipt-row-bundle intents transform source derived)
+;;       ;; => (receipt-rows . count)
+;;       ```
+;;     %
 ;; : (-> [PooSessionMemoryIntent] PooSessionTransform PooSession PooSession (Cons [Alist] Fixnum))
 (def (poo-flow-session-memory-receipt-row-bundle memory-intents
                                                  transform
                                                  source-session
                                                  derived-session)
-  (let loop ((rest memory-intents)
-             (rows '())
-             (count 0))
-    (if (null? rest)
-      (cons (reverse rows) count)
-      (loop (cdr rest)
-            (cons (poo-flow-session-memory-receipt-row
-                   (car rest)
-                   transform
-                   source-session
-                   derived-session)
-                  rows)
-            (fx+ count 1)))))
+  (let (bundle
+        (foldl (lambda (memory-intent result)
+                 (cons
+                  (cons (poo-flow-session-memory-receipt-row
+                         memory-intent
+                         transform
+                         source-session
+                         derived-session)
+                        (car result))
+                  (fx+ (cdr result) 1)))
+               (cons '() 0)
+               memory-intents))
+    (cons (reverse (car bundle)) (cdr bundle))))
 
 ;; : (-> Alist PooSessionMemoryReceipt)
 (def (poo-flow-session-memory-receipt-row->object row)
@@ -561,18 +587,22 @@
 (def (poo-flow-session-transform-receipt-handoff-intent receipt)
   (.ref receipt 'handoff-intent))
 
-;;; Boundary: session transform receipt memory receipts is the policy-visible
-;;; edge for policy behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
+;; poo-flow-session-transform-receipt-memory-receipts
+;;   : (-> PooSessionTransformReceipt [PooSessionMemoryReceipt])
+;;   | doc m%
+;;       Materialize receipt rows from an inert transform receipt as POO memory
+;;       receipt objects for downstream inspection.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-session-transform-receipt-memory-receipts receipt)
+;;       ;; => memory-receipt-objects
+;;       ```
+;;     %
 ;; : (-> PooSessionTransformReceipt [PooSessionMemoryReceipt])
 (def (poo-flow-session-transform-receipt-memory-receipts receipt)
-  (let loop ((rest (.ref receipt 'memory-receipts))
-             (objects '()))
-    (if (null? rest)
-      (reverse objects)
-      (loop (cdr rest)
-            (cons (poo-flow-session-memory-receipt-row->object (car rest))
-                  objects)))))
+  (map poo-flow-session-memory-receipt-row->object
+       (.ref receipt 'memory-receipts)))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-memory-receipt? value)

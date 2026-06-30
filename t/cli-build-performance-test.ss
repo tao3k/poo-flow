@@ -15,8 +15,8 @@
                  poo-flow-cli-build)
         (only-in :poo-flow/src/cli-support/support
                  poo-flow-cli-gerbil-env-argv
-                 poo-flow-cli-string-contains?
-                 poo-flow-cli-string-prefix?))
+                 poo-flow-cli-string-contains?)
+        (only-in :std/srfi/13 string-prefix?))
 
 (export cli-build-performance-test)
 
@@ -91,7 +91,7 @@
         (check-equal? (caddr argv) "gxc")
         (check-equal? (cadddr argv) focused-build-loadpath-module)
         (check-equal?
-         (poo-flow-cli-string-prefix?
+         (string-prefix?
           "GERBIL_LOADPATH=.:.gerbil/lib"
           loadpath)
          #t)

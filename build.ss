@@ -175,7 +175,6 @@
                stdout-redirection: #f
                stderr-redirection: #f))
 
-;; : (String -> Bool)
 ;; : (forall (a) (-> String (-> a) a))
 (def (poo-flow-with-directory directory thunk)
   (let (previous (current-directory))
@@ -374,15 +373,6 @@
     ([gxc: file . _] (poo-flow-diagnostic-gxc-outputs file))
     (_ [])))
 
-;; : (BuildSpec -> [String])
-(def (poo-flow-diagnostic-missing-outputs spec)
-  (filter (lambda (output) (not (file-exists? output)))
-          (poo-flow-diagnostic-outputs spec)))
-
-;; : (BuildSpec -> Bool)
-(def (poo-flow-diagnostic-output-clean? spec)
-  (null? (poo-flow-diagnostic-missing-outputs spec)))
-
 ;; : (BuildSpec List -> Bool)
 (def (poo-flow-stage-cacheable? stage options)
   (and (not (poo-flow-native-build-options? options))
@@ -488,52 +478,6 @@
     ([(or exe: static-exe: optimized-exe: optimized-static-exe:) file . _] file)
     (_ "unsupported")))
 
-;; : (BuildSpec [String] -> Void)
-(def (poo-flow-diagnostic-display-missing spec missing)
-  (display "|stale reason=missing-output spec=")
-  (write (poo-flow-diagnostic-label spec))
-  (display " missing=")
-  (write missing)
-  (newline))
-
-;; : (List -> Void)
-(def (poo-flow-diagnose-build-spec options)
-  (poo-flow-package-require-gxpkg-env!)
-  (let ((stage (poo-flow-compile-build-spec options))
-        (gxc-count 0)
-        (missing-count 0)
-        (clean-count 0)
-        (unsupported-count 0))
-    (for-each
-     (lambda (spec)
-       (cond
-        ((poo-flow-diagnostic-gxc-spec? spec)
-         (set! gxc-count (+ gxc-count 1))
-         (let (missing (poo-flow-diagnostic-missing-outputs spec))
-           (if (null? missing)
-             (set! clean-count (+ clean-count 1))
-             (begin
-               (set! missing-count (+ missing-count 1))
-               (poo-flow-diagnostic-display-missing spec missing)))))
-        (else
-         (set! unsupported-count (+ unsupported-count 1)))))
-     stage)
-    (display "[poo-flow-build-diagnose]")
-    (display " targets=")
-    (display (length stage))
-    (display " gxc=")
-    (display gxc-count)
-    (display " directOutputClean=")
-    (display clean-count)
-    (display " missingOutput=")
-    (display missing-count)
-    (display " unsupported=")
-    (display unsupported-count)
-    (newline)
-    (when (and (= missing-count 0) (> gxc-count 0))
-      (display "|note kind=inference message=\"direct gxc .ssi outputs exist; repeated rebuilds point to dependency timestamp/import freshness rather than missing direct outputs\"")
-      (newline))))
-
 ;; : (List -> List)
 (def (poo-flow-package-parse-options opts)
   (let lp ((rest opts) (options []))
@@ -625,12 +569,10 @@
 
 (def (main . args)
   (match args
-    (["meta"] (write '("spec" "compile" "diagnose" "test" "clean")) (newline))
+    (["meta"] (write '("spec" "compile" "test" "clean")) (newline))
     (["spec" . options]
      (pretty-print (poo-flow-compile-build-spec
                     (poo-flow-package-parse-options options))))
-    (["diagnose" . options]
-     (poo-flow-diagnose-build-spec (poo-flow-package-parse-options options)))
     (["test" . options] (poo-flow-test options))
     (["compile" . options] (poo-flow-package-compile (poo-flow-package-parse-options options)))
     (["clean"] (poo-flow-clean))

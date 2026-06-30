@@ -14,11 +14,11 @@
                  poo-flow-cli-usage)
         (only-in :poo-flow/src/cli-support/support
                  poo-flow-cli-gerbil-env-argv
-                 poo-flow-cli-string-contains?
-                 poo-flow-cli-string-prefix?)
+                 poo-flow-cli-string-contains?)
         (only-in :poo-flow/src/cli-support/test
                  poo-flow-cli-policy-test-file
-                 poo-flow-cli-test-files-env-binding))
+                 poo-flow-cli-test-files-env-binding)
+        (only-in :std/srfi/13 string-prefix?))
 
 (export cli-test)
 
@@ -62,7 +62,7 @@
          (poo-flow-cli-policy-test-file)
          "t/poo-flow-policy-test.ss")
         (check-equal?
-         (poo-flow-cli-string-prefix? prefix binding)
+         (string-prefix? prefix binding)
          #t)
         (check-equal?
          (poo-flow-cli-string-contains?
@@ -75,7 +75,7 @@
                             "gxc"
                             '("src/module-system/module-registry.ss"))))
         (check-equal?
-         (poo-flow-cli-string-prefix?
+         (string-prefix?
           "GERBIL_LOADPATH=.:.gerbil/lib"
           loadpath)
          #t)
