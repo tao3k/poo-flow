@@ -169,14 +169,14 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-v5-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
-          restore-keys: |
-            gerbil-pkg-v5-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-
+          key: gerbil-pkg-v6-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.gerbil/pkg"
+          gxpkg dir -a git.cons.io/mighty-gerbils/gerbil-directory
+          gxpkg dir
           gxpkg deps -i
           gxpkg list
 
@@ -187,7 +187,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-v5-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
+          key: gerbil-pkg-v6-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Clean package outputs
         run: gxpkg env ./build.ss clean
