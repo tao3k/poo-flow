@@ -38,16 +38,16 @@
                           (string-length module-name))
                ".ss")))))
 
-;;; Boundary: cli unit test files from imports is the policy-visible edge for
-;;; CLI behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: manifest imports are expanded only for root test aggregators.
+;;; Native gxtest files remain leaves so policy checks follow the same files
+;;; that the child gxtest process will execute.
 ;; : (-> [Object] [String])
 (def (poo-flow-cli-unit-test-files-from-imports specs)
   (filter-map poo-flow-cli-unit-test-import->file specs))
 
-;;; Boundary: cli form contains symbol predicate is the policy-visible edge for
-;;; CLI behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: native gxtest detection looks for test declarations without
+;;; evaluating the form. This keeps import-only manifests from being executed
+;;; as empty tests.
 ;; : (-> Object Boolean)
 (def (poo-flow-cli-native-gxtest-form? form)
   (or (poo-flow-cli-form-contains-symbol? form 'test-suite)
@@ -56,9 +56,9 @@
        form
        'define-poo-flow-module-system-live-case-test)))
 
-;;; Boundary: cli native gxtest file predicate is the policy-visible edge for
-;;; CLI behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: native gxtest file detection reads forms until the first test
+;;; marker. It never loads the module, so source expansion cannot trigger
+;;; package side effects during test discovery.
 ;; poo-flow-cli-native-gxtest-file?
 ;;   : (-> String Boolean)
 ;;   | doc m%
@@ -84,9 +84,8 @@
                 ((poo-flow-cli-native-gxtest-form? form) #t)
                 (else (loop)))))))))
 
-;;; Boundary: cli read test file imports is the policy-visible edge for CLI
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: manifest import reading consumes only the leading import form.
+;;; Non-manifest files return no imports and stay as direct gxtest targets.
 ;; : (-> String [String])
 (def (poo-flow-cli-read-test-file-imports file)
   (if (file-exists? file)
@@ -99,9 +98,9 @@
             []))))
     []))
 
-;;; Boundary: cli expand test manifest file is the policy-visible edge for CLI
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: manifest expansion follows import roots recursively but stops at
+;;; native gxtest files. The seen set prevents cyclic manifests from expanding
+;;; forever.
 ;; : (-> String [String] [String])
 (def (poo-flow-cli-expand-test-manifest-file file seen)
   (if (member file seen)
@@ -129,9 +128,8 @@
 (def (poo-flow-cli-test-root? file)
   (member file (poo-flow-cli-test-roots)))
 
-;;; Boundary: cli expand test args is the policy-visible edge for CLI behavior,
-;;; keeping validation, lookup, or projection responsibilities centralized for
-;;; callers.
+;;; Boundary: CLI test roots expand to leaf files before process launch.
+;;; Explicit file lists are preserved so focused agent runs do not widen scope.
 ;; : (-> [String] [String])
 (def (poo-flow-cli-expand-test-args args)
   (cond
@@ -141,9 +139,8 @@
     (poo-flow-cli-read-test-root-files (car args)))
    (else args)))
 
-;;; Boundary: cli form contains symbol predicate is the policy-visible edge for
-;;; CLI behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: form symbol search is structural and read-only. It recognizes
+;;; runnable test markers without invoking macros or loading imported modules.
 ;; : (-> Object Symbol Boolean)
 (def (poo-flow-cli-form-contains-symbol? form symbol)
   (cond
@@ -200,9 +197,9 @@
   (poo-flow-cli-error "next: add test-suite/run-tests! or an explicit poo-flow-import-side-effect-test-suite? marker")
   65)
 
-;;; Boundary: cli validate test files is the policy-visible edge for CLI
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: validation rejects empty import-only files before spawning gxtest.
+;;; This keeps CLI failures local to the selected batch and avoids confusing
+;;; downstream policy receipts.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-validate-test-files files)
   (cond
@@ -220,9 +217,8 @@
 (def (poo-flow-cli-policy-test-file)
   "t/poo-flow-policy-test.ss")
 
-;;; Boundary: cli write datum is the policy-visible edge for CLI behavior,
-;;; keeping validation, lookup, or projection responsibilities centralized for
-;;; callers.
+;;; Boundary: file scope is serialized as a Scheme datum because the static
+;;; policy bridge reads it back inside the same gxtest process.
 ;; : (-> Datum String)
 (def (poo-flow-cli-write-datum value)
   (call-with-output-string ""
@@ -294,9 +290,9 @@
   (newline)
   (force-output))
 
-;;; Boundary: cli test batch is the policy-visible edge for CLI behavior,
-;;; keeping validation, lookup, or projection responsibilities centralized for
-;;; callers.
+;;; Boundary: each batch owns exactly one child gxtest process. The receipt
+;;; reports elapsed time and the selected files so CI failures can be mapped
+;;; back to the scoped policy input.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-test-batch files)
   (display "[poo-flow-test] start ")
@@ -324,9 +320,8 @@
 (def (poo-flow-cli-batch-tail files batch-size)
   (drop files (poo-flow-cli-batch-width files batch-size)))
 
-;;; Boundary: cli test batches is the policy-visible edge for CLI behavior,
-;;; keeping validation, lookup, or projection responsibilities centralized for
-;;; callers.
+;;; Boundary: batching is a pure list partition. It changes process granularity
+;;; without changing the set or order of files checked by policy.
 ;; : (-> [String] Integer [[String]])
 (def (poo-flow-cli-test-batches files batch-size)
   (unfold null?
@@ -397,9 +392,9 @@
   (poo-flow-cli-error (string-append "max-bytes: " (object->string max-bytes)))
   75)
 
-;;; Boundary: cli accept or reject rss threshold! is the policy-visible edge
-;;; for CLI behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
+;;; Boundary: RSS threshold decisions happen after the measured test process
+;;; exits. The receipt is printed before failure so CI preserves the measured
+;;; value.
 ;; : (-> Integer Integer Number Integer)
 (def (poo-flow-cli-accept-or-reject-rss-threshold! rss-bytes max-bytes elapsed)
   (poo-flow-cli-display-rss-receipt rss-bytes max-bytes elapsed)
@@ -407,9 +402,8 @@
     (poo-flow-cli-reject-rss-threshold! rss-bytes max-bytes)
     0))
 
-;;; Boundary: cli perf rss parse output is the policy-visible edge for CLI
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: RSS parsing accepts the platform-specific `/usr/bin/time` output
+;;; and compares bytes after a single normalization step.
 ;; : (-> Integer Number String Integer)
 (def (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
   (let ((rss-bytes (poo-flow-cli-max-rss-bytes output))
@@ -421,9 +415,8 @@
        elapsed)
       (poo-flow-cli-reject-rss-parse! output))))
 
-;;; Boundary: cli perf rss measured files is the policy-visible edge for CLI
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: measured perf runs capture the child output so the RSS parser can
+;;; inspect stderr while still replaying the output to the caller.
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-measured-files max-megabytes files)
   (let* ((started-at (time->seconds (current-time)))
@@ -438,9 +431,8 @@
       (poo-flow-cli-perf-rss-parse-output max-megabytes elapsed output)
       status)))
 
-;;; Boundary: cli perf rss validated files is the policy-visible edge for CLI
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: perf validation reuses the test-file gate before measurement so
+;;; RSS failures are not mixed with empty-test-file errors.
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-validated-files max-megabytes files)
   (let (validation-status (poo-flow-cli-validate-test-files files))
@@ -448,9 +440,8 @@
       (poo-flow-cli-perf-rss-measured-files max-megabytes files)
       validation-status)))
 
-;;; Boundary: cli perf rss files is the policy-visible edge for CLI behavior,
-;;; keeping validation, lookup, or projection responsibilities centralized for
-;;; callers.
+;;; Boundary: RSS gates require `/usr/bin/time`; missing platform support is a
+;;; command error, not a skipped performance assertion.
 ;; : (-> Integer [String] Integer)
 (def (poo-flow-cli-perf-rss-files max-megabytes files)
   (if (file-exists? "/usr/bin/time")
@@ -459,8 +450,8 @@
       (poo-flow-cli-error "poo-flow perf rss: /usr/bin/time is required for RSS gates")
       69)))
 
-;;; Boundary: cli perf rss is the policy-visible edge for CLI behavior, keeping
-;;; validation, lookup, or projection responsibilities centralized for callers.
+;;; Boundary: perf rss parses the threshold before expanding tests, keeping
+;;; argument errors separate from test discovery and process execution.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-perf-rss args)
   (match args
@@ -478,8 +469,8 @@
      (poo-flow-cli-error "poo-flow perf rss: usage is `poo-flow perf rss --max-mb <megabytes> [test-file.ss...]`")
      64)))
 
-;;; Boundary: cli perf is the policy-visible edge for CLI behavior, keeping
-;;; validation, lookup, or projection responsibilities centralized for callers.
+;;; Boundary: perf dispatch is intentionally narrow; RSS is the only public
+;;; measurement mode until another metric has a receipt contract.
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-perf args)
   (match args
