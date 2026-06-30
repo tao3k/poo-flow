@@ -22,11 +22,15 @@
         poo-flow-sandbox-profile->descriptor
         poo-flow-sandbox-profile->profile
         poo-flow-sandbox-profile->alist
+        poo-flow-sandbox-profile-backend-capability/registry
         poo-flow-sandbox-profile-backend-capability
+        poo-flow-sandbox-profile-policy-validation-receipt/registry
         poo-flow-sandbox-profile-policy-validation-receipt
+        poo-flow-sandbox-profile-policy-projection-receipt/registry
         poo-flow-sandbox-profile-policy-projection-receipt
         poo-flow-sandbox-profile-policy-projections-valid?
         poo-flow-sandbox-profile-policy-presentation-diagnostics
+        poo-flow-sandbox-profile-runtime-intent/registry
         poo-flow-sandbox-profile-runtime-intent
         poo-flow-sandbox-profile-runtime-summary
         poo-flow-sandbox-profile-handoff-summary
@@ -36,6 +40,7 @@
         poo-flow-default-sandbox-profiles
         poo-flow-default-sandbox-profile-names
         poo-flow-default-sandbox-profile-presentation
+        pooFlowSandboxProfilesPresentation/registry
         pooFlowSandboxProfilesPresentation)
 
 ;;; Profile kind ids are receipt vocabulary. They are stable enough for
@@ -304,44 +309,58 @@
 
 ;;; Backend capability receipts are static control-plane facts. They make
 ;;; OpenRath-style capability boundaries visible without selecting a runtime.
+;; : (-> PooSandboxProfile PooSandboxBackendCapabilityRegistry PooSandboxBackendCapability)
+(def (poo-flow-sandbox-profile-backend-capability/registry profile registry)
+  (poo-flow-sandbox-backend-capability-registry-ref
+   registry
+   (poo-flow-sandbox-profile-backend-kind profile)))
+
 ;; : (-> PooSandboxProfile PooSandboxBackendCapability)
 (def (poo-flow-sandbox-profile-backend-capability profile)
-  (poo-flow-sandbox-backend-capability-ref
-   (poo-flow-sandbox-profile-backend-kind profile)))
+  (poo-flow-sandbox-profile-backend-capability/registry
+   profile
+   poo-flow-sandbox-backend-capability-registry/default))
 
 ;;; Policy validation is report-only for public user profiles. Backend profile
 ;;; objects can hard-gate resolution, while presentation keeps diagnostics
 ;;; visible for users and agents.
-;; : (-> PooSandboxProfile Alist)
-(def (poo-flow-sandbox-profile-policy-validation-receipt profile)
+;; : (-> PooSandboxProfile PooSandboxProfilePolicyValidation)
+(def (poo-flow-sandbox-profile-policy-validation-receipt/registry profile
+                                                                   registry)
   (poo-flow-sandbox-profile-policy-validation
    (poo-flow-sandbox-profile-name profile)
    (poo-flow-sandbox-profile-backend-kind profile)
    (poo-flow-sandbox-profile-backend-ref profile)
-   (poo-flow-sandbox-profile-backend-capability profile)
+   (poo-flow-sandbox-profile-backend-capability/registry profile registry)
    poo-flow-sandbox-profile-policy/default
-   (poo-flow-sandbox-profile-capabilities profile)))
+   (poo-flow-sandbox-profile-capabilities profile)
+   (poo-flow-sandbox-profile-resource-policy profile)))
 
-;; : (-> PooSandboxProfile Alist)
-(def (poo-flow-sandbox-profile-policy-projection-receipt profile)
+;; : (-> PooSandboxProfile PooSandboxProfilePolicyValidation)
+(def (poo-flow-sandbox-profile-policy-validation-receipt profile)
+  (poo-flow-sandbox-profile-policy-validation-receipt/registry
+   profile
+   poo-flow-sandbox-backend-capability-registry/default))
+
+;; : (-> PooSandboxProfile PooSandboxProfilePolicyProjection)
+(def (poo-flow-sandbox-profile-policy-projection-receipt/registry profile
+                                                                   registry)
   (poo-flow-sandbox-profile-policy-projection
    (poo-flow-sandbox-profile-name profile)
    (poo-flow-sandbox-profile-backend-kind profile)
    (poo-flow-sandbox-profile-backend-ref profile)
-   (poo-flow-sandbox-profile-backend-capability profile)
+   (poo-flow-sandbox-profile-backend-capability/registry profile registry)
    poo-flow-sandbox-profile-policy/default
-   (poo-flow-sandbox-profile-capabilities profile)))
+   (poo-flow-sandbox-profile-capabilities profile)
+   (poo-flow-sandbox-profile-resource-policy profile)))
 
-;; : (-> Alist Symbol Value)
-(def (poo-flow-sandbox-profile-policy-receipt-ref receipt key default-value)
-  (let (entry (assoc key receipt))
-    (if entry (cdr entry) default-value)))
+;; : (-> PooSandboxProfile PooSandboxProfilePolicyProjection)
+(def (poo-flow-sandbox-profile-policy-projection-receipt profile)
+  (poo-flow-sandbox-profile-policy-projection-receipt/registry
+   profile
+   poo-flow-sandbox-backend-capability-registry/default))
 
-;; : (-> Alist Boolean)
-(def (poo-flow-sandbox-profile-policy-projection-valid? projection)
-  (poo-flow-sandbox-profile-policy-receipt-ref projection 'valid? #f))
-
-;; : (-> [Alist] Boolean)
+;; : (-> [PooSandboxProfilePolicyProjection] Boolean)
 (def (poo-flow-sandbox-profile-policy-projections-valid? projections)
   (cond
    ((null? projections) #t)
@@ -349,19 +368,7 @@
     (poo-flow-sandbox-profile-policy-projections-valid? (cdr projections)))
    (else #f)))
 
-;; : (-> Alist [Alist])
-(def (poo-flow-sandbox-profile-policy-projection-diagnostics projection)
-  (let (validation
-        (poo-flow-sandbox-profile-policy-receipt-ref
-         projection
-         'validation
-         '()))
-    (poo-flow-sandbox-profile-policy-receipt-ref
-     validation
-     'diagnostics
-     '())))
-
-;; : (-> [Alist] [Alist])
+;; : (-> [PooSandboxProfilePolicyProjection] [PooSandboxProfilePolicyDiagnostic])
 (def (poo-flow-sandbox-profile-policy-presentation-diagnostics projections)
   (if (null? projections)
     '()
@@ -373,10 +380,12 @@
 
 ;;; Runtime intent is a receipt shape for agents and CLI tooling. It names the
 ;;; backend handoff target without manufacturing a runtime command in Scheme.
-;; : (-> PooSandboxProfile Alist)
-(def (poo-flow-sandbox-profile-runtime-intent profile)
+;; : (-> PooSandboxProfile PooSandboxBackendCapabilityRegistry Alist)
+(def (poo-flow-sandbox-profile-runtime-intent/registry profile registry)
   (let ((policy-projection
-         (poo-flow-sandbox-profile-policy-projection-receipt profile)))
+         (poo-flow-sandbox-profile-policy-projection-receipt/registry
+          profile
+          registry)))
     (list (cons 'profile-name (poo-flow-sandbox-profile-name profile))
           (cons 'backend-kind (poo-flow-sandbox-profile-backend-kind profile))
           (cons 'backend-ref (poo-flow-sandbox-profile-backend-ref profile))
@@ -389,9 +398,23 @@
           (cons 'policy-valid?
                 (poo-flow-sandbox-profile-policy-projection-valid?
                  policy-projection))
+          (cons 'durable-policy-ref
+                (.ref policy-projection 'durable-policy-ref))
+          (cons 'durable-policy-summary
+                (.ref policy-projection 'durable-policy-summary))
+          (cons 'durable-valid?
+                (.ref policy-projection 'durable-valid?))
+          (cons 'sandbox-handle-class
+                (.ref policy-projection 'sandbox-handle-class))
           (cons 'runtime-owner "marlin-agent-core")
           (cons 'descriptor-realized? #f)
           (cons 'runtime-executed #f))))
+
+;; : (-> PooSandboxProfile Alist)
+(def (poo-flow-sandbox-profile-runtime-intent profile)
+  (poo-flow-sandbox-profile-runtime-intent/registry
+   profile
+   poo-flow-sandbox-backend-capability-registry/default))
 
 ;;; Runtime summaries deliberately cross the validation boundary: callers get
 ;;; the sandbox-owned summary of the realized agent profile, while the public
@@ -439,10 +462,14 @@
 
 ;;; Keep the parameter name distinct from the `profiles:` slot. gerbil-poo lazy
 ;;; slot resolution can otherwise capture the slot name and recurse on read.
-;; : (-> [PooSandboxProfile] POOObject)
-(def (pooFlowSandboxProfilesPresentation profile-list)
+;; : (-> [PooSandboxProfile] PooSandboxBackendCapabilityRegistry POOObject)
+(def (pooFlowSandboxProfilesPresentation/registry profile-list registry)
   (let (policy-projections
-        (map poo-flow-sandbox-profile-policy-projection-receipt profile-list))
+        (map (lambda (profile)
+               (poo-flow-sandbox-profile-policy-projection-receipt/registry
+                profile
+                registry))
+             profile-list))
     (object<-alist
      (list
       (cons 'kind poo-flow-sandbox-profiles-presentation-kind)
@@ -450,7 +477,11 @@
       (cons 'profile-names (poo-flow-sandbox-profile-names profile-list))
       (cons 'profiles (poo-flow-sandbox-profile-alists profile-list))
       (cons 'runtime-intents
-            (map poo-flow-sandbox-profile-runtime-intent profile-list))
+            (map (lambda (profile)
+                   (poo-flow-sandbox-profile-runtime-intent/registry
+                    profile
+                    registry))
+                 profile-list))
       (cons 'runtime-summaries
             (map poo-flow-sandbox-profile-runtime-summary profile-list))
       (cons 'handoff-summaries
@@ -468,6 +499,12 @@
       (cons 'descriptor-realized? #f)
       (cons 'runtime-executed #f)
       (cons 'replayable #t)))))
+
+;; : (-> [PooSandboxProfile] POOObject)
+(def (pooFlowSandboxProfilesPresentation profile-list)
+  (pooFlowSandboxProfilesPresentation/registry
+   profile-list
+   poo-flow-sandbox-backend-capability-registry/default))
 
 ;; : [Symbol]
 (def poo-flow-default-sandbox-profile-names

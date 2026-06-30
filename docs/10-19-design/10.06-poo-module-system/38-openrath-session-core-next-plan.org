@@ -206,6 +206,12 @@ Acceptance:
   a handoff manifest.
 - Built-in filesystem/shell tool specs require a sandbox placement profile.
 - MCP tool rows can be represented without starting an MCP server.
+Implemented checkpoint:
+- =src/modules/tool-core/objects.ss= and =src/modules/tool-core/config.ss= now own report-only tool specs, catalog projection, handoff manifests, and session-policy grant validation.
+- =user-interface/custom/my-module/cases/tool-core.ss= proves the public surface with =use-module tool-core :config= and POO =tool-spec= / =tool-catalog= objects.
+- =t/tool-core-test.ss= covers direct object semantics, built-in sandbox requirements, MCP row declaration, and policy diagnostics.
+- =t/user-interface-custom-tool-core-test.ss= and the =scenario-tool-core= testing-project root cover the user-facing scenario path.
+- =t/tool-core-performance-test.ss= and =t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss= cover the matching hot validation path.
 ** 10.06.38.120 Milestone 5: Memory Core
 OpenRath rung: =09_memory.py=.
 
@@ -227,6 +233,12 @@ Acceptance:
 - A session transform can declare memory dependencies.
 - Presentation exposes recall/commit intent and refuses missing namespace/store
   fields through structured validation.
+Implemented checkpoint:
+- =src/modules/memory-core/objects.ss= and =src/modules/memory-core/config.ss= now own report-only memory store specs, catalogs, handoff manifests, catalog validation receipts, and durable memory job receipts.
+- =user-interface/custom/my-module/cases/memory-core.ss= proves the public surface with =use-module memory-core :config= and POO =memory-store-spec= / =memory-catalog= objects.
+- =t/memory-core-test.ss= covers direct object semantics, default stores, custom stores, handoff manifests, and catalog validation diagnostics.
+- =t/user-interface-custom-memory-core-test.ss= and the =scenario-memory-core= testing-project root cover the user-facing scenario path.
+- =t/memory-core-performance-test.ss= and =t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss= cover the matching hot validation path.
 ** 10.06.38.130 Milestone 6: Selector Core
 OpenRath rung: =11_dynamic_selector.py=.
 
@@ -269,10 +281,10 @@ Each milestone must update:
 Minimum commands per milestone:
 #+begin_src sh
 gxpkg env gxc <changed-source-files> <changed-test-files>
-gxpkg env gxtest <focused-test>
-gxpkg env gxtest t/user-interface-presentation-test.ss
-gxpkg env gxtest t/declaration-case-test.ss
-poo-flow test t/unit-tests.ss
+gxtest <focused-test>
+gxtest t/user-interface-presentation-test.ss
+gxtest t/declaration-case-test.ss
+gxtest t/unit-tests.ss
 asp org lint docs/10-19-design/10.06-poo-module-system/00-index.org <changed-doc>
 #+end_src
 ** 10.06.38.160 Current Implementation Status

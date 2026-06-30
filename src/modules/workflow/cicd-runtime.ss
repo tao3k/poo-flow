@@ -23,6 +23,44 @@
         poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi
         poo-flow-cicd-check-map->marlin-runtime-handoff-abi)
 
+;;; Durable fields are a bounded runtime receipt projection. They are derived
+;;; from validated POO check metadata once, then copied into runtime handoff
+;;; alists so Marlin never has to inspect the POO object graph.
+;; : (-> PooFlowCicdCheck [Alist])
+(def (poo-flow-cicd-check-artifact-provenance check)
+  (map (lambda (artifact-ref)
+         (list
+          (cons 'artifact-ref artifact-ref)
+          (cons 'producer-check (poo-flow-cicd-check-name check))
+          (cons 'durable-task-id
+                (poo-flow-cicd-check-durable-task-id check))
+          (cons 'retention
+                (poo-flow-cicd-check-artifact-retention check))
+          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+          (cons 'runtime-executed #f)))
+       (poo-flow-cicd-check-artifacts check)))
+
+;; : (-> PooFlowCicdCheck Alist)
+(def (poo-flow-cicd-check-durable-fields check)
+  (list
+   (cons 'durable-task-id
+         (poo-flow-cicd-check-durable-task-id check))
+   (cons 'action-class
+         (poo-flow-cicd-check-action-class check))
+   (cons 'artifact-refs
+         (poo-flow-cicd-check-artifacts check))
+   (cons 'artifact-provenance
+         (poo-flow-cicd-check-artifact-provenance check))
+   (cons 'artifact-retention
+         (poo-flow-cicd-check-artifact-retention check))
+   (cons 'sandbox-refs
+         (poo-flow-cicd-check-profile-refs check))
+   (cons 'checkpoint-ref
+         (list 'workflow-cicd-check
+               (poo-flow-cicd-check-name check)))
+   (cons 'compensation-refs
+         (poo-flow-cicd-check-compensation-refs check))))
+
 ;;; The runtime command bridge intentionally consumes readiness data instead of
 ;;; executing it: Scheme produces the same manifest shape that runtime adapters
 ;;; already understand, while Marlin/Rust remains the process owner.
@@ -34,20 +72,22 @@
      (car command)
      (cdr command)
      (.ref check 'result-protocol)
-     (list (cons 'source 'poo-flow.workflow.cicd.check)
-           (cons 'check (poo-flow-cicd-check-name check))
-           (cons 'profile (poo-flow-cicd-check-profile check))
-           (cons 'profile-refs
-                 (poo-flow-cicd-check-profile-refs check))
-           (cons 'dependency-refs
-                 (poo-flow-cicd-check-dependency-refs check))
-           (cons 'runtime (poo-flow-cicd-check-runtime check))
-           (cons 'runtime-executed #f)
-           (cons 'handoff-required #t)
-           (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-           (cons 'cache (poo-flow-cicd-check-cache check))
-          (cons 'secrets (poo-flow-cicd-check-secrets check))
-          (cons 'readiness readiness)))))
+     (append
+      (list (cons 'source 'poo-flow.workflow.cicd.check)
+            (cons 'check (poo-flow-cicd-check-name check))
+            (cons 'profile (poo-flow-cicd-check-profile check))
+            (cons 'profile-refs
+                  (poo-flow-cicd-check-profile-refs check))
+            (cons 'dependency-refs
+                  (poo-flow-cicd-check-dependency-refs check))
+            (cons 'runtime (poo-flow-cicd-check-runtime check))
+            (cons 'runtime-executed #f)
+            (cons 'handoff-required #t)
+            (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+            (cons 'cache (poo-flow-cicd-check-cache check))
+            (cons 'secrets (poo-flow-cicd-check-secrets check))
+            (cons 'readiness readiness))
+      (poo-flow-cicd-check-durable-fields check)))))
 
 ;;; The envelope is intentionally the smallest runtime request shape: it names
 ;;; the workflow operation and carries readiness as data, while leaving plan and
@@ -62,11 +102,13 @@
         (cons 'artifact-handle (poo-flow-cicd-check-artifacts check))
         (cons 'request readiness)
         (cons 'policy
-              (list (cons 'runtime (poo-flow-cicd-check-runtime check))
-                    (cons 'dependency-refs
-                          (poo-flow-cicd-check-dependency-refs check))
-                    (cons 'runtime-executed #f)
-                    (cons 'handoff-required #t)))
+              (append
+               (list (cons 'runtime (poo-flow-cicd-check-runtime check))
+                     (cons 'dependency-refs
+                           (poo-flow-cicd-check-dependency-refs check))
+                     (cons 'runtime-executed #f)
+                     (cons 'handoff-required #t))
+               (poo-flow-cicd-check-durable-fields check)))
         (cons 'plan-id #f)
         (cons 'node-id (poo-flow-cicd-check-name check))
         (cons 'frontier '())))
@@ -107,37 +149,39 @@
           (poo-flow-cicd-check->runtime-manifest-readiness
            check
            profile-catalog)))
-    (list (cons 'schema +poo-flow-cicd-check-receipt-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.check-receipt)
-          (cons 'check (poo-flow-cicd-check-name check))
-          (cons 'profile (poo-flow-cicd-check-profile check))
-          (cons 'profile-refs
-                (poo-flow-cicd-check-profile-refs check))
-          (cons 'dependency-refs
-                (poo-flow-cicd-check-dependency-refs check))
-          (cons 'sandbox-runtime-summaries
-                (poo-flow-cicd-check-sandbox-runtime-summaries
-                 check
-                 profile-catalog))
-          (cons 'sandbox-handoff-summaries
-                (poo-flow-cicd-check-sandbox-handoff-summaries
-                 check
-                 profile-catalog))
-          (cons 'sandbox-unresolved-profile-refs
-                (poo-flow-cicd-check-sandbox-unresolved-profile-refs
-                 check
-                 profile-catalog))
-          (cons 'command (poo-flow-cicd-check-command check))
-          (cons 'inputs (.ref check 'input-bindings))
-          (cons 'config (.ref check 'config-sources))
-          (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-          (cons 'cache (poo-flow-cicd-check-cache check))
-          (cons 'secrets (poo-flow-cicd-check-secrets check))
-          (cons 'result (.ref check 'result-protocol))
-          (cons 'runtime (poo-flow-cicd-check-runtime check))
-          (cons 'runtime-executed #f)
-          (cons 'status 'ready)
-          (cons 'runtime-manifest-ready runtime-ready))))
+    (append
+     (list (cons 'schema +poo-flow-cicd-check-receipt-schema+)
+           (cons 'kind 'poo-flow.workflow.cicd.check-receipt)
+           (cons 'check (poo-flow-cicd-check-name check))
+           (cons 'profile (poo-flow-cicd-check-profile check))
+           (cons 'profile-refs
+                 (poo-flow-cicd-check-profile-refs check))
+           (cons 'dependency-refs
+                 (poo-flow-cicd-check-dependency-refs check))
+           (cons 'sandbox-runtime-summaries
+                 (poo-flow-cicd-check-sandbox-runtime-summaries
+                  check
+                  profile-catalog))
+           (cons 'sandbox-handoff-summaries
+                 (poo-flow-cicd-check-sandbox-handoff-summaries
+                  check
+                  profile-catalog))
+           (cons 'sandbox-unresolved-profile-refs
+                 (poo-flow-cicd-check-sandbox-unresolved-profile-refs
+                  check
+                  profile-catalog))
+           (cons 'command (poo-flow-cicd-check-command check))
+           (cons 'inputs (.ref check 'input-bindings))
+           (cons 'config (.ref check 'config-sources))
+           (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+           (cons 'cache (poo-flow-cicd-check-cache check))
+           (cons 'secrets (poo-flow-cicd-check-secrets check))
+           (cons 'result (.ref check 'result-protocol))
+           (cons 'runtime (poo-flow-cicd-check-runtime check))
+           (cons 'runtime-executed #f)
+           (cons 'status 'ready)
+           (cons 'runtime-manifest-ready runtime-ready))
+     (poo-flow-cicd-check-durable-fields check))))
 
 ;;; Node names are kept in declaration order so diagnostics line up with the
 ;;; user-authored pipeline instead of a derived scheduler order.
@@ -423,29 +467,31 @@
            graph
            readiness
            check-name)))
-    (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.pipeline-run-step)
-          (cons 'check check-name)
-          (cons 'status status)
-          (cons 'handoff-ready
-                (and (eq? status 'admitted)
-                     (null? unresolved-profile-refs)))
-          (cons 'profile (poo-flow-cicd-check-profile check))
-          (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
-          (cons 'dependency-refs
-                (poo-flow-cicd-check-dependency-refs check))
-          (cons 'command (poo-flow-cicd-check-command check))
-          (cons 'argv (poo-flow-cicd-check-command check))
-          (cons 'runtime (poo-flow-cicd-check-runtime check))
-          (cons 'result (.ref check 'result-protocol))
-          (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-          (cons 'sandbox-unresolved-profile-refs unresolved-profile-refs)
-          (cons 'diagnostics diagnostics)
-          (cons 'valid? (and (eq? status 'admitted)
-                             (null? diagnostics)))
-          (cons 'runtime-readiness readiness)
-          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-          (cons 'runtime-executed #f))))
+    (append
+     (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
+           (cons 'kind 'poo-flow.workflow.cicd.pipeline-run-step)
+           (cons 'check check-name)
+           (cons 'status status)
+           (cons 'handoff-ready
+                 (and (eq? status 'admitted)
+                      (null? unresolved-profile-refs)))
+           (cons 'profile (poo-flow-cicd-check-profile check))
+           (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
+           (cons 'dependency-refs
+                 (poo-flow-cicd-check-dependency-refs check))
+           (cons 'command (poo-flow-cicd-check-command check))
+           (cons 'argv (poo-flow-cicd-check-command check))
+           (cons 'runtime (poo-flow-cicd-check-runtime check))
+           (cons 'result (.ref check 'result-protocol))
+           (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+           (cons 'sandbox-unresolved-profile-refs unresolved-profile-refs)
+           (cons 'diagnostics diagnostics)
+           (cons 'valid? (and (eq? status 'admitted)
+                              (null? diagnostics)))
+           (cons 'runtime-readiness readiness)
+           (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+           (cons 'runtime-executed #f))
+     (poo-flow-cicd-check-durable-fields check))))
 
 ;;; Unique diagnostic projection preserves first-seen order while removing
 ;;; repeated step diagnostics from large pipelines.
@@ -691,6 +737,46 @@
               (poo-flow-cicd-alist-ref manifest 'frontier '()))
         (cons 'metadata
               (poo-flow-cicd-alist-ref manifest 'metadata '()))
+        (cons 'durable-task-id
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'durable-task-id
+               #f))
+        (cons 'action-class
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'action-class
+               #f))
+        (cons 'artifact-refs
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'artifact-refs
+               '()))
+        (cons 'artifact-provenance
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'artifact-provenance
+               '()))
+        (cons 'artifact-retention
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'artifact-retention
+               #f))
+        (cons 'sandbox-refs
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'sandbox-refs
+               '()))
+        (cons 'checkpoint-ref
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'checkpoint-ref
+               #f))
+        (cons 'compensation-refs
+              (poo-flow-cicd-runtime-command-manifest-policy-ref
+               manifest
+               'compensation-refs
+               '()))
         (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
         (cons 'handoff-required
               (poo-flow-cicd-runtime-command-manifest-policy-ref

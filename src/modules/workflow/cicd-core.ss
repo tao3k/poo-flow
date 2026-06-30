@@ -2,7 +2,9 @@
 ;;; Boundary: workflow CI/CD POO check and check-map objects.
 ;;; Invariant: declarations validate shape but never execute commands.
 
-(import (only-in :clan/poo/object .o .ref object? object<-alist))
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
+        (only-in :poo-flow/src/module-system/durable-policy
+                 +poo-flow-durable-action-classes+))
 
 (export +poo-flow-cicd-check-map-schema+
         +poo-flow-cicd-check-receipt-schema+
@@ -22,6 +24,10 @@
         poo-flow-cicd-check-profile
         poo-flow-cicd-check-command
         poo-flow-cicd-check-dependency-refs
+        poo-flow-cicd-check-durable-task-id
+        poo-flow-cicd-check-action-class
+        poo-flow-cicd-check-compensation-refs
+        poo-flow-cicd-check-artifact-retention
         poo-flow-cicd-check-artifacts
         poo-flow-cicd-check-cache
         poo-flow-cicd-check-secrets
@@ -77,6 +83,14 @@
     plan-id
     node-id
     frontier
+    durable-task-id
+    action-class
+    artifact-refs
+    artifact-provenance
+    artifact-retention
+    sandbox-refs
+    checkpoint-ref
+    compensation-refs
     runtime-owner
     handoff-required
     runtime-executed))
@@ -230,6 +244,51 @@
      (poo-flow-cicd-symbol-list? refs)
      refs)
     refs))
+
+;; : (-> PooFlowCicdCheck Symbol)
+(def (poo-flow-cicd-check-durable-task-id check)
+  (let (task-id (poo-flow-cicd-alist-ref (.ref check 'metadata)
+                                         'durable-task-id
+                                         (poo-flow-cicd-check-name check)))
+    (poo-flow-cicd-require
+     "cicd check durable-task-id must be a symbol"
+     (symbol? task-id)
+     task-id)
+    task-id))
+
+;; : (-> PooFlowCicdCheck Symbol)
+(def (poo-flow-cicd-check-action-class check)
+  (let (action-class (poo-flow-cicd-alist-ref (.ref check 'metadata)
+                                             'action-class
+                                             'idempotent))
+    (poo-flow-cicd-require
+     "cicd check action-class must be a known durable action class"
+     (and (symbol? action-class)
+          (member action-class +poo-flow-durable-action-classes+))
+     action-class)
+    action-class))
+
+;; : (-> PooFlowCicdCheck [Symbol])
+(def (poo-flow-cicd-check-compensation-refs check)
+  (let (refs (poo-flow-cicd-alist-ref (.ref check 'metadata)
+                                      'compensation-refs
+                                      '()))
+    (poo-flow-cicd-require
+     "cicd check compensation-refs must be a list of symbols"
+     (poo-flow-cicd-symbol-list? refs)
+     refs)
+    refs))
+
+;; : (-> PooFlowCicdCheck Symbol)
+(def (poo-flow-cicd-check-artifact-retention check)
+  (let (retention (poo-flow-cicd-alist-ref (.ref check 'metadata)
+                                           'artifact-retention
+                                           'workflow-retained))
+    (poo-flow-cicd-require
+     "cicd check artifact-retention must be a symbol"
+     (symbol? retention)
+     retention)
+    retention))
 
 ;; : (-> PooFlowCicdCheck List)
 (def (poo-flow-cicd-check-artifacts check)

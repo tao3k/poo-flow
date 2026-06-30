@@ -1,0 +1,388 @@
+* 10.06.47 Current Code Structure Audit And Complete Improvement Plan
+This document is the complete project advancement plan for the current =poo-flow= codebase. It is broader than a next-step list: it defines the target structure, workstreams, dependency order, application scenarios, deliverables, validation gates, and risk controls.
+
+The plan assumes the project invariants already established in =10.06.44= and =10.06.46=:
+- public extension APIs stay 100% POO-native;
+- flow composition prefers functional programming;
+- macros are internal generators for mechanical POO/functional/projection structure, not a new user DSL;
+- Scheme owns strategy, composition, validation, presentation, and report-only handoff data;
+- Rust and =marlin-agent-core= own heavy execution and scheduling.
+** 10.06.47.10 Current Structure Baseline
+The current codebase already has a useful layered shape:
+
+1. Build and testing boundary.
+   =build.ss= owns package build options. =src/cli-support/testing-project.ss= binds the harness project root, roots =src=, =user-interface=, and =t=, and keeps policy checks enabled.
+   Single-file test selection belongs to the new testing framework and =gxtest='s native single-file selection support.
+
+2. Core functional and POO foundations.
+   =src/core/flow-declarations.ss= defines flow declaration descriptors and registries as POO-native values. =src/core/flow.ss= contains flow category access. =src/module-system/object-core-support/object.ss= owns module object construction, field resolution, inheritance, contribution indexing, and merge behavior.
+
+3. Module system facade and syntax.
+   =src/module-system/init-syntax.ss= owns public =use-module= syntax, profile construction helpers, and module bundle collection. It is the current public syntax choke point.
+
+4. Sandbox backend modules.
+   =src/module-system/sandbox-backend-object-syntax.ss= owns the internal =defpoo-sandbox-backend-object-family= macro. Concrete backends such as =src/modules/docker-sandbox/objects.ss= already call that macro instead of hand-writing every object/profile/capability family.
+
+5. Session policy module.
+   =src/modules/session/policy.ss= owns policy predicates, constructors, accessors, durable policy attachment, tool grants, policy checks, and final alist projections.
+
+6. Loop engine runtime module.
+   =src/module-system/loop-engine-runtime.ss= owns runtime envelopes, manifests, receipts, capability lookup, memory/compression policy projection, context enrichment, and loop-engine intent collection.
+
+7. User-interface scenarios and tests.
+   =user-interface/custom/my-module/cases/loop-engine.ss= shows a real POO-native loop-engine profile with sandbox, runtime, memory, compression, lineage, selector, resource, and capability policies. =user-interface/custom/my-module/cases/session-policy.ss= shows real session policy use across tool grants, model, prompt, resource, and agent execution. Tests such as =t/user-interface-custom-loop-engine-runtime-manifest-test.ss=, =t/user-interface-custom-loop-engine-memory-policy-test.ss=, and =t/session-policy-contract-test.ss= are the scenario-level acceptance surfaces.
+** 10.06.47.20 Structural Diagnosis
+The project direction is coherent, but the structure has predictable pressure points:
+
+1. Large owners mix several change axes.
+   =loop-engine-runtime.ss= currently mixes runtime ABI projection, receipt construction, policy enrichment, capability diagnostics, sandbox agreement, and config collection.
+
+2. Session policy code repeats a policy family pattern.
+   =session/policy.ss= repeats validation, object construction, accessor reads, policy checks, durable attachment, and projection fields.
+
+3. Runtime receipts repeat projection family structure.
+   Receipt and manifest alists are valid final ABI/report payloads, but the field lists should not be maintained by hand across source and tests.
+
+4. =use-module= repeats branch mechanics.
+   Public syntax belongs in =init-syntax.ss=, but repeated branches should be generated from private procedural helpers once the lower-level macro pattern is proven.
+
+5. Scenarios exist but are not yet an acceptance matrix.
+   We have real loop, sandbox, memory, runtime, and session policy cases. They need to be treated as product-facing acceptance gates, not incidental tests.
+** 10.06.47.30 Target Architecture
+The target architecture is a small set of stable owners with clear responsibility:
+
+| Owner | Responsibility | Public surface |
+|-------+----------------+----------------|
+| =src/core/*= | Functional flow descriptors, flow registry, DAG/arrow-style composition kernel | Functional constructors and POO values |
+| =src/module-system/object-core-support/*= | Module object contract, inheritance, field merge, contribution indexing | Internal object engine |
+| =src/module-system/sandbox-backend-object-syntax.ss= | Declarative backend object/profile/capability generation | Internal macro only |
+| =src/modules/session/policy-syntax.ss= | Session policy family generation | Internal macro only |
+| =src/modules/session/policy.ss= | Public policy constructors/checks/projections | Stable POO-native policy functions |
+| =src/module-system/runtime-projection-syntax.ss= | Runtime receipt/manifest projection generation | Internal macro only |
+| =src/module-system/loop-engine-runtime-receipts.ss= | Generated and hand-owned receipt functions | Internal ABI/report helpers |
+| =src/module-system/loop-engine-runtime-intent.ss= | Functional loop intent enrichment pipeline | Internal pure pipeline helpers |
+| =src/module-system/loop-engine-runtime.ss= | Orchestrates runtime intent, receipts, and projections | Existing compatibility owner during migration |
+| =src/module-system/init-syntax.ss= | Public =use-module= syntax | User-facing module entry |
+| =user-interface/*= | Real scenario examples for users and agents | Public examples |
+| =t/*= | Owner and scenario gates | Verification contract |
+
+The migration should keep compatibility at public names while shrinking mixed owners behind generated and functional sub-owners.
+** 10.06.47.40 Planning Options
+Recommended: program-level staged architecture plan.
+
+This plan coordinates macro adoption, runtime owner splitting, user scenarios, Marlin handoff, and harness verification. It is slower than a single refactor, but it keeps the system coherent and prevents each slice from inventing its own local pattern.
+
+Option A: local cleanup only.
+
+This would refactor whichever file looks worst first. It is fast initially, but it does not create a reusable policy/projection pattern and would likely leave =use-module= and runtime receipts drifting.
+
+Option B: macro-first rewrite.
+
+This would aggressively replace repetition with macros before the acceptance matrix is complete. It uses Gerbil power, but it risks hiding behavior changes and creating compile-time complexity before the user scenarios are pinned.
+
+The recommended path is staged architecture: scenario matrix first, generated families second, owner splits third, broad =use-module= cleanup last.
+** 10.06.47.50 Workstreams
+*** 10.06.47.50.10 Workstream A: Scenario And Acceptance Matrix
+Purpose: make user-facing behavior the validation spine for every refactor.
+
+Deliverables:
+- A scenario matrix under =docs/10-19-design/10.06-poo-module-system/= mapping user examples to source owners and tests.
+- Expanded =user-interface/custom/my-module/cases/*= examples for funflow DAG, loop profile, sandbox resources, session policy, memory/compression, and Marlin runtime discovery.
+- Test mapping for each scenario.
+
+Acceptance:
+- Every major refactor points to at least one user-interface scenario and one focused test file.
+- No user-facing scenario is an introspection toy; each demonstrates real configuration.
+*** 10.06.47.50.20 Workstream B: Sandbox Backend Macro Hardening
+Purpose: turn the existing sandbox macro into the reference pattern for generated POO object families.
+
+Deliverables:
+- Focused tests for generated backend object metadata, field contracts, profile inheritance, and capability registry contents.
+- Coverage for =nono-sandbox=, =cubeSandbox=, and =docker-sandbox= using the same object family shape.
+- Common POO-native resource fragments for filesystem, ports, CPU, memory, volume, and runtime materialization.
+
+Acceptance gates:
+#+begin_src sh
+testing framework / gxtest native single-file selection:
+  t/agent-sandbox-profile-test.ss
+  t/agent-sandbox-cube-interface-test.ss
+  t/docker-descriptor-test.ss
+  t/nono-sandbox-c-binding-test.ss
+#+end_src
+*** 10.06.47.50.30 Workstream C: Session Policy Family Generation
+Purpose: reduce repeated constructor/accessor/projection structure while preserving public policy functions.
+
+Deliverables:
+- New =src/modules/session/policy-syntax.ss=.
+- One internal macro family that can generate constructor validation, default slots, optional slots, projection fragments, and accessor helpers.
+- Incremental migration from small policies to larger agent execution policy.
+- Compatibility tests for =poo-flow-session-policy->alist= and durable policy attachment.
+
+Acceptance gates:
+#+begin_src sh
+testing framework / gxtest native single-file selection:
+  t/session-policy-contract-test.ss
+#+end_src
+
+Completion condition:
+- Public session policy functions still exist.
+- User-facing =session-policy.ss= scenario is unchanged or improved.
+- Projection payloads remain compatible with existing tests.
+*** 10.06.47.50.40 Workstream D: Runtime Receipt And Manifest Projection
+Purpose: make receipt/manifest payloads generated from named contract declarations while keeping alists only at final ABI/report boundaries.
+
+Deliverables:
+- New =src/module-system/runtime-projection-syntax.ss=.
+- Generated lineage, selector, resource-dispatch, capability, memory, and compression receipt projections.
+- A future =src/module-system/loop-engine-runtime-receipts.ss= owner once projection generation is stable.
+- Runtime command manifest and discovery consistency checks.
+
+Acceptance gates:
+#+begin_src sh
+testing framework / gxtest native single-file selection:
+  t/user-interface-custom-loop-engine-runtime-manifest-test.ss
+#+end_src
+
+Completion condition:
+- Receipt contract names are generated or declared once.
+- Runtime envelope remains explicit until receipt generation is stable.
+- Marlin handoff shape stays discoverable and report-only.
+*** 10.06.47.50.50 Workstream E: Loop Intent Functional Pipeline
+Purpose: split loop enrichment into pure functional steps while keeping heavy execution outside Scheme.
+
+Deliverables:
+- Future =src/module-system/loop-engine-runtime-intent.ss=.
+- Named pipeline steps:
+  - base intent creation;
+  - sandbox profile resolution;
+  - sandbox runtime summary;
+  - sandbox handoff agreement;
+  - workflow agreement;
+  - capability receipt;
+  - runtime projection attachment.
+- Memory/compression selection behavior tied to loop use cases.
+
+Acceptance gates:
+#+begin_src sh
+testing framework / gxtest native single-file selection:
+  t/user-interface-custom-loop-engine-memory-policy-test.ss
+  t/user-interface-custom-loop-engine-runtime-manifest-test.ss
+#+end_src
+
+Completion condition:
+- Each enrichment step is value-in/value-out.
+- No scheduling or execution state is introduced in Scheme.
+*** 10.06.47.50.60 Workstream F: Funflow Functional Kernel
+Purpose: make the funflow route a first-class functional programming surface, not just a compatibility reference.
+
+Deliverables:
+- Clear functional constructors for task, sequential, branch, and empty flow descriptors.
+- DAG/arrow-style composition examples in user-interface.
+- Report-only run receipt for L1 local validation.
+- =poo-flow run <file.ss>= examples for practical execution tests where the Scheme side validates composition and emits receipts.
+
+Acceptance:
+- Users can define a small functional DAG flow without raw alist authoring.
+- Tests prove the resulting flow registry/descriptors can be consumed by loop-engine profile and runtime manifest generation.
+*** 10.06.47.50.70 Workstream G: =use-module= Procedural Branch Generation
+Purpose: reduce public syntax branch repetition only after lower-level generated families are stable.
+
+Deliverables:
+- Private helper macro for repeated =.def= parse/build/config/contract branch shape.
+- Stable public forms:
+  #+begin_src scheme
+  (use-module loop-engine
+    :config
+    (.def (profile @ loop-engine-profile)
+      sandbox: sandbox-profile))
+  #+end_src
+- Removal of stale compatibility clauses that reintroduce old DSL paths.
+
+Acceptance:
+- Existing user-interface scenarios keep working.
+- Error messages still direct users to POO-native =.def= forms.
+- No public raw alist/record DSL is introduced.
+*** 10.06.47.50.80 Workstream H: Marlin ABI And Downstream Boundary
+Purpose: make Scheme-side discovery predictable for =marlin-agent-core= while keeping execution in Rust.
+
+Deliverables:
+- Runtime manifest/bridge discovery surface that exposes loop governor request, runtime command contract, receipt contracts, and report-only handoff facts.
+- Documentation for downstream Gerbil package consumer shape.
+- ABI consumer audit in =marlin-agent-core= before any breaking contract changes.
+
+Acceptance:
+- Marlin does not guess entrypoints.
+- Scheme exports stable contract-bearing requests and receipts.
+- No scheduler, durable state writer, or heavy runtime is added to this repository.
+*** 10.06.47.50.90 Workstream I: Build, Harness, And Performance
+Purpose: keep iteration fast and verification canonical.
+
+Deliverables:
+- Focused single-file gates for each owner through the new testing framework and =gxtest= native selection support.
+- Documented understanding that native =gxtest= single-file selection is the canonical single-file testing model for this plan.
+- Full =gxpkg build -R -O= gate after owner-level tests.
+- Build-performance watch for macro expansion cost.
+- Harness policy warnings fixed through the package CLI path, not separate shadow checks.
+
+Acceptance:
+- Refactors never require direct generated artifact cleanup.
+- Tests run through the native CLI/harness path.
+- Compile-time metaprogramming does not make normal agent iteration materially slower.
+** 10.06.47.60 Phase Plan
+*** 10.06.47.60.10 Phase 0: Baseline And Matrix
+Goal: make the plan actionable and measurable.
+
+Inputs:
+- Existing docs =10.06.44=, =10.06.46=, and this plan.
+- Existing user-interface cases and tests.
+
+Deliverables:
+- Scenario acceptance matrix.
+- Owner-to-test matrix.
+- Explicit non-goals for DSL compatibility and Scheme-side execution.
+
+Exit criteria:
+- Every later phase has named owners, tests, and scenarios.
+*** 10.06.47.60.20 Phase 1: Sandbox Reference Pattern
+Goal: prove the existing declarative macro pattern is stable enough to copy.
+
+Deliverables:
+- Tests around generated object metadata, fields, inheritance, capability registry.
+- Resource-fragment model for docker/nono/cube reuse.
+
+Exit criteria:
+- Sandbox tests pass.
+- The macro shape is documented as internal infrastructure, not user API.
+*** 10.06.47.60.30 Phase 2: Session Policy Generated Families
+Goal: move repeated session policy structure into a bounded macro owner.
+
+Deliverables:
+- =policy-syntax.ss=.
+- Generated constructor/projection for one small policy.
+- Migration of larger policy families after compatibility test passes.
+
+Exit criteria:
+- =t/session-policy-contract-test.ss= passes.
+- User-interface session policy scenario still demonstrates real multi-agent policy composition.
+*** 10.06.47.60.40 Phase 3: Runtime Receipt Projection Families
+Goal: remove hand-maintained receipt projection drift.
+
+Deliverables:
+- =runtime-projection-syntax.ss=.
+- Generated receipt family for lineage first, then selector/resource/capability/memory/compression.
+- Receipt contract table.
+
+Exit criteria:
+- Runtime manifest tests pass.
+- Marlin handoff payload remains report-only and stable.
+*** 10.06.47.60.50 Phase 4: Loop Intent Pipeline Split
+Goal: turn loop enrichment into a functional pipeline.
+
+Deliverables:
+- =loop-engine-runtime-intent.ss= owner.
+- Pure pipeline steps for sandbox, workflow, capability, memory, compression, and runtime projection.
+
+Exit criteria:
+- Memory policy and runtime manifest scenario tests pass.
+- =loop-engine-runtime.ss= becomes an orchestrator instead of the owner of all details.
+*** 10.06.47.60.60 Phase 5: Funflow Functional Kernel Completion
+Goal: make funflow the functional route for DAG and flow composition.
+
+Deliverables:
+- Functional flow constructors and combinators.
+- User-interface funflow DAG scenario.
+- L1 report-only run receipt.
+
+Exit criteria:
+- A user or agent can define and validate a functional DAG flow without raw alists.
+- The flow can be consumed by loop-engine profile/runtime surfaces.
+*** 10.06.47.60.70 Phase 6: =use-module= Branch Generation
+Goal: reduce syntax branch repetition without changing the public syntax.
+
+Deliverables:
+- Private procedural helper for repeated branch generation.
+- Public syntax compatibility tests.
+- Removal of stale non-POO DSL clauses.
+
+Exit criteria:
+- User-interface scenarios pass.
+- Bad syntax errors still guide users to =use-module ... :config (.def ...)=.
+*** 10.06.47.60.80 Phase 7: Marlin Downstream Integration
+Goal: align Scheme strategy output with Rust execution consumer expectations.
+
+Deliverables:
+- ABI consumer audit in =marlin-agent-core=.
+- Downstream documentation for =gerbil.pkg= dependency, load path, =gxtest=, harness policy, and root =user-interface/*= usage.
+- Contract compatibility checks for loop governor request shape.
+
+Exit criteria:
+- Downstream Gerbil package can consume =poo-flow= through package dependency.
+- Marlin discovers request/manifest/receipt contracts without guessing.
+*** 10.06.47.60.90 Phase 8: Closure, Performance, And Release Readiness
+Goal: make the improved structure durable.
+
+Deliverables:
+- Full package build gate.
+- Build-performance comparison before/after macro migration.
+- Documentation index and AGENTS rules updated.
+- Changelog/release notes for public behavior.
+
+Exit criteria:
+- =gxpkg build -R -O= passes.
+- Focused scenario tests pass.
+- No known stale DSL compatibility path remains documented.
+** 10.06.47.70 Dependency Order
+The key dependency rule is:
+
+#+begin_src text
+scenario matrix
+  -> sandbox macro reference
+  -> session policy generated families
+  -> runtime receipt generated families
+  -> loop intent functional pipeline
+  -> funflow DAG completion
+  -> use-module branch generation
+  -> Marlin downstream integration
+  -> release readiness
+#+end_src
+
+=use-module= should not be the first major refactor. It is public syntax and therefore should wait until the lower-level generated family patterns are proven.
+** 10.06.47.80 Scenario Acceptance Matrix
+| Scenario | User-facing surface | Internal owners | Primary tests |
+|----------+---------------------+-----------------+---------------|
+| Sandbox backend reuse | =use-module docker-sandbox/nono-sandbox/cubeSandbox= | =sandbox-backend-object-syntax.ss=, concrete backend =objects.ss= | =t/agent-sandbox-profile-test.ss=, =t/docker-descriptor-test.ss=, =t/nono-sandbox-c-binding-test.ss= |
+| Loop strategy profile | =user-interface/custom/my-module/cases/loop-engine.ss= | =init-syntax.ss=, =loop-engine-runtime.ss= | =t/user-interface-custom-loop-engine-profile-test.ss= |
+| Runtime manifest and receipts | loop runtime discovery/manifest | =runtime-projection-syntax.ss=, =loop-engine-runtime-receipts.ss= | =t/user-interface-custom-loop-engine-runtime-manifest-test.ss= |
+| Memory policy variants | loop profile memory policies | =loop-engine-runtime-intent.ss= | =t/user-interface-custom-loop-engine-memory-policy-test.ss= |
+| Session policy governance | =user-interface/custom/my-module/cases/session-policy.ss= | =policy-syntax.ss=, =policy.ss= | =t/session-policy-contract-test.ss= |
+| Funflow functional DAG | future funflow user-interface case | =src/core/flow-declarations.ss=, =src/core/flow.ss= | new focused funflow DAG test |
+| Marlin ABI handoff | runtime manifest/bridge discovery | =loop-engine-runtime.ss=, Marlin consumer | runtime manifest test plus downstream ABI smoke |
+** 10.06.47.90 Definition Of Done
+A phase is done only when all of these are true:
+
+- The public surface is still POO-native or functional.
+- Generated code expands to ordinary POO-native/functional/projection code.
+- Final alists exist only at ABI/report/test boundaries.
+- The relevant user-interface scenario exists and is realistic.
+- Focused native =gxtest <file>= gates pass.
+- Full package build is run when a phase changes shared owners.
+- Documentation and =AGENTS.md= remain aligned with the new owner boundary.
+** 10.06.47.100 Risk Register
+| Risk | Impact | Mitigation |
+|------+--------+------------|
+| Macro overreach becomes a hidden DSL | Users and agents lose the POO model | Keep macros internal unless explicitly public and POO-lowering |
+| Projection generation changes ABI shape | Marlin and tests break | Add compatibility tests before migration |
+| =use-module= refactor changes public syntax | User examples break | Delay until lower-level patterns are stable |
+| Large owner split creates circular imports | Build complexity increases | Split by dependency direction: syntax -> generated helpers -> runtime orchestrator |
+| Macro expansion slows builds | Agent iteration suffers | Track build performance after each macro phase |
+| Scenario docs drift from tests | Documentation becomes ornamental | Bind each scenario to a named test file |
+** 10.06.47.110 Operating Model For Each Slice
+Every implementation slice should follow this sequence:
+
+1. Use ASP owner/selector evidence to identify the real source owner.
+2. Update or confirm the relevant scenario and acceptance test.
+3. Make the smallest owner-boundary code change.
+4. Run the focused single-file gate through the project testing framework and native =gxtest= selection support.
+5. Run broader =gxpkg build -R -O= only after focused gates pass or when shared build/package owners changed.
+6. Update docs and user-interface examples in the same slice when public behavior changes.
+7. Commit only the bounded slice.

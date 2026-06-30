@@ -51,7 +51,7 @@
     (poo-flow-cicd-check
      'test
      'ci/check
-     '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+     '("gxtest" "t/unit-tests.ss")
      '()
      '()
      '(test-receipt)
@@ -284,6 +284,14 @@
                         plan-id
                         node-id
                         frontier
+                        durable-task-id
+                        action-class
+                        artifact-refs
+                        artifact-provenance
+                        artifact-retention
+                        sandbox-refs
+                        checkpoint-ref
+                        compensation-refs
                         runtime-owner
                         handoff-required
                         runtime-executed))

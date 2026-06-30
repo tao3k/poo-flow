@@ -136,7 +136,8 @@
            backend-ref
            backend-capability
            profile-policy
-           capabilities)))
+           capabilities
+           (poo-flow-sandbox-profile-object-slot node 'resource-policy))))
     (if (poo-flow-sandbox-profile-policy-validation-valid? validation)
       (.o kind: poo-flow-sandbox-profile-kind
           name: name-value

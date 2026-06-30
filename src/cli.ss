@@ -25,9 +25,10 @@
 
 Commands:
   run    Execute a Scheme file through gxpkg env gxi in the poo-flow package context.
+  help   Print this usage text. Focused tests use native gxtest <file>.
 ")
 
-;; : (-> String MaybeInteger)
+;; : (-> String [String] Integer)
 ;;; Boundary: cli run command is the policy-visible edge for CLI behavior,
 ;;; keeping validation, lookup, or projection responsibilities centralized for
 ;;; callers.

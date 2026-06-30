@@ -180,8 +180,21 @@
           (cons 'inputs (.ref check 'input-bindings))
           (cons 'config (.ref check 'config-sources))
           (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+          (cons 'durable-task-id
+                (poo-flow-cicd-check-durable-task-id check))
+          (cons 'action-class
+                (poo-flow-cicd-check-action-class check))
+          (cons 'artifact-refs
+                (poo-flow-cicd-check-artifacts check))
+          (cons 'artifact-retention
+                (poo-flow-cicd-check-artifact-retention check))
+          (cons 'sandbox-refs
+                (poo-flow-cicd-check-profile-refs check))
+          (cons 'checkpoint-ref
+                (list 'workflow-cicd-check
+                      (poo-flow-cicd-check-name check)))
+          (cons 'compensation-refs
+                (poo-flow-cicd-check-compensation-refs check))
           (cons 'cache (poo-flow-cicd-check-cache check))
           (cons 'secrets (poo-flow-cicd-check-secrets check))
           (cons 'result (.ref check 'result-protocol)))))
-
-

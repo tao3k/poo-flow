@@ -228,6 +228,16 @@
           intent
           'compression-policy
           '()))
+   (cons 'session-selector-receipts
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'session-selector-receipts
+          '()))
+   (cons 'session-materialization-receipts
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'session-materialization-receipts
+          '()))
    (cons 'policy-extension-receipts
          (poo-flow-user-loop-engine-intent-ref
           intent

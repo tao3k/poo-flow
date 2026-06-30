@@ -14,6 +14,13 @@
     mode: 'guarded-handoff
     workflow: 'funflow-cicd)
 
+  (.def (current-system-recovery-loop @ loop-engine-use-case
+                                      name level mode workflow)
+    name: 'current-system-recovery-loop
+    level: 'l2
+    mode: 'recovery-handoff
+    workflow: 'funflow-cicd)
+
   (.def (current-system-build-governor @ loop-engine-governor
                                        capabilities)
     capabilities: '(+strategy +policy +collision-check))
@@ -77,7 +84,7 @@
   (.def (current-system-build-selector @ loop-engine-selector-policy
                                        candidates judge-inputs fallback
                                        selected-branch)
-    candidates: '(current-system-build-loop)
+    candidates: '(current-system-build-loop current-system-recovery-loop)
     judge-inputs: '(ci-audit-agent build-verifier-agent ci-loop-governor)
     fallback: 'current-system-build-loop
     selected-branch: 'current-system-build-loop)
@@ -99,7 +106,7 @@
   (.def (current-system-build-capability-policy
          @ loop-engine-capability-policy
          backend isolation required optional unsupported-behavior)
-    backend: 'nono-sandbox
+    backend: 'nono
     isolation: 'project-copy
     required: '(command-run files-read files-write)
     optional: '(stream-events code-run)
@@ -117,6 +124,19 @@
     ranking: 'recency
     retention: 'report-only)
 
+  (.def (current-system-recovery-memory-policy @ loop-engine-memory-policy
+                                               use-case store state-path
+                                               scope recall commit ranking
+                                               retention)
+    use-case: 'current-system-recovery-loop
+    store: 'project-memory
+    state-path: "loop-state/current-system-recovery.org"
+    scope: 'recovery-session
+    recall: '(last-good-build failed-commands verifier-notes)
+    commit: '(recovery-plan retry-boundary human-escalation)
+    ranking: 'risk-first
+    retention: 'report-only)
+
   (.def (current-system-build-compression-policy
          @ loop-engine-compression-policy
          strategy trigger summary-format lineage-kind retention)
@@ -127,13 +147,16 @@
     retention: 'report-only)
 
   (.def (current-system-build-profile @ loop-engine-profile
-                                      use-case governor agent-judges
+                                      use-case use-cases governor agent-judges
                                       human-audit schedule state sandbox budget
                                       result observability runtime
                                       lineage-policy selector-policy
                                       resource-policy capability-policy
-                                      memory-policies compression-policy)
+                                      memory-policies compression-policy
+                                      session-selector-receipts
+                                      session-materialization-receipts)
     use-case: current-system-build-loop
+    use-cases: (list current-system-recovery-loop)
     governor: current-system-build-governor
     agent-judges: current-system-build-judges
     human-audit: current-system-build-human-audit
@@ -148,5 +171,64 @@
     selector-policy: current-system-build-selector
     resource-policy: current-system-build-resource-policy
     capability-policy: current-system-build-capability-policy
-    memory-policies: (list current-system-build-memory-policy)
-    compression-policy: current-system-build-compression-policy))
+    memory-policies: (list current-system-build-memory-policy
+                           current-system-recovery-memory-policy)
+    compression-policy: current-system-build-compression-policy
+    session-selector-receipts:
+    (list
+     (poo-flow-session-selector-receipt
+      'selector/current-system-loop-router
+      'custom/project
+      'incoming-ci-request-session
+      'incoming-ci-request-session
+      (list
+       (poo-flow-session-selector-candidate
+        'candidate/current-build
+        'workflow
+        'workflow/current-system-build
+        "Continue the current CI build loop."
+        '(runtime-handoff build-context)
+        '((source . loop-engine)
+          (use-case . current-system-build-loop)))
+       (poo-flow-session-selector-candidate
+        'candidate/current-recovery
+        'transform
+        'transform/current-system-recovery
+        "Derive a recovery session from the failing build state."
+        '(prior-failure verifier-notes)
+        '((source . loop-engine)
+          (use-case . current-system-recovery-loop))))
+      '((strategy . policy-first)
+        (selected-branch . current-system-build-loop)
+        (result-contract . workflow-or-transform-ref))
+      'candidate/current-build
+      '((source . loop-engine)
+        (case . current-system-build))))
+    session-materialization-receipts:
+    (list
+     (poo-flow-session-runtime-materialization-receipt
+      'runtime/current-system-build-request
+      'custom/project
+      'incoming-ci-request-session
+      'current-system-build-session
+      '(incoming-ci-request-session)
+      'pending
+      'runtime/current-system-build-future
+      'sandbox/current-system-build
+      '()
+      #f
+      '((source . loop-engine)
+        (use-case . current-system-build-loop)))
+     (poo-flow-session-runtime-materialization-receipt
+      'runtime/current-system-recovery-request
+      'custom/project
+      'incoming-ci-request-session
+      'current-system-recovery-session
+      '(incoming-ci-request-session current-system-build-session)
+      'pending
+      'runtime/current-system-recovery-future
+      'sandbox/current-system-recovery
+      '()
+      #f
+      '((source . loop-engine)
+        (use-case . current-system-recovery-loop))))))

@@ -139,6 +139,8 @@
    ((eq? module 'funflow) 'flow)
    ((eq? module 'loop-engine) 'flow)
    ((eq? module 'session-core) 'session)
+   ((eq? module 'tool-core) 'session)
+   ((eq? module 'memory-core) 'session)
    ((eq? module 'governor) 'loop)
    ((or (eq? module 'nono-sandbox)
         (eq? module 'cubeSandbox)

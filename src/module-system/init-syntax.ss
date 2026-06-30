@@ -7,13 +7,23 @@
                  expander-context-id)
         (only-in :gerbil/expander/stx stx-source)
         (only-in :clan/poo/object .o object<-alist)
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-user-module-selection-flag-entry
+                 poo-flow-user-module-selection->alist)
         :poo-flow/src/module-system/observability
+        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/module-system/durable-runtime-store
+        :poo-flow/src/module-system/durable-runtime-store-backend
+        :poo-flow/src/module-system/durable-runtime-store-operation
+        :poo-flow/src/module-system/durable-recovery-scenario
         :poo-flow/src/modules/cubeSandbox/config
         :poo-flow/src/modules/cubeSandbox/profile-interface
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/docker-sandbox/profile-interface
         :poo-flow/src/modules/funflow/config
+        :poo-flow/src/modules/memory-core/config
         :poo-flow/src/modules/session/config
+        :poo-flow/src/modules/tool-core/config
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/nono-sandbox/profile-interface
         :poo-flow/src/module-system/loop-engine-config
@@ -32,14 +42,23 @@
         poo-flow-profile-set
         poo-flow-profile-extend
         poo-flow-profile
+        poo-flow-user-module-selection-flag-entry
+        poo-flow-user-module-selection->alist
         (import: :poo-flow/src/modules/cubeSandbox/profile-interface)
         (import: :poo-flow/src/modules/docker-sandbox/profile-interface)
         (import: :poo-flow/src/modules/funflow/config)
+        (import: :poo-flow/src/modules/memory-core/config)
         (import: :poo-flow/src/modules/session/config)
+        (import: :poo-flow/src/modules/tool-core/config)
         (import: :poo-flow/src/module-system/loop-engine-config)
         (import: :poo-flow/src/module-system/loop-engine-policy-extension)
         (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
         (import: :poo-flow/src/module-system/observability)
+        (import: :poo-flow/src/module-system/durable-policy)
+        (import: :poo-flow/src/module-system/durable-runtime-store)
+        (import: :poo-flow/src/module-system/durable-runtime-store-backend)
+        (import: :poo-flow/src/module-system/durable-runtime-store-operation)
+        (import: :poo-flow/src/module-system/durable-recovery-scenario)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
 ;;; Doom-style config fragments are declaration includes, not runtime module
@@ -282,7 +301,7 @@
 ;;       ```
 ;;     %
 (defsyntax (use-module stx)
-  (syntax-case stx (:config profiles binding workflow funflow loop-engine nono-sandbox cubeSandbox docker-sandbox
+  (syntax-case stx (:config profiles binding workflow funflow tool-core memory-core loop-engine nono-sandbox cubeSandbox docker-sandbox
                     .def
                     :inherits :isolation :environment :command :nono)
     ((_ funflow
@@ -302,24 +321,30 @@
             (let* ((prototype-name
                     (object<-alist
                      (list (cons 'slot-name slot-value) ...)
-                     supers: prototype-super))
+                     supers: (poo-flow-memory-core-prototype-super
+                              'prototype-super)))
                    ...)
               (poo-flow-modules-system-use-module/contract
                'funflow
                (poo-flow-funflow-poo-config-flags
                 (list prototype-name ...)
-                '((.def (prototype-name prototype-self prototype-super prototype-slot ...))
+                '((.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                        slot-def ...)
                   ...))))))
          (syntax
           (let* ((prototype-name
-                  (.o (:: prototype-self prototype-super prototype-slot ...)
+                  (.o (:: prototype-self
+                          (poo-flow-memory-core-prototype-super
+                           'prototype-super)
+                          prototype-slot ...)
                       slot-def ...))
                  ...)
             (poo-flow-modules-system-use-module/contract
              'funflow
              (poo-flow-funflow-poo-config-flags
               (list prototype-name ...)
-              '((.def (prototype-name prototype-self prototype-super prototype-slot ...))
+              '((.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                      slot-def ...)
                 ...))))))))
     ((_ funflow
         :config
@@ -346,7 +371,8 @@
                (poo-flow-funflow-poo-config-flags
                 (list prototype-name ...)
                 '(:config
-                  (.def (prototype-name prototype-self prototype-super prototype-slot ...))
+                  (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                        slot-def ...)
                   ...))))))
          (syntax
           (let* ((prototype-name
@@ -358,13 +384,96 @@
              (poo-flow-funflow-poo-config-flags
               (list prototype-name ...)
               '(:config
-                (.def (prototype-name prototype-self prototype-super prototype-slot ...))
+                (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                      slot-def ...)
                 ...))))))))
     ((_ workflow :config bad-clause ...)
      (syntax
       (poo-flow-modules-system-use-module/contract
        'workflow
        '())))
+    ((_ tool-core
+        :config
+        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+              slot-def ...)
+        ...)
+     (let* ((slot-groups
+             (map (lambda (slot-specs)
+                    (poo-flow-simple-keyword-slot-specs
+                     (syntax ctx)
+                     slot-specs))
+                  (poo-flow-syntax-list->list
+                   (syntax ((slot-def ...) ...))))))
+       (if (poo-flow-all? slot-groups)
+         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
+           (syntax
+            (let* ((prototype-name
+                    (object<-alist
+                     (list (cons 'slot-name slot-value) ...)
+                     supers: prototype-super))
+                   ...)
+              (poo-flow-modules-system-use-module/contract
+               'tool-core
+               (poo-flow-tool-core-poo-config-flags
+                (list prototype-name ...)
+                '(:config
+                  (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                        slot-def ...)
+                  ...))))))
+         (syntax
+          (let* ((prototype-name
+                  (.o (:: prototype-self prototype-super prototype-slot ...)
+                      slot-def ...))
+                 ...)
+            (poo-flow-modules-system-use-module/contract
+             'tool-core
+             (poo-flow-tool-core-poo-config-flags
+              (list prototype-name ...)
+             '(:config
+               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                     slot-def ...)
+               ...))))))))
+    ((_ memory-core
+        :config
+        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+              slot-def ...)
+        ...)
+     (let* ((slot-groups
+             (map (lambda (slot-specs)
+                    (poo-flow-simple-keyword-slot-specs
+                     (syntax ctx)
+                     slot-specs))
+                  (poo-flow-syntax-list->list
+                   (syntax ((slot-def ...) ...))))))
+       (if (poo-flow-all? slot-groups)
+         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
+           (syntax
+            (let* ((prototype-name
+                    (object<-alist
+                     (list (cons 'slot-name slot-value) ...)
+                     supers: prototype-super))
+                   ...)
+              (poo-flow-modules-system-use-module/contract
+               'memory-core
+               (poo-flow-memory-core-poo-config-flags
+                (list prototype-name ...)
+                '(:config
+                  (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                        slot-def ...)
+                  ...))))))
+         (syntax
+          (let* ((prototype-name
+                  (.o (:: prototype-self prototype-super prototype-slot ...)
+                      slot-def ...))
+                 ...)
+            (poo-flow-modules-system-use-module/contract
+             'memory-core
+             (poo-flow-memory-core-poo-config-flags
+              (list prototype-name ...)
+              '(:config
+                (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                      slot-def ...)
+                ...))))))))
     ((_ loop-engine
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
@@ -380,7 +489,8 @@
          (poo-flow-user-loop-engine-poo-config-flags
           (list prototype-name ...)
           '(:config
-            (.def (prototype-name prototype-self prototype-super prototype-slot ...))
+            (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                  slot-def ...)
             ...))))))
     ((_ loop-engine bad-clause ...)
      (error "loop-engine config DSL has been removed; use (use-module loop-engine :config (.def ...))"))
@@ -401,7 +511,8 @@
           (poo-flow-sandbox-profile-prototypes
            (profile-name profile-name) ...)
           '((binding binding-kind)
-            (.def (profile-name profile-self profile-super profile-slot ...))
+            (.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
             ...))))))
     ((_ nono-sandbox
         (.def (profile-name profile-self profile-super profile-slot ...)
@@ -418,7 +529,8 @@
           +poo-flow-nono-sandbox-default-binding+
           (poo-flow-sandbox-profile-prototypes
            (profile-name profile-name) ...)
-          '((.def (profile-name profile-self profile-super profile-slot ...))
+          '((.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
             ...))))))
     ((_ cubeSandbox
         (.def (profile-name profile-self profile-super profile-slot ...)
@@ -434,7 +546,8 @@
          (poo-flow-cubeSandbox-config-flags
           (poo-flow-sandbox-profile-prototypes
            (profile-name profile-name) ...)
-          '((.def (profile-name profile-self profile-super profile-slot ...))
+          '((.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
             ...))))))
     ((_ docker-sandbox
         (.def (profile-name profile-self profile-super profile-slot ...)
@@ -450,7 +563,8 @@
          (poo-flow-docker-sandbox-config-flags
           (poo-flow-sandbox-profile-prototypes
            (profile-name profile-name) ...)
-          '((.def (profile-name profile-self profile-super profile-slot ...))
+          '((.def (profile-name profile-self profile-super profile-slot ...)
+                  slot-def ...)
             ...))))))
     ((_ module
         :inherits inherited-profile

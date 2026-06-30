@@ -312,23 +312,22 @@ M7 is now the active bridge closure between the user-interface handoff gate and 
 ** 10.06.27.80 Verification Gate
 M7 focused gates:
 - =gxpkg build=
-- =gxpkg env gxtest t/user-interface-cicd-test.ss=
-- =gxpkg env gxtest t/user-interface-presentation-test.ss=
-- =gxpkg env gxtest t/funflow-tutorial-alignment-report-test.ss=
+- =gxtest t/user-interface-cicd-test.ss=
+- =gxtest t/user-interface-presentation-test.ss=
+- =gxtest t/funflow-tutorial-alignment-report-test.ss=
 
 Before declaring the next slice complete, run:
 
 #+begin_src sh
 gxpkg build
-gxpkg env gxtest t/user-interface-cicd-test.ss
-gxpkg env gxtest t/user-interface-presentation-test.ss
-gxpkg env gxtest t/user-interface-config-presentation-test.ss
-gxpkg env gxtest t/declaration-case-test.ss
-gxpkg env gxtest t/workflow-cicd-check-map-test.ss
-gxpkg env gxtest t/funflow-config-pipeline-test.ss
-gxpkg env gxtest t/funflow-tutorial-alignment-report-test.ss
-gxpkg env gxtest t/unit-tests.ss
-poo-flow test t/unit-tests.ss
+gxtest t/user-interface-cicd-test.ss
+gxtest t/user-interface-presentation-test.ss
+gxtest t/user-interface-config-presentation-test.ss
+gxtest t/declaration-case-test.ss
+gxtest t/workflow-cicd-check-map-test.ss
+gxtest t/funflow-config-pipeline-test.ss
+gxtest t/funflow-tutorial-alignment-report-test.ss
+gxtest t/unit-tests.ss
 git diff --check
 #+end_src
 

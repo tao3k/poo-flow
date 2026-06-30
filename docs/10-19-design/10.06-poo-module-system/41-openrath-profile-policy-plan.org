@@ -5,7 +5,7 @@
 The OpenRath research checkout was refreshed under:
 
 #+begin_src text
-.data/openRath
+.data/OpenRath
 #+end_src
 
 Latest local revision after fetch:
@@ -159,6 +159,25 @@ Milestone 2: Capability Registry
 - Add static backend capability objects for existing sandbox backends.
 - Wire capability lookups into sandbox profile validation.
 - Project capability mismatch diagnostics.
+*** 10.06.41.75 Refresh: Session Loop And Capability Registry Lessons
+The checkout was refreshed again under =.data/OpenRath= and remained at:
+#+begin_src text
+ab884ab532e5139835c098213f3433016fb28deb 2026-06-24T17:12:54+08:00 ci(opensandbox): restore --reruns lost in v1.2.0 prep
+#+end_src
+
+The additional evidence reinforces the same architecture boundary:
+- =Agent.forward= performs memory injection, calls =run_session_loop=, then optionally commits memory. Recall and commit failures are deliberately non-fatal.
+- =BackendSandboxSpec= is only an optional sandbox request shape. =BackendSandbox= is the runtime handle with refcounting. =poo-flow= should model the request and policy, not the handle lifecycle.
+- =Capabilities= is class-level static backend data. It is not runtime probing. This maps directly to =poo-flow='s POO backend capability registry.
+- =_arun_session_loop= groups tool calls by =FlowToolCall.resource_key=. Calls with the same key remain serial; different keys can fan out in parallel; transcript rows are written back in original tool-call order. Scheme should project =resource-policy= and =dispatch-groups= as handoff data, not schedule tool execution.
+- Tool failures are structured values such as =ToolExecutionFailure= and are summarized into tool feedback JSON. =poo-flow= should continue producing structured diagnostics and failure-policy receipts rather than ad hoc error strings.
+
+The concrete =poo-flow= adjustment from this pass is that loop-engine capability receipts no longer use a hard-coded supported backend list. They now derive =supported-backends= from the selected module-system backend capability registry and use canonical backend-kind values such as =sandbox=, =nono=, =cube=, and =docker=. Marlin remains the runtime owner; it is not a backend capability value.
+
+Next implementation pressure:
+1. strengthen =resource-policy= validation around resource-key shape, collision classes, and dispatch groups;
+2. make memory-policy receipts distinguish recall, commit, ranking, retention, and failure behavior without executing memory operations;
+3. keep session lineage and persistence as report-only contracts until Marlin owns the runtime execution path.
 
 Current landing:
 
@@ -208,6 +227,241 @@ Milestone 5: Backend Projection Receipts
 - Keep runtime execution outside the Scheme validator.
 
 Milestone 6: User Profile Surface
+** 10.06.41.80 P1-P4 Delivery Plan
+This is the current staged implementation plan. It is feature-led: each phase
+has a user-visible result, a Scheme object boundary, and a receipt or diagnostic
+shape that can be checked without copying OpenRath internals.
+
+P1: Profile Policy Validation Receipts
+- User-visible result: sandbox profiles produce structured profile-policy
+  diagnostics that explain concrete resource, safety, and projection failures.
+- Scheme boundary: =profile-policy= remains a POO object family. Validation reads
+  composed POO slots and emits diagnostic POO objects or serializable receipts.
+- Main owners:
+  - =src/modules/sandbox-core/profile-support/policy.ss=
+  - =src/modules/sandbox-core/profile-support/resolve.ss=
+  - =src/modules/sandbox-core/profile-support/derivation.ss=
+  - =src/modules/agent-sandbox/config.ss=
+- Required behavior:
+  - represent diagnostics as =profile-policy.diagnostic.v1= receipts.
+  - validate concrete filesystem/workspace paths when a profile declares them.
+  - report missing filesystem policy when a sandbox profile enables resource
+    isolation that cannot be meaningful without filesystem scope.
+  - preserve profile lineage, source object, phase, slot, severity, and
+    recoverability in diagnostics.
+  - keep row operators as authoring helpers only. Do not add a second patch DSL.
+- Out of scope in P1:
+  - runtime provisioning.
+  - backend process startup.
+  - current testing/CLI refactor files.
+
+P2: Backend Capability Registry
+- User-visible result: every sandbox backend can explain what it supports before
+  a profile is handed to runtime code.
+- Scheme boundary: backend capabilities are POO objects that profile policy can
+  inherit, extend, and validate against.
+- Main owners:
+  - =src/modules/sandbox-core/profile-support/policy.ss=
+  - =src/modules/sandbox-core/profile-support/resolve.ss=
+  - =src/modules/agent-sandbox/config.ss=
+  - backend modules for nono, docker, cube, and future sandbox providers.
+- Required behavior:
+  - publish static capability objects for command, filesystem, network,
+    persistence, interpreter, isolation, and concurrency hints.
+  - make capability lookup extension-friendly. Backend modules should register
+    POO objects, not string-only cases.
+  - emit capability mismatch diagnostics through the same P1 receipt channel.
+  - keep availability checks cheap and diagnostic. Runtime work belongs outside
+    this registry.
+- Exit criteria:
+  - a profile can declare required capabilities and get a deterministic
+    validation result against a selected backend capability object.
+
+P3: Session/Profile Handoff Policy
+- User-visible result: session and agent-flow objects can request a named sandbox
+  profile and receive a validated placement receipt before runtime handoff.
+- Scheme boundary: session placement is functional data over POO objects. The
+  Scheme layer builds receipts and intent objects; Marlin/Rust or backend code
+  owns execution.
+- Main owners:
+  - =src/modules/session-core/config.ss=
+  - =src/module-system/session-core-config.ss=
+  - =src/modules/session/objects.ss=
+  - =src/modules/session/transform.ss=
+  - =src/modules/sandbox-core/profile.ss=
+  - =src/modules/agent-sandbox/config.ss=
+- Required behavior:
+  - attach profile-policy projection receipts to session placement results.
+  - preserve session lineage, requested profile, backend intent, and validation
+    diagnostics.
+  - make invalid placement a structured failure value, not an implicit runtime
+    exception.
+  - avoid runtime handles, refcounts, or backend lifecycle state in Scheme
+    profile objects.
+- Exit criteria:
+  - session configuration can show which validated profile would be used for
+    each runtime placement path.
+
+P4: Funflow and CI/CD Profile Policy Integration
+- User-visible result: workflow and CI/CD pipelines can request sandbox profiles
+  for checks, build tasks, artifact tasks, and release tasks with the same
+  profile-policy validation path.
+- Scheme boundary: flow composition stays functional. Task and pipeline objects
+  reference profile-policy objects by name or object identity, then lower to
+  projection receipts.
+- Main owners:
+  - =src/modules/funflow/config.ss=
+  - =src/modules/workflow/config.ss=
+  - workflow CI/CD feature modules.
+  - user configuration examples under =user-interface/custom/my-module/=.
+- Required behavior:
+  - let a pipeline task request a profile-policy object without embedding backend
+    runtime details in the task.
+  - include profile, capability set, resource scope, safety policy, and
+    projection status in the pipeline receipt.
+  - support multiple pipelines and task inheritance through POO supers, with
+    validation after composition.
+  - make invalid CI/CD profile use fail at configuration validation time.
+- Exit criteria:
+  - a CI/CD example can explain the selected sandbox profile for each task and
+    show deterministic diagnostics for illegal profile inheritance or missing
+    resources.
+** 10.06.41.90 Harness Scenario Lessons
+The upstream Gerbil harness scenarios show a better optimization loop than
+one-off implementation fixes. The pattern to copy is the evidence shape, not the
+specific test harness internals:
+- keep the scenario compact and user-shaped.
+- preserve mixed dependency context instead of reducing everything to the POO
+  dependency alone.
+- emit selectors, minimal forms, failure cases, and quality signals as
+  structured evidence.
+- keep local fixture facts source-loadable so stale installed packages cannot
+  hide scenario drift.
+- prefer named POO constructors, mixins, and functional helpers over anonymous
+  raw compute hooks.
+- split hot-path object reads into stable helpers. Avoid repeatedly reading
+  expensive nested child POO objects in validation loops.
+- write negative scenarios for similar-but-wrong dependencies, inactive
+  extensions, illegal profile inheritance, missing concrete paths, and forbidden
+  runtime provisioning.
+
+For =poo-flow= this means P1-P4 should be driven by scenario fixtures that prove
+the object boundary:
+#+begin_src text
+compact user shape -> composed POO objects -> validation receipt -> projection receipt
+#+end_src
+
+Testing files are intentionally excluded from this slice because the project
+testing layer is being refactored. The next code slice should add implementation
+owners first, then wire focused scenario gates once the testing boundary is
+stable again.
+** 10.06.41.100 Current Progress Audit And Next Plan
+Current status:
+- P1 has started in code. =profile-policy= now has POO-native diagnostic,
+  validation, and projection objects as the public control-plane surface.
+- Profile resolution now passes the merged =resource-policy= into profile-policy
+  validation, so validation observes the composed object result instead of only
+  the policy default.
+- User-facing sandbox profile presentation now reads policy receipts through POO
+  slots, not alist lookup.
+- The plan document has the P1-P4 delivery lane and harness-scenario lessons.
+- The package build gate is restored. =build.ss= is executable again, and
+  =GERBIL_BUILD_CORES=8 gxpkg build -R -O= reaches and completes package
+  compilation.
+
+Remaining gaps:
+- Profile-policy receipt helpers now expose explicit POO accessors from the
+  policy owner. Plain alist projection should stay a named serialization path,
+  not the ordinary receipt interface.
+- =agent-sandbox/config.ss= still has a mixed presentation boundary: profile
+  collections are POO objects, while runtime intent and summaries still project
+  to alists. That is acceptable for bridge receipts, but the profile-policy
+  branch should be named as POO-native.
+- Existing tests still contain old alist-oriented assertions around
+  =policy-projections= and validation receipts. Testing is currently being
+  refactored, so the next code slice should not widen test churn until that
+  boundary settles.
+- Backend capabilities are still selected through a fixed ref helper. This is
+  usable for P1, but P2 needs an extension-friendly registry object.
+
+Next execution plan:
+
+P0: Restore Build Gate
+- Done: restored executable mode on =build.ss= so =gxpkg build -R -O= can
+  launch the package build script.
+- Verified with =GERBIL_BUILD_CORES=8 gxpkg build -R -O=.
+- Keep this invariant: do not repair build entry drift by deleting generated
+  =.gerbil= state.
+
+P1A: Finish POO-Native Profile-Policy Surface
+- Done: corrected the profile-policy receipt helper boundary so validation and
+  projection are read through explicit POO accessors owned by
+  =profile-support/policy.ss=.
+- Remaining: audit public documentation and examples after the testing refactor
+  settles, because tests still carry old alist-shaped expectations in some
+  assertions.
+- Keep serialization as an explicit projection helper only; do not make alists
+  the ordinary receipt interface.
+- Clean the small formatting drift in =resolve.ss= around the validation call.
+
+P1B: Scenario Evidence For Profile Policy
+- Once the testing refactor stabilizes, add focused scenarios for:
+  - missing backend capability.
+  - filesystem capability without filesystem resource.
+  - resource policy without filesystem capability.
+  - invalid concrete project-workspace path.
+  - profile inheritance that produces an invalid merged resource policy.
+- Each scenario should prove the same shape:
+  compact user shape -> composed POO objects -> POO diagnostics -> projection
+  receipt.
+
+P2: Capability Registry Object
+- Replace the fixed backend capability ref helper with a registry POO object.
+- Let backend modules contribute capability objects by extension instead of
+  adding string cases.
+- Keep registry checks static and report-only. Runtime availability remains a
+  cheap diagnostic, not provisioning.
+- Current code state:
+  - =profile-support/policy.ss= owns the backend capability registry POO object
+    plus =entries=, =aliases=, =default=, =extend=, =merge=, and =ref= helpers.
+  - =profile-support/policy.ss= separates the minimal =sandbox-core= registry
+    contribution from the built-in static default registry snapshot.
+  - =profile-support/policy.ss= owns registry diagnostic and validation
+    receipts for duplicate backend ids, duplicate aliases, invalid capability
+    entries, alias target holes, and registry shape errors.
+  - =nono-sandbox=, =docker-sandbox=, and =cubeSandbox= each export a backend
+    capability registry contribution object beside their profile/module objects.
+  - =module-system/sandbox-backend-capability-catalog.ss= builds a merged
+    backend registry from enabled user module selections and exports it through
+    =module-system/profile-config.ss=.
+  - =module-system/sandbox-backend-capability-catalog.ss= also preserves the
+    contribution registry list before merge so validation can report conflicts
+    before last-writer merge semantics erase evidence.
+  - =agent-sandbox/config.ss= exposes registry-aware policy validation,
+    projection, runtime-intent, and profile-presentation helpers so callers can
+    pass the merged module-system registry.
+  - =module-system/presentation-config.ss= and profile presentation now expose
+    the sandbox backend capability registry validation receipt, validity flag,
+    diagnostic count, and diagnostics.
+  - The legacy fixed helper now delegates to the default registry, so call sites
+    keep working while module-system aggregation can move to registry merge.
+- Remaining P2 work:
+  - pass the merged registry into profile-policy projection instead of relying
+    only on =poo-flow-sandbox-backend-capability-registry/default= at older call
+    sites.
+
+P3: Session/Profile Handoff
+- Attach profile-policy projection objects to session placement receipts.
+- Invalid placement should return a structured POO failure object before runtime
+  handoff.
+- Keep backend handles, process lifecycle, and provisioning out of Scheme.
+
+P4: Funflow/CI/CD Integration
+- Let workflow tasks and CI/CD pipeline objects request profile-policy objects
+  by name or object identity.
+- Include selected profile, capability object, resource scope, safety policy,
+  and projection status in pipeline receipts.
+- Use POO supers for task/profile inheritance, then validate after composition.
 
 - Update user-interface custom cases so profiles inherit from real module
   profile objects rather than restating fake profile fragments.

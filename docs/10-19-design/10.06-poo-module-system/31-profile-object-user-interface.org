@@ -347,9 +347,7 @@ the observability request as check metadata:
                                    observability observes guards report)
     check-name: 'profile-authoring
     profile-ref: 'ci/build
-    command-vector: '("gxpkg"
-                      "env"
-                      "gxtest"
+    command-vector: '("gxtest"
                       "t/sandbox-core-profile-authoring-diagnostics-test.ss")
     artifact-outputs: '(poo-authoring-report)
     cache-intents: '(gerbil-build-cache)
@@ -366,9 +364,7 @@ the observability request as check metadata:
                            dependency-refs)
     check-name: 'funflow-readiness
     profile-ref: 'ci/check
-    command-vector: '("gxpkg"
-                      "env"
-                      "gxtest"
+    command-vector: '("gxtest"
                       "t/user-interface-cicd-pipeline-run-test.ss")
     artifact-outputs: '(runtime-manifest-readiness)
     result-protocol: '(read :lines)

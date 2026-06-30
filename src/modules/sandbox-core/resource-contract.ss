@@ -8,8 +8,13 @@
                  poo-object-contract-validation
                  poo-object-validation-valid?))
 
-(export poo-flow-runtime-volume-filesystem-prototype
+(export poo-flow-runtime-filesystem-prototype
+        poo-flow-runtime-volume-filesystem-prototype
+        poo-flow-snapshot-filesystem-prototype
+        poo-flow-runtime-filesystem-resources-prototype
         poo-flow-runtime-volume-resources-prototype
+        poo-flow-snapshot-resources-prototype
+        poo-flow-runtime-volume-ports-resources-prototype
         poo-flow-sandbox-resources-prototype-contract-validation
         poo-flow-sandbox-resources-prototype-contract-validation-valid?
         poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
@@ -17,20 +22,52 @@
         poo-flow-require-sandbox-resources-prototype-contract!
         poo-flow-sandbox-prototype-slot-entry
         poo-flow-sandbox-filesystem-prototype->resource-entry
+        poo-flow-sandbox-filesystem-prototype->resource-policy
         poo-flow-sandbox-resources-prototype->resource-policy
         poo-flow-sandbox-resources-value->resource-policy)
 
 ;;; Runtime resources are modeled as a first-class POO object so backend
 ;;; profiles can extend concrete slots without reintroducing ad hoc alists.
 ;; : PooSandboxFilesystemPrototype
+(.def poo-flow-runtime-filesystem-prototype
+  scope: 'runtime
+  materialized-by: 'runtime
+  mounts: 'runtime)
+
+;; : PooSandboxFilesystemPrototype
 (.def poo-flow-runtime-volume-filesystem-prototype
   scope: 'volume
   materialized-by: 'runtime
   mounts: 'runtime)
 
+;; : PooSandboxFilesystemPrototype
+(.def poo-flow-snapshot-filesystem-prototype
+  scope: 'snapshot
+  snapshot: 'clone)
+
+;; : PooSandboxResourcesPrototype
+(.def poo-flow-runtime-filesystem-resources-prototype
+  filesystem: poo-flow-runtime-filesystem-prototype
+  cpu: 2
+  memory: "4Gi")
+
 ;; : PooSandboxResourcesPrototype
 (.def poo-flow-runtime-volume-resources-prototype
   filesystem: poo-flow-runtime-volume-filesystem-prototype
+  cpu: 2
+  memory: "4Gi")
+
+;; : PooSandboxResourcesPrototype
+(.def poo-flow-snapshot-resources-prototype
+  filesystem: poo-flow-snapshot-filesystem-prototype
+  cpu: 2
+  memory: "4Gi")
+
+;; : PooSandboxResourcesPrototype
+(.def poo-flow-runtime-volume-ports-resources-prototype
+  filesystem: poo-flow-runtime-volume-filesystem-prototype
+  ports: '((scope . runtime)
+           (published-by . runtime))
   cpu: 2
   memory: "4Gi")
 
@@ -102,7 +139,7 @@
 
 ;; : [Symbol]
 (def +poo-flow-sandbox-resources-prototype-slots+
-  '(filesystem cpu memory timeout-ms))
+  '(filesystem ports cpu memory timeout-ms))
 
 ;;; Boundary: sandbox resources prototype slot if present is the policy-visible
 ;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
@@ -187,6 +224,12 @@
     'override
     (poo-flow-sandbox-resources-prototype-slot/default resources 'cpu #f)
     '((scope . sandbox-core) (slot . cpu)))
+   (poo-flow-sandbox-resources-prototype-field-contract
+    'ports
+    'List
+    'override
+    (poo-flow-sandbox-resources-prototype-slot/default resources 'ports #f)
+    '((scope . sandbox-core) (slot . ports) (optional . #t)))
    (poo-flow-sandbox-resources-prototype-field-contract
     'memory
     'String
@@ -276,6 +319,10 @@
          (poo-flow-sandbox-prototype-slot-entry filesystem 'snapshot)
          (poo-flow-sandbox-prototype-slot-entry filesystem 'volume))))
 
+;; : (-> PooSandboxFilesystemPrototype ResourcePolicy)
+(def (poo-flow-sandbox-filesystem-prototype->resource-policy filesystem)
+  (list (poo-flow-sandbox-filesystem-prototype->resource-entry filesystem)))
+
 ;;; Boundary: sandbox resources prototype to resource policy is the policy-
 ;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
@@ -288,6 +335,7 @@
        (.ref resources 'filesystem)))
      '())
    (poo-flow-sandbox-prototype-slot-entry resources 'mounts)
+   (poo-flow-sandbox-prototype-slot-entry resources 'ports)
    (poo-flow-sandbox-prototype-slot-entry resources 'cpu)
    (poo-flow-sandbox-prototype-slot-entry resources 'memory)
    (poo-flow-sandbox-prototype-slot-entry resources 'timeout-ms)))

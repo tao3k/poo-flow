@@ -328,6 +328,8 @@
     (cons 'capability-policy #f)
     (cons 'memory-policies '())
     (cons 'compression-policy #f)
+    (cons 'session-selector-receipts '())
+    (cons 'session-materialization-receipts '())
     (cons 'policy-extensions '())
     (cons 'metadata '())
     (cons 'runtime-executed #f))))

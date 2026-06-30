@@ -13,6 +13,11 @@
         :poo-flow/src/module-system/resolver
         :poo-flow/src/module-system/loader
         :poo-flow/src/module-system/doctor
+        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/module-system/durable-runtime-store
+        :poo-flow/src/module-system/durable-runtime-store-backend
+        :poo-flow/src/module-system/durable-runtime-store-operation
+        :poo-flow/src/module-system/durable-recovery-scenario
         :poo-flow/src/module-system/descriptor-syntax
         :poo-flow/src/module-system/projection
         :poo-flow/src/module-system/presentation)
@@ -28,6 +33,11 @@
         (import: :poo-flow/src/module-system/resolver)
         (import: :poo-flow/src/module-system/loader)
         (import: :poo-flow/src/module-system/doctor)
+        (import: :poo-flow/src/module-system/durable-policy)
+        (import: :poo-flow/src/module-system/durable-runtime-store)
+        (import: :poo-flow/src/module-system/durable-runtime-store-backend)
+        (import: :poo-flow/src/module-system/durable-runtime-store-operation)
+        (import: :poo-flow/src/module-system/durable-recovery-scenario)
         (import: :poo-flow/src/module-system/descriptor-syntax)
         (import: :poo-flow/src/module-system/projection)
         (import: :poo-flow/src/module-system/presentation))

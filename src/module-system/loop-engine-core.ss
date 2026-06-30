@@ -3,6 +3,12 @@
 ;;; Invariant: this owner normalizes user rows but never builds command manifests.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
+        (only-in :poo-flow/src/modules/session/materialization
+                 poo-flow-session-materialization-receipt?
+                 poo-flow-session-materialization-receipt->alist)
+        (only-in :poo-flow/src/modules/session/selector
+                 poo-flow-session-selector-receipt?
+                 poo-flow-session-selector-receipt->alist)
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/loop-engine-prototypes
         :poo-flow/src/module-system/loop-engine-contract
@@ -44,6 +50,54 @@
   (if (and (pair? row) (symbol? (car row)))
     (list (car row))
     '()))
+
+;;; Session selector receipts are functional values supplied by session modules.
+;;; Loop profiles store the values, and this boundary projects them once.
+;; : (-> PooSessionSelectorReceipt Alist)
+(def (poo-flow-user-loop-engine-session-selector-receipt->row receipt)
+  (poo-flow-user-loop-engine-require
+   "loop-engine session-selector-receipts slot requires selector receipts"
+   (poo-flow-session-selector-receipt? receipt)
+   receipt)
+  (poo-flow-session-selector-receipt->alist receipt))
+
+;; : (-> [PooSessionSelectorReceipt] [Alist])
+(def (poo-flow-user-loop-engine-session-selector-receipts->rows receipts)
+  (cond
+   ((null? receipts) '())
+   ((pair? receipts)
+    (cons
+     (poo-flow-user-loop-engine-session-selector-receipt->row
+      (car receipts))
+     (poo-flow-user-loop-engine-session-selector-receipts->rows
+      (cdr receipts))))
+   (else
+    (error "loop-engine profile session-selector-receipts slot must be a list"
+           receipts))))
+
+;;; Session materialization receipts stay runtime-owned; Scheme only carries
+;;; their report shape into the loop handoff packet.
+;; : (-> PooSessionMaterializationReceipt Alist)
+(def (poo-flow-user-loop-engine-session-materialization-receipt->row receipt)
+  (poo-flow-user-loop-engine-require
+   "loop-engine session-materialization-receipts slot requires materialization receipts"
+   (poo-flow-session-materialization-receipt? receipt)
+   receipt)
+  (poo-flow-session-materialization-receipt->alist receipt))
+
+;; : (-> [PooSessionMaterializationReceipt] [Alist])
+(def (poo-flow-user-loop-engine-session-materialization-receipts->rows receipts)
+  (cond
+   ((null? receipts) '())
+   ((pair? receipts)
+    (cons
+     (poo-flow-user-loop-engine-session-materialization-receipt->row
+      (car receipts))
+     (poo-flow-user-loop-engine-session-materialization-receipts->rows
+      (cdr receipts))))
+   (else
+    (error "loop-engine profile session-materialization-receipts slot must be a list"
+           receipts))))
 
 ;;; Profile intent projection is the sole join point for object rows, policy
 ;;; rows, policy-extension receipts, and runtime ownership facts. Keeping this
@@ -133,6 +187,12 @@
       (cons 'compression-policy
             (poo-flow-user-loop-engine-poo-compression-policy->rows
              (.ref profile 'compression-policy)))
+      (cons 'session-selector-receipts
+            (poo-flow-user-loop-engine-session-selector-receipts->rows
+             (.ref profile 'session-selector-receipts)))
+      (cons 'session-materialization-receipts
+            (poo-flow-user-loop-engine-session-materialization-receipts->rows
+             (.ref profile 'session-materialization-receipts)))
       (cons 'policy-extension-receipts
             (poo-flow-user-loop-engine-poo-policy-extensions->receipts
              (.ref profile 'policy-extensions)))

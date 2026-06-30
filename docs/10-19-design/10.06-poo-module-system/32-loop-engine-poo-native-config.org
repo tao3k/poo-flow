@@ -105,7 +105,7 @@ This split is intentional. =runtime-handoff-contracts= names operations that Mar
 
 The public presentation exposes the same =receipt-contracts= table so downstream agents can validate the manifest shape without walking every runtime request payload.
 
-OpenRath's backend, memory, compression, and operational policy layers suggest manifest extensions, but not Scheme runtime implementations. =loop-engine-capability-policy= validates backend values as sandbox backend names: =nono-sandbox= and =cube-sandbox= are accepted; =marlin-agent-core= remains the runtime owner, not a sandbox backend. =memory-policies= are report-only and use-case-scoped: Scheme validates membership and duplicate use-case conflicts, then the =memory-receipt= exposes the selected policy plus the complete policy list. Marlin owns durable memory stores, recall execution, commit execution, ranking, retention, and mutation. =loop-engine-compression-policy= is also report-only: Marlin owns transcript summarization, compressed session creation, session lineage writes, and retention enforcement. =policy-extensions= are generic report-only receipts for operational policy families such as coordination, observability, and safety. Concrete POO sub-prototypes provide family-specific slots; Marlin consumes the receipt collection and owns execution, state mutation, scheduling, and conflict enforcement.
+OpenRath's backend, memory, compression, and operational policy layers suggest manifest extensions, but not Scheme runtime implementations. =loop-engine-capability-policy= validates backend values as sandbox backend names: =nono-sandbox= and =cube-sandbox= are accepted; =marlin-agent-core= remains the runtime owner, not a sandbox backend. =memory-policies= are report-only and use-case-scoped: Scheme validates membership and duplicate use-case conflicts, then the =memory-receipt= exposes the selected policy, =policy-count=, =available-use-cases=, =selected-policy-found?=, and the complete policy list. Marlin owns durable memory stores, recall execution, commit execution, ranking, retention, and mutation. =loop-engine-compression-policy= is also report-only: Marlin owns transcript summarization, compressed session creation, session lineage writes, and retention enforcement. =policy-extensions= are generic report-only receipts for operational policy families such as coordination, observability, and safety. Concrete POO sub-prototypes provide family-specific slots; Marlin consumes the receipt collection and owns execution, state mutation, scheduling, and conflict enforcement.
 
 The legacy =govern-loop= Marlin ABI manifest now carries a =loop-engine-discovery= table that references the same loop-engine runtime command contract, object families, and receipt contracts used by runtime handoff manifests. This keeps downstream consumers on one discovery surface without copying receipt contracts into a second source.
 
@@ -116,8 +116,8 @@ The package build spec now includes root =t/*.ss= test modules as a separate tes
 Focused verification should include:
 
 - =gxpkg build=;
-- =gxpkg env gxtest t/user-interface-custom-loop-engine-test.ss=;
-- =gxpkg env gxtest t/user-interface-presentation-test.ss=;
-- =gxpkg env gxtest t/user-interface-config-presentation-test.ss=;
-- =gxpkg env gxtest t/unit-tests.ss= after package-context compiled artifacts
+- =gxtest t/user-interface-custom-loop-engine-test.ss=;
+- =gxtest t/user-interface-presentation-test.ss=;
+- =gxtest t/user-interface-config-presentation-test.ss=;
+- =gxtest t/unit-tests.ss= after package-context compiled artifacts
   have been refreshed by the package CLI.

@@ -1,35 +1,59 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: focused user-interface loop-engine capability backend checks.
-;;; Invariant: capability backends name sandbox modules, never runtime owners.
+;;; Invariant: capability backends name registry backend-kind values, never
+;;; runtime owners.
 
 (import (only-in :std/test
                  check-equal?
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :gslph/src/benchmark/gate
+                 benchmark-fixture-contract-pass?
+                 benchmark-receipt-pass?
+                 benchmark-run)
+        (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/src/module-system/facade
+        (only-in :poo-flow/src/module-system/loop-engine-runtime
+                 loop-engine-capability-receipt?
+                 poo-flow-user-loop-engine-capability-receipt-ref)
         :poo-flow/src/module-system/init-syntax)
 
 (export user-interface-custom-loop-engine-capability-test)
 
-;;; Intent rows stay at the public presentation boundary so this focused owner
-;;; validates the same shape Marlin receives through the runtime manifest.
-;; | LoopEngineIntentRow = Alist
+;;; Generated runtime receipts are fixed Scheme structs internally and project
+;;; to bounded alists at presentation and runtime handoff boundaries. User POO
+;;; authoring remains native.
+;; | LoopEngineIntentRow = (Or POOObject LoopEngineCapabilityReceipt Alist)
 ;; | LoopEngineIntentKey = Symbol
 ;; : (-> LoopEngineIntentRow LoopEngineIntentKey MaybeValue)
-(def (test-ref alist key)
-  (let (entry (assoc key alist))
-    (if entry (cdr entry) #f)))
+(def (test-ref value key)
+  (cond
+   ((loop-engine-capability-receipt? value)
+    (poo-flow-user-loop-engine-capability-receipt-ref value key #f))
+   ((and (object? value) (.slot? value key)) (.ref value key))
+   ((pair? value)
+    (let (entry (assoc key value))
+      (if entry (cdr entry) #f)))
+   (else #f)))
 
-;;; Field extraction keeps capability diagnostics readable while preserving the
-;;; raw alist receipt shape used by the runtime handoff.
+;;; Field extraction keeps capability diagnostics readable across POO and
+;;; serialized receipt shapes.
 ;; : (-> [Alist] Symbol [Value])
 (def (test-field-values rows key)
   (map (lambda (row) (test-ref row key)) rows))
 
+;; : String
+(def invalid-capability-benchmark-path
+  "t/scenarios/performance/loop-engine-invalid-capability-presentation/benchmark.ss")
+
+;; : Alist
+(def invalid-capability-benchmark
+  (call-with-input-file invalid-capability-benchmark-path read))
+
 ;;; Invalid capability backend fixture protects the sandbox backend contract:
-;;; user-facing backend names are sandbox modules, not the Marlin runtime owner.
+;;; user-facing backend names are static backend-kind values from the selected
+;;; capability registry, not the Marlin runtime owner.
 ;; : [PooUserModuleSelection]
 (def custom-loop-invalid-capability-module
   (use-module loop-engine
@@ -52,13 +76,33 @@
 ;;; never calls private loop-engine lowering helpers directly.
 ;; : (-> [PooUserModuleSelection] POOObject)
 (def (custom-loop-presentation module-bundle)
-  (pooFlowUserConfigPresentation
-   (pooFlowUserConfig
-    (poo-flow-user-module-bundles->modules (list module-bundle))
-    (poo-flow-settings))))
+  (let* ((modules
+          (poo-flow-user-module-bundles->modules (list module-bundle)))
+         (config
+          (pooFlowUserConfig modules (poo-flow-settings))))
+    (pooFlowUserConfigPresentation config)))
 
-;;; Capability policy validates backend names as sandbox backends. Marlin is the
-;;; runtime owner, not a sandbox backend value.
+;; : (-> Alist)
+(def (custom-loop-invalid-capability-summary)
+  (let* ((presentation
+          (custom-loop-presentation custom-loop-invalid-capability-module))
+         (receipt
+          (car (.ref presentation 'loop-engine-capability-receipts))))
+    (list
+     (cons 'valid? (test-ref receipt 'valid?))
+     (cons 'diagnostic-count (test-ref receipt 'diagnostic-count))
+     (cons 'supported-backends (test-ref receipt 'supported-backends)))))
+
+;; : (-> Alist Void)
+(def (display-invalid-capability-benchmark receipt)
+  (display "[poo-flow-benchmark] loop-engine-invalid-capability-presentation ")
+  (write receipt)
+  (newline)
+  (force-output))
+
+;;; Capability policy validates backend names through the selected static
+;;; backend capability registry. Marlin is the runtime owner, not a backend
+;;; capability value.
 ;; : TestCase
 (def user-interface-custom-loop-engine-invalid-capability-case
   (test-case "diagnoses invalid loop-engine capability backend"
@@ -75,22 +119,46 @@
            (diagnostics
             (test-ref capability-receipt 'diagnostics)))
       (check-equal? (test-ref capability-receipt 'backend) 'marlin-sandbox)
+      (check-equal? (test-ref capability-receipt 'backend-kind) #f)
+      (check-equal? (test-ref capability-receipt 'backend-capabilities) '())
       (check-equal? (test-ref capability-receipt 'valid?) #f)
       (check-equal? (test-ref capability-receipt 'diagnostic-count) 1)
       (check-equal? (test-field-values diagnostics 'code)
                     '(unsupported-capability-backend))
       (check-equal? (test-ref capability-receipt 'supported-backends)
-                    '(nono-sandbox cube-sandbox))
+                    '(sandbox))
       (check-equal? (test-ref (test-ref runtime-manifest-request
                                          'capability-receipt)
                               'valid?)
                     #f)
-      (check-equal? (car (.ref presentation
-                            'loop-engine-capability-receipts))
-                    capability-receipt)
+      (let (presentation-capability-receipt
+            (car (.ref presentation 'loop-engine-capability-receipts)))
+        (check-equal? (test-ref presentation-capability-receipt 'backend)
+                      (test-ref capability-receipt 'backend))
+        (check-equal? (test-ref presentation-capability-receipt 'valid?)
+                      (test-ref capability-receipt 'valid?)))
       (check-equal? (test-ref intent 'runtime-executed) #f))))
+
+;; : TestCase
+(def user-interface-custom-loop-engine-invalid-capability-performance-case
+  (test-case "keeps invalid capability presentation inside benchmark contract"
+    (let* ((summary
+            (custom-loop-invalid-capability-summary))
+           (receipt
+            (benchmark-run
+             invalid-capability-benchmark
+             custom-loop-invalid-capability-summary)))
+      (check-equal?
+       (benchmark-fixture-contract-pass? invalid-capability-benchmark)
+       #t)
+      (check-equal? (test-ref summary 'valid?) #f)
+      (check-equal? (test-ref summary 'diagnostic-count) 1)
+      (check-equal? (test-ref summary 'supported-backends) '(sandbox))
+      (display-invalid-capability-benchmark receipt)
+      (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestSuite
 (def user-interface-custom-loop-engine-capability-test
   (test-suite "poo-flow custom loop-engine capability policy"
-    user-interface-custom-loop-engine-invalid-capability-case))
+    user-interface-custom-loop-engine-invalid-capability-case
+    user-interface-custom-loop-engine-invalid-capability-performance-case))

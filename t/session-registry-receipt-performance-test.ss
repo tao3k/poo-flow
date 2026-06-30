@@ -1,0 +1,139 @@
+;;; -*- Gerbil -*-
+;;; Boundary: session registry receipt performance gate.
+;;; Invariant: registry projection is a bounded address-space receipt, not a
+;;; live runtime store.
+
+(import (only-in :std/test
+                 check-equal?
+                 test-case
+                 test-suite)
+        (only-in :clan/poo/object .ref)
+        (only-in :gslph/src/benchmark/gate
+                 benchmark-fixture-contract-pass?
+                 benchmark-receipt-pass?
+                 benchmark-run)
+        :poo-flow/t/support/performance
+        :poo-flow/src/modules/session/config)
+
+(export session-registry-receipt-performance-test)
+
+;; : String
+(def session-registry-receipt-fixture-path
+  "t/scenarios/performance/session-registry-receipt/benchmark.ss")
+
+;; : Alist
+(def session-registry-receipt-fixture
+  (call-with-input-file session-registry-receipt-fixture-path read))
+
+;; : (-> Alist Symbol MaybeValue)
+(def (registry-performance-ref row key)
+  (let (entry (assoc key row))
+    (if entry (cdr entry) #f)))
+
+;; : (-> Alist Void)
+(def (registry-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] session-registry-receipt ")
+  (write receipt)
+  (newline)
+  (force-output))
+
+;; : (-> String Integer Symbol)
+(def (registry-performance-symbol prefix index)
+  (string->symbol
+   (string-append prefix "/" (number->string index))))
+
+;; : (-> Integer PooSession)
+(def (registry-performance-session index)
+  (let* ((session-id (registry-performance-symbol "session" index))
+         (parent-ids (if (= index 0)
+                       '()
+                       '(session/0))))
+    (poo-flow-session-value
+     session-id
+     (list (poo-flow-session-chunk
+            (registry-performance-symbol "chunk" index)
+            'assistant
+            "session registry performance node"))
+     (poo-flow-session-lineage
+      session-id
+      parent-ids
+      (if (= index 0) 'root 'child-agent))
+     (poo-flow-session-placement 'agent/nono))))
+
+;; : (-> Integer PooSessionRegistryEntry)
+(def (registry-performance-entry index)
+  (poo-flow-session-registry-entry
+   (registry-performance-session index)
+   (registry-performance-symbol "agent" index)
+   (list (registry-performance-symbol "channel" index))
+   (list (cons 'context
+               '((allowed-session-refs . (session/0))))
+         (cons 'sharing
+               '((project-workspace
+                  (access . read)
+                  (accounting . session/0))))
+         (cons 'durable
+               (list (cons 'policy-id
+                           (registry-performance-symbol "durable" index))
+                     (cons 'valid? #t))))))
+
+;; : (-> Integer Alist)
+(def (registry-performance-summary count)
+  (let* ((entries
+          (poo-flow-performance-build-list
+           count
+           registry-performance-entry))
+         (child-session-ids
+          (map poo-flow-session-registry-entry-session-id (cdr entries)))
+         (receipt
+          (poo-flow-session-registry-receipt
+           'project/performance
+           '(session/0)
+           child-session-ids
+           'session/0
+           entries)))
+    (list
+     (cons 'entry-count (.ref receipt 'entry-count))
+     (cons 'session-count (length (.ref receipt 'session-ids)))
+     (cons 'child-session-count (length (.ref receipt 'child-session-ids)))
+     (cons 'first-session
+           (poo-flow-session-registry-entry-session-id (car entries)))
+     (cons 'last-session
+           (poo-flow-session-registry-entry-session-id
+            (list-ref entries (- count 1))))
+     (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
+
+;; : TestSuite
+(def session-registry-receipt-performance-test
+  (test-suite "session registry receipt performance"
+    (test-case "keeps registry receipt projection inside benchmark contract"
+      (let* ((entry-count 240)
+             (summary (registry-performance-summary entry-count))
+             (receipt
+              (benchmark-run
+               session-registry-receipt-fixture
+               (lambda ()
+                 (registry-performance-summary entry-count)))))
+        (check-equal?
+         (benchmark-fixture-contract-pass? session-registry-receipt-fixture)
+         #t)
+        (check-equal?
+         (registry-performance-ref summary 'entry-count)
+         entry-count)
+        (check-equal?
+         (registry-performance-ref summary 'session-count)
+         entry-count)
+        (check-equal?
+         (registry-performance-ref summary 'child-session-count)
+         (- entry-count 1))
+        (check-equal?
+         (registry-performance-ref summary 'first-session)
+         'session/0)
+        (check-equal?
+         (registry-performance-ref summary 'last-session)
+         'session/239)
+        (check-equal?
+         (registry-performance-ref summary 'runtime-executed)
+         #f)
+        (registry-performance-display-receipt receipt)
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))))

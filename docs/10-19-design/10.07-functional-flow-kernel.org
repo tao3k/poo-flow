@@ -332,5 +332,5 @@ Boundary result:
 
 Proof:
 #+begin_src sh
-gxpkg env gxtest t/functional-flow-kleisli-test.ss
+gxtest t/functional-flow-kleisli-test.ss
 #+end_src

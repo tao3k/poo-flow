@@ -100,7 +100,7 @@ The public downstream shape should be:
                       dependency-refs)
     check-name: 'test
     profile-ref: 'ci/check
-    command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+    command-vector: '("gxtest" "t/unit-tests.ss")
     artifact-outputs: '(test-receipt)
     result-protocol: '(read :lines)
     runtime-mode: 'manifest-handoff
@@ -215,5 +215,5 @@ Legacy =:config= pipeline rows are no longer accepted.
   =src/modules/workflow/cicd.ss= projections;
 - Scheme does not execute commands, activate sandboxes, or resolve runtime
   adapters;
-- focused tests pass through =gxpkg env gxtest= and the package build remains
+- focused tests pass through native =gxtest= and the package build remains
   package-manager-owned.

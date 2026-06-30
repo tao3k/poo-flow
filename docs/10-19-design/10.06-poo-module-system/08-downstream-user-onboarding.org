@@ -1,7 +1,6 @@
 * 10.06.08 Downstream User Onboarding
 ** 10.06.08.10 Purpose
-This note is the downstream-facing entrypoint for using =poo-flow= as a
-Gerbil package dependency.
+This note is the downstream-facing entrypoint for using =poo-flow= as a Gerbil package dependency.
 
 The boundary is deliberately narrow:
 #+begin_src text
@@ -12,41 +11,33 @@ Runtime execution stays outside this repository.
 #+end_src
 
 ** 10.06.08.20 gerbil.pkg Dependency
-Downstream packages should depend on =poo-flow= through =gerbil.pkg= and keep
-the same dependency shape used by this repository's current package manifest.
+Downstream packages should depend on =poo-flow= through =gerbil.pkg= and keep the same dependency shape used by this repository's current package manifest.
 
-The important behavior is not package-manager state. The important behavior is
-that downstream tests can resolve the =src= module tree and the harness package
-without creating repository-local package-manager state.
+The important behavior is not package-manager state. The important behavior is that downstream tests can resolve the =src= module tree and the harness package without creating repository-local package-manager state.
 
-** 10.06.08.30 Package-Context Tests
-Use the Gerbil package CLI for local tests:
+** 10.06.08.30 Focused Tests
+Use native =gxtest= for focused local tests:
 #+begin_src sh
-gxpkg env gxtest t/unit-tests.ss
+gxtest t/unit-tests.ss
 #+end_src
 
-For focused downstream tests, keep the same shape and point the test file at the
-downstream suite:
+For focused downstream tests, keep the same shape and point the test file at the downstream suite:
 #+begin_src sh
-gxpkg env gxtest t/<downstream-test>.ss
+gxtest t/<downstream-test>.ss
 #+end_src
 
-Do not require callers to import =:poo-flow/user-interface/*= from the project
-root during package tests. Root practice files stay at the top level for user
-experiments and examples; stable tests should import =:poo-flow/src/module-system=,
-=:poo-flow/src/core/api=, or the relevant concrete module facade.
+Do not require callers to import =:poo-flow/user-interface/*= from the project root during package tests. Root practice files stay at the top level for user experiments and examples; stable tests should import =:poo-flow/src/module-system=, =:poo-flow/src/core/api=, or the relevant concrete module facade.
 
 ** 10.06.08.40 gxtest And Policy Harness
+Focused single-file selection is a native =gxtest= responsibility. The project harness and package build remain responsible for policy scope and declared source-root coverage.
+
 The normal verification ladder is:
 #+begin_src sh
-gxpkg build
-poo-flow test t/unit-tests.ss
+gxtest t/unit-tests.ss
+gxpkg build -R -O
 #+end_src
 
-=poo-flow test= includes the project harness policy surface through the
-dependency-provided harness policy API. The harness loads the =build.ss= source
-coverage declaration, so the policy gate covers the declared project source
-roots instead of a single test file. A clean direct report looks like:
+A clean direct report looks like:
 #+begin_src text
 [gerbil-gxtest] status=pass files=... definitions=... findings=0
 #+end_src
@@ -57,9 +48,7 @@ The =user-interface/*= directory is intentionally top-level:
 - =user-interface/custom/*/config.ss= shows user-owned custom module bodies.
 - =user-interface/README.org= explains the practice surface.
 
-Those files are examples of how a user writes configuration. They are not a
-second package namespace under =src= and should not force downstream tests to add
-the repository root to =GERBIL_LOADPATH=.
+Those files are examples of how a user writes configuration. They are not a second package namespace under =src= and should not force downstream tests to add the repository root to =GERBIL_LOADPATH=.
 
 ** 10.06.08.60 Runtime Boundary
 =poo-flow= publishes control-plane data:
@@ -68,9 +57,7 @@ the repository root to =GERBIL_LOADPATH=.
 - loop strategy and governor contracts;
 - Marlin ABI manifests and request envelopes.
 
-The production execution owner remains =marlin-agent-core=. Downstream code
-should treat Scheme projections as request and receipt data until Marlin
-consumes them.
+The production execution owner remains =marlin-agent-core=. Downstream code should treat Scheme projections as request and receipt data until Marlin consumes them.
 
 ** 10.06.08.70 Namespace Rule
 Public schema ids and contract ids use the project namespace:
@@ -78,6 +65,4 @@ Public schema ids and contract ids use the project namespace:
 poo-flow.*
 #+end_src
 
-Local Gerbil helper names may still use =poo-= prefixes where they describe the
-library API, such as =poo-user-config?= or =poo-module-doctor=. The ambiguous
-=poo.*= schema namespace should not be introduced in downstream contracts.
+Local Gerbil helper names may still use =poo-= prefixes where they describe the library API, such as =poo-user-config?= or =poo-module-doctor=. The ambiguous =poo.*= schema namespace should not be introduced in downstream contracts.

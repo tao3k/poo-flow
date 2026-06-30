@@ -14,22 +14,34 @@
                  test-case
                  test-error
                  test-suite)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/src/module-system/facade
+        (only-in :poo-flow/src/module-system/loop-engine-runtime
+                 loop-engine-capability-receipt?
+                 poo-flow-user-loop-engine-capability-receipt-ref)
+        (only-in :poo-flow/src/modules/cubeSandbox/config
+                 poo-flow-cubeSandbox-module-bundles)
+        (only-in :poo-flow/src/modules/nono-sandbox/config
+                 poo-flow-nono-sandbox-module-bundles)
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-engine-test)
 
-;;; Intent rows are projected as alists for presentation only. The helper keeps
-;;; the test at the public presentation boundary instead of reaching into the
-;;; loop-engine module constructors.
-;; | LoopEngineIntentRow = Alist
+;;; Intent rows are public presentation values. Generated capability receipts
+;;; are fixed structs; runtime ABI payloads serialize to alists.
+;; | LoopEngineIntentRow = (Or POOObject Alist)
 ;; | LoopEngineIntentKey = Symbol
 ;; : (-> LoopEngineIntentRow LoopEngineIntentKey MaybeValue)
-(def (test-ref alist key)
-  (let (entry (assoc key alist))
-    (if entry (cdr entry) #f)))
+(def (test-ref value key)
+  (cond
+   ((loop-engine-capability-receipt? value)
+    (poo-flow-user-loop-engine-capability-receipt-ref value key #f))
+   ((and (object? value) (.slot? value key)) (.ref value key))
+   ((pair? value)
+    (let (entry (assoc key value))
+      (if entry (cdr entry) #f)))
+   (else #f)))
 
 ;;; Name extraction keeps repeated profile/harness assertions about the object
 ;;; graph shape instead of duplicating alist traversal at each check site.
@@ -83,7 +95,10 @@
 
 ;; : (-> [PooUserModuleSelection] POOObject)
 (def (custom-loop-presentation module-bundle)
-  (custom-loop-presentation/bundles (list module-bundle)))
+  (custom-loop-presentation/bundles
+   (append poo-flow-nono-sandbox-module-bundles
+           poo-flow-cubeSandbox-module-bundles
+           (list module-bundle))))
 
 ;;; The concrete context centralizes projection setup so each assertion helper
 ;;; stays under one boundary: declaration shape, agent graph, operation rows,
@@ -104,12 +119,17 @@
 ;;; receipt rows are inspected.
 ;; : (-> POOObject Alist)
 (def (check-custom-loop-concrete-declaration presentation intent)
-  (check-equal? (.ref presentation 'module-count) 1)
+  (check-equal? (.ref presentation 'module-count) 3)
   (check-equal? (test-ref intent 'use-case)
                 '(current-system-build-loop
                   (level . l2)
                   (mode . guarded-handoff)
                   (workflow . funflow-cicd)))
+  (check-equal? (test-ref intent 'use-cases)
+                '((current-system-recovery-loop
+                   (level . l2)
+                   (mode . recovery-handoff)
+                   (workflow . funflow-cicd))))
   (check-equal? (test-ref intent 'agent-judges)
                 '((auditor ci-audit-agent)
                   (verifier build-verifier-agent)
@@ -126,12 +146,18 @@
                           'lineage-kind)
                 'guarded-handoff)
   (check-equal? (test-ref (test-ref intent 'selector-policy)
+                          'candidates)
+                '(current-system-build-loop current-system-recovery-loop))
+  (check-equal? (test-ref (test-ref intent 'selector-policy)
                           'selected-branch)
                 'current-system-build-loop)
   (check-equal? (test-ref (test-ref intent 'resource-policy)
                           'dispatch-groups)
                 '(((run-shell-command) . serial)
                   ((write-workspace-file read-workspace-file) . serial)))
+  (check-equal? (test-ref (test-ref intent 'capability-policy)
+                          'backend)
+                'nono)
   (check-equal? (test-ref (test-ref intent 'capability-policy)
                           'required)
                 '(command-run files-read files-write))
@@ -140,11 +166,20 @@
                 'handoff-diagnostic)
   (let ((memory-policies (test-ref intent 'memory-policies)))
     (check-equal? (test-field-values memory-policies 'use-case)
-                  '(current-system-build-loop))
+                  '(current-system-build-loop
+                    current-system-recovery-loop))
     (check-equal? (test-ref (car memory-policies) 'state-path)
                   "loop-state/current-system-build.org")
     (check-equal? (test-ref (car memory-policies) 'recall)
                   '(last-user-message build-context prior-failure))
+    (check-equal? (test-ref (cadr memory-policies) 'state-path)
+                  "loop-state/current-system-recovery.org")
+    (check-equal? (test-ref (cadr memory-policies) 'scope)
+                  'recovery-session)
+    (check-equal? (test-ref (cadr memory-policies) 'recall)
+                  '(last-good-build failed-commands verifier-notes))
+    (check-equal? (test-ref (cadr memory-policies) 'retention)
+                  'report-only)
     (check-equal? (test-ref (car memory-policies) 'retention)
                   'report-only))
   (check-equal? (test-ref (test-ref intent 'compression-policy)
@@ -153,6 +188,35 @@
   (check-equal? (test-ref (test-ref intent 'compression-policy)
                           'lineage-kind)
                 'compressed-ci-session)
+  (let ((selector-receipts
+         (test-ref intent 'session-selector-receipts))
+        (materialization-receipts
+         (test-ref intent 'session-materialization-receipts)))
+    (check-equal? (map (lambda (row) (test-ref row 'selector-id))
+                       selector-receipts)
+                  '(selector/current-system-loop-router))
+    (check-equal? (test-ref (car selector-receipts)
+                            'candidate-ids)
+                  '(candidate/current-build candidate/current-recovery))
+    (check-equal? (test-ref (car selector-receipts)
+                            'fallback-ref)
+                  'candidate/current-build)
+    (check-equal? (test-ref (car selector-receipts)
+                            'selection-state)
+                  'pending)
+    (check-equal? (test-ref (car selector-receipts)
+                            'selected-candidate-ref)
+                  #f)
+    (check-equal? (test-field-values materialization-receipts
+                                     'session-ref)
+                  '(current-system-build-session
+                    current-system-recovery-session))
+    (check-equal? (test-field-values materialization-receipts
+                                     'materialization-state)
+                  '(pending pending))
+    (check-equal? (test-field-values materialization-receipts
+                                     'runtime-executed)
+                  '(#f #f)))
   (check-equal? (test-ref intent 'result)
                 '((default . poo-flow.loop-governor.node-result.v1)
                   (auditor . poo-flow.loop-governor.audit-result.v1)
@@ -175,7 +239,8 @@
                                              sandbox-agreement
                                              agent-profiles
                                              agent-harnesses
-                                             agent-sessions)
+                                             agent-sessions
+                                             session-agent-graph)
   (check-equal? (test-ref handoff 'contract)
                 'poo-flow.loop-governor.runtime-handoff.v1)
   (check-equal? (test-ref handoff 'workflow-ref) 'funflow-cicd)
@@ -205,6 +270,18 @@
                 expected-loop-engine-agent-names)
   (check-equal? (test-field-values agent-sessions 'kind)
                 '(agent-session agent-session agent-session agent-session))
+  (check-equal? (test-ref session-agent-graph 'kind)
+                'poo-flow.session.agent-graph)
+  (check-equal? (test-ref session-agent-graph 'root-session-ref)
+                'incoming-ci-request-session)
+  (check-equal? (test-ref session-agent-graph 'agent-count) 4)
+  (check-equal? (test-ref session-agent-graph 'agent-ids)
+                expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-graph 'runtime-executed) #f)
+  (check-equal? (test-ref (test-ref session-agent-graph
+                                    'registry-receipt)
+                          'active-session-ref)
+                'loop-engine/current-system-build-loop/session)
   (check-equal? (test-ref (car agent-profiles) 'runtime-executed) #f)
   (check-equal? (test-ref (car agent-harnesses) 'runtime-executed) #f)
   (check-equal? (test-ref (test-ref (car agent-sessions) 'metadata)
@@ -222,14 +299,16 @@
                                                 compression-receipt)
   (check-equal? (test-ref lineage-receipt 'lineage-kind)
                 'guarded-handoff)
+  (check-equal? (test-ref selector-receipt 'candidates)
+                '(current-system-build-loop current-system-recovery-loop))
   (check-equal? (test-ref selector-receipt 'selected-branch)
                 'current-system-build-loop)
   (check-equal? (test-ref resource-dispatch-receipt 'dispatch-groups)
                 '(((run-shell-command) . serial)
                   ((write-workspace-file read-workspace-file) . serial)))
-  (check-equal? (test-ref capability-receipt 'backend) 'nono-sandbox)
+  (check-equal? (test-ref capability-receipt 'backend) 'nono)
   (check-equal? (test-ref capability-receipt 'supported-backends)
-                '(nono-sandbox cube-sandbox))
+                '(sandbox nono cube))
   (check-equal? (test-ref capability-receipt 'valid?) #t)
   (check-equal? (test-ref capability-receipt 'diagnostics) '())
   (check-equal? (test-ref capability-receipt 'required)
@@ -237,6 +316,11 @@
   (check-equal? (test-ref capability-receipt 'sandbox-ref) 'ci/build)
   (check-equal? (test-ref memory-receipt 'selected-use-case)
                 'current-system-build-loop)
+  (check-equal? (test-ref memory-receipt 'policy-count) 2)
+  (check-equal? (test-ref memory-receipt 'available-use-cases)
+                '(current-system-build-loop
+                  current-system-recovery-loop))
+  (check-equal? (test-ref memory-receipt 'selected-policy-found?) #t)
   (check-equal? (test-ref memory-receipt 'use-case)
                 'current-system-build-loop)
   (check-equal? (test-ref memory-receipt 'store) 'project-memory)
@@ -250,7 +334,11 @@
   (check-equal? (test-ref memory-receipt 'retention) 'report-only)
   (check-equal? (test-field-values (test-ref memory-receipt 'policies)
                                    'use-case)
-                '(current-system-build-loop))
+                '(current-system-build-loop
+                  current-system-recovery-loop))
+  (check-equal? (test-ref (cadr (test-ref memory-receipt 'policies))
+                          'state-path)
+                "loop-state/current-system-recovery.org")
   (check-equal? (test-ref memory-receipt 'runtime-executed) #f)
   (check-equal? (test-ref compression-receipt 'strategy)
                 'handoff-summary)
@@ -272,6 +360,7 @@
                                             agent-profiles
                                             agent-harnesses
                                             agent-sessions
+                                            session-agent-graph
                                             lineage-receipt
                                             selector-receipt
                                             resource-dispatch-receipt
@@ -281,17 +370,40 @@
   (check-equal? (test-ref handoff 'agent-profiles) agent-profiles)
   (check-equal? (test-ref handoff 'agent-harnesses) agent-harnesses)
   (check-equal? (test-ref handoff 'agent-sessions) agent-sessions)
+  (check-equal? (test-ref handoff 'session-agent-graph)
+                session-agent-graph)
   (check-equal? (test-ref handoff 'receipt-contracts)
                 expected-loop-engine-receipt-contracts)
   (check-equal? (test-ref handoff 'lineage-receipt) lineage-receipt)
   (check-equal? (test-ref handoff 'selector-receipt) selector-receipt)
   (check-equal? (test-ref handoff 'resource-dispatch-receipt)
                 resource-dispatch-receipt)
-  (check-equal? (test-ref handoff 'capability-receipt)
-                capability-receipt)
+  (let (handoff-capability-receipt
+        (test-ref handoff 'capability-receipt))
+    (check-equal? (loop-engine-capability-receipt? capability-receipt) #t)
+    (check-equal? (loop-engine-capability-receipt?
+                   handoff-capability-receipt)
+                  #f)
+    (check-equal? (object? handoff-capability-receipt) #f)
+    (check-equal? (pair? handoff-capability-receipt) #t)
+    (check-equal? (test-ref handoff-capability-receipt 'backend)
+                  (test-ref capability-receipt 'backend))
+    (check-equal? (test-ref handoff-capability-receipt 'valid?)
+                  (test-ref capability-receipt 'valid?))
+    (check-equal? (test-ref handoff-capability-receipt 'diagnostics)
+                  (test-ref capability-receipt 'diagnostics)))
   (check-equal? (test-ref handoff 'memory-receipt) memory-receipt)
   (check-equal? (test-ref handoff 'compression-receipt)
                 compression-receipt)
+  (check-equal? (test-field-values
+                 (test-ref handoff 'session-selector-receipts)
+                 'selector-id)
+                '(selector/current-system-loop-router))
+  (check-equal? (test-field-values
+                 (test-ref handoff 'session-materialization-receipts)
+                 'session-ref)
+                '(current-system-build-session
+                  current-system-recovery-session))
   (check-equal? (test-ref handoff 'result-contract) result-contract)
   (check-equal? (test-ref handoff 'runtime-executed) #f))
 
@@ -305,6 +417,7 @@
         (agent-profiles (test-ref intent 'agent-profiles))
         (agent-harnesses (test-ref intent 'agent-harnesses))
         (agent-sessions (test-ref intent 'agent-sessions))
+        (session-agent-graph (test-ref intent 'session-agent-graph))
         (lineage-receipt (test-ref intent 'lineage-receipt))
         (selector-receipt (test-ref intent 'selector-receipt))
         (resource-dispatch-receipt
@@ -320,7 +433,8 @@
                                             sandbox-agreement
                                             agent-profiles
                                             agent-harnesses
-                                            agent-sessions)
+                                            agent-sessions
+                                            session-agent-graph)
     (check-custom-loop-policy-receipt-boundary lineage-receipt
                                                selector-receipt
                                                resource-dispatch-receipt
@@ -332,6 +446,7 @@
                                            agent-profiles
                                            agent-harnesses
                                            agent-sessions
+                                           session-agent-graph
                                            lineage-receipt
                                            selector-receipt
                                            resource-dispatch-receipt
@@ -425,6 +540,8 @@
                 (test-ref intent 'agent-harnesses))
   (check-equal? (car (.ref presentation 'loop-engine-agent-sessions))
                 (test-ref intent 'agent-sessions))
+  (check-equal? (car (.ref presentation 'loop-engine-session-agent-graphs))
+                (test-ref intent 'session-agent-graph))
   (check-equal? (test-ref (car (.ref presentation
                                   'loop-engine-runtime-snapshots))
                           'status)
@@ -456,7 +573,7 @@
   (check-equal? (test-ref (car (.ref presentation
                                   'loop-engine-capability-receipts))
                           'backend)
-                'nono-sandbox)
+                'nono)
   (check-equal? (test-ref (car (.ref presentation
                                   'loop-engine-memory-receipts))
                           'store)
@@ -469,6 +586,17 @@
                                   'loop-engine-compression-receipts))
                           'trigger)
                 'after-human-audit)
+  (check-equal? (test-field-values
+                 (car (.ref presentation
+                             'loop-engine-session-selector-receipts))
+                 'selector-id)
+                '(selector/current-system-loop-router))
+  (check-equal? (test-field-values
+                 (car (.ref presentation
+                             'loop-engine-session-materialization-receipts))
+                 'session-ref)
+                '(current-system-build-session
+                  current-system-recovery-session))
   (check-equal? (test-ref (car (.ref presentation
                                   'loop-engine-runtime-command-manifests))
                           'operation)

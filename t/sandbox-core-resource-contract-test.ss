@@ -39,6 +39,14 @@
   cpu: 2
   memory: "4Gi")
 
+;; : PooSandboxResourcesPrototype
+(.def runtime-volume-ports-resources-prototype
+  filesystem: poo-flow-runtime-volume-filesystem-prototype
+  ports: '((scope . runtime)
+           (published-by . runtime))
+  cpu: 2
+  memory: "4Gi")
+
 ;; : (-> HashTable Symbol Value)
 (def (receipt-ref receipt key)
   (hash-get receipt key))
@@ -73,6 +81,47 @@
 ;; : TestSuite
 (def sandbox-core-resource-contract-test
   (test-suite "sandbox-core resource prototype typed contracts"
+    (test-case "projects shared filesystem fragments to resource policies"
+      (check-equal?
+       (poo-flow-sandbox-filesystem-prototype->resource-entry
+        poo-flow-runtime-filesystem-prototype)
+       '(filesystem
+         (scope . runtime)
+         (materialized-by . runtime)
+         (mounts . runtime)))
+      (check-equal?
+       (poo-flow-sandbox-filesystem-prototype->resource-entry
+        poo-flow-runtime-volume-filesystem-prototype)
+       '(filesystem
+         (scope . volume)
+         (materialized-by . runtime)
+         (mounts . runtime)))
+      (check-equal?
+       (poo-flow-sandbox-filesystem-prototype->resource-entry
+        poo-flow-snapshot-filesystem-prototype)
+       '(filesystem
+         (scope . snapshot)
+         (snapshot . clone))))
+    (test-case "projects shared resources with ports, cpu, and memory"
+      (let ((validation
+             (poo-flow-sandbox-resources-prototype-contract-validation
+              runtime-volume-ports-resources-prototype)))
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation-valid?
+          validation)
+         #t)
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype->resource-policy
+          runtime-volume-ports-resources-prototype)
+         '((filesystem
+            (scope . volume)
+            (materialized-by . runtime)
+            (mounts . runtime))
+           (ports
+            (scope . runtime)
+            (published-by . runtime))
+           (cpu . 2)
+           (memory . "4Gi")))))
     (test-case "validates runtime volume resources through harness facade"
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation

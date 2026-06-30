@@ -1,13 +1,8 @@
 * 40 Module Registry Scale Architecture
 ** 40.10 Problem
-The module-system facade became the largest build hotspot because it acted as a
-compile-time fan-in point. A public facade that imports concrete modules, large
-POO object owners, presentation code, and loader behavior will grow slower as
-the module catalog grows. A Doom Emacs sized catalog cannot depend on a facade
-that recompiles the world whenever the catalog gets wider.
+The module-system facade became the largest build hotspot because it acted as a compile-time fan-in point. A public facade that imports concrete modules, large POO object owners, presentation code, and loader behavior will grow slower as the module catalog grows. A Doom Emacs sized catalog cannot depend on a facade that recompiles the world whenever the catalog gets wider.
 
 The root fix is an architectural boundary, not another local import trim:
-
 - module catalog expansion is data;
 - loading is an explicit action;
 - the facade is a stable public API surface, not a concrete module aggregator.
@@ -17,100 +12,55 @@ The module-system path is split into three layers.
 
 1. =src/module-system/module-registry.ss=
 
-   This owner stores source-ref metadata and static module-tree manifests. It
-   imports only =src/module-system/source=. It must not import loaders,
-   resolvers, extension graphs, concrete =src/modules/*= packages, or POO object
-   owners. Expanding the catalog to hundreds of modules should only expand data
-   and string/source-ref mapping.
+This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/source=. It must not import loaders, resolvers, extension graphs, concrete =src/modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
 
 2. =src/module-system/loader-tree.ss=
 
-   This owner consumes registry source refs and turns them into lazy-load plans,
-   auto-import graphs, and strict load/catalog operations. Loader behavior stays
-   here because it is an action boundary. Registry users can inspect module
-   sources without forcing descriptor realization.
+This owner consumes registry source refs and turns them into lazy-load plans, auto-import graphs, and strict load/catalog operations. Loader behavior stays here because it is an action boundary. Registry users can inspect module sources without forcing descriptor realization.
 
 3. =src/module-system/facade.ss=
 
-   The facade re-exports stable module-system contracts only. Concrete workflow,
-   sandbox, profile, presentation, and object modules should be imported from
-   their real owner by callers that need them. The facade must not be used as a
-   convenience import for downstream implementation modules.
+The facade re-exports stable module-system contracts only. Concrete workflow, sandbox, profile, presentation, and object modules should be imported from their real owner by callers that need them. The facade must not be used as a convenience import for downstream implementation modules.
 
 ** 40.30 Growth Rule
 Adding a new concrete module should follow this shape:
-
 #+begin_src scheme
 (def poo-flow-src-module-tree-entrypoints
   '(("agent-sandbox" config)
     ("new-module" objects config)))
 #+end_src
 
-The registry entry declares source refs. It does not load the files. If a caller
-needs the descriptor, it must pass the source refs through =loader-tree= with an
-explicit backend. If a test or implementation needs a concrete function, it must
-import the owning module directly.
+The registry entry declares source refs. It does not load the files. If a caller needs the descriptor, it must pass the source refs through =loader-tree= with an explicit backend. If a test or implementation needs a concrete function, it must import the owning module directly.
 
-This keeps catalog growth close to O(n) data expansion while preventing O(n)
-compile fan-in through the facade.
+This keeps catalog growth close to O(n) data expansion while preventing O(n) compile fan-in through the facade.
 
 ** 40.40 Guardrail
 =t/module-system-lazy-loader-test.ss= now includes the scenario:
 
-#+begin_example
-expands large module registry manifests without loading modules
-#+end_example
-
-The scenario builds 500 synthetic module roots, expands them into 1000 source
-refs, checks stable source-ref values, and requires the best internal registry
-mapping time to stay below 50ms. This is the performance gate for the
-architecture boundary: large manifests must remain millisecond-level data work
-and must not force loader calls.
+The scenario builds 500 synthetic module roots, expands them into 1000 source refs, checks stable source-ref values, and requires the best internal registry mapping time to stay below 50ms. This is the performance gate for the architecture boundary: large manifests must remain millisecond-level data work and must not force loader calls.
 
 ** 40.50 Evidence
 Focused receipts after the split:
-
 - =direnv exec . true=: real 3.58s
 - =gxpkg env gxi -e '(display "ok") (newline)'=: real 26.68s
-- =gxc -exe -O -o .cache/poo-flow src/cli.ss=: local dynamic macOS CLI build, =real 84.08s=.
-- =install -m 755 .cache/poo-flow .bin/poo-flow=: publishes the canonical local CLI on the direnv PATH.
-- =file .bin/poo-flow=: Mach-O 64-bit arm64 executable.
-- =poo-flow build meta=: validates the focused build command surface, =real 0.52s=.
-- =poo-flow build spec --module src/module-system/module-registry.ss=: validates single-module spec output, =real 0.76s=.
-- =poo-flow build compile --module src/module-system/module-registry.ss=: validates direct =gxc= focused compile, =real 29.56s=.
-- =poo-flow test t/module-system-lazy-loader-test.ss=: validates direct =gxtest= focused tests, =real 8.94s=.
+- historical compiled CLI experiments validated that bypassing package-env startup matters, but the current focused test gate is native =gxtest=.
+- =gxtest t/module-system-lazy-loader-test.ss=: validates native focused tests, =real 8.94s=.
 
-The package-env receipt is the removed cost center. Native runner startup is
-sub-second; =test= remains bounded by =gxtest= and the module/test load graph,
-while the millisecond gate lives inside the registry scenario so the test
-distinguishes module catalog expansion from runner startup and Gerbil
-compilation work.
+The package-env receipt is the removed cost center. Native runner startup is sub-second; focused tests remain bounded by =gxtest= and the module/test load graph, while the millisecond gate lives inside the registry scenario so the test distinguishes module catalog expansion from runner startup and Gerbil compilation work.
 
 ** 40.55 Fast Gate Entrypoint
-Focused module-system gates must not be run through =gxpkg env=. The canonical
-=poo-flow= CLI owns the fast path:
-
+Focused module-system gates must not be run through =gxpkg env=. Native =gxtest= owns focused single-file tests:
 #+begin_src sh
-poo-flow test t/module-system-lazy-loader-test.ss
-poo-flow build compile --module src/module-system/module-registry.ss
+gxtest t/module-system-lazy-loader-test.ss
 #+end_src
 
-The =test= subcommand calls =gxtest= directly and the single-module =compile=
-subcommand calls =gxc -S= directly. This removes the 20s+ package-env startup
-from focused agent checks. Full package builds remain package-graph work and
-should use =gxpkg build -R -O= only when a full release build is the actual
-gate. The Gerbil package build file =build.ss= is not an agent fast-gate
-interface.
+This removes the 20s+ package-env startup from focused agent checks. Full package builds remain package-graph work and should use =gxpkg build -R -O= only when a full release build is the actual gate. The Gerbil package build file =build.ss= is not an agent fast-gate interface.
 
 ** 40.60 Regression Rule
 Reject future changes that do any of the following:
-
 - import =src/modules/*= from =src/module-system/facade.ss=;
-- move loader backends, resolver activation, or extension graph logic into
-  =module-registry.ss=;
+- move loader backends, resolver activation, or extension graph logic into =module-registry.ss=;
 - use filesystem scans as the default registry expansion path;
 - make tests pass by relying on facade to leak concrete owner symbols.
 
-When a new module family is needed, add manifest data to
-=module-registry.ss=, add loader/action behavior to =loader-tree.ss= or the
-real owner, and keep facade imports bounded to stable module-system contracts.
+When a new module family is needed, add manifest data to =module-registry.ss=, add loader/action behavior to =loader-tree.ss= or the real owner, and keep facade imports bounded to stable module-system contracts.

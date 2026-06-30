@@ -61,6 +61,7 @@ The current build implementation has been corrected toward the =gerbil-poo= / =g
 - integration-only fixture wrappers such as =t/fixtures/object-load-valid/objects.ss= are explicit test build-spec entries, so fixture source remains outside package scanning while package-local imports have real compiler artifacts;
 - the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface remain explicit build-spec entries;
 - =GERBIL_BUILD_CORES= remains the normal parallelism knob, matching the reference packages and avoiding custom thread logic in =build.ss=.
+- clean optimized package builds now run a small uncached =runtime-bootstrap= stage for durable runtime store dependencies before the main package stage. This is a dependency-order repair for modules such as =durable-runtime-store=, =durable-runtime-store-backend=, =durable-runtime-store-operation=, and =durable-recovery-scenario=; it is not a fixed worker-count policy. The main package stage still self-schedules through =GERBIL_BUILD_CORES= or the host CPU count.
 - focused CLI compiler/test gates use the project package-local =.gerbil/lib= loadpath and never depend on a user's =~/.gerbil/lib= cache. This is fixed as benchmark scenario =GERBIL-SCHEME-AGENT-R039= under =t/scenarios/performance/focused-build-loadpath/benchmark.ss=: the optimization is not raw speed alone, but moving the focused build surface toward Gerbil/gxpkg's package-local build model while preventing stale user-cache artifacts from entering the compiler path.
 - package-local compilation stays owned by =gxpkg env=. A bare =direnv exec . printenv GERBIL_PATH= returns no package path, while =direnv exec . gxpkg env printenv GERBIL_PATH= returns the project-local =.gerbil= directory. =build.ss= therefore must not compute its own local cache path; it rejects package compile/clean when =GERBIL_PATH= is missing and lets =gxpkg env= provide the package-local environment. The old direct path was measured at =103.54s= and emitted artifacts under =~/.gerbil/lib=; the testing path is now =gxpkg env gxi build.ss test= through the harness testing framework, while package receipt refresh remains =gxpkg env ./build.ss compile= with package-local output under =.gerbil/lib=.
 
@@ -104,5 +105,48 @@ The durable pattern is therefore:
 4. change the implementation at that owner boundary;
 5. rerun the scenario and the relevant semantic root;
 6. document the receipt here when it changes the engineering rule.
+** 10.06.39.75 Field Receipt: Harness Native POO Policy Hot Path
+:PROPERTIES:
+The next optimization pass used the Gerbil Scheme harness native POO scenarios as the pattern source. The useful rules were:
+1. keep public extension APIs as POO objects and prototypes;
+2. avoid rebuilding adapter objects or child POO objects inside validation loops;
+3. replace repeated list membership and duplicate scans with local hash indexes;
+4. replace per-entry =filter= plus =append= update loops with one extension index, one base preservation pass, and one materialization pass;
+5. keep diagnostics indexed so a duplicate key is reported once without walking accumulated diagnostics.
+
+The owner boundary for this pass was =src/modules/sandbox-core/profile-support/policy.ss=. The code now uses indexed helpers for:
+1. registry entry and alias flattening;
+2. duplicate registry-key diagnostics;
+3. alias target validation;
+4. distinct capability append;
+5. registry extension overwrite materialization.
+
+Local package-gate receipts on 2026-06-29 with =GERBIL_BUILD_CORES=8=:
+- pre-change package receipt recorded earlier in this pass: =gxpkg build -R -O=, =real 40.97s=;
+- first build after the policy hot-path rewrite: =gxpkg build -R -O=, =real 26.00s=;
+- second package build after that still compiled remaining downstream targets and measured =real 41.77s=;
+- third package build still compiled a broad downstream group but returned to =real 24.82s=.
+
+The conclusion is deliberately split. The policy dependency chain improved enough to justify the indexed POO implementation change, but the full package aggregate gate is not a stable no-op: repeated receipts in this pass ranged from =24.82s= to =41.77s= while still recompiling broad downstream groups. The next speedup owner is therefore not more sandbox-policy micro-optimization. It is either the focused =poo-flow= CLI gate returning to the package workspace, or the build-spec/cache owner that decides why the aggregate package gate keeps recompiling broad downstream groups.
 
 This is the boundary that keeps POO-native design and performance work aligned. Public APIs remain object/prototype oriented, while implementation hot paths choose the construction and traversal form that keeps macro expansion, allocation, and validation costs bounded.
+** 10.06.39.80 Field Receipt: Generated Receipt Struct Boundary
+The next optimization owner was the loop-engine capability receipt. The earlier bounded-alist stopgap fixed the serialization boundary, but it still blurred internal representation and ABI projection. The better Gerbil-native shape is now the project rule:
+1. user authoring and module config stay POO-native;
+2. generated runtime receipts use fixed =defstruct= values and struct accessors;
+3. manifest, JSON, Marlin handoff, and test summaries receive an explicit bounded =receipt->alist= projection.
+
+This landed in =src/module-system/loop-engine-runtime.ss= as =loop-engine-capability-receipt=. Presentation keeps the generated receipt as a struct, while runtime handoff and manifest requests call =loop-engine-capability-receipt->alist= once at the boundary.
+
+The user-interface performance gate now checks the representation contract directly:
+- =t/user-interface-presentation-performance-test.ss= asserts presentation capability receipts are =loop-engine-capability-receipt?= values.
+- Runtime handoff capability receipts are still serialized alists.
+- =t/scenarios/performance/user-interface-presentation-batch-projection/benchmark.ss= records the optimization focus as batch field projection plus =defstruct= runtime receipts.
+
+Local focused receipts on 2026-06-29, normalized to the current focused gate:
+- =gxtest t/user-interface-presentation-performance-test.ss=: pass;
+- =gxtest t/user-interface-custom-loop-engine-capability-test.ss=: pass;
+- =gxtest t/user-interface-custom-loop-engine-test.ss=: pass;
+- =gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=: pass.
+
+The important engineering result is the boundary, not a single local wall-clock number. POO stays the public extension model; generated internal receipts stop paying dynamic slot/object graph cost; alists remain the stable external ABI.

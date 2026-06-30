@@ -79,22 +79,61 @@
     (test-case "traces CI/CD presentation projection without runtime work"
       (let* ((presentation
               (pooFlowUserConfigPresentation
-               test-poo-flow-user-config
-               '(surface profile flow-mode loop-strategy
-                 sandbox-policy sandbox-backends mode-lock)))
+               (user-interface-cicd-funflow-config)))
              (trace (.ref presentation 'presentation-trace))
              (cicd-step
-              (user-interface-cicd-trace-stage trace 'cicd-intents)))
+              (user-interface-cicd-trace-stage trace 'cicd-intents))
+             (dag-step
+              (user-interface-cicd-trace-stage
+               trace
+               'workflow-cicd-functional-dags)))
         (check-equal? (.ref presentation 'cicd-intent-count) 1)
         (check-equal? (alist-value 'stage cicd-step) 'cicd-intents)
         (check-equal? (alist-value 'count cicd-step) 1)
         (check-equal? (alist-value 'descriptor-realized? cicd-step) #f)
-        (check-equal? (alist-value 'runtime-executed cicd-step) #f)))
-    (test-case "presents Funflow pipeline count"
-      (let ((presentation
-             (pooFlowUserConfigPresentation
-              (user-interface-cicd-funflow-config))))
-        (check-equal? (.ref presentation 'workflow-cicd-pipeline-count) 1)))
+        (check-equal? (alist-value 'runtime-executed cicd-step) #f)
+        (check-equal? (alist-value 'stage dag-step)
+                      'workflow-cicd-functional-dags)
+        (check-equal? (alist-value 'count dag-step) 1)))
+    (test-case "presents Funflow pipeline and functional DAG"
+      (let* ((presentation
+              (pooFlowUserConfigPresentation
+               (user-interface-cicd-funflow-config)))
+             (dags (.ref presentation 'workflow-cicd-functional-dags))
+             (dag (car dags))
+             (composition-steps (alist-value 'composition-steps dag))
+             (first-composition-step (car composition-steps))
+             (first-bind-step (car (cdddr composition-steps)))
+             (edges (alist-value 'edges dag))
+             (edge (car edges)))
+        (check-equal? (.ref presentation 'workflow-cicd-pipeline-count) 1)
+        (check-equal? (.ref presentation 'workflow-cicd-functional-dag-count)
+                      1)
+        (check-equal? (alist-value 'kind dag)
+                      'poo-flow.funflow.functional-dag.prototype)
+        (check-equal? (alist-value 'composition-style dag)
+                      'arrow-kleisli)
+        (check-equal? (alist-value 'composition-step-count dag) 5)
+        (check-equal? (alist-value 'step-kind first-composition-step)
+                      'arrow-node)
+        (check-equal? (alist-value 'check-name first-composition-step)
+                      'build)
+        (check-equal? (alist-value 'composition-style first-composition-step)
+                      'arrow)
+        (check-equal? (alist-value 'step-kind first-bind-step)
+                      'kleisli-bind)
+        (check-equal? (alist-value 'from first-bind-step) 'build)
+        (check-equal? (alist-value 'to first-bind-step) 'test)
+        (check-equal? (alist-value 'composition-style first-bind-step)
+                      'kleisli)
+        (check-equal? (alist-value 'nodes dag) '(build test package))
+        (check-equal? (alist-value 'entry-nodes dag) '(build))
+        (check-equal? (alist-value 'terminal-nodes dag) '(package))
+        (check-equal? (alist-value 'ready-order dag) '(build test package))
+        (check-equal? (alist-value 'runtime-owner dag) "marlin-agent-core")
+        (check-equal? (alist-value 'runtime-executed dag) #f)
+        (check-equal? (alist-value 'from edge) 'build)
+        (check-equal? (alist-value 'to edge) 'test)))
     (test-case "projects user config into Marlin runtime handoff ABI"
       (let* ((presentation
               (pooFlowUserConfigPresentation
@@ -109,6 +148,7 @@
                     'workflow-cicd-marlin-handoff-receipt-bundle))
              (abi (car abis))
              (summary (car summaries))
+             (required-fields (alist-value 'required-fields abi))
              (entries (alist-value 'entries abi))
              (entry (car entries))
              (request (alist-value 'request entry)))
@@ -127,10 +167,28 @@
         (check-equal? (alist-value 'scheme-manufactures-runtime-handlers abi)
                       #f)
         (check-equal? (alist-value 'manifest-count abi) 3)
+        (check-equal? (not (not (member 'durable-task-id required-fields)))
+                      #t)
+        (check-equal? (not (not (member 'artifact-provenance required-fields)))
+                      #t)
+        (check-equal? (not (not (member 'checkpoint-ref required-fields)))
+                      #t)
         (check-equal? (length entries) 3)
         (check-equal? (alist-value 'runtime-owner entry)
                       "marlin-agent-core")
         (check-equal? (alist-value 'runtime-executed entry) #f)
+        (check-equal? (alist-value 'durable-task-id entry)
+                      'task/build)
+        (check-equal? (alist-value 'action-class entry)
+                      'idempotent)
+        (check-equal? (alist-value 'artifact-refs entry)
+                      '(build-log))
+        (check-equal? (alist-value 'artifact-retention entry)
+                      'project-retained)
+        (check-equal? (alist-value 'sandbox-refs entry)
+                      '(ci/build))
+        (check-equal? (alist-value 'checkpoint-ref entry)
+                      '(workflow-cicd-check build))
         (check-equal? (alist-value 'kind request)
                       'poo-flow.workflow.cicd.runtime-manifest-ready)
         (check-equal? (alist-value 'kind summary)

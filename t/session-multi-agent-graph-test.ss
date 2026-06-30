@@ -1,0 +1,142 @@
+;;; -*- Gerbil -*-
+;;; Boundary: report-only multi-agent session graph topology.
+;;; Invariant: graph construction is declarative; Scheme does not run agents or
+;;; deliver messages.
+
+(import (only-in :std/test
+                 check-equal?
+                 run-tests!
+                 test-case
+                 test-suite)
+        (only-in :clan/poo/object .ref)
+        :poo-flow/src/modules/session/config)
+
+(export session-multi-agent-graph-test)
+
+;; : (-> Symbol Symbol PooSession)
+(def (make-agent-graph-session session-id parent-id)
+  (poo-flow-session-value
+   session-id
+   (list (poo-flow-session-chunk session-id 'assistant "agent graph node"))
+   (poo-flow-session-lineage
+    session-id
+    (if parent-id (list parent-id) '())
+    (if parent-id 'child-agent 'root))
+   (poo-flow-session-placement 'agent/nono)))
+
+;; : TestSuite
+(def session-multi-agent-graph-test
+  (test-suite "poo-flow multi-agent session graph"
+    (test-case "unifies child agent sessions through shared topology"
+      (let* ((root-session
+              (make-agent-graph-session 'graph/root #f))
+             (build-session
+              (make-agent-graph-session 'graph/build 'graph/root))
+             (audit-session
+              (make-agent-graph-session 'graph/audit 'graph/root))
+             (build-node
+              (poo-flow-session-agent-node
+               'agent/build
+               'project/graph
+               'graph/root
+               'graph/root
+               'graph/build-system
+               'graph/root
+               'graph/build
+               '(graph/audit)
+               '(channel/build-audit)
+               'policy/build-model
+               'policy/build-prompt
+               'policy/build-tools
+               'policy/build-hook-tools
+               'policy/build-resources
+               'durable/graph
+               '(read-workspace-file run-build-command)
+               '(session/memory)
+               'agent/nono
+               'builder
+               'poo-flow.session.agent.build-result.v1))
+             (audit-node
+              (poo-flow-session-agent-node
+               'agent/audit
+               'project/graph
+               'graph/root
+               'graph/root
+               'graph/audit-system
+               'graph/build
+               'graph/audit
+               '(graph/build)
+               '(channel/build-audit)
+               'policy/audit-model
+               'policy/audit-prompt
+               'policy/audit-tools
+               'policy/audit-hook-tools
+               'policy/audit-resources
+               'durable/graph
+               '(read-workspace-file)
+               '(session/memory)
+               'agent/nono
+               'auditor
+               'poo-flow.session.agent.audit-result.v1))
+             (root-entry
+              (poo-flow-session-registry-entry
+               root-session
+               'agent/root
+               '()
+               '((isolation . root))))
+             (build-entry
+              (poo-flow-session-agent-node->registry-entry
+               build-node
+               build-session))
+             (audit-entry
+              (poo-flow-session-agent-node->registry-entry
+               audit-node
+               audit-session))
+             (registry
+              (poo-flow-session-registry-receipt
+               'project/graph
+               '(graph/root)
+               '(graph/build graph/audit)
+               'graph/root
+               (list root-entry build-entry audit-entry)))
+             (graph
+              (poo-flow-session-agent-graph
+               'project/graph
+               'graph/root
+               (list build-node audit-node)
+               (list root-session build-session audit-session)
+               registry)))
+        (check-equal? (poo-flow-session-agent-node? build-node) #t)
+        (check-equal? (poo-flow-session-agent-node-agent-id build-node)
+                      'agent/build)
+        (check-equal? (poo-flow-session-agent-node-output-session-ref
+                       build-node)
+                      'graph/build)
+        (check-equal? (.ref build-node 'tool-permission-policy-ref)
+                      'policy/build-tools)
+        (check-equal? (poo-flow-session-agent-node-durable-policy-ref
+                       build-node)
+                      'durable/graph)
+        (check-equal? (.ref audit-node 'peer-session-refs)
+                      '(graph/build))
+        (check-equal? (poo-flow-session-agent-graph? graph) #t)
+        (check-equal? (poo-flow-session-agent-graph-agent-ids graph)
+                      '(agent/build agent/audit))
+        (check-equal? (poo-flow-session-agent-graph-session-ids graph)
+                      '(graph/root graph/build graph/audit))
+        (check-equal? (.ref graph 'lineage-edge-pairs)
+                      '((graph/root . graph/build)
+                        (graph/root . graph/audit)))
+        (check-equal? (.ref graph 'durable-policy-refs)
+                      '(durable/graph durable/graph))
+        (check-equal? (.ref (poo-flow-session-agent-graph-registry-receipt
+                             graph)
+                            'entry-count)
+                      3)
+        (check-equal? (.ref (poo-flow-session-agent-graph-registry-receipt
+                             graph)
+                            'durable-policy-refs)
+                      '(durable/graph durable/graph))
+        (check-equal? (.ref graph 'runtime-executed) #f)))))
+
+(run-tests! session-multi-agent-graph-test)

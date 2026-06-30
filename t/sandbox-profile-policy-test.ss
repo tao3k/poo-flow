@@ -7,20 +7,42 @@
                  run-tests!
                  test-case
                  test-suite)
+        (only-in :clan/poo/object .ref .slot? object?)
+        (only-in :poo-flow/src/module-system/durable-policy
+                 poo-flow-durable-policy)
         :poo-flow/src/modules/sandbox-core/profile-support/policy)
 
 (export sandbox-profile-policy-test)
 
 ;; : (-> Alist Symbol Value Value)
 (def (test-ref entries key default-value)
-  (let (entry (assoc key entries))
-    (if entry (cdr entry) default-value)))
+  (cond
+   ((object? entries)
+    (if (.slot? entries key)
+      (.ref entries key)
+      default-value))
+   (else
+    (let (entry (assoc key entries))
+      (if entry (cdr entry) default-value)))))
 
 ;; : (-> Alist [Symbol])
 (def (test-diagnostic-codes validation)
   (map (lambda (diagnostic)
          (test-ref diagnostic 'code #f))
        (test-ref validation 'diagnostics '())))
+
+;; : Alist
+(def test-project-resource-policy
+  '((filesystem
+     (scope . project-workspace)
+     (paths
+      ((role . project-workspace)
+       (source . ".")
+       (project-marker . "gerbil.pkg")
+       (target . "/workspace/project")
+       (mode . read-write)))
+     (access . read-write))
+    (cpu . 2)))
 
 ;; : TestSuite
 (def sandbox-profile-policy-test
@@ -54,7 +76,7 @@
                'agent/gpu
                poo-flow-sandbox-backend-capability/nono
                policy
-               '(filesystem-read tmpdir))))
+               '(process-run tmpdir))))
         (check-equal?
          (poo-flow-sandbox-profile-policy-validation-valid? validation)
          #f)
@@ -69,7 +91,8 @@
               'agent/sandbox
               poo-flow-sandbox-backend-capability/sandbox
               poo-flow-sandbox-profile-policy/default
-              '(process-run filesystem-read tmpdir))))
+              '(process-run filesystem-read tmpdir)
+              test-project-resource-policy)))
         (check-equal?
          (poo-flow-sandbox-profile-policy-validation-valid? validation)
          #t)
@@ -96,12 +119,69 @@
                (poo-flow-sandbox-backend-capability-ref
                 'sandbox)
                poo-flow-sandbox-profile-policy/default
-               '(process-run filesystem-read tmpdir))))
+               '(process-run filesystem-read tmpdir)
+               test-project-resource-policy))
+             (durable-summary
+              (test-ref projection 'durable-policy-summary '())))
         (check-equal? (test-ref projection 'kind #f)
                       poo-flow-sandbox-profile-policy-projection-kind)
         (check-equal? (test-ref projection 'valid? #f) #t)
+        (check-equal? (test-ref projection 'durable-policy-ref #f)
+                      'durable/default)
+        (check-equal? (test-ref projection 'durable-valid? #f) #t)
+        (check-equal? (test-ref durable-summary 'journal-owner #f)
+                      'runtime/fact-log)
+        (check-equal? (test-ref durable-summary 'checkpoint-store #f)
+                      'runtime/checkpoint-store)
+        (check-equal? (test-ref durable-summary 'repair-mode #f)
+                      'fail-closed)
+        (check-equal? (test-ref durable-summary 'sandbox-handle-class #f)
+                      'sandbox/profile-handle)
         (check-equal? (test-ref projection 'runtime-owner #f)
                       "marlin-agent-core")
-        (check-equal? (test-ref projection 'runtime-executed #t) #f)))))
+        (check-equal? (test-ref projection 'runtime-executed #t) #f)))
+    (test-case "rejects missing sandbox durable placement policy"
+      (let* ((policy
+              (poo-flow-sandbox-profile-policy
+               '(process-run)
+               '((durable-policy . #f))))
+             (validation
+              (poo-flow-sandbox-profile-policy-validation
+               'agent/missing-durable
+               'sandbox
+               'agent/missing-durable
+               poo-flow-sandbox-backend-capability/sandbox
+               policy
+               '(process-run tmpdir))))
+        (check-equal?
+         (poo-flow-sandbox-profile-policy-validation-valid? validation)
+         #f)
+        (check-equal? (test-ref validation 'durable-valid? #t) #f)
+        (check-equal? (test-diagnostic-codes validation)
+                      '(missing-durable-placement-policy))))
+    (test-case "rejects invalid inherited durable placement policy"
+      (let* ((invalid-durable
+              (poo-flow-durable-policy
+               'durable/invalid-sandbox
+               'sandbox/test
+               '((checkpoint-store . #f))))
+             (policy
+              (poo-flow-sandbox-profile-policy
+               '(process-run)
+               (list (cons 'durable-policy invalid-durable))))
+             (validation
+              (poo-flow-sandbox-profile-policy-validation
+               'agent/invalid-durable
+               'sandbox
+               'agent/invalid-durable
+               poo-flow-sandbox-backend-capability/sandbox
+               policy
+               '(process-run tmpdir))))
+        (check-equal?
+         (poo-flow-sandbox-profile-policy-validation-valid? validation)
+         #f)
+        (check-equal? (test-ref validation 'durable-valid? #t) #f)
+        (check-equal? (test-diagnostic-codes validation)
+                      '(invalid-durable-placement-policy))))))
 
 (run-tests! sandbox-profile-policy-test)

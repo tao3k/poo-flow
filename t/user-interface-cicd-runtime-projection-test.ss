@@ -124,4 +124,40 @@
         (check-equal? (not (not (member 'argv-mismatch diagnostics))) #t)
         (check-equal?
          (not (not (member 'argv-mismatch row-diagnostics)))
+         #t)))
+    (test-case "flags durable manifest summary mismatch before handoff"
+      (let* ((presentation
+              (pooFlowUserConfigPresentation
+               (user-interface-cicd-runtime-funflow-config)))
+             (manifest-maps
+              (.ref presentation 'workflow-cicd-runtime-command-manifests))
+             (manifest-summaries
+              (.ref presentation
+                    'workflow-cicd-runtime-command-manifest-summaries))
+             (bad-summary
+              (cons (cons 'durable-task-id 'task/wrong)
+                    (car manifest-summaries)))
+             (bad-agreement
+              (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
+               manifest-maps
+               (cons bad-summary (cdr manifest-summaries))))
+             (bad-row
+              (car (user-interface-cicd-runtime-alist-ref bad-agreement 'rows)))
+             (diagnostics
+              (user-interface-cicd-runtime-alist-ref bad-agreement 'diagnostics))
+             (row-diagnostics
+              (user-interface-cicd-runtime-alist-ref bad-row 'diagnostics)))
+        (check-equal?
+         (user-interface-cicd-runtime-alist-ref bad-agreement 'valid?)
+         #f)
+        (check-equal?
+         (user-interface-cicd-runtime-alist-ref
+          bad-row
+          'durable-task-id-match?)
+         #f)
+        (check-equal?
+         (not (not (member 'durable-task-id-mismatch diagnostics)))
+         #t)
+        (check-equal?
+         (not (not (member 'durable-task-id-mismatch row-diagnostics)))
          #t)))))

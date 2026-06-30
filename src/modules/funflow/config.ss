@@ -5,6 +5,9 @@
 (import (only-in :std/sugar filter-map)
         (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
         :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/modules/workflow/cicd-core
+                 poo-flow-cicd-alist-ref
+                 poo-flow-cicd-symbol-member?)
         :poo-flow/src/modules/workflow/cicd)
 
 (export poo-flow-funflow-cicd-default-payload
@@ -16,6 +19,19 @@
         poo-flow-funflow-poo-pipeline?
         poo-flow-funflow-poo-check->cicd-check
         poo-flow-funflow-poo-pipeline->check-map
+        funflow-dag-edge
+        funflow-composition-step
+        funflow-functional-dag
+        poo-flow-funflow-dag-edge
+        poo-flow-funflow-dag-edge?
+        poo-flow-funflow-dag-edge->alist
+        poo-flow-funflow-composition-step
+        poo-flow-funflow-composition-step?
+        poo-flow-funflow-composition-step->alist
+        poo-flow-funflow-functional-dag?
+        poo-flow-funflow-functional-dag->alist
+        poo-flow-funflow-check-map->functional-dag
+        poo-flow-funflow-poo-pipeline->functional-dag
         poo-flow-funflow-poo-config-flags
         poo-flow-funflow-workflow-ref?
         poo-flow-funflow-workflow-agreement
@@ -48,6 +64,18 @@
 (def +poo-flow-funflow-pipeline-prototype-kind+
   'poo-flow.funflow.pipeline.prototype)
 
+;; : Symbol
+(def +poo-flow-funflow-dag-edge-prototype-kind+
+  'poo-flow.funflow.dag-edge.prototype)
+
+;; : Symbol
+(def +poo-flow-funflow-composition-step-prototype-kind+
+  'poo-flow.funflow.composition-step.prototype)
+
+;; : Symbol
+(def +poo-flow-funflow-functional-dag-prototype-kind+
+  'poo-flow.funflow.functional-dag.prototype)
+
 ;; : PooFlowFunflowCheckPrototype
 (def funflow-check
   (object<-alist
@@ -64,6 +92,10 @@
     (cons 'result-protocol '())
     (cons 'runtime-mode 'manifest-handoff)
     (cons 'dependency-refs '())
+    (cons 'durable-task-id #f)
+    (cons 'action-class 'idempotent)
+    (cons 'compensation-refs '())
+    (cons 'artifact-retention 'workflow-retained)
     (cons 'observability #f)
     (cons 'observes '())
     (cons 'guards '())
@@ -78,6 +110,56 @@
       checks: '()
       metadata: '()
       runtime-executed: #f))
+
+;; : PooFlowFunflowDagEdgePrototype
+(def funflow-dag-edge
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-funflow-dag-edge-prototype-kind+)
+    (cons 'from #f)
+    (cons 'to #f)
+    (cons 'composition-style 'kleisli)
+    (cons 'metadata '())
+    (cons 'runtime-executed #f))))
+
+;; : PooFlowFunflowCompositionStepPrototype
+(def funflow-composition-step
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-funflow-composition-step-prototype-kind+)
+    (cons 'schema 'poo-flow.modules.funflow.composition-step.v1)
+    (cons 'step-kind #f)
+    (cons 'check-name #f)
+    (cons 'from #f)
+    (cons 'to #f)
+    (cons 'composition-style #f)
+    (cons 'metadata '())
+    (cons 'runtime-executed #f))))
+
+;; : PooFlowFunflowFunctionalDagPrototype
+(def funflow-functional-dag
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-funflow-functional-dag-prototype-kind+)
+    (cons 'schema 'poo-flow.modules.funflow.functional-dag.v1)
+    (cons 'pipeline-name #f)
+    (cons 'check-map #f)
+    (cons 'composition-style 'arrow-kleisli)
+    (cons 'composition-steps '())
+    (cons 'composition-step-count 0)
+    (cons 'nodes '())
+    (cons 'edges '())
+    (cons 'edge-count 0)
+    (cons 'entry-nodes '())
+    (cons 'terminal-nodes '())
+    (cons 'ready-order '())
+    (cons 'unordered-nodes '())
+    (cons 'blocked-order? #f)
+    (cons 'diagnostics '())
+    (cons 'valid? #t)
+    (cons 'metadata '())
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'runtime-executed #f))))
 
 ;; : (-> Symbol Boolean)
 (def (poo-flow-funflow-workflow-ref? workflow-ref)
@@ -112,10 +194,14 @@
 ;;; prove whether a workflow ref is backed by a Funflow-owned pipeline.
 ;; : (-> Symbol [PooFlowCicdCheckMap] Alist)
 (def (poo-flow-funflow-workflow-agreement workflow-ref check-maps)
-  (let ((diagnostics
-         (poo-flow-funflow-workflow-agreement-diagnostics
-          workflow-ref
-          check-maps)))
+  (let* ((diagnostics
+          (poo-flow-funflow-workflow-agreement-diagnostics
+           workflow-ref
+           check-maps))
+         (functional-dag-rows
+          (map poo-flow-funflow-functional-dag->alist
+               (map poo-flow-funflow-check-map->functional-dag
+                    check-maps))))
     (list
      (cons 'kind 'funflow-workflow-agreement)
      (cons 'contract +poo-flow-funflow-workflow-agreement-contract+)
@@ -123,6 +209,8 @@
      (cons 'funflow-owned? (poo-flow-funflow-workflow-ref? workflow-ref))
      (cons 'pipeline-count (length check-maps))
      (cons 'pipeline-names (poo-flow-funflow-check-map-names check-maps))
+     (cons 'functional-dag-count (length functional-dag-rows))
+     (cons 'functional-dags functional-dag-rows)
      (cons 'diagnostic-count (length diagnostics))
      (cons 'diagnostics diagnostics)
      (cons 'valid? (null? diagnostics))
@@ -161,6 +249,27 @@
        (.slot? value 'kind)
        (eq? (.ref value 'kind) +poo-flow-funflow-pipeline-prototype-kind+)))
 
+;; : (-> POOObject Boolean)
+(def (poo-flow-funflow-dag-edge? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind)
+            +poo-flow-funflow-dag-edge-prototype-kind+)))
+
+;; : (-> POOObject Boolean)
+(def (poo-flow-funflow-composition-step? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind)
+            +poo-flow-funflow-composition-step-prototype-kind+)))
+
+;; : (-> POOObject Boolean)
+(def (poo-flow-funflow-functional-dag? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind)
+            +poo-flow-funflow-functional-dag-prototype-kind+)))
+
 ;;; Boundary: funflow optional metadata is the policy-visible edge for policy
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
@@ -178,6 +287,167 @@
   (if (null? values)
     '()
     (list (cons key values))))
+
+;; : (-> Symbol Symbol [Alist] PooFlowFunflowDagEdge)
+(def (poo-flow-funflow-dag-edge from to . maybe-metadata)
+  (poo-flow-funflow-require "funflow DAG edge from must be a symbol"
+                            (symbol? from)
+                            from)
+  (poo-flow-funflow-require "funflow DAG edge to must be a symbol"
+                            (symbol? to)
+                            to)
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-funflow-dag-edge-prototype-kind+)
+    (cons 'from from)
+    (cons 'to to)
+    (cons 'composition-style 'kleisli)
+    (cons 'metadata (if (null? maybe-metadata)
+                      '()
+                      (car maybe-metadata)))
+    (cons 'runtime-executed #f))))
+
+;; : (-> Symbol MaybeSymbol MaybeSymbol MaybeSymbol [Alist] PooFlowFunflowCompositionStep)
+(def (poo-flow-funflow-composition-step step-kind check-name from to . maybe-metadata)
+  (poo-flow-funflow-require "funflow composition step kind must be a symbol"
+                            (symbol? step-kind)
+                            step-kind)
+  (poo-flow-funflow-require "funflow composition step check-name must be a symbol or #f"
+                            (or (not check-name) (symbol? check-name))
+                            check-name)
+  (poo-flow-funflow-require "funflow composition step from must be a symbol or #f"
+                            (or (not from) (symbol? from))
+                            from)
+  (poo-flow-funflow-require "funflow composition step to must be a symbol or #f"
+                            (or (not to) (symbol? to))
+                            to)
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-funflow-composition-step-prototype-kind+)
+    (cons 'schema 'poo-flow.modules.funflow.composition-step.v1)
+    (cons 'step-kind step-kind)
+    (cons 'check-name check-name)
+    (cons 'from from)
+    (cons 'to to)
+    (cons 'composition-style
+          (if (eq? step-kind 'kleisli-bind) 'kleisli 'arrow))
+    (cons 'metadata (if (null? maybe-metadata)
+                      '()
+                      (car maybe-metadata)))
+    (cons 'runtime-executed #f))))
+
+;; : (-> PooFlowFunflowDagEdge Alist)
+(def (poo-flow-funflow-dag-edge->alist edge)
+  (poo-flow-funflow-require "funflow DAG edge projection requires an edge"
+                            (poo-flow-funflow-dag-edge? edge)
+                            edge)
+  (list
+   (cons 'kind (.ref edge 'kind))
+   (cons 'from (.ref edge 'from))
+   (cons 'to (.ref edge 'to))
+   (cons 'composition-style (.ref edge 'composition-style))
+   (cons 'metadata (.ref edge 'metadata))
+   (cons 'runtime-executed (.ref edge 'runtime-executed))))
+
+;; : (-> PooFlowFunflowCompositionStep Alist)
+(def (poo-flow-funflow-composition-step->alist step)
+  (poo-flow-funflow-require
+   "funflow composition step projection requires a composition step"
+   (poo-flow-funflow-composition-step? step)
+   step)
+  (list
+   (cons 'kind (.ref step 'kind))
+   (cons 'schema (.ref step 'schema))
+   (cons 'step-kind (.ref step 'step-kind))
+   (cons 'check-name (.ref step 'check-name))
+   (cons 'from (.ref step 'from))
+   (cons 'to (.ref step 'to))
+   (cons 'composition-style (.ref step 'composition-style))
+   (cons 'metadata (.ref step 'metadata))
+   (cons 'runtime-executed (.ref step 'runtime-executed))))
+
+;; : (-> [Symbol] [PooFlowFunflowDagEdge] [Symbol])
+(def (poo-flow-funflow-entry-nodes nodes edges)
+  (let (targets (map (lambda (edge) (.ref edge 'to)) edges))
+    (filter (lambda (node)
+              (not (poo-flow-cicd-symbol-member? node targets)))
+            nodes)))
+
+;; : (-> [Symbol] [PooFlowFunflowDagEdge] [Symbol])
+(def (poo-flow-funflow-terminal-nodes nodes edges)
+  (let (sources (map (lambda (edge) (.ref edge 'from)) edges))
+    (filter (lambda (node)
+              (not (poo-flow-cicd-symbol-member? node sources)))
+            nodes)))
+
+;; : (-> Alist PooFlowFunflowDagEdge)
+(def (poo-flow-funflow-dependency-edge->dag-edge edge)
+  (poo-flow-funflow-dag-edge
+   (poo-flow-cicd-alist-ref edge 'from #f)
+   (poo-flow-cicd-alist-ref edge 'to #f)
+   (list (cons 'source 'workflow-cicd-dependency-graph))))
+
+;; : (-> [Alist] [PooFlowFunflowDagEdge])
+(def (poo-flow-funflow-dependency-edges->dag-edges edges)
+  (map poo-flow-funflow-dependency-edge->dag-edge edges))
+
+;; : (-> Symbol PooFlowFunflowCompositionStep)
+(def (poo-flow-funflow-node->composition-step node)
+  (poo-flow-funflow-composition-step
+   'arrow-node
+   node
+   #f
+   #f
+   (list (cons 'source 'funflow-functional-kernel))))
+
+;; : (-> PooFlowFunflowDagEdge PooFlowFunflowCompositionStep)
+(def (poo-flow-funflow-edge->composition-step edge)
+  (poo-flow-funflow-composition-step
+   'kleisli-bind
+   #f
+   (.ref edge 'from)
+   (.ref edge 'to)
+   (list (cons 'source 'funflow-functional-kernel)
+         (cons 'edge-composition-style
+               (.ref edge 'composition-style)))))
+
+;; : (-> [Symbol] [PooFlowFunflowDagEdge] [PooFlowFunflowCompositionStep])
+(def (poo-flow-funflow-dag-composition-steps nodes edges)
+  (append
+   (map poo-flow-funflow-node->composition-step nodes)
+   (map poo-flow-funflow-edge->composition-step edges)))
+
+;; : (-> PooFlowFunflowFunctionalDag Alist)
+(def (poo-flow-funflow-functional-dag->alist dag)
+  (poo-flow-funflow-require "funflow functional DAG projection requires a DAG"
+                            (poo-flow-funflow-functional-dag? dag)
+                            dag)
+  (list
+   (cons 'kind (.ref dag 'kind))
+   (cons 'schema (.ref dag 'schema))
+   (cons 'pipeline-name (.ref dag 'pipeline-name))
+   (cons 'check-map (.ref dag 'check-map))
+   (cons 'composition-style (.ref dag 'composition-style))
+   (cons 'composition-steps
+         (map poo-flow-funflow-composition-step->alist
+              (.ref dag 'composition-steps)))
+   (cons 'composition-step-count
+         (.ref dag 'composition-step-count))
+   (cons 'nodes (.ref dag 'nodes))
+   (cons 'edges
+         (map poo-flow-funflow-dag-edge->alist
+              (.ref dag 'edges)))
+   (cons 'edge-count (.ref dag 'edge-count))
+   (cons 'entry-nodes (.ref dag 'entry-nodes))
+   (cons 'terminal-nodes (.ref dag 'terminal-nodes))
+   (cons 'ready-order (.ref dag 'ready-order))
+   (cons 'unordered-nodes (.ref dag 'unordered-nodes))
+   (cons 'blocked-order? (.ref dag 'blocked-order?))
+   (cons 'diagnostics (.ref dag 'diagnostics))
+   (cons 'valid? (.ref dag 'valid?))
+   (cons 'metadata (.ref dag 'metadata))
+   (cons 'runtime-owner (.ref dag 'runtime-owner))
+   (cons 'runtime-executed (.ref dag 'runtime-executed))))
 
 ;; : (-> PooFlowFunflowCheckPrototype Alist)
 (def (poo-flow-funflow-poo-check-metadata check)
@@ -198,6 +468,18 @@
      (poo-flow-funflow-optional-metadata
       'observability
       (.ref check 'observability))
+     (poo-flow-funflow-optional-metadata
+      'durable-task-id
+      (.ref check 'durable-task-id))
+     (poo-flow-funflow-optional-metadata
+      'action-class
+      (.ref check 'action-class))
+     (poo-flow-funflow-list-metadata
+      'compensation-refs
+      (.ref check 'compensation-refs))
+     (poo-flow-funflow-optional-metadata
+      'artifact-retention
+      (.ref check 'artifact-retention))
      (poo-flow-funflow-list-metadata
       'observes
       (.ref check 'observes))
@@ -261,6 +543,59 @@
       (list (cons 'source 'funflow-poo-config)
             (cons 'pipeline pipeline-name))
       metadata))))
+
+;;; Functional DAGs are Funflow-owned POO objects derived from a pipeline. They
+;;; keep the authoring model functional and inspectable while leaving runtime
+;;; scheduling to Marlin.
+;; : (-> PooFlowCicdCheckMap PooFlowFunflowFunctionalDag)
+(def (poo-flow-funflow-check-map->functional-dag check-map)
+  (poo-flow-funflow-require
+   "funflow functional DAG requires a cicd check-map"
+   (poo-flow-cicd-check-map? check-map)
+   check-map)
+  (let* ((graph (poo-flow-cicd-check-map->dependency-graph check-map))
+         (nodes (poo-flow-cicd-alist-ref graph 'nodes '()))
+         (edges (poo-flow-funflow-dependency-edges->dag-edges
+                 (poo-flow-cicd-alist-ref graph 'edges '())))
+         (composition-steps
+          (poo-flow-funflow-dag-composition-steps nodes edges)))
+    (object<-alist
+     (list
+      (cons 'kind +poo-flow-funflow-functional-dag-prototype-kind+)
+      (cons 'schema 'poo-flow.modules.funflow.functional-dag.v1)
+      (cons 'pipeline-name (poo-flow-cicd-check-map-name check-map))
+      (cons 'check-map (poo-flow-cicd-check-map-name check-map))
+      (cons 'composition-style 'arrow-kleisli)
+      (cons 'composition-steps composition-steps)
+      (cons 'composition-step-count (length composition-steps))
+      (cons 'nodes nodes)
+      (cons 'edges edges)
+      (cons 'edge-count (length edges))
+      (cons 'entry-nodes
+            (poo-flow-funflow-entry-nodes nodes edges))
+      (cons 'terminal-nodes
+            (poo-flow-funflow-terminal-nodes nodes edges))
+      (cons 'ready-order
+            (poo-flow-cicd-alist-ref graph 'ready-order '()))
+      (cons 'unordered-nodes
+            (poo-flow-cicd-alist-ref graph 'unordered-nodes '()))
+      (cons 'blocked-order?
+            (poo-flow-cicd-alist-ref graph 'blocked-order? #f))
+      (cons 'diagnostics
+            (poo-flow-cicd-alist-ref graph 'diagnostics '()))
+      (cons 'valid?
+            (poo-flow-cicd-alist-ref graph 'valid? #f))
+      (cons 'metadata
+            (list (cons 'source 'funflow-functional-kernel)
+                  (cons 'dependency-graph-kind
+                        (poo-flow-cicd-alist-ref graph 'kind #f))))
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f)))))
+
+;; : (-> PooFlowFunflowPipelinePrototype PooFlowFunflowFunctionalDag)
+(def (poo-flow-funflow-poo-pipeline->functional-dag pipeline)
+  (poo-flow-funflow-check-map->functional-dag
+   (poo-flow-funflow-poo-pipeline->check-map pipeline)))
 
 ;;; Boundary: funflow poo config pipelines is the policy-visible edge for
 ;;; policy behavior, keeping validation, lookup, or projection responsibilities

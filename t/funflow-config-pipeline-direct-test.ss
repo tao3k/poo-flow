@@ -48,7 +48,7 @@
                                     runtime-mode dependency-refs)
       check-name: 'integration
       profile-ref: '(ci/check agent/poo-object-extension)
-      command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+      command-vector: '("gxtest" "t/unit-tests.ss")
       artifact-outputs: '(test-receipt)
       result-protocol: '(read :lines)
       runtime-mode: 'manifest-handoff
@@ -168,10 +168,10 @@
     (check-equal? (length manifests) 2)
     (check-equal? (funflow-config-direct-alist-ref integration-manifest
                                                   'executable)
-                  "gxpkg")
+                  "gxtest")
     (check-equal? (funflow-config-direct-alist-ref integration-manifest
                                                   'arguments)
-                  '("env" "gxtest" "t/unit-tests.ss"))
+                  '("t/unit-tests.ss"))
     (check-equal? (funflow-config-direct-alist-ref integration-request
                                                   'check)
                   'integration)

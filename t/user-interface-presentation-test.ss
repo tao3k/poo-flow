@@ -32,6 +32,7 @@
     session-core-intents
     cicd-intents
     workflow-cicd-pipelines
+    workflow-cicd-functional-dags
     workflow-cicd-pipeline-runs
     workflow-cicd-pipeline-results
     workflow-cicd-runtime-readiness
@@ -298,7 +299,7 @@
                       user-interface-presentation-trace-stages)
         (check-equal? (map (lambda (step) (alist-value 'runtime-executed step))
                            trace)
-                      '(#f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f))
+                      '(#f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f #f))
         (check-equal? (alist-value 'profile settings)
                       "developer")
         (check-equal? (.ref presentation 'brand-name) poo-flow-brand-name)

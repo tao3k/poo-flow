@@ -143,8 +143,44 @@ Use these rules:
 
 1. Compose mixins first; then read direct slots from the final object.
 2. Avoid nested child POO objects when validation or presentation loops will repeatedly inspect them.
-3. Precompute primitive receipt rows before placing them in slots.
-4. Keep hot presentation paths over alists, vectors, or direct slots, not repeated child =.ref= walks.
+3. Keep runtime policy and profile values as native POO objects while they are still extension surfaces.
+4. Use Gerbil =defstruct= for generated runtime receipts that are fixed internal facts rather than extension points.
+5. Materialize receipt structs to bounded alists only once at ABI, manifest, JSON, test-summary, snapshot, or Marlin handoff boundaries.
+6. Keep hot presentation paths over direct slots, fixed struct accessors, cached primitive vectors, or boundary alists, not repeated child =.ref= walks.
+7. Do not build POO objects inside tight loops. Accumulate scalar/list/hash state first and construct one final =.o= object at the extension boundary.
+
+The receipt layering rule is:
+1. User authoring and module config stay POO: =.o=, =.def=, mixins, slot operators, and =object<-alist= at named adapter edges.
+2. Generated runtime receipts use =defstruct= with fixed fields and accessors.
+3. External payloads use explicit =receipt->alist= projection and never leak internal struct layout as a public serialization ABI.
+
+Example:
+#+begin_src scheme
+(defstruct loop-engine-capability-receipt
+  (backend backend-kind backend-capabilities supported-backends valid?
+   diagnostics isolation required optional unsupported-behavior
+   sandbox-ref session-ref)
+  transparent: #t)
+
+(def (loop-engine-capability-receipt->alist receipt)
+  (list
+   (cons 'kind 'capability-receipt)
+   (cons 'backend (loop-engine-capability-receipt-backend receipt))
+   (cons 'valid? (loop-engine-capability-receipt-valid? receipt))
+   (cons 'diagnostic-count
+         (length (loop-engine-capability-receipt-diagnostics receipt)))))
+#+end_src
+** 10.06.29.90 Native POO Scenario Lessons
+The Gerbil Scheme harness scenarios make the performance boundary more concrete:
+1. Public APIs stay native POO: prototypes, mixins, slot operators, and functional helpers remain the user-visible model.
+2. Adapter construction such as =object<-alist= belongs at named boundaries. Do not rebuild adapter objects inside validation loops or merge loops.
+3. Repeated membership tests over slot lists should use a local hash index when the operation is part of registry, profile, or policy validation.
+4. Repeated =append=, =filter=, or duplicate scans in extension code are a warning sign. Prefer one pass to index extension values, one pass to preserve untouched base values, and one pass to materialize final values in order.
+5. Duplicate diagnostics should keep a diagnostic index so the validator reports each duplicate key once without repeatedly walking accumulated diagnostics.
+6. Object reads should be hoisted to the owner boundary. A loop should receive the scalar slot values it needs instead of repeatedly traversing child POO objects.
+7. POO composition such as =.mix=, =.extend=, clone overrides, or lens-style mutation should not appear inside tight loops unless the loop's purpose is explicitly to construct those objects.
+
+This is not a license to replace POO with raw data. The intended shape is POO-native at the extension boundary, functional and indexed in the hot implementation path, then POO receipts or projections at the next boundary.
 5. If a test hangs, inspect for slot self-reference and repeated nested object instantiation before changing the runtime.
 
 ** 10.06.29.90 Test Policy

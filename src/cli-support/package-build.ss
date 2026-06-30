@@ -30,6 +30,9 @@
 (def +poo-flow-runtime-include-dirs+
   '("src"))
 
+(def +poo-flow-test-include-dirs+
+  '("t"))
+
 (def +poo-flow-special-source-files+
   '("src/modules/nono-sandbox/_nono.ss"
     "src/cli-support/support.ss"
@@ -53,6 +56,14 @@
 (def +poo-flow-cli-entry-module-build-spec+
   '((gxc: "user-interface/init")
     (gxc: "user-interface/custom/my-module/config")))
+
+(def +poo-flow-runtime-bootstrap-modules+
+  '("src/module-system/durable-policy.ss"
+    "src/core/runtime-adapter.ss"
+    "src/module-system/durable-runtime-store.ss"
+    "src/module-system/durable-runtime-store-backend.ss"
+    "src/module-system/durable-runtime-store-operation.ss"
+    "src/module-system/durable-recovery-scenario.ss"))
 
 (def (poo-flow-cli-entry-build-spec _options)
   +poo-flow-cli-entry-module-build-spec+)
@@ -155,6 +166,18 @@
             (not (member file +poo-flow-special-source-files+)))
           (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)))
 
+(def (poo-flow-runtime-bootstrap-modules)
+  (filter file-exists? +poo-flow-runtime-bootstrap-modules+))
+
+(def (poo-flow-runtime-main-modules)
+  (let (bootstrap (poo-flow-runtime-bootstrap-modules))
+    (filter (lambda (file)
+              (not (member file bootstrap)))
+            (poo-flow-runtime-modules))))
+
+(def (poo-flow-test-modules)
+  (poo-flow-package-modules +poo-flow-test-include-dirs+ '() #t))
+
 (def (poo-flow-gxc-target file _options)
   [gxc: file])
 
@@ -162,14 +185,41 @@
   (map (lambda (file) (poo-flow-gxc-target file options)) files))
 
 (def (poo-flow-runtime-build-spec options)
-  (poo-flow-gxc-spec (poo-flow-runtime-modules) options))
+  (poo-flow-gxc-spec
+   (append (poo-flow-runtime-bootstrap-modules)
+           (poo-flow-runtime-main-modules))
+   options))
+
+(def (poo-flow-runtime-bootstrap-build-spec options)
+  (poo-flow-gxc-spec (poo-flow-runtime-bootstrap-modules) options))
+
+(def (poo-flow-runtime-main-build-spec options)
+  (poo-flow-gxc-spec (poo-flow-runtime-main-modules) options))
+
+(def (poo-flow-test-build-spec options)
+  (poo-flow-gxc-spec (poo-flow-test-modules) options))
 
 (def (poo-flow-package-build-spec options)
   (if (poo-flow-native-build-options? options)
     (append +poo-flow-ffi-build-spec+
             (poo-flow-runtime-build-spec options)
+            (poo-flow-test-build-spec options)
+            +poo-flow-cli-library-build-spec+
             (poo-flow-entry-build-spec options))
     (append (poo-flow-runtime-build-spec options)
+            (poo-flow-test-build-spec options)
+            +poo-flow-cli-library-build-spec+
+            (poo-flow-entry-build-spec options))))
+
+(def (poo-flow-package-build-spec/without-bootstrap options)
+  (if (poo-flow-native-build-options? options)
+    (append +poo-flow-ffi-build-spec+
+            (poo-flow-runtime-main-build-spec options)
+            (poo-flow-test-build-spec options)
+            +poo-flow-cli-library-build-spec+
+            (poo-flow-entry-build-spec options))
+    (append (poo-flow-runtime-main-build-spec options)
+            (poo-flow-test-build-spec options)
             +poo-flow-cli-library-build-spec+
             (poo-flow-entry-build-spec options))))
 
@@ -328,6 +378,19 @@
              (poo-flow-package-stage-options stage options))
       (poo-flow-stage-cache-touch! stage options))))
 
+(def (poo-flow-make-uncached label stage options)
+  (poo-flow-package-require-gxpkg-env!)
+  (poo-flow-package-message "compile" label stage)
+  (apply make stage
+         srcdir: (poo-flow-package-srcdir)
+         (poo-flow-make-options options)))
+
+(def (poo-flow-make-bootstrap label stage options)
+  (for-each
+   (lambda (spec)
+     (poo-flow-make-uncached label (list spec) options))
+   stage))
+
 (def (poo-flow-make-clean label stage)
   (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "clean" label stage)
@@ -432,7 +495,14 @@
                           options)
       (poo-flow-write-cli-launcher!))
     (begin
-      (poo-flow-make "package" (poo-flow-compile-build-spec options) options)
+      (poo-flow-make-bootstrap
+       "runtime-bootstrap"
+       (poo-flow-runtime-bootstrap-build-spec options)
+       options)
+      (poo-flow-make
+       "package"
+       (poo-flow-package-build-spec/without-bootstrap options)
+       options)
       (poo-flow-write-cli-launcher!))))
 
 (def (poo-flow-clean)

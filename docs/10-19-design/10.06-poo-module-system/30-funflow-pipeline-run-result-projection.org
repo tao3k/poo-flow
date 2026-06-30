@@ -62,7 +62,7 @@ The expected downstream surface is POO-native:
                       dependency-refs runtime-mode)
     check-name: 'test
     profile-ref: 'ci/check
-    command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+    command-vector: '("gxtest" "t/unit-tests.ss")
     dependency-refs: '(build)
     runtime-mode: 'manifest-handoff)
   (.def (funflow/default @ funflow-pipeline pipeline-name checks)
@@ -78,13 +78,13 @@ The visible result should answer the agent's first operational questions:
 - whether Scheme executed anything.
 ** 10.06.30.60 Current Result Gates
 Focused tests for this slice:
-- =gxpkg env gxtest t/workflow-cicd-dependency-graph-test.ss=
-- =gxpkg env gxtest t/user-interface-cicd-pipeline-run-test.ss=
-- =gxpkg env gxtest t/session-object-test.ss=
+- =gxtest t/workflow-cicd-dependency-graph-test.ss=
+- =gxtest t/user-interface-cicd-pipeline-run-test.ss=
+- =gxtest t/session-object-test.ss=
 
 Package-level gates before completion:
 - =gxpkg build=
-- =gxpkg env gxtest t/unit-tests.ss=
+- =gxtest t/unit-tests.ss=
 - =git diff --check=
 ** 10.06.30.70 Next Slice
 The next implementation slice should make the result projection easier for agents to consume:

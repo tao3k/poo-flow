@@ -1,0 +1,52 @@
+;;; -*- Gerbil -*-
+;;; Boundary: custom user-interface durable runtime store handoff scenario.
+;;; Invariant: user config projects negotiation and handoff data only; Marlin
+;;; owns the runtime store implementation.
+
+(import (only-in :std/test
+                 check-equal?
+                 run-tests!
+                 test-case
+                 test-suite)
+        (only-in :poo-flow/user-interface/custom/my-module/config
+                 poo-flow-custom-my-module-durable-runtime-store-handoff-case))
+
+(export user-interface-custom-durable-runtime-store-handoff-test)
+
+;; : (-> Alist Symbol MaybeValue)
+(def (test-ref row key)
+  (let (entry (assoc key row))
+    (if entry (cdr entry) #f)))
+
+;; : TestSuite
+(def user-interface-custom-durable-runtime-store-handoff-test
+  (test-suite "poo-flow custom durable runtime store handoff case"
+    (test-case "projects backend negotiation and Marlin handoff"
+      (let* ((negotiation-row
+              (car poo-flow-custom-my-module-durable-runtime-store-handoff-case))
+             (handoff-row
+              (cadr poo-flow-custom-my-module-durable-runtime-store-handoff-case))
+             (manifest (test-ref handoff-row 'runtime-command-manifest)))
+        (check-equal? (test-ref negotiation-row 'kind)
+                      'poo-flow.durable.runtime-store-negotiation-receipt)
+        (check-equal? (test-ref negotiation-row 'store-id)
+                      'runtime-store/custom-project)
+        (check-equal? (test-ref negotiation-row 'backend-id)
+                      'runtime-backend/marlin-store)
+        (check-equal? (test-ref negotiation-row 'valid?) #t)
+        (check-equal? (test-ref negotiation-row 'handoff-ready?) #t)
+        (check-equal? (test-ref negotiation-row 'runtime-executed) #f)
+        (check-equal? (test-ref handoff-row 'kind)
+                      'poo-flow.durable.runtime-store.marlin-handoff)
+        (check-equal? (test-ref handoff-row 'handoff-ready?) #t)
+        (check-equal? (test-ref handoff-row 'operation)
+                      'durable-runtime-store-negotiate)
+        (check-equal? (test-ref manifest 'executable)
+                      "marlin-runtime-store")
+        (check-equal? (test-ref manifest 'argv)
+                      '("marlin-runtime-store"
+                        "durable-runtime-store"
+                        "negotiate"))
+        (check-equal? (test-ref handoff-row 'runtime-executed) #f)))))
+
+(run-tests! user-interface-custom-durable-runtime-store-handoff-test)

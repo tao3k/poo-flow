@@ -1,0 +1,102 @@
+* 10.06.51 Gerbil Metaprogramming Adoption Plan
+This document turns the current "use more Gerbil macro power" direction into an implementation plan for =poo-flow=. It is intentionally scoped to project improvement, not a new public language.
+
+=poo-flow= should use Gerbil's macro system as an internal compiler for repeated POO-native and functional structures. The public model remains POO objects, prototype composition, functional flow values, and final projection boundaries.
+
+** 10.06.51.10 Evidence From Current Owners
+The current code shows four distinct repetition classes:
+1. Sandbox backend object families. =src/module-system/sandbox-backend-object-syntax.ss= owns =defpoo-sandbox-backend-object-family=. This is the reference declarative macro: one fixed family declaration expands into ordinary module objects, field contracts, backend capability registries, and profile objects.
+2. =use-module= syntax branches. =src/module-system/init-syntax.ss= owns public =use-module= syntax. It keeps the accepted public form, but repeats parse, prototype build, config flag, and contract call shapes for concrete modules. This should become private branch-family generation after lower-level families are stable.
+3. Session policy families. =src/modules/session/policy.ss= repeats constructor validation, policy slot reads, accessors, and =->alist= projection fields. =src/modules/session/policy-syntax.ss= now owns the internal policy-family macro for foundational families and for the larger model, prompt, tool-permission, hook-tool-permission, resource-sharing, and agent-execution constructors. The macro supports an explicit =(scope-ref <expr>)= clause for families whose public constructor scope is not the second positional argument.
+4. Loop runtime manifests and receipts. =src/module-system/loop-engine-runtime.ss= repeats final alist projection patterns for runtime envelopes, command manifests, lineage receipts, selector receipts, resource receipts, capability receipts, memory receipts, compression receipts, and Marlin handoff facts. =src/module-system/runtime-projection-syntax.ss= now owns the internal projection macro for pure receipt projection families and runtime handoff facts.
+
+** 10.06.51.20 Macro Ladder
+Use the smallest Gerbil metaprogramming tool that carries the shape:
+1. Declarative macro first. Use =defrules= when a repeated declaration maps directly to fixed POO-native output. Sandbox backend object families and simple projection declarations are the reference examples.
+2. Procedural macro when shape must be checked. Use =defsyntax=, =syntax-case=, =with-syntax=, =syntax->datum=, and =datum->syntax= when a form must validate clauses, normalize optional fragments, generate related identifiers, or emit different expansions by module kind. =use-module= branch generation and larger policy-family declarations belong here when declarative syntax becomes too brittle.
+3. Bounded compile-time generator for families. Use broader compile-time helpers when one declaration must create a constructor, predicate, projection, accessor set, contract table, and test hooks. The output must still be ordinary Scheme functions and POO-native values.
+
+Do not use macros as a second user language. A macro is justified only when its expansion is boring hand-written POO-native or functional code.
+
+** 10.06.51.30 Target Architecture
+The project should converge on four internal syntax owners:
+- =src/module-system/sandbox-backend-object-syntax.ss= owns backend object/profile/capability families.
+- =src/modules/session/policy-syntax.ss= owns policy constructor/projection/accessor family generation.
+- =src/module-system/runtime-projection-syntax.ss= owns runtime manifest, receipt, and Marlin handoff projection family generation where the output is pure projection.
+- =src/module-system/init-syntax.ss= owns public =use-module= and private branch generation helpers.
+
+The generated code should produce:
+- POO objects and prototypes at extension boundaries.
+- Functional constructors and combinators for flow/control-plane composition.
+- Fixed projection functions at ABI and report boundaries.
+- Alists only as final payloads for runtime manifests, receipts, snapshots, and Marlin handoff requests.
+
+** 10.06.51.40 Implementation Sequence
+Phase 1: stabilize the sandbox macro family.
+- Keep =defpoo-sandbox-backend-object-family= as the reference declarative macro.
+- Assert generated backend profiles preserve field contracts, capability registry contents, and module object metadata.
+- Do not expose this macro as the normal user interface.
+
+Phase 2: migrate session policy boilerplate.
+- Keep =src/modules/session/policy-syntax.ss= as the syntax owner.
+- Use the internal policy-family macro for foundational policy constructors.
+- Keep the generated family slot materialization compatible with normal POO slot reads and =policy-slots= projection.
+- Migrate larger model, prompt, tool, hook, and resource-sharing families through the existing macro after focused compatibility tests cover their projection shape.
+- Use the explicit =(scope-ref <expr>)= macro clause only when the public constructor scope differs from the second positional argument; =agent-execution= is the first accepted case.
+- Preserve public POO-native policy objects and current scenario-level user interface.
+
+Phase 3: migrate loop runtime projections.
+- Keep =src/module-system/runtime-projection-syntax.ss= as the projection syntax owner.
+- Generated lineage, selector, resource-dispatch, memory, compression, capability =->alist=, and runtime handoff facts projections are in scope.
+- Keep capability receipt construction explicit where it is a hot path.
+- Keep sandbox-handoff agreement explicit until P7 because it owns diagnostics and handoff-ready validation, not just boundary projection.
+- Treat every generated alist as a final boundary object, never as a user authoring model.
+
+Phase 4: split =use-module= branch generation.
+- Keep the accepted public syntax:
+#+begin_src scheme
+(use-module loop-engine
+  :config
+  (.def (profile @ loop-engine-profile)
+    sandbox: sandbox-profile))
+#+end_src
+- Generate repeated module-specific =syntax-case= branches from a private branch spec.
+- Keep module-specific config functions as the runtime contract boundary.
+- Remove stale compatibility clauses when a public raw DSL form has been deleted.
+
+Phase 5: expose scenarios, not internals.
+- Update =user-interface/*= examples to show real extension cases: funflow, nono sandbox, cube sandbox, docker sandbox, session policy, loop runtime handoff, and Marlin receipt discovery.
+- Do not add "macro demo" cases unless the macro is explicitly public.
+
+** 10.06.51.50 Design Rules
+- POO-native is non-negotiable: user-facing extension values are objects/prototypes, not records, alist specs, or patch languages.
+- Functional style is the default for flow composition.
+- Macros remove mechanical structure; they do not hide the runtime model.
+- Expansion-time validation is preferred for static syntax shape errors.
+- Runtime validation remains for values that can only be known at execution time.
+- Generated projections must name the ABI/report contract they satisfy.
+- A generated object family must have one owner module and focused tests at that owner boundary.
+- Advanced scenarios should show the real POO relationship. Do not hide =self=, =super=, prototype extension, or slot operators behind a simplified compatibility layer.
+
+** 10.06.51.60 Immediate Next Changes
+The next implementation pass should be:
+1. Treat session policy macro migration as closed for the current constructor families; future work should add owner-boundary tests before broadening =policy-syntax.ss= beyond policy constructors.
+2. Close the remaining P4 contract-validation work around invalid loop profile slots and unsupported sandbox modules, now that session selector/materialization receipts are wired through profile, intent, runtime request, handoff facts, and presentation.
+3. Continue P5 by adding arrow/Kleisli combinator examples where they simplify real flow composition, then use those examples to drive loop profile variants without adding Scheme scheduling.
+4. Run P7 Marlin consumer audit in parallel while keeping sandbox agreement validation explicit and keeping ABI adapter ownership downstream.
+5. Refactor =use-module= only after the policy, receipt, loop, and funflow patterns are stable; until then, keep each concrete branch preserving the full user-authored POO-native =.def= body in presentation.
+
+This order reduces risk because session policies and runtime receipts have clear projection outputs, while =use-module= is a broader public syntax owner.
+
+** 10.06.51.70 Verification Gates
+For macro or compile-time generator changes, run focused owner-boundary tests first through native =gxtest= single-file selection, then package-level tests:
+#+begin_src sh
+gxtest t/sandbox-backend-object-family-test.ss
+gxtest t/session-policy-contract-test.ss
+gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss
+#+end_src
+
+For new session policy, runtime projection, loop, and funflow migrations, add focused tests before broad build verification. The expected broad gate remains:
+#+begin_src sh
+gxpkg build -R -O
+#+end_src

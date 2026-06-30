@@ -1,0 +1,408 @@
+;;; -*- Gerbil -*-
+;;; Boundary: POO-native session execution, tool, and hook policy contracts.
+;;; Invariant: policies are declarative authorization objects; Scheme never
+;;; runs tools or hooks.
+
+(import (only-in :std/test
+                 check-equal?
+                 run-tests!
+                 test-case
+                 test-suite)
+        (only-in :clan/poo/object .o .ref)
+        :poo-flow/src/modules/session/config)
+
+(export session-policy-contract-test)
+
+;; : (-> Alist Symbol MaybeValue)
+(def (test-ref alist key)
+  (let (entry (assoc key alist))
+    (if entry (cdr entry) #f)))
+
+;; : (-> Alist)
+(def (make-session-policy-contract-context)
+  (let* ((read-grant
+          (poo-flow-session-tool-grant
+           'grant/project-read
+           'read-workspace-file
+           '(read)
+           '(project-workspace)
+           '(agent-turn hook/pre-check)
+           '((scope . session)
+             (owner . root-agent))))
+         (build-grant
+          (poo-flow-session-tool-grant
+           'grant/project-build
+           'run-build-command
+           '(run)
+           '(project-workspace build-cache)
+           '(agent-turn)
+           '((scope . child-session)
+             (owner . build-agent))))
+         (main-agent-tool-policy
+          (poo-flow-session-tool-permission-policy
+           'policy/main-agent-tools
+           'custom/session-root
+           (list read-grant)
+           '(write-workspace-file run-build-command)
+           'deny
+           '((principal . main-agent))))
+         (build-agent-tool-policy
+          (poo-flow-session-tool-permission-policy
+           'policy/build-agent-tools
+           'custom/session-build-child
+           (list read-grant build-grant)
+           '(write-workspace-file)
+           'deny
+           '((principal . build-agent))))
+         (hook-tool-policy
+          (poo-flow-session-hook-tool-permission-policy
+           'policy/pre-check-hook-tools
+           'custom/session-root
+           '(hook/pre-check)
+           (list read-grant)
+           'human-approval-on-escalation
+           'deny
+           '((principal . hook/pre-check)
+             (inherits-agent-tools? . #f))))
+         (model-policy
+          (poo-flow-session-model-policy
+           'policy/build-agent-model
+           'custom/session-build-child
+           'marlin/provider
+           'marlin/model/build-review
+           '(tool-calling structured-output)
+           'budget/build-agent))
+         (prompt-policy
+          (poo-flow-session-prompt-policy
+           'policy/build-agent-prompt
+           'custom/session-build-child
+           'custom/session-build-system
+           '(system-instruction build-contract)
+           'parent-summary-only))
+         (resource-policy
+          (poo-flow-session-resource-sharing-policy
+           'policy/build-agent-resources
+           'custom/session-build-child
+           '((project-workspace
+              (access . read)
+              (accounting . root-session))
+             (build-cache
+              (access . read-write)
+              (accounting . child-session)))
+           'deny))
+         (execution-policy
+          (poo-flow-session-agent-execution-policy
+           'policy/build-agent-execution
+           'agent/build
+           'custom/session-build-child
+           'policy/build-agent-model
+           'policy/build-agent-prompt
+           'policy/build-agent-tools
+           'policy/pre-check-hook-tools
+           'policy/build-agent-context
+           'policy/build-agent-resources)))
+    (list (cons 'main-agent-tool-policy main-agent-tool-policy)
+          (cons 'build-agent-tool-policy build-agent-tool-policy)
+          (cons 'hook-tool-policy hook-tool-policy)
+          (cons 'execution-policy execution-policy)
+          (cons 'presentation
+                (list (poo-flow-session-policy->alist
+                       main-agent-tool-policy)
+                      (poo-flow-session-policy->alist
+                       build-agent-tool-policy)
+                      (poo-flow-session-policy->alist hook-tool-policy)
+                      (poo-flow-session-policy->alist model-policy)
+                      (poo-flow-session-policy->alist prompt-policy)
+                      (poo-flow-session-policy->alist resource-policy)
+                      (poo-flow-session-policy->alist
+                       execution-policy))))))
+
+;; : TestSuite
+(def session-policy-contract-test
+  (test-suite "poo-flow session policy contracts"
+    (test-case "declares POO-native tool permission policies"
+      (let* ((read-grant
+              (poo-flow-session-tool-grant
+               'grant/read
+               'read-workspace-file
+               '(read)
+               '(project-workspace)
+               '(agent-turn)
+               '((case . unit))))
+             (policy
+              (poo-flow-session-tool-permission-policy
+               'policy/test-agent-tools
+               'session/test
+               (list read-grant)
+               '(write-workspace-file)
+               'deny
+               '((case . unit))))
+             (row (poo-flow-session-policy->alist policy)))
+        (check-equal? (poo-flow-session-tool-grant? read-grant) #t)
+        (check-equal? (poo-flow-session-policy? policy) #t)
+        (check-equal? (poo-flow-session-policy-kind policy)
+                      'agent-tool-permission)
+        (check-equal? (poo-flow-session-policy-name policy)
+                      'policy/test-agent-tools)
+        (check-equal? (poo-flow-session-policy-scope-ref policy)
+                      'session/test)
+        (check-equal? (test-ref row 'tool-grant-count) 1)
+        (check-equal? (test-ref row 'runtime-executed) #f)
+        (check-equal? (poo-flow-session-tool-permission-policy-allows?
+                       policy
+                       'read-workspace-file
+                       'read)
+                      #t)
+        (check-equal? (poo-flow-session-tool-permission-policy-allows?
+                       policy
+                       'read-workspace-file
+                       'write)
+                      #f)
+        (check-equal? (poo-flow-session-tool-permission-policy-allows?
+                       policy
+                       'write-workspace-file
+                       'write)
+                      #f)))
+
+    (test-case "keeps hook-triggered tools separate from agent tools"
+      (let* ((context (make-session-policy-contract-context))
+             (build-agent-tool-policy
+              (test-ref context 'build-agent-tool-policy))
+             (hook-tool-policy (test-ref context 'hook-tool-policy))
+             (main-agent-tool-policy
+              (test-ref context 'main-agent-tool-policy)))
+        (check-equal? (poo-flow-session-tool-permission-policy-allows?
+                       build-agent-tool-policy
+                       'run-build-command
+                       'run)
+                      #t)
+        (check-equal? (poo-flow-session-hook-tool-permission-policy-allows?
+                       hook-tool-policy
+                       'hook/pre-check
+                       'run-build-command
+                       'run)
+                      #f)
+        (check-equal? (poo-flow-session-hook-tool-permission-policy-allows?
+                       hook-tool-policy
+                       'hook/pre-check
+                       'read-workspace-file
+                       'read)
+                      #t)
+        (check-equal? (poo-flow-session-tool-permission-policy-allows?
+                       main-agent-tool-policy
+                       'run-build-command
+                       'run)
+                      #f)))
+
+    (test-case "uses native POO inheritance for policy refinement"
+      (let* ((base-model
+              (poo-flow-session-model-policy
+               'policy/base-model
+               'session/root
+               'marlin/provider
+               'marlin/model/default
+               '(tool-calling)
+               'budget/root
+               '((case . inheritance))))
+             (child-model
+              (.o (:: @ [base-model])
+                  policy-name: 'policy/child-model
+                  scope-ref: 'session/child
+                  model-ref: 'marlin/model/child)))
+        (check-equal? (poo-flow-session-policy? child-model) #t)
+        (check-equal? (poo-flow-session-policy-kind child-model)
+                      'agent-model)
+        (check-equal? (poo-flow-session-policy-name child-model)
+                      'policy/child-model)
+        (check-equal? (poo-flow-session-policy-scope-ref child-model)
+                      'session/child)
+        (check-equal? (.ref child-model 'provider-ref) 'marlin/provider)
+        (check-equal? (.ref child-model 'model-ref)
+                      'marlin/model/child)))
+
+    (test-case "projects generated foundational policy families"
+      (let* ((context-policy
+              (poo-flow-session-context-policy
+               'policy/build-agent-context
+               'custom/session-build-child
+               'parent-summary-only
+               '(custom/session-root custom/session-review)
+               '((case . generated-family))))
+             (isolation-policy
+              (poo-flow-session-isolation-policy
+               'policy/build-agent-isolation
+               'custom/session-build-child
+               'strict
+               'deny
+               'append-summary
+               'via-supervisor))
+             (resource-policy
+              (poo-flow-session-resource-policy
+               'policy/build-agent-budget
+               'custom/session-build-child
+               '(budget/build-agent)
+               '(capability/cache-read capability/cache-write)
+               'session/build))
+             (context-row (poo-flow-session-policy->alist context-policy))
+             (context-slots (test-ref context-row 'policy-slots))
+             (isolation-row
+              (poo-flow-session-policy->alist isolation-policy))
+             (isolation-slots (test-ref isolation-row 'policy-slots))
+             (resource-row (poo-flow-session-policy->alist resource-policy))
+             (resource-slots (test-ref resource-row 'policy-slots)))
+        (check-equal? (poo-flow-session-policy? context-policy) #t)
+        (check-equal? (poo-flow-session-policy-kind context-policy)
+                      'session-context)
+        (check-equal? (poo-flow-session-policy-name context-policy)
+                      'policy/build-agent-context)
+        (check-equal? (poo-flow-session-policy-scope-ref context-policy)
+                      'custom/session-build-child)
+        (check-equal? (test-ref context-slots 'visibility)
+                      'parent-summary-only)
+        (check-equal? (test-ref context-slots 'allowed-session-refs)
+                      '(custom/session-root custom/session-review))
+        (check-equal? (test-ref context-row 'default-action) 'deny)
+        (check-equal? (test-ref context-row 'metadata)
+                      '((case . generated-family)))
+        (check-equal? (test-ref context-row 'runtime-owner)
+                      "marlin-agent-core")
+        (check-equal? (test-ref context-row 'runtime-executed) #f)
+        (check-equal? (poo-flow-session-policy-kind isolation-policy)
+                      'session-isolation)
+        (check-equal? (test-ref isolation-slots 'mode) 'strict)
+        (check-equal? (test-ref isolation-slots 'parent-write)
+                      'append-summary)
+        (check-equal? (poo-flow-session-policy-kind resource-policy)
+                      'session-resource)
+        (check-equal? (test-ref resource-slots 'budget-refs)
+                      '(budget/build-agent))
+        (check-equal? (test-ref resource-slots 'accounting-owner)
+                      'session/build)))
+
+    (test-case "projects durable policy receipts from session policy composition"
+      (let* ((durable-policy
+              (poo-flow-durable-policy
+               'durable/test
+               'session/root
+               '((journal-owner . runtime/fact-log)
+                 (checkpoint-store . runtime/checkpoint-store)
+                 (resume-identity . session-id)
+                 (repair-mode . fail-closed)
+                 (action-classes . (replayable idempotent compensatable)))))
+             (execution-policy
+              (poo-flow-session-agent-execution-policy
+               'policy/durable-execution
+               'agent/build
+               'session/child
+               'policy/model
+               'policy/prompt
+               'policy/tools
+               'policy/hooks
+               'policy/context
+               'policy/resources))
+             (durable-execution-policy
+              (poo-flow-session-policy-attach-durable
+               execution-policy
+               durable-policy))
+             (receipt
+              (poo-flow-session-policy-durable-receipt
+               durable-execution-policy
+               '((project-id . project/test)
+                 (root-session-id . session/root)
+                 (session-id . session/child)
+                 (parent-session-id . session/root)
+                 (loop-run-id . loop/test))))
+             (receipt-row
+              (poo-flow-durable-policy-receipt->alist receipt))
+             (policy-row
+              (poo-flow-session-policy->alist
+               durable-execution-policy))
+             (embedded-durable-row
+              (test-ref policy-row 'durable-policy)))
+        (check-equal? (poo-flow-session-policy?
+                       durable-execution-policy)
+                      #t)
+        (check-equal? (poo-flow-durable-policy?
+                       durable-execution-policy)
+                      #t)
+        (check-equal? (poo-flow-durable-policy-receipt? receipt) #t)
+        (check-equal? (poo-flow-durable-policy-receipt-valid? receipt) #t)
+        (check-equal? (test-ref receipt-row 'policy-id) 'durable/test)
+        (check-equal? (test-ref receipt-row 'session-id) 'session/child)
+        (check-equal? (test-ref receipt-row 'journal-owner)
+                      'runtime/fact-log)
+        (check-equal? (test-ref receipt-row 'diagnostic-count) 0)
+        (check-equal? (test-ref policy-row 'durable-policy-ref)
+                      'durable/test)
+        (check-equal? (test-ref policy-row 'durable-valid?) #t)
+        (check-equal? (test-ref embedded-durable-row 'schema)
+                      +poo-flow-durable-policy-receipt-schema+)))
+
+    (test-case "reports invalid durable policies through receipt diagnostics"
+      (let* ((invalid-policy
+              (.o durable-kind: +poo-flow-durable-policy-kind+
+                  durable-schema: +poo-flow-durable-policy-schema+
+                  durable-policy-name: 'durable/invalid
+                  durable-scope-ref: 'session/invalid
+                  repair-mode: 'teleport
+                  action-classes: '(replayable impossible)
+                  runtime-owner: 'not-a-runtime-owner))
+             (receipt
+              (poo-flow-durable-policy->receipt invalid-policy))
+             (receipt-row
+              (poo-flow-durable-policy-receipt->alist receipt))
+             (diagnostics
+              (test-ref receipt-row 'diagnostics)))
+        (check-equal? (poo-flow-durable-policy? invalid-policy) #t)
+        (check-equal? (poo-flow-durable-policy-receipt-valid? receipt) #f)
+        (check-equal? (test-ref receipt-row 'valid?) #f)
+        (check-equal? (> (test-ref receipt-row 'diagnostic-count) 0) #t)
+        (check-equal? (list? diagnostics) #t)
+        (check-equal? (test-ref (car diagnostics) 'phase)
+                      'durable-policy)))
+
+    (test-case "batch projects durable policies as struct receipts before alists"
+      (let* ((policies
+              (list
+               (poo-flow-durable-policy
+                'durable/batch-root
+                'session/root)
+               (poo-flow-durable-policy
+                'durable/batch-child
+                'session/child
+                '((repair-mode . retry)
+                  (action-classes . (replayable idempotent))))))
+             (receipts
+              (poo-flow-durable-policies->receipts policies))
+             (rows
+              (poo-flow-durable-policy-receipts->alists receipts)))
+        (check-equal? (length receipts) 2)
+        (check-equal? (poo-flow-durable-policy-receipt? (car receipts)) #t)
+        (check-equal? (poo-flow-durable-policy-receipt? (cadr receipts)) #t)
+        (check-equal? (test-ref (car rows) 'policy-id)
+                      'durable/batch-root)
+        (check-equal? (test-ref (cadr rows) 'policy-id)
+                      'durable/batch-child)
+        (check-equal? (test-ref (cadr rows) 'repair-mode)
+                      'retry)
+        (check-equal? (test-ref (cadr rows) 'valid?) #t)))
+
+    (test-case "exposes custom-shaped policy presentation"
+      (let* ((context (make-session-policy-contract-context))
+             (presentation (test-ref context 'presentation))
+             (execution-row
+              (poo-flow-session-policy->alist
+               (test-ref context 'execution-policy))))
+        (check-equal? (length presentation) 7)
+        (check-equal? (test-ref execution-row 'policy-kind)
+                      'agent-execution)
+        (check-equal? (test-ref execution-row 'agent-ref) 'agent/build)
+        (check-equal? (test-ref execution-row 'session-ref)
+                      'custom/session-build-child)
+        (check-equal? (test-ref execution-row 'tool-policy-ref)
+                      'policy/build-agent-tools)
+        (check-equal? (test-ref execution-row 'hook-policy-ref)
+                      'policy/pre-check-hook-tools)
+        (check-equal? (test-ref execution-row 'runtime-executed) #f)))))
+
+(run-tests! session-policy-contract-test)

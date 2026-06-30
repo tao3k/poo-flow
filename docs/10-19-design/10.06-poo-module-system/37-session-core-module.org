@@ -44,8 +44,8 @@ Focused package-context gates:
 gxpkg env gxc src/modules/session/transform.ss src/modules/session/config.ss
 gxpkg env gxc src/modules/session-core/config.ss src/module-system/session-core-config.ss
 gxpkg env gxc src/module-system/presentation.ss src/module-system/profile-presentation.ss
-gxpkg env gxtest t/session-transform-test.ss
-gxpkg env gxtest t/user-interface-presentation-test.ss
-gxpkg env gxtest t/declaration-case-test.ss
-gxpkg env gxtest t/user-interface-config-modules-test.ss
+gxtest t/session-transform-test.ss
+gxtest t/user-interface-presentation-test.ss
+gxtest t/declaration-case-test.ss
+gxtest t/user-interface-config-modules-test.ss
 #+end_src

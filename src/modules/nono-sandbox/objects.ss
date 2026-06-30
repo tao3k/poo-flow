@@ -3,80 +3,62 @@
 
 (import :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/objects
-        :poo-flow/src/modules/sandbox-core/objects)
+        :poo-flow/src/module-system/sandbox-backend-object-syntax
+        :poo-flow/src/modules/sandbox-core/objects
+        :poo-flow/src/modules/sandbox-core/resource-contract)
 
 (export poo-flow-nono-sandbox-object
         poo-flow-nono-sandbox-backend-capability
+        poo-flow-nono-sandbox-backend-capability-registry
         poo-flow-nono-sandbox-profile-object
         poo-flow-nono-sandbox-module-objects)
 
 ;;; Nono sandbox object data names the backend family and native binding
 ;;; default; native calls remain in their dedicated owner.
-;; : PooModuleObject
-(def poo-flow-nono-sandbox-object
-  (poo-flow-module-object
-   'objects.nono-sandbox.sandbox
-   (list poo-flow-shared-sandbox-object)
-   (list
-    (poo-flow-module-field-contract
-     'backend 'Symbol 'override 'nono '((scope . nono-sandbox)))
-    (poo-flow-module-field-contract
-     'binding 'Symbol 'override 'native-ffi '((scope . nono-sandbox))))
-   '((namespace . objects.nono-sandbox)
-     (domain . sandbox)
-     (inherits . objects.shared.sandbox))))
-
-;; : PooSandboxBackendCapability
-(def poo-flow-nono-sandbox-backend-capability
-  poo-flow-sandbox-backend-capability/nono)
-
-;;; The nono profile object specializes sandbox-core through C3 inheritance, so
-;;; legacy nono defaults and shared profile rows merge through one object path.
-;; : PooModuleObject
-(def poo-flow-nono-sandbox-profile-object
-  (poo-flow-module-object
-   'objects.nono-sandbox.profile
-   (list poo-flow-sandbox-core-profile-object
-         poo-flow-nono-sandbox-object)
-   (list
-    (poo-flow-module-field-contract
-     'profile-name 'Symbol 'override 'default
-     '((scope . nono-sandbox) (dsl-row . profile-name)))
-    (poo-flow-module-field-contract
-     'backend-kind 'Symbol 'override 'nono
-     '((scope . nono-sandbox) (owned-by . module-config)))
-    (poo-flow-module-field-contract
-     'backend-ref 'Symbol 'override 'nono-sandbox
-     '((scope . nono-sandbox) (owned-by . module-config)))
-    (poo-flow-module-field-contract
-     'network-policy 'List 'override '(deny-by-default)
-     '((scope . nono-sandbox) (dsl-row . network)))
-    (poo-flow-module-field-contract
-     'capabilities 'List 'override '(process filesystem tmpdir)
-     '((scope . nono-sandbox) (dsl-row . capabilities)))
-    (poo-flow-module-field-contract
-     'backend-capability 'Object 'override
-     poo-flow-nono-sandbox-backend-capability
-     '((scope . nono-sandbox) (owned-by . module-config)))
-    (poo-flow-module-field-contract
-     'resource-policy 'List 'override
-     '((filesystem
-        (scope . runtime)
-        (materialized-by . runtime)
-        (mounts . runtime)))
-     '((scope . nono-sandbox) (dsl-row . resources)))
-    (poo-flow-module-field-contract
-     'metadata 'List 'append '()
-     '((scope . nono-sandbox) (dsl-row . metadata))))
-   '((namespace . objects.nono-sandbox)
-     (domain . profile)
-     (module . nono-sandbox)
-     (collection . sandbox.profile)
-     (backend-owned-by . use-module)
-     (inherits . objects.nono-sandbox.sandbox))))
-
-;;; Object catalogs are validation and loader inputs; they do not load bindings.
-;; : [PooModuleObject]
-(def poo-flow-nono-sandbox-module-objects
-  (list poo-flow-nono-sandbox-object
-        poo-flow-nono-sandbox-profile-object))
+(defpoo-sandbox-backend-object-family
+  poo-flow-nono-sandbox-object
+  poo-flow-nono-sandbox-backend-capability
+  poo-flow-nono-sandbox-backend-capability-registry
+  poo-flow-nono-sandbox-profile-object
+  poo-flow-nono-sandbox-module-objects
+  (sandbox objects.nono-sandbox.sandbox
+           objects.nono-sandbox
+           objects.shared.sandbox
+           ((backend Symbol override 'nono '((scope . nono-sandbox)))
+            (binding Symbol override 'native-ffi '((scope . nono-sandbox)))))
+  (backend nono
+           poo-flow-sandbox-backend-capability/nono
+           '((metadata . ((scope . nono-sandbox)
+                          (runtime-executed . #f)))))
+  (profile objects.nono-sandbox.profile
+           nono-sandbox
+           objects.nono-sandbox.sandbox
+           (poo-flow-sandbox-core-profile-object
+            poo-flow-nono-sandbox-object)
+           ((profile-name Symbol override 'default
+                          '((scope . nono-sandbox)
+                            (dsl-row . profile-name)))
+            (backend-kind Symbol override 'nono
+                          '((scope . nono-sandbox)
+                            (owned-by . module-config)))
+            (backend-ref Symbol override 'nono-sandbox
+                         '((scope . nono-sandbox)
+                           (owned-by . module-config)))
+            (network-policy List override '(deny-by-default)
+                            '((scope . nono-sandbox)
+                              (dsl-row . network)))
+            (capabilities List override '(process filesystem tmpdir)
+                          '((scope . nono-sandbox)
+                            (dsl-row . capabilities)))
+            (backend-capability Object override
+                                poo-flow-nono-sandbox-backend-capability
+                                '((scope . nono-sandbox)
+                                  (owned-by . module-config)))
+            (resource-policy List override
+                             (poo-flow-sandbox-filesystem-prototype->resource-policy
+                              poo-flow-runtime-filesystem-prototype)
+                             '((scope . nono-sandbox)
+                               (dsl-row . resources)))
+            (metadata List append '()
+                      '((scope . nono-sandbox)
+                        (dsl-row . metadata))))))

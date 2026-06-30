@@ -29,10 +29,33 @@
         :poo-flow/t/module-system-observability-test
         :poo-flow/t/module-object-practice-test
         :poo-flow/t/module-system-test
+        :poo-flow/t/memory-core-test
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
         :poo-flow/t/nono-sandbox-native-ffi-test
         :poo-flow/t/sandbox-resource-test
+        :poo-flow/t/session-agent-param-contract-test
+        :poo-flow/t/session-agent-tool-policy-test
+        :poo-flow/t/session-communication-receipt-test
+        :poo-flow/t/session-hook-tool-policy-test
+        :poo-flow/t/session-materialization-receipt-test
+        :poo-flow/t/session-multi-agent-graph-test
         :poo-flow/t/session-object-test
+        :poo-flow/t/session-policy-validation-test
+        :poo-flow/t/session-registry-receipt-test
+        :poo-flow/t/session-selector-receipt-test
         :poo-flow/t/session-transform-test
-        :poo-flow/t/task-family-descriptor-test)
+        :poo-flow/t/task-family-descriptor-test
+        :poo-flow/t/tool-core-test
+        :poo-flow/t/user-interface-custom-durable-recovery-test
+        :poo-flow/t/user-interface-custom-durable-runtime-store-handoff-test
+        :poo-flow/t/user-interface-custom-durable-runtime-store-operations-test
+        :poo-flow/t/user-interface-custom-memory-core-test
+        :poo-flow/t/user-interface-custom-session-agent-graph-test
+        :poo-flow/t/user-interface-custom-session-agent-param-test
+        :poo-flow/t/user-interface-custom-session-communication-test
+        :poo-flow/t/user-interface-custom-session-materialization-test
+        :poo-flow/t/user-interface-custom-session-policy-test
+        :poo-flow/t/user-interface-custom-session-registry-test
+        :poo-flow/t/user-interface-custom-session-selector-test
+        :poo-flow/t/user-interface-custom-tool-core-test)

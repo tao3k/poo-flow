@@ -5,10 +5,28 @@
 
 (import (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-default-sandbox-profiles)
+        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/modules/session/agent
+        :poo-flow/src/modules/session/agent-param
+        :poo-flow/src/modules/session/communication
+        :poo-flow/src/modules/session/materialization
         :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/policy
+        :poo-flow/src/modules/session/policy-validation
+        :poo-flow/src/modules/session/registry
+        :poo-flow/src/modules/session/selector
         :poo-flow/src/modules/session/transform)
 
-(export (import: :poo-flow/src/modules/session/objects)
+(export (import: :poo-flow/src/module-system/durable-policy)
+        (import: :poo-flow/src/modules/session/agent)
+        (import: :poo-flow/src/modules/session/agent-param)
+        (import: :poo-flow/src/modules/session/communication)
+        (import: :poo-flow/src/modules/session/materialization)
+        (import: :poo-flow/src/modules/session/objects)
+        (import: :poo-flow/src/modules/session/policy)
+        (import: :poo-flow/src/modules/session/policy-validation)
+        (import: :poo-flow/src/modules/session/registry)
+        (import: :poo-flow/src/modules/session/selector)
         (import: :poo-flow/src/modules/session/transform)
         poo-flow-session-default-placement
         session

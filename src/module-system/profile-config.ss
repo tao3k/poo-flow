@@ -4,6 +4,7 @@
 
 (import :poo-flow/src/module-system/base
         :poo-flow/src/module-system/sandbox-profile-catalog
+        :poo-flow/src/module-system/sandbox-backend-capability-catalog
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/loop-engine-config
         :poo-flow/src/module-system/presentation
@@ -13,6 +14,7 @@
 
 (export (import: :poo-flow/src/module-system/base)
         (import: :poo-flow/src/module-system/sandbox-profile-catalog)
+        (import: :poo-flow/src/module-system/sandbox-backend-capability-catalog)
         (import: :poo-flow/src/module-system/workflow-cicd-config)
         (import: :poo-flow/src/module-system/loop-engine-config)
         (import: :poo-flow/src/module-system/presentation)

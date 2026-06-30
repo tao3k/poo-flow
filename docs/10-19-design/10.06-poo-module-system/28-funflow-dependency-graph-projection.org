@@ -50,7 +50,7 @@ The compact shape now has a concrete projection:
                       dependency-refs result-protocol runtime-mode)
     check-name: 'test
     profile-ref: 'ci/check
-    command-vector: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+    command-vector: '("gxtest" "t/unit-tests.ss")
     dependency-refs: '(build)
     result-protocol: '(read :lines)
     runtime-mode: 'manifest-handoff)

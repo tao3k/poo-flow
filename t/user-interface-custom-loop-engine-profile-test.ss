@@ -122,6 +122,19 @@
                                                    'issue-triage)
                                 'retention)
                       'rolling-backlog))
+      (let ((memory-receipt (test-ref intent 'memory-receipt)))
+        (check-equal? (test-ref memory-receipt 'selected-use-case)
+                      'daily-triage)
+        (check-equal? (test-ref memory-receipt 'policy-count) 5)
+        (check-equal? (test-ref memory-receipt 'available-use-cases)
+                      '(daily-triage
+                        ci-sweeper
+                        issue-triage
+                        dependency-sweeper
+                        post-merge-cleanup))
+        (check-equal? (test-ref memory-receipt 'selected-policy-found?)
+                      #t)
+        (check-equal? (test-ref memory-receipt 'state-path) "STATE.md"))
       (check-equal? (test-ref (test-ref intent 'compression-policy)
                               'lineage-kind)
                     'compressed-profile-loop)

@@ -67,12 +67,18 @@
          feature-facts
          sandbox-profile-derivation-count
          sandbox-profile-derivations
+         sandbox-backend-capability-registry-validation
+         sandbox-backend-capability-registry-valid?
+         sandbox-backend-capability-registry-diagnostic-count
+         sandbox-backend-capability-registry-diagnostics
          session-core-intent-count
          session-core-intents
          cicd-intent-count
          cicd-intents
          workflow-cicd-pipeline-count
          workflow-cicd-pipelines
+         workflow-cicd-functional-dag-count
+         workflow-cicd-functional-dags
          workflow-cicd-pipeline-run-count
          workflow-cicd-pipeline-runs
          workflow-cicd-pipeline-result-count
@@ -102,6 +108,8 @@
          loop-engine-runtime-handoff-count
          loop-engine-runtime-handoffs
          loop-engine-workflow-agreements
+         loop-engine-workflow-functional-dag-counts
+         loop-engine-workflow-functional-dags
          loop-engine-result-contracts
          loop-engine-agent-profiles
          loop-engine-agent-harnesses
@@ -200,6 +208,9 @@
          (workflow-cicd-check-maps
          (poo-flow-user-config-workflow-cicd-check-maps
            (pooFlowUserConfigFromProfile profile)))
+         (workflow-cicd-functional-dag-rows
+          (poo-flow-user-config-workflow-cicd-functional-dag-rows
+           (pooFlowUserConfigFromProfile profile)))
          (workflow-cicd-pipeline-run-rows
           (poo-flow-user-config-workflow-cicd-pipeline-runs
            (pooFlowUserConfigFromProfile profile)))
@@ -251,6 +262,7 @@
            session-core-intent-rows
            cicd-intent-rows
            workflow-cicd-check-maps
+           workflow-cicd-functional-dag-rows
            workflow-cicd-pipeline-run-rows
            workflow-cicd-pipeline-result-rows
            workflow-cicd-readiness-rows
@@ -290,6 +302,10 @@
             (length workflow-cicd-check-maps))
       (cons 'workflow-cicd-pipelines
             (map poo-flow-cicd-check-map-name workflow-cicd-check-maps))
+      (cons 'workflow-cicd-functional-dag-count
+            (length workflow-cicd-functional-dag-rows))
+      (cons 'workflow-cicd-functional-dags
+            workflow-cicd-functional-dag-rows)
       (cons 'workflow-cicd-pipeline-run-count
             (length workflow-cicd-pipeline-run-rows))
       (cons 'workflow-cicd-pipeline-runs workflow-cicd-pipeline-run-rows)
@@ -361,6 +377,14 @@
             (poo-flow-user-loop-engine-intents-field-values
              loop-engine-intent-rows
              'workflow-agreement))
+      (cons 'loop-engine-workflow-functional-dag-counts
+            (poo-flow-user-loop-engine-intents-field-values
+             loop-engine-intent-rows
+             'workflow-functional-dag-count))
+      (cons 'loop-engine-workflow-functional-dags
+            (poo-flow-user-loop-engine-intents-field-values
+             loop-engine-intent-rows
+             'workflow-functional-dags))
       (cons 'loop-engine-result-contracts
             (poo-flow-user-loop-engine-intents-field-values
              loop-engine-intent-rows

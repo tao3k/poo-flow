@@ -64,6 +64,10 @@
               (user-interface-cicd-runtime-graph-alist-ref
                build-manifest
                'request))
+             (build-policy
+              (user-interface-cicd-runtime-graph-alist-ref
+               build-manifest
+               'policy))
              (manifest-summaries
               (.ref presentation
                     'workflow-cicd-runtime-command-manifest-summaries))
@@ -76,6 +80,15 @@
              (agreement-rows
               (user-interface-cicd-runtime-graph-alist-ref agreement 'rows))
              (build-agreement-row (car agreement-rows))
+             (package-agreement-row (caddr agreement-rows))
+             (handoff-abis
+              (.ref presentation
+                    'workflow-cicd-marlin-runtime-handoff-abis))
+             (handoff-entries
+              (user-interface-cicd-runtime-graph-alist-ref
+               (car handoff-abis)
+               'entries))
+             (build-handoff-entry (car handoff-entries))
              (runtime-summaries
               (.ref presentation 'workflow-cicd-sandbox-runtime-summaries)))
         (check-equal? (length checks) 3)
@@ -147,6 +160,21 @@
         (check-equal?
          (user-interface-cicd-runtime-graph-alist-ref
           build-agreement-row
+          'durable-task-id-match?)
+         #t)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-agreement-row
+          'artifact-provenance-match?)
+         #t)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          package-agreement-row
+          'compensation-refs-match?)
+         #t)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-agreement-row
           'valid?)
          #t)
         (check-equal?
@@ -206,6 +234,56 @@
          (user-interface-cicd-runtime-graph-alist-ref build-request 'check)
          'build)
         (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'durable-task-id)
+         'task/build)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'action-class)
+         'idempotent)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'artifact-refs)
+         '(build-log))
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'artifact-retention)
+         'project-retained)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'sandbox-refs)
+         '(ci/build))
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'checkpoint-ref)
+         '(workflow-cicd-check build))
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-request
+          'compensation-refs)
+         '())
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-policy
+          'durable-task-id)
+         'task/build)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-policy
+          'artifact-provenance)
+         '(((artifact-ref . build-log)
+            (producer-check . build)
+            (durable-task-id . task/build)
+            (retention . project-retained)
+            (runtime-owner . "marlin-agent-core")
+            (runtime-executed . #f))))
+        (check-equal?
          (user-interface-cicd-runtime-graph-alist-ref build-summary 'kind)
          'workflow-cicd-runtime-command-manifest-summary)
         (check-equal?
@@ -214,6 +292,21 @@
         (check-equal?
          (user-interface-cicd-runtime-graph-alist-ref build-summary 'argv)
          '("gxpkg" "build"))
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-summary
+          'durable-task-id)
+         'task/build)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-summary
+          'artifact-provenance)
+         '(((artifact-ref . build-log)
+            (producer-check . build)
+            (durable-task-id . task/build)
+            (retention . project-retained)
+            (runtime-owner . "marlin-agent-core")
+            (runtime-executed . #f))))
         (check-equal?
          (user-interface-cicd-runtime-graph-alist-ref
           build-summary
@@ -245,6 +338,36 @@
           package-summary
           'dependency-refs)
          '(test))
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          package-summary
+          'durable-task-id)
+         'task/package)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          package-summary
+          'action-class)
+         'compensatable)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          package-summary
+          'artifact-retention)
+         'release-retained)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          package-summary
+          'compensation-refs)
+         '(cleanup/package-artifacts))
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-handoff-entry
+          'durable-task-id)
+         'task/build)
+        (check-equal?
+         (user-interface-cicd-runtime-graph-alist-ref
+          build-handoff-entry
+          'artifact-refs)
+         '(build-log))
         (check-equal?
          (user-interface-cicd-runtime-graph-alist-ref
           readiness

@@ -4,6 +4,9 @@
 
 (import :poo-flow/src/module-system/base
         :poo-flow/src/module-system/sandbox-profile-catalog
+        (only-in :poo-flow/src/modules/funflow/config
+                 poo-flow-funflow-check-map->functional-dag
+                 poo-flow-funflow-functional-dag->alist)
         (only-in :poo-flow/src/modules/workflow/cicd
                  poo-flow-cicd-check-map?
                  poo-flow-cicd-check-map-name
@@ -18,6 +21,9 @@
         poo-flow-user-config-cicd-intents
         poo-flow-user-module-selection-workflow-cicd-check-map
         poo-flow-user-config-workflow-cicd-check-maps
+        poo-flow-user-workflow-cicd-functional-dags
+        poo-flow-user-workflow-cicd-functional-dag-rows
+        poo-flow-user-config-workflow-cicd-functional-dag-rows
         poo-flow-user-config-workflow-cicd-runtime-readiness
         poo-flow-user-config-workflow-cicd-runtime-command-manifests
         poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
@@ -137,6 +143,22 @@
   (poo-flow-user-config-workflow-cicd-check-maps/add
    (poo-flow-user-config-modules config)))
 
+;;; Functional DAG discovery stays in the Funflow owner. This layer only
+;;; projects check-map values into POO DAG objects and final presentation rows.
+;; : (-> [PooFlowCicdCheckMap] [PooFlowFunflowFunctionalDag])
+(def (poo-flow-user-workflow-cicd-functional-dags check-maps)
+  (map poo-flow-funflow-check-map->functional-dag check-maps))
+
+;; : (-> [PooFlowCicdCheckMap] [Alist])
+(def (poo-flow-user-workflow-cicd-functional-dag-rows check-maps)
+  (map poo-flow-funflow-functional-dag->alist
+       (poo-flow-user-workflow-cicd-functional-dags check-maps)))
+
+;; : (-> PooUserConfig [Alist])
+(def (poo-flow-user-config-workflow-cicd-functional-dag-rows config)
+  (poo-flow-user-workflow-cicd-functional-dag-rows
+   (poo-flow-user-config-workflow-cicd-check-maps config)))
+
 ;;; Boundary: user workflow cicd runtime readiness add is the policy-visible
 ;;; edge for module-system, workflow behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
@@ -236,6 +258,25 @@
            (poo-flow-user-alist-ref request 'profile-refs '()))
      (cons 'dependency-refs
            (poo-flow-user-alist-ref request 'dependency-refs '()))
+     (cons 'durable-task-id
+           (poo-flow-user-alist-ref request 'durable-task-id #f))
+     (cons 'action-class
+           (poo-flow-user-alist-ref request 'action-class #f))
+     (cons 'artifact-refs
+           (poo-flow-user-alist-ref request 'artifact-refs '()))
+     (cons 'artifact-provenance
+           (poo-flow-user-alist-ref
+            policy
+            'artifact-provenance
+            '()))
+     (cons 'artifact-retention
+           (poo-flow-user-alist-ref request 'artifact-retention #f))
+     (cons 'sandbox-refs
+           (poo-flow-user-alist-ref request 'sandbox-refs '()))
+     (cons 'checkpoint-ref
+           (poo-flow-user-alist-ref request 'checkpoint-ref #f))
+     (cons 'compensation-refs
+           (poo-flow-user-alist-ref request 'compensation-refs '()))
      (cons 'runtime
            (poo-flow-user-alist-ref request 'runtime #f))
      (cons 'runtime-owner "marlin-agent-core")
@@ -394,6 +435,35 @@
    (poo-flow-user-workflow-cicd-mismatch-diagnostics
     summary-present? runtime-executed-match? 'runtime-executed-mismatch)))
 
+;; : (-> Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean [Symbol])
+(def (poo-flow-user-workflow-cicd-runtime-command-durable-agreement-diagnostics
+      summary-present?
+      durable-task-id-match?
+      action-class-match?
+      artifact-refs-match?
+      artifact-provenance-match?
+      artifact-retention-match?
+      sandbox-refs-match?
+      checkpoint-ref-match?
+      compensation-refs-match?)
+  (append
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? durable-task-id-match? 'durable-task-id-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? action-class-match? 'action-class-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? artifact-refs-match? 'artifact-refs-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? artifact-provenance-match? 'artifact-provenance-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? artifact-retention-match? 'artifact-retention-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? sandbox-refs-match? 'sandbox-refs-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? checkpoint-ref-match? 'checkpoint-ref-mismatch)
+   (poo-flow-user-workflow-cicd-mismatch-diagnostics
+    summary-present? compensation-refs-match? 'compensation-refs-mismatch)))
+
 ;;; Boundary:
 ;;; - Agreement rows are audit data only; they never execute CI commands.
 ;;; - Manifest and summary fields stay separate so each drift reason is visible.
@@ -409,6 +479,36 @@
          (request-id (poo-flow-user-alist-ref manifest 'request-id #f))
          (check-name (poo-flow-user-alist-ref request 'check #f))
          (manifest-argv (poo-flow-user-alist-ref manifest 'argv '()))
+         (request-durable-task-id
+          (poo-flow-user-alist-ref request 'durable-task-id #f))
+         (request-action-class
+          (poo-flow-user-alist-ref request 'action-class #f))
+         (request-artifact-refs
+          (poo-flow-user-alist-ref request 'artifact-refs '()))
+         (request-artifact-retention
+          (poo-flow-user-alist-ref request 'artifact-retention #f))
+         (request-sandbox-refs
+          (poo-flow-user-alist-ref request 'sandbox-refs '()))
+         (request-checkpoint-ref
+          (poo-flow-user-alist-ref request 'checkpoint-ref #f))
+         (request-compensation-refs
+          (poo-flow-user-alist-ref request 'compensation-refs '()))
+         (policy-durable-task-id
+          (poo-flow-user-alist-ref policy 'durable-task-id #f))
+         (policy-action-class
+          (poo-flow-user-alist-ref policy 'action-class #f))
+         (policy-artifact-refs
+          (poo-flow-user-alist-ref policy 'artifact-refs '()))
+         (policy-artifact-provenance
+          (poo-flow-user-alist-ref policy 'artifact-provenance '()))
+         (policy-artifact-retention
+          (poo-flow-user-alist-ref policy 'artifact-retention #f))
+         (policy-sandbox-refs
+          (poo-flow-user-alist-ref policy 'sandbox-refs '()))
+         (policy-checkpoint-ref
+          (poo-flow-user-alist-ref policy 'checkpoint-ref #f))
+         (policy-compensation-refs
+          (poo-flow-user-alist-ref policy 'compensation-refs '()))
          (request-unresolved
           (poo-flow-user-alist-ref request
                                    'sandbox-unresolved-profile-refs
@@ -450,15 +550,81 @@
                                                 'runtime-executed
                                                 #t)
                        #f)))
+         (durable-task-id-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'durable-task-id
+                                                #f)
+                       request-durable-task-id)
+               (equal? request-durable-task-id policy-durable-task-id)))
+         (action-class-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'action-class
+                                                #f)
+                       request-action-class)
+               (equal? request-action-class policy-action-class)))
+         (artifact-refs-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'artifact-refs
+                                                '())
+                       request-artifact-refs)
+               (equal? request-artifact-refs policy-artifact-refs)))
+         (artifact-provenance-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'artifact-provenance
+                                                '())
+                       policy-artifact-provenance)))
+         (artifact-retention-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'artifact-retention
+                                                #f)
+                       request-artifact-retention)
+               (equal? request-artifact-retention policy-artifact-retention)))
+         (sandbox-refs-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'sandbox-refs
+                                                '())
+                       request-sandbox-refs)
+               (equal? request-sandbox-refs policy-sandbox-refs)))
+         (checkpoint-ref-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'checkpoint-ref
+                                                #f)
+                       request-checkpoint-ref)
+               (equal? request-checkpoint-ref policy-checkpoint-ref)))
+         (compensation-refs-match?
+          (and summary-present?
+               (equal? (poo-flow-user-alist-ref summary-row
+                                                'compensation-refs
+                                                '())
+                       request-compensation-refs)
+               (equal? request-compensation-refs policy-compensation-refs)))
          (diagnostics
-          (poo-flow-user-workflow-cicd-runtime-command-agreement-diagnostics
-           summary-count
-           summary-present?
-           check-match?
-           argv-match?
-           runtime-owner-match?
-           unresolved-profile-refs-match?
-           runtime-executed-match?)))
+          (append
+           (poo-flow-user-workflow-cicd-runtime-command-agreement-diagnostics
+            summary-count
+            summary-present?
+            check-match?
+            argv-match?
+            runtime-owner-match?
+            unresolved-profile-refs-match?
+            runtime-executed-match?)
+           (poo-flow-user-workflow-cicd-runtime-command-durable-agreement-diagnostics
+            summary-present?
+            durable-task-id-match?
+            action-class-match?
+            artifact-refs-match?
+            artifact-provenance-match?
+            artifact-retention-match?
+            sandbox-refs-match?
+            checkpoint-ref-match?
+            compensation-refs-match?))))
     (list
      (cons 'kind
            'workflow-cicd-runtime-command-manifest-agreement-row)
@@ -473,6 +639,28 @@
      (cons 'unresolved-profile-refs-match?
            unresolved-profile-refs-match?)
      (cons 'runtime-executed-match? runtime-executed-match?)
+     (cons 'durable-task-id-match? durable-task-id-match?)
+     (cons 'action-class-match? action-class-match?)
+     (cons 'artifact-refs-match? artifact-refs-match?)
+     (cons 'artifact-provenance-match? artifact-provenance-match?)
+     (cons 'artifact-retention-match? artifact-retention-match?)
+     (cons 'sandbox-refs-match? sandbox-refs-match?)
+     (cons 'checkpoint-ref-match? checkpoint-ref-match?)
+     (cons 'compensation-refs-match? compensation-refs-match?)
+     (cons 'durable-task-id
+           (poo-flow-user-alist-ref summary-row 'durable-task-id #f))
+     (cons 'action-class
+           (poo-flow-user-alist-ref summary-row 'action-class #f))
+     (cons 'artifact-refs
+           (poo-flow-user-alist-ref summary-row 'artifact-refs '()))
+     (cons 'artifact-retention
+           (poo-flow-user-alist-ref summary-row 'artifact-retention #f))
+     (cons 'sandbox-refs
+           (poo-flow-user-alist-ref summary-row 'sandbox-refs '()))
+     (cons 'checkpoint-ref
+           (poo-flow-user-alist-ref summary-row 'checkpoint-ref #f))
+     (cons 'compensation-refs
+           (poo-flow-user-alist-ref summary-row 'compensation-refs '()))
      (cons 'runtime-owner
            (poo-flow-user-alist-ref summary-row 'runtime-owner #f))
      (cons 'runtime-executed

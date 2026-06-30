@@ -1,0 +1,187 @@
+;;; -*- Gerbil -*-
+;;; Boundary: durable recovery scenario projection performance gate.
+;;; Invariant: crash/replay/repair receipts stay bounded and report-only.
+
+(import (only-in :std/test
+                 check-equal?
+                 test-case
+                 test-suite)
+        (only-in :gslph/src/benchmark/gate
+                 benchmark-fixture-contract-pass?
+                 benchmark-receipt-pass?
+                 benchmark-run)
+        :poo-flow/t/support/performance
+        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/module-system/durable-runtime-store
+        :poo-flow/src/module-system/durable-recovery-scenario
+        :poo-flow/src/modules/session/config
+        :poo-flow/src/modules/memory-core/config)
+
+(export durable-recovery-scenario-performance-test)
+
+;; : String
+(def durable-recovery-scenario-fixture-path
+  "t/scenarios/performance/durable-recovery-scenario/benchmark.ss")
+
+;; : Alist
+(def durable-recovery-scenario-fixture
+  (call-with-input-file durable-recovery-scenario-fixture-path read))
+
+;; : (-> Alist Symbol MaybeValue)
+(def (durable-recovery-performance-ref row key)
+  (let (entry (assoc key row))
+    (if entry (cdr entry) #f)))
+
+;; : (-> Alist Void)
+(def (durable-recovery-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] durable-recovery-scenario ")
+  (write receipt)
+  (newline)
+  (force-output))
+
+;; : (-> String Integer Symbol)
+(def (durable-recovery-performance-symbol prefix index)
+  (string->symbol
+   (string-append prefix "/" (number->string index))))
+
+;; : (-> PooDurableRuntimeStoreContractReceipt)
+(def (durable-recovery-performance-runtime-store)
+  (poo-flow-durable-runtime-store-contract->receipt
+   poo-flow-durable-runtime-store-contract/default
+   '((project-id . project/performance)
+     (root-session-id . session/root)
+     (session-id . session/recovery))))
+
+;; : (-> [Alist])
+(def (durable-recovery-performance-memory-job-rows)
+  (let* ((intent
+          (poo-flow-session-memory-intent
+           'memory/performance-recovery
+           'memory/durable-project
+           'project
+           '("last-40-turns")
+           'review-only))
+         (job
+          (poo-flow-memory-recall-job-receipt
+           'memory-job/performance-recovery
+           'project/performance
+           'session/root
+           'session/recovery
+           'agent/audit
+           poo-flow-memory-core-default-catalog
+           intent
+           (list (cons 'durable-policy poo-flow-durable-policy/default)
+                 (cons 'source-watermark 'turn/40)
+                 (cons 'target-watermark 'memory/index/40)))))
+    (poo-flow-memory-durable-job-receipts->alists (list job))))
+
+;; : Alist
+(def durable-recovery-performance-session-graph-row
+  '((kind . poo-flow.session.agent-graph)
+    (project-id . project/performance)
+    (root-session-ref . session/root)
+    (agent-ids . (agent/build agent/audit))
+    (session-ids . (session/root session/build session/recovery))
+    (runtime-executed . #f)))
+
+;; : [Alist]
+(def durable-recovery-performance-communication-rows
+  '(((kind . poo-flow.session.communication-receipt)
+     (project-id . project/performance)
+     (source-session-id . session/build)
+     (target-session-id . session/recovery)
+     (channel-id . channel/build-audit)
+     (valid? . #t)
+     (runtime-executed . #f))))
+
+;; : (-> Integer Alist)
+(def (durable-recovery-performance-workflow-task-row index)
+  (list
+   (cons 'kind 'poo-flow.workflow.cicd.check-receipt)
+   (cons 'check (durable-recovery-performance-symbol "check" index))
+   (cons 'durable-task-id
+         (durable-recovery-performance-symbol "workflow/task" index))
+   (cons 'action-class 'idempotent)
+   (cons 'checkpoint-ref
+         (durable-recovery-performance-symbol "checkpoint/task" index))
+   (cons 'compensation-refs '())
+   (cons 'sandbox-refs '(agent/nono))
+   (cons 'valid? #t)
+   (cons 'runtime-executed #f)))
+
+;; : (-> PooDurableRuntimeStoreContractReceipt [Alist] Integer Alist)
+(def (durable-recovery-performance-row runtime-store memory-job-rows index)
+  (poo-flow-durable-recovery-scenario->alist
+   (poo-flow-durable-recovery-scenario
+    (durable-recovery-performance-symbol "recovery/perf" index)
+    'project/performance
+    'session/root
+    'session/recovery
+    runtime-store
+    durable-recovery-performance-session-graph-row
+    durable-recovery-performance-communication-rows
+    memory-job-rows
+    (list (durable-recovery-performance-workflow-task-row index))
+    '(agent/nono))))
+
+;; : (-> Integer Alist)
+(def (durable-recovery-performance-summary count)
+  (let* ((runtime-store (durable-recovery-performance-runtime-store))
+         (memory-job-rows (durable-recovery-performance-memory-job-rows))
+         (rows
+          (poo-flow-performance-build-list
+           count
+           (lambda (index)
+             (durable-recovery-performance-row
+              runtime-store
+              memory-job-rows
+              index)))))
+    (list
+     (cons 'scenario-count (length rows))
+     (cons 'first-valid?
+           (durable-recovery-performance-ref (car rows) 'valid?))
+     (cons 'last-scenario-id
+           (durable-recovery-performance-ref
+            (list-ref rows (- count 1))
+            'scenario-id))
+     (cons 'observability-count
+           (length
+            (durable-recovery-performance-ref (car rows)
+                                              'observability-rows)))
+     (cons 'runtime-executed
+           (durable-recovery-performance-ref (car rows)
+                                             'runtime-executed)))))
+
+;; : TestSuite
+(def durable-recovery-scenario-performance-test
+  (test-suite "durable recovery scenario performance"
+    (test-case "keeps recovery scenario batch projection inside benchmark contract"
+      (let* ((scenario-count 96)
+             (summary
+              (durable-recovery-performance-summary scenario-count))
+             (receipt
+              (benchmark-run
+               durable-recovery-scenario-fixture
+               (lambda ()
+                 (durable-recovery-performance-summary
+                  scenario-count)))))
+        (check-equal?
+         (benchmark-fixture-contract-pass? durable-recovery-scenario-fixture)
+         #t)
+        (check-equal?
+         (durable-recovery-performance-ref summary 'scenario-count)
+         scenario-count)
+        (check-equal?
+         (durable-recovery-performance-ref summary 'first-valid?)
+         #t)
+        (check-equal?
+         (durable-recovery-performance-ref summary 'last-scenario-id)
+         'recovery/perf/95)
+        (check-equal?
+         (durable-recovery-performance-ref summary 'observability-count)
+         6)
+        (check-equal?
+         (durable-recovery-performance-ref summary 'runtime-executed)
+         #f)
+        (durable-recovery-performance-display-receipt receipt)
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))))

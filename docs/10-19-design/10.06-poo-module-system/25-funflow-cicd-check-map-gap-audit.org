@@ -67,7 +67,7 @@ Add a workflow-owned CI/CD data object, not an adapter:
          runtime: 'manifest-handoff)
   (check 'test
          profile: 'ci/check
-         command: '("gxpkg" "env" "gxtest" "t/unit-tests.ss")
+         command: '("gxtest" "t/unit-tests.ss")
          artifacts: '(test-receipt)
          cache: '()
          secrets: '()

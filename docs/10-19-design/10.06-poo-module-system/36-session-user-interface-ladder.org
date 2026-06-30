@@ -43,8 +43,8 @@ The focused acceptance surface is:
 #+begin_src sh
 gxpkg env gxc src/modules/session/config.ss t/session-object-test.ss
 gxpkg env gxc user-interface/custom/my-module/cases/session.ss user-interface/custom/my-module/config.ss
-gxpkg env gxtest t/session-object-test.ss
-gxpkg env gxtest t/unit-tests.ss
+gxtest t/session-object-test.ss
+gxtest t/unit-tests.ss
 #+end_src
 ** 10.06.36.50 Session Transform Rung
 The transform slice now has a concrete user-facing shape:

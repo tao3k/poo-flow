@@ -1,0 +1,122 @@
+;;; -*- Gerbil -*-
+;;; Boundary: memory-core catalog policy validation performance gate.
+;;; Invariant: validation resolves POO memory specs and intent refs without
+;;; runtime recall, commit, or backend startup.
+
+(import (only-in :std/test
+                 check-equal?
+                 test-case
+                 test-suite)
+        (only-in :clan/poo/object .ref)
+        (only-in :gslph/src/benchmark/gate
+                 benchmark-fixture-contract-pass?
+                 benchmark-receipt-pass?
+                 benchmark-run)
+        :poo-flow/t/support/performance
+        :poo-flow/src/modules/session/config
+        :poo-flow/src/modules/memory-core/config)
+
+(export memory-core-performance-test)
+
+(def memory-core-performance-fixture-path
+  "t/scenarios/performance/memory-core-catalog-policy-validation/benchmark.ss")
+
+(def memory-core-performance-fixture
+  (call-with-input-file memory-core-performance-fixture-path read))
+
+(def memory-core-performance-count 160)
+
+;; : (-> Alist Symbol MaybeValue)
+(def (memory-core-performance-ref row key)
+  (let (entry (assoc key row))
+    (if entry (cdr entry) #f)))
+
+;; : (-> Alist Void)
+(def (memory-core-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] memory-core-catalog-policy-validation ")
+  (write receipt)
+  (newline)
+  (force-output))
+
+;; : (-> String Integer Symbol)
+(def (memory-core-performance-symbol prefix index)
+  (string->symbol
+   (string-append prefix "/" (number->string index))))
+
+;; : (-> Integer PooMemoryStoreSpec)
+(def (memory-core-performance-store index)
+  (poo-flow-memory-store-spec
+   (memory-core-performance-symbol "memory/store" index)
+   'custom
+   'session
+   '(current-session project)
+   '(semantic-search)
+   '(append)
+   "marlin-agent-core"
+   'memory/custom
+   #t
+   'marlin-memory-adapter))
+
+;; : (-> Integer PooSessionMemoryIntent)
+(def (memory-core-performance-intent index)
+  (poo-flow-session-memory-intent
+   (memory-core-performance-symbol "memory/intent" index)
+   (memory-core-performance-symbol "memory/store" index)
+   'project
+   '(current-task)
+   'append))
+
+;; : (-> Integer Alist)
+(def (memory-core-performance-summary count)
+  (let* ((stores
+          (poo-flow-performance-build-list
+           count
+           memory-core-performance-store))
+         (intents
+          (poo-flow-performance-build-list
+           count
+           memory-core-performance-intent))
+         (catalog (poo-flow-memory-catalog 'memory-core/performance stores))
+         (receipt
+          (poo-flow-memory-policy-catalog-validation-receipt
+           'validation/memory-core-performance
+           catalog
+           intents)))
+    (list
+     (cons 'store-count (poo-flow-memory-catalog-store-count catalog))
+     (cons 'intent-count (.ref receipt 'intent-count))
+     (cons 'resolved-store-count (length (.ref receipt 'resolved-store-refs)))
+     (cons 'unresolved-store-count
+           (length (.ref receipt 'unresolved-store-refs)))
+     (cons 'valid? (.ref receipt 'valid?))
+     (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
+
+(def memory-core-performance-test
+  (test-suite "memory-core performance"
+    (test-case "keeps catalog policy validation inside benchmark contract"
+      (let* ((summary
+              (memory-core-performance-summary memory-core-performance-count))
+             (receipt
+              (benchmark-run
+               memory-core-performance-fixture
+               (lambda ()
+                 (memory-core-performance-summary
+                  memory-core-performance-count)))))
+        (check-equal?
+         (benchmark-fixture-contract-pass? memory-core-performance-fixture)
+         #t)
+        (check-equal? (memory-core-performance-ref summary 'store-count)
+                      memory-core-performance-count)
+        (check-equal? (memory-core-performance-ref summary 'intent-count)
+                      memory-core-performance-count)
+        (check-equal? (memory-core-performance-ref summary
+                                                   'resolved-store-count)
+                      memory-core-performance-count)
+        (check-equal? (memory-core-performance-ref summary
+                                                   'unresolved-store-count)
+                      0)
+        (check-equal? (memory-core-performance-ref summary 'valid?) #t)
+        (check-equal? (memory-core-performance-ref summary 'runtime-executed)
+                      #f)
+        (memory-core-performance-display-receipt receipt)
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))))

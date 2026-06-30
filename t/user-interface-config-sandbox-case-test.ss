@@ -22,6 +22,15 @@
 
 (export user-interface-config-sandbox-case-test)
 
+;; : (-> [PooUserModuleSelection] Pair MaybePooUserModuleSelection)
+(def (module-selection-by-key modules key)
+  (cond
+   ((null? modules) #f)
+   ((equal? (poo-flow-user-module-selection-key (car modules)) key)
+    (car modules))
+   (else
+    (module-selection-by-key (cdr modules) key))))
+
 ;; : (-> Unit TestSuite)
 ;;; This suite protects sandbox configuration cases as declarative user-facing
 ;;; data rather than backend implementation code.
@@ -48,7 +57,15 @@
         (check-equal? (poo-flow-sandbox-profile-backend-kind nono-profile)
                       'nono)
         (check-equal? (poo-flow-sandbox-profile-resource-policy nono-profile)
-                      '((filesystem . scoped)
+                      '((filesystem
+                         (scope . project-workspace)
+                         (paths
+                          ((role . project-workspace)
+                           (source . ".")
+                           (project-marker . "gerbil.pkg")
+                           (target . "/workspace/project")
+                           (mode . read-write)))
+                         (access . read-write))
                         (cpu . 2)
                         (memory . "4Gi")
                         (timeout-ms . 300000)))
@@ -61,23 +78,20 @@
         (check-equal? (.ref presentation 'descriptor-realized?) #f)
         (check-equal? (.ref presentation 'runtime-executed) #f)))
     (test-case "declares sandbox and loop module flags without descriptors"
-      (let ((loop-module
-             (cadr (poo-flow-user-config-modules test-poo-flow-user-config)))
-            (nono-module
-             (caddr (poo-flow-user-config-modules test-poo-flow-user-config)))
-            (cube-module
-             (cadddr (poo-flow-user-config-modules test-poo-flow-user-config)))
-            (docker-module
-             (car (cddddr
-                   (poo-flow-user-config-modules test-poo-flow-user-config)))))
+      (let* ((modules
+              (poo-flow-user-config-modules test-poo-flow-user-config))
+             (loop-module
+              (module-selection-by-key modules '(flow . loop-engine)))
+             (nono-module
+              (module-selection-by-key modules '(sandbox . nono-sandbox)))
+             (cube-module
+              (module-selection-by-key modules '(sandbox . cubeSandbox)))
+             (docker-module
+              (module-selection-by-key modules '(sandbox . docker-sandbox))))
         (check-equal? (poo-flow-user-module-selection? loop-module) #t)
-        (check-equal? (poo-flow-user-module-selection-flags loop-module)
-                      '(+strategy +policy +marlin-handoff +runtime-manifest
-                        +l1-report))
         (check-equal? (poo-flow-user-module-selection-has-flags?
                        loop-module
-                       '(+strategy +policy +marlin-handoff
-                         +runtime-manifest +l1-report))
+                       '(+loop-engine +runtime-manifest))
                       #t)
         (check-equal? (poo-flow-user-module-selection-has-flag?
                        nono-module
@@ -111,13 +125,10 @@
                       #t)
         (check-equal? (poo-flow-user-config-feature?
                        test-poo-flow-user-config
-                       'loop
-                       'governor
-                       '+strategy
-                       '+policy
-                       '+marlin-handoff
-                       '+runtime-manifest
-                       '+l1-report)
+                       'flow
+                       'loop-engine
+                       '+loop-engine
+                       '+runtime-manifest)
                       #t)
         (check-equal? (poo-flow-user-config-feature?
                        test-poo-flow-user-config

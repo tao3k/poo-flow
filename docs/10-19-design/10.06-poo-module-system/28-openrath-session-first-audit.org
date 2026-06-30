@@ -191,12 +191,11 @@ they are hot presentation data, not extension surfaces.
 *** 10.06.28.05.03 Verification Snapshot
 The landed slice was verified with package-context commands:
 #+begin_src sh
-gxpkg env gxtest t/session-object-test.ss
-gxpkg env gxtest t/user-interface-cicd-test.ss
-gxpkg env gxtest t/declaration-case-test.ss
-gxpkg env gxtest t/user-interface-presentation-test.ss
-gxpkg env gxtest t/unit-tests.ss
-poo-flow test t/unit-tests.ss
+gxtest t/session-object-test.ss
+gxtest t/user-interface-cicd-test.ss
+gxtest t/declaration-case-test.ss
+gxtest t/user-interface-presentation-test.ss
+gxtest t/unit-tests.ss
 #+end_src
 
 The aggregate trace contract now includes =sandbox-profile-derivations= between

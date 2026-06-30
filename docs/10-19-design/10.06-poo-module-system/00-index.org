@@ -43,6 +43,15 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:40-module-registry-scale-architecture.org][40 Module Registry Scale Architecture]]
 - [[file:41-openrath-profile-policy-plan.org][41 OpenRath Profile Policy Plan]]
 [[file:41-openrath-profile-policy-plan.org][41 OpenRath Profile Policy Plan]]
+- [[file:42-openrath-session-multi-agent-audit.org][42 OpenRath Session Multi-Agent Audit]]
+- [[file:43-session-memory-recovery-rfc.org][43 Session Memory Durable Policy RFC]]
+- [[file:44-current-project-programming-style.org][44 Current Project Programming Style]]
+- [[file:45-durable-policy-research-agenda.org][45 Durable Policy Research Agenda]]
+- [[file:46-durable-policy-delivery-plan.org][46 Durable Policy Delivery Plan]]
+- [[file:47-current-code-structure-audit-and-improvement-roadmap.org][47 Current Code Structure Audit And Improvement Roadmap]]
+- [[file:48-execution-plan.org][48 Execution Plan]]
+- [[file:49-scenario-test-owner-matrix.org][49 Scenario Test Owner Matrix]]
+- [[file:51-gerbil-metaprogramming-adoption-plan.org][51 Gerbil Metaprogramming Adoption Plan]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.
