@@ -13,7 +13,7 @@
                  test-case
                  test-error
         test-suite)
-        (only-in :clan/poo/object .o .ref)
+        (only-in :clan/poo/object .o .ref .slot? object?)
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/modules/agent-sandbox/config)
@@ -180,10 +180,15 @@
 
 ;;; Local alist lookup keeps assertions readable while avoiding a dependency on
 ;;; internal profile projection helpers.
-;; : (-> Symbol Alist Object)
+;; : (-> Symbol (Or Alist Object) Object)
 (def (alist-value key entries)
-  (let (entry (assoc key entries))
-    (if entry (cdr entry) #f)))
+  (cond
+   ((object? entries)
+    (and (.slot? entries key)
+         (.ref entries key)))
+   (else
+    (let (entry (assoc key entries))
+      (if entry (cdr entry) #f)))))
 
 ;;; Inheritance metadata is append-only in these cases; the last derivation row
 ;;; is the concrete child profile step asserted by the profile tests.

@@ -7,18 +7,13 @@
                  check-equal?
                  run-tests!)
         (only-in :poo-flow/src/cli
-                 poo-flow-cli-expand-test-args
                  poo-flow-cli-max-rss-bytes
                  poo-flow-cli-run
-                 poo-flow-cli-runnable-test-form?
                  poo-flow-cli-usage)
-        (only-in :poo-flow/src/cli-support/support
-                 poo-flow-cli-gerbil-env-argv
-                 poo-flow-cli-string-contains?)
-        (only-in :poo-flow/src/cli-support/test
-                 poo-flow-cli-policy-test-file
-                 poo-flow-cli-test-files-env-binding)
-        (only-in :std/srfi/13 string-prefix?))
+        (only-in :poo-flow/src/cli-support/testing-project
+                 +poo-flow-testing-project+)
+        (only-in :gslph/src/testing/build
+                 testing-build-gxtest-command))
 
 (export cli-test)
 
@@ -29,58 +24,19 @@
       (let (usage (poo-flow-cli-usage))
         (check-equal? (string? usage) #t)))
 
-    (test-case "expands the unit test root into bounded leaf tests"
-      (let (files (poo-flow-cli-expand-test-args '("t/unit-tests.ss")))
-        (check-equal? (not (member "t/unit-tests.ss" files)) #t)
-        (check-equal? (not (not (member "t/cli-test.ss" files))) #t)))
-
-    (test-case "rejects import-only files without an explicit test marker"
-      (check-equal?
-       (poo-flow-cli-runnable-test-form?
-        '(import (only-in :std/test test-suite)))
-       #f)
-      (check-equal?
-       (poo-flow-cli-runnable-test-form?
-        '(def sample-test (test-suite "sample")))
-       #t)
-      (check-equal?
-       (poo-flow-cli-runnable-test-form?
-        '(define-poo-flow-module-system-live-case-test
-           sample-live-case-test
-           sample-live-case))
-       #t)
-      (check-equal?
-       (poo-flow-cli-runnable-test-form?
-        '(def poo-flow-import-side-effect-test-suite? #t))
-       #t))
-
-    (test-case "passes policy file scope as data to the static gxtest bridge"
-      (let* ((files '("t/agent-sandbox-descriptor-test.ss"))
-             (binding (poo-flow-cli-test-files-env-binding files))
-             (prefix "POO_FLOW_TEST_FILES="))
+    (test-case "passes policy file scope through the harness gxtest delegate"
+      (let (command (testing-build-gxtest-command
+                     +poo-flow-testing-project+
+                     '("t/agent-sandbox-descriptor-test.ss")))
         (check-equal?
-         (poo-flow-cli-policy-test-file)
-         "t/poo-flow-policy-test.ss")
+         command
+         '("env"
+           "POO_FLOW_TEST_FILES=(\"t/agent-sandbox-descriptor-test.ss\")"
+           "gxtest"
+           "t/agent-sandbox-descriptor-test.ss"
+           "t/poo-flow-policy-test.ss"))
         (check-equal?
-         (string-prefix? prefix binding)
-         #t)
-        (check-equal?
-         (poo-flow-cli-string-contains?
-          "t/agent-sandbox-descriptor-test.ss"
-          binding)
-         #t)))
-
-    (test-case "uses package-local Gerbil loadpath for focused commands"
-      (let (loadpath (cadr (poo-flow-cli-gerbil-env-argv
-                            "gxc"
-                            '("src/module-system/module-registry.ss"))))
-        (check-equal?
-         (string-prefix?
-          "GERBIL_LOADPATH=.:.gerbil/lib"
-          loadpath)
-         #t)
-        (check-equal?
-         (poo-flow-cli-string-contains? "~/.gerbil/lib" loadpath)
+         (member "GERBIL_LOADPATH=.:.gerbil/lib" command)
          #f)))
 
     (test-case "parses macOS time rss receipts"
