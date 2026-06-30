@@ -59,7 +59,7 @@
      (let (status #f)
        (parameterize ((current-output-port port)
                       (current-error-port port))
-         (set! status (poo-flow-cli-build ["package-status" "--tests"])))
+         (set! status (poo-flow-cli-build ["package-status"])))
        (unless (= status 0)
          (error "poo-flow package-status fast path is stale" status))))))
 

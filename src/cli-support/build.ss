@@ -35,14 +35,6 @@
       (poo-flow-cli-arg-present? "--optimized" args)
       (poo-flow-cli-arg-present? "--debug" args)))
 
-;; : (-> [String] Boolean)
-(def (poo-flow-cli-package-tests? args)
-  (poo-flow-cli-arg-present? "--tests" args))
-
-;; : (-> [String] Boolean)
-(def (poo-flow-cli-package-all-tests? args)
-  (poo-flow-cli-arg-present? "--all-tests" args))
-
 ;; : (-> String Integer)
 (def (poo-flow-cli-reject-native-module-build! module-file)
   (poo-flow-cli-error "poo-flow build: single-module native builds are not supported; use the package build graph")
@@ -84,10 +76,7 @@
 ;;; centralized for callers.
 ;; : (-> [String] String)
 (def (poo-flow-cli-package-cache-mode args)
-  (cond
-   ((poo-flow-cli-package-all-tests? args) "all-tests")
-   ((poo-flow-cli-package-tests? args) "tests")
-   (else "package")))
+  "package")
 
 ;;; Boundary: cli package cache stamp path is the policy-visible edge for CLI
 ;;; behavior, keeping validation, lookup, or projection responsibilities
@@ -95,10 +84,7 @@
 ;; : (-> [String] String)
 (def (poo-flow-cli-package-cache-stamp-path args)
   (path-expand
-   (cond
-    ((poo-flow-cli-package-all-tests? args) ".compile-package-all-tests.stamp")
-    ((poo-flow-cli-package-tests? args) ".compile-package-tests.stamp")
-    (else ".compile-package.stamp"))
+   ".compile-package.stamp"
    (poo-flow-cli-package-cache-dir)))
 
 ;;; Boundary: cli package compile command is the policy-visible edge for CLI
@@ -106,13 +92,14 @@
 ;;; centralized for callers.
 ;; : (-> [String] String)
 (def (poo-flow-cli-package-compile-command args)
-  (cond
-   ((poo-flow-cli-package-all-tests? args)
-    "gxpkg env ./build.ss compile --all-tests")
-   ((poo-flow-cli-package-tests? args)
-    "gxpkg env ./build.ss compile --tests")
-   (else
-    "gxpkg env ./build.ss compile")))
+  "gxpkg env ./build.ss compile")
+
+;; : (-> [String] Integer)
+(def (poo-flow-cli-reject-package-status-args! args)
+  (poo-flow-cli-error "poo-flow build package-status: arguments are no longer supported")
+  (poo-flow-cli-error (string-append "args: " (object->string args)))
+  (poo-flow-cli-error "next: poo-flow build package-status")
+  64)
 
 ;; : [String]
 (def +poo-flow-cli-binary-source-files+
@@ -292,10 +279,12 @@
 
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-build-package-status args)
-  (poo-flow-cli-write-package-status
-   args
-   (gslph-package-build-receipt-status
-    (poo-flow-cli-package-cache-stamp-path args))))
+  (if (null? args)
+    (poo-flow-cli-write-package-status
+     args
+     (gslph-package-build-receipt-status
+      (poo-flow-cli-package-cache-stamp-path args)))
+    (poo-flow-cli-reject-package-status-args! args)))
 
 ;; : (-> BuildSpec Integer)
 (def (poo-flow-cli-write-build-spec spec)

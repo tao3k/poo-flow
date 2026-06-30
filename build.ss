@@ -16,6 +16,9 @@
                  gslph-package-build-receipt-write)
         (only-in :gslph/src/build-api/source-coverage
                  gslph-source-coverage)
+        (only-in :gslph/src/testing/build
+                 testing-build
+                 testing-build-main)
         (only-in :gerbil/gambit
                  current-directory
                  file-exists?
@@ -42,28 +45,11 @@
   '("src"))
 
 ;; : (Listof String)
-(def +poo-flow-test-include-dirs+
-  '("t"))
-
-;; : (Listof String)
-(def +poo-flow-test-exclude-dirs+
-  '("fixtures" "scenarios"))
-
-;; Fixture wrappers stay out of broad test discovery, but integration tests may
-;; declare specific source fixtures that need package-local import artifacts.
-(def +poo-flow-test-fixture-source-files+
-  '("t/fixtures/object-load-valid/objects.ss"))
-
-;; : (Listof String)
-(def +poo-flow-test-root-files+
-  '("t/unit-tests.ss"
-    "t/contract-tests.ss"
-    "t/integration-tests.ss"
-    "t/performance-tests.ss"))
-
-;; : (Listof String)
 (def +poo-flow-special-source-files+
   '("src/modules/nono-sandbox/_nono.ss"
+    "src/cli-support/support.ss"
+    "src/cli-support/build.ss"
+    "src/cli-support/test.ss"
     "src/cli.ss"
     "main.ss"
     "manifest.ss"))
@@ -72,6 +58,24 @@
  roots: '("src" "user-interface")
  runtime-roots: +poo-flow-runtime-include-dirs+
  explanation: "POO Flow runtime owners live under src; user-interface modules are declarative package sources that still need policy coverage.")
+
+(def +poo-flow-testing-project+
+  (testing-build
+   name: "poo-flow"
+   root: "."
+   contract-root: "."
+   gxtest: [["unit" "t/unit-tests.ss"]
+            ["contract" "t/contract-tests.ss"]
+            ["integration" "t/integration-tests.ss"]
+            ["performance" "t/performance-tests.ss"]]
+   roots: ["src" "user-interface" "t"]
+   batch-size: 2
+   max-selected-files: 4
+   max-selected-sources: 8
+   max-selected-outputs: 8))
+
+(def (poo-flow-test options)
+  (testing-build-main +poo-flow-testing-project+ options))
 
 ;; : BuildSpec
 (def +poo-flow-ffi-build-spec+
@@ -211,21 +215,6 @@
             (not (member file +poo-flow-special-source-files+)))
           (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)))
 
-;; : (-> [String])
-(def (poo-flow-all-test-modules)
-  (append
-   (poo-flow-package-modules
-    +poo-flow-test-include-dirs+
-    +poo-flow-test-exclude-dirs+
-    #f)
-   +poo-flow-test-fixture-source-files+))
-
-;; : (List -> [String])
-(def (poo-flow-test-modules options)
-  (if (poo-flow-all-test-build-options? options)
-    (poo-flow-all-test-modules)
-    +poo-flow-test-root-files+))
-
 ;; : (String List -> BuildSpec)
 (def (poo-flow-gxc-target file options)
   [gxc: file])
@@ -239,10 +228,6 @@
   (poo-flow-gxc-spec (poo-flow-runtime-modules) options))
 
 ;; : (List -> BuildSpec)
-(def (poo-flow-test-build-spec options)
-  (poo-flow-gxc-spec (poo-flow-test-modules options) options))
-
-;; : (List -> BuildSpec)
 (def (poo-flow-package-build-spec options)
   (if (poo-flow-native-build-options? options)
     (append +poo-flow-ffi-build-spec+
@@ -252,14 +237,9 @@
             +poo-flow-cli-library-build-spec+
             (poo-flow-entry-build-spec options))))
 
-;; : (List -> BuildSpec)
-(def (poo-flow-package-and-test-spec options)
-  (append (poo-flow-package-build-spec options)
-          (poo-flow-test-build-spec options)))
-
 ;; : (-> BuildSpec)
 (def (spec)
-  (poo-flow-package-and-test-spec []))
+  (poo-flow-package-build-spec []))
 
 ;; : (-> String)
 (def (poo-flow-package-srcdir)
@@ -268,7 +248,7 @@
 ;; : (-> Void)
 (def (poo-flow-package-require-gxpkg-env!)
   (unless (getenv "GERBIL_PATH" #f)
-    (error "poo-flow package builds require gxpkg env; run gxpkg env ./build.ss compile --tests")))
+    (error "poo-flow package builds require gxpkg env; run gxpkg env ./build.ss compile")))
 
 ;; : (-> String (OrFalse Fixnum))
 (def (poo-flow-package-cores-from-env name)
@@ -293,10 +273,6 @@
 ;; : (List -> List)
 (def (poo-flow-make-options options)
   (match options
-    ([build-tests: _ . rest]
-     (poo-flow-make-options rest))
-    ([build-all-tests: _ . rest]
-     (poo-flow-make-options rest))
     ([build-cli: _ . rest]
      (poo-flow-make-options rest))
     ([force: _ . rest]
@@ -362,8 +338,6 @@
 (def (poo-flow-stage-cache-stamp-path options)
   (path-expand
    (cond
-    ((poo-flow-all-test-build-options? options) ".compile-package-all-tests.stamp")
-    ((poo-flow-test-build-options? options) ".compile-package-tests.stamp")
     ((poo-flow-cli-build-options? options) ".compile-cli.stamp")
     (else ".compile-package.stamp"))
    (poo-flow-package-libdir-prefix)))
@@ -571,10 +545,6 @@
        (lp rest [build-optimized: #t . options]))
       (["--debug" . rest]
        (lp rest [debug: #t . options]))
-      (["--tests" . rest]
-       (lp rest [build-tests: #t . options]))
-      (["--all-tests" . rest]
-       (lp rest [build-all-tests: #t build-tests: #t . options]))
       (["--cli" . rest]
        (lp rest [build-cli: #t . options]))
       (["--force" . rest]
@@ -608,20 +578,6 @@
     ([] #f)))
 
 ;; : (List -> Bool)
-(def (poo-flow-test-build-options? options)
-  (match options
-    ([build-tests: value . _] value)
-    ([_ _ . rest] (poo-flow-test-build-options? rest))
-    ([] #f)))
-
-;; : (List -> Bool)
-(def (poo-flow-all-test-build-options? options)
-  (match options
-    ([build-all-tests: value . _] value)
-    ([_ _ . rest] (poo-flow-all-test-build-options? rest))
-    ([] #f)))
-
-;; : (List -> Bool)
 (def (poo-flow-cli-build-options? options)
   (match options
     ([build-cli: value . _] value)
@@ -648,8 +604,6 @@
     (poo-flow-cli-only-build-spec options))
    ((poo-flow-release-build-options? options)
     (poo-flow-package-build-spec options))
-   ((poo-flow-test-build-options? options)
-    (poo-flow-package-and-test-spec options))
    (else
     (poo-flow-package-build-spec options))))
 
@@ -667,16 +621,17 @@
 
 ;; : (-> Void)
 (def (poo-flow-clean)
-  (poo-flow-make-clean "package" (poo-flow-package-and-test-spec [])))
+  (poo-flow-make-clean "package" (poo-flow-package-build-spec [])))
 
 (def (main . args)
   (match args
-    (["meta"] (write '("spec" "compile" "diagnose" "clean")) (newline))
+    (["meta"] (write '("spec" "compile" "diagnose" "test" "clean")) (newline))
     (["spec" . options]
      (pretty-print (poo-flow-compile-build-spec
                     (poo-flow-package-parse-options options))))
     (["diagnose" . options]
      (poo-flow-diagnose-build-spec (poo-flow-package-parse-options options)))
+    (["test" . options] (poo-flow-test options))
     (["compile" . options] (poo-flow-package-compile (poo-flow-package-parse-options options)))
     (["clean"] (poo-flow-clean))
     ([] (poo-flow-package-compile []))))
