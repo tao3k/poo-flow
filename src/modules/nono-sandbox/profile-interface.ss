@@ -7,18 +7,24 @@
 
 (export nono-sandbox-profile)
 
-;;; Boundary: nono sandbox profile is the policy-visible edge for sandbox
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: runtime dispatch keys stay symbolic so profile lookup can compare
+;;; backend families without loading native nono runtime modules.
+;; : Symbol
 (def +nono-sandbox-profile-backend-kind+ 'nono)
+
+;;; Boundary: capabilities describe the nono resource surface advertised to
+;;; profile inheritance; native ABI checks happen at runtime handoff.
+;; : (Listof Symbol)
 (def +nono-sandbox-profile-capabilities+
   '(process-run filesystem-read tmpdir))
+
+;;; Boundary: metadata is inert POO profile evidence, not a native call plan.
+;; : Alist
 (def +nono-sandbox-profile-metadata+
   '((backend . nono-sandbox)))
 
-;;; Boundary: nono sandbox profile is the policy-visible edge for sandbox
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: nono extends the shared sandbox profile by appending backend
+;;; evidence while preserving parent metadata order.
 ;; : PooSandboxProfilePrototype
 (def nono-sandbox-profile
   (.o (:: @ sandbox-profile)

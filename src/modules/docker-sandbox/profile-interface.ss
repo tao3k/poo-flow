@@ -7,18 +7,24 @@
 
 (export docker-sandbox-profile)
 
-;;; Boundary: docker sandbox profile is the policy-visible edge for sandbox
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: runtime dispatch keys stay symbolic so profile lookup can compare
+;;; backend families without loading Docker-specific runtime modules.
+;; : Symbol
 (def +docker-sandbox-profile-backend-kind+ 'docker)
+
+;;; Boundary: capabilities enumerate the sandbox resource surface advertised to
+;;; profile inheritance; runtime code must validate concrete mounts later.
+;; : (Listof Symbol)
 (def +docker-sandbox-profile-capabilities+
   '(process-run filesystem-read filesystem-write tmpdir))
+
+;;; Boundary: metadata is inert POO profile evidence, not an execution request.
+;; : Alist
 (def +docker-sandbox-profile-metadata+
   '((backend . docker-sandbox)))
 
-;;; Boundary: docker sandbox profile is the policy-visible edge for sandbox
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: Docker extends the shared sandbox profile by appending backend
+;;; evidence while preserving parent metadata order.
 ;; : PooSandboxProfilePrototype
 (def docker-sandbox-profile
   (.o (:: @ sandbox-profile)

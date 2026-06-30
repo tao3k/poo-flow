@@ -18,6 +18,9 @@
 (def (poo-flow-cli-unit-test-root)
   "t/unit-tests.ss")
 
+;;; Boundary: root manifests are the only default test expansion inputs.
+;;; Keeping this list explicit prevents the CLI from silently widening a
+;;; focused test run into unrelated package sources.
 ;; : (-> Unit [String])
 (def (poo-flow-cli-test-roots)
   '("t/unit-tests.ss"
@@ -120,6 +123,9 @@
 (def (poo-flow-cli-read-test-root-files root)
   (poo-flow-cli-expand-test-manifest-file root []))
 
+;;; Boundary: the default test command expands the unit manifest rather than
+;;; scanning the repository. This matches gxtest scope to the user's selected
+;;; root and keeps policy checks incremental.
 ;; : (-> Unit [String])
 (def (poo-flow-cli-read-unit-test-files)
   (poo-flow-cli-read-test-root-files (poo-flow-cli-unit-test-root)))
@@ -130,6 +136,19 @@
 
 ;;; Boundary: CLI test roots expand to leaf files before process launch.
 ;;; Explicit file lists are preserved so focused agent runs do not widen scope.
+;; poo-flow-cli-expand-test-args
+;;   : (-> [String] [String])
+;;   | doc m%
+;;       Expands only recognized test root manifests into runnable leaves.
+;;       Explicit file arguments pass through unchanged so focused CI and agent
+;;       repairs cannot accidentally broaden policy scope.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-expand-test-args ["t/unit-tests.ss"])
+;;       ;; => leaf test files from the unit manifest
+;;       ```
+;;     %
 ;; : (-> [String] [String])
 (def (poo-flow-cli-expand-test-args args)
   (cond
@@ -150,6 +169,20 @@
         (poo-flow-cli-form-contains-symbol? (cdr form) symbol)))
    (else #f)))
 
+;; poo-flow-cli-runnable-test-form?
+;;   : (-> Object Boolean)
+;;   | doc m%
+;;       Classifies a source form as runnable test content using structural
+;;       markers only. The CLI uses this before process launch so empty
+;;       import-only files fail locally instead of producing misleading gxtest
+;;       or policy receipts.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-runnable-test-form? '(test-suite "example"))
+;;       ;; => #t
+;;       ```
+;;     %
 ;; : (-> Object Boolean)
 (def (poo-flow-cli-runnable-test-form? form)
   (and (pair? form)
@@ -213,6 +246,9 @@
 (def +poo-flow-cli-test-files-env+
   "POO_FLOW_TEST_FILES")
 
+;;; Boundary: scoped policy always runs as a synthetic sibling test in the same
+;;; gxtest process. That prevents a second project-wide policy pass while still
+;;; checking the exact file batch selected by the user.
 ;; : (-> Unit String)
 (def (poo-flow-cli-policy-test-file)
   "t/poo-flow-policy-test.ss")
@@ -230,6 +266,9 @@
                  "="
                  (poo-flow-cli-write-datum files)))
 
+;;; Boundary: policy receives scope through the child process environment, not
+;;; a project scan. The final argument appends the policy test so gxtest owns
+;;; both functional assertions and policy assertions in one pass.
 ;; : (-> [String] [String])
 (def (poo-flow-cli-test-argv files)
   (poo-flow-cli-gerbil-env-vars-argv
@@ -349,6 +388,20 @@
 (def (poo-flow-cli-test-files files)
   (poo-flow-cli-test-files/batch-size files (poo-flow-cli-test-batch-size)))
 
+;; poo-flow-cli-test
+;;   : (-> [String] Integer)
+;;   | doc m%
+;;       Runs the user-selected test scope through the compiled gxtest runner
+;;       and appends the scoped policy gate to the same process batch. This is
+;;       the public CLI boundary that keeps normal tests and harness policy from
+;;       executing as two independent full-project passes.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-test ["t/cli-test.ss"])
+;;       ;; => process exit status
+;;       ```
+;;     %
 ;; : (-> [String] Integer)
 (def (poo-flow-cli-test args)
   (let (files (poo-flow-cli-expand-test-args args))
@@ -469,6 +522,19 @@
      (poo-flow-cli-error "poo-flow perf rss: usage is `poo-flow perf rss --max-mb <megabytes> [test-file.ss...]`")
      64)))
 
+;; poo-flow-cli-perf
+;;   : (-> [String] Integer)
+;;   | doc m%
+;;       Dispatches the public performance command surface. RSS remains the only
+;;       accepted mode because it has a stable receipt and threshold contract;
+;;       unknown modes fail instead of becoming unmeasured advisory checks.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-perf ["rss" "--max-mb" "512" "t/cli-test.ss"])
+;;       ;; => process exit status
+;;       ```
+;;     %
 ;;; Boundary: perf dispatch is intentionally narrow; RSS is the only public
 ;;; measurement mode until another metric has a receipt contract.
 ;; : (-> [String] Integer)

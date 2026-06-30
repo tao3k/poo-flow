@@ -7,18 +7,24 @@
 
 (export cubeSandbox-profile)
 
-;;; Boundary: cubeSandbox profile is the policy-visible edge for policy
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: runtime dispatch keys stay symbolic so profile lookup can compare
+;;; backend families without loading CubeSandbox lifecycle modules.
+;; : Symbol
 (def +cubeSandbox-profile-backend-kind+ 'cube)
+
+;;; Boundary: capabilities describe the CubeSandbox resource surface advertised
+;;; to profile inheritance; lifecycle support validates concrete runtime plans.
+;; : (Listof Symbol)
 (def +cubeSandbox-profile-capabilities+
   '(process-run filesystem-read tmpdir))
+
+;;; Boundary: metadata is inert POO profile evidence, not a Cube lifecycle plan.
+;; : Alist
 (def +cubeSandbox-profile-metadata+
   '((backend . cubeSandbox)))
 
-;;; Boundary: cubeSandbox profile is the policy-visible edge for policy
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;;; Boundary: CubeSandbox extends the shared sandbox profile by appending backend
+;;; evidence while preserving parent metadata order.
 ;; : PooSandboxProfilePrototype
 (def cubeSandbox-profile
   (.o (:: @ sandbox-profile)
