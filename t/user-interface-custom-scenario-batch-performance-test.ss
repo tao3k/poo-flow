@@ -11,6 +11,8 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-user-module-selection?)
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/modules/session/config
         (only-in :poo-flow/user-interface/custom/my-module/config
@@ -27,12 +29,14 @@
 (export user-interface-custom-scenario-batch-performance-test)
 
 (load! "../user-interface/custom/my-module/cases/session-policy")
+(load! "../user-interface/custom/my-module/cases/session-transform")
 (load! "../user-interface/custom/my-module/cases/session-registry")
 (load! "../user-interface/custom/my-module/cases/session-agent-graph")
 (load! "../user-interface/custom/my-module/cases/session-communication")
 (load! "../user-interface/custom/my-module/cases/session-selector")
 (load! "../user-interface/custom/my-module/cases/session-materialization")
 (load! "../user-interface/custom/my-module/cases/session-agent-param")
+(load! "../user-interface/custom/my-module/cases/session-memory-durable")
 (load! "../user-interface/custom/my-module/cases/durable-recovery")
 
 ;; : String
@@ -50,6 +54,7 @@
    (cons 'funflow-cicd poo-flow-custom-my-module-funflow-cicd-case)
    (cons 'loop-engine poo-flow-custom-my-module-loop-engine-case)
    (cons 'poo-introspection poo-flow-custom-my-module-poo-introspection-case)
+   (cons 'session-transform poo-flow-custom-module-session-transform-case)
    (cons 'session-policy poo-flow-custom-module-session-policy-case)
    (cons 'session-registry poo-flow-custom-module-session-registry-case)
    (cons 'session-agent-graph poo-flow-custom-module-session-agent-graph-case)
@@ -60,6 +65,8 @@
          poo-flow-custom-module-session-materialization-case)
    (cons 'session-agent-param
          poo-flow-custom-module-session-agent-param-case)
+   (cons 'session-memory-durable
+         poo-flow-custom-module-session-memory-durable-case)
    (cons 'tool-core poo-flow-custom-my-module-tool-core-case)
    (cons 'memory-core poo-flow-custom-my-module-memory-core-case)
    (cons 'durable-recovery poo-flow-custom-module-durable-recovery-case)
@@ -91,12 +98,23 @@
       (and entry (cdr entry))))
    (else #f)))
 
+;; : (-> Value MaybeList)
+(def (custom-scenario-module-config-rows value)
+  (if (and (pair? value)
+           (poo-flow-user-module-selection? (car value)))
+    (let (entry
+          (poo-flow-user-module-selection-flag-entry (car value) ':config))
+      (and entry (cdr entry)))
+    #f))
+
 ;; : (-> Value Integer)
 (def (custom-scenario-row-count value)
-  (cond
-   ((custom-scenario-row? value) 1)
-   ((pair? value) (custom-scenario-row-count/list value 0))
-   (else 0)))
+  (let (config-rows (custom-scenario-module-config-rows value))
+    (cond
+     (config-rows (custom-scenario-row-count/list config-rows 0))
+     ((custom-scenario-row? value) 1)
+     ((pair? value) (custom-scenario-row-count/list value 0))
+     (else 0))))
 
 ;; : (-> [Value] Integer Integer)
 (def (custom-scenario-row-count/list values count)
@@ -108,17 +126,20 @@
 
 ;; : (-> Value [Boolean] [Boolean])
 (def (custom-scenario-runtime-flags/rev value flags-rev)
-  (cond
-   ((and (object? value) (.slot? value 'runtime-executed))
-    (cons (.ref value 'runtime-executed) flags-rev))
-   ((custom-scenario-alist-row? value)
-    (let (entry (assoc 'runtime-executed value))
-      (if entry
-        (cons (cdr entry) flags-rev)
-        flags-rev)))
-   ((pair? value)
-    (custom-scenario-runtime-flags/list/rev value flags-rev))
-   (else flags-rev)))
+  (let (config-rows (custom-scenario-module-config-rows value))
+    (cond
+     (config-rows
+      (custom-scenario-runtime-flags/list/rev config-rows flags-rev))
+     ((and (object? value) (.slot? value 'runtime-executed))
+      (cons (.ref value 'runtime-executed) flags-rev))
+     ((custom-scenario-alist-row? value)
+      (let (entry (assoc 'runtime-executed value))
+        (if entry
+          (cons (cdr entry) flags-rev)
+          flags-rev)))
+     ((pair? value)
+      (custom-scenario-runtime-flags/list/rev value flags-rev))
+     (else flags-rev))))
 
 ;; : (-> [Value] [Boolean] [Boolean])
 (def (custom-scenario-runtime-flags/list/rev values flags-rev)
@@ -214,7 +235,7 @@
          (benchmark-fixture-contract-pass?
           user-interface-custom-scenario-batch-fixture)
          #t)
-        (check-equal? (custom-scenario-summary-ref summary 'case-count) 17)
+        (check-equal? (custom-scenario-summary-ref summary 'case-count) 19)
         (check-equal?
          (custom-scenario-summary-ref summary 'runtime-executed?)
          #f)

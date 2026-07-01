@@ -56,7 +56,9 @@
         :poo-flow/t/user-interface-custom-session-agent-param-test
         :poo-flow/t/user-interface-custom-session-communication-test
         :poo-flow/t/user-interface-custom-session-materialization-test
+        :poo-flow/t/user-interface-custom-session-memory-durable-test
         :poo-flow/t/user-interface-custom-session-policy-test
         :poo-flow/t/user-interface-custom-session-registry-test
         :poo-flow/t/user-interface-custom-session-selector-test
+        :poo-flow/t/user-interface-custom-session-transform-test
         :poo-flow/t/user-interface-custom-tool-core-test)

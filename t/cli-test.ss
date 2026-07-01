@@ -58,6 +58,10 @@
       (let (specs
             (testing-object-ref (poo-flow-testing-project "." ".") 'gxtest '()))
         (check-equal? (gxtest-root-registered?
+                       "scenario-session-transform"
+                       specs)
+                      #t)
+        (check-equal? (gxtest-root-registered?
                        "scenario-session-policy"
                        specs)
                       #t)
@@ -71,6 +75,10 @@
                       #t)
         (check-equal? (gxtest-root-registered?
                        "scenario-session-agent-param"
+                       specs)
+                      #t)
+        (check-equal? (gxtest-root-registered?
+                       "scenario-session-memory-durable"
                        specs)
                       #t)
         (check-equal? (gxtest-root-registered?
