@@ -13,11 +13,9 @@
                  poo-flow-cli-run
                  poo-flow-cli-usage)
         (only-in :poo-flow/src/cli-support/testing-project
-                 +poo-flow-testing-project+)
+                 poo-flow-testing-project)
         (only-in :gslph/src/testing/model
-                 testing-object-ref)
-        (only-in :gslph/src/testing/build
-                 testing-build-gxtest-command))
+                 testing-object-ref))
 
 (export cli-test)
 
@@ -47,23 +45,18 @@
     (test-case "rejects removed test command"
       (check-equal? (poo-flow-cli-run '("test")) 64))
 
-    (test-case "passes policy scope through the harness gxtest delegate"
-      (let (command (testing-build-gxtest-command
-                     +poo-flow-testing-project+
-                     '("t/agent-sandbox-descriptor-test.ss")))
+    (test-case "declares policy-enabled testing project without explicit loadpath"
+      (let (project (poo-flow-testing-project "." "."))
         (check-equal?
-         command
-         '("env"
-           "gxtest"
-           "t/agent-sandbox-descriptor-test.ss"
-           "./.gerbil/gslph/testing/poo-flow-policy-test.ss"))
+         (testing-object-ref project 'policy #f)
+         #t)
         (check-equal?
-         (member "GERBIL_LOADPATH=.:.gerbil/lib" command)
+         (testing-object-ref project 'loadpath #f)
          #f)))
 
     (test-case "registers session and durable user scenarios as project roots"
       (let (specs
-            (testing-object-ref +poo-flow-testing-project+ 'gxtest '()))
+            (testing-object-ref (poo-flow-testing-project "." ".") 'gxtest '()))
         (check-equal? (gxtest-root-registered?
                        "scenario-session-policy"
                        specs)

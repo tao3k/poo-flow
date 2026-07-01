@@ -55,7 +55,7 @@
   (poo-flow-load-testing!)
   (let (receipt
         ((eval 'testing-build-main)
-         (eval '+poo-flow-testing-project+)
+         ((eval 'poo-flow-testing-project) "." ".")
          files))
     (if ((eval 'testing-receipt-ok?) receipt) 0 1)))
 
