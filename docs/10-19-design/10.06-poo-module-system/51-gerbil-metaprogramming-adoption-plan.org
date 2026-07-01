@@ -188,9 +188,11 @@ Phase 3: deepen session policy generation.
   through =policy-syntax.ss=.
 - Completed validation performance slice: policy ref and tool-attempt
   allowed/denied partitions now derive in one functional pass instead of
-  separate filter/remove traversals, and hook inheritance diagnostics now avoid
-  map/append intermediate lists under the session policy validation performance
-  gate.
+  separate filter/remove traversals. Full validation diagnostics now build
+  through one ordered reverse accumulator across denied refs, denied attempts,
+  hook inheritance, and resource-accounting diagnostics instead of stitching
+  intermediate lists with =append= under the session policy validation
+  performance gate.
 - Completed communication receipt slice: record-backed session communication
   accessor wrappers and =->alist= projection now route through
   =receipt-syntax.ss=, with diagnostic rows computed once before final
@@ -233,10 +235,12 @@ Phase 4: broaden runtime projection generation carefully.
 - Completed syntax-owner cleanup: =runtime-projection-syntax.ss= now carries no runtime imports; it only expands stable receipt projection functions.
 - Completed summary projection slice: loop-engine runtime command manifest summaries, workflow-cicd runtime command manifest summaries, workflow-cicd Marlin ABI summaries, and the workflow-cicd Marlin handoff receipt bundle now route through =defpoo-runtime-receipt-projection= while keeping manifest, ABI, and bundle construction explicit.
 - Broadened =defpoo-runtime-receipt-projection= to generate ordinary projection functions with single- or multi-argument signatures, so receipt-sized envelopes can reuse the same final alist frame without becoming public authoring syntax.
-- Completed loop-engine session-agent graph owner split: =loop-engine-runtime-agent.ss=
-  delegates report-only topology projection to
-  =loop-engine-session-agent-graph.ss=, whose communication receipt aggregation
-  now avoids =map= plus =apply append= intermediate lists under the loop-engine
+- Completed loop-engine session-agent graph owner split:
+  =loop-engine-runtime-agent.ss= delegates report-only topology projection to
+  =loop-engine-session-agent-graph.ss=. Communication receipt aggregation,
+  agent profile refs, agent session values, and registry entries now use
+  order-preserving functional accumulators instead of =map= plus
+  =apply append= or append-then-map intermediate lists under the loop-engine
   session-agent graph performance gate.
 - Completed workflow CI/CD dependency graph flattening slice:
   =poo-flow-cicd-append-map= now preserves declaration order with a functional

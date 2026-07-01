@@ -210,39 +210,65 @@
          (cons 'resource-ref
                (poo-flow-session-policy-tool-attempt-resource-ref attempt)))))
 
-;; : (-> Symbol Symbol [Symbol] [Alist])
-(def (poo-flow-session-denied-ref-diagnostics code scope-ref refs)
-  (map (lambda (ref)
-         (poo-flow-session-policy-diagnostic
-          code
-          scope-ref
-          (list (cons 'ref ref))))
-       refs))
-
-;; : (-> PooSessionPolicy PooSessionPolicy [PooSessionToolAttempt] [Alist])
-(def (poo-flow-session-hook-inheritance-diagnostics agent-tool-policy
-                                                    hook-tool-policy
-                                                    hook-attempts)
+;; : (-> Symbol Symbol [Symbol] [Alist] [Alist])
+(def (poo-flow-session-denied-ref-diagnostics/rev code
+                                                   scope-ref
+                                                   refs
+                                                   diagnostics-rev)
   (cond
-   ((null? hook-attempts) '())
+   ((null? refs) diagnostics-rev)
    (else
-    (let* ((attempt (car hook-attempts))
-           (tail-diagnostics
-            (poo-flow-session-hook-inheritance-diagnostics
-             agent-tool-policy
-             hook-tool-policy
-             (cdr hook-attempts))))
+    (poo-flow-session-denied-ref-diagnostics/rev
+     code
+     scope-ref
+     (cdr refs)
+     (cons (poo-flow-session-policy-diagnostic
+            code
+            scope-ref
+            (list (cons 'ref (car refs))))
+           diagnostics-rev)))))
+
+;; : (-> Symbol [PooSessionToolAttempt] [Alist] [Alist])
+(def (poo-flow-session-tool-attempt-diagnostics/rev code
+                                                     attempts
+                                                     diagnostics-rev)
+  (cond
+   ((null? attempts) diagnostics-rev)
+   (else
+    (poo-flow-session-tool-attempt-diagnostics/rev
+     code
+     (cdr attempts)
+     (cons (poo-flow-session-tool-attempt-diagnostic code (car attempts))
+           diagnostics-rev)))))
+
+;; : (-> PooSessionPolicy PooSessionPolicy [PooSessionToolAttempt] [Alist] [Alist])
+(def (poo-flow-session-hook-inheritance-diagnostics/rev agent-tool-policy
+                                                        hook-tool-policy
+                                                        hook-attempts
+                                                        diagnostics-rev)
+  (cond
+   ((null? hook-attempts) diagnostics-rev)
+   (else
+    (let (attempt (car hook-attempts))
       (if (and (not (poo-flow-session-hook-tool-attempt-allowed?
                      hook-tool-policy
                      attempt))
                (poo-flow-session-agent-tool-attempt-allowed?
                 agent-tool-policy
                 attempt))
-        (cons (poo-flow-session-tool-attempt-diagnostic
-               'hook-tool-agent-permission-not-inherited
-               attempt)
-              tail-diagnostics)
-        tail-diagnostics)))))
+        (poo-flow-session-hook-inheritance-diagnostics/rev
+         agent-tool-policy
+         hook-tool-policy
+         (cdr hook-attempts)
+         (cons (poo-flow-session-tool-attempt-diagnostic
+                'hook-tool-agent-permission-not-inherited
+                attempt)
+               diagnostics-rev))
+        (poo-flow-session-hook-inheritance-diagnostics/rev
+         agent-tool-policy
+         hook-tool-policy
+         (cdr hook-attempts)
+         diagnostics-rev))))))
 
 ;; : (-> Symbol Symbol PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy [Symbol] [Symbol] [Symbol] [Symbol] [PooSessionToolAttempt] [PooSessionToolAttempt] [Alist] PooSessionPolicyValidationReceipt)
 (def (poo-flow-session-policy-validation-receipt validation-id
@@ -355,44 +381,57 @@
          (denied-hook-tool-attempts
           (cadr hook-tool-attempt-partition))
          (diagnostics
-          (append
-           (poo-flow-session-denied-ref-diagnostics
-            'context-session-not-granted
-            scope-ref
-            denied-context-refs)
-           (poo-flow-session-denied-ref-diagnostics
-            'history-record-not-granted
-            scope-ref
-            denied-history-records)
-           (poo-flow-session-denied-ref-diagnostics
-            'communication-channel-not-granted
-            scope-ref
-            denied-communication-channels)
-           (poo-flow-session-denied-ref-diagnostics
-            'resource-capability-not-granted
-            scope-ref
-            denied-resource-refs)
-           (map (lambda (attempt)
-                  (poo-flow-session-tool-attempt-diagnostic
+          (let* ((diagnostics0
+                  (poo-flow-session-denied-ref-diagnostics/rev
+                   'context-session-not-granted
+                   scope-ref
+                   denied-context-refs
+                   '()))
+                 (diagnostics1
+                  (poo-flow-session-denied-ref-diagnostics/rev
+                   'history-record-not-granted
+                   scope-ref
+                   denied-history-records
+                   diagnostics0))
+                 (diagnostics2
+                  (poo-flow-session-denied-ref-diagnostics/rev
+                   'communication-channel-not-granted
+                   scope-ref
+                   denied-communication-channels
+                   diagnostics1))
+                 (diagnostics3
+                  (poo-flow-session-denied-ref-diagnostics/rev
+                   'resource-capability-not-granted
+                   scope-ref
+                   denied-resource-refs
+                   diagnostics2))
+                 (diagnostics4
+                  (poo-flow-session-tool-attempt-diagnostics/rev
                    'agent-tool-attempt-not-granted
-                   attempt))
-                denied-agent-tool-attempts)
-           (map (lambda (attempt)
-                  (poo-flow-session-tool-attempt-diagnostic
+                   denied-agent-tool-attempts
+                   diagnostics3))
+                 (diagnostics5
+                  (poo-flow-session-tool-attempt-diagnostics/rev
                    'hook-tool-attempt-not-granted
-                   attempt))
-                denied-hook-tool-attempts)
-           (poo-flow-session-hook-inheritance-diagnostics
-            agent-tool-policy
-            hook-tool-policy
-            hook-tool-attempts)
-           (if (poo-flow-session-resource-policy-accounted? sharing-policy)
-             '()
-             (list (poo-flow-session-policy-diagnostic
-                    'resource-sharing-missing-accounting-owner
-                    scope-ref
-                    (poo-flow-session-policy-resource-grants
-                     sharing-policy)))))))
+                   denied-hook-tool-attempts
+                   diagnostics4))
+                 (diagnostics6
+                  (poo-flow-session-hook-inheritance-diagnostics/rev
+                   agent-tool-policy
+                   hook-tool-policy
+                   hook-tool-attempts
+                   diagnostics5))
+                 (diagnostics7
+                  (if (poo-flow-session-resource-policy-accounted?
+                       sharing-policy)
+                    diagnostics6
+                    (cons (poo-flow-session-policy-diagnostic
+                           'resource-sharing-missing-accounting-owner
+                           scope-ref
+                           (poo-flow-session-policy-resource-grants
+                            sharing-policy))
+                          diagnostics6))))
+            (reverse diagnostics7))))
     (object<-alist
      (list
       (cons 'kind 'poo-flow.session.policy-validation-receipt)

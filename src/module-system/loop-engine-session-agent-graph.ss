@@ -48,26 +48,33 @@
               (cons (poo-flow-loop-engine-agent-judge-role row)
                     (poo-flow-loop-engine-agent-judge-value tail))))))
 
-;; : (-> [Value] [AgentProfileRef])
-(def (poo-flow-loop-engine-agent-judge-pairs agent-judges)
+;; : (-> [Value] [AgentProfileRef] [AgentProfileRef])
+(def (poo-flow-loop-engine-agent-judge-pairs/rev agent-judges refs-rev)
   (cond
-   ((null? agent-judges) '())
+   ((null? agent-judges) refs-rev)
    ((poo-flow-loop-engine-agent-judge-pair (car agent-judges))
     => (lambda (role-ref)
-         (cons role-ref
-               (poo-flow-loop-engine-agent-judge-pairs
-                (cdr agent-judges)))))
+         (poo-flow-loop-engine-agent-judge-pairs/rev
+          (cdr agent-judges)
+          (cons role-ref refs-rev))))
    (else
-    (poo-flow-loop-engine-agent-judge-pairs (cdr agent-judges)))))
+    (poo-flow-loop-engine-agent-judge-pairs/rev (cdr agent-judges)
+                                                refs-rev))))
 
 ;; : (-> Alist [AgentProfileRef])
 (def (poo-flow-loop-engine-intent-agent-profile-refs intent)
-  (append
-   (poo-flow-loop-engine-agent-judge-pairs
-    (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '()))
-   (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
-     '()
-     (list (cons 'human-audit 'human-audit)))))
+  (let* ((refs-rev
+          (poo-flow-loop-engine-agent-judge-pairs/rev
+           (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '())
+           '()))
+         (refs-rev*
+          (if (null? (poo-flow-user-loop-engine-intent-ref
+                      intent
+                      'human-audit
+                      '()))
+            refs-rev
+            (cons (cons 'human-audit 'human-audit) refs-rev))))
+    (reverse refs-rev*)))
 
 ;; : (-> Alist MaybeSymbol)
 (def (poo-flow-loop-engine-intent-primary-sandbox-profile intent)
@@ -342,8 +349,86 @@
      (context . ((default . root-summary)))
      (sharing . ((default . explicit-grants-only)))
      (resource . ((accounting-owner . root-session))))
-   '((source . loop-engine-session-agent-graph)
+  '((source . loop-engine-session-agent-graph)
      (runtime-executed . #f))))
+
+;; : (-> PooSessionAgentNode PooSessionValue Alist)
+(def (poo-flow-loop-engine-session-agent-registry-entry node session)
+  (let (node-row (poo-flow-session-agent-node->alist node))
+    (poo-flow-session-registry-entry
+     session
+     (poo-flow-session-alist-ref
+      node-row
+      'agent-id
+      'unknown-agent)
+     (poo-flow-session-alist-ref
+      node-row
+      'communication-channels
+      '())
+     (list
+      (cons 'context
+            (poo-flow-session-alist-ref
+             node-row
+             'prompt-policy-ref
+             #f))
+      (cons 'sharing
+            (poo-flow-session-alist-ref
+             node-row
+             'resource-sharing-policy-ref
+             #f))
+      (cons 'resource
+            (poo-flow-session-alist-ref
+             node-row
+             'resource-sharing-policy-ref
+             #f))
+      (cons 'durable
+            (list
+             (cons 'policy-id
+                   (poo-flow-session-alist-ref
+                    node-row
+                    'durable-policy-ref
+                    #f))
+             (cons 'source 'loop-engine-session-agent-graph))))
+     (list (cons 'source 'loop-engine-session-agent-graph)
+           (cons 'runtime-executed #f)))))
+
+;; : (-> Alist [Symbol] [PooSessionValue])
+(def (poo-flow-loop-engine-session-values intent session-refs)
+  (let loop ((remaining-session-refs session-refs)
+             (session-values '()))
+    (if (null? remaining-session-refs)
+      (reverse session-values)
+      (loop (cdr remaining-session-refs)
+            (cons (poo-flow-loop-engine-session-value
+                   intent
+                   (car remaining-session-refs))
+                  session-values)))))
+
+;; : (-> Alist PooSessionValue PooSessionValue [PooSessionAgentNode] [PooSessionValue] [Alist])
+(def (poo-flow-loop-engine-session-agent-registry-entries intent
+                                                          root-session
+                                                          loop-session
+                                                          agent-nodes
+                                                          agent-sessions)
+  (let loop ((remaining-nodes agent-nodes)
+             (remaining-sessions agent-sessions)
+             (registry-values
+              (list (poo-flow-loop-engine-root-registry-entry
+                     intent
+                     loop-session
+                     'loop-engine)
+                    (poo-flow-loop-engine-root-registry-entry
+                     intent
+                     root-session
+                     'project-root))))
+    (if (or (null? remaining-nodes) (null? remaining-sessions))
+      (reverse registry-values)
+      (loop (cdr remaining-nodes)
+            (cdr remaining-sessions)
+            (cons (poo-flow-loop-engine-session-agent-registry-entry
+                   (car remaining-nodes)
+                   (car remaining-sessions))
+                  registry-values)))))
 
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-session-agent-graph intent)
@@ -373,62 +458,16 @@
          (loop-session
           (poo-flow-loop-engine-session-value intent loop-session-ref))
          (agent-sessions
-          (map (lambda (session-id)
-                 (poo-flow-loop-engine-session-value intent session-id))
-               output-session-refs))
+          (poo-flow-loop-engine-session-values intent output-session-refs))
          (sessions
-          (append (list root-session loop-session) agent-sessions))
+          (cons root-session (cons loop-session agent-sessions)))
          (registry-entries
-          (append
-           (list
-            (poo-flow-loop-engine-root-registry-entry
-             intent
-             root-session
-             'project-root)
-            (poo-flow-loop-engine-root-registry-entry
-             intent
-             loop-session
-             'loop-engine))
-           (map (lambda (node session)
-                  (let (node-row (poo-flow-session-agent-node->alist node))
-                    (poo-flow-session-registry-entry
-                     session
-                     (poo-flow-session-alist-ref
-                      node-row
-                      'agent-id
-                      'unknown-agent)
-                     (poo-flow-session-alist-ref
-                      node-row
-                      'communication-channels
-                      '())
-                     (list
-                      (cons 'context
-                            (poo-flow-session-alist-ref
-                             node-row
-                             'prompt-policy-ref
-                             #f))
-                      (cons 'sharing
-                            (poo-flow-session-alist-ref
-                             node-row
-                             'resource-sharing-policy-ref
-                             #f))
-                      (cons 'resource
-                            (poo-flow-session-alist-ref
-                             node-row
-                             'resource-sharing-policy-ref
-                             #f))
-                      (cons 'durable
-                            (list
-                             (cons 'policy-id
-                                   (poo-flow-session-alist-ref
-                                    node-row
-                                    'durable-policy-ref
-                                    #f))
-                             (cons 'source 'loop-engine-session-agent-graph))))
-                     (list (cons 'source 'loop-engine-session-agent-graph)
-                           (cons 'runtime-executed #f)))))
-                agent-nodes
-                agent-sessions)))
+          (poo-flow-loop-engine-session-agent-registry-entries
+           intent
+           root-session
+           loop-session
+           agent-nodes
+           agent-sessions))
          (registry-receipt
           (poo-flow-session-registry-receipt
            'loop-engine/project
