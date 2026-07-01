@@ -525,23 +525,25 @@
       (poo-flow-module-name profile)
       profile)))
 
-;;; Boundary: import-configs is a filter-map over import profiles.
+;;; Boundary: import-configs keeps only descriptor profiles from import rows.
 ;;; Invariant: only descriptor profiles enter the closure list.
 ;;; Runtime imports remain payloads for the later resolver stage.
-;;; The lambda sees the result of =poo-flow-module-import-config=, never raw source refs.
 ;;; Names, paths, and runtime payloads are intentionally dropped from the closure list.
-;;; A hand-written loop here could accidentally activate a source-only import.
-;;; The higher-order shape makes the keep/drop decision local to one candidate profile.
-;; : (-> [Value] [PooModuleDescriptor])
-(def (poo-flow-module-import-configs imports)
+;; : (-> [Value] [PooModuleDescriptor] [PooModuleDescriptor])
+(def (poo-flow-module-import-configs/rev imports configs-rev)
   (cond
-   ((null? imports) '())
+   ((null? imports) configs-rev)
    ((poo-flow-module-import-config (car imports))
     => (lambda (module)
-         (cons module
-               (poo-flow-module-import-configs (cdr imports)))))
+         (poo-flow-module-import-configs/rev
+          (cdr imports)
+          (cons module configs-rev))))
    (else
-    (poo-flow-module-import-configs (cdr imports)))))
+    (poo-flow-module-import-configs/rev (cdr imports) configs-rev))))
+
+;; : (-> [Value] [PooModuleDescriptor])
+(def (poo-flow-module-import-configs imports)
+  (reverse (poo-flow-module-import-configs/rev imports '())))
 
 ;;; Boundary: only direct names are missing imports; inline profiles are closure members.
 ;;; Boundary: module missing imports for name is the policy-visible edge for

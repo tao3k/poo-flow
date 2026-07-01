@@ -131,6 +131,7 @@
           '(agent-profile
             agent-harness
             agent-session
+            session-agent-graph
             agent-operation
             workflow-run
             dispatch-receipt

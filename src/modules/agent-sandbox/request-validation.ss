@@ -13,6 +13,7 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/request-field)
 
@@ -20,6 +21,12 @@
         agent-sandbox-validate-request
         agent-sandbox-request?
         agent-sandbox-request-ref)
+
+;; : (-> Symbol Symbol ValidationError)
+(def (agent-sandbox-request-validation-error field code)
+  (agent-sandbox-field-rows
+   (field field)
+   (code code)))
 
 ;;; Schema predicate is intentionally exact: bridge requests must use the
 ;;; normalized request vocabulary before backend-specific validation begins.
@@ -37,16 +44,22 @@
 ;;; before runtime dispatch. Policy payloads stay backend-owned alists.
 ;; : (-> AgentSandboxRequest [ValidationError])
 (def (agent-sandbox-request-validation-errors request)
-  (append
-   (if (agent-sandbox-request-schema?
-        (agent-sandbox-request-ref request 'schema #f))
-     '()
-     (list '((field . schema) (code . schema-mismatch))))
-   (agent-sandbox-required-field-errors
-    request
-    (list (cons 'backend-kind agent-sandbox-present?)
-          (cons 'backend-ref agent-sandbox-present?)
-          (cons 'command agent-sandbox-present?)))))
+  (let* ((errors-rev
+          (if (agent-sandbox-request-schema?
+               (agent-sandbox-request-ref request 'schema #f))
+            '()
+            (list (agent-sandbox-request-validation-error
+                   'schema
+                   'schema-mismatch))))
+         (errors-rev
+          (agent-sandbox-rows-into/rev
+           (agent-sandbox-required-field-errors
+            request
+            (list (cons 'backend-kind agent-sandbox-present?)
+                  (cons 'backend-ref agent-sandbox-present?)
+                  (cons 'command agent-sandbox-present?)))
+           errors-rev)))
+    (reverse errors-rev)))
 
 ;;; Request validation is the last Scheme-side gate before a runtime adapter or
 ;;; bridge envelope sees the normalized sandbox request.
@@ -59,8 +72,9 @@
        'agent-sandbox
        'invalid-agent-sandbox-request
        "invalid agent sandbox request"
-       (list (cons 'errors errors)
-             (cons 'request request))))))
+       (agent-sandbox-field-rows
+        (errors errors)
+        (request request))))))
 
 ;;; Request predicates keep bridge code honest without making Scheme validate
 ;;; backend-specific policy details that Marlin or Cube/nono integrations own.

@@ -6,6 +6,7 @@
         :poo-flow/src/core/api
         :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile-data
         :poo-flow/src/modules/agent-sandbox/profile-validation)
 
@@ -58,15 +59,15 @@
                                             . maybe-overrides)
   (poo-core-role-object
    (slot-rows
-    (append
-     (list (cons 'name name)
-           (cons 'backend-kind backend-kind)
-           (cons 'backend-ref backend-ref)
-           (cons 'network-policy network-policy)
-           (cons 'capabilities capabilities)
-           (cons 'resource-policy resource-policy)
-           (cons 'metadata metadata))
-     (if (null? maybe-overrides) '() (car maybe-overrides))))
+    (agent-sandbox-field-rows/tail
+     (if (null? maybe-overrides) '() (car maybe-overrides))
+     (name name)
+     (backend-kind backend-kind)
+     (backend-ref backend-ref)
+     (network-policy network-policy)
+     (capabilities capabilities)
+     (resource-policy resource-policy)
+     (metadata metadata)))
    (supers agent-sandbox-profile-descriptor-prototype)))
 
 ;;; Runtime source for the backend declaration macro. Keeping this as a normal

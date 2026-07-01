@@ -166,15 +166,31 @@
 (def (poo-flow-src-module-tree-root module-name)
   (string-append poo-flow-src-modules-root "/" module-name))
 
+;; : (-> Path [Symbol] [PooModuleSourceRef] [PooModuleSourceRef])
+(def (poo-flow-src-module-tree-entrypoint-source-refs/rev
+      module-root
+      entrypoint-roles
+      source-refs-rev)
+  (if (null? entrypoint-roles)
+    source-refs-rev
+    (poo-flow-src-module-tree-entrypoint-source-refs/rev
+     module-root
+     (cdr entrypoint-roles)
+     (cons (poo-flow-module-tree-source module-root
+                                         (car entrypoint-roles))
+           source-refs-rev))))
+
 ;;; Internal expansion keeps module entrypoints ordered for stable diagnostics.
 ;; : (-> (Path Symbol...) [PooModuleSourceRef])
 (def (poo-flow-src-module-tree-entrypoint-source-refs entrypoint-spec)
   (let ((module-root
-         (poo-flow-src-module-tree-root (car entrypoint-spec)))
+        (poo-flow-src-module-tree-root (car entrypoint-spec)))
         (entrypoint-roles (cdr entrypoint-spec)))
-    (map (lambda (entrypoint-role)
-           (poo-flow-module-tree-source module-root entrypoint-role))
-         entrypoint-roles)))
+    (reverse
+     (poo-flow-src-module-tree-entrypoint-source-refs/rev
+      module-root
+      entrypoint-roles
+      '()))))
 
 ;;; Internal recursion flattens the declared tree without forcing source loads.
 ;; : (-> [(Path Symbol...)] [PooModuleSourceRef])

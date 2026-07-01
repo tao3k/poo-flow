@@ -4,7 +4,8 @@
 
 (import :poo-flow/src/modules/docker-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base)
+        :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-docker-sandbox-module-bundles
         poo-flow-docker-sandbox-config-flags
@@ -26,11 +27,12 @@
 ;;; user-authored config body shown by the user-interface presentation.
 ;; : (-> [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-docker-sandbox-config-flags profiles . maybe-user-config)
-  (append
-   (list (cons ':config profiles))
-   (if (null? maybe-user-config)
-     '()
-     (list (cons ':user-config (car maybe-user-config))))))
+  (if (null? maybe-user-config)
+    (poo-flow-module-field-rows
+     (:config profiles))
+    (poo-flow-module-field-rows
+     (:config profiles)
+     (:user-config (car maybe-user-config)))))
 
 ;;; Backend wrappers pass their inherited profile object into sandbox-core; this
 ;;; keeps Docker-specific defaults out of the user-facing macro body.

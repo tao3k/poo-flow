@@ -98,8 +98,8 @@ Implementation update: the OpenRath-derived policy objects are now implemented a
 
 The loop-engine runtime manifest exposes two different tables for Marlin:
 
-- =object-families=: the report-only object families carried by the handoff request, including =lineage-receipt=, =selector-receipt=, =resource-dispatch-receipt=, =capability-receipt=, =memory-receipt=, =compression-receipt=, and =policy-extension-receipt=.
-- =receipt-contracts=: the stable schema ids for report-only receipt rows. This includes lineage, selector, resource-dispatch, capability, memory, compression, generic policy-extension, and sandbox handoff agreement contracts.
+- =object-families=: the report-only object families carried by the handoff request, including =session-agent-graph=, =lineage-receipt=, =selector-receipt=, =resource-dispatch-receipt=, =capability-receipt=, =memory-receipt=, =compression-receipt=, and =policy-extension-receipt=.
+- =receipt-contracts=: the stable schema ids for report-only receipt rows. This includes session-agent graph, lineage, selector, resource-dispatch, capability, memory, compression, generic policy-extension, and sandbox handoff agreement contracts.
 
 This split is intentional. =runtime-handoff-contracts= names operations that Marlin may implement, such as =start-workflow-run= and =read-runtime-snapshot=. =receipt-contracts= names inert data schemas that Scheme projects for audit and handoff. Scheme must not use receipt contracts as executable commands.
 

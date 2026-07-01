@@ -11,7 +11,6 @@
                  $constant-slot-spec?
                  $constant-slot-spec-value
                  $computed-slot-spec)
-        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-core-support/contracts
         :poo-flow/src/module-system/object-core-support/merge)
@@ -221,27 +220,40 @@
                   (poo-flow-module-object-field-identity field)
                   #t))
      base)
+    (def (finish-field field)
+      (let (identity
+            (poo-flow-module-object-field-identity field))
+        (if (and (poo-flow-module-object-identity-hash-ref
+                  override-seen
+                  identity)
+                 (not (poo-flow-module-object-identity-hash-ref
+                       replacement-used
+                       identity)))
+          (begin
+            (hash-put! replacement-used identity #t)
+            (poo-flow-module-object-identity-hash-ref
+             overrides
+             identity))
+          field)))
+    (def (finish-base/rev fields fields-rev)
+      (if (null? fields)
+        fields-rev
+        (finish-base/rev (cdr fields)
+                         (cons (finish-field (car fields)) fields-rev))))
+    (def (finish-new/rev identities fields-rev)
+      (if (null? identities)
+        fields-rev
+        (finish-new/rev
+         (cdr identities)
+         (cons (poo-flow-module-object-identity-hash-ref
+                overrides
+                (car identities))
+               fields-rev))))
     (def (finish new-identities)
-      (append
-       (map (lambda (field)
-              (let (identity
-                    (poo-flow-module-object-field-identity field))
-                (if (and (poo-flow-module-object-identity-hash-ref
-                          override-seen
-                          identity)
-                         (not (poo-flow-module-object-identity-hash-ref
-                               replacement-used
-                               identity)))
-                  (begin
-                    (hash-put! replacement-used identity #t)
-                    (poo-flow-module-object-identity-hash-ref
-                     overrides
-                     identity))
-                  field)))
-            base)
-       (map (lambda (identity)
-              (poo-flow-module-object-identity-hash-ref overrides identity))
-            (reverse new-identities))))
+      (reverse
+       (finish-new/rev
+        (reverse new-identities)
+        (finish-base/rev base '()))))
     (let loop ((fields extra) (new-identities '()))
       (if (null? fields)
         (finish new-identities)
@@ -324,12 +336,22 @@
 
 ;;; Default slot materialization maps field contracts to slot values; override
 ;;; rows only merge after every field identity has a contract-owned default.
+;; : (-> [PooModuleFieldContract] PooModuleSlotMap PooModuleSlotMap)
+(def (poo-flow-module-object-default-slots/rev fields slots-rev)
+  (if (null? fields)
+    slots-rev
+    (poo-flow-module-object-default-slots/rev
+     (cdr fields)
+     (cons (cons (poo-flow-module-field-contract-identity (car fields))
+                 (poo-flow-module-field-contract-default (car fields)))
+           slots-rev))))
+
 ;; : (-> PooModuleObject PooModuleSlotMap)
 (def (poo-flow-module-object-default-slots object)
-  (map (lambda (field)
-         (cons (poo-flow-module-field-contract-identity field)
-               (poo-flow-module-field-contract-default field)))
-       (poo-flow-module-object-resolved-fields object)))
+  (reverse
+   (poo-flow-module-object-default-slots/rev
+    (poo-flow-module-object-resolved-fields object)
+    '())))
 
 ;;; Slot alist replacement preserves the first key position and updates only
 ;;; the matching row, matching extension slot merge order.
@@ -366,30 +388,41 @@
      (lambda (entry)
        (hash-put! base-seen (car entry) #t))
      base)
+    (def (finish-entry entry)
+      (let (key (car entry))
+        (if (and (poo-flow-module-config-slot-key-hash-ref
+                  override-seen
+                  key)
+                 (not (poo-flow-module-config-slot-key-hash-ref
+                       replacement-used
+                       key)))
+          (begin
+            (hash-put! replacement-used key #t)
+            (cons key
+                  (poo-flow-module-config-slot-key-hash-ref
+                   overrides
+                   key)))
+          entry)))
+    (def (finish-base/rev entries rows-rev)
+      (if (null? entries)
+        rows-rev
+        (finish-base/rev (cdr entries)
+                         (cons (finish-entry (car entries)) rows-rev))))
+    (def (finish-new/rev keys rows-rev)
+      (if (null? keys)
+        rows-rev
+        (finish-new/rev
+         (cdr keys)
+         (cons (cons (car keys)
+                     (poo-flow-module-config-slot-key-hash-ref
+                      overrides
+                      (car keys)))
+               rows-rev))))
     (def (finish new-keys)
-      (append
-       (map (lambda (entry)
-              (let (key (car entry))
-                (if (and (poo-flow-module-config-slot-key-hash-ref
-                          override-seen
-                          key)
-                         (not (poo-flow-module-config-slot-key-hash-ref
-                               replacement-used
-                               key)))
-                  (begin
-                    (hash-put! replacement-used key #t)
-                    (cons key
-                          (poo-flow-module-config-slot-key-hash-ref
-                           overrides
-                           key)))
-                  entry)))
-            base)
-       (map (lambda (key)
-              (cons key
-                    (poo-flow-module-config-slot-key-hash-ref
-                     overrides
-                     key)))
-            (reverse new-keys))))
+      (reverse
+       (finish-new/rev
+        (reverse new-keys)
+        (finish-base/rev base '()))))
     (let loop ((entries extra) (new-keys '()))
       (if (null? entries)
         (finish new-keys)
@@ -459,26 +492,56 @@
 
 ;;; Object contribution mapping preserves one field-contract lookup per user
 ;;; row, keeping unknown fields as validation failures instead of silent slots.
+;; : (-> PooModuleObject HashTable PooModuleObjectContributionEntries [PooModuleFieldContribution] [PooModuleFieldContribution])
+(def (poo-flow-module-object-contributions/rev
+      object
+      field-index
+      entries
+      contributions-rev)
+  (if (null? entries)
+    contributions-rev
+    (poo-flow-module-object-contributions/rev
+     object
+     field-index
+     (cdr entries)
+     (cons (poo-flow-module-object-contribution/index
+            object
+            field-index
+            (car entries))
+           contributions-rev))))
+
 ;; : (-> PooModuleObject PooModuleObjectContributionEntries [PooModuleFieldContribution])
 (def (poo-flow-module-object-contributions object entries)
   (let (field-index
         (poo-flow-module-object-resolved-field-index object))
-    (map (lambda (entry)
-           (poo-flow-module-object-contribution/index object
-                                                      field-index
-                                                      entry))
-         entries)))
+    (reverse
+     (poo-flow-module-object-contributions/rev
+      object
+      field-index
+      entries
+      '()))))
 
 ;;; The object namespace is a regular extension graph root, so object removal
 ;;; and extension use the same fixed-point merge path as runtime modules.
+;; : (-> [PooModuleObject] [PooModuleExtensionNode] [PooModuleExtensionNode])
+(def (poo-flow-module-object-nodes/rev objects nodes-rev)
+  (if (null? objects)
+    nodes-rev
+    (poo-flow-module-object-nodes/rev
+     (cdr objects)
+     (cons (poo-flow-module-object-node (car objects) '() '())
+           nodes-rev))))
+
+;; : (-> [PooModuleObject] [PooModuleExtensionNode])
+(def (poo-flow-module-object-nodes objects)
+  (reverse (poo-flow-module-object-nodes/rev objects '())))
+
 ;; : (-> [PooModuleObject] PooModuleExtensionNode)
 (def (poo-flow-module-objects-node objects)
   (poo-flow-module-extension-node
    poo-flow-module-objects-root-identity
    '((namespace . objects))
-   (map (lambda (object)
-          (poo-flow-module-object-node object '() '()))
-        objects)))
+   (poo-flow-module-object-nodes objects)))
 
 ;;; Object indexes materialize the catalog identity boundary once so inherit and
 ;;; merge callers can resolve child nodes without repeated child scans.
@@ -555,7 +618,22 @@
                             0)))
                     (cons (cons next-child next-children)
                           (or changed? child-changed?)))))
-           (cons (cons child next-children) changed?)))))
+          (cons (cons child next-children) changed?)))))
+
+;; : (-> HashTable [PooModuleExtensionNode] MaybeFastExtensionChildState MaybeFastExtensionChildState)
+(def (poo-flow-module-objects-fast-extension-child-state/fold
+      groups
+      children
+      state)
+  (if (null? children)
+    state
+    (poo-flow-module-objects-fast-extension-child-state/fold
+     groups
+     (cdr children)
+     (poo-flow-module-objects-fast-extension-child-state
+      groups
+      state
+      (car children)))))
 
 ;;; Fast extension result is valid only for the objects root; other roots fall
 ;;; back to the generic fixed-point merge contract.
@@ -568,13 +646,10 @@
               (slots
                (poo-flow-module-extension-node-slots objects-node))
               (state
-               (foldl (lambda (child state)
-                        (poo-flow-module-objects-fast-extension-child-state
-                         groups
-                         state
-                         child))
-                      (cons '() #f)
-                      (poo-flow-module-extension-node-children objects-node))))
+               (poo-flow-module-objects-fast-extension-child-state/fold
+                groups
+                (poo-flow-module-extension-node-children objects-node)
+                (cons '() #f))))
          (and state
               (poo-flow-module-extension-result
                (poo-flow-module-extension-node

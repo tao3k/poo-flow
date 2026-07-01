@@ -23,6 +23,20 @@
   (with-catch (lambda (failure) failure)
               thunk))
 
+;; : (forall (a) (-> [a] [a] [a]))
+(def (control-plane-test-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;;; This suite anchors the pure local runner path as the baseline for receipt
 ;;; and child-node assertions.
 ;; : TestSuite
@@ -174,7 +188,9 @@
                                                   'submit))
              (task-registry (make-task-family-registry
                              'configured-task-families
-                             (append task-family-descriptors (list docker))))
+                             (control-plane-test-values/tail
+                              task-family-descriptors
+                              (list docker))))
              (flow-registry (make-flow-declaration-registry
                              'configured-flow-declarations
                              flow-declaration-descriptors))

@@ -11,6 +11,8 @@
 (export (import: :poo-flow/src/modules/memory-core/objects)
         memory-store-spec
         memory-catalog
+        memory-catalog-validation
+        memory-catalog-validation-row
         poo-flow-memory-core-poo-store-spec?
         poo-flow-memory-core-poo-catalog?
         poo-flow-memory-core-poo-store-spec->store-spec
@@ -43,6 +45,33 @@
           (metadata '())
           (runtime-owner "marlin-agent-core")
           (runtime-executed #f))))
+
+;; memory-catalog-validation
+;;   : (-> Syntax PooMemoryPolicyCatalogValidationReceipt)
+;;   | doc m%
+;;       Validation belongs to memory-core's user facade: users pass a concrete
+;;       catalog and session memory intents, then receive a report-only receipt.
+;;       Scheme never recalls, commits, or persists memory.
+;;     %
+(defrules memory-catalog-validation (metadata)
+  ((_ validation-id catalog
+      (intent ...)
+      (metadata metadata-entry ...))
+   (poo-flow-memory-policy-catalog-validation-receipt
+    'validation-id
+    catalog
+    (list intent ...)
+    '(metadata-entry ...)))
+  ((_ validation-id catalog
+      (intent ...))
+   (poo-flow-memory-policy-catalog-validation-receipt
+    'validation-id
+    catalog
+    (list intent ...))))
+
+;; : (-> PooMemoryPolicyCatalogValidationReceipt Alist)
+(def (memory-catalog-validation-row receipt)
+  (poo-flow-memory-policy-catalog-validation-receipt->alist receipt))
 
 ;; : (-> Symbol POOObject)
 (def (poo-flow-memory-core-prototype-super name)
@@ -105,17 +134,31 @@
 (def (poo-flow-memory-core-poo-config-catalogs prototypes)
   (filter poo-flow-memory-core-poo-catalog? prototypes))
 
+;; : (-> PooMemoryStoreSpec Alist)
+(def (poo-flow-memory-core-catalog-manifest spec)
+  (poo-flow-memory-handoff-manifest->alist
+   (poo-flow-memory-handoff-manifest
+    (string->symbol
+     (string-append
+      "memory/request/"
+      (symbol->string (poo-flow-memory-store-spec-ref spec))))
+    spec)))
+
+;; : (-> [PooMemoryStoreSpec] [Alist] [Alist])
+(def (poo-flow-memory-core-catalog-manifests/rev specs manifests-rev)
+  (if (null? specs)
+    manifests-rev
+    (poo-flow-memory-core-catalog-manifests/rev
+     (cdr specs)
+     (cons (poo-flow-memory-core-catalog-manifest (car specs))
+           manifests-rev))))
+
 ;; : (-> PooMemoryCatalog [Alist])
 (def (poo-flow-memory-core-catalog-manifests catalog)
-  (map (lambda (spec)
-         (poo-flow-memory-handoff-manifest->alist
-          (poo-flow-memory-handoff-manifest
-           (string->symbol
-            (string-append
-             "memory/request/"
-             (symbol->string (poo-flow-memory-store-spec-ref spec))))
-           spec)))
-       (.ref catalog 'stores)))
+  (reverse
+   (poo-flow-memory-core-catalog-manifests/rev
+    (.ref catalog 'stores)
+    '())))
 
 ;; : (-> [POOObject] Alist [UserModuleFlagEntry])
 (def (poo-flow-memory-core-poo-config-flags prototypes user-config)

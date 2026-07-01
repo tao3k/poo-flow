@@ -21,9 +21,14 @@
         poo-flow-session-agent-graph?
         poo-flow-session-agent-graph-agent-ids
         poo-flow-session-agent-graph-session-ids
+        poo-flow-session-agent-graph-communication-channel-receipts
         poo-flow-session-agent-graph-communication-receipts
         poo-flow-session-agent-graph-registry-receipt
         poo-flow-session-agent-graph->alist)
+
+(defrules poo-flow-session-agent-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol [Alist] PooSessionAgentNode)
 (def (poo-flow-session-agent-node agent-id
@@ -111,34 +116,34 @@
                             (symbol? result-contract)
                             result-contract)
   (object<-alist
-   (list
-    (cons 'kind 'poo-flow.session.agent-node)
-    (cons 'schema 'poo-flow.modules.session.agent-node.v1)
-    (cons 'agent-id agent-id)
-    (cons 'project-ref project-ref)
-    (cons 'root-session-ref root-session-ref)
-    (cons 'parent-session-ref parent-session-ref)
-    (cons 'agent-system-session-ref agent-system-session-ref)
-    (cons 'input-session-ref input-session-ref)
-    (cons 'output-session-ref output-session-ref)
-    (cons 'peer-session-refs peer-session-refs)
-    (cons 'communication-channels communication-channels)
-    (cons 'model-policy-ref model-policy-ref)
-    (cons 'prompt-policy-ref prompt-policy-ref)
-    (cons 'tool-permission-policy-ref tool-permission-policy-ref)
-    (cons 'hook-tool-permission-policy-ref hook-tool-permission-policy-ref)
-    (cons 'resource-sharing-policy-ref resource-sharing-policy-ref)
-    (cons 'durable-policy-ref durable-policy-ref)
-    (cons 'tool-refs tool-refs)
-    (cons 'memory-refs memory-refs)
-    (cons 'sandbox-profile-ref sandbox-profile-ref)
-    (cons 'role role)
-    (cons 'result-contract result-contract)
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'metadata (if (null? maybe-metadata)
-                      '()
-                      (car maybe-metadata))))))
+   (poo-flow-session-agent-field-rows
+    (kind 'poo-flow.session.agent-node)
+    (schema 'poo-flow.modules.session.agent-node.v1)
+    (agent-id agent-id)
+    (project-ref project-ref)
+    (root-session-ref root-session-ref)
+    (parent-session-ref parent-session-ref)
+    (agent-system-session-ref agent-system-session-ref)
+    (input-session-ref input-session-ref)
+    (output-session-ref output-session-ref)
+    (peer-session-refs peer-session-refs)
+    (communication-channels communication-channels)
+    (model-policy-ref model-policy-ref)
+    (prompt-policy-ref prompt-policy-ref)
+    (tool-permission-policy-ref tool-permission-policy-ref)
+    (hook-tool-permission-policy-ref hook-tool-permission-policy-ref)
+    (resource-sharing-policy-ref resource-sharing-policy-ref)
+    (durable-policy-ref durable-policy-ref)
+    (tool-refs tool-refs)
+    (memory-refs memory-refs)
+    (sandbox-profile-ref sandbox-profile-ref)
+    (role role)
+    (result-contract result-contract)
+    (runtime-owner "marlin-agent-core")
+    (runtime-executed #f)
+    (metadata (if (null? maybe-metadata)
+                '()
+                (car maybe-metadata))))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-agent-node? value)
@@ -270,6 +275,20 @@
                   session-ids-rev)
             (+ session-count 1)))))
 
+;; : (-> Alist Symbol Value Value)
+(def (poo-flow-session-agent-graph-metadata-ref metadata key default-value)
+  (if (list? metadata)
+    (let (entry (assoc key metadata))
+      (if entry (cdr entry) default-value))
+    default-value))
+
+;; : (-> Alist [PooSessionCommunicationChannelReceipt])
+(def (poo-flow-session-agent-graph-metadata-channel-receipts metadata)
+  (poo-flow-session-agent-graph-metadata-ref
+   metadata
+   'communication-channel-receipts
+   '()))
+
 ;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [PooSessionCommunicationReceipt] [Alist] PooSessionAgentGraph)
 (def (poo-flow-session-agent-graph project-id
                                    root-session-ref
@@ -304,7 +323,12 @@
     poo-flow-session-communication-receipt?
     communication-receipts)
    communication-receipts)
-  (let* ((agent-topology-summary
+  (let* ((metadata (if (null? maybe-metadata)
+                     '()
+                     (car maybe-metadata)))
+         (communication-channel-receipts
+          (poo-flow-session-agent-graph-metadata-channel-receipts metadata))
+         (agent-topology-summary
           (poo-flow-session-agent-node-topology-summary agent-nodes))
          (agent-ids (car agent-topology-summary))
          (lineage-edge-pairs (cadr agent-topology-summary))
@@ -313,6 +337,13 @@
           (poo-flow-session-agent-graph-session-summary sessions))
          (session-ids (car session-summary))
          (session-count (cdr session-summary)))
+    (poo-flow-session-require
+     "session agent graph communication channel receipts must be receipts"
+     (and (list? communication-channel-receipts)
+          (poo-flow-session-every?
+           poo-flow-session-communication-channel-receipt?
+           communication-channel-receipts))
+     communication-channel-receipts)
     (object<-alist
      (list
       (cons 'kind 'poo-flow.session.agent-graph)
@@ -330,11 +361,12 @@
       (cons 'communication-receipt-count
             (length communication-receipts))
       (cons 'communication-receipts communication-receipts)
+      (cons 'communication-channel-receipt-count
+            (length communication-channel-receipts))
+      (cons 'communication-channel-receipts communication-channel-receipts)
       (cons 'runtime-owner "marlin-agent-core")
       (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata)
-                        '()
-                        (car maybe-metadata)))))))
+      (cons 'metadata metadata)))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-agent-graph? value)
@@ -349,6 +381,10 @@
 ;; : (-> PooSessionAgentGraph [Symbol])
 (def (poo-flow-session-agent-graph-session-ids graph)
   (.ref graph 'session-ids))
+
+;; : (-> PooSessionAgentGraph [PooSessionCommunicationChannelReceipt])
+(def (poo-flow-session-agent-graph-communication-channel-receipts graph)
+  (.ref graph 'communication-channel-receipts))
 
 ;; : (-> PooSessionAgentGraph [PooSessionCommunicationReceipt])
 (def (poo-flow-session-agent-graph-communication-receipts graph)
@@ -369,6 +405,8 @@
   (bindings
    ((agent-nodes (.ref graph 'agent-nodes))
     (registry-receipt (.ref graph 'registry-receipt))
+    (communication-channel-receipts
+     (.ref graph 'communication-channel-receipts))
     (communication-receipts (.ref graph 'communication-receipts))))
   (fields
    (('kind (.ref graph 'kind))
@@ -390,6 +428,11 @@
     ('communication-receipts
      (poo-flow-session-communication-receipts->alists
       communication-receipts))
+    ('communication-channel-receipt-count
+     (.ref graph 'communication-channel-receipt-count))
+    ('communication-channel-receipts
+     (poo-flow-session-communication-channel-receipts->alists
+      communication-channel-receipts))
     ('runtime-owner (.ref graph 'runtime-owner))
     ('runtime-executed (.ref graph 'runtime-executed))
     ('metadata (.ref graph 'metadata)))))

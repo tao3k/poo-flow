@@ -134,8 +134,9 @@
        'module-system
        'missing-module-source
        "poo-flow module source was not found in catalog"
-       (list (cons 'catalog (poo-flow-module-catalog-name catalog))
-             (cons 'source (poo-flow-module-source-ref->alist source-ref)))))))
+       (poo-flow-module-field-rows
+        (catalog (poo-flow-module-catalog-name catalog))
+        (source (poo-flow-module-source-ref->alist source-ref)))))))
 
 ;;; Boundary: multi-source resolution preserves requested source order.
 ;; : (-> PooModuleCatalog [PooModuleSourceRef] [PooModuleDescriptor])

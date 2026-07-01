@@ -2,8 +2,7 @@
 ;;; Boundary: loop-engine runtime handoff projection for module-system config.
 ;;; Invariant: this owner emits Marlin handoff data and never executes runtime work.
 
-(import (only-in :std/sugar filter-map)
-        (only-in :poo-flow/src/core/agent-harness
+(import (only-in :poo-flow/src/core/agent-harness
                  make-poo-flow-runtime-snapshot
                  poo-flow-runtime-snapshot->alist
                  )
@@ -691,6 +690,27 @@
      use-case-name))
    (else '())))
 
+;; : (-> [Alist] [Symbol] [Symbol])
+(def (poo-flow-user-loop-engine-memory-policy-use-cases/rev
+      memory-policies
+      use-cases-rev)
+  (if (null? memory-policies)
+    use-cases-rev
+    (poo-flow-user-loop-engine-memory-policy-use-cases/rev
+     (cdr memory-policies)
+     (cons (poo-flow-user-loop-engine-intent-ref
+            (car memory-policies)
+            'use-case
+            #f)
+           use-cases-rev))))
+
+;; : (-> [Alist] [Symbol])
+(def (poo-flow-user-loop-engine-memory-policy-use-cases memory-policies)
+  (reverse
+   (poo-flow-user-loop-engine-memory-policy-use-cases/rev
+    memory-policies
+    '())))
+
 ;;; Memory receipt binds the selected use-case to one declared policy and leaves
 ;;; recall, commit, retention, and store mutation to the Marlin execution layer.
 ;; : (-> Alist Alist)
@@ -712,9 +732,7 @@
     ('selected-use-case use-case-name)
     ('policy-count (length memory-policies))
     ('available-use-cases
-     (map (lambda (policy)
-            (poo-flow-user-loop-engine-intent-ref policy 'use-case #f))
-          memory-policies))
+     (poo-flow-user-loop-engine-memory-policy-use-cases memory-policies))
     ('selected-policy-found? (not (null? memory-policy)))
     ('use-case
      (poo-flow-user-loop-engine-intent-ref memory-policy 'use-case #f))
@@ -1172,7 +1190,32 @@
                            (cons (cons selection intent)
                                  (vector-ref cache 0)))
               intent))))
-      (filter-map project-selection selected-modules))))
+      (poo-flow-user-config-loop-engine-intents/project
+       project-selection
+       selected-modules))))
+
+;; : (-> (-> PooUserModuleSelection MaybeAlist) [PooUserModuleSelection] [Alist] [Alist])
+(def (poo-flow-user-config-loop-engine-intents/project-rev project-selection
+                                                           selected-modules
+                                                           intents-rev)
+  (if (null? selected-modules)
+    intents-rev
+    (let (intent (project-selection (car selected-modules)))
+      (poo-flow-user-config-loop-engine-intents/project-rev
+       project-selection
+       (cdr selected-modules)
+       (if intent
+         (cons intent intents-rev)
+         intents-rev)))))
+
+;; : (-> (-> PooUserModuleSelection MaybeAlist) [PooUserModuleSelection] [Alist])
+(def (poo-flow-user-config-loop-engine-intents/project project-selection
+                                                       selected-modules)
+  (reverse
+   (poo-flow-user-config-loop-engine-intents/project-rev
+    project-selection
+    selected-modules
+    '())))
 
 ;; : (-> PooUserModuleSelection [PooSandboxProfile] [PooFlowCicdCheckMap] MaybeAlist)
 (def (poo-flow-user-config-loop-engine-intent selection

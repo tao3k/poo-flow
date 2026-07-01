@@ -8,8 +8,7 @@
 ;;; Dependency: generic sandbox resources live in =:poo-flow/src/modules/agent-sandbox/resource=.
 ;;; Policy evidence: tests should trust the installed module registry.
 
-(import (only-in :std/sugar foldl)
-        :poo-flow/src/core/api
+(import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/resource)
 
 (export docker-task-family-descriptor
@@ -47,6 +46,24 @@
         docker-task-input-receipt-output-policy
         docker-task-input-receipt-runtime-executed
         docker-flow->task-input-receipt)
+
+(defrules docker-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (forall (a) (-> [a] [a] [a]))
+(def (docker-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
 
 ;;; Boundary: DockerTaskInput receipts use an explicit schema symbol so Marlin
 ;;; can discover report-only handoff data without guessing task entrypoints.
@@ -96,7 +113,9 @@
 ;; : (-> Strategy Strategy)
 (def (docker-enable-strategy strategy)
   (make-strategy (strategy-name strategy)
-                 (append (strategy-capabilities strategy) '(docker))
+                 (docker-values/tail
+                  (strategy-capabilities strategy)
+                  '(docker))
                  (strategy-cache-policy strategy)
                  (strategy-failure-policy strategy)
                  (strategy-planner strategy)))
@@ -112,7 +131,9 @@
 ;; : (-> RuntimeAdapter RuntimeAdapter)
 (def (make-docker-enabled-adapter adapter)
   (make-runtime-adapter (runtime-adapter-name adapter)
-                        (append (runtime-adapter-capabilities adapter) '(docker))
+                        (docker-values/tail
+                         (runtime-adapter-capabilities adapter)
+                         '(docker))
                         (runtime-adapter-submitter adapter)
                         (runtime-adapter-fetcher adapter)
                         (runtime-adapter-store-putter adapter)
@@ -149,28 +170,40 @@
 (def (docker-arg-key-seen? key args)
   (if (assoc key args) #t #f))
 
-;;; Boundary: docker args vals append one is the policy-visible edge for policy
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
+;; : (-> Pair Symbol)
+(def (docker-arg-key entry)
+  (car entry))
+
 ;;; Boundary: docker args vals append left biased is the policy-visible edge
 ;;; for policy behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> Alist Alist Alist)
+(def (docker-args-vals-copy-left/rev remaining result-rev)
+  (if (null? remaining)
+    result-rev
+    (docker-args-vals-copy-left/rev
+     (cdr remaining)
+     (cons (car remaining) result-rev))))
+
+;; : (-> Alist Alist Alist)
+(def (docker-args-vals-append-left-biased/rev remaining result-rev)
+  (cond
+   ((null? remaining)
+    (reverse result-rev))
+   ((docker-arg-key-seen? (docker-arg-key (car remaining)) result-rev)
+    (docker-args-vals-append-left-biased/rev
+     (cdr remaining)
+     result-rev))
+   (else
+    (docker-args-vals-append-left-biased/rev
+     (cdr remaining)
+     (cons (car remaining) result-rev)))))
+
+;; : (-> Alist Alist Alist)
 (def (docker-args-vals-append-left-biased left right)
-  (foldl docker-args-vals-append-one left right))
-
-;;; Boundary: docker args vals append one is the policy-visible edge for policy
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
-;; : (-> Pair Alist Alist)
-(def (docker-args-vals-append-one entry args)
-  (if (docker-arg-key-seen? (docker-arg-key entry) args)
-    args
-    (append args (list entry))))
-
-;; : (-> Pair Symbol)
-(def (docker-arg-key entry)
-  (car entry))
+  (docker-args-vals-append-left-biased/rev
+   right
+   (docker-args-vals-copy-left/rev left '())))
 
 ;;; Boundary: Funflow's DockerTaskInput semigroup is left-biased for duplicate
 ;;; mounts and placeholder values, so earlier composition layers keep priority.
@@ -188,10 +221,11 @@
 ;;; flags, resolves store items, and writes CAS outputs.
 ;; : (-> DockerTaskInput Alist)
 (def (docker-task-input->request input)
-  (list (cons 'input-bindings
-              (sandbox-volume-bindings->request
-               (docker-task-input-input-bindings input)))
-        (cons 'args-vals (docker-task-input-args-vals input))))
+  (docker-field-rows
+   (input-bindings
+    (sandbox-volume-bindings->request
+     (docker-task-input-input-bindings input)))
+   (args-vals (docker-task-input-args-vals input))))
 
 ;;; The configured Docker run entrypoint installs the extension task registry
 ;;; and adapter capability while preserving core run-config behavior.

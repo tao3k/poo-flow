@@ -3,7 +3,8 @@
 ;;; Invariant: this owner validates declaration shape only; it never validates
 ;;; runtime model output or executes reviewer operations.
 
-(import :poo-flow/src/module-system/loop-engine-core)
+(import :poo-flow/src/module-system/loop-engine-core
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-user-loop-engine-intent-result-contract
         poo-flow-user-loop-engine-result-contract-valid?
@@ -16,10 +17,11 @@
 (def (poo-flow-user-loop-engine-result-contract-diagnostic code
                                                            target
                                                            detail)
-  (list (cons 'severity 'error)
-        (cons 'code code)
-        (cons 'target target)
-        (cons 'detail detail)))
+  (poo-flow-module-field-rows
+   (severity 'error)
+   (code code)
+   (target target)
+   (detail detail)))
 
 ;;; Role contracts must be symbols because they are schema ids, not inline
 ;;; schemas. Inline schema payloads belong in a later schema registry layer.
@@ -29,11 +31,12 @@
     (if (symbol? value)
       '()
       (list
-       (poo-flow-user-loop-engine-result-contract-diagnostic
+        (poo-flow-user-loop-engine-result-contract-diagnostic
         'invalid-result-contract-role
         role
-        (list (cons 'expected 'symbol)
-              (cons 'value value)))))))
+        (poo-flow-module-field-rows
+         (expected 'symbol)
+         (value value)))))))
 
 ;;; Role scanning preserves the canonical role order so diagnostics remain
 ;;; deterministic for agents comparing receipts.
@@ -43,7 +46,7 @@
   (cond
    ((null? roles) '())
    (else
-    (append
+    (poo-flow-module-rows/tail
      (poo-flow-user-loop-engine-result-contract-role-diagnostics
       (car roles)
       contract)
@@ -70,11 +73,12 @@
     (if (poo-flow-user-loop-engine-result-required-fields? fields)
       '()
       (list
-       (poo-flow-user-loop-engine-result-contract-diagnostic
+        (poo-flow-user-loop-engine-result-contract-diagnostic
         'invalid-result-required-fields
         'required-fields
-        (list (cons 'expected '(non-empty-list-of-symbols))
-              (cons 'value fields)))))))
+        (poo-flow-module-field-rows
+         (expected '(non-empty-list-of-symbols))
+         (value fields)))))))
 
 ;;; Format is a symbolic protocol selector. The runtime may interpret it later,
 ;;; but Scheme only validates that agents cannot replace it with nested data.
@@ -87,22 +91,24 @@
     (if (symbol? format)
       '()
       (list
-       (poo-flow-user-loop-engine-result-contract-diagnostic
+        (poo-flow-user-loop-engine-result-contract-diagnostic
         'invalid-result-format
         'format
-        (list (cons 'expected 'symbol)
-              (cons 'value format)))))))
+        (poo-flow-module-field-rows
+         (expected 'symbol)
+         (value format)))))))
 
 ;;; Validation is intentionally structural. It validates the control-plane
 ;;; receipt shape that agents edit, not the future backend result payload.
 ;; : (-> LoopEngineResultContract [ResultContractDiagnostic])
 (def (poo-flow-user-loop-engine-result-contract-diagnostics contract)
-  (append
+  (poo-flow-module-rows/tail
    (poo-flow-user-loop-engine-result-contract-roles-diagnostics
     +poo-flow-user-loop-engine-result-contract-roles+
     contract)
-   (poo-flow-user-loop-engine-result-required-fields-diagnostics contract)
-   (poo-flow-user-loop-engine-result-format-diagnostics contract)))
+   (poo-flow-module-rows/tail
+    (poo-flow-user-loop-engine-result-required-fields-diagnostics contract)
+    (poo-flow-user-loop-engine-result-format-diagnostics contract))))
 
 ;;; `valid?` is a receipt summary for presentation and manifest consumers; it
 ;;; never suppresses the diagnostics payload that explains the invalid shape.
@@ -118,62 +124,62 @@
   (let ((result-rows
          (poo-flow-user-loop-engine-intent-ref intent 'result '())))
     (let* ((contract
-            (list
-             (cons 'kind 'loop-engine-result-contract)
-             (cons 'contract +poo-flow-user-loop-engine-result-contract+)
-             (cons 'default
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'default
-                    +poo-flow-user-loop-engine-default-result-contract+))
-             (cons 'auditor
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'auditor
-                    +poo-flow-user-loop-engine-default-result-contract+))
-             (cons 'verifier
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'verifier
-                    +poo-flow-user-loop-engine-default-result-contract+))
-             (cons 'reviewer
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'reviewer
-                    (poo-flow-user-loop-engine-section-ref
-                     result-rows
-                     'verifier
-                     +poo-flow-user-loop-engine-default-result-contract+)))
-             (cons 'governor
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'governor
-                    +poo-flow-user-loop-engine-default-result-contract+))
-             (cons 'human-audit
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'human-audit
-                    +poo-flow-user-loop-engine-default-result-contract+))
-             (cons 'format
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'format
-                    'structured-alist))
-             (cons 'required-fields
-                   (poo-flow-user-loop-engine-section-ref
-                    result-rows
-                    'required-fields
-                    '(decision summary evidence)))
-             (cons 'source 'user-config-loop-engine)
-             (cons 'runtime-executed #f)))
+            (poo-flow-module-field-rows
+             (kind 'loop-engine-result-contract)
+             (contract +poo-flow-user-loop-engine-result-contract+)
+             (default
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'default
+               +poo-flow-user-loop-engine-default-result-contract+))
+             (auditor
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'auditor
+               +poo-flow-user-loop-engine-default-result-contract+))
+             (verifier
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'verifier
+               +poo-flow-user-loop-engine-default-result-contract+))
+             (reviewer
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'reviewer
+               (poo-flow-user-loop-engine-section-ref
+                result-rows
+                'verifier
+                +poo-flow-user-loop-engine-default-result-contract+)))
+             (governor
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'governor
+               +poo-flow-user-loop-engine-default-result-contract+))
+             (human-audit
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'human-audit
+               +poo-flow-user-loop-engine-default-result-contract+))
+             (format
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'format
+               'structured-alist))
+             (required-fields
+              (poo-flow-user-loop-engine-section-ref
+               result-rows
+               'required-fields
+               '(decision summary evidence)))
+             (source 'user-config-loop-engine)
+             (runtime-executed #f)))
            (diagnostics
             (poo-flow-user-loop-engine-result-contract-diagnostics contract)))
-      (append
+      (poo-flow-module-rows/tail
        contract
-       (list
-        (cons 'valid? (null? diagnostics))
-        (cons 'diagnostic-count (length diagnostics))
-        (cons 'diagnostics diagnostics))))))
+       (poo-flow-module-field-rows
+        (valid? (null? diagnostics))
+        (diagnostic-count (length diagnostics))
+        (diagnostics diagnostics))))))
 
 ;;; Role-specific lookup lets machine reviewers and human audit inherit the
 ;;; same result contract packet while keeping their schema ids explicit.

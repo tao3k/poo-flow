@@ -14,6 +14,34 @@
         poo-flow-module-when
         defpoo-flow-module-set)
 
+;; : (forall (a) (-> [a] [a] [a]))
+(def (poo-flow-module-set-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
+;; : (forall (a) (-> [[a]] [a] [a]))
+(def (poo-flow-module-set-groups/tail groups tail)
+  (if (null? groups)
+    tail
+    (poo-flow-module-set-values/tail
+     (car groups)
+     (poo-flow-module-set-groups/tail (cdr groups) tail))))
+
+;; : (forall (a) (-> [a] [[a]] [a]))
+(def (poo-flow-module-set-groups->values values groups)
+  (poo-flow-module-set-values/tail
+   values
+   (poo-flow-module-set-groups/tail groups '())))
+
 ;;; Boundary: higher-order macro factory for hygienic POO slot blocks.
 ;;; The generated macro preserves caller bindings and only constructs POO values.
 ;;; It is not a DSL parser: keyword slots are Gerbil syntax accepted by .o.
@@ -112,5 +140,6 @@
       module-clause ...)
    (def binding
      (apply pooFlowModuleCatalog
-            (append (list module ...)
-                    module-clause ...)))))
+            (poo-flow-module-set-groups->values
+             (list module ...)
+             (list module-clause ...))))))

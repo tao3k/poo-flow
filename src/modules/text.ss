@@ -7,7 +7,8 @@
 ;;; Runtime contract: file IO remains caller/runtime-owned.
 ;;; Policy evidence: tests should assert parsing, formatting, and task flow result.
 
-(import :poo-flow/src/core/api)
+(import :poo-flow/src/core/api
+        :poo-flow/src/core/projection-syntax)
 
 (export text-task-family-descriptor
         make-text-task-family-registry
@@ -42,11 +43,25 @@
 ;;; Invariant:
 ;;; - Capability lists stay set-like.
 ;;; - Existing capabilities keep their original order.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (text-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
-    (append capability-set (list capability))))
+    (text-values/tail capability-set (list capability))))
 
 ;;; Boundary:
 ;;; - Text capability is opt-in at the extension edge.
@@ -75,9 +90,10 @@
     (make-run-config 'text-local
                      (make-text-enabled-strategy)
                      (make-request-only-adapter)
-                     (append '((runtime . gerbil)
-                               (extension . text))
-                             options)
+                     (poo-flow-core-field-rows/tail
+                      options
+                      (runtime 'gerbil)
+                      (extension 'text))
                      (make-text-task-family-registry)
                      default-flow-declaration-registry)))
 
@@ -191,15 +207,19 @@
     (count-words (cdr words)
                  (increment-word-count (car words) counts))))
 
+;; : (-> String Nat TextCount)
+(def (text-count-entry word count)
+  (cons word count))
+
 ;;; Invariant:
 ;;; - Existing word entries are updated in place in the logical alist.
 ;;; - New words are appended at the current traversal point.
 ;; : (-> String [TextCount] [TextCount])
 (def (increment-word-count word counts)
   (cond
-   ((null? counts) (list (cons word 1)))
+   ((null? counts) (list (text-count-entry word 1)))
    ((equal? word (caar counts))
-    (cons (cons word (+ 1 (cdar counts)))
+    (cons (text-count-entry word (+ 1 (cdar counts)))
           (cdr counts)))
    (else
     (cons (car counts)
@@ -241,11 +261,20 @@
 ;;; Boundary:
 ;;; - Formatting is presentation logic for the notebook surface.
 ;;; - Counting and sorting stay separately testable.
+;; : (-> [TextCount] [String] [String])
+(def (format-word-counts/rev counts lines-rev)
+  (if (null? counts)
+    lines-rev
+    (format-word-counts/rev
+     (cdr counts)
+     (cons (string-append (caar counts)
+                          ": "
+                          (number->string (cdar counts)))
+           lines-rev))))
+
 ;; : (-> [TextCount] [String])
 (def (format-word-counts counts)
-  (map (lambda (entry)
-         (string-append (car entry) ": " (number->string (cdr entry))))
-       (sort-word-counts-desc counts)))
+  (reverse (format-word-counts/rev (sort-word-counts-desc counts) '())))
 
 ;;; Boundary:
 ;;; - This is the notebook-visible print surface.

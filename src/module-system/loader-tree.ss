@@ -22,24 +22,52 @@
         poo-flow-module-load-sources
         poo-flow-module-load-catalog)
 
+;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] Alist [PooFlowLazyLoadPlan] [PooFlowLazyLoadPlan])
+(def (poo-flow-module-source-refs->lazy-load-plans/rev
+      backends
+      source-refs
+      metadata
+      plans-rev)
+  (if (null? source-refs)
+    plans-rev
+    (poo-flow-module-source-refs->lazy-load-plans/rev
+     backends
+     (cdr source-refs)
+     metadata
+     (cons (poo-flow-make-lazy-load-plan backends
+                                          (car source-refs)
+                                          metadata)
+           plans-rev))))
+
+;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] Alist [PooFlowLazyLoadPlan])
+(def (poo-flow-module-source-refs->lazy-load-plans backends source-refs metadata)
+  (reverse
+   (poo-flow-module-source-refs->lazy-load-plans/rev
+    backends
+    source-refs
+    metadata
+    '())))
+
 ;;; Boundary: tree loading remains lazy data until callers force a plan.
 ;; : (-> [PooModuleLoaderBackend] Path [PooFlowLazyLoadPlan])
 (def (poo-flow-module-tree-lazy-load-plans backends module-root-path
                                            . maybe-metadata)
   (let (metadata
         (if (null? maybe-metadata) '() (car maybe-metadata)))
-    (map (lambda (source-ref)
-           (poo-flow-make-lazy-load-plan backends source-ref metadata))
-         (poo-flow-module-tree-source-refs module-root-path))))
+    (poo-flow-module-source-refs->lazy-load-plans
+     backends
+     (poo-flow-module-tree-source-refs module-root-path)
+     metadata)))
 
 ;;; Boundary: src/modules lazy plans never call loader handlers.
 ;; : (-> [PooModuleLoaderBackend] [PooFlowLazyLoadPlan])
 (def (poo-flow-src-modules-lazy-load-plans backends . maybe-metadata)
   (let (metadata
         (if (null? maybe-metadata) '() (car maybe-metadata)))
-    (map (lambda (source-ref)
-           (poo-flow-make-lazy-load-plan backends source-ref metadata))
-         (poo-flow-src-modules-source-refs))))
+    (poo-flow-module-source-refs->lazy-load-plans
+     backends
+     (poo-flow-src-modules-source-refs)
+     metadata)))
 
 ;;; Boundary: user-root tree loading is lazy and never evaluates init.ss.
 ;; : (-> [PooModuleLoaderBackend] Path [PooFlowLazyLoadPlan])
@@ -47,9 +75,10 @@
                                          . maybe-metadata)
   (let (metadata
         (if (null? maybe-metadata) '() (car maybe-metadata)))
-    (map (lambda (source-ref)
-           (poo-flow-make-lazy-load-plan backends source-ref metadata))
-         (poo-flow-user-tree-source-refs user-root-path))))
+    (poo-flow-module-source-refs->lazy-load-plans
+     backends
+     (poo-flow-user-tree-source-refs user-root-path)
+     metadata)))
 
 ;;; Boundary: auto-import plans are POO nodes over source refs, not evaluator IO.
 ;; : PooFlowModuleAutoImportRootIdentity

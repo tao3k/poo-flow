@@ -4,8 +4,7 @@
 ;;; Runtime contract: accepted field names are inert data until request assembly.
 ;;; Policy evidence: request facade re-exports these constants for stable callers.
 
-(import (only-in :std/sugar filter-map)
-        :poo-flow/src/core/api
+(import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist)
 
 (export +agent-sandbox-request-schema+
@@ -38,9 +37,22 @@
 
 ;;; Field contract errors catch typo-level interface mistakes before request
 ;;; normalization merges profile defaults into the runtime-facing shape.
+;; : (-> FieldAlist [ValidationError] [ValidationError])
+(def (agent-sandbox-request-field-contract-errors/rev fields errors-rev)
+  (if (null? fields)
+    errors-rev
+    (let (error-row
+          (agent-sandbox-request-field-contract-error (car fields)))
+      (agent-sandbox-request-field-contract-errors/rev
+       (cdr fields)
+       (if error-row
+         (cons error-row errors-rev)
+         errors-rev)))))
+
 ;; : (-> FieldAlist [ValidationError])
 (def (agent-sandbox-request-field-contract-errors fields)
-  (filter-map agent-sandbox-request-field-contract-error fields))
+  (reverse
+   (agent-sandbox-request-field-contract-errors/rev fields '())))
 
 ;;; Boundary: agent sandbox request field contract error is the policy-visible
 ;;; edge for sandbox behavior, keeping validation, lookup, or projection

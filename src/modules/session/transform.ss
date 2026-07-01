@@ -5,7 +5,6 @@
 
 (import (only-in :gerbil/gambit fx+)
         (only-in :clan/poo/object .o .ref object? object<-alist)
-        (only-in :std/sugar foldl)
         :poo-flow/src/modules/session/objects)
 
 (export poo-flow-session-transform
@@ -39,26 +38,50 @@
 (def (poo-flow-session-memory-key? value)
   (or (symbol? value) (string? value)))
 
+;; : (-> Alist Alist Alist)
+(def (poo-flow-session-transform-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+(defrules poo-flow-session-transform-field-rows/tail ()
+  ((_ tail (field value) ...)
+   (poo-flow-session-transform-rows/tail
+    (list (cons 'field value) ...)
+    tail)))
+
 ;; : (-> Symbol Alist Alist)
 (def (poo-flow-session-transform-declaration-metadata/tail declared-by tail)
-  (cons (cons 'declared-by declared-by)
-        (cons (cons 'runtime-executed #f) tail)))
+  (poo-flow-session-transform-field-rows/tail
+   tail
+   (declared-by declared-by)
+   (runtime-executed #f)))
 
 ;; : (-> Symbol Alist Alist)
 (def (poo-flow-session-transform-lineage-metadata/tail transform-name tail)
-  (cons (cons 'transform-name transform-name)
-        tail))
+  (poo-flow-session-transform-field-rows/tail
+   tail
+   (transform-name transform-name)))
 
 ;; : (-> Symbol Symbol Fixnum Alist Alist)
 (def (poo-flow-session-transform-derived-metadata/tail transform-name
                                                         source-session-id
                                                         memory-intent-count
                                                         tail)
-  (cons (cons 'derived-by 'poo-flow-session-transform)
-        (cons (cons 'transform-name transform-name)
-              (cons (cons 'source-session-id source-session-id)
-                    (cons (cons 'memory-intent-count memory-intent-count)
-                          tail)))))
+  (poo-flow-session-transform-field-rows/tail
+   tail
+   (derived-by 'poo-flow-session-transform)
+   (transform-name transform-name)
+   (source-session-id source-session-id)
+   (memory-intent-count memory-intent-count)))
 
 ;;; A memory intent is a report-only request for a runtime memory backend. It is
 ;;; attached to session transforms but never recalls or commits data in Scheme.
@@ -183,15 +206,25 @@
 ;;       ;; => (handoff-rows . count)
 ;;       ```
 ;;     %
+;; : (-> [PooSessionMemoryIntent] [Alist] Fixnum (Cons [Alist] Fixnum))
+(def (poo-flow-session-memory-intent-handoff-bundle/rev memory-intents
+                                                        rows-rev
+                                                        count)
+  (if (null? memory-intents)
+    (cons rows-rev count)
+    (poo-flow-session-memory-intent-handoff-bundle/rev
+     (cdr memory-intents)
+     (cons (poo-flow-session-memory-intent-handoff (car memory-intents))
+           rows-rev)
+     (fx+ count 1))))
+
 ;; : (-> [PooSessionMemoryIntent] (Cons [Alist] Fixnum))
 (def (poo-flow-session-memory-intent-handoff-bundle memory-intents)
   (let (bundle
-        (foldl (lambda (intent result)
-                 (cons (cons (poo-flow-session-memory-intent-handoff intent)
-                             (car result))
-                       (fx+ (cdr result) 1)))
-               (cons '() 0)
-               memory-intents))
+        (poo-flow-session-memory-intent-handoff-bundle/rev
+         memory-intents
+         '()
+         0))
     (cons (reverse (car bundle)) (cdr bundle))))
 
 ;; poo-flow-session-memory-intent-count
@@ -396,23 +429,41 @@
 ;;       ;; => (receipt-rows . count)
 ;;       ```
 ;;     %
+;; : (-> [PooSessionMemoryIntent] PooSessionTransform PooSession PooSession [Alist] Fixnum (Cons [Alist] Fixnum))
+(def (poo-flow-session-memory-receipt-row-bundle/rev memory-intents
+                                                        transform
+                                                        source-session
+                                                        derived-session
+                                                        rows-rev
+                                                        count)
+  (if (null? memory-intents)
+    (cons rows-rev count)
+    (poo-flow-session-memory-receipt-row-bundle/rev
+     (cdr memory-intents)
+     transform
+     source-session
+     derived-session
+     (cons (poo-flow-session-memory-receipt-row
+            (car memory-intents)
+            transform
+            source-session
+            derived-session)
+           rows-rev)
+     (fx+ count 1))))
+
 ;; : (-> [PooSessionMemoryIntent] PooSessionTransform PooSession PooSession (Cons [Alist] Fixnum))
 (def (poo-flow-session-memory-receipt-row-bundle memory-intents
                                                  transform
                                                  source-session
                                                  derived-session)
   (let (bundle
-        (foldl (lambda (memory-intent result)
-                 (cons
-                  (cons (poo-flow-session-memory-receipt-row
-                         memory-intent
-                         transform
-                         source-session
-                         derived-session)
-                        (car result))
-                  (fx+ (cdr result) 1)))
-               (cons '() 0)
-               memory-intents))
+        (poo-flow-session-memory-receipt-row-bundle/rev
+         memory-intents
+         transform
+         source-session
+         derived-session
+         '()
+         0))
     (cons (reverse (car bundle)) (cdr bundle))))
 
 ;; : (-> Alist PooSessionMemoryReceipt)

@@ -6,6 +6,7 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/bridge
         :poo-flow/src/modules/nono-sandbox/c-binding
@@ -23,6 +24,19 @@
         agent-sandbox-request->marlin-interface-manifest
         agent-sandbox-execution-request->marlin-interface-manifest
         agent-sandbox-execution-request->marlin-admission-envelope)
+
+;; : (-> Symbol Symbol ValidationError)
+(def (agent-sandbox-marlin-validation-error field code)
+  (agent-sandbox-field-rows
+   (field field)
+   (code code)))
+
+;; : (-> Symbol ValidationError)
+(def (agent-sandbox-marlin-unsupported-backend-error backend-kind)
+  (agent-sandbox-field-rows
+   (field 'backend-kind)
+   (value backend-kind)
+   (code 'unsupported-marlin-backend)))
 
 ;;; Marlin interface schema is the stable envelope Marlin consumes before it
 ;;; delegates to backend-specific nono or Cube runners.
@@ -77,19 +91,24 @@
   (if (list? runtime-manifest)
     (let (backend-kind
           (agent-sandbox-marlin-runtime-backend-kind runtime-manifest))
-      (append
-       (agent-sandbox-required-field-errors
-        runtime-manifest
-        (list (agent-sandbox-marlin-field-spec
-               'schema
-               (agent-sandbox-marlin-schema?
-                +agent-sandbox-runtime-manifest-schema+))))
-       (if (agent-sandbox-marlin-supported-backend? backend-kind)
-         '()
-         (list (list (cons 'field 'backend-kind)
-                     (cons 'value backend-kind)
-                     (cons 'code 'unsupported-marlin-backend))))))
-    (list '((field . runtime-manifest) (code . not-alist)))))
+      (let* ((errors-rev
+              (agent-sandbox-rows-into/rev
+               (agent-sandbox-required-field-errors
+                runtime-manifest
+                (list (agent-sandbox-marlin-field-spec
+                       'schema
+                       (agent-sandbox-marlin-schema?
+                        +agent-sandbox-runtime-manifest-schema+))))
+               '()))
+             (errors-rev
+              (if (agent-sandbox-marlin-supported-backend? backend-kind)
+                errors-rev
+                (cons (agent-sandbox-marlin-unsupported-backend-error
+                       backend-kind)
+                      errors-rev))))
+        (reverse errors-rev)))
+    (list (agent-sandbox-marlin-validation-error 'runtime-manifest
+                                                 'not-alist))))
 
 ;;; Validation preserves the manifest in typed failures so callers can decide
 ;;; whether to repair backend selection or task policy before invoking Marlin.
@@ -104,8 +123,9 @@
        'agent-sandbox-marlin
        'invalid-agent-sandbox-marlin-interface-manifest
        "invalid agent sandbox Marlin interface manifest"
-       (list (cons 'errors errors)
-             (cons 'runtime-manifest runtime-manifest))))))
+       (agent-sandbox-field-rows
+        (errors errors)
+        (runtime-manifest runtime-manifest))))))
 
 ;;; Backend projection is the only dispatch branch in Scheme. It routes to the
 ;;; leaf contract owners while keeping runtime execution out of this module.
@@ -123,8 +143,9 @@
        'agent-sandbox-marlin
        'unsupported-agent-sandbox-marlin-backend
        "unsupported agent sandbox backend for Marlin"
-       (list (cons 'backend-kind backend-kind)
-             (cons 'runtime-manifest runtime-manifest)))))))
+       (agent-sandbox-field-rows
+        (backend-kind backend-kind)
+        (runtime-manifest runtime-manifest)))))))
 
 ;;; Boundary: agent sandbox marlin handoff kind is the policy-visible edge for
 ;;; sandbox behavior, keeping validation, lookup, or projection
@@ -158,19 +179,20 @@
           (agent-sandbox-marlin-runtime-backend-kind valid-manifest))
          (backend-manifest
           (agent-sandbox-marlin-backend-manifest valid-manifest)))
-    (list (cons 'schema +agent-sandbox-marlin-interface-schema+)
-          (cons 'runtime-schema
-                (agent-sandbox-alist-ref valid-manifest 'schema #f))
-          (cons 'backend-kind backend-kind)
-          (cons 'backend
-                (agent-sandbox-alist-ref valid-manifest 'backend '()))
-          (cons 'handoff-kind
-                (agent-sandbox-marlin-handoff-kind backend-kind))
-          (cons 'handoff-schema
-                (agent-sandbox-alist-ref backend-manifest 'schema #f))
-          (cons 'handoff backend-manifest)
-          (cons 'metadata
-                (agent-sandbox-alist-ref valid-manifest 'metadata '())))))
+    (agent-sandbox-field-rows
+     (schema +agent-sandbox-marlin-interface-schema+)
+     (runtime-schema
+      (agent-sandbox-alist-ref valid-manifest 'schema #f))
+     (backend-kind backend-kind)
+     (backend
+      (agent-sandbox-alist-ref valid-manifest 'backend '()))
+     (handoff-kind
+      (agent-sandbox-marlin-handoff-kind backend-kind))
+     (handoff-schema
+      (agent-sandbox-alist-ref backend-manifest 'schema #f))
+     (handoff backend-manifest)
+     (metadata
+      (agent-sandbox-alist-ref valid-manifest 'metadata '())))))
 
 ;;; Request projection gives Scheme callers the same Marlin envelope that
 ;;; execution-request projection will hand to runtime adapters.
@@ -231,7 +253,8 @@
            (agent-sandbox-marlin-field-spec
             'handoff
             agent-sandbox-marlin-handoff-manifest?)))
-    (list '((field . admission-envelope) (code . not-alist)))))
+    (list (agent-sandbox-marlin-validation-error 'admission-envelope
+                                                 'not-alist))))
 
 ;;; Boundary: agent sandbox marlin validate admission envelope is the policy-
 ;;; visible edge for sandbox behavior, keeping validation, lookup, or
@@ -246,8 +269,9 @@
        'agent-sandbox-marlin
        'invalid-agent-sandbox-marlin-admission-envelope
        "invalid agent sandbox Marlin admission envelope"
-       (list (cons 'errors errors)
-             (cons 'admission-envelope envelope))))))
+       (agent-sandbox-field-rows
+        (errors errors)
+        (admission-envelope envelope))))))
 
 ;;; This is the handoff Marlin should consume from runtime commands: it keeps
 ;;; Rust request identity and policy data together with the backend contract.
@@ -264,46 +288,47 @@
           (agent-sandbox-runtime-manifest->marlin-interface-manifest
            runtime-manifest))
          (handoff
-          (agent-sandbox-alist-ref marlin-interface 'handoff '())))
+         (agent-sandbox-alist-ref marlin-interface 'handoff '())))
     (agent-sandbox-marlin-validate-admission-envelope
-     (list (cons 'schema +agent-sandbox-marlin-admission-schema+)
-           (cons 'runtime-request-schema
-                 (agent-sandbox-alist-ref bridge-envelope 'schema #f))
-           (cons 'bridge-schema
-                 (agent-sandbox-alist-ref bridge-envelope 'extension-schema #f))
-           (cons 'marlin-interface-schema
-                 (agent-sandbox-alist-ref marlin-interface 'schema #f))
-           (cons 'operation operation)
-           (cons 'request-id
-                 (agent-sandbox-alist-ref bridge-envelope 'request-id #f))
-           (cons 'artifact-handle
-                 (agent-sandbox-alist-ref bridge-envelope 'artifact-handle #f))
-           (cons 'policy
-                 (agent-sandbox-alist-ref bridge-envelope 'policy '()))
-           (cons 'plan-id
-                 (agent-sandbox-alist-ref bridge-envelope 'plan-id #f))
-           (cons 'node-id
-                 (agent-sandbox-alist-ref bridge-envelope 'node-id #f))
-           (cons 'frontier
-                 (agent-sandbox-alist-ref bridge-envelope 'frontier '()))
-           (cons 'request-schema
-                 (agent-sandbox-alist-ref bridge-envelope 'request-schema #f))
-           (cons 'backend-kind
-                 (agent-sandbox-alist-ref marlin-interface 'backend-kind #f))
-           (cons 'backend-ref
-                 (agent-sandbox-alist-ref bridge-envelope 'backend-ref #f))
-           (cons 'backend
-                 (agent-sandbox-alist-ref marlin-interface 'backend '()))
-           (cons 'command
-                 (agent-sandbox-alist-ref bridge-envelope 'command #f))
-           (cons 'handoff-kind
-                 (agent-sandbox-alist-ref marlin-interface 'handoff-kind #f))
-           (cons 'handoff-schema
-                 (agent-sandbox-alist-ref marlin-interface 'handoff-schema #f))
-           (cons 'handoff handoff)
-           (cons 'runtime-manifest runtime-manifest)
-           (cons 'marlin-interface marlin-interface)
-           (cons 'sandbox
-                 (agent-sandbox-alist-ref bridge-envelope 'sandbox '()))
-           (cons 'metadata
-                 (agent-sandbox-alist-ref marlin-interface 'metadata '()))))))
+     (agent-sandbox-field-rows
+      (schema +agent-sandbox-marlin-admission-schema+)
+      (runtime-request-schema
+       (agent-sandbox-alist-ref bridge-envelope 'schema #f))
+      (bridge-schema
+       (agent-sandbox-alist-ref bridge-envelope 'extension-schema #f))
+      (marlin-interface-schema
+       (agent-sandbox-alist-ref marlin-interface 'schema #f))
+      (operation operation)
+      (request-id
+       (agent-sandbox-alist-ref bridge-envelope 'request-id #f))
+      (artifact-handle
+       (agent-sandbox-alist-ref bridge-envelope 'artifact-handle #f))
+      (policy
+       (agent-sandbox-alist-ref bridge-envelope 'policy '()))
+      (plan-id
+       (agent-sandbox-alist-ref bridge-envelope 'plan-id #f))
+      (node-id
+       (agent-sandbox-alist-ref bridge-envelope 'node-id #f))
+      (frontier
+       (agent-sandbox-alist-ref bridge-envelope 'frontier '()))
+      (request-schema
+       (agent-sandbox-alist-ref bridge-envelope 'request-schema #f))
+      (backend-kind
+       (agent-sandbox-alist-ref marlin-interface 'backend-kind #f))
+      (backend-ref
+       (agent-sandbox-alist-ref bridge-envelope 'backend-ref #f))
+      (backend
+       (agent-sandbox-alist-ref marlin-interface 'backend '()))
+      (command
+       (agent-sandbox-alist-ref bridge-envelope 'command #f))
+      (handoff-kind
+       (agent-sandbox-alist-ref marlin-interface 'handoff-kind #f))
+      (handoff-schema
+       (agent-sandbox-alist-ref marlin-interface 'handoff-schema #f))
+      (handoff handoff)
+      (runtime-manifest runtime-manifest)
+      (marlin-interface marlin-interface)
+      (sandbox
+       (agent-sandbox-alist-ref bridge-envelope 'sandbox '()))
+      (metadata
+       (agent-sandbox-alist-ref marlin-interface 'metadata '()))))))

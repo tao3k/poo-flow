@@ -22,6 +22,46 @@
         pooFlowUserProfileDoctorPresentation
         pooFlowUserProfileSetDoctorPresentation)
 
+;; : (-> [PooUserModuleSelection] [Symbol] [Symbol])
+(def (poo-flow-user-profile-module-keys/rev modules keys-rev)
+  (if (null? modules)
+    keys-rev
+    (poo-flow-user-profile-module-keys/rev
+     (cdr modules)
+     (cons (poo-flow-user-module-selection-key (car modules)) keys-rev))))
+
+;; : (-> [PooUserModuleSelection] [Symbol])
+(def (poo-flow-user-profile-module-keys modules)
+  (reverse (poo-flow-user-profile-module-keys/rev modules '())))
+
+;; : (-> [PooUserProfile] [Alist] [Alist])
+(def (poo-flow-user-profile-summaries/rev profiles summaries-rev)
+  (if (null? profiles)
+    summaries-rev
+    (poo-flow-user-profile-summaries/rev
+     (cdr profiles)
+     (cons (poo-flow-user-profile-summary->alist (car profiles))
+           summaries-rev))))
+
+;; : (-> [PooUserProfile] [Alist])
+(def (poo-flow-user-profile-summaries profiles)
+  (reverse (poo-flow-user-profile-summaries/rev profiles '())))
+
+;; : (-> [PooFlowCicdCheckMap] [Symbol] [Symbol])
+(def (poo-flow-user-profile-workflow-cicd-check-map-names/rev
+      check-maps
+      names-rev)
+  (if (null? check-maps)
+    names-rev
+    (poo-flow-user-profile-workflow-cicd-check-map-names/rev
+     (cdr check-maps)
+     (cons (poo-flow-cicd-check-map-name (car check-maps)) names-rev))))
+
+;; : (-> [PooFlowCicdCheckMap] [Symbol])
+(def (poo-flow-user-profile-workflow-cicd-check-map-names check-maps)
+  (reverse
+   (poo-flow-user-profile-workflow-cicd-check-map-names/rev check-maps '())))
+
 ;;; Profile summaries avoid embedding POO profile objects in presentations.
 ;; : (-> PooUserProfile Alist)
 (defpoo-module-final-projection
@@ -30,7 +70,7 @@
   (fields ((profile-name (poo-flow-user-profile-name profile))
            (module-count (length modules))
            (module-keys
-            (map poo-flow-user-module-selection-key modules))
+            (poo-flow-user-profile-module-keys modules))
            (module-bundle-count
             (length (poo-flow-user-profile-module-bundles profile)))
            (setting-keys (poo-flow-user-profile-setting-keys profile))
@@ -40,9 +80,22 @@
 ;;; Boundary: user profile presentation copy slots is the policy-visible edge
 ;;; for module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> POOObject [Symbol] Alist Alist)
+(def (poo-flow-user-profile-presentation-copy-slots/rev
+      source
+      keys
+      rows-rev)
+  (if (null? keys)
+    rows-rev
+    (poo-flow-user-profile-presentation-copy-slots/rev
+     source
+     (cdr keys)
+     (cons (cons (car keys) (.ref source (car keys))) rows-rev))))
+
 ;; : (-> POOObject [Symbol] Alist)
 (def (poo-flow-user-profile-presentation-copy-slots source keys)
-  (map (lambda (key) (cons key (.ref source key))) keys))
+  (reverse
+   (poo-flow-user-profile-presentation-copy-slots/rev source keys '())))
 
 ;;; Profile doctor needs a subset of loop-engine receipt fields. Gather them in
 ;;; one pass so doctor rows do not repeat the presentation hot-path scan.
@@ -254,8 +307,8 @@
       (cons 'profile-names
             (poo-flow-user-profile-set-profile-names profile-set))
       (cons 'profiles
-            (map poo-flow-user-profile-summary->alist
-                 (poo-flow-user-profile-set-profiles profile-set)))
+            (poo-flow-user-profile-summaries
+             (poo-flow-user-profile-set-profiles profile-set)))
       (cons 'user-entrypoints poo-flow-user-config-public-entrypoints)
       (cons 'api-entrypoints poo-flow-user-config-api-entrypoints)
       (cons 'boundary poo-flow-user-config-boundary)
@@ -401,7 +454,7 @@
             (length (poo-flow-user-profile-module-bundles profile)))
       (cons 'module-count (length profile-modules))
       (cons 'module-keys
-            (map poo-flow-user-module-selection-key profile-modules))
+            (poo-flow-user-profile-module-keys profile-modules))
       (cons 'feature-count (length profile-modules))
       (cons 'feature-facts feature-fact-rows)
       (cons 'sandbox-profile-derivation-count
@@ -414,7 +467,8 @@
       (cons 'workflow-cicd-pipeline-count
             (length workflow-cicd-check-maps))
       (cons 'workflow-cicd-pipelines
-            (map poo-flow-cicd-check-map-name workflow-cicd-check-maps))
+            (poo-flow-user-profile-workflow-cicd-check-map-names
+             workflow-cicd-check-maps))
       (cons 'workflow-cicd-functional-dag-count
             (length workflow-cicd-functional-dag-rows))
       (cons 'workflow-cicd-functional-dags

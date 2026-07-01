@@ -198,13 +198,22 @@
 
 ;;; Intent: project the top-level child receipt stream into the observed plan
 ;;; node sequence.
-;;; The map transform is valid because each child receipt owns exactly one
-;;; node-id slot at this replay boundary.
 ;;; Nested flow evidence stays in audit events so this sequence remains aligned
 ;;; with the parent execution plan.
+;; : (-> [Receipt] [Id] [Id])
+(def (top-level-receipt-node-ids/rev receipts ids-rev)
+  (if (null? receipts)
+    ids-rev
+    (top-level-receipt-node-ids/rev
+     (cdr receipts)
+     (cons (receipt-node-id (car receipts)) ids-rev))))
+
 ;; : (-> Receipt [Id])
 (def (top-level-receipt-node-ids receipt)
-  (map receipt-node-id (receipt-children receipt)))
+  (reverse
+   (top-level-receipt-node-ids/rev
+    (receipt-children receipt)
+    '())))
 
 ;; : (-> Symbol Alist Value)
 (def (alist-ref key alist)

@@ -91,6 +91,21 @@
            (loop-engine-session-agent-graph-performance-ref
             graph
             'communication-receipt-count))
+     (cons 'topology-trace-session-count
+           (length
+            (loop-engine-session-agent-graph-performance-ref
+             topology-trace
+             'graph-session-ids)))
+     (cons 'topology-trace-channel-count
+           (length
+            (loop-engine-session-agent-graph-performance-ref
+             topology-trace
+             'graph-channel-refs)))
+     (cons 'topology-trace-communication-channel-count
+           (length
+            (loop-engine-session-agent-graph-performance-ref
+             topology-trace
+             'communication-channel-refs)))
      (cons 'topology-trace-valid?
            (loop-engine-session-agent-graph-performance-ref topology-trace
                                                             'valid?))
@@ -133,6 +148,21 @@
           summary
           'communication-receipt-count)
          8)
+        (check-equal?
+         (loop-engine-session-agent-graph-performance-ref
+          summary
+          'topology-trace-session-count)
+         6)
+        (check-equal?
+         (loop-engine-session-agent-graph-performance-ref
+          summary
+          'topology-trace-channel-count)
+         4)
+        (check-equal?
+         (loop-engine-session-agent-graph-performance-ref
+          summary
+          'topology-trace-communication-channel-count)
+         4)
         (check-equal?
          (loop-engine-session-agent-graph-performance-ref
           summary

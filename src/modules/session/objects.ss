@@ -91,6 +91,12 @@
       (loop (cdr remaining-rows)
             (cons (car remaining-rows) rows-rev)))))
 
+(defrules poo-flow-session-field-rows/tail ()
+  ((_ tail (field value) ...)
+   (poo-flow-session-rows/tail
+    (list (cons 'field value) ...)
+    tail)))
+
 ;;; Chunks are receipt rows, not extension surfaces. Keeping them as primitive
 ;;; rows prevents presentation code from repeatedly instantiating child POO
 ;;; objects while still preserving typed user-visible data.
@@ -421,11 +427,12 @@
         (lineage-prototype lineage)
         (placement-prototype placement)
         (session-metadata-value
-         (cons (cons 'declared-by 'poo-flow-session-module)
-               (cons (cons 'runtime-executed #f)
-                     (if (null? maybe-metadata)
-                       '()
-                       (car maybe-metadata))))))
+         (poo-flow-session-field-rows/tail
+          (if (null? maybe-metadata)
+            '()
+            (car maybe-metadata))
+          (declared-by 'poo-flow-session-module)
+          (runtime-executed #f))))
     (.o (:: @ [lineage-prototype placement-prototype])
         kind: 'poo-flow.session.value
         schema: 'poo-flow.modules.session.value.v1

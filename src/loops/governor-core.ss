@@ -250,17 +250,33 @@
            (metadata '())))
    (supers loop-governor-node-role)))
 
+;; : (-> Alist Alist Alist)
+(def (loop-governor-slot-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
 ;; : (-> Symbol Symbol Symbol Boolean Alist Alist)
 (def (loop-governor-node-slot-rows name
                                    governance-node-kind
                                    responsibility
                                    human-intervention?
                                    overrides)
-  (cons (cons 'name name)
-        (cons (cons 'governance-node-kind governance-node-kind)
-              (cons (cons 'governance-responsibility responsibility)
-                    (cons (cons 'human-intervention human-intervention?)
-                          overrides)))))
+  (loop-governor-slot-rows/tail
+   (list
+    (cons 'name name)
+    (cons 'governance-node-kind governance-node-kind)
+    (cons 'governance-responsibility responsibility)
+    (cons 'human-intervention human-intervention?))
+   overrides))
 
 ;;; Agent governor nodes model machine-side judges such as auditor/verifier.
 ;; : (-> Symbol Symbol [Alist] LoopGovernorNode)
@@ -331,9 +347,11 @@
 
 ;; : (-> Symbol LoopStrategyPlan Alist Alist)
 (def (loop-governor-slot-rows name strategy overrides)
-  (cons (cons 'name name)
-        (cons (cons 'strategy strategy)
-              overrides)))
+  (loop-governor-slot-rows/tail
+   (list
+    (cons 'name name)
+    (cons 'strategy strategy))
+   overrides))
 
 ;;; Constructor binds a validated strategy plan to governor policy overrides.
 ;;; Runtime state snapshots are supplied later to projection helpers.

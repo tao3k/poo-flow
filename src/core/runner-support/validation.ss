@@ -1,13 +1,30 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: runner validation checks planned steps against strategy/adapter support.
 
-(import :poo-flow/src/core/failure
+(import :poo-flow/src/core/projection-syntax
+        :poo-flow/src/core/failure
         :poo-flow/src/core/task
         :poo-flow/src/core/plan
         :poo-flow/src/core/strategy
         :poo-flow/src/core/runtime-adapter)
 
 (export validate-plan-node)
+
+;; : (-> Strategy Symbol Task Alist)
+(defpoo-core-receipt-projection
+  unsupported-task-capability-detail (strategy capability task)
+  (bindings ())
+  (fields ((strategy (strategy-name strategy))
+           (capability capability)
+           (task-kind (task-kind task)))))
+
+;; : (-> RuntimeAdapter Symbol Task Alist)
+(defpoo-core-receipt-projection
+  unsupported-adapter-capability-detail (adapter capability task)
+  (bindings ())
+  (fields ((adapter (runtime-adapter-name adapter))
+           (capability capability)
+           (task-kind (task-kind task)))))
 
 ;; : (-> TaskFamilyRegistry Strategy RuntimeAdapter PlanNode Boolean)
 (def (validate-plan-node task-registry strategy adapter node)
@@ -26,15 +43,11 @@
        'runner
        'unsupported-task-capability
        "strategy does not support task kind"
-       (list (cons 'strategy (strategy-name strategy))
-             (cons 'capability capability)
-             (cons 'task-kind (task-kind task)))))
+       (unsupported-task-capability-detail strategy capability task)))
     (when (task-adapter-routed?-in task-registry task)
       (unless (adapter-supports? adapter capability)
         (raise-control-plane-failure
          'runner
          'unsupported-adapter-capability
          "adapter does not support task kind"
-         (list (cons 'adapter (runtime-adapter-name adapter))
-               (cons 'capability capability)
-               (cons 'task-kind (task-kind task))))))))
+         (unsupported-adapter-capability-detail adapter capability task))))))

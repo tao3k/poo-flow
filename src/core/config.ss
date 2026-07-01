@@ -137,9 +137,8 @@
       (make-config-requirement kind value (config-argument-secret? argument)))
      (else #f))))
 
-;;; Requirement derivation is a filter-map over declaration arguments.
-;;; The lambda branch keeps env/file ordering stable while dropping literals
-;;; and placeholders that do not require caller-supplied config source keys.
+;;; Requirement derivation keeps env/file ordering stable while dropping
+;;; literals and placeholders that do not require caller-supplied config keys.
 ;; : (-> [ConfigArgument] [ConfigRequirement])
 (def (config-arguments->requirements arguments)
   (cond
@@ -160,20 +159,24 @@
         (value (config-argument-value argument)))
     (cond
      ((eq? kind 'literal) value)
-     ((eq? kind 'placeholder) (list (cons 'placeholder value)))
+     ((eq? kind 'placeholder)
+      (poo-flow-core-field-rows
+       (placeholder value)))
      ((or (eq? kind 'env) (eq? kind 'file))
       (if (config-argument-secret? argument)
-        (list (cons 'source kind)
-              (cons 'key value)
-              (cons 'secret #t))
+        (poo-flow-core-field-rows
+         (source kind)
+         (key value)
+         (secret #t))
         (config-source-ref source kind value)))
      (else
       (raise-control-plane-failure
        'config
        'unsupported-config-argument
        "unsupported config argument kind"
-       (list (cons 'kind kind)
-             (cons 'value value)))))))
+       (poo-flow-core-field-rows
+        (kind kind)
+        (value value)))))))
 
 ;;; Boundary: render config arguments is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
@@ -248,12 +251,13 @@
 ;;; creating runtime adapter requests.
 ;; : (-> RunConfig Alist)
 (def (run-config-registry-policy config)
-  (list (cons 'task-registry
-              (task-family-registry-name
-               (run-config-task-registry config)))
-        (cons 'flow-registry
-              (flow-declaration-registry-name
-               (run-config-flow-registry config)))))
+  (poo-flow-core-field-rows
+   (task-registry
+    (task-family-registry-name
+     (run-config-task-registry config)))
+   (flow-registry
+    (flow-declaration-registry-name
+     (run-config-flow-registry config)))))
 
 ;;; Boundary: run config option is the policy-visible edge for core behavior,
 ;;; keeping validation, lookup, or projection responsibilities centralized for
@@ -323,7 +327,9 @@
     (make-run-config 'rust
                      (make-local-eager-strategy)
                      (make-rust-adapter command)
-                     (append '((runtime . rust)) options))))
+                     (poo-flow-core-field-rows/tail
+                      options
+                      (runtime 'rust)))))
 
 ;;; Lowering config through the existing runner keeps validation behavior
 ;;; identical for configured and direct execution.
@@ -361,11 +367,24 @@
 ;;; Boundary: missing config requirements is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
+;; : (-> [ConfigRequirement] Alist [ConfigRequirement] [ConfigRequirement])
+(def (missing-config-requirements/rev requirements source missing-rev)
+  (cond
+   ((null? requirements) missing-rev)
+   ((config-source-satisfies? source (car requirements))
+    (missing-config-requirements/rev
+     (cdr requirements)
+     source
+     missing-rev))
+   (else
+    (missing-config-requirements/rev
+     (cdr requirements)
+     source
+     (cons (car requirements) missing-rev)))))
+
 ;; : (-> [ConfigRequirement] Alist [ConfigRequirement])
 (def (missing-config-requirements requirements source)
-  (filter (lambda (requirement)
-            (not (config-source-satisfies? source requirement)))
-          requirements))
+  (reverse (missing-config-requirements/rev requirements source '())))
 
 ;;; Literal requirements are already satisfied; file/env requirements are
 ;;; satisfied only by key presence in their source bucket.
@@ -413,8 +432,9 @@
    'config
    'missing-config-keys
    "missing config key"
-   (list (cons 'status 'missing)
-         (cons 'missing
-               (list (config-requirement->alist
-                      (make-config-requirement source-kind key #f)))))
+   (poo-flow-core-field-rows
+    (status 'missing)
+    (missing
+     (list (config-requirement->alist
+            (make-config-requirement source-kind key #f)))))
    #t))

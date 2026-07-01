@@ -2,7 +2,8 @@
 ;;; Boundary: strategies choose planning policy, not runtime execution.
 ;;; Invariant: heavy execution remains in runner/runtime-adapter code.
 
-(import :poo-flow/src/core/flow
+(import :poo-flow/src/core/projection-syntax
+        :poo-flow/src/core/flow
         :poo-flow/src/core/failure
         :poo-flow/src/core/plan
         :poo-flow/src/core/task)
@@ -67,6 +68,13 @@
 
 ;;; Flow descriptors declare the planner policy; strategies bind supported
 ;;; descriptor planner names to concrete plan functions.
+;; : (-> Strategy Symbol Alist)
+(defpoo-core-receipt-projection
+  strategy-unsupported-flow-planner-detail (strategy planner)
+  (bindings ())
+  (fields ((strategy (strategy-name strategy))
+           (planner planner))))
+
 ;; : (-> Strategy FlowDeclarationRegistry Flow Planner)
 (def (strategy-planner-for-flow-in strategy registry flow)
   (let ((planner (flow-declaration-planner
@@ -78,8 +86,7 @@
        'strategy
        'unsupported-flow-planner
        "strategy does not support flow planner"
-       (list (cons 'strategy (strategy-name strategy))
-             (cons 'planner planner)))))))
+       (strategy-unsupported-flow-planner-detail strategy planner))))))
 
 ;; : (-> Strategy Flow Planner)
 (def (strategy-planner-for-flow strategy flow)
@@ -93,6 +100,12 @@
 
 ;;; Strategy owns the policy decision to expose a ready frontier; plan owns the
 ;;; pure graph predicate that computes it.
+;; : (-> Strategy Alist)
+(defpoo-core-receipt-projection
+  strategy-unsupported-frontier-detail (strategy)
+  (bindings ())
+  (fields ((strategy (strategy-name strategy)))))
+
 ;; : (-> Strategy ExecutionPlan [Id] [PlanNode])
 (def (strategy-ready-frontier strategy plan completed-node-ids)
   (if (strategy-can-select-frontier? strategy)
@@ -101,7 +114,7 @@
      'strategy
      'unsupported-frontier
      "strategy cannot select graph frontier"
-     (list (cons 'strategy (strategy-name strategy))))))
+     (strategy-unsupported-frontier-detail strategy))))
 
 ;;; The id projection is the stable receipt/adapter surface for frontier
 ;;; evidence when callers do not need plan-node payloads.
@@ -113,7 +126,7 @@
      'strategy
      'unsupported-frontier
      "strategy cannot select graph frontier"
-     (list (cons 'strategy (strategy-name strategy))))))
+     (strategy-unsupported-frontier-detail strategy))))
 
 ;; : (-> Strategy TaskFamilyRegistry Task Boolean)
 (def (strategy-can-run-locally-in strategy registry task)

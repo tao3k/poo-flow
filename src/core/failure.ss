@@ -110,11 +110,17 @@
 ;;; Boundary:
 ;;; - String throws model ErrorHandling's =throwStringFlow= result.
 ;;; - The raised value stays typed so recovery logic need not parse strings.
+;; : (-> Unit Detail)
+(defpoo-core-receipt-projection
+  throw-string-flow-detail ()
+  (bindings ())
+  (fields ((source 'throw-string-flow))))
+
 ;; : (-> String Never)
 (def (throw-string-control-plane-failure message)
   (raise-control-plane-failure
    'flow
    'thrown-string
    message
-   (list (cons 'source 'throw-string-flow))
+   (throw-string-flow-detail)
    #t))

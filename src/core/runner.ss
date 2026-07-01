@@ -2,7 +2,8 @@
 ;;; Boundary: runner interprets plans and emits receipts.
 ;;; Invariant: adapter calls remain behind runtime-adapter functions.
 
-(import :poo-flow/src/core/receipt
+(import :poo-flow/src/core/projection-syntax
+        :poo-flow/src/core/receipt
         :poo-flow/src/core/failure
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
@@ -129,11 +130,13 @@
     #t))
 
 ;; : (-> Runner Policy)
-(def (runner-registry-policy runner)
-  (list (cons 'task-registry
-              (task-family-registry-name (runner-task-registry runner)))
-        (cons 'flow-registry
-              (flow-declaration-registry-name (runner-flow-registry runner)))))
+(defpoo-core-receipt-projection
+  runner-registry-policy (runner)
+  (bindings ())
+  (fields ((task-registry
+            (task-family-registry-name (runner-task-registry runner)))
+           (flow-registry
+            (flow-declaration-registry-name (runner-flow-registry runner))))))
 
 ;; : (-> Runner Strategy [Id] Policy)
 (def (runner-execution-policy-alist runner strategy frontier)
@@ -218,6 +221,13 @@
 
 ;;; Node dispatch stays shape-based: task nodes execute work, flow nodes wrap
 ;;; nested runs, and branch nodes join dependency values.
+;; : (-> PlanNode Step Alist)
+(defpoo-core-receipt-projection
+  runner-unsupported-step-detail (node step)
+  (bindings ())
+  (fields ((node-id (plan-node-id node))
+           (step step))))
+
 ;; : (-> Runner ExecutionPlan Strategy PlanNode Input [Id] StepResult)
 (def (run-plan-node runner plan strategy node input frontier)
   (let ((step (plan-node-step node)))
@@ -240,8 +250,7 @@
        'runner
        'unsupported-step
        "flow step is neither task nor flow"
-       (list (cons 'node-id (plan-node-id node))
-             (cons 'step step)))))))
+       (runner-unsupported-step-detail node step))))))
 
 ;;; Flow nodes wrap nested receipts so top-level replay can still match each
 ;;; planned DAG node to one top-level child receipt.
@@ -344,15 +353,25 @@
                                 (list source-receipt bound-receipt)))))
 
 ;; : (-> PlanNode KleisliStep Value Value Failure)
+(defpoo-core-receipt-projection
+  invalid-kleisli-binder-result-detail (node step source-value bound-flow)
+  (bindings ())
+  (fields ((node-id (plan-node-id node))
+           (step-name (kleisli-step-name step))
+           (source-value source-value)
+           (binder-result bound-flow))))
+
+;; : (-> PlanNode KleisliStep Value Value Failure)
 (def (raise-invalid-kleisli-binder-result node step source-value bound-flow)
   (raise-control-plane-failure
    'runner
    'invalid-kleisli-binder-result
    "kleisli binder did not return a flow"
-   (list (cons 'node-id (plan-node-id node))
-         (cons 'step-name (kleisli-step-name step))
-         (cons 'source-value source-value)
-         (cons 'binder-result bound-flow))))
+   (invalid-kleisli-binder-result-detail
+    node
+    step
+    source-value
+    bound-flow)))
 
 ;;; Boundary: run kleisli bound result is the policy-visible edge for core behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
 ;; : (-> Runner ExecutionPlan Strategy PlanNode KleisliStep Input Value [Id] Receipt StepResult)
@@ -465,10 +484,22 @@
 ;;; Terminal selection converts the dataflow table back to the public run
 ;;; result. Multiple terminals remain a list so future DAG plans can expose
 ;;; more than one sink without inventing an implicit ordering rule.
+;; : (-> [PlanNode] [Id] [Id])
+(def (runner-plan-node-ids/rev nodes ids-rev)
+  (if (null? nodes)
+    ids-rev
+    (runner-plan-node-ids/rev
+     (cdr nodes)
+     (cons (plan-node-id (car nodes)) ids-rev))))
+
+;; : (-> [PlanNode] [Id])
+(def (runner-plan-node-ids nodes)
+  (reverse (runner-plan-node-ids/rev nodes '())))
+
 ;; : (-> ExecutionPlan Alist Value Value)
 (def (plan-output-value plan values default-input)
-  (let ((terminal-values (node-values (map plan-node-id
-                                           (execution-plan-terminal-nodes plan))
+  (let ((terminal-values (node-values (runner-plan-node-ids
+                                       (execution-plan-terminal-nodes plan))
                                       values)))
     (cond
      ((null? terminal-values) default-input)
@@ -497,6 +528,12 @@
 
 ;;; Missing dependency values indicate a malformed plan order rather than an
 ;;; application failure, so the runner raises a control-plane error.
+;; : (-> Id Alist)
+(defpoo-core-receipt-projection
+  missing-dependency-value-detail (id)
+  (bindings ())
+  (fields ((node-id id))))
+
 ;; : (-> Id Alist Value)
 (def (value-for-node-id id values)
   (let ((entry (assoc id values)))
@@ -506,11 +543,17 @@
        'runner
        'missing-dependency-value
        "missing dependency value"
-       (list (cons 'node-id id))))))
+       (missing-dependency-value-detail id)))))
 
 ;;; Adapter dispatch preserves runtime adapter operations while keeping
 ;;; extension-specific task request interpretation outside the runner.
 ;; : (-> TaskFamilyRegistry RuntimeAdapter Task ExecutionRequest AdapterResult)
+(defpoo-core-receipt-projection
+  unsupported-adapter-operation-detail (operation task)
+  (bindings ())
+  (fields ((operation operation)
+           (task (task-name task)))))
+
 (def (adapter-result-for-task task-registry adapter task request)
   (let ((operation (task-adapter-operation-in task-registry task)))
     (cond
@@ -525,12 +568,25 @@
        'runner
        'unsupported-adapter-operation
        "unsupported adapter operation"
-       (list (cons 'operation operation)
-             (cons 'task (task-name task))))))))
+       (unsupported-adapter-operation-detail operation task))))))
 
 ;;; Adapter failures remain runtime-owned but are wrapped before receipt
 ;;; persistence so replay and audit code can inspect the same failure shape.
 ;; : (-> RuntimeAdapter AdapterResult MaybeExecutionFailure)
+(defpoo-core-receipt-projection
+  adapter-result-error-detail (adapter adapter-result)
+  (bindings ())
+  (fields ((adapter (runtime-adapter-name adapter))
+           (request-id (adapter-result-request-id adapter-result))
+           (error (adapter-result-error adapter-result)))))
+
+(defpoo-core-receipt-projection
+  adapter-result-failed-status-detail (adapter adapter-result)
+  (bindings ())
+  (fields ((adapter (runtime-adapter-name adapter))
+           (request-id (adapter-result-request-id adapter-result))
+           (status (adapter-result-status adapter-result)))))
+
 (def (adapter-result-failure adapter adapter-result)
   (cond
    ((adapter-result-error adapter-result)
@@ -538,18 +594,14 @@
      'runtime-adapter
      'adapter-failure
      "runtime adapter returned an error"
-     (list (cons 'adapter (runtime-adapter-name adapter))
-           (cons 'request-id (adapter-result-request-id adapter-result))
-           (cons 'error (adapter-result-error adapter-result)))
+     (adapter-result-error-detail adapter adapter-result)
      #t))
    ((eq? (adapter-result-status adapter-result) 'failed)
     (control-plane-failure
      'runtime-adapter
      'adapter-failure
      "runtime adapter failed without a detailed error"
-     (list (cons 'adapter (runtime-adapter-name adapter))
-           (cons 'request-id (adapter-result-request-id adapter-result))
-           (cons 'status (adapter-result-status adapter-result)))
+     (adapter-result-failed-status-detail adapter adapter-result)
      #t))
    (else #f)))
 
@@ -585,6 +637,11 @@
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
 ;; : (-> Runner ExecutionPlan Strategy PlanNode Task Input [Id] StepResult)
+(defpoo-core-receipt-projection
+  unsupported-task-kind-detail (task)
+  (bindings ())
+  (fields ((task-kind (task-kind task)))))
+
 (def (run-task runner plan strategy node task input frontier)
   (let ((task-registry (runner-task-registry runner)))
     (cond
@@ -641,4 +698,4 @@
        'runner
        'unsupported-task-kind
        "unsupported task kind"
-       (list (cons 'task-kind (task-kind task))))))))
+       (unsupported-task-kind-detail task))))))

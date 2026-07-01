@@ -149,6 +149,26 @@
       (cdr entry)
       default)))
 
+;; : (-> Alist Alist Alist)
+(def (runtime-command-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+(defrules runtime-command-field-rows/tail ()
+  ((_ tail (field value) ...)
+   (runtime-command-rows/tail
+    (list (cons 'field value) ...)
+    tail)))
+
 ;; : (-> RuntimeResponse AdapterResult)
 (def (runtime-response->adapter-result response)
   (make-adapter-result
@@ -164,6 +184,13 @@
        (let (schema (assoc 'schema value))
          (and schema (eq? (cdr schema) +runtime-response-schema+)))))
 
+;; : (-> Value Alist)
+(defpoo-core-receipt-projection
+  invalid-runtime-response-error (response)
+  (bindings ())
+  (fields ((code 'invalid-runtime-response)
+           (response response))))
+
 ;; : (-> Alist Value AdapterResult)
 (def (invalid-runtime-response envelope response)
   (make-adapter-result
@@ -171,8 +198,7 @@
    'failed
    #f
    (runtime-alist-ref envelope 'artifact-handle #f)
-   (list (cons 'code 'invalid-runtime-response)
-         (cons 'response response))))
+   (invalid-runtime-response-error response)))
 
 ;;; Runtime command responses are normalized before the runner sees them, so
 ;;; callers can return either the durable schema or the internal adapter shape.
@@ -238,21 +264,32 @@
                         invoker
                         (if (null? maybe-metadata) '() (car maybe-metadata))))
 
+;; : (-> Symbol Alist Alist)
+(defpoo-core-receipt-projection
+  runtime-command-error (code detail)
+  (bindings ())
+  (fields ((code code)
+           (detail detail))))
+
 ;; : (-> Alist Symbol Value Alist RuntimeResponseLike)
-(def (runtime-command-failure-response envelope code detail metadata)
-  (list (cons 'schema +runtime-response-schema+)
-        (cons 'request-id (runtime-alist-ref envelope 'request-id #f))
-        (cons 'status 'failed)
-        (cons 'value #f)
-        (cons 'artifact-handle (runtime-alist-ref envelope 'artifact-handle #f))
-        (cons 'error (list (cons 'code code)
-                           (cons 'detail detail)))
-        (cons 'metadata metadata)))
+(defpoo-core-receipt-projection
+  runtime-command-failure-response (envelope code detail metadata)
+  (bindings ())
+  (fields ((schema +runtime-response-schema+)
+           (request-id (runtime-alist-ref envelope 'request-id #f))
+           (status 'failed)
+           (value #f)
+           (artifact-handle
+            (runtime-alist-ref envelope 'artifact-handle #f))
+           (error (runtime-command-error code detail))
+           (metadata metadata))))
 
 ;; : (-> Symbol Path ArgumentsBuilder ResponseDecoder [Alist] RuntimeCommand)
 (def (make-process-runtime-command name executable arguments response-decoder . maybe-metadata)
-  (let (metadata (append (list (cons 'executable executable))
-                         (if (null? maybe-metadata) '() (car maybe-metadata))))
+  (let (metadata
+        (runtime-command-field-rows/tail
+         (if (null? maybe-metadata) '() (car maybe-metadata))
+         (executable executable)))
     (make-runtime-command
      name
      'process
@@ -422,16 +459,18 @@
    (runtime-command-manifest-ref manifest 'name 'runtime-command-manifest)
    (lambda (_envelope)
      (run-runtime-command-manifest manifest))
-   (append (list (cons 'source 'manifest))
-           (runtime-command-manifest-ref manifest 'metadata '()))))
+   (runtime-command-field-rows/tail
+    (runtime-command-manifest-ref manifest 'metadata '())
+    (source 'manifest))))
 
 ;;; Descriptor materialization is the narrow replacement seam for Rust-backed
 ;;; commands: workflow code depends on protocol data, not constructor details.
 ;; : (-> RuntimeCommandDescriptor RuntimeCommand)
 (def (runtime-command-descriptor->command descriptor)
-  (let ((metadata (append (list (cons 'protocol
-                                      (runtime-command-descriptor-protocol descriptor)))
-                          (runtime-command-descriptor-metadata descriptor))))
+  (let ((metadata
+         (runtime-command-field-rows/tail
+          (runtime-command-descriptor-metadata descriptor)
+          (protocol (runtime-command-descriptor-protocol descriptor)))))
     (if (eq? (runtime-command-descriptor-protocol descriptor) 'stdout-s-expression)
       (make-stdout-runtime-command
        (runtime-command-descriptor-name descriptor)

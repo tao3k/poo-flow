@@ -41,6 +41,10 @@
         poo-flow-tool-core-mcp-tool
         poo-flow-tool-core-default-catalog)
 
+(defrules poo-flow-tool-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
 ;; : Symbol
 (def +poo-flow-tool-core-spec-kind+ 'poo-flow.tool-core.spec)
 
@@ -212,9 +216,10 @@
                sandbox-profile-ref)
             '()
             (list
-             (list (cons 'code 'tool-spec-missing-sandbox-profile)
-                   (cons 'tool-ref (poo-flow-tool-spec-ref spec))
-                   (cons 'severity 'error))))))
+             (poo-flow-tool-field-rows
+              (code 'tool-spec-missing-sandbox-profile)
+              (tool-ref (poo-flow-tool-spec-ref spec))
+              (severity 'error))))))
     (object<-alist
      (list
       (cons 'kind +poo-flow-tool-core-handoff-manifest-kind+)

@@ -2,7 +2,8 @@
 ;;; Boundary: agent-sandbox profile data records and accessors.
 ;;; Invariant: this owner has no descriptor inheritance or validation side effects.
 
-(import :poo-flow/src/modules/agent-sandbox/alist)
+(import :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax)
 
 (export +agent-sandbox-profile-schema+
         +agent-sandbox-profile-runtime-summary-schema+
@@ -38,13 +39,14 @@
                                          capabilities
                                          resource-policy
                                          metadata)
-  (list (cons 'schema +agent-sandbox-profile-schema+)
-        (cons 'backend-kind backend-kind)
-        (cons 'backend-ref backend-ref)
-        (cons 'network-policy network-policy)
-        (cons 'capabilities capabilities)
-        (cons 'resource-policy resource-policy)
-        (cons 'metadata metadata)))
+  (agent-sandbox-field-rows
+   (schema +agent-sandbox-profile-schema+)
+   (backend-kind backend-kind)
+   (backend-ref backend-ref)
+   (network-policy network-policy)
+   (capabilities capabilities)
+   (resource-policy resource-policy)
+   (metadata metadata)))
 
 
 ;;; Profile accessors keep future bridges away from raw list positions.
@@ -82,5 +84,4 @@
 ;; : (-> MaybeList Integer)
 (def (agent-sandbox-profile-list-count value)
   (if (list? value) (length value) 0))
-
 

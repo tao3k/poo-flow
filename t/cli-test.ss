@@ -86,6 +86,10 @@
                        specs)
                       #t)
         (check-equal? (gxtest-root-registered?
+                       "scenario-user-interface-sandbox-config"
+                       specs)
+                      #t)
+        (check-equal? (gxtest-root-registered?
                        "scenario-user-interface-custom-scenario-batch"
                        specs)
                       #t)))

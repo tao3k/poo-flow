@@ -70,6 +70,20 @@
     #f))
 
 ;; : (-> Integer Alist)
+(def (materialization-performance-metadata index)
+  (let* ((session-ref (materialization-performance-symbol "session/child"
+                                                          index))
+         (sandbox-handle-ref
+          (materialization-performance-symbol "sandbox/handle" index)))
+    (list (cons 'source 'performance)
+          (cons 'declared-session-refs
+                (list 'session/root session-ref))
+          (cons 'declared-parent-session-refs
+                '(session/root session/system))
+          (cons 'declared-sandbox-handle-refs
+                (list sandbox-handle-ref)))))
+
+;; : (-> Integer Alist)
 (def (materialization-performance-row index)
   (poo-flow-session-materialization-receipt->alist
    (poo-flow-session-runtime-materialization-receipt
@@ -82,7 +96,31 @@
     (materialization-performance-symbol "runtime/future" index)
     (materialization-performance-sandbox-handle index)
     (materialization-performance-token-usage index)
-    (materialization-performance-error index))))
+    (materialization-performance-error index)
+    (materialization-performance-metadata index))))
+
+;; : (-> [Alist] Integer)
+(def (materialization-performance-valid-count rows)
+  (let loop ((remaining-rows rows)
+             (count 0))
+    (cond
+     ((null? remaining-rows) count)
+     ((materialization-performance-ref (car remaining-rows) 'valid?)
+      (loop (cdr remaining-rows) (+ count 1)))
+     (else
+      (loop (cdr remaining-rows) count)))))
+
+;; : (-> [Alist] Integer)
+(def (materialization-performance-diagnostic-count rows)
+  (let loop ((remaining-rows rows)
+             (count 0))
+    (if (null? remaining-rows)
+      count
+      (loop (cdr remaining-rows)
+            (+ count
+               (materialization-performance-ref
+                (car remaining-rows)
+                'diagnostic-count))))))
 
 ;; : (-> Integer Alist)
 (def (materialization-performance-summary count)
@@ -99,6 +137,18 @@
                 (materialization-performance-ref
                  (list-ref rows (- count 1))
                  'materialization-state))
+          (cons 'valid-count
+                (materialization-performance-valid-count rows))
+          (cons 'diagnostic-count
+                (materialization-performance-diagnostic-count rows))
+          (cons 'declaration-checked?
+                (materialization-performance-ref
+                 (car rows)
+                 'declaration-checked?))
+          (cons 'sandbox-handle-declared?
+                (materialization-performance-ref
+                 (car rows)
+                 'sandbox-handle-declared?))
           (cons 'runtime-executed
                 (materialization-performance-ref
                  (car rows)
@@ -126,6 +176,18 @@
                       'pending)
         (check-equal? (materialization-performance-ref summary 'last-state)
                       'failed)
+        (check-equal?
+         (materialization-performance-ref summary 'valid-count)
+         receipt-count)
+        (check-equal?
+         (materialization-performance-ref summary 'diagnostic-count)
+         0)
+        (check-equal?
+         (materialization-performance-ref summary 'declaration-checked?)
+         #t)
+        (check-equal?
+         (materialization-performance-ref summary 'sandbox-handle-declared?)
+         #t)
         (check-equal?
          (materialization-performance-ref summary 'runtime-executed)
          #f)

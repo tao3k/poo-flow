@@ -3,8 +3,44 @@
 ;;; Invariant: generated functions are inspection, receipt, or presentation
 ;;; boundaries only; module activation and resolver logic stay explicit.
 
-(export defpoo-module-final-projection
+(export poo-flow-module-rows/tail
+        poo-flow-module-rows-into/rev
+        poo-flow-module-field-rows
+        poo-flow-module-field-rows/tail
+        defpoo-module-final-projection
         defpoo-module-final-projection-batch)
+
+;; : (-> List List List)
+(def (poo-flow-module-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+;; : (-> List List List)
+(def (poo-flow-module-rows-into/rev rows rows-rev)
+  (if (null? rows)
+    rows-rev
+    (poo-flow-module-rows-into/rev
+     (cdr rows)
+     (cons (car rows) rows-rev))))
+
+(defrules poo-flow-module-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+(defrules poo-flow-module-field-rows/tail ()
+  ((_ tail (field value) ...)
+   (poo-flow-module-rows/tail
+    (poo-flow-module-field-rows (field value) ...)
+    tail)))
 
 ;; defpoo-module-final-projection
 ;;   : internal syntax generator for fixed module-system alist projections.

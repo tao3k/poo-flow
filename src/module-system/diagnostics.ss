@@ -83,14 +83,36 @@
           (poo-flow-module-option-keys (cdr options)))))
 
 ;;; Boundary: task diagnostic projection ignores task payloads.
+;; : (-> [PooModuleTaskDescriptor] [Symbol] [Symbol])
+(def (poo-flow-module-task-family-names/rev tasks names-rev)
+  (if (null? tasks)
+    names-rev
+    (poo-flow-module-task-family-names/rev
+     (cdr tasks)
+     (cons (task-family-name (car tasks)) names-rev))))
+
 ;; : (-> [PooModuleDescriptor] [Symbol])
 (def (poo-flow-module-task-family-names modules)
-  (map task-family-name (poo-flow-module-all-task-descriptors modules)))
+  (reverse
+   (poo-flow-module-task-family-names/rev
+    (poo-flow-module-all-task-descriptors modules)
+    '())))
 
 ;;; Boundary: flow diagnostic projection ignores flow payloads.
+;; : (-> [PooModuleFlowDescriptor] [Symbol] [Symbol])
+(def (poo-flow-module-flow-declaration-kinds/rev flows kinds-rev)
+  (if (null? flows)
+    kinds-rev
+    (poo-flow-module-flow-declaration-kinds/rev
+     (cdr flows)
+     (cons (flow-declaration-kind (car flows)) kinds-rev))))
+
 ;; : (-> [PooModuleDescriptor] [Symbol])
 (def (poo-flow-module-flow-declaration-kinds modules)
-  (map flow-declaration-kind (poo-flow-module-all-flow-descriptors modules)))
+  (reverse
+   (poo-flow-module-flow-declaration-kinds/rev
+    (poo-flow-module-all-flow-descriptors modules)
+    '())))
 
 ;;; Boundary: option diagnostic projection ignores option values.
 ;; : (-> [PooModuleDescriptor] [Symbol])
@@ -98,11 +120,18 @@
   (poo-flow-module-option-keys (poo-flow-module-all-options modules)))
 
 ;;; Boundary: duplicate detail shape is shared across task/flow/option diagnostics.
+;; : (-> Symbol [Symbol] DiagnosticDetail DiagnosticDetail)
+(def (poo-flow-module-duplicate-detail/rev key duplicates details-rev)
+  (if (null? duplicates)
+    details-rev
+    (poo-flow-module-duplicate-detail/rev
+     key
+     (cdr duplicates)
+     (cons (list (cons key (car duplicates))) details-rev))))
+
 ;; : (-> Symbol [Symbol] DiagnosticDetail)
 (def (poo-flow-module-duplicate-detail key duplicates)
-  (map (lambda (value)
-         (list (cons key value)))
-       duplicates))
+  (reverse (poo-flow-module-duplicate-detail/rev key duplicates '())))
 
 ;;; Boundary: empty details suppress diagnostics instead of emitting noise.
 ;; : (-> Symbol Symbol Symbol DiagnosticDetail [PooModuleDiagnostic])

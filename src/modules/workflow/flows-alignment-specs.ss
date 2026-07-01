@@ -18,6 +18,9 @@
         alignment-gate-proof-commands
         poo-flow-funflow-tutorial-alignment-gate-ids)
 
+(defrules poo-flow-flows-alignment-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
 
 ;;; Boundary: this schema symbol is the stable POO report envelope identity.
 ;;; Tests and docs compare this value directly, so it must not drift with paths.
@@ -192,8 +195,9 @@
 ;;; Keeping proof strings inert lets downstream tooling audit coverage safely.
 ;; : (-> Symbol [String] PooFlowAlignmentGateProof)
 (def (alignment-gate-proof id proofs)
-  (list (cons 'id id)
-        (cons 'proofs proofs)))
+  (poo-flow-flows-alignment-field-rows
+   (id id)
+   (proofs proofs)))
 
 ;;; Boundary: result gates track the repository proof ladder, not upstream files.
 ;;; The catalog connects tutorial parity to concrete local verification commands.
@@ -295,5 +299,3 @@
 (def (poo-flow-funflow-tutorial-alignment-gate-ids)
   (map alignment-gate-proof-id
        (poo-flow-funflow-tutorial-alignment-gate-proofs)))
-
-

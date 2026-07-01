@@ -26,6 +26,32 @@
         agent-sandbox-request->nono-c-binding-manifest
         agent-sandbox-execution-request->nono-c-binding-manifest)
 
+(defrules nono-c-binding-runtime-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (-> List List List)
+(def (nono-c-binding-runtime-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+;; : (-> List List List)
+(def (nono-c-binding-runtime-rows-into/rev rows rows-rev)
+  (if (null? rows)
+    rows-rev
+    (nono-c-binding-runtime-rows-into/rev
+     (cdr rows)
+     (cons (car rows) rows-rev))))
+
 ;;; Dry-run receipts are Scheme-side evidence only. They prove the nono C ABI
 ;;; manifest can be projected, but they do not load a native library or apply a sandbox.
 ;; : (-> Unit Symbol)
@@ -51,31 +77,44 @@
   (if (list? mount)
     (let* ((path (agent-sandbox-alist-ref mount 'path #f))
            (mode (agent-sandbox-alist-ref mount 'mode #f)))
-      (append
+      (nono-c-binding-runtime-rows/tail
        (if (string? path)
          '()
-         (list (list (cons 'field 'mount-path)
-                     (cons 'index index)
-                     (cons 'code 'missing-or-invalid-path))))
+         (list
+          (nono-c-binding-runtime-field-rows
+           (field 'mount-path)
+           (index index)
+           (code 'missing-or-invalid-path))))
        (if (nono-c-binding-access-mode-info mode)
          '()
-         (list (list (cons 'field 'mount-mode)
-                     (cons 'index index)
-                     (cons 'value mode)
-                     (cons 'code 'unsupported-access-mode)))))) 
-    (list (list (cons 'field 'mount)
-                (cons 'index index)
-                (cons 'code 'not-alist)))))
+         (list
+          (nono-c-binding-runtime-field-rows
+           (field 'mount-mode)
+           (index index)
+           (value mode)
+           (code 'unsupported-access-mode))))))
+    (list
+     (nono-c-binding-runtime-field-rows
+      (field 'mount)
+      (index index)
+      (code 'not-alist)))))
 
 ;;; Mount validation preserves indices so runtime-manifest errors point back to
 ;;; the exact filesystem grant that cannot be represented by nono's C ABI.
 ;; : (-> [Mount] Integer [ValidationError])
-(def (nono-c-binding-mounts-validation-errors mounts index)
+(def (nono-c-binding-mounts-validation-errors/rev mounts index errors-rev)
   (if (null? mounts)
-    '()
-    (append (nono-c-binding-mount-validation-errors (car mounts) index)
-            (nono-c-binding-mounts-validation-errors (cdr mounts)
-                                                     (+ index 1)))))
+    errors-rev
+    (nono-c-binding-mounts-validation-errors/rev
+     (cdr mounts)
+     (+ index 1)
+     (nono-c-binding-runtime-rows-into/rev
+      (nono-c-binding-mount-validation-errors (car mounts) index)
+      errors-rev))))
+
+;; : (-> [Mount] Integer [ValidationError])
+(def (nono-c-binding-mounts-validation-errors mounts index)
+  (reverse (nono-c-binding-mounts-validation-errors/rev mounts index '())))
 
 ;;; Network validation maps Scheme policy modes to nono's concrete constants
 ;;; before any runtime tries to set an unsupported mode through C.
@@ -84,9 +123,11 @@
   (let (mode (agent-sandbox-alist-ref network-policy 'mode 'blocked))
     (if (nono-c-binding-network-mode-info mode)
       '()
-      (list (list (cons 'field 'network-mode)
-                  (cons 'value mode)
-                  (cons 'code 'unsupported-network-mode))))))
+      (list
+       (nono-c-binding-runtime-field-rows
+        (field 'network-mode)
+        (value mode)
+        (code 'unsupported-network-mode))))))
 
 ;;; Runtime manifests must first satisfy the neutral sandbox bridge schema
 ;;; before this backend projects them into C ABI calls.
@@ -118,23 +159,34 @@
            (mounts (agent-sandbox-alist-ref filesystem 'mounts '()))
            (network-policy
             (agent-sandbox-alist-ref runtime-manifest 'network-policy '())))
-      (append
+      (nono-c-binding-runtime-rows/tail
        (agent-sandbox-required-field-errors
         runtime-manifest
-        (list (cons 'schema
-                    nono-c-binding-runtime-schema?)))
-       (agent-sandbox-required-field-errors
-        backend
-        (list (cons 'kind nono-c-binding-runtime-backend?)))
-       (agent-sandbox-required-field-errors
-        process
-        (list (cons 'command nono-c-binding-runtime-present?)
-              (cons 'argv list?)))
-       (if (list? mounts)
-         (nono-c-binding-mounts-validation-errors mounts 0)
-         (list '((field . mounts) (code . not-list))))
-       (nono-c-binding-network-validation-errors network-policy)))
-    (list '((field . runtime-manifest) (code . not-alist)))))
+        (nono-c-binding-runtime-field-rows
+         (schema nono-c-binding-runtime-schema?)))
+       (nono-c-binding-runtime-rows/tail
+        (agent-sandbox-required-field-errors
+         backend
+         (nono-c-binding-runtime-field-rows
+          (kind nono-c-binding-runtime-backend?)))
+        (nono-c-binding-runtime-rows/tail
+         (agent-sandbox-required-field-errors
+          process
+          (nono-c-binding-runtime-field-rows
+           (command nono-c-binding-runtime-present?)
+           (argv list?)))
+         (nono-c-binding-runtime-rows/tail
+          (if (list? mounts)
+            (nono-c-binding-mounts-validation-errors mounts 0)
+            (list
+             (nono-c-binding-runtime-field-rows
+              (field 'mounts)
+              (code 'not-list))))
+          (nono-c-binding-network-validation-errors network-policy))))))
+    (list
+     (nono-c-binding-runtime-field-rows
+      (field 'runtime-manifest)
+      (code 'not-alist)))))
 
 ;;; This validator is the last Scheme-side boundary before a native runtime
 ;;; receives the manifest, so it preserves the original manifest in failures
@@ -149,8 +201,9 @@
        'nono-sandbox
        'invalid-nono-c-binding-manifest
        "invalid nono C binding runtime manifest"
-       (list (cons 'errors errors)
-             (cons 'runtime-manifest runtime-manifest))))))
+       (nono-c-binding-runtime-field-rows
+        (errors errors)
+        (runtime-manifest runtime-manifest))))))
 
 ;;; Mount manifests accept both `kind` and legacy `type` so older sandbox
 ;;; descriptors can be normalized without changing the C capability call shape.
@@ -274,25 +327,34 @@
           (agent-sandbox-alist-ref runtime-manifest 'network-policy '()))
          (capabilities
           (agent-sandbox-alist-ref runtime-manifest 'capabilities '())))
-    (append
-     (list '((stage . create-capability-set)
-             (function . nono_capability_set_new)))
-     (nono-c-binding-mount-calls mounts)
-     (nono-c-binding-network-calls network-policy)
-     (nono-c-binding-string-calls capabilities
-                                  'allow-commands
-                                  'allow-command
-                                  'nono_capability_set_allow_command)
-     (nono-c-binding-string-calls capabilities
-                                  'block-commands
-                                  'block-command
-                                  'nono_capability_set_block_command)
-     (nono-c-binding-string-calls capabilities
-                                  'platform-rules
-                                  'platform-rule
-                                  'nono_capability_set_add_platform_rule)
-     (list '((stage . deduplicate)
-             (function . nono_capability_set_deduplicate))))))
+    (nono-c-binding-runtime-rows/tail
+     (list
+      (nono-c-binding-runtime-field-rows
+       (stage 'create-capability-set)
+       (function 'nono_capability_set_new)))
+     (nono-c-binding-runtime-rows/tail
+      (nono-c-binding-mount-calls mounts)
+      (nono-c-binding-runtime-rows/tail
+       (nono-c-binding-network-calls network-policy)
+       (nono-c-binding-runtime-rows/tail
+        (nono-c-binding-string-calls capabilities
+                                     'allow-commands
+                                     'allow-command
+                                     'nono_capability_set_allow_command)
+        (nono-c-binding-runtime-rows/tail
+         (nono-c-binding-string-calls capabilities
+                                      'block-commands
+                                      'block-command
+                                      'nono_capability_set_block_command)
+         (nono-c-binding-runtime-rows/tail
+          (nono-c-binding-string-calls capabilities
+                                       'platform-rules
+                                       'platform-rule
+                                       'nono_capability_set_add_platform_rule)
+          (list
+           (nono-c-binding-runtime-field-rows
+            (stage 'deduplicate)
+            (function 'nono_capability_set_deduplicate)))))))))))
 
 ;;; The dry-run receipt is the nono C binding preflight surface: it validates
 ;;; the neutral runtime manifest, projects the ABI call plan, and reports the
@@ -317,22 +379,23 @@
           (agent-sandbox-alist-ref manifest 'capability-plan '()))
          (apply-plan
           (agent-sandbox-alist-ref manifest 'apply-plan '())))
-    (list (cons 'schema +nono-c-binding-dry-run-receipt-schema+)
-          (cons 'ok? #t)
-          (cons 'runtime-executed #f)
-          (cons 'would-apply? #f)
-          (cons 'binding
-                (agent-sandbox-alist-ref manifest 'binding '()))
-          (cons 'backend
-                (agent-sandbox-alist-ref manifest 'backend '()))
-          (cons 'process
-                (agent-sandbox-alist-ref manifest 'process '()))
-          (cons 'capability-plan-count
-                (length capability-plan))
-          (cons 'apply-function
-                (agent-sandbox-alist-ref apply-plan 'apply #f))
-          (cons 'support-function
-                (agent-sandbox-alist-ref apply-plan 'support #f)))))
+    (nono-c-binding-runtime-field-rows
+     (schema +nono-c-binding-dry-run-receipt-schema+)
+     (ok? #t)
+     (runtime-executed #f)
+     (would-apply? #f)
+     (binding
+      (agent-sandbox-alist-ref manifest 'binding '()))
+     (backend
+      (agent-sandbox-alist-ref manifest 'backend '()))
+     (process
+      (agent-sandbox-alist-ref manifest 'process '()))
+     (capability-plan-count
+      (length capability-plan))
+     (apply-function
+      (agent-sandbox-alist-ref apply-plan 'apply #f))
+     (support-function
+      (agent-sandbox-alist-ref apply-plan 'support #f)))))
 
 ;;; Smoke tests run a host probe command through Gerbil's standard process
 ;;; library after dry-run validation. The default probe is the direct C compile

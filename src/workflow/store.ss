@@ -38,6 +38,10 @@
         store-content-address-receipt-runtime-executed
         store-flow->content-address-receipt)
 
+(defrules store-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
 ;; : (-> Unit Symbol)
 (def +store-content-address-receipt-schema+
   'poo-flow.extensions.store-content-address-receipt.v1)
@@ -70,8 +74,9 @@
      'store-extension
      'unsupported-store-operation
      "unsupported store operation"
-     (list (cons 'task (task-name task))
-           (cons 'operation (task-store-operation task)))))))
+     (store-field-rows
+      (task (task-name task))
+      (operation (task-store-operation task)))))))
 
 ;; : (-> Unit TaskFamilyDescriptor)
 (def store-task-family-descriptor
@@ -93,11 +98,25 @@
 ;;; Boundary: capabilities with is the policy-visible edge for workflow
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (store-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
-    (append capability-set (list capability))))
+    (store-values/tail capability-set (list capability))))
 
 ;; : (-> Strategy Strategy)
 (def (store-enable-strategy strategy)

@@ -8,6 +8,7 @@
                  make-runtime-command-descriptor
                  runtime-command-descriptor->manifest)
         :poo-flow/src/modules/workflow/cicd-core
+        :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox)
 
 (export poo-flow-cicd-check-map->dependency-graph
@@ -35,77 +36,54 @@
       (if (null? remaining-artifact-refs)
         '()
         (cons
-         (list
-          (cons 'artifact-ref (car remaining-artifact-refs))
-          (cons 'producer-check producer-check)
-          (cons 'durable-task-id durable-task-id)
-          (cons 'retention retention)
-          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-          (cons 'runtime-executed #f))
+         (poo-flow-cicd-field-rows
+          (artifact-ref (car remaining-artifact-refs))
+          (producer-check producer-check)
+          (durable-task-id durable-task-id)
+          (retention retention)
+          (runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+          (runtime-executed #f))
          (loop (cdr remaining-artifact-refs)))))))
 
 ;; : (-> PooFlowCicdCheck Alist)
 (def (poo-flow-cicd-check-durable-fields check)
-  (list
-   (cons 'durable-task-id
-         (poo-flow-cicd-check-durable-task-id check))
-   (cons 'action-class
-         (poo-flow-cicd-check-action-class check))
-   (cons 'artifact-refs
-         (poo-flow-cicd-check-artifacts check))
-   (cons 'artifact-provenance
-         (poo-flow-cicd-check-artifact-provenance check))
-   (cons 'artifact-retention
-         (poo-flow-cicd-check-artifact-retention check))
-   (cons 'sandbox-refs
-         (poo-flow-cicd-check-profile-refs check))
-   (cons 'checkpoint-ref
-         (list 'workflow-cicd-check
-               (poo-flow-cicd-check-name check)))
-   (cons 'compensation-refs
-         (poo-flow-cicd-check-compensation-refs check))))
-
-;; : (-> [Alist] Alist Alist)
-(def (poo-flow-cicd-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (poo-flow-cicd-field-rows
+   (durable-task-id (poo-flow-cicd-check-durable-task-id check))
+   (action-class (poo-flow-cicd-check-action-class check))
+   (artifact-refs (poo-flow-cicd-check-artifacts check))
+   (artifact-provenance (poo-flow-cicd-check-artifact-provenance check))
+   (artifact-retention (poo-flow-cicd-check-artifact-retention check))
+   (sandbox-refs (poo-flow-cicd-check-profile-refs check))
+   (checkpoint-ref
+    (list 'workflow-cicd-check
+          (poo-flow-cicd-check-name check)))
+   (compensation-refs (poo-flow-cicd-check-compensation-refs check))))
 
 ;; : (-> PooFlowCicdCheck Alist Alist)
 (def (poo-flow-cicd-check-runtime-metadata check readiness)
-  (poo-flow-cicd-rows/tail
-   (list
-    (cons 'source 'poo-flow.workflow.cicd.check)
-    (cons 'check (poo-flow-cicd-check-name check))
-    (cons 'profile (poo-flow-cicd-check-profile check))
-    (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
-    (cons 'dependency-refs (poo-flow-cicd-check-dependency-refs check))
-    (cons 'runtime (poo-flow-cicd-check-runtime check))
-    (cons 'runtime-executed #f)
-    (cons 'handoff-required #t)
-    (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-    (cons 'cache (poo-flow-cicd-check-cache check))
-    (cons 'secrets (poo-flow-cicd-check-secrets check))
-    (cons 'readiness readiness))
-   (poo-flow-cicd-check-durable-fields check)))
+  (poo-flow-cicd-field-rows/tail
+   (poo-flow-cicd-check-durable-fields check)
+   (source 'poo-flow.workflow.cicd.check)
+   (check (poo-flow-cicd-check-name check))
+   (profile (poo-flow-cicd-check-profile check))
+   (profile-refs (poo-flow-cicd-check-profile-refs check))
+   (dependency-refs (poo-flow-cicd-check-dependency-refs check))
+   (runtime (poo-flow-cicd-check-runtime check))
+   (runtime-executed #f)
+   (handoff-required #t)
+   (artifacts (poo-flow-cicd-check-artifacts check))
+   (cache (poo-flow-cicd-check-cache check))
+   (secrets (poo-flow-cicd-check-secrets check))
+   (readiness readiness)))
 
 ;; : (-> PooFlowCicdCheck Alist)
 (def (poo-flow-cicd-check-runtime-policy check)
-  (poo-flow-cicd-rows/tail
-   (list
-    (cons 'runtime (poo-flow-cicd-check-runtime check))
-    (cons 'dependency-refs (poo-flow-cicd-check-dependency-refs check))
-    (cons 'runtime-executed #f)
-    (cons 'handoff-required #t))
-   (poo-flow-cicd-check-durable-fields check)))
+  (poo-flow-cicd-field-rows/tail
+   (poo-flow-cicd-check-durable-fields check)
+   (runtime (poo-flow-cicd-check-runtime check))
+   (dependency-refs (poo-flow-cicd-check-dependency-refs check))
+   (runtime-executed #f)
+   (handoff-required #t)))
 
 ;;; The runtime command bridge intentionally consumes readiness data instead of
 ;;; executing it: Scheme produces the same manifest shape that runtime adapters
@@ -125,17 +103,18 @@
 ;;; frontier fields inert until a real scheduler supplies them.
 ;; : (-> PooFlowCicdCheck Alist Alist)
 (def (poo-flow-cicd-check-runtime-command-envelope check readiness)
-  (list (cons 'schema +runtime-request-schema+)
-        (cons 'operation 'workflow-cicd-check)
-        (cons 'request-id
-              (list 'poo-flow.workflow.cicd
-                    (poo-flow-cicd-check-name check)))
-        (cons 'artifact-handle (poo-flow-cicd-check-artifacts check))
-        (cons 'request readiness)
-        (cons 'policy (poo-flow-cicd-check-runtime-policy check))
-        (cons 'plan-id #f)
-        (cons 'node-id (poo-flow-cicd-check-name check))
-        (cons 'frontier '())))
+  (poo-flow-cicd-field-rows
+   (schema +runtime-request-schema+)
+   (operation 'workflow-cicd-check)
+   (request-id
+    (list 'poo-flow.workflow.cicd
+          (poo-flow-cicd-check-name check)))
+   (artifact-handle (poo-flow-cicd-check-artifacts check))
+   (request readiness)
+   (policy (poo-flow-cicd-check-runtime-policy check))
+   (plan-id #f)
+   (node-id (poo-flow-cicd-check-name check))
+   (frontier '())))
 
 ;;; Public manifest projection is the handoff boundary for one check. It
 ;;; validates the POO check, reuses the readiness projector, and delegates final
@@ -165,38 +144,37 @@
 (def (poo-flow-cicd-check-receipt-fields check
                                           profile-catalog
                                           runtime-ready)
-  (poo-flow-cicd-rows/tail
-   (list
-    (cons 'schema +poo-flow-cicd-check-receipt-schema+)
-    (cons 'kind 'poo-flow.workflow.cicd.check-receipt)
-    (cons 'check (poo-flow-cicd-check-name check))
-    (cons 'profile (poo-flow-cicd-check-profile check))
-    (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
-    (cons 'dependency-refs (poo-flow-cicd-check-dependency-refs check))
-    (cons 'sandbox-runtime-summaries
-          (poo-flow-cicd-check-sandbox-runtime-summaries
-           check
-           profile-catalog))
-    (cons 'sandbox-handoff-summaries
-          (poo-flow-cicd-check-sandbox-handoff-summaries
-           check
-           profile-catalog))
-    (cons 'sandbox-unresolved-profile-refs
-          (poo-flow-cicd-check-sandbox-unresolved-profile-refs
-           check
-           profile-catalog))
-    (cons 'command (poo-flow-cicd-check-command check))
-    (cons 'inputs (.ref check 'input-bindings))
-    (cons 'config (.ref check 'config-sources))
-    (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-    (cons 'cache (poo-flow-cicd-check-cache check))
-    (cons 'secrets (poo-flow-cicd-check-secrets check))
-    (cons 'result (.ref check 'result-protocol))
-    (cons 'runtime (poo-flow-cicd-check-runtime check))
-    (cons 'runtime-executed #f)
-    (cons 'status 'ready)
-    (cons 'runtime-manifest-ready runtime-ready))
-   (poo-flow-cicd-check-durable-fields check)))
+  (poo-flow-cicd-field-rows/tail
+   (poo-flow-cicd-check-durable-fields check)
+   (schema +poo-flow-cicd-check-receipt-schema+)
+   (kind 'poo-flow.workflow.cicd.check-receipt)
+   (check (poo-flow-cicd-check-name check))
+   (profile (poo-flow-cicd-check-profile check))
+   (profile-refs (poo-flow-cicd-check-profile-refs check))
+   (dependency-refs (poo-flow-cicd-check-dependency-refs check))
+   (sandbox-runtime-summaries
+    (poo-flow-cicd-check-sandbox-runtime-summaries
+     check
+     profile-catalog))
+   (sandbox-handoff-summaries
+    (poo-flow-cicd-check-sandbox-handoff-summaries
+     check
+     profile-catalog))
+   (sandbox-unresolved-profile-refs
+    (poo-flow-cicd-check-sandbox-unresolved-profile-refs
+     check
+     profile-catalog))
+   (command (poo-flow-cicd-check-command check))
+   (inputs (.ref check 'input-bindings))
+   (config (.ref check 'config-sources))
+   (artifacts (poo-flow-cicd-check-artifacts check))
+   (cache (poo-flow-cicd-check-cache check))
+   (secrets (poo-flow-cicd-check-secrets check))
+   (result (.ref check 'result-protocol))
+   (runtime (poo-flow-cicd-check-runtime check))
+   (runtime-executed #f)
+   (status 'ready)
+   (runtime-manifest-ready runtime-ready)))
 
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check->receipt check . maybe-profile-catalog)
@@ -284,8 +262,9 @@
       (if (null? remaining-refs)
         edges-rev
         (loop (cdr remaining-refs)
-              (cons (list (cons 'from (car remaining-refs))
-                          (cons 'to check-name))
+              (cons (poo-flow-cicd-field-rows
+                     (from (car remaining-refs))
+                     (to check-name))
                     edges-rev))))))
 
 ;; : (-> [PooFlowCicdCheck] [Alist])
@@ -453,20 +432,21 @@
            (blocked-order?
             (or (not (null? diagnostics))
                 (not (= (length ready-order) (length check-names))))))
-      (list (cons 'kind 'poo-flow.workflow.cicd.dependency-graph)
-            (cons 'check-map (poo-flow-cicd-check-map-name check-map))
-            (cons 'order-policy 'declaration-topological-report)
-            (cons 'nodes check-names)
-            (cons 'duplicate-nodes duplicate-nodes)
-            (cons 'edges (poo-flow-cicd-dependency-edges checks))
-            (cons 'unresolved-dependency-refs unresolved-dependency-refs)
-            (cons 'cycle-nodes cycle-nodes)
-            (cons 'ready-order ready-order)
-            (cons 'unordered-nodes unordered-node-names)
-            (cons 'blocked-order? blocked-order?)
-            (cons 'diagnostics diagnostics)
-            (cons 'valid? (null? diagnostics))
-            (cons 'runtime-executed #f)))))
+      (poo-flow-cicd-field-rows
+       (kind 'poo-flow.workflow.cicd.dependency-graph)
+       (check-map (poo-flow-cicd-check-map-name check-map))
+       (order-policy 'declaration-topological-report)
+       (nodes check-names)
+       (duplicate-nodes duplicate-nodes)
+       (edges (poo-flow-cicd-dependency-edges checks))
+       (unresolved-dependency-refs unresolved-dependency-refs)
+       (cycle-nodes cycle-nodes)
+       (ready-order ready-order)
+       (unordered-nodes unordered-node-names)
+       (blocked-order? blocked-order?)
+       (diagnostics diagnostics)
+       (valid? (null? diagnostics))
+       (runtime-executed #f)))))
 
 ;;; A step is admitted only when the declarative graph accepts its dependency
 ;;; path and sandbox profile refs are resolved. This is not execution state.
@@ -509,16 +489,6 @@
             (cons 'blocked-dependency-order diagnostics1))))
     (reverse diagnostics2)))
 
-;;; Pipeline-run steps wrap the existing readiness row with pipeline admission
-;;; facts so users can see a concrete run plan without running the command.
-;; : (-> [Alist] [Alist] [Alist])
-(def (poo-flow-cicd-fields-onto-tail fields tail)
-  (cond
-   ((null? fields) tail)
-   (else
-    (cons (car fields)
-          (poo-flow-cicd-fields-onto-tail (cdr fields) tail)))))
-
 ;; : (-> PooFlowCicdCheck Symbol Symbol [Symbol] [Symbol] Alist Alist)
 (def (poo-flow-cicd-pipeline-run-step-fields check
                                               check-name
@@ -526,31 +496,31 @@
                                               unresolved-profile-refs
                                               diagnostics
                                               readiness)
-  (poo-flow-cicd-fields-onto-tail
-   (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
-         (cons 'kind 'poo-flow.workflow.cicd.pipeline-run-step)
-         (cons 'check check-name)
-         (cons 'status status)
-         (cons 'handoff-ready
-               (and (eq? status 'admitted)
-                    (null? unresolved-profile-refs)))
-         (cons 'profile (poo-flow-cicd-check-profile check))
-         (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
-         (cons 'dependency-refs
-               (poo-flow-cicd-check-dependency-refs check))
-         (cons 'command (poo-flow-cicd-check-command check))
-         (cons 'argv (poo-flow-cicd-check-command check))
-         (cons 'runtime (poo-flow-cicd-check-runtime check))
-         (cons 'result (.ref check 'result-protocol))
-         (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-         (cons 'sandbox-unresolved-profile-refs unresolved-profile-refs)
-         (cons 'diagnostics diagnostics)
-         (cons 'valid? (and (eq? status 'admitted)
-                            (null? diagnostics)))
-         (cons 'runtime-readiness readiness)
-         (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-         (cons 'runtime-executed #f))
-   (poo-flow-cicd-check-durable-fields check)))
+  (poo-flow-cicd-field-rows/tail
+   (poo-flow-cicd-check-durable-fields check)
+   (schema +poo-flow-cicd-pipeline-run-schema+)
+   (kind 'poo-flow.workflow.cicd.pipeline-run-step)
+   (check check-name)
+   (status status)
+   (handoff-ready
+    (and (eq? status 'admitted)
+         (null? unresolved-profile-refs)))
+   (profile (poo-flow-cicd-check-profile check))
+   (profile-refs (poo-flow-cicd-check-profile-refs check))
+   (dependency-refs
+    (poo-flow-cicd-check-dependency-refs check))
+   (command (poo-flow-cicd-check-command check))
+   (argv (poo-flow-cicd-check-command check))
+   (runtime (poo-flow-cicd-check-runtime check))
+   (result (.ref check 'result-protocol))
+   (artifacts (poo-flow-cicd-check-artifacts check))
+   (sandbox-unresolved-profile-refs unresolved-profile-refs)
+   (diagnostics diagnostics)
+   (valid? (and (eq? status 'admitted)
+                (null? diagnostics)))
+   (runtime-readiness readiness)
+   (runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+   (runtime-executed #f)))
 
 ;; : (-> PooFlowCicdCheck Alist [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check->pipeline-run-step check
@@ -719,23 +689,24 @@
            graph
            steps
            blocked-steps)))
-    (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.pipeline-run)
-          (cons 'check-map (poo-flow-cicd-check-map-name check-map))
-          (cons 'status status)
-          (cons 'step-count (length steps))
-          (cons 'steps steps)
-          (cons 'ready-order
-                (poo-flow-cicd-alist-ref graph 'ready-order '()))
-          (cons 'blocked-steps blocked-steps)
-          (cons 'diagnostics diagnostics)
-          (cons 'dependency-graph graph)
-          (cons 'handoff-required #t)
-          (cons 'handoff-ready (and (eq? status 'admitted)
-                                    (null? diagnostics)))
-          (cons 'valid? (null? diagnostics))
-          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-          (cons 'runtime-executed #f))))
+    (poo-flow-cicd-field-rows
+     (schema +poo-flow-cicd-pipeline-run-schema+)
+     (kind 'poo-flow.workflow.cicd.pipeline-run)
+     (check-map (poo-flow-cicd-check-map-name check-map))
+     (status status)
+     (step-count (length steps))
+     (steps steps)
+     (ready-order
+      (poo-flow-cicd-alist-ref graph 'ready-order '()))
+     (blocked-steps blocked-steps)
+     (diagnostics diagnostics)
+     (dependency-graph graph)
+     (handoff-required #t)
+     (handoff-ready (and (eq? status 'admitted)
+                         (null? diagnostics)))
+     (valid? (null? diagnostics))
+     (runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+     (runtime-executed #f))))
 
 ;;; Pipeline results summarize the projected run. They are the tutorial-facing
 ;;; "what would this produce" surface before a runtime returns real outputs.
@@ -749,21 +720,22 @@
           (and (eq? (poo-flow-cicd-alist-ref run 'status 'blocked)
                     'admitted)
                (null? diagnostics))))
-    (list (cons 'schema +poo-flow-cicd-pipeline-result-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.pipeline-result)
-          (cons 'check-map (poo-flow-cicd-alist-ref run 'check-map #f))
-          (cons 'status (if handoff-ready 'handoff-ready 'blocked))
-          (cons 'pipeline-run-status
-                (poo-flow-cicd-alist-ref run 'status 'blocked))
-          (cons 'step-count (poo-flow-cicd-alist-ref run 'step-count 0))
-          (cons 'ready-order (poo-flow-cicd-alist-ref run 'ready-order '()))
-          (cons 'blocked-steps blocked-steps)
-          (cons 'diagnostics diagnostics)
-          (cons 'valid? handoff-ready)
-          (cons 'handoff-required #t)
-          (cons 'handoff-ready handoff-ready)
-          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-          (cons 'runtime-executed #f))))
+    (poo-flow-cicd-field-rows
+     (schema +poo-flow-cicd-pipeline-result-schema+)
+     (kind 'poo-flow.workflow.cicd.pipeline-result)
+     (check-map (poo-flow-cicd-alist-ref run 'check-map #f))
+     (status (if handoff-ready 'handoff-ready 'blocked))
+     (pipeline-run-status
+      (poo-flow-cicd-alist-ref run 'status 'blocked))
+     (step-count (poo-flow-cicd-alist-ref run 'step-count 0))
+     (ready-order (poo-flow-cicd-alist-ref run 'ready-order '()))
+     (blocked-steps blocked-steps)
+     (diagnostics diagnostics)
+     (valid? handoff-ready)
+     (handoff-required #t)
+     (handoff-ready handoff-ready)
+     (runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+     (runtime-executed #f))))
 
 ;;; The check-map shortcut keeps callers on the public object surface when they
 ;;; only need the result projection rather than the full run step payload.
@@ -823,17 +795,18 @@
   (let (profile-catalog (if (null? maybe-profile-catalog)
                           '()
                           (car maybe-profile-catalog)))
-    (list (cons 'schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.runtime-manifest-ready-map)
-          (cons 'check-map (poo-flow-cicd-check-map-name check-map))
-          (cons 'runtime-executed #f)
-          (cons 'handoff-required #t)
-          (cons 'dependency-graph
-                (poo-flow-cicd-check-map->dependency-graph check-map))
-          (cons 'checks
-                (poo-flow-cicd-checks->runtime-manifest-readiness
-                 (poo-flow-cicd-check-map-checks check-map)
-                 profile-catalog)))))
+    (poo-flow-cicd-field-rows
+     (schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
+     (kind 'poo-flow.workflow.cicd.runtime-manifest-ready-map)
+     (check-map (poo-flow-cicd-check-map-name check-map))
+     (runtime-executed #f)
+     (handoff-required #t)
+     (dependency-graph
+      (poo-flow-cicd-check-map->dependency-graph check-map))
+     (checks
+      (poo-flow-cicd-checks->runtime-manifest-readiness
+       (poo-flow-cicd-check-map-checks check-map)
+       profile-catalog)))))
 
 ;;; Check-map manifest projection keeps CI/CD orchestration declarative: each
 ;;; check contributes one runtime command manifest, and the wrapper records that
@@ -859,17 +832,18 @@
   (let (profile-catalog (if (null? maybe-profile-catalog)
                           '()
                           (car maybe-profile-catalog)))
-    (list (cons 'schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.runtime-command-manifest-map)
-          (cons 'check-map (poo-flow-cicd-check-map-name check-map))
-          (cons 'runtime-executed #f)
-          (cons 'handoff-required #t)
-          (cons 'dependency-graph
-                (poo-flow-cicd-check-map->dependency-graph check-map))
-          (cons 'manifests
-                (poo-flow-cicd-checks->runtime-command-manifests
-                 (poo-flow-cicd-check-map-checks check-map)
-                 profile-catalog)))))
+    (poo-flow-cicd-field-rows
+     (schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
+     (kind 'poo-flow.workflow.cicd.runtime-command-manifest-map)
+     (check-map (poo-flow-cicd-check-map-name check-map))
+     (runtime-executed #f)
+     (handoff-required #t)
+     (dependency-graph
+      (poo-flow-cicd-check-map->dependency-graph check-map))
+     (manifests
+      (poo-flow-cicd-checks->runtime-command-manifests
+       (poo-flow-cicd-check-map-checks check-map)
+       profile-catalog)))))
 
 ;;; Policy lookup stays nested under the manifest policy field. The ABI wrapper
 ;;; should not depend on incidental top-level keys from runtime descriptors.
@@ -885,79 +859,80 @@
 ;;; objects out of the payload.
 ;; : (-> Alist Alist)
 (def (poo-flow-cicd-runtime-command-manifest->marlin-handoff-entry manifest)
-  (list (cons 'kind 'poo-flow.workflow.cicd.marlin-runtime-handoff-entry)
-        (cons 'schema +poo-flow-cicd-marlin-runtime-handoff-abi-schema+)
-        (cons 'request-schema
-              (poo-flow-cicd-alist-ref manifest 'request-schema #f))
-        (cons 'operation
-              (poo-flow-cicd-alist-ref manifest 'operation #f))
-        (cons 'request-id
-              (poo-flow-cicd-alist-ref manifest 'request-id #f))
-        (cons 'artifact-handle
-              (poo-flow-cicd-alist-ref manifest 'artifact-handle #f))
-        (cons 'argv
-              (poo-flow-cicd-alist-ref manifest 'argv '()))
-        (cons 'request
-              (poo-flow-cicd-alist-ref manifest 'request '()))
-        (cons 'policy
-              (poo-flow-cicd-alist-ref manifest 'policy '()))
-        (cons 'plan-id
-              (poo-flow-cicd-alist-ref manifest 'plan-id #f))
-        (cons 'node-id
-              (poo-flow-cicd-alist-ref manifest 'node-id #f))
-        (cons 'frontier
-              (poo-flow-cicd-alist-ref manifest 'frontier '()))
-        (cons 'metadata
-              (poo-flow-cicd-alist-ref manifest 'metadata '()))
-        (cons 'durable-task-id
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'durable-task-id
-               #f))
-        (cons 'action-class
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'action-class
-               #f))
-        (cons 'artifact-refs
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'artifact-refs
-               '()))
-        (cons 'artifact-provenance
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'artifact-provenance
-               '()))
-        (cons 'artifact-retention
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'artifact-retention
-               #f))
-        (cons 'sandbox-refs
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'sandbox-refs
-               '()))
-        (cons 'checkpoint-ref
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'checkpoint-ref
-               #f))
-        (cons 'compensation-refs
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'compensation-refs
-               '()))
-        (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-        (cons 'handoff-required
-              (poo-flow-cicd-runtime-command-manifest-policy-ref
-               manifest
-               'handoff-required
-               #t))
-        (cons 'runtime-executed #f)
-        (cons 'runtime-parses-scheme-source #f)
-        (cons 'scheme-manufactures-runtime-handlers #f)))
+  (poo-flow-cicd-field-rows
+   (kind 'poo-flow.workflow.cicd.marlin-runtime-handoff-entry)
+   (schema +poo-flow-cicd-marlin-runtime-handoff-abi-schema+)
+   (request-schema
+    (poo-flow-cicd-alist-ref manifest 'request-schema #f))
+   (operation
+    (poo-flow-cicd-alist-ref manifest 'operation #f))
+   (request-id
+    (poo-flow-cicd-alist-ref manifest 'request-id #f))
+   (artifact-handle
+    (poo-flow-cicd-alist-ref manifest 'artifact-handle #f))
+   (argv
+    (poo-flow-cicd-alist-ref manifest 'argv '()))
+   (request
+    (poo-flow-cicd-alist-ref manifest 'request '()))
+   (policy
+    (poo-flow-cicd-alist-ref manifest 'policy '()))
+   (plan-id
+    (poo-flow-cicd-alist-ref manifest 'plan-id #f))
+   (node-id
+    (poo-flow-cicd-alist-ref manifest 'node-id #f))
+   (frontier
+    (poo-flow-cicd-alist-ref manifest 'frontier '()))
+   (metadata
+    (poo-flow-cicd-alist-ref manifest 'metadata '()))
+   (durable-task-id
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'durable-task-id
+     #f))
+   (action-class
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'action-class
+     #f))
+   (artifact-refs
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'artifact-refs
+     '()))
+   (artifact-provenance
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'artifact-provenance
+     '()))
+   (artifact-retention
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'artifact-retention
+     #f))
+   (sandbox-refs
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'sandbox-refs
+     '()))
+   (checkpoint-ref
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'checkpoint-ref
+     #f))
+   (compensation-refs
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'compensation-refs
+     '()))
+   (runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+   (handoff-required
+    (poo-flow-cicd-runtime-command-manifest-policy-ref
+     manifest
+     'handoff-required
+     #t))
+   (runtime-executed #f)
+   (runtime-parses-scheme-source #f)
+   (scheme-manufactures-runtime-handlers #f)))
 
 ;;; Entry projection is a one-to-one map over command manifests. Keeping it a
 ;;; map preserves order and prevents the ABI layer from inventing scheduler data.
@@ -979,26 +954,27 @@
 (def (poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi
       manifest-map)
   (let ((manifests (poo-flow-cicd-alist-ref manifest-map 'manifests '())))
-    (list (cons 'schema +poo-flow-cicd-marlin-runtime-handoff-abi-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.marlin-runtime-handoff-abi)
-          (cons 'check-map
-                (poo-flow-cicd-alist-ref manifest-map 'check-map #f))
-          (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-          (cons 'runtime-executed #f)
-          (cons 'runtime-parses-scheme-source #f)
-          (cons 'scheme-manufactures-runtime-handlers #f)
-          (cons 'handoff-required
-                (poo-flow-cicd-alist-ref manifest-map 'handoff-required #t))
-          (cons 'required-fields
-                +poo-flow-cicd-marlin-runtime-handoff-abi-fields+)
-          (cons 'manifest-count (length manifests))
-          (cons 'dependency-graph
-                (poo-flow-cicd-alist-ref manifest-map
-                                         'dependency-graph
-                                         '()))
-          (cons 'entries
-                (poo-flow-cicd-runtime-command-manifests->marlin-handoff-entries
-                 manifests)))))
+    (poo-flow-cicd-field-rows
+     (schema +poo-flow-cicd-marlin-runtime-handoff-abi-schema+)
+     (kind 'poo-flow.workflow.cicd.marlin-runtime-handoff-abi)
+     (check-map
+      (poo-flow-cicd-alist-ref manifest-map 'check-map #f))
+     (runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+     (runtime-executed #f)
+     (runtime-parses-scheme-source #f)
+     (scheme-manufactures-runtime-handlers #f)
+     (handoff-required
+      (poo-flow-cicd-alist-ref manifest-map 'handoff-required #t))
+     (required-fields
+      +poo-flow-cicd-marlin-runtime-handoff-abi-fields+)
+     (manifest-count (length manifests))
+     (dependency-graph
+      (poo-flow-cicd-alist-ref manifest-map
+                               'dependency-graph
+                               '()))
+     (entries
+      (poo-flow-cicd-runtime-command-manifests->marlin-handoff-entries
+       manifests)))))
 
 ;;; The check-map shortcut keeps callers on the public POO object surface while
 ;;; delegating ABI formation through the manifest-map boundary above.

@@ -46,14 +46,14 @@
      (let* ((project-profile
              (poo-flow-nono-sandbox-profile-config
               'project/dev
-              '((capabilities :append project-tool)
+              '((capabilities :append filesystem-read)
                 (metadata (project . marlin)))))
             (session-profile
              (poo-flow-sandbox-profile-object-derive
               poo-flow-nono-sandbox-profile-object
               project-profile
               'session/dev
-              '((capabilities :append session-tool)
+              '((capabilities :append filesystem-write)
                 (metadata (session . "s-1")))
               '((scope . session) (scope-ref . "s-1"))))
             (task-profile
@@ -61,8 +61,8 @@
               poo-flow-nono-sandbox-profile-object
               session-profile
               'task/build
-              '((capabilities :append task-tool)
-                (capabilities :remove project-tool)
+              '((capabilities :append process-run)
+                (capabilities :remove filesystem-read)
                 (metadata (task . build)))
               '((scope . task) (scope-ref . build))))
             (metadata (poo-flow-sandbox-profile-metadata task-profile))
@@ -76,7 +76,7 @@
        (check-equal? (poo-flow-sandbox-profile-backend-ref task-profile)
                      'task/build)
        (check-equal? (poo-flow-sandbox-profile-capabilities task-profile)
-                     '(process filesystem tmpdir session-tool task-tool))
+                     '(process filesystem tmpdir filesystem-write process-run))
        (check-equal? (length lineage) 2)
        (check-equal? (derivation-test-alist-ref last-step
                                                 'parent-profile

@@ -9,6 +9,7 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/request)
 
 (export +agent-sandbox-bridge-schema+
@@ -66,7 +67,8 @@
      'agent-sandbox
      'invalid-agent-sandbox-execution-request
      "invalid agent sandbox execution request"
-     (list (cons 'request request)))))
+     (agent-sandbox-field-rows
+      (request request)))))
 
 ;;; Runtime manifest projection keeps Marlin and C/R bindings away from the
 ;;; raw request alist while preserving all backend-neutral policy data.
@@ -78,41 +80,36 @@
   (let (sandbox (agent-sandbox-validate-request request))
     (let* ((command (agent-sandbox-request-ref sandbox 'command #f))
            (args (agent-sandbox-request-ref sandbox 'args '())))
-      (list (cons 'schema +agent-sandbox-runtime-manifest-schema+)
-            (cons 'backend
-                  (list (cons 'kind
-                              (agent-sandbox-request-ref sandbox
-                                                         'backend-kind
-                                                         #f))
-                        (cons 'ref
-                              (agent-sandbox-request-ref sandbox
-                                                         'backend-ref
-                                                         #f))))
-            (cons 'process
-                  (list (cons 'command command)
-                        (cons 'args args)
-                        (cons 'argv (cons command args))
-                        (cons 'env
-                              (agent-sandbox-request-ref sandbox 'env '()))
-                        (cons 'workdir
-                              (agent-sandbox-request-ref sandbox
-                                                         'workdir
-                                                         #f))))
-            (cons 'filesystem
-                  (list (cons 'mounts
-                              (agent-sandbox-request-ref sandbox
-                                                         'mounts
-                                                         '()))))
-            (cons 'network-policy
-                  (agent-sandbox-request-ref sandbox 'network-policy '()))
-            (cons 'capabilities
-                  (agent-sandbox-request-ref sandbox 'capabilities '()))
-            (cons 'resource-policy
-                  (agent-sandbox-request-ref sandbox 'resource-policy '()))
-            (cons 'output-policy
-                  (agent-sandbox-request-ref sandbox 'output-policy #f))
-            (cons 'metadata
-                  (agent-sandbox-request-ref sandbox 'metadata '()))))))
+      (agent-sandbox-field-rows
+       (schema +agent-sandbox-runtime-manifest-schema+)
+       (backend
+        (agent-sandbox-field-rows
+         (kind
+          (agent-sandbox-request-ref sandbox 'backend-kind #f))
+         (ref
+          (agent-sandbox-request-ref sandbox 'backend-ref #f))))
+       (process
+        (agent-sandbox-field-rows
+         (command command)
+         (args args)
+         (argv (cons command args))
+         (env (agent-sandbox-request-ref sandbox 'env '()))
+         (workdir
+          (agent-sandbox-request-ref sandbox 'workdir #f))))
+       (filesystem
+        (agent-sandbox-field-rows
+         (mounts
+          (agent-sandbox-request-ref sandbox 'mounts '()))))
+       (network-policy
+        (agent-sandbox-request-ref sandbox 'network-policy '()))
+       (capabilities
+        (agent-sandbox-request-ref sandbox 'capabilities '()))
+       (resource-policy
+        (agent-sandbox-request-ref sandbox 'resource-policy '()))
+       (output-policy
+        (agent-sandbox-request-ref sandbox 'output-policy #f))
+       (metadata
+        (agent-sandbox-request-ref sandbox 'metadata '()))))))
 
 ;;; Intent: extend the core Rust request envelope at the bridge edge, not in
 ;;; core task structs. Marlin can consume these projection fields without
@@ -122,21 +119,22 @@
   (let* ((operation (if (null? maybe-operation) 'submit (car maybe-operation)))
          (valid-request (agent-sandbox-validate-execution-request request))
          (sandbox (agent-sandbox-execution-request-config valid-request)))
-    (append
+    (agent-sandbox-rows/tail
      (rust-request-envelope valid-request operation)
-     (list (cons 'extension-schema +agent-sandbox-bridge-schema+)
-           (cons 'extension 'agent-sandbox)
-           (cons 'request-schema
-                 (agent-sandbox-request-ref sandbox 'schema #f))
-           (cons 'backend-kind
-                 (agent-sandbox-request-ref sandbox 'backend-kind #f))
-           (cons 'backend-ref
-                 (agent-sandbox-request-ref sandbox 'backend-ref #f))
-           (cons 'command
-                 (agent-sandbox-request-ref sandbox 'command #f))
-           (cons 'runtime-manifest
-                 (agent-sandbox-request->runtime-manifest sandbox))
-           (cons 'sandbox sandbox)))))
+     (agent-sandbox-field-rows
+      (extension-schema +agent-sandbox-bridge-schema+)
+      (extension 'agent-sandbox)
+      (request-schema
+       (agent-sandbox-request-ref sandbox 'schema #f))
+      (backend-kind
+       (agent-sandbox-request-ref sandbox 'backend-kind #f))
+      (backend-ref
+       (agent-sandbox-request-ref sandbox 'backend-ref #f))
+      (command
+       (agent-sandbox-request-ref sandbox 'command #f))
+      (runtime-manifest
+       (agent-sandbox-request->runtime-manifest sandbox))
+      (sandbox sandbox)))))
 
 ;;; Runtime command errors keep the bridge envelope identifiers, so Marlin-side
 ;;; failures can be correlated without knowing the underlying Gerbil task.
@@ -149,8 +147,9 @@
       'failed
       #f
       (agent-sandbox-alist-ref envelope 'artifact-handle #f)
-      (list (cons 'code 'agent-sandbox-runtime-command-error)
-            (cons 'error failure))))
+      (agent-sandbox-field-rows
+       (code 'agent-sandbox-runtime-command-error)
+       (error failure))))
    (lambda ()
      (normalize-runtime-response envelope
                                  (runtime-command-call command envelope)))))

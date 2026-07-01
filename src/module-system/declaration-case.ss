@@ -219,11 +219,18 @@
 ;;       ;; => stage-symbols
 ;;       ```
 ;;     %
+;; : (-> [Alist] [Symbol] [Symbol])
+(def (poo-flow-declaration-case-trace-stages/rev trace stages-rev)
+  (if (null? trace)
+    stages-rev
+    (poo-flow-declaration-case-trace-stages/rev
+     (cdr trace)
+     (cons (poo-flow-declaration-case-alist-value 'stage (car trace))
+           stages-rev))))
+
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-declaration-case-trace-stages trace)
-  (map (lambda (row)
-         (poo-flow-declaration-case-alist-value 'stage row))
-       trace))
+  (reverse (poo-flow-declaration-case-trace-stages/rev trace '())))
 
 ;;; Boundary: declaration case trace field all equal predicate is the policy-
 ;;; visible edge for module-system behavior, keeping validation, lookup, or

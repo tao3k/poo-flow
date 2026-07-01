@@ -8,6 +8,7 @@
 ;;; Policy evidence: tests should import this module when they assert nono defaults.
 
 (import :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/nono-profile-candidate)
 
 (export make-nono-agent-sandbox-profile-descriptor
@@ -31,8 +32,9 @@
       (mounts . runtime))
      (startup . zero-latency))
    (lambda (profile-ref)
-     (list (cons 'backend 'nono)
-           (cons 'profile profile-ref)))
+     (agent-sandbox-field-rows
+      (backend 'nono)
+      (profile profile-ref)))
    (if (null? maybe-options) '() (car maybe-options))))
 
 ;;; Boundary: make nono agent sandbox profile is the policy-visible edge for

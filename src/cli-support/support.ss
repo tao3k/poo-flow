@@ -4,7 +4,6 @@
 
 (import :gerbil/gambit
         (only-in :std/misc/process run-process)
-        (only-in :std/srfi/1 filter-map)
         (only-in :std/srfi/13
                  string-contains
                  string-index
@@ -274,8 +273,13 @@
 ;;; Boundary: line parsing remains delegated to platform-specific RSS rules.
 ;; : (-> [String] (U #f Integer))
 (def (poo-flow-cli-first-rss-bytes lines)
-  (let (matches (filter-map poo-flow-cli-rss-line-bytes lines))
-    (and (pair? matches) (car matches))))
+  (cond
+   ((null? lines) #f)
+   (else
+    (let (bytes (poo-flow-cli-rss-line-bytes (car lines)))
+      (if bytes
+        bytes
+        (poo-flow-cli-first-rss-bytes (cdr lines)))))))
 
 ;;; Intent: extract the first RSS value emitted by /usr/bin/time.
 ;;; Boundary: supports Darwin bytes and GNU/Linux kilobytes output formats.

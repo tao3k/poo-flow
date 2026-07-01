@@ -49,6 +49,7 @@
   '(agent-profile
     agent-harness
     agent-session
+    session-agent-graph
     workflow-run
     dispatch-receipt
     agent-operation
@@ -67,6 +68,8 @@
      . poo-flow.loop-engine.lineage-receipt.v1)
     (selector-receipt
      . poo-flow.loop-engine.selector-receipt.v1)
+    (session-agent-graph
+     . poo-flow.modules.session.agent-graph.v1)
     (resource-dispatch-receipt
      . poo-flow.loop-engine.resource-dispatch-receipt.v1)
     (capability-receipt
@@ -347,6 +350,22 @@
                                              'agent-sessions)
                                    'workflow-run?)
                 '(#f #f #f #f))
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'session-agent-graph)
+                          'kind)
+                'poo-flow.session.agent-graph)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'session-agent-graph)
+                          'schema)
+                'poo-flow.modules.session.agent-graph.v1)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'session-agent-graph)
+                          'agent-count)
+                4)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'session-agent-graph)
+                          'communication-receipt-count)
+                8)
   (check-equal? (test-ref (test-ref runtime-manifest-request
                                      'session-agent-topology-trace)
                           'valid?)

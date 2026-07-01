@@ -311,15 +311,21 @@
 ;;; Boundary: module system live case read args is the policy-visible edge for
 ;;; module-system, test harness behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
+;; : (-> [String] [String] [String])
+(def (poo-flow-module-system-live-case-read-args/rev paths args-rev)
+  (cond
+   ((null? paths) (reverse args-rev))
+   ((poo-flow-module-system-live-case-non-empty-string? (car paths))
+    (poo-flow-module-system-live-case-read-args/rev
+     (cdr paths)
+     (cons (car paths)
+           (cons "--read" args-rev))))
+   (else
+    (poo-flow-module-system-live-case-read-args/rev (cdr paths) args-rev))))
+
 ;; : (-> [String] [String])
 (def (poo-flow-module-system-live-case-read-args paths)
-  (cond
-   ((null? paths) '())
-   ((poo-flow-module-system-live-case-non-empty-string? (car paths))
-    (append (list "--read" (car paths))
-            (poo-flow-module-system-live-case-read-args (cdr paths))))
-   (else
-    (poo-flow-module-system-live-case-read-args (cdr paths)))))
+  (poo-flow-module-system-live-case-read-args/rev paths '()))
 
 ;; : (-> POOObject [String])
 (def (poo-flow-module-system-live-case-read-paths live-case)

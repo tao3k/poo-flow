@@ -42,13 +42,12 @@
           (metadata (source . user-interface)
                     (case . memory-core))))
        (validation
-        (poo-flow-memory-policy-catalog-validation-receipt
-         'validation/custom-memory-core
-         catalog
-         (list memory-intent)
-         '((source . user-interface)
-           (case . memory-core)))))
+        (memory-catalog-validation validation/custom-memory-core
+          catalog
+          (memory-intent)
+          (metadata (source . user-interface)
+                    (case . memory-core)))))
   (list
    (poo-flow-user-module-selection->alist selection)
    (poo-flow-memory-catalog->alist catalog)
-   (poo-flow-memory-policy-catalog-validation-receipt->alist validation)))
+   (memory-catalog-validation-row validation)))

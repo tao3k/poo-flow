@@ -68,6 +68,26 @@
     (lazy-loader-plans-deferred? (cdr plans)))
    (else #f)))
 
+;; : (forall (a) (-> [a] [a] [a]))
+(def (lazy-loader-values/rev-onto values values-rev)
+  (let loop ((remaining-values values)
+             (result values-rev))
+    (if (null? remaining-values)
+      result
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) result)))))
+
+;; : (-> [String] [PooModuleSourceRef])
+(def (lazy-loader-module-tree-source-refs module-roots)
+  (let loop ((remaining-roots module-roots)
+             (refs-rev '()))
+    (if (null? remaining-roots)
+      (reverse refs-rev)
+      (loop (cdr remaining-roots)
+            (lazy-loader-values/rev-onto
+             (poo-flow-module-tree-source-refs (car remaining-roots))
+             refs-rev)))))
+
 ;;; This suite keeps lazy-loader planning observable without forcing modules to
 ;;; load eagerly during configuration parsing.
 ;; : TestSuite
@@ -82,16 +102,12 @@
                    (string-append "src/modules/generated-"
                                   (number->string index)))))
                (source-refs
-                (apply append
-                       (map poo-flow-module-tree-source-refs
-                            module-roots)))
+                (lazy-loader-module-tree-source-refs module-roots))
                (best-ms
                 (poo-flow-performance-best-elapsed-ms
                  5
                  (lambda ()
-                   (apply append
-                          (map poo-flow-module-tree-source-refs
-                               module-roots))))))
+                   (lazy-loader-module-tree-source-refs module-roots)))))
           (check-equal? (length source-refs) (* module-count 2))
           (check-equal? (poo-flow-module-source-ref-value (car source-refs))
                         "src/modules/generated-0/config.ss")

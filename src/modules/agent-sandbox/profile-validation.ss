@@ -4,6 +4,7 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile-data)
 
 (export agent-sandbox-required-field-errors
@@ -15,22 +16,33 @@
         agent-sandbox-profile-resource-policy-filesystem-diagnostics
         agent-sandbox-validate-profile)
 
+;; : (-> Symbol Value ValidationError)
+(def (agent-sandbox-validation-error field code)
+  (agent-sandbox-field-rows
+   (field field)
+   (code code)))
+
 ;;; Validation errors are data, not strings, so tests and Marlin bridge code can
 ;;; distinguish missing fields from schema mismatch without parsing messages.
-;; : (-> Alist [(Symbol Value -> Boolean)] [ValidationError])
-(def (agent-sandbox-required-field-errors alist specs)
+;; : (-> Alist [(Symbol Value -> Boolean)] [ValidationError] [ValidationError])
+(def (agent-sandbox-required-field-errors/rev alist specs errors-rev)
   (if (null? specs)
-    '()
+    errors-rev
     (let* ((spec (car specs))
            (key (car spec))
            (valid? (cdr spec))
            (entry (and alist (assoc key alist))))
-      (append
+      (agent-sandbox-required-field-errors/rev
+       alist
+       (cdr specs)
        (if (and entry (valid? (cdr entry)))
-         '()
-         (list (list (cons 'field key)
-                     (cons 'code 'missing-or-invalid))))
-       (agent-sandbox-required-field-errors alist (cdr specs))))))
+         errors-rev
+         (cons (agent-sandbox-validation-error key 'missing-or-invalid)
+               errors-rev))))))
+
+;; : (-> Alist [(Symbol Value -> Boolean)] [ValidationError])
+(def (agent-sandbox-required-field-errors alist specs)
+  (reverse (agent-sandbox-required-field-errors/rev alist specs '())))
 
 ;;; Profile validation checks the contract-owned fields only. Backend-specific
 ;;; policy contents remain descriptor/runtime concerns.
@@ -44,16 +56,24 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> AgentSandboxProfile [ValidationError])
 (def (agent-sandbox-profile-validation-errors profile)
-  (append
-   (if (eq? (agent-sandbox-profile-ref profile 'schema #f)
-            +agent-sandbox-profile-schema+)
-     '()
-     (list '((field . schema) (code . schema-mismatch))))
-   (agent-sandbox-required-field-errors
-    profile
-    (list (cons 'backend-kind agent-sandbox-profile-required-value?)
-          (cons 'backend-ref agent-sandbox-profile-required-value?)))
-   (agent-sandbox-profile-filesystem-sandbox-errors profile)))
+  (let* ((errors-rev
+          (if (eq? (agent-sandbox-profile-ref profile 'schema #f)
+                   +agent-sandbox-profile-schema+)
+            '()
+            (list (agent-sandbox-validation-error 'schema
+                                                  'schema-mismatch))))
+         (errors-rev
+          (agent-sandbox-rows-into/rev
+           (agent-sandbox-required-field-errors
+            profile
+            (list (cons 'backend-kind agent-sandbox-profile-required-value?)
+                  (cons 'backend-ref agent-sandbox-profile-required-value?)))
+           errors-rev))
+         (errors-rev
+          (agent-sandbox-rows-into/rev
+           (agent-sandbox-profile-filesystem-sandbox-errors profile)
+           errors-rev)))
+    (reverse errors-rev)))
 
 ;;; Resource policies only make sense when the profile also declares a
 ;;; filesystem sandbox capability and a concrete filesystem resource boundary.
@@ -223,9 +243,10 @@
 
 ;; : (-> Symbol Alist ValidationError)
 (def (agent-sandbox-profile-filesystem-diagnostic code payload)
-  (append (list (cons 'field 'resource-policy)
-                (cons 'code code))
-          payload))
+  (agent-sandbox-field-rows/tail
+   payload
+   (field 'resource-policy)
+   (code code)))
 
 ;;; Static source diagnostics distinguish runtime/env/static paths before path
 ;;; existence checks, preserving the original resource entry in every error.
@@ -241,33 +262,40 @@
     (cond
      ((eq? source-kind 'runtime) '())
      ((eq? source-kind 'env)
-      (append
-       (if (agent-sandbox-profile-env-source? source)
-         '()
-         (list (agent-sandbox-profile-filesystem-diagnostic
-                'invalid-env-source
-                (list (cons 'source source)
-                      (cons 'entry entry)))))
-       (if (eq? role 'project-workspace)
-         (list (agent-sandbox-profile-filesystem-diagnostic
-                'dynamic-project-workspace-source
-                (list (cons 'source source)
-                      (cons 'entry entry))))
-         '())))
+      (let* ((errors-rev
+              (if (agent-sandbox-profile-env-source? source)
+                '()
+                (list (agent-sandbox-profile-filesystem-diagnostic
+                       'invalid-env-source
+                       (agent-sandbox-field-rows
+                        (source source)
+                        (entry entry))))))
+             (errors-rev
+              (if (eq? role 'project-workspace)
+                (cons (agent-sandbox-profile-filesystem-diagnostic
+                       'dynamic-project-workspace-source
+                       (agent-sandbox-field-rows
+                        (source source)
+                        (entry entry)))
+                      errors-rev)
+                errors-rev)))
+        (reverse errors-rev)))
      ((not (agent-sandbox-profile-static-source-path? source))
       (list (agent-sandbox-profile-filesystem-diagnostic
              'invalid-static-source-path
-             (list (cons 'source source)
-                   (cons 'entry entry)))))
+             (agent-sandbox-field-rows
+              (source source)
+              (entry entry)))))
      ((and (eq? role 'project-workspace)
            (not (and (agent-sandbox-profile-relative-path-shape? marker)
                      (file-exists?
                       (agent-sandbox-profile-path-join source marker)))))
       (list (agent-sandbox-profile-filesystem-diagnostic
              'missing-project-workspace-marker
-             (list (cons 'source source)
-                   (cons 'project-marker marker)
-                   (cons 'entry entry)))))
+             (agent-sandbox-field-rows
+              (source source)
+              (project-marker marker)
+              (entry entry)))))
      (else '()))))
 
 ;;; Boundary: agent sandbox profile target path diagnostics is the policy-
@@ -281,8 +309,9 @@
       '()
       (list (agent-sandbox-profile-filesystem-diagnostic
              'invalid-sandbox-target-path
-             (list (cons 'target target)
-                   (cons 'entry entry)))))))
+             (agent-sandbox-field-rows
+              (target target)
+              (entry entry)))))))
 
 ;;; Boundary: agent sandbox profile filesystem path entry diagnostics is the
 ;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
@@ -290,11 +319,19 @@
 ;; : (-> Alist [ValidationError])
 (def (agent-sandbox-profile-filesystem-path-entry-diagnostics entry)
   (if (list? entry)
-    (append (agent-sandbox-profile-static-source-diagnostics entry)
-            (agent-sandbox-profile-target-path-diagnostics entry))
+    (let* ((errors-rev
+            (agent-sandbox-rows-into/rev
+             (agent-sandbox-profile-static-source-diagnostics entry)
+             '()))
+           (errors-rev
+            (agent-sandbox-rows-into/rev
+             (agent-sandbox-profile-target-path-diagnostics entry)
+             errors-rev)))
+      (reverse errors-rev))
     (list (agent-sandbox-profile-filesystem-diagnostic
            'invalid-filesystem-path-entry
-           (list (cons 'entry entry))))))
+           (agent-sandbox-field-rows
+            (entry entry))))))
 
 ;; : (-> Alist Boolean)
 (def (agent-sandbox-profile-project-workspace-path-entry? entry)
@@ -343,7 +380,8 @@
    ((not (pair? entries))
     (list (agent-sandbox-profile-filesystem-diagnostic
            'missing-filesystem-paths
-           (list (cons 'paths entries)))))
+           (agent-sandbox-field-rows
+            (paths entries)))))
    (else
     (agent-sandbox-profile-entries-diagnostics
      agent-sandbox-profile-filesystem-path-entry-diagnostics
@@ -355,11 +393,19 @@
 ;; : (-> Alist [ValidationError])
 (def (agent-sandbox-profile-filesystem-mount-entry-diagnostics entry)
   (if (list? entry)
-    (append (agent-sandbox-profile-static-source-diagnostics entry)
-            (agent-sandbox-profile-target-path-diagnostics entry))
+    (let* ((errors-rev
+            (agent-sandbox-rows-into/rev
+             (agent-sandbox-profile-static-source-diagnostics entry)
+             '()))
+           (errors-rev
+            (agent-sandbox-rows-into/rev
+             (agent-sandbox-profile-target-path-diagnostics entry)
+             errors-rev)))
+      (reverse errors-rev))
     (list (agent-sandbox-profile-filesystem-diagnostic
            'invalid-filesystem-mount-entry
-           (list (cons 'entry entry))))))
+           (agent-sandbox-field-rows
+            (entry entry))))))
 
 ;;; Mount diagnostics mirror path diagnostics because project-copy and runtime
 ;;; mounts share validation shape but keep separate error codes.
@@ -369,7 +415,8 @@
    ((not (pair? entries))
     (list (agent-sandbox-profile-filesystem-diagnostic
            'missing-filesystem-mounts
-           (list (cons 'mounts entries)))))
+           (agent-sandbox-field-rows
+            (mounts entries)))))
    (else
     (agent-sandbox-profile-entries-diagnostics
      agent-sandbox-profile-filesystem-mount-entry-diagnostics
@@ -448,29 +495,39 @@
          (has-provider-anchor?
           (or (agent-sandbox-alist-ref spec 'snapshot #f)
               (agent-sandbox-alist-ref spec 'volume #f))))
-    (append
-     (if scope
-       '()
-       (list (agent-sandbox-profile-filesystem-diagnostic
-              'missing-filesystem-scope
-              (list (cons 'filesystem spec)))))
-     (if (and (eq? scope 'project-workspace)
-              (not (agent-sandbox-profile-paths-have-project-workspace?
-                    paths)))
-       (list (agent-sandbox-profile-filesystem-diagnostic
-              'missing-project-workspace-path
-              (list (cons 'paths paths))))
-       '())
-     path-errors
-     mount-errors
-     (if (or has-path-anchor?
-             has-mount-anchor?
-             has-dynamic-runtime-anchor?
-             has-provider-anchor?)
-       '()
-       (list (agent-sandbox-profile-filesystem-diagnostic
-              'missing-filesystem-materialization
-              (list (cons 'filesystem spec))))))))
+    (let* ((errors-rev
+            (if scope
+              '()
+              (list (agent-sandbox-profile-filesystem-diagnostic
+                     'missing-filesystem-scope
+                     (agent-sandbox-field-rows
+                      (filesystem spec))))))
+           (errors-rev
+            (if (and (eq? scope 'project-workspace)
+                     (not (agent-sandbox-profile-paths-have-project-workspace?
+                           paths)))
+              (cons (agent-sandbox-profile-filesystem-diagnostic
+                     'missing-project-workspace-path
+                     (agent-sandbox-field-rows
+                      (paths paths)))
+                    errors-rev)
+              errors-rev))
+           (errors-rev
+            (agent-sandbox-rows-into/rev path-errors errors-rev))
+           (errors-rev
+            (agent-sandbox-rows-into/rev mount-errors errors-rev))
+           (errors-rev
+            (if (or has-path-anchor?
+                    has-mount-anchor?
+                    has-dynamic-runtime-anchor?
+                    has-provider-anchor?)
+              errors-rev
+              (cons (agent-sandbox-profile-filesystem-diagnostic
+                     'missing-filesystem-materialization
+                     (agent-sandbox-field-rows
+                      (filesystem spec)))
+                    errors-rev))))
+      (reverse errors-rev))))
 
 ;;; Boundary: agent sandbox profile resource policy filesystem diagnostics is
 ;;; the policy-visible edge for sandbox behavior, keeping validation, lookup,
@@ -487,9 +544,9 @@
             filesystem-entry))
       (list (agent-sandbox-profile-filesystem-diagnostic
              'unsafe-filesystem-sandbox-resource
-             (list (cons 'requires
-                         '(filesystem scope materialization-anchor))
-                   (cons 'resource-policy resource-policy)))))
+             (agent-sandbox-field-rows
+              (requires '(filesystem scope materialization-anchor))
+              (resource-policy resource-policy)))))
      (else
       (agent-sandbox-profile-resource-policy-materialization-diagnostics
        (cdr filesystem-entry)
@@ -533,25 +590,33 @@
          (has-filesystem-resource?
           (agent-sandbox-profile-resource-policy-has-filesystem?
            resource-policy)))
-    (append
-     (if (and (not (null? resource-policy))
-              (not has-filesystem-capability?))
-       (list (list (cons 'field 'capabilities)
-                   (cons 'code 'missing-filesystem-sandbox-capability)
-                   (cons 'requires 'resource-policy)
-                   (cons 'resource-policy resource-policy)))
-       '())
-     (if (and has-filesystem-capability?
-              (not has-filesystem-resource?))
-       (list (list (cons 'field 'resource-policy)
-                   (cons 'code 'missing-filesystem-sandbox-resource)
-                   (cons 'requires 'filesystem)
-                   (cons 'resource-policy resource-policy)))
-       '())
-     (if has-filesystem-resource?
-       (agent-sandbox-profile-resource-policy-filesystem-diagnostics
-        resource-policy)
-       '()))))
+    (let* ((errors-rev
+            (if (and (not (null? resource-policy))
+                     (not has-filesystem-capability?))
+              (list (agent-sandbox-field-rows
+                     (field 'capabilities)
+                     (code 'missing-filesystem-sandbox-capability)
+                     (requires 'resource-policy)
+                     (resource-policy resource-policy)))
+              '()))
+           (errors-rev
+            (if (and has-filesystem-capability?
+                     (not has-filesystem-resource?))
+              (cons (agent-sandbox-field-rows
+                     (field 'resource-policy)
+                     (code 'missing-filesystem-sandbox-resource)
+                     (requires 'filesystem)
+                     (resource-policy resource-policy))
+                    errors-rev)
+              errors-rev))
+           (errors-rev
+            (if has-filesystem-resource?
+              (agent-sandbox-rows-into/rev
+               (agent-sandbox-profile-resource-policy-filesystem-diagnostics
+                resource-policy)
+               errors-rev)
+              errors-rev)))
+      (reverse errors-rev))))
 
 ;;; Validation raises typed control-plane failures at the Scheme boundary before
 ;;; malformed profile data reaches adapter or Marlin bridge code.
@@ -564,5 +629,6 @@
        'agent-sandbox
        'invalid-agent-sandbox-profile
        "invalid agent sandbox profile"
-       (list (cons 'errors errors)
-             (cons 'profile profile))))))
+       (agent-sandbox-field-rows
+        (errors errors)
+        (profile profile))))))

@@ -8,6 +8,7 @@
 ;;; Policy evidence: tests should import this module when they assert Cube defaults.
 
 (import :poo-flow/src/modules/agent-sandbox/profile
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/cube-interface)
 
 (export make-cube-agent-sandbox-profile-descriptor
@@ -32,8 +33,9 @@
      (snapshot . clone)
      (resume . supported))
    (lambda (profile-ref)
-     (list (cons 'backend 'cube)
-           (cons 'template profile-ref)))
+     (agent-sandbox-field-rows
+      (backend 'cube)
+      (template profile-ref)))
    (if (null? maybe-options) '() (car maybe-options))))
 
 ;;; Boundary: make cube agent sandbox profile is the policy-visible edge for

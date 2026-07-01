@@ -128,11 +128,27 @@
            loop-prioritization-role
            loop-strategy-engine-role)))
 
+;; : (-> Alist Alist Alist)
+(def (loop-strategy-slot-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
 ;; : (-> Symbol [LoopPatternDescriptor] Alist Alist)
 (def (loop-strategy-plan-slot-rows name patterns overrides)
-  (cons (cons 'name name)
-        (cons (cons 'patterns patterns)
-              overrides)))
+  (loop-strategy-slot-rows/tail
+   (list
+    (cons 'name name)
+    (cons 'patterns patterns))
+   overrides))
 
 ;;; Boundary: constructor receives descriptors and strategy-policy overrides.
 ;;; Runtime handles, timers, connector clients, and worktrees stay out of scope.

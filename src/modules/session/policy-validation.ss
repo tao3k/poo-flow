@@ -4,6 +4,11 @@
 ;;; attempt rows; it does not execute tools, hooks, communication, or runtime IO.
 
 (import (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/src/modules/session/communication
+                 poo-flow-session-communication-channel-receipt?
+                 poo-flow-session-communication-channel-receipt->alist
+                 poo-flow-session-communication-receipt?
+                 poo-flow-session-communication-receipt->alist)
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy
         :poo-flow/src/modules/session/policy-syntax
@@ -21,7 +26,23 @@
         poo-flow-session-policy-validation-receipt-effective-model-ref
         poo-flow-session-policy-validation-receipt-effective-prompt-session-ref
         poo-flow-session-policy-validation-receipt-effective-prompt-chunk-refs
+        poo-flow-session-policy-validation-receipt-effective-isolation-mode
+        poo-flow-session-policy-validation-receipt-effective-sandbox-profile-ref
+        poo-flow-session-policy-validation-receipt-tool-catalog-ref
         poo-flow-session-policy-validation-receipt-tool-catalog-valid?
+        poo-flow-session-policy-validation-receipt-tool-catalog-policy-tool-refs
+        poo-flow-session-policy-validation-receipt-tool-catalog-resolved-tool-refs
+        poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-tool-refs
+        poo-flow-session-policy-validation-receipt-tool-catalog-allowed-attempt-tool-refs
+        poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-attempt-tool-refs
+        poo-flow-session-policy-validation-receipt-memory-catalog-ref
+        poo-flow-session-policy-validation-receipt-memory-catalog-valid?
+        poo-flow-session-policy-validation-receipt-memory-catalog-resolved-store-refs
+        poo-flow-session-policy-validation-receipt-memory-catalog-unresolved-store-refs
+        poo-flow-session-policy-validation-receipt-allowed-communication-channel-receipts
+        poo-flow-session-policy-validation-receipt-denied-communication-channel-receipts
+        poo-flow-session-policy-validation-receipt-allowed-communication-receipts
+        poo-flow-session-policy-validation-receipt-denied-communication-receipts
         poo-flow-session-policy-validation-receipt-valid?
         poo-flow-session-policy-validation-receipt-diagnostic-count
         poo-flow-session-policy-validation-receipt-diagnostics
@@ -45,6 +66,10 @@
   (if (list? row)
     (poo-flow-session-validation-alist-ref row key default)
     (poo-flow-session-validation-slot row key default)))
+
+(defrules poo-flow-session-policy-validation-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
 
 ;; : (-> Any [Any] Boolean)
 (def (poo-flow-session-validation-member? value values)
@@ -131,19 +156,19 @@
   (poo-flow-session-require "session policy attempt principal must be a symbol"
                             (symbol? principal-ref)
                             principal-ref)
-  (list
-   (cons 'kind 'poo-flow.session.policy.tool-attempt)
-   (cons 'schema 'poo-flow.modules.session.policy.tool-attempt.v1)
-   (cons 'attempt-id attempt-id)
-   (cons 'trigger-ref trigger-ref)
-   (cons 'tool-ref tool-ref)
-   (cons 'action action)
-   (cons 'resource-ref resource-ref)
-   (cons 'principal-ref principal-ref)
-   (cons 'metadata (if (null? maybe-metadata)
-                     '()
-                     (car maybe-metadata)))
-   (cons 'runtime-executed #f)))
+  (poo-flow-session-policy-validation-field-rows
+   (kind 'poo-flow.session.policy.tool-attempt)
+   (schema 'poo-flow.modules.session.policy.tool-attempt.v1)
+   (attempt-id attempt-id)
+   (trigger-ref trigger-ref)
+   (tool-ref tool-ref)
+   (action action)
+   (resource-ref resource-ref)
+   (principal-ref principal-ref)
+   (metadata (if (null? maybe-metadata)
+               '()
+               (car maybe-metadata)))
+   (runtime-executed #f)))
 
 ;; : (-> Any Boolean)
 (def (poo-flow-session-policy-tool-attempt? value)
@@ -163,13 +188,14 @@
 
 ;; : (-> Symbol Symbol Any Alist)
 (def (poo-flow-session-policy-diagnostic code scope-ref detail)
-  (list (cons 'kind 'poo-flow.session.policy.diagnostic)
-        (cons 'schema 'poo-flow.modules.session.policy.diagnostic.v1)
-        (cons 'code code)
-        (cons 'scope-ref scope-ref)
-        (cons 'detail detail)
-        (cons 'severity 'error)
-        (cons 'runtime-executed #f)))
+  (poo-flow-session-policy-validation-field-rows
+   (kind 'poo-flow.session.policy.diagnostic)
+   (schema 'poo-flow.modules.session.policy.diagnostic.v1)
+   (code code)
+   (scope-ref scope-ref)
+   (detail detail)
+   (severity 'error)
+   (runtime-executed #f)))
 
 ;; : (-> PooSessionPolicy Symbol Value)
 (def (poo-flow-session-policy-slot-value policy key default)
@@ -193,6 +219,10 @@
   (poo-flow-session-policy-nested-slot policy 'channel-refs '()))
 
 ;; : (-> PooSessionPolicy [Symbol])
+(def (poo-flow-session-policy-communication-targets policy)
+  (poo-flow-session-policy-nested-slot policy 'target-session-refs '()))
+
+;; : (-> PooSessionPolicy [Symbol])
 (def (poo-flow-session-policy-resource-capabilities policy)
   (poo-flow-session-policy-nested-slot policy 'capability-refs '()))
 
@@ -203,6 +233,63 @@
 ;; : (-> PooSessionPolicy [Alist])
 (def (poo-flow-session-policy-resource-grants policy)
   (poo-flow-session-policy-slot-value policy 'resource-grants '()))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-isolation-mode policy)
+  (poo-flow-session-policy-nested-slot policy 'mode #f))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-isolation-sibling-context policy)
+  (poo-flow-session-policy-nested-slot policy 'sibling-context 'denied))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-isolation-parent-write policy)
+  (poo-flow-session-policy-nested-slot policy 'parent-write 'denied))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-isolation-peer-communication policy)
+  (poo-flow-session-policy-nested-slot policy 'peer-communication 'denied))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-sandbox-profile-ref policy)
+  (poo-flow-session-policy-nested-slot policy 'profile-ref #f))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-sandbox-inheritance-mode policy)
+  (poo-flow-session-policy-nested-slot policy 'inheritance-mode #f))
+
+;; : (-> PooSessionPolicy Symbol)
+(def (poo-flow-session-policy-sandbox-sharing-mode policy)
+  (poo-flow-session-policy-nested-slot policy 'sharing-mode #f))
+
+;; : (-> PooSessionPolicy Boolean)
+(def (poo-flow-session-policy-sibling-context-allowed? isolation-policy)
+  (let (sibling-context
+        (poo-flow-session-policy-isolation-sibling-context isolation-policy))
+    (or (eq? sibling-context 'allow)
+        (eq? sibling-context 'allowed)
+        (eq? sibling-context 'read)
+        (eq? sibling-context 'shared)
+        (eq? sibling-context '*))))
+
+;; : (-> [Symbol] [Symbol] PooSessionPolicy [Symbol])
+(def (poo-flow-session-policy-denied-sibling-context-refs requested-refs
+                                                           sibling-refs
+                                                           isolation-policy)
+  (cond
+   ((poo-flow-session-policy-sibling-context-allowed? isolation-policy) '())
+   ((null? requested-refs) '())
+   ((poo-flow-session-validation-member? (car requested-refs) sibling-refs)
+    (cons (car requested-refs)
+          (poo-flow-session-policy-denied-sibling-context-refs
+           (cdr requested-refs)
+           sibling-refs
+           isolation-policy)))
+   (else
+    (poo-flow-session-policy-denied-sibling-context-refs
+     (cdr requested-refs)
+     sibling-refs
+     isolation-policy))))
 
 ;; : (-> Alist Boolean)
 (def (poo-flow-session-resource-grant-accounted? grant)
@@ -228,6 +315,113 @@
    (lambda (value)
      (poo-flow-session-validation-granted? value allowed))
    requested))
+
+;; : (-> Alist [PooSessionCommunicationReceiptOrRow])
+(def (poo-flow-session-policy-communication-receipts metadata)
+  (poo-flow-session-validation-alist-ref metadata 'communication-receipts '()))
+
+;; : (-> Alist [PooSessionCommunicationChannelReceiptOrRow])
+(def (poo-flow-session-policy-communication-channel-receipts metadata)
+  (poo-flow-session-validation-alist-ref
+   metadata
+   'communication-channel-receipts
+   '()))
+
+;; : (-> PooSessionCommunicationChannelReceiptOrRow Alist)
+(def (poo-flow-session-policy-communication-channel-receipt-row receipt)
+  (cond
+   ((poo-flow-session-communication-channel-receipt? receipt)
+    (poo-flow-session-communication-channel-receipt->alist receipt))
+   ((list? receipt) receipt)
+   (else
+    (list (cons 'kind 'poo-flow.session.communication-channel-receipt.invalid)
+          (cons 'value receipt)))))
+
+;; : (-> [PooSessionCommunicationChannelReceiptOrRow] [Alist])
+(def (poo-flow-session-policy-communication-channel-receipt-rows receipts)
+  (map poo-flow-session-policy-communication-channel-receipt-row receipts))
+
+;; : (-> PooSessionCommunicationReceiptOrRow Alist)
+(def (poo-flow-session-policy-communication-receipt-row receipt)
+  (cond
+   ((poo-flow-session-communication-receipt? receipt)
+    (poo-flow-session-communication-receipt->alist receipt))
+   ((list? receipt) receipt)
+   (else
+    (list (cons 'kind 'poo-flow.session.communication-receipt.invalid)
+          (cons 'value receipt)))))
+
+;; : (-> [PooSessionCommunicationReceiptOrRow] [Alist])
+(def (poo-flow-session-policy-communication-receipt-rows receipts)
+  (map poo-flow-session-policy-communication-receipt-row receipts))
+
+;; : (-> Alist Symbol)
+(def (poo-flow-session-policy-communication-receipt-channel row)
+  (poo-flow-session-validation-row-ref row 'channel-id #f))
+
+;; : (-> Alist Symbol)
+(def (poo-flow-session-policy-communication-channel-receipt-channel row)
+  (poo-flow-session-validation-row-ref row 'channel-id #f))
+
+;; : (-> Alist Symbol)
+(def (poo-flow-session-policy-communication-receipt-target row)
+  (poo-flow-session-validation-row-ref row 'target-session-id #f))
+
+;; : (-> Alist Symbol)
+(def (poo-flow-session-policy-communication-channel-receipt-target row)
+  (poo-flow-session-validation-row-ref row 'target-session-id #f))
+
+;; : (-> PooSessionPolicy Alist Boolean)
+(def (poo-flow-session-policy-communication-receipt-channel-allowed?
+      policy
+      row)
+  (poo-flow-session-validation-granted?
+   (poo-flow-session-policy-communication-receipt-channel row)
+   (poo-flow-session-policy-channel-allowed policy)))
+
+;; : (-> PooSessionPolicy Alist Boolean)
+(def (poo-flow-session-policy-communication-channel-receipt-channel-allowed?
+      policy
+      row)
+  (poo-flow-session-validation-granted?
+   (poo-flow-session-policy-communication-channel-receipt-channel row)
+   (poo-flow-session-policy-channel-allowed policy)))
+
+;; : (-> PooSessionPolicy Alist Boolean)
+(def (poo-flow-session-policy-communication-receipt-target-allowed?
+      policy
+      row)
+  (poo-flow-session-validation-granted?
+   (poo-flow-session-policy-communication-receipt-target row)
+   (poo-flow-session-policy-communication-targets policy)))
+
+;; : (-> PooSessionPolicy Alist Boolean)
+(def (poo-flow-session-policy-communication-channel-receipt-target-allowed?
+      policy
+      row)
+  (poo-flow-session-validation-granted?
+   (poo-flow-session-policy-communication-channel-receipt-target row)
+   (poo-flow-session-policy-communication-targets policy)))
+
+;; : (-> PooSessionPolicy Alist Boolean)
+(def (poo-flow-session-policy-communication-receipt-allowed? policy row)
+  (and (poo-flow-session-policy-communication-receipt-channel-allowed?
+        policy
+        row)
+       (poo-flow-session-policy-communication-receipt-target-allowed?
+        policy
+        row)))
+
+;; : (-> PooSessionPolicy Alist Boolean)
+(def (poo-flow-session-policy-communication-channel-receipt-allowed?
+      policy
+      row)
+  (and (poo-flow-session-policy-communication-channel-receipt-channel-allowed?
+        policy
+        row)
+       (poo-flow-session-policy-communication-channel-receipt-target-allowed?
+        policy
+        row)))
 
 ;; : (-> PooSessionPolicy PooSessionToolAttempt Boolean)
 (def (poo-flow-session-agent-tool-attempt-allowed? policy attempt)
@@ -274,6 +468,55 @@
     (poo-flow-session-validation-row-ref validation-row key default)
     default))
 
+;; : (-> [PooSessionToolAttempt] [Symbol] [Symbol])
+(def (poo-flow-session-policy-attempt-tool-refs/rev attempts refs-rev)
+  (cond
+   ((null? attempts) refs-rev)
+   (else
+    (let (tool-ref
+          (poo-flow-session-policy-tool-attempt-tool-ref (car attempts)))
+      (poo-flow-session-policy-attempt-tool-refs/rev
+       (cdr attempts)
+       (if (member tool-ref refs-rev)
+         refs-rev
+         (cons tool-ref refs-rev)))))))
+
+;; : (-> [PooSessionToolAttempt] [PooSessionToolAttempt] [Symbol])
+(def (poo-flow-session-policy-attempt-tool-refs agent-attempts
+                                                hook-attempts)
+  (reverse
+   (poo-flow-session-policy-attempt-tool-refs/rev
+    hook-attempts
+    (poo-flow-session-policy-attempt-tool-refs/rev agent-attempts '()))))
+
+;; : (-> MaybeToolCatalogValidationRow [Symbol] ([Symbol] [Symbol]))
+(def (poo-flow-session-policy-catalog-attempt-ref-partition
+      tool-catalog-validation
+      attempt-tool-refs)
+  (if (poo-flow-session-tool-catalog-validation-present?
+       tool-catalog-validation)
+    (poo-flow-session-policy-partition-refs
+     attempt-tool-refs
+     (poo-flow-session-tool-catalog-validation-ref
+      tool-catalog-validation
+      'resolved-tool-refs
+      '()))
+    (list '() '())))
+
+;; : (-> Alist MaybeMemoryCatalogValidationRow)
+(def (poo-flow-session-memory-catalog-validation metadata)
+  (poo-flow-session-validation-alist-ref metadata 'memory-catalog-validation #f))
+
+;; : (-> MaybeMemoryCatalogValidationRow Boolean)
+(def (poo-flow-session-memory-catalog-validation-present? validation-row)
+  (if validation-row #t #f))
+
+;; : (-> MaybeMemoryCatalogValidationRow Symbol Value)
+(def (poo-flow-session-memory-catalog-validation-ref validation-row key default)
+  (if (poo-flow-session-memory-catalog-validation-present? validation-row)
+    (poo-flow-session-validation-row-ref validation-row key default)
+    default))
+
 ;; : (-> Symbol Symbol [Symbol] [Alist] [Alist])
 (def (poo-flow-session-denied-ref-diagnostics/rev code
                                                    scope-ref
@@ -303,6 +546,127 @@
      code
      (cdr attempts)
      (cons (poo-flow-session-tool-attempt-diagnostic code (car attempts))
+           diagnostics-rev)))))
+
+;; : (-> Symbol Symbol Alist Alist)
+(def (poo-flow-session-communication-receipt-diagnostic code
+                                                        scope-ref
+                                                        row)
+  (poo-flow-session-policy-diagnostic
+   code
+   scope-ref
+   (list (cons 'relation-kind
+               (poo-flow-session-validation-row-ref row 'relation-kind #f))
+         (cons 'source-session-id
+               (poo-flow-session-validation-row-ref row
+                                                    'source-session-id
+                                                    #f))
+         (cons 'target-session-id
+               (poo-flow-session-validation-row-ref row
+                                                    'target-session-id
+                                                    #f))
+         (cons 'channel-id
+               (poo-flow-session-validation-row-ref row 'channel-id #f))
+         (cons 'message-kind
+               (poo-flow-session-validation-row-ref row 'message-kind #f)))))
+
+;; : (-> Symbol Symbol Alist Alist)
+(def (poo-flow-session-communication-channel-receipt-diagnostic code
+                                                                scope-ref
+                                                                row)
+  (poo-flow-session-policy-diagnostic
+   code
+   scope-ref
+   (list (cons 'relation-kind
+               (poo-flow-session-validation-row-ref row 'relation-kind #f))
+         (cons 'source-session-id
+               (poo-flow-session-validation-row-ref row
+                                                    'source-session-id
+                                                    #f))
+         (cons 'target-session-id
+               (poo-flow-session-validation-row-ref row
+                                                    'target-session-id
+                                                    #f))
+         (cons 'channel-id
+               (poo-flow-session-validation-row-ref row 'channel-id #f)))))
+
+;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
+(def (poo-flow-session-communication-channel-receipt-diagnostics/rev
+      scope-ref
+      policy
+      rows
+      diagnostics-rev)
+  (cond
+   ((null? rows) diagnostics-rev)
+   ((poo-flow-session-policy-communication-channel-receipt-allowed?
+     policy
+     (car rows))
+    (poo-flow-session-communication-channel-receipt-diagnostics/rev
+     scope-ref
+     policy
+     (cdr rows)
+     diagnostics-rev))
+   (else
+    (poo-flow-session-communication-channel-receipt-diagnostics/rev
+     scope-ref
+     policy
+     (cdr rows)
+     (cons (poo-flow-session-communication-channel-receipt-diagnostic
+            'communication-channel-receipt-not-granted
+            scope-ref
+            (car rows))
+           diagnostics-rev)))))
+
+;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
+(def (poo-flow-session-communication-channel-diagnostics/rev scope-ref
+                                                             policy
+                                                             rows
+                                                             diagnostics-rev)
+  (cond
+   ((null? rows) diagnostics-rev)
+   ((poo-flow-session-policy-communication-receipt-channel-allowed?
+     policy
+     (car rows))
+    (poo-flow-session-communication-channel-diagnostics/rev
+     scope-ref
+     policy
+     (cdr rows)
+     diagnostics-rev))
+   (else
+    (poo-flow-session-communication-channel-diagnostics/rev
+     scope-ref
+     policy
+     (cdr rows)
+     (cons (poo-flow-session-communication-receipt-diagnostic
+            'communication-receipt-channel-not-granted
+            scope-ref
+            (car rows))
+           diagnostics-rev)))))
+
+;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
+(def (poo-flow-session-communication-target-diagnostics/rev scope-ref
+                                                            policy
+                                                            rows
+                                                            diagnostics-rev)
+  (cond
+   ((null? rows) diagnostics-rev)
+   ((poo-flow-session-policy-communication-receipt-target-allowed?
+     policy
+     (car rows))
+    (poo-flow-session-communication-target-diagnostics/rev
+     scope-ref
+     policy
+     (cdr rows)
+     diagnostics-rev))
+   (else
+    (poo-flow-session-communication-target-diagnostics/rev
+     scope-ref
+     policy
+     (cdr rows)
+     (cons (poo-flow-session-communication-receipt-diagnostic
+            'communication-receipt-target-not-granted
+            scope-ref
+            (car rows))
            diagnostics-rev)))))
 
 ;; : (-> PooSessionPolicy [PooSessionToolAttempt] [Alist] [Alist])
@@ -336,12 +700,23 @@
    effective-model-ref
    effective-prompt-session-ref
    effective-prompt-chunk-refs
+   effective-isolation-mode
+   isolation-sibling-context
+   isolation-parent-write
+   isolation-peer-communication
+   effective-sandbox-profile-ref
+   sandbox-inheritance-mode
+   sandbox-sharing-mode
    allowed-context-refs
    denied-context-refs
    allowed-history-records
    denied-history-records
    allowed-communication-channels
    denied-communication-channels
+   allowed-communication-channel-receipts
+   denied-communication-channel-receipts
+   allowed-communication-receipts
+   denied-communication-receipts
    allowed-resource-refs
    denied-resource-refs
    allowed-agent-tool-attempts
@@ -351,10 +726,22 @@
    tool-catalog-validation-id
    tool-catalog-ref
    tool-catalog-valid?
+   tool-catalog-policy-tool-refs
    tool-catalog-resolved-tool-refs
    tool-catalog-unresolved-tool-refs
    tool-catalog-sandbox-required-tool-refs
    tool-catalog-action-mismatch-grants
+   tool-catalog-allowed-attempt-tool-refs
+   tool-catalog-unresolved-attempt-tool-refs
+   memory-catalog-validation-id
+   memory-catalog-ref
+   memory-catalog-valid?
+   memory-catalog-store-count
+   memory-catalog-store-refs
+   memory-catalog-intent-count
+   memory-catalog-intent-store-refs
+   memory-catalog-resolved-store-refs
+   memory-catalog-unresolved-store-refs
    shared-resource-grants
    diagnostic-count
    diagnostics
@@ -363,11 +750,13 @@
    metadata)
   transparent: #t)
 
-;; : (-> Symbol Symbol PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy [Symbol] [Symbol] [Symbol] [Symbol] [PooSessionToolAttempt] [PooSessionToolAttempt] [Alist] PooSessionPolicyValidationReceipt)
+;; : (-> Symbol Symbol PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy [Symbol] [Symbol] [Symbol] [Symbol] [PooSessionToolAttempt] [PooSessionToolAttempt] [Alist] PooSessionPolicyValidationReceipt)
 (def (poo-flow-session-policy-validation-receipt validation-id
                                                 scope-ref
                                                 model-policy
                                                 prompt-policy
+                                                isolation-policy
+                                                sandbox-policy
                                                 context-policy
                                                 history-policy
                                                 communication-policy
@@ -394,6 +783,12 @@
   (poo-flow-session-require "session policy validation prompt policy required"
                             (poo-flow-session-policy? prompt-policy)
                             prompt-policy)
+  (poo-flow-session-require "session policy validation isolation policy required"
+                            (poo-flow-session-policy? isolation-policy)
+                            isolation-policy)
+  (poo-flow-session-require "session policy validation sandbox policy required"
+                            (poo-flow-session-policy? sandbox-policy)
+                            sandbox-policy)
   (poo-flow-session-require "session policy validation context policy required"
                             (poo-flow-session-policy? context-policy)
                             context-policy)
@@ -477,6 +872,34 @@
           (if (null? maybe-metadata)
             '()
             (car maybe-metadata)))
+         (communication-channel-receipt-rows
+          (poo-flow-session-policy-communication-channel-receipt-rows
+           (poo-flow-session-policy-communication-channel-receipts metadata)))
+         (communication-channel-receipt-partition
+          (poo-flow-session-validation-partition
+           (lambda (row)
+             (poo-flow-session-policy-communication-channel-receipt-allowed?
+              communication-policy
+              row))
+           communication-channel-receipt-rows))
+         (allowed-communication-channel-receipts
+          (car communication-channel-receipt-partition))
+         (denied-communication-channel-receipts
+          (cadr communication-channel-receipt-partition))
+         (communication-receipt-rows
+          (poo-flow-session-policy-communication-receipt-rows
+           (poo-flow-session-policy-communication-receipts metadata)))
+         (communication-receipt-partition
+          (poo-flow-session-validation-partition
+           (lambda (row)
+             (poo-flow-session-policy-communication-receipt-allowed?
+              communication-policy
+              row))
+           communication-receipt-rows))
+         (allowed-communication-receipts
+          (car communication-receipt-partition))
+         (denied-communication-receipts
+          (cadr communication-receipt-partition))
          (tool-catalog-validation
           (poo-flow-session-tool-catalog-validation metadata))
          (tool-catalog-diagnostics
@@ -484,6 +907,35 @@
            tool-catalog-validation
            'diagnostics
            '()))
+         (allowed-attempt-tool-refs
+          (poo-flow-session-policy-attempt-tool-refs
+           allowed-agent-tool-attempts
+           allowed-hook-tool-attempts))
+         (catalog-attempt-ref-partition
+          (poo-flow-session-policy-catalog-attempt-ref-partition
+           tool-catalog-validation
+           allowed-attempt-tool-refs))
+         (tool-catalog-allowed-attempt-tool-refs
+          (car catalog-attempt-ref-partition))
+         (tool-catalog-unresolved-attempt-tool-refs
+          (cadr catalog-attempt-ref-partition))
+         (memory-catalog-validation
+          (poo-flow-session-memory-catalog-validation metadata))
+         (memory-catalog-diagnostics
+          (poo-flow-session-memory-catalog-validation-ref
+           memory-catalog-validation
+           'diagnostics
+           '()))
+         (sibling-session-refs
+          (poo-flow-session-validation-alist-ref
+           metadata
+           'sibling-session-refs
+           '()))
+         (denied-sibling-context-refs
+          (poo-flow-session-policy-denied-sibling-context-refs
+           requested-context-refs
+           sibling-session-refs
+           isolation-policy))
          (diagnostics
           (let* ((diagnostics0
                   (poo-flow-session-denied-ref-diagnostics/rev
@@ -503,12 +955,30 @@
                    scope-ref
                    denied-communication-channels
                    diagnostics1))
+                 (diagnostics2channel
+                  (poo-flow-session-communication-channel-receipt-diagnostics/rev
+                   scope-ref
+                   communication-policy
+                   communication-channel-receipt-rows
+                   diagnostics2))
+                 (diagnostics2a
+                  (poo-flow-session-communication-channel-diagnostics/rev
+                   scope-ref
+                   communication-policy
+                   communication-receipt-rows
+                   diagnostics2channel))
+                 (diagnostics2b
+                  (poo-flow-session-communication-target-diagnostics/rev
+                   scope-ref
+                   communication-policy
+                   communication-receipt-rows
+                   diagnostics2a))
                  (diagnostics3
                   (poo-flow-session-denied-ref-diagnostics/rev
                    'resource-capability-not-granted
                    scope-ref
                    denied-resource-refs
-                   diagnostics2))
+                   diagnostics2b))
                  (diagnostics4
                   (poo-flow-session-tool-attempt-diagnostics/rev
                    'agent-tool-attempt-not-granted
@@ -520,25 +990,41 @@
                    denied-hook-tool-attempts
                    diagnostics4))
                  (diagnostics6
-                 (poo-flow-session-hook-inheritance-diagnostics/rev
+                  (poo-flow-session-hook-inheritance-diagnostics/rev
                    agent-tool-policy
                    denied-hook-tool-attempts
                    diagnostics5))
                  (diagnostics7
+                  (poo-flow-session-denied-ref-diagnostics/rev
+                   'sibling-context-not-granted
+                   scope-ref
+                   denied-sibling-context-refs
+                   diagnostics6))
+                 (diagnostics8
                   (if (poo-flow-session-resource-policy-accounted?
                        sharing-policy)
-                    diagnostics6
+                    diagnostics7
                     (cons (poo-flow-session-policy-diagnostic
                            'resource-sharing-missing-accounting-owner
                            scope-ref
                            (poo-flow-session-policy-resource-grants
                             sharing-policy))
-                          diagnostics6)))
-                 (diagnostics8
+                          diagnostics7)))
+                 (diagnostics9
                   (poo-flow-session-validation-reverse-onto
                    tool-catalog-diagnostics
-                   diagnostics7)))
-            (reverse diagnostics8))))
+                   diagnostics8))
+                 (diagnostics9a
+                  (poo-flow-session-denied-ref-diagnostics/rev
+                   'tool-attempt-not-in-catalog
+                   scope-ref
+                   tool-catalog-unresolved-attempt-tool-refs
+                   diagnostics9))
+                 (diagnostics10
+                  (poo-flow-session-validation-reverse-onto
+                   memory-catalog-diagnostics
+                   diagnostics9a)))
+            (reverse diagnostics10))))
     (make-poo-flow-session-policy-validation-receipt-record
      validation-id
      scope-ref
@@ -552,12 +1038,23 @@
       prompt-policy
       'prompt-chunk-refs
       '())
+     (poo-flow-session-policy-isolation-mode isolation-policy)
+     (poo-flow-session-policy-isolation-sibling-context isolation-policy)
+     (poo-flow-session-policy-isolation-parent-write isolation-policy)
+     (poo-flow-session-policy-isolation-peer-communication isolation-policy)
+     (poo-flow-session-policy-sandbox-profile-ref sandbox-policy)
+     (poo-flow-session-policy-sandbox-inheritance-mode sandbox-policy)
+     (poo-flow-session-policy-sandbox-sharing-mode sandbox-policy)
      allowed-context-refs
      denied-context-refs
      allowed-history-records
      denied-history-records
      allowed-communication-channels
      denied-communication-channels
+     allowed-communication-channel-receipts
+     denied-communication-channel-receipts
+     allowed-communication-receipts
+     denied-communication-receipts
      allowed-resource-refs
      denied-resource-refs
      allowed-agent-tool-attempts
@@ -578,6 +1075,10 @@
       #f)
      (poo-flow-session-tool-catalog-validation-ref
       tool-catalog-validation
+      'policy-tool-refs
+      '())
+     (poo-flow-session-tool-catalog-validation-ref
+      tool-catalog-validation
       'resolved-tool-refs
       '())
      (poo-flow-session-tool-catalog-validation-ref
@@ -591,6 +1092,44 @@
      (poo-flow-session-tool-catalog-validation-ref
       tool-catalog-validation
       'action-mismatch-grants
+      '())
+     tool-catalog-allowed-attempt-tool-refs
+     tool-catalog-unresolved-attempt-tool-refs
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'validation-id
+      #f)
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'catalog-ref
+      #f)
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'valid?
+      #f)
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'catalog-store-count
+      0)
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'catalog-store-refs
+      '())
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'intent-count
+      0)
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'intent-store-refs
+      '())
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'resolved-store-refs
+      '())
+     (poo-flow-session-memory-catalog-validation-ref
+      memory-catalog-validation
+      'unresolved-store-refs
       '())
      (poo-flow-session-policy-resource-grants sharing-policy)
      (length diagnostics)
@@ -613,8 +1152,40 @@
    poo-flow-session-policy-validation-receipt-record-effective-prompt-session-ref)
   (poo-flow-session-policy-validation-receipt-effective-prompt-chunk-refs
    poo-flow-session-policy-validation-receipt-record-effective-prompt-chunk-refs)
+  (poo-flow-session-policy-validation-receipt-effective-isolation-mode
+   poo-flow-session-policy-validation-receipt-record-effective-isolation-mode)
+  (poo-flow-session-policy-validation-receipt-effective-sandbox-profile-ref
+   poo-flow-session-policy-validation-receipt-record-effective-sandbox-profile-ref)
+  (poo-flow-session-policy-validation-receipt-tool-catalog-ref
+   poo-flow-session-policy-validation-receipt-record-tool-catalog-ref)
   (poo-flow-session-policy-validation-receipt-tool-catalog-valid?
    poo-flow-session-policy-validation-receipt-record-tool-catalog-valid?)
+  (poo-flow-session-policy-validation-receipt-tool-catalog-policy-tool-refs
+   poo-flow-session-policy-validation-receipt-record-tool-catalog-policy-tool-refs)
+  (poo-flow-session-policy-validation-receipt-tool-catalog-resolved-tool-refs
+   poo-flow-session-policy-validation-receipt-record-tool-catalog-resolved-tool-refs)
+  (poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-tool-refs
+   poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-tool-refs)
+  (poo-flow-session-policy-validation-receipt-tool-catalog-allowed-attempt-tool-refs
+   poo-flow-session-policy-validation-receipt-record-tool-catalog-allowed-attempt-tool-refs)
+  (poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-attempt-tool-refs
+   poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-attempt-tool-refs)
+  (poo-flow-session-policy-validation-receipt-memory-catalog-ref
+   poo-flow-session-policy-validation-receipt-record-memory-catalog-ref)
+  (poo-flow-session-policy-validation-receipt-memory-catalog-valid?
+   poo-flow-session-policy-validation-receipt-record-memory-catalog-valid?)
+  (poo-flow-session-policy-validation-receipt-memory-catalog-resolved-store-refs
+   poo-flow-session-policy-validation-receipt-record-memory-catalog-resolved-store-refs)
+  (poo-flow-session-policy-validation-receipt-memory-catalog-unresolved-store-refs
+   poo-flow-session-policy-validation-receipt-record-memory-catalog-unresolved-store-refs)
+  (poo-flow-session-policy-validation-receipt-allowed-communication-channel-receipts
+   poo-flow-session-policy-validation-receipt-record-allowed-communication-channel-receipts)
+  (poo-flow-session-policy-validation-receipt-denied-communication-channel-receipts
+   poo-flow-session-policy-validation-receipt-record-denied-communication-channel-receipts)
+  (poo-flow-session-policy-validation-receipt-allowed-communication-receipts
+   poo-flow-session-policy-validation-receipt-record-allowed-communication-receipts)
+  (poo-flow-session-policy-validation-receipt-denied-communication-receipts
+   poo-flow-session-policy-validation-receipt-record-denied-communication-receipts)
   (poo-flow-session-policy-validation-receipt-valid?
    poo-flow-session-policy-validation-receipt-record-valid?)
   (poo-flow-session-policy-validation-receipt-diagnostic-count
@@ -653,6 +1224,27 @@
     ('effective-prompt-chunk-refs
      (poo-flow-session-policy-validation-receipt-effective-prompt-chunk-refs
       receipt))
+    ('effective-isolation-mode
+     (poo-flow-session-policy-validation-receipt-effective-isolation-mode
+      receipt))
+    ('isolation-sibling-context
+     (poo-flow-session-policy-validation-receipt-record-isolation-sibling-context
+      receipt))
+    ('isolation-parent-write
+     (poo-flow-session-policy-validation-receipt-record-isolation-parent-write
+      receipt))
+    ('isolation-peer-communication
+     (poo-flow-session-policy-validation-receipt-record-isolation-peer-communication
+      receipt))
+    ('effective-sandbox-profile-ref
+     (poo-flow-session-policy-validation-receipt-effective-sandbox-profile-ref
+      receipt))
+    ('sandbox-inheritance-mode
+     (poo-flow-session-policy-validation-receipt-record-sandbox-inheritance-mode
+      receipt))
+    ('sandbox-sharing-mode
+     (poo-flow-session-policy-validation-receipt-record-sandbox-sharing-mode
+      receipt))
     ('allowed-context-refs
      (poo-flow-session-policy-validation-receipt-record-allowed-context-refs
       receipt))
@@ -670,6 +1262,18 @@
       receipt))
     ('denied-communication-channels
      (poo-flow-session-policy-validation-receipt-record-denied-communication-channels
+      receipt))
+    ('allowed-communication-channel-receipts
+     (poo-flow-session-policy-validation-receipt-allowed-communication-channel-receipts
+      receipt))
+    ('denied-communication-channel-receipts
+     (poo-flow-session-policy-validation-receipt-denied-communication-channel-receipts
+      receipt))
+    ('allowed-communication-receipts
+     (poo-flow-session-policy-validation-receipt-allowed-communication-receipts
+      receipt))
+    ('denied-communication-receipts
+     (poo-flow-session-policy-validation-receipt-denied-communication-receipts
       receipt))
     ('allowed-resource-refs
      (poo-flow-session-policy-validation-receipt-record-allowed-resource-refs
@@ -698,6 +1302,9 @@
     ('tool-catalog-valid?
      (poo-flow-session-policy-validation-receipt-tool-catalog-valid?
       receipt))
+    ('tool-catalog-policy-tool-refs
+     (poo-flow-session-policy-validation-receipt-record-tool-catalog-policy-tool-refs
+      receipt))
     ('tool-catalog-resolved-tool-refs
      (poo-flow-session-policy-validation-receipt-record-tool-catalog-resolved-tool-refs
       receipt))
@@ -709,6 +1316,38 @@
       receipt))
     ('tool-catalog-action-mismatch-grants
      (poo-flow-session-policy-validation-receipt-record-tool-catalog-action-mismatch-grants
+      receipt))
+    ('tool-catalog-allowed-attempt-tool-refs
+     (poo-flow-session-policy-validation-receipt-record-tool-catalog-allowed-attempt-tool-refs
+      receipt))
+    ('tool-catalog-unresolved-attempt-tool-refs
+     (poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-attempt-tool-refs
+      receipt))
+    ('memory-catalog-validation-id
+     (poo-flow-session-policy-validation-receipt-record-memory-catalog-validation-id
+      receipt))
+    ('memory-catalog-ref
+     (poo-flow-session-policy-validation-receipt-memory-catalog-ref receipt))
+    ('memory-catalog-valid?
+     (poo-flow-session-policy-validation-receipt-memory-catalog-valid?
+      receipt))
+    ('memory-catalog-store-count
+     (poo-flow-session-policy-validation-receipt-record-memory-catalog-store-count
+      receipt))
+    ('memory-catalog-store-refs
+     (poo-flow-session-policy-validation-receipt-record-memory-catalog-store-refs
+      receipt))
+    ('memory-catalog-intent-count
+     (poo-flow-session-policy-validation-receipt-record-memory-catalog-intent-count
+      receipt))
+    ('memory-catalog-intent-store-refs
+     (poo-flow-session-policy-validation-receipt-record-memory-catalog-intent-store-refs
+      receipt))
+    ('memory-catalog-resolved-store-refs
+     (poo-flow-session-policy-validation-receipt-memory-catalog-resolved-store-refs
+      receipt))
+    ('memory-catalog-unresolved-store-refs
+     (poo-flow-session-policy-validation-receipt-memory-catalog-unresolved-store-refs
       receipt))
     ('shared-resource-grants
      (poo-flow-session-policy-validation-receipt-record-shared-resource-grants

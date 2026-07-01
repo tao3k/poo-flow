@@ -10,6 +10,7 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/request-field
         :poo-flow/src/modules/agent-sandbox/request-validation)
@@ -25,34 +26,35 @@
   (let* ((valid-profile (agent-sandbox-validate-profile profile))
          (request-fields (agent-sandbox-validate-request-fields fields)))
     (agent-sandbox-validate-request
-     (list (cons 'schema +agent-sandbox-request-schema+)
-           (cons 'backend-kind
-                 (agent-sandbox-profile-backend-kind valid-profile))
-           (cons 'backend-ref
-                 (agent-sandbox-profile-backend-ref valid-profile))
-           (cons 'command (agent-sandbox-option request-fields 'command #f))
-           (cons 'args (agent-sandbox-option request-fields 'args '()))
-           (cons 'env (agent-sandbox-option request-fields 'env '()))
-           (cons 'workdir (agent-sandbox-option request-fields 'workdir #f))
-           (cons 'mounts (agent-sandbox-option request-fields 'mounts '()))
-           (cons 'network-policy
-                 (agent-sandbox-override
-                  (agent-sandbox-option request-fields 'network-policy #f)
-                  (agent-sandbox-profile-network-policy valid-profile)))
-           (cons 'capabilities
-                 (agent-sandbox-merge-alists
-                  (agent-sandbox-option request-fields 'capabilities #f)
-                  (agent-sandbox-profile-capabilities valid-profile)))
-           (cons 'resource-policy
-                 (agent-sandbox-merge-alists
-                  (agent-sandbox-option request-fields 'resource-policy #f)
-                  (agent-sandbox-profile-resource-policy valid-profile)))
-           (cons 'output-policy
-                 (agent-sandbox-option request-fields 'output-policy #f))
-           (cons 'metadata
-                 (agent-sandbox-merge-alists
-                  (agent-sandbox-option request-fields 'metadata '())
-                  (agent-sandbox-profile-metadata valid-profile)))))))
+     (agent-sandbox-field-rows
+      (schema +agent-sandbox-request-schema+)
+      (backend-kind
+       (agent-sandbox-profile-backend-kind valid-profile))
+      (backend-ref
+       (agent-sandbox-profile-backend-ref valid-profile))
+      (command (agent-sandbox-option request-fields 'command #f))
+      (args (agent-sandbox-option request-fields 'args '()))
+      (env (agent-sandbox-option request-fields 'env '()))
+      (workdir (agent-sandbox-option request-fields 'workdir #f))
+      (mounts (agent-sandbox-option request-fields 'mounts '()))
+      (network-policy
+       (agent-sandbox-override
+        (agent-sandbox-option request-fields 'network-policy #f)
+        (agent-sandbox-profile-network-policy valid-profile)))
+      (capabilities
+       (agent-sandbox-merge-alists
+        (agent-sandbox-option request-fields 'capabilities #f)
+        (agent-sandbox-profile-capabilities valid-profile)))
+      (resource-policy
+       (agent-sandbox-merge-alists
+        (agent-sandbox-option request-fields 'resource-policy #f)
+        (agent-sandbox-profile-resource-policy valid-profile)))
+      (output-policy
+       (agent-sandbox-option request-fields 'output-policy #f))
+      (metadata
+       (agent-sandbox-merge-alists
+        (agent-sandbox-option request-fields 'metadata '())
+        (agent-sandbox-profile-metadata valid-profile)))))))
 
 ;;; Macro entry point: generated code supplies a thunk that materializes field
 ;;; data once, while the builder owns validation and request assembly.
@@ -87,16 +89,17 @@
                                  metadata)
   (make-agent-sandbox-request-from-fields
    profile
-   (list (cons 'command command)
-         (cons 'args args)
-         (cons 'env env)
-         (cons 'workdir workdir)
-         (cons 'mounts mounts)
-         (cons 'network-policy network-policy)
-         (cons 'capabilities capabilities)
-         (cons 'resource-policy resource-policy)
-         (cons 'output-policy output-policy)
-         (cons 'metadata metadata))))
+   (agent-sandbox-field-rows
+    (command command)
+    (args args)
+    (env env)
+    (workdir workdir)
+    (mounts mounts)
+    (network-policy network-policy)
+    (capabilities capabilities)
+    (resource-policy resource-policy)
+    (output-policy output-policy)
+    (metadata metadata))))
 
 ;;; Named-field construction is the preferred typed contract for callers.
 ;;; Missing optional fields receive deterministic defaults during assembly.

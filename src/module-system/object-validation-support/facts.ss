@@ -64,9 +64,18 @@
 ;;; Boundary: module field identities is the policy-visible edge for module-
 ;;; system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [PooModuleFieldContract] [Symbol] [Symbol])
+(def (poo-flow-module-field-identities/rev fields identities-rev)
+  (if (null? fields)
+    identities-rev
+    (poo-flow-module-field-identities/rev
+     (cdr fields)
+     (cons (poo-flow-module-field-contract-identity (car fields))
+           identities-rev))))
+
 ;; : (-> [PooModuleFieldContract] [Symbol])
 (def (poo-flow-module-field-identities fields)
-  (map poo-flow-module-field-contract-identity fields))
+  (reverse (poo-flow-module-field-identities/rev fields '())))
 
 ;; : (-> PooModuleObject [Symbol])
 (def (poo-flow-module-object-direct-field-identities object)
@@ -217,14 +226,34 @@
 ;;; Boundary: module object field origins is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> PooModuleObject [PooModuleFieldContract] Alist [Alist] [Alist])
+(def (poo-flow-module-object-field-origins/rev
+      object
+      fields
+      providers
+      origins-rev)
+  (if (null? fields)
+    origins-rev
+    (poo-flow-module-object-field-origins/rev
+     object
+     (cdr fields)
+     providers
+     (cons (poo-flow-module-object-field-origin/index
+            object
+            (car fields)
+            providers)
+           origins-rev))))
+
 ;; : (-> PooModuleObject [Alist])
 (def (poo-flow-module-object-field-origins object)
   (let (providers
         (poo-flow-module-object-field-provider-index object))
-    (map (lambda (field)
-           (poo-flow-module-object-field-origin/index
-            object field providers))
-         (poo-flow-module-object-resolved-fields object))))
+    (reverse
+     (poo-flow-module-object-field-origins/rev
+      object
+      (poo-flow-module-object-resolved-fields object)
+      providers
+      '()))))
 
 
 ;;; Local object metadata is the only metadata gate that stays in poo-flow;

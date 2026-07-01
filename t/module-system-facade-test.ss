@@ -155,11 +155,12 @@
                       "poo-flow-module-system")
         (check-equal? (.ref presentation 'runtime-capability-projection-kind)
                       "poo-flow.modules.runtime-capability-projection.v1")
-        (check-equal? (.ref presentation 'runtime-object-family-count) 7)
+        (check-equal? (.ref presentation 'runtime-object-family-count) 8)
         (check-equal? (.ref presentation 'runtime-object-families)
                       '(agent-profile
                         agent-harness
                         agent-session
+                        session-agent-graph
                         agent-operation
                         workflow-run
                         dispatch-receipt

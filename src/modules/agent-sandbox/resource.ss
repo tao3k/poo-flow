@@ -5,7 +5,8 @@
 ;;; Invariant: this module never starts a sandbox, opens ports, mounts paths, or
 ;;; resolves store items; it only preserves declarative resource intent.
 
-(import :poo-flow/src/core/api)
+(import :poo-flow/src/core/api
+        :poo-flow/src/modules/agent-sandbox/projection-syntax)
 
 (export +sandbox-volume-modes+
         +sandbox-port-protocols+
@@ -116,27 +117,30 @@
 ;;; derived read-only flag so backend adapters can choose their native field.
 ;; : (-> SandboxVolumeBinding Alist)
 (def (sandbox-volume-binding->request binding)
-  (list (cons 'store-item (sandbox-volume-binding-store-item binding))
-        (cons 'mount-path (sandbox-volume-binding-mount-path binding))
-        (cons 'mode (sandbox-volume-binding-mode binding))
-        (cons 'read-only? (sandbox-volume-binding-read-only? binding))))
+  (agent-sandbox-field-rows
+   (store-item (sandbox-volume-binding-store-item binding))
+   (mount-path (sandbox-volume-binding-mount-path binding))
+   (mode (sandbox-volume-binding-mode binding))
+   (read-only? (sandbox-volume-binding-read-only? binding))))
 
 ;;; Boundary: port request data is neutral enough for Docker port publishing,
 ;;; Cube network declarations, and nono sandbox request projection.
 ;; : (-> SandboxPortBinding Alist)
 (def (sandbox-port-binding->request binding)
-  (list (cons 'name (sandbox-port-binding-name binding))
-        (cons 'container-port (sandbox-port-binding-container-port binding))
-        (cons 'host-port (sandbox-port-binding-host-port binding))
-        (cons 'protocol (sandbox-port-binding-protocol binding))))
+  (agent-sandbox-field-rows
+   (name (sandbox-port-binding-name binding))
+   (container-port (sandbox-port-binding-container-port binding))
+   (host-port (sandbox-port-binding-host-port binding))
+   (protocol (sandbox-port-binding-protocol binding))))
 
 ;;; Boundary: env request data keeps the source tag attached to the value so
 ;;; runtime adapters can resolve secrets without Scheme-side IO.
 ;; : (-> SandboxEnvBinding Alist)
 (def (sandbox-env-binding->request binding)
-  (list (cons 'name (sandbox-env-binding-name binding))
-        (cons 'value (sandbox-env-binding-value binding))
-        (cons 'source (sandbox-env-binding-source binding))))
+  (agent-sandbox-field-rows
+   (name (sandbox-env-binding-name binding))
+   (value (sandbox-env-binding-value binding))
+   (source (sandbox-env-binding-source binding))))
 
 ;;; Boundary: sequence projection stays a pure map over POO bindings; backend
 ;;; adapters receive plain request data after this edge.
@@ -160,15 +164,16 @@
 ;;; setup; execution remains in Rust/Marlin runtime adapters.
 ;; : (-> SandboxResourceSet Alist)
 (def (sandbox-resource-set->request resource-set)
-  (list (cons 'volumes
-              (sandbox-volume-bindings->request
-               (sandbox-resource-set-volumes resource-set)))
-        (cons 'ports
-              (sandbox-port-bindings->request
-               (sandbox-resource-set-ports resource-set)))
-        (cons 'env
-              (sandbox-env-bindings->request
-               (sandbox-resource-set-env resource-set)))))
+  (agent-sandbox-field-rows
+   (volumes
+    (sandbox-volume-bindings->request
+     (sandbox-resource-set-volumes resource-set)))
+   (ports
+    (sandbox-port-bindings->request
+     (sandbox-resource-set-ports resource-set)))
+   (env
+    (sandbox-env-bindings->request
+     (sandbox-resource-set-env resource-set)))))
 
 ;;; Boundary: sandbox volume mount seen predicate is the policy-visible edge
 ;;; for sandbox behavior, keeping validation, lookup, or projection
@@ -183,18 +188,25 @@
 
 ;;; Boundary: volume merge is left-biased by mount path so earlier composition
 ;;; layers keep priority when several sandbox modules bind the same path.
-;; : (-> [SandboxVolumeBinding] [SandboxVolumeBinding] [SandboxVolumeBinding])
-(def (sandbox-volume-bindings-merge left right)
+;; : (-> [SandboxVolumeBinding] [SandboxVolumeBinding] [SandboxVolumeBinding] [SandboxVolumeBinding])
+(def (sandbox-volume-bindings-merge/rev seen right additions-rev)
   (if (null? right)
-    left
+    additions-rev
     (let (binding (car right))
       (if (sandbox-volume-mount-seen?
            (sandbox-volume-binding-mount-path binding)
-           left)
-        (sandbox-volume-bindings-merge left (cdr right))
-        (sandbox-volume-bindings-merge
-         (append left (list binding))
-         (cdr right))))))
+           seen)
+        (sandbox-volume-bindings-merge/rev seen (cdr right) additions-rev)
+        (sandbox-volume-bindings-merge/rev
+         (cons binding seen)
+         (cdr right)
+         (cons binding additions-rev))))))
+
+;; : (-> [SandboxVolumeBinding] [SandboxVolumeBinding] [SandboxVolumeBinding])
+(def (sandbox-volume-bindings-merge left right)
+  (agent-sandbox-rows/tail
+   left
+   (reverse (sandbox-volume-bindings-merge/rev left right '()))))
 
 ;;; Boundary: sandbox port seen predicate is the policy-visible edge for
 ;;; sandbox behavior, keeping validation, lookup, or projection
@@ -212,16 +224,23 @@
 
 ;;; Boundary: port merge is left-biased by container port and protocol, which
 ;;; matches provider behavior where one endpoint cannot have two meanings.
+;; : (-> [SandboxPortBinding] [SandboxPortBinding] [SandboxPortBinding] [SandboxPortBinding])
+(def (sandbox-port-bindings-merge/rev seen right additions-rev)
+  (if (null? right)
+    additions-rev
+    (let (binding (car right))
+      (if (sandbox-port-seen? binding seen)
+        (sandbox-port-bindings-merge/rev seen (cdr right) additions-rev)
+        (sandbox-port-bindings-merge/rev
+         (cons binding seen)
+         (cdr right)
+         (cons binding additions-rev))))))
+
 ;; : (-> [SandboxPortBinding] [SandboxPortBinding] [SandboxPortBinding])
 (def (sandbox-port-bindings-merge left right)
-  (if (null? right)
-    left
-    (let (binding (car right))
-      (if (sandbox-port-seen? binding left)
-        (sandbox-port-bindings-merge left (cdr right))
-        (sandbox-port-bindings-merge
-         (append left (list binding))
-         (cdr right))))))
+  (agent-sandbox-rows/tail
+   left
+   (reverse (sandbox-port-bindings-merge/rev left right '()))))
 
 ;;; Boundary: sandbox env name seen predicate is the policy-visible edge for
 ;;; sandbox behavior, keeping validation, lookup, or projection
@@ -235,16 +254,23 @@
 
 ;;; Boundary: env merge is left-biased by variable name so outer policy can
 ;;; deliberately override inner module defaults.
+;; : (-> [SandboxEnvBinding] [SandboxEnvBinding] [SandboxEnvBinding] [SandboxEnvBinding])
+(def (sandbox-env-bindings-merge/rev seen right additions-rev)
+  (if (null? right)
+    additions-rev
+    (let (binding (car right))
+      (if (sandbox-env-name-seen? (sandbox-env-binding-name binding) seen)
+        (sandbox-env-bindings-merge/rev seen (cdr right) additions-rev)
+        (sandbox-env-bindings-merge/rev
+         (cons binding seen)
+         (cdr right)
+         (cons binding additions-rev))))))
+
 ;; : (-> [SandboxEnvBinding] [SandboxEnvBinding] [SandboxEnvBinding])
 (def (sandbox-env-bindings-merge left right)
-  (if (null? right)
-    left
-    (let (binding (car right))
-      (if (sandbox-env-name-seen? (sandbox-env-binding-name binding) left)
-        (sandbox-env-bindings-merge left (cdr right))
-        (sandbox-env-bindings-merge
-         (append left (list binding))
-         (cdr right))))))
+  (agent-sandbox-rows/tail
+   left
+   (reverse (sandbox-env-bindings-merge/rev left right '()))))
 
 ;;; Boundary: full resource-set merge composes the three reusable sandbox axes
 ;;; without knowing which backend will later consume the request.

@@ -3,7 +3,8 @@
 ;;; Invariant: macros may stay ergonomic, but every expansion must produce
 ;;; concrete module selections rather than category aliases or loose data.
 
-(import :poo-flow/src/module-system/base)
+(import :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-use-module-contract-validation-kind
         poo-flow-use-module-contract-validation-schema
@@ -34,10 +35,11 @@
 
 ;; : (-> Symbol String Value Value Alist)
 (def (poo-flow-use-module-contract-diagnostic code message subject evidence)
-  (list (cons 'code code)
-        (cons 'message message)
-        (cons 'subject subject)
-        (cons 'evidence evidence)))
+  (poo-flow-module-field-rows
+   (code code)
+   (message message)
+   (subject subject)
+   (evidence evidence)))
 
 ;;; Flags are intentionally shallow here: feature payloads such as `(+cicd ...)`
 ;;; and config pairs such as `(:config . profiles)` are both symbol-keyed
@@ -65,7 +67,7 @@
 ;;; only against the derived `(custom . workflow)` selection row.
 ;; : (-> Symbol [PooUserModuleSelection] [Alist])
 (def (poo-flow-use-module-contract-module-diagnostics module selections)
-  (append
+  (poo-flow-module-rows/tail
    (if (symbol? module)
      '()
      (list
@@ -74,24 +76,25 @@
        "use-module expects a concrete module symbol"
        module
        selections)))
-   (if (and (symbol? module)
-            (poo-flow-use-module-category-symbol? module))
-     (list
-      (poo-flow-use-module-contract-diagnostic
-       'use-module-category-as-module
-       "use-module expects a concrete module, not a category"
-       module
-       '((category-symbols . (workflow flow sandbox loop custom))
-         (example . (use-module funflow)))))
-     '())
-   (if (list? selections)
-     '()
-     (list
-      (poo-flow-use-module-contract-diagnostic
-       'use-module-selection-list-not-list
-       "use-module must return a list of module selection objects"
-       module
-       selections)))))
+   (poo-flow-module-rows/tail
+    (if (and (symbol? module)
+             (poo-flow-use-module-category-symbol? module))
+      (list
+       (poo-flow-use-module-contract-diagnostic
+        'use-module-category-as-module
+        "use-module expects a concrete module, not a category"
+        module
+        '((category-symbols . (workflow flow sandbox loop custom))
+          (example . (use-module funflow)))))
+      '())
+    (if (list? selections)
+      '()
+      (list
+       (poo-flow-use-module-contract-diagnostic
+        'use-module-selection-list-not-list
+        "use-module must return a list of module selection objects"
+        module
+        selections))))))
 
 ;;; The module-system key is the canonical category/module pair. Validating it
 ;;; here prevents `(use-module workflow ...)` from degrading into a custom row.
@@ -120,9 +123,10 @@
      'use-module-group-mismatch
      "use-module selection group must match module routing"
      module
-     (list (cons 'group group)
-           (cons 'module selected-module)
-           (cons 'expected-group expected-group)))))
+     (poo-flow-module-field-rows
+      (group group)
+      (module selected-module)
+      (expected-group expected-group)))))
 
 ;;; Boundary: use module contract category module diagnostics is the policy-
 ;;; visible edge for module-system behavior, keeping validation, lookup, or

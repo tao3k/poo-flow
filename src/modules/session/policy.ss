@@ -3,7 +3,7 @@
 ;;; Invariant: policy objects describe authorization and sharing intent only;
 ;;; they never execute tools, hooks, providers, or sandbox runtimes.
 
-(import (only-in :clan/poo/object .o .ref object? object<-alist)
+(import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
         :poo-flow/src/module-system/durable-policy
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-syntax)
@@ -101,6 +101,13 @@
     #f))
 
 ;; : (-> PooSessionPolicy [Pair])
+(def +poo-flow-session-policy-no-durable-rows+
+  '((durable-policy . #f)
+    (durable-policy-ref . #f)
+    (durable-valid? . #f)
+    (durable-diagnostic-count . 0)))
+
+;; : (-> PooSessionPolicy [Pair])
 (def (poo-flow-session-policy-durable-rows policy)
   (let (receipt (poo-flow-session-policy-durable-receipt policy))
     (if receipt
@@ -114,50 +121,112 @@
        (cons 'durable-diagnostic-count
              (length
               (poo-flow-durable-policy-receipt-diagnostics receipt))))
-      '((durable-policy . #f)
-        (durable-policy-ref . #f)
-        (durable-valid? . #f)
-        (durable-diagnostic-count . 0)))))
+      +poo-flow-session-policy-no-durable-rows+)))
+
+;; : (-> Any Boolean)
+(def (poo-flow-session-policy-fast-policy? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind) 'poo-flow.session.policy)))
+
+;; : (-> Alist Symbol Value Value)
+(def (poo-flow-session-policy-slot-row policy-slots key default)
+  (poo-flow-session-alist-ref policy-slots key default))
 
 ;; : (-> PooSessionPolicy Alist)
-(defpoo-session-policy-projection
-  poo-flow-session-policy->alist
-  (policy)
-  (require poo-flow-session-require
-           "session policy projection requires a policy"
-           poo-flow-session-policy?)
-  (slot-reader poo-flow-session-policy-slot)
-  (durable poo-flow-session-policy-durable-rows)
-  (rows
-   (slot kind #f)
-   (slot schema #f)
-   (value policy-kind (poo-flow-session-policy-kind policy))
-   (value policy-name (poo-flow-session-policy-name policy))
-   (value scope-ref (poo-flow-session-policy-scope-ref policy))
-   (value default-action (poo-flow-session-policy-default-action policy))
-   (slot policy-slots '())
-   (slot agent-ref #f)
-   (slot session-ref #f)
-   (slot provider-ref #f)
-   (slot model-ref #f)
-   (slot prompt-session-ref #f)
-   (slot prompt-chunk-refs '())
-   (slot context-mode 'isolated)
-   (slot model-policy-ref #f)
-   (slot prompt-policy-ref #f)
-   (slot tool-policy-ref #f)
-   (slot hook-policy-ref #f)
-   (slot context-policy-ref #f)
-   (slot resource-policy-ref #f)
-   (slot tool-grants '())
-   (value tool-grant-count
-          (length (poo-flow-session-policy-slot policy 'tool-grants '())))
-   (slot denied-tool-refs '())
-   (slot hook-events '())
-   (slot resource-grants '())
-   (slot metadata '())
-   (slot runtime-owner "marlin-agent-core")
-   (slot runtime-executed #f)))
+(def (poo-flow-session-policy->alist policy)
+  (poo-flow-session-require
+   "session policy projection requires a policy"
+   (poo-flow-session-policy-fast-policy? policy)
+   policy)
+  (let* ((policy-slots
+          (.ref policy 'policy-slots))
+         (tool-grants
+          (poo-flow-session-policy-slot-row policy-slots
+                                            'tool-grants
+                                            '())))
+    (poo-flow-session-policy-rows/tail
+     (list
+      (cons 'kind (.ref policy 'kind))
+      (cons 'schema (.ref policy 'schema))
+      (cons 'policy-kind (.ref policy 'policy-kind))
+      (cons 'policy-name (.ref policy 'policy-name))
+      (cons 'scope-ref (.ref policy 'scope-ref))
+      (cons 'default-action (.ref policy 'default-action))
+      (cons 'policy-slots policy-slots)
+      (cons 'agent-ref
+            (poo-flow-session-policy-slot-row policy-slots 'agent-ref #f))
+      (cons 'session-ref
+            (poo-flow-session-policy-slot-row policy-slots 'session-ref #f))
+      (cons 'provider-ref
+            (poo-flow-session-policy-slot-row policy-slots 'provider-ref #f))
+      (cons 'model-ref
+            (poo-flow-session-policy-slot-row policy-slots 'model-ref #f))
+      (cons 'prompt-session-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'prompt-session-ref
+             #f))
+      (cons 'prompt-chunk-refs
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'prompt-chunk-refs
+             '()))
+      (cons 'context-mode
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'context-mode
+             'isolated))
+      (cons 'model-policy-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'model-policy-ref
+             #f))
+      (cons 'prompt-policy-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'prompt-policy-ref
+             #f))
+      (cons 'tool-policy-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'tool-policy-ref
+             #f))
+      (cons 'hook-policy-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'hook-policy-ref
+             #f))
+      (cons 'context-policy-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'context-policy-ref
+             #f))
+      (cons 'resource-policy-ref
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'resource-policy-ref
+             #f))
+      (cons 'tool-grants tool-grants)
+      (cons 'tool-grant-count (length tool-grants))
+      (cons 'denied-tool-refs
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'denied-tool-refs
+             '()))
+      (cons 'hook-events
+            (poo-flow-session-policy-slot-row policy-slots
+                                              'hook-events
+                                              '()))
+      (cons 'resource-grants
+            (poo-flow-session-policy-slot-row
+             policy-slots
+             'resource-grants
+             '()))
+      (cons 'metadata (.ref policy 'metadata))
+      (cons 'runtime-owner (.ref policy 'runtime-owner))
+      (cons 'runtime-executed (.ref policy 'runtime-executed)))
+     (poo-flow-session-policy-durable-rows policy))))
 
 ;; : (-> Alist Alist Alist)
 (def (poo-flow-session-policy-rows/tail rows tail)

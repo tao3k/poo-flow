@@ -61,6 +61,13 @@
 (def +poo-flow-runtime-bootstrap-modules+
   '("src/module-system/durable-policy.ss"
     "src/core/runtime-adapter.ss"
+    "src/modules/session/objects.ss"
+    "src/modules/session/communication.ss"
+    "src/modules/session/registry.ss"
+    "src/modules/session/agent.ss"
+    "src/module-system/loop-engine-intent-utils.ss"
+    "src/module-system/loop-engine-session-agent-graph.ss"
+    "src/module-system/loop-engine-runtime-agent.ss"
     "src/module-system/durable-runtime-store.ss"
     "src/module-system/durable-runtime-store-backend.ss"
     "src/module-system/durable-runtime-store-operation.ss"
@@ -148,16 +155,30 @@
      ((char=? (string-ref path index) #\/) #f)
      (else (loop (+ index 1))))))
 
+;; : (-> String [String] [String] [String])
+(def (poo-flow-module-files/prefix-rev dir paths files-rev)
+  (if (null? paths)
+    files-rev
+    (poo-flow-module-files/prefix-rev
+     dir
+     (cdr paths)
+     (cons (string-append dir "/" (car paths)) files-rev))))
+
+;; : (-> String [String] [String])
+(def (poo-flow-module-files/prefix dir paths)
+  (reverse (poo-flow-module-files/prefix-rev dir paths '())))
+
 (def (poo-flow-module-files dir exclude-dirs root-only?)
   (poo-flow-with-directory dir
     (lambda ()
       (let (modules (all-gerbil-modules exclude-dirs: exclude-dirs))
-        (map (lambda (path) (string-append dir "/" path))
-             (if root-only?
-               (filter poo-flow-root-module-path? modules)
-               modules))))))
+        (poo-flow-module-files/prefix
+         dir
+         (if root-only?
+           (filter poo-flow-root-module-path? modules)
+           modules))))))
 
-(def (poo-flow-package-append-map/rev proc value results)
+(def (poo-flow-package-flat-map/rev proc value results)
   (let loop ((remaining-values (proc value))
              (result-values results))
     (if (null? remaining-values)
@@ -165,36 +186,50 @@
       (loop (cdr remaining-values)
             (cons (car remaining-values) result-values)))))
 
-(def (poo-flow-package-append-map proc values)
+(def (poo-flow-package-flat-map proc values)
   (let loop ((remaining-values values)
              (result-values []))
     (if (null? remaining-values)
       (reverse result-values)
       (loop (cdr remaining-values)
-            (poo-flow-package-append-map/rev
+            (poo-flow-package-flat-map/rev
              proc
              (car remaining-values)
              result-values)))))
 
 (def (poo-flow-package-modules dirs exclude-dirs root-only?)
-  (poo-flow-package-append-map
+  (poo-flow-package-flat-map
    (lambda (dir)
      (poo-flow-module-files dir exclude-dirs root-only?))
    dirs))
 
+(def (poo-flow-package-remove-members/rev files excluded files-rev)
+  (cond
+   ((null? files) files-rev)
+   ((member (car files) excluded)
+    (poo-flow-package-remove-members/rev (cdr files) excluded files-rev))
+   (else
+    (poo-flow-package-remove-members/rev
+     (cdr files)
+     excluded
+     (cons (car files) files-rev)))))
+
+(def (poo-flow-package-remove-members files excluded)
+  (reverse (poo-flow-package-remove-members/rev files excluded [])))
+
 (def (poo-flow-runtime-modules)
-  (filter (lambda (file)
-            (not (member file +poo-flow-special-source-files+)))
-          (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)))
+  (poo-flow-package-remove-members
+   (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)
+   +poo-flow-special-source-files+))
 
 (def (poo-flow-runtime-bootstrap-modules)
   (filter file-exists? +poo-flow-runtime-bootstrap-modules+))
 
 (def (poo-flow-runtime-main-modules)
   (let (bootstrap (poo-flow-runtime-bootstrap-modules))
-    (filter (lambda (file)
-              (not (member file bootstrap)))
-            (poo-flow-runtime-modules))))
+    (poo-flow-package-remove-members
+     (poo-flow-runtime-modules)
+     bootstrap)))
 
 (def (poo-flow-test-modules)
   (poo-flow-package-modules +poo-flow-test-include-dirs+ '() #t))
@@ -202,8 +237,16 @@
 (def (poo-flow-gxc-target file _options)
   [gxc: file])
 
+(def (poo-flow-gxc-spec/rev files options specs-rev)
+  (if (null? files)
+    specs-rev
+    (poo-flow-gxc-spec/rev
+     (cdr files)
+     options
+     (cons (poo-flow-gxc-target (car files) options) specs-rev))))
+
 (def (poo-flow-gxc-spec files options)
-  (map (lambda (file) (poo-flow-gxc-target file options)) files))
+  (reverse (poo-flow-gxc-spec/rev files options [])))
 
 (def (poo-flow-runtime-build-spec options)
   (poo-flow-gxc-spec
@@ -333,13 +376,25 @@
     ([gxc: file . _] (path-expand file (poo-flow-package-srcdir)))
     (_ #f)))
 
+(def (poo-flow-stage-default-source-files/rev files sources-rev)
+  (if (null? files)
+    sources-rev
+    (poo-flow-stage-default-source-files/rev
+     (cdr files)
+     (cons (path-expand (car files) (poo-flow-package-srcdir))
+           sources-rev))))
+
+(def (poo-flow-stage-default-source-files)
+  (reverse
+   (poo-flow-stage-default-source-files/rev
+    '("build.ss" "gerbil.pkg")
+    [])))
+
 (def (poo-flow-stage-source-files stage)
   (let lp ((rest stage) (sources []))
     (match rest
       ([] (append (reverse sources)
-                  (map (lambda (file)
-                         (path-expand file (poo-flow-package-srcdir)))
-                       '("build.ss" "gerbil.pkg"))))
+                  (poo-flow-stage-default-source-files)))
       ([spec . rest]
        (let (source (poo-flow-diagnostic-source-path spec))
          (if source
@@ -369,7 +424,7 @@
        (poo-flow-stage-cacheable? stage options)
        (let* ((stamp (poo-flow-stage-cache-stamp-path options))
               (sources (poo-flow-stage-source-files stage))
-              (outputs (poo-flow-package-append-map
+              (outputs (poo-flow-package-flat-map
                         poo-flow-diagnostic-outputs
                         stage))
               (status (gslph-package-build-receipt-status
@@ -384,7 +439,7 @@
     (gslph-package-build-receipt-write
      (poo-flow-stage-cache-stamp-path options)
      (poo-flow-stage-source-files stage)
-     (poo-flow-package-append-map poo-flow-diagnostic-outputs stage))))
+     (poo-flow-package-flat-map poo-flow-diagnostic-outputs stage))))
 
 (def (poo-flow-make label stage options)
   (poo-flow-package-require-gxpkg-env!)

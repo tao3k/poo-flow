@@ -12,7 +12,9 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         :poo-flow/t/support/performance
-        :poo-flow/src/modules/session/config)
+        :poo-flow/src/modules/session/config
+        :poo-flow/src/modules/tool-core/config
+        :poo-flow/src/modules/memory-core/config)
 
 (export session-policy-validation-performance-test)
 
@@ -98,6 +100,21 @@
            'session/perf-system
            '(system build-contract)
            'parent-summary-only))
+         (isolation-policy
+          (poo-flow-session-isolation-policy
+           'policy/perf-isolation
+           'session/perf-build
+           'child-isolated
+           'denied
+           'denied
+           'declared-channel-only))
+         (sandbox-policy
+          (poo-flow-session-sandbox-policy
+           'policy/perf-sandbox
+           'session/perf-build
+           'agent/nono
+           'parent-profile
+           'isolated-filesystem))
          (context-policy
           (poo-flow-session-context-policy
            'policy/perf-context
@@ -116,6 +133,34 @@
            'session/perf-build
            '(channel/build-root)
            '(session/root)))
+         (root-communication
+          (poo-flow-session-communication-receipt
+           'project/perf
+           'child-parent
+           'session/root
+           'session/root
+           'session/perf-build
+           'session/root
+           'agent/build
+           'agent/root
+           'channel/build-root
+           'result
+           '((summary . "perf build completed"))
+           'receipt-only))
+         (audit-communication
+          (poo-flow-session-communication-receipt
+           'project/perf
+           'sibling
+           'session/root
+           'session/root
+           'session/perf-build
+           'session/audit
+           'agent/build
+           'agent/audit
+           'channel/build-audit
+           'artifact
+           '((artifact . perf-build-report))
+           'declared-channel-only))
          (sharing-policy
           (poo-flow-session-resource-sharing-policy
            'policy/perf-sharing
@@ -148,16 +193,79 @@
            '(hook/pre-check)
            (list read-grant)
            'human-approval-on-escalation
-           'deny)))
+           'deny))
+         (build-tool
+          (poo-flow-tool-spec
+           'run-build-command
+           'builtin-command
+           '(run)
+           '((argv . list) (cwd . string))
+           '((exit-status . integer)
+             (stdout-ref . artifact)
+             (stderr-ref . artifact))
+           "marlin-agent-core"
+           'tool/run-build-command
+           #t
+           'agent/nono
+           'marlin-tool-adapter))
+         (tool-catalog
+          (poo-flow-tool-catalog
+           'tool-core/perf-session-policy
+           (list poo-flow-tool-core-builtin-read-workspace-file
+                 build-tool)))
+         (tool-catalog-validation-row
+          (poo-flow-tool-policy-catalog-validation-receipt->alist
+           (poo-flow-tool-policy-catalog-validation-receipt
+            'validation/perf-tool-catalog
+            tool-catalog
+            agent-tool-policy
+            hook-tool-policy)))
+         (memory-store
+          (poo-flow-memory-store-spec
+           'memory/perf
+           'durable-project
+           'project
+           '(current-session project)
+           '(semantic-search)
+           '(append review-only)
+           "marlin-agent-core"
+           'memory/perf
+           #t
+           'marlin-memory-adapter))
+         (memory-catalog
+          (poo-flow-memory-catalog
+           'memory-core/perf
+           (list memory-store)))
+         (memory-intent
+          (poo-flow-session-memory-intent
+           'intent/perf-memory
+           'memory/perf
+           'project
+           '(current-ticket)
+           'append))
+         (memory-catalog-validation-row
+          (poo-flow-memory-policy-catalog-validation-receipt->alist
+           (poo-flow-memory-policy-catalog-validation-receipt
+            'validation/perf-memory-catalog
+            memory-catalog
+            (list memory-intent)))))
     (list (cons 'model model-policy)
           (cons 'prompt prompt-policy)
+          (cons 'isolation isolation-policy)
+          (cons 'sandbox sandbox-policy)
           (cons 'context context-policy)
           (cons 'history history-policy)
           (cons 'communication communication-policy)
+          (cons 'communication-receipts
+                (list root-communication audit-communication))
           (cons 'sharing sharing-policy)
           (cons 'resource resource-policy)
           (cons 'agent-tool agent-tool-policy)
-          (cons 'hook-tool hook-tool-policy))))
+          (cons 'hook-tool hook-tool-policy)
+          (cons 'tool-catalog-validation-row
+                tool-catalog-validation-row)
+          (cons 'memory-catalog-validation-row
+                memory-catalog-validation-row))))
 
 ;; : (-> Alist Integer Alist)
 (def (session-policy-validation-performance-summary context attempt-count)
@@ -175,6 +283,8 @@
            'session/perf-build
            (session-policy-validation-performance-ref context 'model)
            (session-policy-validation-performance-ref context 'prompt)
+           (session-policy-validation-performance-ref context 'isolation)
+           (session-policy-validation-performance-ref context 'sandbox)
            (session-policy-validation-performance-ref context 'context)
            (session-policy-validation-performance-ref context 'history)
            (session-policy-validation-performance-ref context 'communication)
@@ -187,7 +297,21 @@
            '(channel/build-root channel/build-audit)
            '(project-workspace build-cache network-egress)
            agent-attempts
-           hook-attempts))
+           hook-attempts
+           (list
+            (cons 'memory-catalog-validation
+                  (session-policy-validation-performance-ref
+                   context
+                   'memory-catalog-validation-row))
+            (cons 'tool-catalog-validation
+                  (session-policy-validation-performance-ref
+                   context
+                   'tool-catalog-validation-row))
+            (cons 'communication-receipts
+                  (session-policy-validation-performance-ref
+                   context
+                   'communication-receipts))
+            (cons 'sibling-session-refs '(session/audit)))))
          (receipt-row
           (poo-flow-session-policy-validation-receipt->alist receipt)))
     (list (cons 'valid?
@@ -219,6 +343,47 @@
                 (session-policy-validation-performance-ref
                  receipt-row
                  'diagnostic-count))
+          (cons 'tool-catalog-valid?
+                (session-policy-validation-performance-ref
+                 receipt-row
+                 'tool-catalog-valid?))
+          (cons 'tool-catalog-allowed-attempt-tool-ref-count
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'tool-catalog-allowed-attempt-tool-refs)))
+          (cons 'tool-catalog-unresolved-attempt-tool-ref-count
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'tool-catalog-unresolved-attempt-tool-refs)))
+          (cons 'memory-catalog-valid?
+                (session-policy-validation-performance-ref
+                 receipt-row
+                 'memory-catalog-valid?))
+          (cons 'effective-isolation-mode
+                (session-policy-validation-performance-ref
+                 receipt-row
+                 'effective-isolation-mode))
+          (cons 'effective-sandbox-profile-ref
+                (session-policy-validation-performance-ref
+                 receipt-row
+                 'effective-sandbox-profile-ref))
+          (cons 'allowed-communication-receipt-count
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'allowed-communication-receipts)))
+          (cons 'denied-communication-receipt-count
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'denied-communication-receipts)))
+          (cons 'memory-catalog-resolved-store-count
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'memory-catalog-resolved-store-refs)))
           (cons 'runtime-executed
                 (session-policy-validation-performance-ref
                  receipt-row
@@ -267,5 +432,47 @@
          (session-policy-validation-performance-ref summary
                                                     'runtime-executed)
          #f)
+        (check-equal?
+         (session-policy-validation-performance-ref summary
+                                                    'memory-catalog-valid?)
+         #t)
+        (check-equal?
+         (session-policy-validation-performance-ref summary
+                                                    'tool-catalog-valid?)
+         #t)
+        (check-equal?
+         (session-policy-validation-performance-ref
+          summary
+          'tool-catalog-allowed-attempt-tool-ref-count)
+         2)
+        (check-equal?
+         (session-policy-validation-performance-ref
+          summary
+          'tool-catalog-unresolved-attempt-tool-ref-count)
+         0)
+        (check-equal?
+         (session-policy-validation-performance-ref summary
+                                                    'effective-isolation-mode)
+         'child-isolated)
+        (check-equal?
+         (session-policy-validation-performance-ref
+          summary
+          'effective-sandbox-profile-ref)
+         'agent/nono)
+        (check-equal?
+         (session-policy-validation-performance-ref
+          summary
+          'allowed-communication-receipt-count)
+         1)
+        (check-equal?
+         (session-policy-validation-performance-ref
+          summary
+          'denied-communication-receipt-count)
+         1)
+        (check-equal?
+         (session-policy-validation-performance-ref
+          summary
+          'memory-catalog-resolved-store-count)
+         1)
         (session-policy-validation-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

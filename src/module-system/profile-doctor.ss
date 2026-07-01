@@ -47,6 +47,18 @@
 (def (poo-flow-user-profile-duplicate-values values)
   (poo-flow-user-profile-duplicate-values/add values '()))
 
+;; : (-> [PooUserModuleSelection] [Pair] [Pair])
+(def (poo-flow-user-profile-doctor-module-keys/rev modules keys-rev)
+  (if (null? modules)
+    keys-rev
+    (poo-flow-user-profile-doctor-module-keys/rev
+     (cdr modules)
+     (cons (poo-flow-user-module-selection-key (car modules)) keys-rev))))
+
+;; : (-> [PooUserModuleSelection] [Pair])
+(def (poo-flow-user-profile-doctor-module-keys modules)
+  (reverse (poo-flow-user-profile-doctor-module-keys/rev modules '())))
+
 ;;; Empty bundle indexes are reported rather than rejected because a false
 ;;; conditional gate is a legitimate Doom-style declaration state.
 ;; : (-> [[PooUserModuleSelection]] Integer [Integer])
@@ -152,8 +164,8 @@
 (def (poo-flow-user-profile-duplicate-module-diagnostics profile)
   (let ((duplicates
          (poo-flow-user-profile-duplicate-values
-          (map poo-flow-user-module-selection-key
-               (poo-flow-user-profile-modules profile)))))
+          (poo-flow-user-profile-doctor-module-keys
+           (poo-flow-user-profile-modules profile)))))
     (if (null? duplicates)
       '()
       (list
@@ -415,8 +427,8 @@
         diagnostic-count: (length diagnostics)
         profile-diagnostics: diagnostics
         module-keys:
-        (map poo-flow-user-module-selection-key
-             (poo-flow-user-profile-modules profile))
+        (poo-flow-user-profile-doctor-module-keys
+         (poo-flow-user-profile-modules profile))
         setting-keys: (poo-flow-user-profile-setting-keys profile)
         descriptor-realized?: #f
         runtime-executed: #f)))

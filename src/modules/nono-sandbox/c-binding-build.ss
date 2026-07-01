@@ -40,6 +40,24 @@
         nono-c-binding-build->probe-command
         nono-c-binding-compile-probe-command)
 
+(defrules nono-c-binding-build-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (forall (a) (-> [a] [a] [a]))
+(def (nono-c-binding-build-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;;; Build schema is separate from the ABI descriptor. The descriptor names the
 ;;; native surface; this object names the package-managed host probe policy.
 ;; : Symbol
@@ -56,8 +74,9 @@
 
 ;; : (List String)
 (def +nono-c-binding-default-include-dirs+
-  (append +nono-c-binding-default-adapter-include-dirs+
-          +nono-c-binding-default-upstream-include-dirs+))
+  (nono-c-binding-build-values/tail
+   +nono-c-binding-default-adapter-include-dirs+
+   +nono-c-binding-default-upstream-include-dirs+))
 
 ;; : (List String)
 (def +nono-c-binding-default-compiler-options+
@@ -193,16 +212,26 @@
 
 ;; : (-> Symbol String Alist)
 (def (nono-c-binding-build-required-input kind path)
-  (list (cons 'kind kind)
-        (cons 'path path)))
+  (nono-c-binding-build-field-rows
+   (kind kind)
+   (path path)))
 
 ;;; Required-dir inputs keep include directory expansion as a pure map from
 ;;; paths to receipt rows, preserving index/order for later diagnostics.
+;; : (-> Symbol (List String) (List Alist) (List Alist))
+(def (nono-c-binding-build-required-dir-inputs/rev kind paths inputs-rev)
+  (if (null? paths)
+    inputs-rev
+    (nono-c-binding-build-required-dir-inputs/rev
+     kind
+     (cdr paths)
+     (cons (nono-c-binding-build-required-input kind (car paths))
+           inputs-rev))))
+
 ;; : (-> Symbol (List String) (List Alist))
 (def (nono-c-binding-build-required-dir-inputs kind paths)
-  (map (lambda (path)
-         (nono-c-binding-build-required-input kind path))
-       paths))
+  (reverse
+   (nono-c-binding-build-required-dir-inputs/rev kind paths '())))
 
 ;;; Required inputs make the package-owned C binding resources explicit.
 ;;; Runtime receipts can report missing headers before a compiler emits opaque

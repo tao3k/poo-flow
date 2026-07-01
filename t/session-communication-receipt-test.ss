@@ -20,7 +20,59 @@
 (def session-communication-receipt-test
   (test-suite "poo-flow session communication receipts"
     (test-case "names parent, child, sibling, and cross-root routing edges"
-      (let* ((parent-child
+      (let* ((parent-child-channel
+              (poo-flow-session-communication-channel-receipt
+               'project/session
+               'channel/root-build
+               'parent-child
+               'session/root
+               'session/build
+               'agent/root
+               'agent/build
+               '(request)
+               '(receipt-only)))
+             (child-parent-channel
+              (poo-flow-session-communication-channel-receipt
+               'project/session
+               'channel/build-root
+               'child-parent
+               'session/build
+               'session/root
+               'agent/build
+               'agent/root
+               '(result)
+               '(receipt-only)))
+             (sibling-channel
+              (poo-flow-session-communication-channel-receipt
+               'project/session
+               'channel/build-audit
+               'sibling
+               'session/build
+               'session/audit
+               'agent/build
+               'agent/audit
+               '(artifact)
+               '(declared-channel-only)))
+             (cross-root-channel
+              (poo-flow-session-communication-channel-receipt
+               'project/session
+               'channel/audit-release
+               'cross-root
+               'session/audit
+               'session/release
+               'agent/audit
+               'agent/release
+               '(receipt)
+               '(explicit-project-root)
+               '((communication-ledger-ref . runtime/communication-ledger)
+                 (durable-policy-ref . durable/session-communication))))
+             (channel-rows
+              (poo-flow-session-communication-channel-receipts->alists
+               (list parent-child-channel
+                     child-parent-channel
+                     sibling-channel
+                     cross-root-channel)))
+             (parent-child
               (poo-flow-session-communication-receipt
                'project/session
                'parent-child
@@ -81,7 +133,33 @@
              (rows
               (poo-flow-session-communication-receipts->alists
                (list parent-child child-parent sibling cross-root)))
+             (root-build-channel-row (car channel-rows))
+             (cross-root-channel-row (cadddr channel-rows))
              (cross-root-row (cadddr rows)))
+        (check-equal? (poo-flow-session-communication-channel-receipt?
+                       parent-child-channel)
+                      #t)
+        (check-equal?
+         (poo-flow-session-communication-channel-receipt-channel-id
+          sibling-channel)
+         'channel/build-audit)
+        (check-equal?
+         (poo-flow-session-communication-channel-receipt-relation-kind
+          cross-root-channel)
+         'cross-root)
+        (check-equal? (test-ref root-build-channel-row 'kind)
+                      +poo-flow-session-communication-channel-receipt-kind+)
+        (check-equal? (test-ref root-build-channel-row
+                                'allowed-message-kinds)
+                      '(request))
+        (check-equal? (test-ref cross-root-channel-row 'delivery-policies)
+                      '(explicit-project-root))
+        (check-equal? (test-ref cross-root-channel-row
+                                'communication-ledger-ref)
+                      'runtime/communication-ledger)
+        (check-equal? (test-ref cross-root-channel-row 'durable-policy-ref)
+                      'durable/session-communication)
+        (check-equal? (test-ref cross-root-channel-row 'open?) #f)
         (check-equal? (poo-flow-session-communication-receipt?
                        parent-child)
                       #t)

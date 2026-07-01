@@ -11,6 +11,20 @@
         defpoo-session-object-projection
         defpoo-session-object-projection-batch)
 
+;; : (-> List List List)
+(def (poo-flow-session-policy-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
 ;; defpoo-session-policy-family
 ;;   : internal syntax generator for a session policy constructor family.
 ;;     The call site supplies the base constructor, contract symbols, parameter
@@ -106,7 +120,7 @@
       (rows row ...))
    (def (constructor policy)
      (require-proc message (policy-predicate policy) policy)
-     (append
+     (poo-flow-session-policy-rows/tail
       (list
        (defpoo-session-policy-projection-row policy
                                              slot-reader-proc

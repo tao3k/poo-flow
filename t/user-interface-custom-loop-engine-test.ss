@@ -56,12 +56,48 @@
     ci-loop-governor
     human-audit))
 
+;; : [Symbol]
+(def expected-loop-engine-session-ids
+  '(incoming-ci-request-session
+    loop-engine/current-system-build-loop/session
+    loop-engine/current-system-build-loop/auditor-session
+    loop-engine/current-system-build-loop/verifier-session
+    loop-engine/current-system-build-loop/governor-session
+    loop-engine/current-system-build-loop/human-audit-session))
+
+;; : [Pair]
+(def expected-loop-engine-lineage-edge-pairs
+  '((loop-engine/current-system-build-loop/session
+     . loop-engine/current-system-build-loop/auditor-session)
+    (loop-engine/current-system-build-loop/session
+     . loop-engine/current-system-build-loop/verifier-session)
+    (loop-engine/current-system-build-loop/session
+     . loop-engine/current-system-build-loop/governor-session)
+    (loop-engine/current-system-build-loop/session
+     . loop-engine/current-system-build-loop/human-audit-session)))
+
+;; : [Symbol]
+(def expected-loop-engine-durable-policy-refs
+  '(ci-audit-agent/durable-policy
+    build-verifier-agent/durable-policy
+    ci-loop-governor/durable-policy
+    human-audit/durable-policy))
+
+;; : [Symbol]
+(def expected-loop-engine-channel-refs
+  '(loop-engine/current-system-build-loop/auditor-channel
+    loop-engine/current-system-build-loop/verifier-channel
+    loop-engine/current-system-build-loop/governor-channel
+    loop-engine/current-system-build-loop/human-audit-channel))
+
 ;; : Alist
 (def expected-loop-engine-receipt-contracts
   '((lineage-receipt
      . poo-flow.loop-engine.lineage-receipt.v1)
     (selector-receipt
      . poo-flow.loop-engine.selector-receipt.v1)
+    (session-agent-graph
+     . poo-flow.modules.session.agent-graph.v1)
     (resource-dispatch-receipt
      . poo-flow.loop-engine.resource-dispatch-receipt.v1)
     (capability-receipt
@@ -267,6 +303,9 @@
   (check-equal? (test-ref (test-ref (car agent-profiles) 'loop-policy)
                           'result-contract)
                 'poo-flow.loop-governor.audit-result.v1)
+  (check-equal? (test-ref (test-ref (car agent-profiles) 'loop-policy)
+                          'topology-source)
+                'session-agent-graph)
   (check-equal? (test-field-values agent-harnesses 'profile)
                 expected-loop-engine-agent-names)
   (check-equal? (test-field-values agent-sessions 'kind)
@@ -278,6 +317,12 @@
   (check-equal? (test-ref session-agent-graph 'agent-count) 4)
   (check-equal? (test-ref session-agent-graph 'agent-ids)
                 expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-graph 'session-ids)
+                expected-loop-engine-session-ids)
+  (check-equal? (test-ref session-agent-graph 'lineage-edge-pairs)
+                expected-loop-engine-lineage-edge-pairs)
+  (check-equal? (test-ref session-agent-graph 'durable-policy-refs)
+                expected-loop-engine-durable-policy-refs)
   (check-equal? (test-ref session-agent-topology-trace 'kind)
                 'loop-engine-session-agent-topology-trace)
   (check-equal? (test-ref session-agent-topology-trace 'valid?) #t)
@@ -289,9 +334,45 @@
   (check-equal? (test-ref session-agent-topology-trace 'graph-agent-ids)
                 expected-loop-engine-agent-names)
   (check-equal? (test-ref session-agent-topology-trace
+                          'graph-root-session-ref)
+                'incoming-ci-request-session)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'loop-session-ref)
+                'loop-engine/current-system-build-loop/session)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'graph-session-ids)
+                expected-loop-engine-session-ids)
+  (check-equal? (test-ref session-agent-topology-trace
                           'agent-session-refs)
                 (test-ref session-agent-topology-trace
                           'graph-output-session-refs))
+  (check-equal? (test-ref session-agent-topology-trace
+                          'graph-lineage-edge-pairs)
+                expected-loop-engine-lineage-edge-pairs)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'graph-durable-policy-refs)
+                expected-loop-engine-durable-policy-refs)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'registry-durable-policy-refs)
+                expected-loop-engine-durable-policy-refs)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'graph-channel-refs)
+                expected-loop-engine-channel-refs)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'communication-channel-refs)
+                expected-loop-engine-channel-refs)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'communication-receipt-count)
+                8)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'registry-root-session-ids)
+                '(incoming-ci-request-session))
+  (check-equal? (test-ref session-agent-topology-trace
+                          'registry-session-ids)
+                expected-loop-engine-session-ids)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'registry-active-session-ref)
+                'loop-engine/current-system-build-loop/session)
   (check-equal? (test-ref session-agent-graph 'communication-receipt-count)
                 8)
   (check-equal? (map (lambda (row) (test-ref row 'relation-kind))
@@ -307,7 +388,10 @@
   (check-equal? (test-ref (car agent-harnesses) 'runtime-executed) #f)
   (check-equal? (test-ref (test-ref (car agent-sessions) 'metadata)
                           'runtime-executed)
-                #f))
+                #f)
+  (check-equal? (test-ref (test-ref (car agent-sessions) 'metadata)
+                          'topology-source)
+                'session-agent-graph))
 
 ;;; Policy receipt assertions keep lineage, selection, resource, memory, and
 ;;; compression facts report-only while preserving their selected loop branch.

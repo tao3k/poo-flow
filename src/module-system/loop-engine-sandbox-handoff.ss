@@ -55,11 +55,25 @@
 
 ;;; Profile refs preserve first declaration order. Later duplicates do not
 ;;; change the runtime handoff order.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (poo-flow-user-loop-engine-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> MaybeSymbol [Symbol] [Symbol])
 (def (poo-flow-user-loop-engine-profile-ref-add value refs)
   (if (and value
            (not (poo-flow-user-loop-engine-profile-ref-member? value refs)))
-    (append refs (list value))
+    (poo-flow-user-loop-engine-values/tail refs (list value))
     refs))
 
 ;;; Sandbox profile refs are collected from user rows without resolving the

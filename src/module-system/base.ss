@@ -255,6 +255,20 @@
 
 ;;; Flag extension appends unseen keys and patches seen keys in place, preserving
 ;;; the user-facing feature order reported by doctor and presentation output.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (poo-flow-user-module-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> [UserModuleFlagEntry] [UserModuleFlagEntry] [UserModuleFlagEntry])
 (def (poo-flow-user-module-selection-extend-flags/add normalized extra-flags)
   (cond
@@ -267,7 +281,7 @@
      (cdr extra-flags)))
    (else
     (poo-flow-user-module-selection-extend-flags/add
-     (append normalized (list (car extra-flags)))
+     (poo-flow-user-module-values/tail normalized (list (car extra-flags)))
      (cdr extra-flags)))))
 
 ;;; Profile extension adds feature flags to an existing module row instead of
@@ -607,8 +621,26 @@
 ;;       ;; => [a b c]
 ;;       ```
 ;;     %
+(def (poo-flow-user-module-bundle->modules/rev modules modules-rev)
+  (if (null? modules)
+    modules-rev
+    (poo-flow-user-module-bundle->modules/rev
+     (cdr modules)
+     (cons (car modules) modules-rev))))
+
+;; : (-> [[PooUserModuleSelection]] [PooUserModuleSelection] [PooUserModuleSelection])
+(def (poo-flow-user-module-bundles->modules/rev module-bundles modules-rev)
+  (if (null? module-bundles)
+    modules-rev
+    (poo-flow-user-module-bundles->modules/rev
+     (cdr module-bundles)
+     (poo-flow-user-module-bundle->modules/rev
+      (car module-bundles)
+      modules-rev))))
+
 (def (poo-flow-user-module-bundles->modules module-bundles)
-  (apply append module-bundles))
+  (reverse
+   (poo-flow-user-module-bundles->modules/rev module-bundles '())))
 
 ;;; Boundary: top-level user config groups module choices and strategy settings.
 ;; : (-> [PooUserModuleSelection] POOObject POOObject)
@@ -631,15 +663,34 @@
 
 ;;; Module key projection is a user-facing summary for selected groups and
 ;;; names. It intentionally drops flags because flag checks stay per selection.
+;; : (-> [PooUserModuleSelection] [Pair] [Pair])
+(def (poo-flow-user-config-module-keys/rev modules keys-rev)
+  (if (null? modules)
+    keys-rev
+    (poo-flow-user-config-module-keys/rev
+     (cdr modules)
+     (cons (poo-flow-user-module-selection-key (car modules)) keys-rev))))
+
 ;; : (-> PooUserConfig [Pair])
 (def (poo-flow-user-config-module-keys config)
-  (map poo-flow-user-module-selection-key
-       (poo-flow-user-config-modules config)))
+  (reverse
+   (poo-flow-user-config-module-keys/rev
+    (poo-flow-user-config-modules config)
+    '())))
 
 ;;; Settings presentation is intentionally shallow: user settings remain slots,
 ;;; while schema validation and merge semantics belong to upstream descriptors.
+;; : (-> POOObject [Symbol] Alist Alist)
+(def (poo-flow-user-settings->alist/rev settings setting-keys rows-rev)
+  (if (null? setting-keys)
+    rows-rev
+    (poo-flow-user-settings->alist/rev
+     settings
+     (cdr setting-keys)
+     (cons (cons (car setting-keys) (.ref settings (car setting-keys)))
+           rows-rev))))
+
 ;; : (-> POOObject [Symbol] Alist)
 (def (poo-flow-user-settings->alist settings setting-keys)
-  (map (lambda (slot-name)
-         (cons slot-name (.ref settings slot-name)))
-       setting-keys))
+  (reverse
+   (poo-flow-user-settings->alist/rev settings setting-keys '())))

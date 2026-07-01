@@ -66,7 +66,7 @@
                'graph/build
                'graph/audit
                '(graph/build)
-               '(channel/build-audit)
+               '(channel/build-audit channel/audit-root)
                'policy/audit-model
                'policy/audit-prompt
                'policy/audit-tools
@@ -99,6 +99,28 @@
                '(graph/build graph/audit)
                'graph/root
                (list root-entry build-entry audit-entry)))
+             (build-audit-channel
+              (poo-flow-session-communication-channel-receipt
+               'project/graph
+               'channel/build-audit
+               'sibling
+               'graph/build
+               'graph/audit
+               'agent/build
+               'agent/audit
+               '(artifact)
+               '(declared-channel-only)))
+             (audit-root-channel
+              (poo-flow-session-communication-channel-receipt
+               'project/graph
+               'channel/audit-root
+               'child-parent
+               'graph/audit
+               'graph/root
+               'agent/audit
+               'agent/root
+               '(receipt)
+               '(receipt-only)))
              (build-audit-message
               (poo-flow-session-communication-receipt
                'project/graph
@@ -134,7 +156,10 @@
                (list build-node audit-node)
                (list root-session build-session audit-session)
                registry
-               (list build-audit-message audit-root-message))))
+               (list build-audit-message audit-root-message)
+               (list (cons 'communication-channel-receipts
+                           (list build-audit-channel
+                                 audit-root-channel))))))
         (check-equal? (poo-flow-session-agent-node? build-node) #t)
         (check-equal? (poo-flow-session-agent-node-agent-id build-node)
                       'agent/build)
@@ -159,6 +184,11 @@
         (check-equal? (.ref graph 'durable-policy-refs)
                       '(durable/graph durable/graph))
         (check-equal? (.ref graph 'communication-receipt-count) 2)
+        (check-equal? (.ref graph 'communication-channel-receipt-count) 2)
+        (check-equal? (map poo-flow-session-communication-channel-receipt-channel-id
+                           (poo-flow-session-agent-graph-communication-channel-receipts
+                            graph))
+                      '(channel/build-audit channel/audit-root))
         (check-equal? (map poo-flow-session-communication-receipt-relation-kind
                            (poo-flow-session-agent-graph-communication-receipts
                             graph))

@@ -9,7 +9,6 @@
                  make-object
                  $constant-slot-spec
                  $computed-slot-spec)
-        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension)
 
 (export poo-flow-module-object-kind

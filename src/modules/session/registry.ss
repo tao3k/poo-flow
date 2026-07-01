@@ -29,6 +29,10 @@
   (let (entry (and (list? row) (assoc key row)))
     (if entry (cdr entry) default)))
 
+(defrules poo-flow-session-registry-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
 ;; : (-> Alist MaybeSymbol)
 (def (poo-flow-session-registry-durable-policy-ref policy-summaries)
   (let (durable-summary
@@ -88,61 +92,61 @@
   (let* ((session-id-value (poo-flow-session-id session))
          (lineage-value (poo-flow-session-value-lineage session))
          (placement-value (poo-flow-session-value-placement session)))
-    (list
-     (cons 'kind 'poo-flow.session.registry-entry)
-     (cons 'schema 'poo-flow.modules.session.registry-entry.v1)
-     (cons 'session-id session-id-value)
-     (cons 'parent-session-ids
-           (poo-flow-session-lineage-parent-session-ids lineage-value))
-     (cons 'agent-id agent-id)
-     (cons 'placement-profile-ref
-           (poo-flow-session-placement-profile-ref placement-value))
-     (cons 'placement-resolved?
-           (poo-flow-session-placement-resolved? placement-value))
-     (cons 'communication-channels communication-channels)
-     (cons 'isolation-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'isolation
-            '()))
-     (cons 'sandbox-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'sandbox
-            '()))
-     (cons 'context-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'context
-            '()))
-     (cons 'history-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'history
-            '()))
-     (cons 'sharing-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'sharing
-            '()))
-     (cons 'resource-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'resource
-            '()))
-     (cons 'durable-policy-summary
-           (poo-flow-session-registry-policy-ref
-            policy-summaries
-            'durable
-            '()))
-     (cons 'durable-policy-ref
-           (poo-flow-session-registry-durable-policy-ref policy-summaries))
-     (cons 'materialization-state 'declared)
-     (cons 'runtime-owner "marlin-agent-core")
-     (cons 'runtime-executed #f)
-     (cons 'metadata (if (null? maybe-metadata)
-                       '()
-                       (car maybe-metadata))))))
+    (poo-flow-session-registry-field-rows
+     (kind 'poo-flow.session.registry-entry)
+     (schema 'poo-flow.modules.session.registry-entry.v1)
+     (session-id session-id-value)
+     (parent-session-ids
+      (poo-flow-session-lineage-parent-session-ids lineage-value))
+     (agent-id agent-id)
+     (placement-profile-ref
+      (poo-flow-session-placement-profile-ref placement-value))
+     (placement-resolved?
+      (poo-flow-session-placement-resolved? placement-value))
+     (communication-channels communication-channels)
+     (isolation-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'isolation
+       '()))
+     (sandbox-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'sandbox
+       '()))
+     (context-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'context
+       '()))
+     (history-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'history
+       '()))
+     (sharing-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'sharing
+       '()))
+     (resource-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'resource
+       '()))
+     (durable-policy-summary
+      (poo-flow-session-registry-policy-ref
+       policy-summaries
+       'durable
+       '()))
+     (durable-policy-ref
+      (poo-flow-session-registry-durable-policy-ref policy-summaries))
+     (materialization-state 'declared)
+     (runtime-owner "marlin-agent-core")
+     (runtime-executed #f)
+     (metadata (if (null? maybe-metadata)
+                 '()
+                 (car maybe-metadata))))))
 
 ;; : (-> Any Boolean)
 (def (poo-flow-session-registry-entry? value)
@@ -195,22 +199,22 @@
          (session-ids (car entry-summary))
          (durable-policy-refs (cadr entry-summary)))
     (object<-alist
-     (list
-      (cons 'kind 'poo-flow.session.registry-receipt)
-      (cons 'schema 'poo-flow.modules.session.registry-receipt.v1)
-      (cons 'project-id project-id)
-      (cons 'root-session-ids root-session-ids)
-      (cons 'child-session-ids child-session-ids)
-      (cons 'session-ids session-ids)
-      (cons 'active-session-ref active-session-ref)
-      (cons 'durable-policy-refs durable-policy-refs)
-      (cons 'entry-count (length entries))
-      (cons 'entries entries)
-      (cons 'runtime-owner "marlin-agent-core")
-      (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata)
-                        '()
-                        (car maybe-metadata)))))))
+     (poo-flow-session-registry-field-rows
+      (kind 'poo-flow.session.registry-receipt)
+      (schema 'poo-flow.modules.session.registry-receipt.v1)
+      (project-id project-id)
+      (root-session-ids root-session-ids)
+      (child-session-ids child-session-ids)
+      (session-ids session-ids)
+      (active-session-ref active-session-ref)
+      (durable-policy-refs durable-policy-refs)
+      (entry-count (length entries))
+      (entries entries)
+      (runtime-owner "marlin-agent-core")
+      (runtime-executed #f)
+      (metadata (if (null? maybe-metadata)
+                  '()
+                  (car maybe-metadata)))))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-registry-receipt? value)

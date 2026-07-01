@@ -3,6 +3,7 @@
 ;;; Invariant: this owner does not define flow record classes or execute tasks.
 
 (import (only-in :clan/poo/object .@ object?)
+        :poo-flow/src/core/projection-syntax
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/task
@@ -170,6 +171,13 @@
 ;;; Boundary: flow declaration for kind in is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
+;; : (-> FlowDeclarationRegistry Symbol Alist)
+(defpoo-core-receipt-projection
+  unknown-flow-declaration-detail (registry kind)
+  (bindings ())
+  (fields ((registry (flow-declaration-registry-name registry))
+           (kind kind))))
+
 ;; : (-> FlowDeclarationRegistry Symbol FlowDeclarationDescriptor)
 (def (flow-declaration-for-kind-in registry kind)
   (let ((descriptor (find-flow-declaration
@@ -181,6 +189,4 @@
        'flow-registry
        'unknown-flow-declaration
        "unknown flow declaration kind"
-       (list (cons 'registry (flow-declaration-registry-name registry))
-             (cons 'kind kind))))))
-
+       (unknown-flow-declaration-detail registry kind)))))

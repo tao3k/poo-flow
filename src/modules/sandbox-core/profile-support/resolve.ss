@@ -13,6 +13,7 @@
         :poo-flow/src/modules/sandbox-core/resource-contract
         :poo-flow/src/modules/sandbox-core/profile-support/prototype
         :poo-flow/src/modules/sandbox-core/profile-support/policy
+        :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/authoring
         :poo-flow/src/modules/sandbox-core/profile-support/derivation)
 
@@ -45,15 +46,16 @@
                                                 name-value)
   (poo-flow-module-object-node
    profile-object
-   (list (cons 'profile-name name-value)
-         (cons 'backend-kind backend-kind)
-         (cons 'backend-ref name-value)
-         (cons 'backend-capability
-               (poo-flow-sandbox-backend-capability-ref backend-kind))
-         (cons 'profile-policy poo-flow-sandbox-profile-policy/default)
-         (cons 'metadata
-               '((declared-by . poo-flow-user-interface)
-                 (runtime-executed . #f))))
+   (poo-flow-sandbox-profile-field-rows
+    (profile-name name-value)
+    (backend-kind backend-kind)
+    (backend-ref name-value)
+    (backend-capability
+     (poo-flow-sandbox-backend-capability-ref backend-kind))
+    (profile-policy poo-flow-sandbox-profile-policy/default)
+    (metadata
+     '((declared-by . poo-flow-user-interface)
+       (runtime-executed . #f))))
    '()))
 
 ;;; A derived profile starts from an already-resolved parent profile, then
@@ -67,33 +69,55 @@
                                                         options)
   (poo-flow-module-object-node
    profile-object
-   (list
-    (cons 'profile-name name-value)
-    (cons 'backend-kind (poo-flow-sandbox-profile-backend-kind parent-profile))
-    (cons 'backend-ref
-          (poo-flow-sandbox-profile-object-option options
-                                                  'backend-ref
-                                                  name-value))
-    (cons 'backend-capability
-          (poo-flow-sandbox-backend-capability-ref
-           (poo-flow-sandbox-profile-backend-kind parent-profile)))
-    (cons 'profile-policy poo-flow-sandbox-profile-policy/default)
-    (cons 'network-policy
-          (poo-flow-sandbox-profile-network-policy parent-profile))
-    (cons 'capabilities
-          (poo-flow-sandbox-profile-capabilities parent-profile))
-    (cons 'resource-policy
-          (poo-flow-sandbox-profile-resource-policy parent-profile))
-    (cons 'metadata
-          (poo-flow-sandbox-profile-object-derived-metadata
-           parent-profile
-           name-value
-           options)))
+   (poo-flow-sandbox-profile-field-rows
+    (profile-name name-value)
+    (backend-kind (poo-flow-sandbox-profile-backend-kind parent-profile))
+    (backend-ref
+     (poo-flow-sandbox-profile-object-option options
+                                             'backend-ref
+                                             name-value))
+    (backend-capability
+     (poo-flow-sandbox-backend-capability-ref
+      (poo-flow-sandbox-profile-backend-kind parent-profile)))
+    (profile-policy poo-flow-sandbox-profile-policy/default)
+    (network-policy
+     (poo-flow-sandbox-profile-network-policy parent-profile))
+    (capabilities
+     (poo-flow-sandbox-profile-capabilities parent-profile))
+    (resource-policy
+     (poo-flow-sandbox-profile-resource-policy parent-profile))
+    (metadata
+     (poo-flow-sandbox-profile-object-derived-metadata
+      parent-profile
+      name-value
+      options)))
    '()))
 
 ;;; Shared resolver for fresh backend profiles and parent-derived child
 ;;; profiles. Keeping this factored prevents derivation from bypassing row
 ;;; validation, unsafe filesystem checks, or object-contract merge behavior.
+;; : (-> PooModuleObject [SandboxProfileForm] [PooModuleFieldContribution] [PooModuleFieldContribution])
+(def (poo-flow-sandbox-profile-object-row-contributions/rev profile-object
+                                                            rows
+                                                            contributions-rev)
+  (if (null? rows)
+    contributions-rev
+    (poo-flow-sandbox-profile-object-row-contributions/rev
+     profile-object
+     (cdr rows)
+     (cons (poo-flow-sandbox-profile-object-row-contribution
+            profile-object
+            (car rows))
+           contributions-rev))))
+
+;; : (-> PooModuleObject [SandboxProfileForm] [PooModuleFieldContribution])
+(def (poo-flow-sandbox-profile-object-row-contributions profile-object rows)
+  (reverse
+   (poo-flow-sandbox-profile-object-row-contributions/rev
+    profile-object
+    rows
+    '())))
+
 ;; : (-> PooModuleObject Symbol PooModuleExtensionNode [SandboxProfileForm] PooSandboxProfile)
 (def (poo-flow-sandbox-profile-object-resolve profile-object
                                               name-value
@@ -106,11 +130,9 @@
          (result
           (poo-flow-module-config-mk-merge
            base-node
-           (map (lambda (row)
-                  (poo-flow-sandbox-profile-object-row-contribution
-                   profile-object
-                   row))
-                validated-rows)))
+           (poo-flow-sandbox-profile-object-row-contributions
+            profile-object
+            validated-rows)))
          (resolved-node
           (poo-flow-module-config-merge-result-root result)))
     (poo-flow-sandbox-profile-object->profile name-value resolved-node)))
@@ -119,34 +141,34 @@
 ;;; recipe consumed by presentation and runtime handoff code.
 ;; : (-> Symbol PooModuleExtensionNode PooSandboxProfile)
 (def (poo-flow-sandbox-profile-object->profile name-value node)
-  (let* ((backend-kind
+  (let* ((backend-kind-value
           (poo-flow-sandbox-profile-object-slot node 'backend-kind))
-         (backend-ref
+         (backend-ref-value
           (poo-flow-sandbox-profile-object-slot node 'backend-ref))
-         (capabilities
+         (capabilities-value
           (poo-flow-sandbox-profile-object-slot node 'capabilities))
-         (backend-capability
+         (backend-capability-value
           (poo-flow-sandbox-profile-object-slot node 'backend-capability))
-         (profile-policy
+         (profile-policy-value
           (poo-flow-sandbox-profile-object-slot node 'profile-policy))
          (validation
           (poo-flow-sandbox-profile-policy-validation
            name-value
-           backend-kind
-           backend-ref
-           backend-capability
-           profile-policy
-           capabilities
+           backend-kind-value
+           backend-ref-value
+           backend-capability-value
+           profile-policy-value
+           capabilities-value
            (poo-flow-sandbox-profile-object-slot node 'resource-policy))))
     (if (poo-flow-sandbox-profile-policy-validation-valid? validation)
       (.o kind: poo-flow-sandbox-profile-kind
           name: name-value
-          backend-kind: backend-kind
-          backend-ref: backend-ref
+          backend-kind: backend-kind-value
+          backend-ref: backend-ref-value
           network-policy: (poo-flow-sandbox-profile-object-slot
                            node
                            'network-policy)
-          capabilities: capabilities
+          capabilities: capabilities-value
           resource-policy: (poo-flow-sandbox-profile-object-slot
                             node
                             'resource-policy)

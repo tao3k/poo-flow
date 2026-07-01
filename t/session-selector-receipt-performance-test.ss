@@ -61,12 +61,38 @@
    "Synthetic selector candidate for batch projection."
    '(runtime-owner runtime-executed)))
 
+;; : (-> Integer Symbol [Symbol])
+(def (selector-performance-target-refs candidate-count candidate-kind)
+  (let loop ((index 0)
+             (refs-rev '()))
+    (cond
+     ((= index candidate-count) (reverse refs-rev))
+     ((eq? (selector-performance-candidate-kind index) candidate-kind)
+      (loop (+ index 1)
+            (cons (selector-performance-target-ref index) refs-rev)))
+     (else
+      (loop (+ index 1) refs-rev)))))
+
 ;; : (-> Integer Alist)
 (def (selector-performance-summary candidate-count)
   (let* ((candidates
           (poo-flow-performance-build-list
            candidate-count
            selector-performance-candidate))
+         (selection-policy
+          (list
+           (cons 'strategy 'llm-router)
+           (cons 'judge-inputs '(summary last-failure))
+           (cons 'workflow-target-refs
+                 (selector-performance-target-refs candidate-count
+                                                   'workflow))
+           (cons 'transform-target-refs
+                 (selector-performance-target-refs candidate-count
+                                                   'transform))
+           (cons 'agent-param-target-refs
+                 (selector-performance-target-refs candidate-count
+                                                   'agent-param))
+           (cons 'external-fallback-refs '(empty-workflow))))
          (receipt
           (poo-flow-session-selector-receipt
            'selector/performance
@@ -74,8 +100,7 @@
            'session/root
            'session/root
            candidates
-           '((strategy . llm-router)
-             (judge-inputs . (summary last-failure)))
+           selection-policy
            'empty-workflow))
          (row (poo-flow-session-selector-receipt->alist receipt))
          (projected-candidates (selector-performance-ref row 'candidates)))
@@ -98,6 +123,18 @@
                 (selector-performance-ref row 'selection-state))
           (cons 'selected-candidate-ref
                 (selector-performance-ref row 'selected-candidate-ref))
+          (cons 'resolved-candidate-count
+                (length
+                 (selector-performance-ref row 'resolved-candidate-ids)))
+          (cons 'unresolved-candidate-count
+                (length
+                 (selector-performance-ref row 'unresolved-candidate-ids)))
+          (cons 'fallback-resolved?
+                (selector-performance-ref row 'fallback-resolved?))
+          (cons 'valid?
+                (selector-performance-ref row 'valid?))
+          (cons 'diagnostic-count
+                (selector-performance-ref row 'diagnostic-count))
           (cons 'runtime-executed
                 (selector-performance-ref row 'runtime-executed)))))
 
@@ -131,6 +168,17 @@
         (check-equal? (selector-performance-ref summary
                                                 'selected-candidate-ref)
                       #f)
+        (check-equal? (selector-performance-ref summary
+                                                'resolved-candidate-count)
+                      candidate-count)
+        (check-equal? (selector-performance-ref summary
+                                                'unresolved-candidate-count)
+                      0)
+        (check-equal? (selector-performance-ref summary 'fallback-resolved?)
+                      #t)
+        (check-equal? (selector-performance-ref summary 'valid?) #t)
+        (check-equal? (selector-performance-ref summary 'diagnostic-count)
+                      0)
         (check-equal? (selector-performance-ref summary 'runtime-executed)
                       #f)
         (selector-performance-display-receipt receipt)

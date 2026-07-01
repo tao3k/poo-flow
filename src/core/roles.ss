@@ -26,6 +26,20 @@
 
 ;;; Boundary: compose is the only higher-order role operation in this module.
 ;;; Invariant: derived roles share one mixing path with leftmost POO precedence.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (role-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> Unit Role)
 (def control-plane-role
   (.o (name 'control-plane)
@@ -33,7 +47,9 @@
       (responsibility 'conceptual-model)
       (runtime-owner 'gerbil)
       (control-plane-capability 'conceptual-model)
-      (compose (lambda roles (apply .mix (append roles (list control-plane-role)))))))
+      (compose (lambda roles
+                 (apply .mix
+                        (role-values/tail roles (list control-plane-role)))))))
 
 ;; : (-> Unit Role)
 (def flow-role
@@ -149,7 +165,15 @@
 ;;; Data flow: each pair becomes the constant slot spec required by =.mix=.
 ;;; Invariant: callers use slot precedence so descriptors can override inherited
 ;;; role slots without falling back to lower-precedence defaults.
+;; : (-> Alist [SlotSpec] [SlotSpec])
+(def (role-constant-slots/rev alist slots-rev)
+  (if (null? alist)
+    slots-rev
+    (role-constant-slots/rev
+     (cdr alist)
+     (cons (cons (caar alist) ($constant-slot-spec (cdar alist)))
+           slots-rev))))
+
 ;; : (-> Alist [SlotSpec])
 (def (role-constant-slots alist)
-  (map (lambda (entry) (cons (car entry) ($constant-slot-spec (cdr entry))))
-       alist))
+  (reverse (role-constant-slots/rev alist '())))

@@ -15,8 +15,7 @@
                  test-error
                  test-suite)
         (only-in :std/sugar
-                 filter
-                 foldl)
+                 filter)
         :poo-flow/src/core/api)
 
 (export tutorial-result-test)
@@ -50,7 +49,10 @@
 ;;       ```
 ;;     %
 (def (count-symbols words counts)
-  (foldl increment-symbol-count counts words))
+  (if (null? words)
+    counts
+    (count-symbols (cdr words)
+                   (increment-symbol-count (car words) counts))))
 
 ;; : (-> Symbol WordCounts WordCounts)
 (def (increment-symbol-count word counts)

@@ -158,12 +158,14 @@ The POO layer should expose these as object families, not raw permission maps:
 3. =agent-tool-permission-policy= for tool/action/resource grants keyed by agent/session id;
 4. =hook-tool-permission-policy= for trigger-specific tool grants and escalation rules;
 5. =resource-sharing-policy= for workspace paths, artifacts, tool results, memory refs, and accounting ownership;
-6. =agent-execution-policy= for the composed policy refs bound to one agent/session.
+6. =communication-receipt= for parent-child, child-parent, sibling, and cross-root message intents that effective policy validation can partition by channel and target-session grants;
+7. =agent-execution-policy= for the composed policy refs bound to one agent/session.
 These objects should compose through POO/C3 like the rest of the module system. A project can define shared defaults, a root session can narrow them, a role policy can add capabilities, and a child agent policy can override or deny selected slots. Validation happens after composition so the effective policy is inspectable before runtime.
 The target invariant is stricter than coarse tool permission:
 - tool grants include =tool-ref=, =action=, =resource-ref=, and =trigger-ref=;
 - every grant is anchored to =project-id=, =root-session-id=, =child-session-id=, or =agent-id= through the policy scope;
 - hook policy is independent unless a visible policy object explicitly composes it with an agent policy;
+- communication receipts remain report-only, but validation treats their =channel-id= and =target-session-id= as authorization facts and emits explicit diagnostics when either grant is missing;
 - resource sharing is denied unless the grant names both scope and accounting owner;
 - context and history sharing are separate from tool permission, so "can read files" never implies "can read sibling transcript."
 ** 10.06.42.38 POO Flow Strengthening Thesis
@@ -263,12 +265,14 @@ The public authoring path should stay compact:
 #+begin_src scheme
 (use-module session-core
   :config
-  (.def (ci-session @ session/value ...)
-    ...)
-  (.def (audit-agent @ session/agent ...)
-    ...)
-  (.def (ci-agent-graph @ session/agent-graph ...)
-    ...))
+  (session-case ci-agent-graph-case
+    (metadata (source . user-interface)
+              (case . session-agent-graph))
+    (objects
+     (ci-session (session ci/root ...))
+     (audit-agent (session-agent-node agent/audit ...))
+     (ci-agent-graph (session-agent-graph ci/project ...)))
+    (rows ci-session audit-agent ci-agent-graph)))
 #+end_src
 
 The exact syntax can evolve, but the invariants should not:
@@ -478,7 +482,8 @@ The validation receipt must also include:
 Current implementation:
 - =src/modules/session/policy.ss= exposes the foundational POO policy family for isolation, sandbox, context, history, communication, session-sharing, resource, model, prompt, tool, hook, resource-sharing, and agent-execution policies through the shared =policy-syntax.ss= constructor pattern.
 - =t/session-policy-contract-test.ss= projects the foundational isolation, sandbox, context, history, communication, session-sharing, and resource policy rows so sandbox and session-sharing cannot remain untested constructor surfaces.
-- =user-interface/custom/my-module/cases/session-policy.ss= projects sandbox and session-sharing policy rows beside the effective validation receipt, keeping the downstream custom module on the same POO-native object path.
+- =user-interface/custom/my-module/cases/session-policy.ss= projects isolation, sandbox, and session-sharing policy rows beside the effective validation receipt, keeping the downstream custom module on the same POO-native object path.
+- =src/modules/session/policy-validation.ss= treats isolation and sandbox as first-class effective policy inputs: bounded projection includes =effective-isolation-mode=, isolation sibling/parent/peer controls, =effective-sandbox-profile-ref=, sandbox inheritance mode, and sandbox sharing mode. Metadata-provided sibling session refs drive explicit =sibling-context-not-granted= diagnostics so child sessions cannot read sibling context through a generic context-policy fallback.
 - =t/scenarios/performance/session-policy-family/benchmark.ss= and =t/session-policy-family-performance-test.ss= keep the foundational constructor family as a hot benchmark gate before effective validation.
 - =src/modules/session/policy-validation.ss= owns the defstruct-backed
   =poo-flow-session-policy-validation-receipt= constructor, explicit receipt
@@ -489,6 +494,10 @@ Current implementation:
   resolved/unresolved tool refs, sandbox-required refs, action mismatch rows,
   and tool-core diagnostics without binding session policy validation to
   tool-core internals.
+- The same receipt consumes an optional memory-core catalog-validation row and
+  projects catalog id/ref, catalog validity, catalog store refs, intent store
+  refs, resolved/unresolved store refs, and memory-core diagnostics without
+  binding session policy validation to memory-core internals.
 - Validation checks requested context refs, history records, communication
   channels, resource capability refs, agent tool attempts, hook tool attempts,
   and resource sharing accounting.

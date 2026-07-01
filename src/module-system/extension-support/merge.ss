@@ -5,7 +5,6 @@
                  .o
                  .ref
                  object?)
-        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension-support/data)
 
 (export poo-flow-module-extension-slots-merge
@@ -22,6 +21,14 @@
         poo-flow-module-extension-flush-slot-append
         poo-flow-module-extension-coalesce-slot-appends
         poo-flow-module-extension-operation-state)
+
+;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-extension-slot-values/rev-onto values tail)
+  (if (null? values)
+    tail
+    (poo-flow-module-extension-slot-values/rev-onto
+     (cdr values)
+     (cons (car values) tail))))
 
 ;; poo-flow-module-extension-slots-merge
 ;;   : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
@@ -52,24 +59,35 @@
                   (entry-slot entry)
                   #t))
      base)
+    (def (finish-entry entry)
+      (let (slot (entry-slot entry))
+        (if (and (hash-get override-seen slot)
+                 (not (hash-get replacement-used slot)))
+          (begin
+            (hash-put! replacement-used slot #t)
+            (poo-flow-module-extension-entry
+             slot
+             (hash-get overrides slot)))
+          entry)))
+    (def (finish-base/rev entries rows-rev)
+      (if (null? entries)
+        rows-rev
+        (finish-base/rev (cdr entries)
+                         (cons (finish-entry (car entries)) rows-rev))))
+    (def (finish-new/rev slots rows-rev)
+      (if (null? slots)
+        rows-rev
+        (finish-new/rev
+         (cdr slots)
+         (cons (poo-flow-module-extension-entry
+                (car slots)
+                (hash-get overrides (car slots)))
+               rows-rev))))
     (def (finish new-order)
-      (append
-       (map (lambda (entry)
-              (let (slot (entry-slot entry))
-                (if (and (hash-get override-seen slot)
-                         (not (hash-get replacement-used slot)))
-                  (begin
-                    (hash-put! replacement-used slot #t)
-                    (poo-flow-module-extension-entry
-                     slot
-                     (hash-get overrides slot)))
-                  entry)))
-            base)
-       (map (lambda (slot)
-              (poo-flow-module-extension-entry
-               slot
-               (hash-get overrides slot)))
-            (reverse new-order))))
+      (reverse
+       (finish-new/rev
+        (reverse new-order)
+        (finish-base/rev base '()))))
     (let loop ((entries extra) (new-order '()))
       (if (null? entries)
         (finish new-order)
@@ -170,20 +188,31 @@
                (hash-put! base-first key child))
              #f)))
        children)
+      (def (finish-child child)
+        (let (identity (poo-flow-module-extension-node-identity child))
+          (if (and (hash-get override-seen identity)
+                   (not (hash-get replacement-used identity)))
+            (begin
+              (hash-put! replacement-used identity #t)
+              (hash-get overrides identity))
+            child)))
+      (def (finish-children/rev remaining rows-rev)
+        (if (null? remaining)
+          rows-rev
+          (finish-children/rev
+           (cdr remaining)
+           (cons (finish-child (car remaining)) rows-rev))))
+      (def (finish-new/rev identities rows-rev)
+        (if (null? identities)
+          rows-rev
+          (finish-new/rev
+           (cdr identities)
+           (cons (hash-get overrides (car identities)) rows-rev))))
       (def (finish new-order)
-        (append
-         (map (lambda (child)
-                (let (identity (poo-flow-module-extension-node-identity child))
-                  (if (and (hash-get override-seen identity)
-                           (not (hash-get replacement-used identity)))
-                    (begin
-                      (hash-put! replacement-used identity #t)
-                      (hash-get overrides identity))
-                    child)))
-              children)
-         (map (lambda (identity)
-                (hash-get overrides identity))
-              (reverse new-order))))
+        (reverse
+         (finish-new/rev
+          (reverse new-order)
+          (finish-children/rev children '()))))
       (let loop-extra ((remaining extra-children)
                        (new-order '()))
         (if (null? remaining)
@@ -450,7 +479,9 @@
               (loop (cdr remaining)
                     #t
                     pending-slot
-                    (foldl cons pending-values values)
+                    (poo-flow-module-extension-slot-values/rev-onto
+                     values
+                     pending-values)
                     output)
               (loop (cdr remaining)
                     #t

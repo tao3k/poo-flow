@@ -133,40 +133,91 @@
        metadata-value)))))
 
 ;;; Boundary: config objects become option config receipts at projection time.
+;; : (-> ModuleId POOConfigRecord [Symbol] [PooModuleOptionConfig] [PooModuleOptionConfig])
+(def (poo-flow-module-object-option-configs/rev
+      module-id-value
+      option-object
+      slot-names
+      configs-rev)
+  (if (null? slot-names)
+    configs-rev
+    (poo-flow-module-object-option-configs/rev
+     module-id-value
+     option-object
+     (cdr slot-names)
+     (cons (make-poo-flow-module-option-config
+            (poo-flow-module-option-id (car slot-names))
+            (.ref option-object (car slot-names))
+            module-id-value
+            '())
+           configs-rev))))
+
+;; : (-> ModuleId ModuleOptionAlist [PooModuleOptionConfig] [PooModuleOptionConfig])
+(def (poo-flow-module-alist-option-configs/rev
+      module-id-value
+      options
+      configs-rev)
+  (if (null? options)
+    configs-rev
+    (poo-flow-module-alist-option-configs/rev
+     module-id-value
+     (cdr options)
+     (cons (make-poo-flow-module-option-config
+            (poo-flow-module-option-id (caar options))
+            (cdar options)
+            module-id-value
+            '())
+           configs-rev))))
+
 ;; : (-> PooModuleDescriptor [PooModuleOptionConfig])
 (def (poo-flow-module-option-configs module)
   (let ((module-id-value (poo-flow-module-name module))
         (option-object (poo-flow-module-config module)))
     (cond
      ((object? option-object)
-      (map (lambda (slot-name)
-             (make-poo-flow-module-option-config
-              (poo-flow-module-option-id slot-name)
-              (.ref option-object slot-name)
-              module-id-value
-              '()))
-           (.all-slots option-object)))
+      (reverse
+       (poo-flow-module-object-option-configs/rev
+        module-id-value
+        option-object
+        (.all-slots option-object)
+        '())))
      (else
-      (map (lambda (option-pair)
-             (make-poo-flow-module-option-config
-              (poo-flow-module-option-id (car option-pair))
-              (cdr option-pair)
-              module-id-value
-              '()))
-           (poo-flow-module-options module))))))
+      (reverse
+       (poo-flow-module-alist-option-configs/rev
+        module-id-value
+        (poo-flow-module-options module)
+        '()))))))
 
 ;;; Boundary: option schemas are projected from interface schema slots.
+;; : (-> ModuleId POOConfigRecord [Symbol] [PooModuleOptionSchema] [PooModuleOptionSchema])
+(def (poo-flow-module-option-schemas/rev
+      module-id-value
+      schema-object
+      slot-names
+      schemas-rev)
+  (if (null? slot-names)
+    schemas-rev
+    (poo-flow-module-option-schemas/rev
+     module-id-value
+     schema-object
+     (cdr slot-names)
+     (cons (poo-flow-module-schema-from-spec
+            module-id-value
+            (poo-flow-module-option-id (car slot-names))
+            (.ref schema-object (car slot-names)))
+           schemas-rev))))
+
 ;; : (-> PooModuleDescriptor [PooModuleOptionSchema])
 (def (poo-flow-module-option-schemas module)
   (let ((module-id-value (poo-flow-module-name module))
         (schema-object (poo-flow-module-schemas module)))
     (if (object? schema-object)
-      (map (lambda (slot-name)
-             (poo-flow-module-schema-from-spec
-              module-id-value
-              (poo-flow-module-option-id slot-name)
-              (.ref schema-object slot-name)))
-           (.all-slots schema-object))
+      (reverse
+       (poo-flow-module-option-schemas/rev
+        module-id-value
+        schema-object
+        (.all-slots schema-object)
+        '()))
       '())))
 
 ;;; Boundary: schema lookup matches projected option ids exactly.
@@ -217,18 +268,34 @@
      (poo-flow-module-option-schema-metadata schema))))
 
 ;;; Boundary: per-module receipts validate declared option configs only.
+;; : (-> [PooModuleOptionSchema] [PooModuleOptionConfig] [PooModuleOptionValidationReceipt] [PooModuleOptionValidationReceipt])
+(def (poo-flow-module-option-validation-receipts/rev
+      schemas
+      configs
+      receipts-rev)
+  (if (null? configs)
+    receipts-rev
+    (let* ((config (car configs))
+           (schema
+            (poo-flow-module-find-schema
+             schemas
+             (poo-flow-module-option-config-id config))))
+      (poo-flow-module-option-validation-receipts/rev
+       schemas
+       (cdr configs)
+       (cons (if schema
+               (poo-flow-module-option-schema-validation-receipt schema config)
+               (poo-flow-module-missing-schema-receipt config))
+             receipts-rev)))))
+
 ;; : (-> PooModuleDescriptor [PooModuleOptionValidationReceipt])
 (def (poo-flow-module-option-validation-receipts module)
   (let (schemas (poo-flow-module-option-schemas module))
-    (map (lambda (config)
-           (let (schema
-                 (poo-flow-module-find-schema
-                  schemas
-                  (poo-flow-module-option-config-id config)))
-             (if schema
-               (poo-flow-module-option-schema-validation-receipt schema config)
-               (poo-flow-module-missing-schema-receipt config))))
-         (poo-flow-module-option-configs module))))
+    (reverse
+     (poo-flow-module-option-validation-receipts/rev
+      schemas
+      (poo-flow-module-option-configs module)
+      '()))))
 
 ;;; Boundary: module validation stays recursive over inline import profiles.
 ;; : (-> PooModuleDescriptor [PooModuleOptionValidationReceipt])

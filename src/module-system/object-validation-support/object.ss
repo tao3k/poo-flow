@@ -4,7 +4,6 @@
 (import :gerbil/gambit
         (only-in :gslph/src/extensions/poo-object-validation
                  poo-object-validation-valid?)
-        (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
         :poo-flow/src/module-system/object-validation-support/harness
@@ -91,7 +90,7 @@
 (def (object-diagnostics/resolved-fields object resolved-fields)
   (object-diagnostics/resolved-identities
    object
-   (map poo-flow-module-field-contract-identity resolved-fields)))
+   (poo-flow-module-field-identities resolved-fields)))
 
 ;;; Boundary: object diagnostics resolved identities is the policy-visible edge
 ;;; for module-system, object behavior, keeping validation, lookup, or
@@ -145,15 +144,33 @@
            value))))
 
 ;; : (-> PooModuleObject [PooModuleFieldContract] [Alist])
+(def (poo-flow-module-object-validation-field-origins/rev
+      object
+      resolved-fields
+      providers
+      origins-rev)
+  (if (null? resolved-fields)
+    origins-rev
+    (poo-flow-module-object-validation-field-origins/rev
+     object
+     (cdr resolved-fields)
+     providers
+     (cons (poo-flow-module-object-field-origin/index
+            object
+            (car resolved-fields)
+            providers)
+           origins-rev))))
+
+;; : (-> PooModuleObject [PooModuleFieldContract] [Alist])
 (def (poo-flow-module-object-validation-field-origins object resolved-fields)
   (let (providers
         (poo-flow-module-object-field-provider-index object))
-    (map (lambda (field)
-           (poo-flow-module-object-field-origin/index
-            object
-            field
-            providers))
-         resolved-fields)))
+    (reverse
+     (poo-flow-module-object-validation-field-origins/rev
+      object
+      resolved-fields
+      providers
+      '()))))
 
 ;; : (-> PooModuleObject [Symbol] [Symbol] [Symbol] [PooModuleFieldContract] MaybeHashTable [Alist])
 (def (poo-flow-module-object-validation-field-origins/cache object
@@ -314,13 +331,30 @@
 ;;; Boundary: module invalid field identities is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [HashTable] [Symbol] [Symbol])
+(def (poo-flow-module-invalid-field-identities/rev field-validations
+                                                   identities-rev)
+  (cond
+   ((null? field-validations) identities-rev)
+   ((poo-flow-module-field-contract-validation-valid?
+     (car field-validations))
+    (poo-flow-module-invalid-field-identities/rev
+     (cdr field-validations)
+     identities-rev))
+   (else
+    (let (identity (hash-get (car field-validations) 'field))
+      (poo-flow-module-invalid-field-identities/rev
+       (cdr field-validations)
+       (if identity
+         (cons identity identities-rev)
+         identities-rev))))))
+
 ;; : (-> [HashTable] [Symbol])
 (def (poo-flow-module-invalid-field-identities field-validations)
-  (filter-map
-   (lambda (validation)
-     (and (not (poo-flow-module-field-contract-validation-valid? validation))
-          (hash-get validation 'field)))
-   field-validations))
+  (reverse
+   (poo-flow-module-invalid-field-identities/rev
+    field-validations
+    '())))
 
 ;;; Public projection boundary: callers get stable alists without depending on
 ;;; hash-table nesting or harness-private source receipt shapes.

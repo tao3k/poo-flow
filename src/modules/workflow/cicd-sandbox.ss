@@ -3,6 +3,7 @@
 ;;; Invariant: unresolved profile refs stay visible; no fallback profile is fabricated.
 
 (import (only-in :clan/poo/object .ref)
+        :poo-flow/src/core/projection-syntax
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-sandbox-profile?
                  poo-flow-sandbox-profile-by-name
@@ -196,6 +197,55 @@
 ;;; RuntimeCommandDescriptor because CI checks still need a sandbox/runtime owner
 ;;; to materialize the command envelope.
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
+(defpoo-core-receipt-projection
+  poo-flow-cicd-runtime-manifest-readiness-fields (check profile-catalog)
+  (bindings ())
+  (fields ((schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
+           (kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
+           (check (poo-flow-cicd-check-name check))
+           (profile (poo-flow-cicd-check-profile check))
+           (profile-refs (poo-flow-cicd-check-profile-refs check))
+           (dependency-refs
+            (poo-flow-cicd-check-dependency-refs check))
+           (sandbox-runtime-summaries
+            (poo-flow-cicd-check-sandbox-runtime-summaries
+             check
+             profile-catalog))
+           (sandbox-handoff-summaries
+            (poo-flow-cicd-check-sandbox-handoff-summaries
+             check
+             profile-catalog))
+           (sandbox-unresolved-profile-refs
+            (poo-flow-cicd-check-sandbox-unresolved-profile-refs
+             check
+             profile-catalog))
+           (runtime (poo-flow-cicd-check-runtime check))
+           (runtime-executed #f)
+           (handoff-required #t)
+           (command (poo-flow-cicd-check-command check))
+           (argv (poo-flow-cicd-check-command check))
+           (inputs (.ref check 'input-bindings))
+           (config (.ref check 'config-sources))
+           (artifacts (poo-flow-cicd-check-artifacts check))
+           (durable-task-id
+            (poo-flow-cicd-check-durable-task-id check))
+           (action-class
+            (poo-flow-cicd-check-action-class check))
+           (artifact-refs
+            (poo-flow-cicd-check-artifacts check))
+           (artifact-retention
+            (poo-flow-cicd-check-artifact-retention check))
+           (sandbox-refs
+            (poo-flow-cicd-check-profile-refs check))
+           (checkpoint-ref
+            (list 'workflow-cicd-check
+                  (poo-flow-cicd-check-name check)))
+           (compensation-refs
+            (poo-flow-cicd-check-compensation-refs check))
+           (cache (poo-flow-cicd-check-cache check))
+           (secrets (poo-flow-cicd-check-secrets check))
+           (result (.ref check 'result-protocol)))))
+
 (def (poo-flow-cicd-check->runtime-manifest-readiness check
                                                         . maybe-profile-catalog)
   (poo-flow-cicd-require "runtime manifest readiness requires a cicd check"
@@ -204,48 +254,4 @@
   (let (profile-catalog (if (null? maybe-profile-catalog)
                           '()
                           (car maybe-profile-catalog)))
-    (list (cons 'schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
-          (cons 'kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
-          (cons 'check (poo-flow-cicd-check-name check))
-          (cons 'profile (poo-flow-cicd-check-profile check))
-          (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
-          (cons 'dependency-refs
-                (poo-flow-cicd-check-dependency-refs check))
-          (cons 'sandbox-runtime-summaries
-                (poo-flow-cicd-check-sandbox-runtime-summaries
-                 check
-                 profile-catalog))
-          (cons 'sandbox-handoff-summaries
-                (poo-flow-cicd-check-sandbox-handoff-summaries
-                 check
-                 profile-catalog))
-          (cons 'sandbox-unresolved-profile-refs
-                (poo-flow-cicd-check-sandbox-unresolved-profile-refs
-                 check
-                 profile-catalog))
-          (cons 'runtime (poo-flow-cicd-check-runtime check))
-          (cons 'runtime-executed #f)
-          (cons 'handoff-required #t)
-          (cons 'command (poo-flow-cicd-check-command check))
-          (cons 'argv (poo-flow-cicd-check-command check))
-          (cons 'inputs (.ref check 'input-bindings))
-          (cons 'config (.ref check 'config-sources))
-          (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-          (cons 'durable-task-id
-                (poo-flow-cicd-check-durable-task-id check))
-          (cons 'action-class
-                (poo-flow-cicd-check-action-class check))
-          (cons 'artifact-refs
-                (poo-flow-cicd-check-artifacts check))
-          (cons 'artifact-retention
-                (poo-flow-cicd-check-artifact-retention check))
-          (cons 'sandbox-refs
-                (poo-flow-cicd-check-profile-refs check))
-          (cons 'checkpoint-ref
-                (list 'workflow-cicd-check
-                      (poo-flow-cicd-check-name check)))
-          (cons 'compensation-refs
-                (poo-flow-cicd-check-compensation-refs check))
-          (cons 'cache (poo-flow-cicd-check-cache check))
-          (cons 'secrets (poo-flow-cicd-check-secrets check))
-          (cons 'result (.ref check 'result-protocol)))))
+    (poo-flow-cicd-runtime-manifest-readiness-fields check profile-catalog)))

@@ -20,6 +20,9 @@
         poo-flow-session-selector-receipt-candidate-ids
         poo-flow-session-selector-receipt-selection-state
         poo-flow-session-selector-receipt-selected-candidate-ref
+        poo-flow-session-selector-receipt-valid?
+        poo-flow-session-selector-receipt-diagnostic-count
+        poo-flow-session-selector-receipt-diagnostics
         poo-flow-session-selector-receipt->alist)
 
 ;; : [Symbol]
@@ -39,6 +42,39 @@
    (lambda (_failure) default)
    (lambda ()
      (.ref object key))))
+
+;; : (-> Alist Symbol Value Value)
+(def (poo-flow-session-selector-policy-ref policy key default)
+  (poo-flow-session-alist-ref policy key default))
+
+;; : (-> List List List)
+(def (poo-flow-session-selector-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+(defrules poo-flow-session-selector-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (-> Symbol Symbol Alist)
+(def (poo-flow-session-selector-diagnostic code selector-id detail)
+  (poo-flow-session-selector-field-rows
+   (kind 'poo-flow.session.selector.diagnostic)
+   (schema 'poo-flow.modules.session.selector.diagnostic.v1)
+   (code code)
+   (selector-id selector-id)
+   (detail detail)
+   (severity 'error)
+   (runtime-executed #f)))
 
 ;; : (-> Symbol Symbol Symbol String [Symbol] [Alist] PooSessionSelectorCandidate)
 (def (poo-flow-session-selector-candidate candidate-id
@@ -144,7 +180,7 @@
              (reverse transform-candidate-ids-rev))
        (cons 'agent-param-candidate-ids
              (reverse agent-param-candidate-ids-rev))))
-     (else
+    (else
       (let* ((candidate (car remaining-candidates))
              (candidate-id
               (poo-flow-session-selector-candidate-id candidate))
@@ -178,6 +214,118 @@
                 (cons candidate-id
                       agent-param-candidate-ids-rev)))))))))
 
+;; : (-> Symbol Symbol)
+(def (poo-flow-session-selector-target-policy-key candidate-kind)
+  (cond
+   ((eq? candidate-kind 'workflow) 'workflow-target-refs)
+   ((eq? candidate-kind 'transform) 'transform-target-refs)
+   (else 'agent-param-target-refs)))
+
+;; : (-> Alist PooSessionSelectorCandidate MaybeSymbolList)
+(def (poo-flow-session-selector-candidate-known-targets selection-policy
+                                                        candidate)
+  (poo-flow-session-selector-policy-ref
+   selection-policy
+   (poo-flow-session-selector-target-policy-key
+    (poo-flow-session-selector-candidate-kind candidate))
+   #f))
+
+;; : (-> Alist PooSessionSelectorCandidate Boolean)
+(def (poo-flow-session-selector-candidate-resolved? selection-policy
+                                                    candidate)
+  (let (known-targets
+        (poo-flow-session-selector-candidate-known-targets
+         selection-policy
+         candidate))
+    (or (not known-targets)
+        (if (member (poo-flow-session-selector-candidate-target-ref
+                     candidate)
+                    known-targets)
+          #t
+          #f))))
+
+;; : (-> Symbol PooSessionSelectorCandidate Alist)
+(def (poo-flow-session-selector-candidate-diagnostic selector-id candidate)
+  (poo-flow-session-selector-diagnostic
+   'selector-candidate-target-not-declared
+   selector-id
+   (poo-flow-session-selector-field-rows
+    (candidate-id
+     (poo-flow-session-selector-candidate-id candidate))
+    (candidate-kind
+     (poo-flow-session-selector-candidate-kind candidate))
+    (target-ref
+     (poo-flow-session-selector-candidate-target-ref candidate)))))
+
+;; : (-> Symbol [PooSessionSelectorCandidate] Alist [Symbol] [Symbol] [Alist] Alist)
+(def (poo-flow-session-selector-resolution/rev selector-id
+                                                candidates
+                                                selection-policy
+                                                resolved-ids-rev
+                                                unresolved-ids-rev
+                                                diagnostics-rev)
+  (cond
+   ((null? candidates)
+    (list (cons 'resolved-candidate-ids (reverse resolved-ids-rev))
+          (cons 'unresolved-candidate-ids (reverse unresolved-ids-rev))
+          (cons 'diagnostics (reverse diagnostics-rev))))
+   ((poo-flow-session-selector-candidate-resolved?
+     selection-policy
+     (car candidates))
+    (poo-flow-session-selector-resolution/rev
+     selector-id
+     (cdr candidates)
+     selection-policy
+     (cons (poo-flow-session-selector-candidate-id (car candidates))
+           resolved-ids-rev)
+     unresolved-ids-rev
+     diagnostics-rev))
+   (else
+    (poo-flow-session-selector-resolution/rev
+     selector-id
+     (cdr candidates)
+     selection-policy
+     resolved-ids-rev
+     (cons (poo-flow-session-selector-candidate-id (car candidates))
+           unresolved-ids-rev)
+     (cons (poo-flow-session-selector-candidate-diagnostic
+            selector-id
+            (car candidates))
+           diagnostics-rev)))))
+
+;; : (-> Symbol [PooSessionSelectorCandidate] Alist Alist)
+(def (poo-flow-session-selector-resolution selector-id
+                                           candidates
+                                           selection-policy)
+  (poo-flow-session-selector-resolution/rev selector-id
+                                            candidates
+                                            selection-policy
+                                            '()
+                                            '()
+                                            '()))
+
+;; : (-> Symbol [Symbol] Alist Boolean)
+(def (poo-flow-session-selector-fallback-resolved? fallback-ref
+                                                   candidate-ids
+                                                   selection-policy)
+  (or (if (member fallback-ref candidate-ids) #t #f)
+      (let (external-fallback-refs
+            (poo-flow-session-selector-policy-ref
+             selection-policy
+             'external-fallback-refs
+             #f))
+        (or (not external-fallback-refs)
+            (if (member fallback-ref external-fallback-refs) #t #f)))))
+
+;; : (-> Symbol Symbol Alist)
+(def (poo-flow-session-selector-fallback-diagnostic selector-id
+                                                    fallback-ref)
+  (poo-flow-session-selector-diagnostic
+   'selector-fallback-not-declared
+   selector-id
+   (poo-flow-session-selector-field-rows
+    (fallback-ref fallback-ref))))
+
 ;; : PooSessionSelectorReceiptRecord
 (defstruct poo-flow-session-selector-receipt-record
   (selector-id
@@ -192,9 +340,15 @@
    candidates
    selection-policy
    fallback-ref
+   fallback-resolved?
+   resolved-candidate-ids
+   unresolved-candidate-ids
    selection-state
    selected-candidate-ref
    pending-selected-result
+   valid?
+   diagnostic-count
+   diagnostics
    handoff-required
    runtime-owner
    runtime-executed
@@ -259,7 +413,37 @@
           (poo-flow-session-alist-ref
            candidate-summary
            'agent-param-candidate-ids
-           '())))
+           '()))
+         (resolution
+          (poo-flow-session-selector-resolution selector-id
+                                                candidates
+                                                selection-policy))
+         (resolved-candidate-ids
+          (poo-flow-session-alist-ref
+           resolution
+           'resolved-candidate-ids
+           '()))
+         (unresolved-candidate-ids
+          (poo-flow-session-alist-ref
+           resolution
+           'unresolved-candidate-ids
+           '()))
+         (fallback-resolved?
+          (poo-flow-session-selector-fallback-resolved?
+           fallback-ref
+           candidate-ids
+           selection-policy))
+         (diagnostics0
+          (poo-flow-session-alist-ref resolution 'diagnostics '()))
+         (diagnostics
+          (if fallback-resolved?
+            diagnostics0
+            (poo-flow-session-selector-rows/tail
+             diagnostics0
+             (list
+              (poo-flow-session-selector-fallback-diagnostic
+               selector-id
+               fallback-ref))))))
     (make-poo-flow-session-selector-receipt-record
      selector-id
      project-id
@@ -273,11 +457,18 @@
      candidates
      selection-policy
      fallback-ref
+     fallback-resolved?
+     resolved-candidate-ids
+     unresolved-candidate-ids
      'pending
      #f
-     (list (cons 'state 'pending)
-           (cons 'runtime-owner "marlin-agent-core")
-           (cons 'runtime-executed #f))
+     (poo-flow-session-selector-field-rows
+      (state 'pending)
+      (runtime-owner "marlin-agent-core")
+      (runtime-executed #f))
+     (null? diagnostics)
+     (length diagnostics)
+     diagnostics
      #t
      "marlin-agent-core"
      #f
@@ -304,6 +495,18 @@
 ;; : (-> PooSessionSelectorReceipt MaybeSymbol)
 (def (poo-flow-session-selector-receipt-selected-candidate-ref receipt)
   (poo-flow-session-selector-receipt-record-selected-candidate-ref receipt))
+
+;; : (-> PooSessionSelectorReceipt Boolean)
+(def (poo-flow-session-selector-receipt-valid? receipt)
+  (poo-flow-session-selector-receipt-record-valid? receipt))
+
+;; : (-> PooSessionSelectorReceipt Integer)
+(def (poo-flow-session-selector-receipt-diagnostic-count receipt)
+  (poo-flow-session-selector-receipt-record-diagnostic-count receipt))
+
+;; : (-> PooSessionSelectorReceipt [Alist])
+(def (poo-flow-session-selector-receipt-diagnostics receipt)
+  (poo-flow-session-selector-receipt-record-diagnostics receipt))
 
 ;; : (-> PooSessionSelectorReceipt Alist)
 (defpoo-session-receipt-projection
@@ -347,6 +550,14 @@
      (poo-flow-session-selector-receipt-record-selection-policy receipt))
     ('fallback-ref
      (poo-flow-session-selector-receipt-record-fallback-ref receipt))
+    ('fallback-resolved?
+     (poo-flow-session-selector-receipt-record-fallback-resolved? receipt))
+    ('resolved-candidate-ids
+     (poo-flow-session-selector-receipt-record-resolved-candidate-ids
+      receipt))
+    ('unresolved-candidate-ids
+     (poo-flow-session-selector-receipt-record-unresolved-candidate-ids
+      receipt))
     ('selection-state
      (poo-flow-session-selector-receipt-selection-state receipt))
     ('selected-candidate-ref
@@ -354,6 +565,12 @@
     ('pending-selected-result
      (poo-flow-session-selector-receipt-record-pending-selected-result
       receipt))
+    ('valid?
+     (poo-flow-session-selector-receipt-valid? receipt))
+    ('diagnostic-count
+     (poo-flow-session-selector-receipt-diagnostic-count receipt))
+    ('diagnostics
+     (poo-flow-session-selector-receipt-diagnostics receipt))
     ('handoff-required
      (poo-flow-session-selector-receipt-record-handoff-required receipt))
     ('runtime-owner

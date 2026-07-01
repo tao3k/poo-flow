@@ -19,17 +19,41 @@
         poo-flow-graph-topological-order
         poo-flow-graph-analysis-receipt)
 
+(defrules poo-flow-graph-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (-> [PooFlowGraphNode] [Object] [Object])
+(def (poo-flow-graph-node-ids/rev nodes ids-rev)
+  (if (null? nodes)
+    ids-rev
+    (poo-flow-graph-node-ids/rev
+     (cdr nodes)
+     (cons (poo-flow-graph-node-id (car nodes)) ids-rev))))
+
 ;; : (-> PooFlowGraph [Object])
 (def (poo-flow-graph-node-ids graph-value)
-  (map poo-flow-graph-node-id
-       (poo-flow-graph-nodes graph-value)))
+  (reverse
+   (poo-flow-graph-node-ids/rev
+    (poo-flow-graph-nodes graph-value)
+    '())))
+
+;; : (-> [PooFlowGraphEdge] [[Object Object]] [[Object Object]])
+(def (poo-flow-graph-edge-pairs/rev edges pairs-rev)
+  (if (null? edges)
+    pairs-rev
+    (poo-flow-graph-edge-pairs/rev
+     (cdr edges)
+     (cons (list (poo-flow-graph-edge-from (car edges))
+                 (poo-flow-graph-edge-to (car edges)))
+           pairs-rev))))
 
 ;; : (-> PooFlowGraph [[Object Object]])
 (def (poo-flow-graph-edge-pairs graph-value)
-  (map (lambda (edge)
-         (list (poo-flow-graph-edge-from edge)
-               (poo-flow-graph-edge-to edge)))
-       (poo-flow-graph-edges graph-value)))
+  (reverse
+   (poo-flow-graph-edge-pairs/rev
+    (poo-flow-graph-edges graph-value)
+    '())))
 
 ;; : (-> PooFlowGraph Object [Object])
 (def (poo-flow-graph-outgoing-ids graph-value id)
@@ -107,7 +131,8 @@
                               (poo-flow-graph-topological-order
                                graph-value)))
          (diagnostics (if cycle-path
-                        (list (cons 'cycle-path cycle-path))
+                        (poo-flow-graph-field-rows
+                         (cycle-path cycle-path))
                         '())))
     (poo-flow-graph-analysis
      (poo-flow-graph-id graph-value)

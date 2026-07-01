@@ -6,7 +6,6 @@
                  poo-object-field-contract-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
-        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
         :poo-flow/src/module-system/projection-syntax)
@@ -63,14 +62,28 @@
 ;;; Boundary: module object harness validation resolved fields is the policy-
 ;;; visible edge for module-system, object behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
+;; : (-> [PooModuleFieldContract] [PooObjectHarnessField] [PooObjectHarnessField])
+(def (poo-flow-module-object-harness-fields/rev resolved-fields fields-rev)
+  (if (null? resolved-fields)
+    fields-rev
+    (poo-flow-module-object-harness-fields/rev
+     (cdr resolved-fields)
+     (cons (poo-flow-module-field-contract->harness-field
+            (car resolved-fields))
+           fields-rev))))
+
+;; : (-> [PooModuleFieldContract] [PooObjectHarnessField])
+(def (poo-flow-module-object-harness-fields resolved-fields)
+  (reverse
+   (poo-flow-module-object-harness-fields/rev resolved-fields '())))
+
 ;; : (-> PooModuleObject [PooModuleFieldContract] HashTable HashTable)
 (def (poo-flow-module-object-harness-validation/resolved-fields object
                                                                resolved-fields
                                                                source-ref)
   (poo-flow-module-object-harness-validation/harness-fields
    object
-   (map poo-flow-module-field-contract->harness-field
-        resolved-fields)
+   (poo-flow-module-object-harness-fields resolved-fields)
    source-ref))
 
 ;; : (-> PooModuleObject [HashTable] HashTable HashTable)
@@ -244,34 +257,67 @@
                                                                         resolved-fields)
   (poo-flow-module-object-field-contract-validations/harness-fields
    object
-   (map poo-flow-module-field-contract->harness-field
-        resolved-fields)))
+   (poo-flow-module-object-harness-fields resolved-fields)))
 
 ;;; Boundary: module object field contract validations resolved fields cache is
 ;;; the policy-visible edge for module-system, object behavior, keeping
 ;;; validation, lookup, or projection responsibilities centralized for callers.
+;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [HashTable] [HashTable])
+(def (poo-flow-module-object-field-contract-validations/resolved-fields/cache/rev
+      object
+      resolved-fields
+      cache
+      validations-rev)
+  (if (null? resolved-fields)
+    validations-rev
+    (poo-flow-module-object-field-contract-validations/resolved-fields/cache/rev
+     object
+     (cdr resolved-fields)
+     cache
+     (cons (poo-flow-module-field-contract-validation/cached
+            object
+            (car resolved-fields)
+            cache)
+           validations-rev))))
+
 ;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [HashTable])
 (def (poo-flow-module-object-field-contract-validations/resolved-fields/cache
       object
       resolved-fields
       cache)
-  (map (lambda (field)
-         (poo-flow-module-field-contract-validation/cached object
-                                                          field
-                                                          cache))
-       resolved-fields))
+  (reverse
+   (poo-flow-module-object-field-contract-validations/resolved-fields/cache/rev
+    object
+    resolved-fields
+    cache
+    '())))
 
 ;;; Boundary: module object field contract validations harness fields is the
 ;;; policy-visible edge for module-system, object behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
+;; : (-> PooModuleObject [HashTable] [HashTable] [HashTable])
+(def (poo-flow-module-object-field-contract-validations/harness-fields/rev
+      object
+      harness-fields
+      validations-rev)
+  (if (null? harness-fields)
+    validations-rev
+    (poo-flow-module-object-field-contract-validations/harness-fields/rev
+     object
+     (cdr harness-fields)
+     (cons (poo-flow-module-field-contract-validation/harness-field
+            object
+            (car harness-fields))
+           validations-rev))))
+
 ;; : (-> PooModuleObject [HashTable] [HashTable])
 (def (poo-flow-module-object-field-contract-validations/harness-fields object
                                                                       harness-fields)
-  (map (lambda (harness-field)
-         (poo-flow-module-field-contract-validation/harness-field
-          object
-          harness-field))
-       harness-fields))
+  (reverse
+   (poo-flow-module-object-field-contract-validations/harness-fields/rev
+    object
+    harness-fields
+    '())))
 
 ;; duplicate-identities
 ;;   : (-> (List Symbol) (List Symbol))
@@ -286,22 +332,28 @@
 ;;       ;; => (a b)
 ;;       ```
 ;;     %
+(def (duplicate-identities/rev identities seen duplicates result-rev)
+  (cond
+   ((null? identities) result-rev)
+   ((hash-key? seen (car identities))
+    (if (hash-key? duplicates (car identities))
+      (duplicate-identities/rev (cdr identities) seen duplicates result-rev)
+      (begin
+        (hash-put! duplicates (car identities) #t)
+        (duplicate-identities/rev
+         (cdr identities)
+         seen
+         duplicates
+         (cons (car identities) result-rev)))))
+   (else
+    (hash-put! seen (car identities) #t)
+    (duplicate-identities/rev (cdr identities) seen duplicates result-rev))))
+
 (def (duplicate-identities identities)
   (let ((seen (make-hash-table))
         (duplicates (make-hash-table)))
     (reverse
-     (foldl (lambda (identity result)
-              (if (hash-key? seen identity)
-                (if (hash-key? duplicates identity)
-                  result
-                  (begin
-                    (hash-put! duplicates identity #t)
-                    (cons identity result)))
-                (begin
-                  (hash-put! seen identity #t)
-                  result)))
-            '()
-            identities))))
+     (duplicate-identities/rev identities seen duplicates '()))))
 
 ;;; Object diagnostics stay intentionally narrow: only object-local metadata and
 ;;; C3-resolved identity collisions are checked here.

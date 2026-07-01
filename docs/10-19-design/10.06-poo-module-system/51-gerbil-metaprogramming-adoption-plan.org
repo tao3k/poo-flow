@@ -107,6 +107,13 @@ Macro ownership follows the layer whose code is generated:
 - =src/module-system/runtime-projection-syntax.ss= owns runtime manifest,
   receipt, and Marlin handoff projection generation when the output is a pure
   final boundary projection.
+- =src/modules/workflow/cicd-projection-syntax.ss= owns workflow CI/CD
+  fixed-field runtime, receipt, and graph projection rows. It must not own
+  scheduling, command execution, or public user-interface scenario behavior.
+- =src/modules/sandbox-core/profile-support/projection-syntax.ss= owns
+  sandbox profile-support fixed-field rows and bounded row-tail composition
+  for derivation, resolve, policy, authoring, validation, and presentation
+  payloads. It must not hide policy decisions or backend capability semantics.
 - =src/module-system/init-syntax.ss= owns public =use-module= syntax and any
   private branch-generation helpers.
 - =src/module-system/load-syntax.ss= owns source-aware =load!= fragment
@@ -257,9 +264,58 @@ Phase 3: deepen session policy generation.
 
 - Completed user-interface scenario batch benchmark slice: the scenario-batch performance owner now derives row counts, runtime flags, and case names through owner-local reverse accumulators instead of recursive append or non-tail list scans, while keeping benchmark payloads under =t/scenarios/performance= and leaving public =user-interface/= POO declarations unchanged.
 - Completed AgentParam batch projection slice: =poo-flow-session-agent-param-contracts->alists= now uses the shared session receipt batch macro, and that macro expands to an ordered reverse accumulator instead of an anonymous =map= frame for session receipt batch projections.
+- Completed core/session/workflow row-frame projection slice: session transform and session value metadata prefixes now use owner-local fixed-prefix tail helpers; core plan, runner, receipt, runtime, failure, strategy, task, flow registry, and validation fixed receipt or error detail rows route through =defpoo-core-receipt-projection=; CI/CD runtime metadata and runtime readiness rows now use declarative field/tail helpers instead of hand-written =cons= towers.
+- Completed agent-sandbox projection and merge slice: request, profile, descriptor, validation, bridge, Marlin, Cube, nono, and sandbox resource final rows now share =src/modules/agent-sandbox/projection-syntax.ss= instead of copying owner-local =list (cons ...)= frames, while sandbox resource merge now collects unseen right-hand bindings in reverse accumulators and appends them to the left side once instead of repeatedly growing lists with =append=.
 - Completed session-agent topology accumulator follow-up: =poo-flow-session-agent-node-topology-summary= now derives agent ids, lineage edge pairs, and durable policy refs with one tail-recursive reverse accumulator instead of recursively rebuilding the tail summary before each cons.
-- Completed workflow CI/CD runtime projection readability slice: runtime metadata, runtime policy, and check receipt field projections now use a bounded =poo-flow-cicd-rows/tail= helper instead of hand-written nested =cons= towers, preserving durable-field tail composition without making public =user-interface/= declarations depend on benchmark or ABI plumbing.
+- Completed workflow CI/CD runtime projection readability slice: runtime metadata, runtime policy, command envelopes, durable rows, and check receipt field projections now use an owner-local =poo-flow-cicd-field-rows= declarative macro over the bounded row-tail helper instead of hand-written nested =cons= towers, preserving durable-field tail composition without making public =user-interface/= declarations depend on benchmark or ABI plumbing.
+- Completed sandbox-core profile-support projection helper slice:
+  profile derivation, resolve, backend capability policy diagnostics,
+  authoring diagnostics, and validation payload rows now share
+  =src/modules/sandbox-core/profile-support/projection-syntax.ss= for
+  fixed-field rows and bounded row-tail composition instead of hand-written
+  =append= and nested =cons= frames. Dynamic registry entry merging remains
+  explicit functional code because it is data-dependent, not a fixed final
+  projection.
+- Completed user-interface scenario benchmark gate repair:
+  =user-interface/custom/my-module/cases/session-policy.ss= now uses canonical
+  =poo-flow-session-*= POO constructors and canonical =->alist= projectors
+  instead of stale short facade names, and
+  =user-interface/custom/my-module/cases/loop-engine.ss= now keeps selector
+  and materialization profile slots as session receipt objects until the
+  loop-engine owner projects them. The existing
+  =t/user-interface-custom-scenario-batch-performance-test.ss= benchmark
+  imports and runs under the performance gate.
+- Completed selector/materialization diagnostic projection slice:
+  session selector and materialization diagnostic rows now use owner-local
+  fixed-field row helpers and bounded row-tail composition instead of
+  hand-written diagnostic =list (cons ...)= frames or small =append= chains,
+  while receipt construction, validation, and public session config syntax stay
+  in their existing session owners.
 - Completed session row-tail readability slice: session policy object rows and session profile runtime/handoff summaries now use owner-local bounded row-tail helpers instead of hand-written nested =cons= towers, preserving fixed field order and durable/handoff tail composition under the existing policy-family and session graph performance gates.
+- Completed loop slot-row readability slice: loop strategy plans, human audit rows, governor nodes, and aggregate governors now use owner-local bounded slot-row tail helpers instead of nested =cons= towers, keeping public POO constructors unchanged while preserving override order under the loop strategy, human-audit, and governor performance gates.
+- Completed tool-core/memory-core facade batch slice: public config facades now build catalog handoff manifests through named single-row helpers and tail-recursive owner-local batch helpers instead of anonymous =map= lambdas, preserving POO authoring and runtime handoff manifest order under the tool-core and memory-core performance gates.
+- Completed durable recovery support diagnostics slice: workflow task diagnostics now aggregate with the owner-local =reverse-onto= helper instead of =apply append= over mapped diagnostic lists, preserving diagnostic order under the durable recovery scenario performance gate.
+- Completed loop governor classifier follow-up: state action key extraction, actionable pattern classification, conflict checks, and compact pattern-name projection now use governor-owner tail helpers instead of =map= plus =filter= or =foldl= frames under the loop governor performance gate.
+- Completed durable recovery observability follow-up: fixed stage observability rows now project with a durable-recovery owner tail accumulator instead of an anonymous =map= lambda while preserving stage order under the durable recovery scenario performance gate.
+- Completed durable recovery memory-job diagnostics follow-up: memory durable job diagnostics now aggregate with the owner-local =reverse-onto= helper instead of =apply append= over mapped diagnostic lists, matching the workflow-task diagnostics path under the durable recovery scenario performance gate.
+- Completed loop-engine memory receipt follow-up: available use-case projection now uses a loop-engine-runtime owner tail accumulator instead of an anonymous =map= lambda under the user-interface loop-engine and presentation performance gates.
+- Completed loop-engine runtime-agent projection follow-up: agent profile, harness, session, and topology field-value projections now use runtime-agent owner reverse accumulators instead of anonymous =map= lambdas under the loop-engine session-agent graph performance gate.
+- Completed clean optimized build bootstrap follow-up: =runtime-bootstrap= now includes the shared session registry/agent owners and loop-engine intent/session-agent graph/runtime-agent owners so clean =gxpkg build -R -O= no longer depends on stale interface artifacts for the loop-engine session-agent graph performance path.
+- Completed profile presentation/doctor helper follow-up: profile summary module-key rows, profile-set summary rows, profile presentation slot copies, doctor object module-key rows, doctor duplicate module-key scans, workflow CI/CD pipeline names in profile and config presentations, config module-key summaries, and settings alists now use owner-local reverse accumulators instead of anonymous or generic =map= projections under the user-interface presentation performance gate.
+- Completed durable runtime store operation follow-up: default operation receipt batches and row bridge handoff operation batches now use durable-operation owner reverse accumulators instead of =map= plus =append= frames while preserving Marlin handoff operation order.
+- Completed module-system support projection follow-up: loader tree lazy plans, module registry source refs, diagnostic duplicate details and family/kind rows, interface object alists, projection option config/schema/validation rows, declaration-case trace stages, init-syntax slot groups, and POO slot authoring observations/statuses now use owner-local recursive projection helpers instead of anonymous =map= frames.
+- Completed object validation projection follow-up: field identity rows, field origin rows, harness-field rows, validation batch rows, and validation value projections now use object-validation owner reverse accumulators instead of =map= frames under the module object validation summary performance gate.
+- Completed extension/object-core foldl follow-up: extension append/remove/coalesce/apply/fixed-point helpers, object-core append/remove/merge/materialization helpers, and object-validation duplicate/field validation helpers now use owner-local state loops instead of =foldl= or anonymous =map= frames while preserving merge order and fixed-point semantics.
+- Completed src/modules traversal residual follow-up: Docker arg merges, session transform memory bundles, session materialization diagnostics, Funflow endpoint and prototype projections, workflow builder option filtering, tutorial alignment report indexes, sandbox profile derivation/resolve/presentation/policy diagnostics, request-field validation, text notebook formatting, and Nono C binding required-input rows now use owner-local accumulators instead of =foldl=, =filter-map=, or anonymous =map=/=filter= frames while preserving row order and public POO/ABI shapes.
+- Completed module-system filter-map cleanup follow-up: session-core intents, object-validation invalid identity projections, and durable recovery sandbox diagnostics now use owner-local maybe-row accumulators, and stale =filter-map= imports were removed from loop-engine runtime, durable recovery support, and object-validation owners.
+- Completed core/cli/graph traversal cleanup follow-up: role slot specs, plan node ids/edges/frontier receipts, runner terminal selection, replay receipt node ids, flow-strand registry merge/projection helpers, package-build module/source/spec rows, CLI RSS parsing, graph node ids, and graph edge pairs now use owner-local accumulators instead of anonymous or generic =map=/=filter-map= frames while preserving receipt order and public API shapes.
+- Completed session constructor row-helper slice: AgentParam contracts, registry entries/receipts, agent nodes, and policy-validation tool attempts/diagnostics now use owner-local fixed-field row helpers for mechanical constructor rows, while final receipt projections continue through =receipt-syntax.ss= and policy decisions remain in their domain owners. The focused session AgentParam, registry, agent graph, and policy-validation gates passed after rebuilding the dependent policy-validation/AgentParam interface pair.
+- Completed user-interface session-case macro repair: =use-module session-core :config (session-case ...)= now supports non-empty =objects= clauses without colliding with the global =binding= syntax literal, and custom session Transform, AgentParam, policy, communication, registry, graph, selector, materialization, and durable-memory cases validate through flat scenario row streams instead of the removed =:rows= public entry.
+- Completed runtime tail-append cleanup slice: extension capability insertion, receipt audit paths, module observability paths, loop-engine sandbox profile refs, user-module flag extension, session-case row-group flattening, descriptor module-set flattening, live-case read argv generation, and test-local command/registry fixtures now use owner-local tail accumulators instead of =append ... (list ...)= frames.
+- Completed test/support traversal cleanup slice: lazy-loader source refs, POO performance contribution fixtures, sandbox resource diagnostic-code projections, and tutorial word-count fixtures now use owner-local recursive accumulators instead of =apply append=, =filter-map=, or =foldl=, leaving only benchmark expected-repair prose for those legacy patterns.
+- Completed diagnostic field-row cleanup slice: sandbox resource contract diagnostics, memory/tool catalog diagnostics, store unsupported-operation detail rows, graph cycle diagnostics, loop human/governor inbox rows, and Nono native/build receipts now use owner-local field-row declarative helpers instead of hand-written fixed =list (cons ...)= frames.
+- Completed module-system row helper slice: module-system projection syntax now owns reusable fixed row/tail helpers, and use-module contract diagnostics, loop-engine result-contract diagnostics/projections, durable runtime-store bridge metadata/options, and resolver missing-source detail rows route through those helpers instead of ad hoc =append= or fixed =list (cons ...)= frames.
+- Completed core/workflow/sandbox config projection slice: core run-config receipts, custom/Docker/workflow builder option prefixes, sandbox backend config flags, Funflow workflow agreement/DAG metadata, CI/CD dependency/runtime/pipeline/Marlin ABI rows, and Nono C binding runtime validation/capability plans now use bounded field-row or value-tail helpers instead of ad hoc =append= or fixed =list (cons ...)= frames, while preserving scenario benchmark and runtime handoff order.
 Phase 4: broaden runtime projection generation carefully.
 - Keep =src/module-system/runtime-projection-syntax.ss= limited to pure
   projection families.
@@ -436,6 +492,14 @@ Phase 4: broaden runtime projection generation carefully.
   validity, resolved/unresolved tool refs, sandbox-required refs, action
   mismatch rows, and tool-core diagnostics through the bounded
   =poo-flow-session-policy-validation-receipt->alist= ABI.
+- Completed session-policy/memory-core bridge slice:
+  effective session policy validation receipts consume an optional memory-core
+  catalog-validation row from metadata and project catalog id/ref, catalog
+  validity, catalog store refs, intent store refs, resolved/unresolved store
+  refs, and memory-core diagnostics through the same bounded
+  =poo-flow-session-policy-validation-receipt->alist= ABI. AgentParam
+  contracts now project the resolved memory catalog facts beside topology-owned
+  =memory-refs= for Marlin handoff.
 - Completed memory-core validation summary slice:
   memory catalogs derive refs and count in one owner-local summary pass, and
   memory intent catalog validation now derives unique store refs, resolved refs,
@@ -659,3 +723,4 @@ gxpkg build -R -O
 
 Do not run broad verification as a substitute for owner-boundary tests. The
 focused tests are what prove the macro did not move the model boundary.
+- Completed user-interface sandbox config benchmark slice: =t/user-interface-sandbox-config-performance-test.ss= and =t/scenarios/performance/user-interface-sandbox-config/benchmark.ss= now give sandbox module feature lookup and default profile presentation an owner-local performance gate, while =user-interface/= remains a POO-native declaration surface with no benchmark payloads.

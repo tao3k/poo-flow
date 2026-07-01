@@ -2,7 +2,8 @@
 ;;; Boundary: planning produces inspectable control-plane artifacts.
 ;;; Invariant: execution stays in the runner/runtime-adapter layer.
 
-(import :poo-flow/src/core/flow
+(import :poo-flow/src/core/projection-syntax
+        :poo-flow/src/core/flow
         :poo-flow/src/core/task)
 
 (export make-plan-node
@@ -187,9 +188,21 @@
 
 ;;; Graph inspection is deliberately read-only: strategies and receipts can
 ;;; reason about topology without smuggling scheduling behavior into planning.
+;; : (-> [PlanNode] [Id] [Id])
+(def (plan-nodes->ids/rev nodes ids-rev)
+  (if (null? nodes)
+    ids-rev
+    (plan-nodes->ids/rev
+     (cdr nodes)
+     (cons (plan-node-id (car nodes)) ids-rev))))
+
+;; : (-> [PlanNode] [Id])
+(def (plan-nodes->ids nodes)
+  (reverse (plan-nodes->ids/rev nodes '())))
+
 ;; : (-> ExecutionPlan [Id])
 (def (execution-plan-node-ids plan)
-  (map plan-node-id (execution-plan-nodes plan)))
+  (plan-nodes->ids (execution-plan-nodes plan)))
 
 ;;; Edges are emitted as prerequisite -> dependent pairs, matching the order a
 ;;; scheduler or Rust adapter needs for readiness and receipt correlation.
@@ -208,7 +221,7 @@
 ;;; frontier facts, not the full plan-node payload.
 ;; : (-> ExecutionPlan [Id])
 (def (execution-plan-root-node-ids plan)
-  (map plan-node-id (execution-plan-root-nodes plan)))
+  (plan-nodes->ids (execution-plan-root-nodes plan)))
 
 ;;; Intent: compute the sink frontier by filtering plan nodes against the
 ;;; dependency-edge table.
@@ -229,7 +242,7 @@
 ;;; schedulers without implying that Scheme will execute those sinks.
 ;; : (-> ExecutionPlan [Id])
 (def (execution-plan-terminal-node-ids plan)
-  (map plan-node-id (execution-plan-terminal-nodes plan)))
+  (plan-nodes->ids (execution-plan-terminal-nodes plan)))
 
 ;;; Intent: compute the runnable frontier from completed node ids without
 ;;; changing the plan's original node order.
@@ -245,12 +258,9 @@
 
 ;;; Intent: expose a lightweight frontier shape for strategy receipts and
 ;;; adapter requests that do not need the full plan-node payload.
-;;; The map projection reuses plan-node-id so ready-frontier evidence matches
-;;; dependency-edge endpoints exactly.
 ;; : (-> ExecutionPlan [Id] [Id])
 (def (execution-plan-ready-node-ids plan completed-node-ids)
-  (map plan-node-id
-       (execution-plan-ready-nodes plan completed-node-ids)))
+  (plan-nodes->ids (execution-plan-ready-nodes plan completed-node-ids)))
 
 ;;; Dependency predicates stay at the node/id level so tests and adapters can
 ;;; audit graph shape without depending on task internals.
@@ -281,47 +291,71 @@
     (append (node->dependency-edges (car nodes))
             (nodes->dependency-edges (cdr nodes)))))
 
-;;; Intent: map every dependency id on a node into a prerequisite-to-dependent
-;;; edge while reusing the current node id as the dependent endpoint.
-;;; The one-argument lambda is the whole transform over dependency-id values.
-;;; A manual loop would hide the invariant that each emitted edge belongs to
-;;; exactly one dependency of this node.
+;;; Intent: project each dependency id into a prerequisite-to-dependent edge
+;;; owned by this node while keeping dependency order stable.
+;; : (-> [Id] Id [[Id Id]] [[Id Id]])
+(def (dependency-ids->edges/rev dependency-ids dependent-id edges-rev)
+  (if (null? dependency-ids)
+    edges-rev
+    (dependency-ids->edges/rev
+     (cdr dependency-ids)
+     dependent-id
+     (cons (list (car dependency-ids) dependent-id) edges-rev))))
+
 ;; : (-> PlanNode [[Id Id]])
 (def (node->dependency-edges node)
-  (map (lambda (dependency-id)
-         (list dependency-id (plan-node-id node)))
-       (plan-node-dependencies node)))
+  (reverse
+   (dependency-ids->edges/rev
+    (plan-node-dependencies node)
+    (plan-node-id node)
+    '())))
 
 ;;; Node entries are the per-node part of the strategy-facing DAG receipt.
 ;;; They intentionally omit the raw step payload so external consumers inspect
 ;;; topology without receiving executable Scheme procedures or task internals.
 ;; : (-> PlanNode Alist)
-(def (plan-node->dag-entry node)
-  (list (cons 'id (plan-node-id node))
-        (cons 'ordinal (plan-node-ordinal node))
-        (cons 'kind (plan-node-kind node))
-        (cons 'name (plan-node-name node))
-        (cons 'dependencies (plan-node-dependencies node))))
+(defpoo-core-receipt-projection
+  plan-node->dag-entry (node)
+  (bindings ())
+  (fields ((id (plan-node-id node))
+           (ordinal (plan-node-ordinal node))
+           (kind (plan-node-kind node))
+           (name (plan-node-name node))
+           (dependencies (plan-node-dependencies node)))))
+
+;; : (-> [PlanNode] [Alist] [Alist])
+(def (plan-nodes->dag-entries/rev nodes entries-rev)
+  (if (null? nodes)
+    entries-rev
+    (plan-nodes->dag-entries/rev
+     (cdr nodes)
+     (cons (plan-node->dag-entry (car nodes)) entries-rev))))
+
+;; : (-> [PlanNode] [Alist])
+(def (plan-nodes->dag-entries nodes)
+  (reverse (plan-nodes->dag-entries/rev nodes '())))
 
 ;;; The DAG receipt is a durable planning projection for Marlin and strategy
 ;;; code. It reports graph shape only; runtime execution remains behind runner
 ;;; and adapter layers.
 ;; : (-> ExecutionPlan Alist)
-(def (execution-plan->dag-receipt plan)
-  (list (cons 'kind flow-dag-receipt-kind)
-        (cons 'flow (execution-plan-flow-name plan))
-        (cons 'input-contract (execution-plan-input-contract plan))
-        (cons 'output-contract (execution-plan-output-contract plan))
-        (cons 'node-count (plan-node-count plan))
-        (cons 'nodes (map plan-node->dag-entry (execution-plan-nodes plan)))
-        (cons 'node-ids (execution-plan-node-ids plan))
-        (cons 'dependency-edges (execution-plan-dependency-edges plan))
-        (cons 'root-node-ids (execution-plan-root-node-ids plan))
-        (cons 'terminal-node-ids (execution-plan-terminal-node-ids plan))
-        (cons 'strategy-facing #t)
-        (cons 'report-only #t)
-        (cons 'descriptor-realized? #f)
-        (cons 'runtime-executed #f)))
+(defpoo-core-receipt-projection
+  execution-plan->dag-receipt (plan)
+  (bindings ())
+  (fields ((kind flow-dag-receipt-kind)
+           (flow (execution-plan-flow-name plan))
+           (input-contract (execution-plan-input-contract plan))
+           (output-contract (execution-plan-output-contract plan))
+           (node-count (plan-node-count plan))
+           (nodes (plan-nodes->dag-entries (execution-plan-nodes plan)))
+           (node-ids (execution-plan-node-ids plan))
+           (dependency-edges (execution-plan-dependency-edges plan))
+           (root-node-ids (execution-plan-root-node-ids plan))
+           (terminal-node-ids (execution-plan-terminal-node-ids plan))
+           (strategy-facing #t)
+           (report-only #t)
+           (descriptor-realized? #f)
+           (runtime-executed #f))))
 
 ;;; Flow projection is the ergonomic entrypoint for functional-kernel arrows:
 ;;; callers hand it a declaration and receive graph evidence, not execution.
@@ -332,39 +366,45 @@
 ;;; Runtime manifest projection is the discovery surface for Marlin-facing
 ;;; consumers. It wraps the report-only DAG receipt and names the Scheme
 ;;; entrypoints, but it never schedules nodes or submits adapter requests.
+;; : (-> ExecutionPlan RequestId Alist)
+(defpoo-core-receipt-projection
+  execution-plan->dag-runtime-manifest* (plan request-id)
+  (bindings ((receipt (execution-plan->dag-receipt plan))))
+  (fields ((schema +flow-dag-runtime-manifest-schema+)
+           (kind 'flow-dag-runtime-manifest)
+           (bridge 'runtime-manifest)
+           (producer 'poo-flow)
+           (consumer 'marlin-agent-core)
+           (operation 'inspect-flow-dag)
+           (request-id request-id)
+           (flow (execution-plan-flow-name plan))
+           (receipt-schema flow-dag-receipt-kind)
+           (dag-receipt receipt)
+           (node-count (plan-node-count plan))
+           (node-ids (execution-plan-node-ids plan))
+           (dependency-edges (execution-plan-dependency-edges plan))
+           (root-node-ids (execution-plan-root-node-ids plan))
+           (terminal-node-ids (execution-plan-terminal-node-ids plan))
+           (entrypoints
+            '((flow . flow->dag-runtime-manifest)
+              (execution-plan . execution-plan->dag-runtime-manifest)
+              (receipt . flow->dag-receipt)))
+           (runtime-boundary
+            '((local-execution . validation-only)
+              (production-execution . marlin-agent-core)))
+           (control-owner 'gerbil)
+           (execution-owner 'marlin-agent-core)
+           (report-only #t)
+           (descriptor-realized? #f)
+           (runtime-executed #f))))
+
 ;; : (-> ExecutionPlan [RequestId] Alist)
 (def (execution-plan->dag-runtime-manifest plan . maybe-request-id)
-  (let ((request-id (if (null? maybe-request-id)
-                      #f
-                      (car maybe-request-id)))
-        (receipt (execution-plan->dag-receipt plan)))
-    (list (cons 'schema +flow-dag-runtime-manifest-schema+)
-          (cons 'kind 'flow-dag-runtime-manifest)
-          (cons 'bridge 'runtime-manifest)
-          (cons 'producer 'poo-flow)
-          (cons 'consumer 'marlin-agent-core)
-          (cons 'operation 'inspect-flow-dag)
-          (cons 'request-id request-id)
-          (cons 'flow (execution-plan-flow-name plan))
-          (cons 'receipt-schema flow-dag-receipt-kind)
-          (cons 'dag-receipt receipt)
-          (cons 'node-count (plan-node-count plan))
-          (cons 'node-ids (execution-plan-node-ids plan))
-          (cons 'dependency-edges (execution-plan-dependency-edges plan))
-          (cons 'root-node-ids (execution-plan-root-node-ids plan))
-          (cons 'terminal-node-ids (execution-plan-terminal-node-ids plan))
-          (cons 'entrypoints
-                '((flow . flow->dag-runtime-manifest)
-                  (execution-plan . execution-plan->dag-runtime-manifest)
-                  (receipt . flow->dag-receipt)))
-          (cons 'runtime-boundary
-                '((local-execution . validation-only)
-                  (production-execution . marlin-agent-core)))
-          (cons 'control-owner 'gerbil)
-          (cons 'execution-owner 'marlin-agent-core)
-          (cons 'report-only #t)
-          (cons 'descriptor-realized? #f)
-          (cons 'runtime-executed #f))))
+  (execution-plan->dag-runtime-manifest*
+   plan
+   (if (null? maybe-request-id)
+     #f
+     (car maybe-request-id))))
 
 ;;; Flow projection is the public ergonomic discovery entrypoint. It lowers the
 ;;; flow to a plan first so Marlin receives the same manifest shape whether the

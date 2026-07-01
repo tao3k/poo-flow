@@ -292,22 +292,37 @@
                (hash-put! base-first key descriptor))
              #f)))
        (flow-strand-registry-descriptors registry))
+      (def (finish-existing/rev remaining result-rev)
+        (if (null? remaining)
+          result-rev
+          (let* ((descriptor (car remaining))
+                 (key (flow-strand-name descriptor))
+                 (next-descriptor
+                  (if (and (hash-get override-seen key)
+                           (not (hash-get replacement-used key)))
+                    (begin
+                      (hash-put! replacement-used key #t)
+                      (hash-get overrides key))
+                    descriptor)))
+            (finish-existing/rev
+             (cdr remaining)
+             (cons next-descriptor result-rev)))))
+      (def (finish-new/rev remaining-new-keys result-rev)
+        (if (null? remaining-new-keys)
+          result-rev
+          (finish-new/rev
+           (cdr remaining-new-keys)
+           (cons (hash-get overrides (car remaining-new-keys))
+                 result-rev))))
       (def (finish new-keys)
         (make-flow-strand-registry
          (flow-strand-registry-name registry)
-         (append
-          (map (lambda (descriptor)
-                 (let (key (flow-strand-name descriptor))
-                   (if (and (hash-get override-seen key)
-                            (not (hash-get replacement-used key)))
-                     (begin
-                       (hash-put! replacement-used key #t)
-                       (hash-get overrides key))
-                     descriptor)))
-               (flow-strand-registry-descriptors registry))
-          (map (lambda (key)
-                 (hash-get overrides key))
-               (reverse new-keys)))
+         (reverse
+          (finish-new/rev
+           (reverse new-keys)
+           (finish-existing/rev
+            (flow-strand-registry-descriptors registry)
+            '())))
          (flow-strand-registry-core-requirements registry)))
       (let loop-extra ((remaining descriptors)
                        (new-keys '()))
@@ -334,6 +349,13 @@
 
 ;;; Missing strand failures are structural contract errors. They must surface
 ;;; before runtime adapters receive an underspecified flow universe.
+;; : (-> FlowStrandRegistry Symbol Alist)
+(defpoo-core-receipt-projection
+  unknown-flow-strand-detail (registry kind)
+  (bindings ())
+  (fields ((registry (flow-strand-registry-name registry))
+           (kind kind))))
+
 ;; : (-> FlowStrandRegistry Symbol FlowStrandDescriptor)
 (def (flow-strand-for-kind-in registry kind)
   (let ((descriptor (find-flow-strand
@@ -345,8 +367,7 @@
        'flow-strand-registry
        'unknown-flow-strand
        "unknown flow strand"
-       (list (cons 'registry (flow-strand-registry-name registry))
-             (cons 'kind kind))))))
+       (unknown-flow-strand-detail registry kind)))))
 
 ;;; The default lookup is a convenience for core Funflow-compatible strands;
 ;;; extension code should use the explicit registry variant.
@@ -356,10 +377,20 @@
 
 ;;; Names are the compact diagnostic view used by contracts before consumers
 ;;; inspect the heavier descriptor snapshots.
+;; : (-> [FlowStrandDescriptor] [Symbol] [Symbol])
+(def (flow-strand-names/rev descriptors names-rev)
+  (if (null? descriptors)
+    names-rev
+    (flow-strand-names/rev
+     (cdr descriptors)
+     (cons (flow-strand-name (car descriptors)) names-rev))))
+
 ;; : (-> FlowStrandRegistry [Symbol])
 (def (flow-strand-names registry)
-  (map flow-strand-name
-       (flow-strand-registry-descriptors registry)))
+  (reverse
+   (flow-strand-names/rev
+    (flow-strand-registry-descriptors registry)
+    '())))
 
 ;;; Descriptor snapshots are intentionally lossless for public slots so docs
 ;;; and manifests can compare POO extension results without object identity.
@@ -375,14 +406,27 @@
            (required? (flow-strand-required? descriptor))
            (extension-policy (flow-strand-extension-policy descriptor)))))
 
+;; : (-> [FlowStrandDescriptor] [Alist] [Alist])
+(def (flow-strand-descriptors->alists/rev descriptors rows-rev)
+  (if (null? descriptors)
+    rows-rev
+    (flow-strand-descriptors->alists/rev
+     (cdr descriptors)
+     (cons (flow-strand-descriptor->alist (car descriptors))
+           rows-rev))))
+
+;; : (-> [FlowStrandDescriptor] [Alist])
+(def (flow-strand-descriptors->alists descriptors)
+  (reverse (flow-strand-descriptors->alists/rev descriptors '())))
+
 ;;; The snapshot is for docs, tests, and runtime-manifest discovery. It exposes
 ;;; the strand universe without handing callers executable interpreters.
 ;; : (-> FlowStrandRegistry Alist)
 (defpoo-core-receipt-projection
   flow-strand-registry->alist (registry)
   (bindings ((descriptors
-              (map flow-strand-descriptor->alist
-                   (flow-strand-registry-descriptors registry)))))
+              (flow-strand-descriptors->alists
+               (flow-strand-registry-descriptors registry)))))
   (fields ((name (flow-strand-registry-name registry))
            (kind 'flow-strand-registry)
            (strand-names (flow-strand-names registry))

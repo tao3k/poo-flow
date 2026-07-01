@@ -7,7 +7,8 @@
 ;;; Runtime contract: scheduler and plan semantics stay out of this extension.
 ;;; Policy evidence: tests should assert registry, task shape, and interpreter result.
 
-(import :poo-flow/src/core/api)
+(import :poo-flow/src/core/api
+        :poo-flow/src/core/projection-syntax)
 
 (export custom-task-family-descriptor
         make-custom-task-family-registry
@@ -40,11 +41,25 @@
 ;;; Invariant:
 ;;; - Capability lists stay set-like.
 ;;; - Existing capabilities keep their original order.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (custom-task-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)
   (if (memq capability capability-set)
     capability-set
-    (append capability-set (list capability))))
+    (custom-task-values/tail capability-set (list capability))))
 
 ;;; Boundary:
 ;;; - Custom capability is opt-in at the extension edge.
@@ -73,9 +88,10 @@
     (make-run-config 'custom-local
                      (make-custom-enabled-strategy)
                      (make-request-only-adapter)
-                     (append '((runtime . gerbil)
-                               (extension . custom-task))
-                             options)
+                     (poo-flow-core-field-rows/tail
+                      options
+                      (runtime 'gerbil)
+                      (extension 'custom-task))
                      (make-custom-task-family-registry)
                      default-flow-declaration-registry)))
 

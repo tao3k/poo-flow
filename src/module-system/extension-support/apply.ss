@@ -5,7 +5,6 @@
                  .o
                  .ref
                  object?)
-        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension-support/data
         :poo-flow/src/module-system/extension-support/merge)
 
@@ -22,6 +21,14 @@
         poo-flow-module-extension-fixed-point-step
         poo-flow-module-extension-fixed-point)
 
+;; : (-> [PooModuleExtensionOperation] PooModuleExtensionOperationState PooModuleExtensionOperationState)
+(def (poo-flow-module-extension-operation-state/fold operations state)
+  (if (null? operations)
+    state
+    (poo-flow-module-extension-operation-state/fold
+     (cdr operations)
+     (poo-flow-module-extension-operation-state (car operations) state))))
+
 ;; poo-flow-module-extension-apply-operations
 ;;   : (-> PooModuleExtensionNode (List PooModuleExtensionOperation) PooModuleExtensionNode)
 ;;   | doc m%
@@ -36,9 +43,9 @@
 ;;       ```
 ;;     %
 (def (poo-flow-module-extension-apply-operations node operations)
-  (match (foldl poo-flow-module-extension-operation-state
-                [node '() '()]
-                (poo-flow-module-extension-coalesce-slot-appends operations))
+  (match (poo-flow-module-extension-operation-state/fold
+          (poo-flow-module-extension-coalesce-slot-appends operations)
+          [node '() '()])
     ([current pending-node-extends pending-slot-overrides]
      (poo-flow-module-extension-flush-pending current
                                               pending-node-extends
@@ -62,7 +69,11 @@
 ;;; operation stacks, preserving order without allocating intermediate appends.
 ;; : (forall (a) (-> (List a) (List a) (List a)))
 (def (poo-flow-module-extension-reverse-onto values tail)
-  (foldl cons tail values))
+  (if (null? values)
+    tail
+    (poo-flow-module-extension-reverse-onto
+     (cdr values)
+     (cons (car values) tail))))
 
 ;;; Flushing is guarded by the pending flag so empty coalescing state never
 ;;; creates synthetic contributions or changes target ordering.
@@ -130,34 +141,61 @@
 ;;
 ;;       # Examples
 ;;       ```scheme
-;;       (map (lambda (contribution)
-;;              (list (poo-flow-module-extension-contribution-target contribution)
-;;                    (map poo-flow-module-extension-operation-action
-;;                         (poo-flow-module-extension-contribution-operations
-;;                          contribution))))
-;;            (poo-flow-module-extension-coalesce-local-contributions
-;;             (list
-;;              (poo-flow-module-extension-contribution
-;;               'root
-;;               (list (poo-flow-module-extension-slot-override 'mode 'strict)))
-;;              (poo-flow-module-extension-contribution
-;;               'root
-;;               (list (poo-flow-module-extension-slot-append 'features
-;;                                                           '(extra)))))))
+;;       (poo-flow-module-extension-coalesce-local-contributions
+;;        (list
+;;         (poo-flow-module-extension-contribution
+;;          'root
+;;          (list (poo-flow-module-extension-slot-override 'mode 'strict)))
+;;         (poo-flow-module-extension-contribution
+;;          'root
+;;          (list (poo-flow-module-extension-slot-append 'features
+;;                                                      '(extra))))))
 ;;       ;; => ((root (slot-override slot-append)))
 ;;       ```
 ;;     %
+(def (poo-flow-module-extension-coalesce-local-contributions/fold
+      contributions
+      state)
+  (if (null? contributions)
+    state
+    (poo-flow-module-extension-coalesce-local-contributions/fold
+     (cdr contributions)
+     (poo-flow-module-extension-coalesce-contribution-state
+      state
+      (car contributions)))))
+
 (def (poo-flow-module-extension-coalesce-local-contributions contributions)
   (poo-flow-module-extension-coalesce-state-output
-   (foldl (lambda (contribution state)
-            (poo-flow-module-extension-coalesce-contribution-state
-             state
-             contribution))
-          [#f #f '() '()]
-          contributions)))
+   (poo-flow-module-extension-coalesce-local-contributions/fold
+    contributions
+    [#f #f '() '()])))
 
 ;;; Contribution application recurses through children after the current target
 ;;; has been patched, which keeps parent and child updates in one graph walk.
+;; : (-> PooModuleExtensionNode PooModuleExtensionContribution PooModuleExtensionNode)
+(def (poo-flow-module-extension-apply-contribution-children/rev
+      children
+      contribution
+      children-rev)
+  (if (null? children)
+    children-rev
+    (poo-flow-module-extension-apply-contribution-children/rev
+     (cdr children)
+     contribution
+     (cons (poo-flow-module-extension-apply-contribution
+            (car children)
+            contribution)
+           children-rev))))
+
+;; : (-> [PooModuleExtensionNode] PooModuleExtensionContribution [PooModuleExtensionNode])
+(def (poo-flow-module-extension-apply-contribution-children children
+                                                            contribution)
+  (reverse
+   (poo-flow-module-extension-apply-contribution-children/rev
+    children
+    contribution
+    '())))
+
 ;; : (-> PooModuleExtensionNode PooModuleExtensionContribution PooModuleExtensionNode)
 (def (poo-flow-module-extension-apply-contribution node contribution)
   (let* ((target (poo-flow-module-extension-contribution-target contribution))
@@ -170,18 +208,27 @@
     (poo-flow-module-extension-replace-node
      current
      (poo-flow-module-extension-node-slots current)
-     (map (lambda (child)
-            (poo-flow-module-extension-apply-contribution child contribution))
-          (poo-flow-module-extension-node-children current)))))
+     (poo-flow-module-extension-apply-contribution-children
+      (poo-flow-module-extension-node-children current)
+      contribution))))
 
 ;;; The coalesced path assumes contribution order is already compacted, so it
 ;;; can fold directly over graph updates without another normalization pass.
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionNode)
+(def (poo-flow-module-extension-apply-contributions/coalesced-loop
+      current
+      contributions)
+  (if (null? contributions)
+    current
+    (poo-flow-module-extension-apply-contributions/coalesced-loop
+     (poo-flow-module-extension-apply-contribution current
+                                                   (car contributions))
+     (cdr contributions))))
+
+;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionNode)
 (def (poo-flow-module-extension-apply-contributions/coalesced node contributions)
-  (foldl (lambda (contribution current)
-           (poo-flow-module-extension-apply-contribution current contribution))
-         node
-         contributions))
+  (poo-flow-module-extension-apply-contributions/coalesced-loop node
+                                                                contributions))
 
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionNode)
 (def (poo-flow-module-extension-apply-contributions node contributions)
@@ -224,13 +271,25 @@
 ;;; All root append contributions must satisfy the same identity guard before
 ;;; the batch can bypass fixed-point graph traversal.
 ;; : (-> Symbol [PooModuleExtensionContribution] Boolean)
+(def (poo-flow-module-extension-root-slot-append-contributions?/loop
+      node-identity
+      contributions)
+  (cond
+   ((null? contributions) #t)
+   ((poo-flow-module-extension-root-slot-append-contribution?
+     node-identity
+     (car contributions))
+    (poo-flow-module-extension-root-slot-append-contributions?/loop
+     node-identity
+     (cdr contributions)))
+   (else #f)))
+
+;; : (-> Symbol [PooModuleExtensionContribution] Boolean)
 (def (poo-flow-module-extension-root-slot-append-contributions? node-identity
                                                                 contributions)
-  (andmap (lambda (contribution)
-            (poo-flow-module-extension-root-slot-append-contribution?
-             node-identity
-             contribution))
-          contributions))
+  (poo-flow-module-extension-root-slot-append-contributions?/loop
+   node-identity
+   contributions))
 
 ;; poo-flow-module-extension-fast-slot-append-slots
 ;;   : (-> PooModuleSlotMap (List PooModuleExtensionContribution) Pair)
@@ -317,19 +376,32 @@
         (if (null? extra)
           base
           (append base (reverse extra)))))
+    (def (materialize-existing-slots/rev remaining result-rev)
+      (if (null? remaining)
+        result-rev
+        (let* ((entry (car remaining))
+               (key (poo-flow-module-extension-entry-key entry)))
+          (materialize-existing-slots/rev
+           (cdr remaining)
+           (cons (if (slot-active? key)
+                   (poo-flow-module-extension-entry
+                    key
+                    (materialize-slot key))
+                   entry)
+                 result-rev)))))
+    (def (materialize-new-slots/rev remaining-new-order result-rev)
+      (if (null? remaining-new-order)
+        result-rev
+        (let (key (car remaining-new-order))
+          (materialize-new-slots/rev
+           (cdr remaining-new-order)
+           (cons (poo-flow-module-extension-entry key (materialize-slot key))
+                 result-rev)))))
     (def (materialize-slots new-order)
-      (append
-       (map (lambda (entry)
-              (let (key (poo-flow-module-extension-entry-key entry))
-                (if (slot-active? key)
-                  (poo-flow-module-extension-entry
-                   key
-                   (materialize-slot key))
-                  entry)))
-            slots)
-       (map (lambda (key)
-              (poo-flow-module-extension-entry key (materialize-slot key)))
-            (reverse new-order))))
+      (reverse
+       (materialize-new-slots/rev
+        (reverse new-order)
+        (materialize-existing-slots/rev slots '()))))
     (let loop-contributions ((remaining-contributions contributions)
                              (new-order '())
                              (changed? #f))

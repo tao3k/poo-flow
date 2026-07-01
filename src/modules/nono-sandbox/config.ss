@@ -4,7 +4,8 @@
 
 (import :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base)
+        :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-nono-sandbox-module-bundles
         +poo-flow-nono-sandbox-default-binding+
@@ -38,13 +39,14 @@
 ;;; centralized for callers.
 ;; : (-> Symbol [PooSandboxProfile] [UserModuleFlagEntry])
 (def (poo-flow-nono-sandbox-config-flags binding-value profiles . maybe-user-config)
-  (append
-   (list (cons ':binding
-               (poo-flow-nono-sandbox-binding-config binding-value))
-         (cons ':config profiles))
-   (if (null? maybe-user-config)
-     '()
-     (list (cons ':user-config (car maybe-user-config))))))
+  (if (null? maybe-user-config)
+    (poo-flow-module-field-rows
+     (:binding (poo-flow-nono-sandbox-binding-config binding-value))
+     (:config profiles))
+    (poo-flow-module-field-rows
+     (:binding (poo-flow-nono-sandbox-binding-config binding-value))
+     (:config profiles)
+     (:user-config (car maybe-user-config)))))
 
 ;;; Backend wrappers pass their inherited profile object into sandbox-core; nono
 ;;; runtime state stays in native.ss while module flags record binding choice.

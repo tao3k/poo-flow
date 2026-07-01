@@ -73,6 +73,21 @@
            'session/build-system
            '(system build-contract)
            'parent-summary-only))
+         (isolation-policy
+          (poo-flow-session-isolation-policy
+           'policy/build-isolation
+           'session/build
+           'child-isolated
+           'denied
+           'denied
+           'declared-channel-only))
+         (sandbox-policy
+          (poo-flow-session-sandbox-policy
+           'policy/build-sandbox
+           'session/build
+           'agent/nono
+           'parent-profile
+           'isolated-filesystem))
          (context-policy
           (poo-flow-session-context-policy
            'policy/build-context
@@ -91,6 +106,20 @@
            'session/build
            '(channel/build-root)
            '(session/root)))
+         (build-root-communication
+          (poo-flow-session-communication-receipt
+           'project/agent-param
+           'child-parent
+           'session/root
+           'session/root
+           'session/build
+           'session/root
+           'agent/build
+           'agent/root
+           'channel/build-root
+           'result
+           '((summary . "build result ready"))
+           'receipt-only))
          (sharing-policy
           (poo-flow-session-resource-sharing-policy
            'policy/build-sharing
@@ -129,6 +158,8 @@
      'session/build
      model-policy
      prompt-policy
+     isolation-policy
+     sandbox-policy
      context-policy
      history-policy
      communication-policy
@@ -155,7 +186,10 @@
        'read-workspace-file
        'read
        'project-workspace
-       'hook/pre-check)))))
+       'hook/pre-check))
+     (list
+      (cons 'communication-receipts
+            (list build-root-communication))))))
 
 ;; : TestSuite
 (def session-agent-param-contract-test
@@ -195,12 +229,25 @@
          #t)
         (check-equal? (.ref contract 'agent-system-session-ref)
                       'session/build-system)
+        (check-equal? (test-ref row 'effective-isolation-mode)
+                      'child-isolated)
+        (check-equal? (test-ref row 'effective-sandbox-profile-ref)
+                      'agent/nono)
         (check-equal? (.ref contract 'tool-refs)
                       '(read-workspace-file run-build-command))
         (check-equal? (.ref contract 'memory-refs)
                       '(memory/build))
         (check-equal? (.ref contract 'durable-policy-ref)
                       'durable/build)
+        (check-equal?
+         (length (test-ref row 'allowed-communication-receipts))
+         1)
+        (check-equal?
+         (test-ref (car (test-ref row 'allowed-communication-receipts))
+                   'target-session-id)
+         'session/root)
+        (check-equal? (test-ref row 'denied-communication-receipts)
+                      '())
         (check-equal? (.ref contract 'runtime-executed) #f)
         (check-equal? (test-ref row 'validation-id)
                       'validation/build-agent-param)

@@ -11,6 +11,7 @@
                  agent-sandbox-profile-resource-policy-filesystem-entry?
                  agent-sandbox-profile-resource-policy-filesystem-diagnostics)
         :poo-flow/src/modules/sandbox-core/resource-contract
+        :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/prototype)
 
 (export poo-flow-sandbox-profile-object-row-slot
@@ -73,11 +74,11 @@
 ;;; remains the hard gate before merge planning.
 ;; : (-> Symbol SandboxProfileForm Alist ValidationError)
 (def (poo-flow-sandbox-profile-object-authoring-diagnostic code row payload)
-  (append
-   (list (cons 'field 'profile-row)
-         (cons 'code code)
-         (cons 'row row))
-   payload))
+  (poo-flow-sandbox-profile-field-rows/tail
+   payload
+   (field 'profile-row)
+   (code code)
+   (row row)))
 
 ;;; Boundary: sandbox profile object row contains symbol predicate is the
 ;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
@@ -127,37 +128,41 @@
          (operator (and (pair? row)
                         (poo-flow-sandbox-profile-object-row-operator row)))
          (value (poo-flow-sandbox-profile-object-row-value/default row)))
-    (append
+    (poo-flow-sandbox-profile-rows/tail
      (if operator
        (list
         (poo-flow-sandbox-profile-object-authoring-diagnostic
          'advanced-row-operator
          row
-         (list (cons 'slot slot)
-               (cons 'operator operator)
-               (cons 'recommendation 'named-prototype-extension))))
+         (poo-flow-sandbox-profile-field-rows
+          (slot slot)
+          (operator operator)
+          (recommendation 'named-prototype-extension))))
        '())
-     (if (or (poo-flow-sandbox-profile-object-row-contains-symbol? row
-                                                                   ':compute)
-             (poo-flow-sandbox-profile-object-row-contains-symbol? row
-                                                                   '$computed-slot-spec)
-             (poo-flow-sandbox-profile-object-row-contains-symbol? row
-                                                                   'lambda))
-       (list
-        (poo-flow-sandbox-profile-object-authoring-diagnostic
-         'raw-compute-hook
-         row
-         (list (cons 'slot slot)
-               (cons 'recommendation 'poo-slot-operator-or-helper))))
-       '())
-     (if (poo-flow-sandbox-profile-object-runtime-executed-true? value)
-       (list
-        (poo-flow-sandbox-profile-object-authoring-diagnostic
-         'runtime-executed-marker
-         row
-         (list (cons 'slot slot)
-               (cons 'expected '#f))))
-       '()))))
+     (poo-flow-sandbox-profile-rows/tail
+      (if (or (poo-flow-sandbox-profile-object-row-contains-symbol? row
+                                                                    ':compute)
+              (poo-flow-sandbox-profile-object-row-contains-symbol? row
+                                                                    '$computed-slot-spec)
+              (poo-flow-sandbox-profile-object-row-contains-symbol? row
+                                                                    'lambda))
+        (list
+         (poo-flow-sandbox-profile-object-authoring-diagnostic
+          'raw-compute-hook
+          row
+          (poo-flow-sandbox-profile-field-rows
+           (slot slot)
+           (recommendation 'poo-slot-operator-or-helper))))
+        '())
+      (if (poo-flow-sandbox-profile-object-runtime-executed-true? value)
+        (list
+         (poo-flow-sandbox-profile-object-authoring-diagnostic
+          'runtime-executed-marker
+          row
+          (poo-flow-sandbox-profile-field-rows
+           (slot slot)
+           (expected '#f))))
+        '())))))
 
 ;;; Boundary: sandbox profile object authoring diagnostics is the policy-
 ;;; visible edge for sandbox, core behavior, keeping validation, lookup, or
@@ -169,7 +174,7 @@
    ((null? forms) '())
    ((not (pair? forms)) '())
    (else
-    (append
+    (poo-flow-sandbox-profile-rows/tail
      (poo-flow-sandbox-profile-object-row-authoring-diagnostics
       profile-object
       (car forms))

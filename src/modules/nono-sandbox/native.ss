@@ -31,6 +31,24 @@
 ;; : Integer
 (def +nono-c-binding-native-apply-null-error-code+ -12)
 
+(defrules nono-c-binding-native-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (-> List List List)
+(def (nono-c-binding-native-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
 ;;; Boundary: nono c binding native library candidates is the policy-visible
 ;;; edge for sandbox behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
@@ -61,18 +79,20 @@
 (def (nono-c-binding-native-open library-path)
   (let ((status (nono_native_open library-path))
         (error (nono_native_last_error)))
-    (list (cons 'ok? (zero? status))
-          (cons 'status status)
-          (cons 'library-path library-path)
-          (cons 'loaded? (= (nono_native_is_loaded) 1))
-          (cons 'error error))))
+    (nono-c-binding-native-field-rows
+     (ok? (zero? status))
+     (status status)
+     (library-path library-path)
+     (loaded? (= (nono_native_is_loaded) 1))
+     (error error))))
 
 ;; : (-> Unit Alist)
 (def (nono-c-binding-native-close)
   (let (status (nono_native_close))
-    (list (cons 'ok? (zero? status))
-          (cons 'status status)
-          (cons 'loaded? (= (nono_native_is_loaded) 1)))))
+    (nono-c-binding-native-field-rows
+     (ok? (zero? status))
+     (status status)
+     (loaded? (= (nono_native_is_loaded) 1)))))
 
 ;;; Boundary: nono c binding selection binding is the policy-visible edge for
 ;;; sandbox behavior, keeping validation, lookup, or projection
@@ -101,26 +121,27 @@
 (def (nono-c-binding-selection-unsupported-receipt selection
                                                    binding
                                                    runtime-manifest)
-  (append
+  (nono-c-binding-native-rows/tail
    (nono-c-binding-selection-receipt-prefix selection binding)
-   (list (cons 'schema +nono-c-binding-selection-live-test-receipt-schema+)
-         (cons 'ok? #f)
-         (cons 'enabled? #f)
-         (cons 'skipped? #t)
-         (cons 'skip-reason 'unsupported-nono-binding)
-         (cons 'native-executed #f)
-         (cons 'cli-executed #f)
-         (cons 'runtime-executed #f)
-         (cons 'would-apply? #f)
-         (cons 'irreversible-apply? #f)
-         (cons 'dry-run (nono-c-binding-dry-run runtime-manifest)))))
+   (nono-c-binding-native-field-rows
+    (schema +nono-c-binding-selection-live-test-receipt-schema+)
+    (ok? #f)
+    (enabled? #f)
+    (skipped? #t)
+    (skip-reason 'unsupported-nono-binding)
+    (native-executed #f)
+    (cli-executed #f)
+    (runtime-executed #f)
+    (would-apply? #f)
+    (irreversible-apply? #f)
+    (dry-run (nono-c-binding-dry-run runtime-manifest)))))
 
 ;; : (-> PooUserModuleSelection RuntimeManifest [AlistOrCommand] Alist)
 (def (nono-c-binding-selection-live-test selection runtime-manifest . maybe-options)
   (let (binding (nono-c-binding-selection-binding selection))
     (cond
      ((eq? binding 'native-ffi)
-      (append
+      (nono-c-binding-native-rows/tail
        (nono-c-binding-selection-receipt-prefix selection binding)
        (apply nono-c-binding-native-live-test
               runtime-manifest
@@ -128,12 +149,14 @@
      ((eq? binding 'cli)
       (let (receipt
             (apply nono-c-binding-live-test runtime-manifest maybe-options))
-        (append
+        (nono-c-binding-native-rows/tail
          (nono-c-binding-selection-receipt-prefix selection binding)
-         (list (cons 'cli-executed
-                     (agent-sandbox-alist-ref receipt 'live-executed #f))
-               (cons 'native-executed #f))
-         receipt)))
+         (nono-c-binding-native-rows/tail
+          (nono-c-binding-native-field-rows
+           (cli-executed
+            (agent-sandbox-alist-ref receipt 'live-executed #f))
+           (native-executed #f))
+          receipt))))
      (else
       (nono-c-binding-selection-unsupported-receipt
        selection

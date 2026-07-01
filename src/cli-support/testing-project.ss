@@ -36,6 +36,7 @@
          ["scenario-tool-core" "t/user-interface-custom-tool-core-test.ss"]
          ["scenario-memory-core" "t/user-interface-custom-memory-core-test.ss"]
          ["scenario-durable-recovery" "t/user-interface-custom-durable-recovery-test.ss"]
+         ["scenario-user-interface-sandbox-config" "t/user-interface-sandbox-config-performance-test.ss"]
          ["scenario-user-interface-custom-scenario-batch" "t/user-interface-custom-scenario-batch-performance-test.ss"]
          ["integration" "t/integration-tests.ss"]
          ["performance" "t/performance-tests.ss"]])

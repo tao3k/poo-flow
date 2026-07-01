@@ -129,13 +129,22 @@
     default-value))
 
 ;;; Boundary: alist projection happens only at activation/config edges.
+;; : (-> POOConfigRecord [Symbol] ModuleOptionAlist ModuleOptionAlist)
+(def (poo-flow-module-object->alist/rev object slot-names rows-rev)
+  (if (null? slot-names)
+    rows-rev
+    (poo-flow-module-object->alist/rev
+     object
+     (cdr slot-names)
+     (cons (cons (car slot-names) (.ref object (car slot-names)))
+           rows-rev))))
+
 ;; : (-> POOConfigRecordOrAlist ModuleOptionAlist)
 (def (poo-flow-module-object->alist value)
   (cond
    ((object? value)
-    (map (lambda (slot-name)
-           (cons slot-name (.ref value slot-name)))
-         (.all-slots value)))
+    (reverse
+     (poo-flow-module-object->alist/rev value (.all-slots value) '())))
    ((list? value) value)
    (else '())))
 

@@ -3,44 +3,52 @@
 ;;; Invariant: selector declarations stay pending receipts; Marlin owns model
 ;;; scoring, workflow dispatch, and selected-result materialization.
 
-(let* ((build-candidate
-        (poo-flow-session-selector-candidate
-         'candidate/build
-         'transform
-         'transform/build-agent
-         "Run the build sub-agent transform."
-         '(derived-session handoff-intent)
-         '((source . user-interface)
-           (case . session-selector))))
-       (audit-candidate
-        (poo-flow-session-selector-candidate
-         'candidate/audit
-         'workflow
-         'workflow/audit-build
-         "Audit build output and diagnostics."
-         '(runtime-handoff diagnostics)
-         '((source . user-interface)
-           (case . session-selector))))
-       (governor-candidate
-        (poo-flow-session-selector-candidate
-         'candidate/governor
-         'agent-param
-         'agent-param/custom-build
-         "Ask the policy governor to decide whether the branch is safe."
-         '(validation-valid? validation-diagnostic-count)
-         '((source . user-interface)
-           (case . session-selector))))
-       (selector-receipt
-        (poo-flow-session-selector-receipt
-         'selector/custom-router
-         'custom/project
-         'custom/root-session
-         'custom/root-session
-         (list build-candidate audit-candidate governor-candidate)
-         '((strategy . llm-router)
-           (judge-inputs . (parent-summary last-failure build-report))
-           (result-contract . workflow-or-transform-ref))
-         'empty-workflow
-         '((source . user-interface)
-           (case . session-selector)))))
-  (poo-flow-session-selector-receipt->alist selector-receipt))
+(use-module session-core
+  :config
+  (session-case custom-session-selector-case
+    (metadata (source . user-interface)
+              (case . session-selector))
+    (objects
+     (build-candidate
+      (session-selector-candidate candidate/build
+        (kind transform)
+        (target transform/build-agent)
+        (description "Run the build sub-agent transform.")
+        (requires derived-session handoff-intent)
+        (metadata (source . user-interface)
+                  (case . session-selector))))
+     (audit-candidate
+      (session-selector-candidate candidate/audit
+        (kind workflow)
+        (target workflow/audit-build)
+        (description "Audit build output and diagnostics.")
+        (requires runtime-handoff diagnostics)
+        (metadata (source . user-interface)
+                  (case . session-selector))))
+     (governor-candidate
+      (session-selector-candidate candidate/governor
+        (kind agent-param)
+        (target agent-param/custom-build)
+        (description
+         "Ask the policy governor to decide whether the branch is safe.")
+        (requires validation-valid? validation-diagnostic-count)
+        (metadata (source . user-interface)
+                  (case . session-selector))))
+     (selector-receipt
+      (session-selector selector/custom-router
+        (project custom/project)
+        (root custom/root-session)
+        (input custom/root-session)
+        (candidates build-candidate audit-candidate governor-candidate)
+        (policy
+         (strategy . llm-router)
+         (judge-inputs . (parent-summary last-failure build-report))
+         (workflow-target-refs . (workflow/audit-build))
+         (transform-target-refs . (transform/build-agent))
+         (agent-param-target-refs . (agent-param/custom-build))
+         (external-fallback-refs . (empty-workflow))
+         (result-contract . workflow-or-transform-ref))
+        (fallback empty-workflow)
+        (metadata (source . user-interface)
+                  (case . session-selector)))))
+    (rows (session-selector-row selector-receipt))))

@@ -2,6 +2,8 @@
 ;;; Boundary: receipts record observed execution outcomes.
 ;;; Invariant: retry, scheduling, and adapter policy remain outside receipts.
 
+(import :poo-flow/src/core/projection-syntax)
+
 (export make-receipt
         receipt?
         receipt-flow
@@ -72,19 +74,25 @@
 ;;; A run summary keeps root status and aggregate counts next to the event log.
 ;;; This is the durable handoff shape for Rust or external storage layers that
 ;;; want audit evidence before they implement full replay execution.
+;; : (-> Receipt [AuditEvent] Nat Nat RunSummary)
+(defpoo-core-receipt-projection
+  receipt-run-summary (receipt events event-count adapter-request-count)
+  (bindings ())
+  (fields ((flow (receipt-flow receipt))
+           (kind (receipt-kind receipt))
+           (status (receipt-status receipt))
+           (strategy (receipt-strategy receipt))
+           (policy (receipt-policy receipt))
+           (frontier (receipt-frontier receipt))
+           (event-count event-count)
+           (adapter-request-count adapter-request-count)
+           (events events))))
+
 ;; : (-> Receipt RunSummary)
 (def (receipt->run-summary receipt)
   (let-values (((events event-count adapter-request-count)
                 (receipt-audit-summary receipt)))
-    (list (cons 'flow (receipt-flow receipt))
-          (cons 'kind (receipt-kind receipt))
-          (cons 'status (receipt-status receipt))
-          (cons 'strategy (receipt-strategy receipt))
-          (cons 'policy (receipt-policy receipt))
-          (cons 'frontier (receipt-frontier receipt))
-          (cons 'event-count event-count)
-          (cons 'adapter-request-count adapter-request-count)
-          (cons 'events events))))
+    (receipt-run-summary receipt events event-count adapter-request-count)))
 
 ;;; Event count is tree cardinality, not step count; the root receipt is counted
 ;;; because it carries run-level frontier and status evidence.
@@ -110,25 +118,41 @@
 ;;; Audit events are intentionally small alists: they describe control-plane
 ;;; decisions, not application payloads.
 ;; : (-> Receipt [Nat] AuditEvent)
-(def (receipt->audit-event receipt path)
-  (list (cons 'path path)
-        (cons 'flow (receipt-flow receipt))
-        (cons 'task (receipt-task receipt))
-        (cons 'kind (receipt-kind receipt))
-        (cons 'node-id (receipt-node-id receipt))
-        (cons 'strategy (receipt-strategy receipt))
-        (cons 'policy (receipt-policy receipt))
-        (cons 'adapter-decision (receipt-adapter-decision receipt))
-        (cons 'request-id (receipt-request-id receipt))
-        (cons 'cache (receipt-cache receipt))
-        (cons 'frontier (receipt-frontier receipt))
-        (cons 'status (receipt-status receipt))
-        (cons 'error (receipt-error receipt))
-        (cons 'child-count (length (receipt-children receipt)))))
+(defpoo-core-receipt-projection
+  receipt->audit-event (receipt path)
+  (bindings ())
+  (fields ((path path)
+           (flow (receipt-flow receipt))
+           (task (receipt-task receipt))
+           (kind (receipt-kind receipt))
+           (node-id (receipt-node-id receipt))
+           (strategy (receipt-strategy receipt))
+           (policy (receipt-policy receipt))
+           (adapter-decision (receipt-adapter-decision receipt))
+           (request-id (receipt-request-id receipt))
+           (cache (receipt-cache receipt))
+           (frontier (receipt-frontier receipt))
+           (status (receipt-status receipt))
+           (error (receipt-error receipt))
+           (child-count (length (receipt-children receipt))))))
 
 ;;; Intent: recursively collect child event streams in child ordinal order.
 ;;; The ordinal path is the replay cursor; it remains stable even if task names
 ;;; repeat inside nested flows.
+;; : (forall (a) (-> [a] [a] [a]))
+(def (receipt-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;; : (-> Receipt (Values [AuditEvent] Nat Nat))
 (def (receipt-audit-summary receipt)
   (let-values (((events event-count adapter-request-count)
@@ -153,7 +177,7 @@
     (let-values (((child-events child-event-count child-adapter-request-count)
                   (receipt-audit-summary-at
                    (car children)
-                   (append parent-path (list ordinal))
+                   (receipt-values/tail parent-path (list ordinal))
                    events
                    event-count
                    adapter-request-count)))

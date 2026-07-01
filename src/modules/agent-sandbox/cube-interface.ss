@@ -8,6 +8,7 @@
         :poo-flow/src/core/api
         :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
+        :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/bridge)
 
@@ -104,6 +105,27 @@
 ;; : (-> CubeInterfaceRequiredFieldCandidate Boolean)
 (def (cube-interface-present? value)
   (and value #t))
+
+;; : (-> Symbol Symbol ValidationError)
+(def (cube-interface-validation-error field code)
+  (agent-sandbox-field-rows
+   (field field)
+   (code code)))
+
+;; : (-> Symbol Integer Symbol ValidationError)
+(def (cube-interface-indexed-validation-error field index code)
+  (agent-sandbox-field-rows
+   (field field)
+   (index index)
+   (code code)))
+
+;; : (-> Symbol Integer Value Symbol ValidationError)
+(def (cube-interface-indexed-value-validation-error field index value code)
+  (agent-sandbox-field-rows
+   (field field)
+   (index index)
+   (value value)
+   (code code)))
 
 ;;; Cube interface descriptors are backend-specific and must not validate for
 ;;; non-Cube profile descriptors.
@@ -224,21 +246,22 @@
 ;; : (-> CubeInterfaceDescriptor Alist)
 (def (cube-interface-descriptor->contract descriptor)
   (let (valid-descriptor (cube-interface-validate-descriptor descriptor))
-    (list (cons 'schema +cube-interface-schema+)
-          (cons 'name (cube-interface-descriptor-name valid-descriptor))
-          (cons 'backend-kind
-                (cube-interface-descriptor-backend-kind valid-descriptor))
-          (cons 'api-compatibility
-                (cube-interface-descriptor-api-compatibility valid-descriptor))
-          (cons 'runtime-owner
-                (cube-interface-descriptor-runtime-owner valid-descriptor))
-          (cons 'lifecycle-operations
-                (cube-interface-descriptor-lifecycle-operations
-                 valid-descriptor))
-          (cons 'network-modes
-                (cube-interface-descriptor-network-modes valid-descriptor))
-          (cons 'mount-modes
-                (cube-interface-descriptor-mount-modes valid-descriptor)))))
+    (agent-sandbox-field-rows
+     (schema +cube-interface-schema+)
+     (name (cube-interface-descriptor-name valid-descriptor))
+     (backend-kind
+      (cube-interface-descriptor-backend-kind valid-descriptor))
+     (api-compatibility
+      (cube-interface-descriptor-api-compatibility valid-descriptor))
+     (runtime-owner
+      (cube-interface-descriptor-runtime-owner valid-descriptor))
+     (lifecycle-operations
+      (cube-interface-descriptor-lifecycle-operations
+       valid-descriptor))
+     (network-modes
+      (cube-interface-descriptor-network-modes valid-descriptor))
+     (mount-modes
+      (cube-interface-descriptor-mount-modes valid-descriptor)))))
 
 ;;; Descriptor validation prevents drift between Cube profile defaults and the
 ;;; backend interface contract consumed by Marlin.
@@ -246,18 +269,19 @@
 (def (cube-interface-descriptor-validation-errors descriptor)
   (if (cube-interface-descriptor? descriptor)
     (agent-sandbox-required-field-errors
-     (list (cons 'schema
-                 (cube-interface-descriptor-slot descriptor 'schema #f))
-           (cons 'name (cube-interface-descriptor-name descriptor))
-           (cons 'backend-kind
-                 (cube-interface-descriptor-backend-kind descriptor))
-           (cons 'api-compatibility
-                 (cube-interface-descriptor-api-compatibility descriptor))
-           (cons 'runtime-owner
-                 (cube-interface-descriptor-runtime-owner descriptor))
-           (cons 'lifecycle-operations
-                 (cube-interface-descriptor-lifecycle-operations
-                  descriptor)))
+     (agent-sandbox-field-rows
+      (schema
+       (cube-interface-descriptor-slot descriptor 'schema #f))
+      (name (cube-interface-descriptor-name descriptor))
+      (backend-kind
+       (cube-interface-descriptor-backend-kind descriptor))
+      (api-compatibility
+       (cube-interface-descriptor-api-compatibility descriptor))
+      (runtime-owner
+       (cube-interface-descriptor-runtime-owner descriptor))
+      (lifecycle-operations
+       (cube-interface-descriptor-lifecycle-operations
+        descriptor)))
      (list (cons 'schema
                  cube-interface-schema?)
            (cons 'name cube-interface-present?)
@@ -266,7 +290,7 @@
            (cons 'runtime-owner cube-interface-runtime-owner?)
            (cons 'lifecycle-operations
                  cube-interface-lifecycle-operations?)))
-    (list '((field . descriptor) (code . not-poo-object)))))
+    (list (cube-interface-validation-error 'descriptor 'not-poo-object))))
 
 ;;; Descriptor failures use typed control-plane errors so callers can recover by
 ;;; code and keep Cube API details out of Scheme exception strings.
@@ -279,7 +303,8 @@
        'agent-sandbox-cube
        'invalid-cube-interface-descriptor
        "invalid CubeSandbox interface descriptor"
-       (list (cons 'errors errors))))))
+       (agent-sandbox-field-rows
+        (errors errors))))))
 
 ;;; Mount validation records indices so Marlin-facing failures identify exactly
 ;;; which remote workspace grant cannot be projected.
@@ -288,36 +313,53 @@
   (if (list? mount)
     (let* ((path (agent-sandbox-alist-ref mount 'path #f))
            (mode (agent-sandbox-alist-ref mount 'mode #f)))
-      (append
-       (if (string? path)
-         '()
-         (list (list (cons 'field 'mount-path)
-                     (cons 'index index)
-                     (cons 'code 'missing-or-invalid-path))))
-       (if (cube-interface-member?
-            mode
-            (cube-interface-descriptor-mount-modes descriptor))
-         '()
-         (list (list (cons 'field 'mount-mode)
-                     (cons 'index index)
-                     (cons 'value mode)
-                     (cons 'code 'unsupported-mount-mode)))))) 
-    (list (list (cons 'field 'mount)
-                (cons 'index index)
-                (cons 'code 'not-alist)))))
+      (let* ((errors-rev
+              (if (string? path)
+                '()
+                (list (cube-interface-indexed-validation-error
+                       'mount-path
+                       index
+                       'missing-or-invalid-path))))
+             (errors-rev
+              (if (cube-interface-member?
+                   mode
+                   (cube-interface-descriptor-mount-modes descriptor))
+                errors-rev
+                (cons (cube-interface-indexed-value-validation-error
+                       'mount-mode
+                       index
+                       mode
+                       'unsupported-mount-mode)
+                      errors-rev))))
+        (reverse errors-rev)))
+    (list (cube-interface-indexed-validation-error 'mount index 'not-alist))))
 
 ;;; Recursive mount validation keeps the original grant order because the
 ;;; lifecycle plan will preserve one remote mount operation per request mount.
 ;; : (-> [Mount] Integer CubeInterfaceDescriptor [ValidationError])
-(def (cube-interface-mounts-validation-errors mounts index descriptor)
+(def (cube-interface-mounts-validation-errors/rev mounts
+                                                  index
+                                                  descriptor
+                                                  errors-rev)
   (if (null? mounts)
-    '()
-    (append (cube-interface-mount-validation-errors (car mounts)
-                                                    index
-                                                    descriptor)
-            (cube-interface-mounts-validation-errors (cdr mounts)
-                                                     (+ index 1)
-                                                     descriptor))))
+    errors-rev
+    (cube-interface-mounts-validation-errors/rev
+     (cdr mounts)
+     (+ index 1)
+     descriptor
+     (agent-sandbox-rows-into/rev
+      (cube-interface-mount-validation-errors (car mounts)
+                                              index
+                                              descriptor)
+      errors-rev))))
+
+;; : (-> [Mount] Integer CubeInterfaceDescriptor [ValidationError])
+(def (cube-interface-mounts-validation-errors mounts index descriptor)
+  (reverse
+   (cube-interface-mounts-validation-errors/rev mounts
+                                                index
+                                                descriptor
+                                                '())))
 
 ;;; Network validation is Cube-specific: the neutral bridge does not know which
 ;;; provider modes Marlin can map into remote sandbox networking.
@@ -328,9 +370,10 @@
          mode
          (cube-interface-descriptor-network-modes descriptor))
       '()
-      (list (list (cons 'field 'network-mode)
-                  (cons 'value mode)
-                  (cons 'code 'unsupported-network-mode))))))
+      (list (agent-sandbox-field-rows
+             (field 'network-mode)
+             (value mode)
+             (code 'unsupported-network-mode))))))
 
 ;;; Runtime manifest validation is the backend gate before Marlin receives a
 ;;; Cube lifecycle manifest. It rejects non-Cube backends and unsupported policy.
@@ -344,24 +387,39 @@
            (mounts (agent-sandbox-alist-ref filesystem 'mounts '()))
            (network-policy
             (agent-sandbox-alist-ref runtime-manifest 'network-policy '())))
-      (append
-       (agent-sandbox-required-field-errors
-        runtime-manifest
-        (list (cons 'schema
-                    cube-interface-runtime-schema?)))
-       (agent-sandbox-required-field-errors
-        backend
-        (list (cons 'kind cube-interface-runtime-backend?)
-              (cons 'ref cube-interface-runtime-ref?)))
-       (agent-sandbox-required-field-errors
-        process
-        (list (cons 'command cube-interface-runtime-command?)
-              (cons 'argv list?)))
-       (if (list? mounts)
-         (cube-interface-mounts-validation-errors mounts 0 descriptor)
-         (list '((field . mounts) (code . not-list))))
-       (cube-interface-network-validation-errors network-policy descriptor)))
-    (list '((field . runtime-manifest) (code . not-alist)))))
+      (let* ((errors-rev
+              (agent-sandbox-rows-into/rev
+               (agent-sandbox-required-field-errors
+                runtime-manifest
+                (list (cons 'schema
+                            cube-interface-runtime-schema?)))
+               '()))
+             (errors-rev
+              (agent-sandbox-rows-into/rev
+               (agent-sandbox-required-field-errors
+                backend
+                (list (cons 'kind cube-interface-runtime-backend?)
+                      (cons 'ref cube-interface-runtime-ref?)))
+               errors-rev))
+             (errors-rev
+              (agent-sandbox-rows-into/rev
+               (agent-sandbox-required-field-errors
+                process
+                (list (cons 'command cube-interface-runtime-command?)
+                      (cons 'argv list?)))
+               errors-rev))
+             (errors-rev
+              (agent-sandbox-rows-into/rev
+               (if (list? mounts)
+                 (cube-interface-mounts-validation-errors mounts 0 descriptor)
+                 (list (cube-interface-validation-error 'mounts 'not-list)))
+               errors-rev))
+             (errors-rev
+              (agent-sandbox-rows-into/rev
+               (cube-interface-network-validation-errors network-policy descriptor)
+               errors-rev)))
+        (reverse errors-rev)))
+    (list (cube-interface-validation-error 'runtime-manifest 'not-alist))))
 
 ;;; Validation preserves the original manifest in failure details so bridge
 ;;; tests and Marlin adapters can inspect the rejected policy.
@@ -382,56 +440,57 @@
        'agent-sandbox-cube
        'invalid-cube-interface-manifest
        "invalid CubeSandbox interface manifest"
-       (list (cons 'errors errors)
-             (cons 'runtime-manifest runtime-manifest))))))
+       (agent-sandbox-field-rows
+        (errors errors)
+        (runtime-manifest runtime-manifest))))))
 
 ;; : (-> RuntimeManifest CubeInterfaceDescriptor Alist)
 (def (cube-interface-template runtime-manifest descriptor)
   (let (backend (agent-sandbox-alist-ref runtime-manifest 'backend '()))
-    (list (cons 'ref (agent-sandbox-alist-ref backend 'ref #f))
-          (cons 'api-compatibility
-                (cube-interface-descriptor-api-compatibility descriptor)))))
+    (agent-sandbox-field-rows
+     (ref (agent-sandbox-alist-ref backend 'ref #f))
+     (api-compatibility
+      (cube-interface-descriptor-api-compatibility descriptor)))))
 
 ;; : (-> RuntimeManifest Alist)
 (def (cube-interface-snapshot-policy runtime-manifest)
   (let (resource-policy
         (agent-sandbox-alist-ref runtime-manifest 'resource-policy '()))
-    (list (cons 'snapshot
-                (agent-sandbox-alist-ref resource-policy 'snapshot #f))
-          (cons 'resume
-                (agent-sandbox-alist-ref resource-policy 'resume #f)))))
+    (agent-sandbox-field-rows
+     (snapshot
+      (agent-sandbox-alist-ref resource-policy 'snapshot #f))
+     (resume
+      (agent-sandbox-alist-ref resource-policy 'resume #f)))))
 
 ;; : (-> LifecycleOperation RuntimeManifest CubeInterfaceDescriptor Alist)
 (def (cube-interface-lifecycle-step operation runtime-manifest descriptor)
   (let ((stage (agent-sandbox-alist-ref operation 'stage #f))
         (resource-policy
          (agent-sandbox-alist-ref runtime-manifest 'resource-policy '())))
-    (append operation
-            (cond
-             ((eq? stage 'resolve-template)
-              (list (cons 'template
-                          (cube-interface-template runtime-manifest descriptor))))
-             ((eq? stage 'exec-process)
-              (list (cons 'process
-                          (agent-sandbox-alist-ref runtime-manifest
-                                                   'process
-                                                   '()))))
-             ((eq? stage 'mount-filesystem)
-              (list (cons 'filesystem
-                          (agent-sandbox-alist-ref runtime-manifest
-                                                   'filesystem
-                                                   '()))))
-             ((eq? stage 'snapshot)
-              (list (cons 'policy
-                          (agent-sandbox-alist-ref resource-policy
-                                                   'snapshot
-                                                   #f))))
-             ((eq? stage 'resume)
-              (list (cons 'policy
-                          (agent-sandbox-alist-ref resource-policy
-                                                   'resume
-                                                   #f))))
-             (else '())))))
+    (agent-sandbox-rows/tail
+     operation
+     (cond
+      ((eq? stage 'resolve-template)
+       (agent-sandbox-field-rows
+        (template
+         (cube-interface-template runtime-manifest descriptor))))
+      ((eq? stage 'exec-process)
+       (agent-sandbox-field-rows
+        (process
+         (agent-sandbox-alist-ref runtime-manifest 'process '()))))
+      ((eq? stage 'mount-filesystem)
+       (agent-sandbox-field-rows
+        (filesystem
+         (agent-sandbox-alist-ref runtime-manifest 'filesystem '()))))
+      ((eq? stage 'snapshot)
+       (agent-sandbox-field-rows
+        (policy
+         (agent-sandbox-alist-ref resource-policy 'snapshot #f))))
+      ((eq? stage 'resume)
+       (agent-sandbox-field-rows
+        (policy
+         (agent-sandbox-alist-ref resource-policy 'resume #f))))
+      (else '())))))
 
 ;; : (-> RuntimeManifest CubeInterfaceDescriptor Procedure)
 (def (cube-interface-lifecycle-step-mapper runtime-manifest descriptor)
@@ -463,29 +522,30 @@
          (filesystem (agent-sandbox-alist-ref valid-manifest 'filesystem '()))
          (network-policy
           (agent-sandbox-alist-ref valid-manifest 'network-policy '())))
-    (list (cons 'schema +cube-interface-schema+)
-          (cons 'interface
-                (cube-interface-descriptor->contract descriptor))
-          (cons 'runtime-schema
-                (agent-sandbox-alist-ref valid-manifest 'schema #f))
-          (cons 'backend backend)
-          (cons 'template
-                (cube-interface-template valid-manifest descriptor))
-          (cons 'process process)
-          (cons 'filesystem filesystem)
-          (cons 'network-policy network-policy)
-          (cons 'capabilities
-                (agent-sandbox-alist-ref valid-manifest 'capabilities '()))
-          (cons 'resource-policy
-                (agent-sandbox-alist-ref valid-manifest 'resource-policy '()))
-          (cons 'snapshot-policy
-                (cube-interface-snapshot-policy valid-manifest))
-          (cons 'lifecycle-plan
-                (cube-interface-lifecycle-plan valid-manifest descriptor))
-          (cons 'output-policy
-                (agent-sandbox-alist-ref valid-manifest 'output-policy #f))
-          (cons 'metadata
-                (agent-sandbox-alist-ref valid-manifest 'metadata '())))))
+    (agent-sandbox-field-rows
+     (schema +cube-interface-schema+)
+     (interface
+      (cube-interface-descriptor->contract descriptor))
+     (runtime-schema
+      (agent-sandbox-alist-ref valid-manifest 'schema #f))
+     (backend backend)
+     (template
+      (cube-interface-template valid-manifest descriptor))
+     (process process)
+     (filesystem filesystem)
+     (network-policy network-policy)
+     (capabilities
+      (agent-sandbox-alist-ref valid-manifest 'capabilities '()))
+     (resource-policy
+      (agent-sandbox-alist-ref valid-manifest 'resource-policy '()))
+     (snapshot-policy
+      (cube-interface-snapshot-policy valid-manifest))
+     (lifecycle-plan
+      (cube-interface-lifecycle-plan valid-manifest descriptor))
+     (output-policy
+      (agent-sandbox-alist-ref valid-manifest 'output-policy #f))
+     (metadata
+      (agent-sandbox-alist-ref valid-manifest 'metadata '())))))
 
 ;;; Request projection lets Scheme callers ask for a Cube interface manifest
 ;;; without constructing a runtime envelope first.

@@ -11,6 +11,8 @@
 (export (import: :poo-flow/src/modules/tool-core/objects)
         tool-spec
         tool-catalog
+        tool-catalog-validation
+        tool-catalog-validation-row
         poo-flow-tool-core-poo-spec?
         poo-flow-tool-core-poo-catalog?
         poo-flow-tool-core-poo-spec->tool-spec
@@ -44,6 +46,33 @@
           (metadata '())
           (runtime-owner "marlin-agent-core")
           (runtime-executed #f))))
+
+;; tool-catalog-validation
+;;   : (-> Syntax PooToolPolicyCatalogValidationReceipt)
+;;   | doc m%
+;;       Validation belongs to tool-core's user facade: users pass a concrete
+;;       catalog plus effective session tool policies and receive a report-only
+;;       receipt. Scheme never dispatches the tool.
+;;     %
+(defrules tool-catalog-validation (metadata)
+  ((_ validation-id catalog agent-tool-policy hook-tool-policy
+      (metadata metadata-entry ...))
+   (poo-flow-tool-policy-catalog-validation-receipt
+    'validation-id
+    catalog
+    agent-tool-policy
+    hook-tool-policy
+    '(metadata-entry ...)))
+  ((_ validation-id catalog agent-tool-policy hook-tool-policy)
+   (poo-flow-tool-policy-catalog-validation-receipt
+    'validation-id
+    catalog
+    agent-tool-policy
+    hook-tool-policy)))
+
+;; : (-> PooToolPolicyCatalogValidationReceipt Alist)
+(def (tool-catalog-validation-row receipt)
+  (poo-flow-tool-policy-catalog-validation-receipt->alist receipt))
 
 ;; : (-> POOObject Boolean)
 (defpoo-module-config-kind-predicate
@@ -97,17 +126,31 @@
 (def (poo-flow-tool-core-poo-config-catalogs prototypes)
   (filter poo-flow-tool-core-poo-catalog? prototypes))
 
+;; : (-> PooToolSpec Alist)
+(def (poo-flow-tool-core-catalog-manifest spec)
+  (poo-flow-tool-handoff-manifest->alist
+   (poo-flow-tool-handoff-manifest
+    (string->symbol
+     (string-append
+      "tool/request/"
+      (symbol->string (poo-flow-tool-spec-ref spec))))
+    spec)))
+
+;; : (-> [PooToolSpec] [Alist] [Alist])
+(def (poo-flow-tool-core-catalog-manifests/rev specs manifests-rev)
+  (if (null? specs)
+    manifests-rev
+    (poo-flow-tool-core-catalog-manifests/rev
+     (cdr specs)
+     (cons (poo-flow-tool-core-catalog-manifest (car specs))
+           manifests-rev))))
+
 ;; : (-> PooToolCatalog [Alist])
 (def (poo-flow-tool-core-catalog-manifests catalog)
-  (map (lambda (spec)
-         (poo-flow-tool-handoff-manifest->alist
-          (poo-flow-tool-handoff-manifest
-           (string->symbol
-            (string-append
-             "tool/request/"
-             (symbol->string (poo-flow-tool-spec-ref spec))))
-           spec)))
-       (.ref catalog 'tools)))
+  (reverse
+   (poo-flow-tool-core-catalog-manifests/rev
+    (.ref catalog 'tools)
+    '())))
 
 ;; : (-> [POOObject] Alist [UserModuleFlagEntry])
 (def (poo-flow-tool-core-poo-config-flags prototypes user-config)

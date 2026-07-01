@@ -3,6 +3,7 @@
 ;;; Invariant: only pure/scheme tasks carry an in-process executor.
 
 (import (only-in :clan/poo/object .@ object?)
+        :poo-flow/src/core/projection-syntax
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/object-syntax)
@@ -209,6 +210,13 @@
 ;;; Boundary: task family for kind in is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
+;; : (-> TaskFamilyRegistry Symbol Alist)
+(defpoo-core-receipt-projection
+  unknown-task-family-detail (registry kind)
+  (bindings ())
+  (fields ((registry (task-family-registry-name registry))
+           (kind kind))))
+
 ;; : (-> Symbol TaskFamilyDescriptor)
 (def (task-family-for-kind-in registry kind)
   (let ((descriptor (find-task-family kind (task-family-registry-descriptors registry))))
@@ -218,8 +226,7 @@
        'task-registry
        'unknown-task-family
        "unknown task family"
-       (list (cons 'registry (task-family-registry-name registry))
-             (cons 'kind kind))))))
+       (unknown-task-family-detail registry kind)))))
 
 ;; : (-> Symbol TaskFamilyDescriptor)
 (def (task-family-for-kind kind)

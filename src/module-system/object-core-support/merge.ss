@@ -3,7 +3,6 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .o .ref)
-        (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-core-support/contracts)
 
@@ -91,35 +90,57 @@
 
 ;;; Indexed append is the inner hot path: it accumulates unseen values in
 ;;; reverse and performs one ordered append after the scan.
+;; : (-> [PooModuleSlotValue] HashTable [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-config-append-distinct-added/rev extra seen added-rev)
+  (cond
+   ((null? extra) added-rev)
+   ((hash-get seen (car extra))
+    (poo-flow-module-config-append-distinct-added/rev
+     (cdr extra)
+     seen
+     added-rev))
+   (else
+    (hash-put! seen (car extra) #t)
+    (poo-flow-module-config-append-distinct-added/rev
+     (cdr extra)
+     seen
+     (cons (car extra) added-rev)))))
+
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
 (def (poo-flow-module-config-append-distinct/indexed base extra seen)
   (let (added
-        (foldl (lambda (value result)
-                 (if (hash-get seen value)
-                   result
-                   (begin
-                     (hash-put! seen value #t)
-                     (cons value result))))
-               '()
-               extra))
+        (poo-flow-module-config-append-distinct-added/rev extra seen '()))
     (if (null? added)
       base
       (append base (reverse added)))))
 
 ;;; Removal mirrors append by indexing the removal set first, so kept values
 ;;; preserve source order without repeated linear membership scans.
+;; : (-> [PooModuleSlotValue] HashTable [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-config-remove-elements/rev values removed-index kept-rev)
+  (cond
+   ((null? values) kept-rev)
+   ((hash-get removed-index (car values))
+    (poo-flow-module-config-remove-elements/rev
+     (cdr values)
+     removed-index
+     kept-rev))
+   (else
+    (poo-flow-module-config-remove-elements/rev
+     (cdr values)
+     removed-index
+     (cons (car values) kept-rev)))))
+
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-config-remove-elements values removed)
   (if (null? removed)
     values
     (let (removed-index (poo-flow-module-config-value-index removed))
       (reverse
-       (foldl (lambda (value kept)
-                (if (hash-get removed-index value)
-                  kept
-                  (cons value kept)))
-              '()
-              values)))))
+       (poo-flow-module-config-remove-elements/rev
+        values
+        removed-index
+        '())))))
 
 ;;; Slot merge operators accept scalar and list payloads; normalizing here keeps
 ;;; append/prepend/remove semantics identical across user input shapes.
@@ -333,19 +354,28 @@
              (loop (cdr remaining)
                     (cons (car remaining) additions)
                     #t)))))))
+    (def (materialize-existing-slots/rev remaining rows-rev)
+      (if (null? remaining)
+        rows-rev
+        (let (key (car (car remaining)))
+          (materialize-existing-slots/rev
+           (cdr remaining)
+           (cons (if (poo-flow-module-config-slot-key-hash-ref updated key)
+                   (cons key (resolved-slot-update key))
+                   (car remaining))
+                 rows-rev)))))
+    (def (materialize-new-slots/rev keys rows-rev)
+      (if (null? keys)
+        rows-rev
+        (materialize-new-slots/rev
+         (cdr keys)
+         (cons (cons (car keys) (resolved-slot-update (car keys)))
+               rows-rev))))
     (def (materialize-updated-slots new-order)
-      (append
-       (map (lambda (entry)
-              (let (key (car entry))
-                (if (poo-flow-module-config-slot-key-hash-ref
-                     updated
-                     key)
-                  (cons key (resolved-slot-update key))
-                  entry)))
-            slots)
-       (map (lambda (key)
-              (cons key (resolved-slot-update key)))
-            (reverse new-order))))
+      (reverse
+       (materialize-new-slots/rev
+        (reverse new-order)
+        (materialize-existing-slots/rev slots '()))))
     (let init ((remaining slots))
       (cond
        ((null? remaining)

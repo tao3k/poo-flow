@@ -35,43 +35,42 @@
           selection
           ':tool-catalog)))
        (calculator-grant
-        (poo-flow-session-tool-grant
-         'grant/calculator
-         'calculator
-         '(calculate)
-         '(session/input)
-         '(agent-turn)))
+        (session-tool-grant grant/calculator
+          calculator
+          (calculate)
+          (session/input)
+          (agent-turn)
+          ()))
        (calculator-bad-action-grant
-        (poo-flow-session-tool-grant
-         'grant/calculator-delete
-         'calculator
-         '(delete)
-         '(session/input)
-         '(agent-turn)))
+        (session-tool-grant grant/calculator-delete
+          calculator
+          (delete)
+          (session/input)
+          (agent-turn)
+          ()))
        (agent-policy
-        (poo-flow-session-tool-permission-policy
-         'policy/tool-core-custom-agent
-         'custom/session-tool-core
-         (list calculator-grant calculator-bad-action-grant)
-         '(write-workspace-file)
-         'deny))
+        (session-tool-policy policy/tool-core-custom-agent
+          custom/session-tool-core
+          (calculator-grant calculator-bad-action-grant)
+          (write-workspace-file)
+          deny
+          ()))
        (hook-policy
-        (poo-flow-session-hook-tool-permission-policy
-         'policy/tool-core-custom-hook
-         'custom/session-tool-core
-         '(hook/pre-check)
-         (list calculator-grant)
-         'human-approval-on-escalation
-         'deny))
+        (session-hook-tool-policy policy/tool-core-custom-hook
+          custom/session-tool-core
+          (hook/pre-check)
+          (calculator-grant)
+          human-approval-on-escalation
+          deny
+          ()))
        (validation
-        (poo-flow-tool-policy-catalog-validation-receipt
-         'validation/custom-tool-core
-         catalog
-         agent-policy
-         hook-policy
-         '((source . user-interface)
-           (case . tool-core)))))
+        (tool-catalog-validation validation/custom-tool-core
+          catalog
+          agent-policy
+          hook-policy
+          (metadata (source . user-interface)
+                    (case . tool-core)))))
   (list
    (poo-flow-user-module-selection->alist selection)
    (poo-flow-tool-catalog->alist catalog)
-   (poo-flow-tool-policy-catalog-validation-receipt->alist validation)))
+   (tool-catalog-validation-row validation)))

@@ -7,7 +7,6 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :std/srfi/1 filter-map)
         :poo-flow/src/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
@@ -64,7 +63,15 @@
 
 ;; : (-> [Object] [Object])
 (def (diagnostic-codes diagnostics)
-  (filter-map diagnostic-code diagnostics))
+  (let loop ((remaining-diagnostics diagnostics)
+             (codes-rev '()))
+    (if (null? remaining-diagnostics)
+      (reverse codes-rev)
+      (let (code (diagnostic-code (car remaining-diagnostics)))
+        (loop (cdr remaining-diagnostics)
+              (if code
+                (cons code codes-rev)
+                codes-rev))))))
 
 ;; : (-> Object [Object] Boolean)
 (def (diagnostic-member? diagnostic diagnostics)

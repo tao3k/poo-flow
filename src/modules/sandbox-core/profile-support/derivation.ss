@@ -12,6 +12,7 @@
                  agent-sandbox-profile-resource-policy-filesystem-diagnostics)
         :poo-flow/src/modules/sandbox-core/resource-contract
         :poo-flow/src/modules/sandbox-core/profile-support/prototype
+        :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/authoring)
 
 (export poo-flow-sandbox-profile-object-option
@@ -41,14 +42,33 @@
 ;;; Metadata pruning is used only while deriving child profiles. It removes
 ;;; fields that must be recomputed for the child, while leaving unrelated
 ;;; policy annotations untouched.
+;; : (-> Alist [Symbol] Alist Alist)
+(def (poo-flow-sandbox-profile-object-metadata-without/rev metadata
+                                                           keys
+                                                           result-rev)
+  (cond
+   ((null? metadata) result-rev)
+   ((and (pair? (car metadata))
+         (poo-flow-sandbox-profile-object-metadata-key?
+          (caar metadata)
+          keys))
+    (poo-flow-sandbox-profile-object-metadata-without/rev
+     (cdr metadata)
+     keys
+     result-rev))
+   (else
+    (poo-flow-sandbox-profile-object-metadata-without/rev
+     (cdr metadata)
+     keys
+     (cons (car metadata) result-rev)))))
+
 ;; : (-> Alist [Symbol] Alist)
 (def (poo-flow-sandbox-profile-object-metadata-without metadata keys)
-  (filter (lambda (entry)
-            (not (and (pair? entry)
-                      (poo-flow-sandbox-profile-object-metadata-key?
-                       (car entry)
-                       keys))))
-          metadata))
+  (reverse
+   (poo-flow-sandbox-profile-object-metadata-without/rev
+    metadata
+    keys
+    '())))
 
 ;;; Parent profiles that do not carry lineage remain valid roots; they simply
 ;;; start the derivation path at the first child profile.
@@ -65,14 +85,14 @@
                                                       parent-name
                                                       scope
                                                       scope-ref)
-  (append
-   (list (cons 'profile name-value)
-         (cons 'parent-profile parent-name)
-         (cons 'scope scope)
-         (cons 'derived-by 'poo-flow-sandbox-profile-object-derive))
+  (poo-flow-sandbox-profile-field-rows/tail
    (if scope-ref
-     (list (cons 'scope-ref scope-ref))
-     '())))
+     (poo-flow-sandbox-profile-field-rows (scope-ref scope-ref))
+     '())
+   (profile name-value)
+   (parent-profile parent-name)
+   (scope scope)
+   (derived-by 'poo-flow-sandbox-profile-object-derive)))
 
 ;;; Derived metadata replaces lineage/runtime facts while preserving ordinary
 ;;; parent metadata. This keeps inheritance visible without letting stale
@@ -87,7 +107,7 @@
          (scope-ref
           (poo-flow-sandbox-profile-object-option options 'scope-ref #f))
          (lineage
-          (append
+          (poo-flow-sandbox-profile-rows/tail
            (poo-flow-sandbox-profile-object-derivation-path parent-metadata)
            (list
             (poo-flow-sandbox-profile-object-derivation-step
@@ -95,13 +115,14 @@
              (poo-flow-sandbox-profile-name parent-profile)
              scope
              scope-ref)))))
-    (append
+    (poo-flow-sandbox-profile-rows/tail
      (poo-flow-sandbox-profile-object-metadata-without
       parent-metadata
       '(derivation-path runtime-executed))
-     (list (cons 'derivation-path lineage)
-           (cons 'runtime-executed #f))
-     (poo-flow-sandbox-profile-object-option options 'metadata '()))))
+     (poo-flow-sandbox-profile-field-rows/tail
+      (poo-flow-sandbox-profile-object-option options 'metadata '())
+      (derivation-path lineage)
+      (runtime-executed #f)))))
 
 
 ;;; Validation rejects malformed rows before merge planning, keeping bad user
@@ -155,24 +176,25 @@
                 (poo-flow-sandbox-profile-object-row-value row)))
         row
         (error "sandbox profile config row is not in backend profile object"
-               (list (cons 'row row)
-                     (cons 'slot (and field
-                                      (poo-flow-module-field-contract-identity
-                                       field)))
-                     (cons 'value
-                           (poo-flow-sandbox-profile-object-row-value row))
-                     (cons 'accepted?
-                           (and field
-                                (poo-flow-module-field-contract-accepts?
-                                 field
-                                 (poo-flow-sandbox-profile-object-row-value
-                                  row))))
-                     (cons 'safe?
-                           (and field
-                                (poo-flow-sandbox-profile-object-field-value-safe?
-                                 field
-                                 (poo-flow-sandbox-profile-object-row-value
-                                  row)))))))))))
+               (poo-flow-sandbox-profile-field-rows
+                (row row)
+                (slot (and field
+                           (poo-flow-module-field-contract-identity
+                            field)))
+                (value
+                 (poo-flow-sandbox-profile-object-row-value row))
+                (accepted?
+                 (and field
+                      (poo-flow-module-field-contract-accepts?
+                       field
+                       (poo-flow-sandbox-profile-object-row-value
+                        row))))
+                (safe?
+                 (and field
+                      (poo-flow-sandbox-profile-object-field-value-safe?
+                       field
+                       (poo-flow-sandbox-profile-object-row-value
+                        row)))))))))))
 
 ;;; Batch validation preserves the original row list so merge planning can keep
 ;;; user declaration order after all rows have passed the contract gate.

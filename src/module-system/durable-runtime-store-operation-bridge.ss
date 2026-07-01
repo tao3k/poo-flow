@@ -3,7 +3,8 @@
 ;;; Invariant: this is a functional projection layer only; Scheme does not
 ;;; append logs, claim leases, retain artifacts, or attach sandbox handles.
 
-(import :poo-flow/src/module-system/durable-runtime-store-operation)
+(import :poo-flow/src/module-system/durable-runtime-store-operation
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-durable-runtime-store-operations-from-rows
         poo-flow-durable-runtime-store-rows->marlin-handoff)
@@ -14,13 +15,17 @@
       (if entry (cdr entry) default-value))
     default-value))
 
-(def (bridge-symbols value)
+(def (bridge-symbols/rev value symbols-rev)
   (cond
-   ((symbol? value) (list value))
+   ((symbol? value) (cons value symbols-rev))
    ((pair? value)
-    (append (bridge-symbols (car value))
-            (bridge-symbols (cdr value))))
-   (else '())))
+    (bridge-symbols/rev
+     (cdr value)
+     (bridge-symbols/rev (car value) symbols-rev)))
+   (else symbols-rev)))
+
+(def (bridge-symbols value)
+  (reverse (bridge-symbols/rev value '())))
 
 (def (bridge-unique symbols seen)
   (cond
@@ -36,11 +41,12 @@
   (bridge-unique (bridge-symbols value) '()))
 
 (def (bridge-options target-ref causal-refs)
-  (append
-   (if target-ref
-     (list (cons 'target-ref target-ref))
-     '())
-   (list (cons 'causal-refs (bridge-symbol-refs causal-refs)))))
+  (if target-ref
+    (poo-flow-module-field-rows
+     (target-ref target-ref)
+     (causal-refs (bridge-symbol-refs causal-refs)))
+    (poo-flow-module-field-rows
+     (causal-refs (bridge-symbol-refs causal-refs)))))
 
 (def (bridge-operation negotiation
                        operation-id
@@ -53,8 +59,9 @@
    operation-id
    operation-kind
    negotiation
-   (list (cons 'source-kind source-kind)
-         (cons 'source-row row))
+   (poo-flow-module-field-rows
+    (source-kind source-kind)
+    (source-row row))
    (bridge-options target-ref causal-refs)))
 
 (def (bridge-session-graph-operation negotiation row)
@@ -113,7 +120,8 @@
    artifact-ref
    'retain-artifact
    'workflow-artifact
-   (list (cons 'artifact-ref artifact-ref))
+   (poo-flow-module-field-rows
+    (artifact-ref artifact-ref))
    #f
    (list artifact-ref)))
 
@@ -123,15 +131,76 @@
    sandbox-ref
    'attach-sandbox-handle
    'sandbox-handle
-   (list (cons 'sandbox-ref sandbox-ref))
+   (poo-flow-module-field-rows
+    (sandbox-ref sandbox-ref))
    #f
    (list sandbox-ref)))
 
-(def (bridge-row-symbol-refs rows key)
+(def (bridge-reverse-onto values tail)
+  (if (null? values)
+    tail
+    (bridge-reverse-onto (cdr values) (cons (car values) tail))))
+
+(def (bridge-row-symbol-refs/rev rows key refs-rev)
   (if (pair? rows)
-    (append (bridge-symbol-refs (bridge-ref (car rows) key '()))
-            (bridge-row-symbol-refs (cdr rows) key))
-    '()))
+    (bridge-row-symbol-refs/rev
+     (cdr rows)
+     key
+     (bridge-reverse-onto
+      (bridge-symbol-refs (bridge-ref (car rows) key '()))
+      refs-rev))
+    refs-rev))
+
+(def (bridge-row-symbol-refs rows key)
+  (reverse (bridge-row-symbol-refs/rev rows key '())))
+
+(def (bridge-communication-operations/rev negotiation rows operations-rev)
+  (if (null? rows)
+    operations-rev
+    (bridge-communication-operations/rev
+     negotiation
+     (cdr rows)
+     (cons (bridge-communication-operation negotiation (car rows))
+           operations-rev))))
+
+(def (bridge-memory-job-operations/rev negotiation rows operations-rev)
+  (if (null? rows)
+    operations-rev
+    (bridge-memory-job-operations/rev
+     negotiation
+     (cdr rows)
+     (cons (bridge-memory-job-operation negotiation (car rows))
+           operations-rev))))
+
+(def (bridge-workflow-task-operations/rev negotiation rows operations-rev)
+  (if (null? rows)
+    operations-rev
+    (bridge-workflow-task-operations/rev
+     negotiation
+     (cdr rows)
+     (cons (bridge-workflow-task-operation negotiation (car rows))
+           operations-rev))))
+
+(def (bridge-artifact-operations/rev negotiation artifact-refs operations-rev)
+  (if (null? artifact-refs)
+    operations-rev
+    (bridge-artifact-operations/rev
+     negotiation
+     (cdr artifact-refs)
+     (cons (bridge-artifact-operation negotiation (car artifact-refs))
+           operations-rev))))
+
+(def (bridge-sandbox-operations/rev negotiation sandbox-refs operations-rev)
+  (if (null? sandbox-refs)
+    operations-rev
+    (bridge-sandbox-operations/rev
+     negotiation
+     (cdr sandbox-refs)
+     (cons (bridge-sandbox-operation negotiation (car sandbox-refs))
+           operations-rev))))
+
+(def (bridge-session-graph-operation/rev operation operations-rev)
+  (if operation (cons operation operations-rev) operations-rev))
 
 (def (poo-flow-durable-runtime-store-operations-from-rows negotiation
                                                           session-graph-row
@@ -150,23 +219,24 @@
            (append (bridge-symbol-refs sandbox-refs)
                    (bridge-row-symbol-refs workflow-task-rows 'sandbox-refs))
            '())))
-    (append
-     (if session-graph-operation (list session-graph-operation) '())
-     (map (lambda (row)
-            (bridge-communication-operation negotiation row))
-          communication-rows)
-     (map (lambda (row)
-            (bridge-memory-job-operation negotiation row))
-          memory-job-rows)
-     (map (lambda (row)
-            (bridge-workflow-task-operation negotiation row))
-          workflow-task-rows)
-     (map (lambda (artifact-ref)
-            (bridge-artifact-operation negotiation artifact-ref))
-          artifact-refs)
-     (map (lambda (sandbox-ref)
-            (bridge-sandbox-operation negotiation sandbox-ref))
-          all-sandbox-refs))))
+    (reverse
+     (bridge-sandbox-operations/rev
+      negotiation
+      all-sandbox-refs
+      (bridge-artifact-operations/rev
+       negotiation
+       artifact-refs
+       (bridge-workflow-task-operations/rev
+        negotiation
+        workflow-task-rows
+        (bridge-memory-job-operations/rev
+         negotiation
+         memory-job-rows
+         (bridge-communication-operations/rev
+          negotiation
+          communication-rows
+          (bridge-session-graph-operation/rev session-graph-operation
+                                             '())))))))))
 
 (def (poo-flow-durable-runtime-store-rows->marlin-handoff negotiation
                                                           session-graph-row

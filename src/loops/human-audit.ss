@@ -41,6 +41,10 @@
         loop-human-audit->runtime-snapshot
         loop-human-audit->contract)
 
+(defrules loop-human-audit-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
 ;;; Boundary: schema names the human audit review contract.
 ;; : (-> Unit Symbol)
 (def +loop-human-audit-schema+ 'poo-flow.loop-human-audit.v1)
@@ -128,17 +132,33 @@
            loop-human-review-role
            loop-human-audit-role)))
 
+;; : (-> Alist Alist Alist)
+(def (loop-human-audit-slot-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
 ;; : (-> Symbol LoopGovernor [Alist] [Alist] Alist Alist)
 (def (loop-human-audit-slot-rows name
                                  governor
                                  state-facts
                                  decisions
                                  overrides)
-  (cons (cons 'name name)
-        (cons (cons 'governor governor)
-              (cons (cons 'state-facts state-facts)
-                    (cons (cons 'decisions decisions)
-                          overrides)))))
+  (loop-human-audit-slot-rows/tail
+   (list
+    (cons 'name name)
+    (cons 'governor governor)
+    (cons 'state-facts state-facts)
+    (cons 'decisions decisions))
+   overrides))
 
 ;;; Constructor binds one governor view to human decisions.
 ;;; Decisions are alists of =(pattern . decision)=.
@@ -261,10 +281,11 @@
 
 ;; : (-> Symbol Symbol Value Symbol Alist)
 (def (loop-human-audit-review-item reason pattern action-key decision)
-  (list (cons 'reason reason)
-        (cons 'pattern pattern)
-        (cons 'acting_on action-key)
-        (cons 'decision decision)))
+  (loop-human-audit-field-rows
+   (reason reason)
+   (pattern pattern)
+   (acting_on action-key)
+   (decision decision)))
 
 ;; : (-> LoopHumanAudit Alist Symbol Alist)
 (def (loop-human-audit-inbox-item->review-item audit item)

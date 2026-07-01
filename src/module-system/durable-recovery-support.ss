@@ -3,8 +3,7 @@
 ;;; Invariant: this owner normalizes receipt rows only; scenario construction
 ;;; and public projection stay in durable-recovery-scenario.ss.
 
-(import (only-in :std/sugar filter-map)
-        :poo-flow/src/module-system/durable-policy
+(import :poo-flow/src/module-system/durable-policy
         :poo-flow/src/module-system/durable-runtime-store)
 
 (export +poo-flow-durable-recovery-scenario-diagnostic-schema+
@@ -281,12 +280,25 @@
         action-class
         '()))))))
 
+;; : (-> [Alist] [Alist] [Alist])
+(def (poo-flow-durable-recovery-workflow-task-diagnostics/rev task-rows
+                                                              diagnostics-rev)
+  (if (null? task-rows)
+    diagnostics-rev
+    (poo-flow-durable-recovery-workflow-task-diagnostics/rev
+     (cdr task-rows)
+     (poo-flow-durable-recovery-reverse-onto
+      (poo-flow-durable-recovery-workflow-task-diagnostics/one
+       (car task-rows))
+      diagnostics-rev))))
+
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-durable-recovery-workflow-task-diagnostics task-rows)
   (if (list? task-rows)
-    (apply append
-           (map poo-flow-durable-recovery-workflow-task-diagnostics/one
-                task-rows))
+    (reverse
+     (poo-flow-durable-recovery-workflow-task-diagnostics/rev
+      task-rows
+      '()))
     (list
      (poo-flow-durable-recovery-diagnostic
       'invalid-workflow-task-rows
@@ -319,12 +331,26 @@
                    '()))
             (cons 'recoverable? #t))))))
 
+;; : (-> [Alist] [Alist] [Alist])
+(def (poo-flow-durable-recovery-memory-job-row-diagnostics/rev
+      memory-job-rows
+      diagnostics-rev)
+  (if (null? memory-job-rows)
+    diagnostics-rev
+    (poo-flow-durable-recovery-memory-job-row-diagnostics/rev
+     (cdr memory-job-rows)
+     (poo-flow-durable-recovery-reverse-onto
+      (poo-flow-durable-recovery-memory-job-row-diagnostics/one
+       (car memory-job-rows))
+      diagnostics-rev))))
+
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-durable-recovery-memory-job-row-diagnostics memory-job-rows)
   (if (list? memory-job-rows)
-    (apply append
-           (map poo-flow-durable-recovery-memory-job-row-diagnostics/one
-                memory-job-rows))
+    (reverse
+     (poo-flow-durable-recovery-memory-job-row-diagnostics/rev
+      memory-job-rows
+      '()))
     (list
      (poo-flow-durable-recovery-diagnostic
       'invalid-memory-job-rows
@@ -376,29 +402,44 @@
 (def (poo-flow-durable-recovery-sandbox-diagnostics workflow-task-rows
                                                      sandbox-refs)
   (if (list? workflow-task-rows)
-    (filter-map
-     (lambda (task-row)
-       (let* ((task-refs
-               (poo-flow-durable-recovery-alist-ref
-                task-row
-                'sandbox-refs
-                '()))
-              (missing-refs
-               (poo-flow-durable-recovery-missing-refs task-refs sandbox-refs)))
-         (and (not (null? missing-refs))
-              (poo-flow-durable-recovery-diagnostic
-               'unresolved-sandbox-ref
-               'sandbox-refs
-               'error
-               (list (cons 'task
-                           (poo-flow-durable-recovery-alist-ref
-                            task-row
-                            'durable-task-id
-                            #f))
-                     (cons 'missing-refs missing-refs)
-                     (cons 'recoverable? #t))))))
-     workflow-task-rows)
+    (reverse
+     (poo-flow-durable-recovery-sandbox-diagnostics/rev
+      workflow-task-rows
+      sandbox-refs
+      '()))
     '()))
+
+;; : (-> [Alist] [Symbol] [Alist] [Alist])
+(def (poo-flow-durable-recovery-sandbox-diagnostics/rev workflow-task-rows
+                                                         sandbox-refs
+                                                         diagnostics-rev)
+  (if (null? workflow-task-rows)
+    diagnostics-rev
+    (let* ((task-row (car workflow-task-rows))
+           (task-refs
+            (poo-flow-durable-recovery-alist-ref
+             task-row
+             'sandbox-refs
+             '()))
+           (missing-refs
+            (poo-flow-durable-recovery-missing-refs task-refs sandbox-refs)))
+      (poo-flow-durable-recovery-sandbox-diagnostics/rev
+       (cdr workflow-task-rows)
+       sandbox-refs
+       (if (null? missing-refs)
+         diagnostics-rev
+         (cons (poo-flow-durable-recovery-diagnostic
+                'unresolved-sandbox-ref
+                'sandbox-refs
+                'error
+                (list (cons 'task
+                            (poo-flow-durable-recovery-alist-ref
+                             task-row
+                             'durable-task-id
+                             #f))
+                      (cons 'missing-refs missing-refs)
+                      (cons 'recoverable? #t)))
+               diagnostics-rev))))))
 
 ;; : (-> Symbol Symbol Symbol Symbol Alist [Alist] [Alist] [Alist] [Alist] [Symbol] [Alist])
 (def (poo-flow-durable-recovery-diagnostics scenario-id
@@ -489,12 +530,18 @@
                                                    status
                                                    detail
                                                    runtime-owner)
-  (map (lambda (stage)
-         (poo-flow-durable-recovery-observability-row scenario-id
-                                                      stage
-                                                      status
-                                                      detail
-                                                      runtime-owner
-                                                      #t
-                                                      #f))
-       +poo-flow-durable-recovery-stages+))
+  (let loop ((remaining-stages +poo-flow-durable-recovery-stages+)
+             (rows-rev '()))
+    (if (null? remaining-stages)
+      (reverse rows-rev)
+      (loop
+       (cdr remaining-stages)
+       (cons (poo-flow-durable-recovery-observability-row
+              scenario-id
+              (car remaining-stages)
+              status
+              detail
+              runtime-owner
+              #t
+              #f)
+             rows-rev)))))

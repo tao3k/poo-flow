@@ -2,7 +2,6 @@
 ;;; Boundary: object validation catalog summaries and require gates.
 
 (import :gerbil/gambit
-        (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
         :poo-flow/src/module-system/object-validation-support/harness
@@ -20,19 +19,44 @@
 ;;; Boundary: module objects validation is the policy-visible edge for module-
 ;;; system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [PooModuleObject] HashTable HashTable HashTable HashTable [HashTable] [HashTable])
+(def (poo-flow-module-objects-validation/rev
+      objects
+      field-cache
+      harness-cache
+      harness-fields-cache
+      field-origins-cache
+      validations-rev)
+  (if (null? objects)
+    validations-rev
+    (poo-flow-module-objects-validation/rev
+     (cdr objects)
+     field-cache
+     harness-cache
+     harness-fields-cache
+     field-origins-cache
+     (cons (poo-flow-module-object-validation/catalog-caches
+            (car objects)
+            field-cache
+            harness-cache
+            harness-fields-cache
+            field-origins-cache)
+           validations-rev))))
+
 ;; : (-> [PooModuleObject] [HashTable])
 (def (poo-flow-module-objects-validation objects)
   (let ((field-cache (make-hash-table))
         (harness-cache (make-hash-table))
         (harness-fields-cache (make-hash-table))
         (field-origins-cache (make-hash-table)))
-    (map (lambda (object)
-           (poo-flow-module-object-validation/catalog-caches object
-                                                            field-cache
-                                                            harness-cache
-                                                            harness-fields-cache
-                                                            field-origins-cache))
-         objects)))
+    (reverse
+     (poo-flow-module-objects-validation/rev
+      objects
+      field-cache
+      harness-cache
+      harness-fields-cache
+      field-origins-cache
+      '()))))
 
 ;;; Validation receipts stay list-shaped for callers that serialize reports;
 ;;; the hash-table detail remains private to each object validation pass.
@@ -45,20 +69,44 @@
 ;;; Boundary: module invalid object identities is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [HashTable] [Symbol] [Symbol])
+(def (poo-flow-module-invalid-object-identities/rev validations
+                                                    identities-rev)
+  (cond
+   ((null? validations) identities-rev)
+   ((poo-flow-module-object-validation-valid? (car validations))
+    (poo-flow-module-invalid-object-identities/rev
+     (cdr validations)
+     identities-rev))
+   (else
+    (let (identity (hash-get (car validations) 'object))
+      (poo-flow-module-invalid-object-identities/rev
+       (cdr validations)
+       (if identity
+         (cons identity identities-rev)
+         identities-rev))))))
+
 ;; : (-> [HashTable] [Symbol])
 (def (poo-flow-module-invalid-object-identities validations)
-  (filter-map
-   (lambda (validation)
-     (and (not (poo-flow-module-object-validation-valid? validation))
-          (hash-get validation 'object)))
-   validations))
+  (reverse
+   (poo-flow-module-invalid-object-identities/rev validations '())))
 
 ;;; Boundary: module validation values is the policy-visible edge for module-
 ;;; system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [HashTable] Symbol [Value] [Value])
+(def (poo-flow-module-validation-values/rev validations key values-rev)
+  (if (null? validations)
+    values-rev
+    (poo-flow-module-validation-values/rev
+     (cdr validations)
+     key
+     (cons (hash-get (car validations) key) values-rev))))
+
 ;; : (-> [HashTable] Symbol [Value])
 (def (poo-flow-module-validation-values validations key)
-  (map (lambda (validation) (hash-get validation key)) validations))
+  (reverse
+   (poo-flow-module-validation-values/rev validations key '())))
 
 ;;; Boundary: module objects validation summary collect is the policy-visible
 ;;; edge for module-system, object behavior, keeping validation, lookup, or

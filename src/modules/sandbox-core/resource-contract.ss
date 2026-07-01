@@ -80,6 +80,32 @@
 (def poo-flow-sandbox-resources-prototype-contract-validation-schema
   "poo-flow-sandbox-resources-prototype-contract-validation/v1")
 
+(defrules poo-flow-sandbox-resource-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
+;; : (-> List List List)
+(def (poo-flow-sandbox-resource-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+;; : (-> [List] List List)
+(def (poo-flow-sandbox-resource-segments/tail segments tail)
+  (if (null? segments)
+    tail
+    (poo-flow-sandbox-resource-rows/tail
+     (car segments)
+     (poo-flow-sandbox-resource-segments/tail (cdr segments) tail))))
+
 ;;; Boundary: sandbox contract receipt is the policy-visible edge for sandbox,
 ;;; core behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
@@ -250,10 +276,11 @@
 
 ;; : (-> Symbol String Dyn Alist)
 (def (poo-flow-sandbox-resources-prototype-diagnostic code message value)
-  (list (cons 'code code)
-        (cons 'message message)
-        (cons 'object 'PooSandboxResourcesPrototype)
-        (cons 'value value)))
+  (poo-flow-sandbox-resource-field-rows
+   (code code)
+   (message message)
+   (object 'PooSandboxResourcesPrototype)
+   (value value)))
 
 ;;; Boundary: sandbox resources prototype slot readable predicate is the
 ;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
@@ -313,13 +340,14 @@
 ;; : (-> PooSandboxFilesystemPrototype AgentSandboxResourcePolicyEntry)
 (def (poo-flow-sandbox-filesystem-prototype->resource-entry filesystem)
   (cons 'filesystem
-        (append
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'scope)
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'materialized-by)
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'paths)
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'mounts)
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'access)
-         (poo-flow-sandbox-prototype-slot-entry filesystem 'snapshot)
+        (poo-flow-sandbox-resource-segments/tail
+         (list
+          (poo-flow-sandbox-prototype-slot-entry filesystem 'scope)
+          (poo-flow-sandbox-prototype-slot-entry filesystem 'materialized-by)
+          (poo-flow-sandbox-prototype-slot-entry filesystem 'paths)
+          (poo-flow-sandbox-prototype-slot-entry filesystem 'mounts)
+          (poo-flow-sandbox-prototype-slot-entry filesystem 'access)
+          (poo-flow-sandbox-prototype-slot-entry filesystem 'snapshot))
          (poo-flow-sandbox-prototype-slot-entry filesystem 'volume))))
 
 ;; : (-> PooSandboxFilesystemPrototype ResourcePolicy)
@@ -331,16 +359,17 @@
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype ResourcePolicy)
 (def (poo-flow-sandbox-resources-prototype->resource-policy resources)
-  (append
-   (if (.slot? resources 'filesystem)
-     (list
-      (poo-flow-sandbox-filesystem-prototype->resource-entry
-       (.ref resources 'filesystem)))
-     '())
-   (poo-flow-sandbox-prototype-slot-entry resources 'mounts)
-   (poo-flow-sandbox-prototype-slot-entry resources 'ports)
-   (poo-flow-sandbox-prototype-slot-entry resources 'cpu)
-   (poo-flow-sandbox-prototype-slot-entry resources 'memory)
+  (poo-flow-sandbox-resource-segments/tail
+   (list
+    (if (.slot? resources 'filesystem)
+      (list
+       (poo-flow-sandbox-filesystem-prototype->resource-entry
+        (.ref resources 'filesystem)))
+      '())
+    (poo-flow-sandbox-prototype-slot-entry resources 'mounts)
+    (poo-flow-sandbox-prototype-slot-entry resources 'ports)
+    (poo-flow-sandbox-prototype-slot-entry resources 'cpu)
+    (poo-flow-sandbox-prototype-slot-entry resources 'memory))
    (poo-flow-sandbox-prototype-slot-entry resources 'timeout-ms)))
 
 ;;; Boundary: sandbox resources prototype structured filesystem diagnostics is
@@ -375,34 +404,35 @@
       'resources-prototype-not-object
       "sandbox resources contract expects a POO object"
       resources))
-    (append
-     (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics
-      resources
-      'filesystem
-      'missing-filesystem-slot
-      "sandbox resources prototype must define filesystem")
-     (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics
-      resources
-      'cpu
-      'missing-cpu-slot
-      "sandbox resources prototype must define cpu")
-     (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics
-      resources
-      'memory
-      'missing-memory-slot
-      "sandbox resources prototype must define memory")
-     (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
-      'unreadable-filesystem-slot
-      'filesystem
-      resources)
-     (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
-      'unreadable-cpu-slot
-      'cpu
-      resources)
-     (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
-      'unreadable-memory-slot
-      'memory
-      resources)
+    (poo-flow-sandbox-resource-segments/tail
+     (list
+      (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics
+       resources
+       'filesystem
+       'missing-filesystem-slot
+       "sandbox resources prototype must define filesystem")
+      (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics
+       resources
+       'cpu
+       'missing-cpu-slot
+       "sandbox resources prototype must define cpu")
+      (poo-flow-sandbox-resources-prototype-missing-slot-diagnostics
+       resources
+       'memory
+       'missing-memory-slot
+       "sandbox resources prototype must define memory")
+      (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+       'unreadable-filesystem-slot
+       'filesystem
+       resources)
+      (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+       'unreadable-cpu-slot
+       'cpu
+       resources)
+      (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
+       'unreadable-memory-slot
+       'memory
+       resources))
      (poo-flow-sandbox-resources-prototype-structured-filesystem-diagnostics
       resources))))
 
@@ -418,8 +448,9 @@
          (local-diagnostics
           (poo-flow-sandbox-resources-prototype-local-diagnostics resources))
          (diagnostics
-          (append local-diagnostics
-                  (hash-get harness-validation 'diagnostics)))
+          (poo-flow-sandbox-resource-rows/tail
+           local-diagnostics
+           (hash-get harness-validation 'diagnostics)))
          (valid? (and (null? diagnostics)
                       (poo-object-validation-valid? harness-validation))))
     (poo-flow-sandbox-contract-receipt

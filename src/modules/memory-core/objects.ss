@@ -76,6 +76,10 @@
         poo-flow-memory-core-durable-project-store
         poo-flow-memory-core-default-catalog)
 
+(defrules poo-flow-memory-field-rows ()
+  ((_ (field value) ...)
+   (list (cons 'field value) ...)))
+
 (def +poo-flow-memory-core-store-spec-kind+
   'poo-flow.memory-core.store-spec)
 
@@ -392,16 +396,16 @@
 
 ;; : (-> Symbol PooSessionMemoryIntent Alist)
 (def (poo-flow-memory-diagnostic code intent)
-  (list (cons 'kind 'poo-flow.memory-core.diagnostic)
-        (cons 'schema 'poo-flow.modules.memory-core.diagnostic.v1)
-        (cons 'code code)
-        (cons 'intent-name (poo-flow-session-memory-intent-name intent))
-        (cons 'store-ref (poo-flow-session-memory-intent-store-ref intent))
-        (cons 'scope (poo-flow-session-memory-intent-scope intent))
-        (cons 'commit-policy
-              (poo-flow-session-memory-intent-commit-policy intent))
-        (cons 'severity 'error)
-        (cons 'runtime-executed #f)))
+  (poo-flow-memory-field-rows
+   (kind 'poo-flow.memory-core.diagnostic)
+   (schema 'poo-flow.modules.memory-core.diagnostic.v1)
+   (code code)
+   (intent-name (poo-flow-session-memory-intent-name intent))
+   (store-ref (poo-flow-session-memory-intent-store-ref intent))
+   (scope (poo-flow-session-memory-intent-scope intent))
+   (commit-policy (poo-flow-session-memory-intent-commit-policy intent))
+   (severity 'error)
+   (runtime-executed #f)))
 
 ;; : (-> PooMemoryStoreSpec PooSessionMemoryIntent [Alist] [Alist])
 (def (poo-flow-memory-store-intent-diagnostics/tail spec intent tail)

@@ -3,8 +3,7 @@
 ;;; Invariant: this module projects selected session-core features only; session
 ;;; values and graph receipts stay in src/modules/session.
 
-(import (only-in :std/sugar filter-map)
-        :poo-flow/src/module-system/base)
+(import :poo-flow/src/module-system/base)
 
 (export poo-flow-user-module-selection-session-core?
         poo-flow-user-module-selection-session-core-intent
@@ -41,9 +40,23 @@
 ;;; Boundary: user config session core intents add is the policy-visible edge
 ;;; for module-system, core behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [PooUserModuleSelection] [Alist] [Alist])
+(def (poo-flow-user-config-session-core-intents/add-rev selections
+                                                           intents-rev)
+  (if (null? selections)
+    intents-rev
+    (let (intent
+          (poo-flow-user-config-session-core-intent (car selections)))
+      (poo-flow-user-config-session-core-intents/add-rev
+       (cdr selections)
+       (if intent
+         (cons intent intents-rev)
+         intents-rev)))))
+
 ;; : (-> [PooUserModuleSelection] [Alist])
 (def (poo-flow-user-config-session-core-intents/add selections)
-  (filter-map poo-flow-user-config-session-core-intent selections))
+  (reverse
+   (poo-flow-user-config-session-core-intents/add-rev selections '())))
 
 ;; : (-> PooUserModuleSelection MaybeAlist)
 (def (poo-flow-user-config-session-core-intent selection)

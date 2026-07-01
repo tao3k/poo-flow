@@ -33,6 +33,24 @@
         poo-flow-user-config-presentation-trace
         pooFlowUserConfigPresentation)
 
+;; : (-> [PooFlowCicdCheckMap] [Symbol] [Symbol])
+(def (poo-flow-user-config-presentation-workflow-cicd-check-map-names/rev
+      check-maps
+      names-rev)
+  (if (null? check-maps)
+    names-rev
+    (poo-flow-user-config-presentation-workflow-cicd-check-map-names/rev
+     (cdr check-maps)
+     (cons (poo-flow-cicd-check-map-name (car check-maps)) names-rev))))
+
+;; : (-> [PooFlowCicdCheckMap] [Symbol])
+(def (poo-flow-user-config-presentation-workflow-cicd-check-map-names
+      check-maps)
+  (reverse
+   (poo-flow-user-config-presentation-workflow-cicd-check-map-names/rev
+    check-maps
+    '())))
+
 ;;; Sandbox profile derivation presentation is intentionally separate from
 ;;; visible `:config`: users see their authored DSL in module flags, while this
 ;;; section exposes resolved POO lineage for agent/session/branch handoff.
@@ -1244,8 +1262,8 @@
           (cons 'workflow-cicd-pipeline-count
                 (length workflow-cicd-check-maps))
           (cons 'workflow-cicd-pipelines
-                (map poo-flow-cicd-check-map-name
-                     workflow-cicd-check-maps))
+                (poo-flow-user-config-presentation-workflow-cicd-check-map-names
+                 workflow-cicd-check-maps))
           (cons 'workflow-cicd-functional-dag-count
                 (length workflow-cicd-functional-dag-rows))
           (cons 'workflow-cicd-functional-dags

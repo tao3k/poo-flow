@@ -373,12 +373,28 @@
 ;;       ;; => 6
 ;;       ```
 ;;     %
+(def (poo-performance-values/rev-onto values values-rev)
+  (let loop ((remaining-values values)
+             (result values-rev))
+    (if (null? remaining-values)
+      result
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) result)))))
+
+(def (poo-performance-object-contributions/rev objects entries contributions-rev)
+  (if (null? objects)
+    contributions-rev
+    (poo-performance-object-contributions/rev
+     (cdr objects)
+     entries
+     (poo-performance-values/rev-onto
+      (poo-flow-module-object-contributions (car objects) entries)
+      contributions-rev))))
+
 (def (poo-performance-catalog-contributions objects field-count)
   (let (entries (poo-performance-contribution-entries field-count))
-    (apply append
-           (map (lambda (object)
-                  (poo-flow-module-object-contributions object entries))
-                objects))))
+    (reverse
+     (poo-performance-object-contributions/rev objects entries '()))))
 
 ;; : (-> Integer Integer PooModuleSlotMap)
 (def (poo-performance-override-slots count key-span)

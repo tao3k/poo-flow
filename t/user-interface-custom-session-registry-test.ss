@@ -9,6 +9,8 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-user-module-selection-key)
         :poo-flow/src/module-system/init-syntax)
 
 (export user-interface-custom-session-registry-test)
@@ -20,13 +22,25 @@
   (let (entry (assoc key row))
     (if entry (cdr entry) #f)))
 
+;; : (-> [PooUserModuleSelection] [Value])
+(def (module-config-rows module-selection-bundle)
+  (let* ((selection (car module-selection-bundle))
+         (entry
+          (poo-flow-user-module-selection-flag-entry selection ':session-rows)))
+    (if entry (cdr entry) '())))
+
 ;; : TestSuite
 (def user-interface-custom-session-registry-test
   (test-suite "poo-flow custom user-interface session-registry case"
     (test-case "projects custom session registry receipt"
-      (let* ((registry poo-flow-custom-module-session-registry-case)
+      (let* ((selection (car poo-flow-custom-module-session-registry-case))
+             (rows
+              (module-config-rows poo-flow-custom-module-session-registry-case))
+             (registry (car rows))
              (entries (.ref registry 'entries))
              (build-entry (cadr entries)))
+        (check-equal? (poo-flow-user-module-selection-key selection)
+                      '(session . session-core))
         (check-equal? (.ref registry 'kind)
                       'poo-flow.session.registry-receipt)
         (check-equal? (.ref registry 'project-id) 'custom/project)

@@ -15,7 +15,7 @@
         (only-in :poo-flow/src/modules/agent-sandbox/profile-validation
                  agent-sandbox-profile-resource-policy-filesystem-entry?
                  agent-sandbox-profile-resource-policy-filesystem-diagnostics)
-        (only-in :std/srfi/1 filter-map))
+        :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax)
 
 (export poo-flow-sandbox-backend-capability-kind
         poo-flow-sandbox-backend-capability-registry-kind
@@ -201,39 +201,39 @@
                                           . maybe-options)
   (let (options (if (null? maybe-options) '() (car maybe-options)))
     (object<-alist
-     (list
-      (cons 'kind poo-flow-sandbox-backend-capability-kind)
-      (cons 'backend-kind backend-kind)
-      (cons 'isolation
-            (poo-flow-sandbox-profile-policy-option options 'isolation 'process))
-      (cons 'capabilities capabilities)
-      (cons 'supports-command
-            (poo-flow-sandbox-profile-policy-option options 'supports-command #t))
-      (cons 'supports-filesystem
-            (poo-flow-sandbox-profile-policy-option options 'supports-filesystem #t))
-      (cons 'supports-code-interpreter
-            (poo-flow-sandbox-profile-policy-option
-             options
-             'supports-code-interpreter
-             #f))
-      (cons 'supports-network
-            (poo-flow-sandbox-profile-policy-option options 'supports-network #f))
-      (cons 'supports-persistence
-            (poo-flow-sandbox-profile-policy-option
-             options
-             'supports-persistence
-             #f))
-      (cons 'max-sandboxes
-            (poo-flow-sandbox-profile-policy-option options 'max-sandboxes #f))
-      (cons 'cold-start-ms-p50
-            (poo-flow-sandbox-profile-policy-option options 'cold-start-ms-p50 #f))
-      (cons 'availability
-            (poo-flow-sandbox-profile-policy-option
-             options
-             'availability
-             '((mode . static) (runtime-executed . #f))))
-      (cons 'metadata
-            (poo-flow-sandbox-profile-policy-option options 'metadata '()))))))
+     (poo-flow-sandbox-profile-field-rows
+      (kind poo-flow-sandbox-backend-capability-kind)
+      (backend-kind backend-kind)
+      (isolation
+       (poo-flow-sandbox-profile-policy-option options 'isolation 'process))
+      (capabilities capabilities)
+      (supports-command
+       (poo-flow-sandbox-profile-policy-option options 'supports-command #t))
+      (supports-filesystem
+       (poo-flow-sandbox-profile-policy-option options 'supports-filesystem #t))
+      (supports-code-interpreter
+       (poo-flow-sandbox-profile-policy-option
+        options
+        'supports-code-interpreter
+        #f))
+      (supports-network
+       (poo-flow-sandbox-profile-policy-option options 'supports-network #f))
+      (supports-persistence
+       (poo-flow-sandbox-profile-policy-option
+        options
+        'supports-persistence
+        #f))
+      (max-sandboxes
+       (poo-flow-sandbox-profile-policy-option options 'max-sandboxes #f))
+      (cold-start-ms-p50
+       (poo-flow-sandbox-profile-policy-option options 'cold-start-ms-p50 #f))
+      (availability
+       (poo-flow-sandbox-profile-policy-option
+        options
+        'availability
+        '((mode . static) (runtime-executed . #f))))
+      (metadata
+       (poo-flow-sandbox-profile-policy-option options 'metadata '()))))))
 
 ;; : (-> SandboxPolicyCandidate Boolean)
 ;; | type SandboxPolicyCandidate = Any
@@ -329,7 +329,7 @@
              entries
              latest
              '())))
-      (append
+      (poo-flow-sandbox-profile-rows/tail
        kept-entries
        (poo-flow-sandbox-backend-capability-registry-put-entries/materialize
         ordered-extra-keys
@@ -427,7 +427,7 @@
              aliases))
       (cons 'default-capability default-capability)
       (cons 'metadata
-            (append
+            (poo-flow-sandbox-profile-rows/tail
              (poo-flow-sandbox-backend-capability-registry-metadata registry)
              metadata))))))
 
@@ -438,17 +438,17 @@
     (poo-flow-sandbox-backend-capability-registry-extend
      base
      (poo-flow-sandbox-backend-capability-registry-entries extension)
-     (append
-      (list
-       (cons 'aliases
-             (poo-flow-sandbox-backend-capability-registry-aliases
-              extension))
-       (cons 'metadata
-             (poo-flow-sandbox-backend-capability-registry-metadata
-              extension)))
+     (poo-flow-sandbox-profile-field-rows/tail
       (if extension-default
-        (list (cons 'default-capability extension-default))
-        '())))))
+        (poo-flow-sandbox-profile-field-rows
+         (default-capability extension-default))
+        '())
+      (aliases
+       (poo-flow-sandbox-backend-capability-registry-aliases
+        extension))
+      (metadata
+       (poo-flow-sandbox-backend-capability-registry-metadata
+        extension))))))
 
 ;; : (-> Symbol Symbol Symbol Alist POOObject)
 (def (poo-flow-sandbox-backend-capability-registry-diagnostic code
@@ -456,17 +456,15 @@
                                                               severity
                                                               payload)
   (object<-alist
-   (append
-    (list (cons 'kind
-                poo-flow-sandbox-backend-capability-registry-diagnostic-kind)
-          (cons 'schema
-                poo-flow-sandbox-backend-capability-registry-diagnostic-kind)
-          (cons 'code code)
-          (cons 'phase 'backend-capability-registry)
-          (cons 'slot slot)
-          (cons 'severity severity)
-          (cons 'payload payload))
-    payload)))
+   (poo-flow-sandbox-profile-field-rows/tail
+    payload
+    (kind poo-flow-sandbox-backend-capability-registry-diagnostic-kind)
+    (schema poo-flow-sandbox-backend-capability-registry-diagnostic-kind)
+    (code code)
+    (phase 'backend-capability-registry)
+    (slot slot)
+    (severity severity)
+    (payload payload))))
 
 ;; : (-> Value Boolean)
 (def (poo-flow-sandbox-backend-capability-registry-diagnostic? value)
@@ -484,8 +482,9 @@
       'invalid-backend-capability-registry
       'registry
       'error
-      (list (cons 'registry-index index)
-            (cons 'recoverable? #t))))))
+      (poo-flow-sandbox-profile-field-rows
+       (registry-index index)
+       (recoverable? #t))))))
 
 ;; : (-> [Value] Fixnum [POOObject])
 (def (poo-flow-sandbox-backend-capability-registries-invalid-diagnostics
@@ -494,7 +493,7 @@
   (cond
    ((null? registries) '())
    (else
-    (append
+    (poo-flow-sandbox-profile-rows/tail
      (poo-flow-sandbox-backend-capability-registry-invalid-diagnostics
       (car registries)
       index)
@@ -611,8 +610,9 @@
       code
       slot
       'error
-      (list (cons 'key (car keys))
-            (cons 'recoverable? #t)))
+      (poo-flow-sandbox-profile-field-rows
+       (key (car keys))
+       (recoverable? #t)))
      (poo-flow-sandbox-backend-capability-registry-duplicate-diagnostics
       code
       slot
@@ -628,8 +628,9 @@
       'invalid-backend-capability-entry
       'entries
       'error
-      (list (cons 'entry (car entries))
-            (cons 'recoverable? #t)))
+      (poo-flow-sandbox-profile-field-rows
+       (entry (car entries))
+       (recoverable? #t)))
      (poo-flow-sandbox-backend-capability-registry-entry-diagnostics
       (cdr entries))))
    ((not (poo-flow-sandbox-backend-capability? (cdar entries)))
@@ -638,8 +639,9 @@
       'invalid-backend-capability-entry
       'entries
       'error
-      (list (cons 'backend-kind (caar entries))
-            (cons 'recoverable? #t)))
+      (poo-flow-sandbox-profile-field-rows
+       (backend-kind (caar entries))
+       (recoverable? #t)))
      (poo-flow-sandbox-backend-capability-registry-entry-diagnostics
       (cdr entries))))
    ((not (equal? (caar entries)
@@ -662,12 +664,26 @@
     (poo-flow-sandbox-backend-capability-registry-entry-diagnostics
      (cdr entries)))))
 
+;; : (-> [Alist] [Symbol] [Symbol])
+(def (poo-flow-sandbox-backend-capability-registry-entry-keys/rev entries
+                                                                 keys-rev)
+  (cond
+   ((null? entries) keys-rev)
+   ((pair? (car entries))
+    (poo-flow-sandbox-backend-capability-registry-entry-keys/rev
+     (cdr entries)
+     (cons (caar entries) keys-rev)))
+   (else
+    (poo-flow-sandbox-backend-capability-registry-entry-keys/rev
+     (cdr entries)
+     keys-rev))))
+
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-sandbox-backend-capability-registry-entry-keys entries)
-  (filter-map
-   (lambda (entry)
-     (if (pair? entry) (car entry) #f))
-   entries))
+  (reverse
+   (poo-flow-sandbox-backend-capability-registry-entry-keys/rev
+    entries
+    '())))
 
 ;; : (-> [Alist] [Symbol] [POOObject])
 (def (poo-flow-sandbox-backend-capability-registry-alias-diagnostics aliases
@@ -682,8 +698,9 @@
       'invalid-backend-capability-alias
       'aliases
       'error
-      (list (cons 'alias (car aliases))
-            (cons 'recoverable? #t)))
+      (poo-flow-sandbox-profile-field-rows
+       (alias (car aliases))
+       (recoverable? #t)))
      (poo-flow-sandbox-backend-capability-registry-alias-diagnostics
       (cdr aliases)
       entry-index)))
@@ -693,9 +710,10 @@
       'backend-capability-alias-target-missing
       'aliases
       'error
-      (list (cons 'alias (caar aliases))
-            (cons 'target (cdar aliases))
-            (cons 'recoverable? #t)))
+       (poo-flow-sandbox-profile-field-rows
+        (alias (caar aliases))
+        (target (cdar aliases))
+        (recoverable? #t)))
      (poo-flow-sandbox-backend-capability-registry-alias-diagnostics
       (cdr aliases)
       entry-index)))
@@ -719,38 +737,39 @@
          (entry-index
           (poo-flow-sandbox-policy-value-index entry-keys))
          (diagnostics
-          (append
+          (poo-flow-sandbox-profile-rows/tail
            (poo-flow-sandbox-backend-capability-registries-invalid-diagnostics
             registries
             0)
-           (poo-flow-sandbox-backend-capability-registry-entry-diagnostics
-            entries)
-           (poo-flow-sandbox-backend-capability-registry-duplicate-diagnostics
-            'duplicate-backend-capability-id
-            'entries
-            (poo-flow-sandbox-backend-capability-registry-duplicate-keys
-             entries))
-           (poo-flow-sandbox-backend-capability-registry-duplicate-diagnostics
-            'duplicate-backend-capability-alias
-            'aliases
-            (poo-flow-sandbox-backend-capability-registry-duplicate-keys
-             aliases))
-           (poo-flow-sandbox-backend-capability-registry-alias-diagnostics
-            aliases
-            entry-index))))
+           (poo-flow-sandbox-profile-rows/tail
+            (poo-flow-sandbox-backend-capability-registry-entry-diagnostics
+             entries)
+            (poo-flow-sandbox-profile-rows/tail
+             (poo-flow-sandbox-backend-capability-registry-duplicate-diagnostics
+              'duplicate-backend-capability-id
+              'entries
+              (poo-flow-sandbox-backend-capability-registry-duplicate-keys
+               entries))
+             (poo-flow-sandbox-profile-rows/tail
+              (poo-flow-sandbox-backend-capability-registry-duplicate-diagnostics
+               'duplicate-backend-capability-alias
+               'aliases
+               (poo-flow-sandbox-backend-capability-registry-duplicate-keys
+                aliases))
+              (poo-flow-sandbox-backend-capability-registry-alias-diagnostics
+               aliases
+               entry-index)))))))
     (object<-alist
-     (list
-      (cons 'kind
-            poo-flow-sandbox-backend-capability-registry-validation-kind)
-      (cons 'schema
-            poo-flow-sandbox-backend-capability-registry-validation-kind)
-      (cons 'valid? (null? diagnostics))
-      (cons 'registry-count (length registries))
-      (cons 'entry-count (length entries))
-      (cons 'alias-count (length aliases))
-      (cons 'diagnostics diagnostics)
-      (cons 'diagnostic-count (length diagnostics))
-      (cons 'runtime-executed #f)))))
+     (poo-flow-sandbox-profile-field-rows
+      (kind poo-flow-sandbox-backend-capability-registry-validation-kind)
+      (schema poo-flow-sandbox-backend-capability-registry-validation-kind)
+      (valid? (null? diagnostics))
+      (registry-count (length registries))
+      (entry-count (length entries))
+      (alias-count (length aliases))
+      (diagnostics diagnostics)
+      (diagnostic-count (length diagnostics))
+      (runtime-executed #f)))))
 
 ;; : (-> Value Boolean)
 (def (poo-flow-sandbox-backend-capability-registry-validation? value)
@@ -1039,7 +1058,9 @@
                                                               added)
   (cond
    ((null? extra)
-    (if (null? added) base (append base (reverse added))))
+    (if (null? added)
+      base
+      (append base (reverse added))))
    ((hash-get seen (car extra))
     (poo-flow-sandbox-profile-policy-append-distinct/indexed
      base
@@ -1135,16 +1156,16 @@
     'invalid-resource-policy)
    'resource
    'error
-   (list
-    (cons 'profile profile-name)
-    (cons 'backend-kind backend-kind)
-    (cons 'slot
-          (poo-flow-sandbox-profile-policy-alist-ref
-           diagnostic
-           'field
-           'resource-policy))
-    (cons 'detail diagnostic)
-    (cons 'recoverable? #t))))
+   (poo-flow-sandbox-profile-field-rows
+    (profile profile-name)
+    (backend-kind backend-kind)
+    (slot
+     (poo-flow-sandbox-profile-policy-alist-ref
+      diagnostic
+      'field
+      'resource-policy))
+    (detail diagnostic)
+    (recoverable? #t))))
 
 ;; : (-> Symbol Symbol [Symbol] ResourcePolicy [POOObject])
 (def (poo-flow-sandbox-profile-policy-resource-diagnostics profile-name
@@ -1157,7 +1178,7 @@
         (has-filesystem-resource?
          (poo-flow-sandbox-profile-policy-resource-policy-has-filesystem?
           resource-policy)))
-    (append
+    (poo-flow-sandbox-profile-rows/tail
      (if (and (not (null? resource-policy))
               (not has-filesystem-capability?))
        (list
@@ -1165,36 +1186,63 @@
          'missing-filesystem-sandbox-capability
          'resource
          'error
-         (list
-          (cons 'profile profile-name)
-          (cons 'backend-kind backend-kind)
-          (cons 'slot 'capabilities)
-          (cons 'requires 'resource-policy)
-          (cons 'resource-policy resource-policy)
-          (cons 'recoverable? #t))))
+         (poo-flow-sandbox-profile-field-rows
+          (profile profile-name)
+          (backend-kind backend-kind)
+          (slot 'capabilities)
+          (requires 'resource-policy)
+          (resource-policy resource-policy)
+          (recoverable? #t))))
        '())
-     (if (and has-filesystem-capability?
-              (not has-filesystem-resource?))
-       (list
-        (poo-flow-sandbox-profile-policy-diagnostic
-         'missing-filesystem-sandbox-resource
-         'resource
-         'error
-         (list
-          (cons 'profile profile-name)
-          (cons 'backend-kind backend-kind)
-          (cons 'slot 'resource-policy)
-          (cons 'requires 'filesystem)
-          (cons 'resource-policy resource-policy)
-          (cons 'recoverable? #t))))
-       '())
-     (map (lambda (diagnostic)
-            (poo-flow-sandbox-profile-policy-resource-diagnostic
-             profile-name
-             backend-kind
-             diagnostic))
-          (agent-sandbox-profile-resource-policy-filesystem-diagnostics
-           resource-policy)))))
+     (poo-flow-sandbox-profile-rows/tail
+      (if (and has-filesystem-capability?
+               (not has-filesystem-resource?))
+        (list
+         (poo-flow-sandbox-profile-policy-diagnostic
+          'missing-filesystem-sandbox-resource
+          'resource
+          'error
+          (poo-flow-sandbox-profile-field-rows
+           (profile profile-name)
+           (backend-kind backend-kind)
+           (slot 'resource-policy)
+           (requires 'filesystem)
+           (resource-policy resource-policy)
+           (recoverable? #t))))
+        '())
+      (poo-flow-sandbox-profile-policy-resource-diagnostic-rows
+       profile-name
+       backend-kind
+       (agent-sandbox-profile-resource-policy-filesystem-diagnostics
+        resource-policy))))))
+
+;; : (-> Symbol Symbol [Alist] [Alist] [Alist])
+(def (poo-flow-sandbox-profile-policy-resource-diagnostic-rows/rev profile-name
+                                                                    backend-kind
+                                                                    diagnostics
+                                                                    rows-rev)
+  (if (null? diagnostics)
+    rows-rev
+    (poo-flow-sandbox-profile-policy-resource-diagnostic-rows/rev
+     profile-name
+     backend-kind
+     (cdr diagnostics)
+     (cons (poo-flow-sandbox-profile-policy-resource-diagnostic
+            profile-name
+            backend-kind
+            (car diagnostics))
+           rows-rev))))
+
+;; : (-> Symbol Symbol [Alist] [Alist])
+(def (poo-flow-sandbox-profile-policy-resource-diagnostic-rows profile-name
+                                                               backend-kind
+                                                               diagnostics)
+  (reverse
+   (poo-flow-sandbox-profile-policy-resource-diagnostic-rows/rev
+    profile-name
+    backend-kind
+    diagnostics
+    '())))
 
 ;; : (-> PooSandboxProfilePolicy Alist)
 (def (poo-flow-sandbox-profile-policy-durable-summary profile-policy
@@ -1352,36 +1400,76 @@
           (if (null? maybe-resource-policy)
             (poo-flow-sandbox-profile-policy-resource-policy profile-policy)
             (car maybe-resource-policy))))
-    (append
-     (filter-map
-      (lambda (required-capability)
-        (if (poo-flow-sandbox-backend-capability-supports?
-             backend-capability
-             required-capability)
-          #f
-          (poo-flow-sandbox-profile-policy-diagnostic
-           'missing-backend-capability
-           'capability
-           'error
-           (list
-            (cons 'profile profile-name)
-            (cons 'backend-kind backend-kind)
-            (cons 'slot 'capabilities)
-            (cons 'required required-capability)
-            (cons 'supported
-                  (poo-flow-sandbox-backend-capability/capabilities
-                   backend-capability))
-            (cons 'recoverable? #t)))))
+    (poo-flow-sandbox-profile-rows/tail
+     (poo-flow-sandbox-profile-policy-required-capability-diagnostics
+      profile-name
+      backend-kind
+      backend-capability
       required)
-     (poo-flow-sandbox-profile-policy-resource-diagnostics
+     (poo-flow-sandbox-profile-rows/tail
+      (poo-flow-sandbox-profile-policy-resource-diagnostics
+       profile-name
+       backend-kind
+       profile-capabilities
+       resource-policy)
+      (poo-flow-sandbox-profile-policy-durable-diagnostics
+       profile-name
+       backend-kind
+       profile-policy)))))
+
+;; : (-> Symbol Symbol PooSandboxBackendCapability [Symbol] [Alist] [Alist])
+(def (poo-flow-sandbox-profile-policy-required-capability-diagnostics/rev
       profile-name
       backend-kind
-      profile-capabilities
-      resource-policy)
-     (poo-flow-sandbox-profile-policy-durable-diagnostics
+      backend-capability
+      required
+      diagnostics-rev)
+  (cond
+   ((null? required) diagnostics-rev)
+   ((poo-flow-sandbox-backend-capability-supports?
+     backend-capability
+     (car required))
+    (poo-flow-sandbox-profile-policy-required-capability-diagnostics/rev
+     profile-name
+     backend-kind
+     backend-capability
+     (cdr required)
+     diagnostics-rev))
+   (else
+    (poo-flow-sandbox-profile-policy-required-capability-diagnostics/rev
+     profile-name
+     backend-kind
+     backend-capability
+     (cdr required)
+     (cons
+      (poo-flow-sandbox-profile-policy-diagnostic
+       'missing-backend-capability
+       'capability
+       'error
+       (poo-flow-sandbox-profile-field-rows
+        (profile profile-name)
+        (backend-kind backend-kind)
+        (slot 'capabilities)
+        (required (car required))
+        (supported
+         (poo-flow-sandbox-backend-capability/capabilities
+          backend-capability))
+        (recoverable? #t)))
+      diagnostics-rev)))))
+
+;; : (-> Symbol Symbol PooSandboxBackendCapability [Symbol] [Alist])
+(def (poo-flow-sandbox-profile-policy-required-capability-diagnostics
       profile-name
       backend-kind
-      profile-policy))))
+      backend-capability
+      required)
+  (reverse
+   (poo-flow-sandbox-profile-policy-required-capability-diagnostics/rev
+    profile-name
+    backend-kind
+    backend-capability
+    required
+    '())))
 
 ;; : (-> Symbol Symbol Symbol PooSandboxBackendCapability PooSandboxProfilePolicy [Symbol] POOObject)
 (def (poo-flow-sandbox-profile-policy-validation profile-name

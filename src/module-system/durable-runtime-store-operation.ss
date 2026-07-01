@@ -215,20 +215,39 @@
      #f)))
 
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt [Alist] [PooDurableRuntimeStoreOperationReceipt])
+(def (poo-flow-durable-runtime-store-operation-receipts/rev
+      negotiation
+      specs
+      options
+      receipts-rev)
+  (if (null? specs)
+    receipts-rev
+    (let (spec (car specs))
+      (poo-flow-durable-runtime-store-operation-receipts/rev
+       negotiation
+       (cdr specs)
+       options
+       (cons (poo-flow-durable-runtime-store-operation
+              (car spec)
+              (car spec)
+              negotiation
+              (durable-runtime-store-ref
+               options
+               'payload-summary
+               (list (cons 'operation-kind (car spec))))
+              options)
+             receipts-rev)))))
+
+;; : (-> PooDurableRuntimeStoreNegotiationReceipt [Alist] [PooDurableRuntimeStoreOperationReceipt])
 (def (poo-flow-durable-runtime-store-operation-receipts negotiation
                                                          . maybe-options)
   (let ((options (if (null? maybe-options) '() (car maybe-options))))
-    (map (lambda (spec)
-           (poo-flow-durable-runtime-store-operation
-            (car spec)
-            (car spec)
-            negotiation
-            (durable-runtime-store-ref
-             options
-             'payload-summary
-             (list (cons 'operation-kind (car spec))))
-            options))
-         +poo-flow-durable-runtime-store-operation-specs+)))
+    (reverse
+     (poo-flow-durable-runtime-store-operation-receipts/rev
+      negotiation
+      +poo-flow-durable-runtime-store-operation-specs+
+      options
+      '()))))
 
 ;; : (-> PooDurableRuntimeStoreOperationReceipt Alist)
 (defpoo-module-final-projection

@@ -35,6 +35,18 @@
         poo-flow-user-loop-engine-intent-agent-operation
         poo-flow-user-loop-engine-intent-delegated-operation)
 
+;; : (-> Alist [Alist])
+(def (poo-flow-user-loop-engine-intent-session-agent-graph-agent-nodes
+      intent)
+  (poo-flow-user-loop-engine-intent-ref
+   (poo-flow-user-loop-engine-intent-session-agent-graph intent)
+   'agent-nodes
+   '()))
+
+;; : (-> Alist Symbol Value Value)
+(def (poo-flow-loop-engine-session-agent-node-ref node key default)
+  (poo-flow-user-loop-engine-intent-ref node key default))
+
 ;;; Agent profiles are shallow policy rows. They name the selected reviewer or
 ;;; governor role but leave model choice, tool execution, and sandbox startup to
 ;;; the runtime handoff.
@@ -70,13 +82,79 @@
             (cons 'runtime-owner "marlin-agent-core")
             (cons 'runtime-executed #f))))))
 
+;;; The runtime-facing profile view is derived from the shared session-agent
+;;; graph node so loop-engine no longer maintains a parallel profile topology.
+;; : (-> Alist Alist Alist)
+(def (poo-flow-user-loop-engine-intent-agent-profile/node intent node)
+  (let ((role (poo-flow-loop-engine-session-agent-node-ref node 'role #f))
+        (profile-name
+         (poo-flow-loop-engine-session-agent-node-ref
+          node
+          'agent-id
+          'unknown-agent))
+        (sandbox-profile-ref
+         (poo-flow-loop-engine-session-agent-node-ref
+          node
+          'sandbox-profile-ref
+          (poo-flow-user-loop-engine-intent-primary-sandbox-profile
+           intent)))
+        (result-contract
+         (poo-flow-loop-engine-session-agent-node-ref
+          node
+          'result-contract
+          'poo-flow.loop-governor.node-result.v1)))
+    (poo-flow-agent-profile->alist
+     (make-poo-flow-agent-profile
+      profile-name
+      'runtime-selected
+      (list 'loop-engine role)
+      '()
+      '(loop-engine)
+      sandbox-profile-ref
+      (list (cons 'role role)
+            (cons 'governor
+                  (poo-flow-user-loop-engine-intent-ref intent 'governor '()))
+            (cons 'result-contract result-contract)
+            (cons 'human-audit
+                  (poo-flow-user-loop-engine-intent-ref
+                   intent
+                   'human-audit
+                   '()))
+            (cons 'topology-source 'session-agent-graph))
+      '()
+      (poo-flow-user-loop-engine-intent-ref intent 'budget '())
+      (poo-flow-user-loop-engine-intent-ref intent 'observability '())
+      (list (cons 'source 'user-config-loop-engine)
+            (cons 'profile-role role)
+            (cons 'topology-source 'session-agent-graph)
+            (cons 'runtime-owner "marlin-agent-core")
+            (cons 'runtime-executed #f))))))
+
 ;;; Profile projection preserves user declaration order so presentation output
 ;;; and runtime manifests can be compared without sorting.
+;; : (-> Alist [Alist] [Alist] [Alist])
+(def (poo-flow-user-loop-engine-intent-agent-profiles-from-nodes/rev
+      intent
+      agent-nodes
+      profiles-rev)
+  (if (null? agent-nodes)
+    profiles-rev
+    (poo-flow-user-loop-engine-intent-agent-profiles-from-nodes/rev
+     intent
+     (cdr agent-nodes)
+     (cons (poo-flow-user-loop-engine-intent-agent-profile/node
+            intent
+            (car agent-nodes))
+           profiles-rev))))
+
 ;; : (-> Alist [Alist])
 (def (poo-flow-user-loop-engine-intent-agent-profiles intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-intent-agent-profile intent role-ref))
-       (poo-flow-user-loop-engine-intent-agent-profile-refs intent)))
+  (reverse
+   (poo-flow-user-loop-engine-intent-agent-profiles-from-nodes/rev
+    intent
+    (poo-flow-user-loop-engine-intent-session-agent-graph-agent-nodes
+     intent)
+    '())))
 
 ;;; Harness rows describe an initialized-agent boundary without constructing
 ;;; it. They carry runtime intent and sandbox policy references as receipt data.
@@ -105,13 +183,70 @@
             (cons 'runtime-owner "marlin-agent-core")
             (cons 'runtime-executed #f))))))
 
+;;; Harness rows are also graph-derived. The node role still determines the
+;;; stable harness id, while the profile ref comes from the graph agent id.
+;; : (-> Alist Alist Alist)
+(def (poo-flow-user-loop-engine-intent-agent-harness/node intent node)
+  (let* ((use-case-name
+          (poo-flow-user-loop-engine-intent-use-case-name intent))
+         (role
+          (poo-flow-loop-engine-session-agent-node-ref node 'role #f))
+         (profile-name
+          (poo-flow-loop-engine-session-agent-node-ref
+           node
+           'agent-id
+           'unknown-agent))
+         (harness-id
+          (poo-flow-user-loop-engine-runtime-id
+           use-case-name
+           (string-append (symbol->string role) "-harness")))
+         (sandbox-profile-ref
+          (poo-flow-loop-engine-session-agent-node-ref
+           node
+           'sandbox-profile-ref
+           (poo-flow-user-loop-engine-intent-primary-sandbox-profile
+            intent))))
+    (poo-flow-agent-harness->alist
+     (make-poo-flow-agent-harness
+      harness-id
+      profile-name
+      sandbox-profile-ref
+      (poo-flow-user-loop-engine-intent-runtime-intent intent)
+      '(execute-agent-operation stream-events read-runtime-snapshot)
+      (list 'loop-engine use-case-name role)
+      (poo-flow-user-loop-engine-intent-ref intent 'observability '())
+      #f
+      (list (cons 'source 'user-config-loop-engine)
+            (cons 'profile-role role)
+            (cons 'topology-source 'session-agent-graph)
+            (cons 'runtime-owner "marlin-agent-core")
+            (cons 'runtime-executed #f))))))
+
 ;;; Harness projection is one row per named profile so multi-agent governor
 ;;; configurations remain explicit in the handoff packet.
+;; : (-> Alist [Alist] [Alist] [Alist])
+(def (poo-flow-user-loop-engine-intent-agent-harnesses-from-nodes/rev
+      intent
+      agent-nodes
+      harnesses-rev)
+  (if (null? agent-nodes)
+    harnesses-rev
+    (poo-flow-user-loop-engine-intent-agent-harnesses-from-nodes/rev
+     intent
+     (cdr agent-nodes)
+     (cons (poo-flow-user-loop-engine-intent-agent-harness/node
+            intent
+            (car agent-nodes))
+           harnesses-rev))))
+
 ;; : (-> Alist [Alist])
 (def (poo-flow-user-loop-engine-intent-agent-harnesses intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-intent-agent-harness intent role-ref))
-       (poo-flow-user-loop-engine-intent-agent-profile-refs intent)))
+  (reverse
+   (poo-flow-user-loop-engine-intent-agent-harnesses-from-nodes/rev
+    intent
+    (poo-flow-user-loop-engine-intent-session-agent-graph-agent-nodes
+     intent)
+    '())))
 
 ;;; Session rows keep delegated work separate from workflow runs. The active
 ;;; operation ref points at the control-plane operation, not an executed turn.
@@ -148,29 +283,195 @@
             (cons 'runtime-owner "marlin-agent-core")
             (cons 'runtime-executed #f))))))
 
+;;; Agent sessions now derive their session name from the graph node's
+;;; `output-session-ref`, making the session-agent graph the address owner.
+;; : (-> Alist Alist Alist)
+(def (poo-flow-user-loop-engine-intent-agent-session/node intent node)
+  (let* ((use-case-name
+          (poo-flow-user-loop-engine-intent-use-case-name intent))
+         (role
+          (poo-flow-loop-engine-session-agent-node-ref node 'role #f))
+         (session-name
+          (poo-flow-loop-engine-session-agent-node-ref
+           node
+           'output-session-ref
+           (poo-flow-user-loop-engine-runtime-id
+            use-case-name
+            (string-append (symbol->string role) "-session"))))
+         (harness-id
+          (poo-flow-user-loop-engine-runtime-id
+           use-case-name
+           (string-append (symbol->string role) "-harness")))
+         (operation-id
+          (poo-flow-user-loop-engine-runtime-id use-case-name "operation")))
+    (poo-flow-agent-session->alist
+     (make-poo-flow-agent-session
+      session-name
+      harness-id
+      (poo-flow-user-loop-engine-intent-status intent)
+      operation-id
+      (list 'loop-engine-conversation use-case-name role)
+      '((retention . parent-owned))
+      (list operation-id)
+      (list (cons 'source 'user-config-loop-engine)
+            (cons 'profile-role role)
+            (cons 'topology-source 'session-agent-graph)
+            (cons 'workflow-run-ref
+                  (poo-flow-user-loop-engine-runtime-id
+                   use-case-name
+                   "workflow-run"))
+            (cons 'runtime-owner "marlin-agent-core")
+            (cons 'runtime-executed #f))))))
+
 ;;; Session projection gives every named profile a stable namespace that agents
 ;;; can audit before a backend opens durable conversation state.
+;; : (-> Alist [Alist] [Alist] [Alist])
+(def (poo-flow-user-loop-engine-intent-agent-sessions-from-nodes/rev
+      intent
+      agent-nodes
+      sessions-rev)
+  (if (null? agent-nodes)
+    sessions-rev
+    (poo-flow-user-loop-engine-intent-agent-sessions-from-nodes/rev
+     intent
+     (cdr agent-nodes)
+     (cons (poo-flow-user-loop-engine-intent-agent-session/node
+            intent
+            (car agent-nodes))
+           sessions-rev))))
+
 ;; : (-> Alist [Alist])
 (def (poo-flow-user-loop-engine-intent-agent-sessions intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-intent-agent-session intent role-ref))
-       (poo-flow-user-loop-engine-intent-agent-profile-refs intent)))
+  (reverse
+   (poo-flow-user-loop-engine-intent-agent-sessions-from-nodes/rev
+    intent
+    (poo-flow-user-loop-engine-intent-session-agent-graph-agent-nodes
+     intent)
+    '())))
 
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-session-agent-graph intent)
   (poo-flow-loop-engine-session-agent-graph/projection intent))
 
 ;; : (-> [Alist] Symbol [Value])
+(def (poo-flow-loop-engine-runtime-agent-field-values/rev
+      rows
+      key
+      values-rev)
+  (if (null? rows)
+    values-rev
+    (poo-flow-loop-engine-runtime-agent-field-values/rev
+     (cdr rows)
+     key
+     (cons (poo-flow-user-loop-engine-intent-ref (car rows) key #f)
+           values-rev))))
+
+;; : (-> [Alist] Symbol [Value])
 (def (poo-flow-loop-engine-runtime-agent-field-values rows key)
-  (map (lambda (row)
-         (poo-flow-user-loop-engine-intent-ref row key #f))
-       rows))
+  (reverse
+   (poo-flow-loop-engine-runtime-agent-field-values/rev rows key '())))
+
+;; : (-> [Value] [Value] [Value])
+(def (poo-flow-loop-engine-runtime-agent-values-append/rev values values-rev)
+  (if (null? values)
+    values-rev
+    (poo-flow-loop-engine-runtime-agent-values-append/rev
+     (cdr values)
+     (cons (car values) values-rev))))
+
+;; : (-> [Alist] Symbol [Value] [Value])
+(def (poo-flow-loop-engine-runtime-agent-flat-field-values/rev rows
+                                                               key
+                                                               values-rev)
+  (if (null? rows)
+    values-rev
+    (let (value
+          (poo-flow-user-loop-engine-intent-ref (car rows) key #f))
+      (poo-flow-loop-engine-runtime-agent-flat-field-values/rev
+       (cdr rows)
+       key
+       (cond
+        ((not value) values-rev)
+        ((list? value)
+         (poo-flow-loop-engine-runtime-agent-values-append/rev
+          value
+          values-rev))
+        (else
+         (cons value values-rev)))))))
+
+;; : (-> [Alist] Symbol [Value])
+(def (poo-flow-loop-engine-runtime-agent-flat-field-values rows key)
+  (reverse
+   (poo-flow-loop-engine-runtime-agent-flat-field-values/rev rows key '())))
+
+;; : (-> [Value] [Value] [Value])
+(def (poo-flow-loop-engine-runtime-agent-unique/rev values unique-rev)
+  (cond
+   ((null? values) unique-rev)
+   ((member (car values) unique-rev)
+    (poo-flow-loop-engine-runtime-agent-unique/rev (cdr values)
+                                                   unique-rev))
+   (else
+    (poo-flow-loop-engine-runtime-agent-unique/rev
+     (cdr values)
+     (cons (car values) unique-rev)))))
+
+;; : (-> [Value] [Value])
+(def (poo-flow-loop-engine-runtime-agent-unique values)
+  (reverse
+   (poo-flow-loop-engine-runtime-agent-unique/rev values '())))
+
+;; : (-> Alist Symbol [Value])
+(def (poo-flow-loop-engine-session-agent-graph-agent-node-field-values
+      graph
+      key)
+  (poo-flow-loop-engine-runtime-agent-field-values
+   (poo-flow-user-loop-engine-intent-ref graph 'agent-nodes '())
+   key))
+
+;; : (-> Alist Symbol [Value])
+(def (poo-flow-loop-engine-session-agent-graph-agent-node-flat-field-values
+      graph
+      key)
+  (poo-flow-loop-engine-runtime-agent-flat-field-values
+   (poo-flow-user-loop-engine-intent-ref graph 'agent-nodes '())
+   key))
 
 ;; : (-> Alist [Symbol])
 (def (poo-flow-loop-engine-session-agent-graph-output-session-refs graph)
-  (poo-flow-loop-engine-runtime-agent-field-values
-   (poo-flow-user-loop-engine-intent-ref graph 'agent-nodes '())
+  (poo-flow-loop-engine-session-agent-graph-agent-node-field-values
+   graph
    'output-session-ref))
+
+;; : (-> Alist [Symbol])
+(def (poo-flow-loop-engine-session-agent-graph-channel-refs graph)
+  (poo-flow-loop-engine-runtime-agent-unique
+   (poo-flow-loop-engine-session-agent-graph-agent-node-flat-field-values
+    graph
+    'communication-channels)))
+
+;; : (-> Alist [Symbol])
+(def (poo-flow-loop-engine-session-agent-graph-communication-channel-refs
+      graph)
+  (poo-flow-loop-engine-runtime-agent-unique
+   (poo-flow-loop-engine-runtime-agent-field-values
+    (poo-flow-user-loop-engine-intent-ref graph 'communication-receipts '())
+    'channel-id)))
+
+;; : (-> Alist Symbol Value Value)
+(def (poo-flow-loop-engine-session-agent-graph-registry-ref graph
+                                                            key
+                                                            default)
+  (poo-flow-user-loop-engine-intent-ref
+   (poo-flow-user-loop-engine-intent-ref graph 'registry-receipt '())
+   key
+   default))
+
+;; : (-> Alist Symbol)
+(def (poo-flow-loop-engine-session-agent-topology-loop-session-ref intent)
+  (poo-flow-user-loop-engine-runtime-id
+   (poo-flow-user-loop-engine-intent-use-case-name intent)
+   "session"))
 
 ;; : (-> Symbol [Value] [Value] Alist)
 (def (poo-flow-loop-engine-session-agent-topology-diagnostic code
@@ -195,8 +496,9 @@
       expected
       actual))))
 
-;; : (-> [Alist] [Alist] [Alist] Alist [Alist])
-(def (poo-flow-loop-engine-session-agent-topology-diagnostics profiles
+;; : (-> Alist [Alist] [Alist] [Alist] Alist [Alist])
+(def (poo-flow-loop-engine-session-agent-topology-diagnostics intent
+                                                              profiles
                                                               harnesses
                                                               sessions
                                                               graph)
@@ -209,7 +511,41 @@
         (graph-agent-ids
          (poo-flow-user-loop-engine-intent-ref graph 'agent-ids '()))
         (graph-output-session-refs
-         (poo-flow-loop-engine-session-agent-graph-output-session-refs graph)))
+         (poo-flow-loop-engine-session-agent-graph-output-session-refs graph))
+        (graph-root-session-ref
+         (poo-flow-user-loop-engine-intent-ref graph 'root-session-ref #f))
+        (graph-session-ids
+         (poo-flow-user-loop-engine-intent-ref graph 'session-ids '()))
+        (graph-durable-policy-refs
+         (poo-flow-user-loop-engine-intent-ref graph 'durable-policy-refs '()))
+        (graph-channel-refs
+         (poo-flow-loop-engine-session-agent-graph-channel-refs graph))
+        (communication-channel-refs
+         (poo-flow-loop-engine-session-agent-graph-communication-channel-refs
+          graph))
+        (registry-root-session-ids
+         (poo-flow-loop-engine-session-agent-graph-registry-ref
+          graph
+          'root-session-ids
+          '()))
+        (registry-session-ids
+         (poo-flow-loop-engine-session-agent-graph-registry-ref
+          graph
+          'session-ids
+          '()))
+        (registry-active-session-ref
+         (poo-flow-loop-engine-session-agent-graph-registry-ref
+          graph
+          'active-session-ref
+          #f))
+        (registry-durable-policy-refs
+         (poo-flow-loop-engine-session-agent-graph-registry-ref
+          graph
+          'durable-policy-refs
+          '()))
+        (loop-session-ref
+         (poo-flow-loop-engine-session-agent-topology-loop-session-ref
+          intent)))
     (append
      (poo-flow-loop-engine-session-agent-topology-diagnostics/one
       'loop-agent-profile-graph-mismatch
@@ -222,7 +558,27 @@
      (poo-flow-loop-engine-session-agent-topology-diagnostics/one
       'loop-agent-session-graph-mismatch
       graph-output-session-refs
-      agent-session-refs))))
+      agent-session-refs)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-session-graph-registry-root-mismatch
+      (list graph-root-session-ref)
+      registry-root-session-ids)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-session-graph-registry-session-mismatch
+      graph-session-ids
+      registry-session-ids)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-session-graph-registry-active-mismatch
+      loop-session-ref
+      registry-active-session-ref)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-agent-durable-policy-registry-mismatch
+      graph-durable-policy-refs
+      registry-durable-policy-refs)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-agent-channel-communication-mismatch
+      graph-channel-refs
+      communication-channel-refs))))
 
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-session-agent-topology-trace intent)
@@ -241,11 +597,56 @@
          (agent-session-refs
           (poo-flow-loop-engine-runtime-agent-field-values sessions 'name))
          (graph-agent-ids
-          (poo-flow-user-loop-engine-intent-ref graph 'agent-ids '()))
+         (poo-flow-user-loop-engine-intent-ref graph 'agent-ids '()))
          (graph-output-session-refs
           (poo-flow-loop-engine-session-agent-graph-output-session-refs graph))
+         (graph-root-session-ref
+          (poo-flow-user-loop-engine-intent-ref graph 'root-session-ref #f))
+         (graph-session-ids
+          (poo-flow-user-loop-engine-intent-ref graph 'session-ids '()))
+         (graph-lineage-edge-pairs
+          (poo-flow-user-loop-engine-intent-ref graph
+                                                'lineage-edge-pairs
+                                                '()))
+         (graph-durable-policy-refs
+          (poo-flow-user-loop-engine-intent-ref graph
+                                                'durable-policy-refs
+                                                '()))
+         (graph-channel-refs
+          (poo-flow-loop-engine-session-agent-graph-channel-refs graph))
+         (communication-channel-refs
+          (poo-flow-loop-engine-session-agent-graph-communication-channel-refs
+           graph))
+         (communication-receipt-count
+          (poo-flow-user-loop-engine-intent-ref graph
+                                                'communication-receipt-count
+                                                0))
+         (registry-root-session-ids
+          (poo-flow-loop-engine-session-agent-graph-registry-ref
+           graph
+           'root-session-ids
+           '()))
+         (registry-session-ids
+          (poo-flow-loop-engine-session-agent-graph-registry-ref
+           graph
+           'session-ids
+           '()))
+         (registry-active-session-ref
+          (poo-flow-loop-engine-session-agent-graph-registry-ref
+           graph
+           'active-session-ref
+           #f))
+         (registry-durable-policy-refs
+          (poo-flow-loop-engine-session-agent-graph-registry-ref
+           graph
+           'durable-policy-refs
+           '()))
+         (loop-session-ref
+          (poo-flow-loop-engine-session-agent-topology-loop-session-ref
+           intent))
          (diagnostics
           (poo-flow-loop-engine-session-agent-topology-diagnostics
+           intent
            profiles
            harnesses
            sessions
@@ -258,7 +659,19 @@
      (cons 'harness-profiles harness-profiles)
      (cons 'agent-session-refs agent-session-refs)
      (cons 'graph-agent-ids graph-agent-ids)
+     (cons 'graph-root-session-ref graph-root-session-ref)
+     (cons 'loop-session-ref loop-session-ref)
+     (cons 'graph-session-ids graph-session-ids)
      (cons 'graph-output-session-refs graph-output-session-refs)
+     (cons 'graph-lineage-edge-pairs graph-lineage-edge-pairs)
+     (cons 'graph-durable-policy-refs graph-durable-policy-refs)
+     (cons 'graph-channel-refs graph-channel-refs)
+     (cons 'communication-channel-refs communication-channel-refs)
+     (cons 'communication-receipt-count communication-receipt-count)
+     (cons 'registry-root-session-ids registry-root-session-ids)
+     (cons 'registry-session-ids registry-session-ids)
+     (cons 'registry-active-session-ref registry-active-session-ref)
+     (cons 'registry-durable-policy-refs registry-durable-policy-refs)
      (cons 'valid? (null? diagnostics))
      (cons 'diagnostic-count (length diagnostics))
      (cons 'diagnostics diagnostics)

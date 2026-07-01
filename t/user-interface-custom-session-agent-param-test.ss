@@ -8,6 +8,8 @@
                  run-tests!
                  test-case
                  test-suite)
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-user-module-selection-key)
         :poo-flow/src/module-system/init-syntax)
 
 (export user-interface-custom-session-agent-param-test)
@@ -19,11 +21,24 @@
   (let (entry (assoc key row))
     (if entry (cdr entry) #f)))
 
+;; : (-> [PooUserModuleSelection] [Alist])
+(def (module-config-rows module-selection-bundle)
+  (let* ((selection (car module-selection-bundle))
+         (entry
+          (poo-flow-user-module-selection-flag-entry selection ':session-rows)))
+    (if entry (cdr entry) '())))
+
 ;; : TestSuite
 (def user-interface-custom-session-agent-param-test
   (test-suite "poo-flow custom user-interface session-agent-param case"
     (test-case "projects custom AgentParam contract without runtime work"
-      (let (row poo-flow-custom-module-session-agent-param-case)
+      (let* ((selection (car poo-flow-custom-module-session-agent-param-case))
+             (row
+              (car
+               (module-config-rows
+                poo-flow-custom-module-session-agent-param-case))))
+        (check-equal? (poo-flow-user-module-selection-key selection)
+                      '(session . session-core))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.session.agent-param-contract)
         (check-equal? (test-ref row 'contract-id)
@@ -32,11 +47,31 @@
         (check-equal? (test-ref row 'provider-ref) 'marlin/provider)
         (check-equal? (test-ref row 'effective-model-ref)
                       'marlin/model/build-review)
+        (check-equal? (test-ref row 'effective-isolation-mode)
+                      'child-isolated)
+        (check-equal? (test-ref row 'effective-sandbox-profile-ref)
+                      'agent/nono)
         (check-equal? (test-ref row 'validation-valid?) #t)
         (check-equal? (test-ref row 'validation-diagnostic-count) 0)
         (check-equal? (test-ref row 'tool-refs)
                       '(read-workspace-file run-build-command))
         (check-equal? (test-ref row 'memory-refs) '(session/memory))
+        (check-equal? (test-ref row 'memory-catalog-ref)
+                      'memory-core/custom-agent-param)
+        (check-equal? (test-ref row 'memory-catalog-valid?) #t)
+        (check-equal? (test-ref row 'memory-catalog-resolved-store-refs)
+                      '(session/memory))
+        (check-equal? (test-ref row 'memory-catalog-unresolved-store-refs)
+                      '())
+        (check-equal?
+         (length (test-ref row 'allowed-communication-receipts))
+         1)
+        (check-equal?
+         (test-ref (car (test-ref row 'allowed-communication-receipts))
+                   'target-session-id)
+         'custom/root-session)
+        (check-equal? (test-ref row 'denied-communication-receipts)
+                      '())
         (check-equal? (test-ref row 'runtime-executed) #f)))))
 
 (run-tests! user-interface-custom-session-agent-param-test)

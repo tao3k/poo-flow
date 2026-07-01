@@ -2,8 +2,8 @@
 ;;; Boundary: composed workflow builders for Docker, Store, Tensorflow, and makefile examples.
 ;;; Invariant: builders produce descriptors and runtime command manifests only.
 
-(import (only-in :std/sugar filter)
-        :poo-flow/src/core/api
+(import :poo-flow/src/core/api
+        :poo-flow/src/core/projection-syntax
         :poo-flow/src/modules/docker
         :poo-flow/src/workflow/store)
 
@@ -39,11 +39,35 @@
 ;;; Boundary:
 ;;; - Option filtering keeps control callbacks out of exported descriptor metadata.
 ;;; - Metadata remains inert data for runtime manifests.
+;; : (-> Alist Symbol Alist Alist)
+(def (workflow-options-without/rev options key result-rev)
+  (cond
+   ((null? options) result-rev)
+   ((workflow-option-entry-key? (car options) key)
+    (workflow-options-without/rev (cdr options) key result-rev))
+   (else
+    (workflow-options-without/rev
+     (cdr options)
+     key
+     (cons (car options) result-rev)))))
+
 ;; : (-> Alist Symbol Alist)
 (def (workflow-options-without options key)
-  (filter (lambda (entry)
-            (not (workflow-option-entry-key? entry key)))
-          options))
+  (reverse (workflow-options-without/rev options key '())))
+
+;; : (-> List List List)
+(def (workflow-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
 
 ;; : (-> Pair Symbol Boolean)
 (def (workflow-option-entry-key? entry key)
@@ -72,9 +96,10 @@
       (docker-enable-strategy (make-local-eager-strategy)))
      (make-store-enabled-adapter
       (make-docker-enabled-adapter (make-rust-adapter command)))
-     (append '((runtime . rust)
-               (extensions . (docker store)))
-             options)
+     (poo-flow-core-field-rows/tail
+      options
+      (runtime 'rust)
+      (extensions '(docker store)))
      (make-store-task-family-registry
       (make-docker-task-family-registry))
      default-flow-declaration-registry)))
@@ -221,7 +246,7 @@
                          (workflow-cli-string (execution-request-plan-id request))
                          "--operation"
                          (workflow-cli-string operation))))
-        (append
+        (workflow-values/tail
          base
          (cond
           ((eq? operation 'makefile-tool-parse)
@@ -267,9 +292,10 @@
                      options
                      'arguments
                      (make-makefile-tool-runtime-arguments options)))
-         (metadata (append '((workflow . makefile-tool)
-                             (runtime . rust-cli-compatible))
-                           (workflow-options-without options 'arguments))))
+         (metadata (poo-flow-core-field-rows/tail
+                    (workflow-options-without options 'arguments)
+                    (workflow 'makefile-tool)
+                    (runtime 'rust-cli-compatible))))
     (make-stdout-runtime-command-descriptor name
                                             executable
                                             arguments

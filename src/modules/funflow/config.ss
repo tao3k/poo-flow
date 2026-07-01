@@ -2,8 +2,7 @@
 ;;; Boundary: Funflow module configuration belongs to the Funflow module owner.
 ;;; Invariant: this file only declares maintained Funflow module rows.
 
-(import (only-in :std/sugar filter-map)
-        (only-in :clan/poo/object .ref object<-alist)
+(import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/config-prototype-syntax
         :poo-flow/src/module-system/projection-syntax
@@ -184,9 +183,10 @@
    ((and (eq? workflow-ref 'funflow-cicd)
          (null? check-maps))
     (list
-     (list (cons 'field 'workflow-ref)
-           (cons 'code 'missing-funflow-workflow-pipeline)
-           (cons 'workflow-ref workflow-ref))))
+     (poo-flow-module-field-rows
+      (field 'workflow-ref)
+      (code 'missing-funflow-workflow-pipeline)
+      (workflow-ref workflow-ref))))
    (else '())))
 
 ;; : (-> [PooFlowCicdCheckMap] Alist)
@@ -196,10 +196,10 @@
              (pipeline-names-rev '())
              (functional-dag-rows-rev '()))
     (if (null? remaining-check-maps)
-      (list
-       (cons 'pipeline-count pipeline-count)
-       (cons 'pipeline-names (reverse pipeline-names-rev))
-       (cons 'functional-dag-rows (reverse functional-dag-rows-rev)))
+      (poo-flow-module-field-rows
+       (pipeline-count pipeline-count)
+       (pipeline-names (reverse pipeline-names-rev))
+       (functional-dag-rows (reverse functional-dag-rows-rev)))
       (let* ((check-map (car remaining-check-maps))
              (pipeline-name (poo-flow-cicd-check-map-name check-map))
              (functional-dag-row
@@ -222,22 +222,22 @@
           (poo-flow-funflow-workflow-agreement-summary check-maps))
          (functional-dag-rows
           (poo-flow-cicd-alist-ref summary 'functional-dag-rows '())))
-    (list
-     (cons 'kind 'funflow-workflow-agreement)
-     (cons 'contract +poo-flow-funflow-workflow-agreement-contract+)
-     (cons 'workflow-ref workflow-ref)
-     (cons 'funflow-owned? (poo-flow-funflow-workflow-ref? workflow-ref))
-     (cons 'pipeline-count
-           (poo-flow-cicd-alist-ref summary 'pipeline-count 0))
-     (cons 'pipeline-names
-           (poo-flow-cicd-alist-ref summary 'pipeline-names '()))
-     (cons 'functional-dag-count (length functional-dag-rows))
-     (cons 'functional-dags functional-dag-rows)
-     (cons 'diagnostic-count (length diagnostics))
-     (cons 'diagnostics diagnostics)
-     (cons 'valid? (null? diagnostics))
-     (cons 'runtime-owner "marlin-agent-core")
-     (cons 'runtime-executed #f))))
+    (poo-flow-module-field-rows
+     (kind 'funflow-workflow-agreement)
+     (contract +poo-flow-funflow-workflow-agreement-contract+)
+     (workflow-ref workflow-ref)
+     (funflow-owned? (poo-flow-funflow-workflow-ref? workflow-ref))
+     (pipeline-count
+      (poo-flow-cicd-alist-ref summary 'pipeline-count 0))
+     (pipeline-names
+      (poo-flow-cicd-alist-ref summary 'pipeline-names '()))
+     (functional-dag-count (length functional-dag-rows))
+     (functional-dags functional-dag-rows)
+     (diagnostic-count (length diagnostics))
+     (diagnostics diagnostics)
+     (valid? (null? diagnostics))
+     (runtime-owner "marlin-agent-core")
+     (runtime-executed #f))))
 
 ;;; POO-native check and pipeline objects stay shallow: Funflow owns the public
 ;;; prototype surface, while sandbox profile refs and runtime descriptors remain
@@ -395,13 +395,22 @@
   (projector poo-flow-funflow-composition-step->alist)
   (error-message "funflow composition step projection requires a list"))
 
+;; : (-> [PooFlowFunflowDagEdge] [Symbol] [Symbol] Pair)
+(def (poo-flow-funflow-edge-endpoint-summary/rev edges sources-rev targets-rev)
+  (if (null? edges)
+    (cons (reverse sources-rev) (reverse targets-rev))
+    (poo-flow-funflow-edge-endpoint-summary/rev
+     (cdr edges)
+     (cons (.ref (car edges) 'from) sources-rev)
+     (cons (.ref (car edges) 'to) targets-rev))))
+
 ;; : (-> [PooFlowFunflowDagEdge] Alist)
 (def (poo-flow-funflow-edge-endpoint-summary edges)
-  (list
-   (cons 'sources
-         (map (lambda (edge) (.ref edge 'from)) edges))
-   (cons 'targets
-         (map (lambda (edge) (.ref edge 'to)) edges))))
+  (let (summary
+        (poo-flow-funflow-edge-endpoint-summary/rev edges '() '()))
+    (list
+     (cons 'sources (car summary))
+     (cons 'targets (cdr summary)))))
 
 ;; : (-> [Symbol] [Symbol] [Symbol])
 (def (poo-flow-funflow-nodes-not-in nodes blocked-nodes)
@@ -418,7 +427,8 @@
   (poo-flow-funflow-dag-edge
    (poo-flow-cicd-alist-ref edge 'from #f)
    (poo-flow-cicd-alist-ref edge 'to #f)
-   (list (cons 'source 'workflow-cicd-dependency-graph))))
+   (poo-flow-module-field-rows
+    (source 'workflow-cicd-dependency-graph))))
 
 ;; : (-> [Alist] [PooFlowFunflowDagEdge])
 (def (poo-flow-funflow-dependency-edges->dag-edges edges)
@@ -437,7 +447,8 @@
    node
    #f
    #f
-   (list (cons 'source 'funflow-functional-kernel))))
+   (poo-flow-module-field-rows
+    (source 'funflow-functional-kernel))))
 
 ;; : (-> PooFlowFunflowDagEdge PooFlowFunflowCompositionStep)
 (def (poo-flow-funflow-edge->composition-step edge)
@@ -446,15 +457,35 @@
    #f
    (.ref edge 'from)
    (.ref edge 'to)
-   (list (cons 'source 'funflow-functional-kernel)
-         (cons 'edge-composition-style
-               (.ref edge 'composition-style)))))
+   (poo-flow-module-field-rows
+    (source 'funflow-functional-kernel)
+    (edge-composition-style
+     (.ref edge 'composition-style)))))
+
+;; : (-> [Symbol] [PooFlowFunflowCompositionStep] [PooFlowFunflowCompositionStep])
+(def (poo-flow-funflow-node-composition-steps/rev nodes steps-rev)
+  (if (null? nodes)
+    steps-rev
+    (poo-flow-funflow-node-composition-steps/rev
+     (cdr nodes)
+     (cons (poo-flow-funflow-node->composition-step (car nodes))
+           steps-rev))))
+
+;; : (-> [PooFlowFunflowDagEdge] [PooFlowFunflowCompositionStep] [PooFlowFunflowCompositionStep])
+(def (poo-flow-funflow-edge-composition-steps/rev edges steps-rev)
+  (if (null? edges)
+    steps-rev
+    (poo-flow-funflow-edge-composition-steps/rev
+     (cdr edges)
+     (cons (poo-flow-funflow-edge->composition-step (car edges))
+           steps-rev))))
 
 ;; : (-> [Symbol] [PooFlowFunflowDagEdge] [PooFlowFunflowCompositionStep])
 (def (poo-flow-funflow-dag-composition-steps nodes edges)
-  (append
-   (map poo-flow-funflow-node->composition-step nodes)
-   (map poo-flow-funflow-edge->composition-step edges)))
+  (reverse
+   (poo-flow-funflow-edge-composition-steps/rev
+    edges
+    (poo-flow-funflow-node-composition-steps/rev nodes '()))))
 
 ;; : (-> PooFlowFunflowFunctionalDag Alist)
 (defpoo-module-final-projection
@@ -579,10 +610,10 @@
      pipeline-name
      (poo-flow-funflow-poo-checks->cicd-checks
       (.ref pipeline 'checks))
-     (append
-      (list (cons 'source 'funflow-poo-config)
-            (cons 'pipeline pipeline-name))
-      metadata))))
+     (poo-flow-module-field-rows/tail
+      metadata
+      (source 'funflow-poo-config)
+      (pipeline pipeline-name)))))
 
 ;;; Functional DAGs are Funflow-owned POO objects derived from a pipeline. They
 ;;; keep the authoring model functional and inspectable while leaving runtime
@@ -632,9 +663,10 @@
       (cons 'valid?
             (poo-flow-cicd-alist-ref graph 'valid? #f))
       (cons 'metadata
-            (list (cons 'source 'funflow-functional-kernel)
-                  (cons 'dependency-graph-kind
-                        (poo-flow-cicd-alist-ref graph 'kind #f))))
+            (poo-flow-module-field-rows
+             (source 'funflow-functional-kernel)
+             (dependency-graph-kind
+              (poo-flow-cicd-alist-ref graph 'kind #f))))
       (cons 'runtime-owner "marlin-agent-core")
       (cons 'runtime-executed #f)))))
 
@@ -646,10 +678,22 @@
 ;;; Boundary: funflow poo config pipelines is the policy-visible edge for
 ;;; policy behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
+;; : (-> [PooFlowFunflowConfigPrototype] [PooFlowCicdCheckMap] [PooFlowCicdCheckMap])
+(def (poo-flow-funflow-poo-config-pipelines/rev prototypes pipelines-rev)
+  (if (null? prototypes)
+    pipelines-rev
+    (let (pipeline
+          (poo-flow-funflow-poo-config-pipeline (car prototypes)))
+      (poo-flow-funflow-poo-config-pipelines/rev
+       (cdr prototypes)
+       (if pipeline
+         (cons pipeline pipelines-rev)
+         pipelines-rev)))))
+
 ;; : (-> [PooFlowFunflowConfigPrototype] [PooFlowCicdCheckMap])
 (def (poo-flow-funflow-poo-config-pipelines prototypes)
   (if (list? prototypes)
-    (filter-map poo-flow-funflow-poo-config-pipeline prototypes)
+    (reverse (poo-flow-funflow-poo-config-pipelines/rev prototypes '()))
     (error "funflow POO config prototypes must be a list" prototypes)))
 
 ;; : (-> PooFlowFunflowConfigPrototype MaybePooFlowCicdCheckMap)

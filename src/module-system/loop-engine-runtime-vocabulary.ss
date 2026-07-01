@@ -53,6 +53,8 @@
      . poo-flow.loop-engine.lineage-receipt.v1)
     (selector-receipt
      . poo-flow.loop-engine.selector-receipt.v1)
+    (session-agent-graph
+     . poo-flow.modules.session.agent-graph.v1)
     (resource-dispatch-receipt
      . poo-flow.loop-engine.resource-dispatch-receipt.v1)
     (capability-receipt
@@ -87,6 +89,7 @@
   '(agent-profile
     agent-harness
     agent-session
+    session-agent-graph
     workflow-run
     dispatch-receipt
     agent-operation

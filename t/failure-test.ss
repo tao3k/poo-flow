@@ -25,6 +25,20 @@
   (with-catch (lambda (failure) failure)
               thunk))
 
+;; : (forall (a) (-> [a] [a] [a]))
+(def (failure-test-values/tail values tail)
+  (let loop ((remaining-values values)
+             (values-rev '()))
+    (if (null? remaining-values)
+      (let restore ((remaining-rev values-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) values-rev)))))
+
 ;;; Submit failure fixture preserves the request kind so receipt wrapping can be
 ;;; checked after the adapter reports failure.
 ;; : (-> ExecutionRequest AdapterResult)
@@ -128,7 +142,9 @@
                                                       'custom-dispatch))
              (registry (make-task-family-registry
                         'custom-task-families
-                        (append task-family-descriptors (list descriptor))))
+                        (failure-test-values/tail
+                         task-family-descriptors
+                         (list descriptor))))
              (task (make-task 'remote-custom
                               'custom
                               '(remote custom)

@@ -361,6 +361,18 @@
 ;;; Existing runner receipts can be projected into the new workflow-run object
 ;;; family without making the runner import this module. The caller supplies the
 ;;; run id because durable id ownership belongs to the admission/runtime layer.
+;; : (-> Receipt Alist)
+(defpoo-core-receipt-projection
+  poo-flow-receipt-workflow-run-metadata (receipt)
+  (bindings ())
+  (fields ((source 'receipt)
+           (strategy (receipt-strategy receipt))
+           (policy (receipt-policy receipt))
+           (frontier (receipt-frontier receipt))
+           (event-count (receipt-event-count receipt))
+           (adapter-request-count
+            (receipt-adapter-request-count receipt)))))
+
 ;; : (-> Receipt RunId PooFlowWorkflowRun)
 (def (poo-flow-receipt->workflow-run receipt run-id)
   (make-poo-flow-workflow-run
@@ -374,13 +386,15 @@
    (receipt-output receipt)
    (receipt-error receipt)
    receipt
-   (list (cons 'source 'receipt)
-         (cons 'strategy (receipt-strategy receipt))
-         (cons 'policy (receipt-policy receipt))
-         (cons 'frontier (receipt-frontier receipt))
-         (cons 'event-count (receipt-event-count receipt))
-         (cons 'adapter-request-count
-               (receipt-adapter-request-count receipt)))))
+   (poo-flow-receipt-workflow-run-metadata receipt)))
+
+;; : (-> PooFlowWorkflowRun PooFlowRuntimeSnapshot)
+(defpoo-core-receipt-projection
+  poo-flow-workflow-run-snapshot-details (run)
+  (bindings ())
+  (fields ((workflow-ref (poo-flow-workflow-run-workflow-ref run))
+           (event-stream-ref
+            (poo-flow-workflow-run-event-stream-ref run)))))
 
 ;; : (-> PooFlowWorkflowRun PooFlowRuntimeSnapshot)
 (def (poo-flow-workflow-run->snapshot run)
@@ -396,9 +410,15 @@
    (poo-flow-workflow-run-error run)
    '((stage . workflow-run->snapshot)
      (runtime-executed . #f))
-   (list (cons 'workflow-ref (poo-flow-workflow-run-workflow-ref run))
-         (cons 'event-stream-ref
-               (poo-flow-workflow-run-event-stream-ref run)))))
+   (poo-flow-workflow-run-snapshot-details run)))
+
+;; : (-> PooFlowAgentSession PooFlowRuntimeSnapshot)
+(defpoo-core-receipt-projection
+  poo-flow-agent-session-snapshot-details (session)
+  (bindings ())
+  (fields ((harness-id (poo-flow-agent-session-harness-id session))
+           (active-operation-id
+            (poo-flow-agent-session-active-operation-id session)))))
 
 ;; : (-> PooFlowAgentSession PooFlowRuntimeSnapshot)
 (def (poo-flow-agent-session->snapshot session)
@@ -411,9 +431,16 @@
    #f
    '((stage . agent-session->snapshot)
      (runtime-executed . #f))
-   (list (cons 'harness-id (poo-flow-agent-session-harness-id session))
-         (cons 'active-operation-id
-               (poo-flow-agent-session-active-operation-id session)))))
+   (poo-flow-agent-session-snapshot-details session)))
+
+;; : (-> PooFlowDispatchReceipt PooFlowRuntimeSnapshot)
+(defpoo-core-receipt-projection
+  poo-flow-dispatch-receipt-snapshot-details (receipt)
+  (bindings ())
+  (fields ((target-agent
+            (poo-flow-dispatch-receipt-target-agent receipt))
+           (target-session-id
+            (poo-flow-dispatch-receipt-target-session-id receipt)))))
 
 ;; : (-> PooFlowDispatchReceipt PooFlowRuntimeSnapshot)
 (def (poo-flow-dispatch-receipt->snapshot receipt)
@@ -426,7 +453,4 @@
    #f
    '((stage . dispatch-receipt->snapshot)
      (runtime-executed . #f))
-   (list (cons 'target-agent
-               (poo-flow-dispatch-receipt-target-agent receipt))
-         (cons 'target-session-id
-               (poo-flow-dispatch-receipt-target-session-id receipt)))))
+   (poo-flow-dispatch-receipt-snapshot-details receipt)))

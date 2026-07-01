@@ -60,6 +60,34 @@
         (import: :poo-flow/src/module-system/durable-recovery-scenario)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
+;; : (forall (a) (-> [a] [a] [a]))
+(def (poo-flow-session-case-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+;; : (-> [[Alist]] [Alist] [Alist])
+(def (poo-flow-session-case-row-groups/tail row-groups tail)
+  (if (null? row-groups)
+    tail
+    (poo-flow-session-case-rows/tail
+     (car row-groups)
+     (poo-flow-session-case-row-groups/tail (cdr row-groups) tail))))
+
+;; : (-> [Alist] [[Alist]] [Alist])
+(def (poo-flow-session-case-row-groups->rows rows row-groups)
+  (poo-flow-session-case-rows/tail
+   rows
+   (poo-flow-session-case-row-groups/tail row-groups '())))
+
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives
 ;;; in `poo-flow-modules-system-use-module` upstream data helpers.
@@ -88,10 +116,17 @@
       (and elements
            (poo-flow-simple-keyword-slot-specs/elements ctx elements))))
 
+  (def (poo-flow-simple-keyword-slot-groups/elements ctx elements)
+    (match elements
+      ([] '())
+      ([slot-specs . more]
+       (cons (poo-flow-simple-keyword-slot-specs ctx slot-specs)
+             (poo-flow-simple-keyword-slot-groups/elements ctx more)))))
+
   (def (poo-flow-simple-keyword-slot-groups ctx slot-def-groups)
-    (map (lambda (slot-specs)
-           (poo-flow-simple-keyword-slot-specs ctx slot-specs))
-         (poo-flow-syntax-list->list slot-def-groups)))
+    (poo-flow-simple-keyword-slot-groups/elements
+     ctx
+     (poo-flow-syntax-list->list slot-def-groups)))
 
   (def (poo-flow-all? values)
     (not (member #f values))))
@@ -203,7 +238,8 @@
 ;;       ```
 ;;     %
 (defsyntax (use-module stx)
-  (syntax-case stx (:config profiles binding workflow funflow tool-core memory-core loop-engine nono-sandbox cubeSandbox docker-sandbox
+  (syntax-case stx (:config :rows :metadata profiles binding workflow funflow session-core tool-core memory-core loop-engine nono-sandbox cubeSandbox docker-sandbox
+                    session-case metadata objects rows row-groups
                     .def
                     :inherits :isolation :environment :command :nono)
     ((_ funflow
@@ -266,6 +302,72 @@
       (poo-flow-modules-system-use-module/contract
        'workflow
        '())))
+    ((_ session-core
+        :config
+        (session-case case-name
+          (metadata metadata-entry ...)
+          (objects (object-name object-expr) ...)
+          (rows row-expr ...)
+          (row-groups row-group-expr ...))
+        ...)
+     (syntax
+      (let* ((case-name
+              (let* ((object-name object-expr) ...)
+                (object<-alist
+                 (list
+                  (cons 'rows
+                        (poo-flow-session-case-row-groups->rows
+                         (list row-expr ...)
+                         (list row-group-expr ...)))
+                  (cons 'metadata '(metadata-entry ...)))
+                 supers: session-config)))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'session-core
+         (poo-flow-session-core-poo-config-flags
+          (list case-name ...)
+          '(:config
+            (session-case case-name
+              (metadata metadata-entry ...)
+              (objects (object-name object-expr) ...)
+              (rows row-expr ...)
+              (row-groups row-group-expr ...))
+            ...))))))
+    ((_ session-core
+        :config
+        (session-case case-name
+          (metadata metadata-entry ...)
+          (objects (object-name object-expr) ...)
+          (rows row-expr ...))
+        ...)
+     (syntax
+      (let* ((case-name
+              (let* ((object-name object-expr) ...)
+                (object<-alist
+                 (list
+                  (cons 'rows (list row-expr ...))
+                  (cons 'metadata '(metadata-entry ...)))
+                 supers: session-config)))
+             ...)
+        (poo-flow-modules-system-use-module/contract
+         'session-core
+         (poo-flow-session-core-poo-config-flags
+          (list case-name ...)
+          '(:config
+            (session-case case-name
+              (metadata metadata-entry ...)
+              (objects (object-name object-expr) ...)
+              (rows row-expr ...))
+            ...))))))
+    ((_ session-core
+        :config
+        (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+              slot-def ...)
+        ...)
+     (error "session-core :config .def has been removed; use (use-module session-core :config (session-case ...))"))
+    ((_ session-core
+        :rows bad-clause ...)
+     (error "session-core :rows has been removed; use (use-module session-core :config (session-case ...))"))
     ((_ tool-core
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)

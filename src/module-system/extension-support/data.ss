@@ -4,8 +4,7 @@
 (import (only-in :clan/poo/object
                  .o
                  .ref
-                 object?)
-        (only-in :std/sugar foldl))
+                 object?))
 
 (export poo-flow-module-extension-node-kind
         poo-flow-module-extension-operation-kind
@@ -206,35 +205,63 @@
 ;;; Boundary: module extension append distinct indexed is the policy-visible
 ;;; edge for module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (-> [PooModuleSlotValue] HashTable [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-extension-append-distinct-added/rev
+      extra
+      seen
+      added-rev)
+  (cond
+   ((null? extra) added-rev)
+   ((hash-get seen (car extra))
+    (poo-flow-module-extension-append-distinct-added/rev
+     (cdr extra)
+     seen
+     added-rev))
+   (else
+    (hash-put! seen (car extra) #t)
+    (poo-flow-module-extension-append-distinct-added/rev
+     (cdr extra)
+     seen
+     (cons (car extra) added-rev)))))
+
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct/indexed base extra seen)
   (let (added
-        (foldl (lambda (value result)
-                 (if (hash-get seen value)
-                   result
-                   (begin
-                     (hash-put! seen value #t)
-                     (cons value result))))
-               '()
-               extra))
+        (poo-flow-module-extension-append-distinct-added/rev
+         extra
+         seen
+         '()))
     (if (null? added)
       base
       (append base (reverse added)))))
 
 ;;; Remove is value-based rather than positional so downstream patches can
 ;;; delete inherited list elements without knowing the upstream list index.
+;; : (-> [PooModuleSlotValue] HashTable [PooModuleSlotValue] [PooModuleSlotValue])
+(def (poo-flow-module-extension-remove-elements/rev values removed-index kept-rev)
+  (cond
+   ((null? values) kept-rev)
+   ((hash-get removed-index (car values))
+    (poo-flow-module-extension-remove-elements/rev
+     (cdr values)
+     removed-index
+     kept-rev))
+   (else
+    (poo-flow-module-extension-remove-elements/rev
+     (cdr values)
+     removed-index
+     (cons (car values) kept-rev)))))
+
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-remove-elements values removed)
   (if (null? removed)
     values
     (let (removed-index (poo-flow-module-extension-value-index removed))
       (reverse
-       (foldl (lambda (value kept)
-                (if (hash-get removed-index value)
-                  kept
-                  (cons value kept)))
-              '()
-              values)))))
+       (poo-flow-module-extension-remove-elements/rev
+        values
+        removed-index
+        '())))))
 
 ;;; Boundary: module extension list value is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection

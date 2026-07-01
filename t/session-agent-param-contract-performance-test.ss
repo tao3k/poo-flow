@@ -12,7 +12,8 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         :poo-flow/t/support/performance
-        :poo-flow/src/modules/session/config)
+        :poo-flow/src/modules/session/config
+        :poo-flow/src/modules/memory-core/config)
 
 (export session-agent-param-contract-performance-test)
 
@@ -84,6 +85,21 @@
            'session/perf-system
            '(system)
            'parent-summary-only))
+         (isolation-policy
+          (poo-flow-session-isolation-policy
+           'policy/perf-isolation
+           'session/perf
+           'child-isolated
+           'denied
+           'denied
+           'declared-channel-only))
+         (sandbox-policy
+          (poo-flow-session-sandbox-policy
+           'policy/perf-sandbox
+           'session/perf
+           'agent/nono
+           'parent-profile
+           'isolated-filesystem))
          (context-policy
           (poo-flow-session-context-policy
            'policy/perf-context
@@ -102,6 +118,20 @@
            'session/perf
            '(channel/perf-root)
            '(session/root)))
+         (root-communication
+          (poo-flow-session-communication-receipt
+           'project/agent-param
+           'child-parent
+           'session/root
+           'session/root
+           'session/perf
+           'session/root
+           'agent/perf
+           'agent/root
+           'channel/perf-root
+           'result
+           '((summary . "perf result ready"))
+           'receipt-only))
          (sharing-policy
           (poo-flow-session-resource-sharing-policy
            'policy/perf-sharing
@@ -131,12 +161,43 @@
            '(hook/pre-check)
            (list read-grant)
            'human-approval-on-escalation
-           'deny)))
+           'deny))
+         (memory-store
+          (poo-flow-memory-store-spec
+           'memory/perf
+           'durable-project
+           'project
+           '(current-session project)
+           '(semantic-search)
+           '(append review-only)
+           "marlin-agent-core"
+           'memory/perf
+           #t
+           'marlin-memory-adapter))
+         (memory-catalog
+          (poo-flow-memory-catalog
+           'memory-core/perf-agent-param
+           (list memory-store)))
+         (memory-intent
+          (poo-flow-session-memory-intent
+           'intent/perf-agent-param-memory
+           'memory/perf
+           'project
+           '(current-ticket)
+           'append))
+         (memory-catalog-validation-row
+          (poo-flow-memory-policy-catalog-validation-receipt->alist
+           (poo-flow-memory-policy-catalog-validation-receipt
+            'validation/perf-agent-param-memory-catalog
+            memory-catalog
+            (list memory-intent)))))
     (poo-flow-session-policy-validation-receipt
      'validation/perf-agent-param
      'session/perf
      model-policy
      prompt-policy
+     isolation-policy
+     sandbox-policy
      context-policy
      history-policy
      communication-policy
@@ -163,7 +224,12 @@
        'read-workspace-file
        'read
        'project-workspace
-       'hook/pre-check)))))
+       'hook/pre-check))
+     (list
+      (cons 'memory-catalog-validation
+            memory-catalog-validation-row)
+      (cons 'communication-receipts
+            (list root-communication))))))
 
 ;; : (-> Integer Symbol)
 (def (agent-param-performance-contract-id index)
@@ -199,7 +265,34 @@
           (cons 'runtime-executed
                 (agent-param-performance-ref
                  (car rows)
-                 'runtime-executed)))))
+                 'runtime-executed))
+          (cons 'memory-catalog-valid?
+                (agent-param-performance-ref
+                 (car rows)
+                 'memory-catalog-valid?))
+          (cons 'effective-isolation-mode
+                (agent-param-performance-ref
+                 (car rows)
+                 'effective-isolation-mode))
+          (cons 'effective-sandbox-profile-ref
+                (agent-param-performance-ref
+                 (car rows)
+                 'effective-sandbox-profile-ref))
+          (cons 'allowed-communication-receipt-count
+                (length
+                 (agent-param-performance-ref
+                  (car rows)
+                  'allowed-communication-receipts)))
+          (cons 'denied-communication-receipt-count
+                (length
+                 (agent-param-performance-ref
+                  (car rows)
+                  'denied-communication-receipts)))
+          (cons 'memory-catalog-resolved-store-count
+                (length
+                 (agent-param-performance-ref
+                  (car rows)
+                  'memory-catalog-resolved-store-refs))))))
 
 ;; : TestSuite
 (def session-agent-param-contract-performance-test
@@ -229,5 +322,28 @@
                       'agent-param/perf-199)
         (check-equal? (agent-param-performance-ref summary 'runtime-executed)
                       #f)
+        (check-equal? (agent-param-performance-ref summary
+                                                   'memory-catalog-valid?)
+                      #t)
+        (check-equal? (agent-param-performance-ref
+                       summary
+                       'effective-isolation-mode)
+                      'child-isolated)
+        (check-equal? (agent-param-performance-ref
+                       summary
+                       'effective-sandbox-profile-ref)
+                      'agent/nono)
+        (check-equal? (agent-param-performance-ref
+                       summary
+                       'allowed-communication-receipt-count)
+                      1)
+        (check-equal? (agent-param-performance-ref
+                       summary
+                       'denied-communication-receipt-count)
+                      0)
+        (check-equal? (agent-param-performance-ref
+                       summary
+                       'memory-catalog-resolved-store-count)
+                      1)
         (agent-param-performance-display-receipt receipt)
         (check-equal? (benchmark-receipt-pass? receipt) #t)))))

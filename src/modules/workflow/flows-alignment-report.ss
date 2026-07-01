@@ -3,7 +3,6 @@
 ;;; Invariant: report rows summarize proof metadata and runtime gaps without execution.
 
 (import (only-in :clan/poo/object .o .ref object<-alist)
-        (only-in :std/srfi/1 filter-map fold)
         :poo-flow/src/modules/workflow/flows-alignment-specs)
 
 (export poo-flow-funflow-tutorial-alignment-report)
@@ -23,14 +22,19 @@
 
 ;;; Boundary: status counts are report metadata only; they summarize coverage
 ;;; states without changing runtime ownership or proof semantics.
+;; : (-> [PooObject] Alist Alist)
+(def (alignment-status-counts/loop specs counts)
+  (if (null? specs)
+    counts
+    (alignment-status-counts/loop
+     (cdr specs)
+     (alignment-status-count-increment
+      (poo-flow-funflow-tutorial-alignment-spec-status (car specs))
+      counts))))
+
 ;; : (-> [PooObject] Alist)
 (def (alignment-status-counts specs)
-  (fold (lambda (spec counts)
-          (alignment-status-count-increment
-           (poo-flow-funflow-tutorial-alignment-spec-status spec)
-           counts))
-        '()
-        specs))
+  (alignment-status-counts/loop specs '()))
 
 ;;; Boundary: alignment status count ref is the policy-visible edge for
 ;;; workflow behavior, keeping validation, lookup, or projection
@@ -41,38 +45,65 @@
     (if entry (cdr entry) 0)))
 
 ;;; Boundary: map preserves source row order so report output stays diff-stable.
+;; : (-> [PooObject] [Symbol] [Symbol])
+(def (alignment-spec-ids/rev specs ids-rev)
+  (if (null? specs)
+    ids-rev
+    (alignment-spec-ids/rev
+     (cdr specs)
+     (cons (poo-flow-funflow-tutorial-alignment-spec-id (car specs))
+           ids-rev))))
+
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-spec-ids specs)
-  (map poo-flow-funflow-tutorial-alignment-spec-id specs))
+  (reverse (alignment-spec-ids/rev specs '())))
 
 ;;; Boundary: deferred ids keep runtime-owned gaps visible in diagnostics.
 ;;; Empty deferred slots stay out of the public report projection.
+;; : (-> [PooObject] [Symbol] [Symbol])
+(def (alignment-deferred-ids/rev specs ids-rev)
+  (cond
+   ((null? specs) ids-rev)
+   ((null? (.ref (car specs) 'deferred))
+    (alignment-deferred-ids/rev (cdr specs) ids-rev))
+   (else
+    (alignment-deferred-ids/rev
+     (cdr specs)
+     (cons (poo-flow-funflow-tutorial-alignment-spec-id (car specs))
+           ids-rev)))))
+
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-deferred-ids specs)
-  (filter-map
-   (lambda (spec)
-     (if (null? (.ref spec 'deferred))
-       #f
-       (poo-flow-funflow-tutorial-alignment-spec-id spec)))
-   specs))
+  (reverse (alignment-deferred-ids/rev specs '())))
 
 ;;; Boundary: proof counts are observability summaries, not success predicates.
 ;;; The helper counts attached proof strings without interpreting their content.
+;; : (-> [PooObject] Integer Integer)
+(def (alignment-proof-count/loop specs count)
+  (if (null? specs)
+    count
+    (alignment-proof-count/loop
+     (cdr specs)
+     (+ count (length (.ref (car specs) 'proofs))))))
+
 ;; : (-> [PooObject] Integer)
 (def (alignment-proof-count specs)
-  (fold (lambda (spec count)
-          (+ count (length (.ref spec 'proofs))))
-        0
-        specs))
+  (alignment-proof-count/loop specs 0))
 
 ;;; Boundary: gate proof count summarizes local verification coverage only.
 ;;; It does not replace executing the tests listed in the proof catalog.
+;; : (-> [PooFlowAlignmentGateProof] Integer Integer)
+(def (alignment-gate-proof-count/loop gate-proofs count)
+  (if (null? gate-proofs)
+    count
+    (alignment-gate-proof-count/loop
+     (cdr gate-proofs)
+     (+ count
+        (length (alignment-gate-proof-commands (car gate-proofs)))))))
+
 ;; : (-> [PooFlowAlignmentGateProof] Integer)
 (def (alignment-gate-proof-count gate-proofs)
-  (fold (lambda (gate-proof count)
-          (+ count (length (alignment-gate-proof-commands gate-proof))))
-        0
-        gate-proofs))
+  (alignment-gate-proof-count/loop gate-proofs 0))
 
 ;; : (-> PooObject Alist)
 (def (alignment-spec-snapshot spec)
@@ -96,9 +127,17 @@
 
 ;;; Boundary: source index preserves tutorial source order from the spec table.
 ;;; This is the fast path for checking which upstream file a report row covers.
+;; : (-> [PooObject] [Alist] [Alist])
+(def (alignment-source-index/rev specs rows-rev)
+  (if (null? specs)
+    rows-rev
+    (alignment-source-index/rev
+     (cdr specs)
+     (cons (alignment-source-index-entry (car specs)) rows-rev))))
+
 ;; : (-> [PooObject] [Alist])
 (def (alignment-source-index specs)
-  (map alignment-source-index-entry specs))
+  (reverse (alignment-source-index/rev specs '())))
 
 ;;; Boundary: proof entries are detailed audit rows keyed by upstream source.
 ;;; They keep command receipts inert while linking proof coverage to runtime gaps.
@@ -115,9 +154,17 @@
 
 ;;; Boundary: source proof index preserves tutorial source order from specs.
 ;;; Use it for diagnostics that need proof strings; keep source-index compact.
+;; : (-> [PooObject] [Alist] [Alist])
+(def (alignment-source-proof-index/rev specs rows-rev)
+  (if (null? specs)
+    rows-rev
+    (alignment-source-proof-index/rev
+     (cdr specs)
+     (cons (alignment-source-proof-entry (car specs)) rows-rev))))
+
 ;; : (-> [PooObject] [Alist])
 (def (alignment-source-proof-index specs)
-  (map alignment-source-proof-entry specs))
+  (reverse (alignment-source-proof-index/rev specs '())))
 
 ;;; Boundary: owner symbol collection is stable and spec-order preserving.
 ;;; Duplicate runtime owners collapse into the first observed matrix row.
@@ -164,33 +211,77 @@
 
 ;;; Boundary: status filtering stays over normalized spec rows.
 ;;; It supports coverage matrix projections without changing the source table.
+;; : (-> Symbol [PooObject] [PooObject] [PooObject])
+(def (alignment-specs-with-status/rev status specs specs-rev)
+  (cond
+   ((null? specs) specs-rev)
+   ((eq? status
+         (poo-flow-funflow-tutorial-alignment-spec-status (car specs)))
+    (alignment-specs-with-status/rev
+     status
+     (cdr specs)
+     (cons (car specs) specs-rev)))
+   (else
+    (alignment-specs-with-status/rev status (cdr specs) specs-rev))))
+
 ;; : (-> Symbol [PooObject] [PooObject])
 (def (alignment-specs-with-status status specs)
-  (filter (lambda (spec)
-            (eq? status
-                 (poo-flow-funflow-tutorial-alignment-spec-status spec)))
-          specs))
+  (reverse (alignment-specs-with-status/rev status specs '())))
+
+;; : (-> [PooObject] [Symbol] [Symbol])
+(def (alignment-spec-statuses/rev specs statuses-rev)
+  (if (null? specs)
+    statuses-rev
+    (alignment-spec-statuses/rev
+     (cdr specs)
+     (cons (poo-flow-funflow-tutorial-alignment-spec-status (car specs))
+           statuses-rev))))
+
+;; : (-> [PooObject] [Symbol])
+(def (alignment-spec-statuses specs)
+  (reverse (alignment-spec-statuses/rev specs '())))
+
+;; : (-> [PooObject] [String] [String])
+(def (alignment-spec-sources/rev specs sources-rev)
+  (if (null? specs)
+    sources-rev
+    (alignment-spec-sources/rev
+     (cdr specs)
+     (cons (.ref (car specs) 'source) sources-rev))))
+
+;; : (-> [PooObject] [String])
+(def (alignment-spec-sources specs)
+  (reverse (alignment-spec-sources/rev specs '())))
 
 ;;; Boundary: status matrix rows expose source ids and paths for one status.
 ;;; The row is a report index, not another coverage authority.
 ;; : (-> Symbol [PooObject] Alist)
 (def (alignment-status-source-entry status specs)
-  (let* ((matching-specs (alignment-specs-with-status status specs))
-         (matching-source-index (alignment-source-index matching-specs)))
+  (let (matching-specs (alignment-specs-with-status status specs))
     (list (cons 'status status)
           (cons 'count (length matching-specs))
           (cons 'ids (alignment-spec-ids matching-specs))
-          (cons 'sources
-                (map (lambda (entry) (cdr (assoc 'source entry)))
-                     matching-source-index)))))
+          (cons 'sources (alignment-spec-sources matching-specs)))))
 
 ;;; Boundary: matrix order follows status-counts so summary and detail align.
 ;;; Consumers can compare counts without re-scanning the spec snapshots.
+;; : (-> Alist [PooObject] [Alist] [Alist])
+(def (alignment-status-source-matrix/rev status-counts specs rows-rev)
+  (if (null? status-counts)
+    rows-rev
+    (alignment-status-source-matrix/rev
+     (cdr status-counts)
+     specs
+     (cons (alignment-status-source-entry (caar status-counts) specs)
+           rows-rev))))
+
 ;; : (-> [PooObject] [Alist])
 (def (alignment-status-source-matrix specs)
-  (map (lambda (status-entry)
-         (alignment-status-source-entry (car status-entry) specs))
-       (alignment-status-counts specs)))
+  (reverse
+   (alignment-status-source-matrix/rev
+    (alignment-status-counts specs)
+    specs
+    '())))
 
 ;;; Boundary: runtime owner matching is structural and data-only.
 ;;; It never executes the runtime operation named by the owner symbol.
@@ -200,31 +291,50 @@
 
 ;;; Boundary: runtime owner rows show handoff blast radius by backend concern.
 ;;; Statuses and deferred outputs stay attached so runtime readiness is visible.
+;; : (-> Symbol [PooObject] [PooObject] [PooObject])
+(def (alignment-specs-with-runtime-owner/rev owner specs specs-rev)
+  (cond
+   ((null? specs) specs-rev)
+   ((alignment-spec-has-runtime-owner? owner (car specs))
+    (alignment-specs-with-runtime-owner/rev
+     owner
+     (cdr specs)
+     (cons (car specs) specs-rev)))
+   (else
+    (alignment-specs-with-runtime-owner/rev owner (cdr specs) specs-rev))))
+
+;; : (-> Symbol [PooObject] [PooObject])
+(def (alignment-specs-with-runtime-owner owner specs)
+  (reverse (alignment-specs-with-runtime-owner/rev owner specs '())))
+
 ;; : (-> Symbol [PooObject] Alist)
 (def (alignment-runtime-owner-entry owner specs)
-  (let* ((matching-specs
-          (filter (lambda (spec)
-                    (alignment-spec-has-runtime-owner? owner spec))
-                  specs))
-         (matching-source-index (alignment-source-index matching-specs)))
+  (let (matching-specs (alignment-specs-with-runtime-owner owner specs))
     (list (cons 'runtime-owner owner)
           (cons 'count (length matching-specs))
           (cons 'ids (alignment-spec-ids matching-specs))
-          (cons 'statuses
-                (map poo-flow-funflow-tutorial-alignment-spec-status
-                     matching-specs))
-          (cons 'sources
-                (map (lambda (entry) (cdr (assoc 'source entry)))
-                     matching-source-index))
+          (cons 'statuses (alignment-spec-statuses matching-specs))
+          (cons 'sources (alignment-spec-sources matching-specs))
           (cons 'deferred (alignment-deferred-values matching-specs)))))
 
 ;;; Boundary: owner matrix groups runtime gaps by backend concern.
 ;;; It is diagnostic metadata for Marlin handoff, not an execution scheduler.
+;; : (-> [Symbol] [PooObject] [Alist] [Alist])
+(def (alignment-runtime-owner-matrix/rev owners specs rows-rev)
+  (if (null? owners)
+    rows-rev
+    (alignment-runtime-owner-matrix/rev
+     (cdr owners)
+     specs
+     (cons (alignment-runtime-owner-entry (car owners) specs) rows-rev))))
+
 ;; : (-> [PooObject] [Alist])
 (def (alignment-runtime-owner-matrix specs)
-  (map (lambda (owner)
-         (alignment-runtime-owner-entry owner specs))
-       (alignment-runtime-owner-symbols specs)))
+  (reverse
+   (alignment-runtime-owner-matrix/rev
+    (alignment-runtime-owner-symbols specs)
+    specs
+    '())))
 
 ;;; Boundary: readiness summary is a CI/user-interface snapshot.
 ;;; It summarizes existing report indexes without becoming a runtime scheduler.
@@ -323,14 +433,44 @@
 
 ;;; Boundary: runtime gap index is a report-only diagnostic projection.
 ;;; It does not imply the Scheme side can execute the listed runtime work.
+;; : (-> [PooObject] [Alist] [Alist])
+(def (alignment-runtime-gap-index/rev specs rows-rev)
+  (cond
+   ((null? specs) rows-rev)
+   ((alignment-runtime-gap-spec? (car specs))
+    (alignment-runtime-gap-index/rev
+     (cdr specs)
+     (cons (alignment-runtime-gap-entry (car specs)) rows-rev)))
+   (else
+    (alignment-runtime-gap-index/rev (cdr specs) rows-rev))))
+
 ;; : (-> [PooObject] [Alist])
 (def (alignment-runtime-gap-index specs)
-  (filter-map
-   (lambda (spec)
-     (if (alignment-runtime-gap-spec? spec)
-       (alignment-runtime-gap-entry spec)
-       #f))
-   specs))
+  (reverse (alignment-runtime-gap-index/rev specs '())))
+
+;; : (-> [PooFlowAlignmentGateProof] [Symbol] [Symbol])
+(def (alignment-gate-proof-ids/rev gate-proofs ids-rev)
+  (if (null? gate-proofs)
+    ids-rev
+    (alignment-gate-proof-ids/rev
+     (cdr gate-proofs)
+     (cons (alignment-gate-proof-id (car gate-proofs)) ids-rev))))
+
+;; : (-> [PooFlowAlignmentGateProof] [Symbol])
+(def (alignment-gate-proof-ids gate-proofs)
+  (reverse (alignment-gate-proof-ids/rev gate-proofs '())))
+
+;; : (-> [PooObject] [Alist] [Alist])
+(def (alignment-spec-snapshots/rev specs snapshots-rev)
+  (if (null? specs)
+    snapshots-rev
+    (alignment-spec-snapshots/rev
+     (cdr specs)
+     (cons (alignment-spec-snapshot (car specs)) snapshots-rev))))
+
+;; : (-> [PooObject] [Alist])
+(def (alignment-spec-snapshots specs)
+  (reverse (alignment-spec-snapshots/rev specs '())))
 
 ;;; Boundary: aggregate observability is derived only from normalized spec rows.
 ;;; The map keeps row snapshots separate from report-level summary metadata.
@@ -346,10 +486,10 @@
          (proof-count-value (alignment-proof-count specs))
          (gate-proofs-value
           (poo-flow-funflow-tutorial-alignment-gate-proofs))
-         (gate-ids-value (map alignment-gate-proof-id gate-proofs-value))
+         (gate-ids-value (alignment-gate-proof-ids gate-proofs-value))
          (gate-proof-count-value
           (alignment-gate-proof-count gate-proofs-value))
-         (spec-snapshots-value (map alignment-spec-snapshot specs))
+         (spec-snapshots-value (alignment-spec-snapshots specs))
          (source-index-value (alignment-source-index specs))
          (source-proof-index-value (alignment-source-proof-index specs))
          (status-source-matrix-value
