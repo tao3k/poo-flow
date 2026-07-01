@@ -145,13 +145,28 @@
    'tool-refs
    '()))
 
+;; : (-> Alist [Pair] [Symbol] [Symbol])
+(def (poo-flow-loop-engine-agent-output-session-refs/rev intent
+                                                         role-refs
+                                                         output-session-refs)
+  (if (null? role-refs)
+    output-session-refs
+    (poo-flow-loop-engine-agent-output-session-refs/rev
+     intent
+     (cdr role-refs)
+     (cons
+      (poo-flow-user-loop-engine-runtime-id
+       (poo-flow-user-loop-engine-intent-use-case-name intent)
+       (string-append (symbol->string (caar role-refs)) "-session"))
+      output-session-refs))))
+
 ;; : (-> Alist [Symbol])
 (def (poo-flow-loop-engine-agent-output-session-refs intent)
-  (map (lambda (role-ref)
-         (poo-flow-user-loop-engine-runtime-id
-          (poo-flow-user-loop-engine-intent-use-case-name intent)
-          (string-append (symbol->string (car role-ref)) "-session")))
-       (poo-flow-loop-engine-intent-agent-profile-refs intent)))
+  (reverse
+   (poo-flow-loop-engine-agent-output-session-refs/rev
+    intent
+    (poo-flow-loop-engine-intent-agent-profile-refs intent)
+    '())))
 
 ;; : (-> Symbol [Symbol] [Symbol])
 (def (poo-flow-loop-engine-peer-session-refs session-id session-ids)
@@ -253,6 +268,34 @@
            (cons 'use-case use-case-name)
            (cons 'runtime-owner "marlin-agent-core")
            (cons 'runtime-executed #f)))))
+
+;; : (-> Alist [Pair] [Symbol] [PooSessionAgentNode] [PooSessionAgentNode])
+(def (poo-flow-loop-engine-session-agent-nodes/rev intent
+                                                   role-refs
+                                                   output-session-refs
+                                                   agent-nodes)
+  (if (null? role-refs)
+    agent-nodes
+    (poo-flow-loop-engine-session-agent-nodes/rev
+     intent
+     (cdr role-refs)
+     output-session-refs
+     (cons (poo-flow-loop-engine-session-agent-node
+            intent
+            (car role-refs)
+            output-session-refs)
+           agent-nodes))))
+
+;; : (-> Alist [Pair] [Symbol] [PooSessionAgentNode])
+(def (poo-flow-loop-engine-session-agent-nodes intent
+                                               role-refs
+                                               output-session-refs)
+  (reverse
+   (poo-flow-loop-engine-session-agent-nodes/rev
+    intent
+    role-refs
+    output-session-refs
+    '())))
 
 ;; : (-> Alist Pair [PooSessionCommunicationReceipt])
 (def (poo-flow-loop-engine-session-agent-communication-receipts/rev
@@ -443,12 +486,9 @@
          (output-session-refs
           (poo-flow-loop-engine-agent-output-session-refs intent))
          (agent-nodes
-          (map (lambda (role-ref)
-                 (poo-flow-loop-engine-session-agent-node
-                  intent
-                  role-ref
-                  output-session-refs))
-               role-refs))
+          (poo-flow-loop-engine-session-agent-nodes intent
+                                                    role-refs
+                                                    output-session-refs))
          (communication-receipts
           (poo-flow-loop-engine-session-agent-communication-receipts*
            intent

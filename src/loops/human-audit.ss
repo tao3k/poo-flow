@@ -128,17 +128,29 @@
            loop-human-review-role
            loop-human-audit-role)))
 
+;; : (-> Symbol LoopGovernor [Alist] [Alist] Alist Alist)
+(def (loop-human-audit-slot-rows name
+                                 governor
+                                 state-facts
+                                 decisions
+                                 overrides)
+  (cons (cons 'name name)
+        (cons (cons 'governor governor)
+              (cons (cons 'state-facts state-facts)
+                    (cons (cons 'decisions decisions)
+                          overrides)))))
+
 ;;; Constructor binds one governor view to human decisions.
 ;;; Decisions are alists of =(pattern . decision)=.
 ;; : (-> Symbol LoopGovernor [Alist] [Alist] [Alist] LoopHumanAudit)
 (def (make-loop-human-audit name governor state-facts decisions . maybe-overrides)
   (poo-core-role-object
    (slot-rows
-    (append
-     (list (cons 'name name)
-           (cons 'governor governor)
-           (cons 'state-facts state-facts)
-           (cons 'decisions decisions))
+    (loop-human-audit-slot-rows
+     name
+     governor
+     state-facts
+     decisions
      (if (null? maybe-overrides) '() (car maybe-overrides))))
    (supers loop-human-audit-prototype)))
 
@@ -289,34 +301,75 @@
 ;;; projection responsibilities centralized for callers.
 ;; : (-> LoopHumanAudit Alist [Alist])
 (def (loop-human-audit-review-items/from-governor-contract audit contract)
-    (append
-     (map (lambda (pattern)
-            (loop-human-audit-open-pattern->review-item audit pattern))
-          (loop-human-audit-alist-ref contract 'open-patterns '()))
-     (map (lambda (item)
-            (loop-human-audit-inbox-item->review-item audit item))
-          (loop-human-audit-alist-ref contract 'human-inbox-items '()))))
+  (loop-human-audit-open-review-items/tail
+   audit
+   (loop-human-audit-alist-ref contract 'open-patterns '())
+   (loop-human-audit-inbox-review-items/tail
+    audit
+    (loop-human-audit-alist-ref contract 'human-inbox-items '())
+    '())))
+
+;; : (-> LoopHumanAudit [Symbol] [Alist] [Alist])
+(def (loop-human-audit-open-review-items/tail audit patterns tail)
+  (cond
+   ((null? patterns) tail)
+   (else
+    (cons (loop-human-audit-open-pattern->review-item audit (car patterns))
+          (loop-human-audit-open-review-items/tail
+           audit
+           (cdr patterns)
+           tail)))))
+
+;; : (-> LoopHumanAudit [Alist] [Alist] [Alist])
+(def (loop-human-audit-inbox-review-items/tail audit items tail)
+  (cond
+   ((null? items) tail)
+   (else
+    (cons (loop-human-audit-inbox-item->review-item audit (car items))
+          (loop-human-audit-inbox-review-items/tail
+           audit
+           (cdr items)
+           tail)))))
 
 ;;; Boundary: loop human audit required field error is the policy-visible edge
 ;;; for loop behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> Symbol Value [ValidationError])
-(def (loop-human-audit-required-field-error field value)
+(def (loop-human-audit-required-field-error/tail field value tail)
   (if value
-    '()
-    (list (list (cons 'field field)
-                (cons 'code 'required)))))
+    tail
+    (cons (list (cons 'field field)
+                (cons 'code 'required))
+          tail)))
+
+;; : (-> Symbol Value [ValidationError])
+(def (loop-human-audit-required-field-error field value)
+  (loop-human-audit-required-field-error/tail field value '()))
 
 ;;; Boundary: loop human audit field validation error unless is the policy-
 ;;; visible edge for loop behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
-(def (loop-human-audit-field-validation-error/unless valid? field code value)
+(def (loop-human-audit-field-validation-error/unless/tail valid?
+                                                        field
+                                                        code
+                                                        value
+                                                        tail)
   (if valid?
-    '()
-    (list (list (cons 'field field)
+    tail
+    (cons (list (cons 'field field)
                 (cons 'code code)
-                (cons 'value value)))))
+                (cons 'value value))
+          tail)))
+
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-human-audit-field-validation-error/unless valid? field code value)
+  (loop-human-audit-field-validation-error/unless/tail
+   valid?
+   field
+   code
+   value
+   '()))
 
 ;;; Boundary: loop human audit governor validation errors is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection
@@ -379,25 +432,33 @@
                 (cons 'value (car decisions)))
           (loop-human-audit-decision-validation-errors (cdr decisions))))))
 
+;; : (-> [ValidationError] [ValidationError] [ValidationError])
+(def (loop-human-audit-errors/tail errors tail)
+  (if (null? errors)
+    tail
+    (cons (car errors)
+          (loop-human-audit-errors/tail (cdr errors) tail))))
+
 ;;; Boundary: validation keeps audit contracts typed before review projection.
 ;; : (-> LoopHumanAudit [ValidationError])
 (def (loop-human-audit-validation-errors audit)
   (if (loop-human-audit? audit)
-    (append
-     (loop-human-audit-required-field-error
-      'name
-      (loop-human-audit-name audit))
-     (loop-human-audit-governor-validation-errors
-      (loop-human-audit-governor audit))
-     (loop-human-audit-governor-contract-field-validation-errors
-      (loop-human-audit-governor-contract audit))
-     (loop-human-audit-field-validation-error/unless
-      (list? (loop-human-audit-state-facts audit))
-      'state-facts
-      'not-list
-      (loop-human-audit-state-facts audit))
-     (loop-human-audit-decisions-field-validation-errors
-      (loop-human-audit-decisions audit)))
+    (loop-human-audit-required-field-error/tail
+     'name
+     (loop-human-audit-name audit)
+     (loop-human-audit-errors/tail
+      (loop-human-audit-governor-validation-errors
+       (loop-human-audit-governor audit))
+      (loop-human-audit-errors/tail
+       (loop-human-audit-governor-contract-field-validation-errors
+        (loop-human-audit-governor-contract audit))
+       (loop-human-audit-field-validation-error/unless/tail
+        (list? (loop-human-audit-state-facts audit))
+        'state-facts
+        'not-list
+        (loop-human-audit-state-facts audit)
+        (loop-human-audit-decisions-field-validation-errors
+         (loop-human-audit-decisions audit))))))
     (list '((field . audit) (code . not-loop-human-audit)))))
 
 ;;; Boundary: loop human audit validation errors contract facts is the policy-
@@ -406,21 +467,22 @@
 ;; : (-> LoopHumanAudit [ValidationError])
 (def (loop-human-audit-validation-errors/contract-facts audit)
   (if (loop-human-audit? audit)
-    (append
-     (loop-human-audit-required-field-error
-      'name
-      (loop-human-audit-name audit))
-     (loop-human-audit-governor-contract-validation-errors
-      (loop-human-audit-governor audit))
-     (loop-human-audit-governor-contract-field-validation-errors
-      (loop-human-audit-governor-contract audit))
-     (loop-human-audit-field-validation-error/unless
-      (list? (loop-human-audit-state-facts audit))
-      'state-facts
-      'not-list
-      (loop-human-audit-state-facts audit))
-     (loop-human-audit-decisions-field-validation-errors
-      (loop-human-audit-decisions audit)))
+    (loop-human-audit-required-field-error/tail
+     'name
+     (loop-human-audit-name audit)
+     (loop-human-audit-errors/tail
+      (loop-human-audit-governor-contract-validation-errors
+       (loop-human-audit-governor audit))
+      (loop-human-audit-errors/tail
+       (loop-human-audit-governor-contract-field-validation-errors
+        (loop-human-audit-governor-contract audit))
+       (loop-human-audit-field-validation-error/unless/tail
+        (list? (loop-human-audit-state-facts audit))
+        'state-facts
+        'not-list
+        (loop-human-audit-state-facts audit)
+        (loop-human-audit-decisions-field-validation-errors
+         (loop-human-audit-decisions audit))))))
     (list '((field . audit) (code . not-loop-human-audit)))))
 
 ;;; Boundary: validate loop human audit is the policy-visible edge for loop
@@ -455,11 +517,24 @@
 ;;; table, so adding a decision does not change the contract writer.
 ;; : (-> LoopHumanAudit Symbol [Symbol])
 (def (loop-human-audit-patterns-by-decision audit decision)
-  (map car
-       (loop-human-audit-filter
-        (lambda (entry)
-          (eq? (cdr entry) decision))
-        (loop-human-audit-decisions audit))))
+  (loop-human-audit-patterns-by-decision/from-decisions
+   (loop-human-audit-decisions audit)
+   decision))
+
+;; : (-> [Alist] Symbol [Symbol])
+(def (loop-human-audit-patterns-by-decision/from-decisions decisions decision)
+  (cond
+   ((null? decisions) '())
+   ((and (pair? (car decisions))
+         (eq? (cdar decisions) decision))
+    (cons (caar decisions)
+          (loop-human-audit-patterns-by-decision/from-decisions
+           (cdr decisions)
+           decision)))
+   (else
+    (loop-human-audit-patterns-by-decision/from-decisions
+     (cdr decisions)
+     decision))))
 
 ;;; Boundary: loop human audit review items pending predicate is the policy-
 ;;; visible edge for loop behavior, keeping validation, lookup, or projection

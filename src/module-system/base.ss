@@ -608,20 +608,7 @@
 ;;       ```
 ;;     %
 (def (poo-flow-user-module-bundles->modules module-bundles)
-  (let loop-bundles ((remaining module-bundles)
-                     (modules-rev '()))
-    (cond
-     ((null? remaining)
-      (reverse modules-rev))
-     (else
-      (let loop-modules ((bundle (car remaining))
-                         (modules-rev modules-rev))
-        (cond
-         ((null? bundle)
-          (loop-bundles (cdr remaining) modules-rev))
-         (else
-          (loop-modules (cdr bundle)
-                        (cons (car bundle) modules-rev)))))))))
+  (apply append module-bundles))
 
 ;;; Boundary: top-level user config groups module choices and strategy settings.
 ;; : (-> [PooUserModuleSelection] POOObject POOObject)

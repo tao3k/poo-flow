@@ -187,6 +187,12 @@
            (metadata (.ref checked-node 'metadata))
            (runtime-executed (.ref checked-node 'runtime-executed)))))
 
+;; : (-> [PooFlowGraphNode] [Alist])
+(defpoo-module-final-projection-batch
+  poo-flow-graph-nodes->alists (nodes)
+  (projector poo-flow-graph-node->alist)
+  (error-message "graph node projection requires a list"))
+
 ;; : (-> Object Object Symbol [Alist] PooFlowGraphEdge)
 (def (poo-flow-graph-edge from to . maybe-kind+metadata)
   (poo-flow-graph-require "graph edge from must be a stable id"
@@ -254,6 +260,12 @@
            (metadata (.ref checked-edge 'metadata))
            (runtime-executed (.ref checked-edge 'runtime-executed)))))
 
+;; : (-> [PooFlowGraphEdge] [Alist])
+(defpoo-module-final-projection-batch
+  poo-flow-graph-edges->alists (edges)
+  (projector poo-flow-graph-edge->alist)
+  (error-message "graph edge projection requires a list"))
+
 ;; : (-> Object [PooFlowGraphNode] [PooFlowGraphEdge] [Alist] PooFlowGraph)
 (def (poo-flow-graph graph-id nodes edges . maybe-metadata)
   (poo-flow-graph-require "graph id must be a stable id"
@@ -313,10 +325,10 @@
   (fields ((kind (.ref checked-graph 'kind))
            (schema (.ref checked-graph 'schema))
            (graph-id (.ref checked-graph 'graph-id))
-           (nodes (map poo-flow-graph-node->alist
-                       (.ref checked-graph 'nodes)))
-           (edges (map poo-flow-graph-edge->alist
-                       (.ref checked-graph 'edges)))
+           (nodes
+            (poo-flow-graph-nodes->alists (.ref checked-graph 'nodes)))
+           (edges
+            (poo-flow-graph-edges->alists (.ref checked-graph 'edges)))
            (metadata (.ref checked-graph 'metadata))
            (runtime-executed (.ref checked-graph 'runtime-executed)))))
 

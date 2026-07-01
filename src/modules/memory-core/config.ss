@@ -80,7 +80,14 @@
 
 ;; : (-> [PooMemoryStoreSpecPrototype] [PooMemoryStoreSpec])
 (def (poo-flow-memory-core-poo-store-specs->store-specs specs)
-  (map poo-flow-memory-core-poo-store-spec->store-spec specs))
+  (cond
+   ((null? specs) '())
+   ((pair? specs)
+    (cons (poo-flow-memory-core-poo-store-spec->store-spec (car specs))
+          (poo-flow-memory-core-poo-store-specs->store-specs
+           (cdr specs))))
+   (else
+    (error "memory-core POO store specs must be a list" specs))))
 
 ;; : (-> PooMemoryCatalogPrototype [PooMemoryStoreSpec] PooMemoryCatalog)
 (defpoo-module-config-converter

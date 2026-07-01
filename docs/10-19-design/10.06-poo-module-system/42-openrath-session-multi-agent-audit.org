@@ -395,8 +395,8 @@ Current implementation:
 - =user-interface/custom/my-module/cases/session-agent-graph.ss= declares a root session with build and audit child-agent sessions.
 - =t/session-multi-agent-graph-test.ss= proves graph topology and registry correlation without executing agents or delivering messages.
 - =src/module-system/loop-engine-runtime-agent.ss= now projects loop-engine agent/judge/human-audit rows into the same =poo-flow-session-agent-graph= topology instead of maintaining a parallel agent/session graph.
-- =src/module-system/loop-engine-runtime.ss= carries the shared =session-agent-graph= through runtime envelope, handoff facts, and runtime projections; =src/module-system/presentation-config.ss= exposes it as =loop-engine-session-agent-graphs=.
-- =t/user-interface-custom-loop-engine-test.ss= proves intent, handoff, and presentation all reference the same graph; =t/loop-engine-session-agent-graph-performance-test.ss= and =t/scenarios/performance/loop-engine-session-agent-graph/benchmark.ss= guard the projection cost.
+- =src/module-system/loop-engine-runtime.ss= carries the shared =session-agent-graph= and =session-agent-topology-trace= through runtime envelope, handoff facts, and runtime projections; =src/module-system/presentation-config.ss= exposes them as =loop-engine-session-agent-graphs= and =loop-engine-session-agent-topology-traces=.
+- =t/user-interface-custom-loop-engine-test.ss= proves intent, handoff, and presentation all reference the same graph and that topology trace profile/session ids stay aligned; =t/loop-engine-session-agent-graph-performance-test.ss= and =t/scenarios/performance/loop-engine-session-agent-graph/benchmark.ss= guard the projection cost.
 *** 10.06.42.70.30 P3 Session Communication Receipt
 Add a report-only communication object between sessions:
 - =project-id=;
@@ -476,10 +476,19 @@ The validation receipt must also include:
 - diagnostics for hooks that try to borrow parent or child agent permissions without an explicit hook policy.
 
 Current implementation:
-- =src/modules/session/policy-validation.ss= owns
-  =poo-flow-session-policy-validation-receipt=,
-  =poo-flow-session-policy-validation-receipt->alist=, and bounded
+- =src/modules/session/policy.ss= exposes the foundational POO policy family for isolation, sandbox, context, history, communication, session-sharing, resource, model, prompt, tool, hook, resource-sharing, and agent-execution policies through the shared =policy-syntax.ss= constructor pattern.
+- =t/session-policy-contract-test.ss= projects the foundational isolation, sandbox, context, history, communication, session-sharing, and resource policy rows so sandbox and session-sharing cannot remain untested constructor surfaces.
+- =user-interface/custom/my-module/cases/session-policy.ss= projects sandbox and session-sharing policy rows beside the effective validation receipt, keeping the downstream custom module on the same POO-native object path.
+- =t/scenarios/performance/session-policy-family/benchmark.ss= and =t/session-policy-family-performance-test.ss= keep the foundational constructor family as a hot benchmark gate before effective validation.
+- =src/modules/session/policy-validation.ss= owns the defstruct-backed
+  =poo-flow-session-policy-validation-receipt= constructor, explicit receipt
+  accessors, =poo-flow-session-policy-validation-receipt->alist=, and bounded
   =poo-flow-session-policy-tool-attempt= rows.
+- The validation receipt consumes an optional tool-core catalog-validation row
+  from metadata and projects catalog id/ref, catalog validity,
+  resolved/unresolved tool refs, sandbox-required refs, action mismatch rows,
+  and tool-core diagnostics without binding session policy validation to
+  tool-core internals.
 - Validation checks requested context refs, history records, communication
   channels, resource capability refs, agent tool attempts, hook tool attempts,
   and resource sharing accounting.
@@ -490,7 +499,8 @@ Current implementation:
   =hook-tool-agent-permission-not-inherited=, and
   =resource-sharing-missing-accounting-owner=.
 - =user-interface/custom/my-module/cases/session-policy.ss= now projects a
-  real custom validation receipt from its POO-native policies and attempts.
+  real custom validation receipt from its POO-native policies, attempts, and
+  tool-core catalog-validation row.
 - =t/session-policy-validation-test.ss= covers the denied sibling context,
   denied history replay, denied peer channel, denied resource capability,
   denied agent tool, denied hook tool, hook permission non-inheritance, and
@@ -548,13 +558,17 @@ Current implementation:
 - =src/modules/session/selector.ss= owns
   =poo-flow-session-selector-candidate= and
   =poo-flow-session-selector-receipt=.
-- Candidates are bounded rows over =workflow=, =transform=, or =agent-param=
+- Candidates are POO objects over =workflow=, =transform=, or =agent-param=
   targets. Each candidate carries a candidate id, target ref, description,
-  required receipt fields, runtime owner, and =runtime-executed: #f=.
-- The selector receipt records project id, root session ref, input session ref,
-  candidate ids, workflow/transform/AgentParam candidate buckets, selection
-  policy, fallback ref, =selection-state: pending=, =selected-candidate-ref:
-  #f=, and a pending selected-result row. This turns OpenRath's
+  required receipt fields, runtime owner, and =runtime-executed: #f=, then
+  projects through =poo-flow-session-selector-candidate->alist= at the ABI
+  boundary.
+- The selector receipt is defstruct-backed and records project id, root session
+  ref, input session ref, bounded candidate rows, candidate ids,
+  workflow/transform/AgentParam candidate buckets, selection policy, fallback
+  ref, =selection-state: pending=, =selected-candidate-ref: #f=, and a pending
+  selected-result row. Its ABI boundary stays
+  =poo-flow-session-selector-receipt->alist=. This turns OpenRath's
   =EmptyWorkflow= fallback behavior into explicit receipt data.
 - =user-interface/custom/my-module/cases/session-selector.ss= exposes the
   downstream authoring shape over build transform, audit workflow, and governor
@@ -563,7 +577,7 @@ Current implementation:
   explicit no-candidate fallback path without runtime dispatch.
 - =t/scenarios/performance/session-selector-receipt/benchmark.ss= and
   =t/session-selector-receipt-performance-test.ss= make selector projection a
-  hot benchmark gate over 300 bounded candidates.
+  hot benchmark gate over 300 candidate objects.
 
 *** 10.06.42.70.70 P7 Runtime Materialization Receipt
 OpenRath's lazy session materialization is a good runtime model, but the Scheme
@@ -605,17 +619,19 @@ loop-engine surface:
 2. =gxtest t/session-multi-agent-graph-test.ss=
 3. =gxtest t/session-communication-receipt-test.ss=
 4. =gxtest t/session-policy-contract-test.ss=
-5. =gxtest t/session-policy-validation-test.ss=
-6. =gxtest t/session-policy-validation-performance-test.ss=
-7. =gxtest t/session-agent-param-contract-test.ss=
-8. =gxtest t/session-agent-param-contract-performance-test.ss=
-9. =gxtest t/session-selector-receipt-test.ss=
-10. =gxtest t/session-selector-receipt-performance-test.ss=
-11. =gxtest t/session-materialization-receipt-test.ss=
-12. =gxtest t/session-materialization-receipt-performance-test.ss=
-13. =gxtest t/user-interface-custom-loop-engine-test.ss=
-14. =gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=
-15. =gxtest t/user-interface-presentation-test.ss=
+5. =gxtest t/session-policy-family-performance-test.ss=
+6. =gxtest t/session-policy-validation-test.ss=
+7. =gxtest t/session-policy-validation-performance-test.ss=
+8. =gxtest t/session-agent-param-contract-test.ss=
+9. =gxtest t/session-agent-param-contract-performance-test.ss=
+10. =gxtest t/session-selector-receipt-test.ss=
+11. =gxtest t/session-selector-receipt-performance-test.ss=
+12. =gxtest t/session-materialization-receipt-test.ss=
+13. =gxtest t/session-materialization-receipt-performance-test.ss=
+14. =gxtest t/user-interface-custom-loop-engine-test.ss=
+15. =gxtest t/user-interface-custom-loop-engine-runtime-manifest-test.ss=
+16. =gxtest t/user-interface-presentation-test.ss=
+17. =gxtest t/performance-tests.ss=, which explicitly runs every scenario performance suite with =run-tests!= instead of relying on imported module discovery.
 
 Scenario/performance gates are mandatory for new implementation slices. A
 session feature is not considered delivered until it has:

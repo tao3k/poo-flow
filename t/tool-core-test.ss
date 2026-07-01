@@ -155,11 +155,22 @@
                '(run)
                '(project-workspace)
                '(agent-turn)))
+             (bad-action-grant
+              (poo-flow-session-tool-grant
+               'grant/calc-delete
+               'calculator
+               '(delete)
+               '(session/input)
+               '(agent-turn)))
              (agent-policy
               (poo-flow-session-tool-permission-policy
                'policy/tool-core-agent
                'session/tool-core
-               (list calc-grant shell-grant unsafe-grant missing-grant)
+               (list calc-grant
+                     shell-grant
+                     unsafe-grant
+                     missing-grant
+                     bad-action-grant)
                '()
                'deny))
              (hook-policy
@@ -191,9 +202,18 @@
                       '(delete-world))
         (check-equal? (test-ref row 'sandbox-required-tool-refs)
                       '(run-shell-command unsafe-shell))
+        (check-equal? (test-field-values
+                       (test-ref row 'action-mismatch-grants)
+                       'grant-id)
+                      '(grant/calc-delete))
+        (check-equal? (test-field-values
+                       (test-ref row 'action-mismatch-grants)
+                       'unsupported-actions)
+                      '((delete)))
         (check-equal? (test-field-values (test-ref row 'diagnostics) 'code)
                       '(tool-spec-not-in-catalog
-                        tool-spec-missing-sandbox-profile))
+                        tool-spec-missing-sandbox-profile
+                        tool-grant-action-not-supported))
         (check-equal? (test-ref row 'runtime-executed) #f)))))
 
 (run-tests! tool-core-test)

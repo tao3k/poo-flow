@@ -183,6 +183,10 @@ Phase 3: deepen session policy generation.
 - Completed first slice: session policy constructors, slot accessors,
   tool-grant alist accessors, and policy =->alist= projection now route through
   =policy-syntax.ss=.
+- Completed policy object row-frame slice:
+  =poo-flow-session-policy-object= now preserves base rows, generated policy
+  slots, metadata, runtime owner, and runtime-executed order through an
+  owner-local tail helper instead of stitching constructor rows with =append=.
 - Completed validation slice: policy tool-attempt alist accessors, validation
   receipt POO accessors, and validation receipt =->alist= projection now route
   through =policy-syntax.ss=.
@@ -193,6 +197,12 @@ Phase 3: deepen session policy generation.
   hook inheritance, and resource-accounting diagnostics instead of stitching
   intermediate lists with =append= under the session policy validation
   performance gate.
+- Hook inheritance diagnostics now consume the denied hook-attempt partition
+  directly, so the inheritance pass no longer rescans every hook attempt or
+  repeats the hook-policy allowance check before testing agent-policy coverage.
+  The shared validation partition helper is now tail-recursive with reverse
+  accumulators, preserving public allowed/denied order without per-element
+  tail partition allocation.
 - Completed communication receipt slice: record-backed session communication
   accessor wrappers and =->alist= projection now route through
   =receipt-syntax.ss=, with diagnostic rows computed once before final
@@ -200,18 +210,40 @@ Phase 3: deepen session policy generation.
 - Completed materialization receipt slice: =poo-flow-session-materialization-receipt->alist=
   now routes through =receipt-syntax.ss= with its receipt guard preserved at
   the generated function boundary.
-- Completed selector receipt slice: object-backed =poo-flow-session-selector-receipt->alist=
-  now routes through =receipt-syntax.ss= with its selector guard preserved at
-  the generated function boundary; selector candidate id projections now use
-  single-pass functional recursion under the existing performance gate.
+- Completed selector receipt slice: =poo-flow-session-selector-receipt= is now
+  defstruct-backed, while selector candidates remain POO objects and project
+  through =poo-flow-session-selector-candidate->alist= at the ABI boundary.
+  =poo-flow-session-selector-receipt->alist= still routes through
+  =receipt-syntax.ss= with its selector guard preserved at the generated
+  function boundary; selector candidate id projections use single-pass
+  functional recursion under the existing performance gate.
 - Completed registry receipt slice: object-backed =poo-flow-session-registry-receipt->alist=
   now routes through =receipt-syntax.ss=, and session-agent graph projection
   delegates registry rows back to the registry owner instead of inlining them.
+  Registry receipt construction now derives =session-ids= and
+  =durable-policy-refs= in one owner-local accumulator pass under the session
+  registry receipt performance gate.
+- Completed session object metadata/summary slice:
+  session value metadata and profile handoff summaries now use fixed-prefix
+  tail helpers instead of append-based row stitching, keeping runtime and
+  handoff summaries in the session object owner.
+- Completed session transform metadata/materialization slice:
+  memory-intent declarations, transform declarations, lineage metadata, and
+  derived-session metadata now use owner-local fixed-prefix tail helpers instead
+  of append-based row stitching under the session transform performance gate.
+  Memory receipt row materialization now uses a transform-owner helper instead
+  of an anonymous map, keeping object reconstruction separate from final alist
+  projection batches.
 - Completed session-agent topology slice: agent node and agent graph final
   alist projections now route through =receipt-syntax.ss= while preserving
   their report-only guards and registry/communication owner delegation; agent
   id, lineage edge, and durable policy ref derivation now shares one topology
   summary pass under the loop-engine session-agent graph performance gate.
+  Session ids and count now derive in one graph-owner summary pass, and agent
+  node final row serialization uses the session receipt batch helper instead of
+  an anonymous map. Loop-engine output session refs and session-agent node
+  construction now use named graph-owner reverse accumulators instead of
+  anonymous =map= frames before the shared registry and communication passes.
 - Completed AgentParam contract slice: =poo-flow-session-agent-param-contract->alist=
   now routes through =receipt-syntax.ss= while preserving the AgentParam guard
   and the existing batch projection performance gate.
@@ -223,6 +255,11 @@ Phase 3: deepen session policy generation.
   unless expansion-time code actually needs them; stale or polluted =.ssi=
   files can otherwise break facade re-export checks.
 
+- Completed user-interface scenario batch benchmark slice: the scenario-batch performance owner now derives row counts, runtime flags, and case names through owner-local reverse accumulators instead of recursive append or non-tail list scans, while keeping benchmark payloads under =t/scenarios/performance= and leaving public =user-interface/= POO declarations unchanged.
+- Completed AgentParam batch projection slice: =poo-flow-session-agent-param-contracts->alists= now uses the shared session receipt batch macro, and that macro expands to an ordered reverse accumulator instead of an anonymous =map= frame for session receipt batch projections.
+- Completed session-agent topology accumulator follow-up: =poo-flow-session-agent-node-topology-summary= now derives agent ids, lineage edge pairs, and durable policy refs with one tail-recursive reverse accumulator instead of recursively rebuilding the tail summary before each cons.
+- Completed workflow CI/CD runtime projection readability slice: runtime metadata, runtime policy, and check receipt field projections now use a bounded =poo-flow-cicd-rows/tail= helper instead of hand-written nested =cons= towers, preserving durable-field tail composition without making public =user-interface/= declarations depend on benchmark or ABI plumbing.
+- Completed session row-tail readability slice: session policy object rows and session profile runtime/handoff summaries now use owner-local bounded row-tail helpers instead of hand-written nested =cons= towers, preserving fixed field order and durable/handoff tail composition under the existing policy-family and session graph performance gates.
 Phase 4: broaden runtime projection generation carefully.
 - Keep =src/module-system/runtime-projection-syntax.ss= limited to pure
   projection families.
@@ -243,9 +280,38 @@ Phase 4: broaden runtime projection generation carefully.
   =apply append= or append-then-map intermediate lists under the loop-engine
   session-agent graph performance gate.
 - Completed workflow CI/CD dependency graph flattening slice:
-  =poo-flow-cicd-append-map= now preserves declaration order with a functional
-  single-pass accumulator instead of allocating a mapped list before
-  =apply append=.
+  unresolved dependency refs, dependency edges, cycle nodes, dependency graph
+  diagnostics, pipeline-run step diagnostics, and pipeline-run aggregate
+  diagnostics now preserve declaration order with specialized functional
+  accumulators instead of allocating filtered/mapped lists and stitching them
+  through generic append-map helpers.
+- Completed workflow CI/CD runtime metadata slice:
+  runtime command descriptor metadata, runtime request policy rows, check
+  receipt rows, and pipeline-run step rows now use named functional helpers for
+  fixed-prefix plus durable-field projection, preserving final manifest/receipt
+  field order without runtime =append=. Artifact provenance, check-map receipt
+  rows, runtime readiness rows, runtime command manifest rows, Marlin handoff
+  entries, unordered dependency nodes, and pipeline-run blocked-step summaries
+  now use owner-local recursion instead of anonymous =map= / =filter= frames.
+- Completed workflow CI/CD runtime projection batch slice:
+  =poo-flow-user-config-workflow-cicd-runtime-projection= now computes the
+  shared check-map/profile-catalog runtime rows once, then config and profile
+  presentations consume that owner-local receipt instead of rediscovering
+  manifests, summaries, ABIs, and receipts through separate config-level scans.
+  Runtime readiness check rows and the three sandbox presentation columns now
+  flatten in the same owner-local summary pass, preserving public row order
+  while removing repeated presentation-side field scans.
+  Runtime command manifest summaries now share the same owner-local projection
+  pass as the flattened full manifests, so agreement validation can reuse that
+  manifest list instead of rebuilding it. Marlin handoff ABI rows, ABI summary
+  rows, and check-map receipt rows now use reverse accumulators instead of
+  anonymous =map= or append-based sequence stitching.
+- Completed workflow-focused presentation slice:
+  Funflow CI/CD configs with sandbox profile selections now use a
+  workflow-focused =make-object= presentation with memoized computed slots. The
+  public return shape and =.ref= field names stay unchanged, while unaccessed
+  feature, sandbox, pipeline-run, and presentation-trace rows stay lazy under
+  the Funflow performance gate.
 - Completed workflow CI/CD sandbox inheritance projection slice: runtime
   summaries, handoff summaries, and unresolved profile refs now share a bounded
   recursive projection flattener, preserving inherited profile order without
@@ -277,6 +343,23 @@ Phase 4: broaden runtime projection generation carefully.
   same =poo-core-role-object= syntax owner for fixed role slots and explicit
   override row construction while preserving Marlin handoff and validation
   logic in each loop owner.
+- Completed loop strategy aggregation slice:
+  strategy plan slot rows and validation errors now preserve field order through
+  owner-local tail helpers instead of append-based row stitching. Pattern
+  validation error collection now conses each invalid descriptor onto the
+  recursive tail while keeping descriptor index order stable under the loop
+  strategy performance gate.
+- Completed loop governor aggregation slice:
+  governor node/governor slot rows, governance node contracts, human inbox
+  items, governor validation errors, Marlin request validation errors, and
+  blocked-pattern rows now use owner-local tail helpers instead of anonymous
+  maps or append-based stitching while preserving contract order under the loop
+  governor performance gate.
+- Completed loop human-audit aggregation slice:
+  audit slot rows, review-item projection, validation error collection, and
+  decision-pattern projection now use owner-local tail helpers or direct
+  recursion instead of append/map/filter intermediate lists while preserving
+  review order under the loop human-audit performance gate.
 - Completed module descriptor object-frame slice:
   =poo-flow-module-descriptor-prototype= and
   =make-poo-flow-module-descriptor/full= now route through
@@ -300,6 +383,11 @@ Phase 4: broaden runtime projection generation carefully.
   receipt =->alist= rows now route through =defpoo-module-final-projection=,
   with policy validation, receipt construction, and runtime ownership checks
   left as explicit code in =durable-policy.ss=.
+- Completed durable policy accumulator slice: durable policy diagnostics,
+  diagnostic alist projection, and batch receipt construction now use
+  owner-local reverse accumulators instead of append chains, anonymous =map=,
+  or non-tail batch recursion under the durable policy batch projection
+  performance gate.
 - Completed module observability projection slice: strict module observation
   rows, POO slot-authoring observation rows, and slot-authoring summaries now
   route through =defpoo-module-final-projection= while recursive trace
@@ -320,18 +408,66 @@ Phase 4: broaden runtime projection generation carefully.
 - Completed durable recovery scenario projection slice: recovery scenario final
   rows now route through =defpoo-module-final-projection= while recovery
   diagnostics and observability row generation stay explicit.
+- Completed durable recovery diagnostics aggregation slice:
+  workflow-task, memory-job, sandbox-ref, and final scenario diagnostics now
+  preserve report order through owner-local tail helpers and reverse
+  accumulators instead of append-based row stitching under the durable recovery
+  scenario performance gate.
 - Completed concrete module projection slice: tool-core specs, tool handoff
   manifests, tool catalogs, tool policy-validation receipts, memory store specs,
   memory handoff manifests, memory catalogs, memory policy-validation receipts,
   and memory durable job receipts now route through
   =defpoo-module-final-projection= while POO constructors, policy lookup,
   durable job validation, and catalog matching stay explicit in their module
-  owners.
+  owners. Tool and memory catalog nested spec/store serialization now uses
+  =defpoo-module-final-projection-batch= instead of owner-local anonymous
+  =map= frames.
+- Completed tool-core validation summary slice:
+  tool catalogs derive refs and count in one owner-local summary pass, tool
+  policy refs now merge without an intermediate append, and catalog validation
+  derives resolved refs, unresolved refs, sandbox-required refs, and diagnostics
+  in one functional pass while preserving the existing receipt order under the
+  tool-core performance gate. Action-mismatch rows and diagnostics now derive
+  in the same grants pass, and final validation diagnostics use a tail helper
+  instead of appending validation diagnostics to action diagnostics.
+- Completed session-policy/tool-core bridge slice:
+  effective session policy validation receipts consume an optional tool-core
+  catalog-validation row from metadata and project catalog id/ref, catalog
+  validity, resolved/unresolved tool refs, sandbox-required refs, action
+  mismatch rows, and tool-core diagnostics through the bounded
+  =poo-flow-session-policy-validation-receipt->alist= ABI.
+- Completed memory-core validation summary slice:
+  memory catalogs derive refs and count in one owner-local summary pass, and
+  memory intent catalog validation now derives unique store refs, resolved refs,
+  unresolved refs, intent count, and diagnostics in one functional pass.
+  The validation summary pass is tail-recursive and accumulates final rows in
+  reverse, so it preserves first-seen store refs and diagnostic order without
+  allocating one summary alist plus repeated =alist-ref= lookups per intent.
+  Store-intent and durable-store diagnostics now use tail helpers to preserve
+  diagnostic order, and durable job diagnostics build the same ordered tail
+  without append-based list stitching under the memory-core and durable recovery
+  performance gates.
 - Completed graph/Funflow projection slice: graph node, edge, graph, and
   analysis rows plus Funflow DAG edge, composition-step, and functional-DAG rows
   now route through =defpoo-module-final-projection= while graph algorithms,
   Funflow dependency derivation, and runtime scheduling boundaries stay
-  explicit.
+  explicit. Graph node and edge collection serialization now uses
+  =defpoo-module-final-projection-batch= instead of anonymous =map= frames in
+  the graph projection owner. Funflow functional-DAG edge and composition-step
+  collection serialization now uses the same batch projection helper.
+- Completed Funflow DAG composition-step accumulator slice:
+  =poo-flow-funflow-dag-composition-steps= now preserves node-then-edge step
+  order with one functional accumulator instead of allocating node and edge
+  =map= lists and appending them.
+- Completed Funflow workflow agreement summary slice:
+  workflow agreement rows now derive pipeline count, names, and functional-DAG
+  rows in one owner-local pass. Functional-DAG construction now derives source
+  and target endpoint sets in one edge pass before computing entry and terminal
+  nodes.
+- Completed Funflow check metadata tail-helper slice:
+  POO check metadata now appends optional/list metadata rows onto user metadata
+  through tail helpers instead of constructing several singleton lists and
+  joining them with =append=.
 - Completed graph traversal accumulator slice: reachable-id and
   dependency-cone walks now accumulate visited ids in reverse and restore public
   order at the function boundary, removing per-visited-node tail append while
@@ -342,6 +478,13 @@ Phase 4: broaden runtime projection generation carefully.
   report order with reverse accumulators instead of repeated =append= growth.
   This stays functional because the runtime-owner/deferred sets are
   data-dependent report values, not static declaration frames.
+- Completed Funflow scenario benchmark gate slice:
+  =t/funflow-config-pipeline-performance-test.ss= now runs the real
+  32-config user-interface Funflow CI/CD presentation summary through
+  =benchmark-run/result= instead of only smoke-checking the fixture contract.
+  The benchmark support is parameterized over module bundles, so =load!=
+  generated scenario names stay owned by the =t/= entrypoint and do not leak
+  into reusable support modules.
 - Completed core runtime projection naming slice: =adapter-result->alist= now
   routes through =defpoo-core-receipt-projection= by delegating through the
   runtime-response owner, while config requirement collection projection and
@@ -393,7 +536,8 @@ Phase 4: broaden runtime projection generation carefully.
   =src/modules/tool-core/config.ss= and
   =src/modules/memory-core/config.ss= use it for their public =tool-spec=,
   =tool-catalog=, =memory-store-spec=, and =memory-catalog= prototype frames
-  and prototype-to-domain/catalog converter frames.
+  and prototype-to-domain/catalog converter frames. Their spec/store list
+  converters now use owner-local recursion instead of anonymous =map= frames.
   =src/modules/funflow/config.ss= uses the same helper for its public
   =funflow-check=, =funflow-pipeline=, DAG edge, composition-step, and
   functional-DAG prototype frames, while Funflow converter functions remain

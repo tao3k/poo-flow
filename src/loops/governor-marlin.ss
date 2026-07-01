@@ -78,11 +78,16 @@
 ;;; Boundary: request-envelope validation reports wrapper shape errors without
 ;;; coupling Marlin-specific schemas back into the core governor module.
 ;; : (-> Symbol FieldValue [ValidationError])
-(def (loop-governor-marlin-required-field-error field value)
+(def (loop-governor-marlin-required-field-error/tail field value tail)
   (if value
-    '()
-    (list (list (cons 'field field)
-                (cons 'code 'required)))))
+    tail
+    (cons (list (cons 'field field)
+                (cons 'code 'required))
+          tail)))
+
+;; : (-> Symbol FieldValue [ValidationError])
+(def (loop-governor-marlin-required-field-error field value)
+  (loop-governor-marlin-required-field-error/tail field value '()))
 
 ;;; Boundary: this table is shared discovery for the newer loop-engine handoff.
 ;;; Invariant: it references the loop-engine constants instead of duplicating
@@ -149,30 +154,40 @@
 ;; : (-> Alist [ValidationError])
 (def (loop-governor-marlin-request-envelope-validation-errors envelope)
   (if (list? envelope)
-    (append
-     (loop-governor-marlin-required-field-error
-      'schema
-      (and (eq? (loop-governor-marlin-alist-ref envelope 'schema #f)
-                +loop-governor-marlin-request-schema+)
-           #t))
-     (loop-governor-marlin-required-field-error
+    (loop-governor-marlin-required-field-error/tail
+     'schema
+     (and (eq? (loop-governor-marlin-alist-ref envelope 'schema #f)
+               +loop-governor-marlin-request-schema+)
+          #t)
+     (loop-governor-marlin-required-field-error/tail
       'governor-schema
       (and (eq? (loop-governor-marlin-alist-ref envelope 'governor-schema #f)
                 +loop-governor-schema+)
-           #t))
-     (loop-governor-marlin-required-field-error
-      'operation
-      (loop-governor-marlin-alist-ref envelope 'operation #f))
-     (loop-governor-marlin-required-field-error
-      'target
-      (loop-governor-marlin-alist-ref envelope 'target #f))
-     (loop-governor-marlin-required-field-error
-      'transport
-      (loop-governor-marlin-alist-ref envelope 'transport #f))
-     (loop-governor-marlin-required-field-error
-      'governor
-      (loop-governor-marlin-alist-ref envelope 'governor #f)))
+           #t)
+      (loop-governor-marlin-required-field-error/tail
+       'operation
+       (loop-governor-marlin-alist-ref envelope 'operation #f)
+       (loop-governor-marlin-required-field-error/tail
+        'target
+        (loop-governor-marlin-alist-ref envelope 'target #f)
+        (loop-governor-marlin-required-field-error/tail
+         'transport
+         (loop-governor-marlin-alist-ref envelope 'transport #f)
+         (loop-governor-marlin-required-field-error/tail
+          'governor
+          (loop-governor-marlin-alist-ref envelope 'governor #f)
+          '()))))))
     (list '((field . marlin-request-envelope) (code . not-alist)))))
+
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (loop-governor-marlin-blocked-patterns conflicting-patterns
+                                             denied-patterns)
+  (if (null? conflicting-patterns)
+    denied-patterns
+    (cons (car conflicting-patterns)
+          (loop-governor-marlin-blocked-patterns
+           (cdr conflicting-patterns)
+           denied-patterns))))
 
 ;;; Boundary: invalid envelopes fail before leaving the Scheme control plane.
 ;;; Intent: downstream tests inspect typed failures, not malformed strings.
@@ -222,7 +237,7 @@
            (cons 'open-patterns
                  (loop-governor-marlin-alist-ref contract 'open-patterns '()))
            (cons 'blocked-patterns
-                 (append
+                 (loop-governor-marlin-blocked-patterns
                   (loop-governor-marlin-alist-ref
                    contract
                    'conflicting-patterns

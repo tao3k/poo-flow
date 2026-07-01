@@ -347,6 +347,14 @@
                                              'agent-sessions)
                                    'workflow-run?)
                 '(#f #f #f #f))
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'session-agent-topology-trace)
+                          'valid?)
+                #t)
+  (check-equal? (test-ref (test-ref runtime-manifest-request
+                                     'session-agent-topology-trace)
+                          'diagnostic-count)
+                0)
   (check-equal? (test-ref runtime-manifest-request 'sandbox-profile-refs)
                 '(ci/build))
   (check-equal? (test-ref runtime-manifest-request 'sandbox-runtime-summaries)
@@ -416,6 +424,10 @@
                                        'compression-receipt)
                             'runtime-executed)
                   #f)
+    (check-equal? (test-ref (test-ref runtime-handoff-facts
+                                       'session-agent-topology-trace)
+                            'valid?)
+                  #t)
     (check-equal? (test-field-values
                    (test-ref runtime-handoff-facts
                              'session-selector-receipts)

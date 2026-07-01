@@ -59,6 +59,7 @@
         poo-flow-user-loop-engine-intent-agent-harnesses
         poo-flow-user-loop-engine-intent-agent-sessions
         poo-flow-user-loop-engine-intent-session-agent-graph
+        poo-flow-user-loop-engine-intent-session-agent-topology-trace
         poo-flow-user-loop-engine-intent-agent-operation
         poo-flow-user-loop-engine-intent-delegated-operation
         poo-flow-user-loop-engine-intent-dispatch-receipt
@@ -143,6 +144,9 @@
                   (poo-flow-user-loop-engine-intent-agent-sessions intent))
             (cons 'session-agent-graph
                   (poo-flow-user-loop-engine-intent-session-agent-graph
+                   intent))
+            (cons 'session-agent-topology-trace
+                  (poo-flow-user-loop-engine-intent-session-agent-topology-trace
                    intent))
             (cons 'workflow-run
                   (poo-flow-user-loop-engine-intent-workflow-run intent))
@@ -825,6 +829,9 @@
      (poo-flow-user-loop-engine-intent-agent-sessions intent))
     ('session-agent-graph
      (poo-flow-user-loop-engine-intent-session-agent-graph intent))
+    ('session-agent-topology-trace
+     (poo-flow-user-loop-engine-intent-session-agent-topology-trace
+      intent))
     ('lineage-receipt
      (poo-flow-user-loop-engine-intent-lineage-receipt intent))
     ('selector-receipt
@@ -932,6 +939,9 @@
          (poo-flow-user-loop-engine-intent-agent-sessions intent))
    (cons 'session-agent-graph
          (poo-flow-user-loop-engine-intent-session-agent-graph intent))
+   (cons 'session-agent-topology-trace
+         (poo-flow-user-loop-engine-intent-session-agent-topology-trace
+          intent))
    (cons 'workflow-run
          (poo-flow-user-loop-engine-intent-workflow-run intent))
    (cons 'dispatch-receipt
@@ -1146,14 +1156,23 @@
            (poo-flow-user-config-sandbox-backend-capability-registry
             selected-modules)
            (cadr maybe-workflow-check-maps))))
-    (filter-map
-     (lambda (selection)
-       (poo-flow-user-config-loop-engine-intent
-        selection
-        profile-catalog
-        workflow-check-maps
-        backend-capability-registry))
-     selected-modules)))
+    (let (cache (vector '()))
+      (def (project-selection selection)
+        (let (entry (assq selection (vector-ref cache 0)))
+          (if entry
+            (cdr entry)
+            (let (intent
+                  (poo-flow-user-config-loop-engine-intent
+                   selection
+                   profile-catalog
+                   workflow-check-maps
+                   backend-capability-registry))
+              (vector-set! cache
+                           0
+                           (cons (cons selection intent)
+                                 (vector-ref cache 0)))
+              intent))))
+      (filter-map project-selection selected-modules))))
 
 ;; : (-> PooUserModuleSelection [PooSandboxProfile] [PooFlowCicdCheckMap] MaybeAlist)
 (def (poo-flow-user-config-loop-engine-intent selection

@@ -16,7 +16,8 @@
         poo-flow-session-agent-param-contract-provider-ref
         poo-flow-session-agent-param-contract-effective-model-ref
         poo-flow-session-agent-param-contract-validation-valid?
-        poo-flow-session-agent-param-contract->alist)
+        poo-flow-session-agent-param-contract->alist
+        poo-flow-session-agent-param-contracts->alists)
 
 ;; : (-> POOObject Symbol Value Value)
 (def (poo-flow-session-agent-param-slot object key default)
@@ -70,11 +71,14 @@
           (poo-flow-session-agent-node-output-session-ref agent-node))
     (cons 'provider-ref provider-ref)
     (cons 'effective-model-ref
-          (.ref validation-receipt 'effective-model-ref))
+          (poo-flow-session-policy-validation-receipt-effective-model-ref
+           validation-receipt))
     (cons 'effective-prompt-session-ref
-          (.ref validation-receipt 'effective-prompt-session-ref))
+          (poo-flow-session-policy-validation-receipt-effective-prompt-session-ref
+           validation-receipt))
     (cons 'effective-prompt-chunk-refs
-          (.ref validation-receipt 'effective-prompt-chunk-refs))
+          (poo-flow-session-policy-validation-receipt-effective-prompt-chunk-refs
+           validation-receipt))
     (cons 'model-policy-ref (.ref agent-node 'model-policy-ref))
     (cons 'prompt-policy-ref (.ref agent-node 'prompt-policy-ref))
     (cons 'tool-permission-policy-ref
@@ -90,12 +94,15 @@
     (cons 'sandbox-profile-ref (.ref agent-node 'sandbox-profile-ref))
     (cons 'streaming-policy streaming-policy)
     (cons 'event-policy event-policy)
-    (cons 'validation-id (.ref validation-receipt 'validation-id))
+    (cons 'validation-id
+          (poo-flow-session-policy-validation-receipt-validation-id
+           validation-receipt))
     (cons 'validation-valid?
           (poo-flow-session-policy-validation-receipt-valid?
            validation-receipt))
     (cons 'validation-diagnostic-count
-          (.ref validation-receipt 'diagnostic-count))
+          (poo-flow-session-policy-validation-receipt-diagnostic-count
+           validation-receipt))
     (cons 'runtime-owner "marlin-agent-core")
     (cons 'runtime-executed #f)
     (cons 'metadata (if (null? maybe-metadata)
@@ -175,3 +182,10 @@
     ('runtime-owner (.ref contract 'runtime-owner))
     ('runtime-executed (.ref contract 'runtime-executed))
     ('metadata (.ref contract 'metadata)))))
+
+;; : (-> [PooSessionAgentParamContract] [Alist])
+(defpoo-session-receipt-projection-batch
+  poo-flow-session-agent-param-contracts->alists
+  (contracts)
+  (projector poo-flow-session-agent-param-contract->alist)
+  (error-message "session AgentParam contract serialization requires a list"))

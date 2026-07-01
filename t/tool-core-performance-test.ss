@@ -107,6 +107,8 @@
      (cons 'resolved-tool-count (length (.ref receipt 'resolved-tool-refs)))
      (cons 'unresolved-tool-count
            (length (.ref receipt 'unresolved-tool-refs)))
+     (cons 'action-mismatch-count
+           (length (.ref receipt 'action-mismatch-grants)))
      (cons 'valid? (.ref receipt 'valid?))
      (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
 
@@ -132,6 +134,9 @@
                       tool-core-performance-count)
         (check-equal? (tool-core-performance-ref summary 'unresolved-tool-count)
                       0)
+        (check-equal?
+         (tool-core-performance-ref summary 'action-mismatch-count)
+         0)
         (check-equal? (tool-core-performance-ref summary 'valid?) #t)
         (check-equal? (tool-core-performance-ref summary 'runtime-executed)
                       #f)

@@ -23,7 +23,10 @@
 (def user-interface-custom-session-selector-test
   (test-suite "poo-flow custom user-interface session-selector case"
     (test-case "projects custom selector receipt without dispatch"
-      (let (row poo-flow-custom-module-session-selector-case)
+      (let* ((row poo-flow-custom-module-session-selector-case)
+             (candidates (test-ref row 'candidates))
+             (build-candidate (car candidates))
+             (governor-candidate (list-ref candidates 2)))
         (check-equal? (test-ref row 'kind)
                       'poo-flow.session.selector-receipt)
         (check-equal? (test-ref row 'selector-id)
@@ -37,6 +40,11 @@
                       '(candidate/build))
         (check-equal? (test-ref row 'agent-param-candidate-ids)
                       '(candidate/governor))
+        (check-equal? (length candidates) 3)
+        (check-equal? (test-ref build-candidate 'description)
+                      "Run the build sub-agent transform.")
+        (check-equal? (test-ref governor-candidate 'target-ref)
+                      'agent-param/custom-build)
         (check-equal? (test-ref row 'selection-state) 'pending)
         (check-equal? (test-ref row 'fallback-ref) 'empty-workflow)
         (check-equal? (test-ref row 'runtime-executed) #f)))))

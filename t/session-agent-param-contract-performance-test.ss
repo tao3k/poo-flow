@@ -170,24 +170,25 @@
   (string->symbol
    (string-append "agent-param/perf-" (number->string index))))
 
-;; : (-> PooSessionAgentNode PooSessionPolicyValidationReceipt Integer Alist)
-(def (agent-param-performance-contract-row node validation index)
-  (poo-flow-session-agent-param-contract->alist
-   (poo-flow-session-agent-param-contract
-    (agent-param-performance-contract-id index)
-    node
-    validation
-    'marlin/provider
-    'streaming-disabled
-    'events-receipt-only)))
+;; : (-> PooSessionAgentNode PooSessionPolicyValidationReceipt Integer PooSessionAgentParamContract)
+(def (agent-param-performance-contract node validation index)
+  (poo-flow-session-agent-param-contract
+   (agent-param-performance-contract-id index)
+   node
+   validation
+   'marlin/provider
+   'streaming-disabled
+   'events-receipt-only))
 
 ;; : (-> PooSessionAgentNode PooSessionPolicyValidationReceipt Integer Alist)
 (def (agent-param-performance-summary node validation count)
-  (let (rows
-        (poo-flow-performance-build-list
-         count
-         (lambda (index)
-           (agent-param-performance-contract-row node validation index))))
+  (let* ((contracts
+          (poo-flow-performance-build-list
+           count
+           (lambda (index)
+             (agent-param-performance-contract node validation index))))
+         (rows
+          (poo-flow-session-agent-param-contracts->alists contracts)))
     (list (cons 'contract-count (length rows))
           (cons 'first-agent
                 (agent-param-performance-ref (car rows) 'agent-id))

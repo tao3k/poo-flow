@@ -11,6 +11,8 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
+        (only-in :poo-flow/src/module-system/loop-engine-runtime-agent
+                 poo-flow-user-loop-engine-intent-session-agent-topology-trace)
         (only-in :poo-flow/src/module-system/loop-engine-session-agent-graph
                  poo-flow-user-loop-engine-intent-session-agent-graph))
 
@@ -66,9 +68,12 @@
 
 ;; : (-> Alist)
 (def (loop-engine-session-agent-graph-performance-summary)
-  (let (graph
-        (poo-flow-user-loop-engine-intent-session-agent-graph
-         loop-engine-session-agent-graph-performance-intent))
+  (let* ((graph
+          (poo-flow-user-loop-engine-intent-session-agent-graph
+           loop-engine-session-agent-graph-performance-intent))
+         (topology-trace
+          (poo-flow-user-loop-engine-intent-session-agent-topology-trace
+           loop-engine-session-agent-graph-performance-intent)))
     (list
      (cons 'agent-count
            (loop-engine-session-agent-graph-performance-ref graph
@@ -86,7 +91,14 @@
            (loop-engine-session-agent-graph-performance-ref
             graph
             'communication-receipt-count))
-     (cons 'projection-count 1)
+     (cons 'topology-trace-valid?
+           (loop-engine-session-agent-graph-performance-ref topology-trace
+                                                            'valid?))
+     (cons 'topology-trace-diagnostic-count
+           (loop-engine-session-agent-graph-performance-ref
+            topology-trace
+            'diagnostic-count))
+     (cons 'projection-count 2)
      (cons 'runtime-executed
            (loop-engine-session-agent-graph-performance-ref
             graph
@@ -124,8 +136,18 @@
         (check-equal?
          (loop-engine-session-agent-graph-performance-ref
           summary
+          'topology-trace-valid?)
+         #t)
+        (check-equal?
+         (loop-engine-session-agent-graph-performance-ref
+          summary
+          'topology-trace-diagnostic-count)
+         0)
+        (check-equal?
+         (loop-engine-session-agent-graph-performance-ref
+          summary
           'projection-count)
-         1)
+         2)
         (check-equal?
          (loop-engine-session-agent-graph-performance-ref
           summary

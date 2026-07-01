@@ -41,11 +41,18 @@
          '(calculate)
          '(session/input)
          '(agent-turn)))
+       (calculator-bad-action-grant
+        (poo-flow-session-tool-grant
+         'grant/calculator-delete
+         'calculator
+         '(delete)
+         '(session/input)
+         '(agent-turn)))
        (agent-policy
         (poo-flow-session-tool-permission-policy
          'policy/tool-core-custom-agent
          'custom/session-tool-core
-         (list calculator-grant)
+         (list calculator-grant calculator-bad-action-grant)
          '(write-workspace-file)
          'deny))
        (hook-policy

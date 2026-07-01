@@ -108,7 +108,8 @@
              (request (adapter-result-value (run-result-value result)))
              (child (car (receipt-children receipt))))
         (check-equal? (receipt-flow receipt) 'compile)
-        (check-equal? (receipt-kind child) 'external)
+        (
+         check-equal? (receipt-kind child) 'external)
         (check-equal? (receipt-node-id child) '(node compile 0 external compile))
         (check-equal? (adapter-result-status (run-result-value result)) 'requested)
         (check-equal? (execution-request-plan-id request) 'compile)

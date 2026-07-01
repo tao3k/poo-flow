@@ -29,6 +29,7 @@
         poo-flow-user-loop-engine-intent-agent-session
         poo-flow-user-loop-engine-intent-agent-sessions
         poo-flow-user-loop-engine-intent-session-agent-graph
+        poo-flow-user-loop-engine-intent-session-agent-topology-trace
         poo-flow-user-loop-engine-intent-workflow-run
         poo-flow-user-loop-engine-intent-dispatch-receipt
         poo-flow-user-loop-engine-intent-agent-operation
@@ -158,6 +159,111 @@
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-session-agent-graph intent)
   (poo-flow-loop-engine-session-agent-graph/projection intent))
+
+;; : (-> [Alist] Symbol [Value])
+(def (poo-flow-loop-engine-runtime-agent-field-values rows key)
+  (map (lambda (row)
+         (poo-flow-user-loop-engine-intent-ref row key #f))
+       rows))
+
+;; : (-> Alist [Symbol])
+(def (poo-flow-loop-engine-session-agent-graph-output-session-refs graph)
+  (poo-flow-loop-engine-runtime-agent-field-values
+   (poo-flow-user-loop-engine-intent-ref graph 'agent-nodes '())
+   'output-session-ref))
+
+;; : (-> Symbol [Value] [Value] Alist)
+(def (poo-flow-loop-engine-session-agent-topology-diagnostic code
+                                                             expected
+                                                             actual)
+  (list (cons 'kind 'poo-flow.loop-engine.session-agent-topology.diagnostic)
+        (cons 'code code)
+        (cons 'expected expected)
+        (cons 'actual actual)
+        (cons 'severity 'error)
+        (cons 'runtime-executed #f)))
+
+;; : (-> Symbol [Value] [Value] [Alist])
+(def (poo-flow-loop-engine-session-agent-topology-diagnostics/one code
+                                                                 expected
+                                                                 actual)
+  (if (equal? expected actual)
+    '()
+    (list
+     (poo-flow-loop-engine-session-agent-topology-diagnostic
+      code
+      expected
+      actual))))
+
+;; : (-> [Alist] [Alist] [Alist] Alist [Alist])
+(def (poo-flow-loop-engine-session-agent-topology-diagnostics profiles
+                                                              harnesses
+                                                              sessions
+                                                              graph)
+  (let ((profile-names
+         (poo-flow-loop-engine-runtime-agent-field-values profiles 'name))
+        (harness-profiles
+         (poo-flow-loop-engine-runtime-agent-field-values harnesses 'profile))
+        (agent-session-refs
+         (poo-flow-loop-engine-runtime-agent-field-values sessions 'name))
+        (graph-agent-ids
+         (poo-flow-user-loop-engine-intent-ref graph 'agent-ids '()))
+        (graph-output-session-refs
+         (poo-flow-loop-engine-session-agent-graph-output-session-refs graph)))
+    (append
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-agent-profile-graph-mismatch
+      graph-agent-ids
+      profile-names)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-agent-harness-graph-mismatch
+      graph-agent-ids
+      harness-profiles)
+     (poo-flow-loop-engine-session-agent-topology-diagnostics/one
+      'loop-agent-session-graph-mismatch
+      graph-output-session-refs
+      agent-session-refs))))
+
+;; : (-> Alist Alist)
+(def (poo-flow-user-loop-engine-intent-session-agent-topology-trace intent)
+  (let* ((profiles
+          (poo-flow-user-loop-engine-intent-agent-profiles intent))
+         (harnesses
+          (poo-flow-user-loop-engine-intent-agent-harnesses intent))
+         (sessions
+          (poo-flow-user-loop-engine-intent-agent-sessions intent))
+         (graph
+          (poo-flow-user-loop-engine-intent-session-agent-graph intent))
+         (profile-names
+          (poo-flow-loop-engine-runtime-agent-field-values profiles 'name))
+         (harness-profiles
+          (poo-flow-loop-engine-runtime-agent-field-values harnesses 'profile))
+         (agent-session-refs
+          (poo-flow-loop-engine-runtime-agent-field-values sessions 'name))
+         (graph-agent-ids
+          (poo-flow-user-loop-engine-intent-ref graph 'agent-ids '()))
+         (graph-output-session-refs
+          (poo-flow-loop-engine-session-agent-graph-output-session-refs graph))
+         (diagnostics
+          (poo-flow-loop-engine-session-agent-topology-diagnostics
+           profiles
+           harnesses
+           sessions
+           graph)))
+    (list
+     (cons 'kind 'loop-engine-session-agent-topology-trace)
+     (cons 'contract
+           'poo-flow.loop-engine.session-agent-topology-trace.v1)
+     (cons 'profile-names profile-names)
+     (cons 'harness-profiles harness-profiles)
+     (cons 'agent-session-refs agent-session-refs)
+     (cons 'graph-agent-ids graph-agent-ids)
+     (cons 'graph-output-session-refs graph-output-session-refs)
+     (cons 'valid? (null? diagnostics))
+     (cons 'diagnostic-count (length diagnostics))
+     (cons 'diagnostics diagnostics)
+     (cons 'runtime-owner "marlin-agent-core")
+     (cons 'runtime-executed #f))))
 
 ;;; The workflow-run projection is an admission plan for runtime lowering. It
 ;;; is not evidence that a workflow has started.

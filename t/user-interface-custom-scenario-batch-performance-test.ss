@@ -91,48 +91,46 @@
       (and entry (cdr entry))))
    (else #f)))
 
-;; : (-> [Value] [Value] [Value])
-(def (custom-scenario-append left right)
-  (if (null? left)
-    right
-    (cons (car left)
-          (custom-scenario-append (cdr left) right))))
-
 ;; : (-> Value Integer)
 (def (custom-scenario-row-count value)
   (cond
    ((custom-scenario-row? value) 1)
-   ((pair? value) (custom-scenario-row-count/list value))
+   ((pair? value) (custom-scenario-row-count/list value 0))
    (else 0)))
 
-;; : (-> [Value] Integer)
-(def (custom-scenario-row-count/list values)
+;; : (-> [Value] Integer Integer)
+(def (custom-scenario-row-count/list values count)
   (if (null? values)
-    0
-    (+ (custom-scenario-row-count (car values))
-       (custom-scenario-row-count/list (cdr values)))))
+    count
+    (custom-scenario-row-count/list
+     (cdr values)
+     (+ count (custom-scenario-row-count (car values))))))
 
-;; : (-> Value [Boolean])
-(def (custom-scenario-runtime-flags value)
+;; : (-> Value [Boolean] [Boolean])
+(def (custom-scenario-runtime-flags/rev value flags-rev)
   (cond
    ((and (object? value) (.slot? value 'runtime-executed))
-    (list (.ref value 'runtime-executed)))
+    (cons (.ref value 'runtime-executed) flags-rev))
    ((custom-scenario-alist-row? value)
     (let (entry (assoc 'runtime-executed value))
       (if entry
-        (list (cdr entry))
-        '())))
+        (cons (cdr entry) flags-rev)
+        flags-rev)))
    ((pair? value)
-    (custom-scenario-runtime-flags/list value))
-   (else '())))
+    (custom-scenario-runtime-flags/list/rev value flags-rev))
+   (else flags-rev)))
 
-;; : (-> [Value] [Boolean])
-(def (custom-scenario-runtime-flags/list values)
+;; : (-> [Value] [Boolean] [Boolean])
+(def (custom-scenario-runtime-flags/list/rev values flags-rev)
   (if (null? values)
-    '()
-    (custom-scenario-append
-     (custom-scenario-runtime-flags (car values))
-     (custom-scenario-runtime-flags/list (cdr values)))))
+    flags-rev
+    (custom-scenario-runtime-flags/list/rev
+     (cdr values)
+     (custom-scenario-runtime-flags/rev (car values) flags-rev))))
+
+;; : (-> Value [Boolean])
+(def (custom-scenario-runtime-flags value)
+  (reverse (custom-scenario-runtime-flags/rev value '())))
 
 ;; : (-> [Boolean] Boolean)
 (def (custom-scenario-runtime-clean? flags)
@@ -141,27 +139,41 @@
    ((car flags) #f)
    (else (custom-scenario-runtime-clean? (cdr flags)))))
 
+;; : (-> [Pair] Integer Integer)
+(def (custom-scenario-case-row-count/loop cases count)
+  (if (null? cases)
+    count
+    (custom-scenario-case-row-count/loop
+     (cdr cases)
+     (+ count (custom-scenario-row-count (cdar cases))))))
+
 ;; : (-> [Pair] Integer)
 (def (custom-scenario-case-row-count cases)
+  (custom-scenario-case-row-count/loop cases 0))
+
+;; : (-> [Pair] [Boolean] [Boolean])
+(def (custom-scenario-case-runtime-flags/rev cases flags-rev)
   (if (null? cases)
-    0
-    (+ (custom-scenario-row-count (cdar cases))
-       (custom-scenario-case-row-count (cdr cases)))))
+    flags-rev
+    (custom-scenario-case-runtime-flags/rev
+     (cdr cases)
+     (custom-scenario-runtime-flags/rev (cdar cases) flags-rev))))
 
 ;; : (-> [Pair] [Boolean])
 (def (custom-scenario-case-runtime-flags cases)
+  (reverse (custom-scenario-case-runtime-flags/rev cases '())))
+
+;; : (-> [Pair] [Symbol] [Symbol])
+(def (custom-scenario-case-names/rev cases names-rev)
   (if (null? cases)
-    '()
-    (custom-scenario-append
-     (custom-scenario-runtime-flags (cdar cases))
-     (custom-scenario-case-runtime-flags (cdr cases)))))
+    names-rev
+    (custom-scenario-case-names/rev
+     (cdr cases)
+     (cons (caar cases) names-rev))))
 
 ;; : (-> [Pair] [Symbol])
 (def (custom-scenario-case-names cases)
-  (if (null? cases)
-    '()
-    (cons (caar cases)
-          (custom-scenario-case-names (cdr cases)))))
+  (reverse (custom-scenario-case-names/rev cases '())))
 
 ;; : (-> Alist Symbol MaybeValue)
 (def (custom-scenario-summary-ref row key)

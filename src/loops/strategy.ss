@@ -128,15 +128,21 @@
            loop-prioritization-role
            loop-strategy-engine-role)))
 
+;; : (-> Symbol [LoopPatternDescriptor] Alist Alist)
+(def (loop-strategy-plan-slot-rows name patterns overrides)
+  (cons (cons 'name name)
+        (cons (cons 'patterns patterns)
+              overrides)))
+
 ;;; Boundary: constructor receives descriptors and strategy-policy overrides.
 ;;; Runtime handles, timers, connector clients, and worktrees stay out of scope.
 ;; : (-> Symbol [LoopPatternDescriptor] [Alist] LoopStrategyPlan)
 (def (make-loop-strategy-plan name patterns . maybe-overrides)
   (poo-core-role-object
    (slot-rows
-    (append
-     (list (cons 'name name)
-           (cons 'patterns patterns))
+    (loop-strategy-plan-slot-rows
+     name
+     patterns
      (if (null? maybe-overrides) '() (car maybe-overrides))))
    (supers loop-strategy-plan-prototype)))
 
@@ -316,22 +322,41 @@
 ;;; so downstream presentation can concatenate findings without translation.
 ;;; Boundary: required-field errors use structured details for doctor output.
 ;; : (-> Symbol FieldValue [ValidationError])
-(def (loop-strategy-required-field-error field value)
+(def (loop-strategy-required-field-error/tail field value tail)
   (if value
-    '()
-    (list (list (cons 'field field)
-                (cons 'code 'required)))))
+    tail
+    (cons (list (cons 'field field)
+                (cons 'code 'required))
+          tail)))
+
+;; : (-> Symbol FieldValue [ValidationError])
+(def (loop-strategy-required-field-error field value)
+  (loop-strategy-required-field-error/tail field value '()))
 
 ;;; Boundary: loop strategy field validation error unless is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
-(def (loop-strategy-field-validation-error/unless valid? field code value)
+(def (loop-strategy-field-validation-error/unless/tail valid?
+                                                       field
+                                                       code
+                                                       value
+                                                       tail)
   (if valid?
-    '()
-    (list (list (cons 'field field)
+    tail
+    (cons (list (cons 'field field)
                 (cons 'code code)
-                (cons 'value value)))))
+                (cons 'value value))
+          tail)))
+
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-strategy-field-validation-error/unless valid? field code value)
+  (loop-strategy-field-validation-error/unless/tail
+   valid?
+   field
+   code
+   value
+   '()))
 
 ;;; Pattern validation nests descriptor findings under the strategy index so a
 ;;; downstream doctor can point at the bad loop entry without parsing strings.
@@ -340,16 +365,17 @@
   (cond
    ((null? descriptors) '())
    (else
-    (let (errors (loop-pattern-validation-errors (car descriptors)))
-      (append
-       (if (null? errors)
-         '()
-         (list (list (cons 'field 'patterns)
-                     (cons 'index index)
-                     (cons 'code 'invalid-pattern)
-                     (cons 'errors errors))))
-       (loop-strategy-pattern-validation-errors (cdr descriptors)
-                                                (+ index 1)))))))
+    (let ((errors (loop-pattern-validation-errors (car descriptors)))
+          (tail-errors
+           (loop-strategy-pattern-validation-errors (cdr descriptors)
+                                                    (+ index 1))))
+      (if (null? errors)
+        tail-errors
+        (cons (list (cons 'field 'patterns)
+                    (cons 'index index)
+                    (cons 'code 'invalid-pattern)
+                    (cons 'errors errors))
+              tail-errors))))))
 
 ;;; Boundary: validation errors are structured data so doctor surfaces stay typed.
 ;;; The aggregate validator keeps local policy mistakes in one alist payload:
@@ -370,26 +396,27 @@
 ;; : (-> LoopStrategyPlan Symbol [LoopPatternDescriptor] Symbol Alist [ValidationError])
 (def (loop-strategy-validation-errors/fields plan name patterns level-ceiling local-validation)
   (if (loop-strategy-plan? plan)
-    (append
-     (loop-strategy-required-field-error 'name name)
-     (loop-strategy-field-validation-error/unless
+    (loop-strategy-required-field-error/tail
+     'name
+     name
+     (loop-strategy-field-validation-error/unless/tail
       (list? patterns)
       'patterns
       'not-list
-      patterns)
-     (loop-strategy-field-validation-error/unless
-      (loop-pattern-level? level-ceiling)
-      'level-ceiling
-      'unsupported-level
-      level-ceiling)
-     (loop-strategy-field-validation-error/unless
-      (loop-strategy-local-validation-policy-harness-only? local-validation)
-      'local-validation
-      'local-execution-must-be-harness-only
-      local-validation)
-     (loop-strategy-pattern-validation-errors
-      (if (list? patterns) patterns '())
-      0))
+      patterns
+      (loop-strategy-field-validation-error/unless/tail
+       (loop-pattern-level? level-ceiling)
+       'level-ceiling
+       'unsupported-level
+       level-ceiling
+       (loop-strategy-field-validation-error/unless/tail
+        (loop-strategy-local-validation-policy-harness-only? local-validation)
+        'local-validation
+        'local-execution-must-be-harness-only
+        local-validation
+        (loop-strategy-pattern-validation-errors
+         (if (list? patterns) patterns '())
+         0)))))
     (list '((field . plan) (code . not-loop-strategy-plan)))))
 
 ;;; Boundary: validation is the gate before any strategy projection leaves this owner.

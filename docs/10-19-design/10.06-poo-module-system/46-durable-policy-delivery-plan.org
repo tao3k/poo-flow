@@ -789,7 +789,7 @@ Concrete next document/code action:
 Reason: durable policy, runtime store contracts, backend negotiation, operation receipts, session communication, memory durable jobs, workflow/CI/CD/artifact projections, and sandbox refs now bridge into one runtime operation batch. The next architectural risk is that the operation batch remains a Scheme-only report instead of becoming the Rust/Marlin durable command contract.
 ** 10.06.46.79.30 Eighth Slice Delivery Notes
 Eighth slice status: landed. Delivered:
-- =src/module-system/durable-recovery-scenario.ss= adds a =defstruct= recovery scenario receipt and bounded =->alist= projection.
+- =src/module-system/durable-recovery-scenario.ss= adds a =defstruct= recovery scenario receipt and bounded =->alist= projection; =src/module-system/durable-recovery-support.ss= keeps diagnostics, runtime-store row normalization, and observability stage rows out of the receipt owner.
 - The scenario receipt accepts projected runtime store, session graph, communication, memory durable job, workflow task, and sandbox rows without traversing hot POO object graphs.
 - The crash/replay/repair gate reports missing durable memory jobs, invalid memory job rows, unsafe manual replay, missing checkpoints, missing compensation, unresolved sandbox refs, and invalid runtime store receipts.
 - Recovery observability rows now cover =durable-event-append=, =checkpoint-read=, =derived-index-rebuild=, =job-lease-claim=, =repair-event-append=, and =recovery-decision=.

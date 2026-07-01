@@ -39,6 +39,27 @@
 (def (poo-flow-session-memory-key? value)
   (or (symbol? value) (string? value)))
 
+;; : (-> Symbol Alist Alist)
+(def (poo-flow-session-transform-declaration-metadata/tail declared-by tail)
+  (cons (cons 'declared-by declared-by)
+        (cons (cons 'runtime-executed #f) tail)))
+
+;; : (-> Symbol Alist Alist)
+(def (poo-flow-session-transform-lineage-metadata/tail transform-name tail)
+  (cons (cons 'transform-name transform-name)
+        tail))
+
+;; : (-> Symbol Symbol Fixnum Alist Alist)
+(def (poo-flow-session-transform-derived-metadata/tail transform-name
+                                                        source-session-id
+                                                        memory-intent-count
+                                                        tail)
+  (cons (cons 'derived-by 'poo-flow-session-transform)
+        (cons (cons 'transform-name transform-name)
+              (cons (cons 'source-session-id source-session-id)
+                    (cons (cons 'memory-intent-count memory-intent-count)
+                          tail)))))
+
 ;;; A memory intent is a report-only request for a runtime memory backend. It is
 ;;; attached to session transforms but never recalls or commits data in Scheme.
 ;; : (-> Symbol Symbol Symbol [Symbol/String] Symbol [Alist] PooSessionMemoryIntent)
@@ -68,9 +89,9 @@
                             (symbol? commit-policy)
                             commit-policy)
   (let ((metadata-value
-         (append '((declared-by . poo-flow-session-memory-intent)
-                   (runtime-executed . #f))
-                 (if (null? maybe-metadata) '() (car maybe-metadata)))))
+         (poo-flow-session-transform-declaration-metadata/tail
+          'poo-flow-session-memory-intent
+          (if (null? maybe-metadata) '() (car maybe-metadata)))))
     (poo-flow-session-require "session memory metadata must be a list"
                               (list? metadata-value)
                               metadata-value)
@@ -240,9 +261,9 @@
          (description-value description)
          (capability-values capabilities)
          (metadata-value
-          (append '((declared-by . poo-flow-session-transform)
-                    (runtime-executed . #f))
-                  (car split-options)))
+          (poo-flow-session-transform-declaration-metadata/tail
+           'poo-flow-session-transform
+           (car split-options)))
          (memory-intents-value (cdr split-options)))
     (poo-flow-session-require "session transform metadata must be a list"
                               (list? metadata-value)
@@ -435,6 +456,14 @@
     source-session
     derived-session)))
 
+;; : (-> [Alist] [PooSessionMemoryReceipt])
+(def (poo-flow-session-memory-receipt-rows->objects rows)
+  (cond
+   ((null? rows) '())
+   (else
+    (cons (poo-flow-session-memory-receipt-row->object (car rows))
+          (poo-flow-session-memory-receipt-rows->objects (cdr rows))))))
+
 ;;; Apply a transform in the control plane. The output is a receipt object with
 ;;; an inspectable derived session; runtime providers still receive only the
 ;;; handoff intent.
@@ -488,17 +517,14 @@
             derived-session-id-value
             (list source-session-id-value)
             'transform
-            (append
-             (list (cons 'transform-name
-                         transform-name-value))
+            (poo-flow-session-transform-lineage-metadata/tail
+             transform-name-value
              metadata-value))
            source-placement-value
-           (append
-            (list (cons 'derived-by 'poo-flow-session-transform)
-                  (cons 'transform-name transform-name-value)
-                  (cons 'source-session-id source-session-id-value)
-                  (cons 'memory-intent-count
-                        memory-intent-count-value))
+           (poo-flow-session-transform-derived-metadata/tail
+            transform-name-value
+            source-session-id-value
+            memory-intent-count-value
             metadata-value)))
          (handoff-intent-value
           (poo-flow-session-transform-handoff-intent
@@ -601,8 +627,8 @@
 ;;     %
 ;; : (-> PooSessionTransformReceipt [PooSessionMemoryReceipt])
 (def (poo-flow-session-transform-receipt-memory-receipts receipt)
-  (map poo-flow-session-memory-receipt-row->object
-       (.ref receipt 'memory-receipts)))
+  (poo-flow-session-memory-receipt-rows->objects
+   (.ref receipt 'memory-receipts)))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-memory-receipt? value)

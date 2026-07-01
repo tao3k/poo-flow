@@ -189,6 +189,27 @@
            (cons 'workflow-ref workflow-ref))))
    (else '())))
 
+;; : (-> [PooFlowCicdCheckMap] Alist)
+(def (poo-flow-funflow-workflow-agreement-summary check-maps)
+  (let loop ((remaining-check-maps check-maps)
+             (pipeline-count 0)
+             (pipeline-names-rev '())
+             (functional-dag-rows-rev '()))
+    (if (null? remaining-check-maps)
+      (list
+       (cons 'pipeline-count pipeline-count)
+       (cons 'pipeline-names (reverse pipeline-names-rev))
+       (cons 'functional-dag-rows (reverse functional-dag-rows-rev)))
+      (let* ((check-map (car remaining-check-maps))
+             (pipeline-name (poo-flow-cicd-check-map-name check-map))
+             (functional-dag-row
+              (poo-flow-funflow-functional-dag->alist
+               (poo-flow-funflow-check-map->functional-dag check-map))))
+        (loop (cdr remaining-check-maps)
+              (+ pipeline-count 1)
+              (cons pipeline-name pipeline-names-rev)
+              (cons functional-dag-row functional-dag-rows-rev))))))
+
 ;;; The agreement is report-only data that lets loop-engine handoff receipts
 ;;; prove whether a workflow ref is backed by a Funflow-owned pipeline.
 ;; : (-> Symbol [PooFlowCicdCheckMap] Alist)
@@ -197,17 +218,19 @@
           (poo-flow-funflow-workflow-agreement-diagnostics
            workflow-ref
            check-maps))
+         (summary
+          (poo-flow-funflow-workflow-agreement-summary check-maps))
          (functional-dag-rows
-          (map poo-flow-funflow-functional-dag->alist
-               (map poo-flow-funflow-check-map->functional-dag
-                    check-maps))))
+          (poo-flow-cicd-alist-ref summary 'functional-dag-rows '())))
     (list
      (cons 'kind 'funflow-workflow-agreement)
      (cons 'contract +poo-flow-funflow-workflow-agreement-contract+)
      (cons 'workflow-ref workflow-ref)
      (cons 'funflow-owned? (poo-flow-funflow-workflow-ref? workflow-ref))
-     (cons 'pipeline-count (length check-maps))
-     (cons 'pipeline-names (poo-flow-funflow-check-map-names check-maps))
+     (cons 'pipeline-count
+           (poo-flow-cicd-alist-ref summary 'pipeline-count 0))
+     (cons 'pipeline-names
+           (poo-flow-cicd-alist-ref summary 'pipeline-names '()))
      (cons 'functional-dag-count (length functional-dag-rows))
      (cons 'functional-dags functional-dag-rows)
      (cons 'diagnostic-count (length diagnostics))
@@ -264,20 +287,20 @@
 ;;; Boundary: funflow optional metadata is the policy-visible edge for policy
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
-;; : (forall (a) (-> Symbol a [Pair]))
-(def (poo-flow-funflow-optional-metadata key value)
+;; : (forall (a) (-> Symbol a [Pair] [Pair]))
+(def (poo-flow-funflow-optional-metadata/tail key value tail)
   (if value
-    (list (cons key value))
-    '()))
+    (cons (cons key value) tail)
+    tail))
 
 ;;; Boundary: funflow list metadata is the policy-visible edge for policy
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
-;; : (-> Symbol List [Pair])
-(def (poo-flow-funflow-list-metadata key values)
+;; : (-> Symbol List [Pair] [Pair])
+(def (poo-flow-funflow-list-metadata/tail key values tail)
   (if (null? values)
-    '()
-    (list (cons key values))))
+    tail
+    (cons (cons key values) tail)))
 
 ;; : (-> Symbol Symbol [Alist] PooFlowFunflowDagEdge)
 (def (poo-flow-funflow-dag-edge from to . maybe-metadata)
@@ -342,6 +365,12 @@
            (metadata (.ref edge 'metadata))
            (runtime-executed (.ref edge 'runtime-executed)))))
 
+;; : (-> [PooFlowFunflowDagEdge] [Alist])
+(defpoo-module-final-projection-batch
+  poo-flow-funflow-dag-edges->alists (edges)
+  (projector poo-flow-funflow-dag-edge->alist)
+  (error-message "funflow DAG edge projection requires a list"))
+
 ;; : (-> PooFlowFunflowCompositionStep Alist)
 (defpoo-module-final-projection
   poo-flow-funflow-composition-step->alist (step)
@@ -360,19 +389,29 @@
            (metadata (.ref step 'metadata))
            (runtime-executed (.ref step 'runtime-executed)))))
 
-;; : (-> [Symbol] [PooFlowFunflowDagEdge] [Symbol])
-(def (poo-flow-funflow-entry-nodes nodes edges)
-  (let (targets (map (lambda (edge) (.ref edge 'to)) edges))
-    (filter (lambda (node)
-              (not (poo-flow-cicd-symbol-member? node targets)))
-            nodes)))
+;; : (-> [PooFlowFunflowCompositionStep] [Alist])
+(defpoo-module-final-projection-batch
+  poo-flow-funflow-composition-steps->alists (steps)
+  (projector poo-flow-funflow-composition-step->alist)
+  (error-message "funflow composition step projection requires a list"))
 
-;; : (-> [Symbol] [PooFlowFunflowDagEdge] [Symbol])
-(def (poo-flow-funflow-terminal-nodes nodes edges)
-  (let (sources (map (lambda (edge) (.ref edge 'from)) edges))
-    (filter (lambda (node)
-              (not (poo-flow-cicd-symbol-member? node sources)))
-            nodes)))
+;; : (-> [PooFlowFunflowDagEdge] Alist)
+(def (poo-flow-funflow-edge-endpoint-summary edges)
+  (list
+   (cons 'sources
+         (map (lambda (edge) (.ref edge 'from)) edges))
+   (cons 'targets
+         (map (lambda (edge) (.ref edge 'to)) edges))))
+
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (poo-flow-funflow-nodes-not-in nodes blocked-nodes)
+  (cond
+   ((null? nodes) '())
+   ((poo-flow-cicd-symbol-member? (car nodes) blocked-nodes)
+    (poo-flow-funflow-nodes-not-in (cdr nodes) blocked-nodes))
+   (else
+    (cons (car nodes)
+          (poo-flow-funflow-nodes-not-in (cdr nodes) blocked-nodes)))))
 
 ;; : (-> Alist PooFlowFunflowDagEdge)
 (def (poo-flow-funflow-dependency-edge->dag-edge edge)
@@ -383,7 +422,13 @@
 
 ;; : (-> [Alist] [PooFlowFunflowDagEdge])
 (def (poo-flow-funflow-dependency-edges->dag-edges edges)
-  (map poo-flow-funflow-dependency-edge->dag-edge edges))
+  (cond
+   ((null? edges) '())
+   ((pair? edges)
+    (cons (poo-flow-funflow-dependency-edge->dag-edge (car edges))
+          (poo-flow-funflow-dependency-edges->dag-edges (cdr edges))))
+   (else
+    (error "funflow dependency edges must be a list" edges))))
 
 ;; : (-> Symbol PooFlowFunflowCompositionStep)
 (def (poo-flow-funflow-node->composition-step node)
@@ -425,14 +470,14 @@
            (check-map (.ref dag 'check-map))
            (composition-style (.ref dag 'composition-style))
            (composition-steps
-            (map poo-flow-funflow-composition-step->alist
-                 (.ref dag 'composition-steps)))
+            (poo-flow-funflow-composition-steps->alists
+             (.ref dag 'composition-steps)))
            (composition-step-count
             (.ref dag 'composition-step-count))
            (nodes (.ref dag 'nodes))
            (edges
-            (map poo-flow-funflow-dag-edge->alist
-                 (.ref dag 'edges)))
+            (poo-flow-funflow-dag-edges->alists
+             (.ref dag 'edges)))
            (edge-count (.ref dag 'edge-count))
            (entry-nodes (.ref dag 'entry-nodes))
            (terminal-nodes (.ref dag 'terminal-nodes))
@@ -457,35 +502,34 @@
      "funflow POO check metadata must be an alist"
      (list? metadata)
      metadata)
-    (append
-     (list (cons 'source 'funflow-poo-prototype)
-           (cons 'check (.ref check 'check-name))
-           (cons 'dependency-refs dependency-refs))
-     (poo-flow-funflow-optional-metadata
-      'observability
-      (.ref check 'observability))
-     (poo-flow-funflow-optional-metadata
-      'durable-task-id
-      (.ref check 'durable-task-id))
-     (poo-flow-funflow-optional-metadata
-      'action-class
-      (.ref check 'action-class))
-     (poo-flow-funflow-list-metadata
-      'compensation-refs
-      (.ref check 'compensation-refs))
-     (poo-flow-funflow-optional-metadata
-      'artifact-retention
-      (.ref check 'artifact-retention))
-     (poo-flow-funflow-list-metadata
-      'observes
-      (.ref check 'observes))
-     (poo-flow-funflow-list-metadata
-      'guards
-      (.ref check 'guards))
-     (poo-flow-funflow-optional-metadata
-      'report
-      (.ref check 'report))
-     metadata)))
+    (cons (cons 'source 'funflow-poo-prototype)
+          (cons (cons 'check (.ref check 'check-name))
+                (cons (cons 'dependency-refs dependency-refs)
+                      (poo-flow-funflow-optional-metadata/tail
+                       'observability
+                       (.ref check 'observability)
+                       (poo-flow-funflow-optional-metadata/tail
+                        'durable-task-id
+                        (.ref check 'durable-task-id)
+                        (poo-flow-funflow-optional-metadata/tail
+                         'action-class
+                         (.ref check 'action-class)
+                         (poo-flow-funflow-list-metadata/tail
+                          'compensation-refs
+                          (.ref check 'compensation-refs)
+                          (poo-flow-funflow-optional-metadata/tail
+                           'artifact-retention
+                           (.ref check 'artifact-retention)
+                           (poo-flow-funflow-list-metadata/tail
+                            'observes
+                            (.ref check 'observes)
+                            (poo-flow-funflow-list-metadata/tail
+                             'guards
+                             (.ref check 'guards)
+                             (poo-flow-funflow-optional-metadata/tail
+                              'report
+                              (.ref check 'report)
+                              metadata)))))))))))))
 
 ;; : (-> PooFlowFunflowCheckPrototype PooFlowCicdCheck)
 (def (poo-flow-funflow-poo-check->cicd-check check)
@@ -554,7 +598,9 @@
          (edges (poo-flow-funflow-dependency-edges->dag-edges
                  (poo-flow-cicd-alist-ref graph 'edges '())))
          (composition-steps
-          (poo-flow-funflow-dag-composition-steps nodes edges)))
+          (poo-flow-funflow-dag-composition-steps nodes edges))
+         (endpoint-summary
+          (poo-flow-funflow-edge-endpoint-summary edges)))
     (object<-alist
      (list
       (cons 'kind +poo-flow-funflow-functional-dag-prototype-kind+)
@@ -568,9 +614,13 @@
       (cons 'edges edges)
       (cons 'edge-count (length edges))
       (cons 'entry-nodes
-            (poo-flow-funflow-entry-nodes nodes edges))
+            (poo-flow-funflow-nodes-not-in
+             nodes
+             (poo-flow-cicd-alist-ref endpoint-summary 'targets '())))
       (cons 'terminal-nodes
-            (poo-flow-funflow-terminal-nodes nodes edges))
+            (poo-flow-funflow-nodes-not-in
+             nodes
+             (poo-flow-cicd-alist-ref endpoint-summary 'sources '())))
       (cons 'ready-order
             (poo-flow-cicd-alist-ref graph 'ready-order '()))
       (cons 'unordered-nodes

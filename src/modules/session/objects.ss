@@ -77,6 +77,20 @@
    (else
     (poo-flow-session-compact (cdr values)))))
 
+;; : (-> Alist Alist Alist)
+(def (poo-flow-session-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
 ;;; Chunks are receipt rows, not extension surfaces. Keeping them as primitive
 ;;; rows prevents presentation code from repeatedly instantiating child POO
 ;;; objects while still preserving typed user-visible data.
@@ -257,29 +271,37 @@
    (else
     (poo-flow-session-profile-by-name (cdr profiles) name))))
 
+;; : (-> Symbol POOObject Alist Alist)
+(def (poo-flow-session-profile-runtime-summary/tail profile-ref profile tail)
+  (poo-flow-session-rows/tail
+   (list
+    (cons 'profile-name (poo-flow-session-profile-name profile))
+    (cons 'profile-ref profile-ref)
+    (cons 'backend-kind
+          (poo-flow-session-profile-slot profile 'backend-kind 'unknown))
+    (cons 'backend-ref
+          (poo-flow-session-profile-slot profile 'backend-ref 'unknown))
+    (cons 'network-policy
+          (poo-flow-session-profile-slot profile 'network-policy '()))
+    (cons 'capabilities
+          (poo-flow-session-profile-slot profile 'capabilities '()))
+    (cons 'resource-policy
+          (poo-flow-session-profile-slot profile 'resource-policy '()))
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'catalog-resolved? #t)
+    (cons 'descriptor-realized? #f)
+    (cons 'runtime-executed #f))
+   tail))
+
 ;; : (-> Symbol POOObject Alist)
 (def (poo-flow-session-profile-runtime-summary profile-ref profile)
-  (list (cons 'profile-name (poo-flow-session-profile-name profile))
-        (cons 'profile-ref profile-ref)
-        (cons 'backend-kind
-              (poo-flow-session-profile-slot profile 'backend-kind 'unknown))
-        (cons 'backend-ref
-              (poo-flow-session-profile-slot profile 'backend-ref 'unknown))
-        (cons 'network-policy
-              (poo-flow-session-profile-slot profile 'network-policy '()))
-        (cons 'capabilities
-              (poo-flow-session-profile-slot profile 'capabilities '()))
-        (cons 'resource-policy
-              (poo-flow-session-profile-slot profile 'resource-policy '()))
-        (cons 'runtime-owner "marlin-agent-core")
-        (cons 'catalog-resolved? #t)
-        (cons 'descriptor-realized? #f)
-        (cons 'runtime-executed #f)))
+  (poo-flow-session-profile-runtime-summary/tail profile-ref profile '()))
 
 ;; : (-> Symbol POOObject Alist)
 (def (poo-flow-session-profile-handoff-summary profile-ref profile)
-  (append
-   (poo-flow-session-profile-runtime-summary profile-ref profile)
+  (poo-flow-session-profile-runtime-summary/tail
+   profile-ref
+   profile
    '((handoff-required . #t))))
 
 ;; : (-> Symbol Symbol POOObject Alist)
@@ -399,9 +421,11 @@
         (lineage-prototype lineage)
         (placement-prototype placement)
         (session-metadata-value
-         (append '((declared-by . poo-flow-session-module)
-                   (runtime-executed . #f))
-                 (if (null? maybe-metadata) '() (car maybe-metadata)))))
+         (cons (cons 'declared-by 'poo-flow-session-module)
+               (cons (cons 'runtime-executed #f)
+                     (if (null? maybe-metadata)
+                       '()
+                       (car maybe-metadata))))))
     (.o (:: @ [lineage-prototype placement-prototype])
         kind: 'poo-flow.session.value
         schema: 'poo-flow.modules.session.value.v1

@@ -12,6 +12,8 @@
         poo-flow-session-selector-candidate-id
         poo-flow-session-selector-candidate-kind
         poo-flow-session-selector-candidate-target-ref
+        poo-flow-session-selector-candidate->alist
+        poo-flow-session-selector-candidates->alists
         poo-flow-session-selector-receipt
         poo-flow-session-selector-receipt?
         poo-flow-session-selector-receipt-selector-id
@@ -30,6 +32,13 @@
        (if (member value +poo-flow-session-selector-candidate-kinds+)
          #t
          #f)))
+
+;; : (-> POOObject Symbol Value Value)
+(def (poo-flow-session-selector-slot object key default)
+  (with-catch
+   (lambda (_failure) default)
+   (lambda ()
+     (.ref object key))))
 
 ;; : (-> Symbol Symbol Symbol String [Symbol] [Alist] PooSessionSelectorCandidate)
 (def (poo-flow-session-selector-candidate candidate-id
@@ -55,60 +64,142 @@
    "session selector required receipt fields must be symbols"
    (poo-flow-session-every? symbol? required-receipt-fields)
    required-receipt-fields)
-  (list
-   (cons 'kind 'poo-flow.session.selector-candidate)
-   (cons 'schema 'poo-flow.modules.session.selector-candidate.v1)
-   (cons 'candidate-id candidate-id)
-   (cons 'candidate-kind candidate-kind)
-   (cons 'target-ref target-ref)
-   (cons 'description description)
-   (cons 'required-receipt-fields required-receipt-fields)
-   (cons 'runtime-owner "marlin-agent-core")
-   (cons 'runtime-executed #f)
-   (cons 'metadata (if (null? maybe-metadata)
-                     '()
-                     (car maybe-metadata)))))
+  (object<-alist
+   (list
+    (cons 'kind 'poo-flow.session.selector-candidate)
+    (cons 'schema 'poo-flow.modules.session.selector-candidate.v1)
+    (cons 'candidate-id candidate-id)
+    (cons 'candidate-kind candidate-kind)
+    (cons 'target-ref target-ref)
+    (cons 'description description)
+    (cons 'required-receipt-fields required-receipt-fields)
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'runtime-executed #f)
+    (cons 'metadata (if (null? maybe-metadata)
+                      '()
+                      (car maybe-metadata))))))
 
-;; : (-> Any Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-session-selector-candidate? value)
-  (and (list? value)
-       (eq? (poo-flow-session-alist-ref value 'kind #f)
+  (and (object? value)
+       (eq? (poo-flow-session-selector-slot value 'kind #f)
             'poo-flow.session.selector-candidate)))
 
 ;; : (-> PooSessionSelectorCandidate Symbol)
 (def (poo-flow-session-selector-candidate-id candidate)
-  (poo-flow-session-alist-ref candidate 'candidate-id #f))
+  (.ref candidate 'candidate-id))
 
 ;; : (-> PooSessionSelectorCandidate Symbol)
 (def (poo-flow-session-selector-candidate-kind candidate)
-  (poo-flow-session-alist-ref candidate 'candidate-kind #f))
+  (.ref candidate 'candidate-kind))
 
 ;; : (-> PooSessionSelectorCandidate Symbol)
 (def (poo-flow-session-selector-candidate-target-ref candidate)
-  (poo-flow-session-alist-ref candidate 'target-ref #f))
+  (.ref candidate 'target-ref))
 
-;; : (-> [PooSessionSelectorCandidate] [Symbol])
-(def (poo-flow-session-selector-candidate-ids candidates)
-  (cond
-   ((null? candidates) '())
-   (else
-    (cons (poo-flow-session-selector-candidate-id (car candidates))
-          (poo-flow-session-selector-candidate-ids (cdr candidates))))))
+;; : (-> PooSessionSelectorCandidate Alist)
+(defpoo-session-receipt-projection
+  poo-flow-session-selector-candidate->alist
+  (candidate)
+  (require poo-flow-session-require
+           "session selector candidate projection requires a candidate"
+           (poo-flow-session-selector-candidate? candidate)
+           candidate)
+  (bindings ())
+  (fields
+   (('kind (.ref candidate 'kind))
+    ('schema (.ref candidate 'schema))
+    ('candidate-id (.ref candidate 'candidate-id))
+    ('candidate-kind (.ref candidate 'candidate-kind))
+    ('target-ref (.ref candidate 'target-ref))
+    ('description (.ref candidate 'description))
+    ('required-receipt-fields (.ref candidate 'required-receipt-fields))
+    ('runtime-owner (.ref candidate 'runtime-owner))
+    ('runtime-executed (.ref candidate 'runtime-executed))
+    ('metadata (.ref candidate 'metadata)))))
 
-;; : (-> Symbol [PooSessionSelectorCandidate] [Symbol])
-(def (poo-flow-session-selector-candidates-by-kind candidate-kind candidates)
-  (cond
-   ((null? candidates) '())
-   ((eq? (poo-flow-session-selector-candidate-kind (car candidates))
-         candidate-kind)
-    (cons (poo-flow-session-selector-candidate-id (car candidates))
-          (poo-flow-session-selector-candidates-by-kind
-           candidate-kind
-           (cdr candidates))))
-   (else
-    (poo-flow-session-selector-candidates-by-kind
-     candidate-kind
-     (cdr candidates)))))
+;; : (-> [PooSessionSelectorCandidate] [Alist])
+(defpoo-session-receipt-projection-batch
+  poo-flow-session-selector-candidates->alists
+  (candidates)
+  (projector poo-flow-session-selector-candidate->alist)
+  (error-message "session selector candidate projection requires a list"))
+
+;; : (-> [PooSessionSelectorCandidate] Alist)
+(def (poo-flow-session-selector-candidate-summary candidates)
+  (let loop ((remaining-candidates candidates)
+             (candidate-count 0)
+             (candidate-ids-rev '())
+             (workflow-candidate-ids-rev '())
+             (transform-candidate-ids-rev '())
+             (agent-param-candidate-ids-rev '()))
+    (cond
+     ((null? remaining-candidates)
+      (list
+       (cons 'candidate-count candidate-count)
+       (cons 'candidate-ids (reverse candidate-ids-rev))
+       (cons 'workflow-candidate-ids
+             (reverse workflow-candidate-ids-rev))
+       (cons 'transform-candidate-ids
+             (reverse transform-candidate-ids-rev))
+       (cons 'agent-param-candidate-ids
+             (reverse agent-param-candidate-ids-rev))))
+     (else
+      (let* ((candidate (car remaining-candidates))
+             (candidate-id
+              (poo-flow-session-selector-candidate-id candidate))
+             (candidate-kind
+              (poo-flow-session-selector-candidate-kind candidate))
+             (next-candidates (cdr remaining-candidates))
+             (next-count (+ candidate-count 1))
+             (next-candidate-ids
+              (cons candidate-id candidate-ids-rev)))
+        (cond
+         ((eq? candidate-kind 'workflow)
+          (loop next-candidates
+                next-count
+                next-candidate-ids
+                (cons candidate-id workflow-candidate-ids-rev)
+                transform-candidate-ids-rev
+                agent-param-candidate-ids-rev))
+         ((eq? candidate-kind 'transform)
+          (loop next-candidates
+                next-count
+                next-candidate-ids
+                workflow-candidate-ids-rev
+                (cons candidate-id transform-candidate-ids-rev)
+                agent-param-candidate-ids-rev))
+         (else
+          (loop next-candidates
+                next-count
+                next-candidate-ids
+                workflow-candidate-ids-rev
+                transform-candidate-ids-rev
+                (cons candidate-id
+                      agent-param-candidate-ids-rev)))))))))
+
+;; : PooSessionSelectorReceiptRecord
+(defstruct poo-flow-session-selector-receipt-record
+  (selector-id
+   project-id
+   root-session-ref
+   input-session-ref
+   candidate-count
+   candidate-ids
+   workflow-candidate-ids
+   transform-candidate-ids
+   agent-param-candidate-ids
+   candidates
+   selection-policy
+   fallback-ref
+   selection-state
+   selected-candidate-ref
+   pending-selected-result
+   handoff-required
+   runtime-owner
+   runtime-executed
+   metadata)
+  transparent: #t)
 
 ;; : (-> Symbol Symbol Symbol Symbol [PooSessionSelectorCandidate] Alist Symbol [Alist] PooSessionSelectorReceipt)
 (def (poo-flow-session-selector-receipt selector-id
@@ -142,66 +233,77 @@
   (poo-flow-session-require "session selector fallback ref must be a symbol"
                             (symbol? fallback-ref)
                             fallback-ref)
-  (object<-alist
-   (list
-    (cons 'kind 'poo-flow.session.selector-receipt)
-    (cons 'schema 'poo-flow.modules.session.selector-receipt.v1)
-    (cons 'selector-id selector-id)
-    (cons 'project-id project-id)
-    (cons 'root-session-ref root-session-ref)
-    (cons 'input-session-ref input-session-ref)
-    (cons 'candidate-count (length candidates))
-    (cons 'candidate-ids
-          (poo-flow-session-selector-candidate-ids candidates))
-    (cons 'workflow-candidate-ids
-          (poo-flow-session-selector-candidates-by-kind
-           'workflow
-           candidates))
-    (cons 'transform-candidate-ids
-          (poo-flow-session-selector-candidates-by-kind
-           'transform
-           candidates))
-    (cons 'agent-param-candidate-ids
-          (poo-flow-session-selector-candidates-by-kind
-           'agent-param
-           candidates))
-    (cons 'candidates candidates)
-    (cons 'selection-policy selection-policy)
-    (cons 'fallback-ref fallback-ref)
-    (cons 'selection-state 'pending)
-    (cons 'selected-candidate-ref #f)
-    (cons 'pending-selected-result
-          (list (cons 'state 'pending)
-                (cons 'runtime-owner "marlin-agent-core")
-                (cons 'runtime-executed #f)))
-    (cons 'handoff-required #t)
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'metadata (if (null? maybe-metadata)
-                      '()
-                      (car maybe-metadata))))))
+  (let* ((candidate-summary
+          (poo-flow-session-selector-candidate-summary candidates))
+         (candidate-count
+          (poo-flow-session-alist-ref
+           candidate-summary
+           'candidate-count
+           0))
+         (candidate-ids
+          (poo-flow-session-alist-ref
+           candidate-summary
+           'candidate-ids
+           '()))
+         (workflow-candidate-ids
+          (poo-flow-session-alist-ref
+           candidate-summary
+           'workflow-candidate-ids
+           '()))
+         (transform-candidate-ids
+          (poo-flow-session-alist-ref
+           candidate-summary
+           'transform-candidate-ids
+           '()))
+         (agent-param-candidate-ids
+          (poo-flow-session-alist-ref
+           candidate-summary
+           'agent-param-candidate-ids
+           '())))
+    (make-poo-flow-session-selector-receipt-record
+     selector-id
+     project-id
+     root-session-ref
+     input-session-ref
+     candidate-count
+     candidate-ids
+     workflow-candidate-ids
+     transform-candidate-ids
+     agent-param-candidate-ids
+     candidates
+     selection-policy
+     fallback-ref
+     'pending
+     #f
+     (list (cons 'state 'pending)
+           (cons 'runtime-owner "marlin-agent-core")
+           (cons 'runtime-executed #f))
+     #t
+     "marlin-agent-core"
+     #f
+     (if (null? maybe-metadata)
+       '()
+       (car maybe-metadata)))))
 
-;; : (-> POOObject Boolean)
+;; : (-> Any Boolean)
 (def (poo-flow-session-selector-receipt? value)
-  (and (object? value)
-       (eq? (.ref value 'kind)
-            'poo-flow.session.selector-receipt)))
+  (poo-flow-session-selector-receipt-record? value))
 
 ;; : (-> PooSessionSelectorReceipt Symbol)
 (def (poo-flow-session-selector-receipt-selector-id receipt)
-  (.ref receipt 'selector-id))
+  (poo-flow-session-selector-receipt-record-selector-id receipt))
 
 ;; : (-> PooSessionSelectorReceipt [Symbol])
 (def (poo-flow-session-selector-receipt-candidate-ids receipt)
-  (.ref receipt 'candidate-ids))
+  (poo-flow-session-selector-receipt-record-candidate-ids receipt))
 
 ;; : (-> PooSessionSelectorReceipt Symbol)
 (def (poo-flow-session-selector-receipt-selection-state receipt)
-  (.ref receipt 'selection-state))
+  (poo-flow-session-selector-receipt-record-selection-state receipt))
 
 ;; : (-> PooSessionSelectorReceipt MaybeSymbol)
 (def (poo-flow-session-selector-receipt-selected-candidate-ref receipt)
-  (.ref receipt 'selected-candidate-ref))
+  (poo-flow-session-selector-receipt-record-selected-candidate-ref receipt))
 
 ;; : (-> PooSessionSelectorReceipt Alist)
 (defpoo-session-receipt-projection
@@ -213,24 +315,50 @@
            receipt)
   (bindings ())
   (fields
-   (('kind (.ref receipt 'kind))
-    ('schema (.ref receipt 'schema))
-    ('selector-id (.ref receipt 'selector-id))
-    ('project-id (.ref receipt 'project-id))
-    ('root-session-ref (.ref receipt 'root-session-ref))
-    ('input-session-ref (.ref receipt 'input-session-ref))
-    ('candidate-count (.ref receipt 'candidate-count))
-    ('candidate-ids (.ref receipt 'candidate-ids))
-    ('workflow-candidate-ids (.ref receipt 'workflow-candidate-ids))
-    ('transform-candidate-ids (.ref receipt 'transform-candidate-ids))
+   (('kind 'poo-flow.session.selector-receipt)
+    ('schema 'poo-flow.modules.session.selector-receipt.v1)
+    ('selector-id
+     (poo-flow-session-selector-receipt-record-selector-id receipt))
+    ('project-id
+     (poo-flow-session-selector-receipt-record-project-id receipt))
+    ('root-session-ref
+     (poo-flow-session-selector-receipt-record-root-session-ref
+      receipt))
+    ('input-session-ref
+     (poo-flow-session-selector-receipt-record-input-session-ref
+      receipt))
+    ('candidate-count
+     (poo-flow-session-selector-receipt-record-candidate-count receipt))
+    ('candidate-ids
+     (poo-flow-session-selector-receipt-candidate-ids receipt))
+    ('workflow-candidate-ids
+     (poo-flow-session-selector-receipt-record-workflow-candidate-ids
+      receipt))
+    ('transform-candidate-ids
+     (poo-flow-session-selector-receipt-record-transform-candidate-ids
+      receipt))
     ('agent-param-candidate-ids
-     (.ref receipt 'agent-param-candidate-ids))
-    ('selection-policy (.ref receipt 'selection-policy))
-    ('fallback-ref (.ref receipt 'fallback-ref))
-    ('selection-state (.ref receipt 'selection-state))
-    ('selected-candidate-ref (.ref receipt 'selected-candidate-ref))
-    ('pending-selected-result (.ref receipt 'pending-selected-result))
-    ('handoff-required (.ref receipt 'handoff-required))
-    ('runtime-owner (.ref receipt 'runtime-owner))
-    ('runtime-executed (.ref receipt 'runtime-executed))
-    ('metadata (.ref receipt 'metadata)))))
+     (poo-flow-session-selector-receipt-record-agent-param-candidate-ids
+      receipt))
+    ('candidates
+     (poo-flow-session-selector-candidates->alists
+      (poo-flow-session-selector-receipt-record-candidates receipt)))
+    ('selection-policy
+     (poo-flow-session-selector-receipt-record-selection-policy receipt))
+    ('fallback-ref
+     (poo-flow-session-selector-receipt-record-fallback-ref receipt))
+    ('selection-state
+     (poo-flow-session-selector-receipt-selection-state receipt))
+    ('selected-candidate-ref
+     (poo-flow-session-selector-receipt-selected-candidate-ref receipt))
+    ('pending-selected-result
+     (poo-flow-session-selector-receipt-record-pending-selected-result
+      receipt))
+    ('handoff-required
+     (poo-flow-session-selector-receipt-record-handoff-required receipt))
+    ('runtime-owner
+     (poo-flow-session-selector-receipt-record-runtime-owner receipt))
+    ('runtime-executed
+     (poo-flow-session-selector-receipt-record-runtime-executed receipt))
+    ('metadata
+     (poo-flow-session-selector-receipt-record-metadata receipt)))))

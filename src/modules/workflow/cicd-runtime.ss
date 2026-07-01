@@ -28,17 +28,21 @@
 ;;; alists so Marlin never has to inspect the POO object graph.
 ;; : (-> PooFlowCicdCheck [Alist])
 (def (poo-flow-cicd-check-artifact-provenance check)
-  (map (lambda (artifact-ref)
+  (let ((producer-check (poo-flow-cicd-check-name check))
+        (durable-task-id (poo-flow-cicd-check-durable-task-id check))
+        (retention (poo-flow-cicd-check-artifact-retention check)))
+    (let loop ((remaining-artifact-refs (poo-flow-cicd-check-artifacts check)))
+      (if (null? remaining-artifact-refs)
+        '()
+        (cons
          (list
-          (cons 'artifact-ref artifact-ref)
-          (cons 'producer-check (poo-flow-cicd-check-name check))
-          (cons 'durable-task-id
-                (poo-flow-cicd-check-durable-task-id check))
-          (cons 'retention
-                (poo-flow-cicd-check-artifact-retention check))
+          (cons 'artifact-ref (car remaining-artifact-refs))
+          (cons 'producer-check producer-check)
+          (cons 'durable-task-id durable-task-id)
+          (cons 'retention retention)
           (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-          (cons 'runtime-executed #f)))
-       (poo-flow-cicd-check-artifacts check)))
+          (cons 'runtime-executed #f))
+         (loop (cdr remaining-artifact-refs)))))))
 
 ;; : (-> PooFlowCicdCheck Alist)
 (def (poo-flow-cicd-check-durable-fields check)
@@ -61,6 +65,48 @@
    (cons 'compensation-refs
          (poo-flow-cicd-check-compensation-refs check))))
 
+;; : (-> [Alist] Alist Alist)
+(def (poo-flow-cicd-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+;; : (-> PooFlowCicdCheck Alist Alist)
+(def (poo-flow-cicd-check-runtime-metadata check readiness)
+  (poo-flow-cicd-rows/tail
+   (list
+    (cons 'source 'poo-flow.workflow.cicd.check)
+    (cons 'check (poo-flow-cicd-check-name check))
+    (cons 'profile (poo-flow-cicd-check-profile check))
+    (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
+    (cons 'dependency-refs (poo-flow-cicd-check-dependency-refs check))
+    (cons 'runtime (poo-flow-cicd-check-runtime check))
+    (cons 'runtime-executed #f)
+    (cons 'handoff-required #t)
+    (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+    (cons 'cache (poo-flow-cicd-check-cache check))
+    (cons 'secrets (poo-flow-cicd-check-secrets check))
+    (cons 'readiness readiness))
+   (poo-flow-cicd-check-durable-fields check)))
+
+;; : (-> PooFlowCicdCheck Alist)
+(def (poo-flow-cicd-check-runtime-policy check)
+  (poo-flow-cicd-rows/tail
+   (list
+    (cons 'runtime (poo-flow-cicd-check-runtime check))
+    (cons 'dependency-refs (poo-flow-cicd-check-dependency-refs check))
+    (cons 'runtime-executed #f)
+    (cons 'handoff-required #t))
+   (poo-flow-cicd-check-durable-fields check)))
+
 ;;; The runtime command bridge intentionally consumes readiness data instead of
 ;;; executing it: Scheme produces the same manifest shape that runtime adapters
 ;;; already understand, while Marlin/Rust remains the process owner.
@@ -72,22 +118,7 @@
      (car command)
      (cdr command)
      (.ref check 'result-protocol)
-     (append
-      (list (cons 'source 'poo-flow.workflow.cicd.check)
-            (cons 'check (poo-flow-cicd-check-name check))
-            (cons 'profile (poo-flow-cicd-check-profile check))
-            (cons 'profile-refs
-                  (poo-flow-cicd-check-profile-refs check))
-            (cons 'dependency-refs
-                  (poo-flow-cicd-check-dependency-refs check))
-            (cons 'runtime (poo-flow-cicd-check-runtime check))
-            (cons 'runtime-executed #f)
-            (cons 'handoff-required #t)
-            (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-            (cons 'cache (poo-flow-cicd-check-cache check))
-            (cons 'secrets (poo-flow-cicd-check-secrets check))
-            (cons 'readiness readiness))
-      (poo-flow-cicd-check-durable-fields check)))))
+     (poo-flow-cicd-check-runtime-metadata check readiness))))
 
 ;;; The envelope is intentionally the smallest runtime request shape: it names
 ;;; the workflow operation and carries readiness as data, while leaving plan and
@@ -101,14 +132,7 @@
                     (poo-flow-cicd-check-name check)))
         (cons 'artifact-handle (poo-flow-cicd-check-artifacts check))
         (cons 'request readiness)
-        (cons 'policy
-              (append
-               (list (cons 'runtime (poo-flow-cicd-check-runtime check))
-                     (cons 'dependency-refs
-                           (poo-flow-cicd-check-dependency-refs check))
-                     (cons 'runtime-executed #f)
-                     (cons 'handoff-required #t))
-               (poo-flow-cicd-check-durable-fields check)))
+        (cons 'policy (poo-flow-cicd-check-runtime-policy check))
         (cons 'plan-id #f)
         (cons 'node-id (poo-flow-cicd-check-name check))
         (cons 'frontier '())))
@@ -137,6 +161,43 @@
 
 ;;; Receipts are normalized alists so Rust/Marlin can consume them without
 ;;; knowing the Gerbil POO object representation.
+;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist Alist)
+(def (poo-flow-cicd-check-receipt-fields check
+                                          profile-catalog
+                                          runtime-ready)
+  (poo-flow-cicd-rows/tail
+   (list
+    (cons 'schema +poo-flow-cicd-check-receipt-schema+)
+    (cons 'kind 'poo-flow.workflow.cicd.check-receipt)
+    (cons 'check (poo-flow-cicd-check-name check))
+    (cons 'profile (poo-flow-cicd-check-profile check))
+    (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
+    (cons 'dependency-refs (poo-flow-cicd-check-dependency-refs check))
+    (cons 'sandbox-runtime-summaries
+          (poo-flow-cicd-check-sandbox-runtime-summaries
+           check
+           profile-catalog))
+    (cons 'sandbox-handoff-summaries
+          (poo-flow-cicd-check-sandbox-handoff-summaries
+           check
+           profile-catalog))
+    (cons 'sandbox-unresolved-profile-refs
+          (poo-flow-cicd-check-sandbox-unresolved-profile-refs
+           check
+           profile-catalog))
+    (cons 'command (poo-flow-cicd-check-command check))
+    (cons 'inputs (.ref check 'input-bindings))
+    (cons 'config (.ref check 'config-sources))
+    (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+    (cons 'cache (poo-flow-cicd-check-cache check))
+    (cons 'secrets (poo-flow-cicd-check-secrets check))
+    (cons 'result (.ref check 'result-protocol))
+    (cons 'runtime (poo-flow-cicd-check-runtime check))
+    (cons 'runtime-executed #f)
+    (cons 'status 'ready)
+    (cons 'runtime-manifest-ready runtime-ready))
+   (poo-flow-cicd-check-durable-fields check)))
+
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check->receipt check . maybe-profile-catalog)
   (poo-flow-cicd-require "cicd receipt requires a cicd check"
@@ -149,45 +210,19 @@
           (poo-flow-cicd-check->runtime-manifest-readiness
            check
            profile-catalog)))
-    (append
-     (list (cons 'schema +poo-flow-cicd-check-receipt-schema+)
-           (cons 'kind 'poo-flow.workflow.cicd.check-receipt)
-           (cons 'check (poo-flow-cicd-check-name check))
-           (cons 'profile (poo-flow-cicd-check-profile check))
-           (cons 'profile-refs
-                 (poo-flow-cicd-check-profile-refs check))
-           (cons 'dependency-refs
-                 (poo-flow-cicd-check-dependency-refs check))
-           (cons 'sandbox-runtime-summaries
-                 (poo-flow-cicd-check-sandbox-runtime-summaries
-                  check
-                  profile-catalog))
-           (cons 'sandbox-handoff-summaries
-                 (poo-flow-cicd-check-sandbox-handoff-summaries
-                  check
-                  profile-catalog))
-           (cons 'sandbox-unresolved-profile-refs
-                 (poo-flow-cicd-check-sandbox-unresolved-profile-refs
-                  check
-                  profile-catalog))
-           (cons 'command (poo-flow-cicd-check-command check))
-           (cons 'inputs (.ref check 'input-bindings))
-           (cons 'config (.ref check 'config-sources))
-           (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-           (cons 'cache (poo-flow-cicd-check-cache check))
-           (cons 'secrets (poo-flow-cicd-check-secrets check))
-           (cons 'result (.ref check 'result-protocol))
-           (cons 'runtime (poo-flow-cicd-check-runtime check))
-           (cons 'runtime-executed #f)
-           (cons 'status 'ready)
-           (cons 'runtime-manifest-ready runtime-ready))
-     (poo-flow-cicd-check-durable-fields check))))
+    (poo-flow-cicd-check-receipt-fields check
+                                        profile-catalog
+                                        runtime-ready)))
 
 ;;; Node names are kept in declaration order so diagnostics line up with the
 ;;; user-authored pipeline instead of a derived scheduler order.
 ;; : (-> [PooFlowCicdCheck] [Symbol])
 (def (poo-flow-cicd-checks-names checks)
-  (map poo-flow-cicd-check-name checks))
+  (cond
+   ((null? checks) '())
+   (else
+    (cons (poo-flow-cicd-check-name (car checks))
+          (poo-flow-cicd-checks-names (cdr checks))))))
 
 ;;; Duplicate names make dependency refs ambiguous, so the graph reports them
 ;;; before any downstream scheduler tries to interpret edges.
@@ -210,46 +245,59 @@
 (def (poo-flow-cicd-duplicate-symbols names)
   (poo-flow-cicd-duplicate-symbols/fold names '() '()))
 
-;;; Dependency graph projection must work for empty declarative pipelines too;
-;;; the runtime scheduler is downstream, so this layer only flattens facts.
-;; : (-> (-> PooFlowCicdCheck List) PooFlowCicdCheck List List)
-(def (poo-flow-cicd-append-map/rev proc value results)
-  (let loop ((remaining-values (proc value))
-             (result-values results))
-    (if (null? remaining-values)
-      result-values
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) result-values)))))
-
-;; : (-> (-> PooFlowCicdCheck List) [PooFlowCicdCheck] List)
-(def (poo-flow-cicd-append-map proc values)
-  (let loop ((remaining-values values)
-             (result-values '()))
-    (if (null? remaining-values)
-      (reverse result-values)
-      (loop (cdr remaining-values)
-            (poo-flow-cicd-append-map/rev
-             proc
-             (car remaining-values)
-             result-values)))))
-
 ;;; Unresolved dependency refs are graph diagnostics, not constructor errors.
 ;;; Keeping this local to one check lets the map-level report aggregate every
 ;;; missing edge before a backend scheduler sees the pipeline.
-;; : (-> PooFlowCicdCheck [Symbol] [Symbol])
-(def (poo-flow-cicd-check-unresolved-dependency-refs check check-names)
-  (filter (lambda (dependency-ref)
-            (not (poo-flow-cicd-symbol-member? dependency-ref check-names)))
-          (poo-flow-cicd-check-dependency-refs check)))
+;; : (-> PooFlowCicdCheck [Symbol] [Symbol] [Symbol])
+(def (poo-flow-cicd-check-unresolved-dependency-refs/rev check
+                                                            check-names
+                                                            refs-rev)
+  (let loop ((remaining-refs (poo-flow-cicd-check-dependency-refs check))
+             (refs-rev refs-rev))
+    (cond
+     ((null? remaining-refs) refs-rev)
+     ((poo-flow-cicd-symbol-member? (car remaining-refs) check-names)
+      (loop (cdr remaining-refs) refs-rev))
+     (else
+      (loop (cdr remaining-refs)
+            (cons (car remaining-refs) refs-rev))))))
+
+;; : (-> [PooFlowCicdCheck] [Symbol] [Symbol])
+(def (poo-flow-cicd-unresolved-dependency-refs checks check-names)
+  (let loop ((remaining-checks checks)
+             (refs-rev '()))
+    (if (null? remaining-checks)
+      (reverse refs-rev)
+      (loop (cdr remaining-checks)
+            (poo-flow-cicd-check-unresolved-dependency-refs/rev
+             (car remaining-checks)
+             check-names
+             refs-rev)))))
 
 ;;; Dependency edges are emitted as inert `from` and `to` facts. The runtime
 ;;; scheduler can choose its own execution plan from the graph report later.
-;; : (-> PooFlowCicdCheck [Alist])
-(def (poo-flow-cicd-check-dependency-edges check)
-  (map (lambda (dependency-ref)
-         (list (cons 'from dependency-ref)
-               (cons 'to (poo-flow-cicd-check-name check))))
-       (poo-flow-cicd-check-dependency-refs check)))
+;; : (-> PooFlowCicdCheck [Alist] [Alist])
+(def (poo-flow-cicd-check-dependency-edges/rev check edges-rev)
+  (let ((check-name (poo-flow-cicd-check-name check)))
+    (let loop ((remaining-refs (poo-flow-cicd-check-dependency-refs check))
+               (edges-rev edges-rev))
+      (if (null? remaining-refs)
+        edges-rev
+        (loop (cdr remaining-refs)
+              (cons (list (cons 'from (car remaining-refs))
+                          (cons 'to check-name))
+                    edges-rev))))))
+
+;; : (-> [PooFlowCicdCheck] [Alist])
+(def (poo-flow-cicd-dependency-edges checks)
+  (let loop ((remaining-checks checks)
+             (edges-rev '()))
+    (if (null? remaining-checks)
+      (reverse edges-rev)
+      (loop (cdr remaining-checks)
+            (poo-flow-cicd-check-dependency-edges/rev
+             (car remaining-checks)
+             edges-rev)))))
 
 ;;; Lookup is intentionally first-match because duplicate names are reported as
 ;;; diagnostics; graph projection should remain total even for invalid input.
@@ -305,14 +353,21 @@
 ;;; across runs and independent of backend scheduling policy.
 ;; : (-> [PooFlowCicdCheck] [Symbol])
 (def (poo-flow-cicd-cycle-nodes checks)
-  (map poo-flow-cicd-check-name
-       (filter (lambda (check)
-                 (poo-flow-cicd-check-reaches?
-                  (poo-flow-cicd-check-name check)
-                  check
-                  checks
-                  '()))
-               checks)))
+  (let loop ((remaining-checks checks)
+             (nodes-rev '()))
+    (cond
+     ((null? remaining-checks)
+      (reverse nodes-rev))
+     ((poo-flow-cicd-check-reaches?
+       (poo-flow-cicd-check-name (car remaining-checks))
+       (car remaining-checks)
+       checks
+       '())
+      (loop (cdr remaining-checks)
+            (cons (poo-flow-cicd-check-name (car remaining-checks))
+                  nodes-rev)))
+     (else
+      (loop (cdr remaining-checks) nodes-rev)))))
 
 ;;; Diagnostics are coarse policy classes. Detailed data stays in sibling
 ;;; fields so downstream presenters can choose their own wording.
@@ -321,11 +376,27 @@
       duplicate-nodes
       unresolved-dependency-refs
       cycle-nodes)
-  (append (if (null? duplicate-nodes) '() '(duplicate-nodes))
+  (let* ((diagnostics0
+          (if (null? duplicate-nodes) '() '(duplicate-nodes)))
+         (diagnostics1
           (if (null? unresolved-dependency-refs)
-            '()
-            '(unresolved-dependency-refs))
-          (if (null? cycle-nodes) '() '(cycle-detected))))
+            diagnostics0
+            (cons 'unresolved-dependency-refs diagnostics0)))
+         (diagnostics2
+          (if (null? cycle-nodes)
+            diagnostics1
+            (cons 'cycle-detected diagnostics1))))
+    (reverse diagnostics2)))
+
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (poo-flow-cicd-unordered-nodes check-names ready-order)
+  (cond
+   ((null? check-names) '())
+   ((poo-flow-cicd-symbol-member? (car check-names) ready-order)
+    (poo-flow-cicd-unordered-nodes (cdr check-names) ready-order))
+   (else
+    (cons (car check-names)
+          (poo-flow-cicd-unordered-nodes (cdr check-names) ready-order)))))
 
 ;;; The dependency graph is a declarative DAG handoff. It reports nodes, edges,
 ;;; and unresolved refs but deliberately does not sort or schedule the checks.
@@ -361,25 +432,13 @@
               (let (next-ready-order (ready-order-scan checks ready-order))
                 (if (= (length next-ready-order) (length ready-order))
                   ready-order
-                  (ready-order/fix checks next-ready-order)))))
-           (unordered-nodes
-            (lambda (check-names ready-order)
-              (filter (lambda (check-name)
-                        (not (poo-flow-cicd-symbol-member?
-                              check-name
-                              ready-order)))
-                      check-names))))
+                  (ready-order/fix checks next-ready-order))))))
     (let* ((checks (poo-flow-cicd-check-map-checks check-map))
            (check-names (poo-flow-cicd-checks-names checks))
            (duplicate-nodes
             (poo-flow-cicd-duplicate-symbols check-names))
            (unresolved-dependency-refs
-            (poo-flow-cicd-append-map
-             (lambda (check)
-               (poo-flow-cicd-check-unresolved-dependency-refs
-                check
-                check-names))
-             checks))
+            (poo-flow-cicd-unresolved-dependency-refs checks check-names))
            (cycle-nodes (poo-flow-cicd-cycle-nodes checks))
            (diagnostics
             (poo-flow-cicd-dependency-graph-diagnostics
@@ -390,7 +449,7 @@
                           (ready-order/fix checks '())
                           '()))
            (unordered-node-names
-            (unordered-nodes check-names ready-order))
+            (poo-flow-cicd-unordered-nodes check-names ready-order))
            (blocked-order?
             (or (not (null? diagnostics))
                 (not (= (length ready-order) (length check-names))))))
@@ -399,10 +458,7 @@
             (cons 'order-policy 'declaration-topological-report)
             (cons 'nodes check-names)
             (cons 'duplicate-nodes duplicate-nodes)
-            (cons 'edges
-                  (poo-flow-cicd-append-map
-                   poo-flow-cicd-check-dependency-edges
-                   checks))
+            (cons 'edges (poo-flow-cicd-dependency-edges checks))
             (cons 'unresolved-dependency-refs unresolved-dependency-refs)
             (cons 'cycle-nodes cycle-nodes)
             (cons 'ready-order ready-order)
@@ -433,25 +489,69 @@
 ;;; Agents can decide whether to edit dependencies or profile bindings first.
 ;; : (-> Alist Alist Symbol [Symbol])
 (def (poo-flow-cicd-pipeline-run-step-diagnostics graph readiness check-name)
-  (append
-   (if (poo-flow-cicd-alist-ref graph 'valid? #f)
-     '()
-     '(blocked-dependency-graph))
-   (if (null? (poo-flow-cicd-alist-ref
-               readiness
-               'sandbox-unresolved-profile-refs
-               '()))
-     '()
-     '(unresolved-sandbox-profile-refs))
-   (if (or (not (poo-flow-cicd-alist-ref graph 'valid? #f))
-           (poo-flow-cicd-symbol-member?
-            check-name
-            (poo-flow-cicd-alist-ref graph 'ready-order '())))
-     '()
-     '(blocked-dependency-order))))
+  (let* ((diagnostics0
+          (if (poo-flow-cicd-alist-ref graph 'valid? #f)
+            '()
+            '(blocked-dependency-graph)))
+         (diagnostics1
+          (if (null? (poo-flow-cicd-alist-ref
+                      readiness
+                      'sandbox-unresolved-profile-refs
+                      '()))
+            diagnostics0
+            (cons 'unresolved-sandbox-profile-refs diagnostics0)))
+         (diagnostics2
+          (if (or (not (poo-flow-cicd-alist-ref graph 'valid? #f))
+                  (poo-flow-cicd-symbol-member?
+                   check-name
+                   (poo-flow-cicd-alist-ref graph 'ready-order '())))
+            diagnostics1
+            (cons 'blocked-dependency-order diagnostics1))))
+    (reverse diagnostics2)))
 
 ;;; Pipeline-run steps wrap the existing readiness row with pipeline admission
 ;;; facts so users can see a concrete run plan without running the command.
+;; : (-> [Alist] [Alist] [Alist])
+(def (poo-flow-cicd-fields-onto-tail fields tail)
+  (cond
+   ((null? fields) tail)
+   (else
+    (cons (car fields)
+          (poo-flow-cicd-fields-onto-tail (cdr fields) tail)))))
+
+;; : (-> PooFlowCicdCheck Symbol Symbol [Symbol] [Symbol] Alist Alist)
+(def (poo-flow-cicd-pipeline-run-step-fields check
+                                              check-name
+                                              status
+                                              unresolved-profile-refs
+                                              diagnostics
+                                              readiness)
+  (poo-flow-cicd-fields-onto-tail
+   (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
+         (cons 'kind 'poo-flow.workflow.cicd.pipeline-run-step)
+         (cons 'check check-name)
+         (cons 'status status)
+         (cons 'handoff-ready
+               (and (eq? status 'admitted)
+                    (null? unresolved-profile-refs)))
+         (cons 'profile (poo-flow-cicd-check-profile check))
+         (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
+         (cons 'dependency-refs
+               (poo-flow-cicd-check-dependency-refs check))
+         (cons 'command (poo-flow-cicd-check-command check))
+         (cons 'argv (poo-flow-cicd-check-command check))
+         (cons 'runtime (poo-flow-cicd-check-runtime check))
+         (cons 'result (.ref check 'result-protocol))
+         (cons 'artifacts (poo-flow-cicd-check-artifacts check))
+         (cons 'sandbox-unresolved-profile-refs unresolved-profile-refs)
+         (cons 'diagnostics diagnostics)
+         (cons 'valid? (and (eq? status 'admitted)
+                            (null? diagnostics)))
+         (cons 'runtime-readiness readiness)
+         (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
+         (cons 'runtime-executed #f))
+   (poo-flow-cicd-check-durable-fields check)))
+
 ;; : (-> PooFlowCicdCheck Alist [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check->pipeline-run-step check
                                              graph
@@ -482,31 +582,39 @@
            graph
            readiness
            check-name)))
-    (append
-     (list (cons 'schema +poo-flow-cicd-pipeline-run-schema+)
-           (cons 'kind 'poo-flow.workflow.cicd.pipeline-run-step)
-           (cons 'check check-name)
-           (cons 'status status)
-           (cons 'handoff-ready
-                 (and (eq? status 'admitted)
-                      (null? unresolved-profile-refs)))
-           (cons 'profile (poo-flow-cicd-check-profile check))
-           (cons 'profile-refs (poo-flow-cicd-check-profile-refs check))
-           (cons 'dependency-refs
-                 (poo-flow-cicd-check-dependency-refs check))
-           (cons 'command (poo-flow-cicd-check-command check))
-           (cons 'argv (poo-flow-cicd-check-command check))
-           (cons 'runtime (poo-flow-cicd-check-runtime check))
-           (cons 'result (.ref check 'result-protocol))
-           (cons 'artifacts (poo-flow-cicd-check-artifacts check))
-           (cons 'sandbox-unresolved-profile-refs unresolved-profile-refs)
-           (cons 'diagnostics diagnostics)
-           (cons 'valid? (and (eq? status 'admitted)
-                              (null? diagnostics)))
-           (cons 'runtime-readiness readiness)
-           (cons 'runtime-owner +poo-flow-cicd-marlin-runtime-owner+)
-           (cons 'runtime-executed #f))
-     (poo-flow-cicd-check-durable-fields check))))
+    (poo-flow-cicd-pipeline-run-step-fields check
+                                            check-name
+                                            status
+                                            unresolved-profile-refs
+                                            diagnostics
+                                            readiness)))
+
+;; : (-> [PooFlowCicdCheck] Alist [PooSandboxProfile] Alist)
+(def (poo-flow-cicd-pipeline-run-step-summary checks graph profile-catalog)
+  (let loop ((remaining-checks checks)
+             (steps-rev '())
+             (blocked-steps-rev '()))
+    (if (null? remaining-checks)
+      (list
+       (cons 'steps (reverse steps-rev))
+       (cons 'blocked-steps (reverse blocked-steps-rev)))
+      (let* ((step
+              (poo-flow-cicd-check->pipeline-run-step
+               (car remaining-checks)
+               graph
+               profile-catalog))
+             (check-name
+              (poo-flow-cicd-alist-ref step 'check #f))
+             (blocked?
+              (not (eq? (poo-flow-cicd-alist-ref step
+                                                  'status
+                                                  'blocked)
+                        'admitted))))
+        (loop (cdr remaining-checks)
+              (cons step steps-rev)
+              (if blocked?
+                (cons check-name blocked-steps-rev)
+                blocked-steps-rev))))))
 
 ;;; Unique diagnostic projection preserves first-seen order while removing
 ;;; repeated step diagnostics from large pipelines.
@@ -523,39 +631,65 @@
 (def (poo-flow-cicd-symbol-list-unique values)
   (poo-flow-cicd-symbol-list-unique/fold values '()))
 
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (poo-flow-cicd-symbols-into/rev values result)
+  (cond
+   ((null? values) result)
+   (else
+    (poo-flow-cicd-symbols-into/rev
+     (cdr values)
+     (cons (car values) result)))))
+
+;; : (-> [Alist] [Symbol] [Symbol])
+(def (poo-flow-cicd-pipeline-run-steps-diagnostics/rev steps diagnostics-rev)
+  (cond
+   ((null? steps) diagnostics-rev)
+   (else
+    (poo-flow-cicd-pipeline-run-steps-diagnostics/rev
+     (cdr steps)
+     (poo-flow-cicd-symbols-into/rev
+      (poo-flow-cicd-alist-ref (car steps) 'diagnostics '())
+      diagnostics-rev)))))
+
 ;;; Step diagnostics are aggregated at the pipeline level so result rows can be
 ;;; audited without traversing every step.
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-cicd-pipeline-run-steps-diagnostics steps)
-  (cond
-   ((null? steps) '())
-   (else
-    (append
-     (poo-flow-cicd-alist-ref (car steps) 'diagnostics '())
-     (poo-flow-cicd-pipeline-run-steps-diagnostics (cdr steps))))))
+  (reverse (poo-flow-cicd-pipeline-run-steps-diagnostics/rev steps '())))
 
 ;;; Pipeline diagnostics merge graph, step, and blocked-step facts into a
 ;;; stable report-only list for user-interface and agent editing loops.
 ;; : (-> Alist [Alist] [Symbol] [Symbol])
 (def (poo-flow-cicd-pipeline-run-diagnostics graph steps blocked-steps)
-  (poo-flow-cicd-symbol-list-unique
-   (append
-    (poo-flow-cicd-alist-ref graph 'diagnostics '())
-    (poo-flow-cicd-pipeline-run-steps-diagnostics steps)
-    (if (null? blocked-steps) '() '(blocked-steps)))))
+  (let* ((diagnostics0
+          (poo-flow-cicd-symbols-into/rev
+           (poo-flow-cicd-alist-ref graph 'diagnostics '())
+           '()))
+         (diagnostics1
+          (poo-flow-cicd-pipeline-run-steps-diagnostics/rev
+           steps
+           diagnostics0))
+         (diagnostics2
+          (if (null? blocked-steps)
+            diagnostics1
+            (cons 'blocked-steps diagnostics1))))
+    (poo-flow-cicd-symbol-list-unique (reverse diagnostics2))))
 
 ;;; Pipeline run status is a control-plane admission result. It stays blocked
 ;;; when graph diagnostics or sandbox refs prevent a clean Marlin handoff.
+;; : (-> [Alist] Boolean)
+(def (poo-flow-cicd-pipeline-run-steps-admitted? steps)
+  (cond
+   ((null? steps) #t)
+   ((eq? (poo-flow-cicd-alist-ref (car steps) 'status 'blocked)
+         'admitted)
+    (poo-flow-cicd-pipeline-run-steps-admitted? (cdr steps)))
+   (else #f)))
+
 ;; : (-> Alist [Alist] Symbol)
 (def (poo-flow-cicd-pipeline-run-status graph steps)
   (if (and (poo-flow-cicd-alist-ref graph 'valid? #f)
-           (null? (filter (lambda (step)
-                            (not (eq? (poo-flow-cicd-alist-ref
-                                       step
-                                       'status
-                                       'blocked)
-                                      'admitted)))
-                          steps)))
+           (poo-flow-cicd-pipeline-run-steps-admitted? steps))
     'admitted
     'blocked))
 
@@ -570,22 +704,15 @@
                             '()
                             (car maybe-profile-catalog)))
          (graph (poo-flow-cicd-check-map->dependency-graph check-map))
+         (step-summary
+          (poo-flow-cicd-pipeline-run-step-summary
+           (poo-flow-cicd-check-map-checks check-map)
+           graph
+           profile-catalog))
          (steps
-          (map (lambda (check)
-                 (poo-flow-cicd-check->pipeline-run-step
-                  check
-                  graph
-                  profile-catalog))
-               (poo-flow-cicd-check-map-checks check-map)))
+          (poo-flow-cicd-alist-ref step-summary 'steps '()))
          (blocked-steps
-          (map (lambda (step) (poo-flow-cicd-alist-ref step 'check #f))
-               (filter (lambda (step)
-                         (not (eq? (poo-flow-cicd-alist-ref
-                                    step
-                                    'status
-                                    'blocked)
-                                   'admitted)))
-                       steps)))
+          (poo-flow-cicd-alist-ref step-summary 'blocked-steps '()))
          (status (poo-flow-cicd-pipeline-run-status graph steps))
          (diagnostics
           (poo-flow-cicd-pipeline-run-diagnostics
@@ -651,6 +778,15 @@
 
 ;;; The map is the whole data-flow: each POO check becomes one immutable
 ;;; receipt row, preserving order without a hand-written accumulator.
+;; : (-> [PooFlowCicdCheck] [PooSandboxProfile] [Alist])
+(def (poo-flow-cicd-checks->receipts checks profile-catalog)
+  (cond
+   ((null? checks) '())
+   (else
+    (cons (poo-flow-cicd-check->receipt (car checks) profile-catalog)
+          (poo-flow-cicd-checks->receipts (cdr checks)
+                                          profile-catalog)))))
+
 ;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] [Alist])
 (def (poo-flow-cicd-check-map->receipts check-map . maybe-profile-catalog)
   (poo-flow-cicd-require "cicd receipts require a cicd check-map"
@@ -659,12 +795,25 @@
   (let (profile-catalog (if (null? maybe-profile-catalog)
                           '()
                           (car maybe-profile-catalog)))
-    (map (lambda (check)
-           (poo-flow-cicd-check->receipt check profile-catalog))
-         (poo-flow-cicd-check-map-checks check-map))))
+    (poo-flow-cicd-checks->receipts
+     (poo-flow-cicd-check-map-checks check-map)
+     profile-catalog)))
 
 ;;; Runtime readiness uses the same ordered sequence-map as receipts so every
 ;;; check has exactly one handoff row and no runtime side effect is introduced.
+;; : (-> [PooFlowCicdCheck] [PooSandboxProfile] [Alist])
+(def (poo-flow-cicd-checks->runtime-manifest-readiness checks
+                                                       profile-catalog)
+  (cond
+   ((null? checks) '())
+   (else
+    (cons (poo-flow-cicd-check->runtime-manifest-readiness
+           (car checks)
+           profile-catalog)
+          (poo-flow-cicd-checks->runtime-manifest-readiness
+           (cdr checks)
+           profile-catalog)))))
+
 ;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check-map->runtime-manifest-readiness check-map
                                                               . maybe-profile-catalog)
@@ -682,15 +831,25 @@
           (cons 'dependency-graph
                 (poo-flow-cicd-check-map->dependency-graph check-map))
           (cons 'checks
-                (map (lambda (check)
-                       (poo-flow-cicd-check->runtime-manifest-readiness
-                        check
-                        profile-catalog))
-                     (poo-flow-cicd-check-map-checks check-map))))))
+                (poo-flow-cicd-checks->runtime-manifest-readiness
+                 (poo-flow-cicd-check-map-checks check-map)
+                 profile-catalog)))))
 
 ;;; Check-map manifest projection keeps CI/CD orchestration declarative: each
 ;;; check contributes one runtime command manifest, and the wrapper records that
 ;;; this is still report-only handoff data, not an execution result.
+;; : (-> [PooFlowCicdCheck] [PooSandboxProfile] [Alist])
+(def (poo-flow-cicd-checks->runtime-command-manifests checks profile-catalog)
+  (cond
+   ((null? checks) '())
+   (else
+    (cons (poo-flow-cicd-check->runtime-command-manifest
+           (car checks)
+           profile-catalog)
+          (poo-flow-cicd-checks->runtime-command-manifests
+           (cdr checks)
+           profile-catalog)))))
+
 ;; : (-> PooFlowCicdCheckMap [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check-map->runtime-command-manifests check-map
                                                           . maybe-profile-catalog)
@@ -708,11 +867,9 @@
           (cons 'dependency-graph
                 (poo-flow-cicd-check-map->dependency-graph check-map))
           (cons 'manifests
-                (map (lambda (check)
-                       (poo-flow-cicd-check->runtime-command-manifest
-                        check
-                        profile-catalog))
-                     (poo-flow-cicd-check-map-checks check-map))))))
+                (poo-flow-cicd-checks->runtime-command-manifests
+                 (poo-flow-cicd-check-map-checks check-map)
+                 profile-catalog)))))
 
 ;;; Policy lookup stays nested under the manifest policy field. The ABI wrapper
 ;;; should not depend on incidental top-level keys from runtime descriptors.
@@ -807,8 +964,13 @@
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-cicd-runtime-command-manifests->marlin-handoff-entries
       manifests)
-  (map poo-flow-cicd-runtime-command-manifest->marlin-handoff-entry
-       manifests))
+  (cond
+   ((null? manifests) '())
+   (else
+    (cons (poo-flow-cicd-runtime-command-manifest->marlin-handoff-entry
+           (car manifests))
+          (poo-flow-cicd-runtime-command-manifests->marlin-handoff-entries
+           (cdr manifests))))))
 
 ;;; The ABI map is the Marlin-facing workflow payload. It keeps the full
 ;;; dependency graph and per-check command entries, but still records that no

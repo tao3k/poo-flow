@@ -240,7 +240,8 @@
                                              agent-profiles
                                              agent-harnesses
                                              agent-sessions
-                                             session-agent-graph)
+                                             session-agent-graph
+                                             session-agent-topology-trace)
   (check-equal? (test-ref handoff 'contract)
                 'poo-flow.loop-governor.runtime-handoff.v1)
   (check-equal? (test-ref handoff 'workflow-ref) 'funflow-cicd)
@@ -277,6 +278,20 @@
   (check-equal? (test-ref session-agent-graph 'agent-count) 4)
   (check-equal? (test-ref session-agent-graph 'agent-ids)
                 expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-topology-trace 'kind)
+                'loop-engine-session-agent-topology-trace)
+  (check-equal? (test-ref session-agent-topology-trace 'valid?) #t)
+  (check-equal? (test-ref session-agent-topology-trace 'diagnostics) '())
+  (check-equal? (test-ref session-agent-topology-trace 'profile-names)
+                expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-topology-trace 'harness-profiles)
+                expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-topology-trace 'graph-agent-ids)
+                expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-topology-trace
+                          'agent-session-refs)
+                (test-ref session-agent-topology-trace
+                          'graph-output-session-refs))
   (check-equal? (test-ref session-agent-graph 'communication-receipt-count)
                 8)
   (check-equal? (map (lambda (row) (test-ref row 'relation-kind))
@@ -367,6 +382,7 @@
                                             agent-harnesses
                                             agent-sessions
                                             session-agent-graph
+                                            session-agent-topology-trace
                                             lineage-receipt
                                             selector-receipt
                                             resource-dispatch-receipt
@@ -378,6 +394,8 @@
   (check-equal? (test-ref handoff 'agent-sessions) agent-sessions)
   (check-equal? (test-ref handoff 'session-agent-graph)
                 session-agent-graph)
+  (check-equal? (test-ref handoff 'session-agent-topology-trace)
+                session-agent-topology-trace)
   (check-equal? (test-ref handoff 'receipt-contracts)
                 expected-loop-engine-receipt-contracts)
   (check-equal? (test-ref handoff 'lineage-receipt) lineage-receipt)
@@ -424,6 +442,8 @@
         (agent-harnesses (test-ref intent 'agent-harnesses))
         (agent-sessions (test-ref intent 'agent-sessions))
         (session-agent-graph (test-ref intent 'session-agent-graph))
+        (session-agent-topology-trace
+         (test-ref intent 'session-agent-topology-trace))
         (lineage-receipt (test-ref intent 'lineage-receipt))
         (selector-receipt (test-ref intent 'selector-receipt))
         (resource-dispatch-receipt
@@ -440,7 +460,8 @@
                                             agent-profiles
                                             agent-harnesses
                                             agent-sessions
-                                            session-agent-graph)
+                                            session-agent-graph
+                                            session-agent-topology-trace)
     (check-custom-loop-policy-receipt-boundary lineage-receipt
                                                selector-receipt
                                                resource-dispatch-receipt
@@ -453,6 +474,7 @@
                                            agent-harnesses
                                            agent-sessions
                                            session-agent-graph
+                                           session-agent-topology-trace
                                            lineage-receipt
                                            selector-receipt
                                            resource-dispatch-receipt
@@ -548,6 +570,9 @@
                 (test-ref intent 'agent-sessions))
   (check-equal? (car (.ref presentation 'loop-engine-session-agent-graphs))
                 (test-ref intent 'session-agent-graph))
+  (check-equal? (car (.ref presentation
+                            'loop-engine-session-agent-topology-traces))
+                (test-ref intent 'session-agent-topology-trace))
   (check-equal? (test-ref (car (.ref presentation
                                   'loop-engine-runtime-snapshots))
                           'status)

@@ -60,6 +60,38 @@
          'deny
          '((principal . hook/pre-check)
            (inherits-agent-tools? . #f))))
+       (custom-session-build-tool
+        (poo-flow-tool-spec
+         'run-build-command
+         'builtin-command
+         '(run)
+         '((argv . list) (cwd . string))
+         '((exit-status . integer)
+           (stdout-ref . artifact)
+           (stderr-ref . artifact))
+         "marlin-agent-core"
+         'tool/run-build-command
+         #t
+         'agent/nono
+         'marlin-tool-adapter
+         '((source . user-interface)
+           (case . session-policy))))
+       (custom-session-tool-catalog
+        (poo-flow-tool-catalog
+         'tool-core/custom-session-policy
+         (list poo-flow-tool-core-builtin-read-workspace-file
+               custom-session-build-tool)
+         '((source . user-interface)
+           (case . session-policy))))
+       (custom-session-tool-catalog-validation-row
+        (poo-flow-tool-policy-catalog-validation-receipt->alist
+         (poo-flow-tool-policy-catalog-validation-receipt
+          'validation/custom-session-tool-catalog
+          custom-session-tool-catalog
+          custom-session-build-agent-tool-policy
+          custom-session-hook-tool-policy
+          '((source . user-interface)
+            (case . session-policy)))))
        (custom-session-model-policy
         (poo-flow-session-model-policy
          'policy/build-agent-model
@@ -99,6 +131,24 @@
          '(channel/build-root)
          '(custom/session-root)
          '((peer-communication . declared-channel-only))))
+       (custom-session-sandbox-policy
+        (poo-flow-session-sandbox-policy
+         'policy/build-agent-sandbox
+         'custom/session-build-child
+         'sandbox/nono-build
+         'parent-profile
+         'isolated-filesystem
+         '((sandbox . nono)
+           (filesystem . project-workspace))))
+       (custom-session-sharing-policy
+        (poo-flow-session-sharing-policy
+         'policy/build-agent-sharing
+         'custom/session-build-child
+         '(memory/project)
+         '(artifact/build-log)
+         '(tool-result/test-summary)
+         '("build/" "reports/")
+         '((sharing . explicit-refs-only))))
        (custom-session-resource-policy
         (poo-flow-session-resource-sharing-policy
          'policy/build-agent-resources
@@ -160,15 +210,18 @@
            'build-cache
            'agent/build))
          (list
-          (poo-flow-session-policy-tool-attempt
-           'attempt/custom-hook-build
-           'hook/pre-check
+         (poo-flow-session-policy-tool-attempt
+          'attempt/custom-hook-build
+          'hook/pre-check
            'run-build-command
            'run
            'build-cache
-           'hook/pre-check))
-         '((source . user-interface)
-           (case . session-policy)))))
+          'hook/pre-check))
+         (list
+          (cons 'source 'user-interface)
+          (cons 'case 'session-policy)
+          (cons 'tool-catalog-validation
+                custom-session-tool-catalog-validation-row)))))
   (list (poo-flow-durable-policy-receipt->alist
          (poo-flow-durable-policy->receipt
           custom-durable-default
@@ -180,12 +233,16 @@
         (poo-flow-session-policy->alist custom-session-main-agent-tool-policy)
         (poo-flow-session-policy->alist custom-session-build-agent-tool-policy)
         (poo-flow-session-policy->alist custom-session-hook-tool-policy)
+        (poo-flow-tool-catalog->alist custom-session-tool-catalog)
+        custom-session-tool-catalog-validation-row
         (poo-flow-session-policy->alist custom-session-model-policy)
         (poo-flow-session-policy->alist custom-session-prompt-policy)
         (poo-flow-session-policy->alist custom-session-context-policy)
         (poo-flow-session-policy->alist custom-session-history-policy)
         (poo-flow-session-policy->alist
          custom-session-communication-policy)
+        (poo-flow-session-policy->alist custom-session-sandbox-policy)
+        (poo-flow-session-policy->alist custom-session-sharing-policy)
         (poo-flow-session-policy->alist custom-session-resource-policy)
         (poo-flow-session-policy->alist custom-session-capability-policy)
         (poo-flow-session-policy->alist

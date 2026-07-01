@@ -201,6 +201,12 @@
     ('runtime-executed (.ref node 'runtime-executed))
     ('metadata (.ref node 'metadata)))))
 
+;; : (-> [PooSessionAgentNode] [Alist])
+(defpoo-session-receipt-projection-batch
+  poo-flow-session-agent-nodes->alists (nodes)
+  (projector poo-flow-session-agent-node->alist)
+  (error-message "session agent node serialization requires a list"))
+
 ;; : (-> PooSessionAgentNode PooSession PooSessionRegistryEntry)
 (def (poo-flow-session-agent-node->registry-entry node session)
   (poo-flow-session-registry-entry
@@ -220,23 +226,25 @@
 
 ;; : (-> [PooSessionAgentNode] [Symbol])
 (def (poo-flow-session-agent-node-topology-summary nodes)
-  (cond
-   ((null? nodes) (list '() '() '()))
-   (else
-    (let* ((node (car nodes))
-           (tail-summary
-            (poo-flow-session-agent-node-topology-summary (cdr nodes)))
-           (tail-agent-ids (car tail-summary))
-           (tail-edge-pairs (cadr tail-summary))
-           (tail-durable-policy-refs (caddr tail-summary)))
+  (let loop ((remaining-nodes nodes)
+             (agent-ids-rev '())
+             (edge-pairs-rev '())
+             (durable-policy-refs-rev '()))
+    (if (null? remaining-nodes)
       (list
-       (cons (poo-flow-session-agent-node-agent-id node)
-             tail-agent-ids)
-       (cons (cons (poo-flow-session-agent-node-parent-session-ref node)
-                   (poo-flow-session-agent-node-output-session-ref node))
-             tail-edge-pairs)
-       (cons (poo-flow-session-agent-node-durable-policy-ref node)
-             tail-durable-policy-refs))))))
+       (reverse agent-ids-rev)
+       (reverse edge-pairs-rev)
+       (reverse durable-policy-refs-rev))
+      (let (node (car remaining-nodes))
+        (loop
+         (cdr remaining-nodes)
+         (cons (poo-flow-session-agent-node-agent-id node)
+               agent-ids-rev)
+         (cons (cons (poo-flow-session-agent-node-parent-session-ref node)
+                     (poo-flow-session-agent-node-output-session-ref node))
+               edge-pairs-rev)
+         (cons (poo-flow-session-agent-node-durable-policy-ref node)
+               durable-policy-refs-rev))))))
 
 ;; : (-> [PooSessionAgentNode] [Symbol])
 (def (poo-flow-session-agent-node-ids nodes)
@@ -249,6 +257,18 @@
 ;; : (-> [PooSessionAgentNode] [Symbol])
 (def (poo-flow-session-agent-node-durable-policy-refs nodes)
   (caddr (poo-flow-session-agent-node-topology-summary nodes)))
+
+;; : (-> [PooSession] (Cons [Symbol] Integer))
+(def (poo-flow-session-agent-graph-session-summary sessions)
+  (let loop ((remaining-sessions sessions)
+             (session-ids-rev '())
+             (session-count 0))
+    (if (null? remaining-sessions)
+      (cons (reverse session-ids-rev) session-count)
+      (loop (cdr remaining-sessions)
+            (cons (poo-flow-session-id (car remaining-sessions))
+                  session-ids-rev)
+            (+ session-count 1)))))
 
 ;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [PooSessionCommunicationReceipt] [Alist] PooSessionAgentGraph)
 (def (poo-flow-session-agent-graph project-id
@@ -288,7 +308,11 @@
           (poo-flow-session-agent-node-topology-summary agent-nodes))
          (agent-ids (car agent-topology-summary))
          (lineage-edge-pairs (cadr agent-topology-summary))
-         (durable-policy-refs (caddr agent-topology-summary)))
+         (durable-policy-refs (caddr agent-topology-summary))
+         (session-summary
+          (poo-flow-session-agent-graph-session-summary sessions))
+         (session-ids (car session-summary))
+         (session-count (cdr session-summary)))
     (object<-alist
      (list
       (cons 'kind 'poo-flow.session.agent-graph)
@@ -296,9 +320,9 @@
       (cons 'project-id project-id)
       (cons 'root-session-ref root-session-ref)
       (cons 'agent-count (length agent-nodes))
-      (cons 'session-count (length sessions))
+      (cons 'session-count session-count)
       (cons 'agent-ids agent-ids)
-      (cons 'session-ids (map poo-flow-session-id sessions))
+      (cons 'session-ids session-ids)
       (cons 'lineage-edge-pairs lineage-edge-pairs)
       (cons 'durable-policy-refs durable-policy-refs)
       (cons 'agent-nodes agent-nodes)
@@ -358,7 +382,7 @@
     ('lineage-edge-pairs (.ref graph 'lineage-edge-pairs))
     ('durable-policy-refs (.ref graph 'durable-policy-refs))
     ('agent-nodes
-     (map poo-flow-session-agent-node->alist agent-nodes))
+     (poo-flow-session-agent-nodes->alists agent-nodes))
     ('registry-receipt
      (poo-flow-session-registry-receipt->alist registry-receipt))
     ('communication-receipt-count

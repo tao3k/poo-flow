@@ -208,6 +208,7 @@ Acceptance:
 - MCP tool rows can be represented without starting an MCP server.
 Implemented checkpoint:
 - =src/modules/tool-core/objects.ss= and =src/modules/tool-core/config.ss= now own report-only tool specs, catalog projection, handoff manifests, and session-policy grant validation.
+- =src/modules/session/policy-validation.ss= now consumes an optional tool-core catalog-validation row from effective policy metadata and projects catalog id/ref, catalog validity, resolved/unresolved tool refs, sandbox-required refs, action mismatch rows, and tool-core diagnostics inside the session policy validation receipt.
 - =user-interface/custom/my-module/cases/tool-core.ss= proves the public surface with =use-module tool-core :config= and POO =tool-spec= / =tool-catalog= objects.
 - =t/tool-core-test.ss= covers direct object semantics, built-in sandbox requirements, MCP row declaration, and policy diagnostics.
 - =t/user-interface-custom-tool-core-test.ss= and the =scenario-tool-core= testing-project root cover the user-facing scenario path.

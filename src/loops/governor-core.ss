@@ -250,16 +250,28 @@
            (metadata '())))
    (supers loop-governor-node-role)))
 
+;; : (-> Symbol Symbol Symbol Boolean Alist Alist)
+(def (loop-governor-node-slot-rows name
+                                   governance-node-kind
+                                   responsibility
+                                   human-intervention?
+                                   overrides)
+  (cons (cons 'name name)
+        (cons (cons 'governance-node-kind governance-node-kind)
+              (cons (cons 'governance-responsibility responsibility)
+                    (cons (cons 'human-intervention human-intervention?)
+                          overrides)))))
+
 ;;; Agent governor nodes model machine-side judges such as auditor/verifier.
 ;; : (-> Symbol Symbol [Alist] LoopGovernorNode)
 (def (make-loop-governor-agent-node name responsibility . maybe-overrides)
   (poo-core-role-object
    (slot-rows
-    (append
-     (list (cons 'name name)
-           (cons 'governance-node-kind 'agent)
-           (cons 'governance-responsibility responsibility)
-           (cons 'human-intervention #f))
+    (loop-governor-node-slot-rows
+     name
+     'agent
+     responsibility
+     #f
      (if (null? maybe-overrides) '() (car maybe-overrides))))
    (supers loop-governor-agent-node-role
            loop-governor-node-prototype)))
@@ -269,11 +281,11 @@
 (def (make-loop-governor-human-node name responsibility . maybe-overrides)
   (poo-core-role-object
    (slot-rows
-    (append
-     (list (cons 'name name)
-           (cons 'governance-node-kind 'human)
-           (cons 'governance-responsibility responsibility)
-           (cons 'human-intervention #t))
+    (loop-governor-node-slot-rows
+     name
+     'human
+     responsibility
+     #t
      (if (null? maybe-overrides) '() (car maybe-overrides))))
    (supers loop-governor-human-node-role
            loop-governor-node-prototype)))
@@ -317,15 +329,21 @@
            loop-governor-priority-role
            loop-governor-role)))
 
+;; : (-> Symbol LoopStrategyPlan Alist Alist)
+(def (loop-governor-slot-rows name strategy overrides)
+  (cons (cons 'name name)
+        (cons (cons 'strategy strategy)
+              overrides)))
+
 ;;; Constructor binds a validated strategy plan to governor policy overrides.
 ;;; Runtime state snapshots are supplied later to projection helpers.
 ;; : (-> Symbol LoopStrategyPlan [Alist] LoopGovernor)
 (def (make-loop-governor name strategy . maybe-overrides)
   (poo-core-role-object
    (slot-rows
-    (append
-     (list (cons 'name name)
-           (cons 'strategy strategy))
+    (loop-governor-slot-rows
+     name
+     strategy
      (if (null? maybe-overrides) '() (car maybe-overrides))))
    (supers loop-governor-prototype)))
 
@@ -405,7 +423,11 @@
 ;;; review/report consumers independent from the internal role object shape.
 ;; : (-> [LoopGovernorNode] [Alist])
 (def (loop-governor-node-contracts nodes)
-  (map loop-governor-node->contract nodes))
+  (cond
+   ((null? nodes) '())
+   (else
+    (cons (loop-governor-node->contract (car nodes))
+          (loop-governor-node-contracts (cdr nodes))))))
 
 ;;; Governor alist lookup is local because state facts and policy slots share
 ;;; the same simple alist shape but stay semantically separate.
@@ -470,4 +492,3 @@
 ;; : (-> LoopGovernor Alist)
 (def (loop-governor-metadata governor)
   (loop-governor-slot governor 'metadata '()))
-

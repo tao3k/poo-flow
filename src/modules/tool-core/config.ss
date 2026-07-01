@@ -73,7 +73,13 @@
 
 ;; : (-> [PooToolSpecPrototype] [PooToolSpec])
 (def (poo-flow-tool-core-poo-specs->tool-specs specs)
-  (map poo-flow-tool-core-poo-spec->tool-spec specs))
+  (cond
+   ((null? specs) '())
+   ((pair? specs)
+    (cons (poo-flow-tool-core-poo-spec->tool-spec (car specs))
+          (poo-flow-tool-core-poo-specs->tool-specs (cdr specs))))
+   (else
+    (error "tool-core POO specs must be a list" specs))))
 
 ;; : (-> PooToolCatalogPrototype [PooToolSpec] PooToolCatalog)
 (defpoo-module-config-converter

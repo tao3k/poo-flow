@@ -159,6 +159,48 @@
    (slot runtime-owner "marlin-agent-core")
    (slot runtime-executed #f)))
 
+;; : (-> Alist Alist Alist)
+(def (poo-flow-session-policy-rows/tail rows tail)
+  (let loop ((remaining-rows rows)
+             (rows-rev '()))
+    (if (null? remaining-rows)
+      (let restore ((remaining-rev rows-rev)
+                    (result tail))
+        (if (null? remaining-rev)
+          result
+          (restore (cdr remaining-rev)
+                   (cons (car remaining-rev) result))))
+      (loop (cdr remaining-rows)
+            (cons (car remaining-rows) rows-rev)))))
+
+;; : (-> Alist Alist Alist)
+(def (poo-flow-session-policy-slots/tail policy-slots tail)
+  (poo-flow-session-policy-rows/tail policy-slots tail))
+
+;; : (-> Symbol Symbol Symbol Symbol Symbol Alist Alist Alist)
+(def (poo-flow-session-policy-object-rows policy-kind
+                                          schema
+                                          policy-name
+                                          scope-ref
+                                          default-action
+                                          policy-slots
+                                          metadata)
+  (poo-flow-session-policy-rows/tail
+   (list
+    (cons 'kind 'poo-flow.session.policy)
+    (cons 'schema schema)
+    (cons 'policy-kind policy-kind)
+    (cons 'policy-name policy-name)
+    (cons 'scope-ref scope-ref)
+    (cons 'default-action default-action)
+    (cons 'policy-slots policy-slots))
+   (poo-flow-session-policy-slots/tail
+    policy-slots
+    (list
+     (cons 'metadata metadata)
+     (cons 'runtime-owner "marlin-agent-core")
+     (cons 'runtime-executed #f)))))
+
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Alist [Alist] PooSessionPolicy)
 (def (poo-flow-session-policy-object policy-kind
                                      schema
@@ -186,20 +228,16 @@
                             (list? policy-slots)
                             policy-slots)
   (object<-alist
-   (append
-    (list (cons 'kind 'poo-flow.session.policy)
-          (cons 'schema schema)
-          (cons 'policy-kind policy-kind)
-          (cons 'policy-name policy-name)
-          (cons 'scope-ref scope-ref)
-          (cons 'default-action default-action)
-          (cons 'policy-slots policy-slots))
+   (poo-flow-session-policy-object-rows
+    policy-kind
+    schema
+    policy-name
+    scope-ref
+    default-action
     policy-slots
-    (list (cons 'metadata (if (null? maybe-metadata)
-                            '()
-                            (car maybe-metadata)))
-          (cons 'runtime-owner "marlin-agent-core")
-          (cons 'runtime-executed #f)))))
+    (if (null? maybe-metadata)
+      '()
+      (car maybe-metadata)))))
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol [Alist] PooSessionPolicy)
 (defpoo-session-policy-family

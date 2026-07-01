@@ -33,9 +33,16 @@
                       'tool-core/custom)
         (check-equal? (test-ref catalog-row 'tool-refs)
                       '(calculator))
-        (check-equal? (test-ref validation-row 'valid?) #t)
+        (check-equal? (test-ref validation-row 'valid?) #f)
         (check-equal? (test-ref validation-row 'resolved-tool-refs)
                       '(calculator))
+        (check-equal?
+         (test-ref (car (test-ref validation-row 'action-mismatch-grants))
+                   'grant-id)
+         'grant/calculator-delete)
+        (check-equal?
+         (test-ref (car (test-ref validation-row 'diagnostics)) 'code)
+         'tool-grant-action-not-supported)
         (check-equal? (test-ref validation-row 'runtime-owner)
                       "marlin-agent-core")
         (check-equal? (test-ref validation-row 'runtime-executed) #f)))))

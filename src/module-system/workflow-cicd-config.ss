@@ -39,6 +39,7 @@
         poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
         poo-flow-user-config-workflow-cicd-marlin-handoff-receipt-bundle
         poo-flow-user-config-workflow-cicd-receipts
+        poo-flow-user-config-workflow-cicd-runtime-projection
         poo-flow-user-alist-ref
         poo-flow-user-workflow-cicd-readiness-checks
         poo-flow-user-workflow-cicd-checks-field-values)
@@ -221,13 +222,11 @@
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
       manifest-maps)
-  (cond
-   ((null? manifest-maps) '())
-   (else
-    (append
-     (poo-flow-user-alist-ref (car manifest-maps) 'manifests '())
-     (poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
-      (cdr manifest-maps))))))
+  (poo-flow-user-alist-ref
+   (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection
+    manifest-maps)
+   'manifests
+   '()))
 
 ;;; Compact summaries are the agent-facing audit rows for runtime handoff. The
 ;;; full manifest remains available, but presentation code and docs can inspect
@@ -294,12 +293,68 @@
 
 ;;; Summary projection is a pure sequence transform over manifest maps. It keeps
 ;;; user-facing audit rows small while leaving the full command payload intact.
+;; : (-> [Alist] [Alist] [Alist] Values)
+(def (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-manifests
+      manifests
+      manifests-rev
+      summaries-rev)
+  (cond
+   ((null? manifests)
+    (values manifests-rev summaries-rev))
+   (else
+    (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-manifests
+     (cdr manifests)
+     (cons (car manifests) manifests-rev)
+     (cons
+      (poo-flow-user-workflow-cicd-runtime-command-manifest-summary
+       (car manifests))
+      summaries-rev)))))
+
+;; : (-> [Alist] [Alist] [Alist] Values)
+(def (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-maps
+      manifest-maps
+      manifests-rev
+      summaries-rev)
+  (cond
+   ((null? manifest-maps)
+    (values manifests-rev summaries-rev))
+   (else
+    (let-values (((manifests-rev summaries-rev)
+                  (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-manifests
+                   (poo-flow-user-alist-ref
+                    (car manifest-maps)
+                    'manifests
+                    '())
+                   manifests-rev
+                   summaries-rev)))
+      (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-maps
+       (cdr manifest-maps)
+       manifests-rev
+       summaries-rev)))))
+
+;;; The manifest summary projection keeps full manifests and compact summaries
+;;; in the same declaration order without building a flattened manifest list and
+;;; then mapping it again.
+;; : (-> [Alist] Alist)
+(def (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection
+      manifest-maps)
+  (let-values (((manifests-rev summaries-rev)
+                (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-maps
+                 manifest-maps
+                 '()
+                 '())))
+    (list
+     (cons 'manifests (reverse manifests-rev))
+     (cons 'summaries (reverse summaries-rev)))))
+
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
       manifest-maps)
-  (map poo-flow-user-workflow-cicd-runtime-command-manifest-summary
-       (poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
-        manifest-maps)))
+  (poo-flow-user-alist-ref
+   (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection
+    manifest-maps)
+   'summaries
+   '()))
 
 ;;; Runtime owner is pinned at the presentation boundary so user-facing receipts
 ;;; do not drift from the Marlin handoff ABI when check-map internals change.
@@ -719,13 +774,10 @@
 ;;; payload and compact user/agent audit rows. It checks shape equivalence only;
 ;;; runtime execution and provider semantics stay outside Scheme.
 ;; : (-> [Alist] [Alist] Alist)
-(def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
-      manifest-maps
+(def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement/from-manifests
+      manifests
       summaries)
-  (let* ((manifests
-          (poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
-           manifest-maps))
-         (rows
+  (let* ((rows
           (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement-rows
            manifests
            summaries))
@@ -750,6 +802,15 @@
      (cons 'runtime-owner +poo-flow-user-workflow-cicd-runtime-owner+)
      (cons 'runtime-executed #f))))
 
+;; : (-> [Alist] [Alist] Alist)
+(def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
+      manifest-maps
+      summaries)
+  (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement/from-manifests
+   (poo-flow-user-workflow-cicd-runtime-command-manifest-map-manifests
+    manifest-maps)
+   summaries))
+
 ;; : (-> PooUserConfig Alist)
 (def (poo-flow-user-config-workflow-cicd-runtime-command-manifest-agreement
       config)
@@ -766,10 +827,26 @@
 ;;; Marlin ABI projections reuse the already validated manifest maps. The user
 ;;; interface sees a stable handoff payload without learning workflow object
 ;;; internals or executing any runtime adapter.
+;; : (-> [Alist] [Alist] [Alist])
+(def (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis/rev
+      manifest-maps
+      abis-rev)
+  (cond
+   ((null? manifest-maps) abis-rev)
+   (else
+    (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis/rev
+     (cdr manifest-maps)
+     (cons
+      (poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi
+       (car manifest-maps))
+      abis-rev)))))
+
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis manifest-maps)
-  (map poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi
-       manifest-maps))
+  (reverse
+   (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis/rev
+    manifest-maps
+    '())))
 
 ;; : (-> PooUserConfig [Alist])
 (def (poo-flow-user-config-workflow-cicd-marlin-runtime-handoff-abis config)
@@ -810,10 +887,26 @@
       #f)))))
 
 ;; : (-> [MarlinRuntimeHandoffAbi] [MarlinRuntimeHandoffAbiSummary])
+(def (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries/rev
+      abi-rows
+      summaries-rev)
+  (cond
+   ((null? abi-rows) summaries-rev)
+   (else
+    (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries/rev
+     (cdr abi-rows)
+     (cons
+      (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary
+       (car abi-rows))
+      summaries-rev)))))
+
+;; : (-> [MarlinRuntimeHandoffAbi] [MarlinRuntimeHandoffAbiSummary])
 (def (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
       abi-rows)
-  (map poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary
-       abi-rows))
+  (reverse
+   (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries/rev
+    abi-rows
+    '())))
 
 ;; : (-> [MarlinRuntimeHandoffAbiSummary] Integer)
 (def (poo-flow-user-workflow-cicd-marlin-handoff-entry-count summaries)
@@ -910,16 +1003,27 @@
 
 ;;; Receipt accumulation preserves check-map declaration order while flattening
 ;;; per-check receipts into the presentation contract.
+;; : (-> [PooFlowCicdCheckMap] [PooSandboxProfile] [Alist] [Alist])
+(def (poo-flow-user-workflow-cicd-receipts/add/rev check-maps
+                                                       profile-catalog
+                                                       receipts-rev)
+  (cond
+   ((null? check-maps) receipts-rev)
+   (else
+    (poo-flow-user-workflow-cicd-receipts/add/rev
+     (cdr check-maps)
+     profile-catalog
+     (poo-flow-user-workflow-cicd-reverse-prepend
+      (poo-flow-cicd-check-map->receipts (car check-maps) profile-catalog)
+      receipts-rev)))))
+
 ;; : (-> [PooFlowCicdCheckMap] [PooSandboxProfile] [Alist])
 (def (poo-flow-user-workflow-cicd-receipts/add check-maps profile-catalog)
-  (cond
-   ((null? check-maps) '())
-   (else
-    (append
-     (poo-flow-cicd-check-map->receipts (car check-maps) profile-catalog)
-     (poo-flow-user-workflow-cicd-receipts/add
-      (cdr check-maps)
-      profile-catalog)))))
+  (reverse
+   (poo-flow-user-workflow-cicd-receipts/add/rev
+    check-maps
+    profile-catalog
+    '())))
 
 ;;; Config-level receipts resolve sandbox profiles through selected modules,
 ;;; preserving user overrides before Marlin receives check receipts.
@@ -932,6 +1036,107 @@
      (poo-flow-user-config-workflow-cicd-check-maps config)
      profile-catalog)))
 
+;; : (-> [PooFlowCicdCheckMap] [Symbol])
+(def (poo-flow-user-workflow-cicd-check-map-names check-maps)
+  (cond
+   ((null? check-maps) '())
+   (else
+    (cons (poo-flow-cicd-check-map-name (car check-maps))
+          (poo-flow-user-workflow-cicd-check-map-names
+           (cdr check-maps))))))
+
+;;; Runtime projection batches the CI/CD handoff rows that share the same
+;;; check-map list and sandbox profile catalog. Presentation layers can then
+;;; reuse one owner-local receipt instead of rebuilding each public slot by
+;;; rediscovering the same module selections.
+;; : (-> PooUserConfig Alist)
+(def (poo-flow-user-config-workflow-cicd-runtime-projection config)
+  (let* ((selected-modules (poo-flow-user-config-modules config))
+         (profile-catalog
+          (poo-flow-user-config-sandbox-profile-catalog selected-modules))
+         (check-maps
+          (poo-flow-user-config-workflow-cicd-check-maps config))
+         (readiness-rows
+          (poo-flow-user-workflow-cicd-runtime-readiness/add
+           check-maps
+           profile-catalog))
+         (readiness-check-summary
+          (poo-flow-user-workflow-cicd-readiness-check-summary
+           readiness-rows))
+         (manifest-maps
+          (poo-flow-user-workflow-cicd-runtime-command-manifests/add
+           check-maps
+           profile-catalog))
+         (manifest-summary-projection
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection
+           manifest-maps))
+         (manifests
+          (poo-flow-user-alist-ref
+           manifest-summary-projection
+           'manifests
+           '()))
+         (manifest-summaries
+          (poo-flow-user-alist-ref
+           manifest-summary-projection
+           'summaries
+           '()))
+         (manifest-agreement
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement/from-manifests
+           manifests
+           manifest-summaries))
+         (handoff-abis
+          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis
+           manifest-maps))
+         (handoff-summaries
+          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
+           handoff-abis))
+         (receipts
+          (poo-flow-user-workflow-cicd-receipts/add
+           check-maps
+           profile-catalog))
+         (handoff-bundle
+          (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+           manifest-maps
+           manifest-summaries
+           manifest-agreement
+           handoff-abis
+           handoff-summaries
+           receipts)))
+    (list
+     (cons 'check-maps check-maps)
+     (cons 'pipeline-count (length check-maps))
+     (cons 'pipeline-names
+           (poo-flow-user-workflow-cicd-check-map-names check-maps))
+     (cons 'runtime-readiness readiness-rows)
+     (cons 'readiness-checks
+           (poo-flow-user-alist-ref
+            readiness-check-summary
+            'checks
+            '()))
+     (cons 'sandbox-runtime-summaries
+           (poo-flow-user-alist-ref
+            readiness-check-summary
+            'sandbox-runtime-summaries
+            '()))
+     (cons 'sandbox-handoff-summaries
+           (poo-flow-user-alist-ref
+            readiness-check-summary
+            'sandbox-handoff-summaries
+            '()))
+     (cons 'sandbox-unresolved-profile-refs
+           (poo-flow-user-alist-ref
+            readiness-check-summary
+            'sandbox-unresolved-profile-refs
+            '()))
+     (cons 'runtime-command-manifests manifest-maps)
+     (cons 'runtime-command-manifest-summaries manifest-summaries)
+     (cons 'runtime-command-manifest-agreement manifest-agreement)
+     (cons 'marlin-runtime-handoff-abis handoff-abis)
+     (cons 'marlin-runtime-handoff-summaries handoff-summaries)
+     (cons 'receipts receipts)
+     (cons 'marlin-handoff-receipt-bundle handoff-bundle)
+     (cons 'runtime-executed #f))))
+
 ;;; Shared alist lookup is total by design: presentation and agreement checks
 ;;; need to report partial payloads instead of failing on the first missing key.
 ;; : (-> Alist Symbol Value Value)
@@ -939,27 +1144,118 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
+;; : (-> [Value] [Value] [Value])
+(def (poo-flow-user-workflow-cicd-reverse-prepend values values-rev)
+  (cond
+   ((null? values) values-rev)
+   (else
+    (poo-flow-user-workflow-cicd-reverse-prepend
+     (cdr values)
+     (cons (car values) values-rev)))))
+
+;; : (-> [Alist] [Alist] [Alist] [Alist] [Alist] Values)
+(def (poo-flow-user-workflow-cicd-readiness-check-summary/add-checks
+      checks
+      checks-rev
+      runtime-summaries-rev
+      handoff-summaries-rev
+      unresolved-profile-refs-rev)
+  (cond
+   ((null? checks)
+    (values checks-rev
+            runtime-summaries-rev
+            handoff-summaries-rev
+            unresolved-profile-refs-rev))
+   (else
+    (let (check (car checks))
+      (poo-flow-user-workflow-cicd-readiness-check-summary/add-checks
+       (cdr checks)
+       (cons check checks-rev)
+       (poo-flow-user-workflow-cicd-reverse-prepend
+        (poo-flow-user-alist-ref check 'sandbox-runtime-summaries '())
+        runtime-summaries-rev)
+       (poo-flow-user-workflow-cicd-reverse-prepend
+        (poo-flow-user-alist-ref check 'sandbox-handoff-summaries '())
+        handoff-summaries-rev)
+       (poo-flow-user-workflow-cicd-reverse-prepend
+        (poo-flow-user-alist-ref check 'sandbox-unresolved-profile-refs '())
+        unresolved-profile-refs-rev))))))
+
+;; : (-> [Alist] [Alist] [Alist] [Alist] [Alist] Values)
+(def (poo-flow-user-workflow-cicd-readiness-check-summary/add
+      readiness-rows
+      checks-rev
+      runtime-summaries-rev
+      handoff-summaries-rev
+      unresolved-profile-refs-rev)
+  (cond
+   ((null? readiness-rows)
+    (values checks-rev
+            runtime-summaries-rev
+            handoff-summaries-rev
+            unresolved-profile-refs-rev))
+   (else
+    (let-values (((checks-rev
+                   runtime-summaries-rev
+                   handoff-summaries-rev
+                   unresolved-profile-refs-rev)
+                  (poo-flow-user-workflow-cicd-readiness-check-summary/add-checks
+                   (poo-flow-user-alist-ref
+                    (car readiness-rows)
+                    'checks
+                    '())
+                   checks-rev
+                   runtime-summaries-rev
+                   handoff-summaries-rev
+                   unresolved-profile-refs-rev)))
+      (poo-flow-user-workflow-cicd-readiness-check-summary/add
+       (cdr readiness-rows)
+       checks-rev
+       runtime-summaries-rev
+       handoff-summaries-rev
+       unresolved-profile-refs-rev)))))
+
+;;; Readiness check summary flattens the nested per-pipeline check rows and the
+;;; three sandbox presentation columns in one owner-local pass.
+;; : (-> [Alist] Alist)
+(def (poo-flow-user-workflow-cicd-readiness-check-summary readiness-rows)
+  (let-values (((checks-rev
+                 runtime-summaries-rev
+                 handoff-summaries-rev
+                 unresolved-profile-refs-rev)
+                (poo-flow-user-workflow-cicd-readiness-check-summary/add
+                 readiness-rows
+                 '()
+                 '()
+                 '()
+                 '())))
+    (list
+     (cons 'checks (reverse checks-rev))
+     (cons 'sandbox-runtime-summaries (reverse runtime-summaries-rev))
+     (cons 'sandbox-handoff-summaries (reverse handoff-summaries-rev))
+     (cons 'sandbox-unresolved-profile-refs
+           (reverse unresolved-profile-refs-rev)))))
+
 ;;; Readiness rows are nested by pipeline. This helper exposes the per-check
 ;;; rows that presentation uses for sandbox summary columns.
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-user-workflow-cicd-readiness-checks readiness-rows)
-  (cond
-   ((null? readiness-rows) '())
-   (else
-    (append
-     (poo-flow-user-alist-ref (car readiness-rows) 'checks '())
-     (poo-flow-user-workflow-cicd-readiness-checks
-      (cdr readiness-rows))))))
+  (poo-flow-user-alist-ref
+   (poo-flow-user-workflow-cicd-readiness-check-summary readiness-rows)
+   'checks
+   '()))
 
 ;;; Field collection keeps repeated sandbox summary fields in declaration
 ;;; order; empty fields stay absent rather than fabricated.
 ;; : (-> [Alist] Symbol [Value])
 (def (poo-flow-user-workflow-cicd-checks-field-values checks field)
-  (cond
-   ((null? checks) '())
-   (else
-    (append
-     (poo-flow-user-alist-ref (car checks) field '())
-     (poo-flow-user-workflow-cicd-checks-field-values
-      (cdr checks)
-      field)))))
+  (let loop ((remaining-checks checks)
+             (values-rev '()))
+    (cond
+     ((null? remaining-checks) (reverse values-rev))
+     (else
+      (loop
+       (cdr remaining-checks)
+       (poo-flow-user-workflow-cicd-reverse-prepend
+        (poo-flow-user-alist-ref (car remaining-checks) field '())
+        values-rev))))))

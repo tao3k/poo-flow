@@ -12,15 +12,6 @@
 
 (begin-syntax
   ;; Compile-time path and naming helpers keep `load!` focused on expansion.
-  (def (poo-flow-load-fragment-source-forms path)
-    (call-with-input-file path
-      (lambda (port)
-        (let loop ((forms '()))
-          (let (form (read port))
-            (if (eof-object? form)
-              (reverse forms)
-              (loop (cons form forms))))))))
-
   (def (poo-flow-load-source-path value)
     (cond
      ((string? value) value)
@@ -201,7 +192,7 @@
                             binding-suffix))))
       (list binding-name
             objects-fragment?
-            (poo-flow-load-fragment-source-forms fragment-source-path)))))
+            fragment-source-path))))
 
 ;;; Doom-style config fragments are declaration includes, not runtime module
 ;;; loading. Extensionless paths mirror Doom's `load!` surface; the macro wraps
@@ -229,22 +220,20 @@
                                           (stx-source stx)))
             (binding-name (car fragment-info))
             (objects-fragment? (cadr fragment-info))
-            (fragment-forms (caddr fragment-info)))
+            (fragment-source-path (caddr fragment-info)))
        (with-syntax ((binding (datum->syntax (syntax ctx)
                                              binding-name))
-                     ((fragment-form ...)
-                      (map (lambda (form)
-                             (datum->syntax (syntax ctx) form))
-                           fragment-forms)))
+                     (fragment-source
+                      (datum->syntax (syntax ctx) fragment-source-path)))
          (if objects-fragment?
            (syntax
             (begin
               (import :poo-flow/src/module-system/object-core)
               (def binding
-                (begin fragment-form ...))
+                (begin (include fragment-source)))
               (export binding)))
            (syntax
             (begin
               (def binding
-                (begin fragment-form ...))
+                (begin (include fragment-source)))
               (export binding)))))))))

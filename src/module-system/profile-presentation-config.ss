@@ -56,6 +56,7 @@
     agent-profiles
     agent-harnesses
     agent-sessions
+    session-agent-topology-trace
     workflow-run
     dispatch-receipt
     agent-operation
@@ -198,6 +199,7 @@
          loop-engine-agent-profiles
          loop-engine-agent-harnesses
          loop-engine-agent-sessions
+         loop-engine-session-agent-topology-traces
          loop-engine-workflow-runs
          loop-engine-dispatch-receipts
          loop-engine-agent-operations
@@ -287,8 +289,14 @@
           (poo-flow-user-config-session-core-intents profile-config))
          (cicd-intent-rows
           (poo-flow-user-config-cicd-intents profile-config))
+         (workflow-cicd-runtime-projection
+          (poo-flow-user-config-workflow-cicd-runtime-projection
+           profile-config))
          (workflow-cicd-check-maps
-         (poo-flow-user-config-workflow-cicd-check-maps profile-config))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'check-maps
+           '()))
          (workflow-cicd-functional-dag-rows
           (poo-flow-user-config-workflow-cicd-functional-dag-rows
            profile-config))
@@ -299,37 +307,60 @@
           (poo-flow-user-config-workflow-cicd-pipeline-results
            profile-config))
          (workflow-cicd-readiness-rows
-          (poo-flow-user-config-workflow-cicd-runtime-readiness
-           profile-config))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'runtime-readiness
+           '()))
          (workflow-cicd-runtime-command-manifest-rows
-          (poo-flow-user-config-workflow-cicd-runtime-command-manifests
-           profile-config))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'runtime-command-manifests
+           '()))
          (workflow-cicd-runtime-command-manifest-summary-rows
-          (poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
-           workflow-cicd-runtime-command-manifest-rows))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'runtime-command-manifest-summaries
+           '()))
          (workflow-cicd-runtime-command-manifest-agreement-report
-          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
-           workflow-cicd-runtime-command-manifest-rows
-           workflow-cicd-runtime-command-manifest-summary-rows))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'runtime-command-manifest-agreement
+           '()))
          (workflow-cicd-marlin-runtime-handoff-abi-rows
-          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis
-           workflow-cicd-runtime-command-manifest-rows))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'marlin-runtime-handoff-abis
+           '()))
          (workflow-cicd-marlin-runtime-handoff-abi-summary-rows
-          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
-           workflow-cicd-marlin-runtime-handoff-abi-rows))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'marlin-runtime-handoff-summaries
+           '()))
          (workflow-cicd-receipt-rows
-          (poo-flow-user-config-workflow-cicd-receipts profile-config))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'receipts
+           '()))
          (workflow-cicd-marlin-handoff-receipt-bundle-row
-          (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
-           workflow-cicd-runtime-command-manifest-rows
-           workflow-cicd-runtime-command-manifest-summary-rows
-           workflow-cicd-runtime-command-manifest-agreement-report
-           workflow-cicd-marlin-runtime-handoff-abi-rows
-           workflow-cicd-marlin-runtime-handoff-abi-summary-rows
-           workflow-cicd-receipt-rows))
-         (workflow-cicd-check-rows
-          (poo-flow-user-workflow-cicd-readiness-checks
-           workflow-cicd-readiness-rows))
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'marlin-handoff-receipt-bundle
+           '()))
+         (workflow-cicd-sandbox-runtime-summary-rows
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'sandbox-runtime-summaries
+           '()))
+         (workflow-cicd-sandbox-handoff-summary-rows
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'sandbox-handoff-summaries
+           '()))
+         (workflow-cicd-sandbox-unresolved-profile-ref-rows
+          (poo-flow-user-profile-alist-ref
+           workflow-cicd-runtime-projection
+           'sandbox-unresolved-profile-refs
+           '()))
          (loop-engine-intent-rows
           (poo-flow-user-config-loop-engine-intents profile-config))
          (loop-engine-field-values
@@ -436,17 +467,11 @@
       (cons 'workflow-cicd-receipt-count (length workflow-cicd-receipt-rows))
       (cons 'workflow-cicd-receipts workflow-cicd-receipt-rows)
       (cons 'workflow-cicd-sandbox-runtime-summaries
-            (poo-flow-user-workflow-cicd-checks-field-values
-             workflow-cicd-check-rows
-             'sandbox-runtime-summaries))
+            workflow-cicd-sandbox-runtime-summary-rows)
       (cons 'workflow-cicd-sandbox-handoff-summaries
-            (poo-flow-user-workflow-cicd-checks-field-values
-             workflow-cicd-check-rows
-             'sandbox-handoff-summaries))
+            workflow-cicd-sandbox-handoff-summary-rows)
       (cons 'workflow-cicd-sandbox-unresolved-profile-refs
-            (poo-flow-user-workflow-cicd-checks-field-values
-             workflow-cicd-check-rows
-             'sandbox-unresolved-profile-refs))
+            workflow-cicd-sandbox-unresolved-profile-ref-rows)
       (cons 'loop-engine-intent-count (length loop-engine-intent-rows))
       (cons 'loop-engine-intents loop-engine-intent-rows)
       (cons 'loop-engine-runtime-handoff-count

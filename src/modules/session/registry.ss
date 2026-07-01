@@ -41,22 +41,29 @@
      'policy-id
      #f)))
 
-;; : (-> [PooSessionRegistryEntry] [Symbol])
-(def (poo-flow-session-registry-durable-policy-refs entries)
-  (cond
-   ((null? entries) '())
-   (else
-    (let (durable-policy-ref
-          (poo-flow-session-alist-ref
-           (car entries)
-           'durable-policy-ref
-           #f))
-      (if durable-policy-ref
-        (cons durable-policy-ref
-              (poo-flow-session-registry-durable-policy-refs
-               (cdr entries)))
-        (poo-flow-session-registry-durable-policy-refs
-         (cdr entries)))))))
+;; : (-> [PooSessionRegistryEntry] ([Symbol] [Symbol]))
+(def (poo-flow-session-registry-entry-summary entries)
+  (let loop ((remaining-entries entries)
+             (session-ids-rev '())
+             (durable-policy-refs-rev '()))
+    (cond
+     ((null? remaining-entries)
+      (list (reverse session-ids-rev)
+            (reverse durable-policy-refs-rev)))
+     (else
+      (let* ((entry (car remaining-entries))
+             (session-id
+              (poo-flow-session-registry-entry-session-id entry))
+             (durable-policy-ref
+              (poo-flow-session-alist-ref
+               entry
+               'durable-policy-ref
+               #f)))
+        (loop (cdr remaining-entries)
+              (cons session-id session-ids-rev)
+              (if durable-policy-ref
+                (cons durable-policy-ref durable-policy-refs-rev)
+                durable-policy-refs-rev)))))))
 
 ;; : (-> PooSession Symbol [Symbol] Alist [Alist] PooSessionRegistryEntry)
 (def (poo-flow-session-registry-entry session
@@ -155,10 +162,6 @@
 (def (poo-flow-session-registry-entry-parent-session-ids entry)
   (poo-flow-session-alist-ref entry 'parent-session-ids '()))
 
-;; : (-> [PooSessionRegistryEntry] [Symbol])
-(def (poo-flow-session-registry-entry-session-ids entries)
-  (map poo-flow-session-registry-entry-session-id entries))
-
 ;; : (-> Symbol [Symbol] [Symbol] Symbol [PooSessionRegistryEntry] [Alist] PooSessionRegistryReceipt)
 (def (poo-flow-session-registry-receipt project-id
                                         root-session-ids
@@ -187,25 +190,27 @@
                              poo-flow-session-registry-entry?
                              entries)
                             entries)
-  (object<-alist
-   (list
-    (cons 'kind 'poo-flow.session.registry-receipt)
-    (cons 'schema 'poo-flow.modules.session.registry-receipt.v1)
-    (cons 'project-id project-id)
-    (cons 'root-session-ids root-session-ids)
-    (cons 'child-session-ids child-session-ids)
-    (cons 'session-ids
-          (poo-flow-session-registry-entry-session-ids entries))
-    (cons 'active-session-ref active-session-ref)
-    (cons 'durable-policy-refs
-          (poo-flow-session-registry-durable-policy-refs entries))
-    (cons 'entry-count (length entries))
-    (cons 'entries entries)
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'metadata (if (null? maybe-metadata)
-                      '()
-                      (car maybe-metadata))))))
+  (let* ((entry-summary
+          (poo-flow-session-registry-entry-summary entries))
+         (session-ids (car entry-summary))
+         (durable-policy-refs (cadr entry-summary)))
+    (object<-alist
+     (list
+      (cons 'kind 'poo-flow.session.registry-receipt)
+      (cons 'schema 'poo-flow.modules.session.registry-receipt.v1)
+      (cons 'project-id project-id)
+      (cons 'root-session-ids root-session-ids)
+      (cons 'child-session-ids child-session-ids)
+      (cons 'session-ids session-ids)
+      (cons 'active-session-ref active-session-ref)
+      (cons 'durable-policy-refs durable-policy-refs)
+      (cons 'entry-count (length entries))
+      (cons 'entries entries)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f)
+      (cons 'metadata (if (null? maybe-metadata)
+                        '()
+                        (car maybe-metadata)))))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-registry-receipt? value)

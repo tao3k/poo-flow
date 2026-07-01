@@ -248,54 +248,87 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> [LoopPatternDescriptor] [LoopPatternDescriptor] [Alist])
 (def (loop-governor-human-inbox-items/from-patterns denied-patterns conflicting-patterns)
-  (append
-   (map (lambda (descriptor)
-          (loop-governor-inbox-item
-           'shared-denylist
-           descriptor
-           (loop-governor-pattern-action-key descriptor)))
-        denied-patterns)
-   (map (lambda (descriptor)
-          (loop-governor-inbox-item
-           'acting-on-conflict
-           descriptor
-           (loop-governor-pattern-action-key descriptor)))
-        conflicting-patterns)))
+  (loop-governor-human-inbox-items/tail
+   denied-patterns
+   'shared-denylist
+   (loop-governor-human-inbox-items/tail
+    conflicting-patterns
+    'acting-on-conflict
+    '())))
+
+;; : (-> [LoopPatternDescriptor] Symbol [Alist] [Alist])
+(def (loop-governor-human-inbox-items/tail descriptors reason tail)
+  (cond
+   ((null? descriptors) tail)
+   (else
+    (cons (loop-governor-inbox-item
+           reason
+           (car descriptors)
+           (loop-governor-pattern-action-key (car descriptors)))
+          (loop-governor-human-inbox-items/tail
+           (cdr descriptors)
+           reason
+           tail)))))
 
 ;;; Required errors use the same alist shape as strategy validation.
 ;;; That keeps governor findings composable with existing doctor output.
 ;; : (-> Symbol FieldValue [ValidationError])
-(def (loop-governor-required-field-error field value)
+(def (loop-governor-required-field-error/tail field value tail)
   (if value
-    '()
-    (list (list (cons 'field field)
-                (cons 'code 'required)))))
+    tail
+    (cons (list (cons 'field field)
+                (cons 'code 'required))
+          tail)))
+
+;; : (-> Symbol FieldValue [ValidationError])
+(def (loop-governor-required-field-error field value)
+  (loop-governor-required-field-error/tail field value '()))
 
 ;;; Boundary: loop governor field validation error unless is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
-(def (loop-governor-field-validation-error/unless valid? field code value)
+(def (loop-governor-field-validation-error/unless/tail valid?
+                                                        field
+                                                        code
+                                                        value
+                                                        tail)
   (if valid?
-    '()
-    (list (list (cons 'field field)
+    tail
+    (cons (list (cons 'field field)
                 (cons 'code code)
-                (cons 'value value)))))
+                (cons 'value value))
+          tail)))
+
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+(def (loop-governor-field-validation-error/unless valid? field code value)
+  (loop-governor-field-validation-error/unless/tail
+   valid?
+   field
+   code
+   value
+   '()))
 
 ;;; Boundary: loop governor strategy validation errors is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> LoopStrategyPlan [ValidationError])
-(def (loop-governor-strategy-validation-errors strategy)
+;; : (-> LoopStrategyPlan [ValidationError] [ValidationError])
+(def (loop-governor-strategy-validation-errors/tail strategy tail)
   (if (loop-strategy-plan? strategy)
     (let (strategy-errors (loop-strategy-validation-errors strategy))
       (if (null? strategy-errors)
-        '()
-        (list (list (cons 'field 'strategy)
+        tail
+        (cons (list (cons 'field 'strategy)
                     (cons 'code 'invalid-strategy)
-                    (cons 'errors strategy-errors)))))
-    (list (list (cons 'field 'strategy)
-                (cons 'code 'not-loop-strategy-plan)))))
+                    (cons 'errors strategy-errors))
+              tail)))
+    (cons (list (cons 'field 'strategy)
+                (cons 'code 'not-loop-strategy-plan))
+          tail)))
+
+;; : (-> LoopStrategyPlan [ValidationError])
+(def (loop-governor-strategy-validation-errors strategy)
+  (loop-governor-strategy-validation-errors/tail strategy '()))
 
 ;;; Boundary: loop governor node list validation errors is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection
@@ -331,27 +364,28 @@
 ;; : (-> LoopGovernor [ValidationError])
 (def (loop-governor-validation-errors governor)
   (if (loop-governor? governor)
-    (append
-     (loop-governor-required-field-error 'name (loop-governor-name governor))
-     (loop-governor-strategy-validation-errors
-      (loop-governor-strategy governor))
-     (loop-governor-field-validation-error/unless
-      (symbol? (loop-governor-state-field governor))
-      'state-key
-      'field-not-symbol
-      (loop-governor-state-field governor))
-     (loop-governor-field-validation-error/unless
-      (integer? (loop-governor-budget-limit governor))
-      'aggregate-budget
-      'max-actionable-not-integer
-      (loop-governor-budget-limit governor))
-     (loop-governor-field-validation-error/unless
-      (list? (loop-governor-agent-judges governor))
-      'agent-judges
-      'not-list
-      (loop-governor-agent-judges governor))
-     (loop-governor-agent-judge-node-field-errors
-      (loop-governor-agent-judge-nodes governor)))
+    (loop-governor-required-field-error/tail
+     'name
+     (loop-governor-name governor)
+     (loop-governor-strategy-validation-errors/tail
+      (loop-governor-strategy governor)
+      (loop-governor-field-validation-error/unless/tail
+       (symbol? (loop-governor-state-field governor))
+       'state-key
+       'field-not-symbol
+       (loop-governor-state-field governor)
+       (loop-governor-field-validation-error/unless/tail
+        (integer? (loop-governor-budget-limit governor))
+        'aggregate-budget
+        'max-actionable-not-integer
+        (loop-governor-budget-limit governor)
+        (loop-governor-field-validation-error/unless/tail
+         (list? (loop-governor-agent-judges governor))
+         'agent-judges
+         'not-list
+         (loop-governor-agent-judges governor)
+         (loop-governor-agent-judge-node-field-errors
+          (loop-governor-agent-judge-nodes governor)))))))
     (list '((field . governor) (code . not-loop-governor)))))
 
 ;;; Validation is the only gate before governor contracts leave Scheme.

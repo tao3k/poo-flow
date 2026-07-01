@@ -6,7 +6,6 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -77,18 +76,30 @@
            candidates
            '((strategy . llm-router)
              (judge-inputs . (summary last-failure)))
-           'empty-workflow)))
-    (list (cons 'candidate-count (.ref receipt 'candidate-count))
+           'empty-workflow))
+         (row (poo-flow-session-selector-receipt->alist receipt))
+         (projected-candidates (selector-performance-ref row 'candidates)))
+    (list (cons 'candidate-count
+                (selector-performance-ref row 'candidate-count))
+          (cons 'projected-candidate-count (length projected-candidates))
           (cons 'workflow-count
-                (length (.ref receipt 'workflow-candidate-ids)))
+                (length (selector-performance-ref
+                         row
+                         'workflow-candidate-ids)))
           (cons 'transform-count
-                (length (.ref receipt 'transform-candidate-ids)))
+                (length (selector-performance-ref
+                         row
+                         'transform-candidate-ids)))
           (cons 'agent-param-count
-                (length (.ref receipt 'agent-param-candidate-ids)))
-          (cons 'selection-state (.ref receipt 'selection-state))
+                (length (selector-performance-ref
+                         row
+                         'agent-param-candidate-ids)))
+          (cons 'selection-state
+                (selector-performance-ref row 'selection-state))
           (cons 'selected-candidate-ref
-                (.ref receipt 'selected-candidate-ref))
-          (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
+                (selector-performance-ref row 'selected-candidate-ref))
+          (cons 'runtime-executed
+                (selector-performance-ref row 'runtime-executed)))))
 
 ;; : TestSuite
 (def session-selector-receipt-performance-test
@@ -106,6 +117,9 @@
          #t)
         (check-equal? (selector-performance-ref summary 'candidate-count)
                       candidate-count)
+        (check-equal?
+         (selector-performance-ref summary 'projected-candidate-count)
+         candidate-count)
         (check-equal? (selector-performance-ref summary 'workflow-count)
                       100)
         (check-equal? (selector-performance-ref summary 'transform-count)

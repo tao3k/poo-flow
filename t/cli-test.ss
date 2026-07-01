@@ -54,7 +54,7 @@
          (testing-object-ref project 'loadpath #f)
          #f)))
 
-    (test-case "registers session and durable user scenarios as project roots"
+    (test-case "registers session, durable, and user-interface scenarios as project roots"
       (let (specs
             (testing-object-ref (poo-flow-testing-project "." ".") 'gxtest '()))
         (check-equal? (gxtest-root-registered?
@@ -75,6 +75,10 @@
                       #t)
         (check-equal? (gxtest-root-registered?
                        "scenario-durable-recovery"
+                       specs)
+                      #t)
+        (check-equal? (gxtest-root-registered?
+                       "scenario-user-interface-custom-scenario-batch"
                        specs)
                       #t)))
 

@@ -45,7 +45,7 @@
 ;; defpoo-session-receipt-projection-batch
 ;;   : internal collection projector for session receipt alists. The single
 ;;     receipt projection remains explicit; this macro owns only the shared
-;;     list guard and map frame.
+;;     list guard and ordered accumulator frame.
 (defrules defpoo-session-receipt-projection-batch
   (projector error-message)
   ((_ constructor (items)
@@ -53,7 +53,13 @@
       (error-message message-expr))
    (def (constructor items)
      (if (list? items)
-       (map projector-expr items)
+       (let loop ((remaining-items items)
+                  (rows-rev '()))
+         (if (null? remaining-items)
+           (reverse rows-rev)
+           (loop (cdr remaining-items)
+                 (cons (projector-expr (car remaining-items))
+                       rows-rev))))
        (error message-expr items)))))
 
 ;; Backward-compatible name for the first record-backed slices. New session

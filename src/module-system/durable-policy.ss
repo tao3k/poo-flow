@@ -49,21 +49,27 @@
         poo-flow-durable-policy-receipt->alist
         poo-flow-durable-policy-receipts->alists)
 
+;; : Symbol
 (def +poo-flow-durable-policy-kind+
   'poo-flow.durable.policy)
 
+;; : Symbol
 (def +poo-flow-durable-policy-schema+
   'poo-flow.module-system.durable-policy.v1)
 
+;; : Symbol
 (def +poo-flow-durable-policy-diagnostic-schema+
   'poo-flow.module-system.durable-policy.diagnostic.v1)
 
+;; : Symbol
 (def +poo-flow-durable-policy-receipt-schema+
   'poo-flow.module-system.durable-policy.receipt.v1)
 
+;; : [Symbol]
 (def +poo-flow-durable-action-classes+
   '(replayable idempotent compensatable terminal manual))
 
+;; : [Symbol]
 (def +poo-flow-durable-repair-modes+
   '(fail-closed retry rebuild compensate quarantine manual))
 
@@ -77,6 +83,14 @@
 (def (poo-flow-durable-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
+
+;; : (forall (a) (-> (List a) (List a) (List a)))
+(def (poo-flow-durable-reverse-onto values tail)
+  (if (null? values)
+    tail
+    (poo-flow-durable-reverse-onto
+     (cdr values)
+     (cons (car values) tail))))
 
 ;; : (forall (a) (-> String Boolean a a))
 (def (poo-flow-durable-require message condition value)
@@ -154,13 +168,27 @@
                diagnostic))))
 
 ;; : (-> [PooDurablePolicyDiagnostic] [Alist])
-(def (poo-flow-durable-policy-diagnostic-alists diagnostics)
-  (map poo-flow-durable-policy-diagnostic->alist diagnostics))
+(defpoo-module-final-projection-batch
+  poo-flow-durable-policy-diagnostic-alists (diagnostics)
+  (projector poo-flow-durable-policy-diagnostic->alist)
+  (error-message "durable policy diagnostic projection requires a list"))
 
-;;; Durable policy construction is the single normalization point for policy
-;;; identity, handoff refs, and repair defaults while preserving a native POO
-;;; object for staged receipt projection.
-;; : (-> Symbol Symbol [Alist] POOObject)
+;; poo-flow-durable-policy
+;;   : (-> Symbol Symbol [Alist] POOObject)
+;;   | doc m%
+;;       Durable policy construction is the single normalization point for
+;;       policy identity, handoff refs, repair defaults, and runtime ownership.
+;;       The returned value remains a native POO object until the explicit
+;;       receipt projection boundary.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-durable-policy 'durable/ci 'session/build
+;;         '((repair-mode . retry)))
+;;       ;; => POO durable policy object
+;;       ```
+;;     %
 (def (poo-flow-durable-policy policy-name scope-ref . maybe-options)
   (poo-flow-durable-require "durable policy name must be a symbol"
                             (symbol? policy-name)
@@ -229,6 +257,7 @@
         durable-metadata: metadata-value
         durable-runtime-executed: #f)))
 
+;; : PooDurablePolicy
 (def poo-flow-durable-policy/default
   (poo-flow-durable-policy
    'durable/default
@@ -353,38 +382,64 @@
               (cons 'expected 'string)
               (cons 'recoverable? #t)))))))
 
+;;; Effective durable validation accumulates all diagnostics before projection
+;;; so callers get a complete repair report instead of a fail-fast exception.
 ;; : (-> PooDurablePolicy [PooDurablePolicyDiagnostic])
 (def (poo-flow-durable-policy-diagnostics policy)
   (if (poo-flow-durable-policy? policy)
-    (append
-     (poo-flow-durable-policy-required-symbol-diagnostics
-      policy
-      'durable-policy-name
-      'missing-durable-policy-name
-      (poo-flow-durable-slot policy 'durable-policy-name #f))
-     (poo-flow-durable-policy-required-symbol-diagnostics
-      policy
-      'durable-scope-ref
-      'missing-durable-scope-ref
-      (poo-flow-durable-slot policy 'durable-scope-ref #f))
-     (poo-flow-durable-policy-required-symbol-diagnostics
-      policy
-      'journal-owner
-      'missing-journal-owner
-      (poo-flow-durable-slot policy 'journal-owner #f))
-     (poo-flow-durable-policy-required-symbol-diagnostics
-      policy
-      'checkpoint-store
-      'missing-checkpoint-store
-      (poo-flow-durable-slot policy 'checkpoint-store #f))
-     (poo-flow-durable-policy-required-symbol-diagnostics
-      policy
-      'resume-identity
-      'missing-resume-identity
-      (poo-flow-durable-slot policy 'resume-identity #f))
-     (poo-flow-durable-policy-repair-mode-diagnostics policy)
-     (poo-flow-durable-policy-action-class-diagnostics policy)
-     (poo-flow-durable-policy-runtime-owner-diagnostics policy))
+    (let* ((diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-required-symbol-diagnostics
+              policy
+              'durable-policy-name
+              'missing-durable-policy-name
+              (poo-flow-durable-slot policy 'durable-policy-name #f))
+             '()))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-required-symbol-diagnostics
+              policy
+              'durable-scope-ref
+              'missing-durable-scope-ref
+              (poo-flow-durable-slot policy 'durable-scope-ref #f))
+             diagnostics-rev))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-required-symbol-diagnostics
+              policy
+              'journal-owner
+              'missing-journal-owner
+              (poo-flow-durable-slot policy 'journal-owner #f))
+             diagnostics-rev))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-required-symbol-diagnostics
+              policy
+              'checkpoint-store
+              'missing-checkpoint-store
+              (poo-flow-durable-slot policy 'checkpoint-store #f))
+             diagnostics-rev))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-required-symbol-diagnostics
+              policy
+              'resume-identity
+              'missing-resume-identity
+              (poo-flow-durable-slot policy 'resume-identity #f))
+             diagnostics-rev))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-repair-mode-diagnostics policy)
+             diagnostics-rev))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-action-class-diagnostics policy)
+             diagnostics-rev))
+           (diagnostics-rev
+            (poo-flow-durable-reverse-onto
+             (poo-flow-durable-policy-runtime-owner-diagnostics policy)
+             diagnostics-rev)))
+      (reverse diagnostics-rev))
     (list
      (poo-flow-durable-policy-diagnostic
       'invalid-durable-policy
@@ -455,13 +510,9 @@
 
 ;; : (-> [PooDurablePolicy] [PooDurablePolicyReceipt])
 (def (poo-flow-durable-policies->receipts policies)
-  (cond
-   ((null? policies) '())
-   ((pair? policies)
-    (cons (poo-flow-durable-policy->receipt (car policies))
-          (poo-flow-durable-policies->receipts (cdr policies))))
-   (else
-    (error "durable policy batch projection requires a list" policies))))
+  (if (list? policies)
+    (map poo-flow-durable-policy->receipt policies)
+    (error "durable policy batch projection requires a list" policies)))
 
 ;; : (-> PooDurablePolicyReceipt Alist)
 (defpoo-module-final-projection

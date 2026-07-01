@@ -236,6 +236,33 @@
                'deny
                'append-summary
                'via-supervisor))
+             (sandbox-policy
+              (poo-flow-session-sandbox-policy
+               'policy/build-agent-sandbox
+               'custom/session-build-child
+               'sandbox/nono-build
+               'parent-profile
+               'isolated-filesystem))
+             (history-policy
+              (poo-flow-session-history-policy
+               'policy/build-agent-history
+               'custom/session-build-child
+               'bounded
+               '(record/last-failure record/build-log)))
+             (communication-policy
+              (poo-flow-session-communication-policy
+               'policy/build-agent-communication
+               'custom/session-build-child
+               '(channel/build-root channel/build-audit)
+               '(custom/session-root custom/session-review)))
+             (sharing-policy
+              (poo-flow-session-sharing-policy
+               'policy/build-agent-sharing
+               'custom/session-build-child
+               '(memory/project)
+               '(artifact/build-log)
+               '(tool-result/test-summary)
+               '("build/" "reports/")))
              (resource-policy
               (poo-flow-session-resource-policy
                'policy/build-agent-budget
@@ -248,6 +275,19 @@
              (isolation-row
               (poo-flow-session-policy->alist isolation-policy))
              (isolation-slots (test-ref isolation-row 'policy-slots))
+             (sandbox-row
+              (poo-flow-session-policy->alist sandbox-policy))
+             (sandbox-slots (test-ref sandbox-row 'policy-slots))
+             (history-row
+              (poo-flow-session-policy->alist history-policy))
+             (history-slots (test-ref history-row 'policy-slots))
+             (communication-row
+              (poo-flow-session-policy->alist communication-policy))
+             (communication-slots
+              (test-ref communication-row 'policy-slots))
+             (sharing-row
+              (poo-flow-session-policy->alist sharing-policy))
+             (sharing-slots (test-ref sharing-row 'policy-slots))
              (resource-row (poo-flow-session-policy->alist resource-policy))
              (resource-slots (test-ref resource-row 'policy-slots)))
         (check-equal? (poo-flow-session-policy? context-policy) #t)
@@ -272,6 +312,26 @@
         (check-equal? (test-ref isolation-slots 'mode) 'strict)
         (check-equal? (test-ref isolation-slots 'parent-write)
                       'append-summary)
+        (check-equal? (poo-flow-session-policy-kind sandbox-policy)
+                      'session-sandbox)
+        (check-equal? (test-ref sandbox-slots 'profile-ref)
+                      'sandbox/nono-build)
+        (check-equal? (test-ref sandbox-slots 'inheritance-mode)
+                      'parent-profile)
+        (check-equal? (poo-flow-session-policy-kind history-policy)
+                      'session-history)
+        (check-equal? (test-ref history-slots 'allowed-records)
+                      '(record/last-failure record/build-log))
+        (check-equal? (poo-flow-session-policy-kind communication-policy)
+                      'session-communication)
+        (check-equal? (test-ref communication-slots 'channel-refs)
+                      '(channel/build-root channel/build-audit))
+        (check-equal? (poo-flow-session-policy-kind sharing-policy)
+                      'session-sharing)
+        (check-equal? (test-ref sharing-slots 'memory-refs)
+                      '(memory/project))
+        (check-equal? (test-ref sharing-slots 'workspace-paths)
+                      '("build/" "reports/"))
         (check-equal? (poo-flow-session-policy-kind resource-policy)
                       'session-resource)
         (check-equal? (test-ref resource-slots 'budget-refs)

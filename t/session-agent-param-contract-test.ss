@@ -172,7 +172,10 @@
                'streaming-disabled
                'events-receipt-only
                '((case . unit))))
-             (row (poo-flow-session-agent-param-contract->alist contract)))
+             (row (poo-flow-session-agent-param-contract->alist contract))
+             (rows
+              (poo-flow-session-agent-param-contracts->alists
+               (list contract))))
         (check-equal? (poo-flow-session-agent-param-contract? contract)
                       #t)
         (check-equal? (poo-flow-session-agent-param-contract-id contract)
@@ -202,6 +205,9 @@
         (check-equal? (test-ref row 'validation-id)
                       'validation/build-agent-param)
         (check-equal? (test-ref row 'runtime-owner)
-                      "marlin-agent-core")))))
+                      "marlin-agent-core")
+        (check-equal? (length rows) 1)
+        (check-equal? (test-ref (car rows) 'contract-id)
+                      'agent-param/build)))))
 
 (run-tests! session-agent-param-contract-test)

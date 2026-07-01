@@ -188,6 +188,12 @@
            (runtime-executed (.ref checked-spec 'runtime-executed))
            (metadata (.ref checked-spec 'metadata)))))
 
+;; : (-> [PooToolSpec] [Alist])
+(defpoo-module-final-projection-batch
+  poo-flow-tool-specs->alists (specs)
+  (projector poo-flow-tool-spec->alist)
+  (error-message "tool spec serialization requires a list"))
+
 ;; : (-> Symbol PooToolSpec [Alist] PooToolHandoffManifest)
 (def (poo-flow-tool-handoff-manifest request-id spec . maybe-metadata)
   (poo-flow-session-require "tool handoff request id must be a symbol"
@@ -265,6 +271,18 @@
            (runtime-executed (.ref checked-manifest 'runtime-executed))
            (metadata (.ref checked-manifest 'metadata)))))
 
+;; : (-> [PooToolSpec] (Cons [Symbol] Integer))
+(def (poo-flow-tool-catalog-summary tools)
+  (let loop ((remaining-tools tools)
+             (tool-refs-rev '())
+             (tool-count 0))
+    (if (null? remaining-tools)
+      (cons (reverse tool-refs-rev) tool-count)
+      (loop (cdr remaining-tools)
+            (cons (poo-flow-tool-spec-ref (car remaining-tools))
+                  tool-refs-rev)
+            (+ tool-count 1)))))
+
 ;; : (-> Symbol [PooToolSpec] [Alist] PooToolCatalog)
 (def (poo-flow-tool-catalog catalog-ref tools . maybe-metadata)
   (poo-flow-session-require "tool catalog ref must be a symbol"
@@ -274,19 +292,22 @@
                             (poo-flow-session-every? poo-flow-tool-spec?
                                                      tools)
                             tools)
-  (object<-alist
-   (list
-    (cons 'kind +poo-flow-tool-core-catalog-kind+)
-    (cons 'schema 'poo-flow.modules.tool-core.catalog.v1)
-    (cons 'catalog-ref catalog-ref)
-    (cons 'tools tools)
-    (cons 'tool-refs (map poo-flow-tool-spec-ref tools))
-    (cons 'tool-count (length tools))
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'metadata (if (null? maybe-metadata)
-                      '()
-                      (car maybe-metadata))))))
+  (let* ((catalog-summary (poo-flow-tool-catalog-summary tools))
+         (tool-refs (car catalog-summary))
+         (tool-count (cdr catalog-summary)))
+    (object<-alist
+     (list
+      (cons 'kind +poo-flow-tool-core-catalog-kind+)
+      (cons 'schema 'poo-flow.modules.tool-core.catalog.v1)
+      (cons 'catalog-ref catalog-ref)
+      (cons 'tools tools)
+      (cons 'tool-refs tool-refs)
+      (cons 'tool-count tool-count)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f)
+      (cons 'metadata (if (null? maybe-metadata)
+                        '()
+                        (car maybe-metadata)))))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-tool-catalog? value)
@@ -331,8 +352,8 @@
            (catalog-ref (.ref checked-catalog 'catalog-ref))
            (tool-count (.ref checked-catalog 'tool-count))
            (tool-refs (.ref checked-catalog 'tool-refs))
-           (tools (map poo-flow-tool-spec->alist
-                       (.ref checked-catalog 'tools)))
+           (tools
+            (poo-flow-tool-specs->alists (.ref checked-catalog 'tools)))
            (runtime-owner (.ref checked-catalog 'runtime-owner))
            (runtime-executed (.ref checked-catalog 'runtime-executed))
            (metadata (.ref checked-catalog 'metadata)))))
@@ -344,6 +365,13 @@
    (else
     (cons (poo-flow-session-tool-grant-tool-ref (car grants))
           (poo-flow-tool-policy-grant-tool-refs (cdr grants))))))
+
+;; : (-> PooSessionPolicy [PooSessionToolGrant])
+(def (poo-flow-tool-policy-grants policy)
+  (poo-flow-session-alist-ref
+   (poo-flow-session-policy->alist policy)
+   'tool-grants
+   '()))
 
 ;; : (-> [Symbol] [Symbol] [Symbol])
 (def (poo-flow-tool-unique-symbols values seen)
@@ -357,14 +385,38 @@
           (poo-flow-tool-unique-symbols (cdr values)
                                         (cons (car values) seen))))))
 
+;; : (-> [Symbol] [Symbol] [Symbol] (Cons [Symbol] [Symbol]))
+(def (poo-flow-tool-unique-symbols/accumulate values seen values-rev)
+  (cond
+   ((null? values) (cons seen values-rev))
+   ((or (eq? (car values) '*)
+        (member (car values) seen))
+    (poo-flow-tool-unique-symbols/accumulate
+     (cdr values)
+     seen
+     values-rev))
+   (else
+    (poo-flow-tool-unique-symbols/accumulate
+     (cdr values)
+     (cons (car values) seen)
+     (cons (car values) values-rev)))))
+
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (poo-flow-tool-merge-policy-tool-refs agent-tool-refs hook-tool-refs)
+  (let* ((agent-bundle
+          (poo-flow-tool-unique-symbols/accumulate agent-tool-refs '() '()))
+         (hook-bundle
+          (poo-flow-tool-unique-symbols/accumulate
+           hook-tool-refs
+           (car agent-bundle)
+           (cdr agent-bundle))))
+    (reverse (cdr hook-bundle))))
+
 ;; : (-> PooSessionPolicy [Symbol])
 (def (poo-flow-tool-policy-tool-refs policy)
   (poo-flow-tool-unique-symbols
    (poo-flow-tool-policy-grant-tool-refs
-    (poo-flow-session-alist-ref
-     (poo-flow-session-policy->alist policy)
-     'tool-grants
-     '()))
+    (poo-flow-tool-policy-grants policy))
    '()))
 
 ;; : (-> Symbol Symbol Alist)
@@ -376,57 +428,197 @@
         (cons 'severity 'error)
         (cons 'runtime-executed #f)))
 
-;; : (-> PooToolCatalog [Symbol] [Symbol])
-(def (poo-flow-tool-resolved-refs catalog tool-refs)
-  (cond
-   ((null? tool-refs) '())
-   ((poo-flow-tool-catalog-find catalog (car tool-refs))
-    (cons (car tool-refs)
-          (poo-flow-tool-resolved-refs catalog (cdr tool-refs))))
-   (else
-    (poo-flow-tool-resolved-refs catalog (cdr tool-refs)))))
+;; : (-> Symbol Symbol [Symbol] [Symbol] [Symbol] Alist)
+(def (poo-flow-tool-action-diagnostic grant-id
+                                      tool-ref
+                                      requested-actions
+                                      supported-actions
+                                      unsupported-actions)
+  (list (cons 'kind 'poo-flow.tool-core.diagnostic)
+        (cons 'schema 'poo-flow.modules.tool-core.diagnostic.v1)
+        (cons 'code 'tool-grant-action-not-supported)
+        (cons 'grant-id grant-id)
+        (cons 'tool-ref tool-ref)
+        (cons 'requested-actions requested-actions)
+        (cons 'supported-actions supported-actions)
+        (cons 'unsupported-actions unsupported-actions)
+        (cons 'severity 'error)
+        (cons 'runtime-executed #f)))
 
-;; : (-> PooToolCatalog [Symbol] [Symbol])
-(def (poo-flow-tool-unresolved-refs catalog tool-refs)
-  (cond
-   ((null? tool-refs) '())
-   ((poo-flow-tool-catalog-find catalog (car tool-refs))
-    (poo-flow-tool-unresolved-refs catalog (cdr tool-refs)))
-   (else
-    (cons (car tool-refs)
-          (poo-flow-tool-unresolved-refs catalog (cdr tool-refs))))))
+;; : (-> Symbol [Symbol] Boolean)
+(def (poo-flow-tool-action-supported? action supported-actions)
+  (or (member action supported-actions)
+      (member '* supported-actions)))
 
-;; : (-> PooToolCatalog [Symbol] [Symbol])
-(def (poo-flow-tool-sandbox-required-refs catalog tool-refs)
+;; : (-> [Symbol] [Symbol] [Symbol])
+(def (poo-flow-tool-unsupported-actions requested-actions supported-actions)
   (cond
-   ((null? tool-refs) '())
+   ((null? requested-actions) '())
+   ((poo-flow-tool-action-supported? (car requested-actions)
+                                     supported-actions)
+    (poo-flow-tool-unsupported-actions (cdr requested-actions)
+                                       supported-actions))
    (else
-    (let (spec (poo-flow-tool-catalog-find catalog (car tool-refs)))
-      (if (and spec (poo-flow-tool-spec-sandbox-required? spec))
-        (cons (car tool-refs)
-              (poo-flow-tool-sandbox-required-refs catalog (cdr tool-refs)))
-        (poo-flow-tool-sandbox-required-refs catalog (cdr tool-refs)))))))
+    (cons (car requested-actions)
+          (poo-flow-tool-unsupported-actions (cdr requested-actions)
+                                             supported-actions)))))
 
-;; : (-> PooToolCatalog [Symbol] [Alist])
-(def (poo-flow-tool-sandbox-diagnostics catalog tool-refs)
+;; : (-> PooSessionToolGrant PooToolSpec Alist)
+(def (poo-flow-tool-action-mismatch-row grant spec)
+  (let* ((requested-actions
+          (poo-flow-session-tool-grant-actions grant))
+         (supported-actions
+          (poo-flow-tool-spec-actions spec))
+         (unsupported-actions
+          (poo-flow-tool-unsupported-actions requested-actions
+                                             supported-actions)))
+    (if (null? unsupported-actions)
+      #f
+      (list
+       (cons 'grant-id (poo-flow-session-tool-grant-id grant))
+       (cons 'tool-ref (poo-flow-session-tool-grant-tool-ref grant))
+       (cons 'requested-actions requested-actions)
+       (cons 'supported-actions supported-actions)
+       (cons 'unsupported-actions unsupported-actions)))))
+
+;; : (-> PooToolCatalog [PooSessionToolGrant] [Alist])
+(def (poo-flow-tool-action-mismatch-bundle/fold catalog
+                                                grants
+                                                rows-rev
+                                                diagnostics-rev)
   (cond
-   ((null? tool-refs) '())
+   ((null? grants)
+    (cons rows-rev diagnostics-rev))
    (else
-    (let (spec (poo-flow-tool-catalog-find catalog (car tool-refs)))
-      (if (and spec
-               (poo-flow-tool-spec-sandbox-required? spec)
-               (not (symbol? (poo-flow-tool-spec-sandbox-profile-ref spec))))
-        (cons (poo-flow-tool-diagnostic
-               'tool-spec-missing-sandbox-profile
-               (car tool-refs))
-              (poo-flow-tool-sandbox-diagnostics catalog (cdr tool-refs)))
-        (poo-flow-tool-sandbox-diagnostics catalog (cdr tool-refs)))))))
+    (let* ((grant (car grants))
+           (tool-ref (poo-flow-session-tool-grant-tool-ref grant))
+           (spec (poo-flow-tool-catalog-find catalog tool-ref))
+           (mismatch-row
+            (if spec
+              (poo-flow-tool-action-mismatch-row grant spec)
+              #f)))
+      (if mismatch-row
+        (poo-flow-tool-action-mismatch-bundle/fold
+         catalog
+         (cdr grants)
+         (cons mismatch-row rows-rev)
+         (cons (poo-flow-tool-action-diagnostic
+                (poo-flow-session-alist-ref mismatch-row 'grant-id #f)
+                (poo-flow-session-alist-ref mismatch-row 'tool-ref #f)
+                (poo-flow-session-alist-ref
+                 mismatch-row
+                 'requested-actions
+                 '())
+                (poo-flow-session-alist-ref
+                 mismatch-row
+                 'supported-actions
+                 '())
+                (poo-flow-session-alist-ref
+                 mismatch-row
+                 'unsupported-actions
+                 '()))
+               diagnostics-rev))
+        (poo-flow-tool-action-mismatch-bundle/fold
+         catalog
+         (cdr grants)
+         rows-rev
+         diagnostics-rev))))))
 
-;; : (-> [Symbol] [Alist])
-(def (poo-flow-tool-unresolved-diagnostics tool-refs)
-  (map (lambda (tool-ref)
-         (poo-flow-tool-diagnostic 'tool-spec-not-in-catalog tool-ref))
-       tool-refs))
+;; : (-> PooToolCatalog [PooSessionToolGrant] [PooSessionToolGrant] Alist)
+(def (poo-flow-tool-action-mismatch-bundle catalog agent-grants hook-grants)
+  (let* ((agent-bundle
+          (poo-flow-tool-action-mismatch-bundle/fold
+           catalog
+           agent-grants
+           '()
+           '()))
+         (hook-bundle
+          (poo-flow-tool-action-mismatch-bundle/fold
+           catalog
+           hook-grants
+           (car agent-bundle)
+           (cdr agent-bundle))))
+    (list
+     (cons 'rows (reverse (car hook-bundle)))
+     (cons 'diagnostics (reverse (cdr hook-bundle))))))
+
+;; : (-> [Value] [Value] [Value])
+(def (poo-flow-tool-reverse-onto values tail)
+  (if (null? values)
+    tail
+    (poo-flow-tool-reverse-onto
+     (cdr values)
+     (cons (car values) tail))))
+
+;; : (-> [Alist] [Alist] [Alist] [Alist])
+(def (poo-flow-tool-validation-diagnostics/tail unresolved-diagnostics-rev
+                                                sandbox-diagnostics-rev
+                                                tail)
+  (poo-flow-tool-reverse-onto
+   unresolved-diagnostics-rev
+   (poo-flow-tool-reverse-onto sandbox-diagnostics-rev tail)))
+
+;; : (-> [Alist] [Alist] [Alist])
+(def (poo-flow-tool-validation-diagnostics unresolved-diagnostics-rev
+                                           sandbox-diagnostics-rev)
+  (poo-flow-tool-validation-diagnostics/tail unresolved-diagnostics-rev
+                                             sandbox-diagnostics-rev
+                                             '()))
+
+;; : (-> PooToolCatalog [Symbol] Alist)
+(def (poo-flow-tool-policy-catalog-validation-summary catalog tool-refs)
+  (let loop ((remaining-tool-refs tool-refs)
+             (resolved-tool-refs-rev '())
+             (unresolved-tool-refs-rev '())
+             (sandbox-required-tool-refs-rev '())
+             (unresolved-diagnostics-rev '())
+             (sandbox-diagnostics-rev '()))
+    (cond
+     ((null? remaining-tool-refs)
+      (list
+       (cons 'resolved-tool-refs (reverse resolved-tool-refs-rev))
+       (cons 'unresolved-tool-refs (reverse unresolved-tool-refs-rev))
+       (cons 'sandbox-required-tool-refs
+             (reverse sandbox-required-tool-refs-rev))
+       (cons 'unresolved-diagnostics-rev unresolved-diagnostics-rev)
+       (cons 'sandbox-diagnostics-rev sandbox-diagnostics-rev)
+       (cons 'diagnostics
+             (poo-flow-tool-validation-diagnostics
+              unresolved-diagnostics-rev
+              sandbox-diagnostics-rev))))
+     (else
+      (let* ((tool-ref (car remaining-tool-refs))
+             (spec (poo-flow-tool-catalog-find catalog tool-ref)))
+        (cond
+         (spec
+          (let ((sandbox-required?
+                 (poo-flow-tool-spec-sandbox-required? spec))
+                (sandbox-profile-ref
+                 (poo-flow-tool-spec-sandbox-profile-ref spec)))
+            (loop
+             (cdr remaining-tool-refs)
+             (cons tool-ref resolved-tool-refs-rev)
+             unresolved-tool-refs-rev
+             (if sandbox-required?
+               (cons tool-ref sandbox-required-tool-refs-rev)
+               sandbox-required-tool-refs-rev)
+             unresolved-diagnostics-rev
+             (if (and sandbox-required?
+                      (not (symbol? sandbox-profile-ref)))
+               (cons (poo-flow-tool-diagnostic
+                      'tool-spec-missing-sandbox-profile
+                      tool-ref)
+                     sandbox-diagnostics-rev)
+               sandbox-diagnostics-rev))))
+         (else
+          (loop
+           (cdr remaining-tool-refs)
+           resolved-tool-refs-rev
+           (cons tool-ref unresolved-tool-refs-rev)
+           sandbox-required-tool-refs-rev
+           (cons (poo-flow-tool-diagnostic 'tool-spec-not-in-catalog tool-ref)
+                 unresolved-diagnostics-rev)
+           sandbox-diagnostics-rev))))))))
 
 ;; : (-> Symbol PooToolCatalog PooSessionPolicy PooSessionPolicy [Alist] PooToolPolicyCatalogValidationReceipt)
 (def (poo-flow-tool-policy-catalog-validation-receipt validation-id
@@ -451,19 +643,54 @@
          (hook-tool-refs
           (poo-flow-tool-policy-tool-refs hook-tool-policy))
          (policy-tool-refs
-          (poo-flow-tool-unique-symbols
-           (append agent-tool-refs hook-tool-refs)
+          (poo-flow-tool-merge-policy-tool-refs
+           agent-tool-refs
+           hook-tool-refs))
+         (validation-summary
+          (poo-flow-tool-policy-catalog-validation-summary
+           catalog
+           policy-tool-refs))
+         (agent-tool-grants
+          (poo-flow-tool-policy-grants agent-tool-policy))
+         (hook-tool-grants
+          (poo-flow-tool-policy-grants hook-tool-policy))
+         (action-mismatch-bundle
+          (poo-flow-tool-action-mismatch-bundle catalog
+                                                agent-tool-grants
+                                                hook-tool-grants))
+         (action-mismatch-grants
+          (poo-flow-session-alist-ref action-mismatch-bundle 'rows '()))
+         (action-diagnostics
+          (poo-flow-session-alist-ref
+           action-mismatch-bundle
+           'diagnostics
            '()))
          (resolved-tool-refs
-          (poo-flow-tool-resolved-refs catalog policy-tool-refs))
+          (poo-flow-session-alist-ref
+           validation-summary
+           'resolved-tool-refs
+           '()))
          (unresolved-tool-refs
-          (poo-flow-tool-unresolved-refs catalog policy-tool-refs))
+          (poo-flow-session-alist-ref
+           validation-summary
+           'unresolved-tool-refs
+           '()))
          (sandbox-required-tool-refs
-          (poo-flow-tool-sandbox-required-refs catalog resolved-tool-refs))
+          (poo-flow-session-alist-ref
+           validation-summary
+           'sandbox-required-tool-refs
+           '()))
          (diagnostics
-          (append
-           (poo-flow-tool-unresolved-diagnostics unresolved-tool-refs)
-           (poo-flow-tool-sandbox-diagnostics catalog resolved-tool-refs))))
+          (poo-flow-tool-validation-diagnostics/tail
+           (poo-flow-session-alist-ref
+            validation-summary
+            'unresolved-diagnostics-rev
+            '())
+           (poo-flow-session-alist-ref
+            validation-summary
+            'sandbox-diagnostics-rev
+            '())
+           action-diagnostics)))
     (object<-alist
      (list
       (cons 'kind +poo-flow-tool-core-policy-validation-receipt-kind+)
@@ -480,6 +707,7 @@
       (cons 'resolved-tool-refs resolved-tool-refs)
       (cons 'unresolved-tool-refs unresolved-tool-refs)
       (cons 'sandbox-required-tool-refs sandbox-required-tool-refs)
+      (cons 'action-mismatch-grants action-mismatch-grants)
       (cons 'valid? (null? diagnostics))
       (cons 'diagnostic-count (length diagnostics))
       (cons 'diagnostics diagnostics)
@@ -526,6 +754,8 @@
            (unresolved-tool-refs (.ref checked-receipt 'unresolved-tool-refs))
            (sandbox-required-tool-refs
             (.ref checked-receipt 'sandbox-required-tool-refs))
+           (action-mismatch-grants
+            (.ref checked-receipt 'action-mismatch-grants))
            (valid? (.ref checked-receipt 'valid?))
            (diagnostic-count (.ref checked-receipt 'diagnostic-count))
            (diagnostics (.ref checked-receipt 'diagnostics))
