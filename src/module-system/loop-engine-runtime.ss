@@ -243,30 +243,33 @@
 ;;; Summaries keep presentation tables small while retaining the descriptor ids
 ;;; that let agents correlate the full manifest when needed.
 ;; : (-> Alist Alist)
-(def (poo-flow-user-loop-engine-intent-runtime-command-manifest-summary intent)
-  (let ((manifest
-         (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)))
-    (list
-     (cons 'kind 'runtime-command-manifest-summary)
-     (cons 'contract +poo-flow-user-loop-engine-runtime-command-contract+)
-     (cons 'schema
-           (poo-flow-user-loop-engine-intent-ref manifest 'schema #f))
-     (cons 'request-schema
-           (poo-flow-user-loop-engine-intent-ref manifest 'request-schema #f))
-     (cons 'operation
-           (poo-flow-user-loop-engine-intent-ref manifest 'operation #f))
-     (cons 'request-id
-           (poo-flow-user-loop-engine-intent-ref manifest 'request-id #f))
-     (cons 'artifact-handle
-           (poo-flow-user-loop-engine-intent-ref manifest 'artifact-handle #f))
-     (cons 'runtime-owner "marlin-agent-core")
-     (cons 'object-families
-           +poo-flow-user-loop-engine-runtime-object-families+)
-     (cons 'receipt-contracts
-           +poo-flow-user-loop-engine-receipt-contracts+)
-     (cons 'argv
-           (poo-flow-user-loop-engine-intent-ref manifest 'argv '()))
-     (cons 'runtime-executed #f))))
+(defpoo-runtime-receipt-projection
+  poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
+  (intent)
+  (bindings
+   ((manifest
+     (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))))
+  (fields
+   (('kind 'runtime-command-manifest-summary)
+    ('contract +poo-flow-user-loop-engine-runtime-command-contract+)
+    ('schema
+     (poo-flow-user-loop-engine-intent-ref manifest 'schema #f))
+    ('request-schema
+     (poo-flow-user-loop-engine-intent-ref manifest 'request-schema #f))
+    ('operation
+     (poo-flow-user-loop-engine-intent-ref manifest 'operation #f))
+    ('request-id
+     (poo-flow-user-loop-engine-intent-ref manifest 'request-id #f))
+    ('artifact-handle
+     (poo-flow-user-loop-engine-intent-ref manifest 'artifact-handle #f))
+    ('runtime-owner "marlin-agent-core")
+    ('object-families
+     +poo-flow-user-loop-engine-runtime-object-families+)
+    ('receipt-contracts
+     +poo-flow-user-loop-engine-receipt-contracts+)
+    ('argv
+     (poo-flow-user-loop-engine-intent-ref manifest 'argv '()))
+    ('runtime-executed #f))))
 
 ;;; Runtime snapshots expose the sandbox agreement as the handoff readiness
 ;;; source of truth. This prevents a loop from looking ready when a sandbox

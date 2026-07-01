@@ -46,7 +46,8 @@
    root: "."
    contract-root: "."
    gxtest: +poo-flow-gxtest-suites+
-   suite-support-files: (map poo-flow-suite-support +poo-flow-gxtest-suites+)
+   suite-support-files: (map poo-flow-suite-support
+                             +poo-flow-gxtest-suites+)
    support-directories: ["t/module-system-poo-performance-test-support"]
    roots: ["src" "user-interface" "t"]
    policy: #t

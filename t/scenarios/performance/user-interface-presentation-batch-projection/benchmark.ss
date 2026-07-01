@@ -24,9 +24,9 @@
  (purpose . "observe user-interface presentation projection over repeated loop-engine modules")
  (feature . user-interface-presentation-batch-projection)
  (rule . POO-FLOW-USER-INTERFACE-PERFORMANCE-001)
- (optimizationFocus . "batch field projection for loop-engine and workflow-cicd presentation slots")
+ (optimizationFocus . "POO lazy loop-engine-only presentation fast path with batch field projection for runtime receipt slots")
  (inputShape . "eight real custom loop-engine user-interface module declarations projected through pooFlowUserConfigPresentation")
- (expectedRepair . "walk intent/check rows once per presentation family, keep generated capability receipts as fixed structs, and serialize only runtime handoff ABI payloads")
+ (expectedRepair . "use focused POO presentation owners so loop-engine-only configs do not force unrelated CI/CD, session, sandbox, or workflow projection families")
  (nativePooAuthoring . #t)
  (receiptRepresentation . defstruct)
  (adapterBoundary . "presentation loop-engine capability receipts are structs; runtime handoff capability receipts are alists")
@@ -34,14 +34,16 @@
  (hotPathEvidence native-poo-authoring
                   defstruct-runtime-receipt
                   user-interface-presentation
+                  poo-lazy-presentation
                   batch-field-projection
                   scalar-summary
                   adapter-boundary
                   benchmark-contract)
- (optimizerVisibility . "presentation-config names field sets and performs one batch projection per row family instead of one traversal per public slot")
+ (optimizerVisibility . "presentation-config names field sets, routes loop-engine-only configs through a memoized POO lazy fast path, and performs one batch projection per row family instead of one traversal per public slot")
  (expectedQualitySignals batch-field-projection
                          struct-capability-receipts
                          serialized-runtime-handoff-boundary
+                         poo-lazy-presentation
                          user-interface-performance-gate)
  (learnedStyleSources
   "agent-semantic-protocols/languages/gerbil-scheme-language-project-harness/t/scenarios/policy/list-random-access-loop-performance/benchmark.ss"

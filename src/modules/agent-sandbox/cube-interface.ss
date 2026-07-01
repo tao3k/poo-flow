@@ -4,8 +4,9 @@
 ;;; Runtime contract: Marlin owns Cube API calls, remote sessions, and snapshots.
 ;;; Policy evidence: Cube interface tests assert descriptor override and gates.
 
-(import (only-in :clan/poo/object .ref .mix object?)
+(import (only-in :clan/poo/object .ref object?)
         :poo-flow/src/core/api
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/agent-sandbox/bridge)
@@ -156,27 +157,27 @@
 ;;; lifecycle operation names can be overridden without changing request shape.
 ;; : CubeInterfaceDescriptorPrototype
 (def cube-interface-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'schema +cube-interface-schema+)
-                      (cons 'name 'cube-interface)
-                      (cons 'backend-kind 'cube)
-                      (cons 'api-compatibility 'e2b-compatible)
-                      (cons 'runtime-owner 'marlin)
-                      (cons 'lifecycle-operations
-                            +cube-interface-lifecycle-operations+)
-                      (cons 'network-modes +cube-interface-network-modes+)
-                      (cons 'mount-modes +cube-interface-mount-modes+)
-                      (cons 'validator
-                            cube-interface-descriptor-validator)))
-        execution-policy-role))
+  (poo-core-role-object
+   (slots ((schema +cube-interface-schema+)
+           (name 'cube-interface)
+           (backend-kind 'cube)
+           (api-compatibility 'e2b-compatible)
+           (runtime-owner 'marlin)
+           (lifecycle-operations
+            +cube-interface-lifecycle-operations+)
+           (network-modes +cube-interface-network-modes+)
+           (mount-modes +cube-interface-mount-modes+)
+           (validator
+            cube-interface-descriptor-validator)))
+   (supers execution-policy-role)))
 
 ;;; Descriptor construction is the extension override point for local Cube API
 ;;; variants; default construction remains enough for the Tencent Cube profile.
 ;; : (-> [Alist] CubeInterfaceDescriptor)
 (def (make-cube-interface-descriptor . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (if (null? maybe-overrides) '() (car maybe-overrides)))
-        cube-interface-descriptor-prototype))
+  (poo-core-role-object
+   (slot-rows (if (null? maybe-overrides) '() (car maybe-overrides)))
+   (supers cube-interface-descriptor-prototype)))
 
 ;; : (-> CubeInterfaceDescriptorCandidate Boolean)
 (def (cube-interface-descriptor? descriptor)

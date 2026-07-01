@@ -4,7 +4,8 @@
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/policy)
+        :poo-flow/src/modules/session/policy
+        :poo-flow/src/modules/session/receipt-syntax)
 
 (export poo-flow-session-registry-entry
         poo-flow-session-registry-entry?
@@ -15,7 +16,8 @@
         poo-flow-session-registry-receipt?
         poo-flow-session-registry-receipt-project-id
         poo-flow-session-registry-receipt-session-ids
-        poo-flow-session-registry-receipt-entries)
+        poo-flow-session-registry-receipt-entries
+        poo-flow-session-registry-receipt->alist)
 
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-session-registry-policy-ref summaries key default)
@@ -51,8 +53,10 @@
            #f))
       (if durable-policy-ref
         (cons durable-policy-ref
-              (poo-flow-session-registry-durable-policy-refs (cdr entries)))
-        (poo-flow-session-registry-durable-policy-refs (cdr entries)))))))
+              (poo-flow-session-registry-durable-policy-refs
+               (cdr entries)))
+        (poo-flow-session-registry-durable-policy-refs
+         (cdr entries)))))))
 
 ;; : (-> PooSession Symbol [Symbol] Alist [Alist] PooSessionRegistryEntry)
 (def (poo-flow-session-registry-entry session
@@ -220,3 +224,27 @@
 ;; : (-> PooSessionRegistryReceipt [PooSessionRegistryEntry])
 (def (poo-flow-session-registry-receipt-entries receipt)
   (.ref receipt 'entries))
+
+;; : (-> PooSessionRegistryReceipt Alist)
+(defpoo-session-receipt-projection
+  poo-flow-session-registry-receipt->alist
+  (receipt)
+  (require poo-flow-session-require
+           "session registry projection requires a receipt"
+           (poo-flow-session-registry-receipt? receipt)
+           receipt)
+  (bindings ())
+  (fields
+   (('kind (.ref receipt 'kind))
+    ('schema (.ref receipt 'schema))
+    ('project-id (.ref receipt 'project-id))
+    ('root-session-ids (.ref receipt 'root-session-ids))
+    ('child-session-ids (.ref receipt 'child-session-ids))
+    ('session-ids (.ref receipt 'session-ids))
+    ('active-session-ref (.ref receipt 'active-session-ref))
+    ('durable-policy-refs (.ref receipt 'durable-policy-refs))
+    ('entry-count (.ref receipt 'entry-count))
+    ('entries (.ref receipt 'entries))
+    ('runtime-owner (.ref receipt 'runtime-owner))
+    ('runtime-executed (.ref receipt 'runtime-executed))
+    ('metadata (.ref receipt 'metadata)))))

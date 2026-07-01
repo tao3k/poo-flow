@@ -209,4 +209,21 @@
         (check-equal? (alist-value 'receipt-count bundle) 3)
         (check-equal? (alist-value 'runtime-owner bundle)
                       "marlin-agent-core")
+        (check-equal? (alist-value 'runtime-executed bundle) #f)))
+    (test-case "projects empty Marlin handoff bundle entry count"
+      (let ((bundle
+             (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+              '()
+              '()
+              '((valid? . #t)
+                (diagnostics . ())
+                (rows . ()))
+              '()
+              '()
+              '())))
+        (check-equal? (alist-value 'kind bundle)
+                      'workflow-cicd-marlin-handoff-receipt-bundle)
+        (check-equal? (alist-value 'handoff-required bundle) #f)
+        (check-equal? (alist-value 'marlin-runtime-handoff-entry-count bundle)
+                      0)
         (check-equal? (alist-value 'runtime-executed bundle) #f)))))

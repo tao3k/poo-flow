@@ -13,6 +13,7 @@
         :poo-flow/src/module-system/workflow-cicd-pipeline-run-config
         :poo-flow/src/module-system/loop-engine-config
         :poo-flow/src/module-system/presentation
+        :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profile-doctor)
 
@@ -23,18 +24,18 @@
 
 ;;; Profile summaries avoid embedding POO profile objects in presentations.
 ;; : (-> PooUserProfile Alist)
-(def (poo-flow-user-profile-summary->alist profile)
-  (list
-   (cons 'profile-name (poo-flow-user-profile-name profile))
-   (cons 'module-count (length (poo-flow-user-profile-modules profile)))
-   (cons 'module-keys
-         (map poo-flow-user-module-selection-key
-              (poo-flow-user-profile-modules profile)))
-   (cons 'module-bundle-count
-         (length (poo-flow-user-profile-module-bundles profile)))
-   (cons 'setting-keys (poo-flow-user-profile-setting-keys profile))
-   (cons 'descriptor-realized? #f)
-   (cons 'runtime-executed #f)))
+(defpoo-module-final-projection
+  poo-flow-user-profile-summary->alist (profile)
+  (bindings ((modules (poo-flow-user-profile-modules profile))))
+  (fields ((profile-name (poo-flow-user-profile-name profile))
+           (module-count (length modules))
+           (module-keys
+            (map poo-flow-user-module-selection-key modules))
+           (module-bundle-count
+            (length (poo-flow-user-profile-module-bundles profile)))
+           (setting-keys (poo-flow-user-profile-setting-keys profile))
+           (descriptor-realized? #f)
+           (runtime-executed #f))))
 
 ;;; Boundary: user profile presentation copy slots is the policy-visible edge
 ;;; for module-system behavior, keeping validation, lookup, or projection
@@ -42,6 +43,89 @@
 ;; : (-> POOObject [Symbol] Alist)
 (def (poo-flow-user-profile-presentation-copy-slots source keys)
   (map (lambda (key) (cons key (.ref source key))) keys))
+
+;;; Profile doctor needs a subset of loop-engine receipt fields. Gather them in
+;;; one pass so doctor rows do not repeat the presentation hot-path scan.
+;; : [Symbol]
+(def +poo-flow-user-profile-doctor-loop-engine-fields+
+  '(runtime-handoff-facts
+    workflow-agreement
+    workflow-functional-dag-count
+    workflow-functional-dags
+    result-contract
+    agent-profiles
+    agent-harnesses
+    agent-sessions
+    workflow-run
+    dispatch-receipt
+    agent-operation
+    delegated-operation
+    runtime-command-manifest
+    runtime-command-manifest-summary
+    sandbox-runtime-summaries
+    sandbox-handoff-summaries
+    sandbox-handoff-agreement
+    sandbox-unresolved-profile-refs
+    runtime-snapshot))
+
+;; : (-> [Symbol] [Pair])
+(def (poo-flow-user-profile-presentation-empty-field-values fields)
+  (cond
+   ((null? fields) '())
+   (else
+    (cons (cons (car fields) '())
+          (poo-flow-user-profile-presentation-empty-field-values
+           (cdr fields))))))
+
+;; : (-> Alist [Pair] [Pair])
+(def (poo-flow-user-profile-presentation-accumulate-loop-fields intent
+                                                                field-values)
+  (cond
+   ((null? field-values) '())
+   (else
+    (let ((field (caar field-values))
+          (values (cdar field-values)))
+      (cons
+       (cons field
+             (cons (poo-flow-user-loop-engine-intent-ref intent field #f)
+                   values))
+       (poo-flow-user-profile-presentation-accumulate-loop-fields
+        intent
+        (cdr field-values)))))))
+
+;; : (-> [Alist] [Pair] [Pair])
+(def (poo-flow-user-profile-presentation-accumulate-loop-rows intents
+                                                              field-values)
+  (cond
+   ((null? intents) field-values)
+   (else
+    (poo-flow-user-profile-presentation-accumulate-loop-rows
+     (cdr intents)
+     (poo-flow-user-profile-presentation-accumulate-loop-fields
+      (car intents)
+      field-values)))))
+
+;; : (-> [Pair] [Pair])
+(def (poo-flow-user-profile-presentation-reverse-field-values field-values)
+  (cond
+   ((null? field-values) '())
+   (else
+    (cons
+     (cons (caar field-values) (reverse (cdar field-values)))
+     (poo-flow-user-profile-presentation-reverse-field-values
+      (cdr field-values))))))
+
+;; : (-> [Alist] [Pair])
+(def (poo-flow-user-profile-presentation-loop-engine-field-values intents)
+  (poo-flow-user-profile-presentation-reverse-field-values
+   (poo-flow-user-profile-presentation-accumulate-loop-rows
+    intents
+    (poo-flow-user-profile-presentation-empty-field-values
+     +poo-flow-user-profile-doctor-loop-engine-fields+))))
+
+;; : (-> [Pair] Symbol [Value])
+(def (poo-flow-user-profile-presentation-field-values-ref field-values field)
+  (poo-flow-user-profile-alist-ref field-values field '()))
 
 ;;; Profile presentation is the downstream view for the high-level user
 ;;; entrypoint. It keeps config fields shallow to avoid recursive POO printing.
@@ -193,36 +277,33 @@
   (let* ((doctor-report (pooFlowUserProfileDoctor profile))
          (diagnostics (.ref doctor-report 'profile-diagnostics))
          (profile-modules (poo-flow-user-profile-modules profile))
+         (profile-config (pooFlowUserConfigFromProfile profile))
          (feature-fact-rows
-          (poo-flow-user-config-feature-facts
-           (pooFlowUserConfigFromProfile profile)))
+          (poo-flow-user-config-feature-facts profile-config))
          (sandbox-profile-derivation-rows
          (poo-flow-user-config-sandbox-profile-derivations
            profile-modules))
          (session-core-intent-rows
-          (poo-flow-user-config-session-core-intents
-           (pooFlowUserConfigFromProfile profile)))
+          (poo-flow-user-config-session-core-intents profile-config))
          (cicd-intent-rows
-          (poo-flow-user-config-cicd-intents
-           (pooFlowUserConfigFromProfile profile)))
+          (poo-flow-user-config-cicd-intents profile-config))
          (workflow-cicd-check-maps
-         (poo-flow-user-config-workflow-cicd-check-maps
-           (pooFlowUserConfigFromProfile profile)))
+         (poo-flow-user-config-workflow-cicd-check-maps profile-config))
          (workflow-cicd-functional-dag-rows
           (poo-flow-user-config-workflow-cicd-functional-dag-rows
-           (pooFlowUserConfigFromProfile profile)))
+           profile-config))
          (workflow-cicd-pipeline-run-rows
           (poo-flow-user-config-workflow-cicd-pipeline-runs
-           (pooFlowUserConfigFromProfile profile)))
+           profile-config))
          (workflow-cicd-pipeline-result-rows
           (poo-flow-user-config-workflow-cicd-pipeline-results
-           (pooFlowUserConfigFromProfile profile)))
+           profile-config))
          (workflow-cicd-readiness-rows
           (poo-flow-user-config-workflow-cicd-runtime-readiness
-           (pooFlowUserConfigFromProfile profile)))
+           profile-config))
          (workflow-cicd-runtime-command-manifest-rows
           (poo-flow-user-config-workflow-cicd-runtime-command-manifests
-           (pooFlowUserConfigFromProfile profile)))
+           profile-config))
          (workflow-cicd-runtime-command-manifest-summary-rows
           (poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
            workflow-cicd-runtime-command-manifest-rows))
@@ -237,8 +318,7 @@
           (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
            workflow-cicd-marlin-runtime-handoff-abi-rows))
          (workflow-cicd-receipt-rows
-          (poo-flow-user-config-workflow-cicd-receipts
-           (pooFlowUserConfigFromProfile profile)))
+          (poo-flow-user-config-workflow-cicd-receipts profile-config))
          (workflow-cicd-marlin-handoff-receipt-bundle-row
           (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
            workflow-cicd-runtime-command-manifest-rows
@@ -251,8 +331,10 @@
           (poo-flow-user-workflow-cicd-readiness-checks
            workflow-cicd-readiness-rows))
          (loop-engine-intent-rows
-          (poo-flow-user-config-loop-engine-intents
-           (pooFlowUserConfigFromProfile profile)))
+          (poo-flow-user-config-loop-engine-intents profile-config))
+         (loop-engine-field-values
+          (poo-flow-user-profile-presentation-loop-engine-field-values
+           loop-engine-intent-rows))
          (public-setting-keys (poo-flow-user-profile-setting-keys profile))
          (presentation-trace-rows
           (poo-flow-user-config-presentation-trace
@@ -370,82 +452,82 @@
       (cons 'loop-engine-runtime-handoff-count
             (length loop-engine-intent-rows))
       (cons 'loop-engine-runtime-handoffs
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'runtime-handoff-facts))
       (cons 'loop-engine-workflow-agreements
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'workflow-agreement))
       (cons 'loop-engine-workflow-functional-dag-counts
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'workflow-functional-dag-count))
       (cons 'loop-engine-workflow-functional-dags
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'workflow-functional-dags))
       (cons 'loop-engine-result-contracts
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'result-contract))
       (cons 'loop-engine-agent-profiles
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'agent-profiles))
       (cons 'loop-engine-agent-harnesses
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'agent-harnesses))
       (cons 'loop-engine-agent-sessions
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'agent-sessions))
       (cons 'loop-engine-workflow-runs
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'workflow-run))
       (cons 'loop-engine-dispatch-receipts
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'dispatch-receipt))
       (cons 'loop-engine-agent-operations
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'agent-operation))
       (cons 'loop-engine-delegated-operations
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'delegated-operation))
       (cons 'loop-engine-runtime-command-manifests
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'runtime-command-manifest))
       (cons 'loop-engine-runtime-command-manifest-summaries
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'runtime-command-manifest-summary))
       (cons 'loop-engine-sandbox-runtime-summaries
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'sandbox-runtime-summaries))
       (cons 'loop-engine-sandbox-handoff-summaries
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'sandbox-handoff-summaries))
       (cons 'loop-engine-sandbox-handoff-agreements
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'sandbox-handoff-agreement))
       (cons 'loop-engine-sandbox-unresolved-profile-refs
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'sandbox-unresolved-profile-refs))
       (cons 'loop-engine-runtime-snapshot-count
             (length loop-engine-intent-rows))
       (cons 'loop-engine-runtime-snapshots
-            (poo-flow-user-loop-engine-intents-field-values
-             loop-engine-intent-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
              'runtime-snapshot))
       (cons 'presentation-trace presentation-trace-rows)
       (cons 'setting-count (length public-setting-keys))

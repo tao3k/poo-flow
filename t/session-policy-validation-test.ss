@@ -187,6 +187,8 @@
              (diagnostics
               (poo-flow-session-policy-validation-receipt-diagnostics
                receipt))
+             (receipt-row
+              (poo-flow-session-policy-validation-receipt->alist receipt))
              (codes (diagnostic-codes diagnostics)))
         (check-equal?
          (poo-flow-session-policy-validation-receipt? receipt)
@@ -230,6 +232,12 @@
         (check-equal?
          (has-code? 'resource-sharing-missing-accounting-owner codes)
          #t)
+        (check-equal? (test-ref receipt-row 'kind)
+                      'poo-flow.session.policy-validation-receipt)
+        (check-equal? (test-ref receipt-row 'diagnostic-count)
+                      (length diagnostics))
+        (check-equal? (test-ref receipt-row 'denied-context-refs)
+                      '(session/audit))
         (check-equal? (.ref receipt 'runtime-executed) #f)))))
 
 (run-tests! session-policy-validation-test)

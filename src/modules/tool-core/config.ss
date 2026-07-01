@@ -3,8 +3,9 @@
 ;;; Invariant: users author POO tool specs; runtime execution remains external.
 
 (import (only-in :std/sugar filter)
-        (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
+        (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/config-prototype-syntax
         :poo-flow/src/modules/tool-core/objects)
 
 (export (import: :poo-flow/src/modules/tool-core/objects)
@@ -18,69 +19,69 @@
         poo-flow-tool-core-module-bundles)
 
 ;; : PooToolSpecPrototype
-(def tool-spec
-  (object<-alist
-   (list
-    (cons 'kind +poo-flow-tool-core-spec-kind+)
-    (cons 'tool-ref #f)
-    (cons 'tool-kind 'custom)
-    (cons 'actions '())
-    (cons 'input-schema '())
-    (cons 'output-schema '())
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'handoff-operation 'tool/custom)
-    (cons 'sandbox-required? #f)
-    (cons 'sandbox-profile-ref #f)
-    (cons 'runtime-backend 'marlin-tool-adapter)
-    (cons 'metadata '())
-    (cons 'runtime-executed #f))))
+(defpoo-module-config-prototype
+  tool-spec
+  (slots ((kind +poo-flow-tool-core-spec-kind+)
+          (tool-ref #f)
+          (tool-kind 'custom)
+          (actions '())
+          (input-schema '())
+          (output-schema '())
+          (runtime-owner "marlin-agent-core")
+          (handoff-operation 'tool/custom)
+          (sandbox-required? #f)
+          (sandbox-profile-ref #f)
+          (runtime-backend 'marlin-tool-adapter)
+          (metadata '())
+          (runtime-executed #f))))
 
 ;; : PooToolCatalogPrototype
-(def tool-catalog
-  (.o kind: +poo-flow-tool-core-catalog-kind+
-      catalog-ref: 'tool-core/catalog
-      tools: '()
-      metadata: '()
-      runtime-owner: "marlin-agent-core"
-      runtime-executed: #f))
+(defpoo-module-config-prototype
+  tool-catalog
+  (slots ((kind +poo-flow-tool-core-catalog-kind+)
+          (catalog-ref 'tool-core/catalog)
+          (tools '())
+          (metadata '())
+          (runtime-owner "marlin-agent-core")
+          (runtime-executed #f))))
 
 ;; : (-> POOObject Boolean)
-(def (poo-flow-tool-core-poo-spec? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (eq? (.ref value 'kind) +poo-flow-tool-core-spec-kind+)))
+(defpoo-module-config-kind-predicate
+  poo-flow-tool-core-poo-spec?
+  +poo-flow-tool-core-spec-kind+)
 
 ;; : (-> POOObject Boolean)
-(def (poo-flow-tool-core-poo-catalog? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (eq? (.ref value 'kind) +poo-flow-tool-core-catalog-kind+)))
+(defpoo-module-config-kind-predicate
+  poo-flow-tool-core-poo-catalog?
+  +poo-flow-tool-core-catalog-kind+)
 
 ;; : (-> PooToolSpecPrototype PooToolSpec)
-(def (poo-flow-tool-core-poo-spec->tool-spec spec)
-  (poo-flow-tool-spec
-   (.ref spec 'tool-ref)
-   (.ref spec 'tool-kind)
-   (.ref spec 'actions)
-   (.ref spec 'input-schema)
-   (.ref spec 'output-schema)
-   (.ref spec 'runtime-owner)
-   (.ref spec 'handoff-operation)
-   (.ref spec 'sandbox-required?)
-   (.ref spec 'sandbox-profile-ref)
-   (.ref spec 'runtime-backend)
-   (.ref spec 'metadata)))
+(defpoo-module-config-converter
+  poo-flow-tool-core-poo-spec->tool-spec (spec)
+  (constructor poo-flow-tool-spec)
+  (arguments (slot tool-ref)
+             (slot tool-kind)
+             (slot actions)
+             (slot input-schema)
+             (slot output-schema)
+             (slot runtime-owner)
+             (slot handoff-operation)
+             (slot sandbox-required?)
+             (slot sandbox-profile-ref)
+             (slot runtime-backend)
+             (slot metadata)))
 
 ;; : (-> [PooToolSpecPrototype] [PooToolSpec])
 (def (poo-flow-tool-core-poo-specs->tool-specs specs)
   (map poo-flow-tool-core-poo-spec->tool-spec specs))
 
 ;; : (-> PooToolCatalogPrototype [PooToolSpec] PooToolCatalog)
-(def (poo-flow-tool-core-poo-catalog->catalog catalog specs)
-  (poo-flow-tool-catalog
-   (.ref catalog 'catalog-ref)
-   specs
-   (.ref catalog 'metadata)))
+(defpoo-module-config-converter
+  poo-flow-tool-core-poo-catalog->catalog (catalog specs)
+  (constructor poo-flow-tool-catalog)
+  (arguments (slot catalog-ref)
+             (value specs)
+             (slot metadata)))
 
 ;; : (-> [POOObject] [POOObject])
 (def (poo-flow-tool-core-poo-config-specs prototypes)

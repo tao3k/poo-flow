@@ -57,22 +57,73 @@
     (poo-flow-sandbox-profile-by-name profile-catalog profile))
    (else #f)))
 
-;;; Runtime summaries follow profile inheritance recursively. Missing catalog
-;;; refs are skipped here and reported by the unresolved-ref projection.
-;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
-(def (poo-flow-cicd-profile-runtime-summaries profile profile-catalog)
+;; : (-> [Value] [Value] [Value])
+(def (poo-flow-cicd-profile-projection-values/rev values results)
+  (let loop ((remaining-values values)
+             (result-values results))
+    (if (null? remaining-values)
+      result-values
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) result-values)))))
+
+;; : (-> Procedure [PooFlowCicdProfileRef] [PooSandboxProfile] [Value] [Value])
+(def (poo-flow-cicd-profile-projections/list-rev projector
+                                                    profiles
+                                                    profile-catalog
+                                                    results)
   (cond
-   ((and (pair? profile) (list? profile))
-    (apply append
-           (map (lambda (profile-ref)
-                  (poo-flow-cicd-profile-runtime-summaries
-                   profile-ref
-                   profile-catalog))
-                profile)))
+   ((null? profiles) results)
+   (else
+    (poo-flow-cicd-profile-projections/list-rev
+     projector
+     (cdr profiles)
+     profile-catalog
+     (poo-flow-cicd-profile-projections/rev
+      projector
+      (car profiles)
+      profile-catalog
+      results)))))
+
+;; : (-> Procedure PooFlowCicdProfileRef [PooSandboxProfile] [Value] [Value])
+(def (poo-flow-cicd-profile-projections/rev projector
+                                            profile
+                                            profile-catalog
+                                            results)
+  (if (and (pair? profile) (list? profile))
+    (poo-flow-cicd-profile-projections/list-rev
+     projector
+     profile
+     profile-catalog
+     results)
+    (poo-flow-cicd-profile-projection-values/rev
+     (projector profile profile-catalog)
+     results)))
+
+;; : (-> Procedure PooFlowCicdProfileRef [PooSandboxProfile] [Value])
+(def (poo-flow-cicd-profile-projections projector profile profile-catalog)
+  (reverse
+   (poo-flow-cicd-profile-projections/rev
+    projector
+    profile
+    profile-catalog
+    '())))
+
+;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
+(def (poo-flow-cicd-profile-runtime-summary-values profile profile-catalog)
+  (cond
    ((poo-flow-cicd-profile-ref->sandbox-profile profile profile-catalog)
     => (lambda (sandbox-profile)
          (list (poo-flow-sandbox-profile-runtime-summary sandbox-profile))))
    (else '())))
+
+;;; Runtime summaries follow profile inheritance recursively. Missing catalog
+;;; refs are skipped here and reported by the unresolved-ref projection.
+;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
+(def (poo-flow-cicd-profile-runtime-summaries profile profile-catalog)
+  (poo-flow-cicd-profile-projections
+   poo-flow-cicd-profile-runtime-summary-values
+   profile
+   profile-catalog))
 
 ;;; Boundary: cicd check sandbox runtime summaries is the policy-visible edge
 ;;; for sandbox, workflow behavior, keeping validation, lookup, or projection
@@ -87,19 +138,19 @@
 ;;; Handoff summaries mirror runtime summaries so both report paths preserve
 ;;; the same inherited profile order.
 ;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
-(def (poo-flow-cicd-profile-handoff-summaries profile profile-catalog)
+(def (poo-flow-cicd-profile-handoff-summary-values profile profile-catalog)
   (cond
-   ((and (pair? profile) (list? profile))
-    (apply append
-           (map (lambda (profile-ref)
-                  (poo-flow-cicd-profile-handoff-summaries
-                   profile-ref
-                   profile-catalog))
-                profile)))
    ((poo-flow-cicd-profile-ref->sandbox-profile profile profile-catalog)
     => (lambda (sandbox-profile)
          (list (poo-flow-sandbox-profile-handoff-summary sandbox-profile))))
    (else '())))
+
+;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Alist])
+(def (poo-flow-cicd-profile-handoff-summaries profile profile-catalog)
+  (poo-flow-cicd-profile-projections
+   poo-flow-cicd-profile-handoff-summary-values
+   profile
+   profile-catalog))
 
 ;;; Boundary: cicd check sandbox handoff summaries is the policy-visible edge
 ;;; for sandbox, workflow behavior, keeping validation, lookup, or projection
@@ -114,21 +165,21 @@
 ;;; Unresolved profile refs are the safety signal for fake or incomplete CI
 ;;; profiles. Inline POO profiles are already resolved and never reported.
 ;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Symbol])
-(def (poo-flow-cicd-profile-unresolved-refs profile profile-catalog)
+(def (poo-flow-cicd-profile-unresolved-ref-values profile profile-catalog)
   (cond
    ((symbol? profile)
     (if (poo-flow-sandbox-profile-by-name profile-catalog profile)
       '()
       (list profile)))
    ((poo-flow-sandbox-profile? profile) '())
-   ((and (pair? profile) (list? profile))
-    (apply append
-           (map (lambda (profile-ref)
-                  (poo-flow-cicd-profile-unresolved-refs
-                   profile-ref
-                   profile-catalog))
-                profile)))
    (else '())))
+
+;; : (-> PooFlowCicdProfileRef [PooSandboxProfile] [Symbol])
+(def (poo-flow-cicd-profile-unresolved-refs profile profile-catalog)
+  (poo-flow-cicd-profile-projections
+   poo-flow-cicd-profile-unresolved-ref-values
+   profile
+   profile-catalog))
 
 ;;; Boundary: cicd check sandbox unresolved profile refs is the policy-visible
 ;;; edge for sandbox, workflow behavior, keeping validation, lookup, or

@@ -82,7 +82,13 @@
 ;;; `resolved-field-identities` is the observed C3 result from gerbil-poo.
 ;; : (-> PooModuleObject [Symbol])
 (def (poo-flow-module-object-inheritance-chain object)
-  (poo-flow-module-object-inheritance-chain/onto object '()))
+  (let (cache (poo-flow-module-object-inheritance-chain-cache object))
+    (if (vector-ref cache 0)
+      (vector-ref cache 1)
+      (let (chain (poo-flow-module-object-inheritance-chain/onto object '()))
+        (vector-set! cache 0 #t)
+        (vector-set! cache 1 chain)
+        chain))))
 
 ;;; Boundary: module object inheritance chains onto is the policy-visible edge
 ;;; for module-system, object behavior, keeping validation, lookup, or

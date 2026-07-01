@@ -6,7 +6,8 @@
         (only-in :clan/poo/object .def .ref .slot? object?)
         (only-in :gslph/src/extensions/poo-object-validation
                  poo-object-contract-validation
-                 poo-object-validation-valid?))
+                 poo-object-validation-valid?)
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-runtime-filesystem-prototype
         poo-flow-runtime-volume-filesystem-prototype
@@ -153,14 +154,16 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype [Symbol])
 (def (poo-flow-sandbox-resources-prototype-present-slots resources)
-  (if (object? resources)
-    (apply append
-           (map (lambda (slot)
-                  (poo-flow-sandbox-resources-prototype-slot-if-present
-                   resources
-                   slot))
-                +poo-flow-sandbox-resources-prototype-slots+))
-    '()))
+  (let loop ((remaining-slots +poo-flow-sandbox-resources-prototype-slots+)
+             (slot-values '()))
+    (cond
+     ((not (object? resources)) '())
+     ((null? remaining-slots) (reverse slot-values))
+     ((.slot? resources (car remaining-slots))
+      (loop (cdr remaining-slots)
+            (cons (car remaining-slots) slot-values)))
+     (else
+      (loop (cdr remaining-slots) slot-values)))))
 
 ;; : (-> PooSandboxResourcesPrototype HashTable)
 (def (poo-flow-sandbox-resources-prototype-source-ref resources)
@@ -447,20 +450,20 @@
   (hash-get validation 'diagnostics))
 
 ;; : (-> HashTable Alist)
-(def (poo-flow-sandbox-resources-prototype-contract-validation->alist
-      validation)
-  (let ((harness-validation (hash-get validation 'harnessValidation))
-        (diagnostics (hash-get validation 'diagnostics)))
-    (list
-     (cons 'kind (hash-get validation 'kind))
-     (cons 'schema (hash-get validation 'schema))
-     (cons 'object (hash-get validation 'object))
-     (cons 'valid (hash-get validation 'valid))
-     (cons 'diagnostics diagnostics)
-     (cons 'diagnostic-count (length diagnostics))
-     (cons 'harness-kind (hash-get harness-validation 'kind))
-     (cons 'harness-valid (hash-get harness-validation 'valid))
-     (cons 'checked-signals (hash-get validation 'checkedSignals)))))
+(defpoo-module-final-projection
+  poo-flow-sandbox-resources-prototype-contract-validation->alist
+  (validation)
+  (bindings ((harness-validation (hash-get validation 'harnessValidation))
+             (diagnostics (hash-get validation 'diagnostics))))
+  (fields ((kind (hash-get validation 'kind))
+           (schema (hash-get validation 'schema))
+           (object (hash-get validation 'object))
+           (valid (hash-get validation 'valid))
+           (diagnostics diagnostics)
+           (diagnostic-count (length diagnostics))
+           (harness-kind (hash-get harness-validation 'kind))
+           (harness-valid (hash-get harness-validation 'valid))
+           (checked-signals (hash-get validation 'checkedSignals)))))
 
 ;;; Boundary: require sandbox resources prototype contract! is the policy-
 ;;; visible edge for sandbox, core behavior, keeping validation, lookup, or

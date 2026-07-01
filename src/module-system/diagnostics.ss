@@ -4,7 +4,8 @@
 
 (import :poo-flow/src/core/task
         :poo-flow/src/core/flow
-        :poo-flow/src/module-system/descriptor)
+        :poo-flow/src/module-system/descriptor
+        :poo-flow/src/module-system/projection-syntax)
 
 (export make-poo-flow-module-diagnostic
         poo-flow-module-diagnostic?
@@ -34,11 +35,13 @@
   transparent: #t)
 
 ;; : (-> PooModuleDiagnostic Alist)
-(def (poo-flow-module-diagnostic->alist diagnostic)
-  (list (cons 'severity (poo-flow-module-diagnostic-severity diagnostic))
-        (cons 'code (poo-flow-module-diagnostic-code diagnostic))
-        (cons 'target (poo-flow-module-diagnostic-target diagnostic))
-        (cons 'detail (poo-flow-module-diagnostic-detail diagnostic))))
+(defpoo-module-final-projection
+  poo-flow-module-diagnostic->alist (diagnostic)
+  (bindings ())
+  (fields ((severity (poo-flow-module-diagnostic-severity diagnostic))
+           (code (poo-flow-module-diagnostic-code diagnostic))
+           (target (poo-flow-module-diagnostic-target diagnostic))
+           (detail (poo-flow-module-diagnostic-detail diagnostic)))))
 
 ;;; Boundary: module diagnostic key member predicate is the policy-visible edge
 ;;; for module-system behavior, keeping validation, lookup, or projection
@@ -235,9 +238,11 @@
 
 ;;; Boundary: alist conversion is reserved for CLI/agent presentation edges.
 ;; : (-> PooModuleDoctorReport Alist)
-(def (poo-flow-module-doctor-report->alist report)
-  (list (cons 'modules (poo-flow-module-doctor-report-modules report))
-        (cons 'status (poo-flow-module-doctor-report-status report))
-        (cons 'diagnostics
+(defpoo-module-final-projection
+  poo-flow-module-doctor-report->alist (report)
+  (bindings ((diagnostics
               (map poo-flow-module-diagnostic->alist
                    (poo-flow-module-doctor-report-diagnostics report)))))
+  (fields ((modules (poo-flow-module-doctor-report-modules report))
+           (status (poo-flow-module-doctor-report-status report))
+           (diagnostics diagnostics))))

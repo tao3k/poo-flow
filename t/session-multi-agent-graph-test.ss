@@ -99,13 +99,42 @@
                '(graph/build graph/audit)
                'graph/root
                (list root-entry build-entry audit-entry)))
+             (build-audit-message
+              (poo-flow-session-communication-receipt
+               'project/graph
+               'sibling
+               'graph/root
+               'graph/root
+               'graph/build
+               'graph/audit
+               'agent/build
+               'agent/audit
+               'channel/build-audit
+               'artifact
+               '((artifact . build-report))
+               'declared-channel-only))
+             (audit-root-message
+              (poo-flow-session-communication-receipt
+               'project/graph
+               'child-parent
+               'graph/root
+               'graph/root
+               'graph/audit
+               'graph/root
+               'agent/audit
+               'agent/root
+               'channel/audit-root
+               'receipt
+               '((receipt . audit-result))
+               'receipt-only))
              (graph
               (poo-flow-session-agent-graph
                'project/graph
                'graph/root
                (list build-node audit-node)
                (list root-session build-session audit-session)
-               registry)))
+               registry
+               (list build-audit-message audit-root-message))))
         (check-equal? (poo-flow-session-agent-node? build-node) #t)
         (check-equal? (poo-flow-session-agent-node-agent-id build-node)
                       'agent/build)
@@ -129,6 +158,11 @@
                         (graph/root . graph/audit)))
         (check-equal? (.ref graph 'durable-policy-refs)
                       '(durable/graph durable/graph))
+        (check-equal? (.ref graph 'communication-receipt-count) 2)
+        (check-equal? (map poo-flow-session-communication-receipt-relation-kind
+                           (poo-flow-session-agent-graph-communication-receipts
+                            graph))
+                      '(sibling child-parent))
         (check-equal? (.ref (poo-flow-session-agent-graph-registry-receipt
                              graph)
                             'entry-count)

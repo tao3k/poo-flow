@@ -6,6 +6,7 @@
         :poo-flow/t/durable-runtime-store-contract-test
         :poo-flow/t/durable-runtime-store-backend-test
         :poo-flow/t/durable-runtime-store-operation-test
+        :poo-flow/t/durable-runtime-store-operation-bridge-test
         :poo-flow/t/durable-recovery-scenario-test
         :poo-flow/t/memory-durable-job-receipt-test
         :poo-flow/t/module-system-facade-test

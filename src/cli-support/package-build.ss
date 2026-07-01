@@ -55,6 +55,7 @@
 
 (def +poo-flow-cli-entry-module-build-spec+
   '((gxc: "user-interface/init")
+    (gxc: "user-interface/custom/my-module/cases/loop-engine-owner")
     (gxc: "user-interface/custom/my-module/config")))
 
 (def +poo-flow-runtime-bootstrap-modules+
@@ -63,6 +64,7 @@
     "src/module-system/durable-runtime-store.ss"
     "src/module-system/durable-runtime-store-backend.ss"
     "src/module-system/durable-runtime-store-operation.ss"
+    "src/module-system/durable-runtime-store-operation-bridge.ss"
     "src/module-system/durable-recovery-scenario.ss"))
 
 (def (poo-flow-cli-entry-build-spec _options)
@@ -155,11 +157,30 @@
                (filter poo-flow-root-module-path? modules)
                modules))))))
 
+(def (poo-flow-package-append-map/rev proc value results)
+  (let loop ((remaining-values (proc value))
+             (result-values results))
+    (if (null? remaining-values)
+      result-values
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) result-values)))))
+
+(def (poo-flow-package-append-map proc values)
+  (let loop ((remaining-values values)
+             (result-values []))
+    (if (null? remaining-values)
+      (reverse result-values)
+      (loop (cdr remaining-values)
+            (poo-flow-package-append-map/rev
+             proc
+             (car remaining-values)
+             result-values)))))
+
 (def (poo-flow-package-modules dirs exclude-dirs root-only?)
-  (apply append
-         (map (lambda (dir)
-                (poo-flow-module-files dir exclude-dirs root-only?))
-              dirs)))
+  (poo-flow-package-append-map
+   (lambda (dir)
+     (poo-flow-module-files dir exclude-dirs root-only?))
+   dirs))
 
 (def (poo-flow-runtime-modules)
   (filter (lambda (file)
@@ -348,7 +369,9 @@
        (poo-flow-stage-cacheable? stage options)
        (let* ((stamp (poo-flow-stage-cache-stamp-path options))
               (sources (poo-flow-stage-source-files stage))
-              (outputs (apply append (map poo-flow-diagnostic-outputs stage)))
+              (outputs (poo-flow-package-append-map
+                        poo-flow-diagnostic-outputs
+                        stage))
               (status (gslph-package-build-receipt-status
                        stamp
                        expected-sources: sources
@@ -361,7 +384,7 @@
     (gslph-package-build-receipt-write
      (poo-flow-stage-cache-stamp-path options)
      (poo-flow-stage-source-files stage)
-     (apply append (map poo-flow-diagnostic-outputs stage)))))
+     (poo-flow-package-append-map poo-flow-diagnostic-outputs stage))))
 
 (def (poo-flow-make label stage options)
   (poo-flow-package-require-gxpkg-env!)

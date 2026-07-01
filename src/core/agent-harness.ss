@@ -3,7 +3,8 @@
 ;;; Invariant: constructors and projections never execute runtime work.
 
 (import :poo-flow/src/core/agent-harness-vocabulary
-        :poo-flow/src/core/receipt)
+        :poo-flow/src/core/receipt
+        :poo-flow/src/core/projection-syntax)
 
 (export (import: :poo-flow/src/core/agent-harness-vocabulary)
         make-poo-flow-agent-profile
@@ -207,128 +208,145 @@
   transparent: #t)
 
 ;; : (-> PooFlowAgentProfile Alist)
-(def (poo-flow-agent-profile->alist profile)
-  (list (cons 'kind 'agent-profile)
-        (cons 'name (poo-flow-agent-profile-name profile))
-        (cons 'model-policy (poo-flow-agent-profile-model-policy profile))
-        (cons 'instructions (poo-flow-agent-profile-instructions profile))
-        (cons 'tools (poo-flow-agent-profile-tools profile))
-        (cons 'skills (poo-flow-agent-profile-skills profile))
-        (cons 'sandbox-profile (poo-flow-agent-profile-sandbox-profile profile))
-        (cons 'loop-policy (poo-flow-agent-profile-loop-policy profile))
-        (cons 'compaction-policy (poo-flow-agent-profile-compaction-policy profile))
-        (cons 'budget-policy (poo-flow-agent-profile-budget-policy profile))
-        (cons 'observability-policy (poo-flow-agent-profile-observability-policy profile))
-        (cons 'metadata (poo-flow-agent-profile-metadata profile))
-        (cons 'runtime-executed #f)))
+(defpoo-core-receipt-projection
+  poo-flow-agent-profile->alist (profile)
+  (bindings ())
+  (fields ((kind 'agent-profile)
+           (name (poo-flow-agent-profile-name profile))
+           (model-policy (poo-flow-agent-profile-model-policy profile))
+           (instructions (poo-flow-agent-profile-instructions profile))
+           (tools (poo-flow-agent-profile-tools profile))
+           (skills (poo-flow-agent-profile-skills profile))
+           (sandbox-profile (poo-flow-agent-profile-sandbox-profile profile))
+           (loop-policy (poo-flow-agent-profile-loop-policy profile))
+           (compaction-policy
+            (poo-flow-agent-profile-compaction-policy profile))
+           (budget-policy (poo-flow-agent-profile-budget-policy profile))
+           (observability-policy
+            (poo-flow-agent-profile-observability-policy profile))
+           (metadata (poo-flow-agent-profile-metadata profile))
+           (runtime-executed #f))))
 
 ;; : (-> PooFlowAgentHarness Alist)
-(def (poo-flow-agent-harness->alist harness)
-  (list (cons 'kind 'agent-harness)
-        (cons 'id (poo-flow-agent-harness-id harness))
-        (cons 'profile (poo-flow-agent-harness-profile harness))
-        (cons 'sandbox-profile (poo-flow-agent-harness-sandbox-profile harness))
-        (cons 'runtime-adapter-intent
-              (poo-flow-agent-harness-runtime-adapter-intent harness))
-        (cons 'capabilities (poo-flow-agent-harness-capabilities harness))
-        (cons 'session-namespace
-              (poo-flow-agent-harness-session-namespace harness))
-        (cons 'observability-sink
-              (poo-flow-agent-harness-observability-sink harness))
-        (cons 'runtime-executed
-              (poo-flow-agent-harness-runtime-executed? harness))
-        (cons 'metadata (poo-flow-agent-harness-metadata harness))))
+(defpoo-core-receipt-projection
+  poo-flow-agent-harness->alist (harness)
+  (bindings ())
+  (fields ((kind 'agent-harness)
+           (id (poo-flow-agent-harness-id harness))
+           (profile (poo-flow-agent-harness-profile harness))
+           (sandbox-profile (poo-flow-agent-harness-sandbox-profile harness))
+           (runtime-adapter-intent
+            (poo-flow-agent-harness-runtime-adapter-intent harness))
+           (capabilities (poo-flow-agent-harness-capabilities harness))
+           (session-namespace
+            (poo-flow-agent-harness-session-namespace harness))
+           (observability-sink
+            (poo-flow-agent-harness-observability-sink harness))
+           (runtime-executed
+            (poo-flow-agent-harness-runtime-executed? harness))
+           (metadata (poo-flow-agent-harness-metadata harness)))))
 
 ;; : (-> PooFlowAgentSession Alist)
-(def (poo-flow-agent-session->alist session)
-  (list (cons 'kind 'agent-session)
-        (cons 'name (poo-flow-agent-session-name session))
-        (cons 'harness-id (poo-flow-agent-session-harness-id session))
-        (cons 'status (poo-flow-agent-session-status session))
-        (cons 'active-operation-id
-              (poo-flow-agent-session-active-operation-id session))
-        (cons 'conversation-state-ref
-              (poo-flow-agent-session-conversation-state-ref session))
-        (cons 'retention-policy
-              (poo-flow-agent-session-retention-policy session))
-        (cons 'operation-history
-              (poo-flow-agent-session-operation-history session))
-        (cons 'metadata (poo-flow-agent-session-metadata session))
-        (cons 'workflow-run? #f)))
+(defpoo-core-receipt-projection
+  poo-flow-agent-session->alist (session)
+  (bindings ())
+  (fields ((kind 'agent-session)
+           (name (poo-flow-agent-session-name session))
+           (harness-id (poo-flow-agent-session-harness-id session))
+           (status (poo-flow-agent-session-status session))
+           (active-operation-id
+            (poo-flow-agent-session-active-operation-id session))
+           (conversation-state-ref
+            (poo-flow-agent-session-conversation-state-ref session))
+           (retention-policy
+            (poo-flow-agent-session-retention-policy session))
+           (operation-history
+            (poo-flow-agent-session-operation-history session))
+           (metadata (poo-flow-agent-session-metadata session))
+           (workflow-run? #f))))
 
 ;; : (-> PooFlowAgentOperation Boolean)
 (def (poo-flow-agent-operation-delegated-task? operation)
   (eq? (poo-flow-agent-operation-kind operation) 'task))
 
 ;; : (-> PooFlowAgentOperation Alist)
-(def (poo-flow-agent-operation->alist operation)
-  (list (cons 'kind 'agent-operation)
-        (cons 'operation-kind (poo-flow-agent-operation-kind operation))
-        (cons 'id (poo-flow-agent-operation-id operation))
-        (cons 'parent-session
-              (poo-flow-agent-operation-parent-session operation))
-        (cons 'parent-run (poo-flow-agent-operation-parent-run operation))
-        (cons 'request (poo-flow-agent-operation-request operation))
-        (cons 'result-contract
-              (poo-flow-agent-operation-result-contract operation))
-        (cons 'runtime-intent
-              (poo-flow-agent-operation-runtime-intent operation))
-        (cons 'status (poo-flow-agent-operation-status operation))
-        (cons 'receipt (poo-flow-agent-operation-receipt operation))
-        (cons 'delegated-task?
-              (poo-flow-agent-operation-delegated-task? operation))
-        (cons 'metadata (poo-flow-agent-operation-metadata operation))))
+(defpoo-core-receipt-projection
+  poo-flow-agent-operation->alist (operation)
+  (bindings ())
+  (fields ((kind 'agent-operation)
+           (operation-kind (poo-flow-agent-operation-kind operation))
+           (id (poo-flow-agent-operation-id operation))
+           (parent-session
+            (poo-flow-agent-operation-parent-session operation))
+           (parent-run (poo-flow-agent-operation-parent-run operation))
+           (request (poo-flow-agent-operation-request operation))
+           (result-contract
+            (poo-flow-agent-operation-result-contract operation))
+           (runtime-intent
+            (poo-flow-agent-operation-runtime-intent operation))
+           (status (poo-flow-agent-operation-status operation))
+           (receipt (poo-flow-agent-operation-receipt operation))
+           (delegated-task?
+            (poo-flow-agent-operation-delegated-task? operation))
+           (metadata (poo-flow-agent-operation-metadata operation)))))
 
 ;; : (-> PooFlowWorkflowRun Alist)
-(def (poo-flow-workflow-run->alist run)
-  (list (cons 'kind 'workflow-run)
-        (cons 'run-id (poo-flow-workflow-run-run-id run))
-        (cons 'workflow-ref (poo-flow-workflow-run-workflow-ref run))
-        (cons 'payload-ref (poo-flow-workflow-run-payload-ref run))
-        (cons 'status (poo-flow-workflow-run-status run))
-        (cons 'harness-refs (poo-flow-workflow-run-harness-refs run))
-        (cons 'event-stream-ref
-              (poo-flow-workflow-run-event-stream-ref run))
-        (cons 'logs (poo-flow-workflow-run-logs run))
-        (cons 'result (poo-flow-workflow-run-result run))
-        (cons 'error (poo-flow-workflow-run-error run))
-        (cons 'terminal-receipt
-              (poo-flow-workflow-run-terminal-receipt run))
-        (cons 'metadata (poo-flow-workflow-run-metadata run))))
+(defpoo-core-receipt-projection
+  poo-flow-workflow-run->alist (run)
+  (bindings ())
+  (fields ((kind 'workflow-run)
+           (run-id (poo-flow-workflow-run-run-id run))
+           (workflow-ref (poo-flow-workflow-run-workflow-ref run))
+           (payload-ref (poo-flow-workflow-run-payload-ref run))
+           (status (poo-flow-workflow-run-status run))
+           (harness-refs (poo-flow-workflow-run-harness-refs run))
+           (event-stream-ref
+            (poo-flow-workflow-run-event-stream-ref run))
+           (logs (poo-flow-workflow-run-logs run))
+           (result (poo-flow-workflow-run-result run))
+           (error (poo-flow-workflow-run-error run))
+           (terminal-receipt
+            (poo-flow-workflow-run-terminal-receipt run))
+           (metadata (poo-flow-workflow-run-metadata run)))))
 
 ;; : (-> PooFlowDispatchReceipt Alist)
-(def (poo-flow-dispatch-receipt->alist receipt)
-  (list (cons 'kind 'dispatch-receipt)
-        (cons 'dispatch-id (poo-flow-dispatch-receipt-dispatch-id receipt))
-        (cons 'target-agent (poo-flow-dispatch-receipt-target-agent receipt))
-        (cons 'target-instance-id
-              (poo-flow-dispatch-receipt-target-instance-id receipt))
-        (cons 'target-session-id
-              (poo-flow-dispatch-receipt-target-session-id receipt))
-        (cons 'payload-ref (poo-flow-dispatch-receipt-payload-ref receipt))
-        (cons 'accepted-at (poo-flow-dispatch-receipt-accepted-at receipt))
-        (cons 'admission-status
-              (poo-flow-dispatch-receipt-admission-status receipt))
-        (cons 'runtime-queue-intent
-              (poo-flow-dispatch-receipt-runtime-queue-intent receipt))
-        (cons 'workflow-run-id #f)
-        (cons 'metadata (poo-flow-dispatch-receipt-metadata receipt))))
+(defpoo-core-receipt-projection
+  poo-flow-dispatch-receipt->alist (receipt)
+  (bindings ())
+  (fields ((kind 'dispatch-receipt)
+           (dispatch-id (poo-flow-dispatch-receipt-dispatch-id receipt))
+           (target-agent (poo-flow-dispatch-receipt-target-agent receipt))
+           (target-instance-id
+            (poo-flow-dispatch-receipt-target-instance-id receipt))
+           (target-session-id
+            (poo-flow-dispatch-receipt-target-session-id receipt))
+           (payload-ref (poo-flow-dispatch-receipt-payload-ref receipt))
+           (accepted-at (poo-flow-dispatch-receipt-accepted-at receipt))
+           (admission-status
+            (poo-flow-dispatch-receipt-admission-status receipt))
+           (runtime-queue-intent
+            (poo-flow-dispatch-receipt-runtime-queue-intent receipt))
+           (workflow-run-id #f)
+           (metadata (poo-flow-dispatch-receipt-metadata receipt)))))
 
 ;; : (-> PooFlowRuntimeSnapshot Alist)
-(def (poo-flow-runtime-snapshot->alist snapshot)
-  (list (cons 'kind 'runtime-snapshot)
-        (cons 'subject-kind (poo-flow-runtime-snapshot-subject-kind snapshot))
-        (cons 'subject-id (poo-flow-runtime-snapshot-subject-id snapshot))
-        (cons 'status (poo-flow-runtime-snapshot-status snapshot))
-        (cons 'last-event-index
-              (poo-flow-runtime-snapshot-last-event-index snapshot))
-        (cons 'result-summary
-              (poo-flow-runtime-snapshot-result-summary snapshot))
-        (cons 'error-summary
-              (poo-flow-runtime-snapshot-error-summary snapshot))
-        (cons 'presentation-trace
-              (poo-flow-runtime-snapshot-presentation-trace snapshot))
-        (cons 'metadata (poo-flow-runtime-snapshot-metadata snapshot))))
+(defpoo-core-receipt-projection
+  poo-flow-runtime-snapshot->alist (snapshot)
+  (bindings ())
+  (fields ((kind 'runtime-snapshot)
+           (subject-kind
+            (poo-flow-runtime-snapshot-subject-kind snapshot))
+           (subject-id (poo-flow-runtime-snapshot-subject-id snapshot))
+           (status (poo-flow-runtime-snapshot-status snapshot))
+           (last-event-index
+            (poo-flow-runtime-snapshot-last-event-index snapshot))
+           (result-summary
+            (poo-flow-runtime-snapshot-result-summary snapshot))
+           (error-summary
+            (poo-flow-runtime-snapshot-error-summary snapshot))
+           (presentation-trace
+            (poo-flow-runtime-snapshot-presentation-trace snapshot))
+           (metadata (poo-flow-runtime-snapshot-metadata snapshot)))))
 
 ;;; Boundary: receipt workflow status is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities

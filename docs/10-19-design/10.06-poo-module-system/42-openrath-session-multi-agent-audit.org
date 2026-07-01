@@ -477,7 +477,8 @@ The validation receipt must also include:
 
 Current implementation:
 - =src/modules/session/policy-validation.ss= owns
-  =poo-flow-session-policy-validation-receipt= and bounded
+  =poo-flow-session-policy-validation-receipt=,
+  =poo-flow-session-policy-validation-receipt->alist=, and bounded
   =poo-flow-session-policy-tool-attempt= rows.
 - Validation checks requested context refs, history records, communication
   channels, resource capability refs, agent tool attempts, hook tool attempts,

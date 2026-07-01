@@ -10,13 +10,18 @@
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
-                 benchmark-run)
+                 benchmark-run/result)
         (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/t/support/performance
-        :poo-flow/src/module-system/facade
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-settings
+                 poo-flow-user-module-bundles->modules
+                 pooFlowUserConfig)
+        (only-in :poo-flow/src/module-system/presentation-config
+                 pooFlowUserConfigPresentation)
         (only-in :poo-flow/src/module-system/loop-engine-runtime
                  loop-engine-capability-receipt?)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-presentation-performance-test)
@@ -118,15 +123,12 @@
 (def user-interface-presentation-performance-test
   (test-suite "user-interface presentation performance"
     (test-case "keeps batch presentation projection inside benchmark contract"
-      (let* ((summary
-              (user-interface-presentation-summary
-               user-interface-presentation-module-count))
-             (receipt
-              (benchmark-run
-               user-interface-presentation-fixture
-               (lambda ()
-                 (user-interface-presentation-summary
-                  user-interface-presentation-module-count)))))
+      (let-values (((receipt summary)
+                    (benchmark-run/result
+                     user-interface-presentation-fixture
+                     (lambda ()
+                       (user-interface-presentation-summary
+                        user-interface-presentation-module-count)))))
         (check-equal?
          (benchmark-fixture-contract-pass? user-interface-presentation-fixture)
          #t)

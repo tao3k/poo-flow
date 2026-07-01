@@ -2,10 +2,11 @@
 ;;; Boundary: flow declaration descriptors and registry metadata.
 ;;; Invariant: this owner does not define flow record classes or execute tasks.
 
-(import (only-in :clan/poo/object .mix .@ object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
-        :poo-flow/src/core/task)
+        :poo-flow/src/core/task
+        :poo-flow/src/core/object-syntax)
 
 (export make-flow-declaration-descriptor
         flow-declaration-descriptor?
@@ -33,11 +34,11 @@
 ;;; without changing the stable flow record or running any task.
 ;; : (-> Unit FlowDeclarationDescriptorPrototype)
 (def flow-declaration-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'flow-declaration)
-                      (cons 'planner 'linear-dag)
-                      (cons 'extension-policy 'descriptor-prototype)))
-        flow-role))
+  (poo-core-role-object
+   (slots ((kind 'flow-declaration)
+           (planner 'linear-dag)
+           (extension-policy 'descriptor-prototype)))
+   (supers flow-role)))
 
 ;;; Descriptor supers are a pair-tree on purpose: gerbil-poo flattens supers
 ;;; before C3 linearization, so extension descriptors can add role parents
@@ -52,14 +53,14 @@
 ;; : (-> Symbol Symbol PlannerPolicy ExtensionPolicy [Role] FlowDeclarationDescriptor)
 (def (make-flow-declaration-descriptor descriptor-name descriptor-kind descriptor-planner descriptor-extension-policy . maybe-role-supers)
   (let (role-supers (if (null? maybe-role-supers) '() (car maybe-role-supers)))
-    (.mix slots: (role-constant-slots
-                  (list (cons 'name descriptor-name)
-                        (cons 'declaration-kind descriptor-kind)
-                        (cons 'planner descriptor-planner)
-                        (cons 'extension-policy descriptor-extension-policy)
-                        (cons 'responsibility
-                              (list 'flow-declaration descriptor-kind descriptor-planner))))
-          (flow-declaration-descriptor-supers role-supers))))
+    (poo-core-role-object
+     (slots ((name descriptor-name)
+             (declaration-kind descriptor-kind)
+             (planner descriptor-planner)
+             (extension-policy descriptor-extension-policy)
+             (responsibility
+              (list 'flow-declaration descriptor-kind descriptor-planner))))
+     (supers (flow-declaration-descriptor-supers role-supers)))))
 
 ;; : (-> FlowDeclarationDescriptorCandidate Boolean)
 (def (flow-declaration-descriptor? descriptor)
@@ -70,20 +71,20 @@
 ;;; can consume a registry without knowing which module contributed descriptors.
 ;; : (-> Unit FlowDeclarationRegistryPrototype)
 (def flow-declaration-registry-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'flow-declaration-registry)
-                      (cons 'descriptors '())
-                      (cons 'extension-policy 'immutable-registry)))
-        flow-role))
+  (poo-core-role-object
+   (slots ((kind 'flow-declaration-registry)
+           (descriptors '())
+           (extension-policy 'immutable-registry)))
+   (supers flow-role)))
 
 ;; : (-> Symbol [FlowDeclarationDescriptor] FlowDeclarationRegistry)
 (def (make-flow-declaration-registry registry-name registry-descriptors)
-  (.mix slots: (role-constant-slots
-                (list (cons 'name registry-name)
-                      (cons 'descriptors registry-descriptors)
-                      (cons 'responsibility
-                            (list 'flow-declaration-registry registry-name))))
-        flow-declaration-registry-prototype))
+  (poo-core-role-object
+   (slots ((name registry-name)
+           (descriptors registry-descriptors)
+           (responsibility
+            (list 'flow-declaration-registry registry-name))))
+   (supers flow-declaration-registry-prototype)))
 
 ;; : (-> FlowDeclarationRegistryCandidate Boolean)
 (def (flow-declaration-registry? registry)
@@ -182,5 +183,4 @@
        "unknown flow declaration kind"
        (list (cons 'registry (flow-declaration-registry-name registry))
              (cons 'kind kind))))))
-
 

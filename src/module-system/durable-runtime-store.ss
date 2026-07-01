@@ -4,7 +4,8 @@
 ;;; owns storage, locking, leases, fsync, backfill, replay, and side effects.
 
 (import (only-in :clan/poo/object .o .ref .slot? object?)
-        :poo-flow/src/module-system/durable-policy)
+        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/module-system/projection-syntax)
 
 (export +poo-flow-durable-runtime-store-contract-kind+
         +poo-flow-durable-runtime-store-contract-schema+
@@ -71,18 +72,18 @@
     append-communication-event
     attach-sandbox-handle))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-runtime-store-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
 
-;; : (-> POOObject Symbol Value Value)
+;; : (forall (a) (-> POOObject Symbol a a))
 (def (poo-flow-durable-runtime-store-slot object key default-value)
   (if (and (object? object) (.slot? object key))
     (.ref object key)
     default-value))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-runtime-store-identity-ref identity key default-value)
   (let (entry (assoc key identity))
     (if entry (cdr entry) default-value)))
@@ -95,11 +96,11 @@
     (poo-flow-durable-runtime-store-every? predicate (cdr values)))
    (else #f)))
 
-;; : (-> Any [Any] Boolean)
+;; : (forall (a) (-> a (List a) Boolean))
 (def (poo-flow-durable-runtime-store-member? value values)
   (if (member value values) #t #f))
 
-;; : (-> [Any] Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-runtime-store-symbol-list? values)
   (and (list? values)
        (poo-flow-durable-runtime-store-every? symbol? values)))
@@ -120,7 +121,7 @@
           'recoverable?
           #t))))
 
-;; : (-> Symbol Symbol Value Alist)
+;; : (-> Symbol Symbol Datum Alist)
 (def (poo-flow-durable-runtime-store-value-diagnostic code slot value)
   (poo-flow-durable-runtime-store-diagnostic
    code
@@ -129,6 +130,9 @@
    (list (cons 'value value)
          (cons 'recoverable? #t))))
 
+;;; Runtime store contract construction centralizes ledger and capability
+;;; defaults before backend negotiation while keeping validation and receipt
+;;; projection as separate cheap stages.
 ;; : (-> Symbol String PooDurablePolicy [Alist] POOObject)
 (def (poo-flow-durable-runtime-store-contract store-id
                                               store-owner
@@ -210,7 +214,7 @@
    '((metadata . ((scope . shared)
                   (runtime-executed . #f))))))
 
-;; : (-> Value Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-runtime-store-contract? value)
   (and (object? value)
        (.slot? value 'durable-runtime-store-kind)
@@ -221,7 +225,7 @@
 (def (poo-flow-durable-runtime-store-contract-name contract)
   (poo-flow-durable-runtime-store-slot contract 'runtime-store-id #f))
 
-;; : (-> PooDurableRuntimeStoreContract Symbol Value [Alist])
+;; : (-> PooDurableRuntimeStoreContract Symbol Datum [Alist])
 (def (poo-flow-durable-runtime-store-required-symbol-diagnostics contract
                                                                   slot
                                                                   code
@@ -308,6 +312,122 @@
               (cons 'recoverable? #t))))))))
 
 ;; : (-> PooDurableRuntimeStoreContract [Alist])
+(def (poo-flow-durable-runtime-store-required-contract-diagnostics contract)
+  (append
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'runtime-store-id
+    'missing-store-id
+    (poo-flow-durable-runtime-store-slot contract 'runtime-store-id #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'runtime-store-owner
+    'missing-store-owner
+    (poo-flow-durable-runtime-store-slot contract 'runtime-store-owner #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'fact-log-ref
+    'missing-fact-log-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-fact-log-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'checkpoint-store-ref
+    'missing-checkpoint-store-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-checkpoint-store-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'derived-index-ref
+    'missing-derived-index-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-derived-index-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'job-store-ref
+    'missing-job-store-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-job-store-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'repair-journal-ref
+    'missing-repair-journal-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-repair-journal-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'artifact-store-ref
+    'missing-artifact-store-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-artifact-store-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'communication-ledger-ref
+    'missing-communication-ledger-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-communication-ledger-ref
+     #f))
+   (poo-flow-durable-runtime-store-required-symbol-diagnostics
+    contract
+    'sandbox-ledger-ref
+    'missing-sandbox-ledger-ref
+    (poo-flow-durable-runtime-store-slot
+     contract
+     'runtime-store-sandbox-ledger-ref
+     #f))))
+
+;; : (-> PooDurableRuntimeStoreContract [Alist])
+(def (poo-flow-durable-runtime-store-schema-version-diagnostics contract)
+  (let (schema-version
+        (poo-flow-durable-runtime-store-slot
+         contract
+         'runtime-store-schema-version
+         #f))
+    (if (integer? schema-version)
+      '()
+      (list
+       (poo-flow-durable-runtime-store-value-diagnostic
+        'invalid-schema-version
+        'schema-version
+        schema-version)))))
+
+;; : (-> PooDurableRuntimeStoreContract Value [Alist])
+(def (poo-flow-durable-runtime-store-policy-diagnostics contract durable-policy)
+  (append
+   (if (poo-flow-durable-policy? durable-policy)
+     '()
+     (list
+      (poo-flow-durable-runtime-store-value-diagnostic
+       'invalid-durable-policy
+       'durable-policy
+       durable-policy)))
+   (if (and (poo-flow-durable-policy? durable-policy)
+            (poo-flow-durable-policy-valid? durable-policy))
+     '()
+     (list
+      (poo-flow-durable-runtime-store-diagnostic
+       'invalid-durable-policy-receipt
+       'durable-policy
+       'error
+       (list (cons 'store-id
+                   (poo-flow-durable-runtime-store-contract-name
+                    contract))
+             (cons 'recoverable? #t)))))))
+
+;; : (-> PooDurableRuntimeStoreContract [Alist])
 (def (poo-flow-durable-runtime-store-contract-diagnostics contract)
   (if (poo-flow-durable-runtime-store-contract? contract)
     (let ((durable-policy
@@ -316,109 +436,10 @@
             'runtime-store-durable-policy
             #f)))
       (append
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'runtime-store-id
-        'missing-store-id
-        (poo-flow-durable-runtime-store-slot contract 'runtime-store-id #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'runtime-store-owner
-        'missing-store-owner
-        (poo-flow-durable-runtime-store-slot contract 'runtime-store-owner #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'fact-log-ref
-        'missing-fact-log-ref
-        (poo-flow-durable-runtime-store-slot
-         contract
-         'runtime-store-fact-log-ref
-         #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'checkpoint-store-ref
-        'missing-checkpoint-store-ref
-        (poo-flow-durable-runtime-store-slot contract
-                                            'runtime-store-checkpoint-store-ref
-                                            #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'derived-index-ref
-        'missing-derived-index-ref
-        (poo-flow-durable-runtime-store-slot
-         contract
-         'runtime-store-derived-index-ref
-         #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'job-store-ref
-        'missing-job-store-ref
-        (poo-flow-durable-runtime-store-slot
-         contract
-         'runtime-store-job-store-ref
-         #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'repair-journal-ref
-        'missing-repair-journal-ref
-        (poo-flow-durable-runtime-store-slot
-         contract
-         'runtime-store-repair-journal-ref
-         #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'artifact-store-ref
-        'missing-artifact-store-ref
-        (poo-flow-durable-runtime-store-slot
-         contract
-         'runtime-store-artifact-store-ref
-         #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'communication-ledger-ref
-        'missing-communication-ledger-ref
-        (poo-flow-durable-runtime-store-slot contract
-                                            'runtime-store-communication-ledger-ref
-                                            #f))
-       (poo-flow-durable-runtime-store-required-symbol-diagnostics
-        contract
-        'sandbox-ledger-ref
-        'missing-sandbox-ledger-ref
-        (poo-flow-durable-runtime-store-slot
-         contract
-         'runtime-store-sandbox-ledger-ref
-         #f))
-       (if (integer? (poo-flow-durable-runtime-store-slot
-                      contract
-                      'runtime-store-schema-version
-                      #f))
-         '()
-         (list
-          (poo-flow-durable-runtime-store-value-diagnostic
-           'invalid-schema-version
-           'schema-version
-           (poo-flow-durable-runtime-store-slot contract
-                                               'runtime-store-schema-version
-                                               #f))))
-       (if (poo-flow-durable-policy? durable-policy)
-         '()
-         (list
-          (poo-flow-durable-runtime-store-value-diagnostic
-           'invalid-durable-policy
-           'durable-policy
-           durable-policy)))
-       (if (and (poo-flow-durable-policy? durable-policy)
-                (poo-flow-durable-policy-valid? durable-policy))
-         '()
-         (list
-          (poo-flow-durable-runtime-store-diagnostic
-           'invalid-durable-policy-receipt
-           'durable-policy
-           'error
-           (list (cons 'store-id
-                       (poo-flow-durable-runtime-store-contract-name
-                        contract))
-                 (cons 'recoverable? #t)))))
+       (poo-flow-durable-runtime-store-required-contract-diagnostics contract)
+       (poo-flow-durable-runtime-store-schema-version-diagnostics contract)
+       (poo-flow-durable-runtime-store-policy-diagnostics contract
+                                                          durable-policy)
        (poo-flow-durable-runtime-store-ledger-kind-diagnostics contract)
        (poo-flow-durable-runtime-store-capability-diagnostics contract)))
     (list
@@ -431,7 +452,8 @@
 (def (poo-flow-durable-runtime-store-contract-valid? contract)
   (null? (poo-flow-durable-runtime-store-contract-diagnostics contract)))
 
-;; : PooDurableRuntimeStoreContractReceipt
+;;; Runtime store contract receipts stay fixed structs; projection helpers own
+;;; the ABI alist shape.
 (defstruct poo-flow-durable-runtime-store-contract-receipt
   (store-id
    store-owner
@@ -456,6 +478,21 @@
    metadata)
   transparent: #t)
 
+;; : (forall (a) (-> a Alist (U #f PooDurablePolicyReceipt)))
+(def (poo-flow-durable-runtime-store-policy->receipt durable-policy identity)
+  (and (poo-flow-durable-policy? durable-policy)
+       (poo-flow-durable-policy->receipt durable-policy identity)))
+
+;; : (-> (U #f PooDurablePolicyReceipt) (U #f Symbol))
+(def (poo-flow-durable-runtime-store-policy-receipt-policy-id receipt)
+  (and receipt
+       (poo-flow-durable-policy-receipt-policy-id receipt)))
+
+;; : (-> (U #f PooDurablePolicyReceipt) (U #f Symbol String))
+(def (poo-flow-durable-runtime-store-policy-receipt-runtime-owner receipt)
+  (and receipt
+       (poo-flow-durable-policy-receipt-runtime-owner receipt)))
+
 ;; : (-> PooDurableRuntimeStoreContract [Alist] PooDurableRuntimeStoreContractReceipt)
 (def (poo-flow-durable-runtime-store-contract->receipt contract
                                                         . maybe-identity)
@@ -466,26 +503,23 @@
            'runtime-store-durable-policy
            #f))
          (durable-policy-receipt
-          (if (poo-flow-durable-policy? durable-policy)
-            (poo-flow-durable-policy->receipt durable-policy identity)
-            #f))
+          (poo-flow-durable-runtime-store-policy->receipt durable-policy
+                                                          identity))
          (diagnostics
           (poo-flow-durable-runtime-store-contract-diagnostics contract))
          (valid? (null? diagnostics)))
     (make-poo-flow-durable-runtime-store-contract-receipt
      (poo-flow-durable-runtime-store-slot contract 'runtime-store-id #f)
      (poo-flow-durable-runtime-store-slot contract 'runtime-store-owner #f)
-     (if durable-policy-receipt
-       (poo-flow-durable-policy-receipt-policy-id durable-policy-receipt)
-       #f)
+     (poo-flow-durable-runtime-store-policy-receipt-policy-id
+      durable-policy-receipt)
      (poo-flow-durable-runtime-store-identity-ref identity 'project-id #f)
      (poo-flow-durable-runtime-store-identity-ref identity
                                                  'root-session-id
                                                  #f)
      (poo-flow-durable-runtime-store-identity-ref identity 'session-id #f)
-     (if durable-policy-receipt
-       (poo-flow-durable-policy-receipt-runtime-owner durable-policy-receipt)
-       #f)
+     (poo-flow-durable-runtime-store-policy-receipt-runtime-owner
+      durable-policy-receipt)
      (poo-flow-durable-runtime-store-slot
       contract
       'runtime-store-schema-version
@@ -537,72 +571,72 @@
       '()))))
 
 ;; : (-> PooDurableRuntimeStoreContractReceipt Alist)
-(def (poo-flow-durable-runtime-store-contract-receipt->alist receipt)
-  (list
-   (cons 'kind 'poo-flow.durable.runtime-store-contract-receipt)
-   (cons 'schema +poo-flow-durable-runtime-store-contract-receipt-schema+)
-   (cons 'store-id
-         (poo-flow-durable-runtime-store-contract-receipt-store-id receipt))
-   (cons 'store-owner
-         (poo-flow-durable-runtime-store-contract-receipt-store-owner receipt))
-   (cons 'durable-policy-ref
-         (poo-flow-durable-runtime-store-contract-receipt-durable-policy-ref
-          receipt))
-   (cons 'project-id
-         (poo-flow-durable-runtime-store-contract-receipt-project-id receipt))
-   (cons 'root-session-id
-         (poo-flow-durable-runtime-store-contract-receipt-root-session-id
-          receipt))
-   (cons 'session-id
-         (poo-flow-durable-runtime-store-contract-receipt-session-id receipt))
-   (cons 'runtime-owner
-         (poo-flow-durable-runtime-store-contract-receipt-runtime-owner
-          receipt))
-   (cons 'schema-version
-         (poo-flow-durable-runtime-store-contract-receipt-schema-version
-          receipt))
-   (cons 'fact-log-ref
-         (poo-flow-durable-runtime-store-contract-receipt-fact-log-ref
-          receipt))
-   (cons 'checkpoint-store-ref
-         (poo-flow-durable-runtime-store-contract-receipt-checkpoint-store-ref
-          receipt))
-   (cons 'derived-index-ref
-         (poo-flow-durable-runtime-store-contract-receipt-derived-index-ref
-          receipt))
-   (cons 'job-store-ref
-         (poo-flow-durable-runtime-store-contract-receipt-job-store-ref
-          receipt))
-   (cons 'repair-journal-ref
-         (poo-flow-durable-runtime-store-contract-receipt-repair-journal-ref
-          receipt))
-   (cons 'artifact-store-ref
-         (poo-flow-durable-runtime-store-contract-receipt-artifact-store-ref
-          receipt))
-   (cons 'communication-ledger-ref
-         (poo-flow-durable-runtime-store-contract-receipt-communication-ledger-ref
-          receipt))
-   (cons 'sandbox-ledger-ref
-         (poo-flow-durable-runtime-store-contract-receipt-sandbox-ledger-ref
-          receipt))
-   (cons 'ledger-kinds
-         (poo-flow-durable-runtime-store-contract-receipt-ledger-kinds
-          receipt))
-   (cons 'capability-flags
-         (poo-flow-durable-runtime-store-contract-receipt-capability-flags
-          receipt))
-   (cons 'valid?
-         (poo-flow-durable-runtime-store-contract-receipt-valid? receipt))
-   (cons 'diagnostics
-         (poo-flow-durable-runtime-store-contract-receipt-diagnostics
-          receipt))
-   (cons 'diagnostic-count
-         (length
-          (poo-flow-durable-runtime-store-contract-receipt-diagnostics
-           receipt)))
-   (cons 'metadata
-         (poo-flow-durable-runtime-store-contract-receipt-metadata receipt))
-   (cons 'runtime-executed #f)))
+(defpoo-module-final-projection
+  poo-flow-durable-runtime-store-contract-receipt->alist (receipt)
+  (bindings ((diagnostics
+              (poo-flow-durable-runtime-store-contract-receipt-diagnostics
+               receipt))))
+  (fields ((kind 'poo-flow.durable.runtime-store-contract-receipt)
+           (schema +poo-flow-durable-runtime-store-contract-receipt-schema+)
+           (store-id
+            (poo-flow-durable-runtime-store-contract-receipt-store-id receipt))
+           (store-owner
+            (poo-flow-durable-runtime-store-contract-receipt-store-owner
+             receipt))
+           (durable-policy-ref
+            (poo-flow-durable-runtime-store-contract-receipt-durable-policy-ref
+             receipt))
+           (project-id
+            (poo-flow-durable-runtime-store-contract-receipt-project-id receipt))
+           (root-session-id
+            (poo-flow-durable-runtime-store-contract-receipt-root-session-id
+             receipt))
+           (session-id
+            (poo-flow-durable-runtime-store-contract-receipt-session-id
+             receipt))
+           (runtime-owner
+            (poo-flow-durable-runtime-store-contract-receipt-runtime-owner
+             receipt))
+           (schema-version
+            (poo-flow-durable-runtime-store-contract-receipt-schema-version
+             receipt))
+           (fact-log-ref
+            (poo-flow-durable-runtime-store-contract-receipt-fact-log-ref
+             receipt))
+           (checkpoint-store-ref
+            (poo-flow-durable-runtime-store-contract-receipt-checkpoint-store-ref
+             receipt))
+           (derived-index-ref
+            (poo-flow-durable-runtime-store-contract-receipt-derived-index-ref
+             receipt))
+           (job-store-ref
+            (poo-flow-durable-runtime-store-contract-receipt-job-store-ref
+             receipt))
+           (repair-journal-ref
+            (poo-flow-durable-runtime-store-contract-receipt-repair-journal-ref
+             receipt))
+           (artifact-store-ref
+            (poo-flow-durable-runtime-store-contract-receipt-artifact-store-ref
+             receipt))
+           (communication-ledger-ref
+            (poo-flow-durable-runtime-store-contract-receipt-communication-ledger-ref
+             receipt))
+           (sandbox-ledger-ref
+            (poo-flow-durable-runtime-store-contract-receipt-sandbox-ledger-ref
+             receipt))
+           (ledger-kinds
+            (poo-flow-durable-runtime-store-contract-receipt-ledger-kinds
+             receipt))
+           (capability-flags
+            (poo-flow-durable-runtime-store-contract-receipt-capability-flags
+             receipt))
+           (valid?
+            (poo-flow-durable-runtime-store-contract-receipt-valid? receipt))
+           (diagnostics diagnostics)
+           (diagnostic-count (length diagnostics))
+           (metadata
+            (poo-flow-durable-runtime-store-contract-receipt-metadata receipt))
+           (runtime-executed #f))))
 
 ;; : (-> [PooDurableRuntimeStoreContract] [PooDurableRuntimeStoreContractReceipt])
 (def (poo-flow-durable-runtime-store-contracts->receipts contracts)
@@ -617,14 +651,8 @@
            contracts))))
 
 ;; : (-> [PooDurableRuntimeStoreContractReceipt] [Alist])
-(def (poo-flow-durable-runtime-store-contract-receipts->alists receipts)
-  (cond
-   ((null? receipts) '())
-   ((pair? receipts)
-    (cons (poo-flow-durable-runtime-store-contract-receipt->alist
-           (car receipts))
-          (poo-flow-durable-runtime-store-contract-receipts->alists
-           (cdr receipts))))
-   (else
-    (error "durable runtime store contract receipt serialization requires a list"
-           receipts))))
+(defpoo-module-final-projection-batch
+  poo-flow-durable-runtime-store-contract-receipts->alists (receipts)
+  (projector poo-flow-durable-runtime-store-contract-receipt->alist)
+  (error-message
+   "durable runtime store contract receipt serialization requires a list"))

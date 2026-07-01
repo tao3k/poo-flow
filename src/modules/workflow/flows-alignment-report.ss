@@ -123,15 +123,44 @@
 ;;; Duplicate runtime owners collapse into the first observed matrix row.
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-runtime-owner-symbols specs)
-  (fold (lambda (spec owners)
-          (fold (lambda (owner seen)
-                  (if (member owner seen)
-                    seen
-                    (append seen (list owner))))
-                owners
-                (.ref spec 'runtime-owned)))
-        '()
-        specs))
+  (let loop-specs ((remaining-specs specs)
+                   (owners-rev '()))
+    (cond
+     ((null? remaining-specs)
+      (reverse owners-rev))
+     (else
+      (let loop-owners ((remaining-owners
+                         (.ref (car remaining-specs) 'runtime-owned))
+                        (owners-rev owners-rev))
+        (cond
+         ((null? remaining-owners)
+          (loop-specs (cdr remaining-specs) owners-rev))
+         ((member (car remaining-owners) owners-rev)
+          (loop-owners (cdr remaining-owners) owners-rev))
+         (else
+          (loop-owners (cdr remaining-owners)
+                       (cons (car remaining-owners) owners-rev)))))))))
+
+;;; Boundary: deferred output aggregation keeps spec order without repeated
+;;; append growth while preserving each spec's local deferred order.
+;; : (-> [PooObject] [Symbol])
+(def (alignment-deferred-values specs)
+  (let loop-specs ((remaining-specs specs)
+                   (deferred-rev '()))
+    (cond
+     ((null? remaining-specs)
+      (reverse deferred-rev))
+     (else
+      (let loop-deferred ((remaining-deferred
+                           (.ref (car remaining-specs) 'deferred))
+                          (deferred-rev deferred-rev))
+        (cond
+         ((null? remaining-deferred)
+          (loop-specs (cdr remaining-specs) deferred-rev))
+         (else
+          (loop-deferred (cdr remaining-deferred)
+                         (cons (car remaining-deferred)
+                               deferred-rev)))))))))
 
 ;;; Boundary: status filtering stays over normalized spec rows.
 ;;; It supports coverage matrix projections without changing the source table.
@@ -187,11 +216,7 @@
           (cons 'sources
                 (map (lambda (entry) (cdr (assoc 'source entry)))
                      matching-source-index))
-          (cons 'deferred
-                (fold (lambda (spec deferred)
-                        (append deferred (.ref spec 'deferred)))
-                      '()
-                      matching-specs)))))
+          (cons 'deferred (alignment-deferred-values matching-specs)))))
 
 ;;; Boundary: owner matrix groups runtime gaps by backend concern.
 ;;; It is diagnostic metadata for Marlin handoff, not an execution scheduler.

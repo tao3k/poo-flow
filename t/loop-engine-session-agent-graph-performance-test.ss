@@ -7,19 +7,12 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
-                 benchmark-run)
-        :poo-flow/t/support/performance
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/modules/cubeSandbox/config
-                 poo-flow-cubeSandbox-module-bundles)
-        (only-in :poo-flow/src/modules/nono-sandbox/config
-                 poo-flow-nono-sandbox-module-bundles)
-        (only-in :poo-flow/user-interface/custom/my-module/config
-                 poo-flow-custom-my-module-loop-engine-case))
+                 benchmark-run/result)
+        (only-in :poo-flow/src/module-system/loop-engine-session-agent-graph
+                 poo-flow-user-loop-engine-intent-session-agent-graph))
 
 (export loop-engine-session-agent-graph-performance-test)
 
@@ -43,20 +36,39 @@
   (newline)
   (force-output))
 
+;; : Alist
+(def loop-engine-session-agent-graph-performance-intent
+  '((use-case . (current-system-build-loop
+                 (workflow . funflow-cicd)))
+    (use-cases . ((current-system-recovery-loop
+                   (workflow . funflow-cicd))))
+    (agent-judges . ((auditor . ci-audit-agent)
+                     (verifier . build-verifier-agent)
+                     (governor . ci-loop-governor)))
+    (human-audit . ((actions . (+manual-gate +changes-requested))))
+    (lineage-policy . ((parent-session-refs . (incoming-ci-request-session))
+                       (lineage-kind . guarded-handoff)
+                       (lineage-operator . current-system-build-loop)))
+    (resource-policy . ((tool-refs . (run-shell-command
+                                      write-workspace-file
+                                      read-workspace-file))))
+    (sandbox-profile-refs . (ci/build))
+    (memory-policies . (((use-case . current-system-build-loop)
+                         (store . project-memory))))
+    (result . ((default . poo-flow.loop-governor.node-result.v1)
+               (auditor . poo-flow.loop-governor.audit-result.v1)
+               (verifier . poo-flow.loop-governor.review-result.v1)
+               (governor . poo-flow.loop-governor.governor-result.v1)
+               (human-audit
+                . poo-flow.loop-governor.human-audit-decision.v1)))
+    (runtime-owner . "marlin-agent-core")
+    (runtime-executed . #f)))
+
 ;; : (-> Alist)
 (def (loop-engine-session-agent-graph-performance-summary)
-  (let* ((presentation
-          (pooFlowUserConfigPresentation
-           (pooFlowUserConfig
-            (poo-flow-user-module-bundles->modules
-             (append poo-flow-nono-sandbox-module-bundles
-                     poo-flow-cubeSandbox-module-bundles
-                     (list poo-flow-custom-my-module-loop-engine-case)))
-            (poo-flow-settings))))
-         (intent (car (.ref presentation 'loop-engine-intents)))
-         (graph (loop-engine-session-agent-graph-performance-ref
-                 intent
-                 'session-agent-graph)))
+  (let (graph
+        (poo-flow-user-loop-engine-intent-session-agent-graph
+         loop-engine-session-agent-graph-performance-intent))
     (list
      (cons 'agent-count
            (loop-engine-session-agent-graph-performance-ref graph
@@ -70,8 +82,11 @@
              graph
              'registry-receipt)
             'entry-count))
-     (cons 'presentation-count
-           (length (.ref presentation 'loop-engine-session-agent-graphs)))
+     (cons 'communication-receipt-count
+           (loop-engine-session-agent-graph-performance-ref
+            graph
+            'communication-receipt-count))
+     (cons 'projection-count 1)
      (cons 'runtime-executed
            (loop-engine-session-agent-graph-performance-ref
             graph
@@ -80,12 +95,10 @@
 (def loop-engine-session-agent-graph-performance-test
   (test-suite "loop-engine session-agent graph performance"
     (test-case "keeps loop-engine topology projection inside benchmark contract"
-      (let* ((summary
-              (loop-engine-session-agent-graph-performance-summary))
-             (receipt
-              (benchmark-run
-               loop-engine-session-agent-graph-performance-fixture
-               loop-engine-session-agent-graph-performance-summary)))
+      (let-values (((receipt summary)
+                    (benchmark-run/result
+                     loop-engine-session-agent-graph-performance-fixture
+                     loop-engine-session-agent-graph-performance-summary)))
         (check-equal?
          (benchmark-fixture-contract-pass?
           loop-engine-session-agent-graph-performance-fixture)
@@ -106,7 +119,12 @@
         (check-equal?
          (loop-engine-session-agent-graph-performance-ref
           summary
-          'presentation-count)
+          'communication-receipt-count)
+         8)
+        (check-equal?
+         (loop-engine-session-agent-graph-performance-ref
+          summary
+          'projection-count)
          1)
         (check-equal?
          (loop-engine-session-agent-graph-performance-ref

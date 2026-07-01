@@ -136,7 +136,7 @@
               (flow-declaration-registry-name (runner-flow-registry runner)))))
 
 ;; : (-> Runner Strategy [Id] Policy)
-(def (runner-execution-policy->alist runner strategy frontier)
+(def (runner-execution-policy-alist runner strategy frontier)
   (append (execution-policy->alist
            (strategy-execution-policy strategy frontier))
           (runner-registry-policy runner)))
@@ -159,7 +159,7 @@
                          'flow
                          #f
                          (strategy-name strategy)
-                         (runner-execution-policy->alist runner strategy root-frontier)
+                         (runner-execution-policy-alist runner strategy root-frontier)
                          'local
                          #f
                          input
@@ -252,7 +252,7 @@
                 (plan-node-kind node)
                 (plan-node-id node)
                 (strategy-name strategy)
-                (runner-execution-policy->alist runner strategy frontier)
+                (runner-execution-policy-alist runner strategy frontier)
                 'local
                 #f
                 input
@@ -277,7 +277,7 @@
                         'try
                         (plan-node-id node)
                         (strategy-name strategy)
-                        (runner-execution-policy->alist runner strategy frontier)
+                        (runner-execution-policy-alist runner strategy frontier)
                         'local
                         #f
                         input
@@ -415,7 +415,7 @@
                 'kleisli
                 (plan-node-id node)
                 (strategy-name strategy)
-                (runner-execution-policy->alist runner strategy frontier)
+                (runner-execution-policy-alist runner strategy frontier)
                 'local
                 #f
                 input
@@ -451,7 +451,7 @@
                 'branch
                 (plan-node-id node)
                 (strategy-name strategy)
-                (runner-execution-policy->alist runner strategy frontier)
+                (runner-execution-policy-alist runner strategy frontier)
                 'local
                 #f
                 input
@@ -589,7 +589,7 @@
   (let ((task-registry (runner-task-registry runner)))
     (cond
      ((strategy-can-run-locally-in strategy task-registry task)
-      (let* ((policy (runner-execution-policy->alist runner strategy frontier))
+      (let* ((policy (runner-execution-policy-alist runner strategy frontier))
              (value ((task-executor task) input))
              (cache (strategy-cache-decision strategy task input value)))
         (cons value
@@ -609,7 +609,7 @@
                             #f
                             '()))))
      ((task-adapter-routed?-in task-registry task)
-      (let* ((policy (runner-execution-policy->alist runner strategy frontier))
+      (let* ((policy (runner-execution-policy-alist runner strategy frontier))
              (request (task-adapter-request task
                                              input
                                              (execution-plan-flow-name plan)

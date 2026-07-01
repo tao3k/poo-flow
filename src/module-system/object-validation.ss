@@ -28,7 +28,7 @@
         poo-flow-module-object-validation-diagnostics
         poo-flow-module-object-validation->alist
         poo-flow-module-objects-validation
-        poo-flow-module-objects-validation->alist
+        poo-flow-module-objects-validation->alists
         poo-flow-module-objects-validation-summary
         poo-flow-require-module-object-validation!
         poo-flow-require-module-objects-validation!)

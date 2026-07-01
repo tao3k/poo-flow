@@ -22,7 +22,7 @@ Current implementation state:
 - P0 contract vocabulary is closed enough to support code slices.
 - P1 shared POO durable policy and session policy composition are landed.
 - P2 first =defstruct= receipt and batch projection gate are landed for durable policy.
-- P3 runtime store contract receipt projection, backend negotiation, operation receipt projection, and Marlin handoff ABI are landed.
+- P3 runtime store contract receipt projection, backend negotiation, operation receipt projection, row-to-operation bridge, and Marlin handoff ABI are landed.
 - P5 first multi-agent graph durable refs and communication ledger receipt projection are landed.
 - P6 first memory durable job receipt projection is landed.
 - P7 first workflow/CI/CD/artifact durable projection is landed.
@@ -777,16 +777,16 @@ Durable is considered delivered when:
 Superseded by [[*10.06.46.101 Current Next Step][10.06.46.101 Current Next Step]].
 
 ** 10.06.46.101 Current Next Step
-Wire P5/P6/P7 completion slices to runtime-owned durable store operation receipts and begin the Rust/Marlin implementation behind the negotiated backend.
+Begin the Rust/Marlin durable store command contract behind the negotiated backend and feed the operation batch into recovery scenarios.
 
 Concrete next document/code action:
-1. make session communication, memory durable jobs, workflow task/artifact receipts, and sandbox durable refs emit operation rows against the negotiated runtime store;
-2. define the Rust/Marlin store command contract for append, checkpoint, derived-index rebuild, lease claim, repair event, artifact retention, communication event, and sandbox handle attachment;
-3. add deterministic replay constraints and diagnostics for non-idempotent or missing-checkpoint work at the scenario boundary;
+1. define the Rust/Marlin store command contract for append, checkpoint, derived-index rebuild, lease claim, repair event, artifact retention, communication event, and sandbox handle attachment;
+2. extend recovery scenario receipts to include operation rows and operation handoff summaries, without executing the runtime;
+3. add deterministic replay constraints and diagnostics for non-idempotent or missing-checkpoint work at the operation batch boundary;
 4. expose observability rows for durable operation handoff, runtime acceptance, runtime rejection, replay, backfill, and repair decisions;
 5. keep Scheme report-only: it validates policy shape and projects receipts, while Rust/Marlin owns append, fsync, locking, leases, checkpoint IO, index rebuild, and repair execution.
 
-Reason: durable policy, runtime store contracts, backend negotiation, operation receipts, session communication, memory durable jobs, and workflow/CI/CD/artifact projections now exist as bounded receipts. The next architectural risk is that these receipts remain parallel reports instead of one runtime-owned durable event stream.
+Reason: durable policy, runtime store contracts, backend negotiation, operation receipts, session communication, memory durable jobs, workflow/CI/CD/artifact projections, and sandbox refs now bridge into one runtime operation batch. The next architectural risk is that the operation batch remains a Scheme-only report instead of becoming the Rust/Marlin durable command contract.
 ** 10.06.46.79.30 Eighth Slice Delivery Notes
 Eighth slice status: landed. Delivered:
 - =src/module-system/durable-recovery-scenario.ss= adds a =defstruct= recovery scenario receipt and bounded =->alist= projection.
@@ -830,3 +830,24 @@ Build note:
 Next implementation pressure:
 - Connect P5 session communication rows, P6 memory durable jobs, P7 workflow/artifact receipts, and sandbox durable refs to these operation receipts.
 - Start the Rust/Marlin command implementation behind the existing handoff ABI.
+** 10.06.46.79.60 Eleventh Slice Delivery Notes
+Eleventh slice status: landed. Delivered:
+- =src/module-system/durable-runtime-store-operation-bridge.ss= adds a functional bridge from existing durable rows to runtime-store operation receipts.
+- The bridge maps session graph rows to =append-fact=, session communication rows to =append-communication-event=, memory durable job rows to =claim-job-lease=, workflow task rows to =append-fact=, workflow artifact refs to =retain-artifact=, and sandbox refs to =attach-sandbox-handle=.
+- The implementation keeps the conversion in the module-system runtime-store owner instead of scattering operation construction into session, memory, workflow, and sandbox modules.
+- =user-interface/custom/my-module/cases/durable-operation-bridge.ss= demonstrates the downstream shape with a real communication receipt, memory durable job receipt, workflow task row, artifact refs, and sandbox refs.
+- The bridge produces the same operation batch handoff used by =poo-flow-durable-runtime-store-operations->marlin-handoff=, keeping Scheme report-only.
+
+Verified:
+- =gxpkg env gxtest t/durable-runtime-store-operation-bridge-test.ss=
+- =gxpkg env gxtest t/user-interface-custom-durable-operation-bridge-test.ss=
+- =gxpkg env gxtest t/contract-tests.ss=
+- =gxpkg env gxtest t/unit-tests.ss=
+- =GERBIL_BUILD_CORES=2 gxpkg build -R -O=
+
+Build note:
+- 4-way and 8-way builds still intermittently hit Gerbil generated-file races such as missing =~1.c= outputs for syntax-heavy modules. A 2-core package build completed successfully and is the current non-single-core verification lane for this slice.
+
+Next implementation pressure:
+- Add operation batch rows to recovery scenario receipts so P4 can test replay/repair against the same event stream that P5/P6/P7 emit.
+- Start the Rust/Marlin command implementation behind the negotiated operation handoff ABI.

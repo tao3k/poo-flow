@@ -2,7 +2,8 @@
 ;;; Boundary: module loader backend descriptors and lazy receipt values.
 ;;; Invariant: this owner returns data and never activates modules.
 
-(import :poo-flow/src/module-system/source
+(import :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/source
         :poo-flow/src/module-system/descriptor)
 
 (export make-poo-flow-module-loader-entry
@@ -232,16 +233,19 @@
 
 ;;; Boundary: receipt projection is stable evidence for doctors and user tooling.
 ;; : (-> PooModuleLoadReceipt Alist)
-(def (poo-flow-module-load-receipt->alist receipt)
-  (list (cons 'source
-              (poo-flow-module-source-ref->alist
-               (poo-flow-module-load-receipt-source receipt)))
-        (cons 'module
-              (if (poo-flow-module-load-receipt-module receipt)
-                (poo-flow-module-name (poo-flow-module-load-receipt-module receipt))
-                #f))
-        (cons 'backend-name (poo-flow-module-load-receipt-backend-name receipt))
-        (cons 'loaded? (poo-flow-module-load-receipt-loaded? receipt))
-        (cons 'code (poo-flow-module-load-receipt-code receipt))
-        (cons 'messages (poo-flow-module-load-receipt-messages receipt))
-        (cons 'metadata (poo-flow-module-load-receipt-metadata receipt))))
+(defpoo-module-final-projection
+  poo-flow-module-load-receipt->alist (receipt)
+  (bindings ((module
+              (poo-flow-module-load-receipt-module receipt))))
+  (fields ((source
+            (poo-flow-module-source-ref->alist
+             (poo-flow-module-load-receipt-source receipt)))
+           (module
+            (if module
+              (poo-flow-module-name module)
+              #f))
+           (backend-name (poo-flow-module-load-receipt-backend-name receipt))
+           (loaded? (poo-flow-module-load-receipt-loaded? receipt))
+           (code (poo-flow-module-load-receipt-code receipt))
+           (messages (poo-flow-module-load-receipt-messages receipt))
+           (metadata (poo-flow-module-load-receipt-metadata receipt)))))

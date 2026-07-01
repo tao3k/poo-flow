@@ -4,8 +4,10 @@
 ;;; dispatches providers, tools, memory stores, or messages.
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
+        :poo-flow/src/modules/session/communication
         :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/registry)
+        :poo-flow/src/modules/session/registry
+        :poo-flow/src/modules/session/receipt-syntax)
 
 (export poo-flow-session-agent-node
         poo-flow-session-agent-node?
@@ -19,6 +21,7 @@
         poo-flow-session-agent-graph?
         poo-flow-session-agent-graph-agent-ids
         poo-flow-session-agent-graph-session-ids
+        poo-flow-session-agent-graph-communication-receipts
         poo-flow-session-agent-graph-registry-receipt
         poo-flow-session-agent-graph->alist)
 
@@ -160,39 +163,43 @@
   (.ref node 'durable-policy-ref))
 
 ;; : (-> PooSessionAgentNode Alist)
-(def (poo-flow-session-agent-node->alist node)
-  (poo-flow-session-require "session agent node projection requires a node"
-                            (poo-flow-session-agent-node? node)
-                            node)
-  (list
-   (cons 'kind (.ref node 'kind))
-   (cons 'schema (.ref node 'schema))
-   (cons 'agent-id (.ref node 'agent-id))
-   (cons 'project-ref (.ref node 'project-ref))
-   (cons 'root-session-ref (.ref node 'root-session-ref))
-   (cons 'parent-session-ref (.ref node 'parent-session-ref))
-   (cons 'agent-system-session-ref (.ref node 'agent-system-session-ref))
-   (cons 'input-session-ref (.ref node 'input-session-ref))
-   (cons 'output-session-ref (.ref node 'output-session-ref))
-   (cons 'peer-session-refs (.ref node 'peer-session-refs))
-   (cons 'communication-channels (.ref node 'communication-channels))
-   (cons 'model-policy-ref (.ref node 'model-policy-ref))
-   (cons 'prompt-policy-ref (.ref node 'prompt-policy-ref))
-   (cons 'tool-permission-policy-ref
-         (.ref node 'tool-permission-policy-ref))
-   (cons 'hook-tool-permission-policy-ref
-         (.ref node 'hook-tool-permission-policy-ref))
-   (cons 'resource-sharing-policy-ref
-         (.ref node 'resource-sharing-policy-ref))
-   (cons 'durable-policy-ref (.ref node 'durable-policy-ref))
-   (cons 'tool-refs (.ref node 'tool-refs))
-   (cons 'memory-refs (.ref node 'memory-refs))
-   (cons 'sandbox-profile-ref (.ref node 'sandbox-profile-ref))
-   (cons 'role (.ref node 'role))
-   (cons 'result-contract (.ref node 'result-contract))
-   (cons 'runtime-owner (.ref node 'runtime-owner))
-   (cons 'runtime-executed (.ref node 'runtime-executed))
-   (cons 'metadata (.ref node 'metadata))))
+(defpoo-session-receipt-projection
+  poo-flow-session-agent-node->alist
+  (node)
+  (require poo-flow-session-require
+           "session agent node projection requires a node"
+           (poo-flow-session-agent-node? node)
+           node)
+  (bindings ())
+  (fields
+   (('kind (.ref node 'kind))
+    ('schema (.ref node 'schema))
+    ('agent-id (.ref node 'agent-id))
+    ('project-ref (.ref node 'project-ref))
+    ('root-session-ref (.ref node 'root-session-ref))
+    ('parent-session-ref (.ref node 'parent-session-ref))
+    ('agent-system-session-ref (.ref node 'agent-system-session-ref))
+    ('input-session-ref (.ref node 'input-session-ref))
+    ('output-session-ref (.ref node 'output-session-ref))
+    ('peer-session-refs (.ref node 'peer-session-refs))
+    ('communication-channels (.ref node 'communication-channels))
+    ('model-policy-ref (.ref node 'model-policy-ref))
+    ('prompt-policy-ref (.ref node 'prompt-policy-ref))
+    ('tool-permission-policy-ref
+     (.ref node 'tool-permission-policy-ref))
+    ('hook-tool-permission-policy-ref
+     (.ref node 'hook-tool-permission-policy-ref))
+    ('resource-sharing-policy-ref
+     (.ref node 'resource-sharing-policy-ref))
+    ('durable-policy-ref (.ref node 'durable-policy-ref))
+    ('tool-refs (.ref node 'tool-refs))
+    ('memory-refs (.ref node 'memory-refs))
+    ('sandbox-profile-ref (.ref node 'sandbox-profile-ref))
+    ('role (.ref node 'role))
+    ('result-contract (.ref node 'result-contract))
+    ('runtime-owner (.ref node 'runtime-owner))
+    ('runtime-executed (.ref node 'runtime-executed))
+    ('metadata (.ref node 'metadata)))))
 
 ;; : (-> PooSessionAgentNode PooSession PooSessionRegistryEntry)
 (def (poo-flow-session-agent-node->registry-entry node session)
@@ -212,26 +219,44 @@
          (cons 'role (.ref node 'role)))))
 
 ;; : (-> [PooSessionAgentNode] [Symbol])
+(def (poo-flow-session-agent-node-topology-summary nodes)
+  (cond
+   ((null? nodes) (list '() '() '()))
+   (else
+    (let* ((node (car nodes))
+           (tail-summary
+            (poo-flow-session-agent-node-topology-summary (cdr nodes)))
+           (tail-agent-ids (car tail-summary))
+           (tail-edge-pairs (cadr tail-summary))
+           (tail-durable-policy-refs (caddr tail-summary)))
+      (list
+       (cons (poo-flow-session-agent-node-agent-id node)
+             tail-agent-ids)
+       (cons (cons (poo-flow-session-agent-node-parent-session-ref node)
+                   (poo-flow-session-agent-node-output-session-ref node))
+             tail-edge-pairs)
+       (cons (poo-flow-session-agent-node-durable-policy-ref node)
+             tail-durable-policy-refs))))))
+
+;; : (-> [PooSessionAgentNode] [Symbol])
 (def (poo-flow-session-agent-node-ids nodes)
-  (map poo-flow-session-agent-node-agent-id nodes))
+  (car (poo-flow-session-agent-node-topology-summary nodes)))
 
 ;; : (-> [PooSessionAgentNode] [Pair])
 (def (poo-flow-session-agent-node-edge-pairs nodes)
-  (map (lambda (node)
-         (cons (poo-flow-session-agent-node-parent-session-ref node)
-               (poo-flow-session-agent-node-output-session-ref node)))
-       nodes))
+  (cadr (poo-flow-session-agent-node-topology-summary nodes)))
 
 ;; : (-> [PooSessionAgentNode] [Symbol])
 (def (poo-flow-session-agent-node-durable-policy-refs nodes)
-  (map poo-flow-session-agent-node-durable-policy-ref nodes))
+  (caddr (poo-flow-session-agent-node-topology-summary nodes)))
 
-;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [Alist] PooSessionAgentGraph)
+;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [PooSessionCommunicationReceipt] [Alist] PooSessionAgentGraph)
 (def (poo-flow-session-agent-graph project-id
                                    root-session-ref
                                    agent-nodes
                                    sessions
                                    registry-receipt
+                                   communication-receipts
                                    . maybe-metadata)
   (poo-flow-session-require "session agent graph project id must be a symbol"
                             (symbol? project-id)
@@ -253,27 +278,39 @@
                             (poo-flow-session-registry-receipt?
                              registry-receipt)
                             registry-receipt)
-  (object<-alist
-   (list
-    (cons 'kind 'poo-flow.session.agent-graph)
-    (cons 'schema 'poo-flow.modules.session.agent-graph.v1)
-    (cons 'project-id project-id)
-    (cons 'root-session-ref root-session-ref)
-    (cons 'agent-count (length agent-nodes))
-    (cons 'session-count (length sessions))
-    (cons 'agent-ids (poo-flow-session-agent-node-ids agent-nodes))
-    (cons 'session-ids (map poo-flow-session-id sessions))
-    (cons 'lineage-edge-pairs
-          (poo-flow-session-agent-node-edge-pairs agent-nodes))
-    (cons 'durable-policy-refs
-          (poo-flow-session-agent-node-durable-policy-refs agent-nodes))
-    (cons 'agent-nodes agent-nodes)
-    (cons 'registry-receipt registry-receipt)
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'metadata (if (null? maybe-metadata)
-                      '()
-                      (car maybe-metadata))))))
+  (poo-flow-session-require
+   "session agent graph communication receipts must be receipts"
+   (poo-flow-session-every?
+    poo-flow-session-communication-receipt?
+    communication-receipts)
+   communication-receipts)
+  (let* ((agent-topology-summary
+          (poo-flow-session-agent-node-topology-summary agent-nodes))
+         (agent-ids (car agent-topology-summary))
+         (lineage-edge-pairs (cadr agent-topology-summary))
+         (durable-policy-refs (caddr agent-topology-summary)))
+    (object<-alist
+     (list
+      (cons 'kind 'poo-flow.session.agent-graph)
+      (cons 'schema 'poo-flow.modules.session.agent-graph.v1)
+      (cons 'project-id project-id)
+      (cons 'root-session-ref root-session-ref)
+      (cons 'agent-count (length agent-nodes))
+      (cons 'session-count (length sessions))
+      (cons 'agent-ids agent-ids)
+      (cons 'session-ids (map poo-flow-session-id sessions))
+      (cons 'lineage-edge-pairs lineage-edge-pairs)
+      (cons 'durable-policy-refs durable-policy-refs)
+      (cons 'agent-nodes agent-nodes)
+      (cons 'registry-receipt registry-receipt)
+      (cons 'communication-receipt-count
+            (length communication-receipts))
+      (cons 'communication-receipts communication-receipts)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f)
+      (cons 'metadata (if (null? maybe-metadata)
+                        '()
+                        (car maybe-metadata)))))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-agent-graph? value)
@@ -289,45 +326,46 @@
 (def (poo-flow-session-agent-graph-session-ids graph)
   (.ref graph 'session-ids))
 
+;; : (-> PooSessionAgentGraph [PooSessionCommunicationReceipt])
+(def (poo-flow-session-agent-graph-communication-receipts graph)
+  (.ref graph 'communication-receipts))
+
 ;; : (-> PooSessionAgentGraph PooSessionRegistryReceipt)
 (def (poo-flow-session-agent-graph-registry-receipt graph)
   (.ref graph 'registry-receipt))
 
 ;; : (-> PooSessionAgentGraph Alist)
-(def (poo-flow-session-agent-graph->alist graph)
-  (poo-flow-session-require "session agent graph projection requires a graph"
-                            (poo-flow-session-agent-graph? graph)
-                            graph)
-  (list
-   (cons 'kind (.ref graph 'kind))
-   (cons 'schema (.ref graph 'schema))
-   (cons 'project-id (.ref graph 'project-id))
-   (cons 'root-session-ref (.ref graph 'root-session-ref))
-   (cons 'agent-count (.ref graph 'agent-count))
-   (cons 'session-count (.ref graph 'session-count))
-   (cons 'agent-ids (.ref graph 'agent-ids))
-   (cons 'session-ids (.ref graph 'session-ids))
-   (cons 'lineage-edge-pairs (.ref graph 'lineage-edge-pairs))
-   (cons 'durable-policy-refs (.ref graph 'durable-policy-refs))
-   (cons 'agent-nodes
-         (map poo-flow-session-agent-node->alist
-              (.ref graph 'agent-nodes)))
-   (cons 'registry-receipt
-         (let (receipt (.ref graph 'registry-receipt))
-           (list
-            (cons 'kind (.ref receipt 'kind))
-            (cons 'schema (.ref receipt 'schema))
-            (cons 'project-id (.ref receipt 'project-id))
-            (cons 'root-session-ids (.ref receipt 'root-session-ids))
-            (cons 'child-session-ids (.ref receipt 'child-session-ids))
-            (cons 'session-ids (.ref receipt 'session-ids))
-            (cons 'active-session-ref (.ref receipt 'active-session-ref))
-            (cons 'durable-policy-refs (.ref receipt 'durable-policy-refs))
-            (cons 'entry-count (.ref receipt 'entry-count))
-            (cons 'entries (.ref receipt 'entries))
-            (cons 'runtime-owner (.ref receipt 'runtime-owner))
-            (cons 'runtime-executed (.ref receipt 'runtime-executed))
-            (cons 'metadata (.ref receipt 'metadata)))))
-   (cons 'runtime-owner (.ref graph 'runtime-owner))
-   (cons 'runtime-executed (.ref graph 'runtime-executed))
-   (cons 'metadata (.ref graph 'metadata))))
+(defpoo-session-receipt-projection
+  poo-flow-session-agent-graph->alist
+  (graph)
+  (require poo-flow-session-require
+           "session agent graph projection requires a graph"
+           (poo-flow-session-agent-graph? graph)
+           graph)
+  (bindings
+   ((agent-nodes (.ref graph 'agent-nodes))
+    (registry-receipt (.ref graph 'registry-receipt))
+    (communication-receipts (.ref graph 'communication-receipts))))
+  (fields
+   (('kind (.ref graph 'kind))
+    ('schema (.ref graph 'schema))
+    ('project-id (.ref graph 'project-id))
+    ('root-session-ref (.ref graph 'root-session-ref))
+    ('agent-count (.ref graph 'agent-count))
+    ('session-count (.ref graph 'session-count))
+    ('agent-ids (.ref graph 'agent-ids))
+    ('session-ids (.ref graph 'session-ids))
+    ('lineage-edge-pairs (.ref graph 'lineage-edge-pairs))
+    ('durable-policy-refs (.ref graph 'durable-policy-refs))
+    ('agent-nodes
+     (map poo-flow-session-agent-node->alist agent-nodes))
+    ('registry-receipt
+     (poo-flow-session-registry-receipt->alist registry-receipt))
+    ('communication-receipt-count
+     (.ref graph 'communication-receipt-count))
+    ('communication-receipts
+     (poo-flow-session-communication-receipts->alists
+      communication-receipts))
+    ('runtime-owner (.ref graph 'runtime-owner))
+    ('runtime-executed (.ref graph 'runtime-executed))
+    ('metadata (.ref graph 'metadata)))))

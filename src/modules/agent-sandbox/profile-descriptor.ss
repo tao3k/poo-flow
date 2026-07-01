@@ -2,8 +2,9 @@
 ;;; Boundary: POO profile descriptors for agent-sandbox backend defaults.
 ;;; Invariant: descriptors project through the shared validation owner.
 
-(import (only-in :clan/poo/object .@ .mix object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/api
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile-data
         :poo-flow/src/modules/agent-sandbox/profile-validation)
@@ -33,16 +34,16 @@
 
 ;; : (-> Unit AgentSandboxProfileDescriptorPrototype)
 (def agent-sandbox-profile-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'name 'agent-sandbox-profile)
-                      (cons 'backend-kind #f)
-                      (cons 'backend-ref #f)
-                      (cons 'network-policy '())
-                      (cons 'capabilities '())
-                      (cons 'resource-policy '())
-                      (cons 'metadata '())
-                      (cons 'validator agent-sandbox-profile-validator)))
-        execution-policy-role))
+  (poo-core-role-object
+   (slots ((name 'agent-sandbox-profile)
+           (backend-kind #f)
+           (backend-ref #f)
+           (network-policy '())
+           (capabilities '())
+           (resource-policy '())
+           (metadata '())
+           (validator agent-sandbox-profile-validator)))
+   (supers execution-policy-role)))
 
 ;;; Descriptor construction is the override point for backend modules. The
 ;;; resulting object still projects through the same core profile contract.
@@ -55,17 +56,18 @@
                                             resource-policy
                                             metadata
                                             . maybe-overrides)
-  (.mix slots: (role-constant-slots
-        (append
-                 (list (cons 'name name)
-                       (cons 'backend-kind backend-kind)
-                       (cons 'backend-ref backend-ref)
-                       (cons 'network-policy network-policy)
-                       (cons 'capabilities capabilities)
-                       (cons 'resource-policy resource-policy)
-                       (cons 'metadata metadata))
-                 (if (null? maybe-overrides) '() (car maybe-overrides))))
-        agent-sandbox-profile-descriptor-prototype))
+  (poo-core-role-object
+   (slot-rows
+    (append
+     (list (cons 'name name)
+           (cons 'backend-kind backend-kind)
+           (cons 'backend-ref backend-ref)
+           (cons 'network-policy network-policy)
+           (cons 'capabilities capabilities)
+           (cons 'resource-policy resource-policy)
+           (cons 'metadata metadata))
+     (if (null? maybe-overrides) '() (car maybe-overrides))))
+   (supers agent-sandbox-profile-descriptor-prototype)))
 
 ;;; Runtime source for the backend declaration macro. Keeping this as a normal
 ;;; function makes option merging and metadata callbacks inspectable by policy.
@@ -141,4 +143,3 @@
     (agent-sandbox-profile-descriptor-capabilities descriptor)
     (agent-sandbox-profile-descriptor-resource-policy descriptor)
     (agent-sandbox-profile-descriptor-metadata descriptor))))
-

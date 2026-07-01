@@ -277,6 +277,12 @@
   (check-equal? (test-ref session-agent-graph 'agent-count) 4)
   (check-equal? (test-ref session-agent-graph 'agent-ids)
                 expected-loop-engine-agent-names)
+  (check-equal? (test-ref session-agent-graph 'communication-receipt-count)
+                8)
+  (check-equal? (map (lambda (row) (test-ref row 'relation-kind))
+                     (test-ref session-agent-graph 'communication-receipts))
+                '(parent-child child-parent parent-child child-parent
+                  parent-child child-parent parent-child child-parent))
   (check-equal? (test-ref session-agent-graph 'runtime-executed) #f)
   (check-equal? (test-ref (test-ref session-agent-graph
                                     'registry-receipt)

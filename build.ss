@@ -10,19 +10,13 @@
                  define-multicall-main)
         (only-in :gslph/src/build-api/source-coverage
                  gslph-source-coverage)
-        (only-in :gslph/src/testing/build
-                 testing-build-main)
-        (only-in :gslph/src/testing/model
-                 testing-receipt-ok?)
         (only-in :gerbil/gambit
                  exit
-                 pretty-print)
-        "./src/cli-support/package-build.ss"
-        "./src/cli-support/testing-project.ss")
+                 pretty-print))
 
 (gslph-source-coverage
  roots: '("src" "user-interface")
- runtime-roots: +poo-flow-runtime-include-dirs+
+ runtime-roots: '("src")
  explanation: "POO Flow runtime owners live under src; user-interface modules are declarative package sources that still need policy coverage.")
 
 (def +poo-flow-build-getopt+
@@ -45,12 +39,25 @@
 
 (define-multicall-main)
 
+(def (poo-flow-load-package-build!)
+  (eval '(import "./src/cli-support/package-build.ss")))
+
+(def (poo-flow-load-testing!)
+  (eval '(import :gslph/src/testing/build-runner
+                 :gslph/src/testing/model
+                 "./src/cli-support/testing-project.ss")))
+
+(def (poo-flow-package-entry-options release optimized debug cli force verbose)
+  (poo-flow-load-package-build!)
+  ((eval 'poo-flow-entry-options) release optimized debug cli force verbose))
+
 (def (poo-flow-test files)
+  (poo-flow-load-testing!)
   (let (receipt
-        (testing-build-main
-         +poo-flow-testing-project+
+        ((eval 'testing-build-main)
+         (eval '+poo-flow-testing-project+)
          files))
-    (if (testing-receipt-ok? receipt) 0 1)))
+    (if ((eval 'testing-receipt-ok?) receipt) 0 1)))
 
 (define-entry-point (meta)
   (help: "List package build targets"
@@ -66,9 +73,10 @@
                           verbose: (verbose #f))
   (help: "Print the package build spec"
    getopt: +poo-flow-build-getopt+)
+  (poo-flow-load-package-build!)
   (pretty-print
-   (poo-flow-compile-build-spec
-    (poo-flow-entry-options release optimized debug cli force verbose))))
+   ((eval 'poo-flow-compile-build-spec)
+    (poo-flow-package-entry-options release optimized debug cli force verbose))))
 
 (define-entry-point (compile release: (release #f)
                              optimized: (optimized #f)
@@ -78,8 +86,9 @@
                              verbose: (verbose #f))
   (help: "Compile the package"
    getopt: +poo-flow-build-getopt+)
-  (poo-flow-package-compile
-   (poo-flow-entry-options release optimized debug cli force verbose)))
+  (poo-flow-load-package-build!)
+  ((eval 'poo-flow-package-compile)
+   (poo-flow-package-entry-options release optimized debug cli force verbose)))
 
 (define-entry-point (test . files)
   (help: "Run selected gxtest files through the harness testing framework"
@@ -89,5 +98,6 @@
 (define-entry-point (clean)
   (help: "Clean package build artifacts"
    getopt: [])
-  (poo-flow-clean)
+  (poo-flow-load-package-build!)
+  ((eval 'poo-flow-clean))
   (exit 0))

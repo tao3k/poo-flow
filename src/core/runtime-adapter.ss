@@ -3,6 +3,7 @@
 ;;; Invariant: this module only defines the request-only placeholder adapter.
 
 (import :poo-flow/src/core/task
+        :poo-flow/src/core/projection-syntax
         (only-in :std/misc/process run-process))
 
 (export make-adapter-result
@@ -105,14 +106,16 @@
   transparent: #t)
 
 ;; : (-> RuntimeResponse Alist)
-(def (runtime-response->alist response)
-  (list (cons 'schema +runtime-response-schema+)
-        (cons 'request-id (runtime-response-request-id response))
-        (cons 'status (runtime-response-status response))
-        (cons 'value (runtime-response-value response))
-        (cons 'artifact-handle (runtime-response-artifact-handle response))
-        (cons 'error (runtime-response-error response))
-        (cons 'metadata (runtime-response-metadata response))))
+(defpoo-core-receipt-projection
+  runtime-response->alist (response)
+  (bindings ())
+  (fields ((schema +runtime-response-schema+)
+           (request-id (runtime-response-request-id response))
+           (status (runtime-response-status response))
+           (value (runtime-response-value response))
+           (artifact-handle (runtime-response-artifact-handle response))
+           (error (runtime-response-error response))
+           (metadata (runtime-response-metadata response)))))
 
 ;; : (-> AdapterResult [Alist] RuntimeResponse)
 (def (adapter-result->runtime-response result . maybe-metadata)
@@ -125,8 +128,16 @@
    (if (null? maybe-metadata) '() (car maybe-metadata))))
 
 ;; : (-> AdapterResult Alist)
-(def (adapter-result->alist result)
-  (runtime-response->alist (adapter-result->runtime-response result)))
+(defpoo-core-receipt-projection
+  adapter-result->alist (result)
+  (bindings ((response (adapter-result->runtime-response result))))
+  (fields ((schema +runtime-response-schema+)
+           (request-id (runtime-response-request-id response))
+           (status (runtime-response-status response))
+           (value (runtime-response-value response))
+           (artifact-handle (runtime-response-artifact-handle response))
+           (error (runtime-response-error response))
+           (metadata (runtime-response-metadata response)))))
 
 ;;; Boundary: runtime alist ref is the policy-visible edge for core behavior,
 ;;; keeping validation, lookup, or projection responsibilities centralized for

@@ -17,6 +17,7 @@
         :poo-flow/src/module-system/durable-runtime-store
         :poo-flow/src/module-system/durable-runtime-store-backend
         :poo-flow/src/module-system/durable-runtime-store-operation
+        :poo-flow/src/module-system/durable-runtime-store-operation-bridge
         :poo-flow/src/module-system/durable-recovery-scenario
         :poo-flow/src/module-system/descriptor-syntax
         :poo-flow/src/module-system/projection
@@ -37,6 +38,7 @@
         (import: :poo-flow/src/module-system/durable-runtime-store)
         (import: :poo-flow/src/module-system/durable-runtime-store-backend)
         (import: :poo-flow/src/module-system/durable-runtime-store-operation)
+        (import: :poo-flow/src/module-system/durable-runtime-store-operation-bridge)
         (import: :poo-flow/src/module-system/durable-recovery-scenario)
         (import: :poo-flow/src/module-system/descriptor-syntax)
         (import: :poo-flow/src/module-system/projection)

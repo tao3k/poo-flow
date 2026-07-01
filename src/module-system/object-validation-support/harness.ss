@@ -8,7 +8,8 @@
                  poo-object-validation-valid?)
         (only-in :std/sugar foldl)
         :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/object-validation-support/facts)
+        :poo-flow/src/module-system/object-validation-support/facts
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-module-field-contract->harness-field
         poo-flow-module-object-harness-validation
@@ -177,38 +178,39 @@
 (def (poo-flow-module-validation-hash-field validation key)
   (cons key (hash-get validation key)))
 
-;;; Boundary: module validation hash fields is the policy-visible edge for
-;;; module-system, object behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> HashTable [Symbol] Alist)
-(def (poo-flow-module-validation-hash-fields validation keys)
-  (map (lambda (key)
-         (poo-flow-module-validation-hash-field validation key))
-       keys))
-
 ;;; Boundary: module type validation to alist is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> HashTable Alist)
-(def (poo-flow-module-type-validation->alist validation)
-  (if (hash-table? validation)
-    (poo-flow-module-validation-hash-fields
-     validation
-     '(kind schema valueKind typeDisplay valid diagnostics))
-    '()))
+(defpoo-module-final-projection
+  poo-flow-module-type-validation->alist (validation)
+  (guard (hash-table? validation) '())
+  (bindings ())
+  (fields ((kind (hash-get validation 'kind))
+           (schema (hash-get validation 'schema))
+           (valueKind (hash-get validation 'valueKind))
+           (typeDisplay (hash-get validation 'typeDisplay))
+           (valid (hash-get validation 'valid))
+           (diagnostics (hash-get validation 'diagnostics)))))
 
 ;;; User-facing projection: preserve the upstream validation vocabulary while
 ;;; making field-level receipts easy for doctors and agents to scan.
 ;; : (-> HashTable Alist)
-(def (poo-flow-module-field-contract-validation->alist validation)
-  (append
-   (poo-flow-module-validation-hash-fields
-    validation
-    '(kind schema object field valueKind merge valid diagnostics checkedSignals))
-   (list
-    (cons 'type-validation
-          (poo-flow-module-type-validation->alist
-           (hash-get validation 'typeValidation))))))
+(defpoo-module-final-projection
+  poo-flow-module-field-contract-validation->alist (validation)
+  (bindings ((type-validation
+              (poo-flow-module-type-validation->alist
+               (hash-get validation 'typeValidation)))))
+  (fields ((kind (hash-get validation 'kind))
+           (schema (hash-get validation 'schema))
+           (object (hash-get validation 'object))
+           (field (hash-get validation 'field))
+           (valueKind (hash-get validation 'valueKind))
+           (merge (hash-get validation 'merge))
+           (valid (hash-get validation 'valid))
+           (diagnostics (hash-get validation 'diagnostics))
+           (checkedSignals (hash-get validation 'checkedSignals))
+           (type-validation type-validation))))
 
 ;; field-contract-validations-valid?
 ;;   : (-> (List HashTable) Boolean)

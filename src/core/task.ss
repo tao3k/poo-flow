@@ -2,9 +2,10 @@
 ;;; Boundary: tasks describe work intent and adapter request shape.
 ;;; Invariant: only pure/scheme tasks carry an in-process executor.
 
-(import (only-in :clan/poo/object .mix .@ object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
-        :poo-flow/src/core/failure)
+        :poo-flow/src/core/failure
+        :poo-flow/src/core/object-syntax)
 
 (export make-task
         task?
@@ -86,26 +87,26 @@
 ;;; data-driven at the task boundary, not hard-coded in the runner.
 ;; : (-> Unit TaskFamilyDescriptorPrototype)
 (def task-family-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'task-family)
-                      (cons 'capability #f)
-                      (cons 'route 'local)
-                      (cons 'runtime-owner 'gerbil)
-                      (cons 'adapter-dispatch #f)
-                      (cons 'extension-policy 'descriptor-prototype)))
-        task-role))
+  (poo-core-role-object
+   (slots ((kind 'task-family)
+           (capability #f)
+           (route 'local)
+           (runtime-owner 'gerbil)
+           (adapter-dispatch #f)
+           (extension-policy 'descriptor-prototype)))
+   (supers task-role)))
 
 ;; : (-> Symbol Symbol Symbol Symbol AdapterDispatch TaskFamilyDescriptor)
 (def (make-task-family-descriptor family-name family-capability family-route family-runtime-owner family-adapter-dispatch)
-  (.mix slots: (role-constant-slots
-                (list (cons 'name family-name)
-                      (cons 'capability family-capability)
-                      (cons 'route family-route)
-                      (cons 'runtime-owner family-runtime-owner)
-                      (cons 'adapter-dispatch family-adapter-dispatch)
-                      (cons 'responsibility
-                            (list 'task-family family-route family-capability))))
-        task-family-descriptor-prototype))
+  (poo-core-role-object
+   (slots ((name family-name)
+           (capability family-capability)
+           (route family-route)
+           (runtime-owner family-runtime-owner)
+           (adapter-dispatch family-adapter-dispatch)
+           (responsibility
+            (list 'task-family family-route family-capability))))
+   (supers task-family-descriptor-prototype)))
 
 ;; : (-> TaskFamilyDescriptorCandidate Boolean)
 (def (task-family-descriptor? descriptor)
@@ -116,20 +117,20 @@
 ;;; registry value instead of mutating the default control-plane registry.
 ;; : (-> Unit TaskFamilyRegistryPrototype)
 (def task-family-registry-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'task-family-registry)
-                      (cons 'descriptors '())
-                      (cons 'extension-policy 'immutable-registry)))
-        task-role))
+  (poo-core-role-object
+   (slots ((kind 'task-family-registry)
+           (descriptors '())
+           (extension-policy 'immutable-registry)))
+   (supers task-role)))
 
 ;; : (-> Symbol [TaskFamilyDescriptor] TaskFamilyRegistry)
 (def (make-task-family-registry registry-name registry-descriptors)
-  (.mix slots: (role-constant-slots
-                (list (cons 'name registry-name)
-                      (cons 'descriptors registry-descriptors)
-                      (cons 'responsibility
-                            (list 'task-family-registry registry-name))))
-        task-family-registry-prototype))
+  (poo-core-role-object
+   (slots ((name registry-name)
+           (descriptors registry-descriptors)
+           (responsibility
+            (list 'task-family-registry registry-name))))
+   (supers task-family-registry-prototype)))
 
 ;; : (-> TaskFamilyRegistryCandidate Boolean)
 (def (task-family-registry? registry)

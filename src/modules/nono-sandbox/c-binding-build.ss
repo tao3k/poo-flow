@@ -4,8 +4,9 @@
 ;;; Runtime contract: native loading lives in native.ss; irreversible apply is gated.
 
 (import :gerbil/gambit
-        (only-in :clan/poo/object .ref .mix object?)
+        (only-in :clan/poo/object .ref object?)
         :poo-flow/src/core/api
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
         :poo-flow/src/modules/nono-sandbox/c-binding-descriptor)
@@ -101,37 +102,37 @@
 ;;; the runtime manifest projection.
 ;; : NonoCBindingBuildPrototype
 (def nono-c-binding-build-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'schema +nono-c-binding-build-schema+)
-                      (cons 'name 'nono-c-binding-build)
-                      (cons 'compiler "clang")
-                      (cons 'standard "c11")
-                      (cons 'compiler-options
-                            +nono-c-binding-default-compiler-options+)
-                      (cons 'warning-options
-                            +nono-c-binding-default-warning-options+)
-                      (cons 'syntax-only? #t)
-                      (cons 'adapter-include-dirs
-                            +nono-c-binding-default-adapter-include-dirs+)
-                      (cons 'upstream-include-dirs
-                            +nono-c-binding-default-upstream-include-dirs+)
-                      (cons 'include-dirs
-                            +nono-c-binding-default-include-dirs+)
-                      (cons 'probe-ref
-                            "bindings/nono-c/poo_flow_nono_binding_probe.c")
-                      (cons 'validator
-                            (lambda (build)
-                              (nono-c-binding-validate-build build)))))
-        execution-policy-role))
+  (poo-core-role-object
+   (slots ((schema +nono-c-binding-build-schema+)
+           (name 'nono-c-binding-build)
+           (compiler "clang")
+           (standard "c11")
+           (compiler-options
+            +nono-c-binding-default-compiler-options+)
+           (warning-options
+            +nono-c-binding-default-warning-options+)
+           (syntax-only? #t)
+           (adapter-include-dirs
+            +nono-c-binding-default-adapter-include-dirs+)
+           (upstream-include-dirs
+            +nono-c-binding-default-upstream-include-dirs+)
+           (include-dirs
+            +nono-c-binding-default-include-dirs+)
+           (probe-ref
+            "bindings/nono-c/poo_flow_nono_binding_probe.c")
+           (validator
+            (lambda (build)
+              (nono-c-binding-validate-build build)))))
+   (supers execution-policy-role)))
 
 ;;; Boundary: make nono c binding build is the policy-visible edge for sandbox
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> (List Pair) NonoCBindingBuild)
 (def (make-nono-c-binding-build . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (if (null? maybe-overrides) '() (car maybe-overrides)))
-        nono-c-binding-build-prototype))
+  (poo-core-role-object
+   (slot-rows (if (null? maybe-overrides) '() (car maybe-overrides)))
+   (supers nono-c-binding-build-prototype)))
 
 ;; : (-> NonoCBindingBuildCandidate Boolean)
 (def (nono-c-binding-build? build)
@@ -329,12 +330,29 @@
 
 ;;; Input validation maps paths and generated indexes together; callers get
 ;;; stable row numbers without mutating the required-inputs receipt.
+;; : (-> Alist Integer (List ValidationError) (List ValidationError))
+(def (nono-c-binding-build-input-validation-error/rev input index errors)
+  (let loop ((remaining-errors
+              (nono-c-binding-build-input-validation-error input index))
+             (error-values errors))
+    (if (null? remaining-errors)
+      error-values
+      (loop (cdr remaining-errors)
+            (cons (car remaining-errors) error-values)))))
+
 ;; : (-> (List Alist) Integer (List ValidationError))
 (def (nono-c-binding-build-inputs-validation-errors inputs index)
-  (apply append
-         (map nono-c-binding-build-input-validation-error
-              inputs
-              (iota (length inputs) index))))
+  (let loop ((remaining-inputs inputs)
+             (input-index index)
+             (error-values '()))
+    (if (null? remaining-inputs)
+      (reverse error-values)
+      (loop (cdr remaining-inputs)
+            (+ input-index 1)
+            (nono-c-binding-build-input-validation-error/rev
+             (car remaining-inputs)
+             input-index
+             error-values)))))
 
 ;;; Input validation is deliberately separate from descriptor validation:
 ;;; package contracts may be inspected without a local nono checkout, while

@@ -7,7 +7,8 @@
         (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
-        :poo-flow/src/module-system/object-validation-support/harness)
+        :poo-flow/src/module-system/object-validation-support/harness
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-module-object-validation-phases
         object-diagnostics
@@ -321,41 +322,38 @@
           (hash-get validation 'field)))
    field-validations))
 
-;; : (-> HashTable Symbol Pair)
-(def (poo-flow-module-object-validation-field validation key)
-  (cons key (hash-get validation key)))
-
-;;; Boundary: module object validation fields is the policy-visible edge for
-;;; module-system, object behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> HashTable [Symbol] Alist)
-(def (poo-flow-module-object-validation-fields validation keys)
-  (map (lambda (key)
-         (poo-flow-module-object-validation-field validation key))
-       keys))
-
 ;;; Public projection boundary: callers get stable alists without depending on
 ;;; hash-table nesting or harness-private source receipt shapes.
 ;; : (-> HashTable Alist)
-(def (poo-flow-module-object-validation->alist validation)
-  (let (field-validations
-        (hash-get validation 'fieldContractValidations))
-    (append
-     (poo-flow-module-object-validation-fields
-      validation
-      '(kind schema object inherits inheritance-chain inherit-count
-             direct-field-count direct-field-identities
-             resolved-field-count resolved-field-identities field-origins
-             metadata valid diagnostics checkedSignals validationPhases))
-     (list
-      (cons 'diagnostic-count
-            (length (hash-get validation 'diagnostics)))
-      (cons 'field-count (length field-validations))
-      (cons 'invalid-fields
+(defpoo-module-final-projection
+  poo-flow-module-object-validation->alist (validation)
+  (bindings ((field-validations
+              (hash-get validation 'fieldContractValidations))))
+  (fields ((kind (hash-get validation 'kind))
+           (schema (hash-get validation 'schema))
+           (object (hash-get validation 'object))
+           (inherits (hash-get validation 'inherits))
+           (inheritance-chain (hash-get validation 'inheritance-chain))
+           (inherit-count (hash-get validation 'inherit-count))
+           (direct-field-count (hash-get validation 'direct-field-count))
+           (direct-field-identities
+            (hash-get validation 'direct-field-identities))
+           (resolved-field-count (hash-get validation 'resolved-field-count))
+           (resolved-field-identities
+            (hash-get validation 'resolved-field-identities))
+           (field-origins (hash-get validation 'field-origins))
+           (metadata (hash-get validation 'metadata))
+           (valid (hash-get validation 'valid))
+           (diagnostics (hash-get validation 'diagnostics))
+           (checkedSignals (hash-get validation 'checkedSignals))
+           (validationPhases (hash-get validation 'validationPhases))
+           (diagnostic-count (length (hash-get validation 'diagnostics)))
+           (field-count (length field-validations))
+           (invalid-fields
             (poo-flow-module-invalid-field-identities field-validations))
-      (cons 'field-validations
+           (field-validations
             (map poo-flow-module-field-contract-validation->alist
-                 field-validations))))))
+                 field-validations)))))
 
 ;;; Catalog validation stays a pure map so callers can decide whether to inspect
 ;;; receipts or escalate through the require! gates.

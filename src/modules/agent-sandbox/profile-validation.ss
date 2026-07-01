@@ -316,6 +316,27 @@
 
 ;;; Path diagnostics fan out over every declared path entry so sandbox profiles
 ;;; can report all bad mounts instead of failing on the first row.
+;; : (-> (-> Alist [ValidationError]) Alist [ValidationError] [ValidationError])
+(def (agent-sandbox-profile-entry-diagnostics/rev entry-diagnostics entry errors)
+  (let loop ((remaining-errors (entry-diagnostics entry))
+             (error-values errors))
+    (if (null? remaining-errors)
+      error-values
+      (loop (cdr remaining-errors)
+            (cons (car remaining-errors) error-values)))))
+
+;; : (-> (-> Alist [ValidationError]) [Alist] [ValidationError])
+(def (agent-sandbox-profile-entries-diagnostics entry-diagnostics entries)
+  (let loop ((remaining-entries entries)
+             (error-values '()))
+    (if (null? remaining-entries)
+      (reverse error-values)
+      (loop (cdr remaining-entries)
+            (agent-sandbox-profile-entry-diagnostics/rev
+             entry-diagnostics
+             (car remaining-entries)
+             error-values)))))
+
 ;; : (-> [Alist] [ValidationError])
 (def (agent-sandbox-profile-filesystem-paths-diagnostics entries)
   (cond
@@ -324,9 +345,9 @@
            'missing-filesystem-paths
            (list (cons 'paths entries)))))
    (else
-    (apply append
-           (map agent-sandbox-profile-filesystem-path-entry-diagnostics
-                entries)))))
+    (agent-sandbox-profile-entries-diagnostics
+     agent-sandbox-profile-filesystem-path-entry-diagnostics
+     entries))))
 
 ;;; Boundary: agent sandbox profile filesystem mount entry diagnostics is the
 ;;; policy-visible edge for sandbox behavior, keeping validation, lookup, or
@@ -350,9 +371,9 @@
            'missing-filesystem-mounts
            (list (cons 'mounts entries)))))
    (else
-    (apply append
-           (map agent-sandbox-profile-filesystem-mount-entry-diagnostics
-                entries)))))
+    (agent-sandbox-profile-entries-diagnostics
+     agent-sandbox-profile-filesystem-mount-entry-diagnostics
+     entries))))
 
 ;; : (-> ResourcePolicy Symbol Value)
 (def (agent-sandbox-profile-resource-policy-entry-value resource-policy

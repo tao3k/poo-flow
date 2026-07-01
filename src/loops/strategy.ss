@@ -2,10 +2,11 @@
 ;;; Boundary: loop strategies compose policy descriptors into inert handoff data.
 ;;; Invariant: local execution here is harness-only validation, never production runtime.
 
-(import (only-in :clan/poo/object .o .mix object?)
+(import (only-in :clan/poo/object .o object?)
         (only-in :std/srfi/95 sort)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/loops/descriptor)
 
 (export +loop-strategy-plan-schema+
@@ -110,33 +111,34 @@
 ;;; Intent: C3/POO composes strategy roles before Marlin receives a contract.
 ;; : (-> Unit LoopStrategyPlanPrototype)
 (def loop-strategy-plan-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'schema +loop-strategy-plan-schema+)
-                      (cons 'kind 'loop-strategy-plan)
-                      (cons 'name #f)
-                      (cons 'patterns '())
-                      (cons 'selection 'priority-first)
-                      (cons 'level-ceiling 'l2)
-                      (cons 'local-validation +loop-local-validation-default+)
-                      (cons 'handoff +loop-runtime-handoff-default+)
-                      (cons 'control-owner 'gerbil)
-                      (cons 'execution-owner 'marlin-agent-core)
-                      (cons 'metadata '())))
-        loop-runtime-handoff-role
-        loop-local-validation-role
-        loop-prioritization-role
-        loop-strategy-engine-role))
+  (poo-core-role-object
+   (slots ((schema +loop-strategy-plan-schema+)
+           (kind 'loop-strategy-plan)
+           (name #f)
+           (patterns '())
+           (selection 'priority-first)
+           (level-ceiling 'l2)
+           (local-validation +loop-local-validation-default+)
+           (handoff +loop-runtime-handoff-default+)
+           (control-owner 'gerbil)
+           (execution-owner 'marlin-agent-core)
+           (metadata '())))
+   (supers loop-runtime-handoff-role
+           loop-local-validation-role
+           loop-prioritization-role
+           loop-strategy-engine-role)))
 
 ;;; Boundary: constructor receives descriptors and strategy-policy overrides.
 ;;; Runtime handles, timers, connector clients, and worktrees stay out of scope.
 ;; : (-> Symbol [LoopPatternDescriptor] [Alist] LoopStrategyPlan)
 (def (make-loop-strategy-plan name patterns . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (append
-                 (list (cons 'name name)
-                       (cons 'patterns patterns))
-                 (if (null? maybe-overrides) '() (car maybe-overrides))))
-        loop-strategy-plan-prototype))
+  (poo-core-role-object
+   (slot-rows
+    (append
+     (list (cons 'name name)
+           (cons 'patterns patterns))
+     (if (null? maybe-overrides) '() (car maybe-overrides))))
+   (supers loop-strategy-plan-prototype)))
 
 ;;; Boundary: predicate accepts C3-composed strategy objects by kind slot.
 ;; : (-> LoopStrategyPlanCandidate Boolean)

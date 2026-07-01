@@ -9,13 +9,13 @@
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
-                 benchmark-run)
+                 benchmark-run/result)
         :poo-flow/t/support/performance
         :poo-flow/src/module-system/durable-policy
         :poo-flow/src/module-system/durable-runtime-store
         :poo-flow/src/module-system/durable-recovery-scenario
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/src/modules/session/transform
+        :poo-flow/src/modules/memory-core/objects)
 
 (export durable-recovery-scenario-performance-test)
 
@@ -156,15 +156,13 @@
 (def durable-recovery-scenario-performance-test
   (test-suite "durable recovery scenario performance"
     (test-case "keeps recovery scenario batch projection inside benchmark contract"
-      (let* ((scenario-count 96)
-             (summary
-              (durable-recovery-performance-summary scenario-count))
-             (receipt
-              (benchmark-run
-               durable-recovery-scenario-fixture
-               (lambda ()
-                 (durable-recovery-performance-summary
-                  scenario-count)))))
+      (let* ((scenario-count 96))
+        (let-values (((receipt summary)
+                      (benchmark-run/result
+                       durable-recovery-scenario-fixture
+                       (lambda ()
+                         (durable-recovery-performance-summary
+                          scenario-count)))))
         (check-equal?
          (benchmark-fixture-contract-pass? durable-recovery-scenario-fixture)
          #t)
@@ -184,4 +182,4 @@
          (durable-recovery-performance-ref summary 'runtime-executed)
          #f)
         (durable-recovery-performance-display-receipt receipt)
-        (check-equal? (benchmark-receipt-pass? receipt) #t)))))
+        (check-equal? (benchmark-receipt-pass? receipt) #t))))))

@@ -212,11 +212,26 @@
 
 ;;; Dependency graph projection must work for empty declarative pipelines too;
 ;;; the runtime scheduler is downstream, so this layer only flattens facts.
+;; : (-> (-> PooFlowCicdCheck List) PooFlowCicdCheck List List)
+(def (poo-flow-cicd-append-map/rev proc value results)
+  (let loop ((remaining-values (proc value))
+             (result-values results))
+    (if (null? remaining-values)
+      result-values
+      (loop (cdr remaining-values)
+            (cons (car remaining-values) result-values)))))
+
 ;; : (-> (-> PooFlowCicdCheck List) [PooFlowCicdCheck] List)
 (def (poo-flow-cicd-append-map proc values)
-  (if (null? values)
-    '()
-    (apply append (map proc values))))
+  (let loop ((remaining-values values)
+             (result-values '()))
+    (if (null? remaining-values)
+      (reverse result-values)
+      (loop (cdr remaining-values)
+            (poo-flow-cicd-append-map/rev
+             proc
+             (car remaining-values)
+             result-values)))))
 
 ;;; Unresolved dependency refs are graph diagnostics, not constructor errors.
 ;;; Keeping this local to one check lets the map-level report aggregate every

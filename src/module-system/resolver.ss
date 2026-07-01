@@ -16,7 +16,8 @@
         :poo-flow/src/core/config
         :poo-flow/src/module-system/source
         :poo-flow/src/module-system/descriptor
-        :poo-flow/src/module-system/diagnostics)
+        :poo-flow/src/module-system/diagnostics
+        :poo-flow/src/module-system/projection-syntax)
 
 (export make-poo-flow-module-catalog-entry
         poo-flow-module-catalog-entry?
@@ -57,13 +58,16 @@
 
 ;;; Boundary: catalog entry projection preserves source/module association.
 ;; : (-> PooModuleCatalogEntry Alist)
-(def (poo-flow-module-catalog-entry->alist entry)
-  (list (cons 'source
+(defpoo-module-final-projection
+  poo-flow-module-catalog-entry->alist (entry)
+  (bindings ((source
               (poo-flow-module-source-ref->alist
                (poo-flow-module-catalog-entry-source entry)))
-        (cons 'module
+             (module
               (poo-flow-module-name
                (poo-flow-module-catalog-entry-module entry)))))
+  (fields ((source source)
+           (module module))))
 
 ;;; Boundary: catalogs are immutable resolver indexes, not loaders.
 ;; : (-> Symbol [PooModuleCatalogEntry] PooModuleCatalog)
@@ -143,11 +147,13 @@
 
 ;;; Boundary: catalog alist projection is an inspection surface only.
 ;; : (-> PooModuleCatalog Alist)
-(def (poo-flow-module-catalog->alist catalog)
-  (list (cons 'name (poo-flow-module-catalog-name catalog))
-        (cons 'entries
+(defpoo-module-final-projection
+  poo-flow-module-catalog->alist (catalog)
+  (bindings ((entries
               (map poo-flow-module-catalog-entry->alist
                    (poo-flow-module-catalog-entries catalog)))))
+  (fields ((name (poo-flow-module-catalog-name catalog))
+           (entries entries))))
 
 ;;; Boundary: resolve-doctor validates source selection before activation.
 ;; : (-> PooModuleCatalog [PooModuleSourceRef] PooModuleDoctorReport)

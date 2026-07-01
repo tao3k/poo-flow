@@ -8,7 +8,8 @@
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
-        :poo-flow/src/core/runner)
+        :poo-flow/src/core/runner
+        :poo-flow/src/core/projection-syntax)
 
 (export make-config-requirement
         config-requirement?
@@ -68,10 +69,12 @@
   (config-requirement-secret requirement))
 
 ;; : (-> ConfigRequirement Alist)
-(def (config-requirement->alist requirement)
-  (list (cons 'source (config-requirement-source requirement))
-        (cons 'key (config-requirement-key requirement))
-        (cons 'secret (config-requirement-secret requirement))))
+(defpoo-core-receipt-projection
+  config-requirement->alist (requirement)
+  (bindings ())
+  (fields ((source (config-requirement-source requirement))
+           (key (config-requirement-key requirement))
+           (secret (config-requirement-secret requirement)))))
 
 ;;; Preflight reports only requirement identity and missing keys; raw values
 ;;; remain in the runtime adapter or caller-owned config source.
@@ -98,14 +101,17 @@
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> ConfigPreflight Alist)
-(def (config-preflight->alist preflight)
-  (list (cons 'status (config-preflight-status preflight))
-        (cons 'requirements
-              (config-requirements->alist
+(defpoo-core-receipt-projection
+  config-preflight->alist (preflight)
+  (bindings ((requirements
+              (config-requirement-alists
                (config-preflight-requirements preflight)))
-        (cons 'missing
-              (config-requirements->alist
+             (missing
+              (config-requirement-alists
                (config-preflight-missing preflight)))))
+  (fields ((status (config-preflight-status preflight))
+           (requirements requirements)
+           (missing missing))))
 
 ;;; Config arguments mirror Funflow's configurable arguments while keeping
 ;;; source loading and secret materialization outside the Scheme control plane.
@@ -342,15 +348,15 @@
   (run-config-validate-registries config flow)
   (runner-run (run-config->runner config) flow input))
 
-;;; Boundary: config requirements to alist is the policy-visible edge for core
+;;; Boundary: config requirement collection projection is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> [ConfigRequirement] [Alist])
-(def (config-requirements->alist requirements)
+(def (config-requirement-alists requirements)
   (if (null? requirements)
     '()
     (cons (config-requirement->alist (car requirements))
-          (config-requirements->alist (cdr requirements)))))
+          (config-requirement-alists (cdr requirements)))))
 
 ;;; Boundary: missing config requirements is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities

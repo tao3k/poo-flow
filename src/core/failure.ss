@@ -2,6 +2,8 @@
 ;;; Boundary: failures are typed control-plane data, not runtime strings.
 ;;; Invariant: heavy runtime errors are wrapped here before receipts persist them.
 
+(import :poo-flow/src/core/projection-syntax)
+
 (export make-execution-failure
         execution-failure?
         execution-failure-owner
@@ -84,12 +86,14 @@
 ;;; Alist projection is the durable shape for audit logs and future runtime
 ;;; bridge serialization.
 ;; : (-> ExecutionFailure Alist)
-(def (control-plane-failure->alist failure)
-  (list (cons 'owner (execution-failure-owner failure))
-        (cons 'code (execution-failure-code failure))
-        (cons 'message (execution-failure-message failure))
-        (cons 'detail (execution-failure-detail failure))
-        (cons 'recoverable (execution-failure-recoverable failure))))
+(defpoo-core-receipt-projection
+  control-plane-failure->alist (failure)
+  (bindings ())
+  (fields ((owner (execution-failure-owner failure))
+           (code (execution-failure-code failure))
+           (message (execution-failure-message failure))
+           (detail (execution-failure-detail failure))
+           (recoverable (execution-failure-recoverable failure)))))
 
 ;;; Boundary:
 ;;; - This is the Scheme-side equivalent of Funflow's =tryE= catch boundary.

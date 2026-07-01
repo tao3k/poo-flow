@@ -8,6 +8,7 @@
                  +runtime-request-schema+
                  make-runtime-command-descriptor
                  runtime-command-descriptor->manifest)
+        :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/durable-runtime-store)
 
 (export +poo-flow-durable-runtime-store-backend-kind+
@@ -94,18 +95,18 @@
     negotiation
     runtime-executed))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-runtime-backend-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
 
-;; : (-> POOObject Symbol Value Value)
+;; : (forall (a) (-> POOObject Symbol a a))
 (def (poo-flow-durable-runtime-backend-slot object key default-value)
   (if (and (object? object) (.slot? object key))
     (.ref object key)
     default-value))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-runtime-backend-alist-ref row key default-value)
   (if (list? row)
     (let (entry (assoc key row))
@@ -120,11 +121,11 @@
     (poo-flow-durable-runtime-backend-every? predicate (cdr values)))
    (else #f)))
 
-;; : (-> Any [Any] Boolean)
+;; : (forall (a) (-> a (List a) Boolean))
 (def (poo-flow-durable-runtime-backend-member? value values)
   (if (member value values) #t #f))
 
-;; : (-> [Any] Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-runtime-backend-symbol-list? values)
   (and (list? values)
        (poo-flow-durable-runtime-backend-every? symbol? values)))
@@ -146,7 +147,7 @@
           #t))
    (cons 'runtime-executed #f)))
 
-;; : (-> Symbol Symbol Value [Alist])
+;; : (-> Symbol Symbol Datum [Alist])
 (def (poo-flow-durable-runtime-backend-required-symbol-diagnostics code slot value)
   (if (symbol? value)
     '()
@@ -159,7 +160,7 @@
             (cons 'expected 'symbol)
             (cons 'recoverable? #t))))))
 
-;; : (-> Symbol Symbol Value [Alist])
+;; : (-> Symbol Symbol Datum [Alist])
 (def (poo-flow-durable-runtime-backend-required-string-diagnostics code slot value)
   (if (string? value)
     '()
@@ -264,7 +265,7 @@
    '((metadata . ((scope . shared)
                   (runtime-executed . #f))))))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-runtime-store-backend? value)
   (and (object? value)
        (.slot? value 'durable-runtime-store-backend-kind)
@@ -364,7 +365,7 @@
         (list (cons 'value backend)
               (cons 'recoverable? #t)))))))
 
-;; : PooDurableRuntimeStoreBackendReceipt
+;;; Runtime store backend receipts stay fixed structs before alist projection.
 (defstruct poo-flow-durable-runtime-store-backend-receipt
   (backend-id
    backend-kind
@@ -404,45 +405,44 @@
                                             '()))))
 
 ;; : (-> PooDurableRuntimeStoreBackendReceipt Alist)
-(def (poo-flow-durable-runtime-store-backend-receipt->alist receipt)
-  (list
-   (cons 'kind 'poo-flow.durable.runtime-store-backend-receipt)
-   (cons 'schema +poo-flow-durable-runtime-store-backend-receipt-schema+)
-   (cons 'backend-id
-         (poo-flow-durable-runtime-store-backend-receipt-backend-id receipt))
-   (cons 'backend-kind
-         (poo-flow-durable-runtime-store-backend-receipt-backend-kind
-          receipt))
-   (cons 'runtime-owner
-         (poo-flow-durable-runtime-store-backend-receipt-runtime-owner
-          receipt))
-   (cons 'executable
-         (poo-flow-durable-runtime-store-backend-receipt-executable receipt))
-   (cons 'protocol
-         (poo-flow-durable-runtime-store-backend-receipt-protocol receipt))
-   (cons 'supported-ledger-kinds
-         (poo-flow-durable-runtime-store-backend-receipt-supported-ledger-kinds
-          receipt))
-   (cons 'supported-capability-flags
-         (poo-flow-durable-runtime-store-backend-receipt-supported-capability-flags
-          receipt))
-   (cons 'operation-kinds
-         (poo-flow-durable-runtime-store-backend-receipt-operation-kinds
-          receipt))
-   (cons 'valid?
-         (poo-flow-durable-runtime-store-backend-receipt-valid? receipt))
-   (cons 'diagnostics
-         (poo-flow-durable-runtime-store-backend-receipt-diagnostics
-          receipt))
-   (cons 'diagnostic-count
-         (length
-          (poo-flow-durable-runtime-store-backend-receipt-diagnostics
-           receipt)))
-   (cons 'metadata
-         (poo-flow-durable-runtime-store-backend-receipt-metadata receipt))
-   (cons 'runtime-executed #f)))
+(defpoo-module-final-projection
+  poo-flow-durable-runtime-store-backend-receipt->alist (receipt)
+  (bindings ((diagnostics
+              (poo-flow-durable-runtime-store-backend-receipt-diagnostics
+               receipt))))
+  (fields ((kind 'poo-flow.durable.runtime-store-backend-receipt)
+           (schema +poo-flow-durable-runtime-store-backend-receipt-schema+)
+           (backend-id
+            (poo-flow-durable-runtime-store-backend-receipt-backend-id receipt))
+           (backend-kind
+            (poo-flow-durable-runtime-store-backend-receipt-backend-kind
+             receipt))
+           (runtime-owner
+            (poo-flow-durable-runtime-store-backend-receipt-runtime-owner
+             receipt))
+           (executable
+            (poo-flow-durable-runtime-store-backend-receipt-executable
+             receipt))
+           (protocol
+            (poo-flow-durable-runtime-store-backend-receipt-protocol receipt))
+           (supported-ledger-kinds
+            (poo-flow-durable-runtime-store-backend-receipt-supported-ledger-kinds
+             receipt))
+           (supported-capability-flags
+            (poo-flow-durable-runtime-store-backend-receipt-supported-capability-flags
+             receipt))
+           (operation-kinds
+            (poo-flow-durable-runtime-store-backend-receipt-operation-kinds
+             receipt))
+           (valid?
+            (poo-flow-durable-runtime-store-backend-receipt-valid? receipt))
+           (diagnostics diagnostics)
+           (diagnostic-count (length diagnostics))
+           (metadata
+            (poo-flow-durable-runtime-store-backend-receipt-metadata receipt))
+           (runtime-executed #f))))
 
-;; : (-> Any Alist)
+;; : (-> Datum Alist)
 (def (poo-flow-durable-runtime-store-contract-receipt-row receipt)
   (cond
    ((poo-flow-durable-runtime-store-contract-receipt? receipt)
@@ -450,7 +450,7 @@
    ((list? receipt) receipt)
    (else receipt)))
 
-;; : (-> Any Alist)
+;; : (-> Datum Alist)
 (def (poo-flow-durable-runtime-store-backend-receipt-row receipt)
   (cond
    ((poo-flow-durable-runtime-store-backend-receipt? receipt)
@@ -655,79 +655,78 @@
      #f)))
 
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt Alist)
-(def (poo-flow-durable-runtime-store-negotiation-receipt->alist receipt)
-  (list
-   (cons 'kind 'poo-flow.durable.runtime-store-negotiation-receipt)
-   (cons 'schema +poo-flow-durable-runtime-store-negotiation-schema+)
-   (cons 'store-id
-         (poo-flow-durable-runtime-store-negotiation-receipt-store-id
-          receipt))
-   (cons 'backend-id
-         (poo-flow-durable-runtime-store-negotiation-receipt-backend-id
-          receipt))
-   (cons 'backend-kind
-         (poo-flow-durable-runtime-store-negotiation-receipt-backend-kind
-          receipt))
-   (cons 'selected?
-         (poo-flow-durable-runtime-store-negotiation-receipt-selected?
-          receipt))
-   (cons 'handoff-ready?
-         (poo-flow-durable-runtime-store-negotiation-receipt-handoff-ready?
-          receipt))
-   (cons 'contract-row
-         (poo-flow-durable-runtime-store-negotiation-receipt-contract-row
-          receipt))
-   (cons 'backend-row
-         (poo-flow-durable-runtime-store-negotiation-receipt-backend-row
-          receipt))
-   (cons 'required-ledger-kinds
-         (poo-flow-durable-runtime-store-negotiation-receipt-required-ledger-kinds
-          receipt))
-   (cons 'supported-ledger-kinds
-         (poo-flow-durable-runtime-store-negotiation-receipt-supported-ledger-kinds
-          receipt))
-   (cons 'missing-ledger-kinds
-         (poo-flow-durable-runtime-store-negotiation-receipt-missing-ledger-kinds
-          receipt))
-   (cons 'required-capability-flags
-         (poo-flow-durable-runtime-store-negotiation-receipt-required-capability-flags
-          receipt))
-   (cons 'supported-capability-flags
-         (poo-flow-durable-runtime-store-negotiation-receipt-supported-capability-flags
-          receipt))
-   (cons 'missing-capability-flags
-         (poo-flow-durable-runtime-store-negotiation-receipt-missing-capability-flags
-          receipt))
-   (cons 'operation-kinds
-         (poo-flow-durable-runtime-store-negotiation-receipt-operation-kinds
-          receipt))
-   (cons 'unsupported-operation-kinds
-         (poo-flow-durable-runtime-store-negotiation-receipt-unsupported-operation-kinds
-          receipt))
-   (cons 'manifest-operation
-         (poo-flow-durable-runtime-store-negotiation-receipt-manifest-operation
-          receipt))
-   (cons 'valid?
-         (poo-flow-durable-runtime-store-negotiation-receipt-valid? receipt))
-   (cons 'diagnostics
-         (poo-flow-durable-runtime-store-negotiation-receipt-diagnostics
-          receipt))
-   (cons 'diagnostic-count
-         (length
-          (poo-flow-durable-runtime-store-negotiation-receipt-diagnostics
-           receipt)))
-   (cons 'metadata
-         (poo-flow-durable-runtime-store-negotiation-receipt-metadata
-          receipt))
-   (cons 'runtime-owner
-         (poo-flow-durable-runtime-store-negotiation-receipt-runtime-owner
-          receipt))
-   (cons 'handoff-required
-         (poo-flow-durable-runtime-store-negotiation-receipt-handoff-required
-          receipt))
-   (cons 'runtime-executed
-         (poo-flow-durable-runtime-store-negotiation-receipt-runtime-executed
-          receipt))))
+(defpoo-module-final-projection
+  poo-flow-durable-runtime-store-negotiation-receipt->alist (receipt)
+  (bindings ((diagnostics
+              (poo-flow-durable-runtime-store-negotiation-receipt-diagnostics
+               receipt))))
+  (fields ((kind 'poo-flow.durable.runtime-store-negotiation-receipt)
+           (schema +poo-flow-durable-runtime-store-negotiation-schema+)
+           (store-id
+            (poo-flow-durable-runtime-store-negotiation-receipt-store-id
+             receipt))
+           (backend-id
+            (poo-flow-durable-runtime-store-negotiation-receipt-backend-id
+             receipt))
+           (backend-kind
+            (poo-flow-durable-runtime-store-negotiation-receipt-backend-kind
+             receipt))
+           (selected?
+            (poo-flow-durable-runtime-store-negotiation-receipt-selected?
+             receipt))
+           (handoff-ready?
+            (poo-flow-durable-runtime-store-negotiation-receipt-handoff-ready?
+             receipt))
+           (contract-row
+            (poo-flow-durable-runtime-store-negotiation-receipt-contract-row
+             receipt))
+           (backend-row
+            (poo-flow-durable-runtime-store-negotiation-receipt-backend-row
+             receipt))
+           (required-ledger-kinds
+            (poo-flow-durable-runtime-store-negotiation-receipt-required-ledger-kinds
+             receipt))
+           (supported-ledger-kinds
+            (poo-flow-durable-runtime-store-negotiation-receipt-supported-ledger-kinds
+             receipt))
+           (missing-ledger-kinds
+            (poo-flow-durable-runtime-store-negotiation-receipt-missing-ledger-kinds
+             receipt))
+           (required-capability-flags
+            (poo-flow-durable-runtime-store-negotiation-receipt-required-capability-flags
+             receipt))
+           (supported-capability-flags
+            (poo-flow-durable-runtime-store-negotiation-receipt-supported-capability-flags
+             receipt))
+           (missing-capability-flags
+            (poo-flow-durable-runtime-store-negotiation-receipt-missing-capability-flags
+             receipt))
+           (operation-kinds
+            (poo-flow-durable-runtime-store-negotiation-receipt-operation-kinds
+             receipt))
+           (unsupported-operation-kinds
+            (poo-flow-durable-runtime-store-negotiation-receipt-unsupported-operation-kinds
+             receipt))
+           (manifest-operation
+            (poo-flow-durable-runtime-store-negotiation-receipt-manifest-operation
+             receipt))
+           (valid?
+            (poo-flow-durable-runtime-store-negotiation-receipt-valid?
+             receipt))
+           (diagnostics diagnostics)
+           (diagnostic-count (length diagnostics))
+           (metadata
+            (poo-flow-durable-runtime-store-negotiation-receipt-metadata
+             receipt))
+           (runtime-owner
+            (poo-flow-durable-runtime-store-negotiation-receipt-runtime-owner
+             receipt))
+           (handoff-required
+            (poo-flow-durable-runtime-store-negotiation-receipt-handoff-required
+             receipt))
+           (runtime-executed
+            (poo-flow-durable-runtime-store-negotiation-receipt-runtime-executed
+             receipt)))))
 
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt Alist)
 (def (poo-flow-durable-runtime-store-negotiation->marlin-handoff receipt
@@ -820,14 +819,7 @@
      (cons 'scheme-manufactures-runtime-handlers #f))))
 
 ;; : (-> [PooDurableRuntimeStoreNegotiationReceipt] [Alist])
-(def (poo-flow-durable-runtime-store-negotiations->alists receipts)
-  (cond
-   ((null? receipts) '())
-   ((pair? receipts)
-    (cons (poo-flow-durable-runtime-store-negotiation-receipt->alist
-           (car receipts))
-          (poo-flow-durable-runtime-store-negotiations->alists
-           (cdr receipts))))
-   (else
-    (error "durable runtime store negotiation serialization requires a list"
-           receipts))))
+(defpoo-module-final-projection-batch
+  poo-flow-durable-runtime-store-negotiations->alists (receipts)
+  (projector poo-flow-durable-runtime-store-negotiation-receipt->alist)
+  (error-message "durable runtime store negotiation serialization requires a list"))

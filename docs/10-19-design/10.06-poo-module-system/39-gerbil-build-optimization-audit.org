@@ -142,7 +142,7 @@ The user-interface performance gate now checks the representation contract direc
 - =t/user-interface-presentation-performance-test.ss= asserts presentation capability receipts are =loop-engine-capability-receipt?= values.
 - Runtime handoff capability receipts are still serialized alists.
 - =t/scenarios/performance/user-interface-presentation-batch-projection/benchmark.ss= records the optimization focus as batch field projection plus =defstruct= runtime receipts.
-
+- =t/user-interface-custom-scenario-batch-performance-test.ss= loads the real custom user-interface scenario cases and uses =t/scenarios/performance/user-interface-custom-scenario-batch/benchmark.ss= as the scenario benchmark fixture, keeping benchmark payloads out of =user-interface/=.
 Local focused receipts on 2026-06-29, normalized to the current focused gate:
 - =gxtest t/user-interface-presentation-performance-test.ss=: pass;
 - =gxtest t/user-interface-custom-loop-engine-capability-test.ss=: pass;

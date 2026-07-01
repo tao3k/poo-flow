@@ -107,15 +107,6 @@
          '(custom/build-session custom/audit-session)
          'custom/root-session
          (list root-entry build-entry audit-entry)))
-       (graph
-        (poo-flow-session-agent-graph
-         project-id
-         'custom/root-session
-         (list build-node audit-node)
-         (list root-session build-session audit-session)
-         registry
-         '((source . user-interface)
-           (case . session-agent-graph))))
        (build-audit-message
         (poo-flow-session-communication-receipt
          project-id
@@ -146,6 +137,16 @@
          'receipt
          '((receipt . audit-result))
          'receipt-only
+         '((source . user-interface)
+           (case . session-agent-graph))))
+       (graph
+        (poo-flow-session-agent-graph
+         project-id
+         'custom/root-session
+         (list build-node audit-node)
+         (list root-session build-session audit-session)
+         registry
+         (list build-audit-message audit-root-message)
          '((source . user-interface)
            (case . session-agent-graph))))
        (communication-rows

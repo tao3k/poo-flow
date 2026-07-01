@@ -3,7 +3,8 @@
 ;;; Invariant: this layer validates and projects durable intent only; Rust or
 ;;; Marlin owns fact logs, checkpoints, indexes, leases, replay, and repair.
 
-(import (only-in :clan/poo/object .o .ref .slot? object? object<-alist))
+(import (only-in :clan/poo/object .o .ref .slot? object?)
+        :poo-flow/src/module-system/projection-syntax)
 
 (export +poo-flow-durable-policy-kind+
         +poo-flow-durable-policy-schema+
@@ -66,7 +67,13 @@
 (def +poo-flow-durable-repair-modes+
   '(fail-closed retry rebuild compensate quarantine manual))
 
-;; : (-> Alist Symbol Value Value)
+;;; Durable policy diagnostics use fixed records internally and alists at the
+;;; public receipt boundary.
+(defstruct poo-flow-durable-policy-diagnostic-record
+  (kind schema code phase slot severity payload recoverable?)
+  transparent: #t)
+
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
@@ -85,63 +92,74 @@
     (poo-flow-durable-every? predicate (cdr values)))
    (else #f)))
 
-;; : (-> Any [Any] Boolean)
+;; : (forall (a) (-> a (List a) Boolean))
 (def (poo-flow-durable-member? value values)
   (if (member value values) #t #f))
 
-;; : (-> [Any] Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-symbol-list? values)
   (and (list? values)
        (poo-flow-durable-every? symbol? values)))
 
-;; : (-> POOObject Symbol Value Value)
+;; : (forall (a) (-> POOObject Symbol a a))
 (def (poo-flow-durable-slot object key default-value)
   (if (and (object? object) (.slot? object key))
     (.ref object key)
     default-value))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-identity-ref identity key default-value)
   (let (entry (assoc key identity))
     (if entry (cdr entry) default-value)))
 
-;; : (-> Symbol Symbol Symbol Alist POOObject)
+;; poo-flow-durable-policy-diagnostic
+;;   : (-> Symbol Symbol Symbol Alist PooDurablePolicyDiagnostic)
+;;   | doc m%
+;;       Diagnostics are fixed internal records; callers use
+;;       `poo-flow-durable-policy-diagnostic->alist` at the ABI boundary.
+;;     %
 (def (poo-flow-durable-policy-diagnostic code slot severity payload)
-  (object<-alist
-   (append
-    (list (cons 'kind +poo-flow-durable-policy-diagnostic-schema+)
-          (cons 'schema +poo-flow-durable-policy-diagnostic-schema+)
-          (cons 'code code)
-          (cons 'phase 'durable-policy)
-          (cons 'slot slot)
-          (cons 'severity severity)
-          (cons 'payload payload))
-    payload)))
+  (make-poo-flow-durable-policy-diagnostic-record
+   +poo-flow-durable-policy-diagnostic-schema+
+   +poo-flow-durable-policy-diagnostic-schema+
+   code
+   'durable-policy
+   slot
+   severity
+   payload
+   (poo-flow-durable-identity-ref payload 'recoverable? #t)))
 
-;; : (-> Value Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-policy-diagnostic? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (eq? (.ref value 'kind)
-            +poo-flow-durable-policy-diagnostic-schema+)))
+  (poo-flow-durable-policy-diagnostic-record? value))
 
 ;; : (-> PooDurablePolicyDiagnostic Alist)
 (def (poo-flow-durable-policy-diagnostic->alist diagnostic)
-  (list
-   (cons 'kind (poo-flow-durable-slot diagnostic 'kind #f))
-   (cons 'schema (poo-flow-durable-slot diagnostic 'schema #f))
-   (cons 'code (poo-flow-durable-slot diagnostic 'code #f))
-   (cons 'phase (poo-flow-durable-slot diagnostic 'phase #f))
-   (cons 'slot (poo-flow-durable-slot diagnostic 'slot #f))
-   (cons 'severity (poo-flow-durable-slot diagnostic 'severity #f))
-   (cons 'payload (poo-flow-durable-slot diagnostic 'payload '()))
-   (cons 'recoverable?
-         (poo-flow-durable-slot diagnostic 'recoverable? #t))))
+  (list (cons 'kind
+              (poo-flow-durable-policy-diagnostic-record-kind diagnostic))
+        (cons 'schema
+              (poo-flow-durable-policy-diagnostic-record-schema diagnostic))
+        (cons 'code
+              (poo-flow-durable-policy-diagnostic-record-code diagnostic))
+        (cons 'phase
+              (poo-flow-durable-policy-diagnostic-record-phase diagnostic))
+        (cons 'slot
+              (poo-flow-durable-policy-diagnostic-record-slot diagnostic))
+        (cons 'severity
+              (poo-flow-durable-policy-diagnostic-record-severity diagnostic))
+        (cons 'payload
+              (poo-flow-durable-policy-diagnostic-record-payload diagnostic))
+        (cons 'recoverable?
+              (poo-flow-durable-policy-diagnostic-record-recoverable?
+               diagnostic))))
 
 ;; : (-> [PooDurablePolicyDiagnostic] [Alist])
-(def (poo-flow-durable-policy-diagnostics->alist diagnostics)
+(def (poo-flow-durable-policy-diagnostic-alists diagnostics)
   (map poo-flow-durable-policy-diagnostic->alist diagnostics))
 
+;;; Durable policy construction is the single normalization point for policy
+;;; identity, handoff refs, and repair defaults while preserving a native POO
+;;; object for staged receipt projection.
 ;; : (-> Symbol Symbol [Alist] POOObject)
 (def (poo-flow-durable-policy policy-name scope-ref . maybe-options)
   (poo-flow-durable-require "durable policy name must be a symbol"
@@ -218,7 +236,7 @@
    '((metadata . ((scope . shared)
                   (runtime-executed . #f))))))
 
-;; : (-> Value Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-policy? value)
   (and (object? value)
        (.slot? value 'durable-kind)
@@ -379,7 +397,8 @@
 (def (poo-flow-durable-policy-valid? policy)
   (null? (poo-flow-durable-policy-diagnostics policy)))
 
-;; : PooDurablePolicyReceipt
+;;; Durable policy receipts are fixed records until projected at the external
+;;; ABI boundary.
 (defstruct poo-flow-durable-policy-receipt
   (policy-id
    project-id
@@ -431,7 +450,7 @@
      (poo-flow-durable-slot policy 'action-classes '())
      (poo-flow-durable-slot policy 'runtime-owner #f)
      valid?
-     (poo-flow-durable-policy-diagnostics->alist diagnostics)
+     (poo-flow-durable-policy-diagnostic-alists diagnostics)
      (poo-flow-durable-slot policy 'durable-metadata '()))))
 
 ;; : (-> [PooDurablePolicy] [PooDurablePolicyReceipt])
@@ -445,54 +464,50 @@
     (error "durable policy batch projection requires a list" policies))))
 
 ;; : (-> PooDurablePolicyReceipt Alist)
-(def (poo-flow-durable-policy-receipt->alist receipt)
-  (list
-   (cons 'kind 'poo-flow.durable.policy-receipt)
-   (cons 'schema +poo-flow-durable-policy-receipt-schema+)
-   (cons 'policy-id (poo-flow-durable-policy-receipt-policy-id receipt))
-   (cons 'project-id (poo-flow-durable-policy-receipt-project-id receipt))
-   (cons 'root-session-id
-         (poo-flow-durable-policy-receipt-root-session-id receipt))
-   (cons 'session-id (poo-flow-durable-policy-receipt-session-id receipt))
-   (cons 'parent-session-id
-         (poo-flow-durable-policy-receipt-parent-session-id receipt))
-   (cons 'loop-run-id (poo-flow-durable-policy-receipt-loop-run-id receipt))
-   (cons 'checkpoint-policy-ref
-         (poo-flow-durable-policy-receipt-checkpoint-policy-ref receipt))
-   (cons 'journal-policy-ref
-         (poo-flow-durable-policy-receipt-journal-policy-ref receipt))
-   (cons 'index-policy-ref
-         (poo-flow-durable-policy-receipt-index-policy-ref receipt))
-   (cons 'resume-policy-ref
-         (poo-flow-durable-policy-receipt-resume-policy-ref receipt))
-   (cons 'repair-policy-ref
-         (poo-flow-durable-policy-receipt-repair-policy-ref receipt))
-   (cons 'journal-owner
-         (poo-flow-durable-policy-receipt-journal-owner receipt))
-   (cons 'checkpoint-store
-         (poo-flow-durable-policy-receipt-checkpoint-store receipt))
-   (cons 'resume-identity
-         (poo-flow-durable-policy-receipt-resume-identity receipt))
-   (cons 'repair-mode
-         (poo-flow-durable-policy-receipt-repair-mode receipt))
-   (cons 'action-classes
-         (poo-flow-durable-policy-receipt-action-classes receipt))
-   (cons 'runtime-owner
-         (poo-flow-durable-policy-receipt-runtime-owner receipt))
-   (cons 'valid? (poo-flow-durable-policy-receipt-valid? receipt))
-   (cons 'diagnostics
-         (poo-flow-durable-policy-receipt-diagnostics receipt))
-   (cons 'diagnostic-count
-         (length (poo-flow-durable-policy-receipt-diagnostics receipt)))
-   (cons 'metadata (poo-flow-durable-policy-receipt-metadata receipt))
-   (cons 'runtime-executed #f)))
+(defpoo-module-final-projection
+  poo-flow-durable-policy-receipt->alist (receipt)
+  (bindings ((diagnostics
+              (poo-flow-durable-policy-receipt-diagnostics receipt))))
+  (fields ((kind 'poo-flow.durable.policy-receipt)
+           (schema +poo-flow-durable-policy-receipt-schema+)
+           (policy-id (poo-flow-durable-policy-receipt-policy-id receipt))
+           (project-id (poo-flow-durable-policy-receipt-project-id receipt))
+           (root-session-id
+            (poo-flow-durable-policy-receipt-root-session-id receipt))
+           (session-id (poo-flow-durable-policy-receipt-session-id receipt))
+           (parent-session-id
+            (poo-flow-durable-policy-receipt-parent-session-id receipt))
+           (loop-run-id (poo-flow-durable-policy-receipt-loop-run-id receipt))
+           (checkpoint-policy-ref
+            (poo-flow-durable-policy-receipt-checkpoint-policy-ref receipt))
+           (journal-policy-ref
+            (poo-flow-durable-policy-receipt-journal-policy-ref receipt))
+           (index-policy-ref
+            (poo-flow-durable-policy-receipt-index-policy-ref receipt))
+           (resume-policy-ref
+            (poo-flow-durable-policy-receipt-resume-policy-ref receipt))
+           (repair-policy-ref
+            (poo-flow-durable-policy-receipt-repair-policy-ref receipt))
+           (journal-owner
+            (poo-flow-durable-policy-receipt-journal-owner receipt))
+           (checkpoint-store
+            (poo-flow-durable-policy-receipt-checkpoint-store receipt))
+           (resume-identity
+            (poo-flow-durable-policy-receipt-resume-identity receipt))
+           (repair-mode
+            (poo-flow-durable-policy-receipt-repair-mode receipt))
+           (action-classes
+            (poo-flow-durable-policy-receipt-action-classes receipt))
+           (runtime-owner
+            (poo-flow-durable-policy-receipt-runtime-owner receipt))
+           (valid? (poo-flow-durable-policy-receipt-valid? receipt))
+           (diagnostics diagnostics)
+           (diagnostic-count (length diagnostics))
+           (metadata (poo-flow-durable-policy-receipt-metadata receipt))
+           (runtime-executed #f))))
 
 ;; : (-> [PooDurablePolicyReceipt] [Alist])
-(def (poo-flow-durable-policy-receipts->alists receipts)
-  (cond
-   ((null? receipts) '())
-   ((pair? receipts)
-    (cons (poo-flow-durable-policy-receipt->alist (car receipts))
-          (poo-flow-durable-policy-receipts->alists (cdr receipts))))
-   (else
-    (error "durable policy receipt serialization requires a list" receipts))))
+(defpoo-module-final-projection-batch
+  poo-flow-durable-policy-receipts->alists (receipts)
+  (projector poo-flow-durable-policy-receipt->alist)
+  (error-message "durable policy receipt serialization requires a list"))

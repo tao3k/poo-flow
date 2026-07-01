@@ -48,6 +48,7 @@
         :poo-flow/t/task-family-descriptor-test
         :poo-flow/t/tool-core-test
         :poo-flow/t/user-interface-custom-durable-recovery-test
+        :poo-flow/t/user-interface-custom-durable-operation-bridge-test
         :poo-flow/t/user-interface-custom-durable-runtime-store-handoff-test
         :poo-flow/t/user-interface-custom-durable-runtime-store-operations-test
         :poo-flow/t/user-interface-custom-memory-core-test

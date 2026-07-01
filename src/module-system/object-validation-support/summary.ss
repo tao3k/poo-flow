@@ -6,10 +6,11 @@
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
         :poo-flow/src/module-system/object-validation-support/harness
-        :poo-flow/src/module-system/object-validation-support/object)
+        :poo-flow/src/module-system/object-validation-support/object
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-module-objects-validation
-        poo-flow-module-objects-validation->alist
+        poo-flow-module-objects-validation->alists
         poo-flow-module-invalid-object-identities
         poo-flow-module-validation-values
         poo-flow-module-objects-validation-summary
@@ -36,8 +37,10 @@
 ;;; Validation receipts stay list-shaped for callers that serialize reports;
 ;;; the hash-table detail remains private to each object validation pass.
 ;; : (-> [HashTable] [Alist])
-(def (poo-flow-module-objects-validation->alist validations)
-  (map poo-flow-module-object-validation->alist validations))
+(defpoo-module-final-projection-batch
+  poo-flow-module-objects-validation->alists (validations)
+  (projector poo-flow-module-object-validation->alist)
+  (error-message "module object validation serialization requires a list"))
 
 ;;; Boundary: module invalid object identities is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection

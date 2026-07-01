@@ -13,7 +13,8 @@
 ;; | PooModuleSourceRefCandidate = Value
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :poo-flow/src/module-system/interface)
+        :poo-flow/src/module-system/interface
+        :poo-flow/src/module-system/projection-syntax)
 
 (export make-poo-flow-module-source-ref
         poo-flow-module-source-ref?
@@ -113,10 +114,12 @@
 
 ;;; Boundary: source refs project to alists only at inspection boundaries.
 ;; : (-> PooModuleSourceRef Alist)
-(def (poo-flow-module-source-ref->alist source-ref)
-  (list (cons 'kind (poo-flow-module-source-ref-kind source-ref))
-        (cons 'value (poo-flow-module-source-ref-value source-ref))
-        (cons 'metadata (poo-flow-module-source-ref-metadata source-ref))))
+(defpoo-module-final-projection
+  poo-flow-module-source-ref->alist (source-ref)
+  (bindings ())
+  (fields ((kind (poo-flow-module-source-ref-kind source-ref))
+           (value (poo-flow-module-source-ref-value source-ref))
+           (metadata (poo-flow-module-source-ref-metadata source-ref)))))
 
 ;;; Boundary: import-local sources are catalog-compatible source refs.
 ;; : (-> Path PooModuleSourceRef)

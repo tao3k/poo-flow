@@ -2,12 +2,13 @@
 ;;; Boundary: flows describe workflow composition and contract shape.
 ;;; Invariant: task execution is deferred to runner/runtime-adapter code.
 
-(import (only-in :clan/poo/object .mix .@ object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/task
         :poo-flow/src/core/flow-strand
-        :poo-flow/src/core/flow-declarations)
+        :poo-flow/src/core/flow-declarations
+        :poo-flow/src/core/object-syntax)
 
 (export make-flow
         flow?
@@ -433,30 +434,30 @@
 ;;; that strategy and extension code can reuse without hard-coding helpers.
 ;; : (-> Unit FlowCategoryPrototype)
 (def flow-category-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'flow-category)
-                      (cons 'arrow 'flow)
-                      (cons 'domain flow-input-contract)
-                      (cons 'codomain flow-output-contract)
-                      (cons 'compose flow-then)
-                      (cons 'identity flow-identity)
-                      (cons 'arr flow-arr)
-                      (cons 'map flow-map)
-                      (cons 'bind flow-bind)
-                      (cons 'fanout flow-fanout)
-                      (cons 'first flow-first)
-                      (cons 'second flow-second)
-                      (cons 'strand-registry default-flow-strand-registry)
-                      (cons 'extension-policy 'functional-kernel)))
-        flow-role))
+  (poo-core-role-object
+   (slots ((kind 'flow-category)
+           (arrow 'flow)
+           (domain flow-input-contract)
+           (codomain flow-output-contract)
+           (compose flow-then)
+           (identity flow-identity)
+           (arr flow-arr)
+           (map flow-map)
+           (bind flow-bind)
+           (fanout flow-fanout)
+           (first flow-first)
+           (second flow-second)
+           (strand-registry default-flow-strand-registry)
+           (extension-policy 'functional-kernel)))
+   (supers flow-role)))
 
 ;; : (-> Symbol FlowCategory)
 (def (make-flow-category category-name)
-  (.mix slots: (role-constant-slots
-                (list (cons 'name category-name)
-                      (cons 'responsibility
-                            (list 'functional-flow-kernel category-name))))
-        flow-category-prototype))
+  (poo-core-role-object
+   (slots ((name category-name)
+           (responsibility
+            (list 'functional-flow-kernel category-name))))
+   (supers flow-category-prototype)))
 
 ;; : (-> Unit FlowCategory)
 (def default-flow-category

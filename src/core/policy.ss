@@ -2,7 +2,8 @@
 ;;; Boundary: execution policies package strategy evidence for runtime handoff.
 ;;; Invariant: policies are immutable snapshots, not schedulers or executors.
 
-(import :poo-flow/src/core/strategy)
+(import :poo-flow/src/core/strategy
+        :poo-flow/src/core/projection-syntax)
 
 (export make-execution-policy
         execution-policy?
@@ -40,12 +41,14 @@
 ;;; The alist form is the stable request/receipt shape for future Rust
 ;;; serialization; it intentionally avoids embedding Gerbil structs.
 ;; : (-> ExecutionPolicy Alist)
-(def (execution-policy->alist policy)
-  (list (cons 'strategy (execution-policy-strategy policy))
-        (cons 'cache-policy (execution-policy-cache-policy policy))
-        (cons 'failure-policy (execution-policy-failure-policy policy))
-        (cons 'capabilities (execution-policy-capabilities policy))
-        (cons 'frontier (execution-policy-frontier policy))))
+(defpoo-core-receipt-projection
+  execution-policy->alist (policy)
+  (bindings ())
+  (fields ((strategy (execution-policy-strategy policy))
+           (cache-policy (execution-policy-cache-policy policy))
+           (failure-policy (execution-policy-failure-policy policy))
+           (capabilities (execution-policy-capabilities policy))
+           (frontier (execution-policy-frontier policy)))))
 
 ;; : (-> ExecutionPolicy Symbol Boolean)
 (def (execution-policy-allows? policy capability)

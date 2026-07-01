@@ -4,7 +4,8 @@
 ;;; scores candidates, calls a model, dispatches workflows, or mutates sessions.
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
-        :poo-flow/src/modules/session/objects)
+        :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/receipt-syntax)
 
 (export poo-flow-session-selector-candidate
         poo-flow-session-selector-candidate?
@@ -88,7 +89,11 @@
 
 ;; : (-> [PooSessionSelectorCandidate] [Symbol])
 (def (poo-flow-session-selector-candidate-ids candidates)
-  (map poo-flow-session-selector-candidate-id candidates))
+  (cond
+   ((null? candidates) '())
+   (else
+    (cons (poo-flow-session-selector-candidate-id (car candidates))
+          (poo-flow-session-selector-candidate-ids (cdr candidates))))))
 
 ;; : (-> Symbol [PooSessionSelectorCandidate] [Symbol])
 (def (poo-flow-session-selector-candidates-by-kind candidate-kind candidates)
@@ -199,29 +204,33 @@
   (.ref receipt 'selected-candidate-ref))
 
 ;; : (-> PooSessionSelectorReceipt Alist)
-(def (poo-flow-session-selector-receipt->alist receipt)
-  (poo-flow-session-require "session selector projection requires a receipt"
-                            (poo-flow-session-selector-receipt? receipt)
-                            receipt)
-  (list
-   (cons 'kind (.ref receipt 'kind))
-   (cons 'schema (.ref receipt 'schema))
-   (cons 'selector-id (.ref receipt 'selector-id))
-   (cons 'project-id (.ref receipt 'project-id))
-   (cons 'root-session-ref (.ref receipt 'root-session-ref))
-   (cons 'input-session-ref (.ref receipt 'input-session-ref))
-   (cons 'candidate-count (.ref receipt 'candidate-count))
-   (cons 'candidate-ids (.ref receipt 'candidate-ids))
-   (cons 'workflow-candidate-ids (.ref receipt 'workflow-candidate-ids))
-   (cons 'transform-candidate-ids (.ref receipt 'transform-candidate-ids))
-   (cons 'agent-param-candidate-ids
-         (.ref receipt 'agent-param-candidate-ids))
-   (cons 'selection-policy (.ref receipt 'selection-policy))
-   (cons 'fallback-ref (.ref receipt 'fallback-ref))
-   (cons 'selection-state (.ref receipt 'selection-state))
-   (cons 'selected-candidate-ref (.ref receipt 'selected-candidate-ref))
-   (cons 'pending-selected-result (.ref receipt 'pending-selected-result))
-   (cons 'handoff-required (.ref receipt 'handoff-required))
-   (cons 'runtime-owner (.ref receipt 'runtime-owner))
-   (cons 'runtime-executed (.ref receipt 'runtime-executed))
-   (cons 'metadata (.ref receipt 'metadata))))
+(defpoo-session-receipt-projection
+  poo-flow-session-selector-receipt->alist
+  (receipt)
+  (require poo-flow-session-require
+           "session selector projection requires a receipt"
+           (poo-flow-session-selector-receipt? receipt)
+           receipt)
+  (bindings ())
+  (fields
+   (('kind (.ref receipt 'kind))
+    ('schema (.ref receipt 'schema))
+    ('selector-id (.ref receipt 'selector-id))
+    ('project-id (.ref receipt 'project-id))
+    ('root-session-ref (.ref receipt 'root-session-ref))
+    ('input-session-ref (.ref receipt 'input-session-ref))
+    ('candidate-count (.ref receipt 'candidate-count))
+    ('candidate-ids (.ref receipt 'candidate-ids))
+    ('workflow-candidate-ids (.ref receipt 'workflow-candidate-ids))
+    ('transform-candidate-ids (.ref receipt 'transform-candidate-ids))
+    ('agent-param-candidate-ids
+     (.ref receipt 'agent-param-candidate-ids))
+    ('selection-policy (.ref receipt 'selection-policy))
+    ('fallback-ref (.ref receipt 'fallback-ref))
+    ('selection-state (.ref receipt 'selection-state))
+    ('selected-candidate-ref (.ref receipt 'selected-candidate-ref))
+    ('pending-selected-result (.ref receipt 'pending-selected-result))
+    ('handoff-required (.ref receipt 'handoff-required))
+    ('runtime-owner (.ref receipt 'runtime-owner))
+    ('runtime-executed (.ref receipt 'runtime-executed))
+    ('metadata (.ref receipt 'metadata)))))

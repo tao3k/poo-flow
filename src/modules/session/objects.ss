@@ -486,17 +486,35 @@
 ;;; centralized for callers.
 ;; : (-> PooSession [Pair])
 (def (poo-flow-session-lineage-edge-pairs session)
-  (map (lambda (parent-id)
-         (cons parent-id (poo-flow-session-id session)))
-       (poo-flow-session-lineage-parent-session-ids
-        (poo-flow-session-value-lineage session))))
+  (reverse (poo-flow-session-lineage-edge-pairs/rev session '())))
+
+;; : (-> PooSession [Pair] [Pair])
+(def (poo-flow-session-lineage-edge-pairs/rev session edge-pairs)
+  (let ((session-id (poo-flow-session-id session))
+        (parent-session-ids
+         (poo-flow-session-lineage-parent-session-ids
+          (poo-flow-session-value-lineage session))))
+    (let loop ((remaining-parent-session-ids parent-session-ids)
+               (edge-pair-values edge-pairs))
+      (if (null? remaining-parent-session-ids)
+        edge-pair-values
+        (loop (cdr remaining-parent-session-ids)
+              (cons (cons (car remaining-parent-session-ids) session-id)
+                    edge-pair-values))))))
 
 ;;; Boundary: session graph edge pairs is the policy-visible edge for object
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> [PooSession] [Pair])
 (def (poo-flow-session-graph-edge-pairs sessions)
-  (apply append (map poo-flow-session-lineage-edge-pairs sessions)))
+  (let loop ((remaining-sessions sessions)
+             (edge-pair-values '()))
+    (if (null? remaining-sessions)
+      (reverse edge-pair-values)
+      (loop (cdr remaining-sessions)
+            (poo-flow-session-lineage-edge-pairs/rev
+             (car remaining-sessions)
+             edge-pair-values)))))
 
 ;;; Boundary: session index is the policy-visible edge for object behavior,
 ;;; keeping validation, lookup, or projection responsibilities centralized for
@@ -576,6 +594,41 @@
 ;;; The graph presentation is intentionally compact. It exposes ids, edges,
 ;;; placement refs, and runtime flags without embedding the full session object
 ;;; graph in downstream receipts.
+;; : (-> [PooSession] List)
+(def (poo-flow-session-graph-presentation-summary sessions)
+  (let loop ((remaining-sessions sessions)
+             (session-count-value 0)
+             (session-id-values '())
+             (chunk-count-value 0)
+             (lineage-edge-pair-values '())
+             (placement-profile-ref-values '())
+             (placement-resolved-values '())
+             (placement-diagnostic-values '()))
+    (if (null? remaining-sessions)
+      (list session-count-value
+            (reverse session-id-values)
+            chunk-count-value
+            (reverse lineage-edge-pair-values)
+            (reverse placement-profile-ref-values)
+            (reverse placement-resolved-values)
+            (reverse placement-diagnostic-values))
+      (let* ((session (car remaining-sessions))
+             (placement (poo-flow-session-value-placement session)))
+        (loop
+         (cdr remaining-sessions)
+         (+ session-count-value 1)
+         (cons (poo-flow-session-id session) session-id-values)
+         (+ chunk-count-value (length (poo-flow-session-chunks session)))
+         (poo-flow-session-lineage-edge-pairs/rev
+          session
+          lineage-edge-pair-values)
+         (cons (poo-flow-session-placement-profile-ref placement)
+               placement-profile-ref-values)
+         (cons (poo-flow-session-placement-resolved? placement)
+               placement-resolved-values)
+         (cons (poo-flow-session-placement-diagnostics placement)
+               placement-diagnostic-values))))))
+
 ;; : (-> [PooSession] PooSessionGraphPresentation)
 (def (pooFlowSessionGraphPresentation sessions)
   (poo-flow-session-require "session graph presentation requires sessions"
@@ -585,34 +638,28 @@
    "session graph presentation entries must be sessions"
    (poo-flow-session-every? poo-flow-session? sessions)
    sessions)
-  (object<-alist
-   (list
-    (cons 'kind 'poo-flow.session.graph.presentation)
-    (cons 'schema 'poo-flow.modules.session.graph-presentation.v1)
-    (cons 'session-count (length sessions))
-    (cons 'session-ids (map poo-flow-session-id sessions))
-    (cons 'chunk-count
-          (apply + (map (lambda (session)
-                          (length (poo-flow-session-chunks session)))
-                        sessions)))
-    (cons 'lineage-edge-pairs (poo-flow-session-graph-edge-pairs sessions))
-    (cons 'acyclic? (poo-flow-session-graph-acyclic? sessions))
-    (cons 'placement-profile-refs
-          (map (lambda (session)
-                 (poo-flow-session-placement-profile-ref
-                  (poo-flow-session-value-placement session)))
-               sessions))
-    (cons 'placement-resolved?
-          (map (lambda (session)
-                 (poo-flow-session-placement-resolved?
-                  (poo-flow-session-value-placement session)))
-               sessions))
-    (cons 'placement-diagnostics
-          (map (lambda (session)
-                 (poo-flow-session-placement-diagnostics
-                  (poo-flow-session-value-placement session)))
-               sessions))
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'descriptor-realized? #f)
-    (cons 'replayable #t))))
+  (let* ((summary (poo-flow-session-graph-presentation-summary sessions))
+         (session-count-value (car summary))
+         (session-id-values (cadr summary))
+         (chunk-count-value (caddr summary))
+         (lineage-edge-pair-values (cadddr summary))
+         (placement-summary-values (cddddr summary))
+         (placement-profile-ref-values (car placement-summary-values))
+         (placement-resolved-values (cadr placement-summary-values))
+         (placement-diagnostic-values (caddr placement-summary-values)))
+    (object<-alist
+     (list
+      (cons 'kind 'poo-flow.session.graph.presentation)
+      (cons 'schema 'poo-flow.modules.session.graph-presentation.v1)
+      (cons 'session-count session-count-value)
+      (cons 'session-ids session-id-values)
+      (cons 'chunk-count chunk-count-value)
+      (cons 'lineage-edge-pairs lineage-edge-pair-values)
+      (cons 'acyclic? (poo-flow-session-graph-acyclic? sessions))
+      (cons 'placement-profile-refs placement-profile-ref-values)
+      (cons 'placement-resolved? placement-resolved-values)
+      (cons 'placement-diagnostics placement-diagnostic-values)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f)
+      (cons 'descriptor-realized? #f)
+      (cons 'replayable #t)))))

@@ -4,6 +4,7 @@
 ;;; starts shells, filesystem IO, MCP servers, or backend runtimes.
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
+        :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy)
 
@@ -165,25 +166,27 @@
   (.ref spec 'sandbox-profile-ref))
 
 ;; : (-> PooToolSpec Alist)
-(def (poo-flow-tool-spec->alist spec)
-  (poo-flow-session-require "tool spec projection requires a tool spec"
-                            (poo-flow-tool-spec? spec)
-                            spec)
-  (list
-   (cons 'kind (.ref spec 'kind))
-   (cons 'schema (.ref spec 'schema))
-   (cons 'tool-ref (.ref spec 'tool-ref))
-   (cons 'tool-kind (.ref spec 'tool-kind))
-   (cons 'actions (.ref spec 'actions))
-   (cons 'input-schema (.ref spec 'input-schema))
-   (cons 'output-schema (.ref spec 'output-schema))
-   (cons 'runtime-owner (.ref spec 'runtime-owner))
-   (cons 'handoff-operation (.ref spec 'handoff-operation))
-   (cons 'sandbox-required? (.ref spec 'sandbox-required?))
-   (cons 'sandbox-profile-ref (.ref spec 'sandbox-profile-ref))
-   (cons 'runtime-backend (.ref spec 'runtime-backend))
-   (cons 'runtime-executed (.ref spec 'runtime-executed))
-   (cons 'metadata (.ref spec 'metadata))))
+(defpoo-module-final-projection
+  poo-flow-tool-spec->alist (spec)
+  (bindings ((checked-spec
+              (poo-flow-session-require
+               "tool spec projection requires a tool spec"
+               (poo-flow-tool-spec? spec)
+               spec))))
+  (fields ((kind (.ref checked-spec 'kind))
+           (schema (.ref checked-spec 'schema))
+           (tool-ref (.ref checked-spec 'tool-ref))
+           (tool-kind (.ref checked-spec 'tool-kind))
+           (actions (.ref checked-spec 'actions))
+           (input-schema (.ref checked-spec 'input-schema))
+           (output-schema (.ref checked-spec 'output-schema))
+           (runtime-owner (.ref checked-spec 'runtime-owner))
+           (handoff-operation (.ref checked-spec 'handoff-operation))
+           (sandbox-required? (.ref checked-spec 'sandbox-required?))
+           (sandbox-profile-ref (.ref checked-spec 'sandbox-profile-ref))
+           (runtime-backend (.ref checked-spec 'runtime-backend))
+           (runtime-executed (.ref checked-spec 'runtime-executed))
+           (metadata (.ref checked-spec 'metadata)))))
 
 ;; : (-> Symbol PooToolSpec [Alist] PooToolHandoffManifest)
 (def (poo-flow-tool-handoff-manifest request-id spec . maybe-metadata)
@@ -236,30 +239,31 @@
             +poo-flow-tool-core-handoff-manifest-kind+)))
 
 ;; : (-> PooToolHandoffManifest Alist)
-(def (poo-flow-tool-handoff-manifest->alist manifest)
-  (poo-flow-session-require
-   "tool handoff projection requires a handoff manifest"
-   (poo-flow-tool-handoff-manifest? manifest)
-   manifest)
-  (list
-   (cons 'kind (.ref manifest 'kind))
-   (cons 'schema (.ref manifest 'schema))
-   (cons 'request-id (.ref manifest 'request-id))
-   (cons 'tool-ref (.ref manifest 'tool-ref))
-   (cons 'tool-kind (.ref manifest 'tool-kind))
-   (cons 'actions (.ref manifest 'actions))
-   (cons 'operation (.ref manifest 'operation))
-   (cons 'input-schema (.ref manifest 'input-schema))
-   (cons 'output-schema (.ref manifest 'output-schema))
-   (cons 'runtime-owner (.ref manifest 'runtime-owner))
-   (cons 'runtime-backend (.ref manifest 'runtime-backend))
-   (cons 'sandbox-required? (.ref manifest 'sandbox-required?))
-   (cons 'sandbox-profile-ref (.ref manifest 'sandbox-profile-ref))
-   (cons 'handoff-ready? (.ref manifest 'handoff-ready?))
-   (cons 'diagnostic-count (.ref manifest 'diagnostic-count))
-   (cons 'diagnostics (.ref manifest 'diagnostics))
-   (cons 'runtime-executed (.ref manifest 'runtime-executed))
-   (cons 'metadata (.ref manifest 'metadata))))
+(defpoo-module-final-projection
+  poo-flow-tool-handoff-manifest->alist (manifest)
+  (bindings ((checked-manifest
+              (poo-flow-session-require
+               "tool handoff projection requires a handoff manifest"
+               (poo-flow-tool-handoff-manifest? manifest)
+               manifest))))
+  (fields ((kind (.ref checked-manifest 'kind))
+           (schema (.ref checked-manifest 'schema))
+           (request-id (.ref checked-manifest 'request-id))
+           (tool-ref (.ref checked-manifest 'tool-ref))
+           (tool-kind (.ref checked-manifest 'tool-kind))
+           (actions (.ref checked-manifest 'actions))
+           (operation (.ref checked-manifest 'operation))
+           (input-schema (.ref checked-manifest 'input-schema))
+           (output-schema (.ref checked-manifest 'output-schema))
+           (runtime-owner (.ref checked-manifest 'runtime-owner))
+           (runtime-backend (.ref checked-manifest 'runtime-backend))
+           (sandbox-required? (.ref checked-manifest 'sandbox-required?))
+           (sandbox-profile-ref (.ref checked-manifest 'sandbox-profile-ref))
+           (handoff-ready? (.ref checked-manifest 'handoff-ready?))
+           (diagnostic-count (.ref checked-manifest 'diagnostic-count))
+           (diagnostics (.ref checked-manifest 'diagnostics))
+           (runtime-executed (.ref checked-manifest 'runtime-executed))
+           (metadata (.ref checked-manifest 'metadata)))))
 
 ;; : (-> Symbol [PooToolSpec] [Alist] PooToolCatalog)
 (def (poo-flow-tool-catalog catalog-ref tools . maybe-metadata)
@@ -315,20 +319,23 @@
   (poo-flow-tool-spec-find (.ref catalog 'tools) tool-ref))
 
 ;; : (-> PooToolCatalog Alist)
-(def (poo-flow-tool-catalog->alist catalog)
-  (poo-flow-session-require "tool catalog projection requires a catalog"
-                            (poo-flow-tool-catalog? catalog)
-                            catalog)
-  (list
-   (cons 'kind (.ref catalog 'kind))
-   (cons 'schema (.ref catalog 'schema))
-   (cons 'catalog-ref (.ref catalog 'catalog-ref))
-   (cons 'tool-count (.ref catalog 'tool-count))
-   (cons 'tool-refs (.ref catalog 'tool-refs))
-   (cons 'tools (map poo-flow-tool-spec->alist (.ref catalog 'tools)))
-   (cons 'runtime-owner (.ref catalog 'runtime-owner))
-   (cons 'runtime-executed (.ref catalog 'runtime-executed))
-   (cons 'metadata (.ref catalog 'metadata))))
+(defpoo-module-final-projection
+  poo-flow-tool-catalog->alist (catalog)
+  (bindings ((checked-catalog
+              (poo-flow-session-require
+               "tool catalog projection requires a catalog"
+               (poo-flow-tool-catalog? catalog)
+               catalog))))
+  (fields ((kind (.ref checked-catalog 'kind))
+           (schema (.ref checked-catalog 'schema))
+           (catalog-ref (.ref checked-catalog 'catalog-ref))
+           (tool-count (.ref checked-catalog 'tool-count))
+           (tool-refs (.ref checked-catalog 'tool-refs))
+           (tools (map poo-flow-tool-spec->alist
+                       (.ref checked-catalog 'tools)))
+           (runtime-owner (.ref checked-catalog 'runtime-owner))
+           (runtime-executed (.ref checked-catalog 'runtime-executed))
+           (metadata (.ref checked-catalog 'metadata)))))
 
 ;; : (-> [PooSessionToolGrant] [Symbol])
 (def (poo-flow-tool-policy-grant-tool-refs grants)
@@ -497,31 +504,34 @@
   (.ref receipt 'diagnostics))
 
 ;; : (-> PooToolPolicyCatalogValidationReceipt Alist)
-(def (poo-flow-tool-policy-catalog-validation-receipt->alist receipt)
-  (poo-flow-session-require
-   "tool policy validation projection requires a validation receipt"
-   (poo-flow-tool-policy-catalog-validation-receipt? receipt)
-   receipt)
-  (list
-   (cons 'kind (.ref receipt 'kind))
-   (cons 'schema (.ref receipt 'schema))
-   (cons 'validation-id (.ref receipt 'validation-id))
-   (cons 'catalog-ref (.ref receipt 'catalog-ref))
-   (cons 'catalog-tool-count (.ref receipt 'catalog-tool-count))
-   (cons 'catalog-tool-refs (.ref receipt 'catalog-tool-refs))
-   (cons 'agent-tool-policy-ref (.ref receipt 'agent-tool-policy-ref))
-   (cons 'hook-tool-policy-ref (.ref receipt 'hook-tool-policy-ref))
-   (cons 'policy-tool-refs (.ref receipt 'policy-tool-refs))
-   (cons 'resolved-tool-refs (.ref receipt 'resolved-tool-refs))
-   (cons 'unresolved-tool-refs (.ref receipt 'unresolved-tool-refs))
-   (cons 'sandbox-required-tool-refs
-         (.ref receipt 'sandbox-required-tool-refs))
-   (cons 'valid? (.ref receipt 'valid?))
-   (cons 'diagnostic-count (.ref receipt 'diagnostic-count))
-   (cons 'diagnostics (.ref receipt 'diagnostics))
-   (cons 'runtime-owner (.ref receipt 'runtime-owner))
-   (cons 'runtime-executed (.ref receipt 'runtime-executed))
-   (cons 'metadata (.ref receipt 'metadata))))
+(defpoo-module-final-projection
+  poo-flow-tool-policy-catalog-validation-receipt->alist (receipt)
+  (bindings ((checked-receipt
+              (poo-flow-session-require
+               "tool policy validation projection requires a validation receipt"
+               (poo-flow-tool-policy-catalog-validation-receipt? receipt)
+               receipt))))
+  (fields ((kind (.ref checked-receipt 'kind))
+           (schema (.ref checked-receipt 'schema))
+           (validation-id (.ref checked-receipt 'validation-id))
+           (catalog-ref (.ref checked-receipt 'catalog-ref))
+           (catalog-tool-count (.ref checked-receipt 'catalog-tool-count))
+           (catalog-tool-refs (.ref checked-receipt 'catalog-tool-refs))
+           (agent-tool-policy-ref
+            (.ref checked-receipt 'agent-tool-policy-ref))
+           (hook-tool-policy-ref
+            (.ref checked-receipt 'hook-tool-policy-ref))
+           (policy-tool-refs (.ref checked-receipt 'policy-tool-refs))
+           (resolved-tool-refs (.ref checked-receipt 'resolved-tool-refs))
+           (unresolved-tool-refs (.ref checked-receipt 'unresolved-tool-refs))
+           (sandbox-required-tool-refs
+            (.ref checked-receipt 'sandbox-required-tool-refs))
+           (valid? (.ref checked-receipt 'valid?))
+           (diagnostic-count (.ref checked-receipt 'diagnostic-count))
+           (diagnostics (.ref checked-receipt 'diagnostics))
+           (runtime-owner (.ref checked-receipt 'runtime-owner))
+           (runtime-executed (.ref checked-receipt 'runtime-executed))
+           (metadata (.ref checked-receipt 'metadata)))))
 
 ;; : PooToolSpec
 (def poo-flow-tool-core-builtin-read-workspace-file

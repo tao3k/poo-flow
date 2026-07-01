@@ -3,6 +3,8 @@
 ;;; Invariant: observations do not use POO objects, lazy slots, or runtime adapters.
 ;;; Intent: make recursive presentation paths visible without participating in them.
 
+(import :poo-flow/src/module-system/projection-syntax)
+
 (export poo-flow-module-observation-kind
         make-poo-flow-module-observation
         poo-flow-module-observation?
@@ -108,19 +110,21 @@
 
 ;;; Alist projection is the safe edge for user-interface and doctor outputs.
 ;; : (-> PooFlowModuleObservation Alist)
-(def (poo-flow-module-observation->alist observation)
-  (list (cons 'kind poo-flow-module-observation-kind)
-        (cons 'scope (poo-flow-module-observation-scope observation))
-        (cons 'stage (poo-flow-module-observation-stage observation))
-        (cons 'status (poo-flow-module-observation-status observation))
-        (cons 'count (poo-flow-module-observation-count observation))
-        (cons 'depth (poo-flow-module-observation-depth observation))
-        (cons 'path (poo-flow-module-observation-path observation))
-        (cons 'detail (poo-flow-module-observation-detail observation))
-        (cons 'descriptor-realized?
-              (poo-flow-module-observation-descriptor-realized? observation))
-        (cons 'runtime-executed
-              (poo-flow-module-observation-runtime-executed? observation))))
+(defpoo-module-final-projection
+  poo-flow-module-observation->alist (observation)
+  (bindings ())
+  (fields ((kind poo-flow-module-observation-kind)
+           (scope (poo-flow-module-observation-scope observation))
+           (stage (poo-flow-module-observation-stage observation))
+           (status (poo-flow-module-observation-status observation))
+           (count (poo-flow-module-observation-count observation))
+           (depth (poo-flow-module-observation-depth observation))
+           (path (poo-flow-module-observation-path observation))
+           (detail (poo-flow-module-observation-detail observation))
+           (descriptor-realized?
+            (poo-flow-module-observation-descriptor-realized? observation))
+           (runtime-executed
+            (poo-flow-module-observation-runtime-executed? observation)))))
 
 ;;; Stage/alist keeps the common presentation path concise while still routing
 ;;; every trace row through the strict observation record.
@@ -241,25 +245,26 @@
    #f))
 
 ;; : (-> PooFlowPooSlotAuthoringObservation Alist)
-(def (poo-flow-poo-slot-authoring-observation->alist observation)
-  (list (cons 'kind poo-flow-poo-slot-authoring-observation-kind)
-        (cons 'scope
-              (poo-flow-poo-slot-authoring-observation-scope observation))
-        (cons 'slot
-              (poo-flow-poo-slot-authoring-observation-slot observation))
-        (cons 'initializer
-              (poo-flow-poo-slot-authoring-observation-initializer
-               observation))
-        (cons 'status
-              (poo-flow-poo-slot-authoring-observation-status observation))
-        (cons 'detail
-              (poo-flow-poo-slot-authoring-observation-detail observation))
-        (cons 'descriptor-realized?
-              (poo-flow-poo-slot-authoring-observation-descriptor-realized?
-               observation))
-        (cons 'runtime-executed
-              (poo-flow-poo-slot-authoring-observation-runtime-executed?
-               observation))))
+(defpoo-module-final-projection
+  poo-flow-poo-slot-authoring-observation->alist (observation)
+  (bindings ())
+  (fields ((kind poo-flow-poo-slot-authoring-observation-kind)
+           (scope
+            (poo-flow-poo-slot-authoring-observation-scope observation))
+           (slot
+            (poo-flow-poo-slot-authoring-observation-slot observation))
+           (initializer
+            (poo-flow-poo-slot-authoring-observation-initializer observation))
+           (status
+            (poo-flow-poo-slot-authoring-observation-status observation))
+           (detail
+            (poo-flow-poo-slot-authoring-observation-detail observation))
+           (descriptor-realized?
+            (poo-flow-poo-slot-authoring-observation-descriptor-realized?
+             observation))
+           (runtime-executed
+            (poo-flow-poo-slot-authoring-observation-runtime-executed?
+             observation)))))
 
 ;; : (-> Symbol Pair Alist)
 (def (poo-flow-poo-slot-authoring-observation/alist scope slot-initializer)
@@ -309,15 +314,16 @@
           (poo-flow-poo-slot-authoring-diagnostics (cdr observations))))))
 
 ;; : (-> Symbol [Alist] Alist)
-(def (poo-flow-poo-slot-authoring-summary scope observations)
-  (let ((diagnostics
-         (poo-flow-poo-slot-authoring-diagnostics observations)))
-    (list (cons 'kind poo-flow-poo-slot-authoring-summary-kind)
-          (cons 'scope scope)
-          (cons 'observation-count (length observations))
-          (cons 'statuses
-                (poo-flow-poo-slot-authoring-statuses observations))
-          (cons 'diagnostic-count (length diagnostics))
-          (cons 'diagnostics diagnostics)
-          (cons 'descriptor-realized? #f)
-          (cons 'runtime-executed #f))))
+(defpoo-module-final-projection
+  poo-flow-poo-slot-authoring-summary (scope observations)
+  (bindings ((diagnostics
+              (poo-flow-poo-slot-authoring-diagnostics observations))))
+  (fields ((kind poo-flow-poo-slot-authoring-summary-kind)
+           (scope scope)
+           (observation-count (length observations))
+           (statuses
+            (poo-flow-poo-slot-authoring-statuses observations))
+           (diagnostic-count (length diagnostics))
+           (diagnostics diagnostics)
+           (descriptor-realized? #f)
+           (runtime-executed #f))))

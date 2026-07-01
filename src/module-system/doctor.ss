@@ -9,6 +9,7 @@
         :poo-flow/src/module-system/source
         :poo-flow/src/module-system/descriptor
         :poo-flow/src/module-system/diagnostics
+        :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/projection
         :poo-flow/src/module-system/loader)
 
@@ -31,14 +32,18 @@
 
 ;;; Boundary: validation receipt projection stays local to the doctor edge.
 ;; : (-> PooModuleOptionValidationReceipt Alist)
-(def (poo-flow-module-validation-receipt->alist receipt)
-  (list (cons 'id (poo-flow-module-option-validation-receipt-id receipt))
-        (cons 'source-module
-              (poo-flow-module-option-validation-receipt-source-module receipt))
-        (cons 'valid? (poo-flow-module-option-validation-receipt-valid? receipt))
-        (cons 'code (poo-flow-module-option-validation-receipt-code receipt))
-        (cons 'messages (poo-flow-module-option-validation-receipt-messages receipt))
-        (cons 'metadata (poo-flow-module-option-validation-receipt-metadata receipt))))
+(defpoo-module-final-projection
+  poo-flow-module-validation-receipt->alist (receipt)
+  (bindings ())
+  (fields ((id (poo-flow-module-option-validation-receipt-id receipt))
+           (source-module
+            (poo-flow-module-option-validation-receipt-source-module receipt))
+           (valid? (poo-flow-module-option-validation-receipt-valid? receipt))
+           (code (poo-flow-module-option-validation-receipt-code receipt))
+           (messages
+            (poo-flow-module-option-validation-receipt-messages receipt))
+           (metadata
+            (poo-flow-module-option-validation-receipt-metadata receipt)))))
 
 ;;; Boundary: import profiles are summarized without resolving source refs.
 ;; : (-> ModuleImportProfile Value)

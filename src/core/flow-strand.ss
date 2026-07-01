@@ -2,9 +2,11 @@
 ;;; Boundary: flow strands describe Funflow-style interpreter families.
 ;;; Invariant: strand objects are declaration policy, not executable runners.
 
-(import (only-in :clan/poo/object .mix .@ object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
-        :poo-flow/src/core/failure)
+        :poo-flow/src/core/failure
+        :poo-flow/src/core/projection-syntax
+        :poo-flow/src/core/object-syntax)
 
 (export flow-strand-descriptor-prototype
         make-flow-strand-descriptor
@@ -43,11 +45,11 @@
 ;;; owning route/runtime behavior.
 ;; : (-> Unit FlowStrandDescriptorPrototype)
 (def flow-strand-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'flow-strand)
-                      (cons 'extension-policy 'strand-prototype)
-                      (cons 'required? #t)))
-        flow-role))
+  (poo-core-role-object
+   (slots ((kind 'flow-strand)
+           (extension-policy 'strand-prototype)
+           (required? #t)))
+   (supers flow-role)))
 
 ;;; Strand supers follow the same pair-tree convention as flow descriptors so
 ;;; extension-owned strand descriptors can use gerbil-poo C3 composition.
@@ -67,20 +69,20 @@
       strand-required?
       . maybe-role-supers)
   (let (role-supers (if (null? maybe-role-supers) '() (car maybe-role-supers)))
-    (.mix slots: (role-constant-slots
-                  (list (cons 'name strand-name)
-                        (cons 'task-families strand-task-families)
-                        (cons 'capabilities strand-capabilities)
-                        (cons 'route strand-route)
-                        (cons 'interpreter-owner strand-interpreter-owner)
-                        (cons 'required? strand-required?)
-                        (cons 'extension-policy 'strand-descriptor)
-                        (cons 'responsibility
-                              (list 'flow-strand
-                                    strand-name
-                                    strand-route
-                                    strand-interpreter-owner))))
-          (flow-strand-descriptor-supers role-supers))))
+    (poo-core-role-object
+     (slots ((name strand-name)
+             (task-families strand-task-families)
+             (capabilities strand-capabilities)
+             (route strand-route)
+             (interpreter-owner strand-interpreter-owner)
+             (required? strand-required?)
+             (extension-policy 'strand-descriptor)
+             (responsibility
+              (list 'flow-strand
+                    strand-name
+                    strand-route
+                    strand-interpreter-owner))))
+     (supers (flow-strand-descriptor-supers role-supers)))))
 
 ;; : (-> FlowStrandDescriptorCandidate Boolean)
 (def (flow-strand-descriptor? descriptor)
@@ -92,12 +94,12 @@
 ;;; override path without mutating the default Funflow-like strand set.
 ;; : (-> Unit FlowStrandRegistryPrototype)
 (def flow-strand-registry-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'flow-strand-registry)
-                      (cons 'descriptors '())
-                      (cons 'core-requirements '())
-                      (cons 'extension-policy 'immutable-strand-registry)))
-        flow-role))
+  (poo-core-role-object
+   (slots ((kind 'flow-strand-registry)
+           (descriptors '())
+           (core-requirements '())
+           (extension-policy 'immutable-strand-registry)))
+   (supers flow-role)))
 
 ;;; Core requirements are registry-level facts, mirroring Funflow's RequiredCore
 ;;; without tying every descriptor to the same backend interpretation contract.
@@ -106,13 +108,13 @@
       registry-name
       registry-descriptors
       registry-core-requirements)
-  (.mix slots: (role-constant-slots
-                (list (cons 'name registry-name)
-                      (cons 'descriptors registry-descriptors)
-                      (cons 'core-requirements registry-core-requirements)
-                      (cons 'responsibility
-                            (list 'flow-strand-registry registry-name))))
-        flow-strand-registry-prototype))
+  (poo-core-role-object
+   (slots ((name registry-name)
+           (descriptors registry-descriptors)
+           (core-requirements registry-core-requirements)
+           (responsibility
+            (list 'flow-strand-registry registry-name))))
+   (supers flow-strand-registry-prototype)))
 
 ;; : (-> FlowStrandRegistryCandidate Boolean)
 (def (flow-strand-registry? registry)
@@ -362,25 +364,29 @@
 ;;; Descriptor snapshots are intentionally lossless for public slots so docs
 ;;; and manifests can compare POO extension results without object identity.
 ;; : (-> FlowStrandDescriptor Alist)
-(def (flow-strand-descriptor->alist descriptor)
-  (list (cons 'name (flow-strand-name descriptor))
-        (cons 'task-families (flow-strand-task-families descriptor))
-        (cons 'capabilities (flow-strand-capabilities descriptor))
-        (cons 'route (flow-strand-route descriptor))
-        (cons 'interpreter-owner (flow-strand-interpreter-owner descriptor))
-        (cons 'required? (flow-strand-required? descriptor))
-        (cons 'extension-policy (flow-strand-extension-policy descriptor))))
+(defpoo-core-receipt-projection
+  flow-strand-descriptor->alist (descriptor)
+  (bindings ())
+  (fields ((name (flow-strand-name descriptor))
+           (task-families (flow-strand-task-families descriptor))
+           (capabilities (flow-strand-capabilities descriptor))
+           (route (flow-strand-route descriptor))
+           (interpreter-owner (flow-strand-interpreter-owner descriptor))
+           (required? (flow-strand-required? descriptor))
+           (extension-policy (flow-strand-extension-policy descriptor)))))
 
 ;;; The snapshot is for docs, tests, and runtime-manifest discovery. It exposes
 ;;; the strand universe without handing callers executable interpreters.
 ;; : (-> FlowStrandRegistry Alist)
-(def (flow-strand-registry->alist registry)
-  (list (cons 'name (flow-strand-registry-name registry))
-        (cons 'kind 'flow-strand-registry)
-        (cons 'strand-names (flow-strand-names registry))
-        (cons 'core-requirements
-              (flow-strand-registry-core-requirements registry))
-        (cons 'descriptors
+(defpoo-core-receipt-projection
+  flow-strand-registry->alist (registry)
+  (bindings ((descriptors
               (map flow-strand-descriptor->alist
-                   (flow-strand-registry-descriptors registry)))
-        (cons 'runtime-executed #f)))
+                   (flow-strand-registry-descriptors registry)))))
+  (fields ((name (flow-strand-registry-name registry))
+           (kind 'flow-strand-registry)
+           (strand-names (flow-strand-names registry))
+           (core-requirements
+            (flow-strand-registry-core-requirements registry))
+           (descriptors descriptors)
+           (runtime-executed #f))))

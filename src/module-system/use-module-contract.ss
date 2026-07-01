@@ -10,7 +10,6 @@
         poo-flow-use-module-contract-validation
         poo-flow-use-module-contract-validation-valid?
         poo-flow-use-module-contract-validation-diagnostics
-        poo-flow-use-module-contract-validation->alist
         poo-flow-require-use-module-contract!
         poo-flow-modules-system-use-module/contract)
 
@@ -258,10 +257,6 @@
 (def (poo-flow-use-module-contract-validation-diagnostics validation)
   (let (entry (assoc 'diagnostics validation))
     (if entry (cdr entry) '())))
-
-;; : (-> PooUseModuleContractValidation Alist)
-(def (poo-flow-use-module-contract-validation->alist validation)
-  validation)
 
 ;;; Public `use-module` calls use this fail-fast gate so category/module
 ;;; mistakes stop at declaration load. This keeps `(use-module workflow ...)`

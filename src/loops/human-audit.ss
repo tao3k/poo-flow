@@ -2,9 +2,10 @@
 ;;; Boundary: human audit loops project review decisions over loop facts.
 ;;; Invariant: this module never edits config, schedules loops, or executes runtime work.
 
-(import (only-in :clan/poo/object .o .mix object?)
+(import (only-in :clan/poo/object .o object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/core/agent-harness
         :poo-flow/src/loops/governor)
 
@@ -106,39 +107,40 @@
 ;;; Prototype slots keep audit state separate from user config.
 ;; : (-> Unit LoopHumanAuditPrototype)
 (def loop-human-audit-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'schema +loop-human-audit-schema+)
-                      (cons 'kind 'loop-human-audit)
-                      (cons 'name #f)
-                      (cons 'governor #f)
-                      (cons 'governor-contract #f)
-                      (cons 'state-facts '())
-                      (cons 'decisions '())
-                      (cons 'review-policy +loop-human-audit-default-review-policy+)
-                      (cons 'governor-derived #t)
-                      (cons 'governance-node-kind 'human)
-                      (cons 'governance-responsibility 'human-audit)
-                      (cons 'human-intervention #t)
-                      (cons 'control-owner 'gerbil)
-                      (cons 'decision-owner 'human)
-                      (cons 'execution-owner 'marlin-agent-core)
-                      (cons 'metadata '())))
-        loop-human-decision-role
-        loop-human-review-role
-        loop-human-audit-role))
+  (poo-core-role-object
+   (slots ((schema +loop-human-audit-schema+)
+           (kind 'loop-human-audit)
+           (name #f)
+           (governor #f)
+           (governor-contract #f)
+           (state-facts '())
+           (decisions '())
+           (review-policy +loop-human-audit-default-review-policy+)
+           (governor-derived #t)
+           (governance-node-kind 'human)
+           (governance-responsibility 'human-audit)
+           (human-intervention #t)
+           (control-owner 'gerbil)
+           (decision-owner 'human)
+           (execution-owner 'marlin-agent-core)
+           (metadata '())))
+   (supers loop-human-decision-role
+           loop-human-review-role
+           loop-human-audit-role)))
 
 ;;; Constructor binds one governor view to human decisions.
 ;;; Decisions are alists of =(pattern . decision)=.
 ;; : (-> Symbol LoopGovernor [Alist] [Alist] [Alist] LoopHumanAudit)
 (def (make-loop-human-audit name governor state-facts decisions . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (append
-                 (list (cons 'name name)
-                       (cons 'governor governor)
-                       (cons 'state-facts state-facts)
-                       (cons 'decisions decisions))
-                 (if (null? maybe-overrides) '() (car maybe-overrides))))
-        loop-human-audit-prototype))
+  (poo-core-role-object
+   (slot-rows
+    (append
+     (list (cons 'name name)
+           (cons 'governor governor)
+           (cons 'state-facts state-facts)
+           (cons 'decisions decisions))
+     (if (null? maybe-overrides) '() (car maybe-overrides))))
+   (supers loop-human-audit-prototype)))
 
 ;; : (-> LoopHumanAuditCandidate Boolean)
 (def (loop-human-audit? audit)

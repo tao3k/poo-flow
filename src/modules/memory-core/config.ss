@@ -3,8 +3,9 @@
 ;;; Invariant: users author POO memory specs; runtime memory remains external.
 
 (import (only-in :std/sugar filter)
-        (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
+        (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/config-prototype-syntax
         :poo-flow/src/modules/memory-core/objects)
 
 (export (import: :poo-flow/src/modules/memory-core/objects)
@@ -18,30 +19,30 @@
         poo-flow-memory-core-poo-config-flags
         poo-flow-memory-core-module-bundles)
 
-(def memory-store-spec
-  (object<-alist
-   (list
-    (cons 'kind +poo-flow-memory-core-store-spec-kind+)
-    (cons 'store-ref #f)
-    (cons 'store-kind 'custom)
-    (cons 'namespace 'session)
-    (cons 'scopes '())
-    (cons 'recall-policies '())
-    (cons 'commit-policies '())
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'handoff-operation 'memory/custom)
-    (cons 'durable? #f)
-    (cons 'runtime-backend 'marlin-memory-adapter)
-    (cons 'metadata '())
-    (cons 'runtime-executed #f))))
+(defpoo-module-config-prototype
+  memory-store-spec
+  (slots ((kind +poo-flow-memory-core-store-spec-kind+)
+          (store-ref #f)
+          (store-kind 'custom)
+          (namespace 'session)
+          (scopes '())
+          (recall-policies '())
+          (commit-policies '())
+          (runtime-owner "marlin-agent-core")
+          (handoff-operation 'memory/custom)
+          (durable? #f)
+          (runtime-backend 'marlin-memory-adapter)
+          (metadata '())
+          (runtime-executed #f))))
 
-(def memory-catalog
-  (.o kind: +poo-flow-memory-core-catalog-kind+
-      catalog-ref: 'memory-core/catalog
-      stores: '()
-      metadata: '()
-      runtime-owner: "marlin-agent-core"
-      runtime-executed: #f))
+(defpoo-module-config-prototype
+  memory-catalog
+  (slots ((kind +poo-flow-memory-core-catalog-kind+)
+          (catalog-ref 'memory-core/catalog)
+          (stores '())
+          (metadata '())
+          (runtime-owner "marlin-agent-core")
+          (runtime-executed #f))))
 
 ;; : (-> Symbol POOObject)
 (def (poo-flow-memory-core-prototype-super name)
@@ -52,42 +53,42 @@
     (error "unknown memory-core prototype super" name))))
 
 ;; : (-> POOObject Boolean)
-(def (poo-flow-memory-core-poo-store-spec? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (eq? (.ref value 'kind) +poo-flow-memory-core-store-spec-kind+)))
+(defpoo-module-config-kind-predicate
+  poo-flow-memory-core-poo-store-spec?
+  +poo-flow-memory-core-store-spec-kind+)
 
 ;; : (-> POOObject Boolean)
-(def (poo-flow-memory-core-poo-catalog? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (eq? (.ref value 'kind) +poo-flow-memory-core-catalog-kind+)))
+(defpoo-module-config-kind-predicate
+  poo-flow-memory-core-poo-catalog?
+  +poo-flow-memory-core-catalog-kind+)
 
 ;; : (-> PooMemoryStoreSpecPrototype PooMemoryStoreSpec)
-(def (poo-flow-memory-core-poo-store-spec->store-spec spec)
-  (poo-flow-memory-store-spec
-   (.ref spec 'store-ref)
-   (.ref spec 'store-kind)
-   (.ref spec 'namespace)
-   (.ref spec 'scopes)
-   (.ref spec 'recall-policies)
-   (.ref spec 'commit-policies)
-   (.ref spec 'runtime-owner)
-   (.ref spec 'handoff-operation)
-   (.ref spec 'durable?)
-   (.ref spec 'runtime-backend)
-   (.ref spec 'metadata)))
+(defpoo-module-config-converter
+  poo-flow-memory-core-poo-store-spec->store-spec (spec)
+  (constructor poo-flow-memory-store-spec)
+  (arguments (slot store-ref)
+             (slot store-kind)
+             (slot namespace)
+             (slot scopes)
+             (slot recall-policies)
+             (slot commit-policies)
+             (slot runtime-owner)
+             (slot handoff-operation)
+             (slot durable?)
+             (slot runtime-backend)
+             (slot metadata)))
 
 ;; : (-> [PooMemoryStoreSpecPrototype] [PooMemoryStoreSpec])
 (def (poo-flow-memory-core-poo-store-specs->store-specs specs)
   (map poo-flow-memory-core-poo-store-spec->store-spec specs))
 
 ;; : (-> PooMemoryCatalogPrototype [PooMemoryStoreSpec] PooMemoryCatalog)
-(def (poo-flow-memory-core-poo-catalog->catalog catalog specs)
-  (poo-flow-memory-catalog
-   (.ref catalog 'catalog-ref)
-   specs
-   (.ref catalog 'metadata)))
+(defpoo-module-config-converter
+  poo-flow-memory-core-poo-catalog->catalog (catalog specs)
+  (constructor poo-flow-memory-catalog)
+  (arguments (slot catalog-ref)
+             (value specs)
+             (slot metadata)))
 
 ;; : (-> [POOObject] [POOObject])
 (def (poo-flow-memory-core-poo-config-store-specs prototypes)

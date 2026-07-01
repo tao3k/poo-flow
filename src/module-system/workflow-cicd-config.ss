@@ -3,6 +3,7 @@
 ;;; Invariant: this owner emits POO control-plane data and never executes checks.
 
 (import :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/runtime-projection-syntax
         :poo-flow/src/module-system/sandbox-profile-catalog
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-check-map->functional-dag
@@ -232,61 +233,64 @@
 ;;; full manifest remains available, but presentation code and docs can inspect
 ;;; these rows without traversing nested sandbox summaries.
 ;; : (-> Alist Alist)
-(def (poo-flow-user-workflow-cicd-runtime-command-manifest-summary manifest)
-  (let* ((request (poo-flow-user-alist-ref manifest 'request '()))
-         (policy (poo-flow-user-alist-ref manifest 'policy '()))
-         (unresolved
-          (poo-flow-user-alist-ref request
-                                   'sandbox-unresolved-profile-refs
-                                   '()))
-         (handoff-ready (null? unresolved)))
-    (list
-     (cons 'kind 'workflow-cicd-runtime-command-manifest-summary)
-     (cons 'operation
-           (poo-flow-user-alist-ref manifest 'operation #f))
-     (cons 'request-id
-           (poo-flow-user-alist-ref manifest 'request-id #f))
-     (cons 'artifact-handle
-           (poo-flow-user-alist-ref manifest 'artifact-handle #f))
-     (cons 'argv
-           (poo-flow-user-alist-ref manifest 'argv '()))
-     (cons 'check
-           (poo-flow-user-alist-ref request 'check #f))
-     (cons 'profile
-           (poo-flow-user-alist-ref request 'profile #f))
-     (cons 'profile-refs
-           (poo-flow-user-alist-ref request 'profile-refs '()))
-     (cons 'dependency-refs
-           (poo-flow-user-alist-ref request 'dependency-refs '()))
-     (cons 'durable-task-id
-           (poo-flow-user-alist-ref request 'durable-task-id #f))
-     (cons 'action-class
-           (poo-flow-user-alist-ref request 'action-class #f))
-     (cons 'artifact-refs
-           (poo-flow-user-alist-ref request 'artifact-refs '()))
-     (cons 'artifact-provenance
-           (poo-flow-user-alist-ref
-            policy
-            'artifact-provenance
-            '()))
-     (cons 'artifact-retention
-           (poo-flow-user-alist-ref request 'artifact-retention #f))
-     (cons 'sandbox-refs
-           (poo-flow-user-alist-ref request 'sandbox-refs '()))
-     (cons 'checkpoint-ref
-           (poo-flow-user-alist-ref request 'checkpoint-ref #f))
-     (cons 'compensation-refs
-           (poo-flow-user-alist-ref request 'compensation-refs '()))
-     (cons 'runtime
-           (poo-flow-user-alist-ref request 'runtime #f))
-     (cons 'runtime-owner "marlin-agent-core")
-     (cons 'sandbox-unresolved-profile-refs unresolved)
-     (cons 'status (if handoff-ready 'ready 'blocked))
-     (cons 'handoff-ready handoff-ready)
-     (cons 'handoff-required
-           (poo-flow-user-alist-ref policy 'handoff-required #t))
-     (cons 'runtime-executed
-           (poo-flow-user-alist-ref request 'runtime-executed #f)))))
+(defpoo-runtime-receipt-projection
+  poo-flow-user-workflow-cicd-runtime-command-manifest-summary
+  (manifest)
+  (bindings
+   ((request (poo-flow-user-alist-ref manifest 'request '()))
+    (policy (poo-flow-user-alist-ref manifest 'policy '()))
+    (unresolved
+     (poo-flow-user-alist-ref request
+                              'sandbox-unresolved-profile-refs
+                              '()))
+    (handoff-ready (null? unresolved))))
+  (fields
+   (('kind 'workflow-cicd-runtime-command-manifest-summary)
+    ('operation
+     (poo-flow-user-alist-ref manifest 'operation #f))
+    ('request-id
+     (poo-flow-user-alist-ref manifest 'request-id #f))
+    ('artifact-handle
+     (poo-flow-user-alist-ref manifest 'artifact-handle #f))
+    ('argv
+     (poo-flow-user-alist-ref manifest 'argv '()))
+    ('check
+     (poo-flow-user-alist-ref request 'check #f))
+    ('profile
+     (poo-flow-user-alist-ref request 'profile #f))
+    ('profile-refs
+     (poo-flow-user-alist-ref request 'profile-refs '()))
+    ('dependency-refs
+     (poo-flow-user-alist-ref request 'dependency-refs '()))
+    ('durable-task-id
+     (poo-flow-user-alist-ref request 'durable-task-id #f))
+    ('action-class
+     (poo-flow-user-alist-ref request 'action-class #f))
+    ('artifact-refs
+     (poo-flow-user-alist-ref request 'artifact-refs '()))
+    ('artifact-provenance
+     (poo-flow-user-alist-ref
+      policy
+      'artifact-provenance
+      '()))
+    ('artifact-retention
+     (poo-flow-user-alist-ref request 'artifact-retention #f))
+    ('sandbox-refs
+     (poo-flow-user-alist-ref request 'sandbox-refs '()))
+    ('checkpoint-ref
+     (poo-flow-user-alist-ref request 'checkpoint-ref #f))
+    ('compensation-refs
+     (poo-flow-user-alist-ref request 'compensation-refs '()))
+    ('runtime
+     (poo-flow-user-alist-ref request 'runtime #f))
+    ('runtime-owner "marlin-agent-core")
+    ('sandbox-unresolved-profile-refs unresolved)
+    ('status (if handoff-ready 'ready 'blocked))
+    ('handoff-ready handoff-ready)
+    ('handoff-required
+     (poo-flow-user-alist-ref policy 'handoff-required #t))
+    ('runtime-executed
+     (poo-flow-user-alist-ref request 'runtime-executed #f)))))
 
 ;;; Summary projection is a pure sequence transform over manifest maps. It keeps
 ;;; user-facing audit rows small while leaving the full command payload intact.
@@ -776,31 +780,34 @@
 ;;; handoff diagnostics; they keep the full per-check entries available only in
 ;;; the ABI payload.
 ;; : (-> MarlinRuntimeHandoffAbi MarlinRuntimeHandoffAbiSummary)
-(def (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary abi)
-  (let ((entries (poo-flow-user-alist-ref abi 'entries '())))
-    (list
-     (cons 'kind 'workflow-cicd-marlin-runtime-handoff-abi-summary)
-     (cons 'schema (poo-flow-user-alist-ref abi 'schema #f))
-     (cons 'check-map (poo-flow-user-alist-ref abi 'check-map #f))
-     (cons 'runtime-owner
-           (poo-flow-user-alist-ref abi 'runtime-owner
-                                    +poo-flow-user-workflow-cicd-runtime-owner+))
-     (cons 'manifest-count
-           (poo-flow-user-alist-ref abi 'manifest-count (length entries)))
-     (cons 'entry-count (length entries))
-     (cons 'required-fields
-           (poo-flow-user-alist-ref abi 'required-fields '()))
-     (cons 'handoff-required
-           (poo-flow-user-alist-ref abi 'handoff-required #t))
-     (cons 'runtime-executed
-           (poo-flow-user-alist-ref abi 'runtime-executed #f))
-     (cons 'runtime-parses-scheme-source
-           (poo-flow-user-alist-ref abi 'runtime-parses-scheme-source #f))
-     (cons 'scheme-manufactures-runtime-handlers
-           (poo-flow-user-alist-ref
-            abi
-            'scheme-manufactures-runtime-handlers
-            #f)))))
+(defpoo-runtime-receipt-projection
+  poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary
+  (abi)
+  (bindings
+   ((entries (poo-flow-user-alist-ref abi 'entries '()))))
+  (fields
+   (('kind 'workflow-cicd-marlin-runtime-handoff-abi-summary)
+    ('schema (poo-flow-user-alist-ref abi 'schema #f))
+    ('check-map (poo-flow-user-alist-ref abi 'check-map #f))
+    ('runtime-owner
+     (poo-flow-user-alist-ref abi 'runtime-owner
+                              +poo-flow-user-workflow-cicd-runtime-owner+))
+    ('manifest-count
+     (poo-flow-user-alist-ref abi 'manifest-count (length entries)))
+    ('entry-count (length entries))
+    ('required-fields
+     (poo-flow-user-alist-ref abi 'required-fields '()))
+    ('handoff-required
+     (poo-flow-user-alist-ref abi 'handoff-required #t))
+    ('runtime-executed
+     (poo-flow-user-alist-ref abi 'runtime-executed #f))
+    ('runtime-parses-scheme-source
+     (poo-flow-user-alist-ref abi 'runtime-parses-scheme-source #f))
+    ('scheme-manufactures-runtime-handlers
+     (poo-flow-user-alist-ref
+      abi
+      'scheme-manufactures-runtime-handlers
+      #f)))))
 
 ;; : (-> [MarlinRuntimeHandoffAbi] [MarlinRuntimeHandoffAbiSummary])
 (def (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
@@ -808,57 +815,67 @@
   (map poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summary
        abi-rows))
 
+;; : (-> [MarlinRuntimeHandoffAbiSummary] Integer)
+(def (poo-flow-user-workflow-cicd-marlin-handoff-entry-count summaries)
+  (cond
+   ((null? summaries) 0)
+   (else
+    (+ (poo-flow-user-alist-ref (car summaries) 'entry-count 0)
+       (poo-flow-user-workflow-cicd-marlin-handoff-entry-count
+        (cdr summaries))))))
+
 ;;; The handoff receipt bundle is the user-interface receipt-sized envelope for
 ;;; Marlin handoff. It keeps the full ABI payload available while giving agents
 ;;; one stable object to inspect for agreement, proof gate, and non-execution
 ;;; evidence.
 ;; : (-> [Alist] [Alist] Alist [Alist] [Alist] [Alist] Alist)
-(def (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
-      manifest-maps
-      manifest-summaries
-      manifest-agreement
-      handoff-abis
-      handoff-summaries
-      receipts)
-  (list
-   (cons 'schema
-         'poo-flow.modules.workflow-cicd.marlin-handoff-receipt-bundle.v1)
-   (cons 'kind 'workflow-cicd-marlin-handoff-receipt-bundle)
-   (cons 'source 'poo-flow-user-config-presentation)
-   (cons 'alignment-gate-id
-         'stage-23-user-interface-marlin-handoff-projection)
-   (cons 'proof-command
-         "gxtest t/user-interface-cicd-test.ss: projects user config into Marlin runtime handoff ABI")
-   (cons 'presentation-fields
-         '(workflow-cicd-runtime-command-manifests
-           workflow-cicd-runtime-command-manifest-summaries
-           workflow-cicd-runtime-command-manifest-agreement
-           workflow-cicd-marlin-runtime-handoff-abis
-           workflow-cicd-marlin-runtime-handoff-summaries
-           workflow-cicd-receipts))
-   (cons 'runtime-owner +poo-flow-user-workflow-cicd-runtime-owner+)
-   (cons 'handoff-required (> (length handoff-abis) 0))
-   (cons 'runtime-executed #f)
-   (cons 'runtime-parses-scheme-source #f)
-   (cons 'scheme-manufactures-runtime-handlers #f)
-   (cons 'manifest-map-count (length manifest-maps))
-   (cons 'manifest-summary-count (length manifest-summaries))
-   (cons 'manifest-agreement-valid?
-         (poo-flow-user-alist-ref manifest-agreement 'valid? #f))
-   (cons 'manifest-agreement-diagnostics
-         (poo-flow-user-alist-ref manifest-agreement 'diagnostics '()))
-   (cons 'marlin-runtime-handoff-abi-count (length handoff-abis))
-   (cons 'marlin-runtime-handoff-summary-count (length handoff-summaries))
-   (cons 'receipt-count (length receipts))
-   (cons 'manifest-agreement-schema
-         (poo-flow-user-alist-ref manifest-agreement 'schema #f))
-   (cons 'manifest-agreement-row-count
-         (length (poo-flow-user-alist-ref manifest-agreement 'rows '())))
-   (cons 'marlin-runtime-handoff-entry-count
-         (apply +
-                (map (lambda (summary)
-                       (poo-flow-user-alist-ref summary 'entry-count 0))
-                     handoff-summaries)))))
+(defpoo-runtime-receipt-projection
+  poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+  (manifest-maps
+   manifest-summaries
+   manifest-agreement
+   handoff-abis
+   handoff-summaries
+   receipts)
+  (bindings
+   ((handoff-entry-count
+     (poo-flow-user-workflow-cicd-marlin-handoff-entry-count
+      handoff-summaries))))
+  (fields
+   (('schema
+     'poo-flow.modules.workflow-cicd.marlin-handoff-receipt-bundle.v1)
+    ('kind 'workflow-cicd-marlin-handoff-receipt-bundle)
+    ('source 'poo-flow-user-config-presentation)
+    ('alignment-gate-id
+     'stage-23-user-interface-marlin-handoff-projection)
+    ('proof-command
+     "gxtest t/user-interface-cicd-test.ss: projects user config into Marlin runtime handoff ABI")
+    ('presentation-fields
+     '(workflow-cicd-runtime-command-manifests
+       workflow-cicd-runtime-command-manifest-summaries
+       workflow-cicd-runtime-command-manifest-agreement
+       workflow-cicd-marlin-runtime-handoff-abis
+       workflow-cicd-marlin-runtime-handoff-summaries
+       workflow-cicd-receipts))
+    ('runtime-owner +poo-flow-user-workflow-cicd-runtime-owner+)
+    ('handoff-required (> (length handoff-abis) 0))
+    ('runtime-executed #f)
+    ('runtime-parses-scheme-source #f)
+    ('scheme-manufactures-runtime-handlers #f)
+    ('manifest-map-count (length manifest-maps))
+    ('manifest-summary-count (length manifest-summaries))
+    ('manifest-agreement-valid?
+     (poo-flow-user-alist-ref manifest-agreement 'valid? #f))
+    ('manifest-agreement-diagnostics
+     (poo-flow-user-alist-ref manifest-agreement 'diagnostics '()))
+    ('marlin-runtime-handoff-abi-count (length handoff-abis))
+    ('marlin-runtime-handoff-summary-count (length handoff-summaries))
+    ('receipt-count (length receipts))
+    ('manifest-agreement-schema
+     (poo-flow-user-alist-ref manifest-agreement 'schema #f))
+    ('manifest-agreement-row-count
+     (length (poo-flow-user-alist-ref manifest-agreement 'rows '())))
+    ('marlin-runtime-handoff-entry-count handoff-entry-count))))
 
 ;;; Config-level bundle construction reuses the same projection path as the
 ;;; presentation layer so tests can compare one receipt shape across surfaces.

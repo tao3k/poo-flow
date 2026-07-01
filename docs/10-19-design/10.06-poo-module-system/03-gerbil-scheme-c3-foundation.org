@@ -85,7 +85,14 @@ C4 later as a Gerbil 0.19 compatibility upgrade.
 Explicit DAG/topological planning for workflow execution, implemented outside this project.
 #+end_src
 
-This division is important for the Rust boundary too. =marlin-agent-core= remains the heavy execution substrate for CAS, subprocesses, persistence, and parallel scheduling, while Scheme/POO owns high-level policy and descriptor composition order.
+Amendment: "outside this project" means heavy runtime execution and parallel scheduling, not all graph analysis. =poo-flow= may implement pure graph algorithms over composed POO facts for validation, diagnostics, dependency-cone explanations, cycle detection, and runtime handoff receipts.
+
+The boundary remains:
+#+begin_src text
+Scheme/POO graph layer analyzes and explains object relations.
+Marlin/runtime executes, persists, schedules, and runs external effects.
+#+end_src
+This division is important for the Rust boundary too. =marlin-agent-core= remains the heavy execution substrate for CAS, subprocesses, persistence, and parallel scheduling, while Scheme/POO owns high-level policy, descriptor composition order, and report-only graph diagnostics.
 ** 10.06.03.29 C3 Is Not A Safety Boundary
 
 C3 only decides precedence. It answers "which parent or slot wins first" and

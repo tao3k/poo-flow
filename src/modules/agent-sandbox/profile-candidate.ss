@@ -6,8 +6,9 @@
 ;;; Import contract: backend modules override POO descriptor slots, not this data shape.
 ;;; Policy evidence: tests validate contracts without invoking nono or CubeSandbox.
 
-(import (only-in :clan/poo/object .@ .mix object?)
+(import (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/api
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile)
 
@@ -262,18 +263,18 @@
 ;;; override validator/projector slots without changing the public data contract.
 ;; : (-> Unit AgentSandboxProfileCandidateDescriptorPrototype)
 (def agent-sandbox-profile-candidate-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'name 'agent-sandbox-profile-candidate)
-                      (cons 'backend-kind #f)
-                      (cons 'source #f)
-                      (cons 'metadata '())
-                      (cons 'validator
-                            agent-sandbox-profile-candidate-validator)
-                      (cons 'patch-projector
-                            agent-sandbox-profile-candidate-default-patch-projector)
-                      (cons 'promotion-projector
-                            agent-sandbox-profile-candidate-default-promotion-projector)))
-        execution-policy-role))
+  (poo-core-role-object
+   (slots ((name 'agent-sandbox-profile-candidate)
+           (backend-kind #f)
+           (source #f)
+           (metadata '())
+           (validator
+            agent-sandbox-profile-candidate-validator)
+           (patch-projector
+            agent-sandbox-profile-candidate-default-patch-projector)
+           (promotion-projector
+            agent-sandbox-profile-candidate-default-promotion-projector)))
+   (supers execution-policy-role)))
 
 ;;; Boundary: make agent sandbox profile candidate descriptor is the policy-
 ;;; visible edge for sandbox behavior, keeping validation, lookup, or
@@ -283,14 +284,15 @@
                                                       backend-kind
                                                       source
                                                       . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (append
-                 (list (cons 'name name)
-                       (cons 'backend-kind backend-kind)
-                       (cons 'source source)
-                       (cons 'metadata '()))
-                 (if (null? maybe-overrides) '() (car maybe-overrides))))
-        agent-sandbox-profile-candidate-descriptor-prototype))
+  (poo-core-role-object
+   (slot-rows
+    (append
+     (list (cons 'name name)
+           (cons 'backend-kind backend-kind)
+           (cons 'source source)
+           (cons 'metadata '()))
+     (if (null? maybe-overrides) '() (car maybe-overrides))))
+   (supers agent-sandbox-profile-candidate-descriptor-prototype)))
 
 ;; | AgentSandboxProfileCandidateDescriptorCandidate = Object
 ;; : (-> AgentSandboxProfileCandidateDescriptorCandidate Boolean)

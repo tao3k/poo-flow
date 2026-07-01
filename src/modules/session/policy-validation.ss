@@ -5,7 +5,8 @@
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/policy)
+        :poo-flow/src/modules/session/policy
+        :poo-flow/src/modules/session/policy-syntax)
 
 (export poo-flow-session-policy-tool-attempt
         poo-flow-session-policy-tool-attempt?
@@ -16,7 +17,9 @@
         poo-flow-session-policy-validation-receipt
         poo-flow-session-policy-validation-receipt?
         poo-flow-session-policy-validation-receipt-valid?
-        poo-flow-session-policy-validation-receipt-diagnostics)
+        poo-flow-session-policy-validation-receipt-diagnostics
+        poo-flow-session-policy-validation-receipt->alist
+        poo-flow-session-policy-validation-receipts->alists)
 
 ;; : (-> POOObject Symbol Value Value)
 (def (poo-flow-session-validation-slot policy key default)
@@ -38,21 +41,19 @@
   (or (poo-flow-session-validation-member? value values)
       (poo-flow-session-validation-member? '* values)))
 
-;; : (-> Procedure [Any] [Any])
-(def (poo-flow-session-validation-filter predicate values)
+;; : (-> Procedure [Any] ([Any] [Any]))
+(def (poo-flow-session-validation-partition predicate values)
   (cond
-   ((null? values) '())
-   ((predicate (car values))
-    (cons (car values)
-          (poo-flow-session-validation-filter predicate (cdr values))))
+   ((null? values) (list '() '()))
    (else
-    (poo-flow-session-validation-filter predicate (cdr values)))))
-
-;; : (-> Procedure [Any] [Any])
-(def (poo-flow-session-validation-remove predicate values)
-  (poo-flow-session-validation-filter
-   (lambda (value) (not (predicate value)))
-   values))
+    (let* ((value (car values))
+           (tail-partition
+            (poo-flow-session-validation-partition predicate (cdr values)))
+           (accepted-values (car tail-partition))
+           (rejected-values (cadr tail-partition)))
+      (if (predicate value)
+        (list (cons value accepted-values) rejected-values)
+        (list accepted-values (cons value rejected-values)))))))
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol [Alist] PooSessionToolAttempt)
 (def (poo-flow-session-policy-tool-attempt attempt-id
@@ -100,29 +101,15 @@
        (eq? (poo-flow-session-validation-alist-ref value 'kind #f)
             'poo-flow.session.policy.tool-attempt)))
 
-;; : (-> PooSessionToolAttempt Symbol)
-(def (poo-flow-session-policy-tool-attempt-id attempt)
-  (poo-flow-session-validation-alist-ref attempt 'attempt-id #f))
-
-;; : (-> PooSessionToolAttempt Symbol)
-(def (poo-flow-session-policy-tool-attempt-trigger-ref attempt)
-  (poo-flow-session-validation-alist-ref attempt 'trigger-ref #f))
-
-;; : (-> PooSessionToolAttempt Symbol)
-(def (poo-flow-session-policy-tool-attempt-tool-ref attempt)
-  (poo-flow-session-validation-alist-ref attempt 'tool-ref #f))
-
-;; : (-> PooSessionToolAttempt Symbol)
-(def (poo-flow-session-policy-tool-attempt-action attempt)
-  (poo-flow-session-validation-alist-ref attempt 'action #f))
-
-;; : (-> PooSessionToolAttempt Symbol)
-(def (poo-flow-session-policy-tool-attempt-resource-ref attempt)
-  (poo-flow-session-validation-alist-ref attempt 'resource-ref #f))
-
-;; : (-> PooSessionToolAttempt Symbol)
-(def (poo-flow-session-policy-tool-attempt-principal-ref attempt)
-  (poo-flow-session-validation-alist-ref attempt 'principal-ref #f))
+;; : PooSessionToolAttempt -> Value accessors
+(defpoo-session-alist-accessors
+  poo-flow-session-validation-alist-ref
+  (poo-flow-session-policy-tool-attempt-id attempt-id #f)
+  (poo-flow-session-policy-tool-attempt-trigger-ref trigger-ref #f)
+  (poo-flow-session-policy-tool-attempt-tool-ref tool-ref #f)
+  (poo-flow-session-policy-tool-attempt-action action #f)
+  (poo-flow-session-policy-tool-attempt-resource-ref resource-ref #f)
+  (poo-flow-session-policy-tool-attempt-principal-ref principal-ref #f))
 
 ;; : (-> Symbol Symbol Any Alist)
 (def (poo-flow-session-policy-diagnostic code scope-ref detail)
@@ -185,16 +172,9 @@
          poo-flow-session-resource-grant-accounted?
          resource-grants))))
 
-;; : (-> [Symbol] [Symbol] [Symbol])
-(def (poo-flow-session-policy-allowed-refs requested allowed)
-  (poo-flow-session-validation-filter
-   (lambda (value)
-     (poo-flow-session-validation-granted? value allowed))
-   requested))
-
-;; : (-> [Symbol] [Symbol] [Symbol])
-(def (poo-flow-session-policy-denied-refs requested allowed)
-  (poo-flow-session-validation-remove
+;; : (-> [Symbol] [Symbol] ([Symbol] [Symbol]))
+(def (poo-flow-session-policy-partition-refs requested allowed)
+  (poo-flow-session-validation-partition
    (lambda (value)
      (poo-flow-session-validation-granted? value allowed))
    requested))
@@ -243,19 +223,26 @@
 (def (poo-flow-session-hook-inheritance-diagnostics agent-tool-policy
                                                     hook-tool-policy
                                                     hook-attempts)
-  (apply append
-         (map (lambda (attempt)
-                (if (and (not (poo-flow-session-hook-tool-attempt-allowed?
-                               hook-tool-policy
-                               attempt))
-                         (poo-flow-session-agent-tool-attempt-allowed?
-                          agent-tool-policy
-                          attempt))
-                  (list (poo-flow-session-tool-attempt-diagnostic
-                         'hook-tool-agent-permission-not-inherited
-                         attempt))
-                  '()))
-              hook-attempts)))
+  (cond
+   ((null? hook-attempts) '())
+   (else
+    (let* ((attempt (car hook-attempts))
+           (tail-diagnostics
+            (poo-flow-session-hook-inheritance-diagnostics
+             agent-tool-policy
+             hook-tool-policy
+             (cdr hook-attempts))))
+      (if (and (not (poo-flow-session-hook-tool-attempt-allowed?
+                     hook-tool-policy
+                     attempt))
+               (poo-flow-session-agent-tool-attempt-allowed?
+                agent-tool-policy
+                attempt))
+        (cons (poo-flow-session-tool-attempt-diagnostic
+               'hook-tool-agent-permission-not-inherited
+               attempt)
+              tail-diagnostics)
+        tail-diagnostics)))))
 
 ;; : (-> Symbol Symbol PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy [Symbol] [Symbol] [Symbol] [Symbol] [PooSessionToolAttempt] [PooSessionToolAttempt] [Alist] PooSessionPolicyValidationReceipt)
 (def (poo-flow-session-policy-validation-receipt validation-id
@@ -319,66 +306,54 @@
                              poo-flow-session-policy-tool-attempt?
                              hook-tool-attempts)
                             hook-tool-attempts)
-  (let* ((allowed-context-refs
-          (poo-flow-session-policy-allowed-refs
+  (let* ((context-ref-partition
+          (poo-flow-session-policy-partition-refs
            requested-context-refs
            (poo-flow-session-policy-context-allowed context-policy)))
-         (denied-context-refs
-          (poo-flow-session-policy-denied-refs
-           requested-context-refs
-           (poo-flow-session-policy-context-allowed context-policy)))
-         (allowed-history-records
-          (poo-flow-session-policy-allowed-refs
+         (allowed-context-refs (car context-ref-partition))
+         (denied-context-refs (cadr context-ref-partition))
+         (history-record-partition
+          (poo-flow-session-policy-partition-refs
            requested-history-records
            (poo-flow-session-policy-history-allowed history-policy)))
-         (denied-history-records
-          (poo-flow-session-policy-denied-refs
-           requested-history-records
-           (poo-flow-session-policy-history-allowed history-policy)))
+         (allowed-history-records (car history-record-partition))
+         (denied-history-records (cadr history-record-partition))
+         (communication-channel-partition
+          (poo-flow-session-policy-partition-refs
+           requested-channel-refs
+           (poo-flow-session-policy-channel-allowed communication-policy)))
          (allowed-communication-channels
-          (poo-flow-session-policy-allowed-refs
-           requested-channel-refs
-           (poo-flow-session-policy-channel-allowed communication-policy)))
+          (car communication-channel-partition))
          (denied-communication-channels
-          (poo-flow-session-policy-denied-refs
-           requested-channel-refs
-           (poo-flow-session-policy-channel-allowed communication-policy)))
-         (allowed-resource-refs
-          (poo-flow-session-policy-allowed-refs
+          (cadr communication-channel-partition))
+         (resource-ref-partition
+          (poo-flow-session-policy-partition-refs
            requested-resource-refs
            (poo-flow-session-policy-resource-capabilities resource-policy)))
-         (denied-resource-refs
-          (poo-flow-session-policy-denied-refs
-           requested-resource-refs
-           (poo-flow-session-policy-resource-capabilities resource-policy)))
+         (allowed-resource-refs (car resource-ref-partition))
+         (denied-resource-refs (cadr resource-ref-partition))
+         (agent-tool-attempt-partition
+          (poo-flow-session-validation-partition
+           (lambda (attempt)
+             (poo-flow-session-agent-tool-attempt-allowed?
+              agent-tool-policy
+              attempt))
+           agent-tool-attempts))
          (allowed-agent-tool-attempts
-          (poo-flow-session-validation-filter
-           (lambda (attempt)
-             (poo-flow-session-agent-tool-attempt-allowed?
-              agent-tool-policy
-              attempt))
-           agent-tool-attempts))
+          (car agent-tool-attempt-partition))
          (denied-agent-tool-attempts
-          (poo-flow-session-validation-remove
+          (cadr agent-tool-attempt-partition))
+         (hook-tool-attempt-partition
+          (poo-flow-session-validation-partition
            (lambda (attempt)
-             (poo-flow-session-agent-tool-attempt-allowed?
-              agent-tool-policy
+             (poo-flow-session-hook-tool-attempt-allowed?
+              hook-tool-policy
               attempt))
-           agent-tool-attempts))
+           hook-tool-attempts))
          (allowed-hook-tool-attempts
-          (poo-flow-session-validation-filter
-           (lambda (attempt)
-             (poo-flow-session-hook-tool-attempt-allowed?
-              hook-tool-policy
-              attempt))
-           hook-tool-attempts))
+          (car hook-tool-attempt-partition))
          (denied-hook-tool-attempts
-          (poo-flow-session-validation-remove
-           (lambda (attempt)
-             (poo-flow-session-hook-tool-attempt-allowed?
-              hook-tool-policy
-              attempt))
-           hook-tool-attempts))
+          (cadr hook-tool-attempt-partition))
          (diagnostics
           (append
            (poo-flow-session-denied-ref-diagnostics
@@ -467,10 +442,50 @@
        (eq? (.ref value 'kind)
             'poo-flow.session.policy-validation-receipt)))
 
-;; : (-> PooSessionPolicyValidationReceipt Boolean)
-(def (poo-flow-session-policy-validation-receipt-valid? receipt)
-  (.ref receipt 'valid?))
+;; : PooSessionPolicyValidationReceipt -> Value accessors
+(defpoo-session-object-accessors
+  .ref
+  (poo-flow-session-policy-validation-receipt-valid? valid?)
+  (poo-flow-session-policy-validation-receipt-diagnostics diagnostics))
 
-;; : (-> PooSessionPolicyValidationReceipt [Alist])
-(def (poo-flow-session-policy-validation-receipt-diagnostics receipt)
-  (.ref receipt 'diagnostics))
+;; : (-> PooSessionPolicyValidationReceipt Alist)
+(defpoo-session-object-projection
+  poo-flow-session-policy-validation-receipt->alist
+  (receipt)
+  (require poo-flow-session-require
+           "session policy validation projection requires a receipt"
+           poo-flow-session-policy-validation-receipt?)
+  (object-reader .ref)
+  (rows
+   (slot kind)
+   (slot schema)
+   (slot validation-id)
+   (slot scope-ref)
+   (slot valid?)
+   (slot effective-model-ref)
+   (slot effective-prompt-session-ref)
+   (slot effective-prompt-chunk-refs)
+   (slot allowed-context-refs)
+   (slot denied-context-refs)
+   (slot allowed-history-records)
+   (slot denied-history-records)
+   (slot allowed-communication-channels)
+   (slot denied-communication-channels)
+   (slot allowed-resource-refs)
+   (slot denied-resource-refs)
+   (slot allowed-agent-tool-attempts)
+   (slot denied-agent-tool-attempts)
+   (slot allowed-hook-tool-attempts)
+   (slot denied-hook-tool-attempts)
+   (slot shared-resource-grants)
+   (slot diagnostic-count)
+   (slot diagnostics)
+   (slot runtime-owner)
+   (slot runtime-executed)
+   (slot metadata)))
+
+;; : (-> [PooSessionPolicyValidationReceipt] [Alist])
+(defpoo-session-object-projection-batch
+  poo-flow-session-policy-validation-receipts->alists (receipts)
+  (projector poo-flow-session-policy-validation-receipt->alist)
+  (error-message "session policy validation projection requires a list"))

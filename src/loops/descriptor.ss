@@ -2,9 +2,10 @@
 ;;; Boundary: loop-agent descriptors are policy composition data.
 ;;; Invariant: scheduling, persistence, and execution stay in marlin-agent-core.
 
-(import (only-in :clan/poo/object .o .mix object?)
+(import (only-in :clan/poo/object .o object?)
         :poo-flow/src/core/roles
-        :poo-flow/src/core/failure)
+        :poo-flow/src/core/failure
+        :poo-flow/src/core/object-syntax)
 
 (export +loop-pattern-schema+
         +loop-levels+
@@ -181,56 +182,57 @@
 ;;; Intent: C3/POO composition ranks policy defaults before Marlin executes.
 ;; : (-> Unit LoopPatternDescriptorPrototype)
 (def loop-pattern-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'schema +loop-pattern-schema+)
-                      (cons 'kind 'loop-pattern)
-                      (cons 'name #f)
-                      (cons 'goal #f)
-                      (cons 'level 'l1)
-                      (cons 'priority 50)
-                      (cons 'watched-scope '())
-                      (cons 'non-goals '())
-                      (cons 'schedule '((mode . manual)))
-                      (cons 'state '((store . file) (path . "STATE.md")))
-                      (cons 'budget '((max-attempts . 1)))
-                      (cons 'isolation '((mode . none)))
-                      (cons 'skills '())
-                      (cons 'connectors '())
-                      (cons 'maker '((enabled . #f)))
-                      (cons 'checker '((required . #t)))
-                      (cons 'safety
-                            (list (cons 'human-gates +loop-default-human-gates+)
-                                  (cons 'denylist '())
-                                  (cons 'auto-merge #f)))
-                      (cons 'observability '((run-log . "loop-run-log.md")))
-                      (cons 'policy-order +loop-policy-roles+)
-                      (cons 'control-owner 'gerbil)
-                      (cons 'execution-owner 'marlin-agent-core)
-                      (cons 'metadata '())))
-        loop-safety-role
-        loop-budget-role
-        loop-level-role
-        loop-checker-role
-        loop-maker-role
-        loop-state-role
-        loop-schedule-role
-        loop-purpose-role
-        loop-observability-role
-        loop-connector-role
-        loop-skill-role
-        loop-isolation-role
-        loop-agent-role))
+  (poo-core-role-object
+   (slots ((schema +loop-pattern-schema+)
+           (kind 'loop-pattern)
+           (name #f)
+           (goal #f)
+           (level 'l1)
+           (priority 50)
+           (watched-scope '())
+           (non-goals '())
+           (schedule '((mode . manual)))
+           (state '((store . file) (path . "STATE.md")))
+           (budget '((max-attempts . 1)))
+           (isolation '((mode . none)))
+           (skills '())
+           (connectors '())
+           (maker '((enabled . #f)))
+           (checker '((required . #t)))
+           (safety
+            (list (cons 'human-gates +loop-default-human-gates+)
+                  (cons 'denylist '())
+                  (cons 'auto-merge #f)))
+           (observability '((run-log . "loop-run-log.md")))
+           (policy-order +loop-policy-roles+)
+           (control-owner 'gerbil)
+           (execution-owner 'marlin-agent-core)
+           (metadata '())))
+   (supers loop-safety-role
+           loop-budget-role
+           loop-level-role
+           loop-checker-role
+           loop-maker-role
+           loop-state-role
+           loop-schedule-role
+           loop-purpose-role
+           loop-observability-role
+           loop-connector-role
+           loop-skill-role
+           loop-isolation-role
+           loop-agent-role)))
 
 ;;; Boundary: constructor accepts only descriptor-policy overrides.
 ;;; Runtime commands, timers, and connector handles belong to marlin-agent-core.
 ;; : (-> Symbol String [Alist] LoopPatternDescriptor)
 (def (make-loop-pattern-descriptor name goal . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (append
-                 (list (cons 'name name)
-                       (cons 'goal goal))
-                 (if (null? maybe-overrides) '() (car maybe-overrides))))
-        loop-pattern-descriptor-prototype))
+  (poo-core-role-object
+   (slot-rows
+    (append
+     (list (cons 'name name)
+           (cons 'goal goal))
+     (if (null? maybe-overrides) '() (car maybe-overrides))))
+   (supers loop-pattern-descriptor-prototype)))
 
 ;; : (-> LoopPatternDescriptorCandidate Boolean)
 (def (loop-pattern-descriptor? descriptor)

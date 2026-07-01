@@ -5,8 +5,9 @@
 ;;; Source contract: symbols mirror the package-owned bindings/nono-c/nono.h.
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
-(import (only-in :clan/poo/object .ref .mix object?)
+(import (only-in :clan/poo/object .ref object?)
         :poo-flow/src/core/api
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile)
 
@@ -171,35 +172,35 @@
 ;;; artifact names or header path without changing runtime manifest projection.
 ;; : NonoCBindingDescriptorPrototype
 (def nono-c-binding-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'schema +nono-c-binding-schema+)
-                      (cons 'name 'nono-c-binding)
-                      (cons 'abi 'c)
-                      (cons 'package "nono-ffi")
-                      (cons 'library "nono_ffi")
-                      (cons 'adapter-header "poo_flow_nono_binding.h")
-                      (cons 'adapter-include-ref
-                            "bindings/nono-c/poo_flow_nono_binding.h")
-                      (cons 'header "nono.h")
-                      (cons 'include-ref "bindings/nono-c/nono.h")
-                      (cons 'crate-ref "bindings/nono-c")
-                      (cons 'probe-ref
-                            "bindings/nono-c/poo_flow_nono_binding_probe.c")
-                      (cons 'types +nono-c-binding-types+)
-                      (cons 'functions +nono-c-binding-functions+)
-                      (cons 'access-modes +nono-c-binding-access-modes+)
-                      (cons 'network-modes +nono-c-binding-network-modes+)
-                      (cons 'validator
-                            nono-c-binding-descriptor-validator)))
-        execution-policy-role))
+  (poo-core-role-object
+   (slots ((schema +nono-c-binding-schema+)
+           (name 'nono-c-binding)
+           (abi 'c)
+           (package "nono-ffi")
+           (library "nono_ffi")
+           (adapter-header "poo_flow_nono_binding.h")
+           (adapter-include-ref
+            "bindings/nono-c/poo_flow_nono_binding.h")
+           (header "nono.h")
+           (include-ref "bindings/nono-c/nono.h")
+           (crate-ref "bindings/nono-c")
+           (probe-ref
+            "bindings/nono-c/poo_flow_nono_binding_probe.c")
+           (types +nono-c-binding-types+)
+           (functions +nono-c-binding-functions+)
+           (access-modes +nono-c-binding-access-modes+)
+           (network-modes +nono-c-binding-network-modes+)
+           (validator
+            nono-c-binding-descriptor-validator)))
+   (supers execution-policy-role)))
 
 ;;; Descriptor construction is the POO override point for local builds that
 ;;; rename the native library while keeping the same nono ABI contract.
 ;; : (-> [Alist] NonoCBindingDescriptor)
 (def (make-nono-c-binding-descriptor . maybe-overrides)
-  (.mix slots: (role-constant-slots
-                (if (null? maybe-overrides) '() (car maybe-overrides)))
-        nono-c-binding-descriptor-prototype))
+  (poo-core-role-object
+   (slot-rows (if (null? maybe-overrides) '() (car maybe-overrides)))
+   (supers nono-c-binding-descriptor-prototype)))
 
 ;; : (-> NonoCBindingDescriptorCandidate Boolean)
 (def (nono-c-binding-descriptor? descriptor)

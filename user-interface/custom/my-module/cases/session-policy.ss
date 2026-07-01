@@ -190,4 +190,5 @@
         (poo-flow-session-policy->alist custom-session-capability-policy)
         (poo-flow-session-policy->alist
          custom-session-agent-execution-policy)
-        custom-session-validation))
+        (poo-flow-session-policy-validation-receipt->alist
+         custom-session-validation)))

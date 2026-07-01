@@ -76,7 +76,9 @@
                '(registry/root)
                '(registry/child)
                'registry/root
-               (list root-entry child-entry))))
+               (list root-entry child-entry)))
+             (receipt-row
+              (poo-flow-session-registry-receipt->alist receipt)))
         (check-equal? (poo-flow-session-registry-entry? child-entry) #t)
         (check-equal? (poo-flow-session-registry-entry-session-id
                        child-entry)
@@ -111,6 +113,10 @@
                       '(registry/child))
         (check-equal? (.ref receipt 'durable-policy-refs)
                       '(durable/registry))
-        (check-equal? (.ref receipt 'runtime-executed) #f)))))
+        (check-equal? (.ref receipt 'runtime-executed) #f)
+        (check-equal? (test-ref receipt-row 'kind)
+                      'poo-flow.session.registry-receipt)
+        (check-equal? (test-ref receipt-row 'entry-count) 2)
+        (check-equal? (test-ref receipt-row 'runtime-executed) #f)))))
 
 (run-tests! session-registry-receipt-test)

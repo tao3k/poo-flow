@@ -58,6 +58,7 @@
         poo-flow-module-object-inherits
         poo-flow-module-object-fields
         poo-flow-module-object-metadata
+        poo-flow-module-object-inheritance-chain-cache
         poo-flow-module-object-resolved-fields
         poo-flow-module-object-field
         poo-flow-module-object-default-slots

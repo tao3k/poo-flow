@@ -3,7 +3,8 @@
 ;;; Invariant: receipts describe runtime state and handoff identity only;
 ;;; Scheme never waits on runtime futures, opens sandbox handles, or replays IO.
 
-(import :poo-flow/src/modules/session/objects)
+(import :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/receipt-syntax)
 
 (export +poo-flow-session-materialization-states+
         poo-flow-session-materialization-state?
@@ -116,43 +117,46 @@
    (if (null? maybe-metadata) '() (car maybe-metadata))))
 
 ;; : (-> PooSessionMaterializationReceipt Alist)
-(def (poo-flow-session-materialization-receipt->alist receipt)
-  (poo-flow-session-require
-   "session materialization projection requires a receipt"
-   (poo-flow-session-materialization-receipt? receipt)
-   receipt)
-  (list
-   (cons 'kind 'poo-flow.session.materialization-receipt)
-   (cons 'schema 'poo-flow.modules.session.materialization-receipt.v1)
-   (cons 'request-id
-         (poo-flow-session-materialization-receipt-request-id receipt))
-   (cons 'project-id
-         (poo-flow-session-materialization-receipt-project-id receipt))
-   (cons 'root-session-ref
-         (poo-flow-session-materialization-receipt-root-session-ref receipt))
-   (cons 'session-ref
-         (poo-flow-session-materialization-receipt-session-ref receipt))
-   (cons 'parent-session-refs
-         (poo-flow-session-materialization-receipt-parent-session-refs
-          receipt))
-   (cons 'materialization-state
-         (poo-flow-session-materialization-receipt-state receipt))
-   (cons 'pending-runtime-ref
-         (poo-flow-session-materialization-receipt-pending-runtime-ref
-          receipt))
-   (cons 'sandbox-handle-ref
-         (poo-flow-session-materialization-receipt-sandbox-handle-ref
-          receipt))
-   (cons 'token-usage-summary
-         (poo-flow-session-materialization-receipt-token-usage-summary
-          receipt))
-   (cons 'error-summary
-         (poo-flow-session-materialization-receipt-error-summary receipt))
-   (cons 'runtime-owner
-         (poo-flow-session-materialization-receipt-runtime-owner receipt))
-   (cons 'runtime-executed
-         (poo-flow-session-materialization-receipt-runtime-executed?
-          receipt))
-   (cons 'handoff-required #t)
-   (cons 'metadata
-         (poo-flow-session-materialization-receipt-metadata receipt))))
+(defpoo-session-receipt-projection
+  poo-flow-session-materialization-receipt->alist
+  (receipt)
+  (require poo-flow-session-require
+           "session materialization projection requires a receipt"
+           (poo-flow-session-materialization-receipt? receipt)
+           receipt)
+  (bindings ())
+  (fields
+   (('kind 'poo-flow.session.materialization-receipt)
+    ('schema 'poo-flow.modules.session.materialization-receipt.v1)
+    ('request-id
+     (poo-flow-session-materialization-receipt-request-id receipt))
+    ('project-id
+     (poo-flow-session-materialization-receipt-project-id receipt))
+    ('root-session-ref
+     (poo-flow-session-materialization-receipt-root-session-ref receipt))
+    ('session-ref
+     (poo-flow-session-materialization-receipt-session-ref receipt))
+    ('parent-session-refs
+     (poo-flow-session-materialization-receipt-parent-session-refs
+      receipt))
+    ('materialization-state
+     (poo-flow-session-materialization-receipt-state receipt))
+    ('pending-runtime-ref
+     (poo-flow-session-materialization-receipt-pending-runtime-ref
+      receipt))
+    ('sandbox-handle-ref
+     (poo-flow-session-materialization-receipt-sandbox-handle-ref
+      receipt))
+    ('token-usage-summary
+     (poo-flow-session-materialization-receipt-token-usage-summary
+      receipt))
+    ('error-summary
+     (poo-flow-session-materialization-receipt-error-summary receipt))
+    ('runtime-owner
+     (poo-flow-session-materialization-receipt-runtime-owner receipt))
+    ('runtime-executed
+     (poo-flow-session-materialization-receipt-runtime-executed?
+      receipt))
+    ('handoff-required #t)
+    ('metadata
+     (poo-flow-session-materialization-receipt-metadata receipt)))))

@@ -6,7 +6,8 @@
 (import (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/modules/session/agent
         :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/policy-validation)
+        :poo-flow/src/modules/session/policy-validation
+        :poo-flow/src/modules/session/receipt-syntax)
 
 (export poo-flow-session-agent-param-contract
         poo-flow-session-agent-param-contract?
@@ -128,46 +129,49 @@
   (.ref contract 'validation-valid?))
 
 ;; : (-> PooSessionAgentParamContract Alist)
-(def (poo-flow-session-agent-param-contract->alist contract)
-  (poo-flow-session-require
-   "session AgentParam projection requires an AgentParam contract"
-   (poo-flow-session-agent-param-contract? contract)
-   contract)
-  (list
-   (cons 'kind (.ref contract 'kind))
-   (cons 'schema (.ref contract 'schema))
-   (cons 'contract-id (.ref contract 'contract-id))
-   (cons 'project-ref (.ref contract 'project-ref))
-   (cons 'agent-id (.ref contract 'agent-id))
-   (cons 'root-session-ref (.ref contract 'root-session-ref))
-   (cons 'parent-session-ref (.ref contract 'parent-session-ref))
-   (cons 'agent-system-session-ref (.ref contract 'agent-system-session-ref))
-   (cons 'input-session-ref (.ref contract 'input-session-ref))
-   (cons 'output-session-ref (.ref contract 'output-session-ref))
-   (cons 'provider-ref (.ref contract 'provider-ref))
-   (cons 'effective-model-ref (.ref contract 'effective-model-ref))
-   (cons 'effective-prompt-session-ref
-         (.ref contract 'effective-prompt-session-ref))
-   (cons 'effective-prompt-chunk-refs
-         (.ref contract 'effective-prompt-chunk-refs))
-   (cons 'model-policy-ref (.ref contract 'model-policy-ref))
-   (cons 'prompt-policy-ref (.ref contract 'prompt-policy-ref))
-   (cons 'tool-permission-policy-ref
-         (.ref contract 'tool-permission-policy-ref))
-   (cons 'hook-tool-permission-policy-ref
-         (.ref contract 'hook-tool-permission-policy-ref))
-   (cons 'resource-sharing-policy-ref
-         (.ref contract 'resource-sharing-policy-ref))
-   (cons 'durable-policy-ref (.ref contract 'durable-policy-ref))
-   (cons 'tool-refs (.ref contract 'tool-refs))
-   (cons 'memory-refs (.ref contract 'memory-refs))
-   (cons 'sandbox-profile-ref (.ref contract 'sandbox-profile-ref))
-   (cons 'streaming-policy (.ref contract 'streaming-policy))
-   (cons 'event-policy (.ref contract 'event-policy))
-   (cons 'validation-id (.ref contract 'validation-id))
-   (cons 'validation-valid? (.ref contract 'validation-valid?))
-   (cons 'validation-diagnostic-count
-         (.ref contract 'validation-diagnostic-count))
-   (cons 'runtime-owner (.ref contract 'runtime-owner))
-   (cons 'runtime-executed (.ref contract 'runtime-executed))
-   (cons 'metadata (.ref contract 'metadata))))
+(defpoo-session-receipt-projection
+  poo-flow-session-agent-param-contract->alist
+  (contract)
+  (require poo-flow-session-require
+           "session AgentParam projection requires an AgentParam contract"
+           (poo-flow-session-agent-param-contract? contract)
+           contract)
+  (bindings ())
+  (fields
+   (('kind (.ref contract 'kind))
+    ('schema (.ref contract 'schema))
+    ('contract-id (.ref contract 'contract-id))
+    ('project-ref (.ref contract 'project-ref))
+    ('agent-id (.ref contract 'agent-id))
+    ('root-session-ref (.ref contract 'root-session-ref))
+    ('parent-session-ref (.ref contract 'parent-session-ref))
+    ('agent-system-session-ref (.ref contract 'agent-system-session-ref))
+    ('input-session-ref (.ref contract 'input-session-ref))
+    ('output-session-ref (.ref contract 'output-session-ref))
+    ('provider-ref (.ref contract 'provider-ref))
+    ('effective-model-ref (.ref contract 'effective-model-ref))
+    ('effective-prompt-session-ref
+     (.ref contract 'effective-prompt-session-ref))
+    ('effective-prompt-chunk-refs
+     (.ref contract 'effective-prompt-chunk-refs))
+    ('model-policy-ref (.ref contract 'model-policy-ref))
+    ('prompt-policy-ref (.ref contract 'prompt-policy-ref))
+    ('tool-permission-policy-ref
+     (.ref contract 'tool-permission-policy-ref))
+    ('hook-tool-permission-policy-ref
+     (.ref contract 'hook-tool-permission-policy-ref))
+    ('resource-sharing-policy-ref
+     (.ref contract 'resource-sharing-policy-ref))
+    ('durable-policy-ref (.ref contract 'durable-policy-ref))
+    ('tool-refs (.ref contract 'tool-refs))
+    ('memory-refs (.ref contract 'memory-refs))
+    ('sandbox-profile-ref (.ref contract 'sandbox-profile-ref))
+    ('streaming-policy (.ref contract 'streaming-policy))
+    ('event-policy (.ref contract 'event-policy))
+    ('validation-id (.ref contract 'validation-id))
+    ('validation-valid? (.ref contract 'validation-valid?))
+    ('validation-diagnostic-count
+     (.ref contract 'validation-diagnostic-count))
+    ('runtime-owner (.ref contract 'runtime-owner))
+    ('runtime-executed (.ref contract 'runtime-executed))
+    ('metadata (.ref contract 'metadata)))))

@@ -74,15 +74,17 @@
 ;;; want audit evidence before they implement full replay execution.
 ;; : (-> Receipt RunSummary)
 (def (receipt->run-summary receipt)
-  (list (cons 'flow (receipt-flow receipt))
-        (cons 'kind (receipt-kind receipt))
-        (cons 'status (receipt-status receipt))
-        (cons 'strategy (receipt-strategy receipt))
-        (cons 'policy (receipt-policy receipt))
-        (cons 'frontier (receipt-frontier receipt))
-        (cons 'event-count (receipt-event-count receipt))
-        (cons 'adapter-request-count (receipt-adapter-request-count receipt))
-        (cons 'events (receipt->audit-events receipt))))
+  (let-values (((events event-count adapter-request-count)
+                (receipt-audit-summary receipt)))
+    (list (cons 'flow (receipt-flow receipt))
+          (cons 'kind (receipt-kind receipt))
+          (cons 'status (receipt-status receipt))
+          (cons 'strategy (receipt-strategy receipt))
+          (cons 'policy (receipt-policy receipt))
+          (cons 'frontier (receipt-frontier receipt))
+          (cons 'event-count event-count)
+          (cons 'adapter-request-count adapter-request-count)
+          (cons 'events events))))
 
 ;;; Event count is tree cardinality, not step count; the root receipt is counted
 ;;; because it carries run-level frontier and status evidence.
@@ -101,8 +103,9 @@
 ;;; can be replayed without flattening away hierarchy.
 ;; : (-> Receipt [Nat] [AuditEvent])
 (def (receipt->audit-events-at receipt path)
-  (cons (receipt->audit-event receipt path)
-        (child-receipts->audit-events (receipt-children receipt) path 0)))
+  (let-values (((events _event-count _adapter-request-count)
+                (receipt-audit-summary-at receipt path '() 0 0)))
+    (reverse events)))
 
 ;;; Audit events are intentionally small alists: they describe control-plane
 ;;; decisions, not application payloads.
@@ -123,18 +126,43 @@
         (cons 'error (receipt-error receipt))
         (cons 'child-count (length (receipt-children receipt)))))
 
-;;; Intent: recursively append child event streams in child ordinal order.
+;;; Intent: recursively collect child event streams in child ordinal order.
 ;;; The ordinal path is the replay cursor; it remains stable even if task names
 ;;; repeat inside nested flows.
-;; : (-> [Receipt] [Nat] Nat [AuditEvent])
-(def (child-receipts->audit-events children parent-path ordinal)
+;; : (-> Receipt (Values [AuditEvent] Nat Nat))
+(def (receipt-audit-summary receipt)
+  (let-values (((events event-count adapter-request-count)
+                (receipt-audit-summary-at receipt '() '() 0 0)))
+    (values (reverse events) event-count adapter-request-count)))
+
+;; : (-> Receipt [Nat] [AuditEvent] Nat Nat (Values [AuditEvent] Nat Nat))
+(def (receipt-audit-summary-at receipt path events event-count adapter-request-count)
+  (receipt-children-audit-summary
+   (receipt-children receipt)
+   path
+   0
+   (cons (receipt->audit-event receipt path) events)
+   (+ event-count 1)
+   (+ adapter-request-count
+      (if (receipt-request-id receipt) 1 0))))
+
+;; : (-> [Receipt] [Nat] Nat [AuditEvent] Nat Nat (Values [AuditEvent] Nat Nat))
+(def (receipt-children-audit-summary children parent-path ordinal events event-count adapter-request-count)
   (if (null? children)
-    '()
-    (append (receipt->audit-events-at (car children)
-                                      (append parent-path (list ordinal)))
-            (child-receipts->audit-events (cdr children)
-                                          parent-path
-                                          (+ ordinal 1)))))
+    (values events event-count adapter-request-count)
+    (let-values (((child-events child-event-count child-adapter-request-count)
+                  (receipt-audit-summary-at
+                   (car children)
+                   (append parent-path (list ordinal))
+                   events
+                   event-count
+                   adapter-request-count)))
+      (receipt-children-audit-summary (cdr children)
+                                      parent-path
+                                      (+ ordinal 1)
+                                      child-events
+                                      child-event-count
+                                      child-adapter-request-count))))
 
 ;;; Boundary: receipt list event count is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities

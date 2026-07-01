@@ -32,6 +32,7 @@
                  poo-flow-cicd-check-map->runtime-command-manifests
                  poo-flow-cicd-runtime-command-manifest-map->marlin-runtime-handoff-abi)
         :poo-flow/src/module-system/interface
+        :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/source
         :poo-flow/src/module-system/entrypoints
         :poo-flow/src/module-system/observability)
@@ -504,22 +505,24 @@
 ;;; and doctor output. The index is explanatory metadata only; resolver and
 ;;; loader code remain responsible for any later execution ordering.
 ;; : (-> PooUserModuleSelection MaybeInteger Alist)
-(def (poo-flow-user-module-selection-feature-fact/index selection index)
-  (list (cons 'declaration-index index)
-        (cons 'declaration-phase 'init-selection)
-        (cons 'key (poo-flow-user-module-selection-key selection))
-        (cons 'group (.ref selection 'user-group))
-        (cons 'module (.ref selection 'user-module))
-        (cons 'flags
-              (poo-flow-user-module-selection-presentation-flags selection))
-        (cons 'source-ref
-              (poo-flow-user-module-selection-source-ref->alist selection))
-        (cons 'entrypoint
-              (poo-flow-user-module-selection-entrypoint selection))
-        (cons 'package-management? #f)
-        (cons 'dependency-installation? #f)
-        (cons 'descriptor-realized? #f)
-        (cons 'loader-executed? #f)))
+(defpoo-module-final-projection
+  poo-flow-user-module-selection-feature-fact/index (selection index)
+  (bindings ())
+  (fields ((declaration-index index)
+           (declaration-phase 'init-selection)
+           (key (poo-flow-user-module-selection-key selection))
+           (group (.ref selection 'user-group))
+           (module (.ref selection 'user-module))
+           (flags
+            (poo-flow-user-module-selection-presentation-flags selection))
+           (source-ref
+            (poo-flow-user-module-selection-source-ref-alist selection))
+           (entrypoint
+            (poo-flow-user-module-selection-entrypoint selection))
+           (package-management? #f)
+           (dependency-installation? #f)
+           (descriptor-realized? #f)
+           (loader-executed? #f))))
 
 ;;; Single-selection facts are useful for focused assertions where no profile
 ;;; order exists yet, so the declaration index is intentionally absent.
@@ -547,11 +550,11 @@
    (poo-flow-user-config-modules config)
    0))
 
-;;; Boundary: user module selection source ref to alist is the policy-visible
+;;; Boundary: user module selection source ref projection is the policy-visible
 ;;; edge for module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> PooUserModuleSelection MaybeAlist)
-(def (poo-flow-user-module-selection-source-ref->alist selection)
+(def (poo-flow-user-module-selection-source-ref-alist selection)
   (let ((source-ref (poo-flow-user-module-selection-source-ref selection)))
     (if source-ref
       (poo-flow-module-source-ref->alist source-ref)
@@ -560,17 +563,19 @@
 ;;; Selection presentation keeps hot-plug choices inspectable without resolving
 ;;; them into descriptors or touching upstream catalogs.
 ;; : (-> PooUserModuleSelection Alist)
-(def (poo-flow-user-module-selection->alist selection)
-  (list (cons 'group (.ref selection 'user-group))
-        (cons 'module (.ref selection 'user-module))
-        (cons 'key (poo-flow-user-module-selection-key selection))
-        (cons 'source-ref
-              (poo-flow-user-module-selection-source-ref->alist selection))
-        (cons 'entrypoint
-              (poo-flow-user-module-selection-entrypoint selection))
-        (cons 'flags
-              (poo-flow-user-module-selection-presentation-flags selection))
-        (cons 'enabled? (.ref selection 'enabled?))))
+(defpoo-module-final-projection
+  poo-flow-user-module-selection->alist (selection)
+  (bindings ())
+  (fields ((group (.ref selection 'user-group))
+           (module (.ref selection 'user-module))
+           (key (poo-flow-user-module-selection-key selection))
+           (source-ref
+            (poo-flow-user-module-selection-source-ref-alist selection))
+           (entrypoint
+            (poo-flow-user-module-selection-entrypoint selection))
+           (flags
+            (poo-flow-user-module-selection-presentation-flags selection))
+           (enabled? (.ref selection 'enabled?)))))
 
 ;;; Settings deliberately remain a plain POO slot object: this layer captures
 ;;; user-authored option facts, while option merge semantics stay in the module
@@ -592,9 +597,31 @@
    (.o setting ...)))
 
 ;;; Empty profiles are legal for tests and downstream bootstrap templates.
-;; : (-> [[PooUserModuleSelection]] [PooUserModuleSelection])
+;; poo-flow-user-module-bundles->modules
+;;   : (-> [[PooUserModuleSelection]] [PooUserModuleSelection])
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-user-module-bundles->modules [[a b] [c]])
+;;       ;; => [a b c]
+;;       ```
+;;     %
 (def (poo-flow-user-module-bundles->modules module-bundles)
-  (if (null? module-bundles) '() (apply append module-bundles)))
+  (let loop-bundles ((remaining module-bundles)
+                     (modules-rev '()))
+    (cond
+     ((null? remaining)
+      (reverse modules-rev))
+     (else
+      (let loop-modules ((bundle (car remaining))
+                         (modules-rev modules-rev))
+        (cond
+         ((null? bundle)
+          (loop-bundles (cdr remaining) modules-rev))
+         (else
+          (loop-modules (cdr bundle)
+                        (cons (car bundle) modules-rev)))))))))
 
 ;;; Boundary: top-level user config groups module choices and strategy settings.
 ;; : (-> [PooUserModuleSelection] POOObject POOObject)

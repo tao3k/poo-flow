@@ -1,0 +1,107 @@
+;;; -*- Gerbil -*-
+;;; Boundary: shared graph algorithms remain report-only POO projections.
+;;; Invariant: graph tests must not schedule, run adapters, or write state.
+
+(import (only-in :std/test
+                 check-equal?
+                 run-tests!
+                 test-case
+                 test-suite)
+        (only-in :clan/poo/object .ref)
+        :poo-flow/src/graph/types
+        :poo-flow/src/graph/algorithms)
+
+(export graph-algorithm-test)
+
+;; : PooFlowGraph
+(def graph-algorithm-sample
+  (poo-flow-graph
+   'build-pipeline
+   (list (poo-flow-graph-node 'build)
+         (poo-flow-graph-node 'test)
+         (poo-flow-graph-node 'package)
+         (poo-flow-graph-node 'docs))
+   (list (poo-flow-graph-edge 'build 'test)
+         (poo-flow-graph-edge 'test 'package)
+         (poo-flow-graph-edge 'build 'docs))))
+
+;; : PooFlowGraph
+(def graph-algorithm-cycle-sample
+  (poo-flow-graph
+   'cycle-sample
+   (list (poo-flow-graph-node 'a)
+         (poo-flow-graph-node 'b)
+         (poo-flow-graph-node 'c))
+   (list (poo-flow-graph-edge 'a 'b)
+         (poo-flow-graph-edge 'b 'c)
+         (poo-flow-graph-edge 'c 'a))))
+
+;; : TestSuite
+(def graph-algorithm-test
+  (test-suite "poo-flow graph algorithms"
+    (test-case "projects adjacency, frontiers, reachability, and topology"
+      (let ((analysis (poo-flow-graph-analysis-receipt
+                       graph-algorithm-sample)))
+        (check-equal? (poo-flow-graph? graph-algorithm-sample) #t)
+        (check-equal? (poo-flow-graph-node-ids graph-algorithm-sample)
+                      '(build test package docs))
+        (check-equal? (poo-flow-graph-edge-pairs graph-algorithm-sample)
+                      '((build test) (test package) (build docs)))
+        (check-equal? (poo-flow-graph-outgoing-ids
+                       graph-algorithm-sample
+                       'build)
+                      '(test docs))
+        (check-equal? (poo-flow-graph-incoming-ids
+                       graph-algorithm-sample
+                       'package)
+                      '(test))
+        (check-equal? (poo-flow-graph-outgoing-map
+                       graph-algorithm-sample)
+                      '((build test docs)
+                        (test package)
+                        (package)
+                        (docs)))
+        (check-equal? (poo-flow-graph-incoming-map
+                       graph-algorithm-sample)
+                      '((build)
+                        (test build)
+                        (package test)
+                        (docs build)))
+        (check-equal? (poo-flow-graph-root-ids graph-algorithm-sample)
+                      '(build))
+        (check-equal? (poo-flow-graph-terminal-ids graph-algorithm-sample)
+                      '(package docs))
+        (check-equal? (poo-flow-graph-reachable-ids
+                       graph-algorithm-sample
+                       '(build))
+                      '(build test docs package))
+        (check-equal? (poo-flow-graph-dependency-cone
+                       graph-algorithm-sample
+                       '(package))
+                      '(package test build))
+        (check-equal? (poo-flow-graph-topological-order
+                       graph-algorithm-sample)
+                      '(build test docs package))
+        (check-equal? (poo-flow-graph-analysis? analysis) #t)
+        (check-equal? (.ref analysis 'root-ids) '(build))
+        (check-equal? (.ref analysis 'terminal-ids) '(package docs))
+        (check-equal? (.ref analysis 'acyclic?) #t)
+        (check-equal? (.ref analysis 'runtime-executed) #f)))
+    (test-case "detects cycle paths without producing a topological order"
+      (let ((analysis (poo-flow-graph-analysis-receipt
+                       graph-algorithm-cycle-sample)))
+        (check-equal? (poo-flow-graph-cycle-path
+                       graph-algorithm-cycle-sample)
+                      '(a b c a))
+        (check-equal? (poo-flow-graph-acyclic?
+                       graph-algorithm-cycle-sample)
+                      #f)
+        (check-equal? (poo-flow-graph-topological-order
+                       graph-algorithm-cycle-sample)
+                      #f)
+        (check-equal? (.ref analysis 'cycle-path) '(a b c a))
+        (check-equal? (.ref analysis 'acyclic?) #f)
+        (check-equal? (.ref analysis 'diagnostics)
+                      '((cycle-path a b c a)))))))
+
+(run-tests! graph-algorithm-test)

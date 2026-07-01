@@ -7,7 +7,6 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -188,20 +187,42 @@
            '(channel/build-root channel/build-audit)
            '(project-workspace build-cache network-egress)
            agent-attempts
-           hook-attempts)))
-    (list (cons 'valid? (.ref receipt 'valid?))
+           hook-attempts))
+         (receipt-row
+          (poo-flow-session-policy-validation-receipt->alist receipt)))
+    (list (cons 'valid?
+                (session-policy-validation-performance-ref receipt-row
+                                                           'valid?))
           (cons 'agent-attempt-count (length agent-attempts))
           (cons 'hook-attempt-count (length hook-attempts))
           (cons 'allowed-agent-count
-                (length (.ref receipt 'allowed-agent-tool-attempts)))
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'allowed-agent-tool-attempts)))
           (cons 'denied-agent-count
-                (length (.ref receipt 'denied-agent-tool-attempts)))
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'denied-agent-tool-attempts)))
           (cons 'allowed-hook-count
-                (length (.ref receipt 'allowed-hook-tool-attempts)))
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'allowed-hook-tool-attempts)))
           (cons 'denied-hook-count
-                (length (.ref receipt 'denied-hook-tool-attempts)))
-          (cons 'diagnostic-count (.ref receipt 'diagnostic-count))
-          (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
+                (length
+                 (session-policy-validation-performance-ref
+                  receipt-row
+                  'denied-hook-tool-attempts)))
+          (cons 'diagnostic-count
+                (session-policy-validation-performance-ref
+                 receipt-row
+                 'diagnostic-count))
+          (cons 'runtime-executed
+                (session-policy-validation-performance-ref
+                 receipt-row
+                 'runtime-executed)))))
 
 ;; : TestSuite
 (def session-policy-validation-performance-test

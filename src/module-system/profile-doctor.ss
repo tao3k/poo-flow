@@ -6,7 +6,8 @@
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/loop-engine-config
-        :poo-flow/src/module-system/profile-core)
+        :poo-flow/src/module-system/profile-core
+        :poo-flow/src/module-system/projection-syntax)
 
 (export pooFlowUserProfileDoctor
         pooFlowUserProfileSetDoctor
@@ -88,12 +89,14 @@
 
 ;;; Profile diagnostics are plain alists so doctor output stays cheap to print.
 ;; : (-> Symbol Symbol Symbol Alist Alist)
-(def (poo-flow-user-profile-diagnostic severity code target detail)
-  (list (cons 'kind poo-flow-user-profile-diagnostic-kind)
-        (cons 'severity severity)
-        (cons 'code code)
-        (cons 'target target)
-        (cons 'detail detail)))
+(defpoo-module-final-projection
+  poo-flow-user-profile-diagnostic (severity code target detail)
+  (bindings ())
+  (fields ((kind poo-flow-user-profile-diagnostic-kind)
+           (severity severity)
+           (code code)
+           (target target)
+           (detail detail))))
 
 ;;; The alist projection is intentionally identity: profile diagnostics are
 ;;; already presentation-safe facts and should not require object realization.

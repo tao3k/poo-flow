@@ -60,6 +60,7 @@
     session-core-intents
     cicd-intents
     workflow-cicd-pipelines
+    workflow-cicd-functional-dags
     workflow-cicd-pipeline-runs
     workflow-cicd-pipeline-results
     workflow-cicd-runtime-readiness

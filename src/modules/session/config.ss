@@ -28,6 +28,15 @@
         (import: :poo-flow/src/modules/session/registry)
         (import: :poo-flow/src/modules/session/selector)
         (import: :poo-flow/src/modules/session/transform)
+        poo-flow-session-memory-intent
+        poo-flow-session-memory-intent?
+        poo-flow-session-memory-intent-name
+        poo-flow-session-memory-intent-store-ref
+        poo-flow-session-memory-intent-scope
+        poo-flow-session-memory-intent-recall
+        poo-flow-session-memory-intent-commit-policy
+        poo-flow-session-memory-intent-runtime-owner
+        poo-flow-session-memory-intent-metadata
         poo-flow-session-default-placement
         session
         session-graph

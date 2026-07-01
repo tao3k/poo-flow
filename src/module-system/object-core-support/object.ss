@@ -4,8 +4,12 @@
 (import :gerbil/gambit
         (only-in :clan/poo/object
                  .ref
+                 object?
+                 object-slots
                  make-object
                  $constant-slot-spec
+                 $constant-slot-spec?
+                 $constant-slot-spec-value
                  $computed-slot-spec)
         (only-in :std/sugar foldl)
         :poo-flow/src/module-system/extension
@@ -18,8 +22,11 @@
         poo-flow-module-object-inherits
         poo-flow-module-object-fields
         poo-flow-module-object-metadata
+        poo-flow-module-object-inheritance-chain-cache
         poo-flow-module-object-constant-slot
         poo-flow-module-object-fields-slot
+        poo-flow-module-object-constant-slot-ref
+        poo-flow-module-object-constant-slot-ref/default
         poo-flow-module-object-field-identity
         poo-flow-module-object-field-index
         poo-flow-module-object-identity-hash-ref
@@ -58,7 +65,7 @@
         (fields-value fields)
         (metadata-value metadata))
     (make-object
-     supers: inherits-value
+     supers: '()
      defaults: '((fields . ()))
      slots: (list
              (poo-flow-module-object-constant-slot
@@ -73,36 +80,82 @@
              (poo-flow-module-object-constant-slot
               'direct-fields
               fields-value)
-             (poo-flow-module-object-fields-slot fields-value)
+             (poo-flow-module-object-fields-slot inherits-value fields-value)
              (poo-flow-module-object-constant-slot
               'metadata
-              metadata-value)))))
+              metadata-value)
+             (poo-flow-module-object-constant-slot
+              'inheritance-chain-cache
+              (vector #f '()))))))
 
 ;; : (-> PooModuleObjectCandidate Boolean)
 (def (poo-flow-module-object? value)
-  (poo-flow-module-object-kind? value poo-flow-module-object-kind))
+  (and (object? value)
+       (let (kind (poo-flow-module-object-constant-slot-ref/default
+                   value
+                   'kind
+                   +poo-flow-module-object-slot-missing+))
+         (if (eq? kind +poo-flow-module-object-slot-missing+)
+           (poo-flow-module-object-kind? value poo-flow-module-object-kind)
+           (equal? kind poo-flow-module-object-kind)))))
 
 ;; : (-> PooModuleObject Symbol)
-(def (poo-flow-module-object-identity object) (.ref object 'identity))
+(def (poo-flow-module-object-identity object)
+  (poo-flow-module-object-constant-slot-ref object 'identity))
 ;; : (-> PooModuleObject [PooModuleObject])
-(def (poo-flow-module-object-inherits object) (.ref object 'inherits))
+(def (poo-flow-module-object-inherits object)
+  (poo-flow-module-object-constant-slot-ref object 'inherits))
 ;; : (-> PooModuleObject [PooModuleFieldContract])
-(def (poo-flow-module-object-fields object) (.ref object 'direct-fields))
+(def (poo-flow-module-object-fields object)
+  (poo-flow-module-object-constant-slot-ref object 'direct-fields))
 ;; : (-> PooModuleObject PooModuleObjectMetadata)
-(def (poo-flow-module-object-metadata object) (.ref object 'metadata))
+(def (poo-flow-module-object-metadata object)
+  (poo-flow-module-object-constant-slot-ref object 'metadata))
+
+(def (poo-flow-module-object-inheritance-chain-cache object)
+  (poo-flow-module-object-constant-slot-ref object 'inheritance-chain-cache))
 
 ;; : (-> Symbol Value PooModuleObjectSlotSpec)
 (def (poo-flow-module-object-constant-slot key value)
   (cons key ($constant-slot-spec value)))
 
+(def +poo-flow-module-object-slot-missing+
+  (list 'poo-flow-module-object-slot-missing))
+
+;;; Descriptor slots are plain POO constant slot specs. Read them from the POO
+;;; object's slot table so metadata projections do not instantiate every object.
+;; : (-> PooModuleObject Symbol Value Value)
+(def (poo-flow-module-object-constant-slot-ref/default object key default)
+  (let loop ((slots (object-slots object)))
+    (cond
+     ((null? slots) default)
+     ((eq? (caar slots) key)
+      (let (spec (cdar slots))
+        (if ($constant-slot-spec? spec)
+          ($constant-slot-spec-value spec)
+          default)))
+     (else (loop (cdr slots))))))
+
+;; : (-> PooModuleObject Symbol Value)
+(def (poo-flow-module-object-constant-slot-ref object key)
+  (let (value (poo-flow-module-object-constant-slot-ref/default
+               object
+               key
+               +poo-flow-module-object-slot-missing+))
+    (if (eq? value +poo-flow-module-object-slot-missing+)
+      (.ref object key)
+      value)))
+
 ;;; Field slots are computed from the superclass chain, letting child objects
 ;;; override or add fields without duplicating inherited object metadata.
 ;; : (-> [PooModuleFieldContract] PooModuleObjectSlotSpec)
-(def (poo-flow-module-object-fields-slot fields)
+(def (poo-flow-module-object-fields-slot inherits fields)
   (cons 'fields
         ($computed-slot-spec
-         (lambda (_self superfun)
-           (poo-flow-module-object-fields-merge (superfun) fields)))))
+         (lambda (_self _superfun)
+           (poo-flow-module-object-fields-merge
+            (poo-flow-module-object-inherited-fields inherits)
+            fields)))))
 
 ;;; Field identity accepts contracts and raw symbols so lookup paths share one
 ;;; boundary between parsed field contracts and caller-provided keys.
@@ -216,8 +269,13 @@
 (def (poo-flow-module-object-inherited-fields inherits)
   (if (null? inherits)
     '()
-    (poo-flow-module-object-resolved-fields
-     (poo-flow-module-object 'objects.inherited.fields inherits '() '()))))
+    (let loop ((rest inherits) (fields '()))
+      (if (null? rest)
+        fields
+        (loop (cdr rest)
+              (poo-flow-module-object-fields-merge
+               fields
+               (poo-flow-module-object-resolved-fields (car rest))))))))
 
 ;;; Resolved fields avoid POO slot evaluation for leaf objects and only consult
 ;;; computed inheritance state when the object has parents.

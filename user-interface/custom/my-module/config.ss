@@ -2,7 +2,10 @@
 ;;; Boundary: user-owned custom module body.
 ;;; Invariant: root init.ss decides whether this module is enabled.
 
-(import :poo-flow/src/module-system/init-syntax)
+(import (only-in :poo-flow/src/module-system/durable-runtime-store-operation-bridge
+                 poo-flow-durable-runtime-store-operations-from-rows
+                 poo-flow-durable-runtime-store-rows->marlin-handoff)
+        :poo-flow/src/module-system/init-syntax)
 
 (load! "profiles/session")
 (load! "profiles/task")
@@ -28,3 +31,4 @@
 (load! "cases/durable-recovery")
 (load! "cases/durable-runtime-store-handoff")
 (load! "cases/durable-runtime-store-operations")
+(load! "cases/durable-operation-bridge")

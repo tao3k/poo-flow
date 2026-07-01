@@ -2,9 +2,10 @@
 ;;; Boundary: module descriptors and import closure validation.
 ;;; Invariant: descriptors are POO values and never load module sources.
 
-(import (only-in :clan/poo/object .o .mix .@ .ref object?)
+(import (only-in :clan/poo/object .o .@ .ref object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/interface
@@ -69,31 +70,31 @@
 ;;; Intent: every module surface eventually lowers into this stable slot layout.
 ;; : (-> Unit PooModuleDescriptorPrototype)
 (def poo-flow-module-descriptor-prototype
-  (.mix slots: (role-constant-slots
-                (list (cons 'kind 'poo-flow-module)
-                      (cons 'module-kind poo-flow-modules-kind)
-                      (cons 'brand-name poo-flow-brand-name)
-                      (cons 'group poo-flow-brand-group)
-                      (cons 'interface #f)
-                      (cons 'imports '())
-                      (cons 'extensions '())
-                      (cons 'scripts '())
-                      (cons 'flags '())
-                      (cons 'features '())
-                      (cons 'depth (cons 0 0))
-                      (cons 'phase-files '())
-                      (cons 'hooks '())
-                      (cons 'task-registry
-                            (make-task-family-registry 'empty-module-task-families '()))
-                      (cons 'flow-registry
-                            (make-flow-declaration-registry 'empty-module-flow-declarations '()))
-                      (cons 'options '())
-                      (cons 'config (.o))
-                      (cons 'schemas (.o))
-                      (cons 'metadata '())
-                      (cons 'source-ref #f)
-                      (cons 'extension-policy 'poo-flow-module-descriptor)))
-        poo-flow-module-role))
+  (poo-core-role-object
+   (slots ((kind 'poo-flow-module)
+           (module-kind poo-flow-modules-kind)
+           (brand-name poo-flow-brand-name)
+           (group poo-flow-brand-group)
+           (interface #f)
+           (imports '())
+           (extensions '())
+           (scripts '())
+           (flags '())
+           (features '())
+           (depth (cons 0 0))
+           (phase-files '())
+           (hooks '())
+           (task-registry
+            (make-task-family-registry 'empty-module-task-families '()))
+           (flow-registry
+            (make-flow-declaration-registry 'empty-module-flow-declarations '()))
+           (options '())
+           (config (.o))
+           (schemas (.o))
+           (metadata '())
+           (source-ref #f)
+           (extension-policy 'poo-flow-module-descriptor)))
+   (supers poo-flow-module-role)))
 
 ;;; Boundary: full constructor is the single descriptor slot authority.
 ;;; Intent: all public constructors must pass through one slot assembly point.
@@ -118,29 +119,29 @@
       depth
       phase-files
       hooks)
-  (.mix slots: (role-constant-slots
-                (list (cons 'name module-name)
-                      (cons 'module-kind poo-flow-modules-kind)
-                      (cons 'group group)
-                      (cons 'interface interface)
-                      (cons 'imports module-imports)
-                      (cons 'extensions extensions)
-                      (cons 'scripts scripts)
-                      (cons 'flags flags)
-                      (cons 'features features)
-                      (cons 'depth depth)
-                      (cons 'phase-files phase-files)
-                      (cons 'hooks hooks)
-                      (cons 'task-registry task-registry)
-                      (cons 'flow-registry flow-registry)
-                      (cons 'options options)
-                      (cons 'config config)
-                      (cons 'schemas schemas)
-                      (cons 'metadata metadata)
-                      (cons 'source-ref source-ref)
-                      (cons 'responsibility
-                            (list 'poo-flow-module module-name))))
-        poo-flow-module-descriptor-prototype))
+  (poo-core-role-object
+   (slots ((name module-name)
+           (module-kind poo-flow-modules-kind)
+           (group group)
+           (interface interface)
+           (imports module-imports)
+           (extensions extensions)
+           (scripts scripts)
+           (flags flags)
+           (features features)
+           (depth depth)
+           (phase-files phase-files)
+           (hooks hooks)
+           (task-registry task-registry)
+           (flow-registry flow-registry)
+           (options options)
+           (config config)
+           (schemas schemas)
+           (metadata metadata)
+           (source-ref source-ref)
+           (responsibility
+            (list 'poo-flow-module module-name))))
+   (supers poo-flow-module-descriptor-prototype)))
 
 ;;; Boundary: extended constructor keeps Marlin migration call sites stable.
 ;; : (-> ModuleName ModuleImportList TaskFamilyRegistry FlowDeclarationRegistry ModuleOptionAlist MaybeInterface ModuleSchemas ModuleConfig [ModuleExtension] [ModuleScript] ModuleMetadata MaybeSourceRef PooModuleDescriptor)

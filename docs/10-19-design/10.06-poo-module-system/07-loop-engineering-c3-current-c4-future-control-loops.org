@@ -76,6 +76,18 @@ Those are runtime state and scheduling questions. In current =poo-flow=:
 - =src/core/plan.ss= owns flow lowering, dependency edges, root/terminal frontiers, and ready-node selection.
 - =src/core/runner.ss= owns plan interpretation, ready-frontier projection, validation, execution receipts, and replay reports.
 - =marlin-agent-core= should remain the owner for heavy scheduling, persistence, subprocesses, CAS, and concurrent execution.
+** 10.06.07.55 Graph Analysis Layer
+This boundary does not prohibit a Scheme-side graph layer. It defines its role.
+
+The loop module can use graph algorithms for report-only control-plane analysis:
+- dependency cones for blocked loop actions;
+- cycle detection for finite workflow plans;
+- strongly connected component diagnostics for recurring loop-pattern graphs;
+- governor and human-audit path coverage;
+- capability and budget gate reachability;
+- safe re-run frontier explanation.
+
+The graph layer should emit diagnostics and handoff facts. It should not own timers, workers, subprocesses, persistent queues, or concurrent execution.
 ** 10.06.07.60 Proposed Design: C3-Ranked Loop Pattern Descriptors
 Add a =loop-pattern-descriptor= layer as a policy object, not as another task type.
 

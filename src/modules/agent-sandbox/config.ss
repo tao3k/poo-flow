@@ -4,7 +4,8 @@
 
 (import (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/modules/agent-sandbox/profile
-        :poo-flow/src/modules/sandbox-core/profile-support/policy)
+        :poo-flow/src/modules/sandbox-core/profile-support/policy
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-sandbox-profile-kind
         poo-flow-sandbox-profiles-presentation-kind
@@ -297,15 +298,17 @@
 ;;; Alist conversion is presentation-only. Keeping it separate from the POO
 ;;; recipe avoids flattening the extension point that nono/cubeSandbox can use.
 ;; : (-> PooSandboxProfile Alist)
-(def (poo-flow-sandbox-profile->alist profile)
-  (list (cons 'kind poo-flow-sandbox-profile-kind)
-        (cons 'name (poo-flow-sandbox-profile-name profile))
-        (cons 'backend-kind (poo-flow-sandbox-profile-backend-kind profile))
-        (cons 'backend-ref (poo-flow-sandbox-profile-backend-ref profile))
-        (cons 'network-policy (poo-flow-sandbox-profile-network-policy profile))
-        (cons 'capabilities (poo-flow-sandbox-profile-capabilities profile))
-        (cons 'resource-policy (poo-flow-sandbox-profile-resource-policy profile))
-        (cons 'metadata (poo-flow-sandbox-profile-metadata profile))))
+(defpoo-module-final-projection
+  poo-flow-sandbox-profile->alist (profile)
+  (bindings ())
+  (fields ((kind poo-flow-sandbox-profile-kind)
+           (name (poo-flow-sandbox-profile-name profile))
+           (backend-kind (poo-flow-sandbox-profile-backend-kind profile))
+           (backend-ref (poo-flow-sandbox-profile-backend-ref profile))
+           (network-policy (poo-flow-sandbox-profile-network-policy profile))
+           (capabilities (poo-flow-sandbox-profile-capabilities profile))
+           (resource-policy (poo-flow-sandbox-profile-resource-policy profile))
+           (metadata (poo-flow-sandbox-profile-metadata profile)))))
 
 ;;; Backend capability receipts are static control-plane facts. They make
 ;;; OpenRath-style capability boundaries visible without selecting a runtime.
@@ -446,8 +449,10 @@
 ;;; Alist lists are presentation receipts only; runtime bridges consume
 ;;; descriptors or profile objects instead.
 ;; : (-> [PooSandboxProfile] [Alist])
-(def (poo-flow-sandbox-profile-alists profile-list)
-  (map poo-flow-sandbox-profile->alist profile-list))
+(defpoo-module-final-projection-batch
+  poo-flow-sandbox-profile-alists (profile-list)
+  (projector poo-flow-sandbox-profile->alist)
+  (error-message "sandbox profile alist presentation requires a list"))
 
 ;;; Missing profile names are normal during agent negotiation, so lookup returns
 ;;; `#f` and leaves diagnostics to the caller-facing doctor/presentation path.

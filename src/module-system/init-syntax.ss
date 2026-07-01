@@ -2,11 +2,8 @@
 ;;; Boundary: init/profile declaration syntax lives outside core profile data.
 ;;; Invariant: macros expand to profile-config data and never realize descriptors.
 
-(import (only-in :gerbil/expander/core
-                 current-expander-context
-                 expander-context-id)
-        (only-in :gerbil/expander/stx stx-source)
-        (only-in :clan/poo/object .o object<-alist)
+(import (only-in :clan/poo/object .o object<-alist)
+        :poo-flow/src/module-system/load-syntax
         (only-in :poo-flow/src/module-system/base
                  poo-flow-user-module-selection-flag-entry
                  poo-flow-user-module-selection->alist)
@@ -15,6 +12,7 @@
         :poo-flow/src/module-system/durable-runtime-store
         :poo-flow/src/module-system/durable-runtime-store-backend
         :poo-flow/src/module-system/durable-runtime-store-operation
+        :poo-flow/src/module-system/durable-runtime-store-operation-bridge
         :poo-flow/src/module-system/durable-recovery-scenario
         :poo-flow/src/modules/cubeSandbox/config
         :poo-flow/src/modules/cubeSandbox/profile-interface
@@ -37,7 +35,7 @@
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
-        load!
+        (import: :poo-flow/src/module-system/load-syntax)
         poo-flow!
         poo-flow-profile-set
         poo-flow-profile-extend
@@ -58,205 +56,9 @@
         (import: :poo-flow/src/module-system/durable-runtime-store)
         (import: :poo-flow/src/module-system/durable-runtime-store-backend)
         (import: :poo-flow/src/module-system/durable-runtime-store-operation)
+        (import: :poo-flow/src/module-system/durable-runtime-store-operation-bridge)
         (import: :poo-flow/src/module-system/durable-recovery-scenario)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
-
-;;; Doom-style config fragments are declaration includes, not runtime module
-;;; loading. Extensionless paths mirror Doom's `load!` surface; the macro wraps
-;;; the fragment result in a generated binding so user files only write the
-;;; declaration form, such as `(use-module ...)`.
-;; load!
-;;   : (-> String Syntax...)
-;;   | contract: loads a user config fragment relative to the current module
-;;       and exports a generated binding for the fragment result
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (load! "profiles/session")
-;;       ;; => exports poo-flow-custom-<module>-session-module
-;;       ```
-;;     %
-(defsyntax (load! stx)
-  (syntax-case stx ()
-    ((ctx path)
-     (let* ((path-value (syntax->datum (syntax path)))
-            (path-length (and (string? path-value)
-                              (string-length path-value)))
-            (source-value (stx-source (syntax path)))
-            (form-source-value (stx-source stx))
-            (source-path
-             (lambda (value)
-               (cond
-                ((string? value) value)
-                ((and (pair? value) (string? (car value))) (car value))
-                (else #f))))
-            (call-source-path/raw
-             (or (source-path source-value)
-                 (source-path form-source-value)))
-            (include-source-path
-             (cond
-              ((not (string? path-value))
-               (error "load! expects a string path"))
-              ((and (>= path-length 3)
-                    (string=? (substring path-value
-                                         (- path-length 3)
-                                         path-length)
-                              ".ss"))
-               path-value)
-              (else
-               (string-append path-value ".ss"))))
-            (absolute-path?
-             (lambda (value)
-               (and (> (string-length value) 0)
-                    (char=? (string-ref value 0) #\/))))
-            (string-prefix?
-             (lambda (prefix value)
-               (let ((prefix-length (string-length prefix))
-                     (value-length (string-length value)))
-                 (and (>= value-length prefix-length)
-                      (string=? (substring value 0 prefix-length)
-                                prefix)))))
-            (path-segments
-             (lambda (value)
-               (let ((length (string-length value)))
-                 (let loop ((index 0) (start 0) (segments '()))
-                   (cond
-                    ((= index length)
-                     (reverse
-                      (cons (substring value start index) segments)))
-                    ((char=? (string-ref value index) #\/)
-                     (loop (+ index 1)
-                           (+ index 1)
-                           (cons (substring value start index) segments)))
-                    (else
-                     (loop (+ index 1) start segments)))))))
-            (drop-suffix
-             (lambda (suffix value)
-               (let ((value-length (string-length value))
-                     (suffix-length (string-length suffix)))
-                 (if (and (>= value-length suffix-length)
-                          (string=? (substring value
-                                               (- value-length suffix-length)
-                                               value-length)
-                                    suffix))
-                   (substring value 0 (- value-length suffix-length))
-                   value))))
-            (member-tail
-             (lambda (needle values)
-               (let loop ((rest values))
-                 (cond
-                  ((null? rest) #f)
-                  ((equal? (car rest) needle) rest)
-                  (else (loop (cdr rest)))))))
-            (last-segment
-             (lambda (segments fallback)
-               (let loop ((rest segments) (last fallback))
-                 (if (null? rest) last (loop (cdr rest) (car rest))))))
-            (object-fragment-path?
-             (lambda (segments)
-               (let loop ((rest segments))
-                 (cond
-                  ((null? rest) #f)
-                  ((or (string=? (car rest) "objects")
-                       (string=? (car rest) "objects.ss"))
-                   #t)
-                  (else (loop (cdr rest)))))))
-            (case-fragment-path?
-             (lambda (segments)
-               (let loop ((rest segments))
-                 (cond
-                  ((null? rest) #f)
-                  ((or (string=? (car rest) "cases")
-                       (string=? (car rest) "cases.ss"))
-                   #t)
-                  (else (loop (cdr rest)))))))
-            (module-context-source-path
-             (let* ((context-id
-                     (expander-context-id (current-expander-context)))
-                    (context-name
-                     (and (symbol? context-id)
-                          (symbol->string context-id)))
-                    (package-prefix "poo-flow/"))
-               (and context-name
-                    (let (relative-context-name
-                          (if (string-prefix? package-prefix context-name)
-                            (substring context-name
-                                       (string-length package-prefix)
-                                       (string-length context-name))
-                            context-name))
-                      (string-append relative-context-name ".ss")))))
-            (call-source-path
-             (let (raw-source-path
-                   (or call-source-path/raw module-context-source-path))
-               (and raw-source-path
-                    (path-expand raw-source-path (current-directory)))))
-            (fragment-source-path
-             (if (absolute-path? include-source-path)
-               include-source-path
-               (path-expand include-source-path
-                            (path-directory
-                             (or call-source-path
-                                 (current-directory))))))
-            (read-fragment-forms
-             (lambda (value)
-               (call-with-input-file value
-                 (lambda (port)
-                   (let loop ((forms '()))
-                     (let (form (read port))
-                       (if (eof-object? form)
-                         (reverse forms)
-                         (loop (cons form forms)))))))))
-            (source-segments
-             (if call-source-path
-               (path-segments call-source-path)
-               (path-segments fragment-source-path)))
-            (custom-tail
-             (member-tail "custom" source-segments))
-            (custom-module-name
-             (if (and custom-tail
-                      (pair? (cdr custom-tail)))
-               (cadr custom-tail)
-               "module"))
-            (load-name
-             (drop-suffix ".ss"
-                          (last-segment (path-segments include-source-path)
-                                        "config")))
-            (objects-fragment?
-             (or (object-fragment-path? source-segments)
-                 (object-fragment-path? (path-segments include-source-path))
-                 (string=? load-name "objects")))
-            (case-fragment?
-             (or (case-fragment-path? source-segments)
-                 (case-fragment-path? (path-segments include-source-path))))
-            (binding-suffix
-             (if case-fragment? "-case" "-module"))
-            (binding-name
-             (string->symbol
-              (string-append "poo-flow-custom-"
-                             custom-module-name
-                             "-"
-                             load-name
-                             binding-suffix)))
-            (fragment-forms
-             (read-fragment-forms fragment-source-path)))
-       (with-syntax ((binding (datum->syntax (syntax ctx) binding-name))
-                     ((fragment-form ...)
-                      (map (lambda (form)
-                             (datum->syntax (syntax ctx) form))
-                           fragment-forms)))
-         (if objects-fragment?
-           (syntax
-            (begin
-              (import :poo-flow/src/module-system/object-core)
-              (def binding
-                (begin fragment-form ...))
-              (export binding)))
-           (syntax
-            (begin
-              (def binding
-                (begin fragment-form ...))
-              (export binding)))))))))
 
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives
@@ -286,8 +88,108 @@
       (and elements
            (poo-flow-simple-keyword-slot-specs/elements ctx elements))))
 
+  (def (poo-flow-simple-keyword-slot-groups ctx slot-def-groups)
+    (map (lambda (slot-specs)
+           (poo-flow-simple-keyword-slot-specs ctx slot-specs))
+         (poo-flow-syntax-list->list slot-def-groups)))
+
   (def (poo-flow-all? values)
     (not (member #f values))))
+
+;; poo-flow-use-module-poo-config
+;;   : (-> Syntax Syntax)
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (use-module memory-core :config (.def (store @ spec field) field: x))
+;;       ;; => module selection
+;;       ```
+;;     %
+(defsyntax (poo-flow-use-module-poo-config stx)
+  (syntax-case stx (quoted .def)
+    ((ctx module-key config-flags
+          (quoted quoted-form ...)
+          (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                slot-def ...)
+          ...)
+     (let* ((slot-groups
+             (poo-flow-simple-keyword-slot-groups
+              (syntax ctx)
+              (syntax ((slot-def ...) ...)))))
+       (if (poo-flow-all? slot-groups)
+         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
+           (syntax
+            (let* ((prototype-name
+                    (object<-alist
+                     (list (cons 'slot-name slot-value) ...)
+                     supers: prototype-super))
+                   ...)
+              (poo-flow-modules-system-use-module/contract
+               'module-key
+               (config-flags
+                (list prototype-name ...)
+                '(quoted-form ...))))))
+         (syntax
+          (let* ((prototype-name
+                  (.o (:: prototype-self prototype-super prototype-slot ...)
+                      slot-def ...))
+                 ...)
+            (poo-flow-modules-system-use-module/contract
+             'module-key
+             (config-flags
+              (list prototype-name ...)
+              '(quoted-form ...))))))))))
+
+;; poo-flow-use-module-sandbox-profile-config
+;;   : (-> Syntax Syntax)
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (use-module nono-sandbox :inherits ci/build)
+;;       ;; => sandbox selection
+;;       ```
+;;     %
+(defsyntax (poo-flow-use-module-sandbox-profile-config stx)
+  (syntax-case stx (profile-arguments quoted .def)
+    ((ctx module-key config-flags
+          (profile-arguments config-arg ...)
+          (quoted quoted-form ...)
+          (.def (profile-name profile-self profile-super profile-slot ...)
+                slot-def ...)
+          ...)
+     (let* ((slot-groups
+             (poo-flow-simple-keyword-slot-groups
+              (syntax ctx)
+              (syntax ((slot-def ...) ...)))))
+       (if (poo-flow-all? slot-groups)
+         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
+           (syntax
+            (let* ((profile-name
+                    (object<-alist
+                     (list (cons 'slot-name slot-value) ...)
+                     supers: profile-super))
+                   ...)
+              (poo-flow-modules-system-use-module/contract
+               'module-key
+               (config-flags
+                config-arg ...
+                (poo-flow-sandbox-profile-prototypes
+                 (profile-name profile-name) ...)
+                '(quoted-form ...))))))
+         (syntax
+          (let* ((profile-name
+                  (.o (:: profile-self profile-super profile-slot ...)
+                      slot-def ...))
+                 ...)
+            (poo-flow-modules-system-use-module/contract
+             'module-key
+             (config-flags
+              config-arg ...
+              (poo-flow-sandbox-profile-prototypes
+               (profile-name profile-name) ...)
+              '(quoted-form ...))))))))))
 
 ;; use-module
 ;;   : (-> Symbol UserModuleFlagEntry... [PooUserModuleSelection])
@@ -309,12 +211,9 @@
               slot-def ...)
         ...)
      (let* ((slot-groups
-             (map (lambda (slot-specs)
-                    (poo-flow-simple-keyword-slot-specs
-                     (syntax ctx)
-                     slot-specs))
-                  (poo-flow-syntax-list->list
-                   (syntax ((slot-def ...) ...))))))
+             (poo-flow-simple-keyword-slot-groups
+              (syntax ctx)
+              (syntax ((slot-def ...) ...)))))
        (if (poo-flow-all? slot-groups)
          (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
            (syntax
@@ -351,42 +250,17 @@
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
               slot-def ...)
         ...)
-     (let* ((slot-groups
-             (map (lambda (slot-specs)
-                    (poo-flow-simple-keyword-slot-specs
-                     (syntax ctx)
-                     slot-specs))
-                  (poo-flow-syntax-list->list
-                   (syntax ((slot-def ...) ...))))))
-       (if (poo-flow-all? slot-groups)
-         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
-           (syntax
-            (let* ((prototype-name
-                    (object<-alist
-                     (list (cons 'slot-name slot-value) ...)
-                     supers: prototype-super))
-                   ...)
-              (poo-flow-modules-system-use-module/contract
-               'funflow
-               (poo-flow-funflow-poo-config-flags
-                (list prototype-name ...)
-                '(:config
-                  (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                        slot-def ...)
-                  ...))))))
-         (syntax
-          (let* ((prototype-name
-                  (.o (:: prototype-self prototype-super prototype-slot ...)
-                      slot-def ...))
-                 ...)
-            (poo-flow-modules-system-use-module/contract
-             'funflow
-             (poo-flow-funflow-poo-config-flags
-              (list prototype-name ...)
-              '(:config
-                (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                      slot-def ...)
-                ...))))))))
+     (syntax
+      (poo-flow-use-module-poo-config
+       funflow
+       poo-flow-funflow-poo-config-flags
+       (quoted :config
+               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+             slot-def ...)
+       ...)))
     ((_ workflow :config bad-clause ...)
      (syntax
       (poo-flow-modules-system-use-module/contract
@@ -397,101 +271,49 @@
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
               slot-def ...)
         ...)
-     (let* ((slot-groups
-             (map (lambda (slot-specs)
-                    (poo-flow-simple-keyword-slot-specs
-                     (syntax ctx)
-                     slot-specs))
-                  (poo-flow-syntax-list->list
-                   (syntax ((slot-def ...) ...))))))
-       (if (poo-flow-all? slot-groups)
-         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
-           (syntax
-            (let* ((prototype-name
-                    (object<-alist
-                     (list (cons 'slot-name slot-value) ...)
-                     supers: prototype-super))
-                   ...)
-              (poo-flow-modules-system-use-module/contract
-               'tool-core
-               (poo-flow-tool-core-poo-config-flags
-                (list prototype-name ...)
-                '(:config
-                  (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                        slot-def ...)
-                  ...))))))
-         (syntax
-          (let* ((prototype-name
-                  (.o (:: prototype-self prototype-super prototype-slot ...)
-                      slot-def ...))
-                 ...)
-            (poo-flow-modules-system-use-module/contract
-             'tool-core
-             (poo-flow-tool-core-poo-config-flags
-              (list prototype-name ...)
-             '(:config
+     (syntax
+      (poo-flow-use-module-poo-config
+       tool-core
+       poo-flow-tool-core-poo-config-flags
+       (quoted :config
                (.def (prototype-name prototype-self prototype-super prototype-slot ...)
                      slot-def ...)
-               ...))))))))
+               ...)
+       (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+             slot-def ...)
+       ...)))
     ((_ memory-core
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
               slot-def ...)
         ...)
-     (let* ((slot-groups
-             (map (lambda (slot-specs)
-                    (poo-flow-simple-keyword-slot-specs
-                     (syntax ctx)
-                     slot-specs))
-                  (poo-flow-syntax-list->list
-                   (syntax ((slot-def ...) ...))))))
-       (if (poo-flow-all? slot-groups)
-         (with-syntax (((((slot-name slot-value) ...) ...) slot-groups))
-           (syntax
-            (let* ((prototype-name
-                    (object<-alist
-                     (list (cons 'slot-name slot-value) ...)
-                     supers: prototype-super))
-                   ...)
-              (poo-flow-modules-system-use-module/contract
-               'memory-core
-               (poo-flow-memory-core-poo-config-flags
-                (list prototype-name ...)
-                '(:config
-                  (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                        slot-def ...)
-                  ...))))))
-         (syntax
-          (let* ((prototype-name
-                  (.o (:: prototype-self prototype-super prototype-slot ...)
-                      slot-def ...))
-                 ...)
-            (poo-flow-modules-system-use-module/contract
-             'memory-core
-             (poo-flow-memory-core-poo-config-flags
-              (list prototype-name ...)
-              '(:config
-                (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                      slot-def ...)
-                ...))))))))
+     (syntax
+      (poo-flow-use-module-poo-config
+       memory-core
+       poo-flow-memory-core-poo-config-flags
+       (quoted :config
+               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+             slot-def ...)
+       ...)))
     ((_ loop-engine
         :config
         (.def (prototype-name prototype-self prototype-super prototype-slot ...)
               slot-def ...)
         ...)
      (syntax
-      (let* ((prototype-name
-              (.o (:: prototype-self prototype-super prototype-slot ...)
-                  slot-def ...))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'loop-engine
-         (poo-flow-user-loop-engine-poo-config-flags
-          (list prototype-name ...)
-          '(:config
-            (.def (prototype-name prototype-self prototype-super prototype-slot ...)
-                  slot-def ...)
-            ...))))))
+      (poo-flow-use-module-poo-config
+       loop-engine
+       poo-flow-user-loop-engine-poo-config-flags
+       (quoted :config
+               (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (prototype-name prototype-self prototype-super prototype-slot ...)
+             slot-def ...)
+       ...)))
     ((_ loop-engine bad-clause ...)
      (error "loop-engine config DSL has been removed; use (use-module loop-engine :config (.def ...))"))
     ((_ nono-sandbox
@@ -500,72 +322,62 @@
               slot-def ...)
         ...)
      (syntax
-      (let* ((profile-name
-              (.o (:: profile-self profile-super profile-slot ...)
-                  slot-def ...))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'nono-sandbox
-         (poo-flow-nono-sandbox-config-flags
-          'binding-kind
-          (poo-flow-sandbox-profile-prototypes
-           (profile-name profile-name) ...)
-          '((binding binding-kind)
-            (.def (profile-name profile-self profile-super profile-slot ...)
-                  slot-def ...)
-            ...))))))
+      (poo-flow-use-module-sandbox-profile-config
+       nono-sandbox
+       poo-flow-nono-sandbox-config-flags
+       (profile-arguments 'binding-kind)
+       (quoted (binding binding-kind)
+               (.def (profile-name profile-self profile-super profile-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (profile-name profile-self profile-super profile-slot ...)
+             slot-def ...)
+       ...)))
     ((_ nono-sandbox
         (.def (profile-name profile-self profile-super profile-slot ...)
               slot-def ...)
         ...)
      (syntax
-      (let* ((profile-name
-              (.o (:: profile-self profile-super profile-slot ...)
-                  slot-def ...))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'nono-sandbox
-         (poo-flow-nono-sandbox-config-flags
-          +poo-flow-nono-sandbox-default-binding+
-          (poo-flow-sandbox-profile-prototypes
-           (profile-name profile-name) ...)
-          '((.def (profile-name profile-self profile-super profile-slot ...)
-                  slot-def ...)
-            ...))))))
+      (poo-flow-use-module-sandbox-profile-config
+       nono-sandbox
+       poo-flow-nono-sandbox-config-flags
+       (profile-arguments +poo-flow-nono-sandbox-default-binding+)
+       (quoted (.def (profile-name profile-self profile-super profile-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (profile-name profile-self profile-super profile-slot ...)
+             slot-def ...)
+       ...)))
     ((_ cubeSandbox
         (.def (profile-name profile-self profile-super profile-slot ...)
               slot-def ...)
         ...)
      (syntax
-      (let* ((profile-name
-              (.o (:: profile-self profile-super profile-slot ...)
-                  slot-def ...))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'cubeSandbox
-         (poo-flow-cubeSandbox-config-flags
-          (poo-flow-sandbox-profile-prototypes
-           (profile-name profile-name) ...)
-          '((.def (profile-name profile-self profile-super profile-slot ...)
-                  slot-def ...)
-            ...))))))
+      (poo-flow-use-module-sandbox-profile-config
+       cubeSandbox
+       poo-flow-cubeSandbox-config-flags
+       (profile-arguments)
+       (quoted (.def (profile-name profile-self profile-super profile-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (profile-name profile-self profile-super profile-slot ...)
+             slot-def ...)
+       ...)))
     ((_ docker-sandbox
         (.def (profile-name profile-self profile-super profile-slot ...)
               slot-def ...)
         ...)
      (syntax
-      (let* ((profile-name
-              (.o (:: profile-self profile-super profile-slot ...)
-                  slot-def ...))
-             ...)
-        (poo-flow-modules-system-use-module/contract
-         'docker-sandbox
-         (poo-flow-docker-sandbox-config-flags
-          (poo-flow-sandbox-profile-prototypes
-           (profile-name profile-name) ...)
-          '((.def (profile-name profile-self profile-super profile-slot ...)
-                  slot-def ...)
-            ...))))))
+      (poo-flow-use-module-sandbox-profile-config
+       docker-sandbox
+       poo-flow-docker-sandbox-config-flags
+       (profile-arguments)
+       (quoted (.def (profile-name profile-self profile-super profile-slot ...)
+                     slot-def ...)
+               ...)
+       (.def (profile-name profile-self profile-super profile-slot ...)
+             slot-def ...)
+       ...)))
     ((_ module
         :inherits inherited-profile
         :isolation isolation-clause
@@ -672,6 +484,42 @@
   ((_ :custom init-clause ...)
    (poo-flow-init-custom-bundles init-clause ...)))
 
+;;; Plain category walkers share the same marker transfer and row wrapping
+;;; frame. Flow and custom stay explicit because they carry special row shapes.
+;; defpoo-init-category-bundles
+;;   : (-> Identifier Identifier Syntax)
+;;   | contract: generates a private init category walker for plain rows
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-init-category-bundles poo-flow-init-loop-bundles loop)
+;;       ;; => marker-aware walker over (module flag ...) rows
+;;       ```
+;;     %
+(defsyntax (defpoo-init-category-bundles stx)
+  (syntax-case stx ()
+    ((_ walker category)
+     (let ((walker-name (syntax->datum (syntax walker)))
+           (category-name (syntax->datum (syntax category))))
+       (datum->syntax
+        (syntax walker)
+        `(defrules ,walker-name (:workflow :loop :sandbox :custom)
+           ((_)
+            '())
+           ((_ :workflow init-clause ...)
+            (poo-flow-init-flow-bundles init-clause ...))
+           ((_ :loop init-clause ...)
+            (poo-flow-init-loop-bundles init-clause ...))
+           ((_ :sandbox init-clause ...)
+            (poo-flow-init-sandbox-bundles init-clause ...))
+           ((_ :custom init-clause ...)
+            (poo-flow-init-custom-bundles init-clause ...))
+           ((_ (module flag ...) init-clause ...)
+            (cons (poo-flow-user-module-bundle
+                   (,category-name module flag ...))
+                  (,walker-name init-clause ...)))))))))
+
 ;;; Workflow category walking is a macro-time cursor over init rows: it emits
 ;;; flow selections until another category marker transfers control.
 ;; poo-flow-init-flow-bundles
@@ -726,21 +574,7 @@
 ;;       ;; => bundles
 ;;       ```
 ;;     %
-(defrules poo-flow-init-loop-bundles (:workflow :loop :sandbox :custom)
-  ((_)
-   '())
-  ((_ :workflow init-clause ...)
-   (poo-flow-init-flow-bundles init-clause ...))
-  ((_ :loop init-clause ...)
-   (poo-flow-init-loop-bundles init-clause ...))
-  ((_ :sandbox init-clause ...)
-   (poo-flow-init-sandbox-bundles init-clause ...))
-  ((_ :custom init-clause ...)
-   (poo-flow-init-custom-bundles init-clause ...))
-  ((_ (module flag ...) init-clause ...)
-   (cons (poo-flow-user-module-bundle
-          (loop module flag ...))
-         (poo-flow-init-loop-bundles init-clause ...))))
+(defpoo-init-category-bundles poo-flow-init-loop-bundles loop)
 
 ;;; Sandbox category walking keeps backend choices declarative: rows become
 ;;; user selections, not sandbox descriptors or runtime requests.
@@ -757,21 +591,7 @@
 ;;       ;; => bundles
 ;;       ```
 ;;     %
-(defrules poo-flow-init-sandbox-bundles (:workflow :loop :sandbox :custom)
-  ((_)
-   '())
-  ((_ :workflow init-clause ...)
-   (poo-flow-init-flow-bundles init-clause ...))
-  ((_ :loop init-clause ...)
-   (poo-flow-init-loop-bundles init-clause ...))
-  ((_ :sandbox init-clause ...)
-   (poo-flow-init-sandbox-bundles init-clause ...))
-  ((_ :custom init-clause ...)
-   (poo-flow-init-custom-bundles init-clause ...))
-  ((_ (module flag ...) init-clause ...)
-   (cons (poo-flow-user-module-bundle
-          (sandbox module flag ...))
-         (poo-flow-init-sandbox-bundles init-clause ...))))
+(defpoo-init-category-bundles poo-flow-init-sandbox-bundles sandbox)
 
 ;;; Custom category walking is the only init walker that accepts a module root
 ;;; path; it records source metadata while loaders decide execution later.

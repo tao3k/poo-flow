@@ -3,7 +3,8 @@
 ;;; Invariant: Scheme composes bounded handoff rows only; Rust/Marlin owns
 ;;; event persistence, replay, repair jobs, leases, and side effects.
 
-(import :poo-flow/src/module-system/durable-policy
+(import :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/durable-policy
         :poo-flow/src/module-system/durable-runtime-store)
 
 (export +poo-flow-durable-recovery-scenario-kind+
@@ -60,14 +61,14 @@
     repair-event-append
     recovery-decision))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-recovery-alist-ref row key default-value)
   (if (list? row)
     (let (entry (assoc key row))
       (if entry (cdr entry) default-value))
     default-value))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (poo-flow-durable-recovery-option options key default-value)
   (poo-flow-durable-recovery-alist-ref options key default-value))
 
@@ -79,15 +80,15 @@
     (poo-flow-durable-recovery-every? predicate (cdr values)))
    (else #f)))
 
-;; : (-> Any [Any] Boolean)
+;; : (forall (a) (-> a (List a) Boolean))
 (def (poo-flow-durable-recovery-member? value values)
   (if (member value values) #t #f))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-recovery-alist? value)
   (list? value))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-durable-recovery-row-valid? row)
   (eq? (poo-flow-durable-recovery-alist-ref row 'valid? #f) #t))
 
@@ -105,7 +106,7 @@
          (poo-flow-durable-recovery-option payload 'recoverable? #t))
    (cons 'runtime-executed #f)))
 
-;; : (-> Symbol Symbol Value [Alist])
+;; : (-> Symbol Symbol Datum [Alist])
 (def (poo-flow-durable-recovery-required-symbol-diagnostics code slot value)
   (if (symbol? value)
     '()
@@ -118,7 +119,7 @@
             (cons 'expected 'symbol)
             (cons 'recoverable? #t))))))
 
-;; : (-> Any Alist)
+;; : (-> Datum Alist)
 (def (poo-flow-durable-recovery-runtime-store-row runtime-store-receipt)
   (cond
    ((poo-flow-durable-runtime-store-contract-receipt?
@@ -198,6 +199,73 @@
     #t
     #f))
 
+;; : (-> Symbol Symbol [Alist])
+(def (poo-flow-durable-recovery-action-class-diagnostics task-id action-class)
+  (if (poo-flow-durable-recovery-member?
+       action-class
+       +poo-flow-durable-action-classes+)
+    '()
+    (list
+     (poo-flow-durable-recovery-diagnostic
+      'unsupported-action-class
+      'workflow-task-rows
+      'error
+      (list (cons 'task task-id)
+            (cons 'action-class action-class)
+            (cons 'allowed +poo-flow-durable-action-classes+)
+            (cons 'recoverable? #t))))))
+
+;; : (-> Alist Symbol Symbol [Alist])
+(def (poo-flow-durable-recovery-checkpoint-diagnostics task-row
+                                                        task-id
+                                                        action-class)
+  (if (or (eq? action-class 'idempotent)
+          (poo-flow-durable-recovery-task-has-checkpoint? task-row))
+    '()
+    (list
+     (poo-flow-durable-recovery-diagnostic
+      'missing-task-checkpoint
+      'workflow-task-rows
+      'error
+      (list (cons 'task task-id)
+            (cons 'action-class action-class)
+            (cons 'recoverable? #t))))))
+
+;; : (-> Alist Symbol Symbol [Alist])
+(def (poo-flow-durable-recovery-compensation-diagnostics task-row
+                                                         task-id
+                                                         action-class)
+  (if (or (poo-flow-durable-recovery-replayable-task? task-row)
+          (poo-flow-durable-recovery-compensated-task? task-row)
+          (poo-flow-durable-recovery-task-has-checkpoint? task-row))
+    '()
+    (list
+     (poo-flow-durable-recovery-diagnostic
+      'non-idempotent-without-compensation
+      'workflow-task-rows
+      'error
+      (list (cons 'task task-id)
+            (cons 'action-class action-class)
+            (cons 'recoverable? #t))))))
+
+;; : (-> Alist Symbol Symbol [Alist])
+(def (poo-flow-durable-recovery-manual-replay-diagnostics task-row
+                                                          task-id
+                                                          action-class)
+  (if (or (not (poo-flow-durable-recovery-member?
+                action-class
+                '(terminal manual)))
+          (poo-flow-durable-recovery-compensated-task? task-row))
+    '()
+    (list
+     (poo-flow-durable-recovery-diagnostic
+      'unsafe-manual-replay
+      'workflow-task-rows
+      'error
+      (list (cons 'task task-id)
+            (cons 'action-class action-class)
+            (cons 'recoverable? #t))))))
+
 ;; : (-> Alist [Alist])
 (def (poo-flow-durable-recovery-workflow-task-diagnostics/one task-row)
   (let ((action-class
@@ -211,55 +279,17 @@
           'durable-task-id
           (poo-flow-durable-recovery-alist-ref task-row 'check #f))))
     (append
-     (if (poo-flow-durable-recovery-member?
-          action-class
-          +poo-flow-durable-action-classes+)
-       '()
-       (list
-        (poo-flow-durable-recovery-diagnostic
-         'unsupported-action-class
-         'workflow-task-rows
-         'error
-         (list (cons 'task task-id)
-               (cons 'action-class action-class)
-               (cons 'allowed +poo-flow-durable-action-classes+)
-               (cons 'recoverable? #t)))))
-     (if (or (eq? action-class 'idempotent)
-             (poo-flow-durable-recovery-task-has-checkpoint? task-row))
-       '()
-       (list
-        (poo-flow-durable-recovery-diagnostic
-         'missing-task-checkpoint
-         'workflow-task-rows
-         'error
-         (list (cons 'task task-id)
-               (cons 'action-class action-class)
-               (cons 'recoverable? #t)))))
-     (if (or (poo-flow-durable-recovery-replayable-task? task-row)
-             (poo-flow-durable-recovery-compensated-task? task-row)
-             (poo-flow-durable-recovery-task-has-checkpoint? task-row))
-       '()
-       (list
-        (poo-flow-durable-recovery-diagnostic
-         'non-idempotent-without-compensation
-         'workflow-task-rows
-         'error
-         (list (cons 'task task-id)
-               (cons 'action-class action-class)
-               (cons 'recoverable? #t)))))
-     (if (or (not (poo-flow-durable-recovery-member?
-                   action-class
-                   '(terminal manual)))
-             (poo-flow-durable-recovery-compensated-task? task-row))
-       '()
-       (list
-        (poo-flow-durable-recovery-diagnostic
-         'unsafe-manual-replay
-         'workflow-task-rows
-         'error
-         (list (cons 'task task-id)
-               (cons 'action-class action-class)
-               (cons 'recoverable? #t))))))))
+     (poo-flow-durable-recovery-action-class-diagnostics task-id
+                                                         action-class)
+     (poo-flow-durable-recovery-checkpoint-diagnostics task-row
+                                                       task-id
+                                                       action-class)
+     (poo-flow-durable-recovery-compensation-diagnostics task-row
+                                                         task-id
+                                                         action-class)
+     (poo-flow-durable-recovery-manual-replay-diagnostics task-row
+                                                          task-id
+                                                          action-class))))
 
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-durable-recovery-workflow-task-diagnostics task-rows)
@@ -462,7 +492,8 @@
                                                       #f))
        +poo-flow-durable-recovery-stages+))
 
-;; : PooDurableRecoveryScenarioReceipt
+;;; Recovery scenario receipts stay struct-backed; projection functions own the
+;;; public alist shape consumed by tests and Marlin handoff code.
 (defstruct poo-flow-durable-recovery-scenario-receipt
   (scenario-id
    project-id
@@ -492,7 +523,10 @@
    runtime-executed)
   transparent: #t)
 
-;; : (-> Symbol Symbol Symbol Symbol Any Alist [Alist] [Alist] [Alist] [Symbol] [Alist] PooDurableRecoveryScenarioReceipt)
+;;; Scenario construction folds heterogeneous durable rows into one receipt
+;;; boundary so tests can cover replay and repair handoff without executing
+;;; runtime side effects.
+;; : (-> Symbol Symbol Symbol Symbol Datum Alist [Alist] [Alist] [Alist] [Symbol] [Alist] PooDurableRecoveryScenarioReceipt)
 (def (poo-flow-durable-recovery-scenario scenario-id
                                           project-id
                                           root-session-id
@@ -608,85 +642,82 @@
      #f)))
 
 ;; : (-> PooDurableRecoveryScenarioReceipt Alist)
-(def (poo-flow-durable-recovery-scenario->alist receipt)
-  (list
-   (cons 'kind +poo-flow-durable-recovery-scenario-kind+)
-   (cons 'schema +poo-flow-durable-recovery-scenario-schema+)
-   (cons 'scenario-id
-         (poo-flow-durable-recovery-scenario-receipt-scenario-id receipt))
-   (cons 'project-id
-         (poo-flow-durable-recovery-scenario-receipt-project-id receipt))
-   (cons 'root-session-id
-         (poo-flow-durable-recovery-scenario-receipt-root-session-id
-          receipt))
-   (cons 'session-id
-         (poo-flow-durable-recovery-scenario-receipt-session-id receipt))
-   (cons 'failure-kind
-         (poo-flow-durable-recovery-scenario-receipt-failure-kind receipt))
-   (cons 'recovery-mode
-         (poo-flow-durable-recovery-scenario-receipt-recovery-mode receipt))
-   (cons 'runtime-store
-         (poo-flow-durable-recovery-scenario-receipt-runtime-store-row
-          receipt))
-   (cons 'session-graph
-         (poo-flow-durable-recovery-scenario-receipt-session-graph-row
-          receipt))
-   (cons 'communication-rows
-         (poo-flow-durable-recovery-scenario-receipt-communication-rows
-          receipt))
-   (cons 'memory-job-rows
-         (poo-flow-durable-recovery-scenario-receipt-memory-job-rows receipt))
-   (cons 'workflow-task-rows
-         (poo-flow-durable-recovery-scenario-receipt-workflow-task-rows
-          receipt))
-   (cons 'sandbox-refs
-         (poo-flow-durable-recovery-scenario-receipt-sandbox-refs receipt))
-   (cons 'checkpoint-ref
-         (poo-flow-durable-recovery-scenario-receipt-checkpoint-ref receipt))
-   (cons 'repair-policy-ref
-         (poo-flow-durable-recovery-scenario-receipt-repair-policy-ref
-          receipt))
-   (cons 'event-log-ref
-         (poo-flow-durable-recovery-scenario-receipt-event-log-ref receipt))
-   (cons 'derived-index-ref
-         (poo-flow-durable-recovery-scenario-receipt-derived-index-ref
-          receipt))
-   (cons 'job-lease-ref
-         (poo-flow-durable-recovery-scenario-receipt-job-lease-ref receipt))
-   (cons 'repair-journal-ref
-         (poo-flow-durable-recovery-scenario-receipt-repair-journal-ref
-          receipt))
-   (cons 'deterministic-replay?
-         (poo-flow-durable-recovery-scenario-receipt-deterministic-replay?
-          receipt))
-   (cons 'observability-rows
-         (poo-flow-durable-recovery-scenario-receipt-observability-rows
-          receipt))
-   (cons 'valid?
-         (poo-flow-durable-recovery-scenario-receipt-valid? receipt))
-   (cons 'diagnostics
-         (poo-flow-durable-recovery-scenario-receipt-diagnostics receipt))
-   (cons 'diagnostic-count
-         (length
-          (poo-flow-durable-recovery-scenario-receipt-diagnostics receipt)))
-   (cons 'metadata
-         (poo-flow-durable-recovery-scenario-receipt-metadata receipt))
-   (cons 'runtime-owner
-         (poo-flow-durable-recovery-scenario-receipt-runtime-owner receipt))
-   (cons 'handoff-required
-         (poo-flow-durable-recovery-scenario-receipt-handoff-required
-          receipt))
-   (cons 'runtime-executed
-         (poo-flow-durable-recovery-scenario-receipt-runtime-executed
-          receipt))))
+(defpoo-module-final-projection
+  poo-flow-durable-recovery-scenario->alist (receipt)
+  (bindings ((diagnostics
+              (poo-flow-durable-recovery-scenario-receipt-diagnostics
+               receipt))))
+  (fields ((kind +poo-flow-durable-recovery-scenario-kind+)
+           (schema +poo-flow-durable-recovery-scenario-schema+)
+           (scenario-id
+            (poo-flow-durable-recovery-scenario-receipt-scenario-id receipt))
+           (project-id
+            (poo-flow-durable-recovery-scenario-receipt-project-id receipt))
+           (root-session-id
+            (poo-flow-durable-recovery-scenario-receipt-root-session-id
+             receipt))
+           (session-id
+            (poo-flow-durable-recovery-scenario-receipt-session-id receipt))
+           (failure-kind
+            (poo-flow-durable-recovery-scenario-receipt-failure-kind receipt))
+           (recovery-mode
+            (poo-flow-durable-recovery-scenario-receipt-recovery-mode receipt))
+           (runtime-store
+            (poo-flow-durable-recovery-scenario-receipt-runtime-store-row
+             receipt))
+           (session-graph
+            (poo-flow-durable-recovery-scenario-receipt-session-graph-row
+             receipt))
+           (communication-rows
+            (poo-flow-durable-recovery-scenario-receipt-communication-rows
+             receipt))
+           (memory-job-rows
+            (poo-flow-durable-recovery-scenario-receipt-memory-job-rows
+             receipt))
+           (workflow-task-rows
+            (poo-flow-durable-recovery-scenario-receipt-workflow-task-rows
+             receipt))
+           (sandbox-refs
+            (poo-flow-durable-recovery-scenario-receipt-sandbox-refs receipt))
+           (checkpoint-ref
+            (poo-flow-durable-recovery-scenario-receipt-checkpoint-ref
+             receipt))
+           (repair-policy-ref
+            (poo-flow-durable-recovery-scenario-receipt-repair-policy-ref
+             receipt))
+           (event-log-ref
+            (poo-flow-durable-recovery-scenario-receipt-event-log-ref receipt))
+           (derived-index-ref
+            (poo-flow-durable-recovery-scenario-receipt-derived-index-ref
+             receipt))
+           (job-lease-ref
+            (poo-flow-durable-recovery-scenario-receipt-job-lease-ref receipt))
+           (repair-journal-ref
+            (poo-flow-durable-recovery-scenario-receipt-repair-journal-ref
+             receipt))
+           (deterministic-replay?
+            (poo-flow-durable-recovery-scenario-receipt-deterministic-replay?
+             receipt))
+           (observability-rows
+            (poo-flow-durable-recovery-scenario-receipt-observability-rows
+             receipt))
+           (valid?
+            (poo-flow-durable-recovery-scenario-receipt-valid? receipt))
+           (diagnostics diagnostics)
+           (diagnostic-count (length diagnostics))
+           (metadata
+            (poo-flow-durable-recovery-scenario-receipt-metadata receipt))
+           (runtime-owner
+            (poo-flow-durable-recovery-scenario-receipt-runtime-owner receipt))
+           (handoff-required
+            (poo-flow-durable-recovery-scenario-receipt-handoff-required
+             receipt))
+           (runtime-executed
+            (poo-flow-durable-recovery-scenario-receipt-runtime-executed
+             receipt)))))
 
 ;; : (-> [PooDurableRecoveryScenarioReceipt] [Alist])
-(def (poo-flow-durable-recovery-scenarios->alists receipts)
-  (cond
-   ((null? receipts) '())
-   ((pair? receipts)
-    (cons (poo-flow-durable-recovery-scenario->alist (car receipts))
-          (poo-flow-durable-recovery-scenarios->alists (cdr receipts))))
-   (else
-    (error "durable recovery scenario serialization requires a list"
-           receipts))))
+(defpoo-module-final-projection-batch
+  poo-flow-durable-recovery-scenarios->alists (receipts)
+  (projector poo-flow-durable-recovery-scenario->alist)
+  (error-message "durable recovery scenario serialization requires a list"))

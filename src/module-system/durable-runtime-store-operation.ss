@@ -7,6 +7,7 @@
                  +runtime-request-schema+
                  make-runtime-command-descriptor
                  runtime-command-descriptor->manifest)
+        :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/durable-runtime-store-backend)
 
 (export +poo-flow-durable-runtime-store-operation-receipt-kind+
@@ -44,14 +45,14 @@
      communication append-communication-event communication-ledger-ref)
     (attach-sandbox-handle sandbox attach-sandbox-handle sandbox-ledger-ref)))
 
-;; : (-> Alist Symbol Value Value)
+;; : (forall (a) (-> Alist Symbol a a))
 (def (durable-runtime-store-ref row key default)
   (if (list? row)
     (let (entry (assoc key row))
       (if entry (cdr entry) default))
     default))
 
-;; : (-> Symbol MaybeAlist)
+;; : (-> Symbol (U #f Alist))
 (def (durable-runtime-store-operation-spec operation-kind)
   (let loop ((rest +poo-flow-durable-runtime-store-operation-specs+))
     (cond
@@ -78,7 +79,7 @@
     '()
     (list (durable-runtime-store-operation-diagnostic code slot value))))
 
-;; : (-> Value Boolean)
+;; : (-> Datum Boolean)
 (def (durable-runtime-store-symbol-list? value)
   (and (list? value)
        (let loop ((rest value))
@@ -87,7 +88,8 @@
           ((symbol? (car rest)) (loop (cdr rest)))
           (else #f)))))
 
-;; : PooDurableRuntimeStoreOperationReceipt
+;;; Runtime store operation receipts are fixed structs; handoff helpers project
+;;; them into alists only at the Marlin boundary.
 (defstruct poo-flow-durable-runtime-store-operation-receipt
   (operation-id
    operation-kind
@@ -110,49 +112,6 @@
    handoff-required
    runtime-executed)
   transparent: #t)
-
-;; Projection table keeps the ABI boundary compact without introducing a new
-;; public DSL; each accessor is fixed by the defstruct above.
-(def +poo-flow-durable-runtime-store-operation-receipt-projection+
-  (list
-   (cons 'operation-id
-         poo-flow-durable-runtime-store-operation-receipt-operation-id)
-   (cons 'operation-kind
-         poo-flow-durable-runtime-store-operation-receipt-operation-kind)
-   (cons 'store-id
-         poo-flow-durable-runtime-store-operation-receipt-store-id)
-   (cons 'backend-id
-         poo-flow-durable-runtime-store-operation-receipt-backend-id)
-   (cons 'project-id
-         poo-flow-durable-runtime-store-operation-receipt-project-id)
-   (cons 'root-session-id
-         poo-flow-durable-runtime-store-operation-receipt-root-session-id)
-   (cons 'session-id
-         poo-flow-durable-runtime-store-operation-receipt-session-id)
-   (cons 'ledger-kind
-         poo-flow-durable-runtime-store-operation-receipt-ledger-kind)
-   (cons 'capability-flag
-         poo-flow-durable-runtime-store-operation-receipt-capability-flag)
-   (cons 'target-ref
-         poo-flow-durable-runtime-store-operation-receipt-target-ref)
-   (cons 'payload-summary
-         poo-flow-durable-runtime-store-operation-receipt-payload-summary)
-   (cons 'causal-refs
-         poo-flow-durable-runtime-store-operation-receipt-causal-refs)
-   (cons 'watermark
-         poo-flow-durable-runtime-store-operation-receipt-watermark)
-   (cons 'valid?
-         poo-flow-durable-runtime-store-operation-receipt-valid?)
-   (cons 'diagnostics
-         poo-flow-durable-runtime-store-operation-receipt-diagnostics)
-   (cons 'metadata
-         poo-flow-durable-runtime-store-operation-receipt-metadata)
-   (cons 'runtime-owner
-         poo-flow-durable-runtime-store-operation-receipt-runtime-owner)
-   (cons 'handoff-required
-         poo-flow-durable-runtime-store-operation-receipt-handoff-required)
-   (cons 'runtime-executed
-         poo-flow-durable-runtime-store-operation-receipt-runtime-executed)))
 
 ;; : (-> Symbol Symbol Alist Alist Symbol [Alist])
 (def (durable-runtime-store-operation-diagnostics operation-id
@@ -195,7 +154,7 @@
     'causal-refs
     causal-refs)))
 
-;; : (-> Symbol Symbol PooDurableRuntimeStoreNegotiationReceipt Any [Alist] PooDurableRuntimeStoreOperationReceipt)
+;; : (-> Symbol Symbol PooDurableRuntimeStoreNegotiationReceipt Datum [Alist] PooDurableRuntimeStoreOperationReceipt)
 (def (poo-flow-durable-runtime-store-operation operation-id
                                                operation-kind
                                                negotiation
@@ -272,20 +231,66 @@
          +poo-flow-durable-runtime-store-operation-specs+)))
 
 ;; : (-> PooDurableRuntimeStoreOperationReceipt Alist)
-(def (poo-flow-durable-runtime-store-operation-receipt->alist receipt)
-  (append
-   (list
-    (cons 'kind +poo-flow-durable-runtime-store-operation-receipt-kind+)
-    (cons 'schema +poo-flow-durable-runtime-store-operation-receipt-schema+))
-   (map (lambda (projection)
-          (cons (car projection)
-                ((cdr projection) receipt)))
-        +poo-flow-durable-runtime-store-operation-receipt-projection+)
-   (list
-    (cons 'diagnostic-count
-          (length
-           (poo-flow-durable-runtime-store-operation-receipt-diagnostics
-            receipt))))))
+(defpoo-module-final-projection
+  poo-flow-durable-runtime-store-operation-receipt->alist (receipt)
+  (bindings ((diagnostics
+              (poo-flow-durable-runtime-store-operation-receipt-diagnostics
+               receipt))))
+  (fields ((kind +poo-flow-durable-runtime-store-operation-receipt-kind+)
+           (schema +poo-flow-durable-runtime-store-operation-receipt-schema+)
+           (operation-id
+            (poo-flow-durable-runtime-store-operation-receipt-operation-id
+             receipt))
+           (operation-kind
+            (poo-flow-durable-runtime-store-operation-receipt-operation-kind
+             receipt))
+           (store-id
+            (poo-flow-durable-runtime-store-operation-receipt-store-id receipt))
+           (backend-id
+            (poo-flow-durable-runtime-store-operation-receipt-backend-id
+             receipt))
+           (project-id
+            (poo-flow-durable-runtime-store-operation-receipt-project-id
+             receipt))
+           (root-session-id
+            (poo-flow-durable-runtime-store-operation-receipt-root-session-id
+             receipt))
+           (session-id
+            (poo-flow-durable-runtime-store-operation-receipt-session-id
+             receipt))
+           (ledger-kind
+            (poo-flow-durable-runtime-store-operation-receipt-ledger-kind
+             receipt))
+           (capability-flag
+            (poo-flow-durable-runtime-store-operation-receipt-capability-flag
+             receipt))
+           (target-ref
+            (poo-flow-durable-runtime-store-operation-receipt-target-ref
+             receipt))
+           (payload-summary
+            (poo-flow-durable-runtime-store-operation-receipt-payload-summary
+             receipt))
+           (causal-refs
+            (poo-flow-durable-runtime-store-operation-receipt-causal-refs
+             receipt))
+           (watermark
+            (poo-flow-durable-runtime-store-operation-receipt-watermark
+             receipt))
+           (valid?
+            (poo-flow-durable-runtime-store-operation-receipt-valid? receipt))
+           (diagnostics diagnostics)
+           (metadata
+            (poo-flow-durable-runtime-store-operation-receipt-metadata receipt))
+           (runtime-owner
+            (poo-flow-durable-runtime-store-operation-receipt-runtime-owner
+             receipt))
+           (handoff-required
+            (poo-flow-durable-runtime-store-operation-receipt-handoff-required
+             receipt))
+           (runtime-executed
+            (poo-flow-durable-runtime-store-operation-receipt-runtime-executed
+             receipt))
+           (diagnostic-count (length diagnostics)))))
 
 ;; : (-> [Alist] Boolean)
 (def (durable-runtime-store-operation-rows-valid? rows)
@@ -297,8 +302,11 @@
      (else #f))))
 
 ;; : (-> [PooDurableRuntimeStoreOperationReceipt] [Alist])
-(def (poo-flow-durable-runtime-store-operation-receipts->alists receipts)
-  (map poo-flow-durable-runtime-store-operation-receipt->alist receipts))
+(defpoo-module-final-projection-batch
+  poo-flow-durable-runtime-store-operation-receipts->alists (receipts)
+  (projector poo-flow-durable-runtime-store-operation-receipt->alist)
+  (error-message
+   "durable runtime store operation receipt serialization requires a list"))
 
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt [PooDurableRuntimeStoreOperationReceipt] Alist)
 (def (poo-flow-durable-runtime-store-operations->marlin-handoff negotiation

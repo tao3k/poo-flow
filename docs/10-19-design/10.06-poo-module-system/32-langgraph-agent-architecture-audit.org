@@ -172,5 +172,6 @@ The =poo-flow= translation should be:
 2. Extend =human-audit= as a workflow/loop feature whose validation requires a checkpoint-capable policy and allowed response modes.
 3. Add routing descriptors as module-owned POO objects for deterministic transition, delegated operation, fanout, parent handoff, and resume command.
 4. Add a runtime injection projection owned by the relevant module, presenting context, memory store, stream sink, progress heartbeat, execution identity, and control/drain state as validated handoff facts.
-5. Add a prebuilt agent-loop as a module profile or case, not as the root workflow abstraction.
-6. Keep CLI/deployment descriptors out of =init.ss=; project init should load modules and tune exposed features, while Marlin-owned outputs receive compiled descriptors.
+5. Add a module-owned graph analysis layer over POO facts so workflow, loop, session, sandbox, and human-audit modules can share reachability, cycle, dependency-cone, and gate-coverage diagnostics.
+6. Add a prebuilt agent-loop as a module profile or case, not as the root workflow abstraction.
+7. Keep CLI/deployment descriptors out of =init.ss=; project init should load modules and tune exposed features, while Marlin-owned outputs receive compiled descriptors.

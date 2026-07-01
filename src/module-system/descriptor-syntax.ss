@@ -4,8 +4,8 @@
 ;;; Intent: borrow Doom-style compactness without inventing an alist/record DSL.
 ;;; Parser policy should treat this file as syntax over the public POO API.
 
-(import (only-in :clan/poo/object .mix .o)
-        :poo-flow/src/core/roles
+(import (only-in :clan/poo/object .o)
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/module-system/projection-catalog)
 
 (export defpoo-flow-module-object-block
@@ -62,9 +62,9 @@
 ;;     %
 (defrules poo-flow-module-hook-block ()
   ((_ (hook-id hook-value ...) ...)
-   (.mix slots: (role-constant-slots
-                 (list (cons 'hook-id (list 'hook-value ...)) ...))
-         (.o))))
+   (poo-core-role-object
+    (slots ((hook-id (list 'hook-value ...)) ...))
+    (supers (.o)))))
 
 ;;; Boundary: conditional module inclusion returns a module list.
 ;;; The condition is evaluated where the user writes the module set.

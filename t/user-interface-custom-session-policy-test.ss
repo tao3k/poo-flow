@@ -8,7 +8,6 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/modules/session/config)
 
@@ -38,27 +37,27 @@
       (let* ((rows poo-flow-custom-module-session-policy-case)
              (durable-row (car rows))
              (validation (list-ref rows 12))
-             (codes (diagnostic-codes (.ref validation 'diagnostics))))
+             (codes (diagnostic-codes
+                     (test-ref validation 'diagnostics))))
         (check-equal? (test-ref durable-row 'runtime-executed) #f)
-        (check-equal?
-         (poo-flow-session-policy-validation-receipt? validation)
-         #t)
-        (check-equal? (.ref validation 'validation-id)
+        (check-equal? (test-ref validation 'kind)
+                      'poo-flow.session.policy-validation-receipt)
+        (check-equal? (test-ref validation 'validation-id)
                       'validation/custom-build)
-        (check-equal? (.ref validation 'scope-ref)
+        (check-equal? (test-ref validation 'scope-ref)
                       'custom/session-build-child)
-        (check-equal? (.ref validation 'effective-model-ref)
+        (check-equal? (test-ref validation 'effective-model-ref)
                       'marlin/model/build-review)
-        (check-equal? (.ref validation 'effective-prompt-session-ref)
+        (check-equal? (test-ref validation 'effective-prompt-session-ref)
                       'custom/session-build-system)
-        (check-equal? (.ref validation 'allowed-context-refs)
+        (check-equal? (test-ref validation 'allowed-context-refs)
                       '(custom/session-root))
-        (check-equal? (.ref validation 'denied-resource-refs)
+        (check-equal? (test-ref validation 'denied-resource-refs)
                       '(network-egress))
-        (check-equal? (.ref validation 'valid?) #f)
+        (check-equal? (test-ref validation 'valid?) #f)
         (check-equal?
          (has-code? 'hook-tool-agent-permission-not-inherited codes)
          #t)
-        (check-equal? (.ref validation 'runtime-executed) #f)))))
+        (check-equal? (test-ref validation 'runtime-executed) #f)))))
 
 (run-tests! user-interface-custom-session-policy-test)

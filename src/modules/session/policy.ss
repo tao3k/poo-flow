@@ -76,21 +76,13 @@
        (eq? (poo-flow-session-policy-slot value 'kind #f)
             'poo-flow.session.policy)))
 
-;; : (-> PooSessionPolicy Symbol)
-(def (poo-flow-session-policy-kind policy)
-  (poo-flow-session-policy-slot policy 'policy-kind #f))
-
-;; : (-> PooSessionPolicy Symbol)
-(def (poo-flow-session-policy-name policy)
-  (poo-flow-session-policy-slot policy 'policy-name #f))
-
-;; : (-> PooSessionPolicy Symbol)
-(def (poo-flow-session-policy-scope-ref policy)
-  (poo-flow-session-policy-slot policy 'scope-ref #f))
-
-;; : (-> PooSessionPolicy Symbol)
-(def (poo-flow-session-policy-default-action policy)
-  (poo-flow-session-policy-slot policy 'default-action 'deny))
+;; : PooSessionPolicy -> Value accessors
+(defpoo-session-policy-slot-accessors
+  poo-flow-session-policy-slot
+  (poo-flow-session-policy-kind policy-kind #f)
+  (poo-flow-session-policy-name policy-name #f)
+  (poo-flow-session-policy-scope-ref scope-ref #f)
+  (poo-flow-session-policy-default-action default-action 'deny))
 
 ;; : (-> PooSessionPolicy PooDurablePolicy PooSessionPolicy)
 (def (poo-flow-session-policy-attach-durable policy durable-policy)
@@ -128,59 +120,44 @@
         (durable-diagnostic-count . 0)))))
 
 ;; : (-> PooSessionPolicy Alist)
-(def (poo-flow-session-policy->alist policy)
-  (poo-flow-session-require "session policy projection requires a policy"
-                            (poo-flow-session-policy? policy)
-                            policy)
-  (append
-   (list
-    (cons 'kind (poo-flow-session-policy-slot policy 'kind #f))
-    (cons 'schema (poo-flow-session-policy-slot policy 'schema #f))
-    (cons 'policy-kind (poo-flow-session-policy-kind policy))
-    (cons 'policy-name (poo-flow-session-policy-name policy))
-    (cons 'scope-ref (poo-flow-session-policy-scope-ref policy))
-    (cons 'default-action (poo-flow-session-policy-default-action policy))
-    (cons 'policy-slots
-          (poo-flow-session-policy-slot policy 'policy-slots '()))
-    (cons 'agent-ref (poo-flow-session-policy-slot policy 'agent-ref #f))
-    (cons 'session-ref (poo-flow-session-policy-slot policy 'session-ref #f))
-    (cons 'provider-ref (poo-flow-session-policy-slot policy 'provider-ref #f))
-    (cons 'model-ref (poo-flow-session-policy-slot policy 'model-ref #f))
-    (cons 'prompt-session-ref
-          (poo-flow-session-policy-slot policy 'prompt-session-ref #f))
-    (cons 'prompt-chunk-refs
-          (poo-flow-session-policy-slot policy 'prompt-chunk-refs '()))
-    (cons 'context-mode
-          (poo-flow-session-policy-slot policy 'context-mode 'isolated))
-    (cons 'model-policy-ref
-          (poo-flow-session-policy-slot policy 'model-policy-ref #f))
-    (cons 'prompt-policy-ref
-          (poo-flow-session-policy-slot policy 'prompt-policy-ref #f))
-    (cons 'tool-policy-ref
-          (poo-flow-session-policy-slot policy 'tool-policy-ref #f))
-    (cons 'hook-policy-ref
-          (poo-flow-session-policy-slot policy 'hook-policy-ref #f))
-    (cons 'context-policy-ref
-          (poo-flow-session-policy-slot policy 'context-policy-ref #f))
-    (cons 'resource-policy-ref
-          (poo-flow-session-policy-slot policy 'resource-policy-ref #f))
-    (cons 'tool-grants
-          (poo-flow-session-policy-slot policy 'tool-grants '()))
-    (cons 'tool-grant-count
+(defpoo-session-policy-projection
+  poo-flow-session-policy->alist
+  (policy)
+  (require poo-flow-session-require
+           "session policy projection requires a policy"
+           poo-flow-session-policy?)
+  (slot-reader poo-flow-session-policy-slot)
+  (durable poo-flow-session-policy-durable-rows)
+  (rows
+   (slot kind #f)
+   (slot schema #f)
+   (value policy-kind (poo-flow-session-policy-kind policy))
+   (value policy-name (poo-flow-session-policy-name policy))
+   (value scope-ref (poo-flow-session-policy-scope-ref policy))
+   (value default-action (poo-flow-session-policy-default-action policy))
+   (slot policy-slots '())
+   (slot agent-ref #f)
+   (slot session-ref #f)
+   (slot provider-ref #f)
+   (slot model-ref #f)
+   (slot prompt-session-ref #f)
+   (slot prompt-chunk-refs '())
+   (slot context-mode 'isolated)
+   (slot model-policy-ref #f)
+   (slot prompt-policy-ref #f)
+   (slot tool-policy-ref #f)
+   (slot hook-policy-ref #f)
+   (slot context-policy-ref #f)
+   (slot resource-policy-ref #f)
+   (slot tool-grants '())
+   (value tool-grant-count
           (length (poo-flow-session-policy-slot policy 'tool-grants '())))
-    (cons 'denied-tool-refs
-          (poo-flow-session-policy-slot policy 'denied-tool-refs '()))
-    (cons 'hook-events
-          (poo-flow-session-policy-slot policy 'hook-events '()))
-    (cons 'resource-grants
-          (poo-flow-session-policy-slot policy 'resource-grants '()))
-    (cons 'metadata (poo-flow-session-policy-slot policy 'metadata '()))
-    (cons 'runtime-owner
-          (poo-flow-session-policy-slot policy 'runtime-owner
-                                        "marlin-agent-core"))
-    (cons 'runtime-executed
-          (poo-flow-session-policy-slot policy 'runtime-executed #f)))
-   (poo-flow-session-policy-durable-rows policy)))
+   (slot denied-tool-refs '())
+   (slot hook-events '())
+   (slot resource-grants '())
+   (slot metadata '())
+   (slot runtime-owner "marlin-agent-core")
+   (slot runtime-executed #f)))
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Alist [Alist] PooSessionPolicy)
 (def (poo-flow-session-policy-object policy-kind
@@ -403,25 +380,14 @@
        (eq? (poo-flow-session-alist-ref value 'kind #f)
             'poo-flow.session.tool-grant)))
 
-;; : (-> PooSessionToolGrant Symbol)
-(def (poo-flow-session-tool-grant-id grant)
-  (poo-flow-session-alist-ref grant 'grant-id #f))
-
-;; : (-> PooSessionToolGrant Symbol)
-(def (poo-flow-session-tool-grant-tool-ref grant)
-  (poo-flow-session-alist-ref grant 'tool-ref #f))
-
-;; : (-> PooSessionToolGrant [Symbol])
-(def (poo-flow-session-tool-grant-actions grant)
-  (poo-flow-session-alist-ref grant 'actions '()))
-
-;; : (-> PooSessionToolGrant [Symbol/String])
-(def (poo-flow-session-tool-grant-resource-refs grant)
-  (poo-flow-session-alist-ref grant 'resource-refs '()))
-
-;; : (-> PooSessionToolGrant [Symbol])
-(def (poo-flow-session-tool-grant-trigger-refs grant)
-  (poo-flow-session-alist-ref grant 'trigger-refs '()))
+;; : PooSessionToolGrant -> Value accessors
+(defpoo-session-alist-accessors
+  poo-flow-session-alist-ref
+  (poo-flow-session-tool-grant-id grant-id #f)
+  (poo-flow-session-tool-grant-tool-ref tool-ref #f)
+  (poo-flow-session-tool-grant-actions actions '())
+  (poo-flow-session-tool-grant-resource-refs resource-refs '())
+  (poo-flow-session-tool-grant-trigger-refs trigger-refs '()))
 
 ;; : (-> PooSessionToolGrant Symbol Symbol Boolean)
 (def (poo-flow-session-tool-grant-allows? grant tool-ref action)

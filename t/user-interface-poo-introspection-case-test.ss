@@ -23,8 +23,13 @@
 
 ;; : (-> [UserModuleFlagEntry] Symbol Value)
 (def (poo-introspection-test-flag flags key)
-  (let (entry (assoc key flags))
-    (if entry (cdr entry) #f)))
+  (cond
+   ((null? flags) #f)
+   ((and (pair? (car flags))
+         (equal? (caar flags) key))
+    (cdar flags))
+   (else
+    (poo-introspection-test-flag (cdr flags) key))))
 
 ;; : TestSuite
 (def user-interface-poo-introspection-case-test

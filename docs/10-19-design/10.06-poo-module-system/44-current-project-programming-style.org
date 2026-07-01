@@ -130,6 +130,27 @@ object construction, slot projection, validation, and receipt emission. It must
 not hide which object, policy, profile, slot, contract, or runtime boundary is
 being declared.
 
+** 10.06.44.24 Advanced Gerbil Feature Map
+Use these features as engineering tools, not as surface complexity. The repair rule for agent-authored code is: if the code is a repeated structural frame, move it to the smallest Gerbil mechanism that owns that frame. If the code is business behavior, keep it as a function and use =match=, =using=, folds, and named helpers to make it direct.
+
+- =match= extension and =match-macro=: use when a domain object has a recurring destructuring pattern that is currently expressed by nested =cond=, =and=, =object?=, =.ref=, and list checks. The match extension should make the pattern explicit and keep the body smaller. Do not use it to hide policy decisions or runtime searches.
+- Syntax parameters: use when a form has context-bound names that are only valid inside that form, such as receive-envelope fields or module expansion context. This is the right answer for lexical context facts; it is not a substitute for passing normal runtime arguments.
+- Compile-time metadata objects: use =begin-syntax= classes or records plus =syntax-local-value= when multiple declarations must share static facts, such as policy kind metadata, profile family metadata, contract slot metadata, or generated accessor/projection ownership. This should replace duplicated runtime rows, not create a second registry that users must know.
+- Generated identifiers: use =format-id=, =stx-identifier=, =genident=, and =gentemps= when the generated API has a stable naming convention. Keep source locations with =syntax/loc= or =stx-wrap-source= so expansion errors point at the user declaration.
+- Parser and lexer generators: use expansion-time parsers when the accepted language is static, such as fixed contract syntax, profile declaration syntax, policy selector syntax, or =use-module= branches. Do not parse these repeatedly at runtime.
+- Generic methods and interfaces: use =defgeneric=, =defmethod=, =using=, and interface casts when the extension point is type or object behavior. This is preferable to growing a long symbolic =case= over object kind when downstream modules should add behavior.
+- Specialized tables and caches: use generated table APIs or explicit cache structs when a hot path repeatedly looks up symbolic keys, object classes, or registry entries. Keep hash/equality choices visible; do not hide a performance-sensitive registry behind untyped helper names.
+- Source-aware macros: use =defsyntax-call= or source-location helpers when generated code needs the declaration's file, position, or colocated resource. Avoid runtime current-directory guesses for static assets.
+- FFI and runtime adapter macros: use boundary macros when the repetitive structure is an ABI adapter. The macro may be large internally, but the public project API must stay named, typed, and POO-native.
+*** Agent Repair Signals
+Use these signals while reviewing or repairing generated Scheme:
+- Nested =cond= blocks that repeatedly check object kind, slot presence, and list shape usually want =match=, a named predicate, or a domain match macro.
+- Runtime parsing of fixed declaration syntax usually wants =defsyntax= parsing and expansion-time errors.
+- Repeated constructor, accessor, validator, and projection rows usually want a declaration macro backed by compile-time metadata.
+- Mutable module globals used only to communicate macro context usually want syntax parameters.
+- Long =case= branches over object behavior usually want generic methods, interfaces, or a generated dispatch table.
+- Hot symbolic lookup paths usually want a specialized table, explicit cache object, or cached prototype rather than ad hoc hash helpers.
+- Boundary marshalling code may generate repetitive adapters, but the public side must remain POO-native and typed.
 ** 10.06.44.25 Macro Ownership Discipline
 
 Gerbil macros in this project are owned by the layer whose structure they

@@ -3,7 +3,6 @@
 ;;; Invariant: unit tests can run without loading performance fixture datasets.
 
 (import :poo-flow/t/flow-strand-performance-test
-        :poo-flow/t/funflow-config-pipeline-performance-test
         :poo-flow/t/durable-policy-performance-test
         :poo-flow/t/durable-recovery-scenario-performance-test
         :poo-flow/t/loop-engine-session-agent-graph-performance-test
@@ -26,4 +25,5 @@
         :poo-flow/t/session-selector-receipt-performance-test
         :poo-flow/t/session-transform-performance-test
         :poo-flow/t/tool-core-performance-test
+        :poo-flow/t/user-interface-custom-scenario-batch-performance-test
         :poo-flow/t/user-interface-presentation-performance-test)
