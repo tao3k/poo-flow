@@ -24,6 +24,7 @@
         :poo-flow/t/loop-engine-policy-extension-test
         :poo-flow/t/loop-agent-descriptor-test
         :poo-flow/t/loop-governor-test
+        :poo-flow/t/loop-spec-evolution-test
         :poo-flow/t/loop-strategy-test
         :poo-flow/t/module-system-lazy-loader-test
         :poo-flow/t/module-system-observability-test

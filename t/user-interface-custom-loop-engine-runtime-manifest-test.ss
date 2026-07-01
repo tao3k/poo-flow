@@ -60,6 +60,8 @@
     memory-receipt
     compression-receipt
     policy-extension-receipt
+    spec-evolution-review-item
+    spec-evolution-runtime-manifest-row
     runtime-snapshot))
 
 ;; : Alist
@@ -80,12 +82,20 @@
      . poo-flow.loop-engine.compression-receipt.v1)
     (policy-extension-receipt
      . poo-flow.loop-engine.policy-extension-receipt.v1)
+    (spec-evolution-review
+     . poo-flow.spec-evolution.review-item.v1)
+    (spec-evolution-runtime-manifest-row
+     . poo-flow.spec-evolution.runtime-manifest-row.v1)
     (sandbox-handoff-agreement
      . poo-flow.loop-engine.sandbox-handoff-agreement.v1)))
 
 ;; : Symbol
 (def expected-loop-engine-human-audit-result-contract
   'poo-flow.loop-governor.human-audit-decision.v1)
+
+;; : Symbol
+(def expected-loop-engine-spec-evolution-proposal-id
+  'sandbox-profile-human-audit-before-ci-change)
 
 ;;; Presentation construction goes through the facade because the ABI manifest
 ;;; must be discoverable from normal `use-module` configuration.
@@ -306,6 +316,21 @@
                 #f)
   (check-equal? (test-field-values
                  (test-ref runtime-manifest-request
+                           'spec-evolution-human-audit-review-items)
+                 'pattern)
+                (list expected-loop-engine-spec-evolution-proposal-id))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-runtime-manifest-rows)
+                 'eligible-for-checked-mutation)
+                '(#t))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-runtime-manifest-rows)
+                 'runtime-executed)
+                '(#f))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
                            'session-selector-receipts)
                  'selector-id)
                 '(selector/current-system-loop-router))
@@ -335,7 +360,32 @@
                  (test-ref runtime-manifest-request
                            'session-materialization-receipts)
                  'runtime-executed)
-                '(#f #f)))
+                '(#f #f))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-human-audit-review-items)
+                 'decision)
+                '(approved))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-runtime-manifest-rows)
+                 'schema)
+                '(poo-flow.spec-evolution.runtime-manifest-row.v1))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-runtime-manifest-rows)
+                 'human-audit-decision)
+                '(approved))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-runtime-manifest-rows)
+                 'eligible-for-checked-mutation)
+                '(#t))
+  (check-equal? (test-field-values
+                 (test-ref runtime-manifest-request
+                           'spec-evolution-runtime-manifest-rows)
+                 'runtime-executed)
+                '(#f)))
 
 ;;; Manifest graph assertions verify agent and sandbox rows keep the same
 ;;; public shape after entering the handoff request payload.
@@ -443,6 +493,16 @@
                                        'compression-receipt)
                             'runtime-executed)
                   #f)
+    (check-equal? (test-field-values
+                   (test-ref runtime-handoff-facts
+                             'spec-evolution-human-audit-review-items)
+                   'pattern)
+                  (list expected-loop-engine-spec-evolution-proposal-id))
+    (check-equal? (test-field-values
+                   (test-ref runtime-handoff-facts
+                             'spec-evolution-runtime-manifest-rows)
+                   'eligible-for-checked-mutation)
+                  '(#t))
     (check-equal? (test-ref (test-ref runtime-handoff-facts
                                        'session-agent-topology-trace)
                             'valid?)
@@ -458,6 +518,21 @@
                    'session-ref)
                   '(current-system-build-session
                     current-system-recovery-session))
+    (check-equal? (test-field-values
+                   (test-ref runtime-handoff-facts
+                             'spec-evolution-human-audit-review-items)
+                   'decision)
+                  '(approved))
+    (check-equal? (test-field-values
+                   (test-ref runtime-handoff-facts
+                             'spec-evolution-runtime-manifest-rows)
+                   'eligible-for-checked-mutation)
+                  '(#t))
+    (check-equal? (test-field-values
+                   (test-ref runtime-handoff-facts
+                             'spec-evolution-runtime-manifest-rows)
+                   'runtime-executed)
+                  '(#f))
     (check-equal? (test-ref sandbox-handoff-agreement 'contract)
                   'poo-flow.loop-engine.sandbox-handoff-agreement.v1)
     (check-equal? (test-ref sandbox-handoff-agreement 'handoff-ready?)

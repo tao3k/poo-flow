@@ -88,6 +88,37 @@ The loop module can use graph algorithms for report-only control-plane analysis:
 - safe re-run frontier explanation.
 
 The graph layer should emit diagnostics and handoff facts. It should not own timers, workers, subprocesses, persistent queues, or concurrent execution.
+** 10.06.07.57 Three Loop Alignment
+The three-loop product-development model is now tracked in
+[[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]].
+This document keeps the C3 and loop descriptor boundary; =52= owns the broader
+Agentic Coding Loop, Developer Feedback Loop, External Feedback Loop, Human
+Audit spec-evolution boundary, and control-plane runtime manifest plan.
+
+#+begin_src mermaid
+flowchart TD
+  External["External Feedback Loop\nusers, alpha tests, production signals"] --> Evidence["External feedback receipt"]
+  Evidence --> Developer["Developer Feedback Loop\nproduct judgement and spec delta"]
+  Developer --> HumanAudit["Human Audit Loop\napproval, rejection, escalation"]
+  HumanAudit --> CheckedInterface["Checked interface\nvalidated spec/profile/eval mutation"]
+  CheckedInterface --> ControlPlane["Scheme POO policy graph\nC3 + validators + graph diagnostics"]
+  ControlPlane --> Manifest["Control-plane runtime manifest\nruntime-executed = false"]
+  Manifest --> Marlin["Marlin/Rust runtime\nexecution, scheduling, IO, persistence"]
+  Marlin --> Agentic["Agentic Coding Loop\ncode, test, observe, repair"]
+  Agentic --> Developer
+#+end_src
+
+The Human Audit Loop is the legal mutation boundary for spec evolution. It is
+not the external feedback source and it is not the executor. External feedback
+may create evidence; developer judgement may propose a spec delta; Human Audit
+decides whether the delta can enter the checked interface.
+
+This keeps the existing boundary intact:
+- POO expresses loop policy fragments and feedback/spec-change facts.
+- C3 determines composed role and slot precedence.
+- validators enforce legality before write-capable handoff.
+- graph analysis explains gate coverage and dependency paths.
+- Marlin/Rust executes heavy runtime work after validated handoff.
 ** 10.06.07.60 Proposed Design: C3-Ranked Loop Pattern Descriptors
 Add a =loop-pattern-descriptor= layer as a policy object, not as another task type.
 

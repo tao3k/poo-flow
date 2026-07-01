@@ -24,6 +24,7 @@
         :poo-flow/src/modules/tool-core/config
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/nono-sandbox/profile-interface
+        :poo-flow/src/loops/spec-evolution
         :poo-flow/src/module-system/loop-engine-config
         :poo-flow/src/module-system/loop-engine-policy-extension
         :poo-flow/src/modules/sandbox-core/profile
@@ -48,6 +49,7 @@
         (import: :poo-flow/src/modules/memory-core/config)
         (import: :poo-flow/src/modules/session/config)
         (import: :poo-flow/src/modules/tool-core/config)
+        (import: :poo-flow/src/loops/spec-evolution)
         (import: :poo-flow/src/module-system/loop-engine-config)
         (import: :poo-flow/src/module-system/loop-engine-policy-extension)
         (import: :poo-flow/src/modules/nono-sandbox/profile-interface)

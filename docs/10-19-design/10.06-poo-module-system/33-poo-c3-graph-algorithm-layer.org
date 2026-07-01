@@ -67,6 +67,26 @@ These are analysis and validation questions. Runtime scheduling can consume the
 result later, but Scheme should still emit receipts and manifests with
 =runtime-executed = #f=.
 
+** 10.06.33.35 Graph Role In Loop Engineering
+The three-loop and Human Audit runtime plan is tracked in
+[[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]].
+The graph layer supports that plan by making policy and feedback paths
+explainable without taking over execution.
+
+#+begin_src mermaid
+flowchart LR
+  POO["Composed POO facts"] --> C3["C3 precedence\nslot and role order"]
+  C3 --> Validator["Validator hard gates\nsafety, budget, human audit"]
+  Validator --> Graph["src/graph analysis\nreachability, cones, cycles, coverage"]
+  Graph --> Manifest["Runtime manifest\nreport-only handoff facts"]
+  Manifest --> Marlin["Marlin/Rust\nheavy execution"]
+  Graph --> HumanAudit["Human Audit evidence\nreview path coverage"]
+  HumanAudit --> Validator
+#+end_src
+
+This graph is cyclic at the explanation level, not at finite workflow execution
+level. Human Audit can add evidence and require revised spec or policy
+proposals, but finite workflow DAGs still reject dependency cycles.
 ** 10.06.33.40 Module Ownership
 The graph layer is a first-class internal directory:
 

@@ -35,6 +35,31 @@
                                           actions)
     actions: '(+manual-gate +changes-requested))
 
+  (.def (current-system-build-feedback @ external-feedback-receipt-prototype
+                                       receipt-id source signals summary)
+    receipt-id: 'feedback/current-system-build-sandbox-profile
+    source: 'external-feedback-loop
+    signals: '((source . alpha-user)
+               (signal . sandbox-profile-risk)
+               (requested-profile . ci/build))
+    summary: "Developers need an audited path before changing the CI sandbox profile.")
+
+  (.def (current-system-build-spec-proposal @ spec-change-proposal-prototype
+                                            proposal-id target-kind target-ref
+                                            change-kind summary
+                                            feedback-receipts)
+    proposal-id: 'sandbox-profile-human-audit-before-ci-change
+    target-kind: 'profile
+    target-ref: 'ci/build
+    change-kind: 'require-human-audit-before-profile-change
+    summary: "Require Human Audit before changing the CI sandbox profile."
+    feedback-receipts: (list current-system-build-feedback))
+
+  (.def (current-system-build-spec-review @ spec-evolution-review-item-prototype
+                                          proposal decision)
+    proposal: current-system-build-spec-proposal
+    decision: 'approved)
+
   (.def (current-system-build-schedule @ loop-engine-schedule
                                        trigger cadence)
     trigger: 'manual
@@ -153,6 +178,7 @@
                                       lineage-policy selector-policy
                                       resource-policy capability-policy
                                       memory-policies compression-policy
+                                      spec-evolution-review-items
                                       session-selector-receipts
                                       session-materialization-receipts)
     use-case: current-system-build-loop
@@ -174,6 +200,7 @@
     memory-policies: (list current-system-build-memory-policy
                            current-system-recovery-memory-policy)
     compression-policy: current-system-build-compression-policy
+    spec-evolution-review-items: (list current-system-build-spec-review)
     session-selector-receipts:
     (list
      (poo-flow-session-selector-receipt

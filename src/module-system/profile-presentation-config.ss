@@ -114,6 +114,9 @@
     dispatch-receipt
     agent-operation
     delegated-operation
+    spec-evolution-reviews
+    spec-evolution-human-audit-review-items
+    spec-evolution-runtime-manifest-rows
     runtime-command-manifest
     runtime-command-manifest-summary
     sandbox-runtime-summaries
@@ -257,6 +260,9 @@
          loop-engine-dispatch-receipts
          loop-engine-agent-operations
          loop-engine-delegated-operations
+         loop-engine-spec-evolution-reviews
+         loop-engine-spec-evolution-human-audit-review-items
+         loop-engine-spec-evolution-runtime-manifest-rows
          loop-engine-runtime-command-manifests
          loop-engine-runtime-command-manifest-summaries
          loop-engine-sandbox-runtime-summaries
@@ -578,6 +584,18 @@
             (poo-flow-user-profile-presentation-field-values-ref
              loop-engine-field-values
              'delegated-operation))
+      (cons 'loop-engine-spec-evolution-reviews
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
+             'spec-evolution-reviews))
+      (cons 'loop-engine-spec-evolution-human-audit-review-items
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
+             'spec-evolution-human-audit-review-items))
+      (cons 'loop-engine-spec-evolution-runtime-manifest-rows
+            (poo-flow-user-profile-presentation-field-values-ref
+             loop-engine-field-values
+             'spec-evolution-runtime-manifest-rows))
       (cons 'loop-engine-runtime-command-manifests
             (poo-flow-user-profile-presentation-field-values-ref
              loop-engine-field-values

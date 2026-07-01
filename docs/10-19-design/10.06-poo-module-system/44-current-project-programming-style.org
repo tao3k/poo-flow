@@ -244,6 +244,43 @@ Acceptable user-facing forms:
 Avoid documenting lower-level macro-generated helpers as the normal user path.
 Those helpers are implementation infrastructure.
 
+** 10.06.44.45 Documentation Contract Rule
+Org design documents are part of the control-plane contract. They should be
+written as structured, checkable artifacts, not only prose.
+
+When a document describes a framework, loop design, runtime handoff, module
+boundary, feedback path, graph relationship, policy composition, or spec
+evolution flow, it must include at least one Mermaid diagram using an Org
+source block:
+
+#+begin_src org
+#+begin_src mermaid
+flowchart TD
+  ExternalFeedback["External feedback"] --> HumanAudit["Human audit loop"]
+  HumanAudit --> CheckedInterface["Checked interface"]
+  CheckedInterface --> RuntimeManifest["Control-plane runtime manifest"]
+#+end_src
+#+end_src
+
+The Mermaid diagram is not decorative. It must name the same owners, gates,
+state transitions, feedback edges, runtime boundaries, or graph relationships
+that the surrounding text claims. If the text says Scheme is report-only,
+Marlin executes, Human Audit approves spec changes, or a validator is a hard
+gate, the diagram must show that boundary explicitly.
+
+Preferred diagram kinds:
+- =flowchart= for loop, feedback, handoff, and approval paths;
+- =sequenceDiagram= for protocol exchange between Scheme, Marlin, users, and
+  external feedback sources;
+- =stateDiagram-v2= for lifecycle, decision, approval, retry, and escalation
+  states;
+- =classDiagram= only when documenting POO role/prototype inheritance or
+  slot-bearing object families.
+
+Mermaid blocks should complement Org contract syntax. Future Org-level
+contract checks may reject framework or loop design documents that lack a
+Mermaid block, use a graph that contradicts the owner boundary, or describe
+state transitions in prose without a corresponding diagram.
 ** 10.06.44.50 Projection Rule
 
 Projection code must have an owner and a boundary:

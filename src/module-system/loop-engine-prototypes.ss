@@ -331,5 +331,6 @@
     (cons 'session-selector-receipts '())
     (cons 'session-materialization-receipts '())
     (cons 'policy-extensions '())
+    (cons 'spec-evolution-review-items '())
     (cons 'metadata '())
     (cons 'runtime-executed #f))))

@@ -9,6 +9,11 @@
         (only-in :poo-flow/src/modules/session/selector
                  poo-flow-session-selector-receipt?
                  poo-flow-session-selector-receipt->alist)
+        (only-in :poo-flow/src/loops/spec-evolution
+                 spec-evolution-review-item?
+                 spec-evolution-review-item->alist
+                 spec-evolution-review-item->human-audit-review-item
+                 spec-evolution-review-item->runtime-manifest-row)
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/loop-engine-prototypes
         :poo-flow/src/module-system/loop-engine-contract
@@ -98,6 +103,77 @@
    (else
     (error "loop-engine profile session-materialization-receipts slot must be a list"
            receipts))))
+
+;;; Spec evolution rows are Human Audit inputs. Users attach POO review items to
+;;; the profile; this owner only projects them into report-only boundary rows.
+;; : (-> SpecEvolutionReviewItem Alist)
+(def (poo-flow-user-loop-engine-spec-evolution-review-item->row item)
+  (poo-flow-user-loop-engine-require
+   "loop-engine spec-evolution-review-items slot requires spec evolution review items"
+   (spec-evolution-review-item? item)
+   item)
+  (spec-evolution-review-item->alist item))
+
+;; : (-> SpecEvolutionReviewItem Alist)
+(def (poo-flow-user-loop-engine-spec-evolution-review-item->human-audit-row
+      item)
+  (poo-flow-user-loop-engine-require
+   "loop-engine spec-evolution-review-items slot requires spec evolution review items"
+   (spec-evolution-review-item? item)
+   item)
+  (spec-evolution-review-item->human-audit-review-item item))
+
+;; : (-> SpecEvolutionReviewItem Alist)
+(def (poo-flow-user-loop-engine-spec-evolution-review-item->manifest-row
+      item)
+  (poo-flow-user-loop-engine-require
+   "loop-engine spec-evolution-review-items slot requires spec evolution review items"
+   (spec-evolution-review-item? item)
+   item)
+  (spec-evolution-review-item->runtime-manifest-row item))
+
+;; : (-> [SpecEvolutionReviewItem] [Alist])
+(def (poo-flow-user-loop-engine-spec-evolution-review-items->rows items)
+  (cond
+   ((null? items) '())
+   ((pair? items)
+    (cons
+     (poo-flow-user-loop-engine-spec-evolution-review-item->row (car items))
+     (poo-flow-user-loop-engine-spec-evolution-review-items->rows
+      (cdr items))))
+   (else
+    (error "loop-engine profile spec-evolution-review-items slot must be a list"
+           items))))
+
+;; : (-> [SpecEvolutionReviewItem] [Alist])
+(def (poo-flow-user-loop-engine-spec-evolution-review-items->human-audit-rows
+      items)
+  (cond
+   ((null? items) '())
+   ((pair? items)
+    (cons
+     (poo-flow-user-loop-engine-spec-evolution-review-item->human-audit-row
+      (car items))
+     (poo-flow-user-loop-engine-spec-evolution-review-items->human-audit-rows
+      (cdr items))))
+   (else
+    (error "loop-engine profile spec-evolution-review-items slot must be a list"
+           items))))
+
+;; : (-> [SpecEvolutionReviewItem] [Alist])
+(def (poo-flow-user-loop-engine-spec-evolution-review-items->manifest-rows
+      items)
+  (cond
+   ((null? items) '())
+   ((pair? items)
+    (cons
+     (poo-flow-user-loop-engine-spec-evolution-review-item->manifest-row
+      (car items))
+     (poo-flow-user-loop-engine-spec-evolution-review-items->manifest-rows
+      (cdr items))))
+   (else
+    (error "loop-engine profile spec-evolution-review-items slot must be a list"
+           items))))
 
 ;;; Profile intent projection is the sole join point for object rows, policy
 ;;; rows, policy-extension receipts, and runtime ownership facts. Keeping this
@@ -196,6 +272,15 @@
       (cons 'policy-extension-receipts
             (poo-flow-user-loop-engine-poo-policy-extensions->receipts
              (.ref profile 'policy-extensions)))
+      (cons 'spec-evolution-reviews
+            (poo-flow-user-loop-engine-spec-evolution-review-items->rows
+             (.ref profile 'spec-evolution-review-items)))
+      (cons 'spec-evolution-human-audit-review-items
+            (poo-flow-user-loop-engine-spec-evolution-review-items->human-audit-rows
+             (.ref profile 'spec-evolution-review-items)))
+      (cons 'spec-evolution-runtime-manifest-rows
+            (poo-flow-user-loop-engine-spec-evolution-review-items->manifest-rows
+             (.ref profile 'spec-evolution-review-items)))
       (cons 'runtime-handoff
             (if runtime
               (.ref runtime 'handoff)

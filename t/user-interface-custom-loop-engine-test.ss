@@ -108,6 +108,10 @@
      . poo-flow.loop-engine.compression-receipt.v1)
     (policy-extension-receipt
      . poo-flow.loop-engine.policy-extension-receipt.v1)
+    (spec-evolution-review
+     . poo-flow.spec-evolution.review-item.v1)
+    (spec-evolution-runtime-manifest-row
+     . poo-flow.spec-evolution.runtime-manifest-row.v1)
     (sandbox-handoff-agreement
      . poo-flow.loop-engine.sandbox-handoff-agreement.v1)))
 
@@ -118,6 +122,14 @@
 ;; : [Symbol]
 (def expected-loop-engine-required-result-fields
   '(decision summary evidence))
+
+;; : Symbol
+(def expected-loop-engine-spec-evolution-proposal-id
+  'sandbox-profile-human-audit-before-ci-change)
+
+;; : Symbol
+(def expected-loop-engine-spec-evolution-target-ref
+  'ci/build)
 
 ;;; Custom loop fixtures are tested through the same config presentation used
 ;;; by downstream user declarations. This helper avoids constructing a module
@@ -253,6 +265,7 @@
     (check-equal? (test-field-values materialization-receipts
                                      'runtime-executed)
                   '(#f #f)))
+  (check-custom-loop-spec-evolution-boundary intent)
   (check-equal? (test-ref intent 'result)
                 '((default . poo-flow.loop-governor.node-result.v1)
                   (auditor . poo-flow.loop-governor.audit-result.v1)
@@ -266,6 +279,42 @@
   (check-equal? (test-ref intent 'sandbox-runtime-summaries) '())
   (check-equal? (test-ref intent 'sandbox-handoff-summaries) '())
   (check-equal? (test-ref intent 'sandbox-unresolved-profile-refs) '(ci/build)))
+
+;;; Spec evolution rows prove external feedback reaches Human Audit as
+;;; report-only checked-mutation eligibility, not direct config mutation.
+;; : (-> Alist)
+(def (check-custom-loop-spec-evolution-boundary intent)
+  (let ((reviews (test-ref intent 'spec-evolution-reviews))
+        (human-audit-rows
+         (test-ref intent 'spec-evolution-human-audit-review-items))
+        (manifest-rows
+         (test-ref intent 'spec-evolution-runtime-manifest-rows)))
+    (check-equal? (length reviews) 1)
+    (check-equal? (length human-audit-rows) 1)
+    (check-equal? (length manifest-rows) 1)
+    (check-equal? (test-ref (car reviews) 'schema)
+                  'poo-flow.spec-evolution.review-item.v1)
+    (check-equal? (test-ref (car reviews) 'decision) 'approved)
+    (check-equal? (test-ref (car human-audit-rows) 'reason)
+                  'spec-evolution-proposal)
+    (check-equal? (test-ref (car human-audit-rows) 'pattern)
+                  expected-loop-engine-spec-evolution-proposal-id)
+    (check-equal? (test-ref (car human-audit-rows) 'acting_on)
+                  expected-loop-engine-spec-evolution-target-ref)
+    (check-equal? (test-ref (car human-audit-rows) 'direct-mutation) #f)
+    (check-equal? (test-ref (car manifest-rows) 'proposal-id)
+                  expected-loop-engine-spec-evolution-proposal-id)
+    (check-equal? (test-ref (car manifest-rows) 'target-kind) 'profile)
+    (check-equal? (test-ref (car manifest-rows) 'target-ref)
+                  expected-loop-engine-spec-evolution-target-ref)
+    (check-equal? (test-ref (car manifest-rows) 'human-audit-required) #t)
+    (check-equal? (test-ref (car manifest-rows) 'human-audit-decision)
+                  'approved)
+    (check-equal? (test-ref (car manifest-rows)
+                            'eligible-for-checked-mutation)
+                  #t)
+    (check-equal? (test-ref (car manifest-rows) 'direct-mutation) #f)
+    (check-equal? (test-ref (car manifest-rows) 'runtime-executed) #f)))
 
 ;;; Agent graph assertions prove profile, harness, and session rows are
 ;;; projected before the runtime handoff without becoming execution.
@@ -504,6 +553,16 @@
   (check-equal? (test-ref handoff 'compression-receipt)
                 compression-receipt)
   (check-equal? (test-field-values
+                 (test-ref handoff
+                           'spec-evolution-human-audit-review-items)
+                 'pattern)
+                (list expected-loop-engine-spec-evolution-proposal-id))
+  (check-equal? (test-field-values
+                 (test-ref handoff
+                           'spec-evolution-runtime-manifest-rows)
+                 'eligible-for-checked-mutation)
+                '(#t))
+  (check-equal? (test-field-values
                  (test-ref handoff 'session-selector-receipts)
                  'selector-id)
                 '(selector/current-system-loop-router))
@@ -701,6 +760,16 @@
                                   'loop-engine-compression-receipts))
                           'trigger)
                 'after-human-audit)
+  (check-equal? (test-field-values
+                 (car (.ref presentation
+                             'loop-engine-spec-evolution-human-audit-review-items))
+                 'pattern)
+                (list expected-loop-engine-spec-evolution-proposal-id))
+  (check-equal? (test-field-values
+                 (car (.ref presentation
+                             'loop-engine-spec-evolution-runtime-manifest-rows))
+                 'eligible-for-checked-mutation)
+                '(#t))
   (check-equal? (test-field-values
                  (car (.ref presentation
                              'loop-engine-session-selector-receipts))

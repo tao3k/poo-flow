@@ -52,6 +52,8 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:48-execution-plan.org][48 Execution Plan]]
 - [[file:49-scenario-test-owner-matrix.org][49 Scenario Test Owner Matrix]]
 - [[file:51-gerbil-metaprogramming-adoption-plan.org][51 Gerbil Metaprogramming Adoption Plan]]
+- [[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]]
+- [[file:53-loopx-pressure-test-control-plane-closure.org][53 LoopX Pressure Test And Control-Plane Closure]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.

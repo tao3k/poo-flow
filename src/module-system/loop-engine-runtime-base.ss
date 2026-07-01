@@ -243,6 +243,21 @@
           intent
           'policy-extension-receipts
           '()))
+   (cons 'spec-evolution-reviews
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-reviews
+          '()))
+   (cons 'spec-evolution-human-audit-review-items
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-human-audit-review-items
+          '()))
+   (cons 'spec-evolution-runtime-manifest-rows
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-runtime-manifest-rows
+          '()))
    (cons 'executes-runtime #f)))
 
 ;;; Policy projection is the loop-engine guardrail packet. It keeps governor,
@@ -307,6 +322,21 @@
          (poo-flow-user-loop-engine-intent-ref
           intent
           'policy-extension-receipts
+          '()))
+   (cons 'spec-evolution-reviews
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-reviews
+          '()))
+   (cons 'spec-evolution-human-audit-review-items
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-human-audit-review-items
+          '()))
+   (cons 'spec-evolution-runtime-manifest-rows
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-runtime-manifest-rows
           '()))
    (cons 'budget
          (poo-flow-user-loop-engine-intent-ref intent 'budget '()))

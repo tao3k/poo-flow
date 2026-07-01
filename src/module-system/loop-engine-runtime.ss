@@ -189,6 +189,21 @@
                    intent
                    'policy-extension-receipts
                    '()))
+            (cons 'spec-evolution-reviews
+                  (poo-flow-user-loop-engine-intent-ref
+                   intent
+                   'spec-evolution-reviews
+                   '()))
+            (cons 'spec-evolution-human-audit-review-items
+                  (poo-flow-user-loop-engine-intent-ref
+                   intent
+                   'spec-evolution-human-audit-review-items
+                   '()))
+            (cons 'spec-evolution-runtime-manifest-rows
+                  (poo-flow-user-loop-engine-intent-ref
+                   intent
+                   'spec-evolution-runtime-manifest-rows
+                   '()))
             (cons 'runtime-snapshot
                   (poo-flow-user-loop-engine-intent-runtime-snapshot intent))
             (cons 'sandbox-profile-refs
@@ -299,6 +314,16 @@
          (poo-flow-user-loop-engine-intent-memory-receipt intent))
          (compression-receipt
           (poo-flow-user-loop-engine-intent-compression-receipt intent))
+         (spec-evolution-human-audit-review-items
+          (poo-flow-user-loop-engine-intent-ref
+           intent
+           'spec-evolution-human-audit-review-items
+           '()))
+         (spec-evolution-runtime-manifest-rows
+          (poo-flow-user-loop-engine-intent-ref
+           intent
+           'spec-evolution-runtime-manifest-rows
+           '()))
          (sandbox-agreement
           (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
            intent))
@@ -322,6 +347,10 @@
                 (cons 'capability-receipt capability-receipt)
                 (cons 'memory-receipt memory-receipt)
                 (cons 'compression-receipt compression-receipt)
+                (cons 'spec-evolution-human-audit-review-items
+                      spec-evolution-human-audit-review-items)
+                (cons 'spec-evolution-runtime-manifest-rows
+                      spec-evolution-runtime-manifest-rows)
                 (cons 'sandbox-handoff-agreement sandbox-agreement)
                 (cons 'runtime-executed #f))))
     (poo-flow-runtime-snapshot->alist
@@ -877,6 +906,21 @@
       intent
       'policy-extension-receipts
       '()))
+    ('spec-evolution-reviews
+     (poo-flow-user-loop-engine-intent-ref
+      intent
+      'spec-evolution-reviews
+      '()))
+    ('spec-evolution-human-audit-review-items
+     (poo-flow-user-loop-engine-intent-ref
+      intent
+      'spec-evolution-human-audit-review-items
+      '()))
+    ('spec-evolution-runtime-manifest-rows
+     (poo-flow-user-loop-engine-intent-ref
+      intent
+      'spec-evolution-runtime-manifest-rows
+      '()))
     ('runtime-command-manifest
      (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))
     ('runtime-command-manifest-summary
@@ -995,6 +1039,21 @@
          (poo-flow-user-loop-engine-intent-ref
           intent
           'policy-extension-receipts
+          '()))
+   (cons 'spec-evolution-reviews
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-reviews
+          '()))
+   (cons 'spec-evolution-human-audit-review-items
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-human-audit-review-items
+          '()))
+   (cons 'spec-evolution-runtime-manifest-rows
+         (poo-flow-user-loop-engine-intent-ref
+          intent
+          'spec-evolution-runtime-manifest-rows
           '()))
    (cons 'runtime-command-manifest
          (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))

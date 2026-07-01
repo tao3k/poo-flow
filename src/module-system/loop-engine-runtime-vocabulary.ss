@@ -65,6 +65,10 @@
      . poo-flow.loop-engine.compression-receipt.v1)
     (policy-extension-receipt
      . poo-flow.loop-engine.policy-extension-receipt.v1)
+    (spec-evolution-review
+     . poo-flow.spec-evolution.review-item.v1)
+    (spec-evolution-runtime-manifest-row
+     . poo-flow.spec-evolution.runtime-manifest-row.v1)
     (sandbox-handoff-agreement
      . poo-flow.loop-engine.sandbox-handoff-agreement.v1)))
 
@@ -100,4 +104,6 @@
     memory-receipt
     compression-receipt
     policy-extension-receipt
+    spec-evolution-review-item
+    spec-evolution-runtime-manifest-row
     runtime-snapshot))

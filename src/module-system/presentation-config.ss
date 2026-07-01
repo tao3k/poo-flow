@@ -327,6 +327,9 @@
     session-selector-receipts
     session-materialization-receipts
     policy-extension-receipts
+    spec-evolution-reviews
+    spec-evolution-human-audit-review-items
+    spec-evolution-runtime-manifest-rows
     runtime-command-manifest
     runtime-command-manifest-summary
     sandbox-runtime-summaries
@@ -621,6 +624,16 @@
                   (loop-engine-field 'session-materialization-receipts)))
       (computed 'loop-engine-policy-extension-receipts
                 (lambda () (loop-engine-field 'policy-extension-receipts)))
+      (computed 'loop-engine-spec-evolution-reviews
+                (lambda () (loop-engine-field 'spec-evolution-reviews)))
+      (computed 'loop-engine-spec-evolution-human-audit-review-items
+                (lambda ()
+                  (loop-engine-field
+                   'spec-evolution-human-audit-review-items)))
+      (computed 'loop-engine-spec-evolution-runtime-manifest-rows
+                (lambda ()
+                  (loop-engine-field
+                   'spec-evolution-runtime-manifest-rows)))
       (computed 'loop-engine-runtime-command-manifests
                 (lambda () (loop-engine-field 'runtime-command-manifest)))
       (computed 'loop-engine-runtime-command-manifest-summaries
@@ -1007,6 +1020,15 @@
        '())
       (poo-flow-user-config-presentation-constant-slot
        'loop-engine-policy-extension-receipts
+       '())
+      (poo-flow-user-config-presentation-constant-slot
+       'loop-engine-spec-evolution-reviews
+       '())
+      (poo-flow-user-config-presentation-constant-slot
+       'loop-engine-spec-evolution-human-audit-review-items
+       '())
+      (poo-flow-user-config-presentation-constant-slot
+       'loop-engine-spec-evolution-runtime-manifest-rows
        '())
       (poo-flow-user-config-presentation-constant-slot
        'loop-engine-runtime-command-manifests
@@ -1419,6 +1441,18 @@
                 (poo-flow-user-config-presentation-field-values-ref
                  loop-engine-field-values
                  'policy-extension-receipts))
+          (cons 'loop-engine-spec-evolution-reviews
+                (poo-flow-user-config-presentation-field-values-ref
+                 loop-engine-field-values
+                 'spec-evolution-reviews))
+          (cons 'loop-engine-spec-evolution-human-audit-review-items
+                (poo-flow-user-config-presentation-field-values-ref
+                 loop-engine-field-values
+                 'spec-evolution-human-audit-review-items))
+          (cons 'loop-engine-spec-evolution-runtime-manifest-rows
+                (poo-flow-user-config-presentation-field-values-ref
+                 loop-engine-field-values
+                 'spec-evolution-runtime-manifest-rows))
           (cons 'loop-engine-runtime-command-manifests
                 (poo-flow-user-config-presentation-field-values-ref
                  loop-engine-field-values

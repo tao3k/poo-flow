@@ -21,6 +21,28 @@ POO Flow must not own:
 - runtime handler lifecycle;
 - Marlin session scheduling.
 
+* 10.06.11.015 Control-Plane Runtime Surface
+The three-loop runtime surface is specified in
+[[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]].
+This file defines the handoff boundary that makes that plan executable by
+Marlin without moving heavy runtime work into Scheme.
+
+#+begin_src mermaid
+sequenceDiagram
+  participant Scheme as poo-flow Scheme control plane
+  participant Audit as Human Audit Loop
+  participant Manifest as Control-plane runtime manifest
+  participant Marlin as Marlin/Rust runtime
+
+  Scheme->>Scheme: compose POO policy graph with C3
+  Scheme->>Scheme: validate slots, budgets, safety, graph gates
+  Scheme->>Audit: request approval for spec/profile/eval/policy mutation
+  Audit-->>Scheme: approved evidence or rejection
+  Scheme->>Manifest: emit report-only handoff bundle
+  Manifest->>Marlin: submit validated policy/runtime facts
+  Marlin->>Marlin: execute heavy runtime work
+  Marlin-->>Scheme: receipts and telemetry
+#+end_src
 * 10.06.11.02 Runtime Owner Field
 
 Presentation objects that mention backend lifecycle ownership should expose
@@ -40,4 +62,3 @@ contract data.  Runtime execution and native binding lifecycle stay Marlin-owned
 
 This allows =poo-flow= to test nono/C binding shape without pretending it owns
 the backend that will execute it.
-
