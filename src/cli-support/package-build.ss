@@ -33,6 +33,9 @@
 (def +poo-flow-test-include-dirs+
   '("t"))
 
+(def +poo-flow-test-support-include-dirs+
+  '("t/support"))
+
 (def +poo-flow-special-source-files+
   '("src/modules/nono-sandbox/_nono.ss"
     "src/cli-support/support.ss"
@@ -232,7 +235,8 @@
      bootstrap)))
 
 (def (poo-flow-test-modules)
-  (poo-flow-package-modules +poo-flow-test-include-dirs+ '() #t))
+  (append (poo-flow-package-modules +poo-flow-test-include-dirs+ '() #t)
+          (poo-flow-package-modules +poo-flow-test-support-include-dirs+ '() #f)))
 
 (def (poo-flow-gxc-target file _options)
   [gxc: file])
