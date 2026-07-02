@@ -12,6 +12,9 @@
         :poo-flow/src/core/plan
         :poo-flow/src/core/strategy
         :poo-flow/src/core/policy
+        :poo-flow/src/core/runtime-protocol
+        :poo-flow/src/core/runtime-command-invocation
+        :poo-flow/src/core/runtime-command-descriptor
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/core/agent-harness
         :poo-flow/src/core/replay
@@ -28,6 +31,9 @@
         (import: :poo-flow/src/core/plan)
         (import: :poo-flow/src/core/strategy)
         (import: :poo-flow/src/core/policy)
+        (import: :poo-flow/src/core/runtime-protocol)
+        (import: :poo-flow/src/core/runtime-command-invocation)
+        (import: :poo-flow/src/core/runtime-command-descriptor)
         (import: :poo-flow/src/core/runtime-adapter)
         (import: :poo-flow/src/core/agent-harness)
         (import: :poo-flow/src/core/replay)

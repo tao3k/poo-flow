@@ -22,7 +22,8 @@
                  +poo-flow-user-loop-engine-runtime-command-contract+
                  +poo-flow-user-loop-engine-runtime-command-executable+
                  +poo-flow-user-loop-engine-runtime-command-name+
-                 +poo-flow-user-loop-engine-runtime-object-families+)
+                 +poo-flow-user-loop-engine-runtime-object-families+
+                 +poo-flow-user-loop-engine-runtime-packet-contracts+)
         :poo-flow/src/loops/governor)
 
 (export +loop-governor-marlin-request-schema+
@@ -112,6 +113,8 @@
          +poo-flow-user-loop-engine-runtime-object-families+)
    (cons 'receipt-contracts
          +poo-flow-user-loop-engine-receipt-contracts+)
+   (cons 'runtime-packet-contracts
+         +poo-flow-user-loop-engine-runtime-packet-contracts+)
    (cons 'control-owner 'gerbil)
    (cons 'execution-owner 'marlin-agent-core)
    (cons 'runtime-executed #f)))

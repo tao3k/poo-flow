@@ -58,14 +58,22 @@
     (poo-flow-sandbox-profile-by-name profile-catalog profile))
    (else #f)))
 
-;; : (-> [Value] [Value] [Value])
+;; poo-flow-cicd-profile-projection-values/rev
+;;   : (-> [RuntimeProjectionRow] [RuntimeProjectionRow] [RuntimeProjectionRow])
+;;   | contract: prepend projected profile rows into a reversed accumulator
+;;   | result: reversed projection rows with existing accumulator tail preserved
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-cicd-profile-projection-values/rev
+;;        '((runtime . nono) (handoff . required))
+;;        '((tail)))
+;;       ;; => ((handoff . required) (runtime . nono) (tail))
+;;       ```
+;;     %
 (def (poo-flow-cicd-profile-projection-values/rev values results)
-  (let loop ((remaining-values values)
-             (result-values results))
-    (if (null? remaining-values)
-      result-values
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) result-values)))))
+  (foldl cons results values))
 
 ;; : (-> Procedure [PooFlowCicdProfileRef] [PooSandboxProfile] [Value] [Value])
 (def (poo-flow-cicd-profile-projections/list-rev projector
@@ -196,56 +204,83 @@
 ;;; Runtime readiness is a manifest-shaped promise. It is deliberately not a
 ;;; RuntimeCommandDescriptor because CI checks still need a sandbox/runtime owner
 ;;; to materialize the command envelope.
+;;; The field list is intentionally explicit because these keys are the stable
+;;; ABI contract consumed by the runtime handoff tests.
 ;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
-(defpoo-core-receipt-projection
-  poo-flow-cicd-runtime-manifest-readiness-fields (check profile-catalog)
-  (bindings ())
-  (fields ((schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
-           (kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
-           (check (poo-flow-cicd-check-name check))
-           (profile (poo-flow-cicd-check-profile check))
-           (profile-refs (poo-flow-cicd-check-profile-refs check))
-           (dependency-refs
-            (poo-flow-cicd-check-dependency-refs check))
-           (sandbox-runtime-summaries
-            (poo-flow-cicd-check-sandbox-runtime-summaries
-             check
-             profile-catalog))
-           (sandbox-handoff-summaries
-            (poo-flow-cicd-check-sandbox-handoff-summaries
-             check
-             profile-catalog))
-           (sandbox-unresolved-profile-refs
-            (poo-flow-cicd-check-sandbox-unresolved-profile-refs
-             check
-             profile-catalog))
-           (runtime (poo-flow-cicd-check-runtime check))
-           (runtime-executed #f)
-           (handoff-required #t)
-           (command (poo-flow-cicd-check-command check))
-           (argv (poo-flow-cicd-check-command check))
-           (inputs (.ref check 'input-bindings))
-           (config (.ref check 'config-sources))
-           (artifacts (poo-flow-cicd-check-artifacts check))
-           (durable-task-id
-            (poo-flow-cicd-check-durable-task-id check))
-           (action-class
-            (poo-flow-cicd-check-action-class check))
-           (artifact-refs
-            (poo-flow-cicd-check-artifacts check))
-           (artifact-retention
-            (poo-flow-cicd-check-artifact-retention check))
-           (sandbox-refs
-            (poo-flow-cicd-check-profile-refs check))
-           (checkpoint-ref
-            (list 'workflow-cicd-check
-                  (poo-flow-cicd-check-name check)))
-           (compensation-refs
-            (poo-flow-cicd-check-compensation-refs check))
-           (cache (poo-flow-cicd-check-cache check))
-           (secrets (poo-flow-cicd-check-secrets check))
-           (result (.ref check 'result-protocol)))))
+;; | contract: project a CI check and sandbox catalog into readiness rows
+;; | result: an ordered runtime-readiness alist with no command execution
+;; | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-cicd-runtime-manifest-readiness-fields check profiles)
+;;       ;; => ((schema . poo-flow.workflow.cicd.runtime-manifest-readiness.v1)
+;;       ;;     (kind . poo-flow.workflow.cicd.runtime-manifest-ready)
+;;       ;;     (runtime-executed . #f)
+;;       ;;     (handoff-required . #t))
+;;       ```
+;;   %
+;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
+(def (poo-flow-cicd-runtime-manifest-readiness-fields check profile-catalog)
+  (poo-flow-core-field-rows
+   (schema +poo-flow-cicd-runtime-manifest-readiness-schema+)
+   (kind 'poo-flow.workflow.cicd.runtime-manifest-ready)
+   (check (poo-flow-cicd-check-name check))
+   (profile (poo-flow-cicd-check-profile check))
+   (profile-refs (poo-flow-cicd-check-profile-refs check))
+   (dependency-refs
+    (poo-flow-cicd-check-dependency-refs check))
+   (sandbox-runtime-summaries
+    (poo-flow-cicd-check-sandbox-runtime-summaries
+     check
+     profile-catalog))
+   (sandbox-handoff-summaries
+    (poo-flow-cicd-check-sandbox-handoff-summaries
+     check
+     profile-catalog))
+   (sandbox-unresolved-profile-refs
+    (poo-flow-cicd-check-sandbox-unresolved-profile-refs
+     check
+     profile-catalog))
+   (runtime (poo-flow-cicd-check-runtime check))
+   (runtime-executed #f)
+   (handoff-required #t)
+   (command (poo-flow-cicd-check-command check))
+   (argv (poo-flow-cicd-check-command check))
+   (inputs (.ref check 'input-bindings))
+   (config (.ref check 'config-sources))
+   (artifacts (poo-flow-cicd-check-artifacts check))
+   (durable-task-id
+    (poo-flow-cicd-check-durable-task-id check))
+   (action-class
+    (poo-flow-cicd-check-action-class check))
+   (artifact-refs
+    (poo-flow-cicd-check-artifacts check))
+   (artifact-retention
+    (poo-flow-cicd-check-artifact-retention check))
+   (sandbox-refs
+    (poo-flow-cicd-check-profile-refs check))
+   (checkpoint-ref
+    (list 'workflow-cicd-check
+          (poo-flow-cicd-check-name check)))
+   (compensation-refs
+    (poo-flow-cicd-check-compensation-refs check))
+   (cache (poo-flow-cicd-check-cache check))
+   (secrets (poo-flow-cicd-check-secrets check))
+   (result (.ref check 'result-protocol))))
 
+;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
+;; | contract: validate a CI check and emit report-only readiness rows
+;; | result: runtime manifest readiness alist for Marlin handoff planning
+;; | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-cicd-check->runtime-manifest-readiness check profiles)
+;;       ;; => ((kind . poo-flow.cicd.runtime-manifest-readiness.v1) ...)
+;;       ```
+;;   %
+;; : (-> PooFlowCicdCheck [PooSandboxProfile] Alist)
 (def (poo-flow-cicd-check->runtime-manifest-readiness check
                                                         . maybe-profile-catalog)
   (poo-flow-cicd-require "runtime manifest readiness requires a cicd check"

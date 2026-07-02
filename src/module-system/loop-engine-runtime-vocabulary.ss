@@ -8,6 +8,11 @@
         +poo-flow-user-loop-engine-default-result-contract+
         +poo-flow-user-loop-engine-result-contract-roles+
         +poo-flow-user-loop-engine-receipt-contracts+
+        +poo-flow-user-loop-engine-runtime-capability-descriptor-contract+
+        +poo-flow-user-loop-engine-policy-profile-packet-contract+
+        +poo-flow-user-loop-engine-runtime-action-packet-contract+
+        +poo-flow-user-loop-engine-runtime-receipt-batch-contract+
+        +poo-flow-user-loop-engine-runtime-packet-contracts+
         +poo-flow-user-loop-engine-runtime-command-name+
         +poo-flow-user-loop-engine-runtime-command-executable+
         +poo-flow-user-loop-engine-runtime-command-arguments+
@@ -69,8 +74,45 @@
      . poo-flow.spec-evolution.review-item.v1)
     (spec-evolution-runtime-manifest-row
      . poo-flow.spec-evolution.runtime-manifest-row.v1)
+    (runtime-capability-descriptor
+     . poo-flow.runtime.capability-descriptor.v1)
+    (policy-profile-packet
+     . poo-flow.runtime.policy-profile-packet.v1)
+    (runtime-action-packet
+     . poo-flow.runtime.action-packet.v1)
+    (runtime-receipt-batch
+     . poo-flow.runtime.receipt-batch.v1)
     (sandbox-handoff-agreement
      . poo-flow.loop-engine.sandbox-handoff-agreement.v1)))
+
+;;; Pressure-relief packet contracts are the Marlin-facing ABI reduction layer:
+;;; they describe normalized policy facts, not user-authored POO objects.
+;; : Symbol
+(def +poo-flow-user-loop-engine-runtime-capability-descriptor-contract+
+  'poo-flow.runtime.capability-descriptor.v1)
+
+;; : Symbol
+(def +poo-flow-user-loop-engine-policy-profile-packet-contract+
+  'poo-flow.runtime.policy-profile-packet.v1)
+
+;; : Symbol
+(def +poo-flow-user-loop-engine-runtime-action-packet-contract+
+  'poo-flow.runtime.action-packet.v1)
+
+;; : Symbol
+(def +poo-flow-user-loop-engine-runtime-receipt-batch-contract+
+  'poo-flow.runtime.receipt-batch.v1)
+
+;; : Alist
+(def +poo-flow-user-loop-engine-runtime-packet-contracts+
+  `((runtime-capability-descriptor
+     . ,+poo-flow-user-loop-engine-runtime-capability-descriptor-contract+)
+    (policy-profile-packet
+     . ,+poo-flow-user-loop-engine-policy-profile-packet-contract+)
+    (runtime-action-packet
+     . ,+poo-flow-user-loop-engine-runtime-action-packet-contract+)
+    (runtime-receipt-batch
+     . ,+poo-flow-user-loop-engine-runtime-receipt-batch-contract+)))
 
 ;;; The command name is stable receipt vocabulary for handoff manifests, not an
 ;;; executable selector or shell command.
@@ -106,4 +148,8 @@
     policy-extension-receipt
     spec-evolution-review-item
     spec-evolution-runtime-manifest-row
+    runtime-capability-descriptor
+    policy-profile-packet
+    runtime-action-packet
+    runtime-receipt-batch
     runtime-snapshot))

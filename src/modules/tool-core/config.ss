@@ -53,6 +53,12 @@
 ;;       Validation belongs to tool-core's user facade: users pass a concrete
 ;;       catalog plus effective session tool policies and receive a report-only
 ;;       receipt. Scheme never dispatches the tool.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (tool-catalog-validation tool-check catalog agent-policy hook-policy)
+;;       ;; => validation receipt
+;;       ```
 ;;     %
 (defrules tool-catalog-validation (metadata)
   ((_ validation-id catalog agent-tool-policy hook-tool-policy

@@ -258,6 +258,8 @@ parallel engines.
 
 ** 10.06.53.80 Next Design Work
 The next concrete design work should be ordered this way:
+The runtime-facing interface branch of this work is specified in
+[[file:54-runtime-abi-pressure-relief-interface.org][54 Runtime ABI Pressure Relief Interface]].
 
 1. Define =work-lane-policy=, =monitor-policy=, =user-gate-policy=,
    =capability-gate-policy=, =claim-policy=, and =handoff-policy= as

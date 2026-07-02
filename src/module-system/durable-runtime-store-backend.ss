@@ -4,10 +4,10 @@
 ;;; owns append, fsync, leases, checkpoint IO, index rebuild, and repair jobs.
 
 (import (only-in :clan/poo/object .ref .slot? object? object<-alist)
-        (only-in :poo-flow/src/core/runtime-adapter
-                 +runtime-request-schema+
-                 make-runtime-command-descriptor
-                 runtime-command-descriptor->manifest)
+        (only-in :poo-flow/src/core/runtime-protocol
+                 +runtime-request-schema+)
+        (only-in :poo-flow/src/core/runtime-command-descriptor
+                 runtime-command-fields->manifest)
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/durable-runtime-store)
 
@@ -752,22 +752,19 @@
            options
            'arguments
            '("durable-runtime-store" "negotiate")))
-         (descriptor
-          (make-runtime-command-descriptor
-           operation
-           executable
-           arguments
-           (poo-flow-durable-runtime-backend-alist-ref backend-row
-                                                       'protocol
-                                                       'stdout-s-expression)
-           (list (cons 'source 'poo-flow.durable.runtime-store)
-                 (cons 'backend-id
-                       (poo-flow-durable-runtime-store-negotiation-receipt-backend-id
-                        receipt))
-                 (cons 'store-id
-                       (poo-flow-durable-runtime-store-negotiation-receipt-store-id
-                        receipt))
-                 (cons 'runtime-executed #f))))
+         (protocol
+          (poo-flow-durable-runtime-backend-alist-ref backend-row
+                                                      'protocol
+                                                      'stdout-s-expression))
+         (metadata
+          (list (cons 'source 'poo-flow.durable.runtime-store)
+                (cons 'backend-id
+                      (poo-flow-durable-runtime-store-negotiation-receipt-backend-id
+                       receipt))
+                (cons 'store-id
+                      (poo-flow-durable-runtime-store-negotiation-receipt-store-id
+                       receipt))
+                (cons 'runtime-executed #f)))
          (envelope
           (list (cons 'schema +runtime-request-schema+)
                 (cons 'runtime 'marlin)
@@ -793,7 +790,13 @@
                        receipt))
                 (cons 'frontier '())))
          (runtime-command-manifest
-          (runtime-command-descriptor->manifest descriptor envelope)))
+          (runtime-command-fields->manifest
+           operation
+           executable
+           arguments
+           protocol
+           metadata
+           envelope)))
     (list
      (cons 'kind 'poo-flow.durable.runtime-store.marlin-handoff)
      (cons 'schema +poo-flow-durable-runtime-store-handoff-schema+)

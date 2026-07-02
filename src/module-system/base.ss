@@ -14,10 +14,8 @@
                  poo-flow-dispatch-receipt->alist
                  poo-flow-runtime-snapshot->alist
                  poo-flow-workflow-run->alist)
-        (only-in :poo-flow/src/core/runtime-adapter
-                 +runtime-request-schema+
-                 make-stdout-runtime-command-descriptor
-                 runtime-command-descriptor->manifest)
+        (only-in :poo-flow/src/core/runtime-protocol
+                 +runtime-request-schema+)
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-default-sandbox-profiles
                  poo-flow-sandbox-profile?
@@ -35,6 +33,7 @@
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/source
         :poo-flow/src/module-system/entrypoints
+        :poo-flow/src/module-system/base-selection-flags
         :poo-flow/src/module-system/observability)
 
 (export poo-flow-user-config-kind
@@ -219,82 +218,6 @@
 ;; : (-> POOObject [Symbol])
 (def (poo-flow-user-module-selection-flags selection)
   (.ref selection 'selection-flags))
-
-;;; Flag metadata is keyed by the flag symbol so extension profiles can replace
-;;; or preserve one logical flag without comparing full metadata payloads.
-;; : (-> UserModuleFlagEntry Symbol)
-(def (poo-flow-user-module-selection-flag-entry-key entry)
-  (if (pair? entry) (car entry) entry))
-
-;;; Membership is scoped to a single selection's flags; it does not inspect
-;;; descriptor feature facts or any realized module catalog.
-;; : (-> Symbol [UserModuleFlagEntry] Boolean)
-(def (poo-flow-user-module-selection-flag-key-member? flag-key flags)
-  (cond
-   ((null? flags) #f)
-   ((equal? flag-key
-            (poo-flow-user-module-selection-flag-entry-key (car flags)))
-    #t)
-   (else
-    (poo-flow-user-module-selection-flag-key-member? flag-key (cdr flags)))))
-
-;;; Repeated logical flag keys patch the existing slot in place. This keeps the
-;;; kernel order visible while letting user init rows refine nested payloads.
-;; : (-> [UserModuleFlagEntry] UserModuleFlagEntry [UserModuleFlagEntry])
-(def (poo-flow-user-module-selection-replace-flag flags replacement)
-  (cond
-   ((null? flags) '())
-   ((equal? (poo-flow-user-module-selection-flag-entry-key (car flags))
-            (poo-flow-user-module-selection-flag-entry-key replacement))
-    (cons replacement (cdr flags)))
-   (else
-    (cons (car flags)
-          (poo-flow-user-module-selection-replace-flag
-           (cdr flags)
-           replacement)))))
-
-;;; Flag extension appends unseen keys and patches seen keys in place, preserving
-;;; the user-facing feature order reported by doctor and presentation output.
-;; : (forall (a) (-> [a] [a] [a]))
-(def (poo-flow-user-module-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
-
-;; : (-> [UserModuleFlagEntry] [UserModuleFlagEntry] [UserModuleFlagEntry])
-(def (poo-flow-user-module-selection-extend-flags/add normalized extra-flags)
-  (cond
-   ((null? extra-flags) normalized)
-   ((poo-flow-user-module-selection-flag-key-member?
-     (poo-flow-user-module-selection-flag-entry-key (car extra-flags))
-     normalized)
-    (poo-flow-user-module-selection-extend-flags/add
-     (poo-flow-user-module-selection-replace-flag normalized (car extra-flags))
-     (cdr extra-flags)))
-   (else
-    (poo-flow-user-module-selection-extend-flags/add
-     (poo-flow-user-module-values/tail normalized (list (car extra-flags)))
-     (cdr extra-flags)))))
-
-;;; Profile extension adds feature flags to an existing module row instead of
-;;; creating duplicate user selections for the same `(group . module)` key.
-;; : (-> [UserModuleFlagEntry] [UserModuleFlagEntry] [UserModuleFlagEntry])
-(def (poo-flow-user-module-selection-extend-flags base-flags extra-flags)
-  (poo-flow-user-module-selection-extend-flags/add base-flags extra-flags))
-
-;;; Source and entrypoint metadata remain first-writer-wins so profile
-;;; extensions can add flags without silently retargeting user-owned files.
-;; : (-> MaybeValue MaybeValue MaybeValue)
-(def (poo-flow-user-module-selection-extend-slot base-value extra-value)
-  (if (eq? base-value 'none) extra-value base-value))
 
 ;;; Selection extension is declaration-layer normalization only; the result is
 ;;; still a user selection and is not a descriptor or activation closure.

@@ -2,7 +2,8 @@
 ;;; Boundary: lightweight module entrypoint registry.
 ;;; Invariant: this owner is data-only; it never imports loaders, resolvers, or POO graphs.
 
-(import :poo-flow/src/module-system/source)
+(import (only-in :std/sugar filter)
+        :poo-flow/src/module-system/source)
 
 (export poo-flow-module-tree-entrypoint
         poo-flow-module-tree-source
@@ -116,9 +117,7 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> PooModuleRegistryValue [PooModuleRegistryValue] Boolean)
 (def (poo-flow-module-registry-member? value values)
-  (cond ((null? values) #f)
-        ((equal? value (car values)) #t)
-        (else (poo-flow-module-registry-member? value (cdr values)))))
+  (and (member value values) #t))
 
 ;;; Boundary: module registry alist ref default is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
@@ -142,19 +141,15 @@
 ;;; forcing source loading or descriptor realization.
 ;; : (-> [(Path Symbol...)] [Alist])
 (def (poo-flow-module-tree-entrypoint-conflicts entrypoint-specs)
-  (cond
-   ((null? entrypoint-specs) '())
-   ((poo-flow-module-tree-entrypoint-name-conflict? (car entrypoint-specs))
-    (cons
-     (list (cons 'code 'module-category-name-conflict)
-           (cons 'module-name
-                 (poo-flow-module-tree-entrypoint-module-name
-                  (car entrypoint-specs)))
-           (cons 'module-root (car (car entrypoint-specs)))
-           (cons 'categories poo-flow-module-category-names))
-     (poo-flow-module-tree-entrypoint-conflicts (cdr entrypoint-specs))))
-   (else
-    (poo-flow-module-tree-entrypoint-conflicts (cdr entrypoint-specs)))))
+  (map (lambda (entrypoint-spec)
+         (list (cons 'code 'module-category-name-conflict)
+               (cons 'module-name
+                     (poo-flow-module-tree-entrypoint-module-name
+                      entrypoint-spec))
+               (cons 'module-root (car entrypoint-spec))
+               (cons 'categories poo-flow-module-category-names)))
+       (filter poo-flow-module-tree-entrypoint-name-conflict?
+               entrypoint-specs)))
 
 ;; : (-> Unit [Alist])
 (def (poo-flow-src-module-tree-entrypoint-conflicts)
@@ -166,42 +161,23 @@
 (def (poo-flow-src-module-tree-root module-name)
   (string-append poo-flow-src-modules-root "/" module-name))
 
-;; : (-> Path [Symbol] [PooModuleSourceRef] [PooModuleSourceRef])
-(def (poo-flow-src-module-tree-entrypoint-source-refs/rev
-      module-root
-      entrypoint-roles
-      source-refs-rev)
-  (if (null? entrypoint-roles)
-    source-refs-rev
-    (poo-flow-src-module-tree-entrypoint-source-refs/rev
-     module-root
-     (cdr entrypoint-roles)
-     (cons (poo-flow-module-tree-source module-root
-                                         (car entrypoint-roles))
-           source-refs-rev))))
-
 ;;; Internal expansion keeps module entrypoints ordered for stable diagnostics.
 ;; : (-> (Path Symbol...) [PooModuleSourceRef])
 (def (poo-flow-src-module-tree-entrypoint-source-refs entrypoint-spec)
   (let ((module-root
         (poo-flow-src-module-tree-root (car entrypoint-spec)))
         (entrypoint-roles (cdr entrypoint-spec)))
-    (reverse
-     (poo-flow-src-module-tree-entrypoint-source-refs/rev
-      module-root
-      entrypoint-roles
-      '()))))
+    (map (lambda (entrypoint-role)
+           (poo-flow-module-tree-source module-root entrypoint-role))
+         entrypoint-roles)))
 
 ;;; Internal recursion flattens the declared tree without forcing source loads.
 ;; : (-> [(Path Symbol...)] [PooModuleSourceRef])
 (def (poo-flow-src-module-tree-entrypoint-source-refs* entrypoint-specs)
-  (if (null? entrypoint-specs)
-    '()
-    (append
-     (poo-flow-src-module-tree-entrypoint-source-refs
-      (car entrypoint-specs))
-     (poo-flow-src-module-tree-entrypoint-source-refs*
-      (cdr entrypoint-specs)))))
+  (foldr append
+         '()
+         (map poo-flow-src-module-tree-entrypoint-source-refs
+              entrypoint-specs)))
 
 ;;; Boundary: upstream module sources are declared and lazy by default.
 ;; : (-> [PooModuleSourceRef])
@@ -309,15 +285,11 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> PooModuleSourceRef [Symbol] [Symbol])
 (def (poo-flow-user-tree-source-policy-violations source-ref responsibilities)
-  (cond ((null? responsibilities) '())
-        ((poo-flow-user-tree-source-allows? source-ref (car responsibilities))
-         (poo-flow-user-tree-source-policy-violations source-ref
-                                                     (cdr responsibilities)))
-        (else
-         (cons (car responsibilities)
-               (poo-flow-user-tree-source-policy-violations
-                source-ref
-                (cdr responsibilities))))))
+  (filter (lambda (responsibility)
+            (not (poo-flow-user-tree-source-allows?
+                  source-ref
+                  responsibility)))
+          responsibilities))
 
 ;; : (-> PooModuleSourceRef [Symbol] Boolean)
 (def (poo-flow-user-tree-source-valid? source-ref responsibilities)

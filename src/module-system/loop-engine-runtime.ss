@@ -6,10 +6,10 @@
                  make-poo-flow-runtime-snapshot
                  poo-flow-runtime-snapshot->alist
                  )
-        (only-in :poo-flow/src/core/runtime-adapter
-                 +runtime-request-schema+
-                 make-stdout-runtime-command-descriptor
-                 runtime-command-descriptor->manifest)
+        (only-in :poo-flow/src/core/runtime-protocol
+                 +runtime-request-schema+)
+        (only-in :poo-flow/src/core/runtime-command-descriptor
+                 runtime-command-fields->manifest)
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-default-sandbox-profiles)
         (only-in :poo-flow/src/modules/sandbox-core/profile-support/policy
@@ -64,6 +64,10 @@
         poo-flow-user-loop-engine-intent-dispatch-receipt
         poo-flow-user-loop-engine-intent-runtime-command-manifest
         poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
+        poo-flow-user-loop-engine-intent-runtime-capability-descriptor
+        poo-flow-user-loop-engine-intent-policy-profile-packet
+        poo-flow-user-loop-engine-intent-runtime-action-packet
+        poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
         poo-flow-user-loop-engine-intent-workflow-agreement
         poo-flow-user-loop-engine-intent-runtime-envelope
         poo-flow-user-loop-engine-intent-runtime-handoff-facts
@@ -102,6 +106,291 @@
 (def (loop-engine-capability-receipt-diagnostic-count receipt)
   (length (loop-engine-capability-receipt-diagnostics receipt)))
 
+;;; Runtime capability descriptors are report-only pressure-relief packets. They
+;;; give runtime authors a narrow contract before any policy/action packet is
+;;; validated or executed.
+;; : (-> Alist Alist)
+(defpoo-runtime-receipt-projection
+  poo-flow-user-loop-engine-intent-runtime-capability-descriptor
+  (intent)
+  (bindings ())
+  (fields
+   (('kind 'runtime-capability-descriptor)
+    ('contract
+     +poo-flow-user-loop-engine-runtime-capability-descriptor-contract+)
+    ('runtime-id "marlin-agent-core")
+    ('runtime-language 'rust)
+    ('runtime-owner "marlin-agent-core")
+    ('transport-class 'manifest)
+    ('abi-id 'poo-flow.loop-engine.runtime-pressure-relief)
+    ('abi-version 1)
+    ('exported-symbols '())
+    ('supported-policy-families
+     '(queue-policy continuation-policy tool-batch-policy
+       model-route-policy evidence-policy failure-policy memory-policy
+       human-gate-policy self-evolution-policy))
+    ('supported-action-kinds
+     '(run observe quiet-skip ask-owner self-repair fallback handoff
+           validate-only))
+    ('supported-receipt-contracts
+     +poo-flow-user-loop-engine-receipt-contracts+)
+    ('runtime-packet-contracts
+     +poo-flow-user-loop-engine-runtime-packet-contracts+)
+    ('max-action-batch-size 1)
+    ('supports-epoch-backing? #f)
+    ('supports-borrowed-bytes? #f)
+    ('supports-durable-leases? #f)
+    ('supports-readiness-gates? #t)
+    ('runtime-executed? #f)
+    ('runtime-executed #f))))
+
+;;; Policy profile packets flatten POO-derived policy rows into a runtime-facing
+;;; contract. Marlin should not need to reconstruct slot inheritance or user UI
+;;; concepts to understand these facts.
+;; : (-> Alist Alist)
+(defpoo-runtime-receipt-projection
+  poo-flow-user-loop-engine-intent-policy-profile-packet
+  (intent)
+  (bindings
+   ((use-case-name
+     (poo-flow-user-loop-engine-intent-use-case-name intent))))
+  (fields
+   (('kind 'policy-profile-packet)
+    ('contract
+     +poo-flow-user-loop-engine-policy-profile-packet-contract+)
+    ('profile-id
+     (poo-flow-user-loop-engine-runtime-id use-case-name
+                                           "policy-profile"))
+    ('policy-epoch
+     (poo-flow-user-loop-engine-runtime-id use-case-name
+                                           "policy-epoch"))
+    ('source-refs (list use-case-name))
+    ('policy-families
+     '(queue-policy continuation-policy tool-batch-policy
+       model-route-policy evidence-policy failure-policy memory-policy
+       human-gate-policy self-evolution-policy projection-policy))
+    ('queue-policy
+     '((steering-drain-policy . drain-one)
+       (follow-up-drain-policy . drain-one)
+       (prioritize-steering . #t)))
+    ('continuation-policy
+     '((allow-accept . #t)
+       (allow-deny . #t)
+       (allow-defer . #t)
+       (allow-rewrite . #t)
+       (require-decision-receipt . #t)))
+    ('tool-batch-policy
+     (list
+      (cons 'execution-mode 'sequential)
+      (cons 'force-sequential #t)
+      (cons 'require-all-tools-to-terminate #t)
+      (cons 'require-before-after-hook-receipts #t)
+      (cons 'resource-policy
+            (poo-flow-user-loop-engine-intent-ref
+             intent
+             'resource-policy
+             '()))))
+    ('model-route-policy
+     '((allow-model-override . #f)
+       (require-route-receipt . #t)
+       (require-no-live-llm-receipt . #f)
+       (allow-context-transform . #t)))
+    ('evidence-policy
+     (list
+      (cons 'capture-events #t)
+      (cons 'capture-node-receipts #t)
+      (cons 'capture-tool-receipts #t)
+      (cons 'capture-content-receipts #t)
+      (cons 'capture-trace #t)
+      (cons 'replayable #t)
+      (cons 'observability
+            (poo-flow-user-loop-engine-intent-ref
+             intent
+             'observability
+             '()))))
+    ('failure-policy
+     '((classify-failure . #t)
+       (allow-retry . #t)
+       (allow-repair-graph . #t)
+       (escalate-unknown-to-human . #t)))
+    ('memory-policy
+     (list
+      (cons 'declared-policies
+            (poo-flow-user-loop-engine-intent-ref
+             intent
+             'memory-policies
+             '()))
+      (cons 'require-contract-validated #t)
+      (cons 'allow-cross-project-memory #f)
+      (cons 'require-source-anchor #t)))
+    ('human-gate-policy
+     (list
+      (cons 'human-audit
+            (poo-flow-user-loop-engine-intent-ref
+             intent
+             'human-audit
+             '()))
+      (cons 'require-for-permission-escalation #t)
+      (cons 'require-for-policy-change #t)
+      (cons 'require-for-cross-project-memory #t)
+      (cons 'require-for-unverified-root-cause #t)))
+    ('self-evolution-policy
+     (list
+      (cons 'spec-evolution-reviews
+            (poo-flow-user-loop-engine-intent-ref
+             intent
+             'spec-evolution-reviews
+             '()))
+      (cons 'require-failure-observation-receipt #t)
+      (cons 'require-root-cause-receipt #t)
+      (cons 'require-intervention-receipt #t)
+      (cons 'require-progress-receipt #t)
+      (cons 'allow-policy-update #f)))
+    ('projection-policy
+     '((privacy-class . public-safe-projection)
+       (public-private-check . projection-boundary)
+       (runtime-executed . #f)))
+    ('privacy-class 'public-safe-projection)
+    ('diagnostics '())
+    ('runtime-executed? #f)
+    ('runtime-executed #f))))
+
+;; : (-> Alist Symbol)
+(def (poo-flow-user-loop-engine-intent-runtime-action-kind intent)
+  (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
+    'run
+    'ask-owner))
+
+;;; Action packets are executable intent, not execution. They make gate and
+;;; readiness outcomes explicit before Marlin receives the request.
+;; : (-> Alist Alist)
+(defpoo-runtime-receipt-projection
+  poo-flow-user-loop-engine-intent-runtime-action-packet
+  (intent)
+  (bindings
+   ((use-case-name
+     (poo-flow-user-loop-engine-intent-use-case-name intent))
+    (action-kind
+     (poo-flow-user-loop-engine-intent-runtime-action-kind intent))
+    (sandbox-agreement
+     (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement intent))))
+  (fields
+   (('kind 'runtime-action-packet)
+    ('contract
+     +poo-flow-user-loop-engine-runtime-action-packet-contract+)
+    ('packet-id
+     (poo-flow-user-loop-engine-runtime-id use-case-name "action-packet"))
+    ('request-id
+     (poo-flow-user-loop-engine-runtime-id use-case-name "request"))
+    ('profile-id
+     (poo-flow-user-loop-engine-runtime-id use-case-name
+                                           "policy-profile"))
+    ('policy-epoch
+     (poo-flow-user-loop-engine-runtime-id use-case-name
+                                           "policy-epoch"))
+    ('action-kind action-kind)
+    ('graph-ref
+     (poo-flow-user-loop-engine-runtime-id use-case-name "graph"))
+    ('policy-scope use-case-name)
+    ('root-ref
+     (poo-flow-user-loop-engine-runtime-id use-case-name "root"))
+    ('candidate-refs
+     (poo-flow-user-loop-engine-use-case-names intent))
+    ('gate-state
+     (list
+      (cons 'status
+            (poo-flow-user-loop-engine-intent-status intent))
+      (cons 'human-audit
+            (poo-flow-user-loop-engine-intent-ref
+             intent
+             'human-audit
+             '()))
+      (cons 'sandbox-handoff-ready?
+            (poo-flow-user-loop-engine-intent-ref
+             sandbox-agreement
+             'handoff-ready?
+             #f))))
+    ('required-capabilities
+     (poo-flow-user-loop-engine-intent-ref
+      (poo-flow-user-loop-engine-intent-ref
+       intent
+       'capability-policy
+       '())
+      'required
+      '()))
+    ('readiness-requirements
+     (list
+      (list
+       (cons 'kind 'runtime-abi-readiness-requirement)
+       (cons 'abi-id 'poo-flow.loop-engine.runtime-pressure-relief)
+       (cons 'abi-version 1)
+       (cons 'required-symbols '())
+       (cons 'runtime-executed #f))))
+    ('readiness-receipts
+     (list
+      (list
+       (cons 'kind 'runtime-abi-readiness-receipt)
+       (cons 'abi-id 'poo-flow.loop-engine.runtime-pressure-relief)
+       (cons 'abi-version 1)
+       (cons 'required-symbol-count 0)
+       (cons 'available-symbol-count 0)
+       (cons 'matched-symbol-count 0)
+       (cons 'missing-symbols '())
+       (cons 'status 'ready)
+       (cons 'runtime-executed #f))))
+    ('evidence-refs
+     '(lineage-receipt selector-receipt resource-dispatch-receipt
+       capability-receipt memory-receipt compression-receipt))
+    ('idempotency-key
+     (poo-flow-user-loop-engine-runtime-id use-case-name "idempotency"))
+    ('watermark
+     (poo-flow-user-loop-engine-runtime-id use-case-name "watermark"))
+    ('lease-ref
+     (poo-flow-user-loop-engine-runtime-id use-case-name "lease"))
+    ('conflict-policy 'diagnostic-first)
+    ('budget-ref
+     (poo-flow-user-loop-engine-intent-ref intent 'budget '()))
+    ('privacy-class 'public-safe-projection)
+    ('fallback-policy
+     (poo-flow-user-loop-engine-intent-ref
+      (poo-flow-user-loop-engine-intent-ref intent 'selector-policy '())
+      'fallback
+      #f))
+    ('diagnostics '())
+    ('runtime-executed? #f)
+    ('runtime-executed #f))))
+
+;;; Receipt batches are templates until a runtime-owned receipt reports actual
+;;; execution. Scheme keeps accepted/rejected packet ids empty.
+;; : (-> Alist Alist)
+(defpoo-runtime-receipt-projection
+  poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
+  (intent)
+  (bindings
+   ((use-case-name
+     (poo-flow-user-loop-engine-intent-use-case-name intent))))
+  (fields
+   (('kind 'runtime-receipt-batch)
+    ('contract
+     +poo-flow-user-loop-engine-runtime-receipt-batch-contract+)
+    ('runtime-id "marlin-agent-core")
+    ('batch-id
+     (poo-flow-user-loop-engine-runtime-id use-case-name "receipt-batch"))
+    ('received-packet-ids '())
+    ('accepted-packet-ids '())
+    ('rejected-packet-ids '())
+    ('action-receipts '())
+    ('capability-receipts '())
+    ('readiness-receipts '())
+    ('lease-receipts '())
+    ('telemetry-refs '())
+    ('watermark
+     (poo-flow-user-loop-engine-runtime-id use-case-name "watermark"))
+    ('status 'not-executed)
+    ('diagnostics '())
+    ('runtime-executed? #f)
+    ('runtime-executed #f))))
+
 ;;; Runtime envelopes are the largest loop-engine handoff object. They carry
 ;;; workflow, sandbox, and operation facts as inert request data for Marlin.
 ;; : (-> Alist Alist)
@@ -126,6 +415,21 @@
                   +poo-flow-user-loop-engine-runtime-object-families+)
             (cons 'receipt-contracts
                   +poo-flow-user-loop-engine-receipt-contracts+)
+            (cons 'runtime-packet-contracts
+                  +poo-flow-user-loop-engine-runtime-packet-contracts+)
+            (cons 'runtime-capability-descriptor
+                  (poo-flow-user-loop-engine-intent-runtime-capability-descriptor
+                   intent))
+            (cons 'policy-profile-packet
+                  (poo-flow-user-loop-engine-intent-policy-profile-packet
+                   intent))
+            (cons 'runtime-action-packets
+                  (list
+                   (poo-flow-user-loop-engine-intent-runtime-action-packet
+                    intent)))
+            (cons 'runtime-receipt-batch-template
+                  (poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
+                   intent))
             (cons 'use-case
                   (poo-flow-user-loop-engine-intent-ref intent 'use-case '()))
             (cons 'use-cases
@@ -243,19 +547,19 @@
 ;;; loop-engine envelope without launching Marlin from Scheme.
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)
-  (runtime-command-descriptor->manifest
-   (make-stdout-runtime-command-descriptor
-    +poo-flow-user-loop-engine-runtime-command-name+
-    +poo-flow-user-loop-engine-runtime-command-executable+
-    +poo-flow-user-loop-engine-runtime-command-arguments+
-    (list
-     (cons 'source 'user-config-loop-engine)
-     (cons 'contract
-           +poo-flow-user-loop-engine-runtime-command-contract+)
-     (cons 'runtime-owner "marlin-agent-core")
-     (cons 'object-families
-           +poo-flow-user-loop-engine-runtime-object-families+)
-     (cons 'runtime-executed #f)))
+  (runtime-command-fields->manifest
+   +poo-flow-user-loop-engine-runtime-command-name+
+   +poo-flow-user-loop-engine-runtime-command-executable+
+   +poo-flow-user-loop-engine-runtime-command-arguments+
+   'stdout-s-expression
+   (list
+    (cons 'source 'user-config-loop-engine)
+    (cons 'contract
+          +poo-flow-user-loop-engine-runtime-command-contract+)
+    (cons 'runtime-owner "marlin-agent-core")
+    (cons 'object-families
+          +poo-flow-user-loop-engine-runtime-object-families+)
+    (cons 'runtime-executed #f))
    (poo-flow-user-loop-engine-intent-runtime-envelope intent)))
 
 ;;; Summaries keep presentation tables small while retaining the descriptor ids
@@ -285,6 +589,8 @@
      +poo-flow-user-loop-engine-runtime-object-families+)
     ('receipt-contracts
      +poo-flow-user-loop-engine-receipt-contracts+)
+    ('runtime-packet-contracts
+     +poo-flow-user-loop-engine-runtime-packet-contracts+)
     ('argv
      (poo-flow-user-loop-engine-intent-ref manifest 'argv '()))
     ('runtime-executed #f))))
@@ -862,6 +1168,18 @@
      +poo-flow-user-loop-engine-runtime-object-families+)
     ('receipt-contracts
      +poo-flow-user-loop-engine-receipt-contracts+)
+    ('runtime-packet-contracts
+     +poo-flow-user-loop-engine-runtime-packet-contracts+)
+    ('runtime-capability-descriptor
+     (poo-flow-user-loop-engine-intent-runtime-capability-descriptor
+      intent))
+    ('policy-profile-packet
+     (poo-flow-user-loop-engine-intent-policy-profile-packet intent))
+    ('runtime-action-packets
+     (list (poo-flow-user-loop-engine-intent-runtime-action-packet intent)))
+    ('runtime-receipt-batch-template
+     (poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
+      intent))
     ('workflow-ref
      (poo-flow-user-loop-engine-intent-workflow-ref intent))
     ('workflow-agreement
@@ -987,6 +1305,19 @@
          +poo-flow-user-loop-engine-handoff-contracts+)
    (cons 'receipt-contracts
          +poo-flow-user-loop-engine-receipt-contracts+)
+   (cons 'runtime-packet-contracts
+         +poo-flow-user-loop-engine-runtime-packet-contracts+)
+   (cons 'runtime-capability-descriptor
+         (poo-flow-user-loop-engine-intent-runtime-capability-descriptor
+          intent))
+   (cons 'policy-profile-packet
+         (poo-flow-user-loop-engine-intent-policy-profile-packet intent))
+   (cons 'runtime-action-packets
+         (list (poo-flow-user-loop-engine-intent-runtime-action-packet
+                intent)))
+   (cons 'runtime-receipt-batch-template
+         (poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
+          intent))
    (cons 'runtime-handoff-facts
          (poo-flow-user-loop-engine-intent-runtime-handoff-facts intent))
    (cons 'workflow-agreement

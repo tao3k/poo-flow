@@ -13,7 +13,8 @@
             ["t/support/performance.ss"
              "t/support/poo-performance.ss"]
             ["t/user-interface-fixtures.ss"
-             "t/fixtures/object-load-valid/objects.ss"]))))
+             "t/fixtures/object-load-valid/objects.ss"
+             "t/support/loop-engine-runtime-manifest-receipts.ss"]))))
 
 ;; : (-> ProjectRoot ContractRoot PooFlowTestingProject)
 (def (poo-flow-testing-project root contract-root)

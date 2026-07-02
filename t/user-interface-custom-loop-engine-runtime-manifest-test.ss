@@ -17,6 +17,8 @@
                  poo-flow-cubeSandbox-module-bundles)
         (only-in :poo-flow/src/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
+        (only-in :poo-flow/t/support/loop-engine-runtime-manifest-receipts
+                 check-custom-loop-runtime-manifest-request-receipts)
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-loop-engine-case))
 
@@ -62,6 +64,10 @@
     policy-extension-receipt
     spec-evolution-review-item
     spec-evolution-runtime-manifest-row
+    runtime-capability-descriptor
+    policy-profile-packet
+    runtime-action-packet
+    runtime-receipt-batch
     runtime-snapshot))
 
 ;; : Alist
@@ -86,8 +92,27 @@
      . poo-flow.spec-evolution.review-item.v1)
     (spec-evolution-runtime-manifest-row
      . poo-flow.spec-evolution.runtime-manifest-row.v1)
+    (runtime-capability-descriptor
+     . poo-flow.runtime.capability-descriptor.v1)
+    (policy-profile-packet
+     . poo-flow.runtime.policy-profile-packet.v1)
+    (runtime-action-packet
+     . poo-flow.runtime.action-packet.v1)
+    (runtime-receipt-batch
+     . poo-flow.runtime.receipt-batch.v1)
     (sandbox-handoff-agreement
      . poo-flow.loop-engine.sandbox-handoff-agreement.v1)))
+
+;; : Alist
+(def expected-loop-engine-runtime-packet-contracts
+  '((runtime-capability-descriptor
+     . poo-flow.runtime.capability-descriptor.v1)
+    (policy-profile-packet
+     . poo-flow.runtime.policy-profile-packet.v1)
+    (runtime-action-packet
+     . poo-flow.runtime.action-packet.v1)
+    (runtime-receipt-batch
+     . poo-flow.runtime.receipt-batch.v1)))
 
 ;; : Symbol
 (def expected-loop-engine-human-audit-result-contract
@@ -136,7 +161,10 @@
   (check-equal? (test-ref runtime-manifest-summary 'object-families)
                 expected-loop-engine-object-families)
   (check-equal? (test-ref runtime-manifest-summary 'receipt-contracts)
-                expected-loop-engine-receipt-contracts))
+                expected-loop-engine-receipt-contracts)
+  (check-equal? (test-ref runtime-manifest-summary
+                          'runtime-packet-contracts)
+                expected-loop-engine-runtime-packet-contracts))
 
 ;;; Discovery assertions keep the legacy govern-loop ABI manifest and the newer
 ;;; runtime handoff manifest on one vocabulary surface for Marlin consumers.
@@ -165,6 +193,14 @@
                   (test-ref runtime-manifest-request 'receipt-contracts))
     (check-equal? (test-ref discovery 'receipt-contracts)
                   (test-ref runtime-manifest-summary 'receipt-contracts))
+    (check-equal? (test-ref discovery 'runtime-packet-contracts)
+                  expected-loop-engine-runtime-packet-contracts)
+    (check-equal? (test-ref discovery 'runtime-packet-contracts)
+                  (test-ref runtime-manifest-request
+                            'runtime-packet-contracts))
+    (check-equal? (test-ref discovery 'runtime-packet-contracts)
+                  (test-ref runtime-manifest-summary
+                            'runtime-packet-contracts))
     (check-equal? (test-ref discovery 'control-owner) 'gerbil)
     (check-equal? (test-ref discovery 'execution-owner) 'marlin-agent-core)
     (check-equal? (test-ref discovery 'runtime-executed) #f)))
@@ -190,6 +226,9 @@
                 expected-loop-engine-object-families)
   (check-equal? (test-ref runtime-manifest-request 'receipt-contracts)
                 expected-loop-engine-receipt-contracts)
+  (check-equal? (test-ref runtime-manifest-request
+                          'runtime-packet-contracts)
+                expected-loop-engine-runtime-packet-contracts)
   (check-equal? (test-ref (test-ref runtime-manifest-request
                                      'lineage-receipt)
                           'lineage-kind)
@@ -199,193 +238,76 @@
                           'selected-branch)
                 'current-system-build-loop))
 
-;;; Manifest receipt assertions verify policy receipts survive serialization
-;;; into the runtime request without becoming runtime actions.
+;;; Runtime packets are the Marlin pressure-relief layer: Scheme projects
+;;; normalized policy/action facts, while execution receipts remain empty.
 ;; : (-> Alist)
-(def (check-custom-loop-runtime-manifest-request-receipts
+(def (check-custom-loop-runtime-manifest-runtime-packets
       runtime-manifest-request)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'lineage-receipt)
-                          'contract)
-                'poo-flow.loop-engine.lineage-receipt.v1)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'lineage-receipt)
-                          'parent-session-refs)
-                '(incoming-ci-request-session))
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'lineage-receipt)
-                          'lineage-kind)
-                'guarded-handoff)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'lineage-receipt)
-                          'lineage-operator)
-                'current-system-build-loop)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'lineage-receipt)
-                          'runtime-executed)
-                #f)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'selector-receipt)
-                          'contract)
-                'poo-flow.loop-engine.selector-receipt.v1)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'selector-receipt)
-                          'candidates)
-                '(current-system-build-loop current-system-recovery-loop))
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'selector-receipt)
-                          'selected-branch)
-                'current-system-build-loop)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'selector-receipt)
-                          'runtime-executed)
-                #f)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'resource-dispatch-receipt)
-                          'contract)
-                'poo-flow.loop-engine.resource-dispatch-receipt.v1)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'resource-dispatch-receipt)
-                          'tool-refs)
-                '(run-shell-command write-workspace-file read-workspace-file))
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'resource-dispatch-receipt)
-                          'dispatch-groups)
-                '(((run-shell-command) . serial)
-                  ((write-workspace-file read-workspace-file) . serial)))
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'resource-dispatch-receipt)
-                          'runtime-executed)
-                #f)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'capability-receipt)
-                          'unsupported-behavior)
-                'handoff-diagnostic)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'capability-receipt)
-                          'valid?)
-                #t)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'memory-receipt)
-                          'commit)
-                '(decision-summary evidence-index handoff-receipt))
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'memory-receipt)
-                          'policy-count)
-                2)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'memory-receipt)
-                          'available-use-cases)
-                '(current-system-build-loop
-                  current-system-recovery-loop))
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'memory-receipt)
-                          'selected-policy-found?)
-                #t)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'memory-receipt)
-                          'state-path)
-                "loop-state/current-system-build.org")
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'memory-receipt)
-                          'runtime-executed)
-                #f)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'compression-receipt)
-                          'contract)
-                'poo-flow.loop-engine.compression-receipt.v1)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'compression-receipt)
-                          'strategy)
-                'handoff-summary)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'compression-receipt)
-                          'lineage-kind)
-                'compressed-ci-session)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'compression-receipt)
-                          'source-session-ref)
-                'loop-engine/current-system-build-loop/session)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'compression-receipt)
-                          'compressed-session-ref)
-                'loop-engine/current-system-build-loop/compressed-session)
-  (check-equal? (test-ref (test-ref runtime-manifest-request
-                                     'compression-receipt)
-                          'runtime-executed)
-                #f)
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-human-audit-review-items)
-                 'pattern)
-                (list expected-loop-engine-spec-evolution-proposal-id))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-runtime-manifest-rows)
-                 'eligible-for-checked-mutation)
-                '(#t))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-runtime-manifest-rows)
-                 'runtime-executed)
-                '(#f))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'session-selector-receipts)
-                 'selector-id)
-                '(selector/current-system-loop-router))
-  (check-equal? (test-ref (car (test-ref runtime-manifest-request
-                                          'session-selector-receipts))
-                          'candidate-ids)
-                '(candidate/current-build candidate/current-recovery))
-  (check-equal? (test-ref (car (test-ref runtime-manifest-request
-                                          'session-selector-receipts))
-                          'fallback-ref)
-                'candidate/current-build)
-  (check-equal? (test-ref (car (test-ref runtime-manifest-request
-                                          'session-selector-receipts))
-                          'selection-state)
-                'pending)
-  (check-equal? (test-ref (car (test-ref runtime-manifest-request
-                                          'session-selector-receipts))
-                          'selected-candidate-ref)
-                #f)
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'session-materialization-receipts)
-                 'session-ref)
-                '(current-system-build-session
-                  current-system-recovery-session))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'session-materialization-receipts)
-                 'runtime-executed)
-                '(#f #f))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-human-audit-review-items)
-                 'decision)
-                '(approved))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-runtime-manifest-rows)
-                 'schema)
-                '(poo-flow.spec-evolution.runtime-manifest-row.v1))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-runtime-manifest-rows)
-                 'human-audit-decision)
-                '(approved))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-runtime-manifest-rows)
-                 'eligible-for-checked-mutation)
-                '(#t))
-  (check-equal? (test-field-values
-                 (test-ref runtime-manifest-request
-                           'spec-evolution-runtime-manifest-rows)
-                 'runtime-executed)
-                '(#f)))
+  (let* ((runtime-capability-descriptor
+          (test-ref runtime-manifest-request
+                    'runtime-capability-descriptor))
+         (policy-profile-packet
+          (test-ref runtime-manifest-request 'policy-profile-packet))
+         (runtime-action-packet
+          (car (test-ref runtime-manifest-request
+                         'runtime-action-packets)))
+         (runtime-receipt-batch-template
+          (test-ref runtime-manifest-request
+                    'runtime-receipt-batch-template)))
+    (check-equal? (test-ref runtime-capability-descriptor 'contract)
+                  'poo-flow.runtime.capability-descriptor.v1)
+    (check-equal? (test-ref runtime-capability-descriptor 'runtime-language)
+                  'rust)
+    (check-equal? (test-ref runtime-capability-descriptor 'transport-class)
+                  'manifest)
+    (check-equal? (test-ref runtime-capability-descriptor
+                            'runtime-packet-contracts)
+                  expected-loop-engine-runtime-packet-contracts)
+    (check-equal? (test-ref runtime-capability-descriptor
+                            'supports-readiness-gates?)
+                  #t)
+    (check-equal? (test-ref runtime-capability-descriptor
+                            'runtime-executed)
+                  #f)
+    (check-equal? (test-ref policy-profile-packet 'contract)
+                  'poo-flow.runtime.policy-profile-packet.v1)
+    (check-equal? (test-ref policy-profile-packet 'profile-id)
+                  'loop-engine/current-system-build-loop/policy-profile)
+    (check-equal? (test-ref policy-profile-packet 'source-refs)
+                  '(current-system-build-loop))
+    (check-equal? (test-ref (test-ref policy-profile-packet
+                                       'queue-policy)
+                            'prioritize-steering)
+                  #t)
+    (check-equal? (test-ref policy-profile-packet 'runtime-executed)
+                  #f)
+    (check-equal? (test-ref runtime-action-packet 'contract)
+                  'poo-flow.runtime.action-packet.v1)
+    (check-equal? (test-ref runtime-action-packet 'action-kind)
+                  'ask-owner)
+    (check-equal? (test-ref runtime-action-packet 'profile-id)
+                  'loop-engine/current-system-build-loop/policy-profile)
+    (check-equal? (test-ref runtime-action-packet 'candidate-refs)
+                  '(current-system-build-loop current-system-recovery-loop))
+    (check-equal? (test-ref (test-ref runtime-action-packet 'gate-state)
+                            'sandbox-handoff-ready?)
+                  #f)
+    (check-equal? (test-field-values
+                   (test-ref runtime-action-packet 'readiness-receipts)
+                   'status)
+                  '(ready))
+    (check-equal? (test-ref runtime-action-packet 'runtime-executed)
+                  #f)
+    (check-equal? (test-ref runtime-receipt-batch-template 'contract)
+                  'poo-flow.runtime.receipt-batch.v1)
+    (check-equal? (test-ref runtime-receipt-batch-template 'status)
+                  'not-executed)
+    (check-equal? (test-ref runtime-receipt-batch-template
+                            'accepted-packet-ids)
+                  '())
+    (check-equal? (test-ref runtime-receipt-batch-template
+                            'runtime-executed)
+                  #f)))
 
 ;;; Manifest graph assertions verify agent and sandbox rows keep the same
 ;;; public shape after entering the handoff request payload.
@@ -453,7 +375,10 @@
           (test-ref intent 'runtime-handoff-facts))
          (sandbox-handoff-agreement
           (test-ref runtime-handoff-facts
-                    'sandbox-handoff-agreement)))
+                    'sandbox-handoff-agreement))
+         (runtime-action-packet
+          (car (test-ref runtime-handoff-facts
+                         'runtime-action-packets))))
     (check-equal? (test-ref runtime-handoff-facts 'kind)
                   'loop-engine-runtime-handoff)
     (check-equal? (test-ref runtime-handoff-facts 'contract)
@@ -469,6 +394,23 @@
                   expected-loop-engine-object-families)
     (check-equal? (test-ref runtime-handoff-facts 'receipt-contracts)
                   expected-loop-engine-receipt-contracts)
+    (check-equal? (test-ref runtime-handoff-facts
+                            'runtime-packet-contracts)
+                  expected-loop-engine-runtime-packet-contracts)
+    (check-equal? (test-ref (test-ref runtime-handoff-facts
+                                       'runtime-capability-descriptor)
+                            'contract)
+                  'poo-flow.runtime.capability-descriptor.v1)
+    (check-equal? (test-ref (test-ref runtime-handoff-facts
+                                       'policy-profile-packet)
+                            'profile-id)
+                  'loop-engine/current-system-build-loop/policy-profile)
+    (check-equal? (test-ref runtime-action-packet 'action-kind)
+                  'ask-owner)
+    (check-equal? (test-ref (test-ref runtime-handoff-facts
+                                       'runtime-receipt-batch-template)
+                            'status)
+                  'not-executed)
     (check-equal? (test-ref (test-ref runtime-handoff-facts
                                        'lineage-receipt)
                             'contract)
@@ -569,6 +511,8 @@
        runtime-manifest-request
        runtime-manifest-summary)
       (check-custom-loop-runtime-manifest-request-contracts
+       runtime-manifest-request)
+      (check-custom-loop-runtime-manifest-runtime-packets
        runtime-manifest-request)
       (check-custom-loop-runtime-manifest-request-receipts
        runtime-manifest-request)

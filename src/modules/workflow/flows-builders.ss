@@ -285,7 +285,7 @@
 ;;; Boundary:
 ;;; - The descriptor is inert until materialized by runtime-adapter code.
 ;;; - Tests may override =arguments= to emulate a runtime response through /bin/echo.
-;; : (-> Symbol String [Alist] RuntimeCommandDescriptor)
+;; : (-> Symbol String [Alist] RuntimeCommandDescriptorValue)
 (def (make-makefile-tool-runtime-command-descriptor name executable . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
          (arguments (workflow-option

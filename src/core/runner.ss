@@ -10,6 +10,7 @@
         :poo-flow/src/core/plan
         :poo-flow/src/core/strategy
         :poo-flow/src/core/policy
+        :poo-flow/src/core/runtime-protocol
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/core/replay
         :poo-flow/src/core/runner-support/validation

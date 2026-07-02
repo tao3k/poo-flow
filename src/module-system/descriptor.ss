@@ -476,10 +476,7 @@
 ;;; Boundary: module name projection preserves activation order.
 ;; : (-> [PooModuleDescriptor] [Symbol])
 (def (poo-flow-module-names modules)
-  (if (null? modules)
-    '()
-    (cons (poo-flow-module-name (car modules))
-          (poo-flow-module-names (cdr modules)))))
+  (map poo-flow-module-name modules))
 
 ;;; Boundary: module member name predicate is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
@@ -599,10 +596,11 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleDescriptor] [Symbol] [MissingModuleImport])
 (def (poo-flow-module-missing-imports-from modules available-names)
-  (if (null? modules)
-    '()
-    (append (poo-flow-module-missing-imports-for (car modules) available-names)
-            (poo-flow-module-missing-imports-from (cdr modules) available-names))))
+  (foldr append
+         '()
+         (map (lambda (module)
+                (poo-flow-module-missing-imports-for module available-names))
+              modules)))
 
 ;;; Boundary: missing import checks run over the same closure activation uses.
 ;; : (-> [PooModuleDescriptor] [MissingModuleImport])
@@ -630,23 +628,14 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> [PooModuleDescriptor] [TaskFamilyDescriptor])
 (def (poo-flow-module-all-task-descriptors modules)
-  (if (null? modules)
-    '()
-    (append (poo-flow-module-task-descriptors (car modules))
-            (poo-flow-module-all-task-descriptors (cdr modules)))))
+  (foldr append '() (map poo-flow-module-task-descriptors modules)))
 
 ;;; Boundary: flow aggregation mirrors task aggregation order.
 ;; : (-> [PooModuleDescriptor] [FlowDeclarationDescriptor])
 (def (poo-flow-module-all-flow-descriptors modules)
-  (if (null? modules)
-    '()
-    (append (poo-flow-module-flow-descriptors (car modules))
-            (poo-flow-module-all-flow-descriptors (cdr modules)))))
+  (foldr append '() (map poo-flow-module-flow-descriptors modules)))
 
 ;;; Boundary: option projections stay at the config/run-config edge.
 ;; : (-> [PooModuleDescriptor] ModuleOptionAlist)
 (def (poo-flow-module-all-options modules)
-  (if (null? modules)
-    '()
-    (append (poo-flow-module-options (car modules))
-            (poo-flow-module-all-options (cdr modules)))))
+  (foldr append '() (map poo-flow-module-options modules)))

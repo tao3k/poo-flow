@@ -3,10 +3,10 @@
 ;;; Invariant: Scheme projects operation intent only; Rust/Marlin owns append,
 ;;; fsync, checkpoint IO, index rebuild, leases, and repair side effects.
 
-(import (only-in :poo-flow/src/core/runtime-adapter
-                 +runtime-request-schema+
-                 make-runtime-command-descriptor
-                 runtime-command-descriptor->manifest)
+(import (only-in :poo-flow/src/core/runtime-protocol
+                 +runtime-request-schema+)
+        (only-in :poo-flow/src/core/runtime-command-descriptor
+                 runtime-command-fields->manifest)
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/durable-runtime-store-backend)
 
@@ -24,16 +24,20 @@
         poo-flow-durable-runtime-store-operation-receipts->alists
         poo-flow-durable-runtime-store-operations->marlin-handoff)
 
+;; : Symbol
 (def +poo-flow-durable-runtime-store-operation-receipt-kind+
   'poo-flow.durable.runtime-store-operation-receipt)
 
+;; : Symbol
 (def +poo-flow-durable-runtime-store-operation-receipt-schema+
   'poo-flow.module-system.durable-runtime-store-operation.receipt.v1)
 
+;; : Symbol
 (def +poo-flow-durable-runtime-store-operation-handoff-schema+
   'poo-flow.module-system.durable-runtime-store-operation.marlin-handoff.v1)
 
 ;; OperationSpec = (Kind LedgerKind CapabilityFlag TargetSlot)
+;; : [DurableRuntimeStoreOperationSpec]
 (def +poo-flow-durable-runtime-store-operation-specs+
   '((append-fact fact-log append-fact fact-log-ref)
     (write-checkpoint checkpoint write-checkpoint checkpoint-store-ref)
@@ -54,11 +58,8 @@
 
 ;; : (-> Symbol (U #f Alist))
 (def (durable-runtime-store-operation-spec operation-kind)
-  (let loop ((rest +poo-flow-durable-runtime-store-operation-specs+))
-    (cond
-     ((null? rest) #f)
-     ((eq? (caar rest) operation-kind) (car rest))
-     (else (loop (cdr rest))))))
+  (find (lambda (spec) (eq? (car spec) operation-kind))
+        +poo-flow-durable-runtime-store-operation-specs+))
 
 ;; : (-> Symbol Symbol Value Alist)
 (def (durable-runtime-store-operation-diagnostic code slot value)
@@ -82,14 +83,11 @@
 ;; : (-> Datum Boolean)
 (def (durable-runtime-store-symbol-list? value)
   (and (list? value)
-       (let loop ((rest value))
-         (cond
-          ((null? rest) #t)
-          ((symbol? (car rest)) (loop (cdr rest)))
-          (else #f)))))
+       (not (find (lambda (item) (not (symbol? item))) value))))
 
 ;;; Runtime store operation receipts are fixed structs; handoff helpers project
 ;;; them into alists only at the Marlin boundary.
+;; : PooDurableRuntimeStoreOperationReceipt
 (defstruct poo-flow-durable-runtime-store-operation-receipt
   (operation-id
    operation-kind
@@ -215,39 +213,20 @@
      #f)))
 
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt [Alist] [PooDurableRuntimeStoreOperationReceipt])
-(def (poo-flow-durable-runtime-store-operation-receipts/rev
-      negotiation
-      specs
-      options
-      receipts-rev)
-  (if (null? specs)
-    receipts-rev
-    (let (spec (car specs))
-      (poo-flow-durable-runtime-store-operation-receipts/rev
-       negotiation
-       (cdr specs)
-       options
-       (cons (poo-flow-durable-runtime-store-operation
-              (car spec)
-              (car spec)
-              negotiation
-              (durable-runtime-store-ref
-               options
-               'payload-summary
-               (list (cons 'operation-kind (car spec))))
-              options)
-             receipts-rev)))))
-
-;; : (-> PooDurableRuntimeStoreNegotiationReceipt [Alist] [PooDurableRuntimeStoreOperationReceipt])
 (def (poo-flow-durable-runtime-store-operation-receipts negotiation
                                                          . maybe-options)
   (let ((options (if (null? maybe-options) '() (car maybe-options))))
-    (reverse
-     (poo-flow-durable-runtime-store-operation-receipts/rev
-      negotiation
-      +poo-flow-durable-runtime-store-operation-specs+
-      options
-      '()))))
+    (map (lambda (spec)
+           (poo-flow-durable-runtime-store-operation
+            (car spec)
+            (car spec)
+            negotiation
+            (durable-runtime-store-ref
+             options
+             'payload-summary
+             (list (cons 'operation-kind (car spec))))
+            options))
+         +poo-flow-durable-runtime-store-operation-specs+)))
 
 ;; : (-> PooDurableRuntimeStoreOperationReceipt Alist)
 (defpoo-module-final-projection
@@ -313,12 +292,9 @@
 
 ;; : (-> [Alist] Boolean)
 (def (durable-runtime-store-operation-rows-valid? rows)
-  (let loop ((rest rows))
-    (cond
-     ((null? rest) #t)
-     ((eq? (durable-runtime-store-ref (car rest) 'valid? #f) #t)
-      (loop (cdr rest)))
-     (else #f))))
+  (not (find (lambda (row)
+               (not (eq? (durable-runtime-store-ref row 'valid? #f) #t)))
+             rows)))
 
 ;; : (-> [PooDurableRuntimeStoreOperationReceipt] [Alist])
 (defpoo-module-final-projection-batch
@@ -345,21 +321,22 @@
           (durable-runtime-store-ref options
                                      'manifest-operation
                                      'durable-runtime-store-operations))
-         (descriptor
-          (make-runtime-command-descriptor
-           operation
-           (durable-runtime-store-ref backend-row
-                                      'executable
-                                      "marlin-runtime-store")
-           (durable-runtime-store-ref options
-                                      'arguments
-                                      '("durable-runtime-store" "operations"))
-           (durable-runtime-store-ref backend-row
-                                      'protocol
-                                      'stdout-s-expression)
-           (list (cons 'source 'poo-flow.durable.runtime-store.operation)
-                 (cons 'operation-count (length operation-rows))
-                 (cons 'runtime-executed #f))))
+         (command-executable
+          (durable-runtime-store-ref backend-row
+                                     'executable
+                                     "marlin-runtime-store"))
+         (command-arguments
+          (durable-runtime-store-ref options
+                                     'arguments
+                                     '("durable-runtime-store" "operations")))
+         (command-protocol
+          (durable-runtime-store-ref backend-row
+                                     'protocol
+                                     'stdout-s-expression))
+         (command-metadata
+          (list (cons 'source 'poo-flow.durable.runtime-store.operation)
+                (cons 'operation-count (length operation-rows))
+                (cons 'runtime-executed #f)))
          (envelope
           (list (cons 'schema +runtime-request-schema+)
                 (cons 'runtime 'marlin)
@@ -388,7 +365,13 @@
                                                  #f))
                 (cons 'frontier '())))
          (manifest
-          (runtime-command-descriptor->manifest descriptor envelope)))
+          (runtime-command-fields->manifest
+           operation
+           command-executable
+           command-arguments
+           command-protocol
+           command-metadata
+           envelope)))
     (list
      (cons 'kind 'poo-flow.durable.runtime-store.operation-handoff)
      (cons 'schema +poo-flow-durable-runtime-store-operation-handoff-schema+)

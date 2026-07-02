@@ -10,32 +10,60 @@
         defpoo-module-final-projection
         defpoo-module-final-projection-batch)
 
-;; : (-> List List List)
+;; poo-flow-module-rows/tail
+;;   : (-> List List List)
+;;   | contract: append fixed projection rows before already-owned tail rows
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-module-rows/tail '((kind . module)) '((name . core)))
+;;       ;; => ((kind . module) (name . core))
+;;       ```
+;;     %
 (def (poo-flow-module-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (append rows tail))
 
-;; : (-> List List List)
+;; poo-flow-module-rows-into/rev
+;;   : (-> List List List)
+;;   | contract: prepend rows in reverse order onto an existing reversed spine
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-module-rows-into/rev '(a b) '(tail))
+;;       ;; => (b a tail)
+;;       ```
+;;     %
 (def (poo-flow-module-rows-into/rev rows rows-rev)
-  (if (null? rows)
-    rows-rev
-    (poo-flow-module-rows-into/rev
-     (cdr rows)
-     (cons (car rows) rows-rev))))
+  (append (reverse rows) rows-rev))
 
+;; poo-flow-module-field-rows
+;;   : (-> FieldRow... Alist)
+;;   | contract: lower fixed field clauses to ordered alist rows
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-module-field-rows (kind 'module) (name 'core))
+;;       ;; => ((kind . module) (name . core))
+;;       ```
+;;     %
 (defrules poo-flow-module-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
+;; poo-flow-module-field-rows/tail
+;;   : (-> List FieldRow... Alist)
+;;   | contract: lower fixed field clauses and append caller-owned tail rows
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-module-field-rows/tail '((tail . value)) (kind 'module))
+;;       ;; => ((kind . module) (tail . value))
+;;       ```
+;;     %
 (defrules poo-flow-module-field-rows/tail ()
   ((_ tail (field value) ...)
    (poo-flow-module-rows/tail
@@ -43,11 +71,23 @@
     tail)))
 
 ;; defpoo-module-final-projection
-;;   : internal syntax generator for fixed module-system alist projections.
-;;     Rows are explicit and ordered at the call site. Field keys are fixed
-;;     symbols, not dynamic expressions. Guarded rows preserve existing safe
-;;     defaults for legacy projection inputs while keeping the final shape
-;;     explicit.
+;;   : (-> ProjectionDeclaration Syntax)
+;;   | contract: generate one fixed module-system alist projection function
+;;   | doc m%
+;;       Rows are explicit and ordered at the call site. Field keys are fixed
+;;       symbols, not dynamic expressions. Guarded rows preserve existing safe
+;;       defaults for legacy projection inputs while keeping the final shape
+;;       explicit.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-module-final-projection module->alist (module)
+;;         (bindings ())
+;;         (fields ((kind 'module))))
+;;       ;; => defines module->alist
+;;       ```
+;;     %
 (defrules defpoo-module-final-projection
   (guard bindings fields)
   ((_ constructor (argument ...)
@@ -67,9 +107,21 @@
        (list (cons 'field-key field-expr) ...)))))
 
 ;; defpoo-module-final-projection-batch
-;;   : internal syntax generator for bounded final projection batches. The
-;;     single-row projector stays explicit at the call site; the generated
-;;     collection function owns only the list guard and map frame.
+;;   : (-> ProjectionBatchDeclaration Syntax)
+;;   | contract: generate a guarded map projection over a list of values
+;;   | doc m%
+;;       The single-row projector stays explicit at the call site; the generated
+;;       collection function owns only the list guard and map frame.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-module-final-projection-batch modules->alist (items)
+;;         (projector module->alist)
+;;         (error-message "expected modules"))
+;;       ;; => defines modules->alist
+;;       ```
+;;     %
 (defrules defpoo-module-final-projection-batch
   (projector error-message)
   ((_ constructor (items)

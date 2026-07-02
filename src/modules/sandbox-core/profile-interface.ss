@@ -2,7 +2,8 @@
 ;;; Boundary: public POO-native sandbox profile authoring interface.
 ;;; Invariant: users write Gerbil POO objects; projection stays report-only.
 
-(import :clan/poo/object
+(import (only-in :std/sugar filter)
+        :clan/poo/object
         :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax)
 
 (export #t
@@ -83,25 +84,24 @@
 (def (profile-metadata-remove-key? key keys)
   (and (member key keys) #t))
 
+;; : (-> Alist [Symbol] Alist)
+(def (profile-metadata-without/filter metadata keys)
+  (filter (lambda (entry)
+            (not (and (pair? entry)
+                      (profile-metadata-remove-key? (car entry) keys))))
+          metadata))
+
 ;;; Boundary: profile metadata without is the policy-visible edge for sandbox,
 ;;; core behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> Alist [Symbol] Alist Alist)
 (def (profile-metadata-without/rev metadata keys result-rev)
-  (cond
-   ((null? metadata) result-rev)
-   ((and (pair? (car metadata))
-         (profile-metadata-remove-key? (caar metadata) keys))
-    (profile-metadata-without/rev (cdr metadata) keys result-rev))
-   (else
-    (profile-metadata-without/rev
-     (cdr metadata)
-     keys
-     (cons (car metadata) result-rev)))))
+  (append (reverse (profile-metadata-without/filter metadata keys))
+          result-rev))
 
 ;; : (-> Alist [Symbol] Alist)
 (def (profile-metadata-without metadata keys)
-  (reverse (profile-metadata-without/rev metadata keys '())))
+  (profile-metadata-without/filter metadata keys))
 
 ;;; Boundary: profile derivation path is the policy-visible edge for sandbox,
 ;;; core behavior, keeping validation, lookup, or projection responsibilities

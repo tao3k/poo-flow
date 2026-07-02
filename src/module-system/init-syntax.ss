@@ -64,17 +64,7 @@
 
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (poo-flow-session-case-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (append rows tail))
 
 ;; : (-> [[Alist]] [Alist] [Alist])
 (def (poo-flow-session-case-row-groups/tail row-groups tail)

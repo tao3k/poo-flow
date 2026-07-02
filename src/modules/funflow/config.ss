@@ -4,11 +4,11 @@
 
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/config-prototype-syntax
         :poo-flow/src/module-system/projection-syntax
         (only-in :poo-flow/src/modules/workflow/cicd-core
                  poo-flow-cicd-alist-ref
                  poo-flow-cicd-symbol-member?)
+        :poo-flow/src/modules/funflow/config-prototypes
         :poo-flow/src/modules/workflow/cicd)
 
 (export poo-flow-funflow-cicd-default-payload
@@ -57,108 +57,6 @@
 (def +poo-flow-funflow-workflow-agreement-contract+
   'poo-flow.funflow.workflow-agreement.v1)
 
-;; : Symbol
-(def +poo-flow-funflow-check-prototype-kind+
-  'poo-flow.funflow.check.prototype)
-
-;; : Symbol
-(def +poo-flow-funflow-pipeline-prototype-kind+
-  'poo-flow.funflow.pipeline.prototype)
-
-;; : Symbol
-(def +poo-flow-funflow-dag-edge-prototype-kind+
-  'poo-flow.funflow.dag-edge.prototype)
-
-;; : Symbol
-(def +poo-flow-funflow-composition-step-prototype-kind+
-  'poo-flow.funflow.composition-step.prototype)
-
-;; : Symbol
-(def +poo-flow-funflow-functional-dag-prototype-kind+
-  'poo-flow.funflow.functional-dag.prototype)
-
-;; : PooFlowFunflowCheckPrototype
-(defpoo-module-config-prototype
-  funflow-check
-  (slots ((kind +poo-flow-funflow-check-prototype-kind+)
-          (check-name #f)
-          (profile-ref #f)
-          (command-vector '())
-          (input-bindings '())
-          (config-sources '())
-          (artifact-outputs '())
-          (cache-intents '())
-          (secret-requirements '())
-          (result-protocol '())
-          (runtime-mode 'manifest-handoff)
-          (dependency-refs '())
-          (durable-task-id #f)
-          (action-class 'idempotent)
-          (compensation-refs '())
-          (artifact-retention 'workflow-retained)
-          (observability #f)
-          (observes '())
-          (guards '())
-          (report #f)
-          (metadata '())
-          (runtime-executed #f))))
-
-;; : PooFlowFunflowPipelinePrototype
-(defpoo-module-config-prototype
-  funflow-pipeline
-  (slots ((kind +poo-flow-funflow-pipeline-prototype-kind+)
-          (pipeline-name #f)
-          (checks '())
-          (metadata '())
-          (runtime-executed #f))))
-
-;; : PooFlowFunflowDagEdgePrototype
-(defpoo-module-config-prototype
-  funflow-dag-edge
-  (slots ((kind +poo-flow-funflow-dag-edge-prototype-kind+)
-          (from #f)
-          (to #f)
-          (composition-style 'kleisli)
-          (metadata '())
-          (runtime-executed #f))))
-
-;; : PooFlowFunflowCompositionStepPrototype
-(defpoo-module-config-prototype
-  funflow-composition-step
-  (slots ((kind +poo-flow-funflow-composition-step-prototype-kind+)
-          (schema 'poo-flow.modules.funflow.composition-step.v1)
-          (step-kind #f)
-          (check-name #f)
-          (from #f)
-          (to #f)
-          (composition-style #f)
-          (metadata '())
-          (runtime-executed #f))))
-
-;; : PooFlowFunflowFunctionalDagPrototype
-(defpoo-module-config-prototype
-  funflow-functional-dag
-  (slots ((kind +poo-flow-funflow-functional-dag-prototype-kind+)
-          (schema 'poo-flow.modules.funflow.functional-dag.v1)
-          (pipeline-name #f)
-          (check-map #f)
-          (composition-style 'arrow-kleisli)
-          (composition-steps '())
-          (composition-step-count 0)
-          (nodes '())
-          (edges '())
-          (edge-count 0)
-          (entry-nodes '())
-          (terminal-nodes '())
-          (ready-order '())
-          (unordered-nodes '())
-          (blocked-order? #f)
-          (diagnostics '())
-          (valid? #t)
-          (metadata '())
-          (runtime-owner "marlin-agent-core")
-          (runtime-executed #f))))
-
 ;; : (-> Symbol Boolean)
 (def (poo-flow-funflow-workflow-ref? workflow-ref)
   (or (eq? workflow-ref 'funflow)
@@ -191,24 +89,14 @@
 
 ;; : (-> [PooFlowCicdCheckMap] Alist)
 (def (poo-flow-funflow-workflow-agreement-summary check-maps)
-  (let loop ((remaining-check-maps check-maps)
-             (pipeline-count 0)
-             (pipeline-names-rev '())
-             (functional-dag-rows-rev '()))
-    (if (null? remaining-check-maps)
-      (poo-flow-module-field-rows
-       (pipeline-count pipeline-count)
-       (pipeline-names (reverse pipeline-names-rev))
-       (functional-dag-rows (reverse functional-dag-rows-rev)))
-      (let* ((check-map (car remaining-check-maps))
-             (pipeline-name (poo-flow-cicd-check-map-name check-map))
-             (functional-dag-row
-              (poo-flow-funflow-functional-dag->alist
-               (poo-flow-funflow-check-map->functional-dag check-map))))
-        (loop (cdr remaining-check-maps)
-              (+ pipeline-count 1)
-              (cons pipeline-name pipeline-names-rev)
-              (cons functional-dag-row functional-dag-rows-rev))))))
+  (poo-flow-module-field-rows
+   (pipeline-count (length check-maps))
+   (pipeline-names (map poo-flow-cicd-check-map-name check-maps))
+   (functional-dag-rows
+    (map (lambda (check-map)
+           (poo-flow-funflow-functional-dag->alist
+            (poo-flow-funflow-check-map->functional-dag check-map)))
+         check-maps))))
 
 ;;; The agreement is report-only data that lets loop-engine handoff receipts
 ;;; prove whether a workflow ref is backed by a Funflow-owned pipeline.
@@ -258,31 +146,6 @@
          (symbol? (car values)))
     (poo-flow-funflow-symbol-list? (cdr values)))
    (else #f)))
-
-;; : (-> POOObject Boolean)
-(defpoo-module-config-kind-predicate
-  poo-flow-funflow-poo-check?
-  +poo-flow-funflow-check-prototype-kind+)
-
-;; : (-> POOObject Boolean)
-(defpoo-module-config-kind-predicate
-  poo-flow-funflow-poo-pipeline?
-  +poo-flow-funflow-pipeline-prototype-kind+)
-
-;; : (-> POOObject Boolean)
-(defpoo-module-config-kind-predicate
-  poo-flow-funflow-dag-edge?
-  +poo-flow-funflow-dag-edge-prototype-kind+)
-
-;; : (-> POOObject Boolean)
-(defpoo-module-config-kind-predicate
-  poo-flow-funflow-composition-step?
-  +poo-flow-funflow-composition-step-prototype-kind+)
-
-;; : (-> POOObject Boolean)
-(defpoo-module-config-kind-predicate
-  poo-flow-funflow-functional-dag?
-  +poo-flow-funflow-functional-dag-prototype-kind+)
 
 ;;; Boundary: funflow optional metadata is the policy-visible edge for policy
 ;;; behavior, keeping validation, lookup, or projection responsibilities

@@ -7,7 +7,7 @@
                  test-case
                  check-equal?
                  run-tests!)
-        (only-in :poo-flow/src/core/runtime-adapter
+        (only-in :poo-flow/src/core/runtime-protocol
                  +runtime-command-descriptor-schema+
                  +runtime-request-schema+)
         :poo-flow/src/modules/agent-sandbox/config

@@ -3,7 +3,8 @@
 ;;; Invariant: observations do not use POO objects, lazy slots, or runtime adapters.
 ;;; Intent: make recursive presentation paths visible without participating in them.
 
-(import :poo-flow/src/module-system/projection-syntax)
+(import (only-in :std/sugar filter)
+        :poo-flow/src/module-system/projection-syntax)
 
 (export poo-flow-module-observation-kind
         make-poo-flow-module-observation
@@ -71,13 +72,7 @@
 ;;; descriptor semantics or executing module loaders.
 ;; : (-> Symbol [Symbol] Boolean)
 (def (poo-flow-module-observation-recursive-stage? stage active-path)
-  (cond
-   ((null? active-path) #f)
-   ((equal? stage (car active-path)) #t)
-   (else
-    (poo-flow-module-observation-recursive-stage?
-     stage
-     (cdr active-path)))))
+  (and (member stage active-path) #t))
 
 ;;; Stage status stays finite and symbolic so test fixtures can assert on it
 ;;; without parsing messages or stack traces.
@@ -92,17 +87,7 @@
 ;;; needed to reproduce the problematic projection walk.
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (poo-flow-module-observation-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (append values tail))
 
 ;; : (-> Symbol Symbol Integer [Symbol] Alist PooFlowModuleObservation)
 (def (poo-flow-module-observation-stage/detail
@@ -213,9 +198,8 @@
 ;; : (-> Symbol Boolean)
 (def (poo-flow-poo-slot-authoring-primitive-slot? slot)
   (and (symbol? slot)
-       (if (member slot +poo-flow-poo-slot-authoring-primitive-slots+)
-         #t
-         #f)))
+       (member slot +poo-flow-poo-slot-authoring-primitive-slots+)
+       #t))
 
 ;;; Boundary: poo slot authoring status is the policy-visible edge for module-
 ;;; system behavior, keeping validation, lookup, or projection responsibilities
@@ -290,31 +274,13 @@
     (car slot-initializer)
     (cdr slot-initializer))))
 
-;;; Boundary: poo slot authoring observations is the policy-visible edge for
-;;; module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> Symbol [Pair] [Alist] [Alist])
-(def (poo-flow-poo-slot-authoring-observations/rev
-      scope
-      slot-initializers
-      observations-rev)
-  (if (null? slot-initializers)
-    observations-rev
-    (poo-flow-poo-slot-authoring-observations/rev
-     scope
-     (cdr slot-initializers)
-     (cons (poo-flow-poo-slot-authoring-observation/alist
-            scope
-            (car slot-initializers))
-           observations-rev))))
-
 ;; : (-> Symbol [Pair] [Alist])
 (def (poo-flow-poo-slot-authoring-observations scope slot-initializers)
-  (reverse
-   (poo-flow-poo-slot-authoring-observations/rev
-    scope
-    slot-initializers
-    '())))
+  (map (lambda (slot-initializer)
+         (poo-flow-poo-slot-authoring-observation/alist
+          scope
+          slot-initializer))
+       slot-initializers))
 
 ;; : (-> Unit PooFlowPooSlotAuthoringSummaryKind)
 (def poo-flow-poo-slot-authoring-summary-kind
@@ -324,34 +290,23 @@
 (def (poo-flow-poo-slot-authoring-observation-ok? observation)
   (eq? (cdr (assoc 'status observation)) 'ok))
 
-;;; Boundary: poo slot authoring statuses is the policy-visible edge for
-;;; module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> [Alist] [Symbol] [Symbol])
-(def (poo-flow-poo-slot-authoring-statuses/rev observations statuses-rev)
-  (if (null? observations)
-    statuses-rev
-    (poo-flow-poo-slot-authoring-statuses/rev
-     (cdr observations)
-     (cons (cdr (assoc 'status (car observations))) statuses-rev))))
-
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-poo-slot-authoring-statuses observations)
-  (reverse
-   (poo-flow-poo-slot-authoring-statuses/rev observations '())))
+  (map (lambda (observation)
+         (cdr (assoc 'status observation)))
+       observations))
 
 ;;; Boundary: poo slot authoring diagnostics is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-poo-slot-authoring-diagnostics observations)
-  (cond
-   ((null? observations) '())
-   ((poo-flow-poo-slot-authoring-observation-ok? (car observations))
-    (poo-flow-poo-slot-authoring-diagnostics (cdr observations)))
-   (else
-    (cons (cdr (assoc 'detail (car observations)))
-          (poo-flow-poo-slot-authoring-diagnostics (cdr observations))))))
+  (map (lambda (observation)
+         (cdr (assoc 'detail observation)))
+       (filter (lambda (observation)
+                 (not (poo-flow-poo-slot-authoring-observation-ok?
+                       observation)))
+               observations)))
 
 ;; : (-> Symbol [Alist] Alist)
 (defpoo-module-final-projection

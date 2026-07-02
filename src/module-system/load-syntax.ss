@@ -232,8 +232,12 @@
               (def binding
                 (begin (include fragment-source)))
               (export binding)))
-           (syntax
-            (begin
-              (def binding
-                (begin (include fragment-source)))
-              (export binding)))))))))
+            (syntax
+             (begin
+               (import :poo-flow/src/modules/session/config-session-syntax
+                       :poo-flow/src/modules/session/config-policy-syntax
+                       :poo-flow/src/modules/session/config
+                       :poo-flow/src/modules/session/objects)
+               (def binding
+                 (begin (include fragment-source)))
+               (export binding)))))))))

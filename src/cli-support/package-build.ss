@@ -36,6 +36,22 @@
 (def +poo-flow-test-support-include-dirs+
   '("t/support"))
 
+(def +poo-flow-runtime-extra-source-files+
+  '("src/core/runtime-protocol.ss"
+    "src/core/runtime-command-invocation.ss"
+    "src/core/runtime-command-descriptor.ss"
+    "src/core/runtime-command.ss"
+    "src/module-system/base-selection-flags.ss"
+    "src/modules/funflow/config-prototypes.ss"
+    "src/modules/session/objects-core.ss"
+    "src/modules/session/objects-handoff.ss"
+    "src/modules/session/objects-graph.ss"
+    "src/modules/session/config-session-syntax.ss"
+    "src/modules/session/config-policy-syntax.ss"))
+
+(def +poo-flow-test-extra-source-files+
+  '("t/support/loop-engine-runtime-manifest-receipts.ss"))
+
 (def +poo-flow-special-source-files+
   '("src/modules/nono-sandbox/_nono.ss"
     "src/cli-support/support.ss"
@@ -63,7 +79,14 @@
 
 (def +poo-flow-runtime-bootstrap-modules+
   '("src/module-system/durable-policy.ss"
+    "src/core/runtime-protocol.ss"
+    "src/core/runtime-command-invocation.ss"
+    "src/core/runtime-command-descriptor.ss"
+    "src/core/runtime-command.ss"
     "src/core/runtime-adapter.ss"
+    "src/modules/session/objects-core.ss"
+    "src/modules/session/objects-handoff.ss"
+    "src/modules/session/objects-graph.ss"
     "src/modules/session/objects.ss"
     "src/modules/session/communication.ss"
     "src/modules/session/registry.ss"
@@ -75,7 +98,12 @@
     "src/module-system/durable-runtime-store-backend.ss"
     "src/module-system/durable-runtime-store-operation.ss"
     "src/module-system/durable-runtime-store-operation-bridge.ss"
-    "src/module-system/durable-recovery-scenario.ss"))
+    "src/module-system/durable-recovery-scenario.ss"
+    "src/module-system/load-syntax.ss"
+    "src/modules/session/receipt-syntax.ss"
+    "src/modules/session/config-session-syntax.ss"
+    "src/modules/session/config-policy-syntax.ss"
+    "src/modules/session/config.ss"))
 
 (def (poo-flow-cli-entry-build-spec _options)
   +poo-flow-cli-entry-module-build-spec+)
@@ -220,9 +248,17 @@
 (def (poo-flow-package-remove-members files excluded)
   (reverse (poo-flow-package-remove-members/rev files excluded [])))
 
+;; : (-> [String] [String] [String])
+(def (poo-flow-package-append-missing files extras)
+  (append files
+          (filter (lambda (extra) (not (member extra files)))
+                  extras)))
+
 (def (poo-flow-runtime-modules)
   (poo-flow-package-remove-members
-   (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)
+   (poo-flow-package-append-missing
+    (poo-flow-package-modules +poo-flow-runtime-include-dirs+ '() #f)
+    +poo-flow-runtime-extra-source-files+)
    +poo-flow-special-source-files+))
 
 (def (poo-flow-runtime-bootstrap-modules)
@@ -235,8 +271,13 @@
      bootstrap)))
 
 (def (poo-flow-test-modules)
-  (append (poo-flow-package-modules +poo-flow-test-include-dirs+ '() #t)
-          (poo-flow-package-modules +poo-flow-test-support-include-dirs+ '() #f)))
+  (poo-flow-package-append-missing
+   (append (poo-flow-package-modules +poo-flow-test-include-dirs+ '() #t)
+           (poo-flow-package-modules
+            +poo-flow-test-support-include-dirs+
+            '()
+            #f))
+   +poo-flow-test-extra-source-files+))
 
 (def (poo-flow-gxc-target file _options)
   [gxc: file])
@@ -290,6 +331,16 @@
             (poo-flow-test-build-spec options)
             +poo-flow-cli-library-build-spec+
             (poo-flow-entry-build-spec options))))
+
+(def (poo-flow-package-library-build-spec/without-bootstrap options)
+  (if (poo-flow-native-build-options? options)
+    (append +poo-flow-ffi-build-spec+
+            (poo-flow-runtime-main-build-spec options)
+            (poo-flow-test-build-spec options)
+            +poo-flow-cli-library-build-spec+)
+    (append (poo-flow-runtime-main-build-spec options)
+            (poo-flow-test-build-spec options)
+            +poo-flow-cli-library-build-spec+)))
 
 (def (spec)
   (poo-flow-package-build-spec []))
@@ -581,9 +632,26 @@
        "runtime-bootstrap"
        (poo-flow-runtime-bootstrap-build-spec options)
        options)
+      (when (poo-flow-native-build-options? options)
+        (poo-flow-make
+         "ffi"
+         +poo-flow-ffi-build-spec+
+         options))
       (poo-flow-make
-       "package"
-       (poo-flow-package-build-spec/without-bootstrap options)
+       "runtime"
+       (poo-flow-runtime-main-build-spec options)
+       options)
+      (poo-flow-make
+       "tests"
+       (poo-flow-test-build-spec options)
+       options)
+      (poo-flow-make
+       "cli-library"
+       +poo-flow-cli-library-build-spec+
+       options)
+      (poo-flow-make
+       "entry"
+       (poo-flow-entry-build-spec options)
        options)
       (poo-flow-write-cli-launcher!))))
 

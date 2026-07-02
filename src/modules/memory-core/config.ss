@@ -52,6 +52,13 @@
 ;;       Validation belongs to memory-core's user facade: users pass a concrete
 ;;       catalog and session memory intents, then receive a report-only receipt.
 ;;       Scheme never recalls, commits, or persists memory.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (memory-catalog-validation memory-check catalog
+;;         (intent recall-plan))
+;;       ;; => validation receipt
+;;       ```
 ;;     %
 (defrules memory-catalog-validation (metadata)
   ((_ validation-id catalog
@@ -181,6 +188,7 @@
                 (poo-flow-memory-core-catalog-manifests catalog))
           (cons ':user-config user-config))))
 
+;; : [[PooUserModuleSelection]]
 (def poo-flow-memory-core-module-bundles
   (list
    (poo-flow-user-module-bundle

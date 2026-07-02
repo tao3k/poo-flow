@@ -69,6 +69,19 @@
 (def +spec-evolution-target-kinds+
   '(spec profile eval policy))
 
+;;; Field-row construction is a projection helper, not a user DSL. Keeping the
+;;; row keys at the call site lets review and runtime manifest projections stay
+;;; auditable while avoiding repeated alist boilerplate.
+;; spec-evolution-field-rows
+;;   : (-> FieldRowClause... Alist)
+;;   | contract: lowers fixed projection clauses to ordinary alist rows
+;;   | doc m%
+;;       # Examples
+;;       ```scheme
+;;       (spec-evolution-field-rows (kind 'review) (runtime-executed #f))
+;;       ;; => ((kind . review) (runtime-executed . #f))
+;;       ```
+;;     %
 (defrules spec-evolution-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
@@ -148,17 +161,7 @@
 
 ;; : (-> Alist Alist Alist)
 (def (spec-evolution-slot-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (append rows tail))
 
 ;; : (-> Object Symbol Value Value)
 (def (spec-evolution-slot object slot default)

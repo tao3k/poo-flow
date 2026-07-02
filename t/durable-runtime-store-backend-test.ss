@@ -9,6 +9,7 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
+        :poo-flow/src/core/runtime-protocol
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/module-system/durable-policy
         :poo-flow/src/module-system/durable-runtime-store

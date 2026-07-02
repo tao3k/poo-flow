@@ -16,17 +16,7 @@
 
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (poo-flow-module-set-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (append values tail))
 
 ;; : (forall (a) (-> [[a]] [a] [a]))
 (def (poo-flow-module-set-groups/tail groups tail)

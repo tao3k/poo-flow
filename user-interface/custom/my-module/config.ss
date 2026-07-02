@@ -5,6 +5,8 @@
 (import (only-in :poo-flow/src/module-system/durable-runtime-store-operation-bridge
                  poo-flow-durable-runtime-store-operations-from-rows
                  poo-flow-durable-runtime-store-rows->marlin-handoff)
+        :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/config
         :poo-flow/src/module-system/init-syntax)
 
 (load! "profiles/session")
