@@ -8,8 +8,10 @@
                  gslph-package-build-receipt-write)
         (only-in :gerbil/gambit
                  current-directory
+                 current-jiffy
                  file-exists?
                  getenv
+                 jiffies-per-second
                  path-expand
                  string=?
                  string-append
@@ -20,7 +22,9 @@
                  make
                  make-clean)
         (only-in :std/misc/process
-                 run-process))
+                 run-process)
+        (only-in :std/sugar
+                 filter))
 
 (export #t)
 
@@ -46,6 +50,12 @@
     "src/modules/session/objects-core.ss"
     "src/modules/session/objects-handoff.ss"
     "src/modules/session/objects-graph.ss"
+    "src/modules/session/config-session-syntax-core.ss"
+    "src/modules/session/config-session-syntax-communication.ss"
+    "src/modules/session/config-session-syntax-selector.ss"
+    "src/modules/session/config-session-syntax-materialization.ss"
+    "src/modules/session/config-session-syntax-agent-node.ss"
+    "src/modules/session/config-session-syntax-agent.ss"
     "src/modules/session/config-session-syntax.ss"
     "src/modules/session/config-policy-syntax.ss"))
 
@@ -101,6 +111,12 @@
     "src/module-system/durable-recovery-scenario.ss"
     "src/module-system/load-syntax.ss"
     "src/modules/session/receipt-syntax.ss"
+    "src/modules/session/config-session-syntax-core.ss"
+    "src/modules/session/config-session-syntax-communication.ss"
+    "src/modules/session/config-session-syntax-selector.ss"
+    "src/modules/session/config-session-syntax-materialization.ss"
+    "src/modules/session/config-session-syntax-agent-node.ss"
+    "src/modules/session/config-session-syntax-agent.ss"
     "src/modules/session/config-session-syntax.ss"
     "src/modules/session/config-policy-syntax.ss"
     "src/modules/session/config.ss"))
@@ -407,6 +423,94 @@
   (newline)
   (force-output))
 
+(def (poo-flow-build-debug-start-line phase label command stage options)
+  (when (poo-flow-build-debug-tracking-options? options)
+    (let* ((target-count (length stage))
+           (target (and (= target-count 1)
+                        (poo-flow-diagnostic-source-path (car stage)))))
+      (display "|poo-flow-compile-start ")
+      (write
+       [phase: phase
+        label: label
+        command: command
+        target-count: target-count
+        target: target
+        srcdir: (poo-flow-package-srcdir)])
+      (newline)
+      (force-output))))
+
+(def (poo-flow-build-elapsed-micros start-jiffy end-jiffy)
+  (quotient (* (- end-jiffy start-jiffy) 1000000)
+            (jiffies-per-second)))
+
+(def (poo-flow-build-debug-output-count stage options status reason)
+  (length
+   (if (and (eq? status 'skipped)
+            (or (eq? reason 'stamp-current)
+                (eq? reason 'receipt-current)))
+     (poo-flow-package-flat-map
+      poo-flow-diagnostic-outputs
+      stage)
+     (poo-flow-stage-output-files stage options))))
+
+(def (poo-flow-build-debug-tracking-line phase
+                                         label
+                                         command
+                                         status
+                                         reason
+                                         stage
+                                         options
+                                         stamp
+                                         receipt-status
+                                         start-jiffy)
+  (when (poo-flow-build-debug-tracking-options? options)
+    (let* ((end-jiffy (current-jiffy))
+           (cache-status (and receipt-status
+                              (gslph-package-build-receipt-status-ref
+                               receipt-status
+                               'status
+                               #f)))
+           (target-count (length stage))
+           (raw-targets-preview
+            (let loop ((rest stage) (remaining 3) (acc []))
+              (if (or (null? rest) (= remaining 0))
+                (reverse acc)
+                (let (source (poo-flow-diagnostic-source-path (car rest)))
+                  (loop (cdr rest)
+                        (if source (- remaining 1) remaining)
+                        (if source (cons source acc) acc))))))
+           (targets-preview
+            (if (<= target-count 3)
+              raw-targets-preview
+              (append raw-targets-preview
+                      [(string-append "...+"
+                                      (number->string (- target-count 3))
+                                      " more")]))))
+      (display "|poo-flow-compile-debug ")
+      (write
+       [phase: phase
+        label: label
+        command: command
+        status: status
+        reason: reason
+        cache-status: cache-status
+        target-count: target-count
+        output-count: (poo-flow-build-debug-output-count
+                       stage
+                       options
+                       status
+                       reason)
+        worker-count: (and (> target-count 1)
+                           (poo-flow-package-worker-count))
+        targets-preview: targets-preview
+        cache-stamp: stamp
+        srcdir: (poo-flow-package-srcdir)
+        elapsed-micros: (poo-flow-build-elapsed-micros
+                         start-jiffy
+                         end-jiffy)])
+      (newline)
+      (force-output))))
+
 (def (poo-flow-all? pred xs)
   (match xs
     ([] #t)
@@ -419,16 +523,50 @@
 (def (poo-flow-package-libdir-prefix)
   (path-expand "poo-flow" (poo-flow-package-libdir)))
 
-(def (poo-flow-stage-cache-stamp-path options)
+(def (poo-flow-stage-cache-stamp-path options . maybe-label)
   (path-expand
-   (cond
-    ((poo-flow-cli-build-options? options) ".compile-cli.stamp")
-    (else ".compile-package.stamp"))
+   (string-append
+    (cond
+     ((poo-flow-cli-build-options? options) ".compile-cli")
+     (else ".compile-package"))
+    (cond
+     ((poo-flow-release-build-options? options) "-release")
+     ((poo-flow-optimized-build-options? options) "-optimized")
+     ((poo-flow-debug-build-options? options) "-debug")
+     (else ""))
+    (if (null? maybe-label)
+      ""
+      (string-append "-" (car maybe-label)))
+    ".stamp")
    (poo-flow-package-libdir-prefix)))
+
+(def (poo-flow-stage-legacy-cache-stamp-path options . maybe-label)
+  (path-expand
+   (string-append
+    (cond
+     ((poo-flow-cli-build-options? options) ".compile-cli")
+     (else ".compile-package"))
+    (if (null? maybe-label)
+      ""
+      (string-append "-" (car maybe-label)))
+    ".stamp")
+   (poo-flow-package-libdir-prefix)))
+
+(def (poo-flow-diagnostic-gxc-file file)
+  (let (source (path-expand file (poo-flow-package-srcdir)))
+    (if (file-exists? source)
+      file
+      (let (source.ss (string-append file ".ss"))
+        (if (file-exists? (path-expand source.ss (poo-flow-package-srcdir)))
+          source.ss
+          file)))))
 
 (def (poo-flow-diagnostic-source-path spec)
   (match spec
-    ([gxc: file . _] (path-expand file (poo-flow-package-srcdir)))
+    ([gxc: file . _]
+     (path-expand
+      (poo-flow-diagnostic-gxc-file file)
+      (poo-flow-package-srcdir)))
     (_ #f)))
 
 (def (poo-flow-stage-default-source-files/rev files sources-rev)
@@ -462,8 +600,80 @@
     (_ #f)))
 
 (def (poo-flow-diagnostic-gxc-outputs file)
-  [(path-expand (string-append file "i")
+  [(path-expand (string-append (poo-flow-diagnostic-gxc-file file) "i")
                 (poo-flow-package-libdir-prefix))])
+
+(def (poo-flow-string-prefix? prefix value)
+  (let (prefix-length (string-length prefix))
+    (and (<= prefix-length (string-length value))
+         (let loop ((index 0))
+           (cond
+            ((= index prefix-length) #t)
+            ((char=? (string-ref prefix index)
+                     (string-ref value index))
+             (loop (+ index 1)))
+            (else #f))))))
+
+(def (poo-flow-native-object-prefix output)
+  (let (file (path-strip-directory output))
+    (let (length (string-length file))
+      (if (and (> length 4)
+               (char=? (string-ref file (- length 4)) #\.)
+               (char=? (string-ref file (- length 3)) #\s)
+               (char=? (string-ref file (- length 2)) #\s)
+               (char=? (string-ref file (- length 1)) #\i))
+        (string-append (substring file 0 (- length 4)) ".o")
+        file))))
+
+(def (poo-flow-string-all-digits-from? value start)
+  (let (length (string-length value))
+    (and (< start length)
+         (let loop ((index start))
+           (cond
+            ((= index length) #t)
+            ((char-numeric? (string-ref value index))
+             (loop (+ index 1)))
+            (else #f))))))
+
+(def (poo-flow-native-object-file-name? prefix file)
+  (and (poo-flow-string-prefix? prefix file)
+       (poo-flow-string-all-digits-from?
+        file
+        (string-length prefix))))
+
+(def (poo-flow-native-object-output-files output)
+  (let* ((directory (path-directory output))
+         (prefix (poo-flow-native-object-prefix output)))
+    (if (and directory (file-exists? directory))
+      (let loop ((files (directory-files directory)) (outputs []))
+        (match files
+          ([]
+           (reverse outputs))
+          ([file . rest]
+           (let (path (path-expand file directory))
+             (loop rest
+                   (if (and (poo-flow-native-object-file-name?
+                             prefix
+                             file)
+                            (file-exists? path))
+                     (cons path outputs)
+                     outputs))))))
+      [])))
+
+(def (poo-flow-diagnostic-output-files spec options)
+  (let (outputs (poo-flow-diagnostic-outputs spec))
+    (if (poo-flow-native-build-options? options)
+      (append outputs
+              (poo-flow-package-flat-map
+               poo-flow-native-object-output-files
+               outputs))
+      outputs)))
+
+(def (poo-flow-stage-output-files stage options)
+  (poo-flow-package-flat-map
+   (lambda (spec)
+     (poo-flow-diagnostic-output-files spec options))
+   stage))
 
 (def (poo-flow-diagnostic-outputs spec)
   (match spec
@@ -471,45 +681,338 @@
     (_ [])))
 
 (def (poo-flow-stage-cacheable? stage options)
-  (and (not (poo-flow-native-build-options? options))
-       (poo-flow-all? poo-flow-diagnostic-gxc-spec? stage)))
+  (poo-flow-all? poo-flow-diagnostic-gxc-spec? stage))
 
-(def (poo-flow-stage-cache-valid? stage options)
+(def (poo-flow-file-mtime-seconds path)
+  (and (file-exists? path)
+       (time->seconds
+        (file-info-last-modification-time
+         (file-info path)))))
+
+(def (poo-flow-source-current-against-output?/mtime source output)
+  (let ((source-time (poo-flow-file-mtime-seconds source))
+        (output-time (poo-flow-file-mtime-seconds output)))
+    (and source-time
+         output-time
+         (<= source-time output-time))))
+
+(def (poo-flow-stage-sources-current-against-stamp?/mtime stage stamp)
+  (poo-flow-all?
+   (lambda (source)
+     (poo-flow-source-current-against-output?/mtime source stamp))
+   (poo-flow-stage-source-files stage)))
+
+(def (poo-flow-gxc-spec-lightweight-outputs-current?/mtime spec)
+  (let ((source (poo-flow-diagnostic-source-path spec))
+        (outputs (poo-flow-diagnostic-outputs spec)))
+    (and source
+         (not (null? outputs))
+         (poo-flow-all?
+          (lambda (output)
+            (poo-flow-source-current-against-output?/mtime source output))
+          outputs))))
+
+(def (poo-flow-stage-lightweight-outputs-current?/mtime stage)
+  (poo-flow-all?
+   poo-flow-gxc-spec-lightweight-outputs-current?/mtime
+   stage))
+
+(def (poo-flow-stage-fast-stamp-current?/mtime stage options stamp)
   (and (not (poo-flow-force-build-options? options))
        (poo-flow-stage-cacheable? stage options)
-       (let* ((stamp (poo-flow-stage-cache-stamp-path options))
-              (sources (poo-flow-stage-source-files stage))
-              (outputs (poo-flow-package-flat-map
-                        poo-flow-diagnostic-outputs
-                        stage))
-              (status (gslph-package-build-receipt-status
-                       stamp
-                       expected-sources: sources
-                       expected-outputs: outputs)))
-         (eq? (gslph-package-build-receipt-status-ref status 'status 'stale)
-              'current))))
+       (file-exists? stamp)
+       (poo-flow-stage-sources-current-against-stamp?/mtime stage stamp)
+       (poo-flow-stage-lightweight-outputs-current?/mtime stage)))
 
-(def (poo-flow-stage-cache-touch! stage options)
+(def (poo-flow-native-objects-current?/mtime source output)
+  (let (outputs (poo-flow-native-object-output-files output))
+    (and (not (null? outputs))
+         (poo-flow-source-current-against-any-output?/mtime source outputs))))
+
+(def (poo-flow-gxc-spec-outputs-current?/mtime spec options)
+  (let ((source (poo-flow-diagnostic-source-path spec))
+        (outputs (poo-flow-diagnostic-outputs spec)))
+    (and source
+         (not (null? outputs))
+         (let (source-time (poo-flow-file-mtime-seconds source))
+           (and source-time
+                (poo-flow-all?
+                 (lambda (output)
+                   (let (output-time (poo-flow-file-mtime-seconds output))
+                     (and output-time (<= source-time output-time))))
+                 outputs)
+                (or (not (poo-flow-native-build-options? options))
+                    (poo-flow-all?
+                     (lambda (output)
+                       (poo-flow-native-objects-current?/mtime
+                        source
+                        output))
+                     outputs)))))))
+
+(def (poo-flow-source-current-against-outputs?/mtime source outputs)
+  (let (source-time (poo-flow-file-mtime-seconds source))
+    (and source-time
+         (poo-flow-all?
+          (lambda (output)
+            (let (output-time (poo-flow-file-mtime-seconds output))
+              (and output-time (<= source-time output-time))))
+          outputs))))
+
+(def (poo-flow-source-current-against-any-output?/mtime source outputs)
+  (let (source-time (poo-flow-file-mtime-seconds source))
+    (and source-time
+         (let loop ((rest outputs))
+           (match rest
+             ([] #f)
+             ([output . rest]
+              (let (output-time (poo-flow-file-mtime-seconds output))
+                (or (and output-time (<= source-time output-time))
+                    (loop rest)))))))))
+
+(def (poo-flow-default-sources-current?/mtime stage options)
+  (let (outputs (poo-flow-stage-output-files stage options))
+    (and (not (null? outputs))
+         (poo-flow-all?
+          (lambda (source)
+            (poo-flow-source-current-against-outputs?/mtime source outputs))
+          (poo-flow-stage-default-source-files)))))
+
+(def (poo-flow-stage-outputs-current?/mtime stage options)
+  (and (not (null? stage))
+       (poo-flow-all?
+        (lambda (spec)
+          (poo-flow-gxc-spec-outputs-current?/mtime spec options))
+        stage)))
+
+(def (poo-flow-native-stage-stamp-seed-present? options maybe-label)
+  (or (not (poo-flow-native-build-options? options))
+      (file-exists?
+       (apply poo-flow-stage-cache-stamp-path
+              options
+              maybe-label))
+      (file-exists?
+       (apply poo-flow-stage-legacy-cache-stamp-path
+              options
+              maybe-label))))
+
+(def (poo-flow-stage-cache-assess stage options . maybe-label)
+  (cond
+   ((poo-flow-force-build-options? options)
+    (values #f 'forced #f #f))
+   ((not (poo-flow-stage-cacheable? stage options))
+    (values #f 'unsupported-stage-or-native-options #f #f))
+   (else
+    (let* ((stamp (apply poo-flow-stage-cache-stamp-path
+                         options
+                         maybe-label))
+           (fast-current?
+            (poo-flow-stage-fast-stamp-current?/mtime
+             stage
+             options
+             stamp)))
+      (if fast-current?
+        (values #t 'stamp-current #f stamp)
+        (let* ((sources (poo-flow-stage-source-files stage))
+               (outputs (poo-flow-stage-output-files stage options))
+               (status (gslph-package-build-receipt-status
+                        stamp
+                        expected-sources: sources
+                        expected-outputs: outputs))
+               (receipt-status (gslph-package-build-receipt-status-ref
+                                status
+                                'status
+                                'stale)))
+          (cond
+           ((eq? receipt-status 'current)
+            (values #t 'receipt-current status stamp))
+           ((and (poo-flow-native-stage-stamp-seed-present?
+                  options
+                  maybe-label)
+                 (poo-flow-stage-outputs-current?/mtime stage options))
+            (begin
+              (gslph-package-build-receipt-write
+               stamp
+               sources
+               outputs)
+              (values #t 'mtime-current status stamp)))
+           (else
+            (values #f receipt-status status stamp)))))))))
+
+(def (poo-flow-stage-cache-valid? stage options . maybe-label)
+  (call-with-values
+    (lambda ()
+      (apply poo-flow-stage-cache-assess
+             stage
+             options
+             maybe-label))
+    (lambda (current? _reason _receipt-status _stamp)
+      current?)))
+
+(def (poo-flow-native-stage-stamp-present? options maybe-label)
+  (poo-flow-native-stage-stamp-seed-present? options maybe-label))
+
+(def (poo-flow-stage-spec-current? spec options . maybe-label)
+  (let (stage (list spec))
+    (and (not (poo-flow-force-build-options? options))
+         (poo-flow-stage-cacheable? stage options)
+         (poo-flow-native-stage-stamp-present? options maybe-label)
+         (poo-flow-stage-outputs-current?/mtime stage options))))
+
+(def (poo-flow-stage-stale-specs stage options . maybe-label)
+  (filter (lambda (spec)
+            (not (apply poo-flow-stage-spec-current?
+                        spec
+                        options
+                        maybe-label)))
+          stage))
+
+(def (poo-flow-bootstrap-spec-current? spec options . maybe-label)
+  (apply poo-flow-stage-spec-current?
+         spec
+         options
+         maybe-label))
+
+(def (poo-flow-stage-cache-touch! stage options . maybe-label)
   (when (poo-flow-stage-cacheable? stage options)
     (gslph-package-build-receipt-write
-     (poo-flow-stage-cache-stamp-path options)
+     (apply poo-flow-stage-cache-stamp-path
+            options
+            maybe-label)
      (poo-flow-stage-source-files stage)
-     (poo-flow-package-flat-map poo-flow-diagnostic-outputs stage))))
+     (poo-flow-stage-output-files stage options))))
+
+(def (poo-flow-make-profiled-spec label spec options)
+  (let ((stage (list spec))
+        (start-jiffy (current-jiffy)))
+    (if (poo-flow-stage-spec-current? spec options label)
+      (begin
+        (poo-flow-package-message "skip" label stage)
+        (poo-flow-build-debug-tracking-line
+         'package-stage-spec
+         label
+         "profiled std/make"
+         'skipped
+         'mtime-current
+         stage
+         options
+         #f
+         #f
+         start-jiffy))
+      (begin
+        (poo-flow-package-message "compile" label stage)
+        (poo-flow-build-debug-start-line
+         'package-stage-spec
+         label
+         "profiled std/make"
+         stage
+         options)
+        (apply make stage
+               srcdir: (poo-flow-package-srcdir)
+               (poo-flow-make-options options))
+        (poo-flow-build-debug-tracking-line
+         'package-stage-spec
+         label
+         "profiled std/make"
+         'compiled
+         'stale
+         stage
+         options
+         #f
+         #f
+         start-jiffy)))))
+
+(def (poo-flow-make-profiled-stage label stale-stage options)
+  (poo-flow-package-message "compile-profiled" label stale-stage)
+  (for-each
+   (lambda (spec)
+     (poo-flow-make-profiled-spec label spec options))
+   stale-stage))
 
 (def (poo-flow-make label stage options)
   (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "check" label stage)
-  (if (poo-flow-stage-cache-valid? stage options)
-    (begin
-      (poo-flow-package-message "skip" label stage)
-      (display "|note kind=build-cache message=\"package-local gxc direct outputs are current; skipped std/make no-op rebuild\"")
-      (newline))
-    (begin
-      (poo-flow-package-message "compile" label stage)
-      (apply make stage
-             srcdir: (poo-flow-package-srcdir)
-             (poo-flow-package-stage-options stage options))
-      (poo-flow-stage-cache-touch! stage options))))
+  (let (start-jiffy (current-jiffy))
+    (call-with-values
+      (lambda ()
+        (poo-flow-stage-cache-assess stage options label))
+      (lambda (current? reason receipt-status stamp)
+        (if current?
+          (begin
+            (poo-flow-package-message "skip" label stage)
+            (display "|note kind=build-cache message=\"package-local gxc direct outputs are current; skipped std/make no-op rebuild\"")
+            (newline)
+            (poo-flow-build-debug-tracking-line
+             'package-stage
+             label
+             "std/make"
+             'skipped
+             reason
+             stage
+             options
+             stamp
+             receipt-status
+             start-jiffy))
+          (begin
+            (let (stale-stage (poo-flow-stage-stale-specs
+                               stage
+                               options
+                               label))
+              (if (null? stale-stage)
+                (begin
+                  (poo-flow-package-message "skip" label stage)
+                  (display "|note kind=build-cache message=\"package-local gxc direct outputs are current after stale target scan; skipped std/make rebuild\"")
+                  (newline)
+                  (poo-flow-stage-cache-touch! stage options label)
+                  (poo-flow-build-debug-tracking-line
+                   'package-stage
+                   label
+                   "std/make"
+                   'skipped
+                   'mtime-current
+                   stage
+                   options
+                   stamp
+                   receipt-status
+                   start-jiffy))
+                (begin
+                  (if (poo-flow-profiled-stage-options?
+                       label
+                       stale-stage
+                       options)
+                    (poo-flow-make-profiled-stage
+                     label
+                     stale-stage
+                     options)
+                    (begin
+                      (poo-flow-package-message "compile" label stale-stage)
+                      (poo-flow-build-debug-start-line
+                       'package-stage
+                       label
+                       "std/make"
+                       stale-stage
+                       options)
+                      (apply make stale-stage
+                             srcdir: (poo-flow-package-srcdir)
+                             (poo-flow-package-stage-options
+                              stale-stage
+                              options))))
+                  (poo-flow-stage-cache-touch! stage options label)
+                  (poo-flow-build-debug-tracking-line
+                   'package-stage
+                   label
+                   (if (poo-flow-profiled-stage-options?
+                        label
+                        stale-stage
+                        options)
+                     "profiled std/make"
+                     "std/make")
+                   'compiled
+                   reason
+                   stale-stage
+                   options
+                   stamp
+                   receipt-status
+                   start-jiffy))))))))))
 
 (def (poo-flow-make-uncached label stage options)
   (poo-flow-package-require-gxpkg-env!)
@@ -518,11 +1021,78 @@
          srcdir: (poo-flow-package-srcdir)
          (poo-flow-make-options options)))
 
+(def (poo-flow-make-bootstrap-spec label spec options)
+  (let ((stage (list spec))
+        (start-jiffy (current-jiffy)))
+    (if (poo-flow-bootstrap-spec-current? spec options label)
+      (begin
+        (poo-flow-package-message "skip" label stage)
+        (poo-flow-build-debug-tracking-line
+         'package-bootstrap-spec
+         label
+         "sequential std/make"
+         'skipped
+         'mtime-current
+         stage
+         options
+         #f
+         #f
+         start-jiffy))
+      (begin
+        (poo-flow-make-uncached label stage options)
+        (poo-flow-build-debug-tracking-line
+         'package-bootstrap-spec
+         label
+         "sequential std/make"
+         'compiled
+         'stale
+         stage
+         options
+         #f
+         #f
+         start-jiffy)))))
+
 (def (poo-flow-make-bootstrap label stage options)
-  (for-each
-   (lambda (spec)
-     (poo-flow-make-uncached label (list spec) options))
-   stage))
+  (poo-flow-package-require-gxpkg-env!)
+  (poo-flow-package-message "check" label stage)
+  (let (start-jiffy (current-jiffy))
+    (call-with-values
+      (lambda ()
+        (poo-flow-stage-cache-assess stage options label))
+      (lambda (current? reason receipt-status stamp)
+        (if current?
+          (begin
+            (poo-flow-package-message "skip" label stage)
+            (display "|note kind=build-cache message=\"package-local bootstrap outputs are current; skipped sequential bootstrap rebuild\"")
+            (newline)
+            (poo-flow-build-debug-tracking-line
+             'package-bootstrap-stage
+             label
+             "sequential std/make"
+             'skipped
+             reason
+             stage
+             options
+             stamp
+             receipt-status
+             start-jiffy))
+          (begin
+            (for-each
+             (lambda (spec)
+               (poo-flow-make-bootstrap-spec label spec options))
+             stage)
+            (poo-flow-stage-cache-touch! stage options label)
+            (poo-flow-build-debug-tracking-line
+             'package-bootstrap-stage
+             label
+             "sequential std/make"
+             'compiled
+             reason
+             stage
+             options
+             stamp
+             receipt-status
+             start-jiffy)))))))
 
 (def (poo-flow-make-clean label stage)
   (poo-flow-package-require-gxpkg-env!)
@@ -593,6 +1163,25 @@
     ([debug: value . _] value)
     ([_ _ . rest] (poo-flow-debug-build-options? rest))
     ([] #f)))
+
+(def (poo-flow-verbose-build-options? options)
+  (match options
+    ([verbose: value . _] value)
+    ([_ _ . rest] (poo-flow-verbose-build-options? rest))
+    ([] #f)))
+
+(def (poo-flow-build-debug-tracking-options? options)
+  (or (poo-flow-debug-build-options? options)
+      (poo-flow-verbose-build-options? options)))
+
+(def (poo-flow-profiled-stage-label? label)
+  (or (string=? label "runtime")
+      (string=? label "tests")))
+
+(def (poo-flow-profiled-stage-options? label stage options)
+  (and (> (length stage) 1)
+       (poo-flow-build-debug-tracking-options? options)
+       (poo-flow-profiled-stage-label? label)))
 
 (def (poo-flow-cli-build-options? options)
   (match options

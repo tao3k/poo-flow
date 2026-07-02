@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "poo-flow-proof"
+version = "0.1.0"
+description = "Typed Lean artifact generation for poo-flow proof manifests."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+axle = ["axiom-axle>=1.3.0"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.14.11,<0.15"
+]
+
+[project.scripts]
+poo-flow-proof = "poo_flow_proof.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

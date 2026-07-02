@@ -25,6 +25,7 @@
         :poo-flow/src/module-system/sandbox-profile-catalog
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/loop-engine-core
+        :poo-flow/src/module-system/loop-engine-proof-abi
         :poo-flow/src/module-system/loop-engine-runtime-base
         :poo-flow/src/module-system/runtime-projection-syntax
         :poo-flow/src/module-system/loop-engine-runtime-agent
@@ -64,6 +65,17 @@
         poo-flow-user-loop-engine-intent-dispatch-receipt
         poo-flow-user-loop-engine-intent-runtime-command-manifest
         poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
+        poo-flow-user-loop-engine-intent-proof-manifest
+        +poo-flow-loop-engine-proof-abi-version+
+        +poo-flow-loop-engine-proof-obligation-tags+
+        +poo-flow-loop-engine-proof-obligations+
+        +poo-flow-loop-engine-proof-obligation-count+
+        +poo-flow-loop-engine-proof-required-obligation-mask+
+        +poo-flow-loop-engine-proof-abi-tag-width+
+        poo-flow-loop-engine-proof-obligation
+        poo-flow-loop-engine-proof-obligation-mask
+        poo-flow-loop-engine-proof-c-abi
+        poo-flow-loop-engine-proof-manifest
         poo-flow-user-loop-engine-intent-runtime-capability-descriptor
         poo-flow-user-loop-engine-intent-policy-profile-packet
         poo-flow-user-loop-engine-intent-runtime-action-packet
@@ -594,6 +606,22 @@
     ('argv
      (poo-flow-user-loop-engine-intent-ref manifest 'argv '()))
     ('runtime-executed #f))))
+
+;;; Proof manifests keep the Lean/AXLE boundary small: Scheme normalizes the
+;;; user-interface configuration into named obligations, while Lean proves the
+;;; obligations instead of modelling the whole Scheme runtime.
+;; : (-> Alist Alist)
+(def (poo-flow-user-loop-engine-intent-proof-manifest intent)
+  (let* ((manifest
+          (poo-flow-user-loop-engine-intent-runtime-command-manifest
+           intent)))
+    (poo-flow-loop-engine-proof-manifest
+     (poo-flow-user-loop-engine-intent-ref manifest 'request-id #f)
+     (poo-flow-user-loop-engine-intent-ref manifest 'artifact-handle #f)
+     +poo-flow-user-loop-engine-runtime-command-contract+
+     +poo-flow-user-loop-engine-runtime-object-families+
+     +poo-flow-user-loop-engine-receipt-contracts+
+     +poo-flow-user-loop-engine-runtime-packet-contracts+)))
 
 ;;; Runtime snapshots expose the sandbox agreement as the handoff readiness
 ;;; source of truth. This prevents a loop from looking ready when a sandbox
@@ -1244,6 +1272,8 @@
     ('runtime-command-manifest-summary
      (poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
       intent))
+    ('proof-manifest
+     (poo-flow-user-loop-engine-intent-proof-manifest intent))
     ('sandbox
      (poo-flow-user-loop-engine-intent-ref intent 'sandbox '()))
     ('sandbox-profile-refs
@@ -1391,6 +1421,8 @@
    (cons 'runtime-command-manifest-summary
          (poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
           intent))
+   (cons 'proof-manifest
+         (poo-flow-user-loop-engine-intent-proof-manifest intent))
    (cons 'sandbox-runtime-summaries
          (poo-flow-user-loop-engine-intent-ref
           intent

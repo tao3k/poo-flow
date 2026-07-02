@@ -487,6 +487,75 @@
     (check-equal? (test-ref runtime-handoff-facts 'runtime-executed)
                   #f)))
 
+;;; Proof manifests are Scheme-side normalized obligations. Lean/AXLE can prove
+;;; these small rows without modelling the full Gerbil control plane.
+;; : (-> Alist Alist Alist)
+(def (check-custom-loop-proof-manifest intent
+                                       runtime-manifest
+                                       runtime-manifest-request)
+  (let* ((runtime-handoff-facts
+          (test-ref intent 'runtime-handoff-facts))
+         (proof-manifest
+          (test-ref intent 'proof-manifest))
+         (handoff-proof-manifest
+          (test-ref runtime-handoff-facts 'proof-manifest)))
+    (check-equal? proof-manifest handoff-proof-manifest)
+    (check-equal? (test-ref proof-manifest 'kind)
+                  'loop-engine-proof-manifest)
+    (check-equal? (test-ref proof-manifest 'contract)
+                  'poo-flow.loop-engine.proof-manifest.v1)
+    (check-equal? (test-ref proof-manifest 'source)
+                  'user-config-loop-engine)
+    (check-equal? (test-ref proof-manifest 'proof-owner) 'lean)
+    (check-equal? (test-ref proof-manifest 'proof-checker) 'axle)
+    (check-equal? (test-ref proof-manifest 'runtime-owner)
+                  "marlin-agent-core")
+    (check-equal? (test-ref proof-manifest 'scheme-projection)
+                  'poo-flow-user-loop-engine-intent-runtime-command-manifest)
+    (check-equal? (test-ref proof-manifest 'proof-scope)
+                  '(user-interface policy strategy workflow runtime-handoff))
+    (check-equal? (test-ref proof-manifest 'request-id)
+                  (test-ref runtime-manifest 'request-id))
+    (check-equal? (test-ref proof-manifest 'artifact-handle)
+                  (test-ref runtime-manifest 'artifact-handle))
+    (check-equal? (test-ref proof-manifest 'runtime-command-contract)
+                  (test-ref runtime-manifest-request 'contract))
+    (check-equal? (test-ref proof-manifest 'object-families)
+                  expected-loop-engine-object-families)
+    (check-equal? (test-ref proof-manifest 'receipt-contracts)
+                  expected-loop-engine-receipt-contracts)
+    (check-equal? (test-ref proof-manifest 'runtime-packet-contracts)
+                  expected-loop-engine-runtime-packet-contracts)
+    (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
+                            'version)
+                  1)
+    (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
+                            'required-obligation-mask)
+                  31)
+    (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
+                            'obligation-count)
+                  5)
+    (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
+                            'tag-width)
+                  'uint32)
+    (check-equal? (test-ref proof-manifest 'obligation-tags)
+                  '((ui-config-well-formed . 1)
+                    (runtime-command-inert . 2)
+                    (policy-strategy-deterministic . 4)
+                    (workflow-agreement-linked . 8)
+                    (sandbox-boundary-linked . 16)))
+    (check-equal? (test-field-values
+                   (test-ref proof-manifest 'obligations)
+                   'name)
+                  '(ui-config-well-formed
+                    runtime-command-inert
+                    policy-strategy-deterministic
+                    workflow-agreement-linked
+                    sandbox-boundary-linked))
+    (check-equal? (test-ref proof-manifest 'lean-artifact-kind)
+                  'theorem-stubs)
+    (check-equal? (test-ref proof-manifest 'runtime-executed) #f)))
+
 ;;; Runtime manifest is the ABI handoff surface that Marlin can consume without
 ;;; guessing the loop-engine entrypoint or request shape.
 ;; : TestCase
@@ -520,6 +589,10 @@
        runtime-manifest-request)
       (check-custom-loop-runtime-handoff-facts
        intent
+       runtime-manifest-request)
+      (check-custom-loop-proof-manifest
+       intent
+       runtime-manifest
        runtime-manifest-request)
       (check-equal? (test-ref intent 'runtime-executed) #f))))
 

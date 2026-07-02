@@ -12,7 +12,8 @@
                  gslph-source-coverage)
         (only-in :gerbil/gambit
                  exit
-                 pretty-print))
+                 pretty-print
+                 with-exception-catcher))
 
 (gslph-source-coverage
  roots: '("src" "user-interface")
@@ -51,13 +52,25 @@
   (poo-flow-load-package-build!)
   ((eval 'poo-flow-entry-options) release optimized debug cli force verbose))
 
+(def (poo-flow-test-error-status exn files)
+  (display "|poo-flow-test-error ")
+  (write [files: files
+          exception: exn])
+  (newline)
+  (force-output)
+  11)
+
 (def (poo-flow-test files)
-  (poo-flow-load-testing!)
-  (let (receipt
-        ((eval 'testing-build-main)
-         ((eval 'poo-flow-testing-project) "." ".")
-         files))
-    (if ((eval 'testing-receipt-ok?) receipt) 0 1)))
+  (with-exception-catcher
+   (lambda (exn)
+     (poo-flow-test-error-status exn files))
+   (lambda ()
+     (poo-flow-load-testing!)
+     (let (receipt
+           ((eval 'testing-build-main)
+            ((eval 'poo-flow-testing-project) "." ".")
+            files))
+       (if ((eval 'testing-receipt-ok?) receipt) 0 1)))))
 
 (define-entry-point (meta)
   (help: "List package build targets"
