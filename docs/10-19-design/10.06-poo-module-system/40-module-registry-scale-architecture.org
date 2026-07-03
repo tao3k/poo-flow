@@ -54,8 +54,9 @@ Focused module-system gates must not be run through =gxpkg env=. Native =gxtest=
 gxtest t/module-system-lazy-loader-test.ss
 #+end_src
 
-This removes the 20s+ package-env startup from focused agent checks. Full package builds remain package-graph work and should use =gxpkg build -R -O= only when a full release build is the actual gate. The Gerbil package build file =build.ss= is not an agent fast-gate interface.
+This removes the 20s+ package-env startup from focused agent checks. Full package builds remain package-graph work and should use =gxpkg build -g= for normal CI/development parity; reserve =gxpkg build -R -O= for an explicitly requested release/optimization gate. The Gerbil package build file =build.ss= is not an agent fast-gate interface.
 
+Build-cache fast gates must also follow the receipts in [[file:39-gerbil-build-optimization-audit.org::*10.06.39.70 Warm Build Cache Incident (2026-07-02)][10.06.39.70]]: local warm-path checks use =GERBIL_PATH=.gerbil gxi build.ss compile --debug=, one =touch build.ss= run validates the retouch path, and =gxpkg build -g= remains package-manager/CI parity.
 ** 40.60 Regression Rule
 Reject future changes that do any of the following:
 - import =src/modules/*= from =src/module-system/facade.ss=;

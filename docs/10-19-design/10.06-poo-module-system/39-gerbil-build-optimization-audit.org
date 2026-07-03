@@ -63,7 +63,69 @@ The current build implementation has been corrected toward the =gerbil-poo= / =g
 - =GERBIL_BUILD_CORES= remains the normal parallelism knob, matching the reference packages and avoiding custom thread logic in =build.ss=.
 - clean optimized package builds now run a small uncached =runtime-bootstrap= stage for durable runtime store dependencies and loop-engine session-agent graph dependencies before the main package stage. This is a dependency-order repair for modules such as =durable-runtime-store=, =durable-runtime-store-backend=, =durable-runtime-store-operation=, =durable-recovery-scenario=, =session-registry=, =session-agent=, =loop-engine-intent-utils=, =loop-engine-session-agent-graph=, and =loop-engine-runtime-agent=; it is not a fixed worker-count policy. The main package stage still self-schedules through =GERBIL_BUILD_CORES= or the host CPU count.
 - focused CLI compiler/test gates use the project package-local =.gerbil/lib= loadpath and never depend on a user's =~/.gerbil/lib= cache. This is fixed as benchmark scenario =GERBIL-SCHEME-AGENT-R039= under =t/scenarios/performance/focused-build-loadpath/benchmark.ss=: the optimization is not raw speed alone, but moving the focused build surface toward Gerbil/gxpkg's package-local build model while preventing stale user-cache artifacts from entering the compiler path.
-- package-local compilation stays owned by =gxpkg env=. A bare =direnv exec . printenv GERBIL_PATH= returns no package path, while =direnv exec . gxpkg env printenv GERBIL_PATH= returns the project-local =.gerbil= directory. =build.ss= therefore must not compute its own local cache path; it rejects package compile/clean when =GERBIL_PATH= is missing and lets =gxpkg env= provide the package-local environment. The old direct path was measured at =103.54s= and emitted artifacts under =~/.gerbil/lib=; the testing path is now =gxpkg env gxi build.ss test= through the harness testing framework, while package receipt refresh remains =gxpkg env ./build.ss compile= with package-local output under =.gerbil/lib=.
+- package-local compilation is still guarded by =GERBIL_PATH=, but =gxpkg env= is not the ordinary developer hot-path wrapper. A bare =direnv exec . printenv GERBIL_PATH= returns no package path, while =direnv exec . gxpkg env printenv GERBIL_PATH= returns the project-local =.gerbil= directory; that is useful evidence for the package-manager contract, not a reason to wrap every warm build. =build.ss= must not compute its own local cache path; it rejects package compile/clean when =GERBIL_PATH= is missing. The normal warm-path check is =GERBIL_PATH=.gerbil gxi build.ss compile --debug=. Use =gxpkg build -g= for package-manager and CI parity, and reserve =gxpkg env= for explicitly validating gxpkg-provided environments.
+
+** 10.06.39.70 Warm Build Cache Incident (2026-07-02)
+*** Observation
+The 2026-07-02 build regression showed that the slow path was not Gerbil
+startup itself. Plain =gxi -e '(void)'= is enough when the question is runtime
+startup. For this package's warm build path, the measured command is:
+
+#+begin_src sh
+GERBIL_PATH=.gerbil gxi build.ss compile --debug
+#+end_src
+
+Final local receipts after the fix:
+- =GERBIL_PATH=.gerbil gxi build.ss compile --debug= with stamp-current cache:
+  =11.92s=.
+- After =touch build.ss=, the first mtime-current retouch run: =12.08s=.
+- =gxpkg build -g= passes, but includes package-manager wrapper overhead and is
+  a CI/package-manager parity gate rather than the daily hot-path probe.
+- GitHub Actions run =28631185368= completed green: Ubuntu =6m49s= and macOS
+  =7m43s=.
+
+*** Root Cause
+Stage cache stamps include build-level sources such as =build.ss=. When
+=build.ss= changes, installed output artifacts can still be current while the
+stage stamp is older than the build-level source.
+
+The old fallback re-entered receipt/native output enumeration. Runtime and test
+stages had 12k+ native output candidates, so a warm check could inflate into
+minutes even when nothing semantic needed recompilation. The top-level
+=:clan/building= import was another hot-path cost center: it added roughly
+=24.75s= before the build script had reached project-specific decisions.
+
+*** Fix Pattern
+- Retouch existing stage stamps with an O(1) mtime update after lightweight
+  output diagnostics prove the stage is current. In this repo that means
+  Gambit =##os-file-times-set!= with =(current-second)=.
+- Treat skipped =mtime-current= stages like =stamp-current= in debug receipts:
+  report diagnostic outputs, not full native output enumeration.
+- Give =gsc:= and =ssi:= FFI specs explicit source/output projections, including
+  =_nono.scm=, =_nono.ssi=, =_nono.o1=, and the installed =_nono.ssi=, so FFI
+  stages participate in the same stamp cache.
+- Lazy-load =:std/make= only for actual compile/clean paths. Warm skip checks
+  should not load it.
+- Replace heavy generic module discovery imports with a project-local scanner
+  only when exact semantics are preserved, including the =.ss= suffix and the
+  runtime/test module counts.
+
+*** Anti-Patterns
+- Do not read or rewrite giant receipt files just to retouch stamps.
+- Do not pass =current-time= to =##os-file-times-set!=; in this environment that
+  set the stamp mtime to =0= and caused perpetual =mtime-current= misses.
+- Do not strip =.ss= suffixes from scanner results. That breaks
+  special-source removal and changes target counts.
+- Do not benchmark the daily hot path through =gxpkg env=.
+- Do not treat =gxpkg build -g= timing as a direct replacement for the local
+  =gxi= warm-path timing. It is the package-manager parity gate.
+
+*** Guardrail
+For build performance work, record these four receipts separately:
+- plain =gxi -e '(void)'= when measuring runtime startup;
+- =GERBIL_PATH=.gerbil gxi build.ss compile --debug= for the local warm path;
+- one =touch build.ss= retouch-path run;
+- =gxpkg build -g= for package-manager and CI parity.
 
 The next refinement is structural: keep future package-owned modules under explicit include surfaces. If a new tree needs package compilation, it should be added as an include surface with a clear reason instead of expanding a negative exclude list.
 ** 10.06.39.65 Field Receipt: Package Status Fast Path
