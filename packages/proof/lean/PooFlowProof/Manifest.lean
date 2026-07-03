@@ -31,9 +31,11 @@ deriving Repr, DecidableEq
 
 inductive ProofScope where
   | userInterface
+  | profile
   | policy
   | strategy
   | workflow
+  | sandbox
   | runtimeHandoff
 deriving Repr, DecidableEq
 
@@ -92,26 +94,93 @@ deriving Repr, DecidableEq
 
 inductive ObligationName where
   | uiConfigWellFormed
-  | runtimeCommandInert
+  | uiProfilePolicyLinked
+  | loopStrategyPlanWellFormed
+  | executionPolicyCapabilityBounded
   | policyStrategyDeterministic
+  | runtimeCommandInert
   | workflowAgreementLinked
   | sandboxBoundaryLinked
+  | runtimeHandoffOwnerLinked
+  | proofCaseVectorComplete
 deriving Repr, DecidableEq
 
 inductive ObligationClaim where
   | allRuntimeHandoffReferencesArePresent
-  | schemeEmitsManifestWithoutRuntimeExecution
+  | profilePolicySelectionsAreCarriedIntoProofCase
+  | loopStrategyPlanHasExplicitOwnerAndContract
+  | executionPolicyCapabilitiesAreBoundedByProfile
   | policyAndStrategyProjectionHasStablePrecedence
+  | schemeEmitsManifestWithoutRuntimeExecution
   | workflowAgreementIsCarriedIntoRuntimeEnvelope
   | sandboxHandoffAgreementIsCarriedIntoProofScope
+  | runtimeHandoffOwnerRemainsMarlinAgentCore
+  | proofCaseVectorCoversRequiredUiPolicyStrategyFields
 deriving Repr, DecidableEq
 
 inductive ObligationSource where
   | schemeProjection
+  | profilePolicyPacket
+  | loopStrategyPlan
+  | executionPolicy
   | runtimeCommandManifest
   | policyProfilePacket
   | workflowAgreement
   | sandboxHandoffAgreement
+  | runtimeHandoffManifest
+  | proofCaseVector
+deriving Repr, DecidableEq
+
+inductive ObligationDomain where
+  | userInterface
+  | profile
+  | policy
+  | strategy
+  | workflow
+  | sandbox
+  | runtimeHandoff
+deriving Repr, DecidableEq
+
+inductive ObligationCaseFamily where
+  | uiConfig
+  | profilePolicy
+  | loopStrategy
+  | executionPolicy
+  | workflowAgreement
+  | sandboxBoundary
+  | runtimeCommand
+  | proofCaseVector
+deriving Repr, DecidableEq
+
+inductive EvidenceField where
+  | requestId
+  | artifactHandle
+  | objectFamilies
+  | runtimePacketContracts
+  | receiptContracts
+  | policyProfileRefs
+  | strategyOwner
+  | strategyContract
+  | executionOwner
+  | capabilities
+  | frontier
+  | cachePolicy
+  | failurePolicy
+  | policy
+  | strategy
+  | precedence
+  | profile
+  | runtimeCommandContract
+  | runtimeExecuted
+  | workflowAgreement
+  | runtimeEnvelope
+  | sandboxHandoffAgreement
+  | proofScope
+  | runtimeOwner
+  | runtimeHandoff
+  | obligationTags
+  | obligations
+  | cAbi
 deriving Repr, DecidableEq
 
 inductive LeanArtifactKind where
@@ -130,6 +199,7 @@ deriving Repr, DecidableEq
 
 structure ProofAbi where
   version : Nat
+  obligationSchemaVersion : Nat
   requiredObligationMask : UInt32
   tagWidth : TagWidth
   obligationCount : Nat
@@ -139,6 +209,10 @@ structure Obligation where
   name : ObligationName
   claim : ObligationClaim
   source : ObligationSource
+  domain : ObligationDomain
+  caseFamily : ObligationCaseFamily
+  evidenceFields : List EvidenceField
+  runtimeExecution : RuntimeExecution
 deriving Repr, DecidableEq
 
 structure ProofManifest where
@@ -164,19 +238,35 @@ deriving Repr, DecidableEq
 
 def requiredObligationNames : List ObligationName :=
   [ ObligationName.uiConfigWellFormed
-  , ObligationName.runtimeCommandInert
+  , ObligationName.uiProfilePolicyLinked
+  , ObligationName.loopStrategyPlanWellFormed
+  , ObligationName.executionPolicyCapabilityBounded
   , ObligationName.policyStrategyDeterministic
+  , ObligationName.runtimeCommandInert
   , ObligationName.workflowAgreementLinked
   , ObligationName.sandboxBoundaryLinked
+  , ObligationName.runtimeHandoffOwnerLinked
+  , ObligationName.proofCaseVectorComplete
   ]
 
-def requiredObligationMask : UInt32 := 31
+def requiredProofScopes : List ProofScope :=
+  [ ProofScope.userInterface
+  , ProofScope.profile
+  , ProofScope.policy
+  , ProofScope.strategy
+  , ProofScope.workflow
+  , ProofScope.sandbox
+  , ProofScope.runtimeHandoff
+  ]
+
+def requiredObligationMask : UInt32 := 1023
 
 def canonicalProofAbi : ProofAbi :=
   { version := 1
+    obligationSchemaVersion := 1
     requiredObligationMask := requiredObligationMask
     tagWidth := TagWidth.uint32
-    obligationCount := 5 }
+    obligationCount := 10 }
 
 def ProofManifest.hasObligationName
     (manifest : ProofManifest)
@@ -187,9 +277,33 @@ def ProofManifest.hasAllRequiredObligations
     (manifest : ProofManifest) : Bool :=
   requiredObligationNames.all (manifest.hasObligationName ·)
 
+def ProofManifest.hasProofScope
+    (manifest : ProofManifest)
+    (scope : ProofScope) : Bool :=
+  manifest.proofScope.any (fun actual => actual == scope)
+
+def ProofManifest.hasAllRequiredProofScopes
+    (manifest : ProofManifest) : Bool :=
+  requiredProofScopes.all (manifest.hasProofScope ·)
+
+def Obligation.isRuntimeInert (obligation : Obligation) : Bool :=
+  obligation.runtimeExecution == RuntimeExecution.inert
+
+def ProofManifest.allObligationsRuntimeInert
+    (manifest : ProofManifest) : Bool :=
+  manifest.obligations.all (fun obligation => obligation.isRuntimeInert)
+
+def ProofManifest.proofCaseVectorComplete
+    (manifest : ProofManifest) : Bool :=
+  manifest.hasAllRequiredObligations &&
+  manifest.hasAllRequiredProofScopes &&
+  manifest.allObligationsRuntimeInert
+
 structure ProofManifest.Valid (manifest : ProofManifest) : Prop where
   abiMatches : manifest.cAbi = canonicalProofAbi
   hasRequiredObligations : manifest.hasAllRequiredObligations = true
+  hasRequiredProofScopes : manifest.hasAllRequiredProofScopes = true
+  obligationsRuntimeInert : manifest.allObligationsRuntimeInert = true
 
 theorem ProofManifest.runtime_inert_by_type
     (manifest : ProofManifest) :
@@ -203,10 +317,32 @@ theorem ProofManifest.has_required_obligations_of_valid
     manifest.hasAllRequiredObligations = true :=
   valid.hasRequiredObligations
 
+theorem ProofManifest.has_required_scopes_of_valid
+    {manifest : ProofManifest}
+    (valid : manifest.Valid) :
+    manifest.hasAllRequiredProofScopes = true :=
+  valid.hasRequiredProofScopes
+
+theorem ProofManifest.obligations_runtime_inert_of_valid
+    {manifest : ProofManifest}
+    (valid : manifest.Valid) :
+    manifest.allObligationsRuntimeInert = true :=
+  valid.obligationsRuntimeInert
+
 theorem ProofManifest.abi_matches_of_valid
     {manifest : ProofManifest}
     (valid : manifest.Valid) :
     manifest.cAbi = canonicalProofAbi :=
   valid.abiMatches
+
+theorem ProofManifest.proof_case_vector_complete_of_valid
+    {manifest : ProofManifest}
+    (valid : manifest.Valid) :
+    manifest.proofCaseVectorComplete = true := by
+  simp [ ProofManifest.proofCaseVectorComplete
+       , valid.hasRequiredObligations
+       , valid.hasRequiredProofScopes
+       , valid.obligationsRuntimeInert
+       ]
 
 end PooFlowProof
