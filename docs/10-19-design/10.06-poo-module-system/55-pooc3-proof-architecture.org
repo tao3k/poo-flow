@@ -1,0 +1,73 @@
+#+TITLE: 10.06.55 PooC3 Proof Architecture
+#+OPTIONS: toc:2
+
+* 10.06.55.10 Purpose
+
+The proof layer must model PooC3 as control-plane semantics.  C3 decides
+local POO precedence.  PooC3 proof then reasons over the graph produced by
+composition: scopes, dependencies, branches, policy predicates, strategy
+selection, and runtime handoff.
+
+* 10.06.55.20 Core Formula
+
+#+begin_src latex
+\[
+\begin{gathered}
+  \text{C3Order}(M) \neq \text{Safety}(M,\Sigma) \\
+  \text{Step}(s,s',m) \Rightarrow \text{CanStart}(s,m) \\
+  \text{CanStart}(s,m) \equiv
+    \text{DepsCompleted}(s,m)
+    \land \text{ScopeAllowed}(s,m)
+    \land P_m(s)
+    \land Q_m(s)
+    \land G_m(s)
+\end{gathered}
+\]
+#+end_src
+
+* 10.06.55.30 Owner Map
+
+| Owner | Proof Role |
+|-------+------------|
+| =03-gerbil-scheme-c3-foundation.org= | C3 precedence boundary |
+| =33-poo-c3-graph-algorithm-layer.org= | graph algorithm boundary |
+| =41-openrath-profile-policy-plan.org= | profile/policy/capability model |
+| =src/core/policy.ss= | policy control-plane owner |
+| =src/core/strategy.ss= | strategy control-plane owner |
+| =src/loops/strategy.ss= | loop strategy owner |
+
+* 10.06.55.40 Architecture
+
+#+begin_src mermaid
+flowchart TB
+  UI["UI configuration"]
+  POO["POO objects"]
+  C3["C3 precedence"]
+  Graph["PooC3 graph"]
+  Policy["Policy predicates"]
+  Strategy["Strategy selector"]
+  Lean["Lean semantics"]
+  Runtime["Runtime handoff"]
+
+  UI --> POO --> C3 --> Graph --> Strategy
+  Policy --> Strategy
+  Graph --> Lean
+  Policy --> Lean
+  Strategy --> Lean
+  Lean --> Runtime
+#+end_src
+
+* 10.06.55.50 Proof Documents
+
+| File | Responsibility |
+|------+----------------|
+| =55-pooc3-proof-architecture.org= | proof architecture and owner map |
+| =56-pooc3-formal-semantics.org= | mathematical semantics |
+| =57-pooc3-lean-proof-implementation.org= | Lean module layout and theorem gates |
+
+* 10.06.55.60 Acceptance Rule
+
+A flow is proof-backed only when the emitted strategy step carries Lean
+evidence for =CanStart=.  Manifest completeness is only the bridge; it is not
+the policy/strategy correctness proof.
+

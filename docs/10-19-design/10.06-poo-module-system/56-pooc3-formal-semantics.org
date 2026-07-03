@@ -1,0 +1,95 @@
+#+TITLE: 10.06.56 PooC3 Formal Semantics
+#+OPTIONS: toc:2
+
+* 10.06.56.10 Core Mathematical Model
+
+#+begin_src latex
+\[
+\begin{aligned}
+  &M = \text{modules},\quad S = \text{scopes},\quad \Sigma = \text{states} \\
+  &\sigma_M : M \rightarrow S,\quad \sigma_\Sigma : \Sigma \rightarrow S \\
+  &(S,\le) \text{ is a partial order} \\
+  &\quad \forall a.\ a \le a \\
+  &\quad a \le b \land b \le c \Rightarrow a \le c \\
+  &\quad a \le b \land b \le a \Rightarrow a = b \\
+  &D \subseteq M \times M,\quad D(m,d) = \text{module } m \text{ depends on } d \\
+  &B \subseteq M \times M,\quad B(a,b) = \text{branch siblings} \\
+  &P_m : \Sigma \rightarrow \text{Prop},\quad Q_m : \Sigma \rightarrow \text{Prop},\quad
+    G_m : \Sigma \rightarrow \text{Prop} \\
+  &\text{DepsCompleted}(s,m) \equiv
+    \forall d.\ D(m,d) \Rightarrow \text{Completed}(s,d) \\
+  &\text{ScopeAllowed}(s,m) \equiv \sigma_M(m) \le \sigma_\Sigma(s) \\
+  &\text{BranchExclusive}(s) \equiv
+    \forall a,b.\ B(a,b) \Rightarrow \neg(G_a(s) \land G_b(s)) \\
+  &\text{CanStart}(s,m) \equiv
+    \text{DepsCompleted}(s,m)
+    \land \text{ScopeAllowed}(s,m)
+    \land P_m(s)
+    \land Q_m(s)
+    \land G_m(s) \\
+  &\text{StepSound} \equiv
+    \forall s,s',m.\ \text{Step}(s,s',m) \Rightarrow \text{CanStart}(s,m) \\
+  &\text{DependencySound} \equiv
+    \text{CanStart}(s,m) \land D(m,d) \Rightarrow \text{Completed}(s,d) \\
+  &\text{ScopeTransitive} \equiv
+    \text{CanStart}(s,m) \land \sigma_\Sigma(s) \le p
+    \Rightarrow \sigma_M(m) \le p \\
+  &\text{BranchSound} \equiv
+    B(a,b) \land \text{CanStart}(s,a) \land \text{CanStart}(s,b)
+    \Rightarrow \bot
+\end{aligned}
+\]
+#+end_src
+
+* 10.06.56.20 Lean Shape
+
+#+begin_src lean
+structure CanStart (spec : FlowSpec Module Scope State)
+    (state : State) (module : Module) : Prop where
+  depsCompleted :
+    (dependency : Module) ->
+    spec.dependsOn module dependency ->
+    spec.completed state dependency
+  scopeAllowed :
+    spec.scopeOrder.le (spec.moduleScope module) (spec.activeScope state)
+  policyHolds : spec.policyAllows state module
+  preconditionHolds : spec.precondition state module
+  guardHolds : spec.guard state module
+
+theorem start_sound (step : Step spec state) :
+  CanStart spec state step.module
+
+theorem no_sibling_branch_start
+    (exclusive : BranchExclusiveAt spec state)
+    (sibling : spec.branchSibling left right)
+    (leftStart : CanStart spec state left)
+    (rightStart : CanStart spec state right) :
+    False
+#+end_src
+
+* 10.06.56.30 Transition Diagram
+
+#+begin_src mermaid
+flowchart LR
+  D["DepsCompleted"]
+  S["ScopeAllowed"]
+  P["Policy P_m"]
+  Q["Precondition Q_m"]
+  G["Guard G_m"]
+  C["CanStart"]
+  T["Step"]
+
+  D --> C
+  S --> C
+  P --> C
+  Q --> C
+  G --> C
+  C --> T
+#+end_src
+
+* 10.06.56.40 Boundary
+
+C3 linearization produces an ordered frontier.  It does not prove that a
+frontier item may execute.  PooC3 strategy must prove =CanStart= for the
+selected module.
+

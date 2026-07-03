@@ -1,0 +1,93 @@
+#+TITLE: 10.06.57 PooC3 Lean Proof Implementation
+#+OPTIONS: toc:2
+
+* 10.06.57.10 Goal
+
+The Lean implementation must prove PooC3 execution semantics, not only manifest
+shape.  The first proof milestone is the generic =CanStart= semantics plus a
+loop-engine instance with dependency, branch, scope, and policy theorems.
+
+* 10.06.57.20 Module Layout
+
+#+begin_src mermaid
+flowchart TB
+  Root["PooFlowProof.lean"]
+  Manifest["Manifest.lean"]
+  UiCase["UiCase.lean"]
+  Sem["PooC3/Semantics.lean"]
+  Loop["PooC3/LoopEngine.lean"]
+  Generated["Generated/LoopEngine.lean"]
+
+  Root --> Manifest
+  Root --> UiCase
+  Root --> Sem
+  Root --> Loop
+  Root --> Generated
+  UiCase --> Manifest
+  Loop --> Sem
+  Generated --> UiCase
+#+end_src
+
+* 10.06.57.30 Lean Theorem Gates
+
+#+begin_src lean
+-- Generic PooC3 semantics.
+theorem start_sound :
+  Step spec state -> CanStart spec state module
+
+theorem deps_completed_of_can_start :
+  CanStart spec state module ->
+  spec.dependsOn module dependency ->
+  spec.completed state dependency
+
+theorem scope_allowed_transitive :
+  CanStart spec state module ->
+  spec.scopeOrder.le (spec.activeScope state) parentScope ->
+  spec.scopeOrder.le (spec.moduleScope module) parentScope
+
+theorem no_sibling_branch_start :
+  BranchExclusiveAt spec state ->
+  spec.branchSibling left right ->
+  CanStart spec state left ->
+  CanStart spec state right ->
+  False
+
+-- Loop-engine instance.
+theorem choose_strategy_requires_policy :
+  CanStart loopSpec state LoopModule.chooseStrategy ->
+  loopCompleted state LoopModule.resolvePolicy
+
+theorem runtime_handoff_requires_sandbox :
+  CanStart loopSpec state LoopModule.runtimeHandoff ->
+  loopCompleted state LoopModule.enforceSandbox
+#+end_src
+
+* 10.06.57.40 Implementation Phases
+
+#+begin_src mermaid
+gantt
+  title PooC3 Proof Implementation Phases
+  dateFormat  YYYY-MM-DD
+  section Lean
+  Core semantics              :done, 2026-07-03, 1d
+  Loop-engine example         :done, 2026-07-03, 1d
+  Generated Scheme projection :active, 2026-07-04, 2d
+  UI case family expansion    :2026-07-06, 3d
+  section Gerbil
+  Declarative proof manifest macro :2026-07-04, 2d
+  POO policy object projection     :2026-07-06, 3d
+#+end_src
+
+* 10.06.57.50 Acceptance Criteria
+
+A generated UI case cannot reach runtime handoff unless Lean proves:
+
+#+begin_src latex
+\[
+  \text{Step}(s,s',m) \Rightarrow \text{CanStart}(s,m)
+\]
+#+end_src
+
+The =CanStart= evidence must include dependency completion, scope containment,
+policy allowance, module precondition, and branch guard.
+
