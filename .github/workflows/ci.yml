@@ -8,6 +8,55 @@ permissions:
   contents: read
 
 jobs:
+  lean-proof:
+    name: POO Flow Lean proof bridge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@v7.0.0
+
+      - name: Restore Lean cache
+        id: lean-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: |
+            ~/.elan
+            packages/proof/lean/.lake
+          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+          restore-keys: |
+            lean-proof-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Install elan
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -x "$HOME/.elan/bin/lake" ]; then
+            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+              | sh -s -- -y --default-toolchain none
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          cd packages/proof/lean
+          "$HOME/.elan/bin/lake" --version
+
+      - name: Build Lean proof bridge
+        working-directory: packages/proof/lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake build
+          lake build ffiSmoke
+          .lake/build/bin/ffiSmoke
+
+      - name: Save Lean cache
+        if: steps.lean-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: |
+            ~/.elan
+            packages/proof/lean/.lake
+          key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
+
   native:
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
