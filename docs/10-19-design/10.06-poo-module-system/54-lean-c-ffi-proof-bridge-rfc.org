@@ -175,6 +175,15 @@ against the required obligation list.
 The =uv= package remains useful for generating Lean files and coordinating AXLE
 checks, but it is not part of the trusted proof base.
 
+** 2026-07-02-04: Proof-Case Vector IR
+The first proof ABI was too coarse for user-interface cases because a flat
+obligation tag list can only prove that names are present. The Scheme boundary
+now emits a proof-case vector IR from =src/module-system/loop-engine-proof-abi.ss=:
+each obligation has =name=, =claim=, =source=, =domain=, =case-family=,
+=evidence-fields=, and =runtime-executed=. Lean should prove policy/strategy
+properties over this vector, while C keeps exposing ABI version, tag width,
+obligation count, and required-obligation mask. Python remains a generator and
+runner only.
 * Validation Receipts
 
 Current validation commands for this RFC line:
