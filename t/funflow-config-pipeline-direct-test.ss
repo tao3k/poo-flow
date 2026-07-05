@@ -2,7 +2,7 @@
 ;;; Boundary: direct Funflow POO config lowers to CI/CD runtime facts.
 
 (import (only-in :std/sugar match)
-        (only-in :std/test check-equal?)
+        (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/workflow-cicd-config
@@ -11,7 +11,7 @@
                  poo-flow-funflow-pipeline-runtime-command-manifests)
         :poo-flow/src/modules/workflow/cicd)
 
-(export run-funflow-config-pipeline-direct-checks)
+(export funflow-config-pipeline-direct-test)
 
 'poo-flow-import-side-effect-test-suite?
 
@@ -190,4 +190,7 @@
                   '(agent/poo-object-extension))
     'ok))
 
-(run-funflow-config-pipeline-direct-checks)
+(def funflow-config-pipeline-direct-test
+  (test-suite "poo-flow Funflow direct config pipeline"
+    (test-case "lowers direct Funflow POO config to CI/CD runtime facts"
+      (check-equal? (run-funflow-config-pipeline-direct-checks) 'ok))))

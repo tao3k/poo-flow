@@ -1,0 +1,767 @@
+#+TITLE: 10.06.58 PooC3 Session Lifecycle Proof Link
+#+PROPERTY: header-args :mkdirp yes
+
+* 10.06.58.10 Intent
+
+This document records the implementation contract for proving the session
+lifecycle boundary used by the Scheme control plane.
+
+The proof target is not the Scheme interpreter. The proof target is the typed
+projection emitted from POO-native session, policy, strategy, placement, and
+handoff objects into Lean lifecycle declarations.
+
+* 10.06.58.20 Scheme Boundary
+
+The current implementation evidence maps to these Scheme-side surfaces:
+
+| Surface | Proof Atom |
+| src/modules/session/objects.ss | public session object facade |
+| src/modules/session/objects-core.ss | chunk, lineage, placement, value |
+| src/modules/session/objects-handoff.ss | handoff receipt ABI |
+
+The handoff boundary is intentionally report-only:
+
+| Receipt Field | Proof Fact |
+| runtime owner marlin-agent-core | runtimeOwnerMarlin |
+| runtime-executed #f | runtimeExecutedFalse |
+| handoff-required #t | handoffRequiredTrue |
+| runtime parses Scheme source #f | runtimeParsesSchemeSourceFalse |
+| Scheme manufactures runtime handlers #f | schemeManufacturesRuntimeHandlersFalse |
+
+* 10.06.58.30 Lifecycle Model
+
+#+begin_src latex
+\[
+\begin{aligned}
+SessionValue(s) &\Rightarrow
+  Chunk(s) \land Lineage(s) \land PlacementResolved(s) \\
+SubagentRegistered(s) &\Rightarrow AgentRegistered(s) \\
+CanSend(s) &\Rightarrow
+  AgentRegistered(s)
+  \land SubagentRegistered(s)
+  \land ChannelAuthorized(s) \\
+HandoffReceipt(s) &\Rightarrow
+  RuntimeSummary(s)
+  \land RuntimeExecutedFalse(s)
+  \land HandoffRequiredTrue(s)
+  \land RuntimeOwnerMarlin(s)
+  \land RuntimeParsesSchemeSourceFalse(s)
+  \land SchemeManufacturesRuntimeHandlersFalse(s) \\
+HandoffSummary(s) &\Rightarrow
+  Chunk(s)
+  \land Lineage(s)
+  \land Placement(s)
+  \land PlacementResolved(s)
+  \land SessionValue(s)
+  \land AgentRegistered(s)
+  \land SubagentRegistered(s)
+  \land ChannelAuthorized(s)
+  \land MessageDispatched(s)
+  \land RuntimeSummary(s)
+  \land HandoffReceipt(s)
+  \land RuntimeHandoff(s)
+\end{aligned}
+\]
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+  chunk["session-chunk"] --> lineage["session-lineage"]
+  chunk --> placement["session-placement"]
+  lineage --> resolved["placement-resolution"]
+  placement --> resolved
+  resolved --> value["session-value"]
+  value --> agent["agent-registration"]
+  agent --> subagent["subagent-registration"]
+  agent --> channel["channel-authorization"]
+  subagent --> channel
+  channel --> message["message-dispatch"]
+  message --> runtimeSummary["runtime-summary"]
+  runtimeSummary --> receipt["session-handoff-receipt"]
+  receipt --> handoff["runtime-handoff"]
+  handoff --> summary["handoff-summary"]
+#+end_src
+
+* 10.06.58.40 Lean Implementation
+
+The Lean implementation lives in:
+
+#+begin_src text
+packages/proof/lean/PooFlowProof/PooC3/SessionLifecycle.lean
+#+end_src
+
+The module defines:
+
+| Lean Name | Role |
+| SessionModule | lifecycle atom family |
+| SessionState | typed projection target |
+| SessionDependsOn | lifecycle dependency relation |
+| sessionSpec | FlowSpec instance |
+| SessionStateConsistent | cross-field consistency assumptions |
+| sessionDependencyRank | acyclic dependency proof witness |
+
+* 10.06.58.50 Theorem Gates
+
+#+begin_src lean
+import PooFlowProof.PooC3.SessionLifecycle
+
+open PooFlowProof.PooC3
+open PooFlowProof.PooC3.SessionLifecycle
+
+#check session_no_self_dependency
+#check session_no_two_dependency_cycle
+#check placement_resolution_requires_no_missing_profile
+#check session_value_requires_placement_resolution
+#check subagent_registration_requires_agent_registration
+#check channel_authorization_requires_agent_registration
+#check channel_authorization_requires_subagent_registration
+#check message_dispatch_requires_channel_authorization
+#check runtime_summary_requires_message_dispatch
+#check handoff_receipt_requires_runtime_summary
+#check handoff_receipt_static_runtime_boundary
+#check runtime_handoff_requires_handoff_receipt
+#check handoff_summary_requires_runtime_handoff
+#check message_dispatch_requires_registered_pair
+#check handoff_summary_requires_complete_lifecycle
+#check handoff_summary_required_conditions
+#+end_src
+
+* 10.06.58.60 Projection Contract
+
+The Scheme-to-Lean link should project POO session objects into the exact
+`SessionState` fields. The projection is valid only when the Scheme source
+preserves these facts:
+
+| Scheme Object | Required Lean Fact |
+| session chunk | chunkPresent |
+| session lineage | lineagePresent |
+| session placement | placementPresent |
+| placement diagnostics without missing-profile | not placementMissingProfile |
+| placement resolved | placementResolved |
+| session value | valuePresent |
+| registered agent | agentRegistered |
+| registered subagent | subagentRegistered |
+| approved communication edge | channelAuthorized |
+| dispatched message | messageDispatched |
+| runtime summary | runtimeSummaryPresent |
+| handoff receipt | handoffReceiptPresent |
+| runtime handoff | runtimeHandoffPresent |
+| handoff summary | handoffSummaryPresent |
+
+* 10.06.58.65 Implemented Projection Surface
+
+The first concrete projection bridge is:
+
+#+begin_src scheme
+poo-flow-session-handoff->lean-facts
+#+end_src
+
+It lives beside the existing handoff ABI projection:
+
+#+begin_src text
+src/modules/session/objects-handoff.ss
+#+end_src
+
+The Lean proof surface is now split by project model boundary instead of
+placing every obligation in the scenario bridge:
+
+| Lean module | Project model boundary |
+| PooFlowProof.PooC3.Profile | profile declaration, governor, policy set, runtime manifest |
+| PooFlowProof.PooC3.Sandbox | sandbox profile, tool/resource/capability policy, execution grant |
+| PooFlowProof.PooC3.SessionLifecycle | session values, placement, agent graph, dispatch, handoff |
+| PooFlowProof.PooC3.FunctionalFlow | functional flow input, pure transform, validation, handoff, receipt |
+| PooFlowProof.PooC3.LoopEngine | PooC3 loop and module dependency semantics |
+| PooFlowProof.PooC3.UserInterface | UI scenario gates and benchmark preconditions |
+| PooFlowProof.PooC3.ScenarioProof | cross-model composition and Scheme projection packets |
+
+The current Scheme owners for these boundaries are:
+
+| Boundary | Scheme owner selectors |
+| profile | src/module-system/profiles/kernel-bundles.ss; src/modules/funflow/config.ss |
+| sandbox | src/modules/agent-sandbox/api.ss; src/modules/agent-sandbox/profile-validation.ss; src/modules/agent-sandbox/profile-descriptor.ss |
+| session | src/modules/session/objects-core.ss; src/modules/session/objects-handoff.ss; src/modules/session/objects-graph.ss; src/modules/session/agent.ss; src/modules/session/config-session-runtime.ss |
+| loop | src/module-system/loop-engine-core.ss; src/module-system/loop-engine-object-rows.ss; src/module-system/loop-engine-contract.ss |
+| functional flow | src/modules/funflow/config-prototypes.ss; src/modules/funflow/config.ss; src/core/flow-strand.ss; src/core/runner.ss |
+
+#+begin_src mermaid
+flowchart LR
+  profile["Profile"] --> ui["UserInterface"]
+  sandbox["Sandbox"] --> session["SessionLifecycle"]
+  funflow["FunctionalFlow"] --> session
+  loop["LoopEngine"] --> ui
+  ui --> scenario["ScenarioProof"]
+  session --> scenario
+  profile --> scenario
+  sandbox --> scenario
+  funflow --> scenario
+#+end_src
+
+The module-level gates are:
+
+#+begin_src lean
+#check ProfileState
+#check runtime_manifest_blocks_without_selector_policy
+#check runtime_manifest_blocks_without_memory_policy
+#check SandboxState
+#check execution_grant_blocks_without_tool_policy
+#check execution_grant_blocks_without_resource_policy
+#check execution_grant_blocks_without_capability_policy
+#check PooFlowProof.PooC3.SessionLifecycle.ChannelReceiptProjection
+#check PooFlowProof.PooC3.SessionLifecycle.StrictAgentGraphProjection
+#check PooFlowProof.PooC3.SessionLifecycle.strict_projection_blocks_message_dispatch_without_authorized_receipts
+#check PooFlowProof.PooC3.SessionLifecycle.strict_projection_blocks_handoff_receipt_without_runtime_summary
+#check FlowState
+#check transform_blocks_without_input
+#check validation_blocks_without_pure_transform
+#check handoff_blocks_without_validation
+#check receipt_blocks_without_handoff
+#check PooFlowProof.PooC3.UserInterface.strategy_plan_blocks_without_selector_policy
+#check PooFlowProof.PooC3.UserInterface.runtime_manifest_blocks_without_memory_policy
+#check PooFlowProof.PooC3.UserInterface.marlin_handoff_blocks_without_runtime_manifest
+#check PooFlowProof.PooC3.UserInterface.scenario_benchmark_blocks_without_performance_fixture
+#check PooFlowProof.PooC3.UserInterface.UiScenarioFact
+#check PooFlowProof.PooC3.UserInterface.uiScenarioStateOfFacts
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_local_validation_without_strategy_plan
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_runtime_manifest_without_strategy_plan
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_benchmark_without_l1_report
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_benchmark_without_performance_fixture
+#check PooFlowProof.PooC3.UserInterface.UiScenarioProjectionFailureMatrix
+#+end_src
+
+Session channel receipt and strict agent graph projection are owned by
+=SessionLifecycle=. =ScenarioProof= keeps forwarding theorem names during the
+migration, but it should not define session endpoint authorization semantics
+directly.
+
+UI strategy, runtime manifest, handoff, and scenario benchmark blockers are
+owned by =UserInterface=. =ScenarioProof= should compose those blockers into
+scenario packets and failure matrices instead of re-proving UI dependency
+semantics locally.
+
+UI scenario facts projected from Scheme are also owned by =UserInterface=.
+=ScenarioProof= keeps compatibility aliases for the old names, but
+=UiScenarioFact=, =uiScenarioStateOfFacts=, and
+=UiScenarioProjectionFailureMatrix= are now part of the UI model surface.
+
+The Scheme projection now exposes the same boundary as a typed fact-key
+contract, not an informal table:
+
+#+begin_src scheme
+poo-flow-session-handoff-lean-fact-key-contracts
+poo-flow-ui-scenario-lean-fact-key-contracts
+poo-flow-lean-fact-contract-complete?
+#+end_src
+
+Each contract entry maps one emitted key to its Lean owner and constructor or
+failure theorem:
+
+#+begin_src latex
+\[
+\begin{aligned}
+Contract(k) =
+  \langle Key(k), Kind(k), LeanOwner(k), LeanName(k),
+          SourceSlot(k), Polarity(k) \rangle
+\end{aligned}
+\]
+#+end_src
+
+The projection smoke now checks both directions:
+
+#+begin_src latex
+\[
+\begin{aligned}
+\forall c \in Contracts.\ Key(c) \in EmittedFacts \\
+\forall f \in EmittedFacts.\ \exists c \in Contracts.\ Key(c)=Key(f)
+\end{aligned}
+\]
+#+end_src
+
+The helper projects a handoff receipt or POO handoff object into Lean-facing
+facts:
+
+| Lean Fact Key | Meaning |
+| session.lifecycle/chunk-present | chunk count is positive |
+| session.lifecycle/placement-resolved | placement is resolved |
+| session.lifecycle/placement-missing-profile | diagnostics contain missing-profile |
+| session.lifecycle/runtime-summary-present | handoff carries runtime summary boundary |
+| session.lifecycle/handoff-receipt-present | handoff receipt projection exists |
+| session.lifecycle/runtime-executed-false | Scheme did not execute runtime |
+| session.lifecycle/handoff-required-true | Marlin handoff is required |
+| session.lifecycle/runtime-owner-marlin | runtime owner is marlin-agent-core |
+| session.lifecycle/runtime-parses-scheme-source-false | runtime does not parse Scheme source |
+| session.lifecycle/scheme-manufactures-runtime-handlers-false | Scheme does not manufacture runtime handlers |
+| scenario.bridge/s3-handoff-receipt | S3 handoff receipt bridge fact |
+| scenario.bridge/s11-agent-registered | S11 source agent is registered |
+| scenario.bridge/s11-subagent-registered | S11 target subagent is registered |
+| scenario.bridge/s11-channel-authorized | S11 communication channel is authorized |
+| scenario.bridge/s14-placement-missing-profile | S14 missing-profile recovery fact |
+
+S11 facts are not meant to be handwritten at call sites. The Scheme control
+plane uses a POO topology object and projects it into handoff metadata:
+
+#+begin_src scheme
+(poo-flow-session-topology->handoff-metadata
+ (.o agent-registered?: #t
+     subagent-registered?: #t
+     channel-authorized?: #t))
+#+end_src
+
+The real loop-engine path also produces these facts. The agent graph
+constructor enriches graph metadata from its computed topology:
+
+#+begin_src scheme
+poo-flow-session-agent-graph
+#+end_src
+
+The loop-engine runtime graph builder now supplies declared communication
+channel receipts under the existing metadata key:
+
+#+begin_src scheme
+'communication-channel-receipts
+#+end_src
+
+That makes the projected S11 facts a consequence of real graph state. Channel
+authorization is stronger than receipt presence: every declared channel receipt
+must resolve its endpoints to either a graph agent or the =loop-engine= control
+owner, and at least one endpoint must be a graph agent.
+
+#+begin_src latex
+\[
+\begin{aligned}
+AgentIds(g) \ne \emptyset &\Longrightarrow AgentRegistered(g) \\
+LineageEdges(g) \ne \emptyset &\Longrightarrow SubagentRegistered(g) \\
+AuthorizedChannelReceipts(g) &\Longrightarrow ChannelAuthorized(g)
+\end{aligned}
+\]
+#+end_src
+
+The Lean proof surface mirrors that projection:
+
+#+begin_src lean
+open PooFlowProof.PooC3.ScenarioProof
+
+AgentGraphProjection
+sessionFactsOfAgentGraphProjection
+scenarioBridgeFactsOfAgentGraphProjection
+#check agent_graph_projection_generates_s11_bridge_facts
+#check generated_s11_graph_projection_start_dispatch_chain
+#+end_src
+
+#+begin_src latex
+\[
+\begin{aligned}
+GraphProjection(g) &=
+  \langle AgentIdsPresent(g),
+          LineageEdgesPresent(g),
+          ChannelReceiptsAuthorized(g) \rangle \\
+GraphProjection(g)
+  \land ChannelScope \le ActiveScope(s)
+  \land MessageScope \le ActiveScope(s)
+  \Longrightarrow&
+  CanStart(s, ChannelAuthorization) \\
+  &\land CanStart(s, MessageDispatch)
+\end{aligned}
+\]
+#+end_src
+
+The combined proof packet is typed in Lean, not serialized as JSON:
+
+#+begin_src lean
+ScenarioProjectionPacket
+#check scenario_projection_packet_dispatch_and_handoff
+#check scenario_projection_packet_missing_profile_blocks_resolution
+#+end_src
+
+#+begin_src latex
+\[
+\begin{aligned}
+Packet(s,g) &=
+  \langle GraphProjection(g),
+          BaseFacts(s),
+          ActiveScope(s),
+          ScopeAllows(s),
+          HandoffReceiptPresent(s) \rangle \\
+Packet(s,g)
+  \Longrightarrow&
+  CanStart(s, ChannelAuthorization)
+  \land CanStart(s, MessageDispatch) \\
+  &\land HandoffReceiptPresent(s) \\
+Packet(s,g)
+  \land PlacementMissingProfile(s)
+  \Longrightarrow&
+  \neg CanStart(s, PlacementResolution)
+\end{aligned}
+\]
+#+end_src
+
+* 10.06.58.66 Lean Fact Environment
+
+The Lean side now has a typed environment for projected Scheme facts:
+
+#+begin_src lean
+SessionFact
+SessionFactEnv
+sessionStateOfFacts
+#+end_src
+
+The bridge theorem is:
+
+#+begin_src lean
+#check handoff_receipt_can_start_of_projection_facts
+#check projection_missing_profile_blocks_placement_resolution
+#+end_src
+
+#+begin_src latex
+\[
+\begin{aligned}
+Facts(s) &\vdash RuntimeSummaryPresent(s) \\
+Facts(s) &\vdash RuntimeExecutedFalse(s) \\
+Facts(s) &\vdash HandoffRequiredTrue(s) \\
+Facts(s) &\vdash RuntimeOwnerMarlin(s) \\
+Facts(s) &\vdash RuntimeParsesSchemeSourceFalse(s) \\
+Facts(s) &\vdash SchemeManufacturesRuntimeHandlersFalse(s) \\
+&\Longrightarrow CanStart(s, SessionHandoffReceipt) \\
+Facts(s) &\vdash PlacementMissingProfile(s)
+\Longrightarrow \neg CanStart(s, PlacementResolution)
+\end{aligned}
+\]
+#+end_src
+
+* 10.06.58.67 Topology And Authority
+
+The lifecycle proof now includes an abstract multi-agent communication model:
+
+#+begin_src lean
+AgentTopology
+MessageDispatch
+DispatchAuthority
+AuthorizedMessageDispatch
+#+end_src
+
+The core authority gate is:
+
+#+begin_src lean
+#check authorized_message_dispatch_sound
+#check policy_denial_blocks_authorized_dispatch
+#check strategy_ownership_denial_blocks_authorized_dispatch
+#check local_validation_denial_blocks_authorized_dispatch
+#+end_src
+
+Policy denial, strategy ownership denial, and local validation denial are
+owned by =SessionLifecycle= because they destruct =AuthorizedMessageDispatch=
+directly. =ScenarioProof= may keep forwarding names while the migration is in
+progress, but endpoint authorization semantics live in the lifecycle module.
+
+#+begin_src latex
+\[
+\begin{aligned}
+AuthorizedDispatch(d) \Rightarrow&
+  Registered(source(d))
+  \land Registered(target(d))
+  \land ChannelAllowed(source(d), target(d)) \\
+  &\land ControlOwner(source(d))
+  \land ExecutionOwner(target(d))
+  \land LocalValidation(message(d)) \\
+  &\land PolicyAllows(message(d))
+  \land StrategyOwnsStep(source(d), message(d))
+\end{aligned}
+\]
+#+end_src
+
+* 10.06.58.68 Scenario Bridge
+
+The UI scenario layer is connected to the session lifecycle layer by:
+
+#+begin_src lean
+ScenarioBridge
+ScenarioBridgeFact
+ScenarioBridgeFactEnv
+scenarioBridgeFactsOfSessionFacts
+#+end_src
+
+The bridge records the current scenario families:
+
+| Scenario | Bridge obligation |
+| S2 | profile implies session chunk and lineage |
+| S3 | Marlin handoff implies handoff receipt |
+| S4 | memory and compression policies imply runtime summary |
+| S7 | strategy plan implies message dispatch |
+| S11 | scenario matrix implies registered agent, registered subagent, authorized channel |
+| S14 | missing profile blocks placement resolution |
+| S18 | runtime manifest implies session runtime summary |
+
+#+begin_src mermaid
+flowchart LR
+  s2["S2 profile"] --> chunk["session chunk + lineage"]
+  s3["S3 Marlin handoff"] --> receipt["handoff receipt"]
+  s4["S4 memory/compression"] --> runtime["runtime summary"]
+  s7["S7 strategy DAG"] --> message["message dispatch"]
+  s11["S11 topology bridge"] --> topology["registered pair + channel"]
+  s14["S14 durable recovery"] --> block["missing-profile blocks placement"]
+  s18["S18 transform"] --> runtime
+  topology --> benchmark["scenario benchmark boundary"]
+  receipt --> benchmark
+#+end_src
+
+#+begin_src lean
+#check generated_s3_bridge_fact_produces_handoff_receipt
+#check generated_s14_bridge_fact_blocks_resolution
+#check generated_s11_bridge_facts_authorize_topology
+#check generated_s11_bridge_facts_start_dispatch_chain
+#check scenario_benchmark_links_to_session_boundary
+#check scenario_runtime_manifest_links_to_session_summary
+#+end_src
+
+#+begin_src latex
+\[
+\begin{aligned}
+BridgeFacts_{S11}(s)
+  \land ChannelScope \le ActiveScope(s)
+  \land MessageScope \le ActiveScope(s)
+  \Longrightarrow&
+  CanStart(s, ChannelAuthorization) \\
+  &\land CanStart(s, MessageDispatch)
+\end{aligned}
+\]
+#+end_src
+
+* 10.06.58.69 Proof Reflection And Failure Obligations
+
+The first proof pass was not strong enough to discover defects. It mostly
+translated already-aligned positive facts into Lean fields:
+
+#+begin_src latex
+\[
+\begin{aligned}
+GraphProjection(g)
+  = \langle AgentIdsPresent(g),
+           LineageEdgesPresent(g),
+           ChannelReceiptsAuthorized(g) \rangle
+\end{aligned}
+\]
+#+end_src
+
+That shape is useful as a bridge check, but it cannot find an invalid channel
+receipt. The risk is hidden inside a caller-supplied proposition. The stricter
+model splits receipt presence from receipt authorization:
+
+#+begin_src latex
+\[
+\begin{aligned}
+Authorized(r) \equiv&
+  (SourceInGraph(r) \lor SourceIsLoopEngine(r)) \\
+  &\land (TargetInGraph(r) \lor TargetIsLoopEngine(r)) \\
+  &\land (SourceInGraph(r) \lor TargetInGraph(r)) \\
+AuthorizedReceipts(R) \equiv&
+  \forall r \in R.\ Authorized(r)
+\end{aligned}
+\]
+#+end_src
+
+This creates a real failure obligation:
+
+#+begin_src latex
+\[
+\begin{aligned}
+\exists R.\ ReceiptsPresent(R)
+  \land \neg AuthorizedReceipts(R)
+\end{aligned}
+\]
+#+end_src
+
+The Lean checks are:
+
+#+begin_src lean
+open PooFlowProof.PooC3.ScenarioProof
+
+#check receipt_presence_does_not_imply_authorization
+#check strict_projection_requires_authorized_receipts_for_message_dispatch
+#check strict_projection_blocks_message_dispatch_without_authorized_receipts
+#check strict_projection_blocks_channel_authorization_when_scope_denied
+#check strict_projection_blocks_message_dispatch_when_scope_denied
+#check strict_projection_blocks_handoff_receipt_without_runtime_summary
+#check strict_projection_blocks_handoff_receipt_without_runtime_owner
+#check strict_projection_blocks_handoff_receipt_when_handoff_not_required
+#check PooFlowProof.PooC3.SessionLifecycle.policy_denial_blocks_authorized_dispatch
+#check PooFlowProof.PooC3.SessionLifecycle.strategy_ownership_denial_blocks_authorized_dispatch
+#check PooFlowProof.PooC3.SessionLifecycle.local_validation_denial_blocks_authorized_dispatch
+#check policy_denial_blocks_authorized_dispatch
+#check strategy_ownership_denial_blocks_authorized_dispatch
+#check local_validation_denial_blocks_authorized_dispatch
+#check session_branch_conflict_blocks_dual_start
+#check ScenarioFailureMatrix
+#check scenarioFailureMatrix
+#check PooFlowProof.PooC3.UserInterface.strategy_plan_blocks_without_selector_policy
+#check PooFlowProof.PooC3.UserInterface.strategy_plan_blocks_without_resource_policy
+#check PooFlowProof.PooC3.UserInterface.strategy_plan_blocks_without_capability_policy
+#check PooFlowProof.PooC3.UserInterface.local_validation_blocks_without_strategy_plan
+#check PooFlowProof.PooC3.UserInterface.runtime_manifest_blocks_without_strategy_plan
+#check PooFlowProof.PooC3.UserInterface.runtime_manifest_blocks_without_local_validation
+#check PooFlowProof.PooC3.UserInterface.runtime_manifest_blocks_without_memory_policy
+#check PooFlowProof.PooC3.UserInterface.runtime_manifest_blocks_without_compression_policy
+#check PooFlowProof.PooC3.UserInterface.marlin_handoff_blocks_without_runtime_manifest
+#check PooFlowProof.PooC3.UserInterface.scenario_benchmark_blocks_without_matrix
+#check PooFlowProof.PooC3.UserInterface.scenario_benchmark_blocks_without_l1_report
+#check PooFlowProof.PooC3.UserInterface.scenario_benchmark_blocks_without_performance_fixture
+#check PooFlowProof.PooC3.UserInterface.UiScenarioFailureMatrix
+#check PooFlowProof.PooC3.UserInterface.uiScenarioFailureMatrix
+#check PooFlowProof.PooC3.UserInterface.UiScenarioFact
+#check PooFlowProof.PooC3.UserInterface.UiScenarioFactEnv
+#check PooFlowProof.PooC3.UserInterface.uiScenarioStateOfFacts
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_strategy_without_selector_policy
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_local_validation_without_strategy_plan
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_runtime_manifest_without_strategy_plan
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_runtime_manifest_without_memory_policy
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_handoff_without_runtime_manifest
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_benchmark_without_matrix
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_benchmark_without_l1_report
+#check PooFlowProof.PooC3.UserInterface.ui_projection_blocks_benchmark_without_performance_fixture
+#check PooFlowProof.PooC3.UserInterface.UiScenarioProjectionFailureMatrix
+#check PooFlowProof.PooC3.UserInterface.uiScenarioProjectionFailureMatrix
+#check strategy_plan_blocks_without_selector_policy
+#check strategy_plan_blocks_without_resource_policy
+#check strategy_plan_blocks_without_capability_policy
+#check local_validation_blocks_without_strategy_plan
+#check runtime_manifest_blocks_without_strategy_plan
+#check runtime_manifest_blocks_without_local_validation
+#check runtime_manifest_blocks_without_memory_policy
+#check runtime_manifest_blocks_without_compression_policy
+#check marlin_handoff_blocks_without_runtime_manifest
+#check scenario_benchmark_blocks_without_matrix
+#check scenario_benchmark_blocks_without_l1_report
+#check scenario_benchmark_blocks_without_performance_fixture
+#check UiScenarioFailureMatrix
+#check uiScenarioFailureMatrix
+#check UiScenarioFact
+#check UiScenarioFactEnv
+#check uiScenarioStateOfFacts
+#check ui_projection_blocks_strategy_without_selector_policy
+#check ui_projection_blocks_runtime_manifest_without_memory_policy
+#check ui_projection_blocks_handoff_without_runtime_manifest
+#check ui_projection_blocks_benchmark_without_matrix
+#check UiScenarioProjectionFailureMatrix
+#check uiScenarioProjectionFailureMatrix
+#+end_src
+
+The reflection rule for future proof work is: every positive bridge theorem
+needs a matching failure theorem. A scenario proof is incomplete if it cannot
+state a counterexample for the common bad configuration that the Scheme/UI
+surface is supposed to reject.
+
+The first complete failure matrix covers the six problems exposed by this
+reflection pass:
+
+| Exposed issue | Lean obligation |
+| weak graph model | receipt presence does not imply authorization |
+| positive-only proof | message dispatch is blocked without authorized receipts |
+| Scheme/Lean mismatch | strict graph facts derive channel authorization from endpoint authorization |
+| missing scope model | channel and message start are blocked when active scope is too small |
+| missing strategy/policy model | policy, strategy ownership, and local validation denial block authorized dispatch witnesses |
+| missing branch/runtime blockers | sibling branch conflict blocks dual start; handoff receipt requires runtime summary, Marlin owner, and required handoff |
+
+#+begin_src latex
+\[
+\begin{aligned}
+\neg(ChannelScope \le ActiveScope(s))
+  &\Longrightarrow \neg CanStart(s, ChannelAuthorization) \\
+\neg(MessageScope \le ActiveScope(s))
+  &\Longrightarrow \neg CanStart(s, MessageDispatch) \\
+(\forall m.\neg PolicyAllows(m))
+  &\Longrightarrow \neg AuthorizedDispatch \\
+(\forall a,m.\neg StrategyOwnsStep(a,m))
+  &\Longrightarrow \neg AuthorizedDispatch \\
+BranchSibling(A,B) \land Exclusive(s)
+  &\Longrightarrow \neg(CanStart(s,A) \land CanStart(s,B)) \\
+\neg RuntimeSummary(s)
+  &\Longrightarrow \neg CanStart(s, HandoffReceipt)
+\end{aligned}
+\]
+#+end_src
+
+The Scheme projection for this layer is:
+
+#+begin_src scheme
+poo-flow-ui-scenario->lean-facts
+#+end_src
+
+It accepts a POO object or alist with UI scenario fields such as
+=selector-policy-done?=, =memory-policy-done?=, =runtime-manifest-done?=, and
+=performance-fixture-bound?=. Missing POO slots are projected as =#f= instead
+of raising object access errors, because absence is part of the failure
+surface.
+
+The emitted fact packet aligns with the Lean constructors:
+
+#+begin_src lean
+UiScenarioFact
+UiScenarioFactEnv
+uiScenarioStateOfFacts
+UiScenarioProjectionFailureMatrix
+#+end_src
+
+The smoke receipt checks both a complete UI packet and a denial packet:
+
+| Scheme fact key | Lean obligation |
+| ui.scenario/selector-policy-done | UiScenarioFact.selectorPolicyDone |
+| ui.scenario/memory-policy-done | UiScenarioFact.memoryPolicyDone |
+| ui.scenario/runtime-manifest-done | UiScenarioFact.runtimeManifestDone |
+| ui.failure/strategy-missing-selector-policy | strategy cannot start |
+| ui.failure/runtime-manifest-missing-memory-policy | runtime manifest cannot start |
+| ui.failure/handoff-missing-runtime-manifest | Marlin handoff cannot start |
+| ui.failure/benchmark-missing-performance-fixture | scenario benchmark cannot start |
+
+The UI scenario layer now has its own failure matrix. This prevents S4, S7,
+and S18 from remaining informal labels around positive UI fields:
+
+| UI case | Failure obligation |
+| S7 strategy plan | selector, resource, and capability policies are required |
+| local validation | strategy plan is required |
+| S4/S18 runtime manifest | strategy, validation, memory, and compression policies are required |
+| Marlin handoff | runtime manifest is required |
+| scenario benchmark | scenario matrix, L1 report, and performance fixture are required |
+
+#+begin_src latex
+\[
+\begin{aligned}
+\neg SelectorPolicy(s)
+  &\Longrightarrow \neg CanStart(s, StrategyPlan) \\
+\neg ResourcePolicy(s)
+  &\Longrightarrow \neg CanStart(s, StrategyPlan) \\
+\neg CapabilityPolicy(s)
+  &\Longrightarrow \neg CanStart(s, StrategyPlan) \\
+\neg StrategyPlan(s)
+  &\Longrightarrow \neg CanStart(s, LocalValidation) \\
+\neg MemoryPolicy(s)
+  &\Longrightarrow \neg CanStart(s, RuntimeManifest) \\
+\neg CompressionPolicy(s)
+  &\Longrightarrow \neg CanStart(s, RuntimeManifest) \\
+\neg RuntimeManifest(s)
+  &\Longrightarrow \neg CanStart(s, MarlinHandoff) \\
+\neg ScenarioMatrix(s)
+  &\Longrightarrow \neg CanStart(s, ScenarioBenchmark)
+\end{aligned}
+\]
+#+end_src
+
+* 10.06.58.70 Validation
+
+The current implementation is validated by:
+
+#+begin_src sh
+cd packages/proof/lean
+lake build
+lake build ffiSmoke && .lake/build/bin/ffiSmoke
+cd ../..
+gxpkg env gxi t/session-handoff-lean-facts-smoke.scm
+#+end_src
+
+The handoff projection smoke also exercises the real loop-engine agent graph
+projection. It checks that graph metadata contains S11 agent registration,
+subagent registration, channel authorization, and declared channel receipts.
+It also checks that registered agent/subagent topology does not imply channel
+authorization when the topology projection marks the channel as denied.
+
+The smoke stays out of the package compile target set. A package-compiled
+`.ss` smoke target made the tests stage spend about 98 seconds on one file.
+Keeping this check as an interpreter smoke keeps the proof-link receipt
+replayable while preserving the compile fast path.

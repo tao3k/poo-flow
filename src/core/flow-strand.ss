@@ -2,7 +2,8 @@
 ;;; Boundary: flow strands describe Funflow-style interpreter families.
 ;;; Invariant: strand objects are declaration policy, not executable runners.
 
-(import (only-in :clan/poo/object .@ object?)
+(import (only-in :std/sugar filter)
+        (only-in :clan/poo/object .@ object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/projection-syntax
@@ -232,10 +233,11 @@
 ;;; and inspected before any flow planner consumes them.
 ;; : (-> Symbol [FlowStrandDescriptor] MaybeFlowStrandDescriptor)
 (def (find-flow-strand kind descriptors)
-  (cond
-   ((null? descriptors) #f)
-   ((eq? kind (flow-strand-name (car descriptors))) (car descriptors))
-   (else (find-flow-strand kind (cdr descriptors)))))
+  (let (matches
+        (filter (lambda (descriptor)
+                  (eq? kind (flow-strand-name descriptor)))
+                descriptors))
+    (and (pair? matches) (car matches))))
 
 ;;; Same-name replacement is the POO extension point: downstream profiles can
 ;;; refine a strand object without producing duplicate interpreter families.
@@ -375,22 +377,10 @@
 (def (flow-strand-for-kind kind)
   (flow-strand-for-kind-in default-flow-strand-registry kind))
 
-;;; Names are the compact diagnostic view used by contracts before consumers
-;;; inspect the heavier descriptor snapshots.
-;; : (-> [FlowStrandDescriptor] [Symbol] [Symbol])
-(def (flow-strand-names/rev descriptors names-rev)
-  (if (null? descriptors)
-    names-rev
-    (flow-strand-names/rev
-     (cdr descriptors)
-     (cons (flow-strand-name (car descriptors)) names-rev))))
-
 ;; : (-> FlowStrandRegistry [Symbol])
 (def (flow-strand-names registry)
-  (reverse
-   (flow-strand-names/rev
-    (flow-strand-registry-descriptors registry)
-    '())))
+  (map flow-strand-name
+       (flow-strand-registry-descriptors registry)))
 
 ;;; Descriptor snapshots are intentionally lossless for public slots so docs
 ;;; and manifests can compare POO extension results without object identity.
@@ -406,18 +396,9 @@
            (required? (flow-strand-required? descriptor))
            (extension-policy (flow-strand-extension-policy descriptor)))))
 
-;; : (-> [FlowStrandDescriptor] [Alist] [Alist])
-(def (flow-strand-descriptors->alists/rev descriptors rows-rev)
-  (if (null? descriptors)
-    rows-rev
-    (flow-strand-descriptors->alists/rev
-     (cdr descriptors)
-     (cons (flow-strand-descriptor->alist (car descriptors))
-           rows-rev))))
-
 ;; : (-> [FlowStrandDescriptor] [Alist])
 (def (flow-strand-descriptors->alists descriptors)
-  (reverse (flow-strand-descriptors->alists/rev descriptors '())))
+  (map flow-strand-descriptor->alist descriptors))
 
 ;;; The snapshot is for docs, tests, and runtime-manifest discovery. It exposes
 ;;; the strand universe without handing callers executable interpreters.

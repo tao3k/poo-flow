@@ -590,6 +590,24 @@
       (newline)
       (force-output))))
 
+(def (poo-flow-build-debug-package-total-line options start-jiffy)
+  (when (poo-flow-build-debug-tracking-options? options)
+    (let (end-jiffy (current-jiffy))
+      (display "|poo-flow-compile-debug ")
+      (write
+       [phase: 'package-total
+        label: "package"
+        command: "poo-flow-package-compile"
+        status: 'completed
+        reason: 'package-entry-complete
+        scope: 'poo-flow-build-script
+        excludes: 'gxpkg-env-startup
+        elapsed-micros: (poo-flow-build-elapsed-micros
+                         start-jiffy
+                         end-jiffy)])
+      (newline)
+      (force-output))))
+
 (def (poo-flow-all? pred xs)
   (match xs
     ([] #t)
@@ -1338,39 +1356,41 @@
     (poo-flow-package-build-spec options))))
 
 (def (poo-flow-package-compile options)
-  (if (poo-flow-cli-build-options? options)
-    (begin
-      (poo-flow-gxc-stage "cli-modules"
-                          (poo-flow-cli-only-module-build-spec options)
-                          options)
-      (poo-flow-write-cli-launcher!))
-    (begin
-      (poo-flow-make-bootstrap
-       "runtime-bootstrap"
-       (poo-flow-runtime-bootstrap-build-spec options)
-       options)
-      (when (poo-flow-native-build-options? options)
+  (let (start-jiffy (current-jiffy))
+    (if (poo-flow-cli-build-options? options)
+      (begin
+        (poo-flow-gxc-stage "cli-modules"
+                            (poo-flow-cli-only-module-build-spec options)
+                            options)
+        (poo-flow-write-cli-launcher!))
+      (begin
+        (poo-flow-make-bootstrap
+         "runtime-bootstrap"
+         (poo-flow-runtime-bootstrap-build-spec options)
+         options)
+        (when (poo-flow-native-build-options? options)
+          (poo-flow-make
+           "ffi"
+           +poo-flow-ffi-build-spec+
+           options))
         (poo-flow-make
-         "ffi"
-         +poo-flow-ffi-build-spec+
-         options))
-      (poo-flow-make
-       "runtime"
-       (poo-flow-runtime-main-build-spec options)
-       options)
-      (poo-flow-make
-       "tests"
-       (poo-flow-test-build-spec options)
-       options)
-      (poo-flow-make
-       "cli-library"
-       +poo-flow-cli-library-build-spec+
-       options)
-      (poo-flow-make
-       "entry"
-       (poo-flow-entry-build-spec options)
-       options)
-      (poo-flow-write-cli-launcher!))))
+         "runtime"
+         (poo-flow-runtime-main-build-spec options)
+         options)
+        (poo-flow-make
+         "tests"
+         (poo-flow-test-build-spec options)
+         options)
+        (poo-flow-make
+         "cli-library"
+         +poo-flow-cli-library-build-spec+
+         options)
+        (poo-flow-make
+         "entry"
+         (poo-flow-entry-build-spec options)
+         options)
+        (poo-flow-write-cli-launcher!)))
+    (poo-flow-build-debug-package-total-line options start-jiffy)))
 
 (def (poo-flow-clean)
   (poo-flow-make-clean "package" (poo-flow-package-build-spec [])))

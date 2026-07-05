@@ -33,6 +33,67 @@ structure CanStart
   preconditionHolds : spec.precondition state module
   guardHolds : spec.guard state module
 
+def DependenciesCompleted
+    {Module Scope State : Type u}
+    (spec : FlowSpec Module Scope State)
+    (state : State)
+    (module : Module) : Prop :=
+  (dependency : Module) ->
+    spec.dependsOn module dependency ->
+    spec.completed state dependency
+
+def RequiredConditions
+    {Module Scope State : Type u}
+    (spec : FlowSpec Module Scope State)
+    (state : State)
+    (module : Module) : Prop :=
+  DependenciesCompleted spec state module ∧
+  spec.scopeOrder.le (spec.moduleScope module) (spec.activeScope state) ∧
+  spec.policyAllows state module ∧
+  spec.precondition state module ∧
+  spec.guard state module
+
+theorem required_conditions_of_can_start
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    {state : State}
+    {module : Module}
+    (canStart : CanStart spec state module) :
+    RequiredConditions spec state module :=
+  And.intro
+    canStart.depsCompleted
+    (And.intro
+      canStart.scopeAllowed
+      (And.intro
+        canStart.policyHolds
+        (And.intro
+          canStart.preconditionHolds
+          canStart.guardHolds)))
+
+theorem can_start_of_required_conditions
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    {state : State}
+    {module : Module}
+    (required : RequiredConditions spec state module) :
+    CanStart spec state module :=
+  { depsCompleted := required.left
+    scopeAllowed := required.right.left
+    policyHolds := required.right.right.left
+    preconditionHolds := required.right.right.right.left
+    guardHolds := required.right.right.right.right }
+
+theorem can_start_iff_required_conditions
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    {state : State}
+    {module : Module} :
+    CanStart spec state module ↔
+      RequiredConditions spec state module :=
+  Iff.intro
+    required_conditions_of_can_start
+    can_start_of_required_conditions
+
 structure Step
     {Module Scope State : Type u}
     (spec : FlowSpec Module Scope State)
@@ -40,6 +101,17 @@ structure Step
   module : Module
   next : State
   canStart : CanStart spec state module
+
+inductive Trace
+    {Module Scope State : Type u}
+    (spec : FlowSpec Module Scope State) :
+    State -> State -> Prop where
+  | nil (state : State) : Trace spec state state
+  | cons
+      {state next final : State}
+      (step : Step spec state)
+      (rest : Trace spec step.next final) :
+      Trace spec state final
 
 theorem start_sound
     {Module Scope State : Type u}
@@ -102,6 +174,21 @@ theorem no_sibling_branch_start
     False :=
   exclusive sibling leftStart.guardHolds rightStart.guardHolds
 
+structure Strategy
+    {Module Scope State : Type u}
+    (spec : FlowSpec Module Scope State) where
+  choose : (state : State) -> Option (Step spec state)
+
+theorem strategy_choice_sound
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    (strategy : Strategy spec)
+    {state : State}
+    {step : Step spec state}
+    (_selected : strategy.choose state = some step) :
+    CanStart spec state step.module :=
+  step.canStart
+
 def AppearsBefore
     {Module : Type u}
     (order : List Module)
@@ -126,5 +213,60 @@ theorem dependency_order_of_linearization
     (depends : spec.dependsOn module dependency) :
     AppearsBefore linearization.order dependency module :=
   linearization.dependencyOrder depends
+
+structure DependencyRank
+    {Module Scope State : Type u}
+    (spec : FlowSpec Module Scope State) where
+  rank : Module -> Nat
+  decreases :
+    {module dependency : Module} ->
+    spec.dependsOn module dependency ->
+    rank dependency < rank module
+
+theorem no_self_dependency_of_rank
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    (dependencyRank : DependencyRank spec)
+    {module : Module} :
+    ¬ spec.dependsOn module module := by
+  intro depends
+  exact Nat.lt_irrefl (dependencyRank.rank module)
+    (dependencyRank.decreases depends)
+
+theorem no_two_cycle_of_rank
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    (dependencyRank : DependencyRank spec)
+    {left right : Module}
+    (leftDependsRight : spec.dependsOn left right)
+    (rightDependsLeft : spec.dependsOn right left) :
+    False :=
+  Nat.lt_asymm
+    (dependencyRank.decreases leftDependsRight)
+    (dependencyRank.decreases rightDependsLeft)
+
+def Preserves
+    {Module Scope State : Type u}
+    (spec : FlowSpec Module Scope State)
+    (invariant : State -> Prop) : Prop :=
+  {state : State} ->
+    invariant state ->
+    (step : Step spec state) ->
+    invariant step.next
+
+theorem trace_preserves
+    {Module Scope State : Type u}
+    {spec : FlowSpec Module Scope State}
+    {invariant : State -> Prop}
+    (preserves : Preserves spec invariant)
+    {start final : State}
+    (trace : Trace spec start final)
+    (initial : invariant start) :
+    invariant final := by
+  induction trace with
+  | nil state =>
+      exact initial
+  | cons step rest ih =>
+      exact ih (preserves initial step)
 
 end PooFlowProof.PooC3

@@ -1,11 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: invalid Funflow POO configs fail at the declarative contract.
 
-(import (only-in :std/test check-equal?)
+(import (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax)
 
-(export run-funflow-config-pipeline-error-checks)
+(export funflow-config-pipeline-error-test)
 
 ;; : Boolean
 (def poo-flow-import-side-effect-test-suite? #t)
@@ -53,4 +53,7 @@
    #t)
   'ok)
 
-(run-funflow-config-pipeline-error-checks)
+(def funflow-config-pipeline-error-test
+  (test-suite "poo-flow Funflow config contract errors"
+    (test-case "rejects invalid Funflow POO declarations"
+      (check-equal? (run-funflow-config-pipeline-error-checks) 'ok))))

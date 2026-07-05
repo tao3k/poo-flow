@@ -2,13 +2,13 @@
 ;;; Boundary: downstream-shaped Funflow POO config lowers to readiness facts.
 
 (import (only-in :std/sugar match)
-        (only-in :std/test check-equal?)
+        (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/module-system/facade
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/workflow/cicd)
 
-(export run-funflow-config-pipeline-downstream-checks)
+(export funflow-config-pipeline-downstream-test)
 
 'poo-flow-import-side-effect-test-suite?
 
@@ -179,4 +179,7 @@
                   #f)
     'ok))
 
-(run-funflow-config-pipeline-downstream-checks)
+(def funflow-config-pipeline-downstream-test
+  (test-suite "poo-flow Funflow downstream config pipeline"
+    (test-case "lowers downstream Funflow POO config to readiness facts"
+      (check-equal? (run-funflow-config-pipeline-downstream-checks) 'ok))))

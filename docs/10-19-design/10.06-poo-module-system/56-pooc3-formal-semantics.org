@@ -36,9 +36,96 @@
     \Rightarrow \sigma_M(m) \le p \\
   &\text{BranchSound} \equiv
     B(a,b) \land \text{CanStart}(s,a) \land \text{CanStart}(s,b)
-    \Rightarrow \bot
+    \Rightarrow \bot \\
+  &r : M \rightarrow \mathbb{N},\quad
+    D(m,d) \Rightarrow r(d) < r(m) \\
+  &\text{RankedDeps}(D,r) \Rightarrow
+    \neg D(m,m)
+    \land
+    \neg(D(a,b) \land D(b,a)) \\
+  &\text{Trace}(s_0,s_n) =
+    \text{Step}(s_0,s_1,m_0);\ldots;\text{Step}(s_{n-1},s_n,m_{n-1}) \\
+  &\text{Preserves}(I) \equiv
+    \forall s,s',m.\ I(s) \land \text{Step}(s,s',m) \Rightarrow I(s') \\
+  &\text{TracePreserves}(I) \equiv
+    I(s_0) \land \text{Trace}(s_0,s_n) \Rightarrow I(s_n)
 \end{aligned}
 \]
+#+end_src
+
+* 10.06.56.15 Required Condition Intersection
+
+#+begin_src latex
+\[
+\begin{aligned}
+Deps(s,m) &\equiv \forall d \in M,\; D(m,d) \Rightarrow Done(s,d) \\
+CanStart(s,m) &\Longleftrightarrow
+  Deps(s,m)
+  \land Scope(m) \sqsubseteq Active(s)
+  \land Policy(s,m)
+  \land Pre(s,m)
+  \land Guard(s,m) \\
+CanStart(s,runtimeHandoff) &\Rightarrow
+  profileDone(s)
+  \land policyDone(s)
+  \land strategyDone(s)
+  \land workflowDone(s)
+  \land sandboxDone(s) \\
+CanStart(s,cacheHit) \land CanStart(s,cacheMiss) &\Rightarrow \bot
+\end{aligned}
+\]
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+  deps["Deps(s,m)"] --> start["CanStart(s,m)"]
+  scope["Scope(m) <= Active(s)"] --> start
+  policy["Policy(s,m)"] --> start
+  pre["Pre(s,m)"] --> start
+  guard["Guard(s,m)"] --> start
+#+end_src
+
+* 10.06.56.18 User Interface Projection
+
+#+begin_src latex
+\[
+\begin{aligned}
+StrategyPlan(s) &\Rightarrow
+  SelectorPolicy(s) \land ResourcePolicy(s) \land CapabilityPolicy(s) \\
+RuntimeManifest(s) &\Rightarrow
+  StrategyPlan(s) \land LocalValidation(s)
+  \land MemoryPolicy(s) \land CompressionPolicy(s) \\
+MarlinHandoff(s) &\Rightarrow RuntimeManifest(s) \\
+L1Report(s) &\Rightarrow MarlinHandoff(s) \\
+ScenarioBenchmark(s) &\Rightarrow
+  ScenarioMatrix(s) \land L1Report(s) \land PerformanceFixtureBound(s)
+\end{aligned}
+\]
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+  useCase["loop-engine-use-case"] --> profile["loop-engine-profile"]
+  profile --> governor["loop-engine-governor"]
+  governor --> selector["selector-policy"]
+  governor --> resource["resource-policy"]
+  governor --> capability["capability-policy"]
+  governor --> memory["memory-policy"]
+  governor --> compression["compression-policy"]
+  selector --> strategy["strategy-plan"]
+  resource --> strategy
+  capability --> strategy
+  strategy --> validation["local-validation"]
+  strategy --> matrix["scenario-matrix"]
+  strategy --> runtime["runtime-manifest"]
+  validation --> runtime
+  memory --> runtime
+  compression --> runtime
+  runtime --> handoff["marlin-handoff"]
+  handoff --> report["l1-report"]
+  matrix --> benchmark["scenario-benchmark"]
+  report --> benchmark
+  fixture["performance-fixture-bound"] --> benchmark
 #+end_src
 
 * 10.06.56.20 Lean Shape
@@ -65,6 +152,24 @@ theorem no_sibling_branch_start
     (leftStart : CanStart spec state left)
     (rightStart : CanStart spec state right) :
     False
+
+structure DependencyRank (spec : FlowSpec Module Scope State) where
+  rank : Module -> Nat
+  decreases :
+    spec.dependsOn module dependency ->
+    rank dependency < rank module
+
+theorem no_self_dependency_of_rank :
+  DependencyRank spec -> ¬ spec.dependsOn module module
+
+inductive Trace (spec : FlowSpec Module Scope State) :
+    State -> State -> Prop
+
+theorem trace_preserves :
+  Preserves spec invariant ->
+  Trace spec start final ->
+  invariant start ->
+  invariant final
 #+end_src
 
 * 10.06.56.30 Transition Diagram
@@ -92,4 +197,3 @@ flowchart LR
 C3 linearization produces an ordered frontier.  It does not prove that a
 frontier item may execute.  PooC3 strategy must prove =CanStart= for the
 selected module.
-

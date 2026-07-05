@@ -6,6 +6,7 @@
 (import (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/modules/session/communication
         :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/objects-handoff
         :poo-flow/src/modules/session/registry
         :poo-flow/src/modules/session/receipt-syntax)
 
@@ -333,6 +334,45 @@
          (agent-ids (car agent-topology-summary))
          (lineage-edge-pairs (cadr agent-topology-summary))
          (durable-policy-refs (caddr agent-topology-summary))
+         (channel-authorized?
+          (and
+           (pair? communication-channel-receipts)
+           (let loop ((remaining communication-channel-receipts))
+             (if (null? remaining)
+               #t
+               (let* ((receipt (car remaining))
+                      (row
+                       (and
+                        (poo-flow-session-communication-channel-receipt?
+                         receipt)
+                        (poo-flow-session-communication-channel-receipt->alist
+                         receipt)))
+                      (source-cell
+                       (and row (assoc 'source-agent-id row)))
+                      (target-cell
+                       (and row (assoc 'target-agent-id row)))
+                      (source-agent-id
+                       (and source-cell (cdr source-cell)))
+                      (target-agent-id
+                       (and target-cell (cdr target-cell))))
+                 (and
+                  (or (memq source-agent-id agent-ids)
+                      (eq? source-agent-id 'loop-engine))
+                  (or (memq target-agent-id agent-ids)
+                      (eq? target-agent-id 'loop-engine))
+                  (or (memq source-agent-id agent-ids)
+                      (memq target-agent-id agent-ids))
+                  (loop (cdr remaining))))))))
+         (handoff-metadata
+          (poo-flow-session-topology->handoff-metadata
+           (list
+            (cons 'agent-registered?
+                  (and (pair? agent-ids) #t))
+            (cons 'subagent-registered?
+                  (and (pair? lineage-edge-pairs) #t))
+            (cons 'channel-authorized?
+                  channel-authorized?))
+           metadata))
          (session-summary
           (poo-flow-session-agent-graph-session-summary sessions))
          (session-ids (car session-summary))
@@ -366,7 +406,7 @@
       (cons 'communication-channel-receipts communication-channel-receipts)
       (cons 'runtime-owner "marlin-agent-core")
       (cons 'runtime-executed #f)
-      (cons 'metadata metadata)))))
+      (cons 'metadata handoff-metadata)))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-agent-graph? value)

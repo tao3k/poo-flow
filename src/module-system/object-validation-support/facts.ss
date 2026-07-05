@@ -298,7 +298,11 @@
    (cons 'object (poo-flow-module-object-identity object))
    (cons 'inherits inherit-identities)
    (cons 'fields direct-field-identities)
-   (cons 'resolvedFields resolved-field-identities)))
+   (cons 'resolvedFieldCount (length resolved-field-identities))
+   (cons 'resolvedFieldShape
+         (if (null? direct-field-identities)
+           'inherited
+           'direct-or-extended))))
 
 ;;; Field-level source references preserve the concrete field identity while
 ;;; still citing the same upstream facade as the semantic validation owner.

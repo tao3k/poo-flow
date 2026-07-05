@@ -56,17 +56,7 @@
 ;;; with future Docker-compatible or store-aware adapters.
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (agent-sandbox-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (append values tail))
 
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (agent-sandbox-capabilities-with capability-set capability)

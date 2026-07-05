@@ -121,6 +121,39 @@ minutes even when nothing semantic needed recompilation. The top-level
   =gxi= warm-path timing. It is the package-manager parity gate.
 
 *** Guardrail
+
+The warm-build receipt must separate external command wall time from the
+package build script's own wall time. =/usr/bin/time -p gxpkg build -g= includes
+=gxpkg= environment setup, Gerbil startup, package loading, terminal/pipe
+effects, and the actual poo-flow build script. A high =real= value is therefore
+not enough evidence that a stage cache regressed.
+
+The build script now emits a package-level timing line whenever debug tracking
+is enabled:
+
+#+begin_src text
+|poo-flow-compile-debug (phase: package-total ... excludes: gxpkg-env-startup elapsed-micros: ...)
+#+end_src
+
+Interpretation rule:
+
+#+begin_src latex
+\[
+\begin{aligned}
+ExternalReal(gxpkg) &=
+  EnvStartup + GerbilLoad + PackageCompile + TerminalIO \\
+PackageCompile &=
+  PackageTotalReceipt \\
+UnexplainedOverhead &\approx
+  ExternalReal(gxpkg) - PackageTotalReceipt
+\end{aligned}
+\]
+#+end_src
+
+If =package-total= is small but external =real= is high, investigate =gxpkg=
+environment startup, process startup, or output piping before changing stage
+cache code. If =package-total= is high, start from the largest
+=poo-flow-compile-debug= stage line and optimize that owner.
 For build performance work, record these four receipts separately:
 - plain =gxi -e '(void)'= when measuring runtime startup;
 - =GERBIL_PATH=.gerbil gxi build.ss compile --debug= for the local warm path;

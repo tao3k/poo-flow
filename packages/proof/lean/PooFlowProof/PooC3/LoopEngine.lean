@@ -119,6 +119,51 @@ def loopSpec : FlowSpec LoopModule LoopScope LoopState :=
     branchSibling := LoopBranchSibling
     completed := loopCompleted }
 
+structure LoopStateConsistent (state : LoopState) : Prop where
+  policyAfterProfile : state.policyDone -> state.profileDone
+  strategyAfterPolicy : state.strategyDone -> state.policyDone
+  workflowAfterStrategy : state.workflowDone -> state.strategyDone
+  sandboxAfterWorkflow : state.sandboxDone -> state.workflowDone
+  cacheExclusive : state.cacheHit -> state.cacheMiss -> False
+
+def loopRank : LoopModule -> Nat
+  | LoopModule.readProfile => 0
+  | LoopModule.resolvePolicy => 1
+  | LoopModule.chooseStrategy => 2
+  | LoopModule.cacheHitBranch => 3
+  | LoopModule.cacheMissBranch => 3
+  | LoopModule.prepareWorkflow => 4
+  | LoopModule.enforceSandbox => 5
+  | LoopModule.runtimeHandoff => 6
+
+def loopDependencyRank : DependencyRank loopSpec :=
+  { rank := loopRank
+    decreases := by
+      intro module dependency depends
+      cases depends <;> native_decide }
+
+theorem loop_no_self_dependency
+    {module : LoopModule} :
+    ¬ loopSpec.dependsOn module module :=
+  no_self_dependency_of_rank loopDependencyRank
+
+theorem loop_no_two_dependency_cycle
+    {left right : LoopModule}
+    (leftDependsRight : loopSpec.dependsOn left right)
+    (rightDependsLeft : loopSpec.dependsOn right left) :
+    False :=
+  no_two_cycle_of_rank
+    loopDependencyRank
+    leftDependsRight
+    rightDependsLeft
+
+theorem resolve_policy_requires_profile
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.resolvePolicy) :
+    state.profileDone :=
+  deps_completed_of_can_start canStart LoopDependsOn.policyProfile
+
 theorem choose_strategy_requires_policy
     {state : LoopState}
     (canStart :
@@ -126,12 +171,75 @@ theorem choose_strategy_requires_policy
     loopCompleted state LoopModule.resolvePolicy :=
   deps_completed_of_can_start canStart LoopDependsOn.strategyPolicy
 
+theorem cache_hit_requires_strategy_and_hit
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.cacheHitBranch) :
+    state.strategyDone ∧ state.cacheHit :=
+  canStart.preconditionHolds
+
+theorem cache_miss_requires_strategy_and_miss
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.cacheMissBranch) :
+    state.strategyDone ∧ state.cacheMiss :=
+  canStart.preconditionHolds
+
+theorem prepare_workflow_requires_strategy
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.prepareWorkflow) :
+    state.strategyDone :=
+  deps_completed_of_can_start canStart LoopDependsOn.workflowStrategy
+
+theorem enforce_sandbox_requires_workflow
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.enforceSandbox) :
+    state.workflowDone :=
+  deps_completed_of_can_start canStart LoopDependsOn.sandboxWorkflow
+
 theorem runtime_handoff_requires_sandbox
     {state : LoopState}
     (canStart :
       CanStart loopSpec state LoopModule.runtimeHandoff) :
     loopCompleted state LoopModule.enforceSandbox :=
   deps_completed_of_can_start canStart LoopDependsOn.runtimeSandbox
+
+theorem runtime_handoff_scope_allowed
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.runtimeHandoff) :
+    runtimeScope <= state.activeScope :=
+  canStart.scopeAllowed
+
+theorem runtime_handoff_required_conditions
+    {state : LoopState}
+    (canStart :
+      CanStart loopSpec state LoopModule.runtimeHandoff) :
+    RequiredConditions loopSpec state LoopModule.runtimeHandoff :=
+  required_conditions_of_can_start canStart
+
+theorem runtime_handoff_requires_full_chain
+    {state : LoopState}
+    (consistent : LoopStateConsistent state)
+    (canStart :
+      CanStart loopSpec state LoopModule.runtimeHandoff) :
+    state.profileDone ∧
+    state.policyDone ∧
+    state.strategyDone ∧
+    state.workflowDone ∧
+    state.sandboxDone := by
+  let sandboxDone := runtime_handoff_requires_sandbox canStart
+  let workflowDone := consistent.sandboxAfterWorkflow sandboxDone
+  let strategyDone := consistent.workflowAfterStrategy workflowDone
+  let policyDone := consistent.strategyAfterPolicy strategyDone
+  let profileDone := consistent.policyAfterProfile policyDone
+  exact
+    And.intro profileDone
+      (And.intro policyDone
+        (And.intro strategyDone
+          (And.intro workflowDone sandboxDone)))
 
 def afterStrategyCacheHit : LoopState :=
   { activeScope := runtimeScope
@@ -171,6 +279,15 @@ theorem cache_branch_exclusive_at_after_strategy :
   · exact rightGuard
   · exact leftGuard
 
+theorem cache_branch_exclusive_of_consistent
+    {state : LoopState}
+    (consistent : LoopStateConsistent state) :
+    BranchExclusiveAt loopSpec state := by
+  intro left right sibling leftGuard rightGuard
+  cases sibling
+  · exact consistent.cacheExclusive leftGuard rightGuard
+  · exact consistent.cacheExclusive rightGuard leftGuard
+
 theorem cache_hit_and_cache_miss_cannot_both_start
     (hitStart :
       CanStart loopSpec afterStrategyCacheHit LoopModule.cacheHitBranch)
@@ -179,6 +296,18 @@ theorem cache_hit_and_cache_miss_cannot_both_start
     False :=
   no_sibling_branch_start
     cache_branch_exclusive_at_after_strategy
+    LoopBranchSibling.hitMiss
+    hitStart
+    missStart
+
+theorem cache_hit_and_cache_miss_cannot_both_start_of_consistent
+    {state : LoopState}
+    (consistent : LoopStateConsistent state)
+    (hitStart : CanStart loopSpec state LoopModule.cacheHitBranch)
+    (missStart : CanStart loopSpec state LoopModule.cacheMissBranch) :
+    False :=
+  no_sibling_branch_start
+    (cache_branch_exclusive_of_consistent consistent)
     LoopBranchSibling.hitMiss
     hitStart
     missStart

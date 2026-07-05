@@ -2,7 +2,7 @@
 ;;; Boundary: configured entrypoints assemble strategies and runtime adapters.
 ;;; Invariant: config data selects components but never executes workflow tasks.
 
-(import (only-in :std/sugar filter)
+(import (only-in :std/sugar filter filter-map)
         :poo-flow/src/core/failure
         :poo-flow/src/core/strategy
         :poo-flow/src/core/runtime-adapter
@@ -141,14 +141,7 @@
 ;;; literals and placeholders that do not require caller-supplied config keys.
 ;; : (-> [ConfigArgument] [ConfigRequirement])
 (def (config-arguments->requirements arguments)
-  (cond
-   ((null? arguments) '())
-   ((config-argument->requirement (car arguments))
-    => (lambda (requirement)
-         (cons requirement
-               (config-arguments->requirements (cdr arguments)))))
-   (else
-    (config-arguments->requirements (cdr arguments)))))
+  (filter-map config-argument->requirement arguments))
 
 ;;; Rendering keeps placeholder arguments as symbolic runtime references.
 ;;; Secret source-backed arguments render as redacted references so receipts and
@@ -183,10 +176,8 @@
 ;;; centralized for callers.
 ;; : (-> Alist [ConfigArgument] [Value])
 (def (render-config-arguments source arguments)
-  (if (null? arguments)
-    '()
-    (cons (render-config-argument source (car arguments))
-          (render-config-arguments source (cdr arguments)))))
+  (map (lambda (argument) (render-config-argument source argument))
+       arguments))
 
 ;;; A run config is the inspectable data form of a Funflow-style configured
 ;;; execution entrypoint.
@@ -359,32 +350,13 @@
 ;;; centralized for callers.
 ;; : (-> [ConfigRequirement] [Alist])
 (def (config-requirement-alists requirements)
-  (if (null? requirements)
-    '()
-    (cons (config-requirement->alist (car requirements))
-          (config-requirement-alists (cdr requirements)))))
-
-;;; Boundary: missing config requirements is the policy-visible edge for core
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
-;; : (-> [ConfigRequirement] Alist [ConfigRequirement] [ConfigRequirement])
-(def (missing-config-requirements/rev requirements source missing-rev)
-  (cond
-   ((null? requirements) missing-rev)
-   ((config-source-satisfies? source (car requirements))
-    (missing-config-requirements/rev
-     (cdr requirements)
-     source
-     missing-rev))
-   (else
-    (missing-config-requirements/rev
-     (cdr requirements)
-     source
-     (cons (car requirements) missing-rev)))))
+  (map config-requirement->alist requirements))
 
 ;; : (-> [ConfigRequirement] Alist [ConfigRequirement])
 (def (missing-config-requirements requirements source)
-  (reverse (missing-config-requirements/rev requirements source '())))
+  (filter (lambda (requirement)
+            (not (config-source-satisfies? source requirement)))
+          requirements))
 
 ;;; Literal requirements are already satisfied; file/env requirements are
 ;;; satisfied only by key presence in their source bucket.

@@ -391,12 +391,17 @@
     (def (loop-engine-intent-rows)
       (memo 'loop-engine-intent-rows
             (lambda () (poo-flow-user-config-loop-engine-intents config))))
-    (def (loop-engine-field field)
-      (memo (cons 'loop-engine-field field)
+    (def (loop-engine-field-values)
+      (memo 'loop-engine-field-values
             (lambda ()
-              (poo-flow-user-loop-engine-intents-field-values
+              (poo-flow-user-config-presentation-field-values
                (loop-engine-intent-rows)
-               field))))
+               +poo-flow-user-config-presentation-loop-engine-fields+
+               poo-flow-user-loop-engine-intent-ref))))
+    (def (loop-engine-field field)
+      (poo-flow-user-config-presentation-field-values-ref
+       (loop-engine-field-values)
+       field))
     (def (workflow-command-manifest-agreement)
       (memo 'workflow-command-manifest-agreement
             (lambda ()
@@ -1120,6 +1125,159 @@
        'replayable
        #t)))))
 
+;; : (-> PooUserConfig [PooUserModuleSelection] POOSettings [Symbol] POOObject)
+(def (poo-flow-user-config-loop-engine-only-presentation/summary
+      config
+      selected-modules
+      setting-object
+      public-setting-keys)
+  (let* ((loop-engine-intent-rows
+          (poo-flow-user-config-loop-engine-intents config))
+         (loop-engine-field-values
+          (poo-flow-user-config-presentation-field-values
+           loop-engine-intent-rows
+           '(runtime-handoff-facts capability-receipt)
+           poo-flow-user-loop-engine-intent-ref))
+         (runtime-handoff-facts
+          (poo-flow-user-config-presentation-field-values-ref
+           loop-engine-field-values
+           'runtime-handoff-facts))
+         (capability-receipts
+          (poo-flow-user-config-presentation-field-values-ref
+           loop-engine-field-values
+           'capability-receipt))
+         (workflow-command-manifest-agreement
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
+           '()
+           '()))
+         (workflow-handoff-bundle
+          (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+           '()
+           '()
+           workflow-command-manifest-agreement
+           '()
+           '()
+           '()))
+         (presentation-trace-rows
+          (poo-flow-user-config-presentation-trace
+           selected-modules
+           (poo-flow-user-config-feature-facts config)
+           '()
+           '()
+           '()
+           '()
+           '()
+           '()
+           '()
+           '()
+           '()
+           '()
+           workflow-command-manifest-agreement
+           '()
+           '()
+           workflow-handoff-bundle
+           loop-engine-intent-rows
+           public-setting-keys)))
+    (.o loop-engine-runtime-handoffs: runtime-handoff-facts
+        loop-engine-capability-receipts: capability-receipts
+        module-count: (length selected-modules)
+        loop-engine-intent-count: (length loop-engine-intent-rows)
+        loop-engine-runtime-handoff-count: (length loop-engine-intent-rows)
+        presentation-trace: presentation-trace-rows
+        runtime-executed: #f
+        kind: poo-flow-user-config-presentation-kind
+        module-keys: (poo-flow-user-config-module-keys config)
+        feature-count: (length selected-modules)
+        feature-facts: (poo-flow-user-config-feature-facts config)
+        workflow-cicd-pipeline-count: 0
+        workflow-cicd-runtime-command-manifest-map-count: 0
+        workflow-cicd-marlin-runtime-handoff-abi-count: 0
+        setting-count: (length public-setting-keys)
+        setting-keys: public-setting-keys
+        settings: (poo-flow-user-settings->alist
+                   setting-object
+                   public-setting-keys)
+        runtime-owner: "marlin-agent-core"
+        runtime-parses-scheme-source: #f
+        scheme-manufactures-runtime-handlers: #f
+        descriptor-realized?: #f
+        replayable: #t)))
+
+;; : (-> PooUserConfig [PooUserModuleSelection] POOSettings [Symbol] POOObject)
+(def (poo-flow-user-config-workflow-cicd-focused-presentation/summary-fast
+      config
+      selected-modules
+      setting-object
+      public-setting-keys)
+  (let* ((workflow-check-maps
+          (poo-flow-user-config-workflow-cicd-check-maps config))
+         (workflow-runtime-command-manifest-rows
+          (poo-flow-user-config-workflow-cicd-runtime-command-manifests
+           config))
+         (workflow-runtime-command-manifest-summary-rows
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-summaries
+           workflow-runtime-command-manifest-rows))
+         (workflow-runtime-command-manifest-agreement
+          (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
+           workflow-runtime-command-manifest-rows
+           workflow-runtime-command-manifest-summary-rows))
+         (workflow-marlin-runtime-handoff-abi-rows
+          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abis
+           workflow-runtime-command-manifest-rows))
+         (workflow-marlin-runtime-handoff-summary-rows
+          (poo-flow-user-workflow-cicd-marlin-runtime-handoff-abi-summaries
+           workflow-marlin-runtime-handoff-abi-rows))
+         (workflow-handoff-bundle
+          (poo-flow-user-workflow-cicd-marlin-handoff-receipt-bundle
+           workflow-runtime-command-manifest-rows
+           workflow-runtime-command-manifest-summary-rows
+           workflow-runtime-command-manifest-agreement
+           workflow-marlin-runtime-handoff-abi-rows
+           workflow-marlin-runtime-handoff-summary-rows
+           workflow-runtime-command-manifest-summary-rows)))
+    (.o workflow-cicd-marlin-handoff-receipt-bundle: workflow-handoff-bundle
+        workflow-cicd-pipeline-count: (length workflow-check-maps)
+        workflow-cicd-runtime-command-manifest-map-count:
+        (length workflow-runtime-command-manifest-rows)
+        workflow-cicd-runtime-command-manifest-summary-count:
+        (length workflow-runtime-command-manifest-summary-rows)
+        workflow-cicd-marlin-runtime-handoff-abi-count:
+        (length workflow-marlin-runtime-handoff-abi-rows)
+        runtime-executed: #f
+        kind: poo-flow-user-config-presentation-kind
+        module-count: (length selected-modules)
+        module-keys: (poo-flow-user-config-module-keys config)
+        feature-count: (length selected-modules)
+        cicd-intent-count: (length (poo-flow-user-config-cicd-intents config))
+        workflow-cicd-pipelines:
+        (poo-flow-user-config-presentation-workflow-cicd-check-map-names
+         workflow-check-maps)
+        workflow-cicd-runtime-command-manifests:
+        workflow-runtime-command-manifest-rows
+        workflow-cicd-runtime-command-manifest-summaries:
+        workflow-runtime-command-manifest-summary-rows
+        workflow-cicd-runtime-command-manifest-agreement:
+        workflow-runtime-command-manifest-agreement
+        workflow-cicd-marlin-runtime-handoff-abis:
+        workflow-marlin-runtime-handoff-abi-rows
+        workflow-cicd-marlin-runtime-handoff-summaries:
+        workflow-marlin-runtime-handoff-summary-rows
+        workflow-cicd-receipt-count:
+        (length workflow-runtime-command-manifest-summary-rows)
+        workflow-cicd-receipts: '()
+        loop-engine-intent-count: 0
+        loop-engine-runtime-handoff-count: 0
+        setting-count: (length public-setting-keys)
+        setting-keys: public-setting-keys
+        settings: (poo-flow-user-settings->alist
+                   setting-object
+                   public-setting-keys)
+        runtime-owner: "marlin-agent-core"
+        runtime-parses-scheme-source: #f
+        scheme-manufactures-runtime-handlers: #f
+        descriptor-realized?: #f
+        replayable: #t)))
+
 ;;; User config presentation is the downstream-facing doctor view. It exposes
 ;;; choices and settings but never realizes modules or executes runtime hooks.
 ;;; Presentation is a read-only contract projection over config objects. It
@@ -1134,7 +1292,7 @@
         (public-setting-keys
          (if (null? maybe-setting-keys) '() (car maybe-setting-keys))))
     (if (poo-flow-user-config-loop-engine-only? selected-modules)
-      (poo-flow-user-config-loop-engine-only-presentation
+      (poo-flow-user-config-loop-engine-only-presentation/summary
        config
        selected-modules
        setting-object

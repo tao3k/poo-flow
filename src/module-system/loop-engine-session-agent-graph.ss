@@ -9,6 +9,7 @@
                  poo-flow-session-agent-node
                  poo-flow-session-agent-node->alist)
         (only-in :poo-flow/src/modules/session/communication
+                 poo-flow-session-communication-channel-receipt
                  poo-flow-session-communication-receipt)
         (only-in :poo-flow/src/modules/session/objects
                  poo-flow-session-alist-ref
@@ -297,6 +298,58 @@
     output-session-refs
     '())))
 
+;; : (-> Alist Pair PooSessionCommunicationChannelReceipt)
+(def (poo-flow-loop-engine-session-agent-communication-channel-receipt
+      intent
+      role-ref)
+  (let* ((use-case-name
+          (poo-flow-user-loop-engine-intent-use-case-name intent))
+         (role (car role-ref))
+         (agent-id (cdr role-ref))
+         (loop-session-ref
+          (poo-flow-user-loop-engine-runtime-id use-case-name "session"))
+         (output-session-ref
+          (poo-flow-user-loop-engine-runtime-id
+           use-case-name
+           (string-append (symbol->string role) "-session")))
+         (channel-ref
+          (poo-flow-user-loop-engine-runtime-id
+           use-case-name
+           (string-append (symbol->string role) "-channel")))
+         (metadata
+          (list (cons 'source 'loop-engine-session-agent-graph)
+                (cons 'use-case use-case-name)
+                (cons 'role role)
+                (cons 'runtime-owner "marlin-agent-core")
+                (cons 'runtime-executed #f))))
+    (poo-flow-session-communication-channel-receipt
+     'loop-engine/project
+     channel-ref
+     'parent-child
+     loop-session-ref
+     output-session-ref
+     'loop-engine
+     agent-id
+     '(request receipt)
+     '(declared-channel-only receipt-only)
+     metadata)))
+
+;; : (-> Alist [Pair] [PooSessionCommunicationChannelReceipt])
+(def (poo-flow-loop-engine-session-agent-communication-channel-receipts
+      intent
+      role-refs)
+  (let loop ((remaining-role-refs role-refs)
+             (receipt-values '()))
+    (if (null? remaining-role-refs)
+      (reverse receipt-values)
+      (loop
+       (cdr remaining-role-refs)
+       (cons
+        (poo-flow-loop-engine-session-agent-communication-channel-receipt
+         intent
+         (car remaining-role-refs))
+        receipt-values)))))
+
 ;; : (-> Alist Pair [PooSessionCommunicationReceipt])
 (def (poo-flow-loop-engine-session-agent-communication-receipts/rev
       intent
@@ -493,6 +546,10 @@
           (poo-flow-loop-engine-session-agent-communication-receipts*
            intent
            role-refs))
+         (communication-channel-receipts
+          (poo-flow-loop-engine-session-agent-communication-channel-receipts
+           intent
+           role-refs))
          (root-session
           (poo-flow-loop-engine-session-value intent root-session-ref))
          (loop-session
@@ -529,5 +586,7 @@
       communication-receipts
       (list (cons 'source 'loop-engine-session-agent-graph)
             (cons 'use-case use-case-name)
+            (cons 'communication-channel-receipts
+                  communication-channel-receipts)
             (cons 'runtime-owner "marlin-agent-core")
             (cons 'runtime-executed #f))))))

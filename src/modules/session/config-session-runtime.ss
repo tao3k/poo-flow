@@ -289,6 +289,33 @@
 (def (session-agent-node-registry-entry node session-value)
   (poo-flow-session-agent-node->registry-entry node session-value))
 
+(def (poo-flow-session-syntax-agent-graph-metadata-ref metadata
+                                                        key
+                                                        default-value)
+  (if (list? metadata)
+    (let (entry (assoc key metadata))
+      (if entry (cdr entry) default-value))
+    default-value))
+
+(def (poo-flow-session-syntax-agent-graph-topology-metadata agent-nodes
+                                                            metadata)
+  (let (channel-receipts
+        (poo-flow-session-syntax-agent-graph-metadata-ref
+         metadata
+         'communication-channel-receipts
+         '()))
+    (poo-flow-session-topology->handoff-metadata
+     (list
+      (cons 'agent-registered?
+            (and (pair? agent-nodes) #t))
+      (cons 'subagent-registered?
+            (and (pair? agent-nodes)
+                 (pair? (cdr agent-nodes))
+                 #t))
+      (cons 'channel-authorized?
+            (and (pair? channel-receipts) #t)))
+     metadata)))
+
 ;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [PooSessionCommunicationReceipt] [Alist] PooSessionAgentGraph)
 (def (poo-flow-session-syntax-agent-graph project-id
                                           root-session-ref
@@ -298,14 +325,21 @@
                                           communication-receipts
                                           .
                                           maybe-metadata)
-  (apply poo-flow-session-agent-graph
-         project-id
-         root-session-ref
-         agent-nodes
-         session-values
-         registry-receipt
-         communication-receipts
-         maybe-metadata))
+  (let* ((metadata (if (null? maybe-metadata)
+                     '()
+                     (car maybe-metadata)))
+         (handoff-metadata
+          (poo-flow-session-syntax-agent-graph-topology-metadata
+           agent-nodes
+           metadata)))
+    (poo-flow-session-agent-graph
+     project-id
+     root-session-ref
+     agent-nodes
+     session-values
+     registry-receipt
+     communication-receipts
+     handoff-metadata)))
 
 ;; : (-> Symbol PooSessionAgentNode PooSessionAgentParamValidationReceipt Symbol Symbol Symbol [Alist] PooSessionAgentParamContract)
 (def (poo-flow-session-syntax-agent-param-contract contract-id

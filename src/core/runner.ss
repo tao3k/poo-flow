@@ -14,7 +14,8 @@
         :poo-flow/src/core/runtime-adapter
         :poo-flow/src/core/replay
         :poo-flow/src/core/runner-support/validation
-        :poo-flow/src/core/runner-support/receipt)
+        :poo-flow/src/core/runner-support/receipt
+        :poo-flow/src/core/runner-support/adapter-dispatch)
 
 (export make-run-result
         run-result?
@@ -36,16 +37,10 @@
         runner-run-replay-report)
 
 ;; : (-> Value Receipt RunResult)
-(defstruct run-result
-  (value receipt)
-  transparent: #t)
+(defstruct run-result (value receipt) transparent: #t)
 
 ;; : (-> Strategy RuntimeAdapter TaskFamilyRegistry FlowDeclarationRegistry RunnerState)
-(defstruct runner-state
-  (strategy
-   adapter
-   task-registry
-   flow-registry)
+(defstruct runner-state (strategy adapter task-registry flow-registry)
   transparent: #t)
 
 ;;; Public runner construction keeps the two-argument control-plane API stable
@@ -482,20 +477,9 @@
                 #f
                 '()))
 
-;;; Terminal selection converts the dataflow table back to the public run
-;;; result. Multiple terminals remain a list so future DAG plans can expose
-;;; more than one sink without inventing an implicit ordering rule.
-;; : (-> [PlanNode] [Id] [Id])
-(def (runner-plan-node-ids/rev nodes ids-rev)
-  (if (null? nodes)
-    ids-rev
-    (runner-plan-node-ids/rev
-     (cdr nodes)
-     (cons (plan-node-id (car nodes)) ids-rev))))
-
 ;; : (-> [PlanNode] [Id])
 (def (runner-plan-node-ids nodes)
-  (reverse (runner-plan-node-ids/rev nodes '())))
+  (map plan-node-id nodes))
 
 ;; : (-> ExecutionPlan Alist Value Value)
 (def (plan-output-value plan values default-input)
@@ -522,10 +506,8 @@
 ;;; branch-left and branch-right ordering expected by join receipts.
 ;; : (-> [Id] Alist [Value])
 (def (node-values ids values)
-  (if (null? ids)
-    '()
-    (cons (value-for-node-id (car ids) values)
-          (node-values (cdr ids) values))))
+  (map (lambda (id) (value-for-node-id id values))
+       ids))
 
 ;;; Missing dependency values indicate a malformed plan order rather than an
 ;;; application failure, so the runner raises a control-plane error.
@@ -546,95 +528,6 @@
        "missing dependency value"
        (missing-dependency-value-detail id)))))
 
-;;; Adapter dispatch preserves runtime adapter operations while keeping
-;;; extension-specific task request interpretation outside the runner.
-;; : (-> TaskFamilyRegistry RuntimeAdapter Task ExecutionRequest AdapterResult)
-(defpoo-core-receipt-projection
-  unsupported-adapter-operation-detail (operation task)
-  (bindings ())
-  (fields ((operation operation)
-           (task (task-name task)))))
-
-(def (adapter-result-for-task task-registry adapter task request)
-  (let ((operation (task-adapter-operation-in task-registry task)))
-    (cond
-     ((eq? operation 'store-put)
-      (adapter-store-put adapter request))
-     ((eq? operation 'store-get)
-      (adapter-store-get adapter (task-request-payload task)))
-     ((eq? operation 'submit)
-      (adapter-submit adapter request))
-     (else
-      (raise-control-plane-failure
-       'runner
-       'unsupported-adapter-operation
-       "unsupported adapter operation"
-       (unsupported-adapter-operation-detail operation task))))))
-
-;;; Adapter failures remain runtime-owned but are wrapped before receipt
-;;; persistence so replay and audit code can inspect the same failure shape.
-;; : (-> RuntimeAdapter AdapterResult MaybeExecutionFailure)
-(defpoo-core-receipt-projection
-  adapter-result-error-detail (adapter adapter-result)
-  (bindings ())
-  (fields ((adapter (runtime-adapter-name adapter))
-           (request-id (adapter-result-request-id adapter-result))
-           (error (adapter-result-error adapter-result)))))
-
-(defpoo-core-receipt-projection
-  adapter-result-failed-status-detail (adapter adapter-result)
-  (bindings ())
-  (fields ((adapter (runtime-adapter-name adapter))
-           (request-id (adapter-result-request-id adapter-result))
-           (status (adapter-result-status adapter-result)))))
-
-(def (adapter-result-failure adapter adapter-result)
-  (cond
-   ((adapter-result-error adapter-result)
-    (control-plane-failure
-     'runtime-adapter
-     'adapter-failure
-     "runtime adapter returned an error"
-     (adapter-result-error-detail adapter adapter-result)
-     #t))
-   ((eq? (adapter-result-status adapter-result) 'failed)
-    (control-plane-failure
-     'runtime-adapter
-     'adapter-failure
-     "runtime adapter failed without a detailed error"
-     (adapter-result-failed-status-detail adapter adapter-result)
-     #t))
-   (else #f)))
-
-;;; Boundary: adapter receipt status is the policy-visible edge for core behavior, keeping validation, lookup, or projection responsibilities centralized for callers.
-;; : (-> MaybeExecutionFailure AdapterResult Symbol)
-(def (adapter-receipt-status failure adapter-result)
-  (if failure
-    'failed
-    (adapter-result-status adapter-result)))
-
-;;; Adapter evidence is derived after runtime handoff because only the adapter
-;;; result knows the durable request id, status, and artifact handle.  Core
-;;; deliberately records a generic adapter observation; cache/CAS lifecycle
-;;; interpretation belongs to store/CAS extensions or the runtime owner.
-;; : (-> TaskFamilyRegistry Task AdapterResult AdapterEvidence)
-(def (adapter-result-evidence task-registry task adapter-result)
-  (list 'adapter-result
-        (task-name task)
-        (task-kind task)
-        (task-adapter-operation-in task-registry task)
-        (adapter-result-status adapter-result)
-        (adapter-result-request-id adapter-result)
-        (adapter-result-artifact-handle adapter-result)))
-
-;;; Local tasks keep strategy-owned cache policy; adapter-routed tasks record
-;;; generic runtime evidence instead of pretending to know cache semantics.
-;; : (-> TaskFamilyRegistry Strategy Task Input AdapterResult CacheDecision)
-(def (adapter-cache-decision task-registry strategy task input adapter-result)
-  (if (task-adapter-routed?-in task-registry task)
-    (adapter-result-evidence task-registry task adapter-result)
-    (strategy-cache-decision strategy task input adapter-result)))
-
 ;;; Boundary: local tasks run in-process, while routed tasks cross the adapter.
 ;;; Invariant: both branches return the same value/receipt pair shape.
 ;; : (-> Runner ExecutionPlan Strategy PlanNode Task Input [Id] StepResult)
@@ -643,6 +536,7 @@
   (bindings ())
   (fields ((task-kind (task-kind task)))))
 
+;; : (-> Runner ExecutionPlan Strategy PlanNode Task Input [Id] StepResult)
 (def (run-task runner plan strategy node task input frontier)
   (let ((task-registry (runner-task-registry runner)))
     (cond
