@@ -1,52 +1,146 @@
-#+TITLE: POO Flow
+#+TITLE: poo-flow
+#+OPTIONS: toc:2
 
 * GitHub Description
-Scheme-driven higher-order strategy control plane built on functional composition and Gerbil POO prototype objects for agent loops, workflows, CI/CD, deploy, sandbox, and policy systems.
+Scheme-driven higher-order strategy control plane built on functional composition and Gerbil POO prototype objects for agent loops, workflows, CI/CD, deploy, sandbox, session, policy, and proof-backed flow systems.
 
 * Overview
-=poo-flow= is a Gerbil Scheme control plane for higher-order strategy systems.
-It combines functional flow composition with Gerbil POO prototype objects so
-policies, profiles, modules, workflows, and loop descriptors can be expressed as
-inspectable values before they are handed to heavier runtimes.
+=poo-flow= is a Gerbil Scheme control plane for higher-order strategy systems. It combines functional flow composition with Gerbil POO prototype objects so policies, profiles, modules, workflows, sessions, and loop descriptors can be expressed as inspectable values before they are projected to heavier runtimes.
 
-The project is not only an agent-loop or workflow-configuration library. Its
-intended surface is broader:
+The project is not only an agent-loop or workflow-configuration library. Its intended surface is broader:
 
 - agent loop policy and governance;
 - workflow and task descriptor composition;
 - CI/CD pipeline and deploy strategy configuration;
-- sandbox/profile/resource policy;
-- module and feature activation;
+- sandbox, profile, resource, and capability policy;
+- session and subagent lifecycle control;
+- typed fact contracts and proof-backed user-interface scenarios;
 - validated strategy projection for Rust, Marlin, or other execution backends.
 
-Scheme owns the high-level control plane: object prototypes, functional
-composition, validation, extension, projection, and user configuration. Heavy
-execution remains outside this layer.
+Scheme owns the high-level control plane: object prototypes, functional composition, validation, extension, projection, proof fact emission, and user configuration. Heavy execution remains outside this layer.
 
 * Core Direction
-The current design is centered on two ideas:
+The current design is centered on three ideas.
 
-1. Functional composition should describe flow shape, strategy values, and
-   pure transformations.
-2. Gerbil POO prototype objects should describe extensible policy objects,
-   module objects, profile objects, and descriptor inheritance.
+1. Functional composition should describe flow shape, strategy values, and pure transformations.
+2. Gerbil POO prototype objects should describe extensible policy objects, module objects, profile objects, and descriptor inheritance.
+3. Lean proofs should make policy, strategy, session, sandbox, and runtime-handoff claims explicit instead of relying on informal configuration shape.
 
-Public extension APIs should stay POO-native. Raw alist DSLs, ad hoc patch
-languages, and untyped mutation hooks are not the normal user interface.
+Public extension APIs should stay POO-native. Raw alist DSLs, ad hoc patch languages, and untyped mutation hooks are not the normal user interface. They can exist only as internal or advanced escape hatches behind named POO-native or functional helpers.
 
-* POO, C3, And C4
-=poo-flow= currently relies on Gerbil POO and C3-style deterministic composition
-for descriptor inheritance and role precedence. This is useful when several
-independently-authored policy fragments apply to the same object and the system
-must know which inherited slot wins.
+* AI Strategy/Policy Boundary
+The problem this project targets is AI strategy/policy rigor. This should not be described as a worker-execution problem. A worker can execute a unit of work, but the hard part is deciding whether an AI-generated strategy is allowed to start, which policy it refines, which sandbox it may use, which session facts it depends on, and which loop state it may advance.
 
-C3/C4 do not schedule workflow execution. They decide precedence in composed
-objects. Workflow lowering, dependency edges, ready-node selection, retries, and
-parallel execution remain runtime concerns.
+In this repository, =agent-core= should be read through three control-plane axes:
 
-C4 is a forward-compatibility target for the Gerbil 0.19 line. Until that runtime
-is the project baseline, README-level claims should treat C4 as future support,
-not as a current runtime guarantee.
+| Axis | What It Owns | Proof Question |
+| Session | Conversation state, lineage, handoff receipts, subagent dispatch state. | Which facts prove that this session step may start? |
+| Sandbox | Tool, file, capability, and backend placement policy. | Does the selected profile stay within allowed scope? |
+| Loop | Strategy selection, progress, retries, completion, and runtime unlock. | Does the next strategy step preserve policy and state invariants? |
+
+This is why =poo-flow= is stronger than a generic worker runner. It does not only start work. It builds and checks the strategy/policy contract that says whether the work should be allowed to exist.
+
+* POO/C3 Linearization
+=poo-flow= relies on Gerbil POO and C3-style deterministic linearization for descriptor inheritance and role precedence. This matters when several independently-authored policy fragments apply to the same object and the system must know which inherited slot wins.
+
+The important boundary is:
+
+#+begin_src latex
+\[
+\operatorname{Lin}_{\mathrm{POO/C3}}(M) \neq \operatorname{Safety}(M,\Sigma)
+\]
+#+end_src
+
+POO/C3 linearization decides precedence. It does not prove that the resulting flow is safe to start, safe to project, or safe to run. Safety is checked by validation and proof obligations over the linearized object graph.
+
+In this repository, =PooC3= means the proof-facing view of POO objects after C3 linearization:
+
+#+begin_src text
+POO prototype objects
+  -> C3 linearization
+  -> resolved policy/profile/module graph
+  -> typed validation
+  -> Lean proof obligations
+  -> runtime projection or rejection
+#+end_src
+
+C4 is a forward-compatibility target for the Gerbil 0.19 line. Until that runtime is the project baseline, README-level claims should treat C4 as future support, not as a current runtime guarantee.
+
+* Proof Direction
+The proof layer is not trying to prove a complete Scheme interpreter. It proves the control-plane claims that matter for generated policy, strategy, workflow, session, and runtime-handoff logic.
+
+The central start contract is:
+
+#+begin_src latex
+\[
+\begin{aligned}
+\operatorname{CanStart}(s,m) \equiv\;&
+  \operatorname{DepsCompleted}(s,m) \\
+  &\land \operatorname{ScopeAllowed}(s,m) \\
+  &\land P_m(s) \\
+  &\land Q_m(s) \\
+  &\land G_m(s)
+\end{aligned}
+\]
+#+end_src
+
+Here =P_m= is the policy predicate, =Q_m= is the structural precondition, and =G_m= is the guard that blocks unsafe starts. A strategy step is proof-backed only when it carries evidence for the relevant start, policy, scope, trace, lifecycle, and runtime-boundary claims.
+
+The current Lean proof package lives under =packages/proof/lean=. The active PooC3 proof surface includes:
+
+| Area | Purpose |
+| =Semantics= | Core flow specification, scope, dependency, and =CanStart=. |
+| =PolicyComposition= and =PolicyBundle= | POO-native policy objects, facets, and reusable policy projections. |
+| =PolicyRefinement= | Subset/refinement proofs so overrides cannot silently broaden parent policy. |
+| =PolicyTrace= | Completion traces and runtime unlock conditions. |
+| =ControlPlane= | Session sandbox, tool, file, and subagent trace invariants. |
+| =SessionLifecycle= | Session module dependency graph and message dispatch lifecycle. |
+| =SessionControlLink= | Stronger lifecycle obligations for =sendToSubagent=. |
+| =ReferenceBoundary= | Boundary between POO-owned facts and production reference observations. |
+| =ReferenceAudit= | Candidate obligations, discharge, rejection, and audit result model. |
+| =FactContract= | Typed fact contracts for UI, target, session, aggregate, and failure cases. |
+| =ScenarioProof= | Scenario-level proof shape for user-interface cases. |
+
+* Reference Evidence Boundary
+Production systems such as OpenRATH are useful references, but they are not proof authorities for =poo-flow=. They can suggest real control-plane cases, lifecycle shapes, and missing checks. They cannot by themselves prove a POO flow claim.
+
+#+begin_src latex
+\[
+\begin{aligned}
+\operatorname{PooFlowOwnedFact}(C) &\Rightarrow C \\
+\operatorname{ReferenceObservation}(R,C) &\nRightarrow C \\
+\operatorname{VerifiedFromReference}(r)
+  &\Rightarrow \operatorname{AdoptionCertificate}(r) \\
+\operatorname{AdoptionCertificate}(r) &\Rightarrow C
+\end{aligned}
+\]
+#+end_src
+
+Reference observations become candidate obligations. They must be discharged by POO-owned evidence or adopted through an explicit certificate. Otherwise they remain rejected or open.
+
+* Session And Subagent Safety
+Session lifecycle is one of the main reasons for the Lean layer. A session must establish enough facts before work can be dispatched to agents or subagents.
+
+#+begin_src latex
+\[
+\begin{aligned}
+\operatorname{CanStart}(\Sigma,\operatorname{messageDispatch})
+  &\Rightarrow \operatorname{channelAuthorized}(\Sigma) \\
+\operatorname{channelAuthorized}(\Sigma)
+  &\Rightarrow
+    \operatorname{agentRegistered}(\Sigma)
+    \land \operatorname{subagentRegistered}(\Sigma)
+\end{aligned}
+\]
+#+end_src
+
+The proof layer also exposes gaps. For example, the base control-plane event model can construct a =sendToSubagent= trace without lifecycle facts. The stronger lifecycle model requires:
+
+- the target is an active subagent;
+- the channel is authorized;
+- policy allows the send.
+
+That distinction is intentional. Proof should reveal when implementation surfaces are too permissive, not merely mirror them.
 
 * Runtime Boundary
 The intended execution chain is:
@@ -54,36 +148,88 @@ The intended execution chain is:
 #+begin_src text
 functional strategy values
   -> POO prototype object graph
-  -> deterministic role/slot precedence
-  -> typed validation and safety checks
+  -> POO/C3 linearization
+  -> typed validation and proof obligations
   -> runtime projection
   -> Marlin, Rust, or external executor
 #+end_src
 
-This keeps language responsibilities clear. Scheme is used where Lisp and POO
-are strong: high-level policy, extensibility, inspectable configuration, and
-macro-assisted user interfaces. Rust or other runtimes should own subprocesses,
-CAS, persistence, heavy scheduling, and parallel execution.
+This keeps language responsibilities clear. Scheme is used where Lisp and POO are strong: high-level policy, extensibility, inspectable configuration, macro-assisted user interfaces, and proof fact emission. Rust, Marlin, or other runtimes should own subprocesses, CAS, persistence, heavy scheduling, and parallel execution.
+
+Runtime handoff should be explicit. Scheme should not pretend to execute runtime effects that belong to Marlin or Rust, and runtime code should not manufacture Scheme-side proof facts.
+
+* Agent Contract
+Agents that write or edit =poo-flow= policy, strategy, workflow, session, or UI configuration should treat the proof layer as a contract.
+
+| Agent Question | Required Evidence |
+| Which module starts next? | =CanStart= or a theorem implying it. |
+| Which policy object was reused? | A refinement/subset proof against its parent policy. |
+| Which profile grants tool or file access? | Sandbox trace theorem for tool/file scope. |
+| Which subagent receives a message? | Lifecycle trace with active subagent, channel, and policy facts. |
+| Which production reference was used? | Reference observation plus adoption certificate or rejection. |
+| Which runtime boundary is crossed? | Handoff fact proving Scheme does not manufacture runtime handlers. |
+
+If the agent cannot supply this evidence, it should emit an open obligation or a rejection certificate. It should not silently emit a stronger correctness claim.
+
+* Relation To Agent Frameworks
+General coding agents and harness frameworks are useful, but they solve a different layer.
+
+| System Class | What It Gives | What It Does Not Prove By Default |
+| Codex / Claude-style coding agents | Code generation, tool calls, repository edits, reasoning traces. | Project-specific AI strategy/policy refinement, session lifecycle safety, and sandbox subset proofs. |
+| Pi / Flue-style harnesses | Sessions, tools, skills, instructions, filesystem access, sandboxed execution, durability. | POO/C3-linearized policy objects and Lean-dischargeable proof obligations. |
+| OpenRATH-style session frameworks | Explicit multi-agent, multi-session runtime state; session, sandbox, memory, workflow, selector concepts. | POO flow correctness unless adopted through this project's proof boundary. |
+
+OpenRATH and Flue are valuable reference frameworks because they expose real production shapes: session graphs, sandbox placement, durable execution, tools, skills, workflows, and selectors. They should influence our cases and tests. They should not be treated as verification authorities.
+
+Concrete references:
+- [[https://github.com/Rath-Team/OpenRath][OpenRATH]] shows a production-oriented vocabulary where session, sandbox, memory, tool, agent, workflow, and selector are explicit runtime objects. POO Flow should use that as reference evidence for cases, not as a source of proof facts.
+- [[https://flueframework.com/][Flue]] shows the harness side: durable sessions, tools, skills, filesystem access, sandbox runtime, and deployable agent workflows. POO Flow should use that to sharpen session/sandbox/loop obligations, not to replace Lean discharge.
+
+The detailed evidence record lives in [[file:docs/10-19-design/10.06-poo-module-system/56-ai-strategy-policy-support-evidence.org][10.06.56 AI Strategy/Policy Support Evidence]]. It separates external observations, candidate cases, Scheme facts, Lean discharges, and runtime accept gates.
+* Project Shape
+The important source areas are:
+
+- =src/core/= for flow, task, plan, role, policy, receipt, runtime protocol, and runner concepts;
+- =src/module-system/= for module activation, object validation, profiles, projection, observability, proof-facing facts, and user-facing module forms;
+- =src/modules/= for concrete workflow, sandbox, session, loop, and backend modules;
+- =user-interface/= for example downstream configuration surfaces;
+- =packages/proof/lean/= for the Lean proof package;
+- =docs/10-19-design/= for the design record, proof architecture, and research audits;
+- =t/= for package-managed tests and smoke cases.
+
+* Verification
+Common focused checks:
+
+#+begin_src shell
+cd packages/proof/lean
+lake build
+#+end_src
+
+#+begin_src shell
+asp org lint docs/10-19-design/10.06-poo-module-system/55-pooc3-proof-architecture.org
+asp org lint docs/10-19-design/10.06-poo-module-system/60-pooc3-policy-composition-proof.org
+#+end_src
+
+#+begin_src shell
+gxpkg build -g
+#+end_src
+
+Do not run =gxpkg uninstall= inside this workspace. If package identity or tag state drifts, use =gxpkg clean=, =gxpkg update <package>=, or =gxpkg deps --install= and report any remaining tag conflict.
 
 * Docs
 The design record lives under =docs/10-19-design=. Use these as entry points:
 
-- [[file:docs/10-19-design/10.06-poo-module-system/00-index.org][10.06 poo-flow Module System]]
 - [[file:docs/10-19-design/10.01-gerbil-poo-funflow-control-plane.org][10.01 Gerbil POO Funflow Control Plane]]
+- [[file:docs/10-19-design/10.06-poo-module-system/00-index.org][10.06 poo-flow Module System]]
 - [[file:docs/10-19-design/10.06-poo-module-system/03-gerbil-scheme-c3-foundation.org][10.06.03 Gerbil Scheme C3 Foundation]]
 - [[file:docs/10-19-design/10.06-poo-module-system/29-gerbil-poo-programming-guidelines.org][10.06.29 Gerbil POO Programming Guidelines]]
-
-* Project Shape
-The important source areas are:
-
-- =src/core/= for flow, task, plan, role, policy, receipt, and runner concepts;
-- =src/module-system/= for module activation, object validation, profiles,
-  projection, observability, and user-facing module forms;
-- =src/modules/= for concrete workflow, sandbox, session, loop, and backend
-  modules;
-- =user-interface/= for example downstream configuration surfaces;
-- =docs/10-19-design/= for the design record and upstream research audits;
-- =t/= for package-managed tests.
+- [[file:docs/10-19-design/10.06-poo-module-system/44-current-project-programming-style.org][10.06.44 Current Project Programming Style]]
+- [[file:docs/10-19-design/10.06-poo-module-system/55-pooc3-proof-architecture.org][10.06.55 PooC3 Proof Architecture]]
+- [[file:docs/10-19-design/10.06-poo-module-system/56-pooc3-formal-semantics.org][10.06.56 PooC3 Formal Semantics]]
+- [[file:docs/10-19-design/10.06-poo-module-system/57-pooc3-lean-proof-implementation.org][10.06.57 PooC3 Lean Proof Implementation]]
+- [[file:docs/10-19-design/10.06-poo-module-system/58-pooc3-session-lifecycle-proof-link.org][10.06.58 PooC3 Session Lifecycle Proof Link]]
+- [[file:docs/10-19-design/10.06-poo-module-system/59-pooc3-typed-fact-contract.org][10.06.59 PooC3 Typed Fact Contract]]
+- [[file:docs/10-19-design/10.06-poo-module-system/60-pooc3-policy-composition-proof.org][10.06.60 PooC3 Policy Composition Proof]]
 
 * Non-Goals
 =poo-flow= should not become:
@@ -92,7 +238,7 @@ The important source areas are:
 - a raw data DSL with POO hidden behind it;
 - a replacement for Rust/Marlin execution infrastructure;
 - a scheduler encoded through inheritance linearization;
-- a place where safety policy is assumed from precedence alone.
+- a place where safety policy is assumed from precedence alone;
+- a project where JSON manifests are mistaken for mathematical proof.
 
-POO/C3 makes composition deterministic. Validation decides whether the composed
-object is legal and safe to project.
+POO/C3 makes composition deterministic. Validation and proof decide whether the composed object is legal, safe, and meaningful to project.
