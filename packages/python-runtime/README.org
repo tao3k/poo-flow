@@ -1,0 +1,31 @@
+#+title: Python Runtime Package
+
+This package is the Python runtime consumer for POO Flow runtime bindings.
+
+It does not own the ABI. The stable C surface lives under
+=bindings/runtime-c=. Python tests compile and load that binding through
+=ctypes= so the package validates the same runtime handoff contract that Rust,
+Marlin, or other runtime languages should consume.
+
+The package is managed by =uv=. It provides a Python API and a command-line
+probe for the current C ABI. Future ALALEX validation runtime code should plug
+into this package and consume the same =poo_flow_runtime= API.
+
+The validation runtime API is intentionally small and dependency-free. It
+validates a manifest, plans a runtime handoff, and returns receipts from the
+upstream C ABI binding. Scheme remains the owner of flow, graph, policy-family,
+and strategy-combinator semantics.
+
+The package also includes a dependency-free runtime graph executor. It models
+the compiled-plan execution substrate that Scheme can target: START/END,
+node actions, edges, conditional routing, reducers, and step limits. It is not
+the public graph authoring UI. Cross-language runtime handoff remains owned by
+the C ABI, including opaque graph plan handles.
+
+Run:
+
+#+begin_src sh
+uv run --project packages/python-runtime poo-flow-runtime-probe
+uv run --project packages/python-runtime poo-flow-runtime-validate
+uv run --project packages/python-runtime pytest packages/python-runtime/tests
+#+end_src
