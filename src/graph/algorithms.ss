@@ -17,6 +17,7 @@
         poo-flow-graph-cycle-path
         poo-flow-graph-acyclic?
         poo-flow-graph-topological-order
+        poo-flow-graph-topological-order/acyclic
         poo-flow-graph-analysis-receipt)
 
 (defrules poo-flow-graph-field-rows ()
@@ -110,9 +111,14 @@
   (let ((cycle-path (poo-flow-graph-cycle-path graph-value)))
     (if cycle-path
       #f
-      (topological-walk (poo-flow-graph-node-ids graph-value)
-                        (poo-flow-graph-edges graph-value)
-                        '()))))
+      (poo-flow-graph-topological-order/acyclic graph-value))))
+
+;; : (-> PooFlowGraph MaybeList)
+(def (poo-flow-graph-topological-order/acyclic graph-value)
+  ;; Caller already established that no cycle path exists.
+  (topological-walk (poo-flow-graph-node-ids graph-value)
+                    (poo-flow-graph-edges graph-value)
+                    '()))
 
 ;; : (-> PooFlowGraph PooFlowGraphAnalysis)
 (def (poo-flow-graph-analysis-receipt graph-value . maybe-start+target)
@@ -128,7 +134,7 @@
          (cycle-path (poo-flow-graph-cycle-path graph-value))
          (topological-order (if cycle-path
                               #f
-                              (poo-flow-graph-topological-order
+                              (poo-flow-graph-topological-order/acyclic
                                graph-value)))
          (diagnostics (if cycle-path
                         (poo-flow-graph-field-rows

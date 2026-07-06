@@ -9,6 +9,7 @@
         :poo-flow/src/module-system/loop-engine-config
         :poo-flow/src/module-system/presentation
         :poo-flow/src/module-system/profile-core
+        :poo-flow/src/module-system/profile-gate
         :poo-flow/src/module-system/profile-doctor
         :poo-flow/src/module-system/profile-presentation)
 
@@ -27,9 +28,19 @@
         poo-flow-user-profile-doctor-presentation-kind
         poo-flow-user-profile-set-doctor-report-kind
         poo-flow-user-profile-set-doctor-presentation-kind
+        poo-flow-user-interface-profile-gate-kind
+        poo-flow-user-interface-profile-gate-receipt-kind
+        poo-flow-user-interface-profile-gate-fact-keys
+        poo-flow-user-interface-profile-proof-statuses
         pooFlowUserProfile
         pooFlowUserProfileSet
         pooFlowUserProfileExtend
+        poo-flow-user-interface-profile-gate-receipt
+        poo-flow-user-interface-profile-gate
+        poo-flow-user-interface-profile-gate/receipt
+        pooFlowUserInterfaceProfileGateReceipt
+        pooFlowUserInterfaceProfileGate
+        pooFlowUserInterfaceProfileGateWithReceipt
         pooFlowDefaultUserSettings
         poo-flow-default-user-setting-keys
         pooFlowUserConfigFromProfile
@@ -54,6 +65,12 @@
         poo-flow-user-profile-modules
         poo-flow-user-profile-settings
         poo-flow-user-profile-setting-keys
+        poo-flow-user-interface-profile-gate?
+        poo-flow-user-interface-profile-gate-receipt?
+        poo-flow-user-interface-profile-gate-profile-name
+        poo-flow-user-interface-profile-gate-accepted?
+        poo-flow-user-interface-profile-gate->lean-facts
+        poo-flow-user-interface-profile-lean-fact-contract-complete?
         poo-flow-user-profile-diagnostics
         poo-flow-user-profile-set-diagnostics
         poo-flow-user-profile-diagnostic->alist)

@@ -186,6 +186,8 @@ Concrete references:
 - [[https://flueframework.com/][Flue]] shows the harness side: durable sessions, tools, skills, filesystem access, sandbox runtime, and deployable agent workflows. POO Flow should use that to sharpen session/sandbox/loop obligations, not to replace Lean discharge.
 
 The detailed evidence record lives in [[file:docs/10-19-design/10.06-poo-module-system/56-ai-strategy-policy-support-evidence.org][10.06.56 AI Strategy/Policy Support Evidence]]. It separates external observations, candidate cases, Scheme facts, Lean discharges, and runtime accept gates.
+
+The =user-interface/= tree is also a community profile library, not only an example folder. See [[file:docs/10-19-design/10.06-poo-module-system/57-user-interface-profile-library.org][10.06.57 User Interface Profile Library]] for the contribution model: users contribute reusable profiles, strategies, policies, and scenarios; downstream users import them through the library and extend them with POO objects. Core and community profiles must pass tests and carry Lean proof status before they are treated as public reusable library surface.
 * Project Shape
 The important source areas are:
 

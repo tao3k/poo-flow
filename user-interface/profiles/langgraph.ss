@@ -1,0 +1,25 @@
+;;; -*- Gerbil -*-
+;;; User Interface reusable profile fragment: LangGraph-style state graph.
+;;; Invariant: included by load!; the loader owns imports and generated export.
+
+(.o (session (.o (name 'langgraph-multi-agent-session)
+                 (contract 'session-spawns-subagents)
+                 (policy 'subagent-handoff-is-explicit)))
+    (state (.o (name 'langgraph-typed-checkpointed-state)
+               (contract 'state-schema-is-closed)
+               (policy 'state-updates-are-merged)))
+    (router (.o (name 'langgraph-conditional-router)
+                (contract 'predicate-selects-next-node)
+                (policy 'branch-target-is-declared)))
+    (agent-node (.o (name 'langgraph-agent-node)
+                    (contract 'agent-node-reads-state)
+                    (policy 'agent-node-writes-state-delta)))
+    (tool-node (.o (name 'langgraph-tool-node)
+                   (contract 'tool-node-has-permission-scope)
+                   (policy 'tool-node-requires-route)))
+    (bounded-loop (.o (name 'langgraph-bounded-loop)
+                      (contract 'fuel-decreases-on-step)
+                      (policy 'loop-has-progress-measure)))
+    (runtime-handoff (.o (name 'langgraph-runtime-handoff)
+                         (contract 'runtime-boundary-is-explicit)
+                         (policy 'handoff-after-proof-gate))))

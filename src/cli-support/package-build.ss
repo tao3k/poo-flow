@@ -19,6 +19,9 @@
                  path-expand
                  string=?
                  string-append
+                 make-thread
+                 thread-sleep!
+                 thread-start!
                  ##os-file-times-set!
                  ##cpu-count)
         (only-in :gerbil/compiler/base
@@ -521,6 +524,138 @@
   (quotient (* (- end-jiffy start-jiffy) 1000000)
             (jiffies-per-second)))
 
+;; : (-> String Integer Integer)
+(def (poo-flow-build-observability-budget-seconds name default-value)
+  (let (value (getenv name #f))
+    (if value
+      (let (parsed (string->number value))
+        (if (and (integer? parsed) (> parsed 0))
+          parsed
+          default-value))
+      default-value)))
+
+;; : (-> String Integer Integer)
+(def (poo-flow-build-observability-budget-micros name default-seconds)
+  (* (poo-flow-build-observability-budget-seconds name default-seconds)
+     1000000))
+
+;; : (-> Integer Integer Symbol)
+(def (poo-flow-build-observability-budget-status target-count elapsed-micros)
+  (let ((warn-single
+         (poo-flow-build-observability-budget-micros
+          "POO_FLOW_BUILD_WARN_SINGLE_TARGET_SECONDS"
+          30))
+        (fail-single
+         (poo-flow-build-observability-budget-micros
+          "POO_FLOW_BUILD_FAIL_SINGLE_TARGET_SECONDS"
+          120))
+        (warn-stage
+         (poo-flow-build-observability-budget-micros
+          "POO_FLOW_BUILD_WARN_STAGE_SECONDS"
+          60))
+        (fail-stage
+         (poo-flow-build-observability-budget-micros
+          "POO_FLOW_BUILD_FAIL_STAGE_SECONDS"
+          300)))
+    (cond
+     ((and (= target-count 1) (> elapsed-micros fail-single))
+      'single-target-time-budget-exceeded)
+     ((> elapsed-micros fail-stage)
+      'stage-time-budget-exceeded)
+     ((and (= target-count 1) (> elapsed-micros warn-single))
+      'single-target-time-budget-warning)
+     ((> elapsed-micros warn-stage)
+      'stage-time-budget-warning)
+     (else 'ok))))
+
+;; : (-> Symbol Boolean)
+(def (poo-flow-build-observability-budget-failure? status)
+  (or (eq? status 'single-target-time-budget-exceeded)
+      (eq? status 'stage-time-budget-exceeded)))
+
+;; : (-> Symbol String String Symbol Symbol Integer Integer [String] Unit)
+(def (poo-flow-build-observability-guard! phase
+                                          label
+                                          command
+                                          status
+                                          reason
+                                          target-count
+                                          elapsed-micros
+                                          targets-preview)
+  (let (budget-status
+        (poo-flow-build-observability-budget-status
+         target-count
+         elapsed-micros))
+    (unless (eq? budget-status 'ok)
+      (display "|poo-flow-build-observability ")
+      (write
+       [phase: phase
+        label: label
+        command: command
+        status: status
+        reason: reason
+        budget-status: budget-status
+        target-count: target-count
+        elapsed-micros: elapsed-micros
+        targets-preview: targets-preview])
+      (newline)
+      (force-output))
+    (when (poo-flow-build-observability-budget-failure? budget-status)
+      (error "poo-flow build observability budget exceeded"
+             budget-status
+             label
+             elapsed-micros))))
+
+;; : (-> [BuildSpec] [String])
+(def (poo-flow-build-observability-targets-preview stage)
+  (let loop ((rest stage) (remaining 3) (acc []))
+    (if (or (null? rest) (= remaining 0))
+      (reverse acc)
+      (let (source (poo-flow-diagnostic-source-path (car rest)))
+        (loop (cdr rest)
+              (if source (- remaining 1) remaining)
+              (if source (cons source acc) acc))))))
+
+;; : (-> Symbol String String [BuildSpec] BuildOptions Thunk Value)
+(def (poo-flow-build-observability-with-live-watchdog phase
+                                                      label
+                                                      command
+                                                      stage
+                                                      _options
+                                                      thunk)
+  (let ((completed? #f)
+        (target-count (length stage)))
+    (when (= target-count 1)
+      (let ((fail-seconds
+             (poo-flow-build-observability-budget-seconds
+              "POO_FLOW_BUILD_FAIL_SINGLE_TARGET_SECONDS"
+              120))
+            (targets-preview
+             (poo-flow-build-observability-targets-preview stage)))
+        (thread-start!
+         (make-thread
+          (lambda ()
+            (thread-sleep! fail-seconds)
+            (unless completed?
+              (display "|poo-flow-build-observability ")
+              (write
+               [phase: phase
+                label: label
+                command: command
+                status: 'running
+                reason: 'live-watchdog
+                budget-status: 'single-target-live-time-budget-exceeded
+                target-count: target-count
+                timeout-seconds: fail-seconds
+                targets-preview: targets-preview])
+              (newline)
+              (force-output)
+              (exit 124)))))))
+    (dynamic-wind
+      (lambda () #!void)
+      thunk
+      (lambda () (set! completed? #t)))))
+
 (def (poo-flow-build-debug-output-count stage options status reason)
   (length
    (if (and (eq? status 'skipped)
@@ -544,6 +679,8 @@
                                          start-jiffy)
   (when (poo-flow-build-debug-tracking-options? options)
     (let* ((end-jiffy (current-jiffy))
+           (elapsed-micros
+            (poo-flow-build-elapsed-micros start-jiffy end-jiffy))
            (cache-status (and receipt-status
                               (gslph-package-build-receipt-status-ref
                                receipt-status
@@ -583,12 +720,21 @@
                            (poo-flow-package-worker-count))
         targets-preview: targets-preview
         cache-stamp: stamp
-        srcdir: (poo-flow-package-srcdir)
-        elapsed-micros: (poo-flow-build-elapsed-micros
-                         start-jiffy
-                         end-jiffy)])
-      (newline)
-      (force-output))))
+         srcdir: (poo-flow-package-srcdir)
+         elapsed-micros: elapsed-micros])
+       (newline)
+       (force-output)
+       (unless (and (eq? phase 'package-stage)
+                    (string=? command "profiled std/make"))
+         (poo-flow-build-observability-guard!
+          phase
+          label
+          command
+          status
+          reason
+          target-count
+          elapsed-micros
+          targets-preview)))))
 
 (def (poo-flow-build-debug-package-total-line options start-jiffy)
   (when (poo-flow-build-debug-tracking-options? options)
@@ -855,6 +1001,29 @@
    poo-flow-gxc-spec-lightweight-outputs-current?/mtime
    stage))
 
+(def (poo-flow-gxc-spec-lightweight-outputs-present? spec)
+  (let (outputs (poo-flow-diagnostic-outputs spec))
+    (and (not (null? outputs))
+         (poo-flow-all? file-exists? outputs))))
+
+(def (poo-flow-source-newer-than-stamp?/mtime source stamp)
+  (let ((source-time (poo-flow-file-mtime-seconds source))
+        (stamp-time (poo-flow-file-mtime-seconds stamp)))
+    (or (not source-time)
+        (not stamp-time)
+        (> source-time stamp-time))))
+
+(def (poo-flow-stage-spec-source-stale?/mtime spec stamp)
+  (let (source (poo-flow-diagnostic-source-path spec))
+    (or (not source)
+        (poo-flow-source-newer-than-stamp?/mtime source stamp)
+        (not (poo-flow-gxc-spec-lightweight-outputs-present? spec)))))
+
+(def (poo-flow-stage-source-stale-specs stage stamp)
+  (filter (lambda (spec)
+            (poo-flow-stage-spec-source-stale?/mtime spec stamp))
+          stage))
+
 (def (poo-flow-stage-fast-stamp-current?/mtime stage options stamp)
   (and (not (poo-flow-force-build-options? options))
        (poo-flow-stage-cacheable? stage options)
@@ -948,6 +1117,11 @@
         ((poo-flow-stage-fast-stamp-current?/mtime stage options stamp)
          (values #t 'stamp-current #f stamp))
         ((and (file-exists? stamp)
+              (not (poo-flow-stage-sources-current-against-stamp?/mtime
+                    stage
+                    stamp)))
+         (values #f 'sources-stale #f stamp))
+        ((and (file-exists? stamp)
               (poo-flow-stage-lightweight-outputs-current?/mtime stage))
          (begin
            (poo-flow-stage-cache-retouch! stamp)
@@ -1027,6 +1201,15 @@
      (poo-flow-stage-source-files stage)
      (poo-flow-stage-output-files stage options))))
 
+(def (poo-flow-stage-cache-refresh! stage options . maybe-label)
+  (when (poo-flow-stage-cacheable? stage options)
+    (let (stamp (apply poo-flow-stage-cache-stamp-path
+                       options
+                       maybe-label))
+      (if (file-exists? stamp)
+        (poo-flow-stage-cache-retouch! stamp)
+        (apply poo-flow-stage-cache-touch! stage options maybe-label)))))
+
 (def (poo-flow-make-profiled-spec label spec options)
   (let ((stage (list spec))
         (start-jiffy (current-jiffy)))
@@ -1052,9 +1235,16 @@
          "profiled std/make"
          stage
          options)
-        (apply poo-flow-apply-make stage
-               srcdir: (poo-flow-package-srcdir)
-               (poo-flow-make-options options))
+        (poo-flow-build-observability-with-live-watchdog
+         'package-stage-spec
+         label
+         "profiled std/make"
+         stage
+         options
+         (lambda ()
+           (apply poo-flow-apply-make stage
+                  srcdir: (poo-flow-package-srcdir)
+                  (poo-flow-make-options options))))
         (poo-flow-build-debug-tracking-line
          'package-stage-spec
          label
@@ -1069,10 +1259,22 @@
 
 (def (poo-flow-make-profiled-stage label stale-stage options)
   (poo-flow-package-message "compile-profiled" label stale-stage)
-  (for-each
-   (lambda (spec)
-     (poo-flow-make-profiled-spec label spec options))
-   stale-stage))
+  (if (= (length stale-stage) 1)
+    (for-each
+     (lambda (spec)
+       (poo-flow-make-profiled-spec label spec options))
+     stale-stage)
+    (begin
+      (poo-flow-package-message "compile" label stale-stage)
+      (poo-flow-build-debug-start-line
+       'package-stage
+       label
+       "profiled std/make bulk"
+       stale-stage
+       options)
+      (apply poo-flow-apply-make stale-stage
+             srcdir: (poo-flow-package-srcdir)
+             (poo-flow-package-stage-options stale-stage options)))))
 
 (def (poo-flow-make label stage options)
   (poo-flow-package-require-gxpkg-env!)
@@ -1099,16 +1301,19 @@
              receipt-status
              start-jiffy))
           (begin
-            (let (stale-stage (poo-flow-stage-stale-specs
-                               stage
-                               options
-                               label))
+            (let (stale-stage
+                  (if (and (eq? reason 'sources-stale) stamp)
+                    (poo-flow-stage-source-stale-specs stage stamp)
+                    (poo-flow-stage-stale-specs
+                     stage
+                     options
+                     label)))
               (if (null? stale-stage)
                 (begin
                   (poo-flow-package-message "skip" label stage)
                   (display "|note kind=build-cache message=\"package-local gxc direct outputs are current after stale target scan; skipped std/make rebuild\"")
                   (newline)
-                  (poo-flow-stage-cache-touch! stage options label)
+                  (poo-flow-stage-cache-refresh! stage options label)
                   (poo-flow-build-debug-tracking-line
                    'package-stage
                    label
@@ -1137,12 +1342,19 @@
                        "std/make"
                        stale-stage
                        options)
-                  (apply poo-flow-apply-make stale-stage
-                         srcdir: (poo-flow-package-srcdir)
-                         (poo-flow-package-stage-options
-                          stale-stage
-                          options))))
-                  (poo-flow-stage-cache-touch! stage options label)
+                  (poo-flow-build-observability-with-live-watchdog
+                   'package-stage
+                   label
+                   "std/make"
+                   stale-stage
+                   options
+                   (lambda ()
+                     (apply poo-flow-apply-make stale-stage
+                            srcdir: (poo-flow-package-srcdir)
+                            (poo-flow-package-stage-options
+                             stale-stage
+                             options))))))
+                  (poo-flow-stage-cache-refresh! stage options label)
                   (poo-flow-build-debug-tracking-line
                    'package-stage
                    label
@@ -1150,7 +1362,9 @@
                         label
                         stale-stage
                         options)
-                     "profiled std/make"
+                     (if (= (length stale-stage) 1)
+                       "profiled std/make"
+                       "profiled std/make bulk")
                      "std/make")
                    'compiled
                    reason
@@ -1325,7 +1539,7 @@
       (string=? label "tests")))
 
 (def (poo-flow-profiled-stage-options? label stage options)
-  (and (> (length stage) 1)
+  (and (not (null? stage))
        (poo-flow-build-debug-tracking-options? options)
        (poo-flow-profiled-stage-label? label)))
 

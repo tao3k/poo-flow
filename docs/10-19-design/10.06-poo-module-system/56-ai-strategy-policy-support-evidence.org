@@ -436,6 +436,59 @@ theorem subagent_scope_safe
 That Lean sketch is deliberately small, but it points to the correct direction:
 prove properties over typed facts, not over an untyped JSON blob.
 
+* 10.06.56.85 User Interface As Evidence Library
+
+The =user-interface/= tree is the natural place where support evidence becomes
+local reusable cases.  It should not only teach users how to write configuration.
+It should collect community profiles, strategies, policies, and scenarios that
+downstream users can import and extend through POO objects.
+
+The evidence path is:
+
+#+begin_src mermaid
+flowchart LR
+  Evidence["Research / framework evidence"]
+  Case["Candidate scenario"]
+  Profile["Reusable user-interface profile"]
+  Downstream["Downstream reuse"]
+  Extension["POO extension"]
+  Facts["Scheme facts"]
+  Obligations["Lean obligations"]
+
+  Evidence --> Case
+  Case --> Profile
+  Profile --> Downstream
+  Downstream --> Extension
+  Extension --> Facts
+  Facts --> Obligations
+#+end_src
+
+This gives the community contribution model a proof role.  A
+=user-interface/= profile, whether added by the core project or contributed by
+the community, is not public reusable library surface until its tests and Lean
+proof status are known.
+
+| Contribution | Reuse value | Proof value |
+|--------------+-------------+-------------|
+| profile | downstream users import a shared policy object | establishes a stable fact projection target |
+| strategy | downstream users reuse branch/loop behavior | creates transition and selector obligations |
+| policy | downstream users reuse allowed action scope | creates scope and no-broadening obligations |
+| scenario | users and agents see a concrete instance | becomes a benchmark and proof test case |
+| POO extension | users refine without copying | tests contract preservation under extension |
+
+#+begin_src latex
+\[
+\operatorname{UserInterfaceContribution}(p)
+  \land \operatorname{PublicLibrarySurface}(p)
+  \Rightarrow
+    \operatorname{Tested}(p)
+    \land \operatorname{MappedToLeanObligations}(p)
+    \land \operatorname{ProofStatusKnown}(p)
+\]
+#+end_src
+
+See [[file:57-user-interface-profile-library.org][10.06.57 User Interface Profile Library]] for the full contribution model.
+
 * 10.06.56.90 Evidence-To-Implementation Rule
 
 When a paper or framework exposes a useful idea, the implementation path is:
@@ -468,4 +521,3 @@ mistaking agent traces for proof.  We can learn from ToolEmu and AgentDojo
 without accepting post-hoc testing as a replacement for runtime proof gates.  We
 can reuse the proof-carrying architecture without proving the full Scheme
 interpreter.
-

@@ -1,0 +1,100 @@
+(import :poo-flow/src/proof/proof-fact-wire
+        :poo-flow/src/proof/proof-gate-receipts
+        :poo-flow/src/proof/proof-gate-bundle)
+
+(def (assert-equal label actual expected)
+  (unless (equal? actual expected)
+    (error "proof gate receipt mismatch" label actual expected)))
+
+(def (assert-true label value)
+  (unless value
+    (error "proof gate receipt expected true" label value)))
+
+(def accepted-bundle
+  (poo-flow-langgraph-user-interface-proof-gate-bundle))
+
+(assert-true 'accepted-receipt-bundle-valid
+             (poo-flow-proof-gate-bundle-valid? accepted-bundle))
+(assert-equal 'accepted-receipt-bundle-result
+              (poo-flow-proof-fact-ref 'accepted? accepted-bundle)
+              #t)
+
+(def bad-override-receipts
+  (let ((receipts (poo-flow-langgraph-user-interface-proof-receipts)))
+    (list (assq 'schema receipts)
+          (cons 'composition
+                (list (cons 'fact-id 'langgraph-bad-override-composition)
+                      (cons 'profile-refs-ok #t)
+                      (cons 'overrides-scoped-ok #f)
+                      (cons 'modules-ordered-ok #t)
+                      (cons 'scenario-gate-ok #t)
+                      (cons 'no-runtime-execution #t)))
+          (assq 'scenario receipts)
+          (assq 'handoff receipts))))
+
+(def bad-override-bundle
+  (poo-flow-proof-gate-receipts->bundle bad-override-receipts))
+
+(assert-true 'bad-override-bundle-valid
+             (poo-flow-proof-gate-bundle-valid? bad-override-bundle))
+(assert-equal 'bad-override-rejected
+              (poo-flow-proof-fact-ref 'accepted? bad-override-bundle)
+              #f)
+(assert-equal 'bad-override-rule
+              (poo-flow-proof-fact-ref
+               'rejection-rule
+               (poo-flow-proof-fact-ref 'composition bad-override-bundle))
+              'composition-rejected-by-override-scope)
+
+(def missing-capability-receipts
+  (let ((receipts (poo-flow-langgraph-user-interface-proof-receipts)))
+    (list (assq 'schema receipts)
+          (assq 'composition receipts)
+          (cons 'scenario
+                (list (cons 'fact-id 'langgraph-missing-capability-scenario)
+                      (cons 'plan-ok #t)
+                      (cons 'rejections-ok #t)
+                      (cons 'accepted-ok #f)))
+          (assq 'handoff receipts))))
+
+(def missing-capability-bundle
+  (poo-flow-proof-gate-receipts->bundle missing-capability-receipts))
+
+(assert-true 'missing-capability-bundle-valid
+             (poo-flow-proof-gate-bundle-valid? missing-capability-bundle))
+(assert-equal 'missing-capability-rejected
+              (poo-flow-proof-fact-ref 'accepted? missing-capability-bundle)
+              #f)
+(assert-equal 'missing-capability-rule
+              (poo-flow-proof-fact-ref
+               'rejection-rule
+               (poo-flow-proof-fact-ref 'scenario missing-capability-bundle))
+              'runtime-row-rejected-by-accepted)
+
+(def runtime-owner-receipts
+  (let ((receipts (poo-flow-langgraph-user-interface-proof-receipts)))
+    (list (assq 'schema receipts)
+          (assq 'composition receipts)
+          (assq 'scenario receipts)
+          (cons 'handoff
+                (list (cons 'fact-id 'langgraph-runtime-owner-handoff)
+                      (cons 'policy-ready #t)
+                      (cons 'composition-accepted #t)
+                      (cons 'graph-contract-ok #t)
+                      (cons 'runtime-owner-external #f)
+                      (cons 'execution-deferred #t)
+                      (cons 'artifacts-declared #t))))))
+
+(def runtime-owner-bundle
+  (poo-flow-proof-gate-receipts->bundle runtime-owner-receipts))
+
+(assert-true 'runtime-owner-bundle-valid
+             (poo-flow-proof-gate-bundle-valid? runtime-owner-bundle))
+(assert-equal 'runtime-owner-rejected
+              (poo-flow-proof-fact-ref 'accepted? runtime-owner-bundle)
+              #f)
+(assert-equal 'runtime-boundary-failed
+              (poo-flow-proof-fact-ref
+               'runtime-boundary-ok?
+               runtime-owner-bundle)
+              #f)

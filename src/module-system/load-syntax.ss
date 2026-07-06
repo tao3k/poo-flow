@@ -8,9 +8,12 @@
                  expander-context-id)
         (only-in :gerbil/expander/stx stx-source))
 
-(export load!)
+(export load!
+        poo-flow-load-profile-module-binding)
 
 (begin-syntax
+  (include "load-binding-syntax-core.inc")
+
   ;; Compile-time path and naming helpers keep `load!` focused on expansion.
   (def (poo-flow-load-source-path value)
     (cond
@@ -21,12 +24,6 @@
   (def (poo-flow-load-absolute-path? value)
     (and (> (string-length value) 0)
          (char=? (string-ref value 0) #\/)))
-
-  (def (poo-flow-load-string-prefix? prefix value)
-    (let ((prefix-length (string-length prefix))
-          (value-length (string-length value)))
-      (and (>= value-length prefix-length)
-           (string=? (substring value 0 prefix-length) prefix))))
 
   (def (poo-flow-load-drop-prefix prefix value)
     (let ((prefix-length (string-length prefix))
@@ -46,26 +43,6 @@
                          suffix))
         (substring value 0 (- value-length suffix-length))
         value)))
-
-  (def (poo-flow-load-path-segments value)
-    (let ((length (string-length value)))
-      (let loop ((index 0) (start 0) (segments '()))
-        (cond
-         ((= index length)
-          (reverse (cons (substring value start index) segments)))
-         ((char=? (string-ref value index) #\/)
-          (loop (+ index 1)
-                (+ index 1)
-                (cons (substring value start index) segments)))
-         (else
-          (loop (+ index 1) start segments))))))
-
-  (def (poo-flow-load-member-tail needle values)
-    (let loop ((rest values))
-      (cond
-       ((null? rest) #f)
-       ((equal? (car rest) needle) rest)
-       (else (loop (cdr rest))))))
 
   (def (poo-flow-load-last-segment segments fallback)
     (let loop ((rest segments) (last fallback))
@@ -99,22 +76,6 @@
        (else
         (string-append path-value ".ss")))))
 
-  (def (poo-flow-load-module-context-source-path)
-    (let* ((context-id
-            (expander-context-id (current-expander-context)))
-           (context-name
-            (and (symbol? context-id)
-                 (symbol->string context-id)))
-           (package-prefix "poo-flow/"))
-      (and context-name
-           (let (relative-context-name
-                 (if (poo-flow-load-string-prefix? package-prefix context-name)
-                   (substring context-name
-                              (string-length package-prefix)
-                              (string-length context-name))
-                   context-name))
-             (string-append relative-context-name ".ss")))))
-
   (def (poo-flow-load-candidate-fragment-paths include-source-path
                                                call-source-path)
     (if (poo-flow-load-absolute-path? include-source-path)
@@ -126,7 +87,8 @@
              (cwd-path
               (path-expand include-source-path (current-directory)))
              (root-parent-path
-              (and (poo-flow-load-string-prefix? "../" include-source-path)
+              (and (poo-flow-load-binding-string-prefix? "../"
+                                                         include-source-path)
                    (path-expand
                     (poo-flow-load-drop-prefix "../" include-source-path)
                     (current-directory)))))
@@ -148,7 +110,7 @@
            (call-source-path/raw
             (or (poo-flow-load-source-path path-source)
                 (poo-flow-load-source-path form-source)
-                (poo-flow-load-module-context-source-path)))
+                (poo-flow-load-binding-module-context-source-path)))
            (call-source-path
             (and call-source-path/raw
                  (path-expand call-source-path/raw (current-directory))))
@@ -158,10 +120,10 @@
                                                      call-source-path)))
            (source-segments
             (if call-source-path
-              (poo-flow-load-path-segments call-source-path)
-              (poo-flow-load-path-segments fragment-source-path)))
+              (poo-flow-load-binding-path-segments call-source-path)
+              (poo-flow-load-binding-path-segments fragment-source-path)))
            (custom-tail
-            (poo-flow-load-member-tail "custom" source-segments))
+            (poo-flow-load-binding-member-tail "custom" source-segments))
            (custom-module-name
             (if (and custom-tail (pair? (cdr custom-tail)))
               (cadr custom-tail)
@@ -170,10 +132,10 @@
             (poo-flow-load-drop-suffix
              ".ss"
              (poo-flow-load-last-segment
-              (poo-flow-load-path-segments include-source-path)
+              (poo-flow-load-binding-path-segments include-source-path)
               "config")))
            (include-segments
-            (poo-flow-load-path-segments include-source-path))
+            (poo-flow-load-binding-path-segments include-source-path))
            (objects-fragment?
             (or (poo-flow-load-object-fragment-path? source-segments)
                 (poo-flow-load-object-fragment-path? include-segments)
@@ -181,18 +143,29 @@
            (case-fragment?
             (or (poo-flow-load-case-fragment-path? source-segments)
                 (poo-flow-load-case-fragment-path? include-segments)))
-           (binding-suffix
-            (if case-fragment? "-case" "-module"))
            (binding-name
-            (string->symbol
-             (string-append "poo-flow-custom-"
-                            custom-module-name
-                            "-"
-                            load-name
-                            binding-suffix))))
+            (poo-flow-load-binding-fragment-name custom-module-name
+                                                load-name
+                                                case-fragment?)))
       (list binding-name
             objects-fragment?
             fragment-source-path))))
+
+;; : (-> Syntax Syntax)
+;;   | doc m%
+;;       Resolve a profile fragment name to the binding generated by
+;;       `(load! "profiles/<name>")` in the current user module.
+;;       # Examples
+;;       (poo-flow-load-profile-module-binding langchain)
+;;       ;; => poo-flow-custom-<module>-langchain-module
+;;   | boundary: keeps load! binding naming in one owner
+;;     %
+(defsyntax (poo-flow-load-profile-module-binding stx)
+  (syntax-case stx ()
+    ((ctx profile-name)
+     (poo-flow-load-binding-profile-module-syntax
+      (syntax ctx)
+      (syntax profile-name)))))
 
 ;;; Doom-style config fragments are declaration includes, not runtime module
 ;;; loading. Extensionless paths mirror Doom's `load!` surface; the macro wraps

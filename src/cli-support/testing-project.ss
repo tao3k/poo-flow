@@ -9,12 +9,20 @@
 (def (poo-flow-suite-support spec)
   (let (suite-name (car spec))
     (cons suite-name
-          (if (equal? suite-name "performance")
+          (cond
+           ((equal? suite-name "performance")
             ["t/support/performance.ss"
-             "t/support/poo-performance.ss"]
+             "t/support/poo-performance.ss"])
+           ((equal? suite-name "scenario-user-interface-profile-library")
+            [])
+           ((equal? suite-name "scenario-agent-lifecycle-gate")
+            [])
+           ((equal? suite-name "scenario-poo-flow-composition")
+            [])
+           (else
             ["t/user-interface-fixtures.ss"
              "t/fixtures/object-load-valid/objects.ss"
-             "t/support/loop-engine-runtime-manifest-receipts.ss"]))))
+             "t/support/loop-engine-runtime-manifest-receipts.ss"])))))
 
 ;; : (-> ProjectRoot ContractRoot PooFlowTestingProject)
 (def (poo-flow-testing-project root contract-root)
@@ -39,6 +47,9 @@
          ["scenario-durable-recovery" "t/user-interface-custom-durable-recovery-test.ss"]
          ["scenario-user-interface-sandbox-config" "t/user-interface-sandbox-config-performance-test.ss"]
          ["scenario-user-interface-custom-scenario-batch" "t/user-interface-custom-scenario-batch-performance-test.ss"]
+         ["scenario-user-interface-profile-library" "t/scenarios/user-interface-profile-library-gate-test.ss"]
+         ["scenario-agent-lifecycle-gate" "t/scenarios/agent-lifecycle-gate-test.ss"]
+         ["scenario-poo-flow-composition" "t/scenarios/poo-flow-composition-test.ss"]
          ["integration" "t/integration-tests.ss"]
          ["performance" "t/performance-tests.ss"]])
     (testing-build

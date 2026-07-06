@@ -8,6 +8,21 @@ import PooFlowProof.PooC3.Profile
 import PooFlowProof.PooC3.Sandbox
 import PooFlowProof.PooC3.FunctionalFlow
 import PooFlowProof.PooC3.UserInterface
+import PooFlowProof.PooC3.UserInterfaceProfileLibrary
+import PooFlowProof.PooC3.UserInterfaceProfileSet
+import PooFlowProof.PooC3.AgentLifecycle
+import PooFlowProof.PooC3.AgentLifecycleTopology
+import PooFlowProof.PooC3.LoopEngineGraph
+import PooFlowProof.PooC3.LangChainLangGraph
+import PooFlowProof.PooC3.ScenarioGap
+import PooFlowProof.Generated.ScenarioGapRuntimeRow
+import PooFlowProof.Generated.ScenarioGapRuntimeRowRejections
+import PooFlowProof.PooC3.CompositionReceipt
+import PooFlowProof.Generated.CompositionReceipt
+import PooFlowProof.PooC3.ControlPlaneHandoff
+import PooFlowProof.Generated.ControlPlaneHandoff
+import PooFlowProof.PooC3.ProofGateBundle
+import PooFlowProof.Generated.ProofGateBundle
 import PooFlowProof.PooC3.SessionLifecycle
 import PooFlowProof.PooC3.ScenarioProof
 import PooFlowProof.PooC3.FactContract
@@ -23,3 +38,4 @@ import PooFlowProof.PooC3.ReferenceAudit
 import PooFlowProof.PooC3.SessionControlLink
 import PooFlowProof.FFI
 import PooFlowProof.Generated.LoopEngine
+import PooFlowProof.Generated.LangChainLangGraphRuntime
