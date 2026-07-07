@@ -1,0 +1,80 @@
+#+title: LangChain/LangGraph C ABI Benchmark Report
+#+startup: overview
+
+* Scope
+This benchmark compares native LangChain/LangGraph orchestration with the POO Flow runtime surfaces used to hand graph receipts to a runtime language.
+
+It does not measure real LLM latency, network tools, or durable storage IO. The deterministic actions model the control-plane cost of AI Agent Flow shapes: policy routing, graph edges, dynamic handoff, reducers, checkpoint interrupt/resume, long graph scale, stream/event consumption, receipt materialization, and C ABI validation gates.
+
+* Local Clone Inputs
+- LangChain: =../../.data/langchain/libs/core=
+- LangGraph: =../../.data/langgraph/libs/langgraph=
+- POO Flow runtime: current =packages/python-runtime= workspace
+
+* Command
+#+begin_src sh
+uv run \
+  --with-editable ../../.data/langgraph/libs/langgraph \
+  --with-editable ../../.data/langchain/libs/core \
+  python benchmarks/bench_langchain_langgraph_cabi.py \
+  --iterations 2000 \
+  --warmup 200 \
+  --progress \
+  --format org \
+  --report-org benchmarks/README.org
+#+end_src
+
+* Run Metadata
+- Generated at: =2026-07-06T21:26:58.982784+00:00=
+- Command: =benchmarks/bench_langchain_langgraph_cabi.py --iterations 2000 --warmup 200 --progress --format text --report-org benchmarks/README.org=
+- Python: =3.13.11 (main, Dec 17 2025, 20:55:16) [Clang 21.1.4 ]=
+- Platform: =macOS-26.5-arm64-arm-64bit-Mach-O=
+- Iterations: =2000=
+- Warmup: =200=
+- Per-case caps: =true=
+- GC during measurement: =false=
+
+* Benchmark Results
+| name | family | features | mean us | p50 us | p95 us | min us | max us | ops/s | checksum |
+|-
+| langchain-branch-tool-native | langchain-native | runnable-branch, policy-router, tool-selection, handoff-route | 6862.728 | 1342.604 | 34936.769 | 191.875 | 138425.209 | 145.71 | 133065 |
+| langchain-linear-agent-native | langchain-native | prompt-template, output-parser, runnable-sequence, agent-policy | 7488.810 | 1395.646 | 36429.855 | 241.292 | 140846.208 | 133.53 | 5292 |
+| langgraph-handoff-reducer-native | langgraph-native | state-graph, send, multi-agent-handoff, reducer | 17702.123 | 5832.438 | 76294.465 | 1228.583 | 145905.792 | 56.49 | 139366 |
+| langgraph-interrupt-resume-native | langgraph-native | interrupt, resume, checkpoint, human-in-loop | 34508.479 | 17408.562 | 115040.762 | 3520.667 | 178829.542 | 28.98 | 638974 |
+| langgraph-long-graph-native | langgraph-native | state-graph, long-graph, scale, linear-graph | 89543.394 | 46721.271 | 273849.318 | 2879.917 | 334270.083 | 11.17 | 341567 |
+| langgraph-router-agent-native | langgraph-native | state-graph, conditional-edge, policy-router, agent-state | 14196.622 | 3959.542 | 66887.929 | 437.791 | 138539.959 | 70.44 | 431648 |
+| langgraph-router-stream-native | langgraph-native | state-graph, stream, events, conditional-edge | 13478.772 | 3675.146 | 61489.269 | 407.875 | 156624.958 | 74.19 | 372039 |
+| poo-flow-cabi-describe-linear | poo-flow-cabi | c-abi, receipt, materialization, linear-graph | 84.107 | 10.792 | 63.292 | 10.375 | 16106.084 | 11889.60 | 398000 |
+| poo-flow-cabi-describe-long-graph | poo-flow-cabi | c-abi, receipt, materialization, long-graph, scale | 700.054 | 111.896 | 2523.830 | 76.500 | 51622.375 | 1428.46 | 101000 |
+| poo-flow-cabi-program-long-graph | poo-flow-cabi | c-abi, validate, runtime-graph-program, long-graph, scale | 13954.098 | 5124.604 | 60826.637 | 709.541 | 99887.458 | 71.66 | 446932 |
+| poo-flow-cabi-program-router | poo-flow-cabi | c-abi, validate, runtime-graph-program, policy-router | 866.083 | 100.562 | 2897.454 | 50.750 | 59922.417 | 1154.62 | 439051 |
+| poo-flow-executor-handoff-reducer | poo-flow-executor | runtime-graph, send, multi-agent-handoff, reducer, executor-only | 348.549 | 23.458 | 1281.248 | 21.625 | 32149.167 | 2869.04 | 110844 |
+| poo-flow-executor-interrupt-resume | poo-flow-executor | runtime-graph, interrupt, resume, human-in-loop, executor-only | 180.038 | 14.375 | 371.385 | 13.500 | 30305.042 | 5554.37 | 552858 |
+| poo-flow-executor-long-graph | poo-flow-executor | runtime-graph, long-graph, scale, executor-only | 1334.992 | 150.230 | 6440.277 | 83.208 | 71871.541 | 749.07 | 876351 |
+| poo-flow-executor-router-agent | poo-flow-executor | runtime-graph, conditional-edge, policy-router, executor-only | 235.135 | 11.583 | 472.817 | 10.500 | 35082.750 | 4252.87 | 819897 |
+| poo-flow-executor-router-stream-events | poo-flow-executor | runtime-graph, stream, events, conditional-edge, executor-only | 179.471 | 7.917 | 149.410 | 7.542 | 23293.000 | 5571.93 | 486065 |
+
+* C ABI Gates
+| name | status | features | error | receipt summary |
+|-
+| poo-flow-cabi-linear-validate | passed | c-abi, validate, linear-graph |  | kind=runtime-graph-plan nodes=3 state-reducers=0 edges=4 conditional-routes=0 plan-digest=966fc6bcc603b0cf |
+| poo-flow-cabi-conditional-validate | passed | c-abi, validate, conditional-edge, policy-router |  | kind=runtime-graph-plan nodes=4 state-reducers=0 edges=4 conditional-routes=3 plan-digest=478a51ecad59c4ad |
+| poo-flow-cabi-reducer-validate | passed | c-abi, validate, reducer, handoff |  | kind=runtime-graph-plan nodes=3 state-reducers=1 edges=4 conditional-routes=0 plan-digest=6bbb93f5797a4705 |
+| poo-flow-cabi-long-graph-validate | passed | c-abi, validate, long-graph, scale |  | kind=runtime-graph-plan nodes=32 state-reducers=0 edges=33 conditional-routes=0 plan-digest=5ebceb53bb1be9f1 |
+
+* Failures
+| name | family | phase | features | error |
+|-
+| none | none | none | none | none |
+
+* Interpretation
+- LangChain cases cover runnable composition, prompt/parser cost, branch routing, and tool/handoff selection.
+- LangGraph cases cover the production graph controls we need to compare against: conditional edges, dynamic Send fanout, reducer aggregation, checkpoint-backed interrupt/resume.
+- Long graph cases use a fixed 32-node linear graph to expose scale cost without introducing LLM or IO latency.
+- Stream cases consume framework/runtime stream outputs so the benchmark is not limited to invoke-only happy paths.
+- POO executor cases measure the current Python graph semantics without crossing the C ABI validation gate.
+- POO C ABI receipt cases measure graph handle materialization and receipt creation with explicit handle close, so the benchmark does not hide handle lifetime leaks.
+- POO C ABI validation failures are reported as gates and failures instead of being converted into fake performance numbers.
+
+* Current Gaps Exposed
+- The next benchmark expansion should add durable checkpoint persistence, larger graph-size sweeps, generated Scheme receipt -> Lean fact alignment, and a stable JSON artifact for CI trend comparison.

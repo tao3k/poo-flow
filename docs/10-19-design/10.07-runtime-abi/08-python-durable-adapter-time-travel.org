@@ -1,0 +1,86 @@
+#+title: Python Durable Adapter Time Travel Facade
+
+* Runtime-facing contract
+
+The Python runtime package exposes durable checkpoint operations through
+=RuntimeDurableAdapter= instead of requiring runtime-language users to hold a
+backend-specific checkpointer.
+
+The facade is intentionally thin:
+
+- =has= / =ahas=
+- =inspect= / =ainspect=
+- =history= / =ahistory=
+- =load_at= / =aload_at=
+- =update_state= / =aupdate_state=
+- =clear= / =aclear=
+- =invoke_thread= / =ainvoke_thread=
+- =resume_thread= / =aresume_thread=
+
+This keeps the public runtime boundary stable while the durable policy,
+checkpoint backend, and retention behavior remain driven by the Scheme
+runtime envelope. Runtime languages such as Rust, Python, or Marlin-side
+adapters should bind to the adapter-level surface first and only drop down to
+the concrete checkpointer for backend diagnostics.
+
+* LangGraph alignment value
+
+The facade closes the time-travel and checkpoint-history part of the LangGraph
+compatibility surface without adding LangGraph as a dependency. Interrupting a
+thread stores a durable checkpoint; the runtime can inspect history, load a
+specific checkpoint id, patch state, and resume through the same adapter that
+was built from the Scheme manifest or runtime envelope.
+
+The policy center remains Scheme/POO-native. Python is the runtime harness and
+FFI consumer; it does not re-own durable policy semantics.
+
+* Test performance boundary
+
+Default Python pytest must not force a real C probe rebuild on every run.
+Probe-build unit tests validate cache and force-rebuild semantics with a
+temporary workspace and a monkeypatched compiler. Real C ABI coverage remains
+in the runtime ABI and CFFI integration tests.
+
+Scheme-generated durable payloads are shared through one cached =gxi=
+roundtrip in the Python test process. This preserves cross-language evidence
+while avoiding duplicated Gerbil startup cost across the policy-manifest and
+runtime-envelope tests.
+
+* Build profiling boundary
+
+The package compile-debug rows are emitted from inside the Scheme package
+entry. They can measure package stages such as =runtime=, =tests=, and
+=package-total=, but they cannot measure time spent before the package entry is
+loaded by =gxpkg= and Gerbil.
+
+=uv run --project packages/python-runtime poo-flow-build-profile= wraps =gxpkg build -g= and emits
+=poo-flow.build-profile.v1=. The receipt preserves the normal build output and
+adds:
+
+- =wall-micros=
+- =internal-package-micros=
+- =external-gap-micros=
+- =compile-debug-rows=
+- =slowest=
+
+Use this wrapper when a downstream compile looks slow but package-stage debug
+rows are small. A large =external-gap-micros= means the bottleneck is outside
+the package compile body, typically environment startup, Gerbil loading, or the
+host wrapper around =gxpkg=.
+
+The wrapper also accepts explicit gates:
+
+- =--max-wall-seconds=
+- =--max-package-seconds=
+- =--max-external-gap-seconds=
+
+When a gate fails, the command emits =poo-flow.build-profile-gate.v1= with
+=status: fail= and exits non-zero if the wrapped build command itself
+succeeded. This lets CI and local audits keep the package compile body and the
+host startup gap as separate budgets.
+
+Do not use =gxpkg env gxi build.ss compile= as the default fast path. It enters
+the package CLI directly, but current evidence shows it does not follow the
+same stamp-cache behavior as =gxpkg build -g= and can trigger runtime target
+recompilation. The canonical checked build remains =gxpkg build -g=; use the
+profile wrapper to measure it rather than replacing it.

@@ -47,6 +47,8 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:43-session-memory-recovery-rfc.org][43 Session Memory Durable Policy RFC]]
 - [[file:44-current-project-programming-style.org][44 Current Project Programming Style]]
 - [[file:45-durable-policy-research-agenda.org][45 Durable Policy Research Agenda]]
+- [[file:72-agent-framework-capability-convergence.org][72 Agent Framework Capability Convergence]]
+- [[file:73-tool-calling-control-plane.org][73 Tool Calling Control Plane]]
 - [[file:46-durable-policy-delivery-plan.org][46 Durable Policy Delivery Plan]]
 - [[file:47-current-code-structure-audit-and-improvement-roadmap.org][47 Current Code Structure Audit And Improvement Roadmap]]
 - [[file:48-execution-plan.org][48 Execution Plan]]

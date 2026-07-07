@@ -1,0 +1,388 @@
+#+title: Python Runtime Graph Command Boundary
+
+* Intent
+
+The Python runtime package intentionally mirrors LangGraph-style command
+control without depending on LangGraph.  The stable boundary remains the POO
+Flow runtime C ABI: opaque graph-plan handles, status codes, symbol bindings,
+typed receipts, and explicit ownership/free rules.
+
+* Command semantics
+
+~RuntimeGraphCommand~ is a Python-side runtime action result.  It can carry a
+state update and a ~goto~ target:
+
+#+begin_src python
+RuntimeGraphCommand(update={"route": "accept"}, goto="accept")
+#+end_src
+
+When ~goto~ is present, the command controls the current node's runtime route.
+The executor applies the update, records trace state, skips the node's default
+conditional/static routes, and schedules the explicit command targets.
+
+* C ABI validation envelope
+
+Command routing is still declared to the C ABI as a graph route envelope.  A
+runtime program can use conditional routes to publish the set of legal command
+targets:
+
+#+begin_src python
+RuntimeGraphConditionalEdge(
+    "decide",
+    "poo.command-route",
+    {"accept": "accept", "reject": "reject"},
+)
+#+end_src
+
+The Python executor does not need to call that router when a command controls
+flow.  The route envelope exists so the C ABI can validate reachability,
+terminal paths, plan shape, and receipt digest stability before handoff.
+
+* Send fan-out semantics
+
+~RuntimeGraphSend~ is the dynamic fan-out primitive.  An action can return one
+or more sends:
+
+#+begin_src python
+(
+    RuntimeGraphSend("worker", {"item": 2}),
+    RuntimeGraphSend("worker", {"item": 3}),
+)
+#+end_src
+
+Each send schedules a target node with a branch-local state overlay.  The
+overlay is visible to that target action only; it is not written into the
+global state by itself.  The target action returns normal updates, and reducers
+merge those updates into the global state:
+
+#+begin_src python
+reducers={"results": lambda current, incoming: current + incoming}
+#+end_src
+
+Like command routing, send fan-out controls the current node's runtime route.
+The executor therefore skips default conditional/static routes for that node
+when sends are returned.  The graph still declares a route envelope to the C
+ABI so that dynamic targets remain statically auditable.
+
+* Execution events
+
+The Python runtime also exposes an execution event stream.  The event stream is
+for runtime observability and downstream debugging; it does not change the C
+ABI handoff contract.
+
+Events are immutable values with a kind, node, step, and detail map.  The
+executor emits:
+
+- ~start~
+- ~node-start~
+- ~node-end~
+- ~complete~
+
+The program layer carries these events on ~RuntimeGraphExecution~ alongside
+the final state, trace, validation receipt, and plan digest.  This gives a
+runtime language a stable debug surface without asking it to invent its own
+graph instrumentation or parse ad hoc logs.
+
+* Interrupt semantics
+
+~RuntimeGraphInterrupt~ is the explicit pause primitive.  A node action can
+return an interrupt value when it needs an external runtime, operator, or
+policy decision before continuing:
+
+#+begin_src python
+RuntimeGraphInterrupt({"question": "approve?", "value": state["value"]})
+#+end_src
+
+The executor raises ~RuntimeGraphInterrupted~ with the node, step, state
+snapshot, trace, interrupt payload, and emitted events.  The program layer
+sanitizes this snapshot so internal C ABI handles are not exposed to runtime
+users.
+
+This is deliberately an execution-time runtime control surface.  It does not
+modify graph-plan validation, receipt digests, or the C ABI handoff contract.
+The graph must still be valid before execution reaches an interrupt.
+
+* Resume semantics
+
+~resume_interrupted~ completes the human-in-the-loop control surface.  It takes
+a ~RuntimeGraphInterrupted~ snapshot plus a resume result, then continues from
+the interrupted node's outgoing routes:
+
+#+begin_src python
+execution = program.resume_interrupted(
+    interrupted,
+    {"approved": True},
+    trace_key="trace",
+)
+#+end_src
+
+The resume result uses the same result grammar as a normal action: a state
+update, ~RuntimeGraphCommand~, or ~RuntimeGraphSend~.  If it is a plain state
+update, the executor applies that update and then follows the interrupted
+node's declared default or conditional routes.  If it is a command or send, it
+controls routing for that resume step.
+
+The program layer rematerializes and revalidates the C ABI graph handle before
+resuming, injects that handle only into runtime-internal state, and removes it
+again from public execution results or subsequent interrupt snapshots.  This
+keeps the resume API stable for Python while preserving the same opaque-handle
+ownership model used by normal invocation.
+
+* Checkpoint semantics
+
+~RuntimeGraphCheckpoint~ captures the runtime snapshot needed to resume an
+interrupt:
+
+- thread id
+- interrupt payload
+- interrupted node and step
+- public state snapshot
+- trace
+- pending route queue
+- emitted events
+- validation receipt
+- graph plan digest
+
+~MemoryRuntimeGraphCheckpointer~ is the first concrete checkpointer.  It is
+process-local and intentionally small, but it fixes the user-facing API shape:
+
+#+begin_src python
+checkpointer = MemoryRuntimeGraphCheckpointer()
+
+try:
+    program.invoke_thread("thread-1", {}, checkpointer, trace_key="trace")
+except RuntimeGraphInterrupted:
+    pass
+
+execution = program.resume_thread(
+    "thread-1",
+    {"approved": True},
+    checkpointer,
+    trace_key="trace",
+)
+#+end_src
+
+Checkpointers also expose state inspection and controlled state edits before
+resume:
+
+#+begin_src python
+checkpoint = checkpointer.inspect("thread-1")
+checkpointer.update_state("thread-1", {"approved-by": "operator"})
+#+end_src
+
+State edits update only the saved checkpoint snapshot.  They do not mutate C
+ABI graph handles, graph-plan validation receipts, or runtime symbol bindings.
+
+Each save creates a new checkpoint id.  Checkpointers expose latest-state access
+and history access:
+
+#+begin_src python
+latest = checkpointer.inspect("thread-1")
+history = checkpointer.history("thread-1")
+previous = checkpointer.load_at("thread-1", history[0].checkpoint_id)
+#+end_src
+
+This is the minimal time-travel/replay substrate.  It lets a runtime inspect a
+thread's saved states and choose a specific checkpoint version without changing
+the C ABI graph-plan boundary.
+
+Checkpoints are bound to the validated graph plan digest.  Program resume
+rematerializes and validates the current graph plan, then rejects the checkpoint
+when the stored digest does not match the current digest.  This prevents a
+runtime from resuming an old interrupt into a different graph topology by
+accident.
+
+This moves us closer to LangGraph's thread-id/checkpointer model without
+binding the POO Flow runtime ABI to a storage implementation.  Durable backends
+can implement the same snapshot contract later, while the C ABI remains focused
+on graph-plan validation, opaque handles, and receipts.
+
+~FileRuntimeGraphCheckpointer~ is the first durable Python backend.  It stores
+trusted Python runtime snapshots on disk using hashed thread-id filenames and
+atomic replace writes.  This backend is intentionally Python-local; it is not a
+cross-language checkpoint protocol and does not introduce JSON into the ABI.
+
+#+begin_src python
+checkpointer = FileRuntimeGraphCheckpointer("/var/lib/poo-flow-runtime")
+
+try:
+    program.invoke_thread("thread-1", {}, checkpointer, trace_key="trace")
+except RuntimeGraphInterrupted:
+    pass
+
+execution = program.resume_thread(
+    "thread-1",
+    {"approved": True},
+    checkpointer,
+    trace_key="trace",
+)
+#+end_src
+
+* Subgraph composition
+
+~RuntimeGraphSubgraph~ is the first nested-graph composition helper.  It wraps a
+child ~RuntimeGraphExecutor~ and exposes it as a normal parent graph action:
+
+#+begin_src python
+subgraph = RuntimeGraphSubgraph.from_parts(
+    child_plan,
+    child_actions,
+    input_keys=("seed",),
+    output_keys=("value",),
+    trace_output_key="child-trace",
+)
+
+parent_actions = {"child": subgraph.as_action()}
+#+end_src
+
+The parent graph remains the C ABI materialization and validation unit.  The
+subgraph is a Python runtime strategy combinator inside a node action: it can
+filter inputs, filter outputs, and return a child trace as ordinary state.  It
+does not introduce nested C graph handles or a separate cross-language
+checkpoint protocol.
+
+* Runtime store
+
+~MemoryRuntimeGraphStore~ and ~FileRuntimeGraphStore~ provide the first
+long-term namespace memory surface for Python runtime actions:
+
+#+begin_src python
+store.put(("users", user_id), "profile", {"name": "Alice"})
+profile = store.get(("users", user_id), "profile")
+items = store.search(("users",))
+#+end_src
+
+The store is intentionally separate from checkpointing.  Checkpoints are
+thread-local execution snapshots; store entries are cross-thread runtime memory
+addressed by namespace and key.  Runtime actions can close over a store object
+and read or write durable memory as ordinary Python behavior.
+
+The file store uses hashed namespace/key paths and trusted Python snapshots.
+It is not a cross-language store protocol, and it does not add JSON or storage
+concerns to the C ABI.
+
+* Runtime context
+
+~RuntimeGraphRuntime~ is the Python runtime context passed to actions that
+accept a second argument:
+
+#+begin_src python
+def remember(state, runtime):
+    store = runtime.require_store()
+    thread_id = runtime.require_thread_id()
+    store.put(("threads", thread_id), "value", state["value"])
+    return {"stored": True}
+#+end_src
+
+The executor binds this once during construction, so one-argument actions keep
+working and two-argument actions receive the runtime context without per-step
+signature inspection.  The context can carry:
+
+- thread id
+- store
+- checkpointer
+- metadata
+
+This keeps runtime resources out of the shared graph state and avoids making
+downstream runtimes invent incompatible injection conventions.  The context is
+a Python runtime strategy surface, not a C ABI payload.
+
+* Messages and tool nodes
+
+The Python runtime now includes a dependency-free message/tool layer for common
+agent graphs:
+
+#+begin_src python
+messages = add_messages(
+    [human_message("hello", id="1")],
+    [ai_message("hi", id="2")],
+)
+
+tool_node = RuntimeGraphToolNode.from_callables({
+    "add": lambda a, b: a + b,
+})
+#+end_src
+
+~add_messages~ appends messages by default and replaces an existing message
+when the incoming message has the same id.  ~RuntimeGraphToolNode~ reads
+~tool_calls~ from the last message, invokes registered tools, and returns tool
+messages as ordinary state updates.
+
+This captures the core MessagesState/ToolNode shape without importing
+LangChain or LangGraph.  It remains a Python runtime helper: messages and tool
+calls are state values handled by reducers and node actions, not C ABI payloads.
+
+* Builder and prebuilt tool loop
+
+~RuntimeGraphBuilder~ provides a StateGraph-like authoring surface:
+
+#+begin_src python
+builder = RuntimeGraphBuilder()
+builder.add_node("load", load)
+builder.add_node("double", double)
+builder.set_entry_point("load")
+builder.add_edge("load", "double")
+builder.set_finish_point("double")
+executor = builder.compile()
+program = builder.compile_program()
+#+end_src
+
+It compiles either to a local executor or to a C ABI-backed program.  This
+keeps the common graph-authoring workflow compact while preserving the existing
+runtime ABI boundary.
+
+~tools_condition~ and ~create_tool_call_loop~ cover the common model/tool loop:
+
+#+begin_src python
+executor = create_tool_call_loop(
+    model_action,
+    {"add": lambda a, b: a + b},
+)
+#+end_src
+
+The helper wires the model node, tool node, message reducer, and conditional
+tool routing without taking a LangGraph dependency.
+
+* C ABI performance gate
+
+The C ABI boundary must stay cheap during normal runtime use.  Python now uses
+a workspace-keyed runtime cache for the compiled probe shared library instead
+of relying on ~packages/python-runtime/build~.  Cleaning package-local build
+artifacts must not force ordinary runtime users to recompile the C ABI probe on
+every invocation.
+
+The default cache root is:
+
+#+begin_example
+$XDG_CACHE_HOME/poo-flow-runtime/<workspace-key>/runtime-c-abi
+#+end_example
+
+When ~$XDG_CACHE_HOME~ is unset, the runtime uses ~~/.cache~.  A caller can
+override the location with:
+
+#+begin_example
+POO_FLOW_RUNTIME_C_ABI_BUILD_DIR=/path/to/cache
+#+end_example
+
+The Python test suite includes performance gates for:
+
+- hot C ABI binding load
+- steady C ABI rebuild
+- repeated graph program invocation
+- resume path reuse of an injected binding
+
+This guards the intended split: the runtime ABI call path should be
+microsecond-scale, while compiler startup belongs to explicit build/probe work
+and should not leak into normal execution.
+
+* Downstream runtime pressure relief
+
+This keeps downstream runtimes from reimplementing graph validation, digest
+projection, or receipt normalization.  They only need to bind actions,
+reducers, and routers to stable symbols, then use opaque C ABI handles for
+validated graph plans.  Python proves this path with ctypes today; Rust,
+Marlin, or other runtimes can use the same boundary with their own FFI layer.
+
+There is no JSON handoff protocol here.  JSON-like data can exist inside a
+runtime's own state model, but the cross-language interface remains native C
+ABI values and opaque handles.

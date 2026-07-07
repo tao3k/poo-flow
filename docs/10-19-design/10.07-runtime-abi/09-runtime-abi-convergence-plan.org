@@ -1,0 +1,142 @@
+#+title: Runtime ABI Convergence Plan
+
+* Objective
+
+POO Flow Scheme owns policy semantics, durable policy families, and functional
+strategy composition. Runtime languages own scheduling, native concurrency,
+database drivers, FFI, and process-level performance.
+
+The runtime ABI must therefore expose a small, stable, high-performance
+surface:
+
+- Scheme emits POO-native policy/runtime manifests.
+- Runtime packages consume those manifests through typed adapters.
+- Runtime languages bind adapter-level APIs first, not backend internals.
+- Build and test gates report where time is spent before changing policy or
+  implementation strategy.
+
+* Execution phases
+
+** Phase 1: Stable evidence gates
+
+Canonical gates:
+
+- =gxpkg build -g=
+- =uv run --project packages/python-runtime pytest packages/python-runtime/tests --quiet --durations=12=
+- =git diff --check=
+
+Diagnostic gates:
+
+- =uv run --project packages/python-runtime poo-flow-build-profile --cwd .=
+- =uv run --project packages/python-runtime poo-flow-build-profile --cwd . --max-package-seconds 2=
+
+Do not replace =gxpkg build -g= with =gxpkg env gxi build.ss compile=. Current
+evidence shows the direct package CLI path can bypass the same stamp-cache
+behavior and trigger avoidable recompilation.
+
+** Phase 2: Runtime ABI public surface map
+
+Stable Python runtime entrypoints must be audited as a public contract:
+
+- C ABI validation and runtime graph handoff
+- CFFI binding loader
+- runtime graph program
+- builder/prebuilt graph helpers
+- durable policy manifest parser
+- durable runtime envelope parser
+- durable adapter facade
+- build/profile tool receipts
+
+Each entrypoint needs a package export, focused tests, and one downstream
+example or smoke path.
+
+Execution gate:
+
+- =packages/python-runtime/tests/unit/test_runtime_public_surface.py=
+- =packages/python-runtime/tests/unit/test_runtime_abi_surface.py=
+
+This test is a runtime ABI contract gate. It must fail when adapter-level
+runtime entrypoints disappear from =poo_flow_runtime.__all__= or when the
+durable adapter stops exposing the thread/time-travel facade expected by
+runtime language bindings.
+
+The Python package also exposes =poo-flow.python-runtime.abi-surface.v1= through
+=runtime_abi_surface_manifest_bytes=. Runtime language bindings should consume
+this machine-readable line manifest to confirm entrypoints, durable adapter
+facade methods, supported Scheme manifest schemas, receipt schemas, and default
+developer gates before binding concrete backend details.
+
+Non-Python bindings can read the same carrier through the console script
+=poo-flow-runtime-abi-surface=.
+
+Python validates this carrier with =coerce_runtime_abi_surface_manifest=. Other
+runtime bindings should implement the same checks natively: schema identity,
+owner identity, runtime role, required entrypoints, durable facade methods,
+Scheme manifest schemas, receipt schemas, and developer gates.
+
+The console script also supports =--validate <path|->= and emits
+=poo-flow.python-runtime.abi-surface.validation.v1=, making the same contract
+available to shell-based runtime bootstrap scripts.
+
+** Phase 3: Durable adapter closure
+
+Runtime languages should bind =RuntimeDurableAdapter= before binding concrete
+durable backends.
+
+Required adapter surface:
+
+- =turso=
+- =turso_from_envelope=
+- =receipt=
+- =has= / =ahas=
+- =inspect= / =ainspect=
+- =history= / =ahistory=
+- =load_at= / =aload_at=
+- =update_state= / =aupdate_state=
+- =clear= / =aclear=
+- =invoke_thread= / =ainvoke_thread=
+- =resume_thread= / =aresume_thread=
+
+The durable policy and runtime envelope stay Scheme-owned. Python tests may
+exercise a real =gxi= roundtrip, but shared cached fixtures must keep the
+default pytest path fast.
+
+** Phase 4: Build/profile gate closure
+
+The profiler must remain a wrapper around the canonical build, not a new build
+system.
+
+Receipt surfaces:
+
+- =poo-flow.build-profile.v1=
+- =poo-flow.build-profile-gate.v1=
+
+Budget dimensions:
+
+- wall time
+- internal package time
+- external startup gap
+
+This separates package compile regressions from =gxpkg=, Gerbil startup, or
+host wrapper overhead.
+
+** Phase 5: Verification matrix
+
+Before any commit boundary:
+
+- Python full suite passes under the runtime package.
+- Scheme durable focused tests pass with =GERBIL_LOADPATH=.gerbil/lib=.
+- Canonical package build passes with =gxpkg build -g=.
+- Profile smoke emits both profile and gate receipts.
+- =git diff --check= is clean.
+- No generated =__pycache__=, =dist=, or unrelated artifacts are left behind.
+
+* Current risks
+
+- ASP search routing is blocked by a non-routable registered =asp-explore=
+  child. Work should continue in the main session until a valid message target
+  is available; do not create generic substitute subagents.
+- The external build gap can be much larger than package compile time. Treat it
+  as a separate host/runtime startup budget.
+- Runtime FFI tests must keep real rebuild coverage, but should use isolated
+  temporary build directories when testing force rebuild behavior.

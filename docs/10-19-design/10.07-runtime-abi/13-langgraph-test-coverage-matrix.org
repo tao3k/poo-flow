@@ -1,0 +1,70 @@
+#+TITLE: LangGraph Test Coverage Matrix
+
+* Local Test Inventory
+
+The local checkout at =.data/langgraph= currently exposes 168 Python test files.
+The useful split for POO Flow is not "copy all tests", but "extract portable
+runtime semantics and benchmark stronger composition".
+
+| LangGraph area | Files | POO Flow stance |
+|----------------+-------+-----------------|
+| =libs/langgraph/tests= | 49 | Runtime graph semantics: align and benchmark |
+| =libs/checkpoint/tests= | 6 | Checkpointer semantics: align |
+| =libs/checkpoint-conformance= | 11 | Durable/checkpoint conformance: adapt selected cases |
+| =libs/checkpoint-sqlite/tests= | 8 | Backend-specific: map to Turso/durable adapters, not SQLite |
+| =libs/checkpoint-postgres/tests= | 4 | Backend-specific: adapt only portable contract shape |
+| =libs/prebuilt/tests= | 10 | Tool/message/prebuilt graph patterns: partial runtime alignment |
+| =libs/sdk-py/tests= | 57 | Hosted SDK/remote semantics: out of runtime scope |
+| =libs/cli/tests= | 11 | LangGraph CLI/deploy ecosystem: out of runtime scope |
+| =libs/sdk-py/integration/scripts= | 12 | Remote scenario scripts: use as scenario inspiration only |
+
+* Covered Runtime Semantics
+
+The current Python runtime package covers the portable LangGraph-local surface:
+
+- graph construction through =RuntimeGraphBuilder=;
+- sequence composition through =add_sequence=;
+- conditional routing through route maps, direct targets, and direct
+  =RuntimeGraphSend= fan-out;
+- =RuntimeGraphCommand= control flow;
+- reducers and branch-state updates;
+- stream modes for values, updates, messages, custom, checkpoints, tasks,
+  events, and debug;
+- memory/file/Turso checkpointers and stores;
+- thread invoke, interrupt persistence, resume, history, =load_at=, and
+  =update_state=;
+- subgraph composition and stream projection;
+- ABI manifest, validation receipts, self-test, and build-profile receipts.
+
+* Benchmark Gate
+
+The executable benchmark control surface is:
+
+#+begin_src sh
+uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks langgraph-alignment \
+  --iterations 250 --fanout 24
+#+end_src
+
+It emits one line receipt per scenario:
+
+- =sequence-composition=
+- =dynamic-send-fanout=
+- =subgraph-composition=
+- =thread-state-facade=
+
+These scenarios are deliberately stronger than simple API parity. They verify
+that POO Flow can compose graph construction, dynamic fan-out, subgraphs, and
+durable state access without importing LangGraph or moving policy semantics out
+of Scheme.
+
+* Next Adaptation Rule
+
+When adapting a LangGraph test:
+
+1. If it checks local runtime semantics, port it into the Python runtime tests.
+2. If it checks backend-specific checkpoint storage, map it to the durable
+   adapter contract instead of copying SQLite/Postgres behavior.
+3. If it checks SDK, server, Cloud, CLI deploy, LangSmith, or model-provider
+   behavior, document it as outside the POO Flow runtime ABI boundary.
+4. If it reveals a stronger composition pattern, add it to the benchmark
+   receipt surface rather than copying framework-specific setup.

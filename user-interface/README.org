@@ -1,0 +1,34 @@
+* User Interface Contribution Library
+
+This directory models the downstream surface that users and agents read before writing POO Flow configuration. Stable policy objects should live in =profiles/=, and reusable workflow compositions should live in =cases/=.
+
+* Reusable Profiles
+
+- =profiles/langchain.ss=: linear chain profile slots for memory, prompt, model, parser, and no-tool policy.
+- =profiles/langgraph.ss=: guarded graph profile slots for session, state, router, agent/tool nodes, bounded loop, and runtime handoff.
+- =profiles/crewai.ss=: CrewAI-style profile slots for agents, tasks, crews, processes, flow state/router/persist, guardrails, human input, observability, and runtime handoff.
+- =profiles/tool-calling.ss=: framework-neutral tool calling profile slots for tool request, schema, permission, sandbox scope, cooldown, runtime binding, receipts, and observability.
+
+* Reusable Cases
+
+- =cases/langchain-linear.ss=: LangChain-style linear composition.
+- =cases/langgraph-state.ss=: LangGraph-style guarded state graph composition.
+- =cases/crewai-research-flow.ss=: CrewAI-style crew/flow composition that reuses profile slots instead of cloning CrewAI's Python runtime surface.
+- =cases/tool-calling-agent-loop.ss=: framework-neutral tool calling control-plane composition for agent loop/tool/state runtime handoff.
+
+* Rule
+
+The public user path is POO-native composition:
+
+#+begin_src scheme
+(use-composition my-composition
+  (modules
+    (use-profile crewai #:as crew))
+  (stage production
+    (compose
+      (profile crew agent)
+      (profile crew task)
+      (profile crew flow-router))))
+#+end_src
+
+Do not add a parallel JSON, alist, or framework-specific DSL for these scenarios.

@@ -28,6 +28,8 @@ The files here stay declarative:
 
 - =init.ss= lists optional feature patches/custom modules through =poo-flow!= category rows.
 - =custom/*/config.ss= declares user-maintained custom module bodies.
+- =profiles/*.ss= contributes stable reusable profile objects.
+- =cases/*.ss= contributes reusable strategy compositions over those profiles.
 
 The implementation stays upstream:
 
@@ -54,6 +56,11 @@ Downstream users should rely on root declarations plus upstream helpers:
 - =pooFlowUserConfigPresentation=
 - =pooFlowRootDeveloperDeclarationCase=
 - =poo-flow-declaration-case-presentation-matches?=
+Reusable scenario fragments are also part of the teaching surface:
+- =profiles/langchain.ss= and =cases/langchain-linear.ss=
+- =profiles/langgraph.ss= and =cases/langgraph-state.ss=
+- =profiles/crewai.ss= and =cases/crewai-research-flow.ss=
+- =profiles/tool-calling.ss= and =cases/tool-calling-agent-loop.ss=
 
 The presentation surface exposes ownership metadata so agents can inspect the
 config without realizing descriptors or executing runtime hooks. Presentations

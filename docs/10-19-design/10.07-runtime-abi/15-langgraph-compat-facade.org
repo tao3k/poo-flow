@@ -1,0 +1,63 @@
+#+title: LangGraph Compatibility Facade
+
+* Boundary
+
+The LangGraph bridge is implemented as a POO Flow runtime package surface:
+
+#+begin_src python
+from poo_flow_runtime.compat.langgraph import START, END, StateGraph
+from poo_flow_runtime.compat.langgraph.types import Send
+from poo_flow_runtime.compat.langgraph.checkpoint.memory import MemorySaver
+#+end_src
+
+This avoids shipping a top-level =langgraph= shadow package while still preserving LangGraph-shaped module boundaries for downstream runtime users.
+
+* Current mapping
+
+- =StateGraph= delegates to =RuntimeGraphBuilder=.
+- =START= and =END= map to =__start__= and =__end__=.
+- =Send= maps directly to =RuntimeGraphSend=.
+- =Command= maps directly to =RuntimeGraphCommand=.
+- =MemorySaver= maps to =MemoryRuntimeGraphCheckpointer=.
+- callable-only =add_node(fn)= uses LangGraph-style callable names.
+- =input_schema=, =output_schema=, and =context_schema= are accepted as compatibility metadata.
+- =set_conditional_entry_point= inserts an internal entry node and then routes through POO Flow conditional edges.
+- =typing.Annotated[..., reducer]= fields on =TypedDict= state schemas register POO Flow state reducers.
+- =compile(...).invoke(...)= executes through the runtime graph executor hot path.
+- =compile(checkpointer=...).invoke(..., config={"configurable": {"thread_id": ...}})= stores the resulting runtime state in the POO Flow checkpointer.
+- =get_state=, =get_state_history=, and =update_state= expose LangGraph-shaped =StateSnapshot= values over POO Flow checkpoints.
+
+* Design choice
+
+The compatibility facade is executor-first, not C-ABI-plan-first.
+
+LangGraph dynamic graph features such as conditional =Send= are Python runtime graph behavior.  The current C ABI graph-plan validator is a narrower validation workflow surface and should not block Python dynamic graph execution.  The bridge therefore uses =RuntimeGraphExecutor= for execution and uses the checkpointer directly for thread state persistence.
+
+This keeps the ABI boundary honest:
+
+- low-level C ABI hot calls remain measured by the composition benchmark;
+- validation workflows remain measured separately;
+- LangGraph compatibility uses the runtime graph API where dynamic Python graph behavior belongs.
+
+* Verification
+
+The compatibility test suite covers:
+
+- LangGraph-shaped module imports;
+- test-only top-level =langgraph.graph=, =langgraph.types=, and =langgraph.checkpoint.memory= shim imports;
+- upstream-derived =langgraph.graph.state= and =langgraph.constants= imports;
+- sequence execution via =StateGraph=;
+- conditional =Send= fanout;
+- conditional entry points;
+- callable node auto naming;
+- =Annotated= state reducers;
+- conditional path maps that route to =END=;
+- checkpoint-backed =invoke=, =get_state=, =update_state=, and =get_state_history=.
+
+The top-level shim lives under the test suite, not the runtime package.  It proves that upstream-shaped LangGraph code can be routed into the POO Flow facade without shipping a package that shadows the real LangGraph distribution.
+
+The full runtime ABI gate already includes:
+
+#+begin_src sh
+uv run --project packages/python-runtime pytest packages/python-runtime/tests --quiet --durations=12
+#+end_src

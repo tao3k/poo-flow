@@ -166,6 +166,42 @@ the wrong proof boundary.  Instead, Lean should model the interface contract:
 \]
 #+end_src
 
+* Runtime Language Projection
+The runtime side must be implemented by a runtime language. Python is the first concrete runtime language in this project because it can host agent graph execution, event streaming, checkpoint/resume behavior, tool/action bindings, and C ABI validation without forcing Scheme to become an executor.
+
+This is the intended direction:
+#+begin_src text
+POO Flow Scheme control plane
+  -> profile composition
+  -> graph/loop/policy/proof facts
+  -> runtime handoff receipt
+  -> Python RuntimeGraphProgram / C ABI
+  -> runtime execution receipt
+  -> Scheme/Lean receipt check
+#+end_src
+
+The same boundary applies to LangGraph, CrewAI, and Pi Agent core style systems. POO Flow should not clone those runtimes in Scheme. Instead, POO Flow should make their core capabilities ordinary composition scenarios, then lower the verified plan into Python or another runtime language.
+
+For example:
+- LangChain-like capability maps to model/tool loop policy, prompt/model/parser ordering, middleware/tool constraints, and runtime provider bindings.
+- LangGraph-like capability maps to graph routing, long graph execution, stream events, interrupts, and checkpoint/resume in the Python runtime.
+- CrewAI-like capability maps to agent/task/crew/flow profiles plus a runtime receipt that executes the selected graph/process plan.
+- Pi Agent core-like capability maps to session state, tool calling, agent loop progress, attachment/message state, and provider/tool runtime bindings in the Python runtime.
+
+The proof obligation is:
+#+begin_src latex
+\[
+\operatorname{SoundSchemePlan}(p)
+  \land
+\operatorname{RuntimeLanguageAccepts}(\texttt{python}, p)
+  \land
+\operatorname{ReceiptMatchesPlan}(r, p)
+  \Rightarrow
+\operatorname{PolicySoundRun}(r)
+\]
+#+end_src
+
+This keeps implementation cost low: the Scheme layer composes and proves the policy, while Python implements the operational behavior. If a Python runtime can already execute a long graph, then a LangGraph-like, CrewAI-like, or Pi Agent core-like scenario should be mostly a composition and receipt-lowering problem, not a new Scheme runtime feature.
 * Runtime Contract Shape
 
 The Scheme layer should produce a POO-native and proof-friendly runtime handoff

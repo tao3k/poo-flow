@@ -1,0 +1,77 @@
+#+title: LangChain/LangGraph C ABI Benchmark
+#+startup: overview
+
+* Canonical Report
+
+The runnable benchmark and latest generated Org report live under the Python runtime benchmark directory:
+
+- =packages/python-runtime/benchmarks/bench_langchain_langgraph_cabi.py=
+- =packages/python-runtime/benchmarks/README.org=
+
+This document records the design intent. The benchmark README is the canonical run report because the user-facing request is to keep benchmark output with the benchmark itself.
+
+* Scope
+
+The benchmark compares native LangChain/LangGraph orchestration with the POO Flow runtime surfaces used to hand graph receipts to a runtime language. It does not benchmark real LLM latency, network tools, database IO, or a production runtime executor owned by another language. The deterministic actions model control-plane costs for realistic AI Agent Flow shapes.
+
+The suite covers:
+
+- LangChain prompt/parser/runnable sequence.
+- LangChain branch routing for RAG/tool/handoff selection.
+- LangGraph StateGraph conditional routing.
+- LangGraph dynamic =Send= fanout and reducer aggregation.
+- LangGraph interrupt/resume through an in-memory checkpointer.
+- LangGraph 32-node long graph scale cost.
+- LangGraph stream update consumption.
+- POO Flow executor-only graph routing, handoff/reducer, and interrupt/resume.
+- POO Flow executor-only 32-node long graph and event stream consumption.
+- POO Flow C ABI graph receipt/materialization.
+- POO Flow C ABI 32-node graph receipt/materialization and validated =RuntimeGraphProgram= execution.
+- POO Flow C ABI validation gates for linear, conditional, reducer-backed, and 32-node graph shapes.
+
+* Current Run
+
+The latest run was generated with:
+
+#+begin_src sh
+cd packages/python-runtime
+uv run \
+  --with-editable ../../.data/langgraph/libs/langgraph \
+  --with-editable ../../.data/langchain/libs/core \
+  python benchmarks/bench_langchain_langgraph_cabi.py \
+  --iterations 2000 \
+  --warmup 200 \
+  --format text \
+  --report-org benchmarks/README.org
+#+end_src
+
+Key result from the current run:
+
+- C ABI validation gates passed for linear, conditional, reducer-backed, and 32-node graph shapes.
+- =poo-flow-cabi-program-router= and =poo-flow-cabi-program-long-graph= executed successfully with validation enabled.
+- POO executor-only cases are much faster than native framework orchestration because they avoid framework runtime services and C ABI validation.
+- The benchmark now includes long graph and stream/event consumption, so the honest comparison point is no longer a toy lambda or string append.
+- The honest comparison point for handoff/checkpoint production semantics remains LangGraph native vs the corresponding POO executor/CABI shapes; real runtime IO is intentionally outside this project.
+
+The generated README contains the full table and should be regenerated after benchmark code or ABI changes.
+* Runtime Language Implication
+
+The Python runtime is the concrete runtime-language target for the current control-plane work. The benchmark is not only a LangGraph comparison; it validates that POO Flow plans can be lowered into Python runtime graph execution at low cost.
+
+This matters for more than LangGraph:
+
+- CrewAI-style crews and flows can lower from profile composition into Python graph/process execution.
+- Pi Agent core-style behavior can lower from session/tool/agent-loop policy facts into Python runtime bindings.
+- Scheme stays the control planner and proof surface; Python owns the operational runtime behavior.
+
+The desired closure path is:
+
+#+begin_src text
+Scheme user composition
+  -> runtime receipt / C ABI graph plan
+  -> Python RuntimeGraphProgram
+  -> runtime execution receipt
+  -> generated Lean facts
+#+end_src
+
+If a scenario requires new operational behavior, the first question is whether Python or another runtime language needs a new executor capability. It should not become a Scheme-side runtime clone unless the behavior is actually a control-plane proof or composition primitive.

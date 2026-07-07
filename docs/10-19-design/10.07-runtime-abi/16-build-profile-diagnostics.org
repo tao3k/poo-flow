@@ -1,0 +1,56 @@
+#+TITLE: Build Profile Diagnostics
+
+* Purpose
+
+The runtime benchmark surface must keep the compile and test performance gates
+strict. When a gate fails, the tool should expose enough evidence to separate
+package compile work from package-manager startup and launcher overhead.
+
+This diagnostic layer does not relax thresholds. It records why a failing
+=poo-flow-build-profile= run failed so the next repair can target the real
+owner.
+
+* Receipt Surfaces
+
+- =poo-flow-build-profile= records the wrapped command wall time, internal
+  package time from =poo-flow-compile-debug= rows, and the computed
+  =external-gap-micros=.
+- =poo-flow-build-profile-gate= records the threshold result for wall, package,
+  and external-gap metrics.
+- =poo-flow-build-profile-launcher-diagnostic= records a launcher baseline for
+  the wrapped command. It is emitted when =--diagnose-launcher= is passed or
+  when the =external-gap= gate fails.
+
+The build-profile default resolves a PATH =gxpkg= shell wrapper to the real
+=gxpkg= binary when the wrapper ends in an =exec ".../gxpkg" "$@"= handoff.
+This keeps the default gate focused on the package-manager binary rather than
+an avoidable wrapper boundary. Explicit commands are preserved exactly.
+
+The launcher diagnostic times the resolved build command's executable with
+=--help=. The resulting =external-gap-share-permille= is evidence only; it is
+not subtracted from the gate.
+
+* Current Evidence
+
+- A no-op =gxpkg build -g= run can keep =package-total= under the package gate.
+  One measured run had =package-total= at =1599514= microseconds.
+- The same no-op profile still failed the external-gap gate:
+  =external-gap-micros= was =12923958= against the =10000000= microsecond gate.
+- The launcher diagnostic measured =gxpkg --help= at =8894057= microseconds,
+  which explained =688= permille of that external gap.
+- Directly invoking the real =gxpkg= binary kept a no-op profile inside the
+  gate: one measured run had =wall-micros= at =8288136=, =package-total= at
+  =613402=, and =external-gap-micros= at =7674734=.
+- A stale untracked module, =src/module-system/tool-calling-control.ss=, caused
+  a cold single-file runtime compile of about =17352964= microseconds before
+  the following no-op build returned to package-gate range.
+
+* Repair Direction
+
+- Keep the existing build-profile gates unchanged.
+- Treat package-gate failures and external-gap failures separately.
+- For package failures, inspect the stale source owner and reduce compile-time
+  macro or module complexity.
+- For external-gap failures, optimize or replace the package-manager startup
+  path. The Scheme package gate should not hide =gxpkg= startup cost by
+  lowering thresholds.

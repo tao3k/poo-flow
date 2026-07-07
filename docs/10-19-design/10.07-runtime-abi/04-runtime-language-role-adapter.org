@@ -1,0 +1,216 @@
+#+title: Runtime Language Role Adapter Guide
+
+* Purpose
+
+This document records how a runtime language should integrate with POO Flow.
+The goal is to make Python, Rust, Marlin, and future runtimes cheap to attach
+without asking them to reinvent policy, strategy, or validation semantics.
+
+Runtime languages implement the execution substrate. They do not own POO Flow
+policy semantics.
+
+* Ownership Boundary
+
+POO Flow keeps semantic authority in the upstream control plane:
+
+- Scheme / POO owns policy families, strategy combinators, object extension,
+  and policy-native composition.
+- Lean and proof surfaces own formal guarantees where a proof layer exists.
+- The stable C ABI owns runtime-facing validation receipts, plan identity, and
+  plan digest exchange.
+- Runtime languages own execution, FFI performance, async scheduling, durable
+  storage, replay, and platform integration.
+
+A runtime adapter must not introduce a second policy DSL, validation model, or
+schema owner. Libraries such as Pydantic are therefore not part of the runtime
+role. They can validate Python object shapes, but they cannot improve the
+Scheme / POO / Lean semantic authority and would create competing validation
+surfaces.
+
+* Runtime Language Responsibilities
+
+A runtime language adapter should provide these capabilities:
+
+- Load and call the stable POO Flow C ABI.
+- Validate graph plans through C ABI receipts, not through language-local
+  schema models.
+- Execute graph nodes and stream typed runtime chunks.
+- Persist checkpoints, event logs, state, and replay cursors.
+- Support async execution, cancellation, backpressure, and task supervision
+  where the runtime language supports it.
+- Expose conformance tests that prove the adapter obeys the POO Flow runtime
+  contract.
+
+The adapter may use mature runtime libraries when they improve substrate
+quality. The library must not define policy or graph semantics.
+
+* Recommended Python Runtime Stack
+
+The Python package should stay zero-dependency at the core and expose optional
+runtime backends.
+
+** FFI Backend
+
+- Baseline: =ctypes= from the Python standard library.
+- Performance backend: =cffi= as an optional extra.
+
+The CFFI backend should be added only behind a stable backend interface. It is
+allowed to optimize ABI calls and buffer ownership, but it must return the same
+receipts and runtime objects as the default backend.
+
+Suggested package extra:
+
+#+begin_src toml
+[project.optional-dependencies]
+ffi-cffi = ["cffi"]
+#+end_src
+
+** Async Backend
+
+- Recommended library: =anyio=.
+
+AnyIO should wrap runtime execution with async APIs such as =ainvoke=,
+=astream=, cancellation scopes, task groups, and backpressure-aware stream
+readers. It must not change graph semantics.
+
+Suggested package extra:
+
+#+begin_src toml
+[project.optional-dependencies]
+async-anyio = ["anyio"]
+#+end_src
+
+** Durable Backend
+
+The durable backend should target agent-native database substrates instead of
+plain SQLite. The current priority is Turso / pyturso style integration:
+
+- many-database architecture for per-agent, per-user, or per-tenant isolation
+- async-friendly execution
+- local/offline operation and sync
+- durable event logs and checkpoint stores
+- vector-capable memory surfaces where needed by agent runtimes
+
+The adapter should model Turso as a runtime substrate, not as a policy engine.
+For mission-critical workloads that require a more mature surface today, a
+libSQL/Turso Cloud backend can be kept as a compatibility backend while the
+Turso Database / pyturso path matures.
+
+Suggested package extras:
+
+#+begin_src toml
+[project.optional-dependencies]
+durable-turso = ["pyturso"]
+durable-libsql = ["libsql"]
+#+end_src
+
+* Runtime Adapter Interfaces
+
+The Python runtime should expose small protocol-like interfaces. Backends can
+implement these interfaces with memory, file, Turso, libSQL, or future durable
+substrates.
+
+#+begin_src python
+class RuntimeAbiBackend:
+    def validate_plan(self, plan) -> bytes: ...
+    def plan_digest(self, receipt: bytes) -> str: ...
+
+
+class DurableEventLog:
+    def append(self, thread_id: str, event) -> object: ...
+    def replay(self, thread_id: str, cursor: object | None = None): ...
+
+
+class DurableCheckpointStore:
+    def save(self, checkpoint) -> object: ...
+    def load(self, thread_id: str) -> object: ...
+    def history(self, thread_id: str): ...
+
+
+class DurableStateStore:
+    def put(self, namespace: tuple[str, ...], key: str, value) -> None: ...
+    def get(self, namespace: tuple[str, ...], key: str): ...
+    def search(self, namespace: tuple[str, ...], query: str): ...
+
+
+class DurableLease:
+    def acquire(self, resource: str, owner: str, ttl_ms: int) -> object: ...
+    def renew(self, lease: object, ttl_ms: int) -> None: ...
+    def release(self, lease: object) -> None: ...
+#+end_src
+
+These interfaces are runtime substrate contracts. They are intentionally not
+policy contracts.
+
+* Runtime Lang Authoring Checklist
+
+When adding a new runtime language, follow this checklist:
+
+1. Define the runtime role:
+   - local runtime
+   - remote runtime
+   - async runtime
+   - durable runtime
+   - high-performance FFI runtime
+2. Implement the C ABI backend first.
+3. Prove receipt compatibility with the shared conformance tests.
+4. Implement graph execution using the language runtime's native control
+   primitives.
+5. Implement stream modes:
+   - values
+   - updates
+   - messages
+   - custom
+   - checkpoints
+   - tasks
+   - events
+   - debug
+6. Add durable checkpoint and replay only after the stream contract is stable.
+7. Add async/cancellation/backpressure only as runtime substrate behavior.
+8. Add backend-specific performance gates.
+9. Document every backend as substrate-only, never as strategy authority.
+
+* Anti-Goals
+
+Runtime adapters must not:
+
+- define a new policy DSL
+- replace Scheme / POO policy families
+- introduce language-local validation as semantic authority
+- make JSON the ABI
+- make a durable database define graph semantics
+- bind users to LangGraph, LangChain, Temporal, Turso, or any other external
+  framework as the POO Flow semantic owner
+
+* Python Package Shape
+
+Recommended layout:
+
+#+begin_src text
+packages/python-runtime/src/poo_flow_runtime/
+  bindings.py              # default C ABI backend
+  bindings_cffi.py         # optional cffi backend
+  runtime_graph.py         # zero-dependency graph executor
+  event_stream.py          # stream projection helpers
+  runtime.py               # runtime context
+  checkpoints.py           # checkpoint model and memory/file stores
+  stores.py                # state store model
+  durable/
+    turso.py               # optional pyturso backend
+    libsql.py              # optional libSQL backend
+  async_runtime/
+    anyio.py               # optional AnyIO adapter
+#+end_src
+
+The zero-dependency path must remain usable for conformance tests and local
+development. Optional backends accelerate runtime roles without changing the
+contract.
+
+* References
+
+- Turso: https://turso.tech/
+- pyturso: https://pypi.org/project/pyturso/
+- Turso Python SDK / libSQL: https://docs.turso.tech/sdk/python/quickstart
+- libSQL vs Turso Database: https://docs.turso.tech/libsql
+- CFFI: https://cffi.readthedocs.io/
+- AnyIO: https://anyio.readthedocs.io/

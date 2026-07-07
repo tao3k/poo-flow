@@ -169,11 +169,34 @@ Graph validation and graph handoff receipts include a stable plan digest. This
 gives runtimes a compact identity for cache keys and receipt comparison while
 keeping the graph representation inside the ABI-owned handle.
 
+The Python package should materialize typed runtime plans into C ABI graph
+handles before validation or handoff. Python may provide ergonomic classes for
+tests and local runtime execution, but the graph plan boundary remains the C ABI
+handle.
+
+Runtime-language packages should parse C ABI receipt bytes through a local
+typed receipt API. They should not scatter ad hoc byte matching across runtime
+validation code. Higher-level runtime APIs should expose typed receipt helpers
+while preserving raw C ABI bytes for low-level diagnostics.
+
+The Python package may cache the local probe shared library when it is newer
+than the ABI header and probe source. Manual probe commands should force a
+rebuild to make smoke checks reflect the current C source.
+
+Python runtime programs may expose a local execution trace for debugging and
+ALALEX validation. This trace remains an in-process observation surface; C ABI
+receipts remain the cross-language evidence boundary.
+
+Runtime program execution results should carry the C ABI graph validation
+receipt for the graph handle that was executed. This keeps local traces tied to
+ABI-owned evidence through the plan digest.
+
 The package-level verification entry points are:
 
 #+begin_src sh
 uv run --project packages/python-runtime poo-flow-runtime-probe
 uv run --project packages/python-runtime poo-flow-runtime-validate
+uv run --project packages/python-runtime poo-flow-runtime-program-probe
 uv run --project packages/python-runtime pytest packages/python-runtime/tests
 #+end_src
 

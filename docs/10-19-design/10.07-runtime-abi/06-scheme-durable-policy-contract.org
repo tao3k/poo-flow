@@ -1,0 +1,134 @@
+#+title: Scheme Durable Policy Contract
+
+* Decision
+
+Durable policy belongs to the Scheme control plane.  Python, Rust, Marlin, and
+other runtime languages should implement durable substrates and adapters, not
+the durable strategy engine.
+
+This keeps POO Flow's durable behavior in one semantic owner while allowing each
+runtime to use the best local execution libraries.
+
+* Scheme Responsibility
+
+The Scheme layer owns durable policy families and functional strategy
+combinators for:
+
+- checkpoint timing
+- checkpoint id ownership
+- interrupt and resume legality
+- plan digest compatibility
+- state projection
+- retention and compaction
+- replay and idempotency
+- write consistency and conflict strategy
+
+The Scheme layer should project those policies into a durable manifest that can
+cross the runtime ABI.
+
+* Python Responsibility
+
+The Python runtime package owns adapter execution:
+
+- AnyIO async execution
+- CFFI or ctypes ABI integration
+- Turso durable storage
+- checkpoint CRUD
+- store CRUD
+- runtime conformance tests
+
+Python should consume durable policy manifests and apply their runtime-facing
+requirements.  It should not become the durable policy source of truth.
+
+* Minimal Manifest V1
+
+The first stable manifest only needs fields that Python can enforce without
+inventing policy:
+
+- =policy-id=: stable manifest id
+- =owner=: expected to be =scheme=
+- =checkpoint-id-strategy=: =runtime-generated= or =provided=
+- =require-plan-digest-match=: whether resume must reject changed plans
+- =history-retention-limit=: optional number of checkpoints to retain
+- =receipt=: optional Scheme durable policy receipt
+
+Future versions can add state projection, replay, compaction, and conflict
+policies once the Scheme durable mechanism is stronger.
+
+* Adapter Rule
+
+Runtime adapters must treat the manifest as policy input, not as an advisory
+comment.  If a manifest asks for a behavior the adapter cannot enforce, the
+adapter should fail early with a typed runtime durable policy error.
+
+* Current Python Landing
+
+Python accepts =RuntimeDurablePolicyManifest= and wires it into the Turso store
+and checkpointer.  The current adapter enforces:
+
+- checkpoint id strategy
+- optional checkpoint history retention
+
+Plan digest validation remains in =RuntimeGraphProgram= resume handling because
+that layer has the validated runtime graph plan receipt.
+
+Python also exposes =RuntimeDurableAdapter=.  The adapter consumes the Scheme
+policy manifest, creates the runtime substrate, and emits a
+=poo-flow-durable-adapter.v1= receipt.  This is the handoff shape other runtime
+languages should mirror: policy in, substrate adapter out, receipt back.
+* 2026-07-06 Scheme Runtime Manifest Closure
+
+Scheme durable policy is not complete if downstream runtimes only receive a thin Python-side placeholder.  The stable owner is the Scheme policy family, and runtime languages should consume a bounded manifest projected from a POO policy receipt.
+
+* 2026-07-06 Durable Runtime Envelope Closure
+
+The policy manifest is necessary but not sufficient for runtime language adoption.  A runtime also needs the durable store contract, backend selection surface, and operation vocabulary in one bounded carrier.  Scheme now owns that full envelope.
+
+Implemented closure:
+
+- Scheme module: =:poo-flow/src/module-system/durable-runtime-manifest=.
+- Canonical schema: =poo-flow.durable.runtime-envelope.v1=.
+- Public carrier helpers:
+  - =poo-flow-durable-runtime-manifest-alist=
+  - =poo-flow-durable-runtime-manifest-string=
+  - =poo-flow-durable-runtime-manifest-bytes=
+- Envelope content is projected from POO receipts:
+  - durable policy manifest
+  - durable runtime store contract receipt
+  - durable runtime store backend receipt
+  - backend operation vocabulary and command argv hints
+
+Runtime language contract:
+
+- Runtime languages consume the envelope as bytes.
+- Runtime languages must not parse Scheme source or manufacture Scheme handlers.
+- Runtime languages can validate envelope shape before executing storage/checkpoint/recovery operations.
+- Python exposes =RuntimeDurableEnvelopeManifest= and =coerce_runtime_durable_envelope_manifest= for this role.
+- Python =RuntimeDurableAdapter.turso_from_envelope= can construct a runtime durable adapter directly from the Scheme envelope bytes.
+
+Primary validation gate:
+
+- Python: =uv run --project packages/python-runtime pytest packages/python-runtime/tests --quiet --durations=8=.
+- Scheme: =gxpkg build -g= plus focused =gxi= durable tests with =GERBIL_LOADPATH=.gerbil/lib=.
+- =py-harness check= remains a semantic audit tool, not the primary test command.
+
+Implemented closure:
+
+- Scheme module: =:poo-flow/src/module-system/durable-policy-manifest=.
+- Canonical schema: =poo-flow.durable.runtime-policy-manifest.v1=.
+- Public carrier helpers:
+  - =poo-flow-durable-policy-runtime-manifest-alist=
+  - =poo-flow-durable-policy-runtime-manifest-string=
+  - =poo-flow-durable-policy-runtime-manifest-bytes=
+- Runtime-facing fields are projected from =poo-flow-durable-policy->receipt=: policy id, checkpoint id strategy, checkpoint store, repair mode, action classes, runtime owner, receipt schema/kind, receipt validity, and receipt diagnostic count.
+
+Runtime role boundary:
+
+- Scheme owns durable policy vocabulary and validation.
+- Python, Rust, Marlin, or another runtime consumes manifest bytes over FFI/C ABI and executes storage/checkpoint operations.
+- Runtime adapters may validate the manifest carrier, but should not invent a competing durable policy system.
+
+Validation notes:
+
+- Development tests that consume package-local modules must use =GERBIL_LOADPATH=.gerbil/lib= unless the package has been formally installed into the active Gerbil home.
+- =gxpkg build -g= compiled the new runtime and test targets once, then returned to hot cache behavior at roughly sub-second package checks.

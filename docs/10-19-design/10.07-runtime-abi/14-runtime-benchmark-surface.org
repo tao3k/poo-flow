@@ -1,0 +1,32 @@
+#+title: Runtime Benchmark Surface
+
+* Intent
+
+Benchmarks are package module surfaces, not pyproject script expansion.
+
+The benchmark layer must prove two things:
+
+- LangGraph-compatible runtime semantics are covered by executable tests.
+- POO Flow can go beyond parity through stronger functional composition, durable policy integration, nested subgraph projection, and measured C ABI hot paths.
+
+* Commands
+
+#+begin_src sh
+uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks langgraph-alignment \
+  --iterations 25 --fanout 8
+
+uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks composition \
+  --iterations 10 --fanout 8
+#+end_src
+
+* Composition suite
+
+The composition suite currently emits line-oriented receipts for:
+
+- strategy-combinator-pipeline
+- durable-fanout-strategy
+- nested-subgraph-stream-projection
+- cabi-status-hot-call
+- validation-workflow-round-trip
+
+The C ABI scenarios intentionally separate the loaded binding hot path from the full validation workflow.  The hot path measures the low-level ABI call after the dylib is loaded.  The workflow path measures manifest validation and graph handoff as a higher-level runtime operation.

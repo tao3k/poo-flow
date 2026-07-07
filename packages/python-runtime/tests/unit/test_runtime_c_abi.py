@@ -8,6 +8,7 @@ from poo_flow_runtime import (
     PooFlowRuntimeBinding,
     PooFlowRuntimeError,
     Status,
+    parse_runtime_receipt,
 )
 
 
@@ -70,29 +71,32 @@ def test_runtime_graph_plan_handoff_uses_c_abi_handle() -> None:
         )
 
         description = graph_plan.describe()
-        assert b"kind=runtime-graph-plan\n" in description
-        assert b"nodes=3\n" in description
-        assert b"node-actions=3\n" in description
-        assert b"state-reducers=2\n" in description
-        assert b"edges=4\n" in description
-        assert b"conditional-routes=1\n" in description
-        assert b"step-limit=16\n" in description
+        description_receipt = parse_runtime_receipt(description)
+        assert description_receipt.kind == "runtime-graph-plan"
+        assert description_receipt.integer("nodes") == 3
+        assert description_receipt.integer("node-actions") == 3
+        assert description_receipt.integer("state-reducers") == 2
+        assert description_receipt.integer("edges") == 4
+        assert description_receipt.integer("conditional-routes") == 1
+        assert description_receipt.integer("step-limit") == 16
 
         validation = graph_plan.validate()
-        assert b"kind=runtime-graph-validation\n" in validation
-        assert b"nodes=3\n" in validation
-        assert b"node-actions=3\n" in validation
-        assert b"state-reducers=2\n" in validation
-        validation_digest = _receipt_value(validation, b"plan-digest")
+        validation_receipt = parse_runtime_receipt(validation)
+        assert validation_receipt.kind == "runtime-graph-validation"
+        assert validation_receipt.integer("nodes") == 3
+        assert validation_receipt.integer("node-actions") == 3
+        assert validation_receipt.integer("state-reducers") == 2
+        validation_digest = validation_receipt.plan_digest
 
         with binding.context() as runtime:
             handoff = runtime.plan_runtime_graph_handoff(graph_plan, request)
 
-    assert b"kind=runtime-graph-handoff\n" in handoff
-    assert f"payload-bytes={len(request)}\n".encode("ascii") in handoff
-    assert b"nodes=3\n" in handoff
-    assert b"edges=4\n" in handoff
-    assert _receipt_value(handoff, b"plan-digest") == validation_digest
+    handoff_receipt = parse_runtime_receipt(handoff)
+    assert handoff_receipt.kind == "runtime-graph-handoff"
+    assert handoff_receipt.integer("payload-bytes") == len(request)
+    assert handoff_receipt.integer("nodes") == 3
+    assert handoff_receipt.integer("edges") == 4
+    assert handoff_receipt.plan_digest == validation_digest
 
 
 def test_empty_runtime_graph_plan_is_rejected_by_c_abi() -> None:
@@ -133,20 +137,12 @@ def test_runtime_graph_plan_digest_changes_with_reducer_binding() -> None:
         graph_plan.add_node("manifest-validation")
         graph_plan.add_edge(START, "manifest-validation")
         graph_plan.add_edge("manifest-validation", END)
-        baseline = _receipt_value(graph_plan.validate(), b"plan-digest")
+        baseline = parse_runtime_receipt(graph_plan.validate()).plan_digest
 
         graph_plan.set_state_reducer("receipts", "poo.receipts.append")
-        changed = _receipt_value(graph_plan.validate(), b"plan-digest")
+        changed = parse_runtime_receipt(graph_plan.validate()).plan_digest
 
     assert changed != baseline
-
-
-def _receipt_value(receipt: bytes, key: bytes) -> bytes:
-    prefix = key + b"="
-    for line in receipt.splitlines():
-        if line.startswith(prefix):
-            return line[len(prefix) :]
-    raise AssertionError(f"missing receipt field: {key.decode('ascii')}")
 
 
 def test_dangling_runtime_graph_edge_is_rejected_by_c_abi() -> None:

@@ -1,0 +1,67 @@
+#+TITLE: Python Runtime ABI Surface Self Test
+
+* Purpose
+
+The Python runtime package exposes a stable ABI surface manifest for downstream
+runtime adapters. The manifest is intentionally line-oriented and policy-owned
+by Scheme: Python consumes and validates the contract, but does not become the
+strategy definition layer.
+
+The self-test command is the smallest executable gate for that boundary:
+
+#+begin_src sh
+poo-flow-runtime-abi-surface --self-test
+#+end_src
+
+It validates the generated manifest with the same parser used for external
+payloads, then checks that every declared public entrypoint and durable adapter
+facade method exists in the installed runtime package. The command emits a
+line-oriented validation receipt:
+
+#+begin_example
+schema=poo-flow.python-runtime.abi-surface.validation.v1
+status=ok
+detail=poo-flow.python-runtime.abi-surface.v1
+#+end_example
+
+The same receipt is available to Python harnesses without parsing command
+stdout:
+
+#+begin_src python
+from poo_flow_runtime import runtime_abi_surface_self_test_receipt
+
+receipt = runtime_abi_surface_self_test_receipt()
+assert receipt.status == "ok"
+#+end_src
+
+CLI receipts can be parsed by the same runtime package through
+=coerce_runtime_abi_surface_validation_receipt=, which lets package harnesses
+check shell output without defining a second parser.
+
+* Runtime Adapter Value
+
+Runtime languages do not need to reconstruct the Python package layout or parse
+ad hoc documentation before testing integration readiness. They can execute the
+self-test gate first, then validate any captured manifest through:
+
+#+begin_src sh
+poo-flow-runtime-abi-surface --validate <path-or-stdin>
+#+end_src
+
+This keeps the interface cheap for Python, Rust, Marlin, and future runtime
+adapters:
+
+- Scheme remains the policy and durable strategy owner.
+- Runtime packages only prove that they expose the agreed bridge surface.
+- The gate is executable in shell, CI, and package smoke tests without JSON
+  dependencies or a Python-specific validation framework.
+- The validation receipt schema is listed in the ABI manifest
+  =receipt-schemas= field, so downstream adapters can discover the receipt
+  contract from the same surface manifest.
+
+* Convergence Rule
+
+Every stable runtime binding should provide an equivalent self-test receipt for
+its own package surface. The receipt should prove parser compatibility and
+interface completeness, not business policy semantics. Policy semantics stay in
+POO-native Scheme manifests and functional strategy combinators.

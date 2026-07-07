@@ -1,0 +1,80 @@
+#+title: Python Runtime Streaming Surface
+
+* Boundary
+
+The Python runtime graph now exposes a LangGraph-style =stream= surface without
+adding LangGraph or LangChain as dependencies. This stays inside the POO Flow
+runtime package and keeps the stable upstream boundary as C ABI validation plus
+Python-native runtime execution.
+
+The stream-mode API is deliberately a runtime-language projection. It is not a
+new ABI encoding layer and does not serialize graph state through JSON. Runtime
+languages should keep state in their own native objects while using the C ABI
+for graph-plan validation, receipt generation, and stable plan identity.
+
+* Implemented Modes
+
+- =values= emits the full state after each executed node.
+- =updates= emits the node-local state update after each executed node.
+- =messages= projects =RuntimeGraphMessage= values returned by nodes through the
+  =messages= update key. A message chunk is paired with =node= and =step=
+  metadata.
+- =custom= projects chunks written by nodes through
+  =RuntimeGraphRuntime.emit_custom=. This is a runtime-language writer, not a
+  serialized ABI channel.
+- =checkpoints= persists and projects =RuntimeGraphCheckpoint= values after
+  each executed node when the runtime carries a =thread_id= and checkpointer.
+  Step checkpoints use =interrupt=None= and therefore cannot be mistaken for
+  human-in-the-loop resume checkpoints.
+- =tasks= projects node lifecycle chunks for start, finish, and interrupt
+  events. The chunk carries =node=, =step=, and =status= fields.
+- =events= emits =RuntimeGraphEvent= values for start, node-start, node-end,
+  interrupt, and complete execution receipts.
+- =debug= currently uses the same =RuntimeGraphEvent= payload shape as =events=
+  so downstream runtimes can inspect execution without learning a second event
+  representation.
+
+When multiple modes are requested, the stream yields =(mode, chunk)= tuples.
+That mirrors the official LangGraph stream-mode contract while preserving our
+own object-native runtime surface.
+
+* Typed Projection
+
+=RuntimeGraphExecutor.stream_projection= and
+=RuntimeGraphProgram.stream_projection= collect a multi-mode stream into a
+=RuntimeGraphStreamProjection=. The projection exposes independent iterators:
+=values=, =updates=, =messages=, =custom=, =checkpoints=, =tasks=, =events=,
+and =debug=.
+
+This gives runtime-language SDKs a stable consumer interface without asking
+each downstream runtime to branch over raw =(mode, chunk)= tuples.
+
+* Subgraph Streaming
+
+=RuntimeGraphSubgraph.stream= and =RuntimeGraphSubgraph.stream_projection=
+reuse the same stream modes while preserving the subgraph input/output
+projection contract. A subgraph value stream exposes only the configured
+=output_keys= plus the optional =trace_output_key=, so parent graph state does
+not accidentally receive child-internal state.
+
+* Command Semantics
+
+=RuntimeGraphCommand= now consistently owns control flow across invoke and
+stream execution paths. A command =goto= no longer falls through to ordinary
+default edges in the plain invoke path. This is important for parity with
+LangGraph command routing and for keeping policy-controlled transitions
+deterministic.
+
+* Remaining Alignment
+
+The raw stream-mode surface and typed projection surface now cover the core
+official mode families without adding LangGraph or LangChain as dependencies.
+
+The next acceleration step is:
+
+1. live event streaming: make typed projections incrementally consumable for
+   runtimes that need concurrent readers instead of collected replay.
+2. parent graph subgraph-path metadata: project child chunks with parent/child
+   path metadata when a subgraph is executed as a parent node.
+
+Reference: https://docs.langchain.com/oss/python/langgraph/streaming

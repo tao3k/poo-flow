@@ -22,10 +22,189 @@ node actions, edges, conditional routing, reducers, and step limits. It is not
 the public graph authoring UI. Cross-language runtime handoff remains owned by
 the C ABI, including opaque graph plan handles.
 
+Typed Python runtime plans are materialized into C ABI graph handles before
+validation or handoff. This keeps Python's execution model aligned with the
+upstream ABI instead of creating a parallel graph protocol.
+
+C ABI receipt bytes are parsed through the package receipt API before runtime
+code inspects fields such as =kind=, =nodes=, or =plan-digest=. Higher-level
+runtime APIs expose typed receipt helpers while preserving raw bytes for low
+level ABI checks.
+
+The local C probe build is cached when the compiled shared library is newer
+than the ABI header and probe source. The command-line probe forces a rebuild so
+manual smoke checks always exercise the current C source.
+
+Runtime graph programs can return an execution trace for local debugging and
+ALALEX validation. The trace is process-local observability; it does not replace
+the C ABI receipt boundary.
+
+Each runtime graph execution carries the C ABI graph validation receipt used for
+that run. The typed execution result exposes the receipt and plan digest next to
+the local trace.
+
 Run:
 
 #+begin_src sh
 uv run --project packages/python-runtime poo-flow-runtime-probe
 uv run --project packages/python-runtime poo-flow-runtime-validate
+uv run --project packages/python-runtime poo-flow-runtime-program-probe
 uv run --project packages/python-runtime pytest packages/python-runtime/tests
 #+end_src
+* Runtime graph checkpointing
+
+The Python runtime package exposes the first process-local checkpoint surface
+for human-in-the-loop graph execution:
+
+#+begin_src python
+checkpointer = MemoryRuntimeGraphCheckpointer()
+
+try:
+    program.invoke_thread("thread-1", {}, checkpointer, trace_key="trace")
+except RuntimeGraphInterrupted:
+    pass
+
+execution = program.resume_thread(
+    "thread-1",
+    {"approved": True},
+    checkpointer,
+    trace_key="trace",
+)
+#+end_src
+
+Inspect or edit a saved checkpoint before resuming:
+
+#+begin_src python
+checkpoint = checkpointer.inspect("thread-1")
+checkpointer.update_state("thread-1", {"approved-by": "operator"})
+history = checkpointer.history("thread-1")
+previous = checkpointer.load_at("thread-1", history[0].checkpoint_id)
+#+end_src
+
+Checkpoints carry the validated graph plan digest.  Resuming with a changed
+graph plan is rejected before execution continues.
+
+The memory checkpointer is not a durable production store.  It fixes the
+runtime API shape for thread-scoped interrupt/resume, while keeping durable
+storage outside the C ABI boundary.
+
+Use the file checkpointer when the Python runtime needs a local durable
+snapshot:
+
+#+begin_src python
+checkpointer = FileRuntimeGraphCheckpointer("/tmp/poo-flow-runtime")
+#+end_src
+
+The file backend stores trusted Python runtime snapshots and uses hashed
+thread-id filenames.  It is not a cross-language checkpoint protocol.
+
+* Runtime graph subgraphs
+
+Use ~RuntimeGraphSubgraph~ when a parent graph node should run a nested graph as
+an action:
+
+#+begin_src python
+subgraph = RuntimeGraphSubgraph.from_parts(
+    child_plan,
+    child_actions,
+    input_keys=("seed",),
+    output_keys=("value",),
+    trace_output_key="child-trace",
+)
+
+parent_actions = {"child": subgraph.as_action()}
+#+end_src
+
+Subgraphs are Python runtime strategy combinators.  The parent graph remains
+the C ABI validation/materialization unit.
+
+* Runtime graph store
+
+Use runtime stores for cross-thread, namespace-addressed memory:
+
+#+begin_src python
+store = FileRuntimeGraphStore("/tmp/poo-flow-store")
+store.put(("users", "alice"), "profile", {"name": "Alice"})
+profile = store.get(("users", "alice"), "profile")
+items = store.search(("users",))
+#+end_src
+
+Stores are separate from checkpoints.  Checkpoints capture thread-local graph
+execution state; stores hold long-term runtime memory for actions.
+
+* Runtime context
+
+Actions can opt into runtime context by accepting a second argument:
+
+#+begin_src python
+runtime = RuntimeGraphRuntime(thread_id="thread-1", store=store)
+
+def remember(state, runtime):
+    runtime.require_store().put(
+        ("threads", runtime.require_thread_id()),
+        "value",
+        state["value"],
+    )
+    return {"stored": True}
+#+end_src
+
+One-argument actions continue to work.  Runtime context is a Python runtime
+surface for stores, checkpointers, thread ids, and metadata; it is not part of
+the C ABI payload.
+
+* Messages and tools
+
+Use ~add_messages~ as the reducer for message state:
+
+#+begin_src python
+reducers={"messages": add_messages}
+#+end_src
+
+Use ~RuntimeGraphToolNode~ to execute tool calls from the last AI message:
+
+#+begin_src python
+tool_node = RuntimeGraphToolNode.from_callables({
+    "add": lambda a, b: a + b,
+})
+#+end_src
+
+This mirrors the common MessagesState/ToolNode graph shape without taking a
+LangGraph or LangChain dependency.
+
+* Builder and prebuilt loops
+
+Use the builder for a compact StateGraph-like authoring surface:
+
+#+begin_src python
+builder = RuntimeGraphBuilder()
+builder.add_node("load", load)
+builder.add_node("double", double)
+builder.set_entry_point("load")
+builder.add_edge("load", "double")
+builder.set_finish_point("double")
+executor = builder.compile()
+#+end_src
+
+Use the prebuilt tool loop for the common model/tools cycle:
+
+#+begin_src python
+executor = create_tool_call_loop(
+    model_action,
+    {"add": lambda a, b: a + b},
+)
+#+end_src
+
+* Runtime C ABI cache
+
+The runtime C ABI probe shared library is cached outside the package-local
+~build~ directory by default.  This keeps normal runtime use fast even when a
+developer cleans local build artifacts.
+
+Override the cache location when needed:
+
+#+begin_src sh
+POO_FLOW_RUNTIME_C_ABI_BUILD_DIR=/path/to/cache uv run poo-flow-runtime-probe
+#+end_src
+
+The runtime tests include gates for hot binding load, steady rebuild, repeated
+program invocation, and resume-path binding reuse.

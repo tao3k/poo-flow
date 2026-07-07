@@ -4,15 +4,23 @@ version = "0.1.0"
 description = "Python runtime consumer for the POO Flow C ABI."
 readme = { file = "README.org", content-type = "text/plain" }
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "anyio>=4.14.1",
+    "cffi>=2.0.0",
+    "pyturso>=0.6.1",
+]
 
 [project.scripts]
 poo-flow-runtime-probe = "poo_flow_runtime.probe:main"
 poo-flow-runtime-validate = "poo_flow_runtime.validation:main"
+poo-flow-runtime-program-probe = "poo_flow_runtime.probe:program_main"
+poo-flow-runtime-abi-surface = "poo_flow_runtime.abi_surface_cli:main"
+poo-flow-build-profile = "poo_flow_runtime.build_profile:main"
 
 [dependency-groups]
 dev = [
   "pytest>=8.0",
+  "python-lang-project-harness[pytest] ; python_full_version >= '3.12'",
 ]
 
 [build-system]
@@ -23,5 +31,9 @@ build-backend = "hatchling.build"
 packages = ["src/poo_flow_runtime"]
 
 [tool.pytest.ini_options]
+addopts = ["--python-project-harness"]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.uv.sources]
+python-lang-project-harness = { git = "https://github.com/tao3k/python-lang-project-harness" }
