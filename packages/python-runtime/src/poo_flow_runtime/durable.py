@@ -11,13 +11,16 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-import turso
-
 from .checkpoints import RuntimeGraphCheckpoint, RuntimeGraphCheckpointError
 from .durable_policy import (
     RuntimeDurablePolicyError,
     RuntimeDurablePolicyManifest,
     coerce_runtime_durable_policy_manifest,
+)
+from .durable_turso_backend import (
+    connect_turso_runtime_graph,
+    turso_runtime_graph_backend,
+    validate_turso_backend_requirements,
 )
 from .stores import RuntimeGraphStoreError, RuntimeGraphStoreItem
 
@@ -31,7 +34,9 @@ class TursoRuntimeGraphStore:
 
     def __post_init__(self) -> None:
         self.policy = coerce_runtime_durable_policy_manifest(self.policy)
-        self._conn = turso.connect(str(self.database))
+        self.backend = turso_runtime_graph_backend(self.database)
+        validate_turso_backend_requirements(self.policy.backend, self.backend)
+        self._conn = connect_turso_runtime_graph(self.database)
         self._conn.execute(
             "create table if not exists runtime_store ("
             "namespace text not null, "
@@ -149,7 +154,9 @@ class TursoRuntimeGraphCheckpointer:
 
     def __post_init__(self) -> None:
         self.policy = coerce_runtime_durable_policy_manifest(self.policy)
-        self._conn = turso.connect(str(self.database))
+        self.backend = turso_runtime_graph_backend(self.database)
+        validate_turso_backend_requirements(self.policy.backend, self.backend)
+        self._conn = connect_turso_runtime_graph(self.database)
         self._conn.execute(
             "create table if not exists runtime_checkpoints ("
             "thread_id text not null, "

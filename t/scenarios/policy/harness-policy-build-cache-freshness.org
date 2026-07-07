@@ -1,0 +1,4 @@
+* Harness Policy Build Cache Freshness
+This scenario anchors build-cache freshness to the testing policy suite.
+
+The executable gate is the package build primary output freshness check.

@@ -1,0 +1,91 @@
+* Observability and Performance Gates
+This note records why the previous observability did not stop the composition RSS regression, and what the root performance gates must enforce.
+
+** Failure
+The old gate observed only two weak signals:
+- the fixture shape existed
+- the final benchmark receipt passed or failed
+
+That was not enough. A benchmark could rebuild the full macro-expanded POO composition inside the hot iteration thunk. The final payload shape still looked valid, but each benchmark iteration allocated a new object graph. With =iterations= at 1000, that multiplied composition construction and pushed RSS into the GB range.
+
+Lowering =iterations= is therefore not a fix. It only hides the bug by reducing the multiplier.
+
+** Root Contract
+Composition scenarios must separate construction from hot-path validation.
+
+#+begin_src scheme
+(let (composition (poo-performance-composition-profile-declaration))
+  (poo-performance-family-run-gate
+   +poo-performance-benchmark-receipt-family+
+   poo-performance-composition-profile-declaration-fixture
+   (lambda ()
+     (poo-performance-composition-valid-count composition rounds))))
+#+end_src
+
+The construction counter is the hard observability repair:
+- each gate resets the counter before running
+- each scenario constructor increments the counter once
+- each test asserts =construction-count = 1=
+- the benchmark receipt must still pass the normal time and memory fixture gate
+
+This proves that the benchmark iterates over an already projected POO composition and does not rebuild the composition in the measured hot path.
+
+** Required Scenarios
+The composition performance surface must include at least these gates:
+- inline profile declaration
+- grouped =profiles= import and compose
+- local native POO override
+- reusable hook override
+- direct native POO object reuse
+
+These scenarios match the public composition design. They are not synthetic string operations and they are not reduced-iteration smoke tests.
+
+** Harness Policy Gate
+The GSLPH Testing Framework harness policy must be part of the project testing declaration, not only a helper that tests can query.
+
+The project must declare real policy scenarios through =testing-build=:
+- =scenarios= names the project policy scenarios.
+- =scenario-metadata= carries repair guidance, idiom, benchmark phases, and next repair action.
+- =scenario-root= points to addressable policy scenario files.
+- the resulting project must contain a =scenario-suite= named =policy-scenarios=.
+
+This matters because =policy: #t= alone is only stored on the TestingBuild object. It does not by itself produce a policy suite or a =delegate-policy= phase. A valid POO Flow testing receipt must show the policy suite and repair guidance in the GSLPH Testing Framework receipt.
+
+The current policy scenarios are:
+- performance fixture gates
+- composition observability
+- build cache freshness
+- user-interface composition
+- runtime boundary
+
+The POO performance fixture policy is still enforced at the benchmark boundary:
+- the upstream benchmark fixture contract must pass
+- =maxRssMb= and memory metric fields must be valid
+- canonical input/expected timing phases must be present
+- required POO form evidence must be present
+- required POO usage-call evidence must be present
+
+This policy gates =poo-performance-run-gate=. A fixture missing local POO policy evidence is rejected before benchmark execution.
+
+** Build Cache Gate
+The build cache must not treat a stage stamp or receipt as proof that every module output is current. A stage stamp proves only that the stage was assessed. It does not prove that each generated =.ssi=, =.scm=, or native object is newer than the source that owns it.
+
+The cache contract is:
+- =stamp-current= is valid only when every gxc target also satisfies primary source/output mtime currentness
+- =receipt-current= is valid only when every gxc target also satisfies primary source/output mtime currentness
+- primary output currentness checks the module interface =.ssi= and generated =.scm=, and checks an existing =.o= when native output is present
+- after compiling a stale subset, the stage cache refresh rewrites the receipt instead of only touching stamp mtime
+
+This matters for macro work because a stale =.ssi= can hide a missing export. The source may show the correct performance counter or profile API while the running test imports an older interface. That is an observability failure, not a user error.
+
+** Current Baseline
+The current composition gate baseline after the fix:
+- =gxpkg build -g= passes
+- hot-cache =gxpkg build -g= is about 3.6 seconds
+- tests stage strict skip is about 55 ms
+- composition performance suite passes
+- gate rounds remain at 1000
+- RSS is about 102 MB for the composition performance suite
+- construction count is exactly 1 for each scenario gate
+
+The remaining build-performance follow-up is to keep adding focused gates for new macro surfaces. The build cache should stay strict about primary interface freshness, while deeper output audits can remain behind slower diagnostic or release checks.

@@ -2,18 +2,26 @@
 ;;; User Interface reusable case fragment: LangGraph-style state graph.
 ;;; Invariant: included by load!; the loader owns binding and export.
 
-(use-composition langgraph-state-composition
-  (modules
-   (use-profile langgraph #:as graph))
+(use-composition langgraph
+  (use-module graph
+    (profiles langgraph
+      session
+      state
+      router
+      agent-node
+      tool-node
+      bounded-loop
+      runtime-handoff))
   (stage production
     (compose
-     (profile graph session)
-     (profile graph state)
-     (profile graph router)
-     (profile graph agent-node)
-     (profile graph tool-node)
-     (profile graph bounded-loop)
-     (profile graph runtime-handoff))
+     (profiles graph
+       session
+       state
+       router
+       agent-node
+       tool-node
+       bounded-loop
+       runtime-handoff))
     (graph langgraph-state-graph)
     (loop #:fuel 8 #:exit terminal-edge)
     (prove declared-branch-targets

@@ -19,6 +19,7 @@
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-validation
+        :poo-flow/src/module-system/indexed-family
         (only-in :std/srfi/1 iota)
         (only-in :std/sugar ormap filter))
 
@@ -45,9 +46,43 @@
         poo-performance-cross-contribution-targeting-fixture
         poo-performance-local-contribution-coalescing-fixture-path
         poo-performance-local-contribution-coalescing-fixture
+        poo-performance-tool-calling-object-list-control-fixture-path
+        poo-performance-tool-calling-object-list-control-fixture
+        poo-performance-fixed-slot-projection-fixture-path
+        poo-performance-fixed-slot-projection-fixture
+        poo-performance-large-profile-projection-fixture-path
+        poo-performance-large-profile-projection-fixture
+        poo-performance-generated-receipt-boundary-fixture-path
+        poo-performance-generated-receipt-boundary-fixture
+        poo-performance-runtime-request-family-fixture-path
+        poo-performance-runtime-request-family-fixture
+        poo-performance-policy-proof-fact-family-fixture-path
+        poo-performance-policy-proof-fact-family-fixture
+        poo-performance-strategy-profile-family-fixture-path
+        poo-performance-strategy-profile-family-fixture
+        poo-performance-durable-receipt-family-fixture-path
+        poo-performance-durable-receipt-family-fixture
+        poo-performance-benchmark-fixture-family-fixture-path
+        poo-performance-benchmark-fixture-family-fixture
+        poo-performance-marlin-runtime-handoff-profile-fixture-path
+        poo-performance-marlin-runtime-handoff-profile-fixture
+        poo-performance-prototype-composition-cache-fixture-path
+        poo-performance-prototype-composition-cache-fixture
+        poo-performance-composition-profile-declaration-fixture-path
+        poo-performance-composition-profile-declaration-fixture
+        poo-performance-composition-profiles-bulk-fixture-path
+        poo-performance-composition-profiles-bulk-fixture
+        poo-performance-composition-local-override-fixture-path
+        poo-performance-composition-local-override-fixture
+        poo-performance-composition-hook-override-fixture-path
+        poo-performance-composition-hook-override-fixture
+        poo-performance-composition-native-object-reuse-fixture-path
+        poo-performance-composition-native-object-reuse-fixture
         poo-performance-fixture-paths
         poo-performance-fixtures
         benchmark-fixture-memory-contract-pass?
+        poo-performance-fixture-policy-contract-pass?
+        poo-performance-display-receipt
         poo-performance-run-gate
         poo-performance-required-form-evidence
         poo-performance-required-usage-call-evidence
@@ -55,6 +90,35 @@
         poo-performance-evidence-covers?
         poo-performance-api-evidence-contract-pass?
         poo-performance-api-usage-call-receipt
+        poo-performance-family
+        poo-performance-family-alist
+        poo-performance-family-ref
+        poo-performance-family-run-gate
+        poo-performance-family-descriptor-vector
+        poo-performance-family-slot-lens
+        poo-performance-family-slot-lens-ref
+        poo-performance-indexed-family
+        poo-performance-indexed-family-object
+        poo-performance-indexed-family-ref
+        poo-performance-indexed-family-slot-lens
+        poo-performance-indexed-family-slot-lens-ref
+        poo-performance-indexed-family-lenses
+        poo-performance-indexed-family-project-descriptors
+        +poo-performance-benchmark-receipt-family+
+        +poo-performance-large-runtime-profile-family+
+        +poo-performance-large-runtime-profile-layout+
+        +poo-performance-large-runtime-profile-lenses+
+        +poo-performance-fixed-slot-projection-family+
+        poo-performance-large-profile-projection-descriptors
+        poo-performance-large-profile-indexed-object
+        poo-performance-large-profile-indexed-descriptors
+        poo-performance-large-profile-indexed-valid-count
+        poo-performance-large-profile-projection-valid-count
+        poo-performance-large-profile-projection-gate-receipt
+        poo-performance-generated-receipt-boundary-alist
+        poo-performance-generated-receipt-boundary->alist
+        poo-performance-generated-receipt-boundary-valid-count
+        poo-performance-generated-receipt-boundary-gate-receipt
         poo-performance-slot-ref/default
         poo-performance-build-list
         poo-performance-field-name
@@ -86,72 +150,72 @@
 (def poo-performance-construction-fixture-path
   "t/scenarios/performance/poo-construction/benchmark.ss")
 
-;; : Alist
-(def poo-performance-construction-fixture
+;; : (-> Alist)
+(def (poo-performance-construction-fixture)
   (poo-performance-load-fixture poo-performance-construction-fixture-path))
 
 ;; : String
 (def poo-performance-materialization-fixture-path
   "t/scenarios/performance/poo-loop-materialization/benchmark.ss")
 
-;; : Alist
-(def poo-performance-materialization-fixture
+;; : (-> Alist)
+(def (poo-performance-materialization-fixture)
   (poo-performance-load-fixture poo-performance-materialization-fixture-path))
 
 ;; : String
 (def poo-performance-validation-fixture-path
   "t/scenarios/performance/poo-loop-validation/benchmark.ss")
 
-;; : Alist
-(def poo-performance-validation-fixture
+;; : (-> Alist)
+(def (poo-performance-validation-fixture)
   (poo-performance-load-fixture poo-performance-validation-fixture-path))
 
 ;; : String
 (def poo-performance-catalog-validation-fixture-path
   "t/scenarios/performance/poo-catalog-validation/benchmark.ss")
 
-;; : Alist
-(def poo-performance-catalog-validation-fixture
+;; : (-> Alist)
+(def (poo-performance-catalog-validation-fixture)
   (poo-performance-load-fixture poo-performance-catalog-validation-fixture-path))
 
 ;; : String
 (def poo-performance-object-iteration-fixture-path
   "t/scenarios/performance/poo-object-iteration/benchmark.ss")
 
-;; : Alist
-(def poo-performance-object-iteration-fixture
+;; : (-> Alist)
+(def (poo-performance-object-iteration-fixture)
   (poo-performance-load-fixture poo-performance-object-iteration-fixture-path))
 
 ;; : String
 (def poo-performance-clone-override-fixture-path
   "t/scenarios/performance/poo-clone-override/benchmark.ss")
 
-;; : Alist
-(def poo-performance-clone-override-fixture
+;; : (-> Alist)
+(def (poo-performance-clone-override-fixture)
   (poo-performance-load-fixture poo-performance-clone-override-fixture-path))
 
 ;; : String
 (def poo-performance-field-lookup-fixture-path
   "t/scenarios/performance/poo-field-lookup-loop/benchmark.ss")
 
-;; : Alist
-(def poo-performance-field-lookup-fixture
+;; : (-> Alist)
+(def (poo-performance-field-lookup-fixture)
   (poo-performance-load-fixture poo-performance-field-lookup-fixture-path))
 
 ;; : String
 (def poo-performance-composition-fixture-path
   "t/scenarios/performance/poo-loop-composition/benchmark.ss")
 
-;; : Alist
-(def poo-performance-composition-fixture
+;; : (-> Alist)
+(def (poo-performance-composition-fixture)
   (poo-performance-load-fixture poo-performance-composition-fixture-path))
 
 ;; : String
 (def poo-performance-extension-children-merge-fixture-path
   "t/scenarios/performance/poo-extension-children-merge/benchmark.ss")
 
-;; : Alist
-(def poo-performance-extension-children-merge-fixture
+;; : (-> Alist)
+(def (poo-performance-extension-children-merge-fixture)
   (poo-performance-load-fixture
    poo-performance-extension-children-merge-fixture-path))
 
@@ -159,8 +223,8 @@
 (def poo-performance-cross-contribution-targeting-fixture-path
   "t/scenarios/performance/poo-cross-contribution-targeting/benchmark.ss")
 
-;; : Alist
-(def poo-performance-cross-contribution-targeting-fixture
+;; : (-> Alist)
+(def (poo-performance-cross-contribution-targeting-fixture)
   (poo-performance-load-fixture
    poo-performance-cross-contribution-targeting-fixture-path))
 
@@ -168,10 +232,150 @@
 (def poo-performance-local-contribution-coalescing-fixture-path
   "t/scenarios/performance/poo-local-contribution-coalescing/benchmark.ss")
 
-;; : Alist
-(def poo-performance-local-contribution-coalescing-fixture
+;; : (-> Alist)
+(def (poo-performance-local-contribution-coalescing-fixture)
   (poo-performance-load-fixture
    poo-performance-local-contribution-coalescing-fixture-path))
+
+;; : String
+(def poo-performance-tool-calling-object-list-control-fixture-path
+  "t/scenarios/performance/tool-calling-object-list-control/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-tool-calling-object-list-control-fixture)
+  (poo-performance-load-fixture
+   poo-performance-tool-calling-object-list-control-fixture-path))
+
+;; : String
+(def poo-performance-fixed-slot-projection-fixture-path
+  "t/scenarios/performance/poo-fixed-slot-projection/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-fixed-slot-projection-fixture)
+  (poo-performance-load-fixture
+   poo-performance-fixed-slot-projection-fixture-path))
+
+(def poo-performance-large-profile-projection-fixture-path
+  "t/scenarios/performance/poo-large-profile-projection/benchmark.ss")
+
+(def (poo-performance-large-profile-projection-fixture)
+  (poo-performance-load-fixture
+   poo-performance-large-profile-projection-fixture-path))
+
+(def poo-performance-generated-receipt-boundary-fixture-path
+  "t/scenarios/performance/poo-generated-receipt-boundary/benchmark.ss")
+
+(def (poo-performance-generated-receipt-boundary-fixture)
+  (poo-performance-load-fixture
+   poo-performance-generated-receipt-boundary-fixture-path))
+
+;; : String
+(def poo-performance-runtime-request-family-fixture-path
+  "t/scenarios/performance/poo-runtime-request-family/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-runtime-request-family-fixture)
+  (poo-performance-load-fixture
+   poo-performance-runtime-request-family-fixture-path))
+
+;; : String
+(def poo-performance-policy-proof-fact-family-fixture-path
+  "t/scenarios/performance/poo-policy-proof-fact-family/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-policy-proof-fact-family-fixture)
+  (poo-performance-load-fixture
+   poo-performance-policy-proof-fact-family-fixture-path))
+
+;; : String
+(def poo-performance-strategy-profile-family-fixture-path
+  "t/scenarios/performance/poo-strategy-profile-family/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-strategy-profile-family-fixture)
+  (poo-performance-load-fixture
+   poo-performance-strategy-profile-family-fixture-path))
+
+;; : String
+(def poo-performance-durable-receipt-family-fixture-path
+  "t/scenarios/performance/poo-durable-receipt-family/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-durable-receipt-family-fixture)
+  (poo-performance-load-fixture
+   poo-performance-durable-receipt-family-fixture-path))
+
+;; : String
+(def poo-performance-benchmark-fixture-family-fixture-path
+  "t/scenarios/performance/poo-benchmark-fixture-family/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-benchmark-fixture-family-fixture)
+  (poo-performance-load-fixture
+   poo-performance-benchmark-fixture-family-fixture-path))
+
+;; : String
+(def poo-performance-marlin-runtime-handoff-profile-fixture-path
+  "t/scenarios/performance/poo-marlin-runtime-handoff-profile/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-marlin-runtime-handoff-profile-fixture)
+  (poo-performance-load-fixture
+   poo-performance-marlin-runtime-handoff-profile-fixture-path))
+
+;; : String
+(def poo-performance-prototype-composition-cache-fixture-path
+  "t/scenarios/performance/poo-prototype-composition-cache/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-prototype-composition-cache-fixture)
+  (poo-performance-load-fixture
+   poo-performance-prototype-composition-cache-fixture-path))
+
+;; : String
+(def poo-performance-composition-profile-declaration-fixture-path
+  "t/scenarios/performance/poo-composition-profile-declaration/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-composition-profile-declaration-fixture)
+  (poo-performance-load-fixture
+   poo-performance-composition-profile-declaration-fixture-path))
+
+;; : String
+(def poo-performance-composition-profiles-bulk-fixture-path
+  "t/scenarios/performance/poo-composition-profiles-bulk/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-composition-profiles-bulk-fixture)
+  (poo-performance-load-fixture
+   poo-performance-composition-profiles-bulk-fixture-path))
+
+;; : String
+(def poo-performance-composition-local-override-fixture-path
+  "t/scenarios/performance/poo-composition-local-override/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-composition-local-override-fixture)
+  (poo-performance-load-fixture
+   poo-performance-composition-local-override-fixture-path))
+
+;; : String
+(def poo-performance-composition-hook-override-fixture-path
+  "t/scenarios/performance/poo-composition-hook-override/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-composition-hook-override-fixture)
+  (poo-performance-load-fixture
+   poo-performance-composition-hook-override-fixture-path))
+
+;; : String
+(def poo-performance-composition-native-object-reuse-fixture-path
+  "t/scenarios/performance/poo-composition-native-object-reuse/benchmark.ss")
+
+;; : (-> Alist)
+(def (poo-performance-composition-native-object-reuse-fixture)
+  (poo-performance-load-fixture
+   poo-performance-composition-native-object-reuse-fixture-path))
 
 ;; : [String]
 (def poo-performance-fixture-paths
@@ -185,33 +389,198 @@
         poo-performance-extension-children-merge-fixture-path
         poo-performance-cross-contribution-targeting-fixture-path
         poo-performance-local-contribution-coalescing-fixture-path
+        poo-performance-tool-calling-object-list-control-fixture-path
+        poo-performance-fixed-slot-projection-fixture-path
+        poo-performance-large-profile-projection-fixture-path
+        poo-performance-generated-receipt-boundary-fixture-path
+        poo-performance-runtime-request-family-fixture-path
+        poo-performance-policy-proof-fact-family-fixture-path
+        poo-performance-strategy-profile-family-fixture-path
+        poo-performance-durable-receipt-family-fixture-path
+        poo-performance-benchmark-fixture-family-fixture-path
+        poo-performance-marlin-runtime-handoff-profile-fixture-path
+        poo-performance-prototype-composition-cache-fixture-path
+        poo-performance-composition-profile-declaration-fixture-path
+        poo-performance-composition-profiles-bulk-fixture-path
+        poo-performance-composition-local-override-fixture-path
+        poo-performance-composition-hook-override-fixture-path
+        poo-performance-composition-native-object-reuse-fixture-path
         poo-performance-composition-fixture-path))
 
-;; : [Alist]
-(def poo-performance-fixtures
-  (list poo-performance-construction-fixture
-        poo-performance-materialization-fixture
-        poo-performance-validation-fixture
-        poo-performance-catalog-validation-fixture
-        poo-performance-object-iteration-fixture
-        poo-performance-clone-override-fixture
-        poo-performance-field-lookup-fixture
-        poo-performance-extension-children-merge-fixture
-        poo-performance-cross-contribution-targeting-fixture
-        poo-performance-local-contribution-coalescing-fixture
-        poo-performance-composition-fixture))
+;; : (-> [Alist])
+(def (poo-performance-fixtures)
+  (map poo-performance-load-fixture poo-performance-fixture-paths))
 
 ;; : (-> Alist Boolean)
 (def (benchmark-fixture-memory-contract-pass? fixture)
-  (let (max-rss-mb (benchmark-fixture-ref fixture 'maxRssMb))
+  (let (max-rss-mb (poo-performance-slot-ref/default
+                    fixture
+                    'maxRssMb
+                    #f))
     (and (integer? max-rss-mb)
          (> max-rss-mb 0))))
 
+;; : [Symbol]
+(def poo-performance-required-policy-keys
+  '(max_total
+    maxCollectMs
+    maxParseMs
+    maxFileMs
+    maxPhaseMs
+    observedCollectMs
+    observedParseMs
+    observedFileMs
+    observedPhaseMs
+    observed_total
+    target_total
+    regression_budget
+    expected_over_input_budget
+    observedTimings
+    targetRationale
+    maxRssMb
+    memoryMetric
+    memoryUnit
+    iterations
+    unit
+    sourcePath
+    rule
+    feature
+    optimizationFocus
+    inputShape
+    expectedRepair
+    pooFormEvidence
+    pooUsageCallEvidence
+    measurementPhases
+    tags))
+
+;; : (-> Alist [Symbol] Boolean)
+(def (poo-performance-fixture-keys-present? fixture keys)
+  (not (ormap (lambda (key)
+                (not (assoc key fixture)))
+              keys)))
+
+;; : (-> Alist Symbol Boolean)
+(def (poo-performance-fixture-positive-integer? fixture key)
+  (let (value (poo-performance-slot-ref/default fixture key #f))
+    (and (integer? value) (> value 0))))
+
+;; : (-> Alist Symbol Boolean)
+(def (poo-performance-fixture-nonempty-string? fixture key)
+  (let (value (poo-performance-slot-ref/default fixture key #f))
+    (and (string? value) (> (string-length value) 0))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-source-path-contract-pass? fixture)
+  (let (source-path (poo-performance-slot-ref/default
+                    fixture
+                    'sourcePath
+                    #f))
+    (and (string? source-path)
+         (> (string-length source-path) 0)
+         (file-exists? source-path))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-timing-budget-contract-pass? fixture)
+  (and (poo-performance-fixture-positive-integer? fixture 'maxCollectMs)
+       (poo-performance-fixture-positive-integer? fixture 'maxParseMs)
+       (poo-performance-fixture-positive-integer? fixture 'maxFileMs)
+       (poo-performance-fixture-positive-integer? fixture 'maxPhaseMs)
+       (poo-performance-fixture-positive-integer? fixture 'observedCollectMs)
+       (poo-performance-fixture-positive-integer? fixture 'observedParseMs)
+       (poo-performance-fixture-positive-integer? fixture 'observedFileMs)
+       (poo-performance-fixture-positive-integer? fixture 'observedPhaseMs)
+       (poo-performance-fixture-positive-integer? fixture 'iterations)))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-memory-metric-contract-pass? fixture)
+  (and (eq? (poo-performance-slot-ref/default
+             fixture
+             'memoryMetric
+             #f)
+            'resident-set-size)
+       (equal? (poo-performance-slot-ref/default
+                fixture
+                'memoryUnit
+                #f)
+               "MB")
+       (benchmark-fixture-memory-contract-pass? fixture)))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-text-policy-contract-pass? fixture)
+  (and (poo-performance-fixture-nonempty-string? fixture 'targetRationale)
+       (poo-performance-fixture-nonempty-string? fixture 'optimizationFocus)
+       (poo-performance-fixture-nonempty-string? fixture 'inputShape)
+       (poo-performance-fixture-nonempty-string? fixture 'expectedRepair)
+       (equal? (poo-performance-slot-ref/default fixture 'unit #f) "ms")
+       (symbol? (poo-performance-slot-ref/default fixture 'rule #f))
+       (symbol? (poo-performance-slot-ref/default fixture 'feature #f))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-observed-timing-entry-contract-pass? entry)
+  (and (list? entry)
+       (poo-performance-fixture-nonempty-string? entry 'name)
+       (poo-performance-fixture-positive-integer? entry 'durationMs)))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-observed-timings-contract-pass? fixture)
+  (let (timings (poo-performance-slot-ref/default
+                 fixture
+                 'observedTimings
+                 #f))
+    (and (list? timings)
+         (not (null? timings))
+         (not (ormap (lambda (entry)
+                       (not (poo-performance-observed-timing-entry-contract-pass?
+                             entry)))
+                     timings)))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-measurement-phase-contract-pass? fixture)
+  (let (phases (poo-performance-slot-ref/default
+                fixture
+                'measurementPhases
+                #f))
+    (and (list? phases)
+         (poo-performance-symbol-member? phases 'assert-time-gate)
+         (poo-performance-symbol-member? phases 'assert-memory-gate))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-tags-contract-pass? fixture)
+  (let (tags (poo-performance-slot-ref/default fixture 'tags #f))
+    (and (list? tags)
+         (poo-performance-symbol-member? tags 'poo)
+         (poo-performance-symbol-member? tags 'performance))))
+
+;; : (-> Alist Boolean)
+(def (poo-performance-fixture-policy-contract-pass? fixture)
+  (and (benchmark-fixture-contract-pass? fixture)
+       (poo-performance-fixture-keys-present?
+        fixture
+        poo-performance-required-policy-keys)
+       (benchmark-fixture-memory-contract-pass? fixture)
+       (poo-performance-source-path-contract-pass? fixture)
+       (poo-performance-timing-budget-contract-pass? fixture)
+       (poo-performance-memory-metric-contract-pass? fixture)
+       (poo-performance-text-policy-contract-pass? fixture)
+       (poo-performance-observed-timings-contract-pass? fixture)
+       (poo-performance-measurement-phase-contract-pass? fixture)
+       (poo-performance-tags-contract-pass? fixture)
+       (poo-performance-api-evidence-contract-pass? fixture)))
+
+;; : (-> Alist Unit)
+(def (poo-performance-display-receipt receipt)
+  (display "[poo-flow-benchmark] ")
+  (write (benchmark-fixture-ref receipt 'feature))
+  (display " ")
+  (write receipt)
+  (newline)
+  (force-output))
+
 ;; : (-> Alist (-> Value) Alist)
 (def (poo-performance-run-gate fixture thunk)
-  (if (benchmark-fixture-contract-pass? fixture)
+  (if (poo-performance-fixture-policy-contract-pass? fixture)
     (benchmark-run fixture thunk)
-    (error "poo performance fixture contract failed" fixture)))
+    (error "poo performance fixture policy contract failed" fixture)))
 
 ;; : [Symbol]
 (def poo-performance-required-form-evidence
@@ -285,6 +654,303 @@
           (cons 'fallback (.get object fallback))
           (cons 'dynamic (.get object dynamic))
           (cons 'slots (.all-slots object)))))
+
+;; : (-> Symbol Symbol PooObject)
+(def (poo-performance-family family-name source-tag)
+  (.o (kind 'poo-performance-family)
+      (name family-name)
+      (source source-tag)))
+
+;; : PooObject
+(def +poo-performance-benchmark-receipt-family+
+  (poo-performance-family 'poo-performance-benchmark-receipt-family
+                          'poo-flow.performance.benchmark))
+
+;; : PooObject
+(def +poo-performance-large-runtime-profile-family+
+  (poo-performance-family 'poo-performance-large-runtime-profile-family
+                          'poo-flow.performance.large-runtime-profile))
+
+;; : PooObject
+(def +poo-performance-fixed-slot-projection-family+
+  (poo-performance-family 'poo-performance-fixed-slot-projection-family
+                          'poo-flow.performance.fixed-slot-projection))
+
+;; : (-> PooObject Alist Alist)
+(def (poo-performance-family-alist family alist)
+  (let* ((family-name (.ref family 'name))
+         (source-tag (.ref family 'source))
+         (with-family
+          (if (assoc 'family alist)
+            alist
+            (cons (cons 'family family-name) alist))))
+    (if (or (not source-tag) (assoc 'source with-family))
+      with-family
+      (cons (cons 'source source-tag) with-family))))
+
+;; : (-> PooObject Alist Symbol Value Value)
+(def (poo-performance-family-ref family alist key default-value)
+  (if (eq? (poo-performance-slot-ref/default
+            alist
+            'family
+            #f)
+           (.ref family 'name))
+    (poo-performance-slot-ref/default alist key default-value)
+    default-value))
+
+;; : (-> PooObject Alist (-> Value) Alist)
+(def (poo-performance-family-run-gate family fixture thunk)
+  (poo-performance-family-alist
+   family
+   (poo-performance-run-gate fixture thunk)))
+
+;; : (-> (Listof Symbol) Alist)
+(def (poo-performance-index-slots slot-names)
+  (poo-index-slots slot-names))
+
+;; : (-> Symbol Symbol (Listof Symbol) POOObject)
+(def (poo-performance-indexed-family family-name source-tag slot-names)
+  (poo-indexed-family family-name source-tag slot-names))
+
+;; : (-> POOObject Symbol (Maybe Fixnum))
+(def (poo-performance-indexed-family-slot-index family-object slot-name)
+  (poo-indexed-family-slot-index family-object slot-name))
+
+;; : (-> POOObject (Listof Any) POOObject)
+(def (poo-performance-indexed-family-object family-object values)
+  (poo-indexed-family-object family-object values))
+
+;; : (-> POOObject POOObject Symbol Any Any)
+(def (poo-performance-indexed-family-ref family-object object slot-name default-value)
+  (poo-indexed-family-ref family-object object slot-name default-value))
+
+;; : (-> POOObject Symbol Symbol POOObject)
+(def (poo-performance-indexed-family-named-slot-lens family-object slot-name descriptor-name)
+  (poo-indexed-family-named-slot-lens family-object
+                                      slot-name
+                                      descriptor-name))
+
+;; : (-> POOObject Symbol POOObject)
+(def (poo-performance-indexed-family-slot-lens family-object slot-name)
+  (poo-indexed-family-slot-lens family-object slot-name))
+
+;; : (-> POOObject (Listof Pair) Vector)
+(def (poo-performance-indexed-family-lenses family-object specs)
+  (poo-indexed-family-lenses family-object specs))
+
+;; : (-> POOObject POOObject Any Any)
+(def (poo-performance-indexed-family-slot-lens-ref lens object default-value)
+  (poo-indexed-family-slot-lens-ref lens object default-value))
+
+;; : (-> POOObject POOObject Vector Vector)
+(def (poo-performance-indexed-family-project-descriptors family-object object lenses)
+  (poo-indexed-family-project-descriptors
+   family-object
+   object
+   lenses
+   (lambda (descriptor-family descriptor-name value)
+     (poo-performance-family-alist
+      descriptor-family
+      (list (cons 'name descriptor-name)
+            (cons 'value value))))))
+
+;; : (-> PooObject PooObject [Pair] Vector)
+(def (poo-performance-family-descriptor-vector family object specs)
+  (list->vector
+   (let loop ((rest specs) (descriptors-rev '()))
+     (if (null? rest)
+       (reverse descriptors-rev)
+       (let* ((spec (car rest))
+              (slot (car spec))
+              (name (cdr spec)))
+         (loop (cdr rest)
+               (cons (poo-performance-family-alist
+                      family
+                      (list (cons 'name name)
+                            (cons 'value (.ref object slot))))
+                     descriptors-rev)))))))
+
+;; : (-> PooObject Symbol PooObject)
+(def (poo-performance-family-slot-lens family-object slot-name)
+  (.o (kind 'poo-performance-family-slot-lens)
+      (family family-object)
+      (slot slot-name)))
+
+;; : (-> PooObject PooObject Value)
+(def (poo-performance-family-slot-lens-ref lens object)
+  (.ref object (.ref lens 'slot)))
+
+;; : [Pair]
+(def +poo-performance-large-profile-projection-specs+
+  '((profile-id . profile-id)
+    (policy . policy)
+    (strategy . strategy)
+    (sandbox . sandbox)
+    (tool-scope . tool-scope)
+    (checkpoint . checkpoint)
+    (handoff . handoff)
+    (proof . proof)
+    (priority . priority)
+    (limit . limit)))
+
+(def +poo-performance-large-runtime-profile-layout+
+  (poo-performance-indexed-family
+   'poo-performance-large-runtime-profile-family
+   'poo-flow.performance.large-runtime-profile
+   (map car +poo-performance-large-profile-projection-specs+)))
+
+(def +poo-performance-large-runtime-profile-lenses+
+  (poo-performance-indexed-family-lenses
+   +poo-performance-large-runtime-profile-layout+
+   +poo-performance-large-profile-projection-specs+))
+
+;; : (-> PooObject)
+(def (poo-performance-large-profile-projection-profile)
+  (.o (profile-id 'large-profile)
+      (family 'poo-performance-large-runtime-profile-family)
+      (policy 'loop-policy)
+      (strategy 'graph-strategy)
+      (sandbox 'scoped-sandbox)
+      (tool-scope 'declared-tools)
+      (checkpoint 'durable-checkpoint)
+      (handoff 'runtime-language)
+      (proof 'lean-required)
+      (priority 7)
+      (limit 128)))
+
+;; : (-> Vector)
+(def (poo-performance-large-profile-projection-descriptors)
+  (let (profile (poo-performance-large-profile-projection-profile))
+    (poo-performance-family-descriptor-vector
+     +poo-performance-large-runtime-profile-family+
+     profile
+     +poo-performance-large-profile-projection-specs+)))
+
+(def (poo-performance-large-profile-indexed-object)
+  (poo-performance-indexed-family-object
+   +poo-performance-large-runtime-profile-layout+
+   '(large-profile
+     loop-policy
+     graph-strategy
+     scoped-sandbox
+     declared-tools
+     durable-checkpoint
+     runtime-language
+     lean-required
+     7
+     128)))
+
+(def (poo-performance-large-profile-indexed-descriptors)
+  (poo-performance-indexed-family-project-descriptors
+   +poo-performance-large-runtime-profile-layout+
+   (poo-performance-large-profile-indexed-object)
+   +poo-performance-large-runtime-profile-lenses+))
+
+(def (poo-performance-large-profile-indexed-valid-count rounds)
+  (let* ((object (poo-performance-large-profile-indexed-object))
+         (lenses +poo-performance-large-runtime-profile-lenses+)
+         (count (vector-length lenses))
+         (first-lens (vector-ref lenses 0))
+         (last-lens (vector-ref lenses (- count 1))))
+    (if (and (= count 10)
+             (eq? (.ref object 'family)
+                  +poo-performance-large-runtime-profile-layout+)
+             (eq? (poo-performance-indexed-family-slot-lens-ref
+                   first-lens
+                   object
+                   #f)
+                  'large-profile)
+             (= (poo-performance-indexed-family-slot-lens-ref
+                 last-lens
+                 object
+                 #f)
+                128))
+      rounds
+      0)))
+
+;; : (-> Integer Integer)
+(def (poo-performance-large-profile-projection-valid-count rounds)
+  (let* ((descriptors
+          (poo-performance-large-profile-projection-descriptors))
+         (count (vector-length descriptors))
+         (first-descriptor (vector-ref descriptors 0))
+         (last-descriptor (vector-ref descriptors (- count 1)))
+         (valid?
+          (and (= count 10)
+               (eq? (poo-performance-family-ref
+                     +poo-performance-large-runtime-profile-family+
+                     first-descriptor
+                     'name
+                     #f)
+                    'profile-id)
+               (eq? (cdr (assoc 'value first-descriptor)) 'large-profile)
+               (= (cdr (assoc 'value last-descriptor)) 128))))
+    (if valid? rounds 0)))
+
+;; : (-> Integer Alist)
+(def (poo-performance-large-profile-projection-gate-receipt rounds)
+  (poo-performance-family-run-gate
+   +poo-performance-benchmark-receipt-family+
+   (poo-performance-large-profile-projection-fixture)
+   (lambda ()
+     (poo-performance-large-profile-projection-valid-count rounds))))
+
+(defstruct poo-performance-generated-loop-receipt
+  (profile-id status runtime checkpoint sandbox tool-scope proof))
+
+;; : (-> Integer PooPerformanceGeneratedLoopReceipt)
+(def (poo-performance-generated-receipt-boundary-record index)
+  (make-poo-performance-generated-loop-receipt
+   index
+   'ready
+   'runtime-language
+   'durable-checkpoint
+   'scoped-sandbox
+   'declared-tools
+   'lean-required))
+
+;; : (-> PooPerformanceGeneratedLoopReceipt Alist)
+(def (poo-performance-generated-receipt-boundary->alist receipt)
+  (poo-performance-family-alist
+   +poo-performance-benchmark-receipt-family+
+   (list
+    (cons 'profile-id
+          (poo-performance-generated-loop-receipt-profile-id receipt))
+    (cons 'status
+          (poo-performance-generated-loop-receipt-status receipt))
+    (cons 'runtime
+          (poo-performance-generated-loop-receipt-runtime receipt))
+    (cons 'checkpoint
+          (poo-performance-generated-loop-receipt-checkpoint receipt))
+    (cons 'sandbox
+          (poo-performance-generated-loop-receipt-sandbox receipt))
+    (cons 'tool-scope
+          (poo-performance-generated-loop-receipt-tool-scope receipt))
+    (cons 'proof
+          (poo-performance-generated-loop-receipt-proof receipt)))))
+
+;; : (-> Alist)
+(def (poo-performance-generated-receipt-boundary-alist)
+  (poo-performance-generated-receipt-boundary->alist
+   (poo-performance-generated-receipt-boundary-record 41)))
+
+;; : (-> Integer Integer)
+(def (poo-performance-generated-receipt-boundary-valid-count rounds)
+  (let* ((receipt-alist
+          (poo-performance-generated-receipt-boundary-alist))
+         (valid?
+          (and (= (cdr (assoc 'profile-id receipt-alist)) 41)
+               (eq? (cdr (assoc 'status receipt-alist)) 'ready)
+               (eq? (cdr (assoc 'proof receipt-alist)) 'lean-required))))
+    (if valid? rounds 0)))
+
+;; : (-> Integer Alist)
+(def (poo-performance-generated-receipt-boundary-gate-receipt rounds)
+  (poo-performance-family-run-gate
+   +poo-performance-benchmark-receipt-family+
+   (poo-performance-generated-receipt-boundary-fixture)
+   (lambda ()
+     (poo-performance-generated-receipt-boundary-valid-count rounds))))
 
 ;; : (-> Alist Symbol Value Value)
 (def (poo-performance-slot-ref/default slots key default-value)

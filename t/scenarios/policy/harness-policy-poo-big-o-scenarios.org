@@ -1,0 +1,28 @@
+#+TITLE: Harness Policy POO Big-O Scenarios
+
+* Purpose
+
+POO performance benchmarks must be real downstream scenarios, not standalone
+metric declarations. Every Big-O family scenario added for POO Flow must carry
+both sides of the repair:
+
+- input: the downstream shape before optimization.
+- expected: the POO-native optimized shape after repair.
+
+* Scenario Families
+
+- t/scenarios/performance/poo-runtime-request-family
+- t/scenarios/performance/poo-policy-proof-fact-family
+- t/scenarios/performance/poo-strategy-profile-family
+- t/scenarios/performance/poo-durable-receipt-family
+- t/scenarios/performance/poo-benchmark-fixture-family
+- t/scenarios/performance/poo-marlin-runtime-handoff-profile
+
+* Policy
+
+- A benchmark-only fixture is incomplete.
+- A Big-O scenario must include benchmark.ss, input/src, and expected/src.
+- The benchmark fixture must point at the input and expected repair files with
+  inputPath and expectedPath.
+- Unsafe same-name POO slot/value forms remain in the bounded leak scenario
+  only; optimized expected code must use renamed lexical values.

@@ -209,6 +209,7 @@
              (begin
                (import :poo-flow/src/modules/session/config-session-syntax
                        :poo-flow/src/modules/session/config-policy-syntax
+                       :poo-flow/src/module-system/durable-artifact-policy
                        :poo-flow/src/modules/session/config
                        :poo-flow/src/modules/session/objects)
                (def binding

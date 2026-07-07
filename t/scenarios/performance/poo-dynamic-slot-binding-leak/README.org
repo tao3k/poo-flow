@@ -1,0 +1,44 @@
+#+TITLE: POO Dynamic Slot Binding Leak Scenario
+
+* Purpose
+
+This scenario classifies the memory leak triggered by Gerbil POO object
+construction and slot access. It is not enabled in the normal performance test
+root because one matrix case is expected to leak until the root cause is fixed.
+
+* Safety
+
+Use the matrix runner only with explicit =--run=. Each case runs in a separate
+child process with a timeout and resource limits.
+
+#+begin_src sh
+python3 t/scenarios/performance/poo-dynamic-slot-binding-leak/matrix.py --list
+python3 t/scenarios/performance/poo-dynamic-slot-binding-leak/matrix.py --run
+#+end_src
+
+* Matrix Intent
+
+- =literal-slot= proves static slot literals can be read.
+- =dynamic-same-name= reproduces the reported leak shape. It is evidence for
+  classification only; it does not prove ownership by itself.
+- =dynamic-renamed= checks whether the leak follows dynamic values generally or
+  only same-name slot/value bindings.
+- =dynamic-family-only= checks whether early static slots are still readable
+  when later dynamic slots exist.
+- =alist-control= proves the subprocess harness itself is not the source.
+
+* Ownership Rule
+
+This downstream scenario is the first proof lane. A failure here does not by
+itself prove an upstream defect. Upstream changes are allowed only after the
+matrix shows the leak is independent of POO Flow scenario code and cannot be
+repaired by a valid downstream POO style change.
+
+* Test Policy
+
+The scenario-local policy lives in =policy.ss=. It is static data, not a
+runtime probe. Agents should read it before writing POO performance scenarios:
+
+- forbid =(.o ... (slot slot) ...)= in downstream scenario code.
+- use a renamed lexical binding before inserting dynamic values into =.o=.
+- keep the unsafe reproduction in the bounded matrix only.

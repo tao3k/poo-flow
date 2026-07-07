@@ -14,6 +14,7 @@
         :poo-flow/src/module-system/durable-runtime-store-operation
         :poo-flow/src/module-system/durable-runtime-store-operation-bridge
         :poo-flow/src/module-system/durable-recovery-scenario
+        :poo-flow/src/module-system/durable-artifact-policy
         :poo-flow/src/modules/cubeSandbox/config
         :poo-flow/src/modules/cubeSandbox/profile-interface
         :poo-flow/src/modules/docker-sandbox/config
@@ -60,6 +61,7 @@
         (import: :poo-flow/src/module-system/durable-runtime-store-operation)
         (import: :poo-flow/src/module-system/durable-runtime-store-operation-bridge)
         (import: :poo-flow/src/module-system/durable-recovery-scenario)
+        (import: :poo-flow/src/module-system/durable-artifact-policy)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
 ;; : (forall (a) (-> [a] [a] [a]))

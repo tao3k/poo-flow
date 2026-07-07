@@ -18,12 +18,20 @@ def test_runtime_durable_policy_manifest_parses_scheme_bytes() -> None:
         b"checkpoint-id-strategy=provided\n"
         b"require-plan-digest-match=true\n"
         b"history-retention-limit=2\n"
+        b"backend-driver=turso\n"
+        b"backend-concurrent-writes=true\n"
+        b"backend-ai-vector-search=true\n"
+        b"backend-sync-model=local-first-push-pull\n"
     )
 
     assert manifest.owner == "scheme"
     assert manifest.checkpoint_id_strategy == "provided"
     assert manifest.require_plan_digest_match is True
     assert manifest.history_retention_limit == 2
+    assert manifest.backend["driver"] == "turso"
+    assert manifest.backend["concurrent-writes"] == "true"
+    assert manifest.backend["ai-vector-search"] == "true"
+    assert manifest.backend["sync-model"] == "local-first-push-pull"
     assert b"checkpoint-id-strategy=provided" in manifest.receipt
 
 

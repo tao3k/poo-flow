@@ -30,6 +30,7 @@
 (load! "cases/memory-core")
 (load! "cases/session-memory-durable")
 (load! "cases/sandbox-durable")
+(load! "cases/durable-artifact")
 (load! "cases/durable-recovery")
 (load! "cases/durable-runtime-store-handoff")
 (load! "cases/durable-runtime-store-operations")

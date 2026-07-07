@@ -159,13 +159,24 @@ Current focused checks:
 
 - ~env GERBIL_LOADPATH=$PWD/.gerbil/lib gxc -g -d .gerbil/lib src/module-system/tool-calling-control.ss~
 - ~env GERBIL_LOADPATH=$PWD/.gerbil/lib gxi t/scenarios/tool-calling-control-plane-test.ss~
+- ~gxpkg env gxi t/scenarios/performance/tool-calling-object-list-control/exercise.ss~
 
-Measured smoke timings after the object-list repair:
+Measured smoke timings after the object-list repair, combined validation/proof
+projection, and scenario-specific support-module split:
 
-- plan construction: about 2.93s including ~gxi~ startup/import;
-- runtime receipt construction: about 2.82s including ~gxi~ startup/import;
-- plan/receipt/proof/fact-ref core path: about 2.35s including ~gxi~ startup/import;
-- full scenario load and assertions: about 6.36s.
+- incremental ~gxpkg build -g~ after the support split: about 2.46s total;
+- test compile stage for the main suite plus tool-calling support module: about
+  2.28s with 54 generated outputs;
+- focused tool-calling behavior scenario: about 1.67s including ~gxi~ startup;
+- focused performance exercise: about 1.32s including ~gxi~ startup;
+- package-local POO performance gate:
+  ~tool-calling-object-list-control~ elapsed about 1.36ms under a 100ms gate.
+
+The public API is intentionally narrow.  The canonical fact projection is
+~poo-flow-tool-call-runtime-validation-proof-facts~ plus
+~poo-flow-tool-call-fact-ref~.  The older split public calls for plan-valid,
+receipt-matches-plan, and separate plan/runtime proof facts are not retained as
+compatibility APIs.
 
 Performance guard receipt:
 

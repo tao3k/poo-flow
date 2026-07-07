@@ -24,6 +24,9 @@ def test_turso_durable_adapter_consumes_scheme_manifest(tmp_path) -> None:
             b"checkpoint-id-strategy=runtime-generated\n"
             b"require-plan-digest-match=true\n"
             b"history-retention-limit=2\n"
+            b"backend-driver=turso\n"
+            b"backend-concurrent-writes=true\n"
+            b"backend-ai-vector-search=true\n"
         ),
     )
 
@@ -34,6 +37,28 @@ def test_turso_durable_adapter_consumes_scheme_manifest(tmp_path) -> None:
     assert b"poo-flow-durable-adapter.v1" in receipt
     assert b"owner=scheme" in receipt
     assert b"backend=turso" in receipt
+    assert b"driver=turso" in receipt
+    assert b"driver-package=pyturso" in receipt
+    assert b"connection-module=turso" in receipt
+    assert b"concurrent-writes=true" in receipt
+    assert b"sync-model=local-first-push-pull" in receipt
+    assert b"ai-vector-search=true" in receipt
+    assert b"vector-index=libsql_vector_idx" in receipt
+    assert b"vector-query=vector_top_k" in receipt
+    assert b"driver-version=unknown" not in receipt
+
+
+def test_turso_durable_adapter_rejects_mismatched_backend_requirement(tmp_path) -> None:
+    with pytest.raises(RuntimeError, match="requires driver"):
+        RuntimeDurableAdapter.turso(
+            tmp_path / "adapter.db",
+            policy={
+                "backend": {
+                    "driver": "libsql",
+                    "concurrent-writes": True,
+                }
+            },
+        )
 
 
 def test_turso_durable_adapter_runs_async_thread_workflow(tmp_path) -> None:

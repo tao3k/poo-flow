@@ -53,9 +53,11 @@
         poo-flow-durable-runtime-store-negotiation-receipt-valid?
         poo-flow-durable-runtime-store-negotiation-receipt-diagnostics
         poo-flow-durable-runtime-store-negotiation-receipt-metadata
-        poo-flow-durable-runtime-store-backend
-        poo-flow-durable-runtime-store-backend/default
-        poo-flow-durable-runtime-store-backend?
+ poo-flow-durable-runtime-store-backend
+ poo-flow-durable-runtime-store-backend/default
+ +poo-flow-turso-durable-runtime-store-capability-flags+
+ poo-flow-durable-runtime-store-backend/turso
+ poo-flow-durable-runtime-store-backend?
         poo-flow-durable-runtime-store-backend->receipt
         poo-flow-durable-runtime-store-backend-receipt->alist
         poo-flow-durable-runtime-store-backend-negotiation
@@ -263,6 +265,33 @@
    +poo-flow-durable-runtime-store-capability-flags+
    +poo-flow-durable-runtime-store-capability-flags+
    '((metadata . ((scope . shared)
+                  (runtime-executed . #f))))))
+
+(def +poo-flow-turso-durable-runtime-store-capability-flags+
+  (append +poo-flow-durable-runtime-store-capability-flags+
+          '(concurrent-writes
+            local-first-push-pull
+            ai-vector-search
+            libsql-vector-index
+            vector-top-k)))
+
+(def poo-flow-durable-runtime-store-backend/turso
+  (poo-flow-durable-runtime-store-backend
+   'runtime-backend/turso
+   'turso-runtime-store
+   "turso-runtime-store"
+   'python-pyturso
+   +poo-flow-durable-runtime-store-ledger-kinds+
+   +poo-flow-turso-durable-runtime-store-capability-flags+
+   +poo-flow-durable-runtime-store-capability-flags+
+   '((metadata . ((driver . turso)
+                  (driver-package . pyturso)
+                  (connection-module . turso)
+                  (concurrent-writes . #t)
+                  (sync-model . local-first-push-pull)
+                  (ai-vector-search . #t)
+                  (vector-index . libsql_vector_idx)
+                  (vector-query . vector_top_k)
                   (runtime-executed . #f))))))
 
 ;; : (-> Datum Boolean)

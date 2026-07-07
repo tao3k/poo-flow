@@ -4,6 +4,10 @@ import pytest
 import anyio
 
 from poo_flow_runtime.checkpoints import RuntimeGraphCheckpoint
+from poo_flow_runtime import (
+    TursoRuntimeGraphBackend,
+    turso_runtime_graph_backend,
+)
 from poo_flow_runtime.durable import (
     TursoRuntimeGraphCheckpointer,
     TursoRuntimeGraphStore,
@@ -19,11 +23,28 @@ from poo_flow_runtime.runtime_graph import (
 )
 
 
+def test_turso_runtime_graph_backend_uses_pyturso_driver(tmp_path) -> None:
+    backend = turso_runtime_graph_backend(tmp_path / "backend.db")
+
+    assert isinstance(backend, TursoRuntimeGraphBackend)
+    assert backend.driver == "turso"
+    assert backend.driver_package == "pyturso"
+    assert backend.driver_version != "unknown"
+    assert backend.connection_module == "turso"
+    assert backend.database.endswith("backend.db")
+    assert backend.concurrent_writes is True
+    assert backend.sync_model == "local-first-push-pull"
+    assert backend.ai_vector_search is True
+    assert backend.vector_index == "libsql_vector_idx"
+    assert backend.vector_query == "vector_top_k"
+
+
 def test_turso_runtime_graph_store_round_trips_values(tmp_path) -> None:
     store = TursoRuntimeGraphStore(tmp_path / "store.db")
 
     item = store.put(("tenant", "agent"), "state", {"value": 1})
 
+    assert store.backend.driver_package == "pyturso"
     assert item.value == {"value": 1}
     assert store.get(("tenant", "agent"), "state").value == {"value": 1}
     assert store.list(("tenant", "agent"))[0].key == "state"
@@ -66,6 +87,7 @@ def test_turso_checkpointer_resumes_runtime_graph_thread(tmp_path) -> None:
         ),
     )
     checkpointer = TursoRuntimeGraphCheckpointer(tmp_path / "checkpoints.db")
+    assert checkpointer.backend.driver == "turso"
 
     with pytest.raises(RuntimeGraphInterrupted):
         program.invoke_thread("thread-1", {}, checkpointer)

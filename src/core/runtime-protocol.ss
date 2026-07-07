@@ -14,6 +14,10 @@
         +runtime-request-schema+
         +runtime-response-schema+
         +runtime-command-descriptor-schema+
+        +runtime-response-family+
+        runtime-response-family
+        runtime-response-family-build
+        runtime-response-family-ref
         make-runtime-response
         runtime-response?
         runtime-response-request-id
@@ -47,6 +51,17 @@
 ;; : (-> Unit Symbol)
 (def +runtime-command-descriptor-schema+ 'poo-flow.runtime-command-descriptor.v1)
 
+;; : (-> Symbol Symbol Alist)
+(def (runtime-response-family family-name schema)
+  (list (cons 'kind 'poo-flow-runtime-response-family)
+        (cons 'name family-name)
+        (cons 'schema schema)))
+
+;; : Alist
+(def +runtime-response-family+
+  (runtime-response-family 'poo-flow-runtime-response-family
+                           +runtime-response-schema+))
+
 ;;; Runtime responses are the durable schema projection for adapter results.
 ;;; The runner may still consume =adapter-result= directly, while Rust bridges
 ;;; and receipt stores can persist this stable alist-shaped response.
@@ -59,6 +74,42 @@
    error
    metadata)
   transparent: #t)
+
+;; : (-> Alist Alist Alist)
+(def (runtime-response-family-metadata family metadata)
+  (let* ((family-name (runtime-alist-ref family 'name #f))
+         (schema (runtime-alist-ref family 'schema #f))
+         (with-family
+          (if (assq 'response-family metadata)
+            metadata
+            (cons (cons 'response-family family-name) metadata))))
+    (if (assq 'schema with-family)
+      with-family
+      (cons (cons 'schema schema) with-family))))
+
+;; : (-> Alist RequestId Symbol Value ArtifactHandle Error Alist RuntimeResponse)
+(def (runtime-response-family-build family
+                                    request-id
+                                    status
+                                    value
+                                    artifact-handle
+                                    error
+                                    metadata)
+  (make-runtime-response
+   request-id
+   status
+   value
+   artifact-handle
+   error
+   (runtime-response-family-metadata family metadata)))
+
+;; : (-> Alist RuntimeResponse Symbol Value Value)
+(def (runtime-response-family-ref family response key default)
+  (let (metadata (runtime-response-metadata response))
+    (if (eq? (runtime-alist-ref metadata 'response-family #f)
+             (runtime-alist-ref family 'name #f))
+      (runtime-alist-ref (runtime-response->alist response) key default)
+      default)))
 
 ;; : (-> RuntimeResponse Alist)
 (defpoo-core-receipt-projection
@@ -74,7 +125,8 @@
 
 ;; : (-> AdapterResult [Alist] RuntimeResponse)
 (def (adapter-result->runtime-response result . maybe-metadata)
-  (make-runtime-response
+  (runtime-response-family-build
+   +runtime-response-family+
    (adapter-result-request-id result)
    (adapter-result-status result)
    (adapter-result-value result)

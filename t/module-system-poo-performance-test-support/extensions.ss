@@ -34,7 +34,7 @@
                                                               contribution))
                (receipt
                 (poo-performance-run-gate
-                 poo-performance-extension-children-merge-fixture
+                 (poo-performance-extension-children-merge-fixture)
                  (lambda ()
                    (poo-flow-module-extension-apply-contribution
                     base
@@ -69,7 +69,7 @@
                  target))
                (receipt
                 (poo-performance-run-gate
-                 poo-performance-cross-contribution-targeting-fixture
+                 (poo-performance-cross-contribution-targeting-fixture)
                  (lambda ()
                    (poo-flow-module-extension-apply-contributions
                     base
@@ -105,7 +105,7 @@
                                                                contributions))
                (receipt
                 (poo-performance-run-gate
-                 poo-performance-local-contribution-coalescing-fixture
+                 (poo-performance-local-contribution-coalescing-fixture)
                  (lambda ()
                    (poo-flow-module-extension-apply-contributions
                     base

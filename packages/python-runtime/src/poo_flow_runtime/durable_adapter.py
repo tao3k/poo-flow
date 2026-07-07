@@ -70,6 +70,9 @@ class RuntimeDurableAdapter:
         }
         if self.policy.history_retention_limit is not None:
             fields["history-retention-limit"] = str(self.policy.history_retention_limit)
+        backend = getattr(self.store, "backend", None)
+        if backend is not None:
+            fields.update(backend.receipt_fields())
         lines = ["poo-flow-durable-adapter.v1"]
         lines.extend(f"{key}={value}" for key, value in fields.items())
         return ("\n".join(lines) + "\n").encode("utf-8")

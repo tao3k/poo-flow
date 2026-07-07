@@ -48,6 +48,7 @@
         :poo-flow/t/session-transform-test
         :poo-flow/t/task-family-descriptor-test
         :poo-flow/t/tool-core-test
+        :poo-flow/t/user-interface-custom-durable-artifact-test
         :poo-flow/t/user-interface-custom-durable-recovery-test
         :poo-flow/t/user-interface-custom-durable-operation-bridge-test
         :poo-flow/t/user-interface-custom-durable-runtime-store-handoff-test
@@ -58,6 +59,7 @@
         :poo-flow/t/user-interface-custom-session-communication-test
         :poo-flow/t/user-interface-custom-session-materialization-test
         :poo-flow/t/user-interface-custom-session-memory-durable-test
+        :poo-flow/t/user-interface-custom-sandbox-durable-test
         :poo-flow/t/user-interface-custom-session-policy-test
         :poo-flow/t/user-interface-custom-session-registry-test
         :poo-flow/t/user-interface-custom-session-selector-test

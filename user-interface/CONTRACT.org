@@ -57,9 +57,9 @@ Downstream users should rely on root declarations plus upstream helpers:
 - =pooFlowRootDeveloperDeclarationCase=
 - =poo-flow-declaration-case-presentation-matches?=
 Reusable scenario fragments are also part of the teaching surface:
-- =profiles/langchain.ss= and =cases/langchain-linear.ss=
-- =profiles/langgraph.ss= and =cases/langgraph-state.ss=
-- =profiles/crewai.ss= and =cases/crewai-research-flow.ss=
+- =profiles/langchain.ss= and =cases/langchain.ss=
+- =profiles/langgraph.ss= and =cases/langgraph.ss=
+- =profiles/crewai.ss= and =cases/crewai.ss=
 - =profiles/tool-calling.ss= and =cases/tool-calling-agent-loop.ss=
 
 The presentation surface exposes ownership metadata so agents can inspect the

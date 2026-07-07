@@ -11,16 +11,23 @@
         :poo-flow/src/module-system/profile-composition
         :poo-flow/src/module-system/profile-composition-accessors)
 
-(load! "../user-interface/profiles/langchain")
-(load! "../user-interface/profiles/langgraph")
-(load! "../user-interface/cases/langchain-linear")
-(load! "../user-interface/cases/langgraph-state")
+(def langchain
+  (eval (call-with-input-file "user-interface/profiles/langchain.ss" read)))
 
-(def langchain-linear-composition
-  poo-flow-custom-module-langchain-linear-case)
+(def langgraph
+  (eval (call-with-input-file "user-interface/profiles/langgraph.ss" read)))
 
-(def langgraph-state-composition
-  poo-flow-custom-module-langgraph-state-case)
+(def poo-flow-custom-module-langchain-module langchain)
+(def poo-flow-custom-module-langgraph-module langgraph)
+
+(load! "../user-interface/cases/langchain")
+(load! "../user-interface/cases/langgraph")
+
+(def langchain-composition
+  poo-flow-custom-module-langchain-case)
+
+(def langgraph-composition
+  poo-flow-custom-module-langgraph-case)
 
 (def audited-langchain-module
   (.o (:: self poo-flow-custom-module-langchain-module)
@@ -29,16 +36,17 @@
                  (policy 'audit-model-call-before-terminal)))))
 
 (def audited-langchain-composition
-  (use-composition audited-langchain-linear-composition
-    (modules
-     (use-module audited-langchain-module #:as chain))
+  (use-composition audited-langchain
+    (use-module chain
+      (profiles audited-langchain-module
+        memory
+        prompt
+        model
+        parser
+        no-tool))
     (stage production
       (compose
-       (profile chain memory)
-       (profile chain prompt)
-       (profile chain model)
-       (profile chain parser)
-       (profile chain no-tool))
+       (profiles chain memory prompt model parser no-tool))
       (graph langchain-linear-chain)
       (loop #:fuel 1 #:exit parsed-output)
       (prove chain-order
@@ -190,16 +198,16 @@
 (run-tests!
  (test-suite "langchain and langgraph user compositions"
   (test-case "langchain linear chain declares one production stage"
-    (let* ((stage (single-stage langchain-linear-composition))
+    (let* ((stage (single-stage langchain-composition))
            (compose-payload (stage-clause-payload stage 'compose))
            (graph-payload (stage-clause-payload stage 'graph))
            (loop-payload (stage-clause-payload stage 'loop))
            (prove-payload (stage-clause-payload stage 'prove)))
-      (check-equal? (poo-flow-composition? langchain-linear-composition) #t)
-      (check-equal? (poo-flow-composition-name langchain-linear-composition)
-                    'langchain-linear-composition)
+      (check-equal? (poo-flow-composition? langchain-composition) #t)
+      (check-equal? (poo-flow-composition-name langchain-composition)
+                    'langchain)
       (check-equal? (length (poo-flow-composition-modules
-                             langchain-linear-composition))
+                             langchain-composition))
                     1)
       (check-equal? (poo-flow-composition-stage-name stage) 'production)
       (check-equal? (length compose-payload) 5)
@@ -243,17 +251,17 @@
                       langchain-no-tool))))
 
   (test-case "langgraph state graph declares bounded loop and handoff"
-    (let* ((stage (single-stage langgraph-state-composition))
+    (let* ((stage (single-stage langgraph-composition))
            (compose-payload (stage-clause-payload stage 'compose))
            (graph-payload (stage-clause-payload stage 'graph))
            (loop-payload (stage-clause-payload stage 'loop))
            (prove-payload (stage-clause-payload stage 'prove))
            (handoff-payload (stage-clause-payload stage 'handoff)))
-      (check-equal? (poo-flow-composition? langgraph-state-composition) #t)
-      (check-equal? (poo-flow-composition-name langgraph-state-composition)
-                    'langgraph-state-composition)
+      (check-equal? (poo-flow-composition? langgraph-composition) #t)
+      (check-equal? (poo-flow-composition-name langgraph-composition)
+                    'langgraph)
       (check-equal? (length (poo-flow-composition-modules
-                             langgraph-state-composition))
+                             langgraph-composition))
                     1)
       (check-equal? (poo-flow-composition-stage-name stage) 'production)
       (check-equal? (length compose-payload) 7)

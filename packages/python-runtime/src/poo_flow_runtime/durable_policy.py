@@ -18,6 +18,14 @@ _ALLOWED_ACTION_CLASSES = frozenset(_DEFAULT_ACTION_CLASSES)
 _ALLOWED_REPAIR_MODES = frozenset(
     ("fail-closed", "retry", "rebuild", "compensate", "quarantine", "manual")
 )
+_BACKEND_FIELD_ALIASES = {
+    "backend-driver": "driver",
+    "backend-concurrent-writes": "concurrent-writes",
+    "backend-sync-model": "sync-model",
+    "backend-ai-vector-search": "ai-vector-search",
+    "backend-vector-index": "vector-index",
+    "backend-vector-query": "vector-query",
+}
 
 
 class RuntimeDurablePolicyError(RuntimeError):
@@ -148,7 +156,7 @@ def coerce_runtime_durable_policy_manifest(
             )
         ),
         receipt=_as_bytes(value.get("receipt", b"")),
-        backend=dict(value.get("backend", {})),
+        backend=_coerce_backend(value),
     ).validate()
 
 
@@ -171,6 +179,18 @@ def _as_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     return str(value).lower() in {"1", "true", "yes", "on"}
+
+
+def _coerce_backend(value: Mapping[str, Any]) -> dict[str, Any]:
+    backend_value = value.get("backend", {})
+    if isinstance(backend_value, Mapping):
+        backend = dict(backend_value)
+    else:
+        backend = {}
+    for field, backend_field in _BACKEND_FIELD_ALIASES.items():
+        if field in value:
+            backend[backend_field] = value[field]
+    return backend
 
 
 def _optional_int(value: Any) -> int | None:

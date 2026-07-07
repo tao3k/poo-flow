@@ -108,6 +108,40 @@
         (check-equal? (test-ref handoff 'scheme-manufactures-runtime-handlers)
                       #f)))
 
+    (test-case "declares Turso concurrency and AI backend capabilities"
+      (let* ((backend-receipt
+              (poo-flow-durable-runtime-store-backend->receipt
+               poo-flow-durable-runtime-store-backend/turso))
+             (row
+              (poo-flow-durable-runtime-store-backend-receipt->alist
+               backend-receipt))
+             (metadata (test-ref row 'metadata)))
+        (check-equal? (test-ref row 'backend-id) 'runtime-backend/turso)
+        (check-equal? (test-ref row 'backend-kind) 'turso-runtime-store)
+        (check-equal? (test-ref row 'protocol) 'python-pyturso)
+        (check-equal?
+         (memq 'concurrent-writes
+               (test-ref row 'supported-capability-flags))
+         '(concurrent-writes
+           local-first-push-pull
+           ai-vector-search
+           libsql-vector-index
+           vector-top-k))
+        (check-equal?
+         (memq 'ai-vector-search
+               (test-ref row 'supported-capability-flags))
+         '(ai-vector-search libsql-vector-index vector-top-k))
+        (check-equal? (test-ref metadata 'driver) 'turso)
+        (check-equal? (test-ref metadata 'driver-package) 'pyturso)
+        (check-equal? (test-ref metadata 'connection-module) 'turso)
+        (check-equal? (test-ref metadata 'concurrent-writes) #t)
+        (check-equal? (test-ref metadata 'sync-model)
+                      'local-first-push-pull)
+        (check-equal? (test-ref metadata 'ai-vector-search) #t)
+        (check-equal? (test-ref metadata 'vector-index)
+                      'libsql_vector_idx)
+        (check-equal? (test-ref metadata 'vector-query) 'vector_top_k)))
+
     (test-case "rejects a backend that cannot satisfy durable store contract"
       (let* ((backend
               (poo-flow-durable-runtime-store-backend

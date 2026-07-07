@@ -2,20 +2,10 @@
         :poo-flow/src/module-system/profile-composition
         :poo-flow/src/module-system/tool-calling-control)
 
-(load "user-interface/profiles/tool-calling.ss")
+(def tool-calling
+  (eval (call-with-input-file "user-interface/profiles/tool-calling.ss" read)))
 
-(def poo-flow-custom-module-tool-calling-module
-  (.o (tool-request (.o (name 'tool-calling-request)))
-      (tool-schema (.o (name 'tool-calling-schema)))
-      (tool-permission (.o (name 'tool-calling-permission)))
-      (sandbox-scope (.o (name 'tool-calling-sandbox-scope)))
-      (argument-validation (.o (name 'tool-calling-argument-validation)))
-      (untrusted-observation (.o (name 'tool-calling-untrusted-observation)))
-      (tool-cooldown (.o (name 'tool-calling-cooldown)))
-      (result-contract (.o (name 'tool-calling-result-contract)))
-      (runtime-binding (.o (name 'tool-calling-runtime-binding)))
-      (receipt-gate (.o (name 'tool-calling-receipt-gate)))
-      (observability (.o (name 'tool-calling-observability)))))
+(def poo-flow-custom-module-tool-calling-module tool-calling)
 
 (def tool-calling-composition-fragment
   (load "user-interface/cases/tool-calling-agent-loop.ss"))
@@ -56,14 +46,26 @@
    #f
    'completed))
 
-(unless (poo-flow-tool-call-plan-valid? tool-call-plan)
-  (error "Tool calling plan should be valid"))
-
-(unless (poo-flow-tool-call-receipt-matches-plan? tool-call-plan tool-call-receipt)
-  (error "Tool calling runtime receipt should match plan"))
-
 (def tool-call-facts
-  (poo-flow-tool-call-runtime-proof-facts tool-call-plan tool-call-receipt))
+  (poo-flow-tool-call-runtime-validation-proof-facts tool-call-plan
+                                                     tool-call-receipt))
+
+(def tool-call-fact-family
+  (poo-flow-tool-call-fact-family
+   'poo-flow-tool-call-runtime-validation-proof-facts
+   'poo-flow.tool-calling.control.runtime))
+
+(unless (equal? (poo-flow-tool-call-fact-ref tool-call-facts 'fact-family)
+                'poo-flow-tool-call-runtime-validation-proof-facts)
+  (error "Tool calling facts should carry reusable fact family identity"))
+
+(unless (poo-flow-tool-call-fact-family-ref tool-call-fact-family
+                                            tool-call-facts
+                                            'plan-valid)
+  (error "Tool calling fact family should read matching fact sets"))
+
+(unless (poo-flow-tool-call-fact-ref tool-call-facts 'plan-valid)
+  (error "Tool calling plan should be valid"))
 
 (unless (poo-flow-tool-call-fact-ref tool-call-facts
                                      'runtime-receipt-matches-tool-plan)

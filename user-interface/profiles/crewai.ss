@@ -10,6 +10,18 @@
      (.o (name 'crewai-crew)
          (contract 'agent-task-team)
          (policy 'crew-members-declared)))
+    (planning
+     (.o (name 'crewai-planning)
+         (contract 'crew-planning-steps)
+         (policy 'planning-before-task-dispatch)))
+    (memory
+     (.o (name 'crewai-memory)
+         (contract 'crew-memory-scope)
+         (policy 'memory-scope-contained)))
+    (knowledge
+     (.o (name 'crewai-knowledge)
+         (contract 'crew-knowledge-source)
+         (policy 'knowledge-sources-declared)))
     (sequential-process
      (.o (name 'crewai-sequential-process)
          (contract 'ordered-task-process)

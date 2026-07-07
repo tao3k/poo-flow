@@ -29,6 +29,8 @@
          help: "Include debug information")
    (flag 'cli "--cli"
          help: "Build only CLI modules")
+   (flag 'tests "--tests"
+         help: "Build test modules during compile")
    (flag 'force "--force"
          help: "Force rebuild")
    (flag 'verbose "-V" "--verbose"
@@ -41,6 +43,15 @@
 (define-multicall-main)
 
 (def (poo-flow-load-package-build!)
+  (eval
+   '(begin
+      (import (only-in :std/misc/process run-process))
+      (run-process
+       ["sh" "-c"
+        "src='src/cli-support/package-build.ss'; base='.gerbil/lib/poo-flow/src/cli-support/package-build'; stamp='.gerbil/lib/poo-flow/.package-build-control.cksum'; sum=$(cksum \"$src\"); if [ ! -e \"$base.ssi\" ] || [ ! -e \"$base.scm\" ] || [ ! -e \"$stamp\" ] || [ \"$(cat \"$stamp\")\" != \"$sum\" ]; then printf '%s\n' '|poo-flow-build-bootstrap package-build=compile reason=source-checksum'; gxc \"$src\" && printf '%s\n' \"$sum\" > \"$stamp\"; fi"]
+       stdin-redirection: #f
+       stdout-redirection: #f
+       stderr-redirection: #f)))
   (eval '(import "./src/cli-support/package-build.ss")))
 
 (def (poo-flow-load-testing!)
@@ -48,9 +59,9 @@
                  :gslph/src/testing/model
                  "./src/cli-support/testing-project.ss")))
 
-(def (poo-flow-package-entry-options release optimized debug cli force verbose)
+(def (poo-flow-package-entry-options release optimized debug cli tests force verbose)
   (poo-flow-load-package-build!)
-  ((eval 'poo-flow-entry-options) release optimized debug cli force verbose))
+  ((eval 'poo-flow-entry-options) release optimized debug cli tests force verbose))
 
 (def (poo-flow-test-error-status exn files)
   (display "|poo-flow-test-error ")
@@ -82,6 +93,7 @@
                           optimized: (optimized #f)
                           debug: (debug #f)
                           cli: (cli #f)
+                          tests: (tests #f)
                           force: (force #f)
                           verbose: (verbose #f))
   (help: "Print the package build spec"
@@ -89,19 +101,20 @@
   (poo-flow-load-package-build!)
   (pretty-print
    ((eval 'poo-flow-compile-build-spec)
-    (poo-flow-package-entry-options release optimized debug cli force verbose))))
+    (poo-flow-package-entry-options release optimized debug cli tests force verbose))))
 
 (define-entry-point (compile release: (release #f)
                              optimized: (optimized #f)
                              debug: (debug #f)
                              cli: (cli #f)
+                             tests: (tests #f)
                              force: (force #f)
                              verbose: (verbose #f))
   (help: "Compile the package"
    getopt: +poo-flow-build-getopt+)
   (poo-flow-load-package-build!)
   ((eval 'poo-flow-package-compile)
-   (poo-flow-package-entry-options release optimized debug cli force verbose)))
+   (poo-flow-package-entry-options release optimized debug cli tests force verbose)))
 
 (define-entry-point (test . files)
   (help: "Run selected gxtest files through the harness testing framework"

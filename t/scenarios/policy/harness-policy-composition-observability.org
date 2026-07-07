@@ -1,0 +1,4 @@
+* Harness Policy Composition Observability
+This scenario anchors composition macro observability to the testing policy suite.
+
+The executable gate is the construction-count and benchmark receipt check in the composition performance support.

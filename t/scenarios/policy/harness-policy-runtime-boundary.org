@@ -1,0 +1,4 @@
+* Harness Policy Runtime Boundary
+This scenario anchors Scheme control-plane and runtime-language handoff boundaries to the testing policy suite.
+
+The executable gates are runtime protocol receipts and adapter boundary tests.

@@ -34,13 +34,30 @@ from .abi_surface import (
     runtime_abi_surface_manifest_string,
 )
 from .builder import RuntimeGraphBuilder
+from .crewai import (
+    CrewAIAgentSpec,
+    CrewAIFlowResult,
+    CrewAIFlowSpec,
+    CrewAITaskSpec,
+    create_crewai_flow_executor,
+    crewai_flow_plan,
+    crewai_flow_receipt,
+    run_crewai_flow,
+)
 from .checkpoints import (
     FileRuntimeGraphCheckpointer,
     MemoryRuntimeGraphCheckpointer,
     RuntimeGraphCheckpoint,
     RuntimeGraphCheckpointError,
 )
-from .durable import TursoRuntimeGraphCheckpointer, TursoRuntimeGraphStore
+from .durable import (
+    TursoRuntimeGraphCheckpointer,
+    TursoRuntimeGraphStore,
+)
+from .durable_turso_backend import (
+    TursoRuntimeGraphBackend,
+    turso_runtime_graph_backend,
+)
 from .durable_adapter import RuntimeDurableAdapter
 from .durable_envelope import (
     RuntimeDurableEnvelopeManifest,
@@ -145,6 +162,14 @@ __all__ = (
     "runtime_request",
     "RuntimeGraphBindings",
     "RuntimeGraphBuilder",
+    "CrewAIAgentSpec",
+    "CrewAIFlowResult",
+    "CrewAIFlowSpec",
+    "CrewAITaskSpec",
+    "create_crewai_flow_executor",
+    "crewai_flow_plan",
+    "crewai_flow_receipt",
+    "run_crewai_flow",
     "materialize_runtime_graph_plan",
     "RuntimeGraphExecution",
     "RuntimeGraphProgram",
@@ -189,6 +214,8 @@ __all__ = (
     "RuntimeGraphCheckpointError",
     "TursoRuntimeGraphCheckpointer",
     "TursoRuntimeGraphStore",
+    "TursoRuntimeGraphBackend",
+    "turso_runtime_graph_backend",
     "RuntimeDurableAdapter",
     "RuntimeDurableEnvelopeManifest",
     "RuntimeDurablePolicyError",

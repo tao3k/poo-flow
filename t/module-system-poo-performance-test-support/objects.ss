@@ -25,6 +25,7 @@
   (newline)
   (force-output))
 
+;; : (-> String Integer Symbol)
 ;; : TestCase
 (def module-system-poo-performance-construction-case
   (test-case "constructs large module objects at one boundary"
@@ -32,7 +33,7 @@
                (object (poo-performance-module-object field-count))
                (receipt
                 (poo-performance-run-gate
-                  poo-performance-construction-fixture
+                 (poo-performance-construction-fixture)
                  (lambda ()
                    (poo-performance-module-object field-count)))))
           (check-equal? (poo-flow-module-object-identity object)
@@ -48,7 +49,7 @@
                (slots (poo-flow-module-object-default-slots object))
               (receipt
                 (poo-performance-run-gate
-                 poo-performance-materialization-fixture
+                 (poo-performance-materialization-fixture)
                  (lambda ()
                    (poo-performance-snapshot-sum slots 20)))))
           (check-equal? (length slots) 400)
@@ -64,7 +65,7 @@
                (slots (poo-flow-module-object-default-slots object))
               (receipt
                 (poo-performance-run-gate
-                 poo-performance-validation-fixture
+                 (poo-performance-validation-fixture)
                  (lambda ()
                    (if valid?
                      (poo-performance-snapshot-sum slots 20)
@@ -84,7 +85,7 @@
                 (poo-flow-module-objects-validation-summary validations))
                (receipt
                 (poo-performance-run-gate
-                 poo-performance-catalog-validation-fixture
+                 (poo-performance-catalog-validation-fixture)
                  (lambda ()
                    (poo-flow-module-objects-validation objects)))))
           (check-equal? (length validations) 40)
@@ -104,7 +105,7 @@
                 (map poo-flow-module-object-identity objects))
                (receipt
                 (poo-performance-run-gate
-                 poo-performance-object-iteration-fixture
+                 (poo-performance-object-iteration-fixture)
                  (lambda ()
                    (poo-performance-object-node-lookup-count
                     objects-node
@@ -126,7 +127,7 @@
                 (poo-performance-override-slots 1200 160))
                (receipt
                 (poo-performance-run-gate
-                 poo-performance-clone-override-fixture
+                 (poo-performance-clone-override-fixture)
                  (lambda ()
                    (poo-flow-module-object-node/default-slots
                     object
@@ -154,7 +155,7 @@
                 (poo-performance-contribution-entries field-count))
               (receipt
                 (poo-performance-run-gate
-                 poo-performance-field-lookup-fixture
+                 (poo-performance-field-lookup-fixture)
                  (lambda ()
                    (poo-flow-module-object-contributions object entries)))))
           (check-equal?
@@ -180,7 +181,7 @@
                                                      contributions))
               (receipt
                 (poo-performance-run-gate
-                 poo-performance-composition-fixture
+                 (poo-performance-composition-fixture)
                  (lambda ()
                    (poo-flow-module-objects-mk-merge/node
                     objects-node

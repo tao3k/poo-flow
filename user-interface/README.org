@@ -11,9 +11,9 @@ This directory models the downstream surface that users and agents read before w
 
 * Reusable Cases
 
-- =cases/langchain-linear.ss=: LangChain-style linear composition.
-- =cases/langgraph-state.ss=: LangGraph-style guarded state graph composition.
-- =cases/crewai-research-flow.ss=: CrewAI-style crew/flow composition that reuses profile slots instead of cloning CrewAI's Python runtime surface.
+- =cases/langchain.ss=: LangChain-style composition.
+- =cases/langgraph.ss=: LangGraph-style guarded state graph composition.
+- =cases/crewai.ss=: CrewAI-style crew/flow composition that reuses profile slots instead of cloning CrewAI's Python runtime surface.
 - =cases/tool-calling-agent-loop.ss=: framework-neutral tool calling control-plane composition for agent loop/tool/state runtime handoff.
 
 * Rule

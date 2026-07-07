@@ -4,7 +4,10 @@
 (import (only-in :std/test test-suite)
         :poo-flow/t/module-system-poo-performance-test-support/contracts
         :poo-flow/t/module-system-poo-performance-test-support/objects
-        :poo-flow/t/module-system-poo-performance-test-support/extensions)
+        :poo-flow/t/module-system-poo-performance-test-support/extensions
+        :poo-flow/t/module-system-poo-performance-test-support/tool-calling
+        :poo-flow/t/module-system-poo-performance-test-support/projection
+        :poo-flow/t/module-system-poo-performance-test-support/composition)
 
 (export module-system-poo-performance-test)
 
@@ -13,4 +16,7 @@
   (test-suite "poo-flow module system POO performance"
     module-system-poo-performance-contracts-test
     module-system-poo-performance-objects-test
-    module-system-poo-performance-extensions-test))
+    module-system-poo-performance-extensions-test
+    module-system-poo-performance-tool-calling-test
+    module-system-poo-performance-projection-test
+    module-system-poo-performance-composition-test))

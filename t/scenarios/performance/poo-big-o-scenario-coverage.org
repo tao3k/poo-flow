@@ -1,0 +1,47 @@
+#+TITLE: POO Big-O Scenario Coverage
+
+* Purpose
+
+This file maps POO high-performance writing rules to concrete downstream
+performance scenarios. It is scenario guidance, not a design plan.
+
+* Existing Coverage
+
+- construction: build large objects at one boundary.
+- materialization: materialize default slots once before repeated work.
+- validation: validate stable object shape once before scalar loops.
+- catalog-validation: reuse inherited field validation across object catalogs.
+- object-iteration: iterate after one graph materialization boundary.
+- clone-override: apply clone overrides after default-slot materialization.
+- field-lookup-loop: reuse field contract lookup in contribution loops.
+- extension-children-merge: index extension child merge boundaries.
+- cross-contribution-targeting: preserve same-pass target lookup.
+- local-contribution-coalescing: coalesce local contributions before traversal.
+- fixed-slot-projection: project fixed slots into stable descriptors.
+- large-profile-projection: read large profile descriptors through vectors.
+- generated-receipt-boundary: project generated receipt accessors at runtime boundary.
+- composition families: keep profile composition POO-native.
+
+* Newly Added Big-O Families
+
+- runtime-request-family: O(1) runtime request projection after one family build.
+- policy-proof-fact-family: O(1) proof fact lookup after one policy projection.
+- strategy-profile-family: reuse strategy profile descriptors across combinators.
+- durable-receipt-family: reuse durable receipt identity and key projection.
+- benchmark-fixture-family: project benchmark contract fields once for timing and RSS gates.
+- marlin-runtime-handoff-profile: publish one stable family for Marlin runtime handoff.
+
+Each newly added Big-O family must have:
+
+- =input/src/...=: the downstream shape before optimization.
+- =expected/src/...=: the POO-native shape after optimization.
+- =benchmark.ss= fields =inputPath= and =expectedPath= pointing to those files.
+
+* Unsafe Shape Policy
+
+The dynamic slot binding leak scenario owns this policy:
+
+- forbidden: =(.o ... (slot slot) ...)=
+- allowed: rename the lexical value before inserting it into the =.o= slot form.
+- ownership: downstream scenario evidence first; do not patch upstream before
+  downstream POO style repair is ruled out.

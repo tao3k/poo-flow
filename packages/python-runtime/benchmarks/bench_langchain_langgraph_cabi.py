@@ -797,6 +797,147 @@ def make_poo_executor_router_stream_events() -> Subject:
     return subject
 
 
+def make_crewai_sequential_crew_native() -> Subject:
+    from crewai import Agent, Crew, Process, Task
+    from crewai.llms.base_llm import BaseLLM
+
+    class DeterministicCrewAILLM(BaseLLM):
+        def __init__(self) -> None:
+            super().__init__(model="poo-flow-deterministic")
+
+        def call(
+            self,
+            messages: Any,
+            tools: list[Any] | None = None,
+            callbacks: list[Any] | None = None,
+            available_functions: Mapping[str, Any] | None = None,
+            from_task: Any | None = None,
+            from_agent: Any | None = None,
+            response_model: Any | None = None,
+        ) -> str:
+            task_name = str(getattr(from_task, "name", None) or "task")
+            agent_role = str(getattr(from_agent, "role", None) or "agent")
+            return json.dumps(
+                {
+                    "task": task_name,
+                    "agent": agent_role,
+                    "result": "deterministic-result",
+                },
+                separators=(",", ":"),
+            )
+
+    llm = DeterministicCrewAILLM()
+    researcher = Agent(
+        role="researcher",
+        goal="classify policy strategy requests",
+        backstory="Deterministic CrewAI benchmark agent.",
+        llm=llm,
+        verbose=False,
+        max_iter=1,
+        cache=False,
+    )
+    reviewer = Agent(
+        role="reviewer",
+        goal="finalize routed policy strategy work",
+        backstory="Deterministic CrewAI benchmark reviewer.",
+        llm=llm,
+        verbose=False,
+        max_iter=1,
+        cache=False,
+    )
+    classify = Task(
+        name="classify",
+        description="Classify request {question} for session {session_id}.",
+        expected_output="A deterministic route classification.",
+        agent=researcher,
+    )
+    finalize = Task(
+        name="finalize",
+        description="Finalize the policy result using the classification context.",
+        expected_output="A deterministic final control-plane output.",
+        agent=reviewer,
+        context=[classify],
+    )
+    crew = Crew(
+        agents=[researcher, reviewer],
+        tasks=[classify, finalize],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+        planning=False,
+        tracing=False,
+        cache=False,
+    )
+
+    def subject(iteration: int) -> Any:
+        output = crew.kickoff(inputs=_agent_input(iteration))
+        return {
+            "output": str(output),
+            "tasks": tuple(str(task.name) for task in crew.tasks),
+        }
+
+    return subject
+
+
+def make_poo_executor_crewai_sequential() -> Subject:
+    from poo_flow_runtime.crewai import (
+        CrewAIAgentSpec,
+        CrewAIFlowSpec,
+        CrewAITaskSpec,
+        create_crewai_flow_executor,
+    )
+
+    spec = CrewAIFlowSpec(
+        name="crewai",
+        process="sequential",
+        agents=(
+            CrewAIAgentSpec(
+                "researcher",
+                role="researcher",
+                goal="classify policy strategy requests",
+                tools=("rag", "route"),
+            ),
+            CrewAIAgentSpec(
+                "reviewer",
+                role="reviewer",
+                goal="finalize routed policy strategy work",
+                tools=("review",),
+            ),
+        ),
+        tasks=(
+            CrewAITaskSpec(
+                "classify",
+                agent="researcher",
+                description="Classify request for the current session.",
+                expected_output="A deterministic route classification.",
+                output_key="classification",
+            ),
+            CrewAITaskSpec(
+                "finalize",
+                agent="reviewer",
+                description="Finalize the policy result using the classification context.",
+                expected_output="A deterministic final control-plane output.",
+                output_key="answer",
+                context=("classify",),
+            ),
+        ),
+        planning_steps=("classify", "finalize"),
+        memory_keys=("session_id", "classification"),
+        knowledge_sources=("policy-proof.org", "checkpoint-contract.org"),
+        tool_policy={
+            "researcher": ("rag", "route"),
+            "reviewer": ("review",),
+        },
+    )
+    executor = create_crewai_flow_executor(spec)
+
+    def subject(iteration: int) -> Any:
+        state, trace = executor.invoke_with_trace({**_agent_input(iteration), "trace": []})
+        return {"state": state, "trace": trace}
+
+    return subject
+
+
 def make_poo_cabi_describe_linear() -> Subject:
     from poo_flow_runtime import PooFlowRuntimeBinding
 
@@ -1112,6 +1253,14 @@ def benchmark_cases() -> tuple[BenchmarkCase, ...]:
             max_iterations=200,
         ),
         BenchmarkCase(
+            "crewai-sequential-crew-native",
+            "crewai-native",
+            "CrewAI sequential Crew kickoff with deterministic local BaseLLM.",
+            ("crew", "sequential-process", "agent", "task-context"),
+            make_crewai_sequential_crew_native,
+            max_iterations=50,
+        ),
+        BenchmarkCase(
             "poo-flow-executor-router-agent",
             "poo-flow-executor",
             "POO runtime graph executor with conditional policy routing, without C ABI validation.",
@@ -1145,6 +1294,13 @@ def benchmark_cases() -> tuple[BenchmarkCase, ...]:
             "POO runtime graph executor conditional router consumed through event stream.",
             ("runtime-graph", "stream", "events", "conditional-edge", "executor-only"),
             make_poo_executor_router_stream_events,
+        ),
+        BenchmarkCase(
+            "poo-flow-executor-crewai-sequential",
+            "poo-flow-executor",
+            "POO runtime graph executor for a CrewAI-style sequential crew composition.",
+            ("runtime-graph", "crewai", "sequential-process", "agent-task", "executor-only"),
+            make_poo_executor_crewai_sequential,
         ),
         BenchmarkCase(
             "poo-flow-cabi-describe-linear",
@@ -1227,7 +1383,7 @@ def _json_default(value: Any) -> Any:
             for key in value.__dataclass_fields__.keys()
         }
     if isinstance(value, tuple):
-        return list(value)
+        return [_json_default(item) for item in value]
     return value
 
 
@@ -1243,19 +1399,83 @@ def _features(features: Sequence[str]) -> str:
     return ", ".join(features)
 
 
+def _mean_ms(result: BenchmarkResult) -> float:
+    return result.mean_us / 1000.0
+
+
+def _comparison_rows(report: Report) -> list[tuple[str, BenchmarkResult, BenchmarkResult, float]]:
+    results = {result.name: result for result in report.results}
+    comparisons = (
+        (
+            "LangChain linear runnable vs POO Flow C ABI linear receipt",
+            "langchain-linear-agent-native",
+            "poo-flow-cabi-describe-linear",
+        ),
+        (
+            "LangChain branch/tool route vs POO Flow executor router",
+            "langchain-branch-tool-native",
+            "poo-flow-executor-router-agent",
+        ),
+        (
+            "LangGraph router agent vs POO Flow executor router",
+            "langgraph-router-agent-native",
+            "poo-flow-executor-router-agent",
+        ),
+        (
+            "LangGraph handoff/reducer vs POO Flow executor handoff/reducer",
+            "langgraph-handoff-reducer-native",
+            "poo-flow-executor-handoff-reducer",
+        ),
+        (
+            "LangGraph interrupt/resume vs POO Flow executor interrupt/resume",
+            "langgraph-interrupt-resume-native",
+            "poo-flow-executor-interrupt-resume",
+        ),
+        (
+            "LangGraph long graph vs POO Flow executor long graph",
+            "langgraph-long-graph-native",
+            "poo-flow-executor-long-graph",
+        ),
+        (
+            "LangGraph stream/events vs POO Flow executor stream/events",
+            "langgraph-router-stream-native",
+            "poo-flow-executor-router-stream-events",
+        ),
+        (
+            "CrewAI sequential crew vs POO Flow executor crew composition",
+            "crewai-sequential-crew-native",
+            "poo-flow-executor-crewai-sequential",
+        ),
+        (
+            "LangGraph long graph vs POO Flow C ABI long-graph receipt",
+            "langgraph-long-graph-native",
+            "poo-flow-cabi-describe-long-graph",
+        ),
+    )
+    rows = []
+    for label, native_name, poo_name in comparisons:
+        native = results.get(native_name)
+        poo = results.get(poo_name)
+        if native is None or poo is None or poo.mean_us <= 0:
+            continue
+        rows.append((label, native, poo, native.mean_us / poo.mean_us))
+    return rows
+
+
 def render_org(report: Report) -> str:
     lines: list[str] = []
-    lines.append("#+title: LangChain/LangGraph C ABI Benchmark Report")
+    lines.append("#+title: LangChain/LangGraph/CrewAI C ABI Benchmark Report")
     lines.append("#+startup: overview")
     lines.append("")
     lines.append("* Scope")
-    lines.append("This benchmark compares native LangChain/LangGraph orchestration with the POO Flow runtime surfaces used to hand graph receipts to a runtime language.")
+    lines.append("This benchmark compares native LangChain/LangGraph/CrewAI orchestration with the POO Flow runtime surfaces used to hand graph receipts to a runtime language.")
     lines.append("")
     lines.append("It does not measure real LLM latency, network tools, or durable storage IO. The deterministic actions model the control-plane cost of AI Agent Flow shapes: policy routing, graph edges, dynamic handoff, reducers, checkpoint interrupt/resume, long graph scale, stream/event consumption, receipt materialization, and C ABI validation gates.")
     lines.append("")
     lines.append("* Local Clone Inputs")
     lines.append("- LangChain: =../../.data/langchain/libs/core=")
     lines.append("- LangGraph: =../../.data/langgraph/libs/langgraph=")
+    lines.append("- CrewAI: =../../.data/crewai/lib/crewai=")
     lines.append("- POO Flow runtime: current =packages/python-runtime= workspace")
     lines.append("")
     lines.append("* Command")
@@ -1263,6 +1483,7 @@ def render_org(report: Report) -> str:
     lines.append("uv run \\")
     lines.append("  --with-editable ../../.data/langgraph/libs/langgraph \\")
     lines.append("  --with-editable ../../.data/langchain/libs/core \\")
+    lines.append("  --with-editable ../../.data/crewai/lib/crewai \\")
     lines.append("  python benchmarks/bench_langchain_langgraph_cabi.py \\")
     lines.append("  --iterations 2000 \\")
     lines.append("  --warmup 200 \\")
@@ -1281,26 +1502,80 @@ def render_org(report: Report) -> str:
     lines.append(f"- Per-case caps: ={str(report.case_caps_enabled).lower()}=")
     lines.append(f"- GC during measurement: ={str(report.gc_enabled_during_measurement).lower()}=")
     lines.append("")
+    comparison_rows = _comparison_rows(report)
+    lines.append("* Summary")
+    if comparison_rows:
+        langchain_speedups = [
+            speedup
+            for _, native, _, speedup in comparison_rows
+            if native.family == "langchain-native"
+        ]
+        langgraph_speedups = [
+            speedup
+            for _, native, _, speedup in comparison_rows
+            if native.family == "langgraph-native"
+        ]
+        crewai_speedups = [
+            speedup
+            for _, native, _, speedup in comparison_rows
+            if native.family == "crewai-native"
+        ]
+        if langchain_speedups:
+            lines.append(
+                "- POO Flow runtime surfaces are {min_speedup:.2f}x to {max_speedup:.2f}x faster than the measured LangChain native orchestration cases in this run.".format(
+                    min_speedup=min(langchain_speedups),
+                    max_speedup=max(langchain_speedups),
+                )
+            )
+        if langgraph_speedups:
+            lines.append(
+                "- POO Flow runtime surfaces are {min_speedup:.2f}x to {max_speedup:.2f}x faster than the measured LangGraph native orchestration cases in this run.".format(
+                    min_speedup=min(langgraph_speedups),
+                    max_speedup=max(langgraph_speedups),
+                )
+            )
+        if crewai_speedups:
+            lines.append(
+                "- POO Flow runtime surfaces are {min_speedup:.2f}x to {max_speedup:.2f}x faster than the measured CrewAI native orchestration cases in this run.".format(
+                    min_speedup=min(crewai_speedups),
+                    max_speedup=max(crewai_speedups),
+                )
+            )
+        lines.append("- All comparison rows report deterministic control-plane latency only; they do not include LLM, network, or durable storage IO.")
+        lines.append("")
+        lines.append("| comparison | native mean ms | poo-flow mean ms | speedup |")
+        lines.append("|-")
+        for label, native, poo, speedup in comparison_rows:
+            lines.append(
+                "| {label} | {native_ms:.4f} | {poo_ms:.4f} | {speedup:.2f}x |".format(
+                    label=_org_escape(label),
+                    native_ms=_mean_ms(native),
+                    poo_ms=_mean_ms(poo),
+                    speedup=speedup,
+                )
+            )
+    else:
+        lines.append("- Native LangChain/LangGraph/CrewAI comparison rows were not available in this run. Check the Failures section before reading the POO Flow numbers as a framework comparison.")
+    lines.append("")
     lines.append("* Benchmark Results")
-    lines.append("| name | family | features | mean us | p50 us | p95 us | min us | max us | ops/s | checksum |")
+    lines.append("| name | family | features | mean ms | p50 ms | p95 ms | min ms | max ms | checksum |")
     lines.append("|-")
     for result in sorted(report.results, key=lambda item: (item.family, item.name)):
         lines.append(
-            "| {name} | {family} | {features} | {mean:.3f} | {p50:.3f} | {p95:.3f} | {min:.3f} | {max:.3f} | {ops:.2f} | {checksum} |".format(
+            "| {name} | {family} | {features} | {mean:.4f} | {p50:.4f} | {p95:.4f} | {min:.4f} | {max:.4f} | {checksum} |".format(
                 name=_org_escape(result.name),
                 family=_org_escape(result.family),
                 features=_org_escape(_features(result.features)),
-                mean=result.mean_us,
-                p50=result.p50_us,
-                p95=result.p95_us,
-                min=result.min_us,
-                max=result.max_us,
-                ops=result.ops_per_second,
+                mean=result.mean_us / 1000.0,
+                p50=result.p50_us / 1000.0,
+                p95=result.p95_us / 1000.0,
+                min=result.min_us / 1000.0,
+                max=result.max_us / 1000.0,
                 checksum=result.checksum,
             )
         )
     if not report.results:
-        lines.append("| none | none | none | 0 | 0 | 0 | 0 | 0 | 0 | 0 |")
+        lines.append("| none | none | none | 0 | 0 | 0 | 0 | 0 | 0 |")
     lines.append("")
     lines.append("* C ABI Gates")
     lines.append("| name | status | features | error | receipt summary |")
@@ -1342,6 +1617,7 @@ def render_org(report: Report) -> str:
     lines.append("* Interpretation")
     lines.append("- LangChain cases cover runnable composition, prompt/parser cost, branch routing, and tool/handoff selection.")
     lines.append("- LangGraph cases cover the production graph controls we need to compare against: conditional edges, dynamic Send fanout, reducer aggregation, checkpoint-backed interrupt/resume.")
+    lines.append("- CrewAI cases cover sequential crew kickoff with agents, task context, and deterministic local LLM execution so the runtime-language boundary is tested without network or model latency.")
     lines.append("- Long graph cases use a fixed 32-node linear graph to expose scale cost without introducing LLM or IO latency.")
     lines.append("- Stream cases consume framework/runtime stream outputs so the benchmark is not limited to invoke-only happy paths.")
     lines.append("- POO executor cases measure the current Python graph semantics without crossing the C ABI validation gate.")
@@ -1367,8 +1643,10 @@ def render_text(report: Report) -> str:
     ]
     for result in sorted(report.results, key=lambda item: (item.family, item.name)):
         lines.append(
-            f"{result.name}: mean={result.mean_us:.3f}us p50={result.p50_us:.3f}us "
-            f"p95={result.p95_us:.3f}us ops/s={result.ops_per_second:.2f} features={','.join(result.features)}"
+            f"{result.name}: mean={result.mean_us / 1000.0:.4f}ms "
+            f"p50={result.p50_us / 1000.0:.4f}ms "
+            f"p95={result.p95_us / 1000.0:.4f}ms "
+            f"features={','.join(result.features)}"
         )
     lines.append("")
     lines.append("CABI GATES")
