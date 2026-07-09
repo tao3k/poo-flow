@@ -19,6 +19,16 @@
 ;;       The generated code is normal =poo-flow-module-object= and
 ;;       =poo-flow-module-field-contract= data. It is not a user-facing DSL.
 ;;     %
+;; defpoo-sandbox-backend-object-family
+;; : (-> SandboxBackendObjectFamilySyntax SandboxBackendObjectFamilyExpansionSyntax)
+;; | doc m%
+;;   Expands sandbox, backend capability, registry, and profile object family
+;;   declarations into POO-native module objects.
+;;   # Examples
+;;   ```scheme
+;;   (defpoo-sandbox-backend-object-family ...)
+;;   ;; => (begin ...)
+;;   ```
 (defrules defpoo-sandbox-backend-object-family
   (sandbox backend profile)
   ((_ sandbox-object
@@ -35,6 +45,9 @@
        ((profile-field profile-type profile-merge profile-default profile-metadata)
         ...)))
    (begin
+     ;; Engineering note: policy-sensitive helpers in this owner keep explicit
+     ;; contracts adjacent to definitions so downstream reports stay actionable.
+     ;; : Any
      (def sandbox-object
        (poo-flow-module-object
         'sandbox-identity
@@ -49,22 +62,30 @@
           (domain . sandbox)
           (inherits . sandbox-inherits-value))))
 
+     ;; : Any
      (def backend-capability
        capability-value)
 
+     ;; : Any
      (def backend-capability-registry
        (poo-flow-sandbox-backend-capability-registry
         (list (cons 'backend-key backend-capability))
         registry-metadata))
 
+     ;; : Any
      (def profile-object
        (poo-flow-module-object
         'profile-identity
-        (list profile-super ...)
-        (list
-         (poo-flow-module-field-contract
-          'profile-field 'profile-type 'profile-merge
-          profile-default
+	        (list profile-super ...)
+	        (list
+	         (poo-flow-module-field-contract
+	          'backend 'Symbol 'override
+	          'backend-key
+	          '((scope . backend-key)
+	            (owned-by . module-config)))
+	         (poo-flow-module-field-contract
+	          'profile-field 'profile-type 'profile-merge
+	          profile-default
           profile-metadata)
          ...)
         '((namespace . namespace-value)
@@ -74,5 +95,6 @@
           (backend-owned-by . use-module)
           (inherits . profile-inherits-value))))
 
+     ;; : Any
      (def module-objects
        (list sandbox-object profile-object)))))

@@ -18,6 +18,17 @@
         alignment-gate-proof-commands
         poo-flow-funflow-tutorial-alignment-gate-ids)
 
+;;; Boundary: flows alignment field rows preserve parser-visible slots for
+;;; funflow compatibility receipts.
+;; poo-flow-flows-alignment-field-rows
+;; : (-> FlowsAlignmentFieldRowsClauseSyntax FlowsAlignmentFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands funflow-alignment field clauses into stable compatibility rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-flows-alignment-field-rows (arrow 'kleisli))
+;;   ;; => ((arrow . kleisli))
+;;   ```
 (defrules poo-flow-flows-alignment-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))

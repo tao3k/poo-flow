@@ -1,3 +1,7 @@
+;;; Boundary: materialization syntax lowers session authoring forms into
+;;; runtime receipt builders without starting durable execution.
+;;; Invariant: generated materialization objects must keep checkpoint and
+;;; recovery ids explicit.
 (import :poo-flow/src/modules/session/config-session-runtime
         :poo-flow/src/modules/session/config-session-syntax-core)
 
@@ -9,6 +13,16 @@
 ;;       Materialization rows record runtime handoff state only; they do not
 ;;       await futures or open sandboxes.
 ;;     %
+;; session-materialization
+;; : (-> SessionMaterializationSyntax SessionMaterializationExpansionSyntax)
+;; | doc m%
+;;   Expands user-facing session materialization clauses into a runtime
+;;   materialization receipt value.
+;;   # Examples
+;;   ```scheme
+;;   (session-materialization request (project p) ...)
+;;   ;; => #<poo-flow-session-materialization>
+;;   ```
 (defrules session-materialization
   (project root session parents state pending-runtime sandbox-handle tokens error metadata)
   ((_ request-id

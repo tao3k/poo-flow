@@ -1,0 +1,13 @@
+#+TITLE: POO Flow Schema Registry
+
+* Purpose
+
+This directory stores versioned external schemas that POO Flow contracts study or
+project into Scheme-side contracts. =.data= remains a research/cache area; schema
+files that affect shipped contracts belong here.
+
+* Entries
+
+| Path | Upstream | Owner |
+|------+----------+-------|
+| =schemas/json/github-workflow.json= | =https://json.schemastore.org/github-workflow.json= | =src/modules/funflow/github-ci-contract.ss= |

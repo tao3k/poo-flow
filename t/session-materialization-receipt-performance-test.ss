@@ -99,28 +99,42 @@
     (materialization-performance-error index)
     (materialization-performance-metadata index))))
 
-;; : (-> [Alist] Integer)
+;; materialization-performance-valid-count
+;;   : (-> [SessionMaterializationPerformanceRow] Integer)
+;;   | doc m%
+;;       Count materialized session rows whose receipt status remained valid
+;;       after the performance projection.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (materialization-performance-valid-count '())
+;;       ;; => 0
+;;       ```
+;;     %
 (def (materialization-performance-valid-count rows)
-  (let loop ((remaining-rows rows)
-             (count 0))
-    (cond
-     ((null? remaining-rows) count)
-     ((materialization-performance-ref (car remaining-rows) 'valid?)
-      (loop (cdr remaining-rows) (+ count 1)))
-     (else
-      (loop (cdr remaining-rows) count)))))
+  (length
+   (filter (lambda (row)
+             (materialization-performance-ref row 'valid?))
+           rows)))
 
-;; : (-> [Alist] Integer)
+;; materialization-performance-diagnostic-count
+;;   : (-> [SessionMaterializationPerformanceRow] Integer)
+;;   | doc m%
+;;       Count diagnostics emitted by materialization receipts so the benchmark
+;;       can gate correctness and policy noise separately.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (materialization-performance-diagnostic-count '())
+;;       ;; => 0
+;;       ```
+;;     %
 (def (materialization-performance-diagnostic-count rows)
-  (let loop ((remaining-rows rows)
-             (count 0))
-    (if (null? remaining-rows)
-      count
-      (loop (cdr remaining-rows)
-            (+ count
-               (materialization-performance-ref
-                (car remaining-rows)
-                'diagnostic-count))))))
+  (let (counts
+        (map (lambda (row)
+               (materialization-performance-ref row 'diagnostic-count))
+             rows))
+    (if (null? counts) 0 (apply + counts))))
 
 ;; : (-> Integer Alist)
 (def (materialization-performance-summary count)

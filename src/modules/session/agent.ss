@@ -27,10 +27,23 @@
         poo-flow-session-agent-graph-registry-receipt
         poo-flow-session-agent-graph->alist)
 
+;;; Boundary: session agent field rows keep agent object slots stable across
+;;; parent and child session graph materialization.
+;; poo-flow-session-agent-field-rows
+;; : (-> SessionAgentFieldRowsClauseSyntax SessionAgentFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands session agent field clauses into stable node projection rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-agent-field-rows (session-id 'child))
+;;   ;; => ((session-id . child))
+;;   ```
 (defrules poo-flow-session-agent-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
+;;; Boundary: session agent nodes preserve parent/child session identity and
+;;; sandbox policy refs as inert POO values.
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol [Alist] PooSessionAgentNode)
 (def (poo-flow-session-agent-node agent-id
                                   project-ref
@@ -266,15 +279,8 @@
 
 ;; : (-> [PooSession] (Cons [Symbol] Integer))
 (def (poo-flow-session-agent-graph-session-summary sessions)
-  (let loop ((remaining-sessions sessions)
-             (session-ids-rev '())
-             (session-count 0))
-    (if (null? remaining-sessions)
-      (cons (reverse session-ids-rev) session-count)
-      (loop (cdr remaining-sessions)
-            (cons (poo-flow-session-id (car remaining-sessions))
-                  session-ids-rev)
-            (+ session-count 1)))))
+  (cons (map poo-flow-session-id sessions)
+        (length sessions)))
 
 ;; : (-> Alist Symbol Value Value)
 (def (poo-flow-session-agent-graph-metadata-ref metadata key default-value)
@@ -290,6 +296,18 @@
    'communication-channel-receipts
    '()))
 
+;;; Boundary: session agent graphs join nodes, registry, and communication
+;;; receipts without sharing mutable runtime context.
+;; poo-flow-session-agent-graph
+;; : (-> SessionAgentGraphReceiptSyntax SessionAgentGraphReceiptValue)
+;; | doc m%
+;;   Constructs the policy-visible graph receipt for parent, child, and peer
+;;   session agent relationships.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-agent-graph 'graph 'root '() '() registry '() '())
+;;   ;; => #<poo-flow-session-agent-graph>
+;;   ```
 ;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [PooSessionCommunicationReceipt] [Alist] PooSessionAgentGraph)
 (def (poo-flow-session-agent-graph project-id
                                    root-session-ref

@@ -27,6 +27,19 @@ model:
 4. Heavy execution stays outside Scheme. Scheme owns strategy, composition,
    validation, presentation, and report-only handoff data.
 
+** 10.06.44.12 Upstream Semantic Owner Rule
+When a feature has semantic meaning, place it in the earliest layer that can own it.
+
+The practical rule is:
+- module and feature selection belong in module/profile declarations;
+- workflow meaning belongs in workflow POO objects and functional builders;
+- sandbox meaning belongs in sandbox module objects and resource contracts;
+- loop, governor, and human-audit meaning belongs in their POO object families;
+- validators own legality checks;
+- graph modules own explanation and diagnostics;
+- runtime manifests, ABI rows, JSON-like receipts, and Marlin payloads only project already-validated facts.
+
+Do not implement a feature first as a final alist, manifest row, ABI field, or runtime adapter option when it can be represented as a POO object slot, contract, validator, graph fact, or functional combinator. Final projections must carry schema, producer, source, object kind, and provenance when they cross a runtime boundary.
 ** 10.06.44.20 Macro And Metaprogramming Policy
 
 Prefer Gerbil metaprogramming when all of these are true:

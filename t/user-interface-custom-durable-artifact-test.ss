@@ -14,10 +14,12 @@
 
 (export user-interface-custom-durable-artifact-test)
 
+;; : (-> Alist Symbol Object)
 (def (test-ref row key)
   (let (entry (assoc key row))
     (if entry (cdr entry) #f)))
 
+;; : TestSuite
 (def user-interface-custom-durable-artifact-test
   (test-suite "poo-flow custom durable artifact case"
     (test-case "projects POO artifact policy to bounded receipts"

@@ -1,3 +1,7 @@
+;;; Boundary: durable runtime manifests describe resumable runtime state at the
+;;; Scheme control-plane edge before provider-specific recovery executes.
+;;; Invariant: manifest serialization must remain bounded and deterministic for
+;;; policy reports, Marlin handoff, and checkpoint replay.
 (import :gerbil/gambit
         :poo-flow/src/module-system/durable-policy-manifest
         :poo-flow/src/module-system/durable-runtime-store
@@ -11,6 +15,17 @@
 (def +poo-flow-durable-runtime-envelope-schema+
   'poo-flow.durable.runtime-envelope.v1)
 
+;;; Boundary: runtime manifest alists are the bounded ABI projection from
+;;; internal durable runtime state into policy and handoff receipts.
+;; poo-flow-durable-runtime-manifest-alist
+;; : (-> PooDurablePolicy PooDurableRuntimeStoreContract PooDurableRuntimeStoreBackend Alist)
+;; | doc m%
+;;   Project durable policy, store, and backend receipts into one manifest row.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-durable-runtime-manifest-alist policy store backend)
+;;   ;; => durable runtime envelope rows
+;;   ```
 (def (poo-flow-durable-runtime-manifest-alist policy store-contract backend)
   (let* ((policy-row
           (poo-flow-durable-policy-runtime-manifest-alist policy))
@@ -79,30 +94,58 @@
              (poo-flow-durable-runtime-manifest-ref backend-row 'diagnostic-count 0)))
       (runtime-executed . #f))))
 
+;; poo-flow-durable-runtime-manifest-string
+;; : (-> PooDurablePolicy PooDurableRuntimeStoreContract PooDurableRuntimeStoreBackend String)
+;; | doc m%
+;;   Serialize the durable runtime envelope as line-oriented manifest text.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-durable-runtime-manifest-string policy store backend)
+;;   ;; => manifest text
+;;   ```
 (def (poo-flow-durable-runtime-manifest-string policy store-contract backend)
   (poo-flow-durable-runtime-manifest-lines->string
    (poo-flow-durable-runtime-manifest-alist policy store-contract backend)))
 
+;; poo-flow-durable-runtime-manifest-bytes
+;; : (-> PooDurablePolicy PooDurableRuntimeStoreContract PooDurableRuntimeStoreBackend U8Vector)
+;; | doc m%
+;;   Serialize the durable runtime envelope as UTF-8 bytes for FFI handoff.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-durable-runtime-manifest-bytes policy store backend)
+;;   ;; => UTF-8 manifest bytes
+;;   ```
 (def (poo-flow-durable-runtime-manifest-bytes policy store-contract backend)
   (string->utf8
    (poo-flow-durable-runtime-manifest-string policy store-contract backend)))
 
+;; poo-flow-durable-runtime-manifest-ref
+;; : (-> Alist Symbol Datum Datum)
+;; | doc m%
+;;   Read KEY from a manifest row list, returning DEFAULT when absent.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-durable-runtime-manifest-ref rows 'schema #f)
+;;   ;; => schema value or #f
+;;   ```
 (def (poo-flow-durable-runtime-manifest-ref row key default)
   (let ((cell (assq key row)))
     (if cell (cdr cell) default)))
 
+;; : (-> Alist String)
 (def (poo-flow-durable-runtime-manifest-lines->string rows)
-  (let loop ((rest rows) (out ""))
-    (if (null? rest)
-      out
-      (let ((row (car rest)))
-        (loop (cdr rest)
-              (string-append out
-                             (symbol->string (car row))
-                             "="
-                             (poo-flow-durable-runtime-manifest-value->string (cdr row))
-                             "\n"))))))
+  (call-with-output-string
+   (lambda (port)
+     (for-each
+      (lambda (row)
+        (display (symbol->string (car row)) port)
+        (display "=" port)
+        (display (poo-flow-durable-runtime-manifest-value->string (cdr row)) port)
+        (newline port))
+      rows))))
 
+;; : (-> Datum String)
 (def (poo-flow-durable-runtime-manifest-value->string value)
   (cond
    ((not value) "")
@@ -114,12 +157,20 @@
    (else (call-with-output-string
           (lambda (port) (write value port))))))
 
+;; poo-flow-durable-runtime-manifest-list->string
+;; : (-> [Datum] String)
+;; | doc m%
+;;   Serialize a list field as the comma-delimited runtime manifest value form.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-durable-runtime-manifest-list->string '(run repair))
+;;   ;; => "run,repair"
+;;   ```
 (def (poo-flow-durable-runtime-manifest-list->string value)
-  (let loop ((rest value) (out #f))
-    (if (null? rest)
-      (or out "")
-      (let ((item (poo-flow-durable-runtime-manifest-value->string (car rest))))
-        (loop (cdr rest)
-              (if out
-                (string-append out "," item)
-                item))))))
+  (call-with-output-string
+   (lambda (port)
+     (let loop ((rest value) (first? #t))
+       (unless (null? rest)
+         (unless first? (display "," port))
+         (display (poo-flow-durable-runtime-manifest-value->string (car rest)) port)
+         (loop (cdr rest) #f))))))

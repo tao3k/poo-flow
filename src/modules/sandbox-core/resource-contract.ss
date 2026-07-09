@@ -7,7 +7,16 @@
         (only-in :gslph/src/extensions/poo-object-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
-        :poo-flow/src/module-system/projection-syntax)
+        (only-in "../../utilities/contracts.ss"
+                 poo-flow-slot-contract-slot
+                 poo-flow-slot-contract-value-kind
+                 poo-flow-slot-contract-metadata
+                 poo-flow-object-type-contract->alist
+                 poo-flow-contract-check-slot!)
+        (only-in "../../utilities/contract-syntax.ss"
+                 defcontract-family)
+        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/type-facts)
 
 (export poo-flow-runtime-filesystem-prototype
         poo-flow-runtime-volume-filesystem-prototype
@@ -16,6 +25,15 @@
         poo-flow-runtime-volume-resources-prototype
         poo-flow-snapshot-resources-prototype
         poo-flow-runtime-volume-ports-resources-prototype
+        +poo-flow-sandbox-resources-prototype-filesystem-slot-contract+
+        +poo-flow-sandbox-resources-prototype-cpu-slot-contract+
+        +poo-flow-sandbox-resources-prototype-ports-slot-contract+
+        +poo-flow-sandbox-resources-prototype-memory-slot-contract+
+        +poo-flow-sandbox-resources-prototype-timeout-slot-contract+
+        +poo-flow-sandbox-resources-prototype-slot-contracts+
+        +poo-flow-sandbox-resources-prototype-type-contract+
+        +poo-flow-sandbox-resources-prototype-slots+
+        poo-flow-sandbox-resources-prototype-type-contract->alist
         poo-flow-sandbox-resources-prototype-contract-validation
         poo-flow-sandbox-resources-prototype-contract-validation-valid?
         poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
@@ -80,23 +98,68 @@
 (def poo-flow-sandbox-resources-prototype-contract-validation-schema
   "poo-flow-sandbox-resources-prototype-contract-validation/v1")
 
-(defrules poo-flow-sandbox-resource-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
+;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
+;;   | doc m%
+;;       Declare sandbox resource slot contracts as structured data while
+;;       keeping sandbox resource semantics in sandbox-core.
+;;
+;;       # Examples
+;;       ```scheme
+;;       +poo-flow-sandbox-resources-prototype-slot-contracts+
+;;       ;; => sandbox-resource-slot-contract-list
+;;       ```
+;;     %
+(defcontract-family
+  +poo-flow-sandbox-resources-prototype-slot-contracts+
+  +poo-flow-sandbox-resources-prototype-type-contract+
+  'sandbox/resources
+  'sandbox-core
+  'PooSandboxResourcesPrototype
+  '((scope . sandbox-core) (projection . resource-contract))
+  ((+poo-flow-sandbox-resources-prototype-filesystem-slot-contract+
+    'sandbox.resources/filesystem
+    'filesystem
+    'PooSandboxFilesystemPrototype
+    'object?
+    object?
+    #t
+    '((scope . sandbox-core) (slot . filesystem) (merge . node-extend)))
+   (+poo-flow-sandbox-resources-prototype-cpu-slot-contract+
+    'sandbox.resources/cpu
+    'cpu
+    'Number
+    'number?
+    number?
+    #t
+    '((scope . sandbox-core) (slot . cpu) (merge . override)))
+   (+poo-flow-sandbox-resources-prototype-ports-slot-contract+
+    'sandbox.resources/ports
+    'ports
+    'List
+    'list?
+    list?
+    #f
+    '((scope . sandbox-core) (slot . ports) (optional . #t) (merge . override)))
+   (+poo-flow-sandbox-resources-prototype-memory-slot-contract+
+    'sandbox.resources/memory
+    'memory
+    'String
+    'string?
+    string?
+    #t
+    '((scope . sandbox-core) (slot . memory) (merge . override)))
+   (+poo-flow-sandbox-resources-prototype-timeout-slot-contract+
+    'sandbox.resources/timeout-ms
+    'timeout-ms
+    'Number
+    'number?
+    number?
+    #f
+    '((scope . sandbox-core) (slot . timeout-ms) (optional . #t) (merge . override)))))
 
 ;; : (-> List List List)
 (def (poo-flow-sandbox-resource-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
 ;; : (-> [List] List List)
 (def (poo-flow-sandbox-resource-segments/tail segments tail)
@@ -166,7 +229,13 @@
 
 ;; : [Symbol]
 (def +poo-flow-sandbox-resources-prototype-slots+
-  '(filesystem ports cpu memory timeout-ms))
+  (map poo-flow-slot-contract-slot
+       +poo-flow-sandbox-resources-prototype-slot-contracts+))
+
+;; : (-> Alist)
+(def (poo-flow-sandbox-resources-prototype-type-contract->alist)
+  (poo-flow-object-type-contract->alist
+   +poo-flow-sandbox-resources-prototype-type-contract+))
 
 ;;; Boundary: sandbox resources prototype slot if present is the policy-visible
 ;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
@@ -180,16 +249,10 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> PooSandboxResourcesPrototype [Symbol])
 (def (poo-flow-sandbox-resources-prototype-present-slots resources)
-  (let loop ((remaining-slots +poo-flow-sandbox-resources-prototype-slots+)
-             (slot-values '()))
-    (cond
-     ((not (object? resources)) '())
-     ((null? remaining-slots) (reverse slot-values))
-     ((.slot? resources (car remaining-slots))
-      (loop (cdr remaining-slots)
-            (cons (car remaining-slots) slot-values)))
-     (else
-      (loop (cdr remaining-slots) slot-values)))))
+  (if (object? resources)
+    (filter (lambda (slot) (.slot? resources slot))
+            +poo-flow-sandbox-resources-prototype-slots+)
+    '()))
 
 ;; : (-> PooSandboxResourcesPrototype HashTable)
 (def (poo-flow-sandbox-resources-prototype-source-ref resources)
@@ -221,66 +284,131 @@
        (.ref resources slot)))
     default))
 
-;; : (-> Symbol Symbol Symbol Value Alist HashTable)
-(def (poo-flow-sandbox-resources-prototype-field-contract field
-                                                           value-kind
-                                                           merge
-                                                           default
-                                                           metadata)
-  (poo-flow-sandbox-contract-receipt
-   (cons 'field field)
-   (cons 'identity field)
-   (cons 'valueKind value-kind)
-   (cons 'value-kind value-kind)
-   (cons 'merge merge)
-   (cons 'default default)
-   (cons 'metadata metadata)))
+;; : (-> PooFlowSlotContract Symbol)
+(def (poo-flow-sandbox-resources-prototype-slot-merge contract)
+  (let (entry (assoc 'merge (poo-flow-slot-contract-metadata contract)))
+    (if entry (cdr entry) 'override)))
+
+;; : (-> PooSandboxResourcesPrototype PooFlowSlotContract Value)
+(def (poo-flow-sandbox-resources-prototype-slot-default resources contract)
+  (poo-flow-sandbox-resources-prototype-slot/default
+   resources
+   (poo-flow-slot-contract-slot contract)
+   #f))
+
+;; : (-> PooFlowSlotContract Value HashTable)
+(def (poo-flow-sandbox-resources-prototype-field-contract contract default)
+  (let (field (poo-flow-slot-contract-slot contract))
+    (poo-flow-sandbox-contract-receipt
+     (cons 'field field)
+     (cons 'identity field)
+     (cons 'valueKind (poo-flow-slot-contract-value-kind contract))
+     (cons 'value-kind (poo-flow-slot-contract-value-kind contract))
+     (cons 'merge (poo-flow-sandbox-resources-prototype-slot-merge contract))
+     (cons 'default default)
+     (cons 'metadata (poo-flow-slot-contract-metadata contract)))))
 
 ;; : (-> PooSandboxResourcesPrototype [HashTable])
 (def (poo-flow-sandbox-resources-prototype-field-contracts resources)
-  (list
-   (poo-flow-sandbox-resources-prototype-field-contract
-    'filesystem
-    'PooSandboxFilesystemPrototype
-    'node-extend
-    (poo-flow-sandbox-resources-prototype-slot/default resources
-                                                        'filesystem
-                                                        #f)
-    '((scope . sandbox-core) (slot . filesystem)))
-   (poo-flow-sandbox-resources-prototype-field-contract
-    'cpu
-    'Number
-    'override
-    (poo-flow-sandbox-resources-prototype-slot/default resources 'cpu #f)
-    '((scope . sandbox-core) (slot . cpu)))
-   (poo-flow-sandbox-resources-prototype-field-contract
-    'ports
-    'List
-    'override
-    (poo-flow-sandbox-resources-prototype-slot/default resources 'ports #f)
-    '((scope . sandbox-core) (slot . ports) (optional . #t)))
-   (poo-flow-sandbox-resources-prototype-field-contract
-    'memory
-    'String
-    'override
-    (poo-flow-sandbox-resources-prototype-slot/default resources 'memory #f)
-    '((scope . sandbox-core) (slot . memory)))
-   (poo-flow-sandbox-resources-prototype-field-contract
-    'timeout-ms
-    'Number
-    'override
-    (poo-flow-sandbox-resources-prototype-slot/default resources
-                                                        'timeout-ms
-                                                        #f)
-    '((scope . sandbox-core) (slot . timeout-ms) (optional . #t)))))
+  (map
+   (lambda (contract)
+     (poo-flow-sandbox-resources-prototype-field-contract
+      contract
+      (poo-flow-sandbox-resources-prototype-slot-default resources contract)))
+   +poo-flow-sandbox-resources-prototype-slot-contracts+))
 
 ;; : (-> Symbol String Dyn Alist)
 (def (poo-flow-sandbox-resources-prototype-diagnostic code message value)
-  (poo-flow-sandbox-resource-field-rows
-   (code code)
-   (message message)
-   (object 'PooSandboxResourcesPrototype)
-   (value value)))
+  (list
+   (cons 'code code)
+   (cons 'message message)
+   (cons 'object 'PooSandboxResourcesPrototype)
+   (cons 'value value)))
+
+;; : [PooFlowTypeFactContract]
+(def +poo-flow-sandbox-resources-prototype-type-facts+
+  (list
+   (poo-flow-type-fact
+    'sandbox.resources/filesystem-prototype
+    'slot-contract
+    'PooSandboxResourcesPrototype
+    'filesystemPrototype
+    'filesystem
+    'PooSandboxFilesystemPrototype
+    'positive
+    '((scope . sandbox-core) (required . #t)))
+   (poo-flow-type-fact
+    'sandbox.resources/cpu-number
+    'slot-contract
+    'PooSandboxResourcesPrototype
+    'cpuNumber
+    'cpu
+    'Number
+    'positive
+    '((scope . sandbox-core) (required . #t)))
+   (poo-flow-type-fact
+    'sandbox.resources/memory-string
+    'slot-contract
+    'PooSandboxResourcesPrototype
+    'memoryString
+    'memory
+    'String
+    'positive
+    '((scope . sandbox-core) (required . #t)))
+   (poo-flow-type-fact
+    'sandbox.resources/ports-list
+    'slot-contract
+    'PooSandboxResourcesPrototype
+    'portsList
+    'ports
+    'List
+    'optional
+    '((scope . sandbox-core) (required . #f)))
+   (poo-flow-type-fact
+    'sandbox.resources/timeout-number
+    'slot-contract
+    'PooSandboxResourcesPrototype
+    'timeoutNumber
+    'timeout-ms
+    'Number
+    'optional
+    '((scope . sandbox-core) (required . #f)))))
+
+;; : [PooFlowLeanFactContract]
+(def +poo-flow-sandbox-resources-prototype-lean-fact-contracts+
+  (list
+   (poo-flow-lean-fact
+    'sandbox.resources/filesystem-structured
+    'fact
+    'SandboxResources.SandboxResourceFact
+    'filesystemStructured
+    'filesystem
+    'positive
+    '((scope . sandbox-core)))
+   (poo-flow-lean-fact
+    'sandbox.resources/cpu-present
+    'fact
+    'SandboxResources.SandboxResourceFact
+    'cpuPresent
+    'cpu
+    'positive
+    '((scope . sandbox-core)))
+   (poo-flow-lean-fact
+    'sandbox.resources/memory-present
+    'fact
+    'SandboxResources.SandboxResourceFact
+    'memoryPresent
+    'memory
+    'positive
+    '((scope . sandbox-core)))
+   (poo-flow-lean-fact
+    'sandbox.resources/runtime-executed-false
+    'fact
+    'SandboxResources.SandboxResourceFact
+    'runtimeExecutedFalse
+    'runtime-executed
+    'negative
+    '((scope . sandbox-core)))))
 
 ;;; Boundary: sandbox resources prototype slot readable predicate is the
 ;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
@@ -311,6 +439,40 @@
       code
       "sandbox resources prototype slot exists but cannot be read through POO slot resolution"
       resources))))
+
+;; : (-> PooSandboxResourcesPrototype PooFlowSlotContract [Alist])
+(def (poo-flow-sandbox-resources-prototype-slot-contract-diagnostics
+      resources
+      contract)
+  (let (slot (poo-flow-slot-contract-slot contract))
+    (if (and (object? resources)
+             (.slot? resources slot)
+             (poo-flow-sandbox-resources-prototype-slot-readable? resources slot))
+      (with-catch
+       (lambda (_failure)
+         (list
+          (poo-flow-sandbox-resources-prototype-diagnostic
+           'slot-contract-failed
+           "sandbox resources prototype slot failed structured contract"
+           (list
+            (cons 'slot slot)
+            (cons 'value (.ref resources slot))))))
+       (lambda ()
+         (poo-flow-contract-check-slot! contract (.ref resources slot))
+         '()))
+      '())))
+
+;; : (-> PooSandboxResourcesPrototype [Alist])
+(def (poo-flow-sandbox-resources-prototype-slot-contracts-diagnostics
+      resources)
+  (poo-flow-sandbox-resource-segments/tail
+   (map
+    (lambda (contract)
+      (poo-flow-sandbox-resources-prototype-slot-contract-diagnostics
+       resources
+       contract))
+    +poo-flow-sandbox-resources-prototype-slot-contracts+)
+   '()))
 
 ;;; Boundary: sandbox resources prototype missing slot diagnostics is the
 ;;; policy-visible edge for sandbox, core behavior, keeping validation, lookup,
@@ -432,6 +594,8 @@
       (poo-flow-sandbox-resources-prototype-slot-readability-diagnostics
        'unreadable-memory-slot
        'memory
+       resources)
+      (poo-flow-sandbox-resources-prototype-slot-contracts-diagnostics
        resources))
      (poo-flow-sandbox-resources-prototype-structured-filesystem-diagnostics
       resources))))
@@ -453,48 +617,63 @@
            (hash-get harness-validation 'diagnostics)))
          (valid? (and (null? diagnostics)
                       (poo-object-validation-valid? harness-validation))))
-    (poo-flow-sandbox-contract-receipt
-     (cons 'kind
-           poo-flow-sandbox-resources-prototype-contract-validation-kind)
-     (cons 'schema
-           poo-flow-sandbox-resources-prototype-contract-validation-schema)
-     (cons 'object 'PooSandboxResourcesPrototype)
-     (cons 'valid valid?)
-     (cons 'sourceRef source-ref)
-     (cons 'harnessValidation harness-validation)
-     (cons 'diagnostics diagnostics)
-     (cons 'checkedSignals
-           '(upstream-poo-object-contract-validation
-             resources-prototype-object-shape
-             resources-required-slots
-             resources-structured-filesystem-projection)))))
+    (make-poo-flow-type-validation-receipt
+     poo-flow-sandbox-resources-prototype-contract-validation-kind
+     poo-flow-sandbox-resources-prototype-contract-validation-schema
+     'PooSandboxResourcesPrototype
+     valid?
+     source-ref
+     harness-validation
+     diagnostics
+     '(upstream-poo-object-contract-validation
+       resources-prototype-object-shape
+       resources-required-slots
+       resources-structured-filesystem-projection
+       structured-type-facts
+       lean-fact-contracts)
+     +poo-flow-sandbox-resources-prototype-type-facts+
+     +poo-flow-sandbox-resources-prototype-lean-fact-contracts+
+     #f)))
 
-;; : (-> HashTable Boolean)
+;; : (-> PooFlowTypeValidationReceipt Boolean)
 (def (poo-flow-sandbox-resources-prototype-contract-validation-valid?
       validation)
-  (and (hash-table? validation)
-       (hash-get validation 'valid)))
+  (poo-flow-type-validation-receipt-valid? validation))
 
-;; : (-> HashTable [Alist])
+;; : (-> PooFlowTypeValidationReceipt [Alist])
 (def (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
       validation)
-  (hash-get validation 'diagnostics))
+  (poo-flow-type-validation-receipt-diagnostics validation))
 
-;; : (-> HashTable Alist)
+;; : (-> PooFlowTypeValidationReceipt Alist)
 (defpoo-module-final-projection
   poo-flow-sandbox-resources-prototype-contract-validation->alist
   (validation)
-  (bindings ((harness-validation (hash-get validation 'harnessValidation))
-             (diagnostics (hash-get validation 'diagnostics))))
-  (fields ((kind (hash-get validation 'kind))
-           (schema (hash-get validation 'schema))
-           (object (hash-get validation 'object))
-           (valid (hash-get validation 'valid))
+  (bindings ((harness-validation
+              (poo-flow-type-validation-receipt-harness-validation
+               validation))
+             (diagnostics
+              (poo-flow-type-validation-receipt-diagnostics validation))))
+  (fields ((kind (poo-flow-type-validation-receipt-kind validation))
+           (schema (poo-flow-type-validation-receipt-schema validation))
+           (object (poo-flow-type-validation-receipt-object validation))
+           (valid (poo-flow-type-validation-receipt-valid validation))
            (diagnostics diagnostics)
            (diagnostic-count (length diagnostics))
            (harness-kind (hash-get harness-validation 'kind))
            (harness-valid (hash-get harness-validation 'valid))
-           (checked-signals (hash-get validation 'checkedSignals)))))
+           (checked-signals
+            (poo-flow-type-validation-receipt-checked-signals validation))
+           (type-facts
+            (map poo-flow-type-fact-contract->alist
+                 (poo-flow-type-validation-receipt-type-facts validation)))
+           (lean-fact-contracts
+            (map poo-flow-lean-fact-contract->alist
+                 (poo-flow-type-validation-receipt-lean-fact-contracts
+                  validation)))
+           (runtime-executed
+            (poo-flow-type-validation-receipt-runtime-executed
+             validation)))))
 
 ;;; Boundary: require sandbox resources prototype contract! is the policy-
 ;;; visible edge for sandbox, core behavior, keeping validation, lookup, or

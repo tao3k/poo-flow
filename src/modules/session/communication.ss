@@ -56,18 +56,23 @@
         poo-flow-session-communication-receipt->alist
         poo-flow-session-communication-receipts->alists)
 
+;; : Symbol
 (def +poo-flow-session-communication-receipt-kind+
   'poo-flow.session.communication-receipt)
 
+;; : Symbol
 (def +poo-flow-session-communication-receipt-schema+
   'poo-flow.modules.session.communication-receipt.v1)
 
+;; : Symbol
 (def +poo-flow-session-communication-channel-receipt-kind+
   'poo-flow.session.communication-channel-receipt)
 
+;; : Symbol
 (def +poo-flow-session-communication-channel-receipt-schema+
   'poo-flow.modules.session.communication-channel-receipt.v1)
 
+;; : Symbol
 (def +poo-flow-session-communication-ledger-ref/default+
   'runtime/communication-ledger)
 
@@ -78,21 +83,20 @@
 ;; : (-> Symbol Boolean)
 (def (poo-flow-session-communication-relation-kind? value)
   (and (symbol? value)
-       (if (member value +poo-flow-session-communication-relation-kinds+)
-         #t
-         #f)))
+       (and (memq value +poo-flow-session-communication-relation-kinds+)
+            #t)))
 
-;; : (-> Alist Symbol Value Value)
+;; : (-> Alist Symbol Object Object)
 (def (poo-flow-session-communication-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
 
-;; : (-> [Any] Boolean)
+;; : (-> Object Boolean)
 (def (poo-flow-session-communication-symbol-list? values)
   (and (list? values)
        (poo-flow-session-every? symbol? values)))
 
-;; : (-> [Alist] MaybeSymbol)
+;; : (-> [Alist] Object)
 (def (poo-flow-session-communication-durable-policy-ref metadata)
   (let (durable-policy
         (poo-flow-session-communication-option metadata 'durable-policy #f))
@@ -105,7 +109,7 @@
                                              'durable-policy-ref
                                              #f)))))
 
-;; : PooSessionCommunicationChannelReceiptRecord
+;; : PooSessionCommunicationChannelReceiptRecordStruct
 (defstruct poo-flow-session-communication-channel-receipt-record
   (project-id
    channel-id
@@ -127,6 +131,8 @@
    runtime-executed)
   transparent: #t)
 
+;;; Boundary: communication channel receipts declare allowed session links before
+;;; any agent message transport is used.
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] [Alist] PooSessionCommunicationChannelReceipt)
 (def (poo-flow-session-communication-channel-receipt project-id
                                                      channel-id
@@ -199,40 +205,77 @@
      #f
      #f)))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-communication-channel-receipt? value)
   (poo-flow-session-communication-channel-receipt-record? value))
 
-;; Public accessors are ordinary generated wrappers over the record slots.
-(defpoo-session-record-accessors
-  (poo-flow-session-communication-channel-receipt-project-id
-   poo-flow-session-communication-channel-receipt-record-project-id)
-  (poo-flow-session-communication-channel-receipt-channel-id
-   poo-flow-session-communication-channel-receipt-record-channel-id)
-  (poo-flow-session-communication-channel-receipt-relation-kind
-   poo-flow-session-communication-channel-receipt-record-relation-kind)
-  (poo-flow-session-communication-channel-receipt-source-session-id
-   poo-flow-session-communication-channel-receipt-record-source-session-id)
-  (poo-flow-session-communication-channel-receipt-target-session-id
-   poo-flow-session-communication-channel-receipt-record-target-session-id)
-  (poo-flow-session-communication-channel-receipt-source-agent-id
-   poo-flow-session-communication-channel-receipt-record-source-agent-id)
-  (poo-flow-session-communication-channel-receipt-target-agent-id
-   poo-flow-session-communication-channel-receipt-record-target-agent-id)
-  (poo-flow-session-communication-channel-receipt-allowed-message-kinds
-   poo-flow-session-communication-channel-receipt-record-allowed-message-kinds)
-  (poo-flow-session-communication-channel-receipt-delivery-policies
-   poo-flow-session-communication-channel-receipt-record-delivery-policies)
-  (poo-flow-session-communication-channel-receipt-communication-ledger-ref
-   poo-flow-session-communication-channel-receipt-record-communication-ledger-ref)
-  (poo-flow-session-communication-channel-receipt-durable-policy-ref
-   poo-flow-session-communication-channel-receipt-record-durable-policy-ref)
-  (poo-flow-session-communication-channel-receipt-valid?
-   poo-flow-session-communication-channel-receipt-record-valid?)
-  (poo-flow-session-communication-channel-receipt-diagnostics
-   poo-flow-session-communication-channel-receipt-record-diagnostics)
-  (poo-flow-session-communication-channel-receipt-metadata
-   poo-flow-session-communication-channel-receipt-record-metadata))
+;; Public accessors stay as named functions so policy reports point at stable
+;; definitions rather than a top-level macro expansion site.
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-project-id receipt)
+  (poo-flow-session-communication-channel-receipt-record-project-id receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-channel-id receipt)
+  (poo-flow-session-communication-channel-receipt-record-channel-id receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-relation-kind receipt)
+  (poo-flow-session-communication-channel-receipt-record-relation-kind receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-source-session-id receipt)
+  (poo-flow-session-communication-channel-receipt-record-source-session-id
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-target-session-id receipt)
+  (poo-flow-session-communication-channel-receipt-record-target-session-id
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-source-agent-id receipt)
+  (poo-flow-session-communication-channel-receipt-record-source-agent-id
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-target-agent-id receipt)
+  (poo-flow-session-communication-channel-receipt-record-target-agent-id
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt [Symbol])
+(def (poo-flow-session-communication-channel-receipt-allowed-message-kinds
+      receipt)
+  (poo-flow-session-communication-channel-receipt-record-allowed-message-kinds
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt [Symbol])
+(def (poo-flow-session-communication-channel-receipt-delivery-policies receipt)
+  (poo-flow-session-communication-channel-receipt-record-delivery-policies
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Symbol)
+(def (poo-flow-session-communication-channel-receipt-communication-ledger-ref
+      receipt)
+  (poo-flow-session-communication-channel-receipt-record-communication-ledger-ref
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Object)
+(def (poo-flow-session-communication-channel-receipt-durable-policy-ref receipt)
+  (poo-flow-session-communication-channel-receipt-record-durable-policy-ref
+   receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Boolean)
+(def (poo-flow-session-communication-channel-receipt-valid? receipt)
+  (poo-flow-session-communication-channel-receipt-record-valid? receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt [Alist])
+(def (poo-flow-session-communication-channel-receipt-diagnostics receipt)
+  (poo-flow-session-communication-channel-receipt-record-diagnostics receipt))
+
+;; : (-> PooSessionCommunicationChannelReceipt Alist)
+(def (poo-flow-session-communication-channel-receipt-metadata receipt)
+  (poo-flow-session-communication-channel-receipt-record-metadata receipt))
 
 ;; : (-> PooSessionCommunicationChannelReceipt Alist)
 (defpoo-session-receipt-projection
@@ -296,7 +339,7 @@
   (projector poo-flow-session-communication-channel-receipt->alist)
   (error-message "session communication channel serialization requires a list"))
 
-;; : PooSessionCommunicationReceiptRecord
+;; : PooSessionCommunicationReceiptRecordStruct
 (defstruct poo-flow-session-communication-receipt-record
   (project-id
    relation-kind
@@ -321,7 +364,9 @@
    runtime-executed)
   transparent: #t)
 
-;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol Symbol Symbol Symbol Any Symbol [Alist] PooSessionCommunicationReceipt)
+;;; Boundary: communication receipts capture message routing evidence while
+;;; keeping payload handling outside session policy validation.
+;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol Symbol Symbol Symbol Datum Symbol [Alist] PooSessionCommunicationReceipt)
 (def (poo-flow-session-communication-receipt project-id
                                              relation-kind
                                              source-root-session-id
@@ -403,46 +448,80 @@
      #f
      #f)))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-communication-receipt? value)
   (poo-flow-session-communication-receipt-record? value))
 
-;; Public accessors are ordinary generated wrappers over the record slots.
-(defpoo-session-record-accessors
-  (poo-flow-session-communication-receipt-project-id
-   poo-flow-session-communication-receipt-record-project-id)
-  (poo-flow-session-communication-receipt-relation-kind
-   poo-flow-session-communication-receipt-record-relation-kind)
-  (poo-flow-session-communication-receipt-source-root-session-id
-   poo-flow-session-communication-receipt-record-source-root-session-id)
-  (poo-flow-session-communication-receipt-target-root-session-id
-   poo-flow-session-communication-receipt-record-target-root-session-id)
-  (poo-flow-session-communication-receipt-channel-id
-   poo-flow-session-communication-receipt-record-channel-id)
-  (poo-flow-session-communication-receipt-source-session-id
-   poo-flow-session-communication-receipt-record-source-session-id)
-  (poo-flow-session-communication-receipt-target-session-id
-   poo-flow-session-communication-receipt-record-target-session-id)
-  (poo-flow-session-communication-receipt-source-agent-id
-   poo-flow-session-communication-receipt-record-source-agent-id)
-  (poo-flow-session-communication-receipt-target-agent-id
-   poo-flow-session-communication-receipt-record-target-agent-id)
-  (poo-flow-session-communication-receipt-message-kind
-   poo-flow-session-communication-receipt-record-message-kind)
-  (poo-flow-session-communication-receipt-payload-summary
-   poo-flow-session-communication-receipt-record-payload-summary)
-  (poo-flow-session-communication-receipt-delivery-policy
-   poo-flow-session-communication-receipt-record-delivery-policy)
-  (poo-flow-session-communication-receipt-communication-ledger-ref
-   poo-flow-session-communication-receipt-record-communication-ledger-ref)
-  (poo-flow-session-communication-receipt-durable-policy-ref
-   poo-flow-session-communication-receipt-record-durable-policy-ref)
-  (poo-flow-session-communication-receipt-valid?
-   poo-flow-session-communication-receipt-record-valid?)
-  (poo-flow-session-communication-receipt-diagnostics
-   poo-flow-session-communication-receipt-record-diagnostics)
-  (poo-flow-session-communication-receipt-metadata
-   poo-flow-session-communication-receipt-record-metadata))
+;; Public accessors stay as named functions so policy reports point at stable
+;; definitions rather than a top-level macro expansion site.
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-project-id receipt)
+  (poo-flow-session-communication-receipt-record-project-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-relation-kind receipt)
+  (poo-flow-session-communication-receipt-record-relation-kind receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-source-root-session-id receipt)
+  (poo-flow-session-communication-receipt-record-source-root-session-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-target-root-session-id receipt)
+  (poo-flow-session-communication-receipt-record-target-root-session-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-channel-id receipt)
+  (poo-flow-session-communication-receipt-record-channel-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-source-session-id receipt)
+  (poo-flow-session-communication-receipt-record-source-session-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-target-session-id receipt)
+  (poo-flow-session-communication-receipt-record-target-session-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-source-agent-id receipt)
+  (poo-flow-session-communication-receipt-record-source-agent-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-target-agent-id receipt)
+  (poo-flow-session-communication-receipt-record-target-agent-id receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-message-kind receipt)
+  (poo-flow-session-communication-receipt-record-message-kind receipt))
+
+;; : (-> PooSessionCommunicationReceipt Object)
+(def (poo-flow-session-communication-receipt-payload-summary receipt)
+  (poo-flow-session-communication-receipt-record-payload-summary receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-delivery-policy receipt)
+  (poo-flow-session-communication-receipt-record-delivery-policy receipt))
+
+;; : (-> PooSessionCommunicationReceipt Symbol)
+(def (poo-flow-session-communication-receipt-communication-ledger-ref receipt)
+  (poo-flow-session-communication-receipt-record-communication-ledger-ref
+   receipt))
+
+;; : (-> PooSessionCommunicationReceipt Object)
+(def (poo-flow-session-communication-receipt-durable-policy-ref receipt)
+  (poo-flow-session-communication-receipt-record-durable-policy-ref receipt))
+
+;; : (-> PooSessionCommunicationReceipt Boolean)
+(def (poo-flow-session-communication-receipt-valid? receipt)
+  (poo-flow-session-communication-receipt-record-valid? receipt))
+
+;; : (-> PooSessionCommunicationReceipt [Alist])
+(def (poo-flow-session-communication-receipt-diagnostics receipt)
+  (poo-flow-session-communication-receipt-record-diagnostics receipt))
+
+;; : (-> PooSessionCommunicationReceipt Alist)
+(def (poo-flow-session-communication-receipt-metadata receipt)
+  (poo-flow-session-communication-receipt-record-metadata receipt))
 
 ;; : (-> PooSessionCommunicationReceipt Alist)
 (defpoo-session-receipt-projection

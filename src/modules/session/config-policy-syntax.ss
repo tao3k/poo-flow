@@ -38,6 +38,11 @@
 ;;   | doc m%
 ;;       Tool grants are declaration rows. They name actions, resources, and
 ;;       triggers only; tool-core owns concrete tool specs.
+;;       # Examples
+;;       ```scheme
+;;       (session-tool-grant build shell (read write) (workspace) (manual) (ci))
+;;       ;; => poo-flow-session-tool-grant
+;;       ```
 ;;     %
 (defrules session-tool-grant ()
   ((_ grant-id tool-ref
@@ -58,6 +63,11 @@
 ;;   | doc m%
 ;;       Tool policy rows bind grants and denied refs to a scope. They do not
 ;;       inspect tool implementations or execute grants.
+;;       # Examples
+;;       ```scheme
+;;       (session-tool-policy default project (build) (dangerous-tool) deny (ci))
+;;       ;; => poo-flow-session-tool-permission-policy
+;;       ```
 ;;     %
 (defrules session-tool-policy ()
   ((_ policy-name scope-ref
@@ -78,6 +88,11 @@
 ;;   | doc m%
 ;;       Hook tool policy rows describe escalation and default actions for hook
 ;;       events. Runtime hook dispatch remains outside this facade.
+;;       # Examples
+;;       ```scheme
+;;       (session-hook-tool-policy hooks project (pre-run) (build) review deny (ci))
+;;       ;; => poo-flow-session-hook-tool-permission-policy
+;;       ```
 ;;     %
 (defrules session-hook-tool-policy ()
   ((_ policy-name scope-ref
@@ -100,6 +115,11 @@
 ;;   | doc m%
 ;;       Model policy rows name provider/model refs and budget metadata only.
 ;;       Provider routing and inference are runtime-owned.
+;;       # Examples
+;;       ```scheme
+;;       (session-model-policy default project openai gpt (tool-use) budget (ci))
+;;       ;; => poo-flow-session-model-policy
+;;       ```
 ;;     %
 (defrules session-model-policy ()
   ((_ policy-name scope-ref provider-ref model-ref
@@ -120,6 +140,11 @@
 ;;   | doc m%
 ;;       Prompt policy rows select prompt session/chunk refs. They do not fetch,
 ;;       compose, or mutate prompt content.
+;;       # Examples
+;;       ```scheme
+;;       (session-prompt-policy default project prompt-session (system) scoped (ci))
+;;       ;; => poo-flow-session-prompt-policy
+;;       ```
 ;;     %
 (defrules session-prompt-policy ()
   ((_ policy-name scope-ref prompt-session-ref
@@ -139,6 +164,11 @@
 ;;   | doc m%
 ;;       Isolation policy rows describe context and communication boundaries.
 ;;       They are validated as policy data before runtime handoff.
+;;       # Examples
+;;       ```scheme
+;;       (session-isolation-policy strict project private deny gated (ci))
+;;       ;; => poo-flow-session-isolation-policy
+;;       ```
 ;;     %
 (defrules session-isolation-policy ()
   ((_ policy-name scope-ref mode sibling-context parent-write
@@ -158,6 +188,11 @@
 ;;   | doc m%
 ;;       Sandbox policy rows name profile refs and inheritance modes. Sandbox
 ;;       realization belongs to runtime/sandbox owners.
+;;       # Examples
+;;       ```scheme
+;;       (session-sandbox-policy nono project nono-default inherit isolated (ci))
+;;       ;; => poo-flow-session-sandbox-policy
+;;       ```
 ;;     %
 (defrules session-sandbox-policy ()
   ((_ policy-name scope-ref profile-ref inheritance-mode sharing-mode
@@ -175,6 +210,11 @@
 ;;   | doc m%
 ;;       Context policy rows make visible which sessions can be read. The form
 ;;       is policy data and never opens a context store.
+;;       # Examples
+;;       ```scheme
+;;       (session-context-policy default project parent-only (root) (ci))
+;;       ;; => poo-flow-session-context-policy
+;;       ```
 ;;     %
 (defrules session-context-policy ()
   ((_ policy-name scope-ref visibility
@@ -192,6 +232,11 @@
 ;;   | doc m%
 ;;       History policy rows declare retention and allowed record kinds. They do
 ;;       not read or write history stores.
+;;       # Examples
+;;       ```scheme
+;;       (session-history-policy default project durable (plan checkpoint) (ci))
+;;       ;; => poo-flow-session-history-policy
+;;       ```
 ;;     %
 (defrules session-history-policy ()
   ((_ policy-name scope-ref retention
@@ -209,6 +254,11 @@
 ;;   | doc m%
 ;;       Communication policy rows name channels and targets. Message delivery
 ;;       stays runtime-owned.
+;;       # Examples
+;;       ```scheme
+;;       (session-communication-policy default project (inbox) (worker) (ci))
+;;       ;; => poo-flow-session-communication-policy
+;;       ```
 ;;     %
 (defrules session-communication-policy ()
   ((_ policy-name scope-ref
@@ -227,6 +277,11 @@
 ;;   | doc m%
 ;;       Sharing policy rows list memory, artifact, tool-result, and workspace
 ;;       handles. They remain handles until a runtime consumes them.
+;;       # Examples
+;;       ```scheme
+;;       (session-sharing-policy default project (mem) (artifact) (tool) (workspace) (ci))
+;;       ;; => poo-flow-session-sharing-policy
+;;       ```
 ;;     %
 (defrules session-sharing-policy ()
   ((_ policy-name scope-ref
@@ -249,6 +304,11 @@
 ;;   | doc m%
 ;;       Resource policy rows identify budget and capability refs. Accounting
 ;;       owners perform real metering outside this form.
+;;       # Examples
+;;       ```scheme
+;;       (session-resource-policy default project (tokens) (network) accountant (ci))
+;;       ;; => poo-flow-session-resource-policy
+;;       ```
 ;;     %
 (defrules session-resource-policy ()
   ((_ policy-name scope-ref
@@ -269,6 +329,11 @@
 ;;   | doc m%
 ;;       Resource sharing rows bind grants and default behavior. They do not
 ;;       allocate or release resources in Scheme.
+;;       # Examples
+;;       ```scheme
+;;       (session-resource-sharing-policy default project (network) deny (ci))
+;;       ;; => poo-flow-session-resource-sharing-policy
+;;       ```
 ;;     %
 (defrules session-resource-sharing-policy ()
   ((_ policy-name scope-ref
@@ -287,6 +352,11 @@
 ;;   | doc m%
 ;;       Agent execution policy rows connect model, prompt, tool, context, and
 ;;       resource policy refs for one agent/session pair.
+;;       # Examples
+;;       ```scheme
+;;       (session-agent-execution-policy default agent session model prompt tools hooks context resources (ci))
+;;       ;; => poo-flow-session-agent-execution-policy
+;;       ```
 ;;     %
 (defrules session-agent-execution-policy ()
   ((_ policy-name agent-ref session-ref model-policy-ref prompt-policy-ref
@@ -317,6 +387,11 @@
 ;;   | doc m%
 ;;       Tool attempts are validation inputs. They describe a requested action
 ;;       and principal without running the tool.
+;;       # Examples
+;;       ```scheme
+;;       (session-policy-tool-attempt build hook shell read workspace agent (ci))
+;;       ;; => poo-flow-session-policy-tool-attempt
+;;       ```
 ;;     %
 (defrules session-policy-tool-attempt ()
   ((_ attempt-id trigger-ref tool-ref action resource-ref principal-ref
@@ -343,6 +418,11 @@
 ;;   | doc m%
 ;;       Validation receipts bind effective policy, requested refs, attempts,
 ;;       and owner metadata. They never execute the allowed operation.
+;;       # Examples
+;;       ```scheme
+;;       (session-policy-validation v project model prompt iso sandbox context history comm sharing resources tools hooks () () () () () () ())
+;;       ;; => poo-flow-session-policy-validation-receipt
+;;       ```
 ;;     %
 (defrules session-policy-validation ()
   ((_ validation-id scope-ref

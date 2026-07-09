@@ -1,37 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: user-owned custom module body.
-;;; Invariant: root init.ss decides whether this module is enabled.
+;;; Boundary: user-owned custom module facade.
+;;; Invariant: the facade re-exports focused profile/case owners and does not
+;;; load every declaration into one compiled aggregate module.
 
-(import (only-in :poo-flow/src/module-system/durable-runtime-store-operation-bridge
-                 poo-flow-durable-runtime-store-operations-from-rows
-                 poo-flow-durable-runtime-store-rows->marlin-handoff)
-        :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/config
-        :poo-flow/src/module-system/init-syntax)
+(import :poo-flow/user-interface/custom/my-module/profiles/all
+        :poo-flow/user-interface/custom/my-module/cases/cicd-owner
+        :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
+        :poo-flow/user-interface/custom/my-module/cases/session-owner
+        :poo-flow/user-interface/custom/my-module/cases/runtime-owner
+        :poo-flow/user-interface/custom/my-module/cases/durable-owner)
 
-(load! "profiles/session")
-(load! "profiles/task")
-(load! "profiles/cicd")
-(load! "profiles/loops")
-(load! "profiles/object-extension")
-(load! "cases/cicd")
-(load! "cases/funflow-cicd")
-(load! "cases/loop-engine")
-(load! "cases/poo-introspection")
-(load! "cases/session-transform")
-(load! "cases/session-policy")
-(load! "cases/session-registry")
-(load! "cases/session-agent-graph")
-(load! "cases/session-agent-param")
-(load! "cases/session-communication")
-(load! "cases/session-selector")
-(load! "cases/session-materialization")
-(load! "cases/tool-core")
-(load! "cases/memory-core")
-(load! "cases/session-memory-durable")
-(load! "cases/sandbox-durable")
-(load! "cases/durable-artifact")
-(load! "cases/durable-recovery")
-(load! "cases/durable-runtime-store-handoff")
-(load! "cases/durable-runtime-store-operations")
-(load! "cases/durable-operation-bridge")
+(export (import: :poo-flow/user-interface/custom/my-module/profiles/all)
+        (import: :poo-flow/user-interface/custom/my-module/cases/cicd-owner)
+        (import: :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner)
+        (import: :poo-flow/user-interface/custom/my-module/cases/session-owner)
+        (import: :poo-flow/user-interface/custom/my-module/cases/runtime-owner)
+        (import: :poo-flow/user-interface/custom/my-module/cases/durable-owner))

@@ -7,7 +7,11 @@
         :poo-flow/src/module-system/profile-composition
         :poo-flow/src/module-system/profile-composition-accessors)
 
-(load! "../user-interface/profiles/crewai")
+(def crewai
+  (eval (call-with-input-file "user-interface/profiles/crewai.ss" read)))
+
+(def poo-flow-custom-module-crewai-module crewai)
+
 (load! "../user-interface/cases/crewai")
 
 (def crewai-composition

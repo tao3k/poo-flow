@@ -49,8 +49,124 @@ Run:
 uv run --project packages/python-runtime poo-flow-runtime-probe
 uv run --project packages/python-runtime poo-flow-runtime-validate
 uv run --project packages/python-runtime poo-flow-runtime-program-probe
+uv run --project packages/python-runtime poo-flow-jsonschema-contract --help
 uv run --project packages/python-runtime pytest packages/python-runtime/tests
 #+end_src
+
+* JSON Schema contract generation
+
+Users can bring a JSON Schema file and generate a Scheme contract artifact for
+a Funflow stage or profile:
+
+#+begin_src sh
+uv run --project packages/python-runtime poo-flow-jsonschema-contract \
+  schemas/json/custom-stage.json \
+  --name custom-stage \
+  --object-key funflow/custom-stage \
+  --output user-interface/custom/my-module/contracts/custom-stage.ss
+#+end_src
+
+The generated source defines =custom-stage-schema=,
+=custom-stage-contract-artifact=, and =custom-stage-contract-receipt=. Python
+only projects JSON into Scheme data; the Scheme bridge remains the semantic
+owner for recursive map-value contracts such as
+=stages.<stage_id>.tasks.<task_id>=, =profiles.<profile>.limits.<resource>=,
+or =jobs.<job_id>=.
+* Scheme load AOT warmup
+
+Python runtime users can load Scheme user-interface fragments through the
+package =load(...)= API. Repeated loads use an in-process projection cache, and
+fresh Python processes can reuse Gerbil AOT runners when they have been
+precompiled.
+
+Precompile a user module explicitly during CI, install, or runtime warmup:
+
+#+begin_src sh
+uv run --project packages/python-runtime python -m poo_flow_runtime.scheme_load_aot \
+  precompile packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --cwd .
+#+end_src
+
+The command prints a single =poo-flow.scheme-load-aot.v1= receipt containing the
+source path, workspace root, binary path, rebuild flag, and elapsed time. Normal
+=load(...)= calls reuse a matching AOT runner when present but do not compile
+one synchronously unless the caller passes =compile_aot=True= or sets
+=POO_FLOW_SCHEME_LOAD_AOT_COMPILE=1=.
+
+Run the exact AOT benchmark after precompile:
+
+#+begin_src sh
+uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks \
+  scheme-load-aot --iterations 10 \
+  --source packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --cwd .
+#+end_src
+
+The benchmark emits =poo-flow.scheme-load-aot-benchmark.v1= receipts with
+per-sample timings: =samples-us=, =min-us=, =median-us=, =mean-us=, =p95-us=,
+and =max-us=. The default scenarios measure in-process cache hits,
+in-process AOT reuse, and fresh Python process AOT reuse. Add
+=--include-interpreter= only when an intentionally seconds-scale cold
+interpreter baseline is needed.
+
+For downstream users that should not install Gerbil, publish a preprojected
+Scheme datum artifact from a Gerbil-enabled authoring/release lane:
+
+#+begin_src sh
+uv run --project packages/python-runtime python -m poo_flow_runtime.scheme_projection_artifact \
+  export packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --cwd .
+#+end_src
+
+The artifact is =SOURCE.poo-flow-projection.sexp= by default and stores the
+normalized projection rows plus source/projection digests. Runtime =load(...)=
+checks this artifact before AOT or Gerbil fallback, so an installed package can
+run an already-published flow without =gxi= or =gxc=.
+
+Benchmark the artifact path explicitly:
+
+#+begin_src sh
+uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks \
+  scheme-load-aot --iterations 10 --include-artifact --preproject-artifact \
+  --source packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --cwd .
+#+end_src
+
+* Wheel build
+
+The GitHub wheel workflow keeps this boundary explicit:
+
+1. =projection-artifact= runs with Gerbil and =ccache=, builds the POO Flow
+   package, exports real packaged projection artifacts, and uploads them.
+2. =wheel= runs without Gerbil, downloads those artifacts, builds the Python
+   wheel, installs it, and loads the packaged artifact from package resources.
+
+Build the Python runtime wheel without requiring Gerbil after the generated
+artifact has been placed next to its Scheme source:
+
+#+begin_src sh
+uv build --project packages/python-runtime --wheel --out-dir dist/python-runtime-wheel
+#+end_src
+
+Install and smoke test the built wheel in a clean environment:
+
+#+begin_src sh
+python -m venv /tmp/poo-flow-runtime-wheel-smoke
+/tmp/poo-flow-runtime-wheel-smoke/bin/python -m pip install \
+  dist/python-runtime-wheel/*.whl
+/tmp/poo-flow-runtime-wheel-smoke/bin/python -m poo_flow_runtime.scheme_projection_artifact --help
+/tmp/poo-flow-runtime-wheel-smoke/bin/python -m poo_flow_runtime.benchmarks scheme-load-aot --help
+#+end_src
+
+The wheel build validates the downstream runtime package shape. Gerbil stays in
+the authoring/release lane when source Scheme fragments need to be projected
+into =*.poo-flow-projection.sexp= artifacts.
+To ship built-in flows, generate each projection artifact before =uv build= and
+place the source plus adjacent =*.poo-flow-projection.sexp= under the package
+tree, for example =src/poo_flow_runtime/projections/=. Hatch includes those
+package data files in the wheel. The no-Gerbil wheel CI lane must only consume
+and verify these files; it must not generate real projection artifacts.
+
 * Runtime graph checkpointing
 
 The Python runtime package exposes the first process-local checkpoint surface

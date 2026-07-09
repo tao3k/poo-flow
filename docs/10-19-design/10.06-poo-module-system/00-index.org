@@ -16,6 +16,8 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 [[file:05-implementation-roadmap.org][05 Implementation Roadmap]]
 - [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
 [[file:06-doom-nix-interface-principles.org][06 Doom And Nix Interface Principles]]
+- [[file:86-doom-emacs-core-module-boundary-research.org][86 Doom Emacs Core Module Boundary Research]]
+[[file:86-doom-emacs-core-module-boundary-research.org][86 Doom Emacs Core Module Boundary Research]]
 - [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
 [[file:07-loop-engineering-c3-current-c4-future-control-loops.org][07 Loop Engineering, C3 Now, C4 Later]]
 - [[file:08-downstream-user-onboarding.org][08 Downstream User Onboarding]]
@@ -47,6 +49,12 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:43-session-memory-recovery-rfc.org][43 Session Memory Durable Policy RFC]]
 - [[file:44-current-project-programming-style.org][44 Current Project Programming Style]]
 - [[file:45-durable-policy-research-agenda.org][45 Durable Policy Research Agenda]]
+- [[file:83-funflow-use-module-macro-ir.org][83 FunFlow use-module Macro IR]]
+- [[file:84-funflow-local-module-composition-ui.org][84 FunFlow Local Module Composition UI]]
+- [[file:85-json-schema-contract-bridge.org][85 JSON Schema Contract Bridge]]
+- [[file:81-utilities-contract-macro-design.org][81 Utilities Contract Macro Design]]
+- [[file:82-type-contract-performance-benchmarks.org][82 Type Contract Performance Benchmarks]]
+- [[file:58-p0-boundary-namespace-design.org][58 P0 Boundary Namespace Design]]
 - [[file:72-agent-framework-capability-convergence.org][72 Agent Framework Capability Convergence]]
 - [[file:73-tool-calling-control-plane.org][73 Tool Calling Control Plane]]
 - [[file:74-poo-performance-scenario-alignment.org][74 POO Performance Scenario Alignment]]
@@ -64,6 +72,9 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]]
 - [[file:53-loopx-pressure-test-control-plane-closure.org][53 LoopX Pressure Test And Control-Plane Closure]]
 - [[file:54-runtime-abi-pressure-relief-interface.org][54 Runtime ABI Pressure Relief Interface]]
+- [[file:55-baml-agent-language-audit.org][55 BAML Agent Language Audit]]
+- [[file:56-type-facts-validation-lean-plan.org][56 Type Facts Validation And Lean Plan]]
+- [[file:57-user-graph-p0-thesis.org][57 User Graph P0 Thesis]]
 ** 10.06.30 Local Evidence
 The module-system design builds on existing =poo-flow= contracts:
 - =src/core/roles.ss= owns Gerbil POO role composition and C3-facing slot probing.

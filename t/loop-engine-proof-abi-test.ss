@@ -11,12 +11,12 @@
 
 (export loop-engine-proof-abi-test)
 
-;; : (-> Symbol Alist Any)
+;; : (-> LoopEngineProofAbiKey LoopEngineProofAbiRow LoopEngineProofAbiValue)
 (def (proof-abi-field key row)
   (let (cell (assq key row))
     (if cell (cdr cell) #f)))
 
-;; : (-> Any Bool)
+;; : (-> LoopEngineProofAbiValue Bool)
 (def (truthy? value)
   (if value #t #f))
 

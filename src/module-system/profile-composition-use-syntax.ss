@@ -2,19 +2,56 @@
 ;;; Boundary: user-facing composition declaration syntax.
 ;;; Invariant: expands directly to core POO-native composition builders.
 
-(import :poo-flow/src/module-system/profile-composition-builders)
+(import :poo-flow/src/module-system/profile-composition-builders
+        :poo-flow/src/module-system/profile-composition-inline-runtime)
 
-(export use-composition)
+(export use-composition
+        (import: :poo-flow/src/module-system/profile-composition-inline-runtime))
 
 (begin-syntax
+  ;; Engineering note: policy-sensitive helpers in this owner keep explicit
+  ;; contracts adjacent to definitions so downstream reports stay actionable.
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-as-marker? marker)
+    (let (datum (syntax->datum marker))
+      (and (symbol? datum)
+           (string=? (symbol->string datum) "as"))))
+
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-form-kind form)
+    (match (syntax->list form)
+      ([head . _] (syntax->datum head))
+      (else (error "invalid use-composition form" form))))
+
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-inline-module-spec module-form)
+    (let (items (syntax->list module-form))
+      (match items
+        ([head module marker alias . profile-clauses]
+         (if (and (eq? (syntax->datum head) 'use-module)
+                  (poo-flow-composition-as-marker? marker))
+           (list module alias profile-clauses #t)
+           (match items
+             ([head legacy-alias . legacy-profile-clauses]
+              (if (eq? (syntax->datum head) 'use-module)
+                (list legacy-alias legacy-alias legacy-profile-clauses #f)
+                (error "use-composition expects inline (use-module ...)"
+                       module-form)))
+             (else
+              (error "use-composition expects inline (use-module ...)"
+                     module-form)))))
+        ([head alias . profile-clauses]
+         (if (eq? (syntax->datum head) 'use-module)
+           (list alias alias profile-clauses #f)
+           (error "use-composition expects inline (use-module ...)"
+                  module-form)))
+        (else
+         (error "use-composition expects inline (use-module ...)"
+                module-form)))))
+
+  ;; : (-> Any Any)
   (def (poo-flow-composition-profile-exprs ctx form)
     (match (syntax->list form)
-      ([head module slot]
-       (if (eq? (syntax->datum head) 'profile)
-         (with-syntax ((module module)
-                       (slot slot))
-           (list #'(poo-flow-profile-ref module 'slot)))
-         (error "compose expects (profile module slot)" form)))
       ([head module . slots]
        (if (eq? (syntax->datum head) 'profiles)
          (map (lambda (slot)
@@ -22,12 +59,22 @@
                               (slot slot))
                   #'(poo-flow-profile-ref module 'slot)))
               slots)
-         (error "compose expects (profile module slot) or (profiles module slot ...)"
-                form)))
+         (match slots
+           ([slot]
+            (if (eq? (syntax->datum head) 'profile)
+              (with-syntax ((module module)
+                            (slot slot))
+                (list #'(poo-flow-profile-ref module 'slot)))
+              (error "compose expects (profile module slot) or (profiles module slot ...)"
+                     form)))
+           (else
+            (error "compose expects (profile module slot) or (profiles module slot ...)"
+                   form)))))
       (else
        (error "compose expects (profile module slot) or (profiles module slot ...)"
               form))))
 
+  ;; : (-> Any Any)
   (def (poo-flow-composition-clause-expr ctx clause)
     (match (syntax->list clause)
       ([head . items]
@@ -46,7 +93,10 @@
           ((or (eq? kind 'graph)
                (eq? kind 'loop)
                (eq? kind 'prove)
-               (eq? kind 'handoff))
+               (eq? kind 'handoff)
+               (eq? kind 'step)
+               (eq? kind 'edges)
+               (eq? kind 'route))
            (with-syntax ((clause-kind head)
                          ((payload-item ...) items))
              #'(poo-flow-composition-clause
@@ -57,6 +107,51 @@
       (else
        (error "invalid use-composition clause" clause))))
 
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-top-compose-profile-exprs forms)
+    (let loop ((rest forms) (out '()))
+      (if (null? rest)
+        (reverse out)
+        (let ((form (car rest))
+              (kind (poo-flow-composition-form-kind (car rest))))
+          (cond
+           ((eq? kind 'compose)
+            (match (syntax->list form)
+              ([head . items]
+               (loop (cdr rest)
+                     (append
+                      (reverse
+                       (apply append
+                              (map (lambda (item)
+                                     (poo-flow-composition-profile-exprs #f item))
+                                   items)))
+                      out)))
+              (else
+               (error "use-composition top-level compose is invalid" form))))
+           ((eq? kind 'stage)
+            (loop (cdr rest) out))
+           (else
+            (error "use-composition expects compose or stage after use-module"
+                   form)))))))
+
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-stage-exprs ctx forms)
+    (let loop ((rest forms) (out '()))
+      (if (null? rest)
+        (reverse out)
+        (let ((form (car rest))
+              (kind (poo-flow-composition-form-kind (car rest))))
+          (cond
+           ((eq? kind 'stage)
+            (loop (cdr rest)
+                  (cons (poo-flow-composition-stage-expr ctx form) out)))
+           ((eq? kind 'compose)
+            (loop (cdr rest) out))
+           (else
+            (error "use-composition expects compose or stage after use-module"
+                   form)))))))
+
+  ;; : (-> Any Any)
   (def (poo-flow-composition-stage-expr ctx stage-form)
     (match (syntax->list stage-form)
       ([head stage-name . clauses]
@@ -89,113 +184,15 @@
 ;;   | result: expands to a POO Flow composition object expression
 ;;   | boundary: macro expansion delegates directly to composition builders
 ;;     %
-(import :clan/poo/object)
-
-(def (poo-flow-composition-inline-section-slot key)
-  (case key
-    ((:extends extends) 'extends)
-    ((:kind kind) 'kind)
-    ((:scope scope) 'scope)
-    ((:storage storage) 'storage)
-    ((:analysis analysis) 'analysis)
-    ((:publish publish) 'publish)
-    ((:retention retention) 'retention)
-    ((:capabilities capabilities) 'capabilities)
-    ((:with with) 'hooks)
-    (else key)))
-
-(def (poo-flow-composition-inline-alist-ref alist key default)
-  (let (entry (assoc key alist))
-    (if entry (cdr entry) default)))
-
-(def (poo-flow-composition-inline-profile-field sections base key default)
-  (poo-flow-composition-inline-alist-ref
-   sections
-   key
-   (if base (.ref base key) default)))
-
-(def (poo-flow-composition-inline-apply-hooks profile hooks)
-  (let loop ((rest hooks) (out profile))
-    (if (null? rest)
-      out
-      (loop (cdr rest) ((car rest) out)))))
-
-(def (poo-flow-composition-inline-profile profile-name sections)
-  (let* ((base (poo-flow-composition-inline-alist-ref sections 'extends #f))
-         (hooks (poo-flow-composition-inline-alist-ref sections 'hooks '()))
-         (profile
-          (if base
-            (.o (:extends base)
-                (name profile-name)
-                (extends base)
-                (kind (poo-flow-composition-inline-profile-field sections
-                                                                  base
-                                                                  'kind
-                                                                  profile-name))
-                (scope (poo-flow-composition-inline-profile-field sections
-                                                                   base
-                                                                   'scope
-                                                                   '()))
-                (storage (poo-flow-composition-inline-profile-field sections
-                                                                     base
-                                                                     'storage
-                                                                     '()))
-                (analysis (poo-flow-composition-inline-profile-field sections
-                                                                      base
-                                                                      'analysis
-                                                                      '()))
-                (publish (poo-flow-composition-inline-profile-field sections
-                                                                     base
-                                                                     'publish
-                                                                     '()))
-                (retention (poo-flow-composition-inline-profile-field sections
-                                                                       base
-                                                                       'retention
-                                                                       '()))
-                (capabilities
-                 (poo-flow-composition-inline-profile-field sections
-                                                            base
-                                                            'capabilities
-                                                            '()))
-                (hooks hooks)
-                (runtime-executed #f)
-                (source 'poo-flow.composition.inline-profile))
-            (.o (name profile-name)
-                (extends #f)
-                (kind (poo-flow-composition-inline-alist-ref sections
-                                                             'kind
-                                                             profile-name))
-                (scope (poo-flow-composition-inline-alist-ref sections
-                                                              'scope
-                                                              '()))
-                (storage (poo-flow-composition-inline-alist-ref sections
-                                                                'storage
-                                                                '()))
-                (analysis (poo-flow-composition-inline-alist-ref sections
-                                                                 'analysis
-                                                                 '()))
-                (publish (poo-flow-composition-inline-alist-ref sections
-                                                                'publish
-                                                                '()))
-                (retention (poo-flow-composition-inline-alist-ref sections
-                                                                  'retention
-                                                                  '()))
-                (capabilities
-                 (poo-flow-composition-inline-alist-ref sections
-                                                        'capabilities
-                                                        '()))
-                (hooks hooks)
-                (runtime-executed #f)
-                (source 'poo-flow.composition.inline-profile)))))
-    (poo-flow-composition-inline-apply-hooks profile hooks)))
-
 (begin-syntax
+  ;; : (-> Any Any)
   (def (poo-flow-composition-inline-use-module-syntax? form)
     (match (syntax->list form)
       ([head . _]
        (eq? (syntax->datum head) 'use-module))
       (else #f)))
 
+  ;; : (-> Any Any)
   (def (poo-flow-composition-inline-section-slot-syntax key)
     (case key
       ((:extends extends) 'extends)
@@ -209,6 +206,7 @@
       ((:with with) 'hooks)
       (else key)))
 
+  ;; : (-> Any Any)
   (def (poo-flow-composition-inline-section-pair key value)
     (let (slot (poo-flow-composition-inline-section-slot-syntax
                 (syntax->datum key)))
@@ -226,6 +224,7 @@
                        (value value))
            #'(cons 'slot 'value))))))
 
+  ;; : (-> Any Any)
   (def (poo-flow-composition-inline-section-pairs sections)
     (let loop ((rest sections) (out '()))
       (cond
@@ -239,6 +238,42 @@
                      (cadr rest))
                     out))))))
 
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-inline-imported-profile-syntax module-name stx)
+    (let (items (syntax->list stx))
+      (match items
+        ([head . rest]
+         (let (kind (syntax->datum head))
+           (cond
+            ((eq? kind 'profiles)
+             (if (null? rest)
+               (error "profiles expects one or more profile slots" stx)
+               (map (lambda (profile-slot)
+                      (with-syntax ((module-name module-name)
+                                    (profile-slot profile-slot))
+                        (list #'profile-slot
+                              #'(poo-flow-composition-inline-imported-profile
+                                 'module-name
+                                 'profile-slot))))
+                    rest)))
+            (else
+             (poo-flow-composition-inline-profile-syntax stx)))))
+        (else
+         (error "use-composition inline use-module expects profile clauses"
+                stx)))))
+
+  ;; : (-> Any Any)
+  (def (poo-flow-composition-inline-profile-pairs module-name imported? clauses)
+    (apply append
+           (map (lambda (clause)
+                  (if imported?
+                    (poo-flow-composition-inline-imported-profile-syntax
+                     module-name
+                     clause)
+                    (poo-flow-composition-inline-profile-syntax clause)))
+                clauses)))
+
+  ;; : (-> Any Any)
   (def (poo-flow-composition-inline-profile-syntax stx)
     (let (items (syntax->list stx))
       (match items
@@ -261,7 +296,11 @@
             ((eq? kind 'profile)
             (match rest
               ([existing-profile]
-               (list (list existing-profile existing-profile)))
+               (with-syntax ((existing-profile existing-profile))
+                 (list
+                  (list #'existing-profile
+                        #'(let ((profile-object existing-profile))
+                            profile-object)))))
               ([profile-name . sections]
                (let (section-pairs
                      (poo-flow-composition-inline-section-pairs sections))
@@ -284,29 +323,52 @@
 
   )
 
+;;; Boundary: use-composition is the hygienic macro facade from compact user
+;;; syntax into explicit inline module/profile composition objects.
+;; use-composition
+;; : (-> Syntax PooFlowCompositionExpansionSyntax)
+;; | doc m%
+;;   Expand one inline composition declaration into a POO composition object
+;;   with module bindings and stage receipts.
+;;   # Examples
+;;   ```scheme
+;;   (use-composition ci (use-module workflow (profile default)) (stage build))
+;;   ;; => poo-flow-composition-object
+;;   ```
 (defsyntax (use-composition stx)
   (syntax-case stx ()
-    ((_ name module-form stage-form ...)
+    ((_ name module-form form ...)
      (if (poo-flow-composition-inline-use-module-syntax? #'module-form)
-       (syntax-case #'module-form ()
-         ((use-module alias profile-clause ...)
-          (let* ((profile-pairs
-                  (apply append
-                         (map poo-flow-composition-inline-profile-syntax
-                              (syntax->list #'(profile-clause ...)))))
-                 (profile-names (map car profile-pairs))
-                 (profile-exprs (map cadr profile-pairs))
-                 (stage-exprs
-                  (map (lambda (stage-form)
-                         (poo-flow-composition-stage-expr stx stage-form))
-                       (syntax->list (syntax (stage-form ...))))))
-            (with-syntax (((profile-name ...) profile-names)
-                          ((profile-expr ...) profile-exprs)
-                          ((stage-expr ...) stage-exprs))
-              #'(let ((alias (.o (profile-name profile-expr) ...)))
-                  (poo-flow-composition-object
-                   'name
-                   (list (poo-flow-composition-module-binding 'alias alias))
-                   (list stage-expr ...)))))))
+       (let* ((module-spec
+               (poo-flow-composition-inline-module-spec #'module-form))
+              (module-name (car module-spec))
+              (alias (cadr module-spec))
+              (profile-clauses (caddr module-spec))
+              (imported? (cadddr module-spec))
+              (profile-pairs
+               (poo-flow-composition-inline-profile-pairs
+                module-name
+                imported?
+                profile-clauses))
+              (profile-names (map car profile-pairs))
+              (profile-exprs (map cadr profile-pairs))
+              (forms (syntax->list #'(form ...)))
+              (compose-profile-exprs
+               (poo-flow-composition-top-compose-profile-exprs forms))
+              (stage-exprs
+               (poo-flow-composition-stage-exprs stx forms)))
+         (with-syntax ((alias alias)
+                       ((profile-name ...) profile-names)
+                       ((profile-expr ...) profile-exprs)
+                       ((compose-profile-expr ...) compose-profile-exprs)
+                       ((stage-expr ...) stage-exprs))
+           #'(let ((alias (poo-flow-composition-inline-module
+                           '(profile-name ...)
+                           (list profile-expr ...))))
+               (poo-flow-composition-object/profiles
+                'name
+                (list (poo-flow-composition-module-binding 'alias alias))
+                (list compose-profile-expr ...)
+                (list stage-expr ...)))))
        (error "use-composition expects inline (use-module alias ...)"
               #'module-form)))))

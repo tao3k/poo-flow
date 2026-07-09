@@ -3,6 +3,7 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .o .ref)
+        (only-in :std/sugar filter filter-map)
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-core-support/contracts)
 
@@ -92,19 +93,16 @@
 ;;; reverse and performs one ordered append after the scan.
 ;; : (-> [PooModuleSlotValue] HashTable [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-config-append-distinct-added/rev extra seen added-rev)
-  (cond
-   ((null? extra) added-rev)
-   ((hash-get seen (car extra))
-    (poo-flow-module-config-append-distinct-added/rev
-     (cdr extra)
-     seen
-     added-rev))
-   (else
-    (hash-put! seen (car extra) #t)
-    (poo-flow-module-config-append-distinct-added/rev
-     (cdr extra)
-     seen
-     (cons (car extra) added-rev)))))
+  (append
+   (reverse
+    (filter-map
+     (lambda (value)
+       (and (not (hash-get seen value))
+            (begin
+              (hash-put! seen value #t)
+              value)))
+     extra))
+   added-rev))
 
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
 (def (poo-flow-module-config-append-distinct/indexed base extra seen)
@@ -136,11 +134,9 @@
   (if (null? removed)
     values
     (let (removed-index (poo-flow-module-config-value-index removed))
-      (reverse
-       (poo-flow-module-config-remove-elements/rev
-        values
-        removed-index
-        '())))))
+      (filter (lambda (value)
+                (not (hash-get removed-index value)))
+              values))))
 
 ;;; Slot merge operators accept scalar and list payloads; normalizing here keeps
 ;;; append/prepend/remove semantics identical across user input shapes.
@@ -194,6 +190,7 @@
   (let ((head '())
         (tail #f)
         (seen (make-hash-table)))
+    ;; : (-> Any Any)
     (def (append-entry! entry)
       (let (cell (cons entry '()))
         (if tail
@@ -203,6 +200,7 @@
           (begin
             (set! head cell)
             (set! tail cell)))))
+    ;; : (-> Any Any)
     (def (copy-prefix! stop)
       (let copy ((remaining slots))
         (when (not (eq? remaining stop))
@@ -289,6 +287,7 @@
         (append-active (make-hash-table))
         (append-bases (make-hash-table))
         (append-additions (make-hash-table)))
+    ;; : (-> Any Any)
     (def (slot-value-index key current)
       (let (index (poo-flow-module-config-slot-key-hash-ref value-indexes key))
         (if index
@@ -298,11 +297,13 @@
                  (poo-flow-module-config-list-value current)))
             (hash-put! value-indexes key next-index)
             next-index))))
+    ;; : (-> Any Any)
     (def (record-slot-value-index! key value)
       (hash-put! value-indexes
                  key
                  (poo-flow-module-config-value-index
                   (poo-flow-module-config-list-value value))))
+    ;; : (-> Any Any)
     (def (materialize-append-state key)
       (let ((base (poo-flow-module-config-slot-key-hash-ref
                    append-bases
@@ -313,6 +314,7 @@
         (if (null? additions)
           base
           (append base (reverse additions)))))
+    ;; : (-> Any Any)
     (def (flush-append-state! key)
       (if (poo-flow-module-config-slot-key-hash-ref append-active key)
         (let (value (materialize-append-state key))
@@ -321,10 +323,12 @@
           (record-slot-value-index! key value)
           value)
         (poo-flow-module-config-slot-key-hash-ref updates key)))
+    ;; : (-> Any Any)
     (def (resolved-slot-update key)
       (if (poo-flow-module-config-slot-key-hash-ref append-active key)
         (flush-append-state! key)
         (poo-flow-module-config-slot-key-hash-ref updates key)))
+    ;; : (-> Any Any)
     (def (append-slot-value! key current value)
       (let ((current-list (poo-flow-module-config-list-value current))
             (extra (poo-flow-module-config-list-value value))
@@ -354,6 +358,7 @@
              (loop (cdr remaining)
                     (cons (car remaining) additions)
                     #t)))))))
+    ;; : (-> Any Any)
     (def (materialize-existing-slots/rev remaining rows-rev)
       (if (null? remaining)
         rows-rev
@@ -364,6 +369,7 @@
                    (cons key (resolved-slot-update key))
                    (car remaining))
                  rows-rev)))))
+    ;; : (-> Any Any)
     (def (materialize-new-slots/rev keys rows-rev)
       (if (null? keys)
         rows-rev
@@ -371,6 +377,7 @@
          (cdr keys)
          (cons (cons (car keys) (resolved-slot-update (car keys)))
                rows-rev))))
+    ;; : (-> Any Any)
     (def (materialize-updated-slots new-order)
       (reverse
        (materialize-new-slots/rev

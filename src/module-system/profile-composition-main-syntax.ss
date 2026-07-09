@@ -7,6 +7,9 @@
 (export poo-flow-composition modules use-module stage)
 
 (begin-syntax
+  ;; Engineering note: policy-sensitive helpers in this owner keep explicit
+  ;; contracts adjacent to definitions so downstream reports stay actionable.
+  ;; : (-> Any Any)
   (def (poo-flow-composition-module-syntax binding)
     (match (syntax->list binding)
       ([head module _ alias]
@@ -18,6 +21,7 @@
        (error "poo-flow-composition expects (use-module module #:as alias)"
               binding))))
 
+  ;; : (-> Any Any)
   (def (poo-flow-composition-modules-syntax modules-form)
     (match (syntax->list modules-form)
       ([head . bindings]
@@ -29,18 +33,16 @@
        (error "poo-flow-composition expects a (modules ...) form"
               modules-form)))))
 
+;; poo-flow-composition
 ;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Build a named POO Flow composition object from module bindings and
-;;       ordered stage declarations.
-;;       # Examples
-;;       (poo-flow-composition rag-agent
-;;         (modules (use-module session-module #:as session))
-;;         (stage production
-;;           (compose (profile session hardened))))
-;;   | result: expands to a POO-native composition object
-;;   | boundary: compile-time parsing only builds data; runtime execution is explicit
-;;     %
+;; | doc m%
+;;   Expand a named composition form into a POO composition object with
+;;   declared module bindings and stage receipts.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-composition ci (modules (workflow wf)) (stage build))
+;;   ;; => poo-flow-composition-object
+;;   ```
 (defsyntax (poo-flow-composition stx)
   (syntax-case stx ()
     ((_ name modules-form stage-form ...)
@@ -58,44 +60,43 @@
               (list (poo-flow-composition-module-binding 'alias module) ...)
               (list stage-form ...))))))))
 
+;; modules
 ;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Group the module bindings available to a composition.
-;;       # Examples
-;;       (modules
-;;        (use-module session-module #:as session)
-;;        (use-module sandbox-module #:as sandbox))
-;;   | result: expands to the ordered module binding payload
-;;   | boundary: grouping does not instantiate or execute module profiles
-;;     %
+;; | doc m%
+;;   Normalize module binding clauses for a composition declaration.
+;;   # Examples
+;;   ```scheme
+;;   (modules (workflow wf) (sandbox sb))
+;;   ;; => module binding list
+;;   ```
 (defsyntax (modules stx)
   (syntax-case stx ()
     ((_ binding ...)
      #'(list binding ...))))
 
+;; use-module
 ;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Bind a POO module object to a local composition alias.
-;;       # Examples
-;;       (use-module session-module #:as session)
-;;   | result: expands to a composition module binding
-;;   | boundary: alias names are preserved as data for profile selection
-;;     %
+;; | doc m%
+;;   Normalize one module use clause inside composition authoring syntax.
+;;   # Examples
+;;   ```scheme
+;;   (use-module workflow wf)
+;;   ;; => module binding clause
+;;   ```
 (defsyntax (use-module stx)
   (syntax-case stx ()
     ((_ module _ alias)
      #'(poo-flow-composition-module-binding 'alias module))))
 
+;; stage
 ;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Declare a named composition stage with ordered policy clauses.
-;;       # Examples
-;;       (stage production
-;;         (compose (profile session hardened))
-;;         (loop #:fuel 4 #:exit done))
-;;   | result: expands to a composition stage object
-;;   | boundary: stage ordering is represented as data for proof and runtime gates
-;;     %
+;; | doc m%
+;;   Normalize a composition stage into the staged receipt sequence.
+;;   # Examples
+;;   ```scheme
+;;   (stage build)
+;;   ;; => stage receipt
+;;   ```
 (defsyntax (stage stx)
   (syntax-case stx ()
     ((_ name clause ...)

@@ -5,123 +5,144 @@
 (import :poo-flow/src/module-system/profile-composition-core)
 
 (export profile
+        profiles
         compose
         graph
         loop
         prove
         handoff)
 
-;;; Expands a module/profile pair to direct POO slot selection.
-;;   | doc m%
-;;       # Examples
-;;       (profile session hardened)
-;;   | result: selects (.ref session 'hardened)
+;; profile
 ;; : (-> Syntax Syntax)
-;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Select a named profile slot from a bound composition module.
-;;       # Examples
-;;       (profile session hardened)
-;;   | result: expands to a POO profile reference value
-;;   | boundary: slot lookup stays in the generated composition value
-;;     %
+;; | doc m%
+;;   Expand a profile clause into a POO profile reference for one module slot.
+;;   # Examples
+;;   ```scheme
+;;   (profile workflow default)
+;;   ;; => profile-ref
+;;   ```
 (defsyntax (profile stx)
   (syntax-case stx ()
     ((_ module slot)
      #'(poo-flow-profile-ref module 'slot))))
 
-;;; Stores selected profile objects as the stage compose payload.
-;;   | doc m%
-;;       # Examples
-;;       (compose (profile session hardened) (profile sandbox restricted))
-;;   | result: returns a compose clause containing profile objects
+;; profiles
 ;; : (-> Syntax Syntax)
+;; | doc m%
+;;   Expand a batch of profile slots from one module into POO profile refs.
+;;   # Examples
+;;   ```scheme
+;;   (profiles workflow build test package)
+;;   ;; => profile-ref list
+;;   ```
+(defsyntax (profiles stx)
+  (syntax-case stx ()
+    ((_ module slot ...)
+     #'(list (poo-flow-profile-ref module 'slot) ...))))
+
+(begin-syntax
+  ;; : (-> Any Any)
+  (def (poo-flow-compose-profile-item-exprs form)
+    (let (items (syntax->list form))
+      (match items
+        ([head module . slots]
+         (let (kind (syntax->datum head))
+           (cond
+            ((eq? kind 'profiles)
+             (map (lambda (slot)
+                    (with-syntax ((module module)
+                                  (slot slot))
+                      #'(poo-flow-profile-ref module 'slot)))
+                  slots))
+            ((and (eq? kind 'profile)
+                  (= (length slots) 1))
+             (with-syntax ((module module)
+                           (slot (car slots)))
+               (list #'(poo-flow-profile-ref module 'slot))))
+            (else
+             (list form)))))
+        (else
+         (list form)))))
+
+  ;; : (-> Any Any)
+  (def (poo-flow-compose-profile-exprs items)
+    (let loop ((rest items) (out '()))
+      (if (null? rest)
+        (reverse out)
+        (loop (cdr rest)
+              (append (reverse (poo-flow-compose-profile-item-exprs
+                                (car rest)))
+                      out))))))
+
+;; compose
 ;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Declare the ordered profile set composed by a composition stage.
-;;       # Examples
-;;       (compose (profile session hardened)
-;;                (profile sandbox restricted))
-;;   | result: expands to a composition clause with profile payload values
-;;   | boundary: does not execute profiles; it declares reusable policy objects
-;;     %
+;; | doc m%
+;;   Expand a compose clause for object-level profile composition.
+;;   # Examples
+;;   ```scheme
+;;   (compose base overlay)
+;;   ;; => composition clause
+;;   ```
 (defsyntax (compose stx)
   (syntax-case stx ()
-    ((_ profile-ref ...)
-     #'(poo-flow-composition-clause 'compose
-                                    (list profile-ref ...)))))
+    ((_ item ...)
+     (let (profile-exprs
+           (poo-flow-compose-profile-exprs (syntax->list #'(item ...))))
+       (with-syntax (((profile-ref ...) profile-exprs))
+         #'(poo-flow-composition-clause 'compose
+                                        (list profile-ref ...)))))))
 
-;;; Stores graph metadata for graph-engine projection.
-;;   | doc m%
-;;       # Examples
-;;       (graph guarded-rag-flow)
-;;   | result: returns a graph clause without interpreting graph payloads
+;; graph
 ;; : (-> Syntax Syntax)
-;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Attach the graph strategy reference used by a composition stage.
-;;       # Examples
-;;       (graph guarded-flow)
-;;   | result: expands to a graph composition clause
-;;   | boundary: graph validation remains a downstream proof/test obligation
-;;     %
+;; | doc m%
+;;   Expand a graph clause that binds profile composition to graph receipts.
+;;   # Examples
+;;   ```scheme
+;;   (graph workflow dag)
+;;   ;; => graph clause
+;;   ```
 (defsyntax (graph stx)
   (syntax-case stx ()
     ((_ item ...)
      #'(poo-flow-composition-clause 'graph '(item ...)))))
 
-;;; Stores loop metadata for loop-engine projection.
-;;   | doc m%
-;;       # Examples
-;;       (loop #:fuel 8 #:exit answer-ready)
-;;   | result: returns a loop clause with policy metadata
+;; loop
 ;; : (-> Syntax Syntax)
-;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Attach loop policy metadata to a composition stage.
-;;       # Examples
-;;       (loop #:fuel 4 #:exit done)
-;;   | result: expands to a loop composition clause
-;;   | boundary: fuel and exit semantics are represented as policy data
-;;     %
+;; | doc m%
+;;   Expand a loop clause that connects profile composition with loop receipts.
+;;   # Examples
+;;   ```scheme
+;;   (loop engine policy)
+;;   ;; => loop clause
+;;   ```
 (defsyntax (loop stx)
   (syntax-case stx ()
     ((_ item ...)
      #'(poo-flow-composition-clause 'loop '(item ...)))))
 
-;;; Stores proof obligation symbols for later fact projection.
-;;   | doc m%
-;;       # Examples
-;;       (prove scope-contained graph-reachable loop-progress)
-;;   | result: returns a prove clause with obligation symbols
+;; prove
 ;; : (-> Syntax Syntax)
-;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Declare proof obligations associated with a composition stage.
-;;       # Examples
-;;       (prove scope-contained graph-reachable loop-progress)
-;;   | result: expands to a prove composition clause
-;;   | boundary: proof names are declarations consumed by Lean/test gates
-;;     %
+;; | doc m%
+;;   Expand a proof clause for validating composition contracts before handoff.
+;;   # Examples
+;;   ```scheme
+;;   (prove capability receipt)
+;;   ;; => proof clause
+;;   ```
 (defsyntax (prove stx)
   (syntax-case stx ()
     ((_ item ...)
      #'(poo-flow-composition-clause 'prove '(item ...)))))
 
-;;; Stores runtime handoff metadata at the composition boundary.
-;;   | doc m%
-;;       # Examples
-;;       (handoff cicd runtime marlin)
-;;   | result: returns a handoff clause for downstream runtime owners
+;; handoff
 ;; : (-> Syntax Syntax)
-;; : (-> Syntax Syntax)
-;;   | doc m%
-;;       Declare handoff metadata for runtime or Marlin boundaries.
-;;       # Examples
-;;       (handoff marlin-runtime)
-;;   | result: expands to a handoff composition clause
-;;   | boundary: handoff execution stays behind explicit runtime adapters
-;;     %
+;; | doc m%
+;;   Expand a handoff clause that projects composed profile state to a runtime boundary.
+;;   # Examples
+;;   ```scheme
+;;   (handoff marlin receipt)
+;;   ;; => handoff clause
+;;   ```
 (defsyntax (handoff stx)
   (syntax-case stx ()
     ((_ item ...)

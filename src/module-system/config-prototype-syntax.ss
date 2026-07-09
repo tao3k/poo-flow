@@ -9,10 +9,21 @@
         defpoo-module-config-kind-predicate
         defpoo-module-config-converter)
 
+;;; Prototype macros define named POO config objects from bounded slot rows.
 ;; defpoo-module-config-prototype
-;;   : internal declaration helper for fixed POO config prototype objects.
-;;     The call site owns every slot and default value. The macro removes only
-;;     the repeated object<-alist/list/cons frame.
+;; : (-> Syntax Syntax Syntax)
+;; | type ConfigBindingSyntax = Syntax
+;; | type ConfigSlotRowsSyntax = Syntax
+;; | type ConfigPrototypeSyntax = Syntax
+;; | contract: expands a binding plus literal slots into an `object<-alist` definition
+;; | warning: keep object inheritance and merge policy outside this syntax helper
+;; | doc m%
+;;   Defines a module config prototype object.
+;;   # Examples
+;;   ```scheme
+;;   (defpoo-module-config-prototype workflow-prototype (slots ((kind 'workflow))))
+;;   ;; => workflow-prototype is bound to a POO object with kind
+;;   ```
 (defrules defpoo-module-config-prototype
   (slots)
   ((_ binding
@@ -21,9 +32,21 @@
      (object<-alist
       (list (cons 'slot-key slot-value) ...)))))
 
+;;; Predicate macros generate kind guards over POO config prototypes.
 ;; defpoo-module-config-kind-predicate
-;;   : internal predicate helper for prototype objects identified by a kind
-;;     slot. Predicate names stay public ordinary functions.
+;; : (-> Syntax Syntax)
+;; | type PredicateBindingSyntax = Syntax
+;; | type ConfigKindSyntax = Syntax
+;; | type KindPredicateSyntax = Syntax
+;; | contract: expands a predicate binding and expected kind into an object guard
+;; | warning: this helper checks only the `kind` slot, not full object validation
+;; | doc m%
+;;   Defines a predicate for module config object kinds.
+;;   # Examples
+;;   ```scheme
+;;   (defpoo-module-config-kind-predicate workflow-config? 'workflow)
+;;   ;; => workflow-config? accepts objects whose kind is workflow
+;;   ```
 (defrules defpoo-module-config-kind-predicate ()
   ((_ predicate kind-expr)
    (def (predicate value)
@@ -31,10 +54,23 @@
           (.slot? value 'kind)
           (eq? (.ref value 'kind) kind-expr)))))
 
+;;; Converter macros project prototype slots and literals into constructors.
 ;; defpoo-module-config-converter
-;;   : internal converter helper for prototype-to-domain constructors. The call
-;;     site names the constructor and every argument; the macro removes only the
-;;     repeated `.ref` frame around prototype slots.
+;; : (-> Syntax Syntax Syntax Syntax Syntax Syntax)
+;; | type ConverterBindingSyntax = Syntax
+;; | type ConverterPrototypeArgumentsSyntax = Syntax
+;; | type ConstructorSyntax = Syntax
+;; | type ConverterArgumentRowsSyntax = Syntax
+;; | type ConverterSyntax = Syntax
+;; | contract: expands a converter that passes declared arguments to a constructor
+;; | warning: constructor contract enforcement belongs to the generated constructor
+;; | doc m%
+;;   Defines a converter from a POO prototype plus arguments.
+;;   # Examples
+;;   ```scheme
+;;   (defpoo-module-config-converter make-workflow (prototype name) (constructor list) (arguments (slot kind) (value name)))
+;;   ;; => make-workflow pulls kind from the prototype and forwards name
+;;   ```
 (defrules defpoo-module-config-converter
   (constructor arguments slot value)
   ((_ converter (prototype argument ...)
@@ -45,6 +81,21 @@
       (defpoo-module-config-converter-argument prototype argument-row)
       ...))))
 
+;;; Converter arguments keep slot projection separate from literal values.
+;; defpoo-module-config-converter-argument
+;; : (-> Syntax Syntax Syntax Syntax)
+;; | type ConverterPrototypeSyntax = Syntax
+;; | type ConverterArgumentRowSyntax = Syntax
+;; | type ConverterArgumentSyntax = Syntax
+;; | contract: expands `(slot key)` to `.ref` and `(value expr)` to the expression
+;; | warning: missing slot diagnostics are owned by object validation, not this macro
+;; | doc m%
+;;   Expands one converter argument row.
+;;   # Examples
+;;   ```scheme
+;;   (defpoo-module-config-converter-argument prototype (slot kind))
+;;   ;; => reads kind from prototype
+;;   ```
 (defrules defpoo-module-config-converter-argument
   (slot value)
   ((_ prototype (slot slot-key))

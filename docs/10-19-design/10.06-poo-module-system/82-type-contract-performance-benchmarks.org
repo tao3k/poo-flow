@@ -1,0 +1,105 @@
+* 10.06.82 Type Contract Performance Benchmarks
+This document fixes the benchmark boundary for the utilities-backed type contract layer.
+
+The type contract layer is allowed to be rich and strict, but it must not make agent-loop or runtime-handoff hot paths pay repeated full validation and projection costs.
+
+** 10.06.82.10 Benchmark Boundary
+Measure Scheme hot-path work:
+- =poo-flow-contract-check-slot!= against reusable =PooFlowSlotContract= rows;
+- =PooFlowObjectTypeContract -> alist= projection;
+- =PooFlowObjectTypeContract -> PooFlowTypeFactContract= projection;
+- =PooFlowObjectTypeContract -> PooFlowLeanFactContract= projection;
+- real session policy / tool-grant contract projection and slot gates;
+- cached projection reads used by doctor, observability, and runtime-handoff presentation.
+
+Do not measure these as type contract overhead:
+- cold =gxi= startup;
+- package install or ABI refresh;
+- C compiler / Apple SDK failures;
+- Lean execution;
+- Marlin runtime work;
+- external IO, subprocess, sandbox, or connector activity.
+
+#+begin_src mermaid
+flowchart LR
+  A["contract family declaration"] --> B["slot/object contract rows"]
+  B --> C["constructor slot gates"]
+  B --> D["alist projection"]
+  B --> E["type-fact projection"]
+  B --> F["Lean fact contract projection"]
+  E --> G["cached proof-facing rows"]
+  F --> G
+  G --> H["doctor / observability / Marlin handoff"]
+  C --> I["POO object construction"]
+  I --> H
+#+end_src
+
+** 10.06.82.20 Implementation Owners
+The benchmark implementation is split by responsibility:
+- =t/support/type-contract-performance.ss= owns reusable benchmark workloads.
+- =t/type-contract-performance-test.ss= owns regression budgets and receipts.
+- =t/performance-tests.ss= includes the suite in the broader performance root.
+- =src/testing/project.ss= registers the support file for harness-aware test selection.
+
+The support file is deliberately source-level. It imports the current =src/utilities=, =src/type-facts=, and =src/modules/session= owners directly so benchmark results track the active checkout, not stale installed ABI state.
+
+** 10.06.82.30 Benchmark Classes
+Micro benchmark:
+- check 10 slots across 2,000 rounds;
+- project 10-slot object contracts across 1,500 rounds;
+- project type facts and Lean fact contracts across 1,500 rounds.
+
+Scenario benchmark:
+- project real session policy type facts;
+- project real session tool-grant Lean fact contracts;
+- run real session policy and tool-grant =require-slots!= gates.
+
+Scale benchmark:
+- check 100 contract-backed objects with 10 slots;
+- check 1,000 contract-backed objects with 10 slots;
+- check 10,000 contract-backed objects with 2 slots.
+
+Hot-boundary benchmark:
+- project 50 slot facts once;
+- read the cached fact rows across 10,000 rounds.
+
+** 10.06.82.40 Initial Regression Budgets
+The first budgets are intentionally conservative. They catch order-of-magnitude regressions while avoiding false failures from local scheduling noise.
+
+| Metric | Current sample | Budget |
+| Slot gate, 10 slots x 2,000 rounds | 3.909 ms | 250 ms |
+| Object contract alist projection, 10 slots x 1,500 rounds | 8.242 ms | 350 ms |
+| Type-fact projection, 10 slots x 1,500 rounds | 35.958 ms | 500 ms |
+| Lean fact contract projection, 10 slots x 1,500 rounds | 51.44 ms | 500 ms |
+| Session policy/tool-grant scenario, 1,000 rounds | 77.721 ms | 750 ms |
+| Scaled family, 10,000 objects x 2 slots | 14.495 ms | 600 ms |
+| Cached type-fact reads, 50 slots x 10,000 rounds | 2.092 ms | 200 ms |
+| slot-check-ms | 3.934 ms | 250 ms |
+| alist-projection-ms | 16.475 ms | 350 ms |
+| type-facts-ms | 28.978 ms | 500 ms |
+| lean-facts-ms | 31.277 ms | 500 ms |
+| session-policy-ms | 45.416 ms | 750 ms |
+| scale-10000-ms | 5.012 ms | 600 ms |
+| cached-type-facts-ms | 1.324 ms | 200 ms |
+
+These are not final product SLOs. They are baseline regression gates. After CI and local samples stabilize, the budgets should be tightened around observed p50/p95 behavior.
+
+** 10.06.82.50 Verification Commands
+Use the interpreter-level performance gate for the source hot path:
+
+#+begin_src shell
+gxpkg env gxi -e '(begin (import :std/test "./t/type-contract-performance-test.ss") (run-tests! type-contract-performance-test))'
+#+end_src
+
+Confirm harness registration:
+
+#+begin_src shell
+gxpkg env gxi build.ss spec --tests
+#+end_src
+
+Current local =gxc= / package ABI refresh remains a separate toolchain boundary: C compilation can fail on the known Apple SDK/Nix =stdio.h= / =FILE= issue. That failure is not a type contract performance result.
+
+** 10.06.82.60 Design Rule
+Type contracts may be strict at declaration, construction, doctor, and handoff boundaries.
+
+Agent-loop hot paths should use cached immutable contract projections unless the object graph changed. Repeated full type-fact or Lean-fact projection inside every loop step is a performance bug unless a specific module proves the graph changed and the projection must be recomputed.

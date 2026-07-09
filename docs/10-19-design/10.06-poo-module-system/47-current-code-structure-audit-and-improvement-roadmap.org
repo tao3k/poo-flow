@@ -11,7 +11,7 @@ The plan assumes the project invariants already established in =10.06.44= and =1
 The current codebase already has a useful layered shape:
 
 1. Build and testing boundary.
-   =build.ss= owns package build options. =src/cli-support/testing-project.ss= binds the harness project root, roots =src=, =user-interface=, and =t=, and keeps policy checks enabled.
+   =build.ss= owns package build options. =src/testing/project.ss= binds the harness project root, roots =src=, =user-interface=, and =t=, and keeps policy checks enabled.
    Single-file test selection belongs to the new testing framework and =gxtest='s native single-file selection support.
 
 2. Core functional and POO foundations.

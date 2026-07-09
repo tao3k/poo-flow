@@ -1,3 +1,7 @@
+;;; Boundary: config-session core syntax owns the shared macro substrate for the
+;;; session module category and its feature-level expansions.
+;;; Invariant: core expansions must stay deterministic for loader and policy
+;;; diagnostics.
 (import :poo-flow/src/modules/session/config-session-runtime)
 
 (export session
@@ -77,6 +81,16 @@
 ;;       User-facing registry entries describe the session address space without
 ;;       exposing the lower-level registry constructor.
 ;;     %
+;; session-registry-entry
+;; : (-> SessionRegistryEntrySyntax SessionRegistryEntryObject)
+;; | doc m%
+;;   Build one session registry row that connects a session value with its
+;;   owning agent, communication channels, policy summaries, and metadata.
+;;   # Examples
+;;   ```scheme
+;;   (session-registry-entry root (agent planner) (channels inbox) (policies))
+;;   ;; => session-registry-entry object
+;;   ```
 (defrules session-registry-entry (agent channels policies metadata)
   ((_ session-value
       (agent agent-id)
@@ -105,6 +119,16 @@
 ;;       Registry declarations keep project/root/child topology visible at the
 ;;       module facade and leave live runtime state to Marlin.
 ;;     %
+;; session-registry
+;; : (-> SessionRegistrySyntax SessionRegistryObject)
+;; | doc m%
+;;   Build the project-level session registry receipt that records root,
+;;   child, active, and entry relationships for durable routing.
+;;   # Examples
+;;   ```scheme
+;;   (session-registry project (roots root) (children worker) (active root) (entries))
+;;   ;; => session-registry object
+;;   ```
 (defrules session-registry (roots children active entries metadata)
   ((_ project-id
       (roots root-session-id ...)

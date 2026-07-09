@@ -8,7 +8,7 @@ This document is P0 for the execution plan in =10.06.48=. It makes implementatio
 5. Validation surfaces name files for the current testing framework and native =gxtest= single-file selection. This document does not prescribe legacy wrapper commands.
 6. Missing scenario coverage is a planning fact, not a blocker to documenting the gap. Later packages must close the gap before changing the affected public contract.
 7. Every implementation slice that introduces or changes a public scenario must land the matching scenario test and performance scenario fixture in the same slice when performance is part of the contract.
-8. Scenario roots must be registered through =src/cli-support/testing-project.ss= as harness-native =gxtest= roots. Do not build scenario aggregates by importing source-only test files as library modules.
+8. Scenario roots must be registered through =src/testing/project.ss= as harness-native =gxtest= roots. Do not build scenario aggregates by importing source-only test files as library modules.
 9. The performance aggregate root =t/performance-tests.ss= must explicitly execute each scenario performance suite with =run-tests!=; importing performance modules is not enough evidence that their gates ran.
 ** 10.06.49.20 Scenario Matrix
 | ID | Scenario | User-facing surface | Source owners | Validation surface | Status | Next package | Gap / next action |

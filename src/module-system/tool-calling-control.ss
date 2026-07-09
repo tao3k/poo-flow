@@ -1,3 +1,7 @@
+;;; Boundary: tool-calling control owns the policy-visible proof surface between
+;;; Scheme workflow intent and runtime tool execution.
+;;; Invariant: validation proof facts must stay deterministic and independent
+;;; from provider transport side effects.
 (import (only-in :clan/poo/object .o .ref))
 
 (export poo-flow-tool-call-plan
@@ -8,41 +12,41 @@
         poo-flow-tool-call-runtime-validation-proof-facts
         poo-flow-tool-call-fact-ref)
 
+;; : (-> Object Boolean)
 (def (poo-flow-truthy? value)
   (if value #t #f))
 
+;; : (-> [Symbol] [Symbol] Boolean)
 (def (poo-flow-list-subset? expected actual)
-  (let loop ((rest expected))
-    (if (null? rest)
-      #t
-      (and (memq (car rest) actual)
-           (loop (cdr rest))))))
+  (andmap (lambda (value) (memq value actual)) expected))
 
+;; : (-> Symbol Object PooObject)
 (def (poo-flow-tool-call-entry entry-key entry-value)
   (.o (kind 'poo-flow-tool-call-entry)
       (key entry-key)
       (value entry-value)))
 
+;; : (-> [PooObject] Alist)
 (def (poo-flow-tool-call-entry-index entry-list)
-  (let loop ((rest entry-list) (index-cache '()))
-    (if (null? rest)
-      index-cache
-      (let* ((entry (car rest))
-             (entry-key (.ref entry 'key))
-             (entry-value (.ref entry 'value)))
-        (loop (cdr rest)
-              (cons (cons entry-key entry-value)
-                    index-cache))))))
+  (foldl
+   (lambda (entry index-cache)
+     (cons (cons (.ref entry 'key) (.ref entry 'value))
+           index-cache))
+   '()
+   entry-list))
 
+;; : (-> PooObject Symbol Object)
 (def (poo-flow-tool-call-index-ref object key)
   (let ((cell (assq key (.ref object 'index))))
     (and cell (cdr cell))))
 
+;; : (-> Symbol Symbol PooObject)
 (def (poo-flow-tool-call-fact-family family-name source-tag)
   (.o (kind 'poo-flow-tool-call-fact-family)
       (name family-name)
       (source source-tag)))
 
+;; : (-> PooObject Alist Alist)
 (def (poo-flow-tool-call-fact-family-pairs family fact-pair-list)
   (let* ((family-name (.ref family 'name))
          (source-tag (.ref family 'source))
@@ -54,42 +58,45 @@
       family-pairs
       (cons (cons 'source source-tag) family-pairs))))
 
+;; : (-> PooObject Alist PooObject)
 (def (poo-flow-tool-call-fact-family-build family fact-pair-list)
-  (let loop ((rest (poo-flow-tool-call-fact-family-pairs family fact-pair-list))
-             (entries-rev '())
-             (index-rev '()))
-    (if (null? rest)
-      (.o (kind 'poo-flow-tool-call-fact-set)
-          (family family)
-          (name (.ref family 'name))
-          (entries (reverse entries-rev))
-          (index (reverse index-rev)))
-      (let* ((fact-pair (car rest))
-             (key (car fact-pair))
-             (value (cdr fact-pair))
-             (entry (poo-flow-tool-call-entry key value)))
-        (loop (cdr rest)
-              (cons entry entries-rev)
-              (cons fact-pair index-rev))))))
+  (let* ((pairs (poo-flow-tool-call-fact-family-pairs
+                 family
+                 fact-pair-list))
+         (entries
+          (map (lambda (fact-pair)
+                 (poo-flow-tool-call-entry (car fact-pair) (cdr fact-pair)))
+               pairs))
+         (index-cache pairs))
+    (.o (kind 'poo-flow-tool-call-fact-set)
+        (family family)
+        (name (.ref family 'name))
+        (entries entries)
+        (index index-cache))))
 
+;; : (-> Symbol Alist PooObject)
 (def (poo-flow-tool-call-fact-set fact-set-name fact-pair-list)
   (poo-flow-tool-call-fact-family-build
    (poo-flow-tool-call-fact-family fact-set-name #f)
    fact-pair-list))
 
+;; : (-> PooObject Symbol Object)
 (def (poo-flow-tool-call-fact-ref facts key)
   (poo-flow-tool-call-index-ref facts key))
 
+;; : (-> PooObject PooObject Symbol Object)
 (def (poo-flow-tool-call-fact-family-ref family facts key)
   (and (equal? (.ref family 'name)
                (poo-flow-tool-call-fact-ref facts 'fact-family))
        (poo-flow-tool-call-fact-ref facts key)))
 
+;; : PooObject
 (def +poo-flow-tool-call-runtime-validation-fact-family+
   (poo-flow-tool-call-fact-family
    'poo-flow-tool-call-runtime-validation-proof-facts
    'poo-flow.tool-calling.control.runtime))
 
+;; : (-> Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol Symbol Symbol [Symbol] PooObject)
 (def (poo-flow-tool-call-plan plan-name
                               owner-session
                               tool
@@ -121,6 +128,7 @@
         (entries plan-entry-list)
         (index plan-index-cache))))
 
+;; : (-> Symbol Symbol Symbol [Symbol] Boolean Boolean Boolean Boolean Boolean Symbol [Symbol] Boolean Symbol PooObject)
 (def (poo-flow-tool-call-runtime-receipt receipt-name
                                          owner-session
                                          tool
@@ -160,6 +168,9 @@
         (entries receipt-entry-list)
         (index receipt-index-cache))))
 
+;;; Boundary: validation proof facts expose tool-call runtime decisions without
+;;; calling provider execution again or mutating receipt state.
+;; : (-> PooObject PooObject PooObject)
 (def (poo-flow-tool-call-runtime-validation-proof-facts plan receipt)
   (let* ((plan-owner-session
           (poo-flow-tool-call-index-ref plan 'owner-session))

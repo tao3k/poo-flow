@@ -3,9 +3,43 @@
 ;;; Invariant: runtime snapshots are inputs; this owner never locks or mutates them.
 
 (import :poo-flow/src/core/failure
-        :poo-flow/src/loops/descriptor
-        :poo-flow/src/loops/strategy
-        :poo-flow/src/loops/governor-core)
+        (only-in "./descriptor.ss"
+                 loop-pattern-actionable?
+                 loop-pattern-metadata
+                 loop-pattern-name)
+        (only-in "./strategy.ss"
+                 +loop-strategy-plan-schema+
+                 loop-strategy-control-owner
+                 loop-strategy-execution-owner
+                 loop-strategy-handoff
+                 loop-strategy-level-ceiling
+                 loop-strategy-local-validation
+                 loop-strategy-metadata
+                 loop-strategy-name
+                 loop-strategy-patterns
+                 loop-strategy-plan?
+                 loop-strategy-selected-patterns/from-fields
+                 loop-strategy-selection
+                 loop-strategy-validation-errors)
+        (only-in "./governor-core.ss"
+                 +loop-governor-schema+
+                 loop-governor?
+                 loop-governor-agent-judge-nodes
+                 loop-governor-agent-judges
+                 loop-governor-aggregate-budget
+                 loop-governor-alist-ref
+                 loop-governor-collision-policy
+                 loop-governor-control-owner
+                 loop-governor-execution-owner
+                 loop-governor-handoff
+                 loop-governor-human-inbox
+                 loop-governor-metadata
+                 loop-governor-name
+                 loop-governor-node-contracts
+                 loop-governor-node?
+                 loop-governor-shared-denylist
+                 loop-governor-state-key
+                 loop-governor-strategy))
 
 (export loop-governor-state-field
         loop-governor-budget-limit
@@ -21,10 +55,6 @@
         validate-loop-governor
         loop-governor->contract/validated
         loop-governor->contract)
-
-(defrules loop-governor-policy-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
 
 ;;; State field lookup exposes the runtime snapshot key as a first-class policy
 ;;; value so downstream contracts can rename it without changing predicates.
@@ -79,9 +109,98 @@
      values)
     table))
 
+;;; Hash lookup is deliberately truthy instead of mutating policy state. The
+;;; caller owns table construction and this helper only answers membership.
 ;; : (-> HashTable Value Boolean)
 (def (loop-governor-set-member? table value)
   (and value (hash-get table value)))
+
+;;; Denyset classification checks both action scope and descriptor identity.
+;;; This lets shared denylist policy block broad targets or named patterns.
+;; : (-> LoopPatternDescriptor HashTable Boolean)
+(def (loop-governor-pattern-denied-by-set? descriptor denylist-set)
+  (let ((action-key (loop-governor-pattern-action-key descriptor))
+        (pattern-name (loop-pattern-name descriptor)))
+    (or (loop-governor-set-member? denylist-set action-key)
+        (loop-governor-set-member? denylist-set pattern-name))))
+
+;;; Conflict classification compares the descriptor action key with runtime
+;;; state facts. It never claims or rewrites the state key.
+;; : (-> LoopPatternDescriptor HashTable Boolean)
+(def (loop-governor-pattern-conflicted-by-set? descriptor state-action-key-set)
+  (let (action-key (loop-governor-pattern-action-key descriptor))
+    (and action-key
+         (loop-governor-set-member? state-action-key-set action-key))))
+
+;;; Open classification is the intersection that survived static denylist and
+;;; runtime-state conflict checks.
+;; : (-> Boolean Boolean Boolean)
+(def (loop-governor-pattern-open? denied? conflicted?)
+  (and (not denied?) (not conflicted?)))
+
+;;; Conditional cons keeps the accumulator update branch at the leaf, so the
+;;; classifier can remain a named reducer instead of nested dispatch.
+;; : (forall (a) (-> Boolean a [a] [a]))
+(def (loop-governor-cons-if condition value tail)
+  (if condition
+    (cons value tail)
+    tail))
+
+;; loop-governor-pattern-classification
+;;   | contract: adjacent machine contract below defines the alist projection.
+;;   | doc m%
+;;       Builds the per-pattern classification receipt consumed by the
+;;       governor reducer. The receipt is still an alist because it is projected
+;;       into doctor and manifest explanations.
+;;
+;;       # Examples
+;;       (loop-governor-pattern-classification descriptor denyset stateset)
+;;       ;; => ((descriptor . descriptor) (denied? . #f) ...)
+;;     %
+;; : (-> LoopPatternDescriptor HashTable HashTable Alist)
+(def (loop-governor-pattern-classification descriptor denylist-set state-action-key-set)
+  (let* ((denied?
+          (loop-governor-pattern-denied-by-set? descriptor denylist-set))
+         (conflicted?
+          (loop-governor-pattern-conflicted-by-set?
+           descriptor
+           state-action-key-set)))
+    (list (cons 'descriptor descriptor)
+          (cons 'denied? denied?)
+          (cons 'conflicted? conflicted?)
+          (cons 'open?
+                (loop-governor-pattern-open? denied? conflicted?)))))
+
+;; loop-governor-classification-accumulate
+;;   | contract: adjacent machine contract below defines the three values.
+;;   | doc m%
+;;       Updates the open/conflicting/denied reverse accumulators from one
+;;       classification receipt. Returning multiple values makes the tuple
+;;       protocol explicit and avoids anonymous list tuple plumbing.
+;;
+;;       # Examples
+;;       (loop-governor-classification-accumulate descriptor classification '() '() '())
+;;       ;; => values open-rev conflicting-rev denied-rev
+;;     %
+;; : (-> LoopPatternDescriptor Alist [LoopPatternDescriptor] [LoopPatternDescriptor] [LoopPatternDescriptor] (Values Value Value Value))
+(def (loop-governor-classification-accumulate descriptor
+                                              classification
+                                              open-rev
+                                              conflicting-rev
+                                              denied-rev)
+  (values
+   (loop-governor-cons-if
+    (loop-governor-alist-ref classification 'open? #f)
+    descriptor
+    open-rev)
+   (loop-governor-cons-if
+    (loop-governor-alist-ref classification 'conflicted? #f)
+    descriptor
+    conflicting-rev)
+   (loop-governor-cons-if
+    (loop-governor-alist-ref classification 'denied? #f)
+    descriptor
+    denied-rev)))
 
 ;;; Boundary: loop governor filter is the policy-visible edge for loop
 ;;; behavior, keeping validation, lookup, or projection responsibilities
@@ -125,7 +244,17 @@
 (def (loop-governor-state-action-keys governor states)
   (reverse (loop-governor-state-action-keys/rev governor states '())))
 
-;; : (-> [LoopPatternDescriptor] HashTable HashTable [LoopPatternDescriptor] [LoopPatternDescriptor] [LoopPatternDescriptor] ([LoopPatternDescriptor] [LoopPatternDescriptor] [LoopPatternDescriptor]))
+;; loop-governor-classify-actionable-patterns/rev
+;;   | contract: adjacent machine contract below defines the reducer values.
+;;   | doc m%
+;;       Folds actionable descriptors into open/conflicting/denied groups. This
+;;       is the loop-governor reducer used before final budget clipping.
+;;
+;;       # Examples
+;;       (loop-governor-classify-actionable-patterns/rev patterns denyset stateset '() '() '())
+;;       ;; => values open-rev conflicting-rev denied-rev
+;;     %
+;; : (-> [LoopPatternDescriptor] HashTable HashTable [LoopPatternDescriptor] [LoopPatternDescriptor] [LoopPatternDescriptor] (Values Value Value Value))
 (def (loop-governor-classify-actionable-patterns/rev actionable-patterns
                                                        denylist-set
                                                        state-action-key-set
@@ -134,32 +263,30 @@
                                                        denied-rev)
   (cond
    ((null? actionable-patterns)
-    (list open-rev conflicting-rev denied-rev))
+    (values open-rev conflicting-rev denied-rev))
    (else
     (let* ((descriptor (car actionable-patterns))
-           (action-key (loop-governor-pattern-action-key descriptor))
-           (pattern-name (loop-pattern-name descriptor))
-           (denied?
-            (or (loop-governor-set-member? denylist-set action-key)
-                (loop-governor-set-member? denylist-set pattern-name)))
-           (conflicted?
-            (and action-key
-                 (loop-governor-set-member?
-                  state-action-key-set
-                  action-key))))
-      (loop-governor-classify-actionable-patterns/rev
-       (cdr actionable-patterns)
-       denylist-set
-       state-action-key-set
-       (if (and (not denied?) (not conflicted?))
-         (cons descriptor open-rev)
-         open-rev)
-       (if conflicted?
-         (cons descriptor conflicting-rev)
-         conflicting-rev)
-       (if denied?
-         (cons descriptor denied-rev)
-         denied-rev))))))
+           (classification
+            (loop-governor-pattern-classification
+             descriptor
+             denylist-set
+             state-action-key-set)))
+      (call-with-values
+       (lambda ()
+         (loop-governor-classification-accumulate
+          descriptor
+          classification
+          open-rev
+          conflicting-rev
+          denied-rev))
+       (lambda (next-open-rev next-conflicting-rev next-denied-rev)
+         (loop-governor-classify-actionable-patterns/rev
+          (cdr actionable-patterns)
+          denylist-set
+          state-action-key-set
+          next-open-rev
+          next-conflicting-rev
+          next-denied-rev)))))))
 
 ;;; Boundary: loop governor classify patterns is the policy-visible edge for
 ;;; loop behavior, keeping validation, lookup, or projection responsibilities
@@ -179,27 +306,26 @@
          (denylist-set (loop-governor-value-set denylist))
          (state-action-key-set
           (loop-governor-value-set state-action-keys))
-         (budget-limit (loop-governor-budget-limit valid-governor))
-         (groups
-          (loop-governor-classify-actionable-patterns/rev
-           actionable-patterns
-           denylist-set
-           state-action-key-set
-           '()
-           '()
-           '()))
-         (open (car groups))
-         (conflicting (cadr groups))
-         (denied (caddr groups)))
-    (list
-     (cons 'selected-patterns selected-patterns)
-     (cons 'actionable-patterns actionable-patterns)
-     (cons 'open-patterns
-           (loop-governor-take-at-most
-            budget-limit
-            (reverse open)))
-     (cons 'conflicting-patterns (reverse conflicting))
-     (cons 'denied-patterns (reverse denied)))))
+         (budget-limit (loop-governor-budget-limit valid-governor)))
+    (call-with-values
+     (lambda ()
+       (loop-governor-classify-actionable-patterns/rev
+        actionable-patterns
+        denylist-set
+        state-action-key-set
+        '()
+        '()
+        '()))
+     (lambda (open conflicting denied)
+       (list
+        (cons 'selected-patterns selected-patterns)
+        (cons 'actionable-patterns actionable-patterns)
+        (cons 'open-patterns
+              (loop-governor-take-at-most
+               budget-limit
+               (reverse open)))
+        (cons 'conflicting-patterns (reverse conflicting))
+        (cons 'denied-patterns (reverse denied)))))))
 
 ;;; Denylist checks both action keys and pattern names so policy authors can
 ;;; block a target scope or a named loop with the same slot.
@@ -251,12 +377,22 @@
      'open-patterns
      '())))
 
+;; loop-governor-inbox-item
+;;   | contract: adjacent machine contract below defines the inbox alist.
+;;   | doc m%
+;;       Projects one blocked descriptor into the human inbox receipt shape.
+;;       This is still Scheme-side structured data; delivery and UI ownership
+;;       remain runtime concerns.
+;;
+;;       # Examples
+;;       (loop-governor-inbox-item 'acting-on-conflict descriptor 'workspace)
+;;       ;; => ((reason . acting-on-conflict) (pattern . name) (acting_on . workspace))
+;;     %
 ;; : (-> Symbol LoopPatternDescriptor ActionKey Alist)
 (def (loop-governor-inbox-item reason descriptor action-key)
-  (loop-governor-policy-field-rows
-   (reason reason)
-   (pattern (loop-pattern-name descriptor))
-   (acting_on action-key)))
+  (list (cons 'reason reason)
+        (cons 'pattern (loop-pattern-name descriptor))
+        (cons 'acting_on action-key)))
 
 ;;; Human inbox items describe blocked recommendations as structured data.
 ;;; The inbox target is a later runtime or UI concern.
@@ -298,7 +434,7 @@
 
 ;;; Required errors use the same alist shape as strategy validation.
 ;;; That keeps governor findings composable with existing doctor output.
-;; : (-> Symbol FieldValue [ValidationError])
+;; : (-> Symbol FieldValue [ValidationError] [ValidationError])
 (def (loop-governor-required-field-error/tail field value tail)
   (if value
     tail
@@ -313,7 +449,7 @@
 ;;; Boundary: loop governor field validation error unless is the policy-visible
 ;;; edge for loop behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> Boolean Symbol Symbol FieldValue [ValidationError])
+;; : (-> Boolean Symbol Symbol FieldValue [ValidationError] [ValidationError])
 (def (loop-governor-field-validation-error/unless/tail valid?
                                                         field
                                                         code
@@ -431,13 +567,7 @@
 ;;; doctor output. Full descriptor contracts remain in the nested strategy.
 ;; : (-> [LoopPatternDescriptor] [Symbol])
 (def (loop-governor-pattern-names descriptors)
-  (let loop ((remaining-descriptors descriptors)
-             (names-rev '()))
-    (if (null? remaining-descriptors)
-      (reverse names-rev)
-      (loop (cdr remaining-descriptors)
-            (cons (loop-pattern-name (car remaining-descriptors))
-                  names-rev)))))
+  (map loop-pattern-name descriptors))
 
 ;;; Governor contracts need strategy identity and ordered names, not 600 full
 ;;; descriptor contracts. Full descriptor projection stays on the strategy API.

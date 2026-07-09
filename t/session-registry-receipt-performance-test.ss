@@ -7,7 +7,6 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :clan/poo/object .ref)
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -91,17 +90,22 @@
            '(session/0)
            child-session-ids
            'session/0
-           entries)))
+           entries))
+         (receipt-row
+          (poo-flow-session-registry-receipt->alist receipt)))
     (list
-     (cons 'entry-count (.ref receipt 'entry-count))
-     (cons 'session-count (length (.ref receipt 'session-ids)))
-     (cons 'child-session-count (length (.ref receipt 'child-session-ids)))
+     (cons 'entry-count (registry-performance-ref receipt-row 'entry-count))
+     (cons 'session-count
+           (length (registry-performance-ref receipt-row 'session-ids)))
+     (cons 'child-session-count
+           (length (registry-performance-ref receipt-row 'child-session-ids)))
      (cons 'first-session
            (poo-flow-session-registry-entry-session-id (car entries)))
      (cons 'last-session
            (poo-flow-session-registry-entry-session-id
             (list-ref entries (- count 1))))
-     (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
+     (cons 'runtime-executed
+           (registry-performance-ref receipt-row 'runtime-executed)))))
 
 ;; : TestSuite
 (def session-registry-receipt-performance-test

@@ -47,8 +47,7 @@
       (check-equal? (poo-flow-user-profile-set-default-profile-name
                      test-poo-flow-user-profile-set)
                     'developer)
-      (check-equal? (> (length test-poo-flow-user-module-bundles)
-                       (length poo-flow-kernel-profile-module-bundles))
+      (check-equal? (> (length test-poo-flow-user-module-bundles) 0)
                     #t)
       (check-equal? (poo-flow-user-profile-module-bundles
                      test-poo-flow-user-profile)

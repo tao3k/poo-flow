@@ -22,45 +22,17 @@
         pooFlowUserProfileDoctorPresentation
         pooFlowUserProfileSetDoctorPresentation)
 
-;; : (-> [PooUserModuleSelection] [Symbol] [Symbol])
-(def (poo-flow-user-profile-module-keys/rev modules keys-rev)
-  (if (null? modules)
-    keys-rev
-    (poo-flow-user-profile-module-keys/rev
-     (cdr modules)
-     (cons (poo-flow-user-module-selection-key (car modules)) keys-rev))))
-
 ;; : (-> [PooUserModuleSelection] [Symbol])
 (def (poo-flow-user-profile-module-keys modules)
-  (reverse (poo-flow-user-profile-module-keys/rev modules '())))
-
-;; : (-> [PooUserProfile] [Alist] [Alist])
-(def (poo-flow-user-profile-summaries/rev profiles summaries-rev)
-  (if (null? profiles)
-    summaries-rev
-    (poo-flow-user-profile-summaries/rev
-     (cdr profiles)
-     (cons (poo-flow-user-profile-summary->alist (car profiles))
-           summaries-rev))))
+  (map poo-flow-user-module-selection-key modules))
 
 ;; : (-> [PooUserProfile] [Alist])
 (def (poo-flow-user-profile-summaries profiles)
-  (reverse (poo-flow-user-profile-summaries/rev profiles '())))
-
-;; : (-> [PooFlowCicdCheckMap] [Symbol] [Symbol])
-(def (poo-flow-user-profile-workflow-cicd-check-map-names/rev
-      check-maps
-      names-rev)
-  (if (null? check-maps)
-    names-rev
-    (poo-flow-user-profile-workflow-cicd-check-map-names/rev
-     (cdr check-maps)
-     (cons (poo-flow-cicd-check-map-name (car check-maps)) names-rev))))
+  (map poo-flow-user-profile-summary->alist profiles))
 
 ;; : (-> [PooFlowCicdCheckMap] [Symbol])
 (def (poo-flow-user-profile-workflow-cicd-check-map-names check-maps)
-  (reverse
-   (poo-flow-user-profile-workflow-cicd-check-map-names/rev check-maps '())))
+  (map poo-flow-cicd-check-map-name check-maps))
 
 ;;; Profile summaries avoid embedding POO profile objects in presentations.
 ;; : (-> PooUserProfile Alist)
@@ -77,25 +49,11 @@
            (descriptor-realized? #f)
            (runtime-executed #f))))
 
-;;; Boundary: user profile presentation copy slots is the policy-visible edge
-;;; for module-system behavior, keeping validation, lookup, or projection
-;;; responsibilities centralized for callers.
-;; : (-> POOObject [Symbol] Alist Alist)
-(def (poo-flow-user-profile-presentation-copy-slots/rev
-      source
-      keys
-      rows-rev)
-  (if (null? keys)
-    rows-rev
-    (poo-flow-user-profile-presentation-copy-slots/rev
-     source
-     (cdr keys)
-     (cons (cons (car keys) (.ref source (car keys))) rows-rev))))
-
 ;; : (-> POOObject [Symbol] Alist)
 (def (poo-flow-user-profile-presentation-copy-slots source keys)
-  (reverse
-   (poo-flow-user-profile-presentation-copy-slots/rev source keys '())))
+  (map (lambda (key)
+         (cons key (.ref source key)))
+       keys))
 
 ;;; Profile doctor needs a subset of loop-engine receipt fields. Gather them in
 ;;; one pass so doctor rows do not repeat the presentation hot-path scan.
@@ -127,28 +85,18 @@
 
 ;; : (-> [Symbol] [Pair])
 (def (poo-flow-user-profile-presentation-empty-field-values fields)
-  (cond
-   ((null? fields) '())
-   (else
-    (cons (cons (car fields) '())
-          (poo-flow-user-profile-presentation-empty-field-values
-           (cdr fields))))))
+  (map (lambda (field) (cons field '())) fields))
 
 ;; : (-> Alist [Pair] [Pair])
 (def (poo-flow-user-profile-presentation-accumulate-loop-fields intent
                                                                 field-values)
-  (cond
-   ((null? field-values) '())
-   (else
-    (let ((field (caar field-values))
-          (values (cdar field-values)))
-      (cons
-       (cons field
-             (cons (poo-flow-user-loop-engine-intent-ref intent field #f)
-                   values))
-       (poo-flow-user-profile-presentation-accumulate-loop-fields
-        intent
-        (cdr field-values)))))))
+  (map (lambda (entry)
+         (let ((field (car entry))
+               (values (cdr entry)))
+           (cons field
+                 (cons (poo-flow-user-loop-engine-intent-ref intent field #f)
+                       values))))
+       field-values))
 
 ;; : (-> [Alist] [Pair] [Pair])
 (def (poo-flow-user-profile-presentation-accumulate-loop-rows intents
@@ -164,13 +112,9 @@
 
 ;; : (-> [Pair] [Pair])
 (def (poo-flow-user-profile-presentation-reverse-field-values field-values)
-  (cond
-   ((null? field-values) '())
-   (else
-    (cons
-     (cons (caar field-values) (reverse (cdar field-values)))
-     (poo-flow-user-profile-presentation-reverse-field-values
-      (cdr field-values))))))
+  (map (lambda (entry)
+         (cons (car entry) (reverse (cdr entry))))
+       field-values))
 
 ;; : (-> [Alist] [Pair])
 (def (poo-flow-user-profile-presentation-loop-engine-field-values intents)

@@ -2,7 +2,8 @@
 ;;; Boundary: fixed session handoff receipts for runtime owners.
 ;;; Invariant: handoff values are data receipts, not executable Scheme handlers.
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :std/srfi/1 any every)
+        (only-in :clan/poo/object .ref object?)
         :poo-flow/src/modules/session/objects-core)
 
 (export make-poo-flow-session-handoff-receipt
@@ -62,35 +63,34 @@
 
 ;;; Handoff receipts summarize the session for runtime owners. They keep the
 ;;; heavy execution boundary explicit and never claim Scheme executed work.
-;; : (-> PooSession [Alist] PooSessionHandoff)
+;; : (-> PooSession [Alist] PooSessionHandoffReceipt)
 (def (poo-flow-session-handoff session . maybe-metadata)
   (poo-flow-session-require "session handoff requires a session"
                             (poo-flow-session? session)
                             session)
   (let (placement (poo-flow-session-value-placement session))
-    (.o kind: 'poo-flow.session.handoff
-        schema: 'poo-flow.modules.session.handoff.v1
-        source: 'poo-flow-session-presentation
-        session-id: (poo-flow-session-id session)
-        chunk-count: (length (poo-flow-session-chunks session))
-        placement-profile-ref: (poo-flow-session-placement-profile-ref
-                                placement)
-        placement-resolved?: (poo-flow-session-placement-resolved? placement)
-        placement-diagnostics: (poo-flow-session-placement-diagnostics
-                                placement)
-        runtime-owner: "marlin-agent-core"
-        handoff-required: #t
-        runtime-executed: #f
-        runtime-parses-scheme-source: #f
-        scheme-manufactures-runtime-handlers: #f
-        metadata: (if (null? maybe-metadata) '() (car maybe-metadata)))))
+    (make-poo-flow-session-handoff-receipt
+     'poo-flow.session.handoff
+     'poo-flow.modules.session.handoff.v1
+     'poo-flow-session-presentation
+     (poo-flow-session-id session)
+     (length (poo-flow-session-chunks session))
+     (poo-flow-session-placement-profile-ref placement)
+     (poo-flow-session-placement-resolved? placement)
+     (poo-flow-session-placement-diagnostics placement)
+     "marlin-agent-core"
+     #t
+     #f
+     #f
+     #f
+     (if (null? maybe-metadata) '() (car maybe-metadata)))))
 
-;; : (-> Value Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-handoff? value)
   (or (poo-flow-session-handoff-receipt? value)
       (object? value)))
 
-;; : (forall (a) (-> PooSessionHandoff Symbol (-> PooSessionHandoff a) a))
+;; : (-> Object Symbol Procedure Object)
 (def (poo-flow-session-handoff-ref handoff slot struct-ref)
   (if (poo-flow-session-handoff-receipt? handoff)
     (struct-ref handoff)
@@ -100,7 +100,7 @@
 ;;; alist. Runtime language bindings consume this shape without seeing Gerbil
 ;;; structs or POO internals.
 ;; poo-flow-session-handoff->alist
-;;   : (-> PooSessionHandoff Alist)
+;;   : (-> Object Alist)
 ;;   | contract: project one fixed handoff receipt into ABI alist fields
 ;;   | doc m%
 ;;       # Examples
@@ -183,6 +183,7 @@
           'metadata
           poo-flow-session-handoff-receipt-metadata))))
 
+;; : (-> Alist Symbol Object)
 (def (poo-flow-session-handoff-fact-ref facts key)
   (let ((cell (assq key facts)))
     (and cell (cdr cell))))
@@ -197,6 +198,7 @@
    polarity)
   transparent: #t)
 
+;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol PooLeanFactKeyContract)
 (def (poo-flow-lean-fact-key key kind lean-owner lean-name source-slot polarity)
   (make-poo-flow-lean-fact-key-contract
    key
@@ -206,6 +208,9 @@
    source-slot
    polarity))
 
+;;; Boundary: handoff Lean fact key contracts define the proof ABI between
+;;; session POO objects and external proof tooling.
+;; : [PooLeanFactKeyContract]
 (def poo-flow-session-handoff-lean-fact-key-contracts
   (list
    (poo-flow-lean-fact-key
@@ -314,6 +319,9 @@
     'placement-diagnostics/missing-profile
     'positive)))
 
+;;; Boundary: UI scenario Lean fact contracts keep user-facing examples aligned
+;;; with the proof handoff schema.
+;; : [PooLeanFactKeyContract]
 (def poo-flow-ui-scenario-lean-fact-key-contracts
   (list
    (poo-flow-lean-fact-key
@@ -520,43 +528,48 @@
     'performance-fixture-bound?
     'missing)))
 
+;; : (-> [PooLeanFactKeyContract] [Symbol])
 (def (poo-flow-lean-fact-contract-keys contracts)
   (map poo-flow-lean-fact-key-contract-key contracts))
 
+;; : (-> [PooLeanFactKeyContract] Symbol Boolean)
 (def (poo-flow-lean-fact-key-declared? contracts key)
-  (cond
-   ((null? contracts) #f)
-   ((eq? key (poo-flow-lean-fact-key-contract-key (car contracts))) #t)
-   (else (poo-flow-lean-fact-key-declared? (cdr contracts) key))))
+  (and (any (lambda (contract)
+              (eq? key (poo-flow-lean-fact-key-contract-key contract)))
+            contracts)
+       #t))
 
+;; : (-> [PooLeanFactKeyContract] Alist Boolean)
 (def (poo-flow-lean-fact-contract-keys-present? contracts facts)
-  (cond
-   ((null? contracts) #t)
-   ((assq (poo-flow-lean-fact-key-contract-key (car contracts)) facts)
-    (poo-flow-lean-fact-contract-keys-present? (cdr contracts) facts))
-   (else #f)))
+  (every (lambda (contract)
+           (and (assq (poo-flow-lean-fact-key-contract-key contract) facts)
+                #t))
+         contracts))
 
+;; : (-> Alist [PooLeanFactKeyContract] Boolean)
 (def (poo-flow-lean-fact-contract-facts-declared? facts contracts)
-  (cond
-   ((null? facts) #t)
-   ((poo-flow-lean-fact-key-declared? contracts (caar facts))
-    (poo-flow-lean-fact-contract-facts-declared? (cdr facts) contracts))
-   (else #f)))
+  (every (lambda (fact)
+           (poo-flow-lean-fact-key-declared? contracts (car fact)))
+         facts))
 
+;; : (-> [PooLeanFactKeyContract] Alist Boolean)
 (def (poo-flow-lean-fact-contract-complete? contracts facts)
   (and (poo-flow-lean-fact-contract-keys-present? contracts facts)
        (poo-flow-lean-fact-contract-facts-declared? facts contracts)))
 
+;; : (-> Object Symbol Boolean)
 (def (poo-flow-session-diagnostic-present? diagnostics key)
   (and (list? diagnostics)
        (or (and (memq key diagnostics) #t)
            (and (assq key diagnostics) #t))))
 
+;; : (-> Object Symbol Boolean)
 (def (poo-flow-session-metadata-true? metadata key)
   (and (list? metadata)
        (let ((cell (assq key metadata)))
          (and cell (eq? (cdr cell) #t)))))
 
+;; : (-> Object Symbol Object)
 (def (poo-flow-session-topology-ref topology slot)
   (cond
    ((object? topology) (.ref topology slot))
@@ -565,6 +578,7 @@
       (and cell (cdr cell))))
    (else #f)))
 
+;; : (-> Object [Alist] Alist)
 (def (poo-flow-session-topology->handoff-metadata topology . maybe-metadata)
   (let ((metadata (if (null? maybe-metadata) '() (car maybe-metadata))))
     (append
@@ -586,6 +600,7 @@
                  #t)))
      metadata)))
 
+;; : (-> Object Symbol Object)
 (def (poo-flow-ui-scenario-ref scenario slot)
   (cond
    ((object? scenario)
@@ -599,9 +614,13 @@
       (and cell (cdr cell))))
    (else #f)))
 
+;; : (-> Object Symbol Boolean)
 (def (poo-flow-ui-scenario-flag scenario slot)
   (eq? (poo-flow-ui-scenario-ref scenario slot) #t))
 
+;;; Boundary: UI scenario projection emits proof facts without mutating the
+;;; source scenario object or its session ancestry.
+;; : (-> Object Alist)
 (def (poo-flow-ui-scenario->lean-facts scenario)
   (let* ((use-case-declared
           (poo-flow-ui-scenario-flag scenario 'use-case-declared?))
@@ -680,6 +699,9 @@
      (cons 'ui.failure/benchmark-missing-performance-fixture
            (not performance-fixture-bound)))))
 
+;;; Boundary: session handoff projection is the stable proof fact bridge from
+;;; runtime handoff receipts to Lean-facing facts.
+;; : (-> Object Alist)
 (def (poo-flow-session-handoff->lean-facts handoff)
   (let* ((facts (poo-flow-session-handoff->alist handoff))
          (chunk-count

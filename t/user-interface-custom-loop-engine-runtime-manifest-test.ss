@@ -19,7 +19,7 @@
                  poo-flow-nono-sandbox-module-bundles)
         (only-in :poo-flow/t/support/loop-engine-runtime-manifest-receipts
                  check-custom-loop-runtime-manifest-request-receipts)
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
                  poo-flow-custom-my-module-loop-engine-case))
 
 (export user-interface-custom-loop-engine-runtime-manifest-test)
@@ -513,7 +513,8 @@
     (check-equal? (test-ref proof-manifest 'scheme-projection)
                   'poo-flow-user-loop-engine-intent-runtime-command-manifest)
     (check-equal? (test-ref proof-manifest 'proof-scope)
-                  '(user-interface policy strategy workflow runtime-handoff))
+                  '(user-interface profile policy strategy workflow sandbox
+                                   runtime-handoff))
     (check-equal? (test-ref proof-manifest 'request-id)
                   (test-ref runtime-manifest 'request-id))
     (check-equal? (test-ref proof-manifest 'artifact-handle)
@@ -531,27 +532,37 @@
                   1)
     (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
                             'required-obligation-mask)
-                  31)
+                  1023)
     (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
                             'obligation-count)
-                  5)
+                  10)
     (check-equal? (test-ref (test-ref proof-manifest 'c-abi)
                             'tag-width)
                   'uint32)
     (check-equal? (test-ref proof-manifest 'obligation-tags)
                   '((ui-config-well-formed . 1)
-                    (runtime-command-inert . 2)
-                    (policy-strategy-deterministic . 4)
-                    (workflow-agreement-linked . 8)
-                    (sandbox-boundary-linked . 16)))
+                    (ui-profile-policy-linked . 2)
+                    (loop-strategy-plan-well-formed . 4)
+                    (execution-policy-capability-bounded . 8)
+                    (policy-strategy-deterministic . 16)
+                    (runtime-command-inert . 32)
+                    (workflow-agreement-linked . 64)
+                    (sandbox-boundary-linked . 128)
+                    (runtime-handoff-owner-linked . 256)
+                    (proof-case-vector-complete . 512)))
     (check-equal? (test-field-values
                    (test-ref proof-manifest 'obligations)
                    'name)
                   '(ui-config-well-formed
+                    ui-profile-policy-linked
+                    loop-strategy-plan-well-formed
+                    execution-policy-capability-bounded
                     runtime-command-inert
                     policy-strategy-deterministic
                     workflow-agreement-linked
-                    sandbox-boundary-linked))
+                    sandbox-boundary-linked
+                    runtime-handoff-owner-linked
+                    proof-case-vector-complete))
     (check-equal? (test-ref proof-manifest 'lean-artifact-kind)
                   'theorem-stubs)
     (check-equal? (test-ref proof-manifest 'runtime-executed) #f)))

@@ -9,12 +9,14 @@
 (export poo-flow-durable-runtime-store-operations-from-rows
         poo-flow-durable-runtime-store-rows->marlin-handoff)
 
+;; : (-> Alist Symbol Object Object)
 (def (bridge-ref row key default-value)
   (if (list? row)
     (let (entry (assoc key row))
       (if entry (cdr entry) default-value))
     default-value))
 
+;; : (-> Object [Symbol] [Symbol])
 (def (bridge-symbols/rev value symbols-rev)
   (cond
    ((symbol? value) (cons value symbols-rev))
@@ -24,9 +26,11 @@
      (bridge-symbols/rev (car value) symbols-rev)))
    (else symbols-rev)))
 
+;; : (-> Object [Symbol])
 (def (bridge-symbols value)
   (reverse (bridge-symbols/rev value '())))
 
+;; : (-> [Symbol] [Symbol] [Symbol])
 (def (bridge-unique symbols seen)
   (cond
    ((null? symbols) '())
@@ -37,9 +41,11 @@
           (bridge-unique (cdr symbols)
                          (cons (car symbols) seen))))))
 
+;; : (-> Object [Symbol])
 (def (bridge-symbol-refs value)
   (bridge-unique (bridge-symbols value) '()))
 
+;; : (-> Object [Symbol] Alist)
 (def (bridge-options target-ref causal-refs)
   (if target-ref
     (poo-flow-module-field-rows
@@ -48,6 +54,7 @@
     (poo-flow-module-field-rows
      (causal-refs (bridge-symbol-refs causal-refs)))))
 
+;; : (-> Alist Symbol Symbol Symbol Alist Object [Symbol] Object)
 (def (bridge-operation negotiation
                        operation-id
                        operation-kind
@@ -64,6 +71,7 @@
     (source-row row))
    (bridge-options target-ref causal-refs)))
 
+;; : (-> Alist Alist Object)
 (def (bridge-session-graph-operation negotiation row)
   (and row
        (bridge-operation
@@ -77,6 +85,7 @@
         (list (bridge-ref row 'root-session-ref #f)
               (bridge-ref row 'session-ids '())))))
 
+;; : (-> Alist Alist Object)
 (def (bridge-communication-operation negotiation row)
   (bridge-operation
    negotiation
@@ -89,6 +98,7 @@
          (bridge-ref row 'target-session-id #f)
          (bridge-ref row 'channel-id #f))))
 
+;; : (-> Alist Alist Object)
 (def (bridge-memory-job-operation negotiation row)
   (bridge-operation
    negotiation
@@ -101,6 +111,7 @@
          (bridge-ref row 'session-id #f)
          (bridge-ref row 'source-ref #f))))
 
+;; : (-> Alist Alist Object)
 (def (bridge-workflow-task-operation negotiation row)
   (bridge-operation
    negotiation
@@ -114,6 +125,7 @@
          (bridge-ref row 'checkpoint-ref #f)
          (bridge-ref row 'sandbox-refs '()))))
 
+;; : (-> Alist Symbol Object)
 (def (bridge-artifact-operation negotiation artifact-ref)
   (bridge-operation
    negotiation
@@ -125,6 +137,7 @@
    #f
    (list artifact-ref)))
 
+;; : (-> Alist Symbol Object)
 (def (bridge-sandbox-operation negotiation sandbox-ref)
   (bridge-operation
    negotiation
@@ -136,11 +149,13 @@
    #f
    (list sandbox-ref)))
 
+;; : (-> [Object] [Object] [Object])
 (def (bridge-reverse-onto values tail)
   (if (null? values)
     tail
     (bridge-reverse-onto (cdr values) (cons (car values) tail))))
 
+;; : (-> [Alist] Symbol [Symbol] [Symbol])
 (def (bridge-row-symbol-refs/rev rows key refs-rev)
   (if (pair? rows)
     (bridge-row-symbol-refs/rev
@@ -151,9 +166,11 @@
       refs-rev))
     refs-rev))
 
+;; : (-> [Alist] Symbol [Symbol])
 (def (bridge-row-symbol-refs rows key)
   (reverse (bridge-row-symbol-refs/rev rows key '())))
 
+;; : (-> Alist [Alist] [Object] [Object])
 (def (bridge-communication-operations/rev negotiation rows operations-rev)
   (if (null? rows)
     operations-rev
@@ -163,6 +180,7 @@
      (cons (bridge-communication-operation negotiation (car rows))
            operations-rev))))
 
+;; : (-> Alist [Alist] [Object] [Object])
 (def (bridge-memory-job-operations/rev negotiation rows operations-rev)
   (if (null? rows)
     operations-rev
@@ -172,6 +190,7 @@
      (cons (bridge-memory-job-operation negotiation (car rows))
            operations-rev))))
 
+;; : (-> Alist [Alist] [Object] [Object])
 (def (bridge-workflow-task-operations/rev negotiation rows operations-rev)
   (if (null? rows)
     operations-rev
@@ -181,6 +200,7 @@
      (cons (bridge-workflow-task-operation negotiation (car rows))
            operations-rev))))
 
+;; : (-> Alist [Symbol] [Object] [Object])
 (def (bridge-artifact-operations/rev negotiation artifact-refs operations-rev)
   (if (null? artifact-refs)
     operations-rev
@@ -190,6 +210,7 @@
      (cons (bridge-artifact-operation negotiation (car artifact-refs))
            operations-rev))))
 
+;; : (-> Alist [Symbol] [Object] [Object])
 (def (bridge-sandbox-operations/rev negotiation sandbox-refs operations-rev)
   (if (null? sandbox-refs)
     operations-rev
@@ -199,9 +220,11 @@
      (cons (bridge-sandbox-operation negotiation (car sandbox-refs))
            operations-rev))))
 
+;; : (-> Object [Object] [Object])
 (def (bridge-session-graph-operation/rev operation operations-rev)
   (if operation (cons operation operations-rev) operations-rev))
 
+;; : (-> Alist Alist [Alist] [Alist] [Alist] [Symbol] [Object])
 (def (poo-flow-durable-runtime-store-operations-from-rows negotiation
                                                           session-graph-row
                                                           communication-rows
@@ -238,6 +261,7 @@
           (bridge-session-graph-operation/rev session-graph-operation
                                              '())))))))))
 
+;; : (-> Alist Alist [Alist] [Alist] [Alist] [Symbol] Alist)
 (def (poo-flow-durable-runtime-store-rows->marlin-handoff negotiation
                                                           session-graph-row
                                                           communication-rows

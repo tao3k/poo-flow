@@ -338,18 +338,14 @@
 (def (poo-flow-loop-engine-session-agent-communication-channel-receipts
       intent
       role-refs)
-  (let loop ((remaining-role-refs role-refs)
-             (receipt-values '()))
-    (if (null? remaining-role-refs)
-      (reverse receipt-values)
-      (loop
-       (cdr remaining-role-refs)
-       (cons
-        (poo-flow-loop-engine-session-agent-communication-channel-receipt
-         intent
-         (car remaining-role-refs))
-        receipt-values)))))
+  (map (lambda (role-ref)
+         (poo-flow-loop-engine-session-agent-communication-channel-receipt
+          intent
+          role-ref))
+       role-refs))
 
+;;; Boundary: communication receipt folding keeps graph edges in reverse-build
+;;; form until the caller finalizes deterministic receipt order.
 ;; : (-> Alist Pair [PooSessionCommunicationReceipt])
 (def (poo-flow-loop-engine-session-agent-communication-receipts/rev
       intent
@@ -424,17 +420,18 @@
 ;; : (-> Alist [Pair] [PooSessionCommunicationReceipt])
 (def (poo-flow-loop-engine-session-agent-communication-receipts* intent
                                                                  role-refs)
-  (let loop ((remaining-role-refs role-refs)
-             (receipt-values '()))
-    (if (null? remaining-role-refs)
-      (reverse receipt-values)
-      (loop
-       (cdr remaining-role-refs)
-       (poo-flow-loop-engine-session-agent-communication-receipts/rev
-        intent
-        (car remaining-role-refs)
-        receipt-values)))))
+  (foldr
+   (lambda (role-ref receipt-values)
+     (foldr cons
+            receipt-values
+            (poo-flow-loop-engine-session-agent-communication-receipts
+             intent
+             role-ref)))
+   '()
+   role-refs))
 
+;;; Boundary: user intent graph projection materializes parent, child, and peer
+;;; session communication ids without starting runtime agents.
 ;; : (-> Alist Alist)
 (def (poo-flow-loop-engine-root-registry-entry intent session agent-id)
   (poo-flow-session-registry-entry
@@ -490,15 +487,9 @@
 
 ;; : (-> Alist [Symbol] [PooSessionValue])
 (def (poo-flow-loop-engine-session-values intent session-refs)
-  (let loop ((remaining-session-refs session-refs)
-             (session-values '()))
-    (if (null? remaining-session-refs)
-      (reverse session-values)
-      (loop (cdr remaining-session-refs)
-            (cons (poo-flow-loop-engine-session-value
-                   intent
-                   (car remaining-session-refs))
-                  session-values)))))
+  (map (lambda (session-ref)
+         (poo-flow-loop-engine-session-value intent session-ref))
+       session-refs))
 
 ;; : (-> Alist PooSessionValue PooSessionValue [PooSessionAgentNode] [PooSessionValue] [Alist])
 (def (poo-flow-loop-engine-session-agent-registry-entries intent
@@ -506,26 +497,21 @@
                                                           loop-session
                                                           agent-nodes
                                                           agent-sessions)
-  (let loop ((remaining-nodes agent-nodes)
-             (remaining-sessions agent-sessions)
-             (registry-values
-              (list (poo-flow-loop-engine-root-registry-entry
-                     intent
-                     loop-session
-                     'loop-engine)
-                    (poo-flow-loop-engine-root-registry-entry
-                     intent
-                     root-session
-                     'project-root))))
-    (if (or (null? remaining-nodes) (null? remaining-sessions))
-      (reverse registry-values)
-      (loop (cdr remaining-nodes)
-            (cdr remaining-sessions)
-            (cons (poo-flow-loop-engine-session-agent-registry-entry
-                   (car remaining-nodes)
-                   (car remaining-sessions))
-                  registry-values)))))
+  (append
+   (list (poo-flow-loop-engine-root-registry-entry
+          intent
+          root-session
+          'project-root)
+         (poo-flow-loop-engine-root-registry-entry
+          intent
+          loop-session
+          'loop-engine))
+   (map poo-flow-loop-engine-session-agent-registry-entry
+        agent-nodes
+        agent-sessions)))
 
+;;; Boundary: user intent graph projection materializes parent, child, and peer
+;;; session communication ids without starting runtime agents.
 ;; : (-> Alist Alist)
 (def (poo-flow-user-loop-engine-intent-session-agent-graph intent)
   (let* ((use-case-name

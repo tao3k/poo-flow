@@ -289,6 +289,7 @@
 (def (session-agent-node-registry-entry node session-value)
   (poo-flow-session-agent-node->registry-entry node session-value))
 
+;; : (-> Alist Symbol Object Object)
 (def (poo-flow-session-syntax-agent-graph-metadata-ref metadata
                                                         key
                                                         default-value)
@@ -297,6 +298,7 @@
       (if entry (cdr entry) default-value))
     default-value))
 
+;; : (-> [Object] Alist Alist)
 (def (poo-flow-session-syntax-agent-graph-topology-metadata agent-nodes
                                                             metadata)
   (let (channel-receipts

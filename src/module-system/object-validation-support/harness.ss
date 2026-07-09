@@ -349,6 +349,7 @@
     (hash-put! seen (car identities) #t)
     (duplicate-identities/rev (cdr identities) seen duplicates result-rev))))
 
+;; : (-> [Symbol] [Symbol])
 (def (duplicate-identities identities)
   (let ((seen (make-hash-table))
         (duplicates (make-hash-table)))

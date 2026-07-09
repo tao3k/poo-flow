@@ -301,6 +301,74 @@
 (def (poo-flow-user-config-presentation-field-values-ref field-values field)
   (poo-flow-user-alist-ref field-values field '()))
 
+;;; Keep loop-engine presentation slots centralized so the fast summary path
+;;; cannot drift from the full config projection.
+;; : (-> [Pair] [Alist] [Pair])
+(def (poo-flow-user-config-presentation-loop-engine-slots
+      loop-engine-field-values
+      loop-engine-intent-rows)
+  (def (field key)
+    (poo-flow-user-config-presentation-field-values-ref
+     loop-engine-field-values
+     key))
+  (list
+   (cons 'loop-engine-intent-count (length loop-engine-intent-rows))
+   (cons 'loop-engine-intents loop-engine-intent-rows)
+   (cons 'loop-engine-runtime-handoff-count
+         (length loop-engine-intent-rows))
+   (cons 'loop-engine-runtime-handoffs (field 'runtime-handoff-facts))
+   (cons 'loop-engine-workflow-agreements (field 'workflow-agreement))
+   (cons 'loop-engine-workflow-functional-dag-counts
+         (field 'workflow-functional-dag-count))
+   (cons 'loop-engine-workflow-functional-dags
+         (field 'workflow-functional-dags))
+   (cons 'loop-engine-receipt-contracts (field 'receipt-contracts))
+   (cons 'loop-engine-result-contracts (field 'result-contract))
+   (cons 'loop-engine-agent-profiles (field 'agent-profiles))
+   (cons 'loop-engine-agent-harnesses (field 'agent-harnesses))
+   (cons 'loop-engine-agent-sessions (field 'agent-sessions))
+   (cons 'loop-engine-session-agent-graphs (field 'session-agent-graph))
+   (cons 'loop-engine-session-agent-topology-traces
+         (field 'session-agent-topology-trace))
+   (cons 'loop-engine-workflow-runs (field 'workflow-run))
+   (cons 'loop-engine-dispatch-receipts (field 'dispatch-receipt))
+   (cons 'loop-engine-agent-operations (field 'agent-operation))
+   (cons 'loop-engine-delegated-operations (field 'delegated-operation))
+   (cons 'loop-engine-lineage-receipts (field 'lineage-receipt))
+   (cons 'loop-engine-selector-receipts (field 'selector-receipt))
+   (cons 'loop-engine-resource-dispatch-receipts
+         (field 'resource-dispatch-receipt))
+   (cons 'loop-engine-capability-receipts (field 'capability-receipt))
+   (cons 'loop-engine-memory-receipts (field 'memory-receipt))
+   (cons 'loop-engine-compression-receipts (field 'compression-receipt))
+   (cons 'loop-engine-session-selector-receipts
+         (field 'session-selector-receipts))
+   (cons 'loop-engine-session-materialization-receipts
+         (field 'session-materialization-receipts))
+   (cons 'loop-engine-policy-extension-receipts
+         (field 'policy-extension-receipts))
+   (cons 'loop-engine-spec-evolution-reviews
+         (field 'spec-evolution-reviews))
+   (cons 'loop-engine-spec-evolution-human-audit-review-items
+         (field 'spec-evolution-human-audit-review-items))
+   (cons 'loop-engine-spec-evolution-runtime-manifest-rows
+         (field 'spec-evolution-runtime-manifest-rows))
+   (cons 'loop-engine-runtime-command-manifests
+         (field 'runtime-command-manifest))
+   (cons 'loop-engine-runtime-command-manifest-summaries
+         (field 'runtime-command-manifest-summary))
+   (cons 'loop-engine-sandbox-runtime-summaries
+         (field 'sandbox-runtime-summaries))
+   (cons 'loop-engine-sandbox-handoff-summaries
+         (field 'sandbox-handoff-summaries))
+   (cons 'loop-engine-sandbox-handoff-agreements
+         (field 'sandbox-handoff-agreement))
+   (cons 'loop-engine-sandbox-unresolved-profile-refs
+         (field 'sandbox-unresolved-profile-refs))
+   (cons 'loop-engine-runtime-snapshot-count
+         (length loop-engine-intent-rows))
+   (cons 'loop-engine-runtime-snapshots (field 'runtime-snapshot))))
+
 ;; : [Symbol]
 (def +poo-flow-user-config-presentation-loop-engine-fields+
   '(runtime-handoff-facts
@@ -371,6 +439,8 @@
         (loop (cdr modules)))
        (else #f))))))
 
+;;; Boundary: loop-engine-only presentation exposes a policy-readable UI object
+;;; without enabling workflow runtime execution.
 ;; : (-> PooUserConfig [PooUserModuleSelection] POOSettings [Symbol] POOObject)
 (def (poo-flow-user-config-loop-engine-only-presentation
       config
@@ -378,19 +448,26 @@
       setting-object
       public-setting-keys)
   (let (cache (vector '()))
+    ;; Engineering note: policy-sensitive helpers in this owner keep explicit
+    ;; contracts adjacent to definitions so downstream reports stay actionable.
+    ;; : (-> Any Any)
     (def (memo key thunk)
       (poo-flow-user-config-presentation-memo cache key thunk))
+    ;; : (-> Any Any)
     (def (feature-fact-rows)
       (memo 'feature-fact-rows
             (lambda () (poo-flow-user-config-feature-facts config))))
+    ;; : (-> Any Any)
     (def (sandbox-validation)
       (memo 'sandbox-validation
             (lambda ()
               (poo-flow-user-config-sandbox-backend-capability-registry-validation
                selected-modules))))
+    ;; : (-> Any Any)
     (def (loop-engine-intent-rows)
       (memo 'loop-engine-intent-rows
             (lambda () (poo-flow-user-config-loop-engine-intents config))))
+    ;; : (-> Any Any)
     (def (loop-engine-field-values)
       (memo 'loop-engine-field-values
             (lambda ()
@@ -398,16 +475,19 @@
                (loop-engine-intent-rows)
                +poo-flow-user-config-presentation-loop-engine-fields+
                poo-flow-user-loop-engine-intent-ref))))
+    ;; : (-> Any Any)
     (def (loop-engine-field field)
       (poo-flow-user-config-presentation-field-values-ref
        (loop-engine-field-values)
        field))
+    ;; : (-> Any Any)
     (def (workflow-command-manifest-agreement)
       (memo 'workflow-command-manifest-agreement
             (lambda ()
               (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
                '()
                '()))))
+    ;; : (-> Any Any)
     (def (workflow-handoff-bundle)
       (memo 'workflow-handoff-bundle
             (lambda ()
@@ -418,6 +498,7 @@
                '()
                '()
                '()))))
+    ;; : (-> Any Any)
     (def (presentation-trace-rows)
       (memo 'presentation-trace-rows
             (lambda ()
@@ -440,6 +521,7 @@
                (workflow-handoff-bundle)
                (loop-engine-intent-rows)
                public-setting-keys))))
+    ;; : (-> Any Any)
     (def (computed key thunk)
       (poo-flow-user-config-presentation-computed-slot key thunk))
     (make-object
@@ -729,16 +811,13 @@
 
 ;; : (-> [PooUserModuleSelection] Boolean)
 (def (poo-flow-user-config-workflow-cicd-focused? selected-modules)
-  (let loop ((modules selected-modules)
-             (has-check-map? #f))
-    (cond
-     ((null? modules) has-check-map?)
-     ((poo-flow-user-module-selection-workflow-cicd-check-map (car modules))
-      (loop (cdr modules) #t))
-     ((poo-flow-user-config-workflow-cicd-focused-selection? (car modules))
-      (loop (cdr modules) has-check-map?))
-     (else #f))))
+  (and (ormap poo-flow-user-module-selection-workflow-cicd-check-map
+              selected-modules)
+       (andmap poo-flow-user-config-workflow-cicd-focused-selection?
+               selected-modules)))
 
+;;; Boundary: workflow-focused presentation projects CI/CD state while keeping
+;;; loop-engine runtime surfaces inert.
 ;; : (-> PooUserConfig [PooUserModuleSelection] POOSettings [Symbol] POOObject)
 (def (poo-flow-user-config-workflow-cicd-focused-presentation
       config
@@ -746,67 +825,88 @@
       setting-object
       public-setting-keys)
   (let (cache (vector '()))
+    ;; : (-> Any Any)
     (def (memo key thunk)
       (poo-flow-user-config-presentation-memo cache key thunk))
+    ;; : (-> Any Any)
     (def (computed key thunk)
       (poo-flow-user-config-presentation-computed-slot key thunk))
+    ;; : (-> Any Any)
     (def (feature-fact-rows)
       (memo 'feature-fact-rows
             (lambda () (poo-flow-user-config-feature-facts config))))
+    ;; : (-> Any Any)
     (def (sandbox-profile-derivation-rows)
       (memo 'sandbox-profile-derivation-rows
             (lambda ()
               (poo-flow-user-config-sandbox-profile-derivations
                selected-modules))))
+    ;; : (-> Any Any)
     (def (sandbox-validation)
       (memo 'sandbox-validation
             (lambda ()
               (poo-flow-user-config-sandbox-backend-capability-registry-validation
                selected-modules))))
+    ;; : (-> Any Any)
     (def (cicd-intent-rows)
       (memo 'cicd-intent-rows
             (lambda () (poo-flow-user-config-cicd-intents config))))
+    ;; : (-> Any Any)
     (def (workflow-projection)
       (memo 'workflow-projection
             (lambda ()
               (poo-flow-user-config-workflow-cicd-runtime-projection
                config))))
+    ;; : (-> Any Any)
     (def (workflow-field key default-value)
       (poo-flow-user-alist-ref
        (workflow-projection)
        key
        default-value))
+    ;; : (-> Any Any)
     (def (workflow-check-maps)
       (workflow-field 'check-maps '()))
+    ;; : (-> Any Any)
     (def (workflow-functional-dag-rows)
       (memo 'workflow-functional-dag-rows
             (lambda ()
               (poo-flow-user-workflow-cicd-functional-dag-rows
                (workflow-check-maps)))))
+    ;; : (-> Any Any)
     (def (workflow-pipeline-run-rows)
       (memo 'workflow-pipeline-run-rows
             (lambda ()
               (poo-flow-user-config-workflow-cicd-pipeline-runs config))))
+    ;; : (-> Any Any)
     (def (workflow-pipeline-result-rows)
       (memo 'workflow-pipeline-result-rows
             (lambda ()
               (poo-flow-user-config-workflow-cicd-pipeline-results config))))
+    ;; : (-> Any Any)
     (def (workflow-readiness-rows)
       (workflow-field 'runtime-readiness '()))
+    ;; : (-> Any Any)
     (def (workflow-runtime-command-manifest-rows)
       (workflow-field 'runtime-command-manifests '()))
+    ;; : (-> Any Any)
     (def (workflow-runtime-command-manifest-summary-rows)
       (workflow-field 'runtime-command-manifest-summaries '()))
+    ;; : (-> Any Any)
     (def (workflow-runtime-command-manifest-agreement)
       (workflow-field 'runtime-command-manifest-agreement '()))
+    ;; : (-> Any Any)
     (def (workflow-marlin-runtime-handoff-abi-rows)
       (workflow-field 'marlin-runtime-handoff-abis '()))
+    ;; : (-> Any Any)
     (def (workflow-marlin-runtime-handoff-summary-rows)
       (workflow-field 'marlin-runtime-handoff-summaries '()))
+    ;; : (-> Any Any)
     (def (workflow-receipt-rows)
       (workflow-field 'receipts '()))
+    ;; : (-> Any Any)
     (def (workflow-handoff-bundle)
       (workflow-field 'marlin-handoff-receipt-bundle '()))
+    ;; : (-> Any Any)
     (def (presentation-trace-rows)
       (memo 'presentation-trace-rows
             (lambda ()
@@ -1125,6 +1225,8 @@
        'replayable
        #t)))))
 
+;;; Boundary: summary presentation is a compact loop-engine receipt projection
+;;; for tests and policy reports.
 ;; : (-> PooUserConfig [PooUserModuleSelection] POOSettings [Symbol] POOObject)
 (def (poo-flow-user-config-loop-engine-only-presentation/summary
       config
@@ -1136,16 +1238,8 @@
          (loop-engine-field-values
           (poo-flow-user-config-presentation-field-values
            loop-engine-intent-rows
-           '(runtime-handoff-facts capability-receipt)
+           +poo-flow-user-config-presentation-loop-engine-fields+
            poo-flow-user-loop-engine-intent-ref))
-         (runtime-handoff-facts
-          (poo-flow-user-config-presentation-field-values-ref
-           loop-engine-field-values
-           'runtime-handoff-facts))
-         (capability-receipts
-          (poo-flow-user-config-presentation-field-values-ref
-           loop-engine-field-values
-           'capability-receipt))
          (workflow-command-manifest-agreement
           (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement
            '()
@@ -1178,31 +1272,36 @@
            workflow-handoff-bundle
            loop-engine-intent-rows
            public-setting-keys)))
-    (.o loop-engine-runtime-handoffs: runtime-handoff-facts
-        loop-engine-capability-receipts: capability-receipts
-        module-count: (length selected-modules)
-        loop-engine-intent-count: (length loop-engine-intent-rows)
-        loop-engine-runtime-handoff-count: (length loop-engine-intent-rows)
-        presentation-trace: presentation-trace-rows
-        runtime-executed: #f
-        kind: poo-flow-user-config-presentation-kind
-        module-keys: (poo-flow-user-config-module-keys config)
-        feature-count: (length selected-modules)
-        feature-facts: (poo-flow-user-config-feature-facts config)
-        workflow-cicd-pipeline-count: 0
-        workflow-cicd-runtime-command-manifest-map-count: 0
-        workflow-cicd-marlin-runtime-handoff-abi-count: 0
-        setting-count: (length public-setting-keys)
-        setting-keys: public-setting-keys
-        settings: (poo-flow-user-settings->alist
-                   setting-object
-                   public-setting-keys)
-        runtime-owner: "marlin-agent-core"
-        runtime-parses-scheme-source: #f
-        scheme-manufactures-runtime-handlers: #f
-        descriptor-realized?: #f
-        replayable: #t)))
+    (object<-alist
+     (append
+      (poo-flow-user-config-presentation-loop-engine-slots
+       loop-engine-field-values
+       loop-engine-intent-rows)
+      (list
+       (cons 'module-count (length selected-modules))
+       (cons 'presentation-trace presentation-trace-rows)
+       (cons 'runtime-executed #f)
+       (cons 'kind poo-flow-user-config-presentation-kind)
+       (cons 'module-keys (poo-flow-user-config-module-keys config))
+       (cons 'feature-count (length selected-modules))
+       (cons 'feature-facts (poo-flow-user-config-feature-facts config))
+       (cons 'workflow-cicd-pipeline-count 0)
+       (cons 'workflow-cicd-runtime-command-manifest-map-count 0)
+       (cons 'workflow-cicd-marlin-runtime-handoff-abi-count 0)
+       (cons 'setting-count (length public-setting-keys))
+       (cons 'setting-keys public-setting-keys)
+       (cons 'settings
+             (poo-flow-user-settings->alist
+              setting-object
+              public-setting-keys))
+       (cons 'runtime-owner "marlin-agent-core")
+       (cons 'runtime-parses-scheme-source #f)
+       (cons 'scheme-manufactures-runtime-handlers #f)
+       (cons 'descriptor-realized? #f)
+       (cons 'replayable #t))))))
 
+;;; Boundary: fast workflow summary keeps CI/CD handoff facts bounded for
+;;; policy and user-interface performance checks.
 ;; : (-> PooUserConfig [PooUserModuleSelection] POOSettings [Symbol] POOObject)
 (def (poo-flow-user-config-workflow-cicd-focused-presentation/summary-fast
       config
@@ -1235,48 +1334,53 @@
            workflow-marlin-runtime-handoff-abi-rows
            workflow-marlin-runtime-handoff-summary-rows
            workflow-runtime-command-manifest-summary-rows)))
-    (.o workflow-cicd-marlin-handoff-receipt-bundle: workflow-handoff-bundle
-        workflow-cicd-pipeline-count: (length workflow-check-maps)
-        workflow-cicd-runtime-command-manifest-map-count:
-        (length workflow-runtime-command-manifest-rows)
-        workflow-cicd-runtime-command-manifest-summary-count:
-        (length workflow-runtime-command-manifest-summary-rows)
-        workflow-cicd-marlin-runtime-handoff-abi-count:
-        (length workflow-marlin-runtime-handoff-abi-rows)
-        runtime-executed: #f
-        kind: poo-flow-user-config-presentation-kind
-        module-count: (length selected-modules)
-        module-keys: (poo-flow-user-config-module-keys config)
-        feature-count: (length selected-modules)
-        cicd-intent-count: (length (poo-flow-user-config-cicd-intents config))
-        workflow-cicd-pipelines:
-        (poo-flow-user-config-presentation-workflow-cicd-check-map-names
-         workflow-check-maps)
-        workflow-cicd-runtime-command-manifests:
-        workflow-runtime-command-manifest-rows
-        workflow-cicd-runtime-command-manifest-summaries:
-        workflow-runtime-command-manifest-summary-rows
-        workflow-cicd-runtime-command-manifest-agreement:
-        workflow-runtime-command-manifest-agreement
-        workflow-cicd-marlin-runtime-handoff-abis:
-        workflow-marlin-runtime-handoff-abi-rows
-        workflow-cicd-marlin-runtime-handoff-summaries:
-        workflow-marlin-runtime-handoff-summary-rows
-        workflow-cicd-receipt-count:
-        (length workflow-runtime-command-manifest-summary-rows)
-        workflow-cicd-receipts: '()
-        loop-engine-intent-count: 0
-        loop-engine-runtime-handoff-count: 0
-        setting-count: (length public-setting-keys)
-        setting-keys: public-setting-keys
-        settings: (poo-flow-user-settings->alist
-                   setting-object
-                   public-setting-keys)
-        runtime-owner: "marlin-agent-core"
-        runtime-parses-scheme-source: #f
-        scheme-manufactures-runtime-handlers: #f
-        descriptor-realized?: #f
-        replayable: #t)))
+    (object<-alist
+     (list
+      (cons 'workflow-cicd-marlin-handoff-receipt-bundle
+            workflow-handoff-bundle)
+      (cons 'workflow-cicd-pipeline-count (length workflow-check-maps))
+      (cons 'workflow-cicd-runtime-command-manifest-map-count
+            (length workflow-runtime-command-manifest-rows))
+      (cons 'workflow-cicd-runtime-command-manifest-summary-count
+            (length workflow-runtime-command-manifest-summary-rows))
+      (cons 'workflow-cicd-marlin-runtime-handoff-abi-count
+            (length workflow-marlin-runtime-handoff-abi-rows))
+      (cons 'runtime-executed #f)
+      (cons 'kind poo-flow-user-config-presentation-kind)
+      (cons 'module-count (length selected-modules))
+      (cons 'module-keys (poo-flow-user-config-module-keys config))
+      (cons 'feature-count (length selected-modules))
+      (cons 'cicd-intent-count (length (poo-flow-user-config-cicd-intents
+                                        config)))
+      (cons 'workflow-cicd-pipelines
+            (poo-flow-user-config-presentation-workflow-cicd-check-map-names
+             workflow-check-maps))
+      (cons 'workflow-cicd-runtime-command-manifests
+            workflow-runtime-command-manifest-rows)
+      (cons 'workflow-cicd-runtime-command-manifest-summaries
+            workflow-runtime-command-manifest-summary-rows)
+      (cons 'workflow-cicd-runtime-command-manifest-agreement
+            workflow-runtime-command-manifest-agreement)
+      (cons 'workflow-cicd-marlin-runtime-handoff-abis
+            workflow-marlin-runtime-handoff-abi-rows)
+      (cons 'workflow-cicd-marlin-runtime-handoff-summaries
+            workflow-marlin-runtime-handoff-summary-rows)
+      (cons 'workflow-cicd-receipt-count
+            (length workflow-runtime-command-manifest-summary-rows))
+      (cons 'workflow-cicd-receipts '())
+      (cons 'loop-engine-intent-count 0)
+      (cons 'loop-engine-runtime-handoff-count 0)
+      (cons 'setting-count (length public-setting-keys))
+      (cons 'setting-keys public-setting-keys)
+      (cons 'settings
+            (poo-flow-user-settings->alist
+             setting-object
+             public-setting-keys))
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-parses-scheme-source #f)
+      (cons 'scheme-manufactures-runtime-handlers #f)
+      (cons 'descriptor-realized? #f)
+      (cons 'replayable #t)))))
 
 ;;; User config presentation is the downstream-facing doctor view. It exposes
 ;;; choices and settings but never realizes modules or executes runtime hooks.
@@ -1412,7 +1516,8 @@
                  +poo-flow-user-config-presentation-loop-engine-fields+
                  poo-flow-user-loop-engine-intent-ref)))
         (object<-alist
-         (list
+         (append
+          (list
           (cons 'kind poo-flow-user-config-presentation-kind)
           (cons 'module-count (length selected-modules))
           (cons 'module-keys (poo-flow-user-config-module-keys config))
@@ -1498,149 +1603,11 @@
           (cons 'workflow-cicd-sandbox-handoff-summaries
                 workflow-cicd-sandbox-handoff-summary-rows)
           (cons 'workflow-cicd-sandbox-unresolved-profile-refs
-                workflow-cicd-sandbox-unresolved-profile-ref-rows)
-          (cons 'loop-engine-intent-count (length loop-engine-intent-rows))
-          (cons 'loop-engine-intents loop-engine-intent-rows)
-          (cons 'loop-engine-runtime-handoff-count
-                (length loop-engine-intent-rows))
-          (cons 'loop-engine-runtime-handoffs
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'runtime-handoff-facts))
-          (cons 'loop-engine-workflow-agreements
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'workflow-agreement))
-          (cons 'loop-engine-workflow-functional-dag-counts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'workflow-functional-dag-count))
-          (cons 'loop-engine-workflow-functional-dags
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'workflow-functional-dags))
-          (cons 'loop-engine-receipt-contracts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'receipt-contracts))
-          (cons 'loop-engine-result-contracts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'result-contract))
-          (cons 'loop-engine-agent-profiles
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'agent-profiles))
-          (cons 'loop-engine-agent-harnesses
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'agent-harnesses))
-          (cons 'loop-engine-agent-sessions
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'agent-sessions))
-          (cons 'loop-engine-session-agent-graphs
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'session-agent-graph))
-          (cons 'loop-engine-session-agent-topology-traces
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'session-agent-topology-trace))
-          (cons 'loop-engine-workflow-runs
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'workflow-run))
-          (cons 'loop-engine-dispatch-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'dispatch-receipt))
-          (cons 'loop-engine-agent-operations
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'agent-operation))
-          (cons 'loop-engine-delegated-operations
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'delegated-operation))
-          (cons 'loop-engine-lineage-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'lineage-receipt))
-          (cons 'loop-engine-selector-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'selector-receipt))
-          (cons 'loop-engine-resource-dispatch-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'resource-dispatch-receipt))
-          (cons 'loop-engine-capability-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'capability-receipt))
-          (cons 'loop-engine-memory-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'memory-receipt))
-          (cons 'loop-engine-compression-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'compression-receipt))
-          (cons 'loop-engine-session-selector-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'session-selector-receipts))
-          (cons 'loop-engine-session-materialization-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'session-materialization-receipts))
-          (cons 'loop-engine-policy-extension-receipts
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'policy-extension-receipts))
-          (cons 'loop-engine-spec-evolution-reviews
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'spec-evolution-reviews))
-          (cons 'loop-engine-spec-evolution-human-audit-review-items
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'spec-evolution-human-audit-review-items))
-          (cons 'loop-engine-spec-evolution-runtime-manifest-rows
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'spec-evolution-runtime-manifest-rows))
-          (cons 'loop-engine-runtime-command-manifests
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'runtime-command-manifest))
-          (cons 'loop-engine-runtime-command-manifest-summaries
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'runtime-command-manifest-summary))
-          (cons 'loop-engine-sandbox-runtime-summaries
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'sandbox-runtime-summaries))
-          (cons 'loop-engine-sandbox-handoff-summaries
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'sandbox-handoff-summaries))
-          (cons 'loop-engine-sandbox-handoff-agreements
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'sandbox-handoff-agreement))
-          (cons 'loop-engine-sandbox-unresolved-profile-refs
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'sandbox-unresolved-profile-refs))
-          (cons 'loop-engine-runtime-snapshot-count
-                (length loop-engine-intent-rows))
-          (cons 'loop-engine-runtime-snapshots
-                (poo-flow-user-config-presentation-field-values-ref
-                 loop-engine-field-values
-                 'runtime-snapshot))
+                workflow-cicd-sandbox-unresolved-profile-ref-rows))
+          (poo-flow-user-config-presentation-loop-engine-slots
+           loop-engine-field-values
+           loop-engine-intent-rows)
+          (list
           (cons 'presentation-trace presentation-trace-rows)
           (cons 'setting-count (length public-setting-keys))
           (cons 'setting-keys public-setting-keys)
@@ -1669,4 +1636,4 @@
                  workflow-cicd-marlin-handoff-receipt-bundle-row
                  'runtime-executed
                  #f))
-          (cons 'replayable #t))))))))))
+          (cons 'replayable #t)))))))))))

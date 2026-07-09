@@ -39,6 +39,8 @@
     (runtime-handoff-owner-linked . 256)
     (proof-case-vector-complete . 512)))
 
+;;; Boundary: proof obligations are the stable ABI between loop-engine receipts
+;;; and downstream proof-case generation.
 ;; : List
 (def +poo-flow-loop-engine-proof-obligation-domains+
   '(user-interface profile policy strategy workflow sandbox runtime-handoff))
@@ -63,6 +65,8 @@
    (cons 'evidence-fields evidence-fields)
    (cons 'runtime-executed #f)))
 
+;;; Boundary: proof obligations are the stable ABI between loop-engine receipts
+;;; and downstream proof-case generation.
 ;; : List
 (def +poo-flow-loop-engine-proof-obligations+
   (list
@@ -139,10 +143,9 @@
 
 ;; : (-> Alist Fixnum)
 (def (poo-flow-loop-engine-proof-obligation-mask tags)
-  (if (null? tags)
-    0
-    (+ (cdar tags)
-       (poo-flow-loop-engine-proof-obligation-mask (cdr tags)))))
+  (foldl (lambda (tag mask) (+ (cdr tag) mask))
+         0
+         tags))
 
 ;; : Fixnum
 (def +poo-flow-loop-engine-proof-required-obligation-mask+
@@ -161,7 +164,7 @@
    (cons 'obligation-schema-version
          +poo-flow-loop-engine-proof-obligation-schema-version+)))
 
-;; : (-> Any Any Symbol List List List Alist)
+;; : (-> Datum Datum Symbol List List List Alist)
 (def (poo-flow-loop-engine-proof-manifest request-id
                                           artifact-handle
                                           runtime-command-contract

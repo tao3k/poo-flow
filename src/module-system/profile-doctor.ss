@@ -3,6 +3,7 @@
 ;;; Invariant: diagnostics are data and never realize descriptors or runtimes.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object?)
+        (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/loop-engine-config
@@ -47,17 +48,9 @@
 (def (poo-flow-user-profile-duplicate-values values)
   (poo-flow-user-profile-duplicate-values/add values '()))
 
-;; : (-> [PooUserModuleSelection] [Pair] [Pair])
-(def (poo-flow-user-profile-doctor-module-keys/rev modules keys-rev)
-  (if (null? modules)
-    keys-rev
-    (poo-flow-user-profile-doctor-module-keys/rev
-     (cdr modules)
-     (cons (poo-flow-user-module-selection-key (car modules)) keys-rev))))
-
 ;; : (-> [PooUserModuleSelection] [Pair])
 (def (poo-flow-user-profile-doctor-module-keys modules)
-  (reverse (poo-flow-user-profile-doctor-module-keys/rev modules '())))
+  (map poo-flow-user-module-selection-key modules))
 
 ;;; Empty bundle indexes are reported rather than rejected because a false
 ;;; conditional gate is a legitimate Doom-style declaration state.
@@ -78,7 +71,11 @@
 ;;; User-facing indexes make disabled bundle diagnostics stable and concise.
 ;; : (-> [[PooUserModuleSelection]] [Integer])
 (def (poo-flow-user-profile-empty-bundle-indexes bundles)
-  (poo-flow-user-profile-empty-bundle-indexes/add bundles 0))
+  (filter-map
+   (lambda (bundle index)
+     (and (null? bundle) index))
+   bundles
+   (iota (length bundles))))
 
 ;;; Setting-key validation uses slot introspection instead of `.ref` so doctor
 ;;; can report missing user settings without throwing during presentation.

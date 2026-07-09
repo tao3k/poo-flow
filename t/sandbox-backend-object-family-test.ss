@@ -41,6 +41,7 @@
   (poo-flow-module-field-contract-metadata
    (required-field object field)))
 
+;; : (-> Object Symbol Object Void)
 (def (check-backend-registry registry key capability)
   (check-equal? (poo-flow-sandbox-backend-capability-registry? registry) #t)
   (check-equal? (poo-flow-sandbox-backend-capability-registry-entries registry)

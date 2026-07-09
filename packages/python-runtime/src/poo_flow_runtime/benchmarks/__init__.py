@@ -1,6 +1,14 @@
-"""Benchmark surfaces for the POO Flow Python runtime package."""
+"""Lazy benchmark module exports for CLI-safe execution."""
 
-from . import composition
-from . import langgraph_alignment
+from __future__ import annotations
 
-__all__ = ["composition", "langgraph_alignment"]
+from importlib import import_module
+from types import ModuleType
+
+__all__ = ["composition", "langgraph_alignment", "scheme_load_aot"]
+
+
+def __getattr__(name: str) -> ModuleType:
+    if name not in __all__:
+        raise AttributeError(name)
+    return import_module(f"{__name__}.{name}")

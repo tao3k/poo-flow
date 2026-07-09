@@ -6,10 +6,12 @@
 
 (export durable-runtime-manifest-test)
 
+;; : (-> Alist Symbol Object)
 (def (test-ref row key)
   (let ((cell (assq key row)))
     (and cell (cdr cell))))
 
+;; : TestSuite
 (def durable-runtime-manifest-test
   (test-suite "poo-flow durable runtime manifest envelope"
     (test-case "projects policy store backend and operations into one envelope"

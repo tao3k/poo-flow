@@ -6,6 +6,7 @@
                  check-equal?
                  test-case
                  test-suite)
+        (only-in :std/sugar foldl)
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
@@ -43,11 +44,11 @@
 (def user-interface-custom-scenario-batch-fixture-path
   "t/scenarios/performance/user-interface-custom-scenario-batch/benchmark.ss")
 
-;; : Alist
+;; : CustomScenarioBatchFixture
 (def user-interface-custom-scenario-batch-fixture
   (call-with-input-file user-interface-custom-scenario-batch-fixture-path read))
 
-;; : [Pair]
+;; : [CustomScenarioCasePair]
 (def (custom-user-interface-scenario-cases)
   (list
    (cons 'cicd poo-flow-custom-my-module-cicd-case)
@@ -77,18 +78,18 @@
    (cons 'durable-operation-bridge
          poo-flow-custom-my-module-durable-operation-bridge-case)))
 
-;; : (-> Value Boolean)
+;; : (-> CustomScenarioRowValue Bool)
 (def (custom-scenario-alist-row? value)
   (and (pair? value)
        (pair? (car value))
        (symbol? (caar value))))
 
-;; : (-> Value Boolean)
+;; : (-> CustomScenarioRowValue Bool)
 (def (custom-scenario-row? value)
   (or (object? value)
       (custom-scenario-alist-row? value)))
 
-;; : (-> Value Symbol MaybeValue)
+;; : (-> CustomScenarioRow CustomScenarioRowKey MaybeValue)
 (def (custom-scenario-row-ref value key)
   (cond
    ((and (object? value) (.slot? value key))
@@ -98,7 +99,7 @@
       (and entry (cdr entry))))
    (else #f)))
 
-;; : (-> Value MaybeList)
+;; : (-> CustomScenarioRowValue MaybeList)
 (def (custom-scenario-module-config-rows value)
   (if (and (pair? value)
            (poo-flow-user-module-selection? (car value)))
@@ -107,101 +108,77 @@
       (and entry (cdr entry)))
     #f))
 
-;; : (-> Value Integer)
+;; : (-> CustomScenarioRowValue Integer)
 (def (custom-scenario-row-count value)
   (let (config-rows (custom-scenario-module-config-rows value))
     (cond
-     (config-rows (custom-scenario-row-count/list config-rows 0))
+     (config-rows (custom-scenario-row-count/list config-rows))
      ((custom-scenario-row? value) 1)
-     ((pair? value) (custom-scenario-row-count/list value 0))
+     ((pair? value) (custom-scenario-row-count/list value))
      (else 0))))
 
-;; : (-> [Value] Integer Integer)
-(def (custom-scenario-row-count/list values count)
-  (if (null? values)
-    count
-    (custom-scenario-row-count/list
-     (cdr values)
-     (+ count (custom-scenario-row-count (car values))))))
+;; : (-> [CustomScenarioRowValue] Integer)
+(def (custom-scenario-row-count/list values)
+  (foldl (lambda (value count)
+           (+ count (custom-scenario-row-count value)))
+         0
+         values))
 
-;; : (-> Value [Boolean] [Boolean])
-(def (custom-scenario-runtime-flags/rev value flags-rev)
+;; : (-> CustomScenarioRowValue [Bool])
+(def (custom-scenario-runtime-flags value)
   (let (config-rows (custom-scenario-module-config-rows value))
     (cond
      (config-rows
-      (custom-scenario-runtime-flags/list/rev config-rows flags-rev))
+      (custom-scenario-runtime-flags/list config-rows))
      ((and (object? value) (.slot? value 'runtime-executed))
-      (cons (.ref value 'runtime-executed) flags-rev))
+      (list (.ref value 'runtime-executed)))
      ((custom-scenario-alist-row? value)
       (let (entry (assoc 'runtime-executed value))
         (if entry
-          (cons (cdr entry) flags-rev)
-          flags-rev)))
+          (list (cdr entry))
+          '())))
      ((pair? value)
-      (custom-scenario-runtime-flags/list/rev value flags-rev))
-     (else flags-rev))))
+      (custom-scenario-runtime-flags/list value))
+     (else '()))))
 
-;; : (-> [Value] [Boolean] [Boolean])
-(def (custom-scenario-runtime-flags/list/rev values flags-rev)
-  (if (null? values)
-    flags-rev
-    (custom-scenario-runtime-flags/list/rev
-     (cdr values)
-     (custom-scenario-runtime-flags/rev (car values) flags-rev))))
+;; : (-> [CustomScenarioRowValue] [Bool])
+(def (custom-scenario-runtime-flags/list values)
+  (foldl (lambda (value flags)
+           (append flags (custom-scenario-runtime-flags value)))
+         '()
+         values))
 
-;; : (-> Value [Boolean])
-(def (custom-scenario-runtime-flags value)
-  (reverse (custom-scenario-runtime-flags/rev value '())))
-
-;; : (-> [Boolean] Boolean)
+;; : (-> [Bool] Bool)
 (def (custom-scenario-runtime-clean? flags)
   (cond
    ((null? flags) #t)
    ((car flags) #f)
    (else (custom-scenario-runtime-clean? (cdr flags)))))
 
-;; : (-> [Pair] Integer Integer)
-(def (custom-scenario-case-row-count/loop cases count)
-  (if (null? cases)
-    count
-    (custom-scenario-case-row-count/loop
-     (cdr cases)
-     (+ count (custom-scenario-row-count (cdar cases))))))
-
-;; : (-> [Pair] Integer)
+;; : (-> [CustomScenarioCasePair] Integer)
 (def (custom-scenario-case-row-count cases)
-  (custom-scenario-case-row-count/loop cases 0))
+  (foldl (lambda (entry count)
+           (+ count (custom-scenario-row-count (cdr entry))))
+         0
+         cases))
 
-;; : (-> [Pair] [Boolean] [Boolean])
-(def (custom-scenario-case-runtime-flags/rev cases flags-rev)
-  (if (null? cases)
-    flags-rev
-    (custom-scenario-case-runtime-flags/rev
-     (cdr cases)
-     (custom-scenario-runtime-flags/rev (cdar cases) flags-rev))))
-
-;; : (-> [Pair] [Boolean])
+;; : (-> [CustomScenarioCasePair] [Bool])
 (def (custom-scenario-case-runtime-flags cases)
-  (reverse (custom-scenario-case-runtime-flags/rev cases '())))
+  (foldl (lambda (entry flags)
+           (append flags (custom-scenario-runtime-flags (cdr entry))))
+         '()
+         cases))
 
-;; : (-> [Pair] [Symbol] [Symbol])
-(def (custom-scenario-case-names/rev cases names-rev)
-  (if (null? cases)
-    names-rev
-    (custom-scenario-case-names/rev
-     (cdr cases)
-     (cons (caar cases) names-rev))))
-
-;; : (-> [Pair] [Symbol])
+;; : (-> [CustomScenarioCasePair] [CustomScenarioCaseName])
 (def (custom-scenario-case-names cases)
-  (reverse (custom-scenario-case-names/rev cases '())))
+  (map car cases))
 
-;; : (-> Alist Symbol MaybeValue)
+;; : (-> CustomScenarioSummary CustomScenarioSummaryKey MaybeValue)
 (def (custom-scenario-summary-ref row key)
   (let (entry (assoc key row))
     (and entry (cdr entry))))
 
-;; : (-> Alist)
+;; : (-> CustomScenarioBatchSummary)
 (def (custom-user-interface-scenario-batch-summary)
   (let* ((cases (custom-user-interface-scenario-cases))
          (runtime-flags (custom-scenario-case-runtime-flags cases)))
@@ -215,7 +192,7 @@
      (cons 'benchmark-surface 't/scenarios/performance)
      (cons 'user-interface-benchmark-payload? #f))))
 
-;; : (-> Alist Void)
+;; : (-> CustomScenarioBatchSummary ReceiptDisplayResult)
 (def (custom-scenario-display-receipt receipt)
   (display "[poo-flow-benchmark] user-interface-custom-scenario-batch ")
   (write receipt)

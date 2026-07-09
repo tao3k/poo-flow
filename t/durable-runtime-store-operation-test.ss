@@ -14,10 +14,12 @@
 
 (export durable-runtime-store-operation-test)
 
+;; : (-> Alist Symbol Object)
 (def (test-ref row key)
   (let (entry (assoc key row))
     (if entry (cdr entry) #f)))
 
+;; : (-> [Alist] Symbol Boolean)
 (def (diagnostic-code-present? diagnostics code)
   (cond
    ((null? diagnostics) #f)
@@ -25,6 +27,7 @@
    (else
     (diagnostic-code-present? (cdr diagnostics) code))))
 
+;; : (-> Alist)
 (def (test-negotiation)
   (let* ((contract
           (poo-flow-durable-runtime-store-contract
@@ -47,6 +50,7 @@
     (poo-flow-durable-runtime-store-backend-negotiation contract-receipt
                                                         backend-receipt)))
 
+;; : TestSuite
 (def durable-runtime-store-operation-test
   (test-suite "poo-flow durable runtime store operations"
     (test-case "projects one operation per durable store capability"

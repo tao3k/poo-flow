@@ -8,7 +8,8 @@
         poo-flow-composition-module-binding
         poo-flow-composition-clause
         poo-flow-composition-stage
-        poo-flow-composition-object)
+        poo-flow-composition-object
+        poo-flow-composition-object/profiles)
 
 ;;; Selects a profile slot from a POO module object.
 ;;   | doc m%
@@ -65,10 +66,17 @@
 ;;   | result: composition object containing module bindings and stages
 ;; : (-> Symbol List List PooFlowComposition)
 (def (poo-flow-composition-object name module-bindings stages)
+  (poo-flow-composition-object/profiles name module-bindings '() stages))
+
+;;; Builds the top-level composition object with composition-level profiles.
+;; : (-> Symbol List List List PooFlowComposition)
+(def (poo-flow-composition-object/profiles name module-bindings profiles stages)
   (let ((name-value name)
         (module-bindings-value module-bindings)
+        (profiles-value profiles)
         (stages-value stages))
     (.o (kind 'poo-flow.composition)
         (name name-value)
         (modules module-bindings-value)
+        (profiles profiles-value)
         (stages stages-value))))

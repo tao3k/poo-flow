@@ -12,7 +12,7 @@
                  poo-flow-cli-max-rss-bytes
                  poo-flow-cli-run
                  poo-flow-cli-usage)
-        (only-in :poo-flow/src/cli-support/testing-project
+        (only-in :poo-flow/src/testing/project
                  poo-flow-testing-project)
         (only-in :gslph/src/testing/model
                  testing-object-ref))

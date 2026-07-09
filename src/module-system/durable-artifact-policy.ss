@@ -1,8 +1,15 @@
-(import :clan/poo/object
+;;; Boundary: durable artifact policy owns the Scheme-side artifact/profile
+;;; contract before runtime, database, and Marlin handoff layers consume it.
+;;; Invariant: this module must keep profile objects POO-native while emitting
+;;; stable bounded receipts for policy and parser-owned validation.
+(import (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/src/core/runtime-protocol
                  +runtime-request-schema+)
         (only-in :poo-flow/src/core/runtime-command-descriptor
-                 runtime-command-fields->manifest))
+                 runtime-command-fields->manifest)
+        :poo-flow/src/module-system/durable-artifact-profile
+        :poo-flow/src/module-system/durable-artifact-object
+        :poo-flow/src/module-system/durable-artifact-validation)
 
 (export +poo-flow-durable-artifact-profile-kind+
         +poo-flow-durable-artifact-profile-schema+
@@ -42,604 +49,6 @@
         artifact-module
         database-module)
 
-(def +poo-flow-durable-artifact-profile-kind+
-  'poo-flow.durable.artifact.profile)
-
-(def +poo-flow-durable-artifact-profile-schema+
-  'poo-flow.durable.artifact.profile.v1)
-
-(def +poo-flow-durable-artifact-database-profile-kind+
-  'poo-flow.durable.artifact.database.profile)
-
-(def +poo-flow-durable-artifact-database-profile-schema+
-  'poo-flow.durable.artifact.database.profile.v1)
-
-(def +poo-flow-artifact-profile-fields+
-  '(artifact-profile-kind
-    artifact-profile-schema
-    name
-    extends
-    kind
-    scope
-    storage
-    analysis
-    publish
-    retention
-    lifecycle
-    database
-    hooks
-    runtime-executed
-    source))
-
-(def +poo-flow-artifact-database-profile-fields+
-  '(artifact-database-profile-kind
-    artifact-database-profile-schema
-    name
-    extends
-    classes
-    capabilities
-    storage
-    source))
-
-(def (poo-flow-artifact-section-slot key)
-  (case key
-    ((:extends extends) 'extends)
-    ((:kind kind) 'kind)
-    ((:scope scope) 'scope)
-    ((:storage storage) 'storage)
-    ((:analysis analysis) 'analysis)
-    ((:publish publish) 'publish)
-    ((:retention retention) 'retention)
-    ((:lifecycle lifecycle) 'lifecycle)
-    ((:database database) 'database)
-    ((:with with) 'hooks)
-    ((:classes classes) 'classes)
-    ((:capabilities capabilities) 'capabilities)
-    (else key)))
-
-(def (poo-flow-artifact-sections->alist sections)
-  (let loop ((rest sections) (out '()))
-    (cond
-     ((null? rest) (reverse out))
-     ((null? (cdr rest))
-      (error "artifact profile section requires a value" (car rest)))
-     (else
-      (loop (cddr rest)
-            (cons (cons (poo-flow-artifact-section-slot (car rest))
-                        (cadr rest))
-                  out))))))
-
-(def (poo-flow-artifact-alist-ref alist key default-value)
-  (let (entry (assoc key alist))
-    (if entry (cdr entry) default-value)))
-
-(def (poo-flow-artifact-profile/direct profile-name
-                                       extends-value
-                                       kind-value
-                                       scope-value
-                                       storage-value
-                                       analysis-value
-                                       publish-value
-                                       retention-value
-                                       lifecycle-value
-                                       database-value
-                                       hooks-value)
-  (.o (artifact-profile-kind +poo-flow-durable-artifact-profile-kind+)
-      (artifact-profile-schema +poo-flow-durable-artifact-profile-schema+)
-      (name profile-name)
-      (extends extends-value)
-      (kind kind-value)
-      (scope scope-value)
-      (storage storage-value)
-      (analysis analysis-value)
-      (publish publish-value)
-      (retention retention-value)
-      (lifecycle lifecycle-value)
-      (database database-value)
-      (hooks hooks-value)
-      (runtime-executed #f)
-      (source 'poo-flow.durable.artifact.policy)))
-
-(def (poo-flow-artifact-database-profile/direct profile-name
-                                                extends-value
-                                                classes-value
-                                                capabilities-value
-                                                storage-value)
-  (.o (artifact-database-profile-kind
-       +poo-flow-durable-artifact-database-profile-kind+)
-      (artifact-database-profile-schema
-       +poo-flow-durable-artifact-database-profile-schema+)
-      (name profile-name)
-      (extends extends-value)
-      (classes classes-value)
-      (capabilities capabilities-value)
-      (storage storage-value)
-      (source 'poo-flow.durable.artifact.database)))
-
-(def (poo-flow-artifact-profile-from-alist profile-name fields)
-  (poo-flow-artifact-profile/direct
-   profile-name
-   (poo-flow-artifact-alist-ref fields 'extends #f)
-   (poo-flow-artifact-alist-ref fields 'kind profile-name)
-   (poo-flow-artifact-alist-ref fields 'scope '())
-   (poo-flow-artifact-alist-ref fields 'storage '())
-   (poo-flow-artifact-alist-ref fields 'analysis '())
-   (poo-flow-artifact-alist-ref fields 'publish '())
-   (poo-flow-artifact-alist-ref fields 'retention '())
-   (poo-flow-artifact-alist-ref fields 'lifecycle '(created stored retained))
-   (poo-flow-artifact-alist-ref fields 'database '())
-   (poo-flow-artifact-alist-ref fields 'hooks '())))
-
-(def (poo-flow-artifact-database-profile-from-alist profile-name fields)
-  (poo-flow-artifact-database-profile/direct
-   profile-name
-   (poo-flow-artifact-alist-ref fields 'extends #f)
-   (poo-flow-artifact-alist-ref fields 'classes '())
-   (poo-flow-artifact-alist-ref fields 'capabilities '())
-   (poo-flow-artifact-alist-ref fields 'storage '())))
-
-(def (poo-flow-artifact-profile name sections)
-  (poo-flow-artifact-profile-from-alist
-   name
-   (poo-flow-artifact-sections->alist sections)))
-
-(def (poo-flow-artifact-database-profile name sections)
-  (poo-flow-artifact-database-profile-from-alist
-   name
-   (poo-flow-artifact-sections->alist sections)))
-
-(def (poo-flow-artifact-profile->alist profile)
-  (map (lambda (field) (cons field (.ref profile field)))
-       +poo-flow-artifact-profile-fields+))
-
-(def (poo-flow-artifact-database-profile->alist profile)
-  (map (lambda (field) (cons field (.ref profile field)))
-       +poo-flow-artifact-database-profile-fields+))
-
-(def (poo-flow-artifact-object-ref/default object field default)
-  (if (.slot? object field)
-    (.ref object field)
-    default))
-
-(def (poo-flow-artifact-profile-override profile-name base override)
-  (poo-flow-artifact-profile/direct
-   profile-name
-   (poo-flow-artifact-object-ref/default override 'extends (.ref base 'extends))
-   (poo-flow-artifact-object-ref/default override 'kind (.ref base 'kind))
-   (poo-flow-artifact-object-ref/default override 'scope (.ref base 'scope))
-   (poo-flow-artifact-object-ref/default override 'storage (.ref base 'storage))
-   (poo-flow-artifact-object-ref/default override 'analysis (.ref base 'analysis))
-   (poo-flow-artifact-object-ref/default override 'publish (.ref base 'publish))
-   (poo-flow-artifact-object-ref/default override 'retention (.ref base 'retention))
-   (poo-flow-artifact-object-ref/default override 'lifecycle (.ref base 'lifecycle))
-   (poo-flow-artifact-object-ref/default override 'database (.ref base 'database))
-   (poo-flow-artifact-object-ref/default override 'hooks (.ref base 'hooks))))
-
-(def (poo-flow-artifact-profile-extend name base override)
-  (poo-flow-artifact-profile-override name base override))
-
-(def (poo-flow-artifact-profile-apply-hooks profile hooks)
-  (let loop ((current profile) (rest hooks))
-    (if (null? rest)
-      current
-      (loop ((car rest) current) (cdr rest)))))
-
-(def (poo-flow-artifact-profile? profile)
-  (and (object? profile)
-       (.slot? profile 'artifact-profile-kind)
-       (eq? (.ref profile 'artifact-profile-kind)
-            +poo-flow-durable-artifact-profile-kind+)))
-
-(def (poo-flow-artifact-database-profile? profile)
-  (and (object? profile)
-       (.slot? profile 'artifact-database-profile-kind)
-       (eq? (.ref profile 'artifact-database-profile-kind)
-            +poo-flow-durable-artifact-database-profile-kind+)))
-
-(def (poo-flow-artifact-scope-contained? profile required-scope)
-  (let (scope (.ref profile 'scope))
-    (andmap (lambda (scope-id) (memq scope-id scope)) required-scope)))
-
-(def (poo-flow-artifact-publish-gated? profile)
-  (let (publish (.ref profile 'publish))
-    (or (null? publish)
-        (and (memq 'human-approved publish)
-             (memq 'proof-gated publish)
-             #t))))
-
-(def +poo-flow-durable-artifact-kind+
-  'poo-flow.durable.artifact)
-
-(def +poo-flow-durable-artifact-schema+
-  'poo-flow.durable.artifact.v1)
-
-(def +poo-flow-durable-artifact-fields+
-  '(durable-artifact-kind
-    durable-artifact-schema
-    artifact-id
-    artifact-kind
-    artifact-scope
-    storage-class
-    lifecycle-state
-    producer-ref
-    owner-ref
-    sandbox-scope
-    checksum-policy
-    analysis-policy
-    index-policy
-    call-policy
-    publish-policy
-    retention-policy
-    explicit-grants
-    runtime-executed
-    source))
-
-(def +poo-flow-durable-artifact-lifecycle-edges+
-  '((created . stored)
-    (stored . indexed)
-    (indexed . analyzed)
-    (analyzed . callable)
-    (callable . publish-approved)
-    (publish-approved . published)
-    (published . retained)
-    (published . expired)
-    (published . archived)
-    (published . revoked)))
-
-(def (poo-flow-durable-artifact-section-slot key)
-  (case key
-    ((:artifact-kind artifact-kind :kind kind) 'artifact-kind)
-    ((:artifact-scope artifact-scope :scope scope) 'artifact-scope)
-    ((:storage-class storage-class :storage storage) 'storage-class)
-    ((:lifecycle-state lifecycle-state :state state) 'lifecycle-state)
-    ((:producer-ref producer-ref :producer producer) 'producer-ref)
-    ((:owner-ref owner-ref :owner owner) 'owner-ref)
-    ((:sandbox-scope sandbox-scope :sandbox sandbox) 'sandbox-scope)
-    ((:checksum-policy checksum-policy :checksum checksum) 'checksum-policy)
-    ((:analysis-policy analysis-policy :analysis analysis) 'analysis-policy)
-    ((:index-policy index-policy :index index) 'index-policy)
-    ((:call-policy call-policy :call call) 'call-policy)
-    ((:publish-policy publish-policy :publish publish) 'publish-policy)
-    ((:retention-policy retention-policy :retention retention) 'retention-policy)
-    ((:explicit-grants explicit-grants :grants grants) 'explicit-grants)
-    (else key)))
-
-(def (poo-flow-durable-artifact-sections->alist sections)
-  (let loop ((rest sections) (out '()))
-    (cond
-     ((null? rest) (reverse out))
-     ((null? (cdr rest))
-      (error "durable artifact section requires a value" (car rest)))
-     (else
-      (loop (cddr rest)
-            (cons (cons (poo-flow-durable-artifact-section-slot (car rest))
-                        (cadr rest))
-                  out))))))
-
-(def (poo-flow-durable-artifact/direct artifact-id-value
-                                       artifact-kind-value
-                                       artifact-scope-value
-                                       storage-class-value
-                                       lifecycle-state-value
-                                       producer-ref-value
-                                       owner-ref-value
-                                       sandbox-scope-value
-                                       checksum-policy-value
-                                       analysis-policy-value
-                                       index-policy-value
-                                       call-policy-value
-                                       publish-policy-value
-                                       retention-policy-value
-                                       explicit-grants-value)
-  (.o (durable-artifact-kind +poo-flow-durable-artifact-kind+)
-      (durable-artifact-schema +poo-flow-durable-artifact-schema+)
-      (artifact-id artifact-id-value)
-      (artifact-kind artifact-kind-value)
-      (artifact-scope artifact-scope-value)
-      (storage-class storage-class-value)
-      (lifecycle-state lifecycle-state-value)
-      (producer-ref producer-ref-value)
-      (owner-ref owner-ref-value)
-      (sandbox-scope sandbox-scope-value)
-      (checksum-policy checksum-policy-value)
-      (analysis-policy analysis-policy-value)
-      (index-policy index-policy-value)
-      (call-policy call-policy-value)
-      (publish-policy publish-policy-value)
-      (retention-policy retention-policy-value)
-      (explicit-grants explicit-grants-value)
-      (runtime-executed #f)
-      (source 'poo-flow.durable.artifact.policy)))
-
-(def (poo-flow-durable-artifact artifact-id-value sections)
-  (let (fields (poo-flow-durable-artifact-sections->alist sections))
-    (poo-flow-durable-artifact/direct
-     artifact-id-value
-     (poo-flow-artifact-alist-ref fields 'artifact-kind artifact-id-value)
-     (poo-flow-artifact-alist-ref fields 'artifact-scope '())
-     (poo-flow-artifact-alist-ref fields 'storage-class '())
-     (poo-flow-artifact-alist-ref fields 'lifecycle-state 'created)
-     (poo-flow-artifact-alist-ref fields 'producer-ref #f)
-     (poo-flow-artifact-alist-ref fields 'owner-ref #f)
-     (poo-flow-artifact-alist-ref fields 'sandbox-scope '())
-     (poo-flow-artifact-alist-ref fields 'checksum-policy '())
-     (poo-flow-artifact-alist-ref fields 'analysis-policy '())
-     (poo-flow-artifact-alist-ref fields 'index-policy '())
-     (poo-flow-artifact-alist-ref fields 'call-policy '())
-     (poo-flow-artifact-alist-ref fields 'publish-policy '())
-     (poo-flow-artifact-alist-ref fields 'retention-policy '())
-     (poo-flow-artifact-alist-ref fields 'explicit-grants '()))))
-
-(def (poo-flow-durable-artifact? artifact)
-  (and (object? artifact)
-       (.slot? artifact 'durable-artifact-kind)
-       (eq? (.ref artifact 'durable-artifact-kind)
-            +poo-flow-durable-artifact-kind+)))
-
-(def (poo-flow-durable-artifact->alist artifact)
-  (map (lambda (field) (cons field (.ref artifact field)))
-       +poo-flow-durable-artifact-fields+))
-
-(def (poo-flow-artifact-list-has? items value)
-  (let loop ((rest items))
-    (cond
-     ((null? rest) #f)
-     ((equal? (car rest) value) #t)
-     (else (loop (cdr rest))))))
-
-(def (poo-flow-artifact-scope-subset? actor-scope artifact-scope)
-  (let loop ((rest actor-scope))
-    (cond
-     ((null? rest) #t)
-     ((poo-flow-artifact-list-has? artifact-scope (car rest))
-      (loop (cdr rest)))
-     (else #f))))
-
-(def (poo-flow-durable-artifact-explicit-grant? artifact actor)
-  (let ((artifact-id (.ref artifact 'artifact-id))
-        (actor-ref (and (object? actor)
-                        (.slot? actor 'actor-ref)
-                        (.ref actor 'actor-ref))))
-    (or (and (object? actor)
-             (.slot? actor 'artifact-grants)
-             (poo-flow-artifact-list-has? (.ref actor 'artifact-grants)
-                                          artifact-id))
-        (and actor-ref
-             (poo-flow-artifact-list-has? (.ref artifact 'explicit-grants)
-                                          actor-ref)))))
-
-(def (poo-flow-durable-artifact-visible? artifact actor)
-  (let ((actor-scope (if (and (object? actor) (.slot? actor 'scope))
-                       (.ref actor 'scope)
-                       '()))
-        (artifact-scope (.ref artifact 'artifact-scope)))
-    (or (poo-flow-artifact-scope-subset? actor-scope artifact-scope)
-        (poo-flow-durable-artifact-explicit-grant? artifact actor))))
-
-(def (poo-flow-durable-artifact-lifecycle-transition-allowed? from-state to-state)
-  (poo-flow-artifact-list-has?
-   +poo-flow-durable-artifact-lifecycle-edges+
-   (cons from-state to-state)))
-
-(def (poo-flow-durable-artifact-transition artifact to-state)
-  (let (from-state (.ref artifact 'lifecycle-state))
-    (if (poo-flow-durable-artifact-lifecycle-transition-allowed?
-         from-state
-         to-state)
-      (poo-flow-durable-artifact/direct
-       (.ref artifact 'artifact-id)
-       (.ref artifact 'artifact-kind)
-       (.ref artifact 'artifact-scope)
-       (.ref artifact 'storage-class)
-       to-state
-       (.ref artifact 'producer-ref)
-       (.ref artifact 'owner-ref)
-       (.ref artifact 'sandbox-scope)
-       (.ref artifact 'checksum-policy)
-       (.ref artifact 'analysis-policy)
-       (.ref artifact 'index-policy)
-       (.ref artifact 'call-policy)
-       (.ref artifact 'publish-policy)
-       (.ref artifact 'retention-policy)
-       (.ref artifact 'explicit-grants))
-      (error "durable artifact lifecycle transition is not allowed"
-             from-state
-             to-state))))
-
-(def +poo-flow-durable-artifact-policy-receipt-kind+
-  'poo-flow.durable.artifact.policy-receipt)
-
-(def +poo-flow-durable-artifact-policy-receipt-schema+
-  'poo-flow.durable.artifact.policy-receipt.v1)
-
-(def +poo-flow-durable-artifact-policy-receipt-fields+
-  '(artifact-policy-receipt-kind
-    artifact-policy-receipt-schema
-    artifact-id
-    profile-name
-    database-name
-    valid?
-    scope-contained?
-    storage-supported?
-    analysis-supported?
-    publish-gated?
-    retention-supported?
-    lifecycle-state-valid?
-    database-storage-supported?
-    database-capability-satisfied?
-    diagnostics
-    runtime-executed
-    source))
-
-(def +poo-flow-durable-artifact-lifecycle-states+
-  '(created
-    stored
-    indexed
-    analyzed
-    callable
-    publish-approved
-    published
-    retained
-    expired
-    archived
-    revoked))
-
-(def (poo-flow-artifact-value->list value)
-  (cond
-   ((null? value) '())
-   ((pair? value) value)
-   (else (list value))))
-
-(def (poo-flow-artifact-values-contained? required allowed)
-  (poo-flow-artifact-scope-subset?
-   (poo-flow-artifact-value->list required)
-   (poo-flow-artifact-value->list allowed)))
-
-(def (poo-flow-artifact-diagnostic diagnostics ok? code)
-  (if ok?
-    diagnostics
-    (cons code diagnostics)))
-
-(def (poo-flow-durable-artifact-lifecycle-state-valid? state)
-  (poo-flow-artifact-list-has?
-   +poo-flow-durable-artifact-lifecycle-states+
-   state))
-
-(def (poo-flow-durable-artifact-policy-receipt/direct
-      artifact-id-value
-      profile-name-value
-      database-name-value
-      valid-value
-      scope-contained-value
-      storage-supported-value
-      analysis-supported-value
-      publish-gated-value
-      retention-supported-value
-      lifecycle-state-valid-value
-      database-storage-supported-value
-      database-capability-satisfied-value
-      diagnostics-value)
-  (.o (artifact-policy-receipt-kind
-       +poo-flow-durable-artifact-policy-receipt-kind+)
-      (artifact-policy-receipt-schema
-       +poo-flow-durable-artifact-policy-receipt-schema+)
-      (artifact-id artifact-id-value)
-      (profile-name profile-name-value)
-      (database-name database-name-value)
-      (valid? valid-value)
-      (scope-contained? scope-contained-value)
-      (storage-supported? storage-supported-value)
-      (analysis-supported? analysis-supported-value)
-      (publish-gated? publish-gated-value)
-      (retention-supported? retention-supported-value)
-      (lifecycle-state-valid? lifecycle-state-valid-value)
-      (database-storage-supported? database-storage-supported-value)
-      (database-capability-satisfied? database-capability-satisfied-value)
-      (diagnostics diagnostics-value)
-      (runtime-executed #f)
-      (source 'poo-flow.durable.artifact.policy)))
-
-(def (poo-flow-durable-artifact-validate artifact profile database-profile)
-  (let* ((artifact-id-value (.ref artifact 'artifact-id))
-         (profile-name-value (.ref profile 'name))
-         (database-name-value (.ref database-profile 'name))
-         (scope-contained-value
-          (poo-flow-artifact-values-contained?
-           (.ref artifact 'artifact-scope)
-           (.ref profile 'scope)))
-         (storage-supported-value
-          (poo-flow-artifact-values-contained?
-           (.ref artifact 'storage-class)
-           (.ref profile 'storage)))
-         (analysis-supported-value
-          (poo-flow-artifact-values-contained?
-           (.ref artifact 'analysis-policy)
-           (.ref profile 'analysis)))
-         (publish-gated-value
-          (and (poo-flow-artifact-values-contained?
-                (.ref artifact 'publish-policy)
-                (.ref profile 'publish))
-               (poo-flow-artifact-publish-gated? profile)
-               #t))
-         (retention-supported-value
-          (poo-flow-artifact-values-contained?
-           (.ref artifact 'retention-policy)
-           (.ref profile 'retention)))
-         (lifecycle-state-valid-value
-          (poo-flow-durable-artifact-lifecycle-state-valid?
-           (.ref artifact 'lifecycle-state)))
-         (database-storage-supported-value
-          (poo-flow-artifact-values-contained?
-           (.ref artifact 'storage-class)
-           (.ref database-profile 'storage)))
-         (database-capability-satisfied-value
-          (poo-flow-artifact-values-contained?
-           (.ref artifact 'index-policy)
-           (.ref database-profile 'capabilities)))
-         (diagnostics
-          (reverse
-           (poo-flow-artifact-diagnostic
-            (poo-flow-artifact-diagnostic
-             (poo-flow-artifact-diagnostic
-              (poo-flow-artifact-diagnostic
-               (poo-flow-artifact-diagnostic
-                (poo-flow-artifact-diagnostic
-                 (poo-flow-artifact-diagnostic
-                  (poo-flow-artifact-diagnostic
-                   '()
-                   scope-contained-value
-                   'artifact-scope-not-contained-by-profile)
-                  storage-supported-value
-                  'artifact-storage-not-supported-by-profile)
-                 analysis-supported-value
-                 'artifact-analysis-not-supported-by-profile)
-                publish-gated-value
-                'artifact-publish-policy-not-gated)
-               retention-supported-value
-               'artifact-retention-not-supported-by-profile)
-              lifecycle-state-valid-value
-              'artifact-lifecycle-state-invalid)
-             database-storage-supported-value
-             'artifact-storage-not-supported-by-database)
-            database-capability-satisfied-value
-            'artifact-database-capability-not-satisfied)))
-         (valid-value (and scope-contained-value
-                           storage-supported-value
-                           analysis-supported-value
-                           publish-gated-value
-                           retention-supported-value
-                           lifecycle-state-valid-value
-                           database-storage-supported-value
-                           database-capability-satisfied-value
-                           #t)))
-    (poo-flow-durable-artifact-policy-receipt/direct
-     artifact-id-value
-     profile-name-value
-     database-name-value
-     valid-value
-     scope-contained-value
-     storage-supported-value
-     analysis-supported-value
-     publish-gated-value
-     retention-supported-value
-     lifecycle-state-valid-value
-     database-storage-supported-value
-     database-capability-satisfied-value
-     diagnostics)))
-
-(def (poo-flow-durable-artifact-policy-receipt? receipt)
-  (and (object? receipt)
-       (.slot? receipt 'artifact-policy-receipt-kind)
-       (eq? (.ref receipt 'artifact-policy-receipt-kind)
-            +poo-flow-durable-artifact-policy-receipt-kind+)))
-
-(def (poo-flow-durable-artifact-policy-receipt-valid? receipt)
-  (.ref receipt 'valid?))
-
-(def (poo-flow-durable-artifact-policy-receipt->alist receipt)
-  (map (lambda (field) (cons field (.ref receipt field)))
-       +poo-flow-durable-artifact-policy-receipt-fields+))
-
 (def +poo-flow-durable-artifact-manifest-receipt-kind+
   'poo-flow.durable.artifact.manifest-receipt)
 
@@ -670,10 +79,12 @@
    runtime-executed)
   transparent: #t)
 
+;; : (-> Alist Symbol Datum Datum)
 (def (poo-flow-artifact-option-ref options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
 
+;; : (-> Datum Alist [Symbol])
 (def (poo-flow-artifact-manifest-diagnostics manifest-id policy-row)
   (append
    (if (symbol? manifest-id)
@@ -683,6 +94,7 @@
      '()
      (list 'artifact-policy-receipt-invalid))))
 
+;; : (-> PooDurableArtifact PooArtifactProfile PooArtifactDatabaseProfile [Alist] PooDurableArtifactManifestReceipt)
 (def (poo-flow-durable-artifact-manifest artifact
                                          profile
                                          database-profile
@@ -731,6 +143,7 @@
      #t
      #f)))
 
+;; : (-> PooDurableArtifactManifestReceipt Alist)
 (def (poo-flow-durable-artifact-manifest-receipt->alist receipt)
   (list
    (cons 'kind +poo-flow-durable-artifact-manifest-receipt-kind+)
@@ -775,6 +188,9 @@
    (cons 'runtime-executed
          (poo-flow-durable-artifact-manifest-receipt-runtime-executed receipt))))
 
+;;; Boundary: Marlin handoff projection preserves a stable manifest ABI while
+;;; keeping provider-specific transport details outside durable policy objects.
+;; : (-> PooDurableArtifactManifestReceipt [Alist] Alist)
 (def (poo-flow-durable-artifact-manifest->marlin-handoff receipt
                                                            . maybe-options)
   (let* ((options (if (null? maybe-options) '() (car maybe-options)))
@@ -857,6 +273,18 @@
      (cons 'runtime-parses-scheme-source #f)
      (cons 'scheme-manufactures-runtime-handlers #f))))
 
+;;; Boundary: this macro expands user artifact-profile syntax into runtime POO
+;;; profile construction without leaking syntax-phase witnesses.
+;; artifact-profile
+;; : (-> Syntax DurableArtifactProfileExpansionSyntax)
+;; | doc m%
+;;   Expand an artifact profile declaration into a POO-native durable artifact
+;;   profile, optionally applying profile hooks.
+;;   # Examples
+;;   ```scheme
+;;   (artifact-profile build outputs logs)
+;;   ;; => artifact profile object
+;;   ```
 (defsyntax (artifact-profile stx)
   (syntax-case stx (:with)
     ((_ name section ... :with (hook ...))
@@ -868,21 +296,66 @@
     ((_ name section ...)
      #'(poo-flow-artifact-profile 'name '(section ...)))))
 
+;;; Boundary: this macro preserves the database-profile expansion shape that
+;;; durable artifact policy validation and handoff code expect.
+;; database-profile
+;; : (-> Syntax DurableDatabaseProfileExpansionSyntax)
+;; | doc m%
+;;   Expand a durable database profile declaration for checkpoint and receipt stores.
+;;   # Examples
+;;   ```scheme
+;;   (database-profile project checkpoints receipts)
+;;   ;; => database profile object
+;;   ```
 (defsyntax (database-profile stx)
   (syntax-case stx ()
     ((_ name section ...)
      #'(poo-flow-artifact-database-profile 'name '(section ...)))))
 
+;;; Boundary: this macro keeps durable-artifact authoring syntax hygienic while
+;;; lowering to explicit runtime artifact object construction.
+;; durable-artifact
+;; : (-> Syntax DurableArtifactExpansionSyntax)
+;; | doc m%
+;;   Expand a durable artifact declaration into the policy object used by
+;;   artifact validation and runtime manifest projection.
+;;   # Examples
+;;   ```scheme
+;;   (durable-artifact build-log location retention visibility)
+;;   ;; => durable artifact object
+;;   ```
 (defsyntax (durable-artifact stx)
   (syntax-case stx ()
     ((_ artifact-id section ...)
      #'(poo-flow-durable-artifact 'artifact-id '(section ...)))))
 
+;;; Boundary: artifact-module preserves grouped artifact profile expansion as a
+;;; single POO object namespace for module loader consumption.
+;; artifact-module
+;; : (-> Syntax DurableArtifactModuleExpansionSyntax)
+;; | doc m%
+;;   Expand a group of artifact profile declarations into one POO module object.
+;;   # Examples
+;;   ```scheme
+;;   (artifact-module (_ build outputs) (_ test reports))
+;;   ;; => artifact module object
+;;   ```
 (defsyntax (artifact-module stx)
   (syntax-case stx ()
     ((_ (_ name section ...) ...)
      #'(.o (name (artifact-profile name section ...)) ...))))
 
+;;; Boundary: database-module preserves grouped database profile expansion as a
+;;; single POO object namespace for durable artifact policy.
+;; database-module
+;; : (-> Syntax DurableDatabaseModuleExpansionSyntax)
+;; | doc m%
+;;   Expand a group of database profile declarations into one POO module object.
+;;   # Examples
+;;   ```scheme
+;;   (database-module (_ project checkpoints) (_ session events))
+;;   ;; => database module object
+;;   ```
 (defsyntax (database-module stx)
   (syntax-case stx ()
     ((_ (_ name section ...) ...)

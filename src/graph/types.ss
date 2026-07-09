@@ -3,6 +3,12 @@
 ;;; Invariant: graph objects describe topology; they never schedule or run it.
 
 (import (only-in :clan/poo/object .ref .slot? object? object<-alist)
+        (only-in "../utilities/contracts.ss"
+                 poo-flow-object-type-contract->alist
+                 poo-flow-contract-alist?
+                 poo-flow-contract-list-of?)
+        (only-in "../utilities/contract-syntax.ss"
+                 defcontract-family)
         :poo-flow/src/module-system/projection-syntax)
 
 (export +poo-flow-graph-node-prototype-kind+
@@ -13,6 +19,18 @@
         graph-edge
         graph
         graph-analysis
+        +poo-flow-graph-node-slot-contracts+
+        +poo-flow-graph-edge-slot-contracts+
+        +poo-flow-graph-slot-contracts+
+        +poo-flow-graph-analysis-slot-contracts+
+        +poo-flow-graph-node-type-contract+
+        +poo-flow-graph-edge-type-contract+
+        +poo-flow-graph-type-contract+
+        +poo-flow-graph-analysis-type-contract+
+        poo-flow-graph-node-type-contract->alist
+        poo-flow-graph-edge-type-contract->alist
+        poo-flow-graph-type-contract->alist
+        poo-flow-graph-analysis-type-contract->alist
         poo-flow-graph-id?
         poo-flow-graph-require
         poo-flow-graph-every?
@@ -132,6 +150,10 @@
     (poo-flow-graph-every? predicate (cdr values)))
    (else #f)))
 
+;; : (-> Object Boolean)
+(def (poo-flow-graph-metadata? value)
+  (poo-flow-contract-alist? value))
+
 ;; : (-> Object [Object] [Alist] PooFlowGraphNode)
 (def (poo-flow-graph-node id . maybe-payload+metadata)
   (poo-flow-graph-require "graph node id must be a stable id"
@@ -159,6 +181,10 @@
        (.slot? value 'kind)
        (eq? (.ref value 'kind)
             +poo-flow-graph-node-prototype-kind+)))
+
+;; : (-> Object Boolean)
+(def (poo-flow-graph-node-list? value)
+  (poo-flow-contract-list-of? poo-flow-graph-node? value))
 
 ;; : (-> PooFlowGraphNode Object)
 (def (poo-flow-graph-node-id node)
@@ -227,6 +253,10 @@
        (.slot? value 'kind)
        (eq? (.ref value 'kind)
             +poo-flow-graph-edge-prototype-kind+)))
+
+;; : (-> Object Boolean)
+(def (poo-flow-graph-edge-list? value)
+  (poo-flow-contract-list-of? poo-flow-graph-edge? value))
 
 ;; : (-> PooFlowGraphEdge Object)
 (def (poo-flow-graph-edge-from edge)
@@ -374,6 +404,15 @@
        (eq? (.ref value 'kind)
             +poo-flow-graph-analysis-prototype-kind+)))
 
+;; : (-> Object Boolean)
+(def (poo-flow-graph-analysis-id-list? value)
+  (list? value))
+
+;; : (-> Object Boolean)
+(def (poo-flow-graph-analysis-maybe-list? value)
+  (or (not value)
+      (list? value)))
+
 ;; : (-> PooFlowGraphAnalysis Alist)
 (defpoo-module-final-projection
   poo-flow-graph-analysis->alist (analysis)
@@ -397,3 +436,272 @@
            (diagnostics (.ref checked-analysis 'diagnostics))
            (metadata (.ref checked-analysis 'metadata))
            (runtime-executed (.ref checked-analysis 'runtime-executed)))))
+
+;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
+;;   | doc m%
+;;       Declare graph node contracts as structured data while graph topology
+;;       semantics remain in the graph owner.
+;;
+;;       # Examples
+;;       ```scheme
+;;       +poo-flow-graph-node-slot-contracts+
+;;       ;; => graph-node-slot-contract-list
+;;       ```
+;;     %
+(defcontract-family
+  +poo-flow-graph-node-slot-contracts+
+  +poo-flow-graph-node-type-contract+
+  'graph/node
+  'graph
+  'PooFlowGraphNode
+  '((scope . graph) (projection . graph-node))
+  ((+poo-flow-graph-node-id-slot-contract+
+    'graph.node/id
+    'id
+    'PooFlowGraphId
+    'poo-flow-graph-id?
+    poo-flow-graph-id?
+    #t
+    '((scope . graph) (slot . id)))
+   (+poo-flow-graph-node-payload-slot-contract+
+    'graph.node/payload
+    'payload
+    'Object
+    'any
+    (lambda (_value) #t)
+    #f
+    '((scope . graph) (slot . payload) (optional . #t)))
+   (+poo-flow-graph-node-metadata-slot-contract+
+    'graph.node/metadata
+    'metadata
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . metadata)))))
+
+;; : (-> Alist)
+(def (poo-flow-graph-node-type-contract->alist)
+  (poo-flow-object-type-contract->alist
+   +poo-flow-graph-node-type-contract+))
+
+;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
+;;   | doc m%
+;;       Declare graph edge contracts as structured data for topology checks.
+;;
+;;       # Examples
+;;       ```scheme
+;;       +poo-flow-graph-edge-slot-contracts+
+;;       ;; => graph-edge-slot-contract-list
+;;       ```
+;;     %
+(defcontract-family
+  +poo-flow-graph-edge-slot-contracts+
+  +poo-flow-graph-edge-type-contract+
+  'graph/edge
+  'graph
+  'PooFlowGraphEdge
+  '((scope . graph) (projection . graph-edge))
+  ((+poo-flow-graph-edge-from-slot-contract+
+    'graph.edge/from
+    'from
+    'PooFlowGraphId
+    'poo-flow-graph-id?
+    poo-flow-graph-id?
+    #t
+    '((scope . graph) (slot . from)))
+   (+poo-flow-graph-edge-to-slot-contract+
+    'graph.edge/to
+    'to
+    'PooFlowGraphId
+    'poo-flow-graph-id?
+    poo-flow-graph-id?
+    #t
+    '((scope . graph) (slot . to)))
+   (+poo-flow-graph-edge-kind-slot-contract+
+    'graph.edge/edge-kind
+    'edge-kind
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '((scope . graph) (slot . edge-kind)))
+   (+poo-flow-graph-edge-metadata-slot-contract+
+    'graph.edge/metadata
+    'metadata
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . metadata)))))
+
+;; : (-> Alist)
+(def (poo-flow-graph-edge-type-contract->alist)
+  (poo-flow-object-type-contract->alist
+   +poo-flow-graph-edge-type-contract+))
+
+;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
+;;   | doc m%
+;;       Declare graph aggregate contracts using node and edge list predicates.
+;;
+;;       # Examples
+;;       ```scheme
+;;       +poo-flow-graph-slot-contracts+
+;;       ;; => graph-slot-contract-list
+;;       ```
+;;     %
+(defcontract-family
+  +poo-flow-graph-slot-contracts+
+  +poo-flow-graph-type-contract+
+  'graph
+  'graph
+  'PooFlowGraph
+  '((scope . graph) (projection . graph))
+  ((+poo-flow-graph-id-slot-contract+
+    'graph/graph-id
+    'graph-id
+    'PooFlowGraphId
+    'poo-flow-graph-id?
+    poo-flow-graph-id?
+    #t
+    '((scope . graph) (slot . graph-id)))
+   (+poo-flow-graph-nodes-slot-contract+
+    'graph/nodes
+    'nodes
+    '[PooFlowGraphNode]
+    'poo-flow-graph-node-list?
+    poo-flow-graph-node-list?
+    #t
+    '((scope . graph) (slot . nodes)))
+   (+poo-flow-graph-edges-slot-contract+
+    'graph/edges
+    'edges
+    '[PooFlowGraphEdge]
+    'poo-flow-graph-edge-list?
+    poo-flow-graph-edge-list?
+    #t
+    '((scope . graph) (slot . edges)))
+   (+poo-flow-graph-metadata-slot-contract+
+    'graph/metadata
+    'metadata
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . metadata)))))
+
+;; : (-> Alist)
+(def (poo-flow-graph-type-contract->alist)
+  (poo-flow-object-type-contract->alist
+   +poo-flow-graph-type-contract+))
+
+;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
+;;   | doc m%
+;;       Declare graph analysis contracts for algorithm receipts.
+;;
+;;       # Examples
+;;       ```scheme
+;;       +poo-flow-graph-analysis-slot-contracts+
+;;       ;; => graph-analysis-slot-contract-list
+;;       ```
+;;     %
+(defcontract-family
+  +poo-flow-graph-analysis-slot-contracts+
+  +poo-flow-graph-analysis-type-contract+
+  'graph/analysis
+  'graph
+  'PooFlowGraphAnalysis
+  '((scope . graph) (projection . graph-analysis))
+  ((+poo-flow-graph-analysis-graph-id-slot-contract+
+    'graph.analysis/graph-id
+    'graph-id
+    'PooFlowGraphId
+    'poo-flow-graph-id?
+    poo-flow-graph-id?
+    #t
+    '((scope . graph) (slot . graph-id)))
+   (+poo-flow-graph-analysis-node-count-slot-contract+
+    'graph.analysis/node-count
+    'node-count
+    'Number
+    'number?
+    number?
+    #t
+    '((scope . graph) (slot . node-count)))
+   (+poo-flow-graph-analysis-edge-count-slot-contract+
+    'graph.analysis/edge-count
+    'edge-count
+    'Number
+    'number?
+    number?
+    #t
+    '((scope . graph) (slot . edge-count)))
+   (+poo-flow-graph-analysis-root-ids-slot-contract+
+    'graph.analysis/root-ids
+    'root-ids
+    '[PooFlowGraphId]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . root-ids)))
+   (+poo-flow-graph-analysis-terminal-ids-slot-contract+
+    'graph.analysis/terminal-ids
+    'terminal-ids
+    '[PooFlowGraphId]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . terminal-ids)))
+   (+poo-flow-graph-analysis-reachable-ids-slot-contract+
+    'graph.analysis/reachable-ids
+    'reachable-ids
+    '[PooFlowGraphId]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . reachable-ids)))
+   (+poo-flow-graph-analysis-dependency-cone-slot-contract+
+    'graph.analysis/dependency-cone
+    'dependency-cone
+    '[PooFlowGraphId]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . dependency-cone)))
+   (+poo-flow-graph-analysis-topological-order-slot-contract+
+    'graph.analysis/topological-order
+    'topological-order
+    'MaybeList
+    'poo-flow-graph-analysis-maybe-list?
+    poo-flow-graph-analysis-maybe-list?
+    #t
+    '((scope . graph) (slot . topological-order)))
+   (+poo-flow-graph-analysis-cycle-path-slot-contract+
+    'graph.analysis/cycle-path
+    'cycle-path
+    'MaybeList
+    'poo-flow-graph-analysis-maybe-list?
+    poo-flow-graph-analysis-maybe-list?
+    #t
+    '((scope . graph) (slot . cycle-path)))
+   (+poo-flow-graph-analysis-diagnostics-slot-contract+
+    'graph.analysis/diagnostics
+    'diagnostics
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . diagnostics)))
+   (+poo-flow-graph-analysis-metadata-slot-contract+
+    'graph.analysis/metadata
+    'metadata
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . metadata)))))
+
+;; : (-> Alist)
+(def (poo-flow-graph-analysis-type-contract->alist)
+  (poo-flow-object-type-contract->alist
+   +poo-flow-graph-analysis-type-contract+))

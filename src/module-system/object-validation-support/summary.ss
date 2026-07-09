@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: object validation catalog summaries and require gates.
 
-(import :gerbil/gambit
+(import (only-in :std/srfi/1 fold)
+        :gerbil/gambit
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts
         :poo-flow/src/module-system/object-validation-support/harness
@@ -27,21 +28,17 @@
       harness-fields-cache
       field-origins-cache
       validations-rev)
-  (if (null? objects)
-    validations-rev
-    (poo-flow-module-objects-validation/rev
-     (cdr objects)
-     field-cache
-     harness-cache
-     harness-fields-cache
-     field-origins-cache
+  (fold
+   (lambda (object validations)
      (cons (poo-flow-module-object-validation/catalog-caches
-            (car objects)
+            object
             field-cache
             harness-cache
             harness-fields-cache
             field-origins-cache)
-           validations-rev))))
+           validations))
+   validations-rev
+   objects))
 
 ;; : (-> [PooModuleObject] [HashTable])
 (def (poo-flow-module-objects-validation objects)
@@ -72,19 +69,16 @@
 ;; : (-> [HashTable] [Symbol] [Symbol])
 (def (poo-flow-module-invalid-object-identities/rev validations
                                                     identities-rev)
-  (cond
-   ((null? validations) identities-rev)
-   ((poo-flow-module-object-validation-valid? (car validations))
-    (poo-flow-module-invalid-object-identities/rev
-     (cdr validations)
-     identities-rev))
-   (else
-    (let (identity (hash-get (car validations) 'object))
-      (poo-flow-module-invalid-object-identities/rev
-       (cdr validations)
-       (if identity
-         (cons identity identities-rev)
-         identities-rev))))))
+  (fold
+   (lambda (validation identities)
+     (if (poo-flow-module-object-validation-valid? validation)
+       identities
+       (let (identity (hash-get validation 'object))
+         (if identity
+           (cons identity identities)
+           identities))))
+   identities-rev
+   validations))
 
 ;; : (-> [HashTable] [Symbol])
 (def (poo-flow-module-invalid-object-identities validations)
@@ -96,12 +90,11 @@
 ;;; responsibilities centralized for callers.
 ;; : (-> [HashTable] Symbol [Value] [Value])
 (def (poo-flow-module-validation-values/rev validations key values-rev)
-  (if (null? validations)
-    values-rev
-    (poo-flow-module-validation-values/rev
-     (cdr validations)
-     key
-     (cons (hash-get (car validations) key) values-rev))))
+  (fold
+   (lambda (validation values)
+     (cons (hash-get validation key) values))
+   values-rev
+   validations))
 
 ;; : (-> [HashTable] Symbol [Value])
 (def (poo-flow-module-validation-values validations key)

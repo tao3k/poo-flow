@@ -10,6 +10,7 @@ from typing import Any
 from ..builder import RuntimeGraphBuilder
 from ..bindings import PooFlowRuntimeBinding
 from ..checkpoints import MemoryRuntimeGraphCheckpointer, RuntimeGraphCheckpoint
+from ..funflow import benchmark_funflow_cicd_sandbox_dag
 from ..subgraphs import RuntimeGraphSubgraph
 from ..validation import RuntimeValidationInput, ValidationRuntime
 
@@ -33,6 +34,7 @@ def run_composition_cases(
         _run_nested_subgraph_stream_projection(iterations),
         _run_cabi_status_hot_call(iterations),
         _run_validation_workflow_round_trip(iterations),
+        _run_funflow_cicd_sandbox_dag(iterations, fanout),
     ]
 
 
@@ -130,6 +132,23 @@ def _run_validation_workflow_round_trip(iterations: int) -> CompositionBenchmark
         iterations=iterations,
         elapsed_micros=elapsed,
         detail="manifest validation plus graph handoff workflow",
+    )
+
+
+def _run_funflow_cicd_sandbox_dag(
+    iterations: int, fanout: int
+) -> CompositionBenchmarkCase:
+    receipt = benchmark_funflow_cicd_sandbox_dag(iterations=iterations, fanout=fanout)
+    return CompositionBenchmarkCase(
+        scenario="funflow-cicd-sandbox-dag",
+        iterations=iterations,
+        elapsed_micros=receipt.elapsed_micros,
+        detail=(
+            "AnyIO DAG+sandbox CI/CD runtime; "
+            f"steps: {len(receipt.steps)}; "
+            f"max-wave-width: {receipt.max_wave_width}; "
+            f"trace: {'>'.join(receipt.trace)}"
+        ),
     )
 
 

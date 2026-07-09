@@ -170,44 +170,28 @@
 ;;; Duplicate runtime owners collapse into the first observed matrix row.
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-runtime-owner-symbols specs)
-  (let loop-specs ((remaining-specs specs)
-                   (owners-rev '()))
-    (cond
-     ((null? remaining-specs)
-      (reverse owners-rev))
-     (else
-      (let loop-owners ((remaining-owners
-                         (.ref (car remaining-specs) 'runtime-owned))
-                        (owners-rev owners-rev))
-        (cond
-         ((null? remaining-owners)
-          (loop-specs (cdr remaining-specs) owners-rev))
-         ((member (car remaining-owners) owners-rev)
-          (loop-owners (cdr remaining-owners) owners-rev))
-         (else
-          (loop-owners (cdr remaining-owners)
-                       (cons (car remaining-owners) owners-rev)))))))))
+  (reverse
+   (foldl
+    (lambda (spec owners-rev)
+      (foldl
+       (lambda (owner owner-acc)
+         (if (member owner owner-acc)
+           owner-acc
+           (cons owner owner-acc)))
+       owners-rev
+       (.ref spec 'runtime-owned)))
+    '()
+    specs)))
 
 ;;; Boundary: deferred output aggregation keeps spec order without repeated
 ;;; append growth while preserving each spec's local deferred order.
 ;; : (-> [PooObject] [Symbol])
 (def (alignment-deferred-values specs)
-  (let loop-specs ((remaining-specs specs)
-                   (deferred-rev '()))
-    (cond
-     ((null? remaining-specs)
-      (reverse deferred-rev))
-     (else
-      (let loop-deferred ((remaining-deferred
-                           (.ref (car remaining-specs) 'deferred))
-                          (deferred-rev deferred-rev))
-        (cond
-         ((null? remaining-deferred)
-          (loop-specs (cdr remaining-specs) deferred-rev))
-         (else
-          (loop-deferred (cdr remaining-deferred)
-                         (cons (car remaining-deferred)
-                               deferred-rev)))))))))
+  (foldr
+   (lambda (spec deferred-values)
+     (foldr cons deferred-values (.ref spec 'deferred)))
+   '()
+   specs))
 
 ;;; Boundary: status filtering stays over normalized spec rows.
 ;;; It supports coverage matrix projections without changing the source table.

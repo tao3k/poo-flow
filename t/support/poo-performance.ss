@@ -6,6 +6,8 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run)
+        :poo-flow/t/support/poo-performance-fixtures
+        :poo-flow/t/support/poo-performance-object-scenarios
         (only-in :clan/poo/object
                  .all-slots
                  .def
@@ -16,71 +18,10 @@
                  .ref
                  .setslot!
                  $constant-slot-spec)
-        :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-validation
         :poo-flow/src/module-system/indexed-family
-        (only-in :std/srfi/1 iota)
-        (only-in :std/sugar ormap filter))
+        (only-in :std/sugar ormap))
 
-(export poo-performance-load-fixture
-        poo-performance-construction-fixture-path
-        poo-performance-construction-fixture
-        poo-performance-materialization-fixture-path
-        poo-performance-materialization-fixture
-        poo-performance-validation-fixture-path
-        poo-performance-validation-fixture
-        poo-performance-catalog-validation-fixture-path
-        poo-performance-catalog-validation-fixture
-        poo-performance-object-iteration-fixture-path
-        poo-performance-object-iteration-fixture
-        poo-performance-clone-override-fixture-path
-        poo-performance-clone-override-fixture
-        poo-performance-field-lookup-fixture-path
-        poo-performance-field-lookup-fixture
-        poo-performance-composition-fixture-path
-        poo-performance-composition-fixture
-        poo-performance-extension-children-merge-fixture-path
-        poo-performance-extension-children-merge-fixture
-        poo-performance-cross-contribution-targeting-fixture-path
-        poo-performance-cross-contribution-targeting-fixture
-        poo-performance-local-contribution-coalescing-fixture-path
-        poo-performance-local-contribution-coalescing-fixture
-        poo-performance-tool-calling-object-list-control-fixture-path
-        poo-performance-tool-calling-object-list-control-fixture
-        poo-performance-fixed-slot-projection-fixture-path
-        poo-performance-fixed-slot-projection-fixture
-        poo-performance-large-profile-projection-fixture-path
-        poo-performance-large-profile-projection-fixture
-        poo-performance-generated-receipt-boundary-fixture-path
-        poo-performance-generated-receipt-boundary-fixture
-        poo-performance-runtime-request-family-fixture-path
-        poo-performance-runtime-request-family-fixture
-        poo-performance-policy-proof-fact-family-fixture-path
-        poo-performance-policy-proof-fact-family-fixture
-        poo-performance-strategy-profile-family-fixture-path
-        poo-performance-strategy-profile-family-fixture
-        poo-performance-durable-receipt-family-fixture-path
-        poo-performance-durable-receipt-family-fixture
-        poo-performance-benchmark-fixture-family-fixture-path
-        poo-performance-benchmark-fixture-family-fixture
-        poo-performance-marlin-runtime-handoff-profile-fixture-path
-        poo-performance-marlin-runtime-handoff-profile-fixture
-        poo-performance-prototype-composition-cache-fixture-path
-        poo-performance-prototype-composition-cache-fixture
-        poo-performance-composition-profile-declaration-fixture-path
-        poo-performance-composition-profile-declaration-fixture
-        poo-performance-composition-profiles-bulk-fixture-path
-        poo-performance-composition-profiles-bulk-fixture
-        poo-performance-composition-local-override-fixture-path
-        poo-performance-composition-local-override-fixture
-        poo-performance-composition-hook-override-fixture-path
-        poo-performance-composition-hook-override-fixture
-        poo-performance-composition-native-object-reuse-fixture-path
-        poo-performance-composition-native-object-reuse-fixture
-        poo-performance-fixture-paths
-        poo-performance-fixtures
-        benchmark-fixture-memory-contract-pass?
+(export benchmark-fixture-memory-contract-pass?
         poo-performance-fixture-policy-contract-pass?
         poo-performance-display-receipt
         poo-performance-run-gate
@@ -118,298 +59,7 @@
         poo-performance-generated-receipt-boundary-alist
         poo-performance-generated-receipt-boundary->alist
         poo-performance-generated-receipt-boundary-valid-count
-        poo-performance-generated-receipt-boundary-gate-receipt
-        poo-performance-slot-ref/default
-        poo-performance-build-list
-        poo-performance-field-name
-        poo-performance-field-contract
-        poo-performance-field-contracts
-        poo-performance-module-object
-        poo-performance-module-object-catalog
-        poo-performance-contribution-entries
-        poo-performance-catalog-contributions
-        poo-performance-override-slots
-        poo-performance-snapshot-sum
-        poo-performance-object-node-lookup-count
-        poo-performance-extension-child-name
-        poo-performance-extension-child
-        poo-performance-extension-children
-        poo-performance-extension-merge-root
-        poo-performance-extension-node-extend-operations
-        poo-performance-cross-contribution-child-name
-        poo-performance-cross-contribution-child
-        poo-performance-cross-contribution-create-operations
-        poo-performance-cross-contribution-targeting-contributions
-        poo-performance-local-slot-contributions)
-
-;; : (-> String Alist)
-(def (poo-performance-load-fixture path)
-  (call-with-input-file path read))
-
-;; : String
-(def poo-performance-construction-fixture-path
-  "t/scenarios/performance/poo-construction/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-construction-fixture)
-  (poo-performance-load-fixture poo-performance-construction-fixture-path))
-
-;; : String
-(def poo-performance-materialization-fixture-path
-  "t/scenarios/performance/poo-loop-materialization/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-materialization-fixture)
-  (poo-performance-load-fixture poo-performance-materialization-fixture-path))
-
-;; : String
-(def poo-performance-validation-fixture-path
-  "t/scenarios/performance/poo-loop-validation/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-validation-fixture)
-  (poo-performance-load-fixture poo-performance-validation-fixture-path))
-
-;; : String
-(def poo-performance-catalog-validation-fixture-path
-  "t/scenarios/performance/poo-catalog-validation/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-catalog-validation-fixture)
-  (poo-performance-load-fixture poo-performance-catalog-validation-fixture-path))
-
-;; : String
-(def poo-performance-object-iteration-fixture-path
-  "t/scenarios/performance/poo-object-iteration/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-object-iteration-fixture)
-  (poo-performance-load-fixture poo-performance-object-iteration-fixture-path))
-
-;; : String
-(def poo-performance-clone-override-fixture-path
-  "t/scenarios/performance/poo-clone-override/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-clone-override-fixture)
-  (poo-performance-load-fixture poo-performance-clone-override-fixture-path))
-
-;; : String
-(def poo-performance-field-lookup-fixture-path
-  "t/scenarios/performance/poo-field-lookup-loop/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-field-lookup-fixture)
-  (poo-performance-load-fixture poo-performance-field-lookup-fixture-path))
-
-;; : String
-(def poo-performance-composition-fixture-path
-  "t/scenarios/performance/poo-loop-composition/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-composition-fixture)
-  (poo-performance-load-fixture poo-performance-composition-fixture-path))
-
-;; : String
-(def poo-performance-extension-children-merge-fixture-path
-  "t/scenarios/performance/poo-extension-children-merge/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-extension-children-merge-fixture)
-  (poo-performance-load-fixture
-   poo-performance-extension-children-merge-fixture-path))
-
-;; : String
-(def poo-performance-cross-contribution-targeting-fixture-path
-  "t/scenarios/performance/poo-cross-contribution-targeting/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-cross-contribution-targeting-fixture)
-  (poo-performance-load-fixture
-   poo-performance-cross-contribution-targeting-fixture-path))
-
-;; : String
-(def poo-performance-local-contribution-coalescing-fixture-path
-  "t/scenarios/performance/poo-local-contribution-coalescing/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-local-contribution-coalescing-fixture)
-  (poo-performance-load-fixture
-   poo-performance-local-contribution-coalescing-fixture-path))
-
-;; : String
-(def poo-performance-tool-calling-object-list-control-fixture-path
-  "t/scenarios/performance/tool-calling-object-list-control/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-tool-calling-object-list-control-fixture)
-  (poo-performance-load-fixture
-   poo-performance-tool-calling-object-list-control-fixture-path))
-
-;; : String
-(def poo-performance-fixed-slot-projection-fixture-path
-  "t/scenarios/performance/poo-fixed-slot-projection/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-fixed-slot-projection-fixture)
-  (poo-performance-load-fixture
-   poo-performance-fixed-slot-projection-fixture-path))
-
-(def poo-performance-large-profile-projection-fixture-path
-  "t/scenarios/performance/poo-large-profile-projection/benchmark.ss")
-
-(def (poo-performance-large-profile-projection-fixture)
-  (poo-performance-load-fixture
-   poo-performance-large-profile-projection-fixture-path))
-
-(def poo-performance-generated-receipt-boundary-fixture-path
-  "t/scenarios/performance/poo-generated-receipt-boundary/benchmark.ss")
-
-(def (poo-performance-generated-receipt-boundary-fixture)
-  (poo-performance-load-fixture
-   poo-performance-generated-receipt-boundary-fixture-path))
-
-;; : String
-(def poo-performance-runtime-request-family-fixture-path
-  "t/scenarios/performance/poo-runtime-request-family/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-runtime-request-family-fixture)
-  (poo-performance-load-fixture
-   poo-performance-runtime-request-family-fixture-path))
-
-;; : String
-(def poo-performance-policy-proof-fact-family-fixture-path
-  "t/scenarios/performance/poo-policy-proof-fact-family/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-policy-proof-fact-family-fixture)
-  (poo-performance-load-fixture
-   poo-performance-policy-proof-fact-family-fixture-path))
-
-;; : String
-(def poo-performance-strategy-profile-family-fixture-path
-  "t/scenarios/performance/poo-strategy-profile-family/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-strategy-profile-family-fixture)
-  (poo-performance-load-fixture
-   poo-performance-strategy-profile-family-fixture-path))
-
-;; : String
-(def poo-performance-durable-receipt-family-fixture-path
-  "t/scenarios/performance/poo-durable-receipt-family/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-durable-receipt-family-fixture)
-  (poo-performance-load-fixture
-   poo-performance-durable-receipt-family-fixture-path))
-
-;; : String
-(def poo-performance-benchmark-fixture-family-fixture-path
-  "t/scenarios/performance/poo-benchmark-fixture-family/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-benchmark-fixture-family-fixture)
-  (poo-performance-load-fixture
-   poo-performance-benchmark-fixture-family-fixture-path))
-
-;; : String
-(def poo-performance-marlin-runtime-handoff-profile-fixture-path
-  "t/scenarios/performance/poo-marlin-runtime-handoff-profile/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-marlin-runtime-handoff-profile-fixture)
-  (poo-performance-load-fixture
-   poo-performance-marlin-runtime-handoff-profile-fixture-path))
-
-;; : String
-(def poo-performance-prototype-composition-cache-fixture-path
-  "t/scenarios/performance/poo-prototype-composition-cache/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-prototype-composition-cache-fixture)
-  (poo-performance-load-fixture
-   poo-performance-prototype-composition-cache-fixture-path))
-
-;; : String
-(def poo-performance-composition-profile-declaration-fixture-path
-  "t/scenarios/performance/poo-composition-profile-declaration/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-composition-profile-declaration-fixture)
-  (poo-performance-load-fixture
-   poo-performance-composition-profile-declaration-fixture-path))
-
-;; : String
-(def poo-performance-composition-profiles-bulk-fixture-path
-  "t/scenarios/performance/poo-composition-profiles-bulk/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-composition-profiles-bulk-fixture)
-  (poo-performance-load-fixture
-   poo-performance-composition-profiles-bulk-fixture-path))
-
-;; : String
-(def poo-performance-composition-local-override-fixture-path
-  "t/scenarios/performance/poo-composition-local-override/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-composition-local-override-fixture)
-  (poo-performance-load-fixture
-   poo-performance-composition-local-override-fixture-path))
-
-;; : String
-(def poo-performance-composition-hook-override-fixture-path
-  "t/scenarios/performance/poo-composition-hook-override/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-composition-hook-override-fixture)
-  (poo-performance-load-fixture
-   poo-performance-composition-hook-override-fixture-path))
-
-;; : String
-(def poo-performance-composition-native-object-reuse-fixture-path
-  "t/scenarios/performance/poo-composition-native-object-reuse/benchmark.ss")
-
-;; : (-> Alist)
-(def (poo-performance-composition-native-object-reuse-fixture)
-  (poo-performance-load-fixture
-   poo-performance-composition-native-object-reuse-fixture-path))
-
-;; : [String]
-(def poo-performance-fixture-paths
-  (list poo-performance-construction-fixture-path
-        poo-performance-materialization-fixture-path
-        poo-performance-validation-fixture-path
-        poo-performance-catalog-validation-fixture-path
-        poo-performance-object-iteration-fixture-path
-        poo-performance-clone-override-fixture-path
-        poo-performance-field-lookup-fixture-path
-        poo-performance-extension-children-merge-fixture-path
-        poo-performance-cross-contribution-targeting-fixture-path
-        poo-performance-local-contribution-coalescing-fixture-path
-        poo-performance-tool-calling-object-list-control-fixture-path
-        poo-performance-fixed-slot-projection-fixture-path
-        poo-performance-large-profile-projection-fixture-path
-        poo-performance-generated-receipt-boundary-fixture-path
-        poo-performance-runtime-request-family-fixture-path
-        poo-performance-policy-proof-fact-family-fixture-path
-        poo-performance-strategy-profile-family-fixture-path
-        poo-performance-durable-receipt-family-fixture-path
-        poo-performance-benchmark-fixture-family-fixture-path
-        poo-performance-marlin-runtime-handoff-profile-fixture-path
-        poo-performance-prototype-composition-cache-fixture-path
-        poo-performance-composition-profile-declaration-fixture-path
-        poo-performance-composition-profiles-bulk-fixture-path
-        poo-performance-composition-local-override-fixture-path
-        poo-performance-composition-hook-override-fixture-path
-        poo-performance-composition-native-object-reuse-fixture-path
-        poo-performance-composition-fixture-path))
-
-;; : (-> [Alist])
-(def (poo-performance-fixtures)
-  (map poo-performance-load-fixture poo-performance-fixture-paths))
+        poo-performance-generated-receipt-boundary-gate-receipt)
 
 ;; : (-> Alist Boolean)
 (def (benchmark-fixture-memory-contract-pass? fixture)
@@ -576,7 +226,21 @@
   (newline)
   (force-output))
 
-;; : (-> Alist (-> Value) Alist)
+;; poo-performance-run-gate
+;;   : (-> Alist (-> Object) Alist)
+;;   | doc m%
+;;       Checks the local POO benchmark policy contract before entering the
+;;       measured thunk, so scenario gates fail before they allocate work.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (benchmark-receipt-pass?
+;;        (poo-performance-run-gate
+;;         (poo-performance-fixed-slot-projection-fixture)
+;;         (lambda () 1)))
+;;       ;; => #t
+;;       ```
+;;     %
 (def (poo-performance-run-gate fixture thunk)
   (if (poo-performance-fixture-policy-contract-pass? fixture)
     (benchmark-run fixture thunk)
@@ -688,7 +352,7 @@
       with-family
       (cons (cons 'source source-tag) with-family))))
 
-;; : (-> PooObject Alist Symbol Value Value)
+;; : (-> PooObject Alist Symbol Object Object)
 (def (poo-performance-family-ref family alist key default-value)
   (if (eq? (poo-performance-slot-ref/default
             alist
@@ -698,7 +362,7 @@
     (poo-performance-slot-ref/default alist key default-value)
     default-value))
 
-;; : (-> PooObject Alist (-> Value) Alist)
+;; : (-> PooObject Alist (-> Object) Alist)
 (def (poo-performance-family-run-gate family fixture thunk)
   (poo-performance-family-alist
    family
@@ -716,11 +380,11 @@
 (def (poo-performance-indexed-family-slot-index family-object slot-name)
   (poo-indexed-family-slot-index family-object slot-name))
 
-;; : (-> POOObject (Listof Any) POOObject)
+;; : (-> POOObject [Object] POOObject)
 (def (poo-performance-indexed-family-object family-object values)
   (poo-indexed-family-object family-object values))
 
-;; : (-> POOObject POOObject Symbol Any Any)
+;; : (-> POOObject POOObject Symbol Object Object)
 (def (poo-performance-indexed-family-ref family-object object slot-name default-value)
   (poo-indexed-family-ref family-object object slot-name default-value))
 
@@ -734,11 +398,11 @@
 (def (poo-performance-indexed-family-slot-lens family-object slot-name)
   (poo-indexed-family-slot-lens family-object slot-name))
 
-;; : (-> POOObject (Listof Pair) Vector)
+;; : (-> POOObject Alist Vector)
 (def (poo-performance-indexed-family-lenses family-object specs)
   (poo-indexed-family-lenses family-object specs))
 
-;; : (-> POOObject POOObject Any Any)
+;; : (-> POOObject POOObject Object Object)
 (def (poo-performance-indexed-family-slot-lens-ref lens object default-value)
   (poo-indexed-family-slot-lens-ref lens object default-value))
 
@@ -754,21 +418,34 @@
       (list (cons 'name descriptor-name)
             (cons 'value value))))))
 
-;; : (-> PooObject PooObject [Pair] Vector)
+;; : (-> PooObject PooObject Pair Alist)
+(def (poo-performance-family-descriptor family object spec)
+  (poo-performance-family-alist
+   family
+   (list (cons 'name (cdr spec))
+         (cons 'value (.ref object (car spec))))))
+
+;; poo-performance-family-descriptor-vector
+;;   : (-> PooObject PooObject Alist Vector)
+;;   | doc m%
+;;       Projects a POO object through an explicit slot descriptor alist and
+;;       returns vectorized descriptor rows for benchmark receipt boundaries.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (vector-length
+;;        (poo-performance-family-descriptor-vector
+;;         +poo-performance-large-runtime-profile-family+
+;;         (.o (profile-id 'example))
+;;         '((profile-id . profile-id))))
+;;       ;; => 1
+;;       ```
+;;     %
 (def (poo-performance-family-descriptor-vector family object specs)
   (list->vector
-   (let loop ((rest specs) (descriptors-rev '()))
-     (if (null? rest)
-       (reverse descriptors-rev)
-       (let* ((spec (car rest))
-              (slot (car spec))
-              (name (cdr spec)))
-         (loop (cdr rest)
-               (cons (poo-performance-family-alist
-                      family
-                      (list (cons 'name name)
-                            (cons 'value (.ref object slot))))
-                     descriptors-rev)))))))
+   (map (lambda (spec)
+          (poo-performance-family-descriptor family object spec))
+        specs)))
 
 ;; : (-> PooObject Symbol PooObject)
 (def (poo-performance-family-slot-lens family-object slot-name)
@@ -776,11 +453,11 @@
       (family family-object)
       (slot slot-name)))
 
-;; : (-> PooObject PooObject Value)
+;; : (-> PooObject PooObject Object)
 (def (poo-performance-family-slot-lens-ref lens object)
   (.ref object (.ref lens 'slot)))
 
-;; : [Pair]
+;; : Alist
 (def +poo-performance-large-profile-projection-specs+
   '((profile-id . profile-id)
     (policy . policy)
@@ -793,12 +470,14 @@
     (priority . priority)
     (limit . limit)))
 
+;; : POOObject
 (def +poo-performance-large-runtime-profile-layout+
   (poo-performance-indexed-family
    'poo-performance-large-runtime-profile-family
    'poo-flow.performance.large-runtime-profile
    (map car +poo-performance-large-profile-projection-specs+)))
 
+;; : Vector
 (def +poo-performance-large-runtime-profile-lenses+
   (poo-performance-indexed-family-lenses
    +poo-performance-large-runtime-profile-layout+
@@ -826,6 +505,7 @@
      profile
      +poo-performance-large-profile-projection-specs+)))
 
+;; : (-> PooObject)
 (def (poo-performance-large-profile-indexed-object)
   (poo-performance-indexed-family-object
    +poo-performance-large-runtime-profile-layout+
@@ -840,12 +520,14 @@
      7
      128)))
 
+;; : (-> Vector)
 (def (poo-performance-large-profile-indexed-descriptors)
   (poo-performance-indexed-family-project-descriptors
    +poo-performance-large-runtime-profile-layout+
    (poo-performance-large-profile-indexed-object)
    +poo-performance-large-runtime-profile-lenses+))
 
+;; : (-> Integer Integer)
 (def (poo-performance-large-profile-indexed-valid-count rounds)
   (let* ((object (poo-performance-large-profile-indexed-object))
          (lenses +poo-performance-large-runtime-profile-lenses+)
@@ -895,6 +577,7 @@
    (lambda ()
      (poo-performance-large-profile-projection-valid-count rounds))))
 
+;; : PooPerformanceGeneratedLoopReceipt
 (defstruct poo-performance-generated-loop-receipt
   (profile-id status runtime checkpoint sandbox tool-scope proof))
 
@@ -951,240 +634,3 @@
    (poo-performance-generated-receipt-boundary-fixture)
    (lambda ()
      (poo-performance-generated-receipt-boundary-valid-count rounds))))
-
-;; : (-> Alist Symbol Value Value)
-(def (poo-performance-slot-ref/default slots key default-value)
-  (let (entry (assoc key slots))
-    (if entry (cdr entry) default-value)))
-
-;; poo-performance-build-list
-;;   : (-> Integer (-> Integer Value) [Value])
-;;   | doc m%
-;;       `poo-performance-build-list count make-value` builds deterministic
-;;       index-addressed fixture lists for synthetic benchmark data.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (poo-performance-build-list 3 (lambda (index) index))
-;;       ;; => (0 1 2)
-;;       ```
-;;     %
-(def (poo-performance-build-list count make-value)
-  (map make-value (iota count)))
-
-;; : (-> Integer Symbol)
-(def (poo-performance-field-name index)
-  (string->symbol
-   (string-append "field-" (number->string index))))
-
-;; : (-> Integer PooModuleFieldContract)
-(def (poo-performance-field-contract index)
-  (poo-flow-module-field-contract
-   (poo-performance-field-name index)
-   'Any
-   'override
-   index
-   '((scenario . poo-performance))))
-
-;; : (-> Integer [PooModuleFieldContract])
-(def (poo-performance-field-contracts count)
-  (poo-performance-build-list count poo-performance-field-contract))
-
-;; : (-> Integer PooModuleObject)
-(def (poo-performance-module-object field-count)
-  (poo-flow-module-object
-   'performance-object
-   '()
-   (poo-performance-field-contracts field-count)
-   '((scenario . poo-performance))))
-
-;; : (-> Integer Integer [PooModuleObject])
-(def (poo-performance-module-object-catalog object-count field-count)
-  (let (base-object
-        (poo-flow-module-object
-         'performance-base
-         '()
-         (poo-performance-field-contracts field-count)
-         '((scenario . poo-performance-base))))
-    (poo-performance-build-list
-     object-count
-     (lambda (index)
-       (poo-flow-module-object
-        (string->symbol
-         (string-append "performance-child-"
-                        (number->string index)))
-        (list base-object)
-        '()
-        '((scenario . poo-performance-child)))))))
-
-;; : (-> Integer PooModuleObjectContributionEntries)
-(def (poo-performance-contribution-entries count)
-  (poo-performance-build-list
-   count
-   (lambda (index)
-     (cons (poo-performance-field-name index)
-           (+ index 1000)))))
-
-;; poo-performance-catalog-contributions
-;;   : (-> [PooModuleObject] Integer [PooModuleFieldContribution])
-;;   | doc m%
-;;       `poo-performance-catalog-contributions objects field-count` projects
-;;       one shared contribution-entry fixture through every object in order.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (length (poo-performance-catalog-contributions
-;;                (poo-performance-module-object-catalog 2 3)
-;;                3))
-;;       ;; => 6
-;;       ```
-;;     %
-(def (poo-performance-values/rev-onto values values-rev)
-  (let loop ((remaining-values values)
-             (result values-rev))
-    (if (null? remaining-values)
-      result
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) result)))))
-
-(def (poo-performance-object-contributions/rev objects entries contributions-rev)
-  (if (null? objects)
-    contributions-rev
-    (poo-performance-object-contributions/rev
-     (cdr objects)
-     entries
-     (poo-performance-values/rev-onto
-      (poo-flow-module-object-contributions (car objects) entries)
-      contributions-rev))))
-
-(def (poo-performance-catalog-contributions objects field-count)
-  (let (entries (poo-performance-contribution-entries field-count))
-    (reverse
-     (poo-performance-object-contributions/rev objects entries '()))))
-
-;; : (-> Integer Integer PooModuleSlotMap)
-(def (poo-performance-override-slots count key-span)
-  (poo-performance-build-list
-   count
-   (lambda (index)
-     (cons (poo-performance-field-name (modulo index key-span))
-           (+ index 2000)))))
-
-;; poo-performance-snapshot-sum
-;;   : (-> [Pair] Integer Integer)
-;;   | doc m%
-;;       `poo-performance-snapshot-sum slots rounds` repeats the same
-;;       materialized slot-value sum to keep benchmark loops scalar and stable.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (poo-performance-snapshot-sum '((a . 1) (b . 2)) 3)
-;;       ;; => 9
-;;       ```
-;;     %
-(def (poo-performance-snapshot-sum slots rounds)
-  (* rounds (apply + (map cdr slots))))
-
-;; poo-performance-object-node-lookup-count
-;;   : (-> PooModuleExtensionNode [Symbol] Integer Integer)
-;;   | doc m%
-;;       `poo-performance-object-node-lookup-count objects-node identities
-;;       rounds` counts indexed object hits once, then scales by benchmark rounds.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (poo-performance-object-node-lookup-count
-;;        (poo-flow-module-objects-node
-;;         (poo-performance-module-object-catalog 2 1))
-;;        '(performance-child-0 missing)
-;;        3)
-;;       ;; => 3
-;;       ```
-;;     %
-(def (poo-performance-object-node-lookup-count objects-node identities rounds)
-  (let (objects-index (poo-flow-module-objects-index objects-node))
-    (* rounds
-       (length
-        (filter (lambda (identity)
-                  (poo-flow-module-objects-ref/index objects-index identity))
-                identities)))))
-
-;; : (-> Integer Symbol)
-(def (poo-performance-extension-child-name index)
-  (string->symbol
-   (string-append "extension-child-" (number->string index))))
-
-;; : (-> Integer Integer PooModuleExtensionNode)
-(def (poo-performance-extension-child index slot-offset)
-  (poo-flow-module-extension-node
-   (poo-performance-extension-child-name index)
-   (list (cons 'value (+ slot-offset index)))
-   '()))
-
-;; : (-> Integer Integer [PooModuleExtensionNode])
-(def (poo-performance-extension-children count slot-offset)
-  (poo-performance-build-list
-   count
-   (lambda (index)
-     (poo-performance-extension-child index slot-offset))))
-
-;; : (-> Integer PooModuleExtensionNode)
-(def (poo-performance-extension-merge-root count)
-  (poo-flow-module-extension-node
-   'extension-root
-   '((kind . extension-merge-root))
-   (poo-performance-extension-children count 1000)))
-
-;; : (-> Integer Integer [PooModuleExtensionOperation])
-(def (poo-performance-extension-node-extend-operations count key-span)
-  (poo-performance-build-list
-   count
-   (lambda (index)
-     (poo-flow-module-extension-node-extend
-      (poo-flow-module-extension-node
-       (poo-performance-extension-child-name (modulo index key-span))
-       (list (cons 'value (+ 2000 index)))
-       '())))))
-
-;; : (-> Integer Symbol)
-(def (poo-performance-cross-contribution-child-name index)
-  (string->symbol
-   (string-append "cross-contribution-child-" (number->string index))))
-
-;; : (-> Integer PooModuleExtensionNode)
-(def (poo-performance-cross-contribution-child index)
-  (poo-flow-module-extension-node
-   (poo-performance-cross-contribution-child-name index)
-   (list (cons 'created-order index))
-   '()))
-
-;; : (-> Integer [PooModuleExtensionOperation])
-(def (poo-performance-cross-contribution-create-operations count)
-  (poo-performance-build-list
-   count
-   (lambda (index)
-     (poo-flow-module-extension-node-extend
-      (poo-performance-cross-contribution-child index)))))
-
-;; : (-> Integer Symbol [PooModuleExtensionContribution])
-(def (poo-performance-cross-contribution-targeting-contributions child-count target)
-  (list
-   (poo-flow-module-extension-contribution
-    'extension-root
-    (poo-performance-cross-contribution-create-operations child-count))
-   (poo-flow-module-extension-contribution
-    target
-    (list (poo-flow-module-extension-slot-override 'targeted? #t)
-          (poo-flow-module-extension-slot-override 'target-phase 'same-pass)))))
-
-;; : (-> Symbol Integer [PooModuleExtensionContribution])
-(def (poo-performance-local-slot-contributions target count)
-  (poo-performance-build-list
-   count
-   (lambda (index)
-     (poo-flow-module-extension-contribution
-      target
-      (list
-       (poo-flow-module-extension-slot-override
-        (poo-performance-field-name index)
-        index))))))

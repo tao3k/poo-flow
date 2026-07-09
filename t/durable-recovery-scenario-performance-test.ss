@@ -136,21 +136,28 @@
               runtime-store
               memory-job-rows
               index)))))
-    (list
-     (cons 'scenario-count (length rows))
-     (cons 'first-valid?
-           (durable-recovery-performance-ref (car rows) 'valid?))
-     (cons 'last-scenario-id
-           (durable-recovery-performance-ref
-            (list-ref rows (- count 1))
-            'scenario-id))
-     (cons 'observability-count
-           (length
-            (durable-recovery-performance-ref (car rows)
-                                              'observability-rows)))
-     (cons 'runtime-executed
-           (durable-recovery-performance-ref (car rows)
-                                             'runtime-executed)))))
+    (map (lambda (entry)
+           (cons (car entry) ((cdr entry))))
+         (list
+          (cons 'scenario-count
+                (lambda () (length rows)))
+          (cons 'first-valid?
+                (lambda ()
+                  (durable-recovery-performance-ref (car rows) 'valid?)))
+          (cons 'last-scenario-id
+                (lambda ()
+                  (durable-recovery-performance-ref
+                   (list-ref rows (- count 1))
+                   'scenario-id)))
+          (cons 'observability-count
+                (lambda ()
+                  (length
+                   (durable-recovery-performance-ref (car rows)
+                                                     'observability-rows))))
+          (cons 'runtime-executed
+                (lambda ()
+                  (durable-recovery-performance-ref (car rows)
+                                                    'runtime-executed)))))))
 
 ;; : TestSuite
 (def durable-recovery-scenario-performance-test

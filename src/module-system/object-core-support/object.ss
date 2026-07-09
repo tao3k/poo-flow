@@ -111,6 +111,7 @@
 (def (poo-flow-module-object-metadata object)
   (poo-flow-module-object-constant-slot-ref object 'metadata))
 
+;; : (-> PooModuleObject Vector)
 (def (poo-flow-module-object-inheritance-chain-cache object)
   (poo-flow-module-object-constant-slot-ref object 'inheritance-chain-cache))
 
@@ -123,7 +124,16 @@
 
 ;;; Descriptor slots are plain POO constant slot specs. Read them from the POO
 ;;; object's slot table so metadata projections do not instantiate every object.
+;; poo-flow-module-object-constant-slot-ref/default
 ;; : (-> PooModuleObject Symbol Value Value)
+;; | doc m%
+;;   Read a constant POO slot from a module-system object and return the
+;;   provided fallback when the slot is absent or dynamic.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-module-object-constant-slot-ref/default object 'enabled? #f)
+;;   ;; => #t
+;;   ```
 (def (poo-flow-module-object-constant-slot-ref/default object key default)
   (let loop ((slots (object-slots object)))
     (cond
@@ -220,6 +230,7 @@
                   (poo-flow-module-object-field-identity field)
                   #t))
      base)
+    ;; : (-> Any Any)
     (def (finish-field field)
       (let (identity
             (poo-flow-module-object-field-identity field))
@@ -235,11 +246,13 @@
              overrides
              identity))
           field)))
+    ;; : (-> Any Any)
     (def (finish-base/rev fields fields-rev)
       (if (null? fields)
         fields-rev
         (finish-base/rev (cdr fields)
                          (cons (finish-field (car fields)) fields-rev))))
+    ;; : (-> Any Any)
     (def (finish-new/rev identities fields-rev)
       (if (null? identities)
         fields-rev
@@ -249,6 +262,7 @@
                 overrides
                 (car identities))
                fields-rev))))
+    ;; : (-> Any Any)
     (def (finish new-identities)
       (reverse
        (finish-new/rev
@@ -281,13 +295,15 @@
 (def (poo-flow-module-object-inherited-fields inherits)
   (if (null? inherits)
     '()
-    (let loop ((rest inherits) (fields '()))
-      (if (null? rest)
+    (foldl
+     (lambda (inherit fields)
+       (poo-flow-module-object-fields-merge
         fields
-        (loop (cdr rest)
-              (poo-flow-module-object-fields-merge
-               fields
-               (poo-flow-module-object-resolved-fields (car rest))))))))
+        (poo-flow-module-object-resolved-fields inherit)))
+     '()
+     ;; Fold parents from weakest to strongest: left parents override right
+     ;; parents, while field projection remains root/right/left/child.
+     (reverse inherits))))
 
 ;;; Resolved fields avoid POO slot evaluation for leaf objects and only consult
 ;;; computed inheritance state when the object has parents.
@@ -388,6 +404,7 @@
      (lambda (entry)
        (hash-put! base-seen (car entry) #t))
      base)
+    ;; : (-> Any Any)
     (def (finish-entry entry)
       (let (key (car entry))
         (if (and (poo-flow-module-config-slot-key-hash-ref
@@ -403,11 +420,13 @@
                    overrides
                    key)))
           entry)))
+    ;; : (-> Any Any)
     (def (finish-base/rev entries rows-rev)
       (if (null? entries)
         rows-rev
         (finish-base/rev (cdr entries)
                          (cons (finish-entry (car entries)) rows-rev))))
+    ;; : (-> Any Any)
     (def (finish-new/rev keys rows-rev)
       (if (null? keys)
         rows-rev
@@ -418,6 +437,7 @@
                       overrides
                       (car keys)))
                rows-rev))))
+    ;; : (-> Any Any)
     (def (finish new-keys)
       (reverse
        (finish-new/rev

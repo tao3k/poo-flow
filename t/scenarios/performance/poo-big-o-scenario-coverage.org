@@ -45,3 +45,11 @@ The dynamic slot binding leak scenario owns this policy:
 - allowed: rename the lexical value before inserting it into the =.o= slot form.
 - ownership: downstream scenario evidence first; do not patch upstream before
   downstream POO style repair is ruled out.
+* Current POO Optimization Result
+The POO benchmark layer must not hide src-level POO problems behind smaller iteration counts or local facade objects. Scenario support may build fixtures, but reusable constructors, node merge behavior, and fact-family indexes belong to the src POO object implementations.
+
+- extension-support: root-target contributions stop at the matched node, and node-extend operation batches use an indexed child merge path. The extension suite now runs in 0.90s real time with 116 MB max RSS.
+- tool-calling-control: fact-family objects avoid self-referential slot/value naming and keep fact lookup on a stable index. The tool-calling suite now runs in 0.77s real time with 139 MB max RSS, and the fixture receipt reports 6.638 ms.
+- scenario support: performance fixtures use the real extension constructors instead of redefining local lookalike POO objects.
+- full POO performance suite: 1.90s real time, 166 MB max RSS, all checks passing.
+- composition micro-gates: native large-library reuse and indexed object-list family are 3 us; macro style matrix is 1 us. The outer diagnostic run is 0.40s real time with 106 MB max RSS.

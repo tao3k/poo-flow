@@ -24,11 +24,7 @@
 
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-slot-values/rev-onto values tail)
-  (if (null? values)
-    tail
-    (poo-flow-module-extension-slot-values/rev-onto
-     (cdr values)
-     (cons (car values) tail))))
+  (foldl cons tail values))
 
 ;; poo-flow-module-extension-slots-merge
 ;;   : (-> PooModuleSlotMap PooModuleSlotMap PooModuleSlotMap)
@@ -51,6 +47,7 @@
         (overrides (make-hash-table))
         (new-seen (make-hash-table))
         (replacement-used (make-hash-table)))
+    ;; : (-> Any Any)
     (def (entry-slot entry)
       (poo-flow-module-extension-entry-key entry))
     (for-each
@@ -59,6 +56,7 @@
                   (entry-slot entry)
                   #t))
      base)
+    ;; : (-> Any Any)
     (def (finish-entry entry)
       (let (slot (entry-slot entry))
         (if (and (hash-get override-seen slot)
@@ -69,11 +67,13 @@
              slot
              (hash-get overrides slot)))
           entry)))
+    ;; : (-> Any Any)
     (def (finish-base/rev entries rows-rev)
       (if (null? entries)
         rows-rev
         (finish-base/rev (cdr entries)
                          (cons (finish-entry (car entries)) rows-rev))))
+    ;; : (-> Any Any)
     (def (finish-new/rev slots rows-rev)
       (if (null? slots)
         rows-rev
@@ -83,6 +83,7 @@
                 (car slots)
                 (hash-get overrides (car slots)))
                rows-rev))))
+    ;; : (-> Any Any)
     (def (finish new-order)
       (reverse
        (finish-new/rev
@@ -188,6 +189,7 @@
                (hash-put! base-first key child))
              #f)))
        children)
+      ;; : (-> Any Any)
       (def (finish-child child)
         (let (identity (poo-flow-module-extension-node-identity child))
           (if (and (hash-get override-seen identity)
@@ -196,18 +198,21 @@
               (hash-put! replacement-used identity #t)
               (hash-get overrides identity))
             child)))
+      ;; : (-> Any Any)
       (def (finish-children/rev remaining rows-rev)
         (if (null? remaining)
           rows-rev
           (finish-children/rev
            (cdr remaining)
            (cons (finish-child (car remaining)) rows-rev))))
+      ;; : (-> Any Any)
       (def (finish-new/rev identities rows-rev)
         (if (null? identities)
           rows-rev
           (finish-new/rev
            (cdr identities)
            (cons (hash-get overrides (car identities)) rows-rev))))
+      ;; : (-> Any Any)
       (def (finish new-order)
         (reverse
          (finish-new/rev
@@ -249,12 +254,10 @@
 ;;       ```
 ;;     %
 (def (poo-flow-module-extension-children-remove children identity)
-  (cond ((null? children) '())
-        ((equal? (poo-flow-module-extension-node-identity (car children)) identity)
-         (poo-flow-module-extension-children-remove (cdr children) identity))
-        (else
-         (cons (car children)
-               (poo-flow-module-extension-children-remove (cdr children) identity)))))
+  (filter (lambda (child)
+            (not (equal? (poo-flow-module-extension-node-identity child)
+                         identity)))
+          children))
 
 ;; poo-flow-module-extension-apply-slot-list-op
 ;;   : (-> PooModuleExtensionNode PooModuleExtensionOperation Boolean PooModuleExtensionNode)

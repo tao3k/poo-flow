@@ -1,4 +1,6 @@
-(import (only-in :clan/poo/object .o .ref))
+;;; Scenario-gap intent objects and proof projections.
+;;; - Keep user-authored POO scenario intents separate from bounded Lean/proof fact serialization.
+(import (only-in :clan/poo/object .o .ref object<-alist))
 
 (export poo-flow-graph-reducer-intent
         poo-flow-graph-command-intent
@@ -29,74 +31,100 @@
         poo-flow-scenario-gap-runtime-row-ok?
         poo-flow-scenario-gap-runtime-row->lean-facts)
 
+;; : (-> Symbol Symbol Symbol Alist PooScenarioGapIntent)
+(def (poo-flow-scenario-gap-intent kind priority name fields)
+  (object<-alist
+   (append
+    (list (cons 'kind kind)
+          (cons 'priority priority)
+          (cons 'name name))
+    fields)))
+
 ;; P0: graph/platform primitives.
+;; : (-> Symbol Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-graph-reducer-intent name state-key reducer value-type update-type)
-  (.o kind: 'graph.reducer
-      priority: 'P0
-      name: name
-      state-key: state-key
-      reducer: reducer
-      value-type: value-type
-      update-type: update-type))
+  (poo-flow-scenario-gap-intent
+   'graph.reducer
+   'P0
+   name
+   (list (cons 'state-key state-key)
+         (cons 'reducer reducer)
+         (cons 'value-type value-type)
+         (cons 'update-type update-type))))
 
+;; : (-> Symbol Symbol [Symbol] [Symbol] PooScenarioGapIntent)
 (def (poo-flow-graph-command-intent name from-node update-keys goto-targets)
-  (.o kind: 'graph.command
-      priority: 'P0
-      name: name
-      from-node: from-node
-      update-keys: update-keys
-      goto-targets: goto-targets))
+  (poo-flow-scenario-gap-intent
+   'graph.command
+   'P0
+   name
+   (list (cons 'from-node from-node)
+         (cons 'update-keys update-keys)
+         (cons 'goto-targets goto-targets))))
 
+;; : (-> Symbol Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-graph-fanout-intent name from-node task-key target-node result-key)
-  (.o kind: 'graph.fanout
-      priority: 'P0
-      name: name
-      from-node: from-node
-      task-key: task-key
-      target-node: target-node
-      result-key: result-key))
+  (poo-flow-scenario-gap-intent
+   'graph.fanout
+   'P0
+   name
+   (list (cons 'from-node from-node)
+         (cons 'task-key task-key)
+         (cons 'target-node target-node)
+         (cons 'result-key result-key))))
 
+;; : (-> Symbol [Symbol] Symbol [Symbol] PooScenarioGapIntent)
 (def (poo-flow-graph-barrier-intent name wait-for join-node merge-keys)
-  (.o kind: 'graph.barrier
-      priority: 'P0
-      name: name
-      wait-for: wait-for
-      join-node: join-node
-      merge-keys: merge-keys))
+  (poo-flow-scenario-gap-intent
+   'graph.barrier
+   'P0
+   name
+   (list (cons 'wait-for wait-for)
+         (cons 'join-node join-node)
+         (cons 'merge-keys merge-keys))))
 
+;; : (-> Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-checkpoint-cadence-intent name cadence scope)
-  (.o kind: 'checkpoint.cadence
-      priority: 'P0
-      name: name
-      cadence: cadence
-      scope: scope))
+  (poo-flow-scenario-gap-intent
+   'checkpoint.cadence
+   'P0
+   name
+   (list (cons 'cadence cadence)
+         (cons 'scope scope))))
 
+;; : (-> Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-checkpoint-before-intent name before-node checkpoint-key)
-  (.o kind: 'checkpoint.before
-      priority: 'P0
-      name: name
-      before-node: before-node
-      checkpoint-key: checkpoint-key))
+  (poo-flow-scenario-gap-intent
+   'checkpoint.before
+   'P0
+   name
+   (list (cons 'before-node before-node)
+         (cons 'checkpoint-key checkpoint-key))))
 
+;; : (-> Symbol Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-subgraph-node-intent name node child-graph parent-state child-state)
-  (.o kind: 'graph.subgraph-node
-      priority: 'P0
-      name: name
-      node: node
-      child-graph: child-graph
-      parent-state: parent-state
-      child-state: child-state))
+  (poo-flow-scenario-gap-intent
+   'graph.subgraph-node
+   'P0
+   name
+   (list (cons 'node node)
+         (cons 'child-graph child-graph)
+         (cons 'parent-state parent-state)
+         (cons 'child-state child-state))))
 
+;; : (-> Symbol Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-subagent-node-intent name node session-key scope-key handoff-target)
-  (.o kind: 'graph.subagent-node
-      priority: 'P0
-      name: name
-      node: node
-      session-key: session-key
-      scope-key: scope-key
-      handoff-target: handoff-target))
+  (poo-flow-scenario-gap-intent
+   'graph.subagent-node
+   'P0
+   name
+   (list (cons 'node node)
+         (cons 'session-key session-key)
+         (cons 'scope-key scope-key)
+         (cons 'handoff-target handoff-target))))
 
 ;; P1: runtime-owned, Scheme-declared primitives.
+;; : (-> Symbol [Symbol] [Symbol] PooScenarioGapIntent)
 (def (poo-flow-stream-intent name event-classes projection-labels)
   (.o kind: 'runtime.stream
       priority: 'P1
@@ -104,6 +132,7 @@
       event-classes: event-classes
       projection-labels: projection-labels))
 
+;; : (-> Symbol Symbol Integer Symbol PooScenarioGapIntent)
 (def (poo-flow-retry-intent name node attempts backoff)
   (.o kind: 'runtime.retry
       priority: 'P1
@@ -112,6 +141,7 @@
       attempts: attempts
       backoff: backoff))
 
+;; : (-> Symbol Symbol Integer PooScenarioGapIntent)
 (def (poo-flow-timeout-intent name node timeout-ms)
   (.o kind: 'runtime.timeout
       priority: 'P1
@@ -119,6 +149,7 @@
       node: node
       timeout-ms: timeout-ms))
 
+;; : (-> Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-error-route-intent name node after-retries target)
   (.o kind: 'runtime.error-route
       priority: 'P1
@@ -127,6 +158,7 @@
       after-retries: after-retries
       target: target))
 
+;; : (-> Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-replay-fork-intent name checkpoint-key fork-key policy)
   (.o kind: 'runtime.replay-fork
       priority: 'P1
@@ -135,6 +167,7 @@
       fork-key: fork-key
       policy: policy))
 
+;; : (-> Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-store-scope-intent name store-key scope access)
   (.o kind: 'runtime.store-scope
       priority: 'P1
@@ -143,6 +176,7 @@
       scope: scope
       access: access))
 
+;; : (-> Symbol [Symbol] [Symbol] PooScenarioGapIntent)
 (def (poo-flow-observability-intent name labels receipt-keys)
   (.o kind: 'runtime.observability
       priority: 'P1
@@ -151,6 +185,7 @@
       receipt-keys: receipt-keys))
 
 ;; P2: production evolution hardening.
+;; : (-> Symbol Symbol Symbol Symbol Symbol PooScenarioGapIntent)
 (def (poo-flow-state-version-intent name state-key from-version to-version drain-policy)
   (.o kind: 'profile.state-version
       priority: 'P2
@@ -160,6 +195,7 @@
       to-version: to-version
       drain-policy: drain-policy))
 
+;; : (-> Symbol [PooScenarioGapIntent] [PooScenarioGapIntent] [PooScenarioGapIntent] PooScenarioGapPlan)
 (def (poo-flow-scenario-gap-plan name p0 p1 p2)
   (.o kind: 'scenario.gap-plan
       plan-id: name
@@ -167,54 +203,63 @@
       phase1: p1
       phase2: p2))
 
+;; : (-> PooScenarioGapPlan [PooScenarioGapIntent])
 (def (poo-flow-scenario-gap-plan-intents plan)
   (append (.ref plan 'phase0)
           (.ref plan 'phase1)
           (.ref plan 'phase2)))
 
+;; : (-> [PooScenarioGapIntent] Symbol Integer)
 (def (poo-flow-count-priority intents priority)
-  (let loop ((rest intents) (count 0))
-    (if (null? rest)
-      count
-      (loop (cdr rest)
-            (if (eq? (.ref (car rest) 'priority) priority)
-              (+ count 1)
-              count)))))
+  (length
+   (filter (lambda (intent) (eq? (.ref intent 'priority) priority))
+           intents)))
 
+;; : (-> [PooScenarioGapIntent] Symbol Boolean)
 (def (poo-flow-kind-present? intents kind)
-  (let loop ((rest intents))
-    (cond
-     ((null? rest) #f)
-     ((eq? (.ref (car rest) 'kind) kind) #t)
-     (else (loop (cdr rest))))))
+  (ormap (lambda (intent) (eq? (.ref intent 'kind) kind))
+         intents))
 
+;; : (-> PooScenarioGapPlan PooScenarioGapFacts)
 (def (poo-flow-scenario-gap-plan-facts plan)
   (let* ((intents (poo-flow-scenario-gap-plan-intents plan))
          (p0-count (poo-flow-count-priority intents 'P0))
          (p1-count (poo-flow-count-priority intents 'P1))
          (p2-count (poo-flow-count-priority intents 'P2)))
-    (.o kind: 'scenario.gap-facts
-        plan: (.ref plan 'plan-id)
-        phase0-count: p0-count
-        phase1-count: p1-count
-        phase2-count: p2-count
-        reducer?: (poo-flow-kind-present? intents 'graph.reducer)
-        command?: (poo-flow-kind-present? intents 'graph.command)
-        fanout?: (poo-flow-kind-present? intents 'graph.fanout)
-        barrier?: (poo-flow-kind-present? intents 'graph.barrier)
-        checkpoint-before?: (poo-flow-kind-present? intents 'checkpoint.before)
-        checkpoint-cadence?: (poo-flow-kind-present? intents 'checkpoint.cadence)
-        subgraph-node?: (poo-flow-kind-present? intents 'graph.subgraph-node)
-        subagent-node?: (poo-flow-kind-present? intents 'graph.subagent-node)
-        stream?: (poo-flow-kind-present? intents 'runtime.stream)
-        retry?: (poo-flow-kind-present? intents 'runtime.retry)
-        timeout?: (poo-flow-kind-present? intents 'runtime.timeout)
-        error-route?: (poo-flow-kind-present? intents 'runtime.error-route)
-        replay-fork?: (poo-flow-kind-present? intents 'runtime.replay-fork)
-        store-scope?: (poo-flow-kind-present? intents 'runtime.store-scope)
-        observability?: (poo-flow-kind-present? intents 'runtime.observability)
-        state-version?: (poo-flow-kind-present? intents 'profile.state-version))))
+    (object<-alist
+     (list
+      (cons 'kind 'scenario.gap-facts)
+      (cons 'plan (.ref plan 'plan-id))
+      (cons 'phase0-count p0-count)
+      (cons 'phase1-count p1-count)
+      (cons 'phase2-count p2-count)
+      (cons 'reducer? (poo-flow-kind-present? intents 'graph.reducer))
+      (cons 'command? (poo-flow-kind-present? intents 'graph.command))
+      (cons 'fanout? (poo-flow-kind-present? intents 'graph.fanout))
+      (cons 'barrier? (poo-flow-kind-present? intents 'graph.barrier))
+      (cons 'checkpoint-before?
+            (poo-flow-kind-present? intents 'checkpoint.before))
+      (cons 'checkpoint-cadence?
+            (poo-flow-kind-present? intents 'checkpoint.cadence))
+      (cons 'subgraph-node?
+            (poo-flow-kind-present? intents 'graph.subgraph-node))
+      (cons 'subagent-node?
+            (poo-flow-kind-present? intents 'graph.subagent-node))
+      (cons 'stream? (poo-flow-kind-present? intents 'runtime.stream))
+      (cons 'retry? (poo-flow-kind-present? intents 'runtime.retry))
+      (cons 'timeout? (poo-flow-kind-present? intents 'runtime.timeout))
+      (cons 'error-route?
+            (poo-flow-kind-present? intents 'runtime.error-route))
+      (cons 'replay-fork?
+            (poo-flow-kind-present? intents 'runtime.replay-fork))
+      (cons 'store-scope?
+            (poo-flow-kind-present? intents 'runtime.store-scope))
+      (cons 'observability?
+            (poo-flow-kind-present? intents 'runtime.observability))
+      (cons 'state-version?
+            (poo-flow-kind-present? intents 'profile.state-version))))))
 
+;; : (-> PooScenarioGapPlan Boolean)
 (def (poo-flow-scenario-gap-plan-complete? plan)
   (let ((facts (poo-flow-scenario-gap-plan-facts plan)))
     (and (> (.ref facts 'phase0-count) 0)
@@ -237,55 +282,58 @@
          (.ref facts 'observability?)
          (.ref facts 'state-version?))))
 
+;; : (-> PooScenarioGapPlan [Symbol])
 (def (poo-flow-scenario-gap-intent-kinds plan)
   (map (lambda (intent) (.ref intent 'kind))
        (poo-flow-scenario-gap-plan-intents plan)))
 
+;; : (-> Symbol [Symbol] Boolean)
 (def (poo-flow-symbol-member? value values)
-  (let loop ((rest values))
-    (cond
-     ((null? rest) #f)
-     ((eq? value (car rest)) #t)
-     (else (loop (cdr rest))))))
+  (if (memq value values) #t #f))
 
+;; : (-> PooScenarioGapPlan [Symbol] [Symbol])
 (def (poo-flow-scenario-gap-receipt-missing-kinds plan accepted-kinds)
-  (let loop ((required (poo-flow-scenario-gap-intent-kinds plan))
-             (missing '()))
-    (cond
-     ((null? required) (reverse missing))
-     ((poo-flow-symbol-member? (car required) accepted-kinds)
-      (loop (cdr required) missing))
-     (else
-      (loop (cdr required) (cons (car required) missing))))))
+  (filter
+   (lambda (kind)
+     (not (poo-flow-symbol-member? kind accepted-kinds)))
+   (poo-flow-scenario-gap-intent-kinds plan)))
 
+;; : (-> Alist Symbol Value)
 (def (poo-flow-scenario-gap-runtime-row-value row key)
   (let ((cell (assq key row)))
     (if cell (cdr cell) #f)))
 
+;; : (-> Alist Symbol [Value])
 (def (poo-flow-scenario-gap-runtime-row-list row key)
   (let ((value (poo-flow-scenario-gap-runtime-row-value row key)))
     (if (list? value) value '())))
 
+;; : (-> PooScenarioGapPlan Alist Boolean)
 (def (poo-flow-scenario-gap-runtime-row-plan-ok? plan row)
   (eq? (poo-flow-scenario-gap-runtime-row-value row 'plan-id)
        (.ref plan 'plan-id)))
 
+;; : (-> Alist Boolean)
 (def (poo-flow-scenario-gap-runtime-row-rejections-ok? row)
   (null? (poo-flow-scenario-gap-runtime-row-list row 'rejected-kinds)))
 
+;; : (-> PooScenarioGapPlan Alist Boolean)
 (def (poo-flow-scenario-gap-runtime-row-accepted-ok? plan row)
   (null? (poo-flow-scenario-gap-receipt-missing-kinds
           plan
           (poo-flow-scenario-gap-runtime-row-list row 'accepted-kinds))))
 
+;; : (-> PooScenarioGapPlan Alist Boolean)
 (def (poo-flow-scenario-gap-runtime-row-ok? plan row)
   (and (poo-flow-scenario-gap-runtime-row-plan-ok? plan row)
        (poo-flow-scenario-gap-runtime-row-rejections-ok? row)
        (poo-flow-scenario-gap-runtime-row-accepted-ok? plan row)))
 
+;; : (-> Boolean String)
 (def (poo-flow-lean-bool value)
   (if value "true" "false"))
 
+;; : (-> PooScenarioGapPlan String String)
 (def (poo-flow-scenario-gap-plan->lean-facts plan module-name)
   (let ((facts (poo-flow-scenario-gap-plan-facts plan)))
     (string-append
@@ -310,6 +358,7 @@
      "  rfl\n\n"
      "end PooFlowProof\n")))
 
+;; : (-> PooScenarioGapPlan Alist String String)
 (def (poo-flow-scenario-gap-runtime-row->lean-facts plan row module-name)
   (let ((plan-ok
          (poo-flow-scenario-gap-runtime-row-plan-ok? plan row))

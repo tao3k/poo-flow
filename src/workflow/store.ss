@@ -38,6 +38,18 @@
         store-content-address-receipt-runtime-executed
         store-flow->content-address-receipt)
 
+;;; Boundary: store field rows keep workflow store object slots stable for
+;;; runtime persistence and policy projections.
+;; store-field-rows
+;; : (-> StoreFieldRowsClauseSyntax StoreFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands workflow store field clauses into stable alist rows for the store
+;;   object projection macros.
+;;   # Examples
+;;   ```scheme
+;;   (store-field-rows (backend 'memory))
+;;   ;; => ((backend . memory))
+;;   ```
 (defrules store-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
@@ -100,17 +112,7 @@
 ;;; centralized for callers.
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (store-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (foldr cons tail values))
 
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)

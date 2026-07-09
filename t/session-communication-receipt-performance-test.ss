@@ -79,18 +79,27 @@
            count
            communication-performance-receipt))
          (rows (poo-flow-session-communication-receipts->alists receipts)))
-    (list
-     (cons 'receipt-count (length rows))
-     (cons 'first-relation
-           (communication-performance-ref (car rows) 'relation-kind))
-     (cons 'last-channel
-           (communication-performance-ref
-            (list-ref rows (- count 1))
-            'channel-id))
-     (cons 'handoff-required
-           (communication-performance-ref (car rows) 'handoff-required))
-     (cons 'runtime-executed
-           (communication-performance-ref (car rows) 'runtime-executed)))))
+    (map (lambda (entry)
+           (cons (car entry) ((cdr entry))))
+         (list
+          (cons 'receipt-count
+                (lambda () (length rows)))
+          (cons 'first-relation
+                (lambda ()
+                  (communication-performance-ref (car rows) 'relation-kind)))
+          (cons 'last-channel
+                (lambda ()
+                  (communication-performance-ref
+                   (list-ref rows (- count 1))
+                   'channel-id)))
+          (cons 'handoff-required
+                (lambda ()
+                  (communication-performance-ref (car rows)
+                                                 'handoff-required)))
+          (cons 'runtime-executed
+                (lambda ()
+                  (communication-performance-ref (car rows)
+                                                 'runtime-executed)))))))
 
 ;; : TestSuite
 (def session-communication-receipt-performance-test

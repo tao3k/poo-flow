@@ -4,10 +4,12 @@
 
 (export durable-policy-manifest-test)
 
+;; : (-> Alist Symbol Object)
 (def (test-ref row key)
   (let ((cell (assq key row)))
     (and cell (cdr cell))))
 
+;; : TestSuite
 (def durable-policy-manifest-test
   (test-suite "poo-flow durable policy runtime manifest"
     (test-case "projects Scheme durable policy receipt into runtime manifest"

@@ -4,7 +4,8 @@
 (import (only-in :clan/poo/object
                  .o
                  .ref
-                 object?))
+                 object?)
+        (only-in :std/sugar filter filter-map))
 
 (export poo-flow-module-extension-node-kind
         poo-flow-module-extension-operation-kind
@@ -210,19 +211,16 @@
       extra
       seen
       added-rev)
-  (cond
-   ((null? extra) added-rev)
-   ((hash-get seen (car extra))
-    (poo-flow-module-extension-append-distinct-added/rev
-     (cdr extra)
-     seen
-     added-rev))
-   (else
-    (hash-put! seen (car extra) #t)
-    (poo-flow-module-extension-append-distinct-added/rev
-     (cdr extra)
-     seen
-     (cons (car extra) added-rev)))))
+  (append
+   (reverse
+    (filter-map
+     (lambda (value)
+       (and (not (hash-get seen value))
+            (begin
+              (hash-put! seen value #t)
+              value)))
+     extra))
+   added-rev))
 
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] HashTable [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct/indexed base extra seen)
@@ -257,11 +255,9 @@
   (if (null? removed)
     values
     (let (removed-index (poo-flow-module-extension-value-index removed))
-      (reverse
-       (poo-flow-module-extension-remove-elements/rev
-        values
-        removed-index
-        '())))))
+      (filter (lambda (value)
+                (not (hash-get removed-index value)))
+              values))))
 
 ;;; Boundary: module extension list value is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection

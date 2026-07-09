@@ -9,18 +9,11 @@
         poo-flow-sandbox-profile-field-rows/tail)
 
 ;; : (-> List List List)
+;;; Sandbox profile projection helpers build bounded row lists for profile macros.
+;;; - Keep row-tail helpers pure so module syntax only forwards validated policy rows.
+;; : (-> List List List)
 (def (poo-flow-sandbox-profile-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
 ;; : (-> List List List)
 (def (poo-flow-sandbox-profile-rows-into/rev rows rows-rev)
@@ -30,10 +23,32 @@
      (cdr rows)
      (cons (car rows) rows-rev))))
 
+;;; Boundary: sandbox profile field rows keep generated projections hygienic
+;;; while preserving policy-visible profile slot names.
+;; poo-flow-sandbox-profile-field-rows
+;; : (-> SandboxProfileFieldRowsClauseSyntax SandboxProfileFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands sandbox profile field clauses into stable policy-visible rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-sandbox-profile-field-rows (filesystem 'workspace))
+;;   ;; => ((filesystem . workspace))
+;;   ```
 (defrules poo-flow-sandbox-profile-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
+;;; Boundary: tail field-row expansion preserves the same projection ABI for
+;;; variadic sandbox profile object clauses.
+;; poo-flow-sandbox-profile-field-rows/tail
+;; : (-> SandboxProfileFieldRowsTailSyntax SandboxProfileFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Prepends sandbox profile field rows to an existing tail expression.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-sandbox-profile-field-rows/tail tail (network 'none))
+;;   ;; => (poo-flow-sandbox-profile-rows/tail ((network . none)) tail)
+;;   ```
 (defrules poo-flow-sandbox-profile-field-rows/tail ()
   ((_ tail (field value) ...)
    (poo-flow-sandbox-profile-rows/tail

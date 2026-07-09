@@ -130,17 +130,7 @@
 
 ;; : (-> Alist Alist Alist)
 (def (loop-strategy-slot-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
 ;; : (-> Symbol [LoopPatternDescriptor] Alist Alist)
 (def (loop-strategy-plan-slot-rows name patterns overrides)

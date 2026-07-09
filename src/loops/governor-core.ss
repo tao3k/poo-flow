@@ -6,8 +6,16 @@
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/loops/descriptor
-        :poo-flow/src/loops/strategy)
+        (only-in "./strategy.ss"
+                 loop-strategy-engine-role
+                 loop-strategy-plan?)
+        (only-in "../utilities/contracts.ss"
+                 poo-flow-contract-alist?
+                 poo-flow-contract-list-of?
+                 poo-flow-contract-check-slot!
+                 poo-flow-object-type-contract->alist)
+        (only-in "../utilities/contract-syntax.ss"
+                 defcontract-family))
 
 (export +loop-governor-schema+
         +loop-governor-node-schema+
@@ -17,6 +25,10 @@
         +loop-governor-default-agent-judges+
         +loop-governor-default-human-inbox+
         +loop-governor-default-handoff+
+        +loop-governor-node-slot-contracts+
+        +loop-governor-slot-contracts+
+        +loop-governor-node-type-contract+
+        +loop-governor-type-contract+
         loop-governor-role
         loop-governor-node-role
         loop-governor-agent-node-role
@@ -44,6 +56,15 @@
         loop-governor-node-metadata
         loop-governor-node->contract
         loop-governor-node-contracts
+        loop-governor-alist?
+        loop-governor-list-of?
+        loop-governor-action-key?
+        loop-governor-action-key-list?
+        loop-governor-node-type-contract->alist
+        loop-governor-type-contract->alist
+        loop-governor-check-slot!
+        loop-governor-require-node-slots!
+        loop-governor-require-slots!
         loop-governor?
         loop-governor-slot
         loop-governor-name
@@ -252,17 +273,7 @@
 
 ;; : (-> Alist Alist Alist)
 (def (loop-governor-slot-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
 ;; : (-> Symbol Symbol Symbol Boolean Alist Alist)
 (def (loop-governor-node-slot-rows name
@@ -455,6 +466,152 @@
    ((assoc key alist) => cdr)
    (else default)))
 
+;; loop-governor-alist?
+;;   : (-> PooFlowValue Boolean)
+;;   | doc m%
+;;       Recognize the alist contract shape used by governor policy slots.
+;;       # Examples
+;;       (loop-governor-alist? '((field . acting_on)))
+;;       # Result
+;;       #t for proper association lists.
+;;     %
+(def (loop-governor-alist? value)
+  (poo-flow-contract-alist? value))
+
+;; loop-governor-list-of?
+;;   : (-> (-> PooFlowValue Boolean) PooFlowValue Boolean)
+;;   | doc m%
+;;       Recognize proper governor lists whose elements satisfy a predicate.
+;;       # Examples
+;;       (loop-governor-list-of? symbol? '(audit verify))
+;;       # Result
+;;       #t when every element satisfies the supplied predicate.
+;;     %
+(def (loop-governor-list-of? predicate values)
+  (poo-flow-contract-list-of? predicate values))
+
+;; : (-> PooFlowValue Boolean)
+(def (loop-governor-action-key? value)
+  (or (symbol? value)
+      (string? value)))
+
+;; : (-> PooFlowValue Boolean)
+(def (loop-governor-action-key-list? value)
+  (loop-governor-list-of? loop-governor-action-key? value))
+
+;; : (-> PooFlowValue Boolean)
+(def (loop-governor-node-list? value)
+  (loop-governor-list-of? loop-governor-node? value))
+
+;; : (-> PooFlowValue Boolean)
+(def (loop-governor-strategy-plan-slot? value)
+  (loop-strategy-plan? value))
+
+;; loop-governor-node-type-contract->alist
+;;   : (-> Unit Alist)
+;;   | doc m%
+;;       Project the structured contract for governor node POO objects.
+;;       # Examples
+;;       (loop-governor-node-type-contract->alist)
+;;       # Result
+;;       An alist representation suitable for doctor and manifest output.
+;;     %
+(def (loop-governor-node-type-contract->alist)
+  (poo-flow-object-type-contract->alist +loop-governor-node-type-contract+))
+
+;; loop-governor-type-contract->alist
+;;   : (-> Unit Alist)
+;;   | doc m%
+;;       Project the structured contract for loop governor POO objects.
+;;       # Examples
+;;       (loop-governor-type-contract->alist)
+;;       # Result
+;;       An alist representation suitable for validator and proof facts.
+;;     %
+(def (loop-governor-type-contract->alist)
+  (poo-flow-object-type-contract->alist +loop-governor-type-contract+))
+
+;; loop-governor-check-slot!
+;;   : (-> PooFlowSlotContract PooFlowValue PooFlowValue)
+;;   | doc m%
+;;       Execute one governor slot contract through the utilities layer.
+;;       # Examples
+;;       (loop-governor-check-slot! +loop-governor-name-contract+ 'repo)
+;;       # Result
+;;       The original value when valid; otherwise raises a contract error.
+;;     %
+(def (loop-governor-check-slot! contract value)
+  (poo-flow-contract-check-slot! contract value))
+
+;; loop-governor-require-node-slots!
+;;   : (-> Symbol Symbol Symbol Boolean Symbol Symbol Alist Boolean)
+;;   | doc m%
+;;       Enforce generated slot contracts for one governor node projection.
+;;       # Examples
+;;       (loop-governor-require-node-slots!
+;;        'audit 'agent 'verify #f 'gerbil 'marlin-agent-core '())
+;;       # Result
+;;       #t when every node slot satisfies its contract.
+;;     %
+(def (loop-governor-require-node-slots! name governance-node-kind responsibility human-intervention? control-owner execution-owner metadata)
+  (loop-governor-check-slot! +loop-governor-node-name-contract+ name)
+  (loop-governor-check-slot!
+   +loop-governor-node-governance-node-kind-contract+
+   governance-node-kind)
+  (loop-governor-check-slot!
+   +loop-governor-node-governance-responsibility-contract+
+   responsibility)
+  (loop-governor-check-slot!
+   +loop-governor-node-human-intervention-contract+
+   human-intervention?)
+  (loop-governor-check-slot!
+   +loop-governor-node-control-owner-contract+
+   control-owner)
+  (loop-governor-check-slot!
+   +loop-governor-node-execution-owner-contract+
+   execution-owner)
+  (loop-governor-check-slot! +loop-governor-node-metadata-contract+ metadata)
+  #t)
+
+;; loop-governor-require-slots!
+;;   : (-> Symbol LoopStrategyPlan Alist [ActionKey] Alist Alist Alist Alist Alist [LoopGovernorNode] Alist Alist Symbol Symbol Alist Boolean)
+;;   | doc m%
+;;       Enforce generated slot contracts for the governor contract boundary.
+;;       # Examples
+;;       (loop-governor-require-slots!
+;;        'repo strategy '() '() state-key collision budget judges nodes inbox handoff 'gerbil 'marlin-agent-core '())
+;;       # Result
+;;       #t when every governor slot satisfies its contract.
+;;     %
+(def (loop-governor-require-slots! name strategy priority-table shared-denylist state-key collision-policy aggregate-budget agent-judges agent-judge-nodes human-inbox handoff control-owner execution-owner metadata)
+  (loop-governor-check-slot! +loop-governor-name-contract+ name)
+  (loop-governor-check-slot! +loop-governor-strategy-contract+ strategy)
+  (loop-governor-check-slot!
+   +loop-governor-priority-table-contract+
+   priority-table)
+  (loop-governor-check-slot!
+   +loop-governor-shared-denylist-contract+
+   shared-denylist)
+  (loop-governor-check-slot! +loop-governor-state-key-contract+ state-key)
+  (loop-governor-check-slot!
+   +loop-governor-collision-policy-contract+
+   collision-policy)
+  (loop-governor-check-slot!
+   +loop-governor-aggregate-budget-contract+
+   aggregate-budget)
+  (loop-governor-check-slot! +loop-governor-agent-judges-contract+ agent-judges)
+  (loop-governor-check-slot!
+   +loop-governor-agent-judge-nodes-contract+
+   agent-judge-nodes)
+  (loop-governor-check-slot! +loop-governor-human-inbox-contract+ human-inbox)
+  (loop-governor-check-slot! +loop-governor-handoff-contract+ handoff)
+  (loop-governor-check-slot! +loop-governor-control-owner-contract+ control-owner)
+  (loop-governor-check-slot!
+   +loop-governor-execution-owner-contract+
+   execution-owner)
+  (loop-governor-check-slot! +loop-governor-metadata-contract+ metadata)
+  #t)
+
 ;; : (-> LoopGovernor Symbol)
 (def (loop-governor-name governor)
   (loop-governor-slot governor 'name #f))
@@ -510,3 +667,187 @@
 ;; : (-> LoopGovernor Alist)
 (def (loop-governor-metadata governor)
   (loop-governor-slot governor 'metadata '()))
+
+(defcontract-family
+  +loop-governor-node-slot-contracts+
+  +loop-governor-node-type-contract+
+  'loop-governor/node
+  'loops
+  'LoopGovernorNode
+  '((boundary . loop-governor) (projection . governance-node))
+  ((+loop-governor-node-name-contract+
+    'loop-governor.node/name
+    'name
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-node-governance-node-kind-contract+
+    'loop-governor.node/governance-node-kind
+    'governance-node-kind
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-node-governance-responsibility-contract+
+    'loop-governor.node/governance-responsibility
+    'governance-responsibility
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-node-human-intervention-contract+
+    'loop-governor.node/human-intervention
+    'human-intervention
+    'Boolean
+    'boolean?
+    boolean?
+    #t
+    '())
+   (+loop-governor-node-control-owner-contract+
+    'loop-governor.node/control-owner
+    'control-owner
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-node-execution-owner-contract+
+    'loop-governor.node/execution-owner
+    'execution-owner
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-node-metadata-contract+
+    'loop-governor.node/metadata
+    'metadata
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())))
+
+(defcontract-family
+  +loop-governor-slot-contracts+
+  +loop-governor-type-contract+
+  'loop-governor
+  'loops
+  'LoopGovernor
+  '((boundary . loop-governor) (projection . marlin-contract))
+  ((+loop-governor-name-contract+
+    'loop-governor/name
+    'name
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-strategy-contract+
+    'loop-governor/strategy
+    'strategy
+    'LoopStrategyPlan
+    'loop-governor-strategy-plan-slot?
+    loop-governor-strategy-plan-slot?
+    #t
+    '())
+   (+loop-governor-priority-table-contract+
+    'loop-governor/priority-table
+    'priority-table
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-shared-denylist-contract+
+    'loop-governor/shared-denylist
+    'shared-denylist
+    '[ActionKey]
+    'loop-governor-action-key-list?
+    loop-governor-action-key-list?
+    #t
+    '())
+   (+loop-governor-state-key-contract+
+    'loop-governor/state-key
+    'state-key
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-collision-policy-contract+
+    'loop-governor/collision-policy
+    'collision-policy
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-aggregate-budget-contract+
+    'loop-governor/aggregate-budget
+    'aggregate-budget
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-agent-judges-contract+
+    'loop-governor/agent-judges
+    'agent-judges
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-agent-judge-nodes-contract+
+    'loop-governor/agent-judge-nodes
+    'agent-judge-nodes
+    '[LoopGovernorNode]
+    'loop-governor-node-list?
+    loop-governor-node-list?
+    #t
+    '())
+   (+loop-governor-human-inbox-contract+
+    'loop-governor/human-inbox
+    'human-inbox
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-handoff-contract+
+    'loop-governor/handoff
+    'handoff
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())
+   (+loop-governor-control-owner-contract+
+    'loop-governor/control-owner
+    'control-owner
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-execution-owner-contract+
+    'loop-governor/execution-owner
+    'execution-owner
+    'Symbol
+    'symbol?
+    symbol?
+    #t
+    '())
+   (+loop-governor-metadata-contract+
+    'loop-governor/metadata
+    'metadata
+    'Alist
+    'loop-governor-alist?
+    loop-governor-alist?
+    #t
+    '())))

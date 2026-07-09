@@ -8,6 +8,9 @@
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
+        (only-in :std/sugar filter)
+        :poo-flow/t/support/poo-performance-fixtures
+        :poo-flow/t/support/poo-performance-object-scenarios
         :poo-flow/t/support/poo-performance
         :poo-flow/src/module-system/tool-calling-control)
 
@@ -78,43 +81,51 @@
    count
    module-system-poo-performance-tool-calling-pair))
 
-;; : (-> [Pair] Integer Integer)
+;; : (-> Pair Boolean)
+(def (module-system-poo-performance-tool-calling-valid-pair? pair)
+  (let* ((plan (car pair))
+         (runtime-receipt (cdr pair))
+         (facts
+          (poo-flow-tool-call-runtime-validation-proof-facts
+           plan
+           runtime-receipt))
+         (fact-family
+          (poo-flow-tool-call-fact-family
+           'poo-flow-tool-call-runtime-validation-proof-facts
+           'poo-flow.tool-calling.control.runtime)))
+    (and
+     (poo-flow-tool-call-fact-family-ref
+      fact-family
+      facts
+      'plan-valid)
+     (poo-flow-tool-call-fact-family-ref
+      fact-family
+      facts
+      'runtime-receipt-matches-tool-plan)
+     (poo-flow-tool-call-fact-family-ref
+      fact-family
+      facts
+      'tool-output-cannot-authorize-policy))))
+
+;; module-system-poo-performance-tool-calling-valid-proof-count
+;;   : (-> [Pair] Integer Integer)
+;;   | doc m%
+;;       Reuses prebuilt tool-call POO pairs and counts proof-valid pairs across
+;;       scalar benchmark rounds.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (module-system-poo-performance-tool-calling-valid-proof-count
+;;        (module-system-poo-performance-tool-calling-pairs 1)
+;;        1)
+;;       ;; => 1
+;;       ```
+;;     %
 (def (module-system-poo-performance-tool-calling-valid-proof-count pairs rounds)
-  (let ((fact-family
-         (poo-flow-tool-call-fact-family
-          'poo-flow-tool-call-runtime-validation-proof-facts
-          'poo-flow.tool-calling.control.runtime)))
-    (let round-loop ((round 0) (accepted 0))
-      (if (>= round rounds)
-        accepted
-        (let pair-loop ((rest pairs) (round-accepted accepted))
-          (if (null? rest)
-            (round-loop (+ round 1) round-accepted)
-            (let* ((pair (car rest))
-                   (plan (car pair))
-                   (runtime-receipt (cdr pair))
-                   (facts
-                    (poo-flow-tool-call-runtime-validation-proof-facts
-                     plan
-                     runtime-receipt))
-                   (valid?
-                    (and
-                     (poo-flow-tool-call-fact-family-ref
-                      fact-family
-                      facts
-                      'plan-valid)
-                     (poo-flow-tool-call-fact-family-ref
-                      fact-family
-                      facts
-                      'runtime-receipt-matches-tool-plan)
-                     (poo-flow-tool-call-fact-family-ref
-                      fact-family
-                      facts
-                      'tool-output-cannot-authorize-policy))))
-              (pair-loop (cdr rest)
-                         (if valid?
-                           (+ round-accepted 1)
-                           round-accepted)))))))))
+  (* rounds
+     (length
+      (filter module-system-poo-performance-tool-calling-valid-pair?
+              pairs))))
 
 ;; : TestCase
 (def module-system-poo-performance-tool-calling-object-list-control-case

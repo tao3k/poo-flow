@@ -2,7 +2,8 @@
 ;;; Boundary: pure helpers for graph control proof projections.
 ;;; Invariant: no runtime execution; helpers only shape graph facts.
 
-(import :poo-flow/src/graph/types
+(import (only-in :std/srfi/1 any every filter fold)
+        :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms)
 
 (export +poo-flow-graph-conditional-edge-kinds+
@@ -151,10 +152,10 @@
 
 ;; : (-> Symbol Alist Object Object)
 (def (metadata-ref/default key metadata default)
-  (cond
-   ((null? metadata) default)
-   ((eq? key (caar metadata)) (cdar metadata))
-   (else (metadata-ref/default key (cdr metadata) default))))
+  (let (entry (assoc key metadata))
+    (if entry
+      (cdr entry)
+      default)))
 
 ;; : (-> PooFlowGraph [Symbol] [[Object Object]])
 (def (edge-pairs-by-kinds graph-value edge-kinds)
@@ -165,17 +166,15 @@
 
 ;; : (-> [PooFlowGraphEdge] [Symbol] [[Object Object]] [[Object Object]])
 (def (edge-pairs-by-kinds/rev edges edge-kinds pairs-rev)
-  (cond
-   ((null? edges) pairs-rev)
-   ((symbol-member? (poo-flow-graph-edge-kind (car edges)) edge-kinds)
-    (edge-pairs-by-kinds/rev
-     (cdr edges)
-     edge-kinds
-     (cons (list (poo-flow-graph-edge-from (car edges))
-                 (poo-flow-graph-edge-to (car edges)))
-           pairs-rev)))
-   (else
-    (edge-pairs-by-kinds/rev (cdr edges) edge-kinds pairs-rev))))
+  (fold
+   (lambda (edge pairs)
+     (if (symbol-member? (poo-flow-graph-edge-kind edge) edge-kinds)
+       (cons (list (poo-flow-graph-edge-from edge)
+                   (poo-flow-graph-edge-to edge))
+             pairs)
+       pairs))
+   pairs-rev
+   edges))
 
 ;; : (-> PooFlowGraph [Symbol] [Object])
 (def (edge-targets-by-kinds graph-value edge-kinds)
@@ -186,79 +185,53 @@
 
 ;; : (-> [PooFlowGraphEdge] [Symbol] [Object] [Object])
 (def (edge-targets-by-kinds/rev edges edge-kinds ids-rev)
-  (cond
-   ((null? edges) ids-rev)
-   ((symbol-member? (poo-flow-graph-edge-kind (car edges)) edge-kinds)
-    (edge-targets-by-kinds/rev
-     (cdr edges)
-     edge-kinds
-     (cons (poo-flow-graph-edge-to (car edges)) ids-rev)))
-   (else
-    (edge-targets-by-kinds/rev (cdr edges) edge-kinds ids-rev))))
+  (fold
+   (lambda (edge ids)
+     (if (symbol-member? (poo-flow-graph-edge-kind edge) edge-kinds)
+       (cons (poo-flow-graph-edge-to edge) ids)
+       ids))
+   ids-rev
+   edges))
 
 ;; : (-> [PooFlowGraphEdge] [Object] [[Object Object]] [[Object Object]])
 (def (undeclared-edge-pairs/rev edges node-ids pairs-rev)
-  (cond
-   ((null? edges) pairs-rev)
-   ((and (id-member? (poo-flow-graph-edge-from (car edges)) node-ids)
-         (id-member? (poo-flow-graph-edge-to (car edges)) node-ids))
-    (undeclared-edge-pairs/rev (cdr edges) node-ids pairs-rev))
-   (else
-    (undeclared-edge-pairs/rev
-     (cdr edges)
-     node-ids
-     (cons (list (poo-flow-graph-edge-from (car edges))
-                 (poo-flow-graph-edge-to (car edges)))
-           pairs-rev)))))
+  (fold
+   (lambda (edge pairs)
+     (if (and (id-member? (poo-flow-graph-edge-from edge) node-ids)
+              (id-member? (poo-flow-graph-edge-to edge) node-ids))
+       pairs
+       (cons (list (poo-flow-graph-edge-from edge)
+                   (poo-flow-graph-edge-to edge))
+             pairs)))
+   pairs-rev
+   edges))
 
 ;; : (-> Predicate [Object] [Object])
 (def (select-ids predicate ids)
-  (cond
-   ((null? ids) '())
-   ((predicate (car ids))
-    (cons (car ids)
-          (select-ids predicate (cdr ids))))
-   (else
-    (select-ids predicate (cdr ids)))))
+  (filter predicate ids))
 
 ;; : (-> [Object] [Object] [Object])
 (def (remove-ids ids-to-remove ids)
-  (cond
-   ((null? ids) '())
-   ((id-member? (car ids) ids-to-remove)
-    (remove-ids ids-to-remove (cdr ids)))
-   (else
-    (cons (car ids)
-          (remove-ids ids-to-remove (cdr ids))))))
+  (filter
+   (lambda (id)
+     (not (id-member? id ids-to-remove)))
+   ids))
 
 ;; : (-> [Object] [Object] [Object])
 (def (intersection-ids ids candidates)
-  (cond
-   ((null? ids) '())
-   ((id-member? (car ids) candidates)
-    (cons (car ids)
-          (intersection-ids (cdr ids) candidates)))
-   (else
-    (intersection-ids (cdr ids) candidates))))
+  (filter
+   (lambda (id)
+     (id-member? id candidates))
+   ids))
 
 ;; : (-> [Object] [Object] Boolean)
 (def (ids-subset? subset ids)
-  (cond
-   ((null? subset) #t)
-   ((id-member? (car subset) ids)
-    (ids-subset? (cdr subset) ids))
-   (else #f)))
+  (if (every (lambda (id) (id-member? id ids)) subset) #t #f))
 
 ;; : (-> Object [Object] Boolean)
 (def (id-member? id ids)
-  (cond
-   ((null? ids) #f)
-   ((equal? id (car ids)) #t)
-   (else (id-member? id (cdr ids)))))
+  (if (any (lambda (candidate) (equal? id candidate)) ids) #t #f))
 
 ;; : (-> Symbol [Symbol] Boolean)
 (def (symbol-member? id ids)
-  (cond
-   ((null? ids) #f)
-   ((eq? id (car ids)) #t)
-   (else (symbol-member? id (cdr ids)))))
+  (if (any (lambda (candidate) (eq? id candidate)) ids) #t #f))

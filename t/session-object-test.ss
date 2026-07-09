@@ -92,7 +92,8 @@
 (def session-object-test
   (test-suite "poo-flow report-only session objects"
     (test-case "builds chunks, lineage, placement, and handoff receipts"
-      (let (handoff (poo-flow-session-handoff session-child))
+      (let* ((handoff (poo-flow-session-handoff session-child))
+             (handoff-alist (poo-flow-session-handoff->alist handoff)))
         (check-equal? (poo-flow-session? session-root) #t)
         (check-equal? (poo-flow-session-chunk-role
                        (car (poo-flow-session-chunks session-root)))
@@ -112,10 +113,10 @@
                        'profile-name
                        #f)
                       'agent/nono)
-        (check-equal? (.ref handoff 'session-id) 'child)
-        (check-equal? (.ref handoff 'placement-resolved?) #t)
-        (check-equal? (.ref handoff 'runtime-owner) "marlin-agent-core")
-        (check-equal? (.ref handoff 'runtime-executed) #f)))
+        (check-equal? (poo-flow-session-alist-ref handoff-alist 'session-id #f) 'child)
+        (check-equal? (poo-flow-session-alist-ref handoff-alist 'placement-resolved? #f) #t)
+        (check-equal? (poo-flow-session-alist-ref handoff-alist 'runtime-owner #f) "marlin-agent-core")
+        (check-equal? (poo-flow-session-alist-ref handoff-alist 'runtime-executed #t) #f)))
     (test-case "presents session graph without runtime execution"
       (let (presentation
             (pooFlowSessionGraphPresentation

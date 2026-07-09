@@ -1144,7 +1144,7 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
-;; : (-> [Value] [Value] [Value])
+;; : (-> [WorkflowCicdProjectionValue] [WorkflowCicdProjectionValue] [WorkflowCicdProjectionValue])
 (def (poo-flow-user-workflow-cicd-reverse-prepend values values-rev)
   (cond
    ((null? values) values-rev)
@@ -1249,13 +1249,10 @@
 ;;; order; empty fields stay absent rather than fabricated.
 ;; : (-> [Alist] Symbol [Value])
 (def (poo-flow-user-workflow-cicd-checks-field-values checks field)
-  (let loop ((remaining-checks checks)
-             (values-rev '()))
-    (cond
-     ((null? remaining-checks) (reverse values-rev))
-     (else
-      (loop
-       (cdr remaining-checks)
-       (poo-flow-user-workflow-cicd-reverse-prepend
-        (poo-flow-user-alist-ref (car remaining-checks) field '())
-        values-rev))))))
+  (foldr
+   (lambda (check values)
+     (foldr cons
+            values
+            (poo-flow-user-alist-ref check field '())))
+   '()
+   checks))

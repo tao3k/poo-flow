@@ -255,44 +255,57 @@
              (agent-param-performance-contract node validation index))))
          (rows
           (poo-flow-session-agent-param-contracts->alists contracts)))
-    (list (cons 'contract-count (length rows))
+    (map (lambda (entry)
+           (cons (car entry) ((cdr entry))))
+         (list
+          (cons 'contract-count
+                (lambda () (length rows)))
           (cons 'first-agent
-                (agent-param-performance-ref (car rows) 'agent-id))
+                (lambda ()
+                  (agent-param-performance-ref (car rows) 'agent-id)))
           (cons 'last-contract
-                (agent-param-performance-ref
-                 (list-ref rows (- count 1))
-                 'contract-id))
+                (lambda ()
+                  (agent-param-performance-ref
+                   (list-ref rows (- count 1))
+                   'contract-id)))
           (cons 'runtime-executed
-                (agent-param-performance-ref
-                 (car rows)
-                 'runtime-executed))
+                (lambda ()
+                  (agent-param-performance-ref
+                   (car rows)
+                   'runtime-executed)))
           (cons 'memory-catalog-valid?
-                (agent-param-performance-ref
-                 (car rows)
-                 'memory-catalog-valid?))
+                (lambda ()
+                  (agent-param-performance-ref
+                   (car rows)
+                   'memory-catalog-valid?)))
           (cons 'effective-isolation-mode
-                (agent-param-performance-ref
-                 (car rows)
-                 'effective-isolation-mode))
+                (lambda ()
+                  (agent-param-performance-ref
+                   (car rows)
+                   'effective-isolation-mode)))
           (cons 'effective-sandbox-profile-ref
-                (agent-param-performance-ref
-                 (car rows)
-                 'effective-sandbox-profile-ref))
+                (lambda ()
+                  (agent-param-performance-ref
+                   (car rows)
+                   'effective-sandbox-profile-ref)))
           (cons 'allowed-communication-receipt-count
-                (length
-                 (agent-param-performance-ref
-                  (car rows)
-                  'allowed-communication-receipts)))
+                (lambda ()
+                  (length
+                   (agent-param-performance-ref
+                    (car rows)
+                    'allowed-communication-receipts))))
           (cons 'denied-communication-receipt-count
-                (length
-                 (agent-param-performance-ref
-                  (car rows)
-                  'denied-communication-receipts)))
+                (lambda ()
+                  (length
+                   (agent-param-performance-ref
+                    (car rows)
+                    'denied-communication-receipts))))
           (cons 'memory-catalog-resolved-store-count
-                (length
-                 (agent-param-performance-ref
-                  (car rows)
-                  'memory-catalog-resolved-store-refs))))))
+                (lambda ()
+                  (length
+                   (agent-param-performance-ref
+                    (car rows)
+                    'memory-catalog-resolved-store-refs))))))))
 
 ;; : TestSuite
 (def session-agent-param-contract-performance-test

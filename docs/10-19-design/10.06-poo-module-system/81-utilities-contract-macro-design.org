@@ -1,0 +1,261 @@
+* 10.06.81 Utilities Contract Macro Design
+This document fixes the naming and implementation direction for reusable Scheme-side utilities that support object/type/contract declarations.
+
+The accepted spelling is:
+#+begin_src text
+utilities
+#+end_src
+
+Do not use =utilus=. Avoid public =util= or =utils= directory names because they are too vague for a project where boundary ownership matters.
+
+** 10.06.81.10 Problem
+The project is moving toward a consistent split:
+#+begin_src text
+types.ss    structured type and contract declarations
+objects.ss  objects, constructors, POO/defstruct values, and contract gates
+projection  final report, manifest, doctor, or proof-facing encodings
+#+end_src
+
+If every module writes its own slot contracts, object type contracts, constructor gates, and =->alist= projection helpers, the code will become both large and inconsistent.
+
+The problem is not the existence of helpers. The problem is duplicated safety surface:
+- repeated =defstruct= rows for slot and object contracts;
+- repeated alist projection code;
+- repeated =require-...-slots!= functions;
+- repeated hand-written predicate loops;
+- inconsistent error labels;
+- difficult future Lean/type-fact projection.
+
+** 10.06.81.20 Directory Boundary
+Use:
+#+begin_src text
+src/utilities/
+#+end_src
+
+This directory owns reusable engineering tools, not business semantics.
+
+Recommended layout:
+#+begin_src text
+src/utilities/contracts.ss        generic contract data and gates
+src/utilities/contract-syntax.ss  hygienic declaration macros
+src/utilities/functional.ss       pure list/alist/predicate combinators
+src/utilities/projection.ss       generic projection helpers
+#+end_src
+
+The directory must not become a semantic owner. For example, sandbox resource semantics remain in =src/modules/sandbox-core=, while the generic slot contract record can live in =src/utilities/contracts.ss=.
+
+** 10.06.81.30 Contract Data Model
+The reusable core should define structured records:
+#+begin_src scheme
+(defstruct poo-flow-slot-contract
+  (key owner slot value-kind predicate-key predicate required? metadata)
+  transparent: #t)
+
+(defstruct poo-flow-object-type-contract
+  (key owner object-kind slots metadata)
+  transparent: #t)
+#+end_src
+
+These are data structures, not comments. They are used by:
+- constructor gates;
+- doctor and scenario feedback;
+- type-fact projection;
+- Lean fact projection;
+- module documentation;
+- agent repair receipts.
+
+The executable predicate is stored for runtime checking. The =predicate-key= is stored so reports and proof artifacts can refer to the predicate without trying to serialize a procedure.
+
+** 10.06.81.40 Hygienic Macro Direction
+The final authoring shape should be declarative:
+#+begin_src scheme
+(defobject-contract observability/receipt
+  owner: 'observability
+  object-kind: 'PooFlowObservabilityReceipt
+  slots:
+  ((schema String string? required)
+   (source PooFlowSourceRef poo-flow-observability-source-ref? required)
+   (graph Alist poo-flow-observability-graph-shape? required)
+   (repair Alist poo-flow-observability-repair-shape? required)
+   (readiness Alist poo-flow-observability-readiness-shape? required)))
+#+end_src
+
+The hygienic macro should expand into ordinary definitions:
+#+begin_src scheme
++poo-flow-observability-receipt-slot-contracts+
++poo-flow-observability-receipt-type-contract+
+poo-flow-observability-require-receipt-slots!
+poo-flow-observability-receipt-type-contract->alist
+#+end_src
+
+Macro rules:
+- generate ordinary Scheme bindings, not a second DSL runtime;
+- keep generated identifiers predictable and projectable;
+- keep module-specific predicates in the module namespace;
+- never hide safety gates in final projection code;
+- preserve source-level names for agent diagnostics.
+
+** 10.06.81.50 Functional Library Role
+=src/utilities/functional.ss= should only hold pure reusable combinators:
+- association-list lookup/projection helpers;
+- list-of predicates;
+- predicate composition;
+- small fold/map/filter helpers;
+- non-allocating or allocation-aware variants when a hot path proves it needs them.
+
+It should not define sandbox, workflow, session, runtime, or proof semantics.
+
+** 10.06.81.55 Functional Application Audit
+The functional layer is not complete when it only exists as a library. Each
+landing must audit current =src/= owners and remove repeated local traversal
+code where the semantics are already generic.
+
+Current applied owners:
+- =src/modules/agent-sandbox/alist.ss=
+  Uses =poo-flow-alist-ref/default=, =poo-flow-filter-map=, and
+  =poo-flow-append-map=. The important semantic constraint is preserved:
+  task-local rows stay before profile defaults, so this owner must not use a
+  right-biased de-duplicating merge.
+- =src/modules/workflow/cicd-runtime-support/graph.ss=
+  Uses =poo-flow-fold-left= and =poo-flow-fold-right= for node-name
+  projection, first-match lookup, unresolved refs, dependency edges, and cycle
+  node projection. The graph algorithm remains owned by workflow CI/CD; only
+  the generic traversal mechanics move to =src/utilities/functional.ss=.
+- =src/module-system/loop-engine-runtime.ss=
+  Uses =poo-flow-fold-left= for accumulator-preserving projection helpers and
+  =poo-flow-fold-right= for repeated intent field extraction. The runtime boundary is
+  unchanged: Scheme still projects policy handoff data and does not execute
+  runtime work.
+
+High-yield follow-up owners:
+- =src/module-system/extension-support/merge.ss=
+  This owner contains merge, append, remove, coalesce, and flush traversals. It
+  has high potential for functional cleanup, but it also encodes module
+  extension semantics, so it must be migrated after the extension owner
+  boundary is stabilized instead of blindly replacing loops.
+- =src/module-system/loop-engine-runtime.ss=
+  The first pass only removed obvious projection recursion. A second pass
+  should split policy-free list projection from runtime handoff construction so
+  more helpers can use =poo-flow-map=, =poo-flow-filter-map=, and
+  =poo-flow-find= after the compiled package interface has been refreshed.
+- =src/modules/tool-core/objects.ss= and session policy owners
+  These owners repeatedly project rows and validate optional fields. They are
+  candidates for =poo-flow-filter-map= and predicate-composition helpers once
+  their type/contract rows are moved under the utilities-backed contract layer.
+
+Verification rule:
+- Do not use =asp gerbil-scheme check= as the validation entry for this work.
+  The contract/style behavior must be exercised through the harness library
+  and project self tests, especially =gxpkg env gxi= running the relevant GX
+  test suites.
+
+** 10.06.81.60 Implementation Phases
+Phase 1: generic contract records.
+- Add =src/utilities/contracts.ss=.
+- Move generic slot/object contract structures there.
+- Use it from =src/observability/types.ss= as the first module.
+
+Phase 2: hygienic macro prototype.
+- Add =src/utilities/contract-syntax.ss=.
+- Implement one declarative contract macro.
+- Rebuild =observability/receipt= from the macro.
+
+Phase 3: module migration.
+- Migrate sandbox resource contracts.
+- Migrate graph substrate contracts.
+- Migrate loop/governor contracts.
+- Migrate session policy contracts.
+
+Phase 4: proof/report projection.
+- Project type facts from object contracts.
+- Project Lean fact contract rows.
+- Feed doctor/agent feedback from the same contract data.
+
+** 10.06.81.65 Current Landing Status
+The first landing is complete for the generic contract layer:
+- =src/utilities/contracts.ss= owns =poo-flow-slot-contract=, =poo-flow-object-type-contract=, projection helpers, and slot check gates.
+- =src/utilities/contract-syntax.ss= owns =defcontract-family=, a hygienic declaration macro that expands into ordinary, inspectable Scheme definitions.
+- =src/observability/types.ss= now uses the generic records and macro for diagnostic and receipt contracts.
+
+The second landing is complete for sandbox resources:
+- =src/modules/sandbox-core/resource-contract.ss= keeps sandbox semantics in =sandbox-core= while using utilities-backed slot/object contracts as the typed declaration source.
+- Sandbox resource field contracts are projected from =PooFlowSlotContract= rows before calling the harness-backed POO object validation.
+- Local sandbox diagnostics now run structured slot checks before final receipt projection.
+The third landing starts the reusable functional layer:
+- =src/utilities/functional.ss= owns pure list, alist, predicate, lookup, and fold/map/filter combinators.
+- The functional layer wraps Gerbil/SRFI algorithms such as =fold-right=, =filter-map=, and =append-map= so business modules do not copy local recursive loops for ordinary data transformations.
+- Initial call sites are already migrated in =agent-sandbox/alist.ss=, =workflow/cicd-runtime-support/graph.ss=, and =module-system/loop-engine-runtime.ss=.
+- The functional layer must stay semantic-free. Module-specific safety rules, sandbox policies, workflow decisions, and proof facts remain in their owning modules.
+The third landing is complete for graph substrate contracts:
+- =src/graph/types.ss= uses =defcontract-family= for graph nodes, edges, and graph values.
+- =src/graph/algorithms.ss= consumes the typed graph predicates instead of carrying local row declarations.
+- =t/graph-utilities-contract-test.ss= verifies graph contract projection and invalid graph rejection.
+The fourth landing is complete for loop governance contracts:
+- =src/loops/governor-core.ss= owns governor and governor-node contract families.
+- =src/loops/human-audit.ss= owns human-audit contract families while preserving its POO inheritance from the governor human-node role.
+- =src/loops/governor-policy.ss= now keeps classification as named typed combinators. The actionable-pattern reducer returns explicit values, and =GERBIL-SCHEME-AGENT-POLICY-013= is cleared for this owner.
+- =t/loop-governor-utilities-contract-test.ss= and =t/loop-human-audit-utilities-contract-test.ss= verify the new contract surfaces and invalid slot rejection.
+
+The fifth landing is complete for session policy contracts:
+- =src/modules/session/policy.ss= now declares policy and tool-grant slot/type contracts through =defcontract-family=.
+- Session policy constructors call utilities-backed =require-slots!= gates before POO object construction.
+- =t/session-policy-utilities-contract-test.ss= verifies contract projection, invalid runtime slot rejection, and type-fact / Lean-fact projection from the real session policy contract families.
+The sixth landing completes the proof/report projection spine:
+- =src/type-facts/objects.ss= can project any =PooFlowObjectTypeContract= into =PooFlowTypeFactContract= rows.
+- The same object contract can project =PooFlowLeanFactContract= rows without executing Lean or runtime work.
+- =t/type-facts-contract-projection-test.ss= verifies required/optional polarity, predicate metadata, source slot identity, and Lean proof-address rows from a utilities-backed object contract.
+#+begin_src mermaid
+flowchart LR
+  A["module-local predicates"] --> B["defcontract-family"]
+  B --> C["PooFlowSlotContract rows"]
+  B --> D["PooFlowObjectTypeContract"]
+  C --> E["require-slots! gates"]
+  D --> F["doctor / manifest alist projection"]
+  D --> I["type-fact projection"]
+  D --> J["Lean fact contract projection"]
+  E --> G["POO object constructors"]
+  F --> H["Marlin boundary receipts"]
+  I --> H
+  J --> H
+  G --> H
+#+end_src
+
+** 10.06.81.70 Current Verification
+Focused source-level verification is green for the landed slice:
+- =gxpkg env gxi build.ss test t/utilities-contracts-test.ss=
+- =gxpkg env gxi build.ss test t/observability-feedback-test.ss=
+- =gxpkg env gxi build.ss test t/sandbox-resource-utilities-contract-test.ss=
+- =gxpkg env gxi build.ss test t/graph-utilities-contract-test.ss=
+- =gxpkg env gxi build.ss test t/loop-governor-utilities-contract-test.ss=
+- =gxpkg env gxi build.ss test t/loop-human-audit-utilities-contract-test.ss=
+- =gxpkg env gxi build.ss test t/session-policy-utilities-contract-test.ss=
+- =gxpkg env gxi build.ss test t/type-facts-contract-projection-test.ss=
+
+The source-level contract surface is intentionally verified through =build.ss test= and ASP scoped policy checks. Package compiled ABI refresh is a separate toolchain boundary; current local full compile is blocked by the known Apple SDK/Nix C compiler failure around =stdio.h= and =FILE=.
+
+** 10.06.81.80 Remaining Milestones
+The core utilities contract design is landed: generic contract data, hygienic declaration, module migrations, constructor gates, type facts, and Lean fact contract projection are covered by focused source-level tests.
+Remaining work is hardening, not a missing design primitive.
+
+Milestone 1: split oversized loop owners.
+
+- Split governor contracts, validation, classification, and projection into narrower files.
+- Split human-audit contract declarations from review projection.
+- Use facades to preserve stable public imports while reducing =MOD-R002= large-owner findings.
+
+Milestone 2: apply projection consumers broadly.
+- Feed doctor / observability reports from =poo-flow-object-type-contract->type-facts= where modules already expose contract families.
+- Keep runtime-heavy execution in Marlin; Scheme remains the semantic object graph, validation, interpretation, and manifest projection boundary.
+
+
+- Preserve the ownership rule: generic declaration mechanics stay in =src/utilities=; workflow, loop, governor, session, and proof semantics remain in their module owners.
+
+** 10.06.81.90 Acceptance Criteria
+This utilities layer is acceptable when:
+- contracts are structured records, not loose predicate helpers;
+- =objects.ss= calls constructor gates from =types.ss=;
+- =types.ss= uses generic contract data from =src/utilities/contracts.ss=;
+- module-specific semantics remain in module folders;
+- hygienic macros generate ordinary, inspectable Scheme definitions;
+- every generated or hand-written gate can project contract metadata;
+- focused tests prove both valid construction and invalid contract rejection.

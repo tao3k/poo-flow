@@ -12,7 +12,13 @@
                  gslph-source-coverage)
         (only-in :gerbil/gambit
                  exit
+                 file-exists?
+                 file-info
+                 file-info-last-modification-time
+                 getenv
+                 path-expand
                  pretty-print
+                 string-append
                  with-exception-catcher))
 
 (gslph-source-coverage
@@ -42,25 +48,84 @@
 
 (define-multicall-main)
 
+(def +poo-flow-package-build-source-files+
+  '("src/cli-support/package-build.ss"
+    "src/cli-support/package-build-support/options.ss"
+    "src/cli-support/package-build-support/specs.ss"
+    "src/cli-support/package-build-support/env.ss"
+    "src/cli-support/package-build-support/launcher.ss"
+    "src/cli-support/package-build-support/receipt.ss"
+    "src/cli-support/package-build-support/stage-output.ss"
+    "src/cli-support/package-build-support/stage-cache.ss"
+    "src/cli-support/package-build-support/observability.ss"
+    "src/cli-support/package-build-support/engine.ss"
+    "src/cli-support/package-build-compiled.ss"))
+
+(def +poo-flow-package-build-compiled-files+
+  '("lib/poo-flow/src/cli-support/package-build.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/options.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/specs.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/env.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/launcher.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/receipt.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/stage-output.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/stage-cache.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/observability.ssi"
+    "lib/poo-flow/src/cli-support/package-build-support/engine.ssi"
+    "lib/poo-flow/src/cli-support/package-build-compiled.ssi"))
+
+(def (poo-flow-build-file-mtime-seconds path)
+  (and (file-exists? path)
+       (time->seconds
+        (file-info-last-modification-time
+         (file-info path)))))
+
+(def (poo-flow-build-source-current-against-output?/mtime source output)
+  (let ((source-time (poo-flow-build-file-mtime-seconds source))
+        (output-time (poo-flow-build-file-mtime-seconds output)))
+    (and source-time
+         output-time
+         (<= source-time output-time))))
+
+(def (poo-flow-package-build-compiled-output-path output)
+  (let (gerbil-path (getenv "GERBIL_PATH" #f))
+    (and gerbil-path
+         (path-expand output gerbil-path))))
+
+(def (poo-flow-package-build-compiled-current? sources outputs)
+  (cond
+   ((and (null? sources) (null? outputs))
+    #t)
+   ((or (null? sources) (null? outputs))
+    #f)
+   (else
+    (let (compiled-output
+          (poo-flow-package-build-compiled-output-path (car outputs)))
+      (and compiled-output
+           (poo-flow-build-source-current-against-output?/mtime
+            (path-expand (car sources))
+            compiled-output)
+           (poo-flow-package-build-compiled-current?
+            (cdr sources)
+            (cdr outputs)))))))
+
 (def (poo-flow-load-package-build!)
-  (eval
-   '(begin
-      (import (only-in :std/misc/process run-process))
-      (run-process
-       ["sh" "-c"
-        "src='src/cli-support/package-build.ss'; base='.gerbil/lib/poo-flow/src/cli-support/package-build'; stamp='.gerbil/lib/poo-flow/.package-build-control.cksum'; sum=$(cksum \"$src\"); if [ ! -e \"$base.ssi\" ] || [ ! -e \"$base.scm\" ] || [ ! -e \"$stamp\" ] || [ \"$(cat \"$stamp\")\" != \"$sum\" ]; then printf '%s\n' '|poo-flow-build-bootstrap package-build=compile reason=source-checksum'; gxc \"$src\" && printf '%s\n' \"$sum\" > \"$stamp\"; fi"]
-       stdin-redirection: #f
-       stdout-redirection: #f
-       stderr-redirection: #f)))
-  (eval '(import "./src/cli-support/package-build.ss")))
+  (if (poo-flow-package-build-compiled-current?
+       +poo-flow-package-build-source-files+
+       +poo-flow-package-build-compiled-files+)
+    (with-exception-catcher
+     (lambda (_exn)
+       (eval '(import "./src/cli-support/package-build.ss")))
+     (lambda ()
+       (eval '(import :poo-flow/src/cli-support/package-build-compiled))))
+    (eval '(import "./src/cli-support/package-build.ss"))))
 
 (def (poo-flow-load-testing!)
   (eval '(import :gslph/src/testing/build-runner
                  :gslph/src/testing/model
-                 "./src/cli-support/testing-project.ss")))
+                 "./src/testing/project.ss")))
 
 (def (poo-flow-package-entry-options release optimized debug cli tests force verbose)
-  (poo-flow-load-package-build!)
   ((eval 'poo-flow-entry-options) release optimized debug cli tests force verbose))
 
 (def (poo-flow-test-error-status exn files)

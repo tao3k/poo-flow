@@ -1,7 +1,12 @@
 ;;; -*- Gerbil -*-
+;;; Boundary: backend capability policy describes sandbox provider capabilities
+;;; before nano, docker, cube, or native runtime adapters consume them.
+;;; Invariant: capability objects must stay parser-visible and POO-native for
+;;; shared sandbox profile inheritance.
 
 (import :gerbil/gambit
         (only-in :clan/poo/object object<-alist object? .slot? .ref)
+        (only-in :std/sugar filter)
         :poo-flow/src/modules/sandbox-core/profile-support/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/policy-core)
 
@@ -44,6 +49,9 @@
 ;;       ```
 ;;     %
 ;; : (-> Symbol [CapabilitySymbol] [Alist] PooSandboxBackendCapability)
+;;; Backend capability objects are the sandbox policy extension boundary.
+;;; - Keep registry aliases and default backend resolution explicit before profile validation consumes them.
+;; : (-> Symbol List List Object)
 (def (poo-flow-sandbox-backend-capability backend-kind
                                           capabilities
                                           . maybe-options)
@@ -217,7 +225,15 @@
        (poo-flow-sandbox-backend-capability-registry-put-entries/materialize
         ordered-extra-keys
         latest
-        '())))))
+	       '())))))
+
+;; : (-> Object Boolean)
+(def (poo-flow-sandbox-backend-capability-registry-entry? entry)
+  (pair? entry))
+
+;; : (-> Pair Symbol)
+(def (poo-flow-sandbox-backend-capability-registry-entry-key entry)
+  (car entry))
 
 ;; : (-> Alist HashTable HashTable [Symbol] [Symbol])
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/index reversed-extra
@@ -226,55 +242,53 @@
                                                                      ordered)
   (cond
    ((null? reversed-extra) ordered)
-   ((not (pair? (car reversed-extra)))
-    (poo-flow-sandbox-backend-capability-registry-put-entries/index
-     (cdr reversed-extra)
-     latest
-     seen
-     ordered))
-   ((hash-get seen (caar reversed-extra))
+   ((not (poo-flow-sandbox-backend-capability-registry-entry?
+          (car reversed-extra)))
     (poo-flow-sandbox-backend-capability-registry-put-entries/index
      (cdr reversed-extra)
      latest
      seen
      ordered))
    (else
-    (hash-put! seen (caar reversed-extra) #t)
-    (hash-put! latest (caar reversed-extra) (car reversed-extra))
-    (poo-flow-sandbox-backend-capability-registry-put-entries/index
-     (cdr reversed-extra)
-     latest
-     seen
-     (cons (caar reversed-extra) ordered)))))
+    (let (entry-key (poo-flow-sandbox-backend-capability-registry-entry-key
+                     (car reversed-extra)))
+      (if (hash-get seen entry-key)
+        (poo-flow-sandbox-backend-capability-registry-put-entries/index
+         (cdr reversed-extra)
+         latest
+         seen
+         ordered)
+        (begin
+          (hash-put! seen entry-key #t)
+          (hash-put! latest entry-key (car reversed-extra))
+          (poo-flow-sandbox-backend-capability-registry-put-entries/index
+	           (cdr reversed-extra)
+	           latest
+	           seen
+	           (cons entry-key ordered))))))))
 
 ;; : (-> Alist HashTable Alist Alist)
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/kept entries
                                                                   latest
                                                                   result)
-  (cond
-   ((null? entries) (reverse result))
-   ((and (pair? (car entries)) (hash-get latest (caar entries)))
-    (poo-flow-sandbox-backend-capability-registry-put-entries/kept
-     (cdr entries)
-     latest
-     result))
-   (else
-    (poo-flow-sandbox-backend-capability-registry-put-entries/kept
-     (cdr entries)
-     latest
-     (cons (car entries) result)))))
+  (poo-flow-sandbox-profile-rows/tail
+   result
+   (filter
+    (lambda (entry)
+      (not
+       (and (poo-flow-sandbox-backend-capability-registry-entry? entry)
+            (hash-get
+             latest
+             (poo-flow-sandbox-backend-capability-registry-entry-key entry)))))
+    entries)))
 
 ;; : (-> [Symbol] HashTable Alist Alist)
 (def (poo-flow-sandbox-backend-capability-registry-put-entries/materialize keys
                                                                           latest
                                                                           result)
-  (cond
-   ((null? keys) (reverse result))
-   (else
-    (poo-flow-sandbox-backend-capability-registry-put-entries/materialize
-     (cdr keys)
-     latest
-     (cons (hash-get latest (car keys)) result)))))
+  (poo-flow-sandbox-profile-rows/tail
+   result
+   (map (lambda (key) (hash-get latest key)) keys)))
 
 ;; : (-> PooSandboxBackendCapabilityRegistry [Alist] [Alist] POOObject)
 (def (poo-flow-sandbox-backend-capability-registry-extend registry

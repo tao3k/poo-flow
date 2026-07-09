@@ -2,11 +2,112 @@
 ;;; Boundary: shared fixtures for root user-interface tests.
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
-(import (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+(import (only-in :clan/poo/object .o .ref)
+        :poo-flow/src/module-system/base
         :poo-flow/src/module-system/profile-config
+        :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profiles/kernel)
+
+(defrules poo-flow-profile-set (default profiles)
+  ((_ name (default default-name) (profiles profile ...))
+   (.o kind: "poo-flow.modules.user-profile-set.v1"
+       profile-set-name: 'name
+       default-profile-name: 'default-name
+       user-profiles: (list profile ...))))
+
+(defrules poo-flow-profile (modules settings setting-keys)
+  ((_ name (modules module ...)
+      (settings setting ...)
+      (setting-keys key ...))
+   (.o kind: "poo-flow.modules.user-profile.v1"
+       profile-name: 'name
+       profile-selection-bundles: (list module ...)
+       user-settings: (.o setting ...)
+       public-setting-keys: '(key ...))))
+
+(defrules use-module (:config)
+  ((_ module :config config ...)
+   (poo-flow-modules-system-use-module 'module '()))
+  ((_ module feature ...)
+   (poo-flow-modules-system-use-module 'module '(feature ...))))
+
+(defrules poo-flow-user-module-bundle ()
+  ((_ (category module feature ...) ...)
+   (list
+    (poo-flow-user-module-selection 'category
+                                    'module
+                                    '(feature ...))
+    ...)))
+
+(defrules poo-flow-user-module-when ()
+  ((_ condition (category module feature ...))
+   (if condition
+     (list
+      (.o kind: "poo-flow.modules.user-module.v1"
+          category: 'category
+          module: 'module
+          features: '(feature ...)
+          module-category: 'category
+          module-name: 'module
+          module-features: '(feature ...)))
+     [])))
+
+(def (poo-flow-user-module-bundles-extend base-bundles extra-bundles)
+  (append base-bundles extra-bundles))
+
+(def (poo-flow-user-module-bundles->modules bundles)
+  (apply append bundles))
+
+(defrules poo-flow-custom-module-bundles ()
+  ((_ (name path feature ...) ...)
+   (list
+    (list
+     (poo-flow-user-module-selection 'custom
+                                     'name
+                                     '(feature ...)))
+    ...)))
+
+(def poo-flow-default-user-setting-keys
+  '(surface profile flow-mode loop-strategy sandbox-policy sandbox-backends mode-lock))
+
+(def (pooFlowDefaultUserSettings profile-name)
+  (.o surface: "poo-flow"
+      profile: (symbol->string profile-name)
+      flow-mode: 'funflow
+      loop-strategy: 'governed
+      sandbox-policy: 'module-gated
+      sandbox-backends: '(nono cube docker)
+      mode-lock: "stable"))
+
+(def (pooFlowUserProfile name module-bundles settings setting-keys)
+  (.o kind: "poo-flow.modules.user-profile.v1"
+      profile-name: name
+      profile-selection-bundles: module-bundles
+      user-settings: settings
+      public-setting-keys: setting-keys))
+
+(def (pooFlowUserProfileExtend name base-profile module-bundles)
+  (pooFlowUserProfile
+   name
+   (append (.ref base-profile 'profile-selection-bundles) module-bundles)
+   (.ref base-profile 'user-settings)
+   (.ref base-profile 'public-setting-keys)))
+
+(def poo-flow-kernel-profile-module-bundles
+  (list
+   (poo-flow-user-module-bundle
+    (sandbox nono-sandbox +nono +native-ffi +doctor))
+   (poo-flow-user-module-bundle
+    (sandbox cubeSandbox +cube +doctor))
+   (poo-flow-user-module-bundle
+    (sandbox docker-sandbox +docker +doctor))))
+
+(def poo-flow-kernel-profile
+  (pooFlowUserProfile
+   'kernel
+   poo-flow-kernel-profile-module-bundles
+   (pooFlowDefaultUserSettings 'kernel)
+   poo-flow-default-user-setting-keys))
 
 (export test-poo-flow-user-module-bundles
         test-poo-flow-user-modules
@@ -112,11 +213,15 @@
 
 ;; : (-> Unit POOObject)
 (def test-poo-flow-user-settings
-  (poo-flow-user-profile-settings test-poo-flow-user-profile))
+  (.ref test-poo-flow-user-profile 'user-settings))
 
 ;; : (-> Unit PooUserConfig)
 (def test-poo-flow-user-config
-  (pooFlowUserConfigFromProfile test-poo-flow-user-profile))
+  (.o kind: "poo-flow.modules.user-config.v1"
+      user-modules: (apply append
+                           (.ref test-poo-flow-user-profile
+                                 'profile-selection-bundles))
+      user-settings: (.ref test-poo-flow-user-profile 'user-settings)))
 
 ;; : (-> UserInterfaceEntry Alist MaybeValue)
 (def (alist-value key entries)

@@ -1,4 +1,6 @@
 ;;; -*- Gerbil -*-
+;;; Boundary: test verifies durable sandbox config projection without runtime work.
+;;; Invariant: assertions inspect user-interface metadata only.
 
 (import :std/test
         (only-in :clan/poo/object .ref .slot?)
@@ -9,10 +11,35 @@
 
 (export user-interface-custom-sandbox-durable-test)
 
+;; : (-> Alist Symbol Object)
 (def (test-ref row key)
   (let (entry (assoc key row))
     (if entry (cdr entry) #f)))
 
+;; : Alist
+(def expected-sandbox-durable-metadata
+  '((backend . nono-sandbox)
+    (intent . durable-sandbox-build)
+    (scope . custom-module)
+    (durable-policy . durable/default)
+    (runtime-executed . #f)))
+
+;; : (-> Alist Symbol Object Symbol Void)
+(def (check-metadata! metadata key expected label)
+  (let (actual (test-ref metadata key))
+    (unless (equal? actual expected)
+      (error "metadata check failed" label actual expected))))
+
+;; : (-> Alist Alist Void)
+(def (check-metadata-fields! metadata expected-fields)
+  (for-each
+   (lambda (entry)
+     (check-metadata! metadata (car entry) (cadr entry) (caddr entry)))
+   (map (lambda (entry)
+          (list (car entry) (cdr entry) (car entry)))
+        expected-fields)))
+
+;; : (-> Object Object)
 (def (sandbox-config module-selection-bundle)
   (let* ((selection (car module-selection-bundle))
          (entry
@@ -21,6 +48,7 @@
          (pair? (cdr entry))
          (car (cdr entry)))))
 
+;; : TestSuite
 (def user-interface-custom-sandbox-durable-test
   (test-suite "poo-flow custom user-interface sandbox-durable case"
     (test-case "projects durable sandbox config without runtime work"
@@ -33,8 +61,4 @@
         (check-equal? (.slot? config 'name) #t)
         (check-equal? (.slot? config 'metadata) #t)
         (check-equal? (.ref config 'name) 'agent/durable-build)
-        (check-equal? (test-ref metadata 'backend) 'nono-sandbox)
-        (check-equal? (test-ref metadata 'intent) 'durable-sandbox-build)
-        (check-equal? (test-ref metadata 'scope) 'custom-module)
-        (check-equal? (test-ref metadata 'durable-policy) 'durable/default)
-        (check-equal? (test-ref metadata 'runtime-executed) #f)))))
+        (check-metadata-fields! metadata expected-sandbox-durable-metadata)))))

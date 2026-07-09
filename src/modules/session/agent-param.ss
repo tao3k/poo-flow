@@ -26,10 +26,23 @@
    (lambda ()
      (.ref object key))))
 
+;;; Boundary: agent-param field rows preserve the session parameter projection
+;;; shape used by agent graph and policy receipts.
+;; poo-flow-session-agent-param-field-rows
+;; : (-> SessionAgentParamFieldRowsClauseSyntax SessionAgentParamFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands agent parameter field clauses into stable session param rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-agent-param-field-rows (agent-id 'worker))
+;;   ;; => ((agent-id . worker))
+;;   ```
 (defrules poo-flow-session-agent-param-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
+;;; Boundary: agent parameter contracts bind session agent nodes to validated
+;;; policy receipts before child-session runtime launch.
 ;; : (-> Symbol PooSessionAgentNode PooSessionPolicyValidationReceipt Symbol Symbol Symbol [Alist] PooSessionAgentParamContract)
 (def (poo-flow-session-agent-param-contract contract-id
                                             agent-node

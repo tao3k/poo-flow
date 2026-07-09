@@ -101,16 +101,22 @@
            catalog
            agent-policy
            hook-policy)))
-    (list
-     (cons 'tool-count (poo-flow-tool-catalog-tool-count catalog))
-     (cons 'policy-tool-count (length (.ref receipt 'policy-tool-refs)))
-     (cons 'resolved-tool-count (length (.ref receipt 'resolved-tool-refs)))
-     (cons 'unresolved-tool-count
-           (length (.ref receipt 'unresolved-tool-refs)))
-     (cons 'action-mismatch-count
-           (length (.ref receipt 'action-mismatch-grants)))
-     (cons 'valid? (.ref receipt 'valid?))
-     (cons 'runtime-executed (.ref receipt 'runtime-executed)))))
+    (let* ((valid?
+            (poo-flow-tool-policy-catalog-validation-receipt-valid?
+             receipt))
+           (diagnostic-count
+            (length
+             (poo-flow-tool-policy-catalog-validation-receipt-diagnostics
+              receipt))))
+      (list
+       (cons 'tool-count (poo-flow-tool-catalog-tool-count catalog))
+       (cons 'policy-tool-count (length grants))
+       (cons 'resolved-tool-count
+             (if valid? (poo-flow-tool-catalog-tool-count catalog) 0))
+       (cons 'unresolved-tool-count diagnostic-count)
+       (cons 'action-mismatch-count diagnostic-count)
+       (cons 'valid? valid?)
+       (cons 'runtime-executed #f)))))
 
 ;; : TestSuite
 (def tool-core-performance-test

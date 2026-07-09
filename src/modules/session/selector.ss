@@ -49,18 +49,19 @@
 
 ;; : (-> List List List)
 (def (poo-flow-session-selector-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
+;;; Boundary: selector field rows preserve the policy-visible selector receipt
+;;; shape used for parent-child session addressing.
+;; poo-flow-session-selector-field-rows
+;; : (-> Syntax Syntax)
+;; | doc m%
+;;   Expands session selector field clauses into selector receipt rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-selector-field-rows (selection-policy 'parent))
+;;   ;; => ((selection-policy . parent))
+;;   ```
 (defrules poo-flow-session-selector-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
@@ -326,7 +327,7 @@
    (poo-flow-session-selector-field-rows
     (fallback-ref fallback-ref))))
 
-;; : PooSessionSelectorReceiptRecord
+;; : PooSessionSelectorReceiptRecordStruct
 (defstruct poo-flow-session-selector-receipt-record
   (selector-id
    project-id
@@ -355,6 +356,8 @@
    metadata)
   transparent: #t)
 
+;;; Boundary: selector receipts make parent/root fallback decisions explicit for
+;;; policy and sandbox isolation checks.
 ;; : (-> Symbol Symbol Symbol Symbol [PooSessionSelectorCandidate] Alist Symbol [Alist] PooSessionSelectorReceipt)
 (def (poo-flow-session-selector-receipt selector-id
                                         project-id
@@ -476,7 +479,7 @@
        '()
        (car maybe-metadata)))))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-selector-receipt? value)
   (poo-flow-session-selector-receipt-record? value))
 

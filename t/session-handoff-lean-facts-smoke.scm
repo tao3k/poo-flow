@@ -1,21 +1,39 @@
+;;; Boundary: smoke validates Lean fact projection tables, not runtime behavior.
+;;; Invariant: Scheme manufactures proof facts only; runtime execution stays
+;;; behind the Marlin handoff boundary.
 (import (only-in :clan/poo/object .o)
         :poo-flow/src/module-system/loop-engine-session-agent-graph
         :poo-flow/src/modules/session/objects-handoff)
 
+;; : (-> Alist Symbol Object)
 (def (fact-ref facts key)
   (let ((cell (assq key facts)))
     (and cell (cdr cell))))
 
+;; : (-> Object Object String Void)
 (def (check-equal! actual expected label)
   (unless (equal? actual expected)
     (error "check failed" label actual expected)))
 
+;; : (-> Alist Symbol Object Symbol Void)
+(def (check-fact! facts key expected label)
+  (check-equal! (fact-ref facts key) expected label))
+
+;; : (-> Alist [List] Void)
+(def (check-facts! facts expected-facts)
+  (for-each
+   (lambda (entry)
+     (check-fact! facts (car entry) (cadr entry) (caddr entry)))
+   expected-facts))
+
+;; : (-> Alist Alist String Void)
 (def (check-lean-fact-contract! contracts facts label)
   (check-equal!
    (poo-flow-lean-fact-contract-complete? contracts facts)
    #t
    label))
 
+;; : (-> Void)
 (def (check-static-handoff-boundary!)
   (let* ((handoff
           (.o kind: 'poo-flow.session.handoff
@@ -40,67 +58,37 @@
      poo-flow-session-handoff-lean-fact-key-contracts
      facts
      'session-handoff-lean-fact-contract)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/chunk-present)
-     #t
-     'chunk-present)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/placement-resolved)
-     #t
-     'placement-resolved)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/placement-missing-profile)
-     #f
-     'placement-missing-profile)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/runtime-summary-present)
-     #t
-     'runtime-summary-present)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/handoff-receipt-present)
-     #t
-     'handoff-receipt-present)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/runtime-executed-false)
-     #t
-     'runtime-executed-false)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/handoff-required-true)
-     #t
-     'handoff-required-true)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/runtime-owner-marlin)
-     #t
-     'runtime-owner-marlin)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/runtime-parses-scheme-source-false)
-     #t
-     'runtime-parses-scheme-source-false)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/scheme-manufactures-runtime-handlers-false)
-     #t
-     'scheme-manufactures-runtime-handlers-false)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s3-handoff-receipt)
-     #t
-     'scenario-bridge-s3-handoff-receipt)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s11-agent-registered)
-     #t
-     'scenario-bridge-s11-agent-registered)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s11-subagent-registered)
-     #t
-     'scenario-bridge-s11-subagent-registered)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s11-channel-authorized)
-     #t
-     'scenario-bridge-s11-channel-authorized)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s14-placement-missing-profile)
-     #f
-     'scenario-bridge-s14-placement-missing-profile)))
+    (check-facts!
+     facts
+     '((session.lifecycle/chunk-present #t chunk-present)
+       (session.lifecycle/placement-resolved #t placement-resolved)
+       (session.lifecycle/placement-missing-profile #f
+        placement-missing-profile)
+       (session.lifecycle/runtime-summary-present #t
+        runtime-summary-present)
+       (session.lifecycle/handoff-receipt-present #t
+        handoff-receipt-present)
+       (session.lifecycle/runtime-executed-false #t
+        runtime-executed-false)
+       (session.lifecycle/handoff-required-true #t
+        handoff-required-true)
+       (session.lifecycle/runtime-owner-marlin #t runtime-owner-marlin)
+       (session.lifecycle/runtime-parses-scheme-source-false #t
+        runtime-parses-scheme-source-false)
+       (session.lifecycle/scheme-manufactures-runtime-handlers-false #t
+        scheme-manufactures-runtime-handlers-false)
+       (scenario.bridge/s3-handoff-receipt #t
+        scenario-bridge-s3-handoff-receipt)
+       (scenario.bridge/s11-agent-registered #t
+        scenario-bridge-s11-agent-registered)
+       (scenario.bridge/s11-subagent-registered #t
+        scenario-bridge-s11-subagent-registered)
+       (scenario.bridge/s11-channel-authorized #t
+        scenario-bridge-s11-channel-authorized)
+       (scenario.bridge/s14-placement-missing-profile #f
+        scenario-bridge-s14-placement-missing-profile)))))
 
+;; : (-> Void)
 (def (check-missing-profile-diagnostics!)
   (let* ((handoff
           (.o kind: 'poo-flow.session.handoff
@@ -122,19 +110,16 @@
      poo-flow-session-handoff-lean-fact-key-contracts
      facts
      'missing-profile-lean-fact-contract)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/placement-resolved)
-     #f
-     'missing-profile-placement-resolved)
-    (check-equal!
-     (fact-ref facts 'session.lifecycle/placement-missing-profile)
-     #t
-     'missing-profile-diagnostic)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s14-placement-missing-profile)
-     #t
-     'scenario-bridge-missing-profile)))
+    (check-facts!
+     facts
+     '((session.lifecycle/placement-resolved #f
+        missing-profile-placement-resolved)
+       (session.lifecycle/placement-missing-profile #t
+        missing-profile-diagnostic)
+       (scenario.bridge/s14-placement-missing-profile #t
+        scenario-bridge-missing-profile)))))
 
+;; : (-> Void)
 (def (check-topology-channel-denial!)
   (let* ((handoff
           (.o kind: 'poo-flow.session.handoff
@@ -159,19 +144,16 @@
      poo-flow-session-handoff-lean-fact-key-contracts
      facts
      'topology-denial-lean-fact-contract)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s11-agent-registered)
-     #t
-     'topology-denial-agent-registered)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s11-subagent-registered)
-     #t
-     'topology-denial-subagent-registered)
-    (check-equal!
-     (fact-ref facts 'scenario.bridge/s11-channel-authorized)
-     #f
-     'topology-denial-channel-authorized)))
+    (check-facts!
+     facts
+     '((scenario.bridge/s11-agent-registered #t
+        topology-denial-agent-registered)
+       (scenario.bridge/s11-subagent-registered #t
+        topology-denial-subagent-registered)
+       (scenario.bridge/s11-channel-authorized #f
+        topology-denial-channel-authorized)))))
 
+;; : (-> Void)
 (def (check-ui-scenario-lean-facts!)
   (let* ((facts
           (poo-flow-ui-scenario->lean-facts
@@ -196,27 +178,20 @@
      poo-flow-ui-scenario-lean-fact-key-contracts
      facts
      'ui-scenario-lean-fact-contract)
-    (check-equal!
-     (fact-ref facts 'ui.scenario/strategy-plan-done)
-     #t
-     'ui-scenario-strategy-plan-done)
-    (check-equal!
-     (fact-ref facts 'ui.scenario/runtime-manifest-done)
-     #t
-     'ui-scenario-runtime-manifest-done)
-    (check-equal!
-     (fact-ref facts 'ui.scenario/scenario-benchmark-done)
-     #t
-     'ui-scenario-benchmark-done)
-    (check-equal!
-     (fact-ref facts 'ui.failure/runtime-manifest-missing-memory-policy)
-     #f
-     'ui-scenario-runtime-memory-not-missing)
-    (check-equal!
-     (fact-ref facts 'ui.failure/benchmark-missing-performance-fixture)
-     #f
-     'ui-scenario-fixture-not-missing)))
+    (check-facts!
+     facts
+     '((ui.scenario/strategy-plan-done #t
+        ui-scenario-strategy-plan-done)
+       (ui.scenario/runtime-manifest-done #t
+        ui-scenario-runtime-manifest-done)
+       (ui.scenario/scenario-benchmark-done #t
+        ui-scenario-benchmark-done)
+       (ui.failure/runtime-manifest-missing-memory-policy #f
+        ui-scenario-runtime-memory-not-missing)
+       (ui.failure/benchmark-missing-performance-fixture #f
+        ui-scenario-fixture-not-missing)))))
 
+;; : (-> Void)
 (def (check-ui-scenario-denial-lean-facts!)
   (let* ((facts
           (poo-flow-ui-scenario->lean-facts
@@ -241,54 +216,38 @@
      poo-flow-ui-scenario-lean-fact-key-contracts
      facts
      'ui-denial-lean-fact-contract)
-    (check-equal!
-     (fact-ref facts 'ui.scenario/selector-policy-done)
-     #f
-     'ui-denial-selector-policy-done)
-    (check-equal!
-     (fact-ref facts 'ui.failure/strategy-missing-selector-policy)
-     #t
-     'ui-denial-strategy-missing-selector)
-    (check-equal!
-     (fact-ref facts 'ui.failure/runtime-manifest-missing-memory-policy)
-     #t
-     'ui-denial-runtime-missing-memory)
-    (check-equal!
-     (fact-ref facts 'ui.failure/runtime-manifest-missing-compression-policy)
-     #t
-     'ui-denial-runtime-missing-compression)
-    (check-equal!
-     (fact-ref facts 'ui.failure/handoff-missing-runtime-manifest)
-     #t
-     'ui-denial-handoff-missing-runtime)
-    (check-equal!
-     (fact-ref facts 'ui.failure/benchmark-missing-performance-fixture)
-     #t
-     'ui-denial-benchmark-missing-fixture)))
+    (check-facts!
+     facts
+     '((ui.scenario/selector-policy-done #f
+        ui-denial-selector-policy-done)
+       (ui.failure/strategy-missing-selector-policy #t
+        ui-denial-strategy-missing-selector)
+       (ui.failure/runtime-manifest-missing-memory-policy #t
+        ui-denial-runtime-missing-memory)
+       (ui.failure/runtime-manifest-missing-compression-policy #t
+        ui-denial-runtime-missing-compression)
+       (ui.failure/handoff-missing-runtime-manifest #t
+        ui-denial-handoff-missing-runtime)
+       (ui.failure/benchmark-missing-performance-fixture #t
+        ui-denial-benchmark-missing-fixture)))))
 
+;; : (-> Void)
 (def (check-loop-engine-agent-graph-topology-metadata!)
   (let* ((graph
-          (poo-flow-user-loop-engine-intent-session-agent-graph
-           '((use-case . s11-agent-topology)
-             (agent-judges . ((planner . planner-agent)
-                              (builder . builder-agent))))))
+         (poo-flow-user-loop-engine-intent-session-agent-graph
+          '((use-case . s11-agent-topology)
+            (agent-judges . ((planner . planner-agent)
+                             (builder . builder-agent))))))
          (metadata (fact-ref graph 'metadata)))
-    (check-equal!
-     (fact-ref metadata 'agent-registered)
-     #t
-     'loop-engine-agent-registered)
-    (check-equal!
-     (fact-ref metadata 'subagent-registered)
-     #t
-     'loop-engine-subagent-registered)
-    (check-equal!
-     (fact-ref metadata 'channel-authorized)
-     #t
-     'loop-engine-channel-authorized)
-    (check-equal!
-     (fact-ref graph 'communication-channel-receipt-count)
-     2
-     'loop-engine-channel-receipt-count)))
+    (check-facts!
+     metadata
+     '((agent-registered #t loop-engine-agent-registered)
+       (subagent-registered #t loop-engine-subagent-registered)
+       (channel-authorized #t loop-engine-channel-authorized)))
+    (check-fact! graph
+                 'communication-channel-receipt-count
+                 2
+                 'loop-engine-channel-receipt-count)))
 
 (check-static-handoff-boundary!)
 (check-missing-profile-diagnostics!)

@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; Boundary: backend validation keeps sandbox provider checks separate from
+;;; profile authoring syntax and runtime execution.
+;;; Invariant: validation receipts must be deterministic policy evidence for
+;;; every sandbox backend object.
 
 (import :gerbil/gambit
         (only-in :clan/poo/object object<-alist object? .slot? .ref)
@@ -31,6 +35,8 @@
 ;;       ;; => #t
 ;;       ```
 ;;     %
+;;; Registry diagnostics are internal receipts for backend capability policy validation.
+;;; - Keep duplicate entry and alias reports bounded before projecting validation rows.
 (defstruct poo-flow-sandbox-backend-capability-registry-diagnostic-entry
   (kind schema code phase slot severity payload))
 
@@ -99,7 +105,7 @@
    payload))
 
 ;; poo-flow-sandbox-backend-capability-registry-diagnostic?
-;;   : (-> Value Boolean)
+;;   : (-> Datum Boolean)
 ;;   | contract: recognize fixed backend capability diagnostic structs
 ;;   | result: #t only for backend capability registry diagnostic struct values
 ;;   | doc m%
@@ -474,7 +480,7 @@
       (diagnostic-count (length diagnostics))
       (runtime-executed #f)))))
 
-;; : (-> Value Boolean)
+;; : (-> Object Boolean)
 (def (poo-flow-sandbox-backend-capability-registry-validation? value)
   (poo-flow-sandbox-policy-object-kind?
    value

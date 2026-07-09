@@ -25,19 +25,20 @@
   (with-catch (lambda (failure) failure)
               thunk))
 
-;; : (forall (a) (-> [a] [a] [a]))
+;; failure-test-values/tail
+;;   : (forall (a) (-> [a] [a] [a]))
+;;   | doc m%
+;;       Merge captured failure output fragments into the accumulated test tail
+;;       without changing their observation order.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (failure-test-values/tail '(failure) '(tail))
+;;       ;; => (failure tail)
+;;       ```
+;;     %
 (def (failure-test-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (append values tail))
 
 ;;; Submit failure fixture preserves the request kind so receipt wrapping can be
 ;;; checked after the adapter reports failure.
@@ -62,7 +63,7 @@
 
 ;;; Failing adapter slots let the runner exercise receipt failure wrapping
 ;;; without requiring the Rust runtime to exist in the Scheme test process.
-;; : (-> Unit RuntimeAdapter)
+;; : (-> RuntimeAdapter)
 (def (make-failing-adapter)
   (make-runtime-adapter 'failing
                         '(external)

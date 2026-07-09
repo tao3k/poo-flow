@@ -5,6 +5,8 @@
 ;;; Source contract: symbols mirror the package-owned bindings/nono-c/nono.h.
 ;;; Policy evidence: binding tests assert descriptor override and manifest gates.
 
+;;; Native nono C binding runtime manifest projection.
+;;; - Keep sandbox manifests validated before runtime dry-run, smoke, or live receipts are emitted.
 (import :poo-flow/src/core/api
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/agent-sandbox/profile
@@ -26,23 +28,25 @@
         agent-sandbox-request->nono-c-binding-manifest
         agent-sandbox-execution-request->nono-c-binding-manifest)
 
+;;; Runtime receipt rows are generated without touching sandbox execution.
+;; nono-c-binding-runtime-field-rows
+;; : (-> Syntax Syntax)
+;; | contract: expands literal `(field value)` pairs into bounded runtime rows
+;; | warning: keep dry-run, smoke, and live execution outside this macro
+;; | doc m%
+;;   Generates the C binding runtime manifest row list.
+;;   # Examples
+;;   ```scheme
+;;   (nono-c-binding-runtime-field-rows (backend 'nono-c))
+;;   ;; => ((backend . nono-c))
+;;   ```
 (defrules nono-c-binding-runtime-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
 ;; : (-> List List List)
 (def (nono-c-binding-runtime-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
 ;; : (-> List List List)
 (def (nono-c-binding-runtime-rows-into/rev rows rows-rev)

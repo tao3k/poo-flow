@@ -7,7 +7,9 @@
 
 (export poo-flow-performance-build-list
         poo-flow-performance-elapsed-ms
-        poo-flow-performance-best-elapsed-ms)
+        poo-flow-performance-best-elapsed-ms
+        poo-flow-performance-elapsed-us
+        poo-flow-performance-best-elapsed-us)
 
 ;;; Intent: construct deterministic index-addressed fixture lists.
 ;;; Boundary: callers own the item constructor and count.
@@ -33,4 +35,21 @@
     (apply min
            (map (lambda (_attempt)
                   (poo-flow-performance-elapsed-ms thunk))
+                (iota attempts)))))
+
+;; : (-> (-> Unit Object) Integer)
+(def (poo-flow-performance-elapsed-us thunk)
+  (let (start (##current-time-point))
+    (thunk)
+    (inexact->exact
+     (floor
+      (* (- (##current-time-point) start) 1000000.0)))))
+
+;; : (-> Integer (-> Unit Object) Object)
+(def (poo-flow-performance-best-elapsed-us attempts thunk)
+  (if (<= attempts 0)
+    #f
+    (apply min
+           (map (lambda (_attempt)
+                  (poo-flow-performance-elapsed-us thunk))
                 (iota attempts)))))

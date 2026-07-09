@@ -21,19 +21,19 @@
 (def durable-policy-projection-fixture-path
   "t/scenarios/performance/durable-policy-batch-projection/benchmark.ss")
 
-;; : Alist
+;; : DurablePolicyPerformanceFixture
 (def durable-policy-projection-fixture
   (call-with-input-file durable-policy-projection-fixture-path read))
 
 ;; : Integer
 (def durable-policy-projection-count 64)
 
-;; : (-> Alist Symbol Value)
+;; : (-> DurablePolicyPerformanceRow DurablePolicyPerformanceKey DurablePolicyPerformanceValue)
 (def (durable-policy-performance-ref row key)
   (let (entry (assoc key row))
     (and entry (cdr entry))))
 
-;; : (-> [Value] Boolean)
+;; : (-> [DurablePolicyPerformanceValue] Bool)
 (def (durable-policy-performance-all-receipts? values)
   (cond
    ((null? values) #t)
@@ -41,7 +41,7 @@
     (durable-policy-performance-all-receipts? (cdr values)))
    (else #f)))
 
-;; : (-> [Value] Boolean)
+;; : (-> [DurablePolicyPerformanceValue] Bool)
 (def (durable-policy-performance-all-bounded-alists? values)
   (cond
    ((null? values) #t)
@@ -67,7 +67,7 @@
              (list (cons 'index index)
                    (cons 'fixture 'durable-policy-performance))))))))
 
-;; : (-> Integer Alist)
+;; : (-> Integer DurablePolicyPerformanceSummary)
 (def (durable-policy-performance-summary count)
   (let* ((policies (durable-policy-performance-policies count))
          (receipts (poo-flow-durable-policies->receipts policies))
@@ -82,7 +82,7 @@
            (durable-policy-performance-all-bounded-alists? rows))
      (cons 'runtime-executed #f))))
 
-;; : (-> Alist Void)
+;; : (-> DurablePolicyPerformanceSummary ReceiptDisplayResult)
 (def (durable-policy-performance-display-receipt receipt)
   (display "[poo-flow-benchmark] durable-policy-batch-projection ")
   (write receipt)

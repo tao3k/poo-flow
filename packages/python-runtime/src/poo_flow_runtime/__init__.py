@@ -72,6 +72,21 @@ from .event_stream import (
     DEFAULT_RUNTIME_GRAPH_STREAM_MODES,
     RuntimeGraphStreamProjection,
 )
+from ._scheme_load import clear_load_cache, load, precompile_load, preproject_load
+from .funflow import (
+    AnyioFunFlowRuntime,
+    FunFlowDag,
+    FunFlowPlanProjection,
+    FunFlowRunReceipt,
+    FunFlowRuntimeError,
+    FunFlowSandbox,
+    FunFlowStep,
+    FunFlowStepReceipt,
+)
+from .json_schema_contract import (
+    json_schema_to_scheme_contract,
+    load_json_schema,
+)
 from .materialization import RuntimeGraphBindings, materialize_runtime_graph_plan
 from .messages import (
     RuntimeGraphMessage,
@@ -224,4 +239,18 @@ __all__ = (
     "coerce_runtime_durable_policy_manifest",
     "RuntimeGraphStreamProjection",
     "DEFAULT_RUNTIME_GRAPH_STREAM_MODES",
+    "load",
+    "precompile_load",
+    "preproject_load",
+    "clear_load_cache",
+    "AnyioFunFlowRuntime",
+    "FunFlowDag",
+    "FunFlowPlanProjection",
+    "FunFlowRunReceipt",
+    "FunFlowRuntimeError",
+    "FunFlowSandbox",
+    "FunFlowStep",
+    "FunFlowStepReceipt",
+    "json_schema_to_scheme_contract",
+    "load_json_schema",
 )

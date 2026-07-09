@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; Boundary: sandbox policy core owns shared policy facts that backend and
+;;; profile modules inherit through POO object composition.
+;;; Invariant: core policy defaults must remain backend-neutral and safe for
+;;; module loader reuse.
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .ref .slot? object?))
@@ -144,6 +148,9 @@
 ;;       ;; => deny
 ;;       ```
 ;;     %
+;;; Profile policy options share the same row shape across sandbox backends.
+;;; - Keep kind/value/default metadata construction centralized for backend and profile helpers.
+;; : (-> Alist Symbol Any Any)
 (def (poo-flow-sandbox-profile-policy-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))

@@ -61,17 +61,26 @@
    "Synthetic selector candidate for batch projection."
    '(runtime-owner runtime-executed)))
 
-;; : (-> Integer Symbol [Symbol])
+;; selector-performance-target-refs
+;;   : (-> Integer SelectorPerformanceCandidateKind [SelectorPerformanceTargetRef])
+;;   | doc m%
+;;       Generate target references for selector receipt candidates while
+;;       preserving the requested candidate kind.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (selector-performance-target-refs 0 'profile)
+;;       ;; => ()
+;;       ```
+;;     %
 (def (selector-performance-target-refs candidate-count candidate-kind)
-  (let loop ((index 0)
-             (refs-rev '()))
-    (cond
-     ((= index candidate-count) (reverse refs-rev))
-     ((eq? (selector-performance-candidate-kind index) candidate-kind)
-      (loop (+ index 1)
-            (cons (selector-performance-target-ref index) refs-rev)))
-     (else
-      (loop (+ index 1) refs-rev)))))
+  (filter
+   (lambda (ref) ref)
+   (poo-flow-performance-build-list
+    candidate-count
+    (lambda (index)
+      (and (eq? (selector-performance-candidate-kind index) candidate-kind)
+           (selector-performance-target-ref index))))))
 
 ;; : (-> Integer Alist)
 (def (selector-performance-summary candidate-count)

@@ -2,11 +2,14 @@
 ;;; Boundary: sandbox resource POO prototypes use harness-backed typed contracts.
 
 (import (only-in :clan/poo/object .def)
+        (only-in :std/sugar filter-map)
         (only-in :std/test
                  check-equal?
                  run-tests!
                  test-case
                  test-suite)
+        (only-in :poo-flow/src/type-facts
+                 poo-flow-type-validation-receipt-harness-validation)
         :poo-flow/src/modules/sandbox-core/resource-contract)
 
 (export sandbox-core-resource-contract-test)
@@ -61,17 +64,20 @@
     (alist-ref/default diagnostic 'code #f)
     #f))
 
-;; : (-> [Object] [Object])
+;; diagnostic-codes
+;;   : (-> [Object] [Object])
+;;   | doc m%
+;;       Projects structured diagnostics to their code rows and drops raw string
+;;       diagnostics so contract tests can assert the structural failure path.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (diagnostic-codes '(((code . missing-filesystem-slot)) "raw"))
+;;       ;; => (missing-filesystem-slot)
+;;       ```
+;;     %
 (def (diagnostic-codes diagnostics)
-  (let loop ((remaining-diagnostics diagnostics)
-             (codes-rev '()))
-    (if (null? remaining-diagnostics)
-      (reverse codes-rev)
-      (let (code (diagnostic-code (car remaining-diagnostics)))
-        (loop (cdr remaining-diagnostics)
-              (if code
-                (cons code codes-rev)
-                codes-rev))))))
+  (filter-map diagnostic-code diagnostics))
 
 ;; : (-> Object [Object] Boolean)
 (def (diagnostic-member? diagnostic diagnostics)
@@ -133,7 +139,9 @@
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                poo-flow-runtime-volume-resources-prototype))
-             (harness-validation (receipt-ref validation 'harnessValidation))
+             (harness-validation
+              (poo-flow-type-validation-receipt-harness-validation
+               validation))
              (summary
               (poo-flow-sandbox-resources-prototype-contract-validation->alist
                validation)))
@@ -141,7 +149,10 @@
          (poo-flow-sandbox-resources-prototype-contract-validation-valid?
           validation)
          #t)
-        (check-equal? (receipt-ref validation 'diagnostics) '())
+        (check-equal?
+         (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+          validation)
+         '())
         (check-equal? (receipt-ref harness-validation 'kind)
                       "poo-object-contract-validation")
         (check-equal? (alist-ref/default summary 'harness-valid #f) #t)
@@ -150,7 +161,9 @@
       (let* ((validation
               (poo-flow-sandbox-resources-prototype-contract-validation
                invalid-cpu-resources-prototype))
-             (diagnostics (receipt-ref validation 'diagnostics)))
+             (diagnostics
+              (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+               validation)))
         (check-equal?
          (poo-flow-sandbox-resources-prototype-contract-validation-valid?
           validation)
@@ -175,7 +188,9 @@
           validation)
          #f)
         (check-equal?
-         (diagnostic-codes (receipt-ref validation 'diagnostics))
+         (diagnostic-codes
+          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+           validation))
          '(missing-filesystem-slot))))
     (test-case "reports root resource mixins without parent slot"
       (let ((validation
@@ -186,7 +201,9 @@
           validation)
          #f)
         (check-equal?
-         (diagnostic-codes (receipt-ref validation 'diagnostics))
+         (diagnostic-codes
+          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+           validation))
          '(unreadable-filesystem-slot))))
     (test-case "reports unstructured filesystem projection"
       (let ((validation
@@ -197,5 +214,7 @@
           validation)
          #f)
         (check-equal?
-         (diagnostic-codes (receipt-ref validation 'diagnostics))
+         (diagnostic-codes
+          (poo-flow-sandbox-resources-prototype-contract-validation-diagnostics
+           validation))
          '(filesystem-not-structured))))))

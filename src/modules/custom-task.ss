@@ -43,17 +43,7 @@
 ;;; - Existing capabilities keep their original order.
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (custom-task-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (foldr cons tail values))
 
 ;; : (-> [Symbol] Symbol [Symbol])
 (def (capabilities-with capability-set capability)

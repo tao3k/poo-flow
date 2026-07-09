@@ -10,6 +10,7 @@ def test_composition_benchmark_runs_all_scenarios() -> None:
         "nested-subgraph-stream-projection",
         "cabi-status-hot-call",
         "validation-workflow-round-trip",
+        "funflow-cicd-sandbox-dag",
     )
     assert all(result.elapsed_micros >= 0 for result in results)
 
@@ -28,4 +29,4 @@ def test_composition_benchmark_cli_emits_receipts(capsys) -> None:
     assert benchmark.main(["--iterations", "1", "--fanout", "2"]) == 0
 
     output = capsys.readouterr().out
-    assert output.count("poo-flow.composition-benchmark.v1") == 5
+    assert output.count("poo-flow.composition-benchmark.v1") == 6

@@ -48,11 +48,27 @@
          #t
          #f)))
 
-;; : (-> Alist Symbol MaybeValue)
+;; : (-> Alist Symbol Object)
 (def (poo-flow-session-materialization-metadata-ref metadata key)
   (poo-flow-session-alist-ref metadata key #f))
 
-;; : (-> MaybeSymbolList Boolean)
+;; : (-> [Alist] Alist)
+(def (poo-flow-session-materialization-request-metadata maybe-metadata)
+  (if (null? maybe-metadata) '() (car maybe-metadata)))
+
+;; : (-> Object Object Object)
+(def (poo-flow-session-materialization-selected-refs refs fallback)
+  (if refs refs fallback))
+
+;; : (-> Object [Object])
+(def (poo-flow-session-materialization-required-refs refs)
+  (if refs refs '()))
+
+;; : (-> Object Boolean)
+(def (poo-flow-session-materialization-declaration-checked? refs)
+  (if refs #t #f))
+
+;; : (-> Object Boolean)
 (def (poo-flow-session-materialization-maybe-symbol-list? value)
   (or (not value)
       (poo-flow-session-every? symbol? value)))
@@ -61,40 +77,35 @@
 (def (poo-flow-session-materialization-member? value declared-refs)
   (if (member value declared-refs) #t #f))
 
-;; : (-> List List List)
+;; : (-> Alist Alist Alist)
 (def (poo-flow-session-materialization-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
+;;; Boundary: materialization field rows preserve the receipt slot ABI for
+;;; durable session checkpoint and replay policy.
+;; poo-flow-session-materialization-field-rows
+;; : (-> SessionMaterializationFieldRowsClauseSyntax SessionMaterializationFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands materialization field clauses into checkpoint receipt rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-materialization-field-rows (checkpoint-id 'c1))
+;;   ;; => ((checkpoint-id . c1))
+;;   ```
 (defrules poo-flow-session-materialization-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
-;; : (-> [Symbol] MaybeSymbolList [Symbol])
+;; : (-> [Symbol] Object [Symbol])
 (def (poo-flow-session-materialization-undeclared-refs refs declared-refs)
   (if declared-refs
-    (let loop ((remaining-refs refs)
-               (undeclared-refs-rev '()))
-      (cond
-       ((null? remaining-refs) (reverse undeclared-refs-rev))
-       ((poo-flow-session-materialization-member? (car remaining-refs)
-                                                  declared-refs)
-        (loop (cdr remaining-refs) undeclared-refs-rev))
-       (else
-        (loop (cdr remaining-refs)
-              (cons (car remaining-refs) undeclared-refs-rev)))))
+    (filter
+     (lambda (ref)
+       (not (poo-flow-session-materialization-member? ref declared-refs)))
+     refs)
     '()))
 
-;; : (-> Symbol Symbol Alist)
+;; : (-> Symbol Symbol Object Alist)
 (def (poo-flow-session-materialization-diagnostic code request-id detail)
   (poo-flow-session-materialization-field-rows
    (kind 'poo-flow.session.materialization.diagnostic)
@@ -134,7 +145,7 @@
     session-refs
     '())))
 
-;; : (-> Symbol Symbol MaybeSymbolList [Alist])
+;; : (-> Symbol Symbol Object [Alist])
 (def (poo-flow-session-materialization-sandbox-diagnostics request-id
                                                            sandbox-handle-ref
                                                            declared-refs)
@@ -151,7 +162,7 @@
        (sandbox-handle-ref sandbox-handle-ref))))
     '()))
 
-;; : (-> Symbol Symbol MaybeSymbol [Alist])
+;; : (-> Symbol Symbol Object Object [Alist])
 (def (poo-flow-session-materialization-state-diagnostics request-id
                                                          state
                                                          sandbox-handle-ref
@@ -205,6 +216,8 @@
    metadata)
   transparent: #t)
 
+;;; Boundary: runtime materialization receipts bind checkpoint ids, runtime
+;;; owner, and session metadata without executing durable runtime work.
 ;; : (-> Symbol Symbol Symbol Symbol [Symbol] Symbol Symbol MaybeSymbol Alist MaybeAlist [Alist] PooSessionMaterializationReceipt)
 (def (poo-flow-session-runtime-materialization-receipt request-id
                                                        project-id
@@ -253,7 +266,8 @@
    "session materialization error summary must be an alist or #f"
    (or (list? error-summary) (not error-summary))
    error-summary)
-  (let* ((metadata (if (null? maybe-metadata) '() (car maybe-metadata)))
+  (let* ((metadata
+          (poo-flow-session-materialization-request-metadata maybe-metadata))
          (declared-session-refs
           (poo-flow-session-materialization-metadata-ref
            metadata
@@ -263,9 +277,9 @@
            metadata
            'declared-parent-session-refs))
          (declared-parent-session-refs
-          (if declared-parent-session-refs0
-            declared-parent-session-refs0
-            declared-session-refs))
+          (poo-flow-session-materialization-selected-refs
+           declared-parent-session-refs0
+           declared-session-refs))
          (declared-sandbox-handle-refs
           (poo-flow-session-materialization-metadata-ref
            metadata
@@ -285,7 +299,9 @@
      (poo-flow-session-materialization-maybe-symbol-list?
       declared-sandbox-handle-refs)
      declared-sandbox-handle-refs)
-    (let* ((declaration-checked? (if declared-session-refs #t #f))
+    (let* ((declaration-checked?
+            (poo-flow-session-materialization-declaration-checked?
+             declared-session-refs))
            (root-session-declared?
             (or (not declared-session-refs)
                 (poo-flow-session-materialization-member?
@@ -343,9 +359,11 @@
        token-usage-summary
        error-summary
        declaration-checked?
-       (if declared-session-refs declared-session-refs '())
-       (if declared-parent-session-refs declared-parent-session-refs '())
-       (if declared-sandbox-handle-refs declared-sandbox-handle-refs '())
+       (poo-flow-session-materialization-required-refs declared-session-refs)
+       (poo-flow-session-materialization-required-refs
+        declared-parent-session-refs)
+       (poo-flow-session-materialization-required-refs
+        declared-sandbox-handle-refs)
        root-session-declared?
        session-declared?
        undeclared-session-refs

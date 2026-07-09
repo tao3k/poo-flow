@@ -40,14 +40,15 @@
         poo-flow-durable-recovery-scenario->alist
         poo-flow-durable-recovery-scenarios->alists)
 
+;; : PooFlowDurableRecoveryScenarioKind
 (def +poo-flow-durable-recovery-scenario-kind+
   'poo-flow.durable.recovery-scenario)
 
+;; : PooFlowDurableRecoveryScenarioSchemaId
 (def +poo-flow-durable-recovery-scenario-schema+
   'poo-flow.module-system.durable-recovery-scenario.v1)
 
-;;; Recovery scenario receipts stay struct-backed; projection functions own the
-;;; public alist shape consumed by tests and Marlin handoff code.
+;; : PooDurableRecoveryScenarioReceiptStruct
 (defstruct poo-flow-durable-recovery-scenario-receipt
   (scenario-id
    project-id
@@ -80,7 +81,7 @@
 ;;; Scenario construction folds heterogeneous durable rows into one receipt
 ;;; boundary so tests can cover replay and repair handoff without executing
 ;;; runtime side effects.
-;; : (-> Symbol Symbol Symbol Symbol Datum Alist [Alist] [Alist] [Alist] [Symbol] [Alist] PooDurableRecoveryScenarioReceipt)
+;; : (-> PooDurableRecoveryScenarioId PooDurableRecoveryProjectId PooDurableRecoveryRootSessionId PooDurableRecoverySessionId PooDurableRecoveryFailureKind PooDurableRecoveryRuntimeStoreRow [PooDurableRecoverySessionGraphRow] [PooDurableRecoveryCommunicationRow] [PooDurableRecoveryMemoryJobRow] [PooDurableRecoverySandboxRef] [PooDurableRecoveryWorkflowTaskRow] PooDurableRecoveryScenarioReceipt)
 (def (poo-flow-durable-recovery-scenario scenario-id
                                           project-id
                                           root-session-id
@@ -195,7 +196,7 @@
      #t
      #f)))
 
-;; : (-> PooDurableRecoveryScenarioReceipt Alist)
+;; : (-> PooDurableRecoveryScenarioReceipt PooDurableRecoveryScenarioReceiptRow)
 (defpoo-module-final-projection
   poo-flow-durable-recovery-scenario->alist (receipt)
   (bindings ((diagnostics
@@ -270,7 +271,7 @@
             (poo-flow-durable-recovery-scenario-receipt-runtime-executed
              receipt)))))
 
-;; : (-> [PooDurableRecoveryScenarioReceipt] [Alist])
+;; : (-> [PooDurableRecoveryScenarioReceipt] [PooDurableRecoveryScenarioReceiptRow])
 (defpoo-module-final-projection-batch
   poo-flow-durable-recovery-scenarios->alists (receipts)
   (projector poo-flow-durable-recovery-scenario->alist)

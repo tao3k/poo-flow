@@ -11,6 +11,7 @@
         (only-in :clan/poo/object
                  .get
                  .o)
+        :poo-flow/t/support/poo-performance-fixtures
         :poo-flow/t/support/poo-performance)
 
 (export module-system-poo-performance-projection-test)
@@ -32,7 +33,19 @@
       (weight 5)
       (offset 7)))
 
-;; : (-> PooObject Integer Integer)
+;; module-system-poo-performance-fixed-slot-sum
+;;   : (-> PooObject Integer Integer)
+;;   | doc m%
+;;       Projects fixed POO lenses once, then keeps the benchmark loop scalar.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (module-system-poo-performance-fixed-slot-sum
+;;        module-system-poo-performance-fixed-slot-profile
+;;        1)
+;;       ;; => 43
+;;       ```
+;;     %
 (def (module-system-poo-performance-fixed-slot-sum profile rounds)
   (let* ((family +poo-performance-fixed-slot-projection-family+)
          (base-lens (poo-performance-family-slot-lens family 'base))
@@ -46,11 +59,8 @@
          (weight (poo-performance-family-slot-lens-ref weight-lens profile))
          (offset (poo-performance-family-slot-lens-ref offset-lens profile))
          (slot-total (+ base limit step weight offset)))
-    (let loop ((round 0) (total 0))
-      (if (>= round rounds)
-        total
-        (loop (+ round 1)
-              (+ total slot-total round))))))
+    (+ (* slot-total rounds)
+       (quotient (* rounds (- rounds 1)) 2))))
 
 ;; : TestCase
 (def module-system-poo-performance-fixed-slot-projection-case

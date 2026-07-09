@@ -1,3 +1,7 @@
+;;; Boundary: config-session agent-node syntax owns the user-facing macro
+;;; surface for child agent graph nodes.
+;;; Invariant: macro expansion must preserve session id ancestry without
+;;; materializing runtime agents during configuration parsing.
 (import :poo-flow/src/modules/session/config-session-runtime)
 
 (export session-agent-node
@@ -5,11 +9,15 @@
         session-agent-param-contract)
 
 ;; session-agent-node
-;;   : (-> Syntax PooSessionAgentNode)
-;;   | doc m%
-;;       Agent nodes bind session topology to policy refs without dispatching
-;;       providers, tools, memory, or sandboxes.
-;;     %
+;; : (-> Syntax PooSessionAgentNode)
+;; | doc m%
+;;   Build one agent node receipt with parent-child session identity,
+;;   communication channels, sandbox, memory, durable, and tool policies.
+;;   # Examples
+;;   ```scheme
+;;   (session-agent-node worker (project demo) (root root) ...)
+;;   ;; => session agent node object
+;;   ```
 (defrules session-agent-node
   (project root parent system input output peers channels model prompt tools hook-tools resources durable tool-refs memory sandbox role result metadata)
   ((_ agent-id
@@ -97,13 +105,16 @@
     'role-value
     'result-contract)))
 
-;; : (-> PooSessionAgentNode PooSession PooSessionRegistryEntry)
 ;; session-agent-graph
-;;   : (-> Syntax PooSessionAgentGraph)
-;;   | doc m%
-;;       Graph rows compose sessions, agent nodes, registry receipts, and
-;;       communication receipts into one report-only topology object.
-;;     %
+;; : (-> Syntax PooSessionAgentGraph)
+;; | doc m%
+;;   Build the project-level multi-agent graph receipt that preserves root,
+;;   node, registry, communication, and metadata relationships.
+;;   # Examples
+;;   ```scheme
+;;   (session-agent-graph project root nodes sessions registry communications)
+;;   ;; => session agent graph object
+;;   ```
 (defrules session-agent-graph ()
   ((_ project-id
       root-session-ref
@@ -135,11 +146,15 @@
     communication-receipts)))
 
 ;; session-agent-param-contract
-;;   : (-> Syntax PooSessionAgentParamContract)
-;;   | doc m%
-;;       AgentParam declarations bind an agent node to validated effective
-;;       policy without starting a provider or stream.
-;;     %
+;; : (-> Syntax PooSessionAgentParamContract)
+;; | doc m%
+;;   Build the parameter contract that binds an agent node to validation,
+;;   provider, streaming, event, and metadata policies.
+;;   # Examples
+;;   ```scheme
+;;   (session-agent-param-contract worker node validation provider stream events)
+;;   ;; => session agent parameter contract object
+;;   ```
 (defrules session-agent-param-contract ()
   ((_ contract-id
       agent-node

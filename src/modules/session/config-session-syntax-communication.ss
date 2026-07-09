@@ -1,3 +1,7 @@
+;;; Boundary: config-session communication syntax owns channel authoring before
+;;; session runtime receipts materialize message routing.
+;;; Invariant: channel expansion must preserve explicit session ids so policy
+;;; can reason about allowed cross-agent communication.
 (import :poo-flow/src/modules/session/config-session-runtime)
 
 (export session-communication-channel
@@ -6,12 +10,14 @@
         session-communication-rows)
 
 ;; session-communication-channel
-;;   : (-> Syntax PooSessionCommunicationChannelReceipt)
-;;   | doc m%
-;;       Channel declarations are first-class route capability receipts. They
-;;       describe which sessions and agents may communicate over a channel,
-;;       but Scheme never opens or delivers that channel.
-;;     %
+;; : (-> Syntax PooSessionCommunicationChannelReceipt)
+;; | doc m%
+;;   Build a communication channel receipt between session and agent ids.
+;;   # Examples
+;;   ```scheme
+;;   (session-communication-channel project inbox (relation parent-child) ...)
+;;   ;; => session communication channel object
+;;   ```
 (defrules session-communication-channel
   (relation sessions agents messages delivery metadata)
   ((_ project-id channel-id
@@ -49,18 +55,30 @@
     '(message-kind ...)
     '(delivery-policy ...))))
 
-;; : (-> PooSessionCommunicationChannelReceipt Alist)
+;; session-communication-channel-rows
+;; : (-> Syntax [Alist])
+;; | doc m%
+;;   Collect communication channel receipts into a bounded channel rows object.
+;;   # Examples
+;;   ```scheme
+;;   (session-communication-channel-rows inbox outbox)
+;;   ;; => communication channel rows object
+;;   ```
 (defrules session-communication-channel-rows ()
   ((_ receipt ...)
    (poo-flow-session-syntax-communication-channel-rows
     (list receipt ...))))
 
 ;; session-communication
-;;   : (-> Syntax PooSessionCommunicationReceipt)
-;;   | doc m%
-;;       Communication declarations are report-only route receipts. They never
-;;       deliver messages from Scheme.
-;;     %
+;; : (-> Syntax PooSessionCommunicationReceipt)
+;; | doc m%
+;;   Build a communication event receipt between roots, sessions, agents,
+;;   channel id, message summary, and delivery policy.
+;;   # Examples
+;;   ```scheme
+;;   (session-communication project (relation parent-child) ...)
+;;   ;; => session communication object
+;;   ```
 (defrules session-communication
   (relation roots sessions agents channel message delivery metadata)
   ((_ project-id
@@ -109,10 +127,14 @@
     'delivery-policy)))
 
 ;; session-communication-rows
-;;   : (-> Syntax [Alist])
-;;   | doc m%
-;;       Bounded projection helper for module rows.
-;;     %
+;; : (-> Syntax [Alist])
+;; | doc m%
+;;   Collect communication event receipts into a bounded rows object.
+;;   # Examples
+;;   ```scheme
+;;   (session-communication-rows request response)
+;;   ;; => communication rows object
+;;   ```
 (defrules session-communication-rows ()
   ((_ receipt ...)
    (poo-flow-session-syntax-communication-rows

@@ -47,23 +47,24 @@
         docker-task-input-receipt-runtime-executed
         docker-flow->task-input-receipt)
 
+;;; Boundary: docker field rows keep module object construction hygienic while
+;;; preserving runtime sandbox field names expected by downstream policy.
+;; docker-field-rows
+;; : (-> DockerFieldRowsClauseSyntax DockerFieldRowsExpansionSyntax)
+;; | doc m%
+;;   Expands Docker sandbox object field clauses into stable projection rows.
+;;   # Examples
+;;   ```scheme
+;;   (docker-field-rows (image "alpine"))
+;;   ;; => ((image . "alpine"))
+;;   ```
 (defrules docker-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (docker-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (foldr cons tail values))
 
 ;;; Boundary: DockerTaskInput receipts use an explicit schema symbol so Marlin
 ;;; can discover report-only handoff data without guessing task entrypoints.

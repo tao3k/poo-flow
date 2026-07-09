@@ -7,12 +7,7 @@
 
 ;; : (-> (Listof Symbol) Alist)
 (def (poo-index-slots slot-names)
-  (let loop ((rest slot-names) (index 0) (slots-rev '()))
-    (if (null? rest)
-      (reverse slots-rev)
-      (loop (cdr rest)
-            (+ index 1)
-            (cons (cons (car rest) index) slots-rev)))))
+  (map cons slot-names (iota (length slot-names))))
 
 ;; : (-> Symbol Symbol (Listof Symbol) POOObject)
 (def (poo-indexed-family family-name source-tag slot-names)
@@ -31,7 +26,7 @@
   (let (entry (assoc slot-name (.ref family-object 'slot-index)))
     (if entry (cdr entry) #f)))
 
-;; : (-> POOObject (Listof Any) POOObject)
+;; : (-> POOObject (List Value) POOObject)
 (def (poo-indexed-family-object family-object values)
   (let* ((values-vector-value (list->vector values))
          (slot-count-value (.ref family-object 'slot-count)))
@@ -43,7 +38,7 @@
              (vector-length values-vector-value)
              slot-count-value))))
 
-;; : (-> POOObject POOObject Symbol Any Any)
+;; : (-> POOObject POOObject Symbol Value Value)
 (def (poo-indexed-family-ref family-object object slot-name default-value)
   (let (index-value
         (poo-indexed-family-slot-index family-object slot-name))
@@ -73,20 +68,14 @@
 ;; : (-> POOObject (Listof Pair) Vector)
 (def (poo-indexed-family-lenses family-object specs)
   (list->vector
-   (let loop ((rest specs) (lenses-rev '()))
-     (if (null? rest)
-       (reverse lenses-rev)
-       (let* ((spec (car rest))
-              (slot-name (car spec))
-              (descriptor-name (cdr spec)))
-         (loop (cdr rest)
-               (cons (poo-indexed-family-named-slot-lens
-                      family-object
-                      slot-name
-                      descriptor-name)
-                     lenses-rev)))))))
+   (map (lambda (spec)
+          (poo-indexed-family-named-slot-lens
+           family-object
+           (car spec)
+           (cdr spec)))
+        specs)))
 
-;; : (-> POOObject POOObject Any Any)
+;; : (-> POOObject POOObject Value Value)
 (def (poo-indexed-family-slot-lens-ref lens object default-value)
   (if (eq? (.ref object 'family) (.ref lens 'family))
     (vector-ref (.ref object 'values) (.ref lens 'index))
@@ -97,21 +86,13 @@
                                              object
                                              lenses
                                              descriptor-builder)
-  (let (count (vector-length lenses))
-    (let loop ((index 0) (descriptors-rev '()))
-      (if (= index count)
-        (list->vector (reverse descriptors-rev))
-        (let* ((lens (vector-ref lenses index))
-               (descriptor-name (.ref lens 'name))
-               (value (poo-indexed-family-slot-lens-ref
-                       lens
-                       object
-                       #f)))
-          (loop (+ index 1)
-                (cons (descriptor-builder family-object
-                                          descriptor-name
-                                          value)
-                      descriptors-rev)))))))
+  (list->vector
+   (map (lambda (lens)
+          (descriptor-builder
+           family-object
+           (.ref lens 'name)
+           (poo-indexed-family-slot-lens-ref lens object #f)))
+        (vector->list lenses))))
 
 ;; : (-> POOObject POOObject Vector Vector)
 (def (poo-indexed-family-project-objects family-object object lenses)

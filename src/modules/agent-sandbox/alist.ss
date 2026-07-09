@@ -4,6 +4,8 @@
 ;;; Runtime contract: this module performs no backend selection or execution.
 ;;; Policy evidence: larger extension owners should import these helpers.
 
+(import :poo-flow/src/utilities/functional)
+
 (export agent-sandbox-option
         agent-sandbox-alist-ref
         agent-sandbox-merge-alists
@@ -31,21 +33,29 @@
 ;;       ```
 ;;     %
 (def (agent-sandbox-alist-ref alist key default)
-  (let (entry (assoc key (agent-sandbox-normalize-alist alist)))
-    (if entry (cdr entry) default)))
+  (poo-flow-alist-ref/default
+   (agent-sandbox-normalize-alist alist)
+   key
+   default))
 
 ;;; Normalization is intentionally lossy for non-pair fragments: callers use
 ;;; this utility when they need alist semantics, not raw user syntax recovery.
 ;; : (-> MaybeAgentSandboxOptionRows AgentSandboxOptionRows)
 (def (agent-sandbox-normalize-alist alist)
-  (if (list? alist) (filter pair? alist) '()))
+  (if (list? alist)
+    (poo-flow-filter-map
+     (lambda (entry)
+       (and (pair? entry) entry))
+     alist)
+    '()))
 
 ;;; Alist merge keeps task-local policy first. Downstream bridges that use
 ;;; assoc get task overrides before profile defaults.
 ;; : (-> MaybeAgentSandboxOptionRows MaybeAgentSandboxOptionRows AgentSandboxOptionRows)
 (def (agent-sandbox-merge-alists primary secondary)
-  (append (agent-sandbox-normalize-alist primary)
-          (agent-sandbox-normalize-alist secondary)))
+  (poo-flow-append-map
+   agent-sandbox-normalize-alist
+   (list primary secondary)))
 
 ;;; False means "use profile default".
 ;;; An empty alist is still an explicit task-level override.

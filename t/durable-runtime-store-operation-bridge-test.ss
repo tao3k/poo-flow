@@ -15,16 +15,19 @@
 
 (export durable-runtime-store-operation-bridge-test)
 
+;; : (-> Alist Symbol Object)
 (def (test-ref row key)
   (let (entry (assoc key row))
     (if entry (cdr entry) #f)))
 
+;; : (-> [Alist] Symbol Alist)
 (def (find-operation-row rows operation-kind)
   (cond
    ((null? rows) #f)
    ((eq? (test-ref (car rows) 'operation-kind) operation-kind) (car rows))
    (else (find-operation-row (cdr rows) operation-kind))))
 
+;; : (-> Alist)
 (def (test-negotiation)
   (let* ((contract
           (poo-flow-durable-runtime-store-contract
@@ -47,6 +50,7 @@
     (poo-flow-durable-runtime-store-backend-negotiation contract-receipt
                                                         backend-receipt)))
 
+;; : Alist
 (def test-session-graph-row
   '((kind . poo-flow.session.agent-graph)
     (project-id . project/poo-flow)
@@ -55,6 +59,7 @@
     (session-ids . (session/root session/child))
     (runtime-executed . #f)))
 
+;; : [Alist]
 (def test-communication-rows
   '(((kind . poo-flow.session.communication-receipt)
      (project-id . project/poo-flow)
@@ -68,6 +73,7 @@
      (valid? . #t)
      (runtime-executed . #f))))
 
+;; : [Alist]
 (def test-memory-job-rows
   '(((kind . poo-flow.memory-core.durable-job-receipt)
      (job-id . memory-job/recovery-context)
@@ -82,6 +88,7 @@
      (valid? . #t)
      (runtime-executed . #f))))
 
+;; : [Alist]
 (def test-workflow-task-rows
   '(((kind . poo-flow.workflow.cicd.check-receipt)
      (check . build)
@@ -93,6 +100,7 @@
      (valid? . #t)
      (runtime-executed . #f))))
 
+;; : TestSuite
 (def durable-runtime-store-operation-bridge-test
   (test-suite "poo-flow durable runtime store operation bridge"
     (test-case "bridges session memory workflow artifact and sandbox rows"

@@ -10,16 +10,22 @@
         funflow-dag-edge
         funflow-composition-step
         funflow-functional-dag
+        funflow-normalized-flow
+        funflow-plan
         poo-flow-funflow-poo-check?
         poo-flow-funflow-poo-pipeline?
         poo-flow-funflow-dag-edge?
         poo-flow-funflow-composition-step?
         poo-flow-funflow-functional-dag?
+        poo-flow-funflow-normalized-flow?
+        poo-flow-funflow-plan?
         +poo-flow-funflow-check-prototype-kind+
         +poo-flow-funflow-pipeline-prototype-kind+
         +poo-flow-funflow-dag-edge-prototype-kind+
         +poo-flow-funflow-composition-step-prototype-kind+
-        +poo-flow-funflow-functional-dag-prototype-kind+)
+        +poo-flow-funflow-functional-dag-prototype-kind+
+        +poo-flow-funflow-normalized-flow-prototype-kind+
+        +poo-flow-funflow-plan-prototype-kind+)
 
 ;; : Symbol
 (def +poo-flow-funflow-check-prototype-kind+
@@ -40,6 +46,14 @@
 ;; : Symbol
 (def +poo-flow-funflow-functional-dag-prototype-kind+
   'poo-flow.funflow.functional-dag.prototype)
+
+;; : Symbol
+(def +poo-flow-funflow-normalized-flow-prototype-kind+
+  'poo-flow.funflow.normalized-flow.prototype)
+
+;; : Symbol
+(def +poo-flow-funflow-plan-prototype-kind+
+  'poo-flow.funflow.plan.prototype)
 
 ;; : PooFlowFunflowCheckPrototype
 (defpoo-module-config-prototype
@@ -123,6 +137,45 @@
           (runtime-owner "marlin-agent-core")
           (runtime-executed #f))))
 
+;; : PooFlowFunflowNormalizedFlowPrototype
+(defpoo-module-config-prototype
+  funflow-normalized-flow
+  (slots ((kind +poo-flow-funflow-normalized-flow-prototype-kind+)
+          (schema 'poo-flow.modules.funflow.normalized-flow.v1)
+          (name #f)
+          (pipeline-name #f)
+          (source 'use-module-funflow)
+          (normalized-form '(use-module funflow normalized-flow))
+          (policy-family 'funflow)
+          (functional-dag #f)
+          (stages '())
+          (source-map '())
+          (runtime-contract 'poo-flow.anyio.v1)
+          (metadata '())
+          (diagnostics '())
+          (valid? #t)
+          (runtime-executed #f))))
+
+;; : PooFlowFunflowPlanPrototype
+(defpoo-module-config-prototype
+  funflow-plan
+  (slots ((kind +poo-flow-funflow-plan-prototype-kind+)
+          (schema 'poo-flow.modules.funflow.plan.v1)
+          (name #f)
+          (version 1)
+          (origin 'use-module-funflow)
+          (normalized-flow #f)
+          (node-table '#())
+          (edge-table '#())
+          (policy-table '#())
+          (effect-table '#())
+          (runtime-contract 'poo-flow.anyio.v1)
+          (source-map '())
+          (diagnostics '())
+          (valid? #t)
+          (runtime-owner "python-anyio")
+          (runtime-executed #f))))
+
 ;; : (-> POOObject Boolean)
 (defpoo-module-config-kind-predicate
   poo-flow-funflow-poo-check?
@@ -147,3 +200,13 @@
 (defpoo-module-config-kind-predicate
   poo-flow-funflow-functional-dag?
   +poo-flow-funflow-functional-dag-prototype-kind+)
+
+;; : (-> POOObject Boolean)
+(defpoo-module-config-kind-predicate
+  poo-flow-funflow-normalized-flow?
+  +poo-flow-funflow-normalized-flow-prototype-kind+)
+
+;; : (-> POOObject Boolean)
+(defpoo-module-config-kind-predicate
+  poo-flow-funflow-plan?
+  +poo-flow-funflow-plan-prototype-kind+)

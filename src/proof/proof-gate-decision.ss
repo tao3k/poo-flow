@@ -1,3 +1,5 @@
+;;; Proof gate decision projection.
+;;; - Keep rejection reasons derived from validated proof wires before runtime handoff.
 (import :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-gate-receipts)
 
@@ -7,6 +9,7 @@
         poo-flow-proof-gate-decision-rejection-reasons
         poo-flow-langgraph-user-interface-proof-gate-decision)
 
+;; : (-> Symbol Alist Object)
 (def (poo-flow-proof-gate-wire-rejection-reason source wire)
   (if (poo-flow-proof-fact-ref 'accepted? wire)
     #f
@@ -16,6 +19,7 @@
           (cons 'rejection-rule
                 (poo-flow-proof-fact-ref 'rejection-rule wire)))))
 
+;; : (-> Alist Object)
 (def (poo-flow-proof-gate-runtime-boundary-rejection-reason bundle)
   (if (poo-flow-proof-fact-ref 'runtime-boundary-ok? bundle)
     #f
@@ -27,11 +31,13 @@
                  (poo-flow-proof-fact-ref 'handoff bundle)))
           (cons 'rejection-rule 'runtime-boundary-rejected))))
 
+;; : (-> Object [Alist] [Alist])
 (def (poo-flow-proof-gate-cons-reason reason reasons)
   (if reason
     (cons reason reasons)
     reasons))
 
+;; : (-> Alist [Alist])
 (def (poo-flow-proof-gate-bundle-rejection-reasons bundle)
   (reverse
    (poo-flow-proof-gate-cons-reason
@@ -50,6 +56,7 @@
         (poo-flow-proof-fact-ref 'composition bundle))
        '()))))))
 
+;; : (-> Alist Alist)
 (def (poo-flow-proof-gate-bundle->decision bundle)
   (let ((accepted? (poo-flow-proof-fact-ref 'accepted? bundle))
         (reasons (poo-flow-proof-gate-bundle-rejection-reasons bundle)))
@@ -61,16 +68,20 @@
           (cons 'rejection-reasons reasons)
           (cons 'bundle bundle))))
 
+;; : (-> Alist Alist)
 (def (poo-flow-proof-gate-receipts->decision receipts)
   (poo-flow-proof-gate-bundle->decision
    (poo-flow-proof-gate-receipts->bundle receipts)))
 
+;; : (-> Alist Boolean)
 (def (poo-flow-proof-gate-decision-accepted? decision)
   (poo-flow-proof-fact-ref 'accepted? decision))
 
+;; : (-> Alist [Alist])
 (def (poo-flow-proof-gate-decision-rejection-reasons decision)
   (poo-flow-proof-fact-ref 'rejection-reasons decision))
 
+;; : (-> Alist)
 (def (poo-flow-langgraph-user-interface-proof-gate-decision)
   (poo-flow-proof-gate-receipts->decision
    (poo-flow-langgraph-user-interface-proof-receipts)))

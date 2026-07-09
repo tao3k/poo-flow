@@ -2,7 +2,7 @@
 ;;; Boundary: pure graph runtime receipts for proof-backed UI cases.
 ;;; Invariant: this executor records graph semantics; it never calls tools/models.
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/graph/types)
 
 (export +poo-flow-graph-branch-choice-kind+
@@ -30,6 +30,70 @@
 ;; : Symbol
 (def +poo-flow-graph-runtime-receipt-kind+
   'poo-flow.graph.runtime-receipt.v1)
+
+(defstruct poo-flow-graph-runtime-receipt-record
+  (kind
+   schema
+   graph-id
+   policy-name
+   entry-id
+   finish-id
+   trace
+   fuel-before
+   fuel-after
+   current-id
+   finished
+   loop-fuel-contained
+   handoff-reached
+   sandbox-scope-contained
+   tool-permissions-contained
+   checkpoint-persisted
+   human-approval-required
+   human-approved
+   human-approval-sound
+   subagents-parented
+   diagnostics
+   runtime-executed)
+  transparent: #t)
+
+;; : (-> PooFlowGraphRuntimeReceipt Symbol Datum)
+(def (poo-flow-graph-runtime-receipt-ref receipt key)
+  (if (poo-flow-graph-runtime-receipt-record? receipt)
+    (case key
+      ((kind) (poo-flow-graph-runtime-receipt-record-kind receipt))
+      ((schema) (poo-flow-graph-runtime-receipt-record-schema receipt))
+      ((graph-id) (poo-flow-graph-runtime-receipt-record-graph-id receipt))
+      ((policy-name) (poo-flow-graph-runtime-receipt-record-policy-name receipt))
+      ((entry-id) (poo-flow-graph-runtime-receipt-record-entry-id receipt))
+      ((finish-id) (poo-flow-graph-runtime-receipt-record-finish-id receipt))
+      ((trace) (poo-flow-graph-runtime-receipt-record-trace receipt))
+      ((fuel-before) (poo-flow-graph-runtime-receipt-record-fuel-before receipt))
+      ((fuel-after) (poo-flow-graph-runtime-receipt-record-fuel-after receipt))
+      ((current-id) (poo-flow-graph-runtime-receipt-record-current-id receipt))
+      ((finished) (poo-flow-graph-runtime-receipt-record-finished receipt))
+      ((loop-fuel-contained)
+       (poo-flow-graph-runtime-receipt-record-loop-fuel-contained receipt))
+      ((handoff-reached)
+       (poo-flow-graph-runtime-receipt-record-handoff-reached receipt))
+      ((sandbox-scope-contained)
+       (poo-flow-graph-runtime-receipt-record-sandbox-scope-contained receipt))
+      ((tool-permissions-contained)
+       (poo-flow-graph-runtime-receipt-record-tool-permissions-contained receipt))
+      ((checkpoint-persisted)
+       (poo-flow-graph-runtime-receipt-record-checkpoint-persisted receipt))
+      ((human-approval-required)
+       (poo-flow-graph-runtime-receipt-record-human-approval-required receipt))
+      ((human-approved)
+       (poo-flow-graph-runtime-receipt-record-human-approved receipt))
+      ((human-approval-sound)
+       (poo-flow-graph-runtime-receipt-record-human-approval-sound receipt))
+      ((subagents-parented)
+       (poo-flow-graph-runtime-receipt-record-subagents-parented receipt))
+      ((diagnostics) (poo-flow-graph-runtime-receipt-record-diagnostics receipt))
+      ((runtime-executed)
+       (poo-flow-graph-runtime-receipt-record-runtime-executed receipt))
+      (else #f))
+    (.ref receipt key)))
 
 ;; : [Symbol]
 (def poo-flow-graph-runtime-lean-fact-keys
@@ -84,19 +148,21 @@
         (human-approved-value human-approved?)
         (subagents-parented-value subagents-parented?)
         (handoff-required-value handoff-required?))
-    (.o (kind +poo-flow-graph-runtime-policy-kind+)
-        (name name-value)
-        (entry-id entry-id-value)
-        (finish-id finish-id-value)
-        (branch-choices branch-choices-value)
-        (fuel fuel-value)
-        (sandbox-scope-contained sandbox-scope-contained-value)
-        (tool-permissions-contained tool-permissions-contained-value)
-        (checkpoint-persisted checkpoint-persisted-value)
-        (human-approval-required human-approval-required-value)
-        (human-approved human-approved-value)
-        (subagents-parented subagents-parented-value)
-        (handoff-required handoff-required-value))))
+    (object<-alist
+     (list
+      (cons 'kind +poo-flow-graph-runtime-policy-kind+)
+      (cons 'name name-value)
+      (cons 'entry-id entry-id-value)
+      (cons 'finish-id finish-id-value)
+      (cons 'branch-choices branch-choices-value)
+      (cons 'fuel fuel-value)
+      (cons 'sandbox-scope-contained sandbox-scope-contained-value)
+      (cons 'tool-permissions-contained tool-permissions-contained-value)
+      (cons 'checkpoint-persisted checkpoint-persisted-value)
+      (cons 'human-approval-required human-approval-required-value)
+      (cons 'human-approved human-approved-value)
+      (cons 'subagents-parented subagents-parented-value)
+      (cons 'handoff-required handoff-required-value)))))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-graph-runtime-policy? value)
@@ -106,9 +172,10 @@
 
 ;; : (-> Object Boolean)
 (def (poo-flow-graph-runtime-receipt? value)
-  (and (object? value)
-       (eq? (.ref value 'kind)
-            +poo-flow-graph-runtime-receipt-kind+)))
+  (or (poo-flow-graph-runtime-receipt-record? value)
+      (and (object? value)
+           (eq? (.ref value 'kind)
+                +poo-flow-graph-runtime-receipt-kind+))))
 
 ;; : (-> PooFlowGraph PooFlowGraphRuntimePolicy PooFlowGraphRuntimeReceipt)
 (def (poo-flow-graph-runtime-execute graph-value policy)
@@ -265,103 +332,113 @@
           (human-approval-sound-value human-approval-sound?)
           (subagents-parented-value (.ref policy 'subagents-parented))
           (diagnostics-value diagnostics*))
-      (.o (kind +poo-flow-graph-runtime-receipt-kind+)
-          (schema 'poo-flow.graph.runtime-receipt.v1)
-          (graph-id graph-id-value)
-          (policy-name policy-name-value)
-          (entry-id entry-id-value)
-          (finish-id finish-id-value)
-          (trace trace-value)
-          (fuel-before fuel-before-value)
-          (fuel-after fuel-after-value)
-          (current-id current-id-value)
-          (finished finished-value)
-          (loop-fuel-contained loop-fuel-contained-value)
-          (handoff-reached handoff-reached-value)
-          (sandbox-scope-contained sandbox-scope-contained-value)
-          (tool-permissions-contained tool-permissions-contained-value)
-          (checkpoint-persisted checkpoint-persisted-value)
-          (human-approval-required human-approval-required-value)
-          (human-approved human-approved-value)
-          (human-approval-sound human-approval-sound-value)
-          (subagents-parented subagents-parented-value)
-          (diagnostics diagnostics-value)
-          (runtime-executed #t)))))
+      (make-poo-flow-graph-runtime-receipt-record
+       +poo-flow-graph-runtime-receipt-kind+
+       'poo-flow.graph.runtime-receipt.v1
+       graph-id-value
+       policy-name-value
+       entry-id-value
+       finish-id-value
+       trace-value
+       fuel-before-value
+       fuel-after-value
+       current-id-value
+       finished-value
+       loop-fuel-contained-value
+       handoff-reached-value
+       sandbox-scope-contained-value
+       tool-permissions-contained-value
+       checkpoint-persisted-value
+       human-approval-required-value
+       human-approved-value
+       human-approval-sound-value
+       subagents-parented-value
+       diagnostics-value
+       #t))))
 
 ;; : (-> Alist PooFlowGraphRuntimePolicy Boolean Boolean Alist)
+(def (runtime-diagnostic-prepend diagnostics ok? code policy-name)
+  (if ok?
+    diagnostics
+    (cons (cons code policy-name) diagnostics)))
+
 (def (runtime-final-diagnostics diagnostics
                                 policy
                                 handoff-reached?
                                 human-approval-sound?)
-  (let* ((diagnostics
-          (if (.ref policy 'sandbox-scope-contained)
-            diagnostics
-            (cons (cons 'sandbox-scope-not-contained
-                        (.ref policy 'name))
-                  diagnostics)))
+  (let* ((policy-name (.ref policy 'name))
          (diagnostics
-          (if (.ref policy 'tool-permissions-contained)
-            diagnostics
-            (cons (cons 'tool-permissions-not-contained
-                        (.ref policy 'name))
-                  diagnostics)))
+          (runtime-diagnostic-prepend
+           diagnostics
+           (.ref policy 'sandbox-scope-contained)
+           'sandbox-scope-not-contained
+           policy-name))
          (diagnostics
-          (if (.ref policy 'checkpoint-persisted)
-            diagnostics
-            (cons (cons 'checkpoint-not-persisted
-                        (.ref policy 'name))
-                  diagnostics)))
+          (runtime-diagnostic-prepend
+           diagnostics
+           (.ref policy 'tool-permissions-contained)
+           'tool-permissions-not-contained
+           policy-name))
          (diagnostics
-          (if human-approval-sound?
-            diagnostics
-            (cons (cons 'human-approval-missing
-                        (.ref policy 'name))
-                  diagnostics)))
+          (runtime-diagnostic-prepend
+           diagnostics
+           (.ref policy 'checkpoint-persisted)
+           'checkpoint-not-persisted
+           policy-name))
          (diagnostics
-          (if (.ref policy 'subagents-parented)
-            diagnostics
-            (cons (cons 'subagents-not-parented
-                        (.ref policy 'name))
-                  diagnostics)))
+          (runtime-diagnostic-prepend
+           diagnostics
+           human-approval-sound?
+           'human-approval-missing
+           policy-name))
          (diagnostics
-          (if handoff-reached?
-            diagnostics
-            (cons (cons 'handoff-not-reached
-                        (.ref policy 'name))
-                  diagnostics))))
+          (runtime-diagnostic-prepend
+           diagnostics
+           (.ref policy 'subagents-parented)
+           'subagents-not-parented
+           policy-name))
+         (diagnostics
+          (runtime-diagnostic-prepend
+           diagnostics
+           handoff-reached?
+           'handoff-not-reached
+           policy-name)))
     diagnostics))
 
 ;; : (-> PooFlowGraphRuntimeReceipt Alist)
 (def (poo-flow-graph-runtime-receipt->lean-facts receipt)
-  (let* ((diagnostics-empty? (null? (.ref receipt 'diagnostics)))
+  (let* ((receipt-ref
+          (lambda (key)
+            (poo-flow-graph-runtime-receipt-ref receipt key)))
+         (diagnostics-empty? (null? (receipt-ref 'diagnostics)))
          (reusable-production-case?
-          (and (.ref receipt 'runtime-executed)
-               (.ref receipt 'finished)
-               (.ref receipt 'loop-fuel-contained)
-               (.ref receipt 'handoff-reached)
-               (.ref receipt 'sandbox-scope-contained)
-               (.ref receipt 'tool-permissions-contained)
-               (.ref receipt 'checkpoint-persisted)
-               (.ref receipt 'human-approval-sound)
-               (.ref receipt 'subagents-parented)
+          (and (receipt-ref 'runtime-executed)
+               (receipt-ref 'finished)
+               (receipt-ref 'loop-fuel-contained)
+               (receipt-ref 'handoff-reached)
+               (receipt-ref 'sandbox-scope-contained)
+               (receipt-ref 'tool-permissions-contained)
+               (receipt-ref 'checkpoint-persisted)
+               (receipt-ref 'human-approval-sound)
+               (receipt-ref 'subagents-parented)
                diagnostics-empty?)))
     (list
-     (cons 'graph.runtime/executed (.ref receipt 'runtime-executed))
-     (cons 'graph.runtime/finished (.ref receipt 'finished))
+     (cons 'graph.runtime/executed (receipt-ref 'runtime-executed))
+     (cons 'graph.runtime/finished (receipt-ref 'finished))
      (cons 'graph.runtime/loop-fuel-contained
-           (.ref receipt 'loop-fuel-contained))
+           (receipt-ref 'loop-fuel-contained))
      (cons 'graph.runtime/handoff-reached
-           (.ref receipt 'handoff-reached))
+           (receipt-ref 'handoff-reached))
      (cons 'graph.runtime/sandbox-scope-contained
-           (.ref receipt 'sandbox-scope-contained))
+           (receipt-ref 'sandbox-scope-contained))
      (cons 'graph.runtime/tool-permissions-contained
-           (.ref receipt 'tool-permissions-contained))
+           (receipt-ref 'tool-permissions-contained))
      (cons 'graph.runtime/checkpoint-persisted
-           (.ref receipt 'checkpoint-persisted))
+           (receipt-ref 'checkpoint-persisted))
      (cons 'graph.runtime/human-approval-sound
-           (.ref receipt 'human-approval-sound))
+           (receipt-ref 'human-approval-sound))
      (cons 'graph.runtime/subagents-parented
-           (.ref receipt 'subagents-parented))
+           (receipt-ref 'subagents-parented))
      (cons 'graph.runtime/diagnostics-empty diagnostics-empty?)
      (cons 'graph.runtime/reusable-production-case
            reusable-production-case?))))

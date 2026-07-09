@@ -4,19 +4,13 @@
 
 (import (only-in :poo-flow/src/core/agent-harness
                  make-poo-flow-runtime-snapshot
-                 poo-flow-runtime-snapshot->alist
-                 )
+                 poo-flow-runtime-snapshot->alist)
         (only-in :poo-flow/src/core/runtime-protocol
                  +runtime-request-schema+)
         (only-in :poo-flow/src/core/runtime-command-descriptor
                  runtime-command-fields->manifest)
         (only-in :poo-flow/src/modules/agent-sandbox/config
                  poo-flow-default-sandbox-profiles)
-        (only-in :poo-flow/src/modules/sandbox-core/profile-support/policy
-                 poo-flow-sandbox-backend-capability?
-                 poo-flow-sandbox-backend-capability/backend-kind
-                 poo-flow-sandbox-backend-capability/capabilities
-                 poo-flow-sandbox-backend-capability-registry-entries)
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-workflow-agreement)
         (only-in :poo-flow/src/module-system/sandbox-backend-capability-catalog
@@ -27,9 +21,11 @@
         :poo-flow/src/module-system/loop-engine-core
         :poo-flow/src/module-system/loop-engine-proof-abi
         :poo-flow/src/module-system/loop-engine-runtime-base
+        :poo-flow/src/module-system/loop-engine-runtime-capability
         :poo-flow/src/module-system/runtime-projection-syntax
         :poo-flow/src/module-system/loop-engine-runtime-agent
-        :poo-flow/src/module-system/loop-engine-result-contract)
+        :poo-flow/src/module-system/loop-engine-result-contract
+        :poo-flow/src/utilities/functional)
 
 (export poo-flow-user-module-selection-loop-engine-intent
         make-loop-engine-capability-receipt
@@ -94,29 +90,6 @@
         poo-flow-user-loop-engine-intent-policy
         poo-flow-user-loop-engine-intent-runtime-projections
         poo-flow-user-config-loop-engine-intents/add)
-
-;;; Capability receipts are generated runtime state, not user-authored POO
-;;; declarations. Keep the hot construction path as a fixed Gerbil struct and
-;;; project to alists only at manifest, snapshot, test-summary, and Marlin
-;;; handoff boundaries.
-(defstruct loop-engine-capability-receipt
-  (backend
-   backend-kind
-   backend-capabilities
-   supported-backends
-   valid?
-   diagnostics
-   isolation
-   required
-   optional
-   unsupported-behavior
-   sandbox-ref
-   session-ref)
-  transparent: #t)
-
-;; : (-> LoopEngineCapabilityReceipt Integer)
-(def (loop-engine-capability-receipt-diagnostic-count receipt)
-  (length (loop-engine-capability-receipt-diagnostics receipt)))
 
 ;;; Runtime capability descriptors are report-only pressure-relief packets. They
 ;;; give runtime authors a narrow contract before any policy/action packet is
@@ -267,7 +240,15 @@
     ('runtime-executed? #f)
     ('runtime-executed #f))))
 
+;; poo-flow-user-loop-engine-intent-runtime-action-kind
 ;; : (-> Alist Symbol)
+;; | doc m%
+;;   Choose the inert runtime action kind from declared human audit policy.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-user-loop-engine-intent-runtime-action-kind intent)
+;;   ;; => run or ask-owner
+;;   ```
 (def (poo-flow-user-loop-engine-intent-runtime-action-kind intent)
   (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
     'run
@@ -405,7 +386,15 @@
 
 ;;; Runtime envelopes are the largest loop-engine handoff object. They carry
 ;;; workflow, sandbox, and operation facts as inert request data for Marlin.
+;; poo-flow-user-loop-engine-intent-runtime-envelope
 ;; : (-> Alist Alist)
+;; | doc m%
+;;   Build the Marlin-owned loop-engine runtime request envelope.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-user-loop-engine-intent-runtime-envelope intent)
+;;   ;; => runtime request alist
+;;   ```
 (def (poo-flow-user-loop-engine-intent-runtime-envelope intent)
   (let ((use-case-name
          (poo-flow-user-loop-engine-intent-use-case-name intent)))
@@ -557,7 +546,15 @@
 
 ;;; The command manifest is inert stdout adapter data; it serializes the whole
 ;;; loop-engine envelope without launching Marlin from Scheme.
+;; poo-flow-user-loop-engine-intent-runtime-command-manifest
 ;; : (-> Alist Alist)
+;; | doc m%
+;;   Serialize the loop-engine envelope as a runtime command manifest.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)
+;;   ;; => runtime command manifest alist
+;;   ```
 (def (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)
   (runtime-command-fields->manifest
    +poo-flow-user-loop-engine-runtime-command-name+
@@ -610,7 +607,15 @@
 ;;; Proof manifests keep the Lean/AXLE boundary small: Scheme normalizes the
 ;;; user-interface configuration into named obligations, while Lean proves the
 ;;; obligations instead of modelling the whole Scheme runtime.
+;; poo-flow-user-loop-engine-intent-proof-manifest
 ;; : (-> Alist Alist)
+;; | doc m%
+;;   Project runtime command manifest identity into loop-engine proof obligations.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-user-loop-engine-intent-proof-manifest intent)
+;;   ;; => proof manifest alist
+;;   ```
 (def (poo-flow-user-loop-engine-intent-proof-manifest intent)
   (let* ((manifest
           (poo-flow-user-loop-engine-intent-runtime-command-manifest
@@ -626,7 +631,15 @@
 ;;; Runtime snapshots expose the sandbox agreement as the handoff readiness
 ;;; source of truth. This prevents a loop from looking ready when a sandbox
 ;;; profile is unresolved or only available as an invalid runtime summary.
+;; poo-flow-user-loop-engine-intent-runtime-snapshot
 ;; : (-> Alist Alist)
+;; | doc m%
+;;   Build the bounded runtime snapshot used by presentation and handoff gates.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-user-loop-engine-intent-runtime-snapshot intent)
+;;   ;; => runtime snapshot alist
+;;   ```
 (def (poo-flow-user-loop-engine-intent-runtime-snapshot intent)
   (let* ((use-case-name
           (poo-flow-user-loop-engine-intent-use-case-name intent))
@@ -820,218 +833,6 @@
     ('runtime-owner "marlin-agent-core")
     ('runtime-executed #f))))
 
-;;; Capability receipts are OpenRath-inspired backend expectation facts. They
-;;; read the static module-system capability registry and never probe, open, or
-;;; validate a live backend.
-;; : (-> Pair Symbol)
-(def (poo-flow-user-loop-engine-capability-entry-backend entry)
-  (if (and (pair? entry)
-           (poo-flow-sandbox-backend-capability? (cdr entry)))
-    (poo-flow-sandbox-backend-capability/backend-kind (cdr entry))
-    (and (pair? entry) (car entry))))
-
-;; : (-> [Pair] [Symbol] [Symbol])
-(def (poo-flow-user-loop-engine-capability-supported-backends/add entries
-                                                                   result)
-  (cond
-   ((null? entries) (reverse result))
-   ((poo-flow-user-loop-engine-capability-entry-backend (car entries))
-    => (lambda (backend)
-         (poo-flow-user-loop-engine-capability-supported-backends/add
-          (cdr entries)
-          (cons backend result))))
-   (else
-    (poo-flow-user-loop-engine-capability-supported-backends/add
-     (cdr entries)
-     result))))
-
-;; : (-> PooSandboxBackendCapabilityRegistry [Symbol])
-(def (poo-flow-user-loop-engine-capability-supported-backends registry)
-  (poo-flow-user-loop-engine-capability-supported-backends/add
-   (poo-flow-sandbox-backend-capability-registry-entries registry)
-   '()))
-
-;; : (-> PooSandboxBackendCapabilityRegistry Symbol MaybePooSandboxBackendCapability)
-(def (poo-flow-user-loop-engine-capability-registry-capability registry backend)
-  (let (entry (assoc backend
-                     (poo-flow-sandbox-backend-capability-registry-entries
-                      registry)))
-    (and entry (cdr entry))))
-
-;;; Diagnostics are payload rows for users and ABI consumers. An empty result
-;;; means the policy vocabulary is valid, not that a backend probe succeeded.
-;; : (-> Symbol PooSandboxBackendCapabilityRegistry [Alist])
-(def (poo-flow-user-loop-engine-capability-diagnostics backend registry)
-  (if (or (not backend)
-          (poo-flow-user-loop-engine-capability-registry-capability
-           registry
-           backend))
-    '()
-    (list
-     (list
-      (cons 'field 'backend)
-      (cons 'code 'unsupported-capability-backend)
-      (cons 'value backend)
-      (cons 'supported
-            (poo-flow-user-loop-engine-capability-supported-backends
-             registry))))))
-
-;;; Generated capability receipts use fixed struct access internally and only
-;;; serialize once at manifest, snapshot, or Marlin handoff boundaries.
-;; : (-> LoopEngineCapabilityReceipt Symbol Value Value)
-(def (poo-flow-user-loop-engine-capability-receipt-ref receipt
-                                                       slot
-                                                       default-value)
-  (if (loop-engine-capability-receipt? receipt)
-    (case slot
-      ((kind) 'capability-receipt)
-      ((contract) 'poo-flow.loop-engine.capability-receipt.v1)
-      ((backend)
-       (loop-engine-capability-receipt-backend receipt))
-      ((backend-kind)
-       (loop-engine-capability-receipt-backend-kind receipt))
-      ((backend-capabilities)
-       (loop-engine-capability-receipt-backend-capabilities receipt))
-      ((supported-backends)
-       (loop-engine-capability-receipt-supported-backends receipt))
-      ((valid?)
-       (loop-engine-capability-receipt-valid? receipt))
-      ((diagnostic-count)
-       (loop-engine-capability-receipt-diagnostic-count receipt))
-      ((diagnostics)
-       (loop-engine-capability-receipt-diagnostics receipt))
-      ((isolation)
-       (loop-engine-capability-receipt-isolation receipt))
-      ((required)
-       (loop-engine-capability-receipt-required receipt))
-      ((optional)
-       (loop-engine-capability-receipt-optional receipt))
-      ((unsupported-behavior)
-       (loop-engine-capability-receipt-unsupported-behavior receipt))
-      ((sandbox-ref)
-       (loop-engine-capability-receipt-sandbox-ref receipt))
-      ((session-ref)
-       (loop-engine-capability-receipt-session-ref receipt))
-      ((runtime-owner) "marlin-agent-core")
-      ((runtime-executed) #f)
-      (else default-value))
-    default-value))
-
-;; : (-> LoopEngineCapabilityReceipt Alist)
-(defpoo-runtime-receipt-projection
-  loop-engine-capability-receipt->alist
-  (receipt)
-  (bindings ())
-  (fields
-   (('kind 'capability-receipt)
-    ('contract 'poo-flow.loop-engine.capability-receipt.v1)
-    ('backend (loop-engine-capability-receipt-backend receipt))
-    ('backend-kind (loop-engine-capability-receipt-backend-kind receipt))
-    ('backend-capabilities
-     (loop-engine-capability-receipt-backend-capabilities receipt))
-    ('supported-backends
-     (loop-engine-capability-receipt-supported-backends receipt))
-    ('valid? (loop-engine-capability-receipt-valid? receipt))
-    ('diagnostic-count
-     (loop-engine-capability-receipt-diagnostic-count receipt))
-    ('diagnostics (loop-engine-capability-receipt-diagnostics receipt))
-    ('isolation (loop-engine-capability-receipt-isolation receipt))
-    ('required (loop-engine-capability-receipt-required receipt))
-    ('optional (loop-engine-capability-receipt-optional receipt))
-    ('unsupported-behavior
-     (loop-engine-capability-receipt-unsupported-behavior receipt))
-    ('sandbox-ref (loop-engine-capability-receipt-sandbox-ref receipt))
-    ('session-ref (loop-engine-capability-receipt-session-ref receipt))
-    ('runtime-owner "marlin-agent-core")
-    ('runtime-executed #f))))
-
-;; : (-> Value Alist)
-(def (poo-flow-user-loop-engine-capability-receipt->alist receipt)
-  (if (loop-engine-capability-receipt? receipt)
-    (loop-engine-capability-receipt->alist receipt)
-    (error "loop-engine capability receipt must be a generated struct"
-           receipt)))
-
-;;; Capability receipt is fixed generated Scheme state inside the control
-;;; plane. Runtime ABI boundaries serialize it explicitly when handing data to
-;;; Marlin or writing bounded summaries.
-;; : (-> Alist LoopEngineCapabilityReceipt)
-(def (poo-flow-user-loop-engine-intent-capability-receipt intent
-                                                          .
-                                                          maybe-registry)
-  (if (and (null? maybe-registry) (assoc 'capability-receipt intent))
-    (cdr (assoc 'capability-receipt intent))
-    (let* ((use-case-name
-            (poo-flow-user-loop-engine-intent-use-case-name intent))
-           (capability-policy
-            (poo-flow-user-loop-engine-intent-ref intent
-                                                  'capability-policy
-                                                  '()))
-           (registry
-            (if (null? maybe-registry)
-              (poo-flow-user-config-sandbox-backend-capability-registry '())
-              (car maybe-registry)))
-           (backend
-            (poo-flow-user-loop-engine-intent-ref
-             capability-policy
-             'backend
-             #f))
-           (backend-capability
-            (and backend
-                 (poo-flow-user-loop-engine-capability-registry-capability
-                  registry
-                  backend)))
-           (diagnostics
-            (poo-flow-user-loop-engine-capability-diagnostics backend
-                                                              registry)))
-      (let* ((backend-kind
-              (and backend-capability
-                   (poo-flow-sandbox-backend-capability/backend-kind
-                    backend-capability)))
-             (backend-capabilities
-              (if backend-capability
-                (poo-flow-sandbox-backend-capability/capabilities
-                 backend-capability)
-                '()))
-             (supported-backends
-              (poo-flow-user-loop-engine-capability-supported-backends
-               registry))
-             (isolation
-              (poo-flow-user-loop-engine-intent-ref capability-policy
-                                                    'isolation
-                                                    #f))
-             (required
-              (poo-flow-user-loop-engine-intent-ref capability-policy
-                                                    'required
-                                                    '()))
-             (optional
-              (poo-flow-user-loop-engine-intent-ref capability-policy
-                                                    'optional
-                                                    '()))
-             (unsupported-behavior
-              (poo-flow-user-loop-engine-intent-ref capability-policy
-                                                    'unsupported-behavior
-                                                    'handoff-diagnostic))
-             (sandbox-ref
-              (poo-flow-user-loop-engine-intent-primary-sandbox-profile
-               intent))
-             (session-ref
-              (poo-flow-user-loop-engine-runtime-id use-case-name
-                                                   "session")))
-        (make-loop-engine-capability-receipt
-         backend
-         backend-kind
-         backend-capabilities
-         supported-backends
-         (null? diagnostics)
-         diagnostics
-         isolation
-         required
-         optional
-         unsupported-behavior
-         sandbox-ref
-         session-ref)))))
-
 ;;; Memory receipts declare recall and commit policy without reading, ranking,
 ;;; writing, or retaining memory in Scheme. Marlin owns the memory store.
 ;; : (-> [Alist] Symbol Alist)
@@ -1057,15 +858,15 @@
 (def (poo-flow-user-loop-engine-memory-policy-use-cases/rev
       memory-policies
       use-cases-rev)
-  (if (null? memory-policies)
-    use-cases-rev
-    (poo-flow-user-loop-engine-memory-policy-use-cases/rev
-     (cdr memory-policies)
+  (poo-flow-fold-left
+   (lambda (memory-policy use-cases)
      (cons (poo-flow-user-loop-engine-intent-ref
-            (car memory-policies)
+            memory-policy
             'use-case
             #f)
-           use-cases-rev))))
+           use-cases))
+   use-cases-rev
+   memory-policies))
 
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-user-loop-engine-memory-policy-use-cases memory-policies)
@@ -1448,12 +1249,12 @@
 ;;; slots without learning the shape of each runtime projection row.
 ;; : (-> [Alist] Symbol [Value])
 (def (poo-flow-user-loop-engine-intents-field-values intents field)
-  (cond
-   ((null? intents) '())
-   (else
-    (cons
-     (poo-flow-user-loop-engine-intent-ref (car intents) field #f)
-     (poo-flow-user-loop-engine-intents-field-values (cdr intents) field)))))
+  (poo-flow-fold-right
+   (lambda (intent values)
+     (cons (poo-flow-user-loop-engine-intent-ref intent field #f)
+           values))
+   '()
+   intents))
 
 ;;; Loop-engine intents are the workflow-facing surface for configuring the
 ;;; governor node graph from init.ss. The result is report-only contract data.
@@ -1597,6 +1398,9 @@
             selected-modules)
            (cadr maybe-workflow-check-maps))))
     (let (cache (vector '()))
+      ;; Engineering note: policy-sensitive helpers in this owner keep explicit
+      ;; contracts adjacent to definitions so downstream reports stay actionable.
+      ;; : (-> Any Any)
       (def (project-selection selection)
         (let (entry (assq selection (vector-ref cache 0)))
           (if entry
@@ -1620,15 +1424,14 @@
 (def (poo-flow-user-config-loop-engine-intents/project-rev project-selection
                                                            selected-modules
                                                            intents-rev)
-  (if (null? selected-modules)
-    intents-rev
-    (let (intent (project-selection (car selected-modules)))
-      (poo-flow-user-config-loop-engine-intents/project-rev
-       project-selection
-       (cdr selected-modules)
+  (poo-flow-fold-left
+   (lambda (selection intents)
+     (let (intent (project-selection selection))
        (if intent
-         (cons intent intents-rev)
-         intents-rev)))))
+         (cons intent intents)
+         intents)))
+   intents-rev
+   selected-modules))
 
 ;; : (-> (-> PooUserModuleSelection MaybeAlist) [PooUserModuleSelection] [Alist])
 (def (poo-flow-user-config-loop-engine-intents/project project-selection

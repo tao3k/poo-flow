@@ -1,3 +1,7 @@
+;;; Boundary: selector syntax owns the user-facing selector authoring facade for
+;;; session graph and child-agent addressing.
+;;; Invariant: selector expansion must keep fallback and parent-child ancestry
+;;; visible to policy validation.
 (import :poo-flow/src/modules/session/config-session-runtime)
 
 (export session-selector-candidate
@@ -8,6 +12,16 @@
 ;;   | doc m%
 ;;       Selector candidates are declarative routing choices, not model calls.
 ;;     %
+;; session-selector-candidate
+;; : (-> SessionSelectorCandidateSyntax SessionSelectorCandidateObject)
+;; | doc m%
+;;   Build a candidate route for session selection, including target
+;;   ownership, required receipt fields, and optional metadata.
+;;   # Examples
+;;   ```scheme
+;;   (session-selector-candidate worker (kind agent) (target worker) (description "worker") (requires sandbox))
+;;   ;; => session-selector-candidate object
+;;   ```
 (defrules session-selector-candidate
   (kind target description requires metadata)
   ((_ candidate-id
@@ -41,6 +55,16 @@
 ;;       Selector declarations stay pending receipts; scoring and dispatch are
 ;;       runtime responsibilities.
 ;;     %
+;; session-selector
+;; : (-> SessionSelectorSyntax SessionSelectorObject)
+;; | doc m%
+;;   Build a session selector receipt that chooses among candidate sessions
+;;   under a project root with policy and fallback metadata.
+;;   # Examples
+;;   ```scheme
+;;   (session-selector pick (project demo) (root root) (input root) (candidates worker) (policy) (fallback root))
+;;   ;; => session-selector object
+;;   ```
 (defrules session-selector
   (project root input candidates policy fallback metadata)
   ((_ selector-id
@@ -77,3 +101,7 @@
     'fallback-ref)))
 
 ;; : (-> PooSessionSelectorReceipt Alist)
+;;; Boundary: selector syntax owns the user-facing selector authoring facade for
+;;; session graph and child-agent addressing.
+;;; Invariant: selector expansion must keep fallback and parent-child ancestry
+;;; visible to policy validation.

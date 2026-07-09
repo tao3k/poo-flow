@@ -192,7 +192,9 @@
         (check-equal? (poo-flow-session-memory-receipt-name
                        memory-receipt)
                       'review-memory)
-        (check-equal? (.ref memory-receipt 'runtime-executed)
+        (check-equal? (poo-flow-session-memory-receipt-ref
+                       memory-receipt
+                       'runtime-executed)
                       #f)
         (check-equal? (poo-flow-session-alist-ref
                        handoff-intent

@@ -10,30 +10,31 @@
 
 (export cli-process-test)
 
-;; : (-> Unit Path)
+;; : (-> Path)
 (def (poo-flow-cli-process-test-root)
   (cond
    ((file-exists? "src/cli.ss") (current-directory))
    ((file-exists? "../src/cli.ss") "..")
    (else (current-directory))))
 
-;; : (forall (a) (-> [a] [a] [a]))
+;; poo-flow-cli-process-test-values/tail
+;;   : (forall (a) (-> [a] [a] [a]))
+;;   | doc m%
+;;       Append CLI process output fragments onto the current tail while
+;;       preserving the order expected by test-process-output.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-cli-process-test-values/tail '(a) '(b))
+;;       ;; => (a b)
+;;       ```
+;;     %
 (def (poo-flow-cli-process-test-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (append values tail))
 
 ;;; Process boundary: start the source CLI directly; the `run` command itself
 ;;; owns the package-env hop needed for user scripts.
-;; : (-> [String] Pair)
+;; : (-> [String] (Values Integer String))
 (def (run-poo-flow-cli-process args)
   (let (status 0)
     (let (output
@@ -48,11 +49,16 @@
                        check-status:
                        (lambda (exit-status _settings)
                          (set! status exit-status))))
-      (cons status output))))
+      (values status output))))
 
+;; : TestSuite
 (def cli-process-test
   (test-suite "poo-flow cli process"
     (test-case "runs a Scheme file through the functional flow kernel"
-      (let (result (run-poo-flow-cli-process '("run" "t/fixtures/cli-run-smoke.ss" "3")))
-        (check-equal? (cdr result) "poo-flow-run:8\n")
-        (check-equal? (car result) 0)))))
+      (call-with-values
+       (lambda ()
+         (run-poo-flow-cli-process
+          '("run" "t/fixtures/cli-run-smoke.ss" "3")))
+       (lambda (status output)
+         (check-equal? output "poo-flow-run:8\n")
+         (check-equal? status 0))))))

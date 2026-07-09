@@ -20,10 +20,6 @@
         poo-flow-graph-topological-order/acyclic
         poo-flow-graph-analysis-receipt)
 
-(defrules poo-flow-graph-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
-
 ;; : (-> [PooFlowGraphNode] [Object] [Object])
 (def (poo-flow-graph-node-ids/rev nodes ids-rev)
   (if (null? nodes)
@@ -120,26 +116,45 @@
                     (poo-flow-graph-edges graph-value)
                     '()))
 
+;; : (-> [Object] [Object] [Object])
+(def (poo-flow-graph-analysis-start-ids roots maybe-start+target)
+  (if (null? maybe-start+target)
+    roots
+    (car maybe-start+target)))
+
+;; : (-> [Object] [Object] [Object])
+(def (poo-flow-graph-analysis-target-ids terminals maybe-start+target)
+  (if (or (null? maybe-start+target)
+          (null? (cdr maybe-start+target)))
+    terminals
+    (cadr maybe-start+target)))
+
+;; : (-> PooFlowGraph MaybeList MaybeList)
+(def (poo-flow-graph-analysis-topological-order* graph-value cycle-path)
+  (if cycle-path
+    #f
+    (poo-flow-graph-topological-order/acyclic graph-value)))
+
+;; : (-> MaybeList Alist)
+(def (poo-flow-graph-analysis-diagnostics cycle-path)
+  (if cycle-path
+    (list (cons 'cycle-path cycle-path))
+    '()))
+
 ;; : (-> PooFlowGraph PooFlowGraphAnalysis)
 (def (poo-flow-graph-analysis-receipt graph-value . maybe-start+target)
   (let* ((roots (poo-flow-graph-root-ids graph-value))
          (terminals (poo-flow-graph-terminal-ids graph-value))
-         (start-ids (if (null? maybe-start+target)
-                      roots
-                      (car maybe-start+target)))
-         (target-ids (if (or (null? maybe-start+target)
-                             (null? (cdr maybe-start+target)))
-                       terminals
-                       (cadr maybe-start+target)))
+         (start-ids
+          (poo-flow-graph-analysis-start-ids roots maybe-start+target))
+         (target-ids
+          (poo-flow-graph-analysis-target-ids terminals maybe-start+target))
          (cycle-path (poo-flow-graph-cycle-path graph-value))
-         (topological-order (if cycle-path
-                              #f
-                              (poo-flow-graph-topological-order/acyclic
-                               graph-value)))
-         (diagnostics (if cycle-path
-                        (poo-flow-graph-field-rows
-                         (cycle-path cycle-path))
-                        '())))
+         (topological-order
+          (poo-flow-graph-analysis-topological-order* graph-value
+                                                      cycle-path))
+         (diagnostics
+          (poo-flow-graph-analysis-diagnostics cycle-path)))
     (poo-flow-graph-analysis
      (poo-flow-graph-id graph-value)
      (length (poo-flow-graph-nodes graph-value))
@@ -273,16 +288,16 @@
 
 ;; : (-> Object [Object] [Object])
 (def (cycle-path-from id stack)
-  (let loop ((remaining stack)
-             (path-tail '()))
-    (cond
-     ((null? remaining)
-      (list id))
-     ((equal? id (car remaining))
-      (cons id (cycle-path-close path-tail id)))
-     (else
-      (loop (cdr remaining)
-            (cons (car remaining) path-tail))))))
+  (call/cc
+   (lambda (return)
+     (foldl
+      (lambda (node path-tail)
+        (if (equal? id node)
+          (return (cons id (cycle-path-close path-tail id)))
+          (cons node path-tail)))
+      '()
+      stack)
+     (list id))))
 
 ;; : (-> [Object] Object [Object])
 (def (cycle-path-close path-tail id)

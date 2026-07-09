@@ -1,3 +1,5 @@
+;;; Proof gate receipt projection.
+;;; - Convert module receipts into bounded proof facts before bundling verifier inputs.
 (import :poo-flow/src/proof/proof-gate-bundle
         :poo-flow/src/module-system/composition-proof-facts
         :poo-flow/src/graph/control-plane-handoff-facts
@@ -11,18 +13,21 @@
         poo-flow-langgraph-user-interface-proof-receipts
         poo-flow-langgraph-user-interface-proof-gate-bundle)
 
+;; : (-> Symbol Alist Object)
 (def (poo-flow-proof-receipt-ref key receipt)
   (let ((entry (assq key receipt)))
     (if entry
       (cdr entry)
       (error "missing proof receipt key" key receipt))))
 
+;; : (-> Symbol Alist Object Object)
 (def (poo-flow-proof-receipt-ref/default key receipt default)
   (let ((entry (assq key receipt)))
     (if entry
       (cdr entry)
       default)))
 
+;; : (-> Alist Object)
 (def (poo-flow-composition-receipt-rejection receipt)
   (let ((explicit (poo-flow-proof-receipt-ref/default 'rejection receipt #f)))
     (if explicit
@@ -40,6 +45,7 @@
         'runtime-execution)
        (else #f)))))
 
+;; : (-> Alist Object)
 (def (poo-flow-scenario-gap-receipt-rejection receipt)
   (let ((explicit (poo-flow-proof-receipt-ref/default 'rejection receipt #f)))
     (if explicit
@@ -50,6 +56,7 @@
        ((not (poo-flow-proof-receipt-ref 'accepted-ok receipt)) 'accepted)
        (else #f)))))
 
+;; : (-> Alist Object)
 (def (poo-flow-control-plane-handoff-receipt-rejection receipt)
   (let ((explicit (poo-flow-proof-receipt-ref/default 'rejection receipt #f)))
     (if explicit
@@ -67,6 +74,7 @@
         'artifacts)
        (else #f)))))
 
+;; : (-> Alist Alist)
 (def (poo-flow-composition-receipt->proof-facts receipt)
   (poo-flow-composition-contract->proof-facts
    (poo-flow-proof-receipt-ref 'fact-id receipt)
@@ -77,6 +85,7 @@
    (poo-flow-proof-receipt-ref 'no-runtime-execution receipt)
    (poo-flow-composition-receipt-rejection receipt)))
 
+;; : (-> Alist Alist)
 (def (poo-flow-scenario-gap-receipt->proof-facts receipt)
   (poo-flow-scenario-gap-runtime-contract->proof-facts
    (poo-flow-proof-receipt-ref 'fact-id receipt)
@@ -85,6 +94,7 @@
    (poo-flow-proof-receipt-ref 'accepted-ok receipt)
    (poo-flow-scenario-gap-receipt-rejection receipt)))
 
+;; : (-> Alist Alist)
 (def (poo-flow-control-plane-handoff-receipt->proof-facts receipt)
   (poo-flow-control-plane-handoff-contract->proof-facts
    (poo-flow-proof-receipt-ref 'fact-id receipt)
@@ -96,6 +106,7 @@
    (poo-flow-proof-receipt-ref 'artifacts-declared receipt)
    (poo-flow-control-plane-handoff-receipt-rejection receipt)))
 
+;; : (-> Alist Alist)
 (def (poo-flow-proof-gate-receipts->bundle receipts)
   (poo-flow-proof-gate-bundle
    (poo-flow-composition-receipt->proof-facts
@@ -105,6 +116,7 @@
    (poo-flow-control-plane-handoff-receipt->proof-facts
     (poo-flow-proof-receipt-ref 'handoff receipts))))
 
+;; : (-> Alist)
 (def (poo-flow-langgraph-user-interface-proof-receipts)
   (list (cons 'schema 'poo-flow.user-interface.langgraph.proof-receipts)
         (cons 'composition
@@ -128,6 +140,7 @@
                     (cons 'execution-deferred #t)
                     (cons 'artifacts-declared #t)))))
 
+;; : (-> Alist)
 (def (poo-flow-langgraph-user-interface-proof-gate-bundle)
   (poo-flow-proof-gate-receipts->bundle
    (poo-flow-langgraph-user-interface-proof-receipts)))

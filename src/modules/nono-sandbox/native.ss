@@ -3,6 +3,8 @@
 ;;; Boundary: this module calls the package-managed Gambit FFI shim.
 ;;; Runtime contract: irreversible sandbox apply is not performed by default.
 
+;;; Native nono dynamic-library selection and live-test receipts.
+;;; - Keep FFI handles isolated while the Scheme layer reports bounded sandbox receipts.
 (import :gerbil/gambit
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/nono-sandbox/c-binding-runtime
@@ -31,23 +33,25 @@
 ;; : Integer
 (def +nono-c-binding-native-apply-null-error-code+ -12)
 
+;;; Native live-test row expansion stays separate from dynamic FFI handles.
+;; nono-c-binding-native-field-rows
+;; : (-> Syntax Syntax)
+;; | contract: expands literal `(field value)` pairs into bounded native rows
+;; | warning: keep library open/close and apply calls outside this macro
+;; | doc m%
+;;   Generates the native nono receipt row list.
+;;   # Examples
+;;   ```scheme
+;;   (nono-c-binding-native-field-rows (status 'skipped))
+;;   ;; => ((status . skipped))
+;;   ```
 (defrules nono-c-binding-native-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
 ;; : (-> List List List)
 (def (nono-c-binding-native-rows/tail rows tail)
-  (let loop ((remaining-rows rows)
-             (rows-rev '()))
-    (if (null? remaining-rows)
-      (let restore ((remaining-rev rows-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-rows)
-            (cons (car remaining-rows) rows-rev)))))
+  (foldr cons tail rows))
 
 ;;; Boundary: nono c binding native library candidates is the policy-visible
 ;;; edge for sandbox behavior, keeping validation, lookup, or projection

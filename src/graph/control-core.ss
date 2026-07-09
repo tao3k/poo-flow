@@ -2,6 +2,8 @@
 ;;; Boundary: graph control analysis implementation.
 ;;; Invariant: graph walks happen once per analysis receipt; runtime execution is out.
 
+;;; Graph control analysis receipts and diagnostics.
+;;; - Keep graph traversal evidence explicit before projecting bounded analysis receipts.
 (import :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-utils)
@@ -153,24 +155,55 @@
                              finish-unreachable-ids
                              unexpected-cycle-path)))
 
+;;; Boundary: optional caller-provided entry ids are normalized before the receipt is built.
+;; : (-> PooFlowGraph GraphRootIds MaybeEntryFinish GraphEntryIds)
+(def (poo-flow-graph-control-entry-ids graph-value root-ids maybe-entry+finish)
+  (if (null? maybe-entry+finish)
+    (graph-entry-ids graph-value root-ids)
+    (car maybe-entry+finish)))
+
+;;; Boundary: optional caller-provided finish ids share the same rest-argument protocol as entry ids.
+;; : (-> PooFlowGraph GraphTerminalIds MaybeEntryFinish GraphFinishIds)
+(def (poo-flow-graph-control-finish-ids graph-value
+                                       terminal-ids
+                                       maybe-entry+finish)
+  (if (or (null? maybe-entry+finish)
+          (null? (cdr maybe-entry+finish)))
+    (graph-finish-ids graph-value terminal-ids)
+    (cadr maybe-entry+finish)))
+
+;;; Invariant: cyclic graphs do not expose a topological order in the analysis receipt.
+;; : (-> PooFlowGraph CyclePathMaybe TopologicalOrderMaybe)
+(def (poo-flow-graph-control-topological-order graph-value cycle-path)
+  (if cycle-path
+    #f
+    (poo-flow-graph-topological-order/acyclic graph-value)))
+
+;;; Boundary: cycle diagnostics are unexpected only when no explicit loop edge explains the cycle.
+;; : (-> CyclePathMaybe LoopEdgePairs UnexpectedCyclePathMaybe)
+(def (poo-flow-graph-control-unexpected-cycle-path cycle-path loop-edge-pairs)
+  (if (and cycle-path (null? loop-edge-pairs))
+    cycle-path
+    #f))
+
+;;; Boundary: this receipt projects graph traversal facts without executing any runtime work.
 ;; : (-> PooFlowGraph [Object] [Object] PooFlowGraphAnalysis)
 (def (poo-flow-graph-control-analysis-receipt graph-value
                                              . maybe-entry+finish)
   (let* ((node-ids (poo-flow-graph-node-ids graph-value))
          (root-ids (poo-flow-graph-root-ids graph-value))
          (terminal-ids (poo-flow-graph-terminal-ids graph-value))
-         (entry-ids (if (null? maybe-entry+finish)
-                      (graph-entry-ids graph-value root-ids)
-                      (car maybe-entry+finish)))
-         (finish-ids (if (or (null? maybe-entry+finish)
-                             (null? (cdr maybe-entry+finish)))
-                       (graph-finish-ids graph-value terminal-ids)
-                       (cadr maybe-entry+finish)))
+         (entry-ids
+          (poo-flow-graph-control-entry-ids graph-value
+                                            root-ids
+                                            maybe-entry+finish))
+         (finish-ids
+          (poo-flow-graph-control-finish-ids graph-value
+                                             terminal-ids
+                                             maybe-entry+finish))
          (cycle-path (poo-flow-graph-cycle-path graph-value))
-         (topological-order (if cycle-path
-                              #f
-                              (poo-flow-graph-topological-order/acyclic
-                               graph-value)))
+         (topological-order
+          (poo-flow-graph-control-topological-order graph-value cycle-path))
          (reachable-ids (poo-flow-graph-reachable-ids graph-value
                                                        entry-ids))
          (dependency-cone (poo-flow-graph-dependency-cone graph-value
@@ -200,9 +233,8 @@
          (finish-unreachable-ids
           (remove-ids finish-reachable-ids reachable-ids))
          (unexpected-cycle-path
-          (if (and cycle-path (null? loop-edge-pairs))
-            cycle-path
-            #f))
+          (poo-flow-graph-control-unexpected-cycle-path cycle-path
+                                                        loop-edge-pairs))
          (finish-total?
           (control-finish-total? node-ids
                                  entry-ids

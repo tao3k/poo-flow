@@ -3,6 +3,8 @@
 ;;; Boundary: this module describes host-side compile probes and include policy.
 ;;; Runtime contract: native loading lives in native.ss; irreversible apply is gated.
 
+;;; Native nono C binding build manifest and validation.
+;;; - Keep compiler/include policy explicit before any probe command is materialized.
 (import :gerbil/gambit
         (only-in :clan/poo/object .ref object?)
         :poo-flow/src/core/api
@@ -40,23 +42,25 @@
         nono-c-binding-build->probe-command
         nono-c-binding-compile-probe-command)
 
+;;; Build manifest row expansion is a macro boundary, not a runtime probe.
+;; nono-c-binding-build-field-rows
+;; : (-> Syntax Syntax)
+;; | contract: expands literal `(field value)` pairs into bounded build rows
+;; | warning: keep probe command construction outside this macro expansion
+;; | doc m%
+;;   Generates the C binding build manifest row list.
+;;   # Examples
+;;   ```scheme
+;;   (nono-c-binding-build-field-rows (compiler "cc"))
+;;   ;; => ((compiler . "cc"))
+;;   ```
 (defrules nono-c-binding-build-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (nono-c-binding-build-values/tail values tail)
-  (let loop ((remaining-values values)
-             (values-rev '()))
-    (if (null? remaining-values)
-      (let restore ((remaining-rev values-rev)
-                    (result tail))
-        (if (null? remaining-rev)
-          result
-          (restore (cdr remaining-rev)
-                   (cons (car remaining-rev) result))))
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) values-rev)))))
+  (foldr cons tail values))
 
 ;;; Build schema is separate from the ABI descriptor. The descriptor names the
 ;;; native surface; this object names the package-managed host probe policy.
@@ -361,27 +365,21 @@
 ;;; stable row numbers without mutating the required-inputs receipt.
 ;; : (-> Alist Integer (List ValidationError) (List ValidationError))
 (def (nono-c-binding-build-input-validation-error/rev input index errors)
-  (let loop ((remaining-errors
-              (nono-c-binding-build-input-validation-error input index))
-             (error-values errors))
-    (if (null? remaining-errors)
-      error-values
-      (loop (cdr remaining-errors)
-            (cons (car remaining-errors) error-values)))))
+  (foldl cons
+         errors
+         (nono-c-binding-build-input-validation-error input index)))
 
 ;; : (-> (List Alist) Integer (List ValidationError))
 (def (nono-c-binding-build-inputs-validation-errors inputs index)
-  (let loop ((remaining-inputs inputs)
-             (input-index index)
-             (error-values '()))
-    (if (null? remaining-inputs)
-      (reverse error-values)
-      (loop (cdr remaining-inputs)
-            (+ input-index 1)
-            (nono-c-binding-build-input-validation-error/rev
-             (car remaining-inputs)
-             input-index
-             error-values)))))
+  (foldr
+   (lambda (input+index tail)
+     (foldr cons
+            tail
+            (nono-c-binding-build-input-validation-error
+             (car input+index)
+             (cdr input+index))))
+   '()
+   (map cons inputs (iota (length inputs) index))))
 
 ;;; Input validation is deliberately separate from descriptor validation:
 ;;; package contracts may be inspected without a local nono checkout, while

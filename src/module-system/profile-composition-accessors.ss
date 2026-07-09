@@ -7,6 +7,7 @@
 (export poo-flow-composition?
         poo-flow-composition-name
         poo-flow-composition-modules
+        poo-flow-composition-profiles
         poo-flow-composition-stages
         poo-flow-composition-stage-name
         poo-flow-composition-stage-clauses)
@@ -37,6 +38,11 @@
 ;; : (-> PooFlowComposition List)
 (def (poo-flow-composition-modules composition)
   (.ref composition 'modules))
+
+;;; Returns top-level profiles selected by the composition.
+;; : (-> PooFlowComposition List)
+(def (poo-flow-composition-profiles composition)
+  (.ref composition 'profiles))
 
 ;;; Returns all stages in declaration order.
 ;;   | doc m%

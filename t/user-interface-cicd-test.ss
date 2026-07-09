@@ -41,7 +41,8 @@
   (test-suite "poo-flow user interface cicd payload"
     (test-case "presents Funflow CI/CD payload as user intent data"
       (let* ((intents
-              (poo-flow-user-config-cicd-intents test-poo-flow-user-config))
+              (poo-flow-user-config-cicd-intents
+               (user-interface-cicd-funflow-config)))
              (intent (car intents)))
         (check-equal? (length intents) 1)
         (check-equal? (alist-value 'key intent) '(flow . funflow))

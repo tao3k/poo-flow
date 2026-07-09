@@ -48,7 +48,7 @@
     (poo-flow-durable-recovery-every? predicate (cdr values)))
    (else #f)))
 
-;; : (-> [Value] [Value] [Value])
+;; : (forall (a) (-> (List a) (List a) (List a)))
 (def (poo-flow-durable-recovery-reverse-onto values tail)
   (if (null? values)
     tail
@@ -441,6 +441,8 @@
                       (cons 'recoverable? #t)))
                diagnostics-rev))))))
 
+;;; Boundary: recovery diagnostics consolidate durable runtime, communication,
+;;; memory, workflow, and sandbox evidence without executing recovery actions.
 ;; : (-> Symbol Symbol Symbol Symbol Alist [Alist] [Alist] [Alist] [Alist] [Symbol] [Alist])
 (def (poo-flow-durable-recovery-diagnostics scenario-id
                                              project-id
@@ -530,18 +532,13 @@
                                                    status
                                                    detail
                                                    runtime-owner)
-  (let loop ((remaining-stages +poo-flow-durable-recovery-stages+)
-             (rows-rev '()))
-    (if (null? remaining-stages)
-      (reverse rows-rev)
-      (loop
-       (cdr remaining-stages)
-       (cons (poo-flow-durable-recovery-observability-row
-              scenario-id
-              (car remaining-stages)
-              status
-              detail
-              runtime-owner
-              #t
-              #f)
-             rows-rev)))))
+  (map (lambda (stage)
+         (poo-flow-durable-recovery-observability-row
+          scenario-id
+          stage
+          status
+          detail
+          runtime-owner
+          #t
+          #f))
+       +poo-flow-durable-recovery-stages+))

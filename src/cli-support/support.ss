@@ -4,6 +4,7 @@
 
 (import :gerbil/gambit
         (only-in :std/misc/process run-process)
+        (only-in :std/sugar foldl)
         (only-in :std/srfi/13
                  string-contains
                  string-index
@@ -100,7 +101,10 @@
     ([] "")
     ([path] path)
     ([path . rest]
-     (string-append path ":" (poo-flow-cli-join-loadpath rest)))))
+     (foldl (lambda (next-path joined)
+              (string-append joined ":" next-path))
+            path
+            rest))))
 
 ;;; Intent: build the default loadpath order from source, package artifacts, user cache.
 ;;; Boundary: callers may append external loadpath entries after this default.

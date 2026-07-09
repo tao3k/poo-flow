@@ -159,7 +159,10 @@
                (list build-audit-message audit-root-message)
                (list (cons 'communication-channel-receipts
                            (list build-audit-channel
-                                 audit-root-channel))))))
+                                 audit-root-channel)))))
+             (registry-row
+              (poo-flow-session-registry-receipt->alist
+               (poo-flow-session-agent-graph-registry-receipt graph))))
         (check-equal? (poo-flow-session-agent-node? build-node) #t)
         (check-equal? (poo-flow-session-agent-node-agent-id build-node)
                       'agent/build)
@@ -193,13 +196,9 @@
                            (poo-flow-session-agent-graph-communication-receipts
                             graph))
                       '(sibling child-parent))
-        (check-equal? (.ref (poo-flow-session-agent-graph-registry-receipt
-                             graph)
-                            'entry-count)
+        (check-equal? (cdr (assoc 'entry-count registry-row))
                       3)
-        (check-equal? (.ref (poo-flow-session-agent-graph-registry-receipt
-                             graph)
-                            'durable-policy-refs)
+        (check-equal? (cdr (assoc 'durable-policy-refs registry-row))
                       '(durable/graph durable/graph))
         (check-equal? (.ref graph 'runtime-executed) #f)))))
 

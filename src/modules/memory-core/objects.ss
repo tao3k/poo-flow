@@ -76,49 +76,116 @@
         poo-flow-memory-core-durable-project-store
         poo-flow-memory-core-default-catalog)
 
+;;; Boundary: memory field rows preserve object slot names that durable session
+;;; and artifact policy projections consume.
+;; poo-flow-memory-field-rows
+;; : (-> Syntax Syntax)
+;; | doc m%
+;;   Expands memory object field clauses into stable projection rows for durable
+;;   memory receipts.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-memory-field-rows (store 'local))
+;;   ;; => ((store . local))
+;;   ```
 (defrules poo-flow-memory-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
+;; : PooMemoryHandoffManifestReceiptStruct
+(defstruct poo-flow-memory-handoff-manifest-receipt
+  (kind
+   schema
+   request-id
+   store-ref
+   store-kind
+   namespace
+   scopes
+   recall-policies
+   commit-policies
+   operation
+   runtime-owner
+   runtime-backend
+   durable?
+   handoff-ready?
+   diagnostic-count
+   diagnostics
+   runtime-executed
+   metadata)
+  transparent: #t)
+
+;; : PooMemoryPolicyValidationReceiptRecordStruct
+(defstruct poo-flow-memory-policy-validation-receipt-record
+  (kind
+   schema
+   validation-id
+   catalog-ref
+   catalog-store-count
+   catalog-store-refs
+   intent-count
+   intent-store-refs
+   resolved-store-refs
+   unresolved-store-refs
+   valid?
+   diagnostic-count
+   diagnostics
+   runtime-owner
+   runtime-executed
+   metadata)
+  transparent: #t)
+
+;;; Runtime receipts use fixed structs first; this helper is the narrow POO ABI
+;;; projection used at downstream `.ref` boundaries.
+;; : (-> Alist POOObject)
+(def (poo-flow-memory-runtime-object fields)
+  (object<-alist fields))
+
+;; : Symbol
 (def +poo-flow-memory-core-store-spec-kind+
   'poo-flow.memory-core.store-spec)
 
+;; : Symbol
 (def +poo-flow-memory-core-catalog-kind+
   'poo-flow.memory-core.catalog)
 
+;; : Symbol
 (def +poo-flow-memory-core-handoff-manifest-kind+
   'poo-flow.memory-core.handoff-manifest)
 
+;; : Symbol
 (def +poo-flow-memory-core-policy-validation-receipt-kind+
   'poo-flow.memory-core.policy-catalog-validation-receipt)
 
+;; : Symbol
 (def +poo-flow-memory-core-durable-job-receipt-kind+
   'poo-flow.memory-core.durable-job-receipt)
 
+;; : [Symbol]
 (def +poo-flow-memory-durable-job-kinds+
   '(recall write consolidation stale-source repair))
 
+;; : [Symbol]
 (def +poo-flow-memory-durable-job-states+
   '(planned claimable claimed completed failed stale repair-required))
 
-;; : (-> POOObject Symbol Value Value)
+;; : (-> POOObject Symbol Object Object)
 (def (poo-flow-memory-slot object key default-value)
   (with-catch
    (lambda (_failure) default-value)
    (lambda ()
      (.ref object key))))
 
-;; : (-> Alist Symbol Value Value)
+;; : (-> Alist Symbol Object Object)
 (def (poo-flow-memory-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
 
-;; : (-> [Any] Boolean)
+;; : (-> Object Boolean)
 (def (poo-flow-memory-symbol-list? values)
   (and (list? values)
        (poo-flow-session-every? symbol? values)))
 
-;; : (-> [Any] Boolean)
+;; : (-> Object Boolean)
 (def (poo-flow-memory-alist? value)
   (list? value))
 
@@ -242,7 +309,7 @@
   (poo-flow-session-require "memory handoff requires a store spec"
                             (poo-flow-memory-store-spec? spec)
                             spec)
-  (object<-alist
+  (poo-flow-memory-runtime-object
    (list
     (cons 'kind +poo-flow-memory-core-handoff-manifest-kind+)
     (cons 'schema 'poo-flow.modules.memory-core.handoff-manifest.v1)
@@ -267,48 +334,82 @@
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-memory-handoff-manifest? value)
-  (and (object? value)
-       (eq? (poo-flow-memory-slot value 'kind #f)
-            +poo-flow-memory-core-handoff-manifest-kind+)))
+  (or (poo-flow-memory-handoff-manifest-receipt? value)
+      (and (object? value)
+           (eq? (poo-flow-memory-slot value 'kind #f)
+                +poo-flow-memory-core-handoff-manifest-kind+))))
 
+;;; Boundary: handoff manifest serialization is the bounded ABI between memory
+;;; policy objects and Marlin/runtime transfer.
 ;; : (-> PooMemoryHandoffManifest Alist)
-(defpoo-module-final-projection
-  poo-flow-memory-handoff-manifest->alist (manifest)
-  (bindings ((checked-manifest
-              (poo-flow-session-require
-               "memory handoff projection requires a memory handoff manifest"
-               (poo-flow-memory-handoff-manifest? manifest)
-               manifest))))
-  (fields ((kind (.ref checked-manifest 'kind))
-           (schema (.ref checked-manifest 'schema))
-           (request-id (.ref checked-manifest 'request-id))
-           (store-ref (.ref checked-manifest 'store-ref))
-           (store-kind (.ref checked-manifest 'store-kind))
-           (namespace (.ref checked-manifest 'namespace))
-           (scopes (.ref checked-manifest 'scopes))
-           (recall-policies (.ref checked-manifest 'recall-policies))
-           (commit-policies (.ref checked-manifest 'commit-policies))
-           (operation (.ref checked-manifest 'operation))
-           (runtime-owner (.ref checked-manifest 'runtime-owner))
-           (runtime-backend (.ref checked-manifest 'runtime-backend))
-           (durable? (.ref checked-manifest 'durable?))
-           (handoff-ready? (.ref checked-manifest 'handoff-ready?))
-           (diagnostic-count (.ref checked-manifest 'diagnostic-count))
-           (diagnostics (.ref checked-manifest 'diagnostics))
-           (runtime-executed (.ref checked-manifest 'runtime-executed))
-           (metadata (.ref checked-manifest 'metadata)))))
+(def (poo-flow-memory-handoff-manifest->alist manifest)
+  (let (checked-manifest
+        (poo-flow-session-require
+         "memory handoff projection requires a memory handoff manifest"
+         (poo-flow-memory-handoff-manifest? manifest)
+         manifest))
+    (if (poo-flow-memory-handoff-manifest-receipt? checked-manifest)
+      (list
+       (cons 'kind
+             (poo-flow-memory-handoff-manifest-receipt-kind checked-manifest))
+       (cons 'schema
+             (poo-flow-memory-handoff-manifest-receipt-schema checked-manifest))
+       (cons 'request-id
+             (poo-flow-memory-handoff-manifest-receipt-request-id checked-manifest))
+       (cons 'store-ref
+             (poo-flow-memory-handoff-manifest-receipt-store-ref checked-manifest))
+       (cons 'store-kind
+             (poo-flow-memory-handoff-manifest-receipt-store-kind checked-manifest))
+       (cons 'namespace
+             (poo-flow-memory-handoff-manifest-receipt-namespace checked-manifest))
+       (cons 'scopes
+             (poo-flow-memory-handoff-manifest-receipt-scopes checked-manifest))
+       (cons 'recall-policies
+             (poo-flow-memory-handoff-manifest-receipt-recall-policies checked-manifest))
+       (cons 'commit-policies
+             (poo-flow-memory-handoff-manifest-receipt-commit-policies checked-manifest))
+       (cons 'operation
+             (poo-flow-memory-handoff-manifest-receipt-operation checked-manifest))
+       (cons 'runtime-owner
+             (poo-flow-memory-handoff-manifest-receipt-runtime-owner checked-manifest))
+       (cons 'runtime-backend
+             (poo-flow-memory-handoff-manifest-receipt-runtime-backend checked-manifest))
+       (cons 'durable?
+             (poo-flow-memory-handoff-manifest-receipt-durable? checked-manifest))
+       (cons 'handoff-ready?
+             (poo-flow-memory-handoff-manifest-receipt-handoff-ready? checked-manifest))
+       (cons 'diagnostic-count
+             (poo-flow-memory-handoff-manifest-receipt-diagnostic-count checked-manifest))
+       (cons 'diagnostics
+             (poo-flow-memory-handoff-manifest-receipt-diagnostics checked-manifest))
+       (cons 'runtime-executed
+             (poo-flow-memory-handoff-manifest-receipt-runtime-executed checked-manifest))
+       (cons 'metadata
+             (poo-flow-memory-handoff-manifest-receipt-metadata checked-manifest)))
+      (list
+       (cons 'kind (.ref checked-manifest 'kind))
+       (cons 'schema (.ref checked-manifest 'schema))
+       (cons 'request-id (.ref checked-manifest 'request-id))
+       (cons 'store-ref (.ref checked-manifest 'store-ref))
+       (cons 'store-kind (.ref checked-manifest 'store-kind))
+       (cons 'namespace (.ref checked-manifest 'namespace))
+       (cons 'scopes (.ref checked-manifest 'scopes))
+       (cons 'recall-policies (.ref checked-manifest 'recall-policies))
+       (cons 'commit-policies (.ref checked-manifest 'commit-policies))
+       (cons 'operation (.ref checked-manifest 'operation))
+       (cons 'runtime-owner (.ref checked-manifest 'runtime-owner))
+       (cons 'runtime-backend (.ref checked-manifest 'runtime-backend))
+       (cons 'durable? (.ref checked-manifest 'durable?))
+       (cons 'handoff-ready? (.ref checked-manifest 'handoff-ready?))
+       (cons 'diagnostic-count (.ref checked-manifest 'diagnostic-count))
+       (cons 'diagnostics (.ref checked-manifest 'diagnostics))
+       (cons 'runtime-executed (.ref checked-manifest 'runtime-executed))
+       (cons 'metadata (.ref checked-manifest 'metadata))))))
 
 ;; : (-> [PooMemoryStoreSpec] (Cons [Symbol] Integer))
 (def (poo-flow-memory-catalog-summary stores)
-  (let loop ((remaining-stores stores)
-             (store-refs-rev '())
-             (store-count 0))
-    (if (null? remaining-stores)
-      (cons (reverse store-refs-rev) store-count)
-      (loop (cdr remaining-stores)
-            (cons (poo-flow-memory-store-spec-ref (car remaining-stores))
-                  store-refs-rev)
-            (+ store-count 1)))))
+  (cons (map poo-flow-memory-store-spec-ref stores)
+        (length stores)))
 
 ;; : (-> Symbol [PooMemoryStoreSpec] [Alist] PooMemoryCatalog)
 (def (poo-flow-memory-catalog catalog-ref stores . maybe-metadata)
@@ -386,7 +487,7 @@
            (runtime-executed (.ref checked-catalog 'runtime-executed))
            (metadata (.ref checked-catalog 'metadata)))))
 
-;; : (-> [Value] [Value] [Value])
+;; : (-> [MemoryProjectionValue] [MemoryProjectionValue] [MemoryProjectionValue])
 (def (poo-flow-memory-reverse-onto values tail)
   (if (null? values)
     tail
@@ -441,6 +542,77 @@
   (poo-flow-memory-store-intent-diagnostics/tail spec intent '()))
 
 ;; : (-> PooMemoryCatalog [PooSessionMemoryIntent] [Symbol] Integer [Symbol] [Symbol] [Symbol] [Alist] Alist)
+(def (poo-flow-memory-policy-catalog-validation-summary-finish
+      intent-count
+      intent-store-refs-rev
+      resolved-store-refs-rev
+      unresolved-store-refs-rev
+      diagnostics-rev)
+  (list
+   (cons 'intent-count intent-count)
+   (cons 'intent-store-refs (reverse intent-store-refs-rev))
+   (cons 'resolved-store-refs (reverse resolved-store-refs-rev))
+   (cons 'unresolved-store-refs (reverse unresolved-store-refs-rev))
+   (cons 'diagnostics (reverse diagnostics-rev))))
+
+;; : (-> Object PooSessionMemoryIntent [Alist])
+(def (poo-flow-memory-policy-catalog-intent-diagnostics spec intent)
+  (if spec
+    (poo-flow-memory-store-intent-diagnostics spec intent)
+    (list (poo-flow-memory-diagnostic
+           'memory-store-not-in-catalog
+           intent))))
+
+;; : (-> Boolean Symbol [Symbol] [Symbol])
+(def (poo-flow-memory-policy-catalog-seen-store-refs already-seen?
+                                                            store-ref
+                                                            seen-store-refs)
+  (if already-seen?
+    seen-store-refs
+    (cons store-ref seen-store-refs)))
+
+;; : (-> Boolean Symbol [Symbol] [Symbol])
+(def (poo-flow-memory-policy-catalog-intent-store-refs/rev already-seen?
+                                                                  store-ref
+                                                                  refs-rev)
+  (if already-seen?
+    refs-rev
+    (cons store-ref refs-rev)))
+
+;; : (-> Boolean Object Symbol [Symbol] [Symbol])
+(def (poo-flow-memory-policy-catalog-resolved-store-refs/rev already-seen?
+                                                                    spec
+                                                                    store-ref
+                                                                    refs-rev)
+  (if (and (not already-seen?) spec)
+    (cons store-ref refs-rev)
+    refs-rev))
+
+;; : (-> Boolean Object Symbol [Symbol] [Symbol])
+(def (poo-flow-memory-policy-catalog-unresolved-store-refs/rev already-seen?
+                                                                      spec
+                                                                      store-ref
+                                                                      refs-rev)
+  (if (and (not already-seen?) (not spec))
+    (cons store-ref refs-rev)
+    refs-rev))
+
+;; poo-flow-memory-policy-catalog-validation-summary/rev
+;;   : (-> PooMemoryCatalog [PooSessionMemoryIntent] [Symbol] Integer [Symbol] [Symbol] [Symbol] [Alist] Alist)
+;;   | doc m%
+;;       Fold session memory intents against a memory catalog while preserving
+;;       declaration order and diagnostic provenance. This helper owns the
+;;       accumulator state for catalog validation; runtime recall, commit, and
+;;       persistence stay outside Scheme.
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-memory-policy-catalog-validation-summary/rev
+;;        catalog intents '() 0 '() '() '() '())
+;;       ```
+;;       # Result
+;;       A validation summary alist with intent, resolved-store, unresolved-store,
+;;       and diagnostic rows.
+;;     %
 (def (poo-flow-memory-policy-catalog-validation-summary/rev catalog
                                                             memory-intents
                                                             seen-store-refs
@@ -458,12 +630,12 @@
              (diagnostics-rev diagnostics-rev))
     (cond
      ((null? remaining-intents)
-      (list
-       (cons 'intent-count intent-count)
-       (cons 'intent-store-refs (reverse intent-store-refs-rev))
-       (cons 'resolved-store-refs (reverse resolved-store-refs-rev))
-       (cons 'unresolved-store-refs (reverse unresolved-store-refs-rev))
-       (cons 'diagnostics (reverse diagnostics-rev))))
+      (poo-flow-memory-policy-catalog-validation-summary-finish
+       intent-count
+       intent-store-refs-rev
+       resolved-store-refs-rev
+       unresolved-store-refs-rev
+       diagnostics-rev))
      (else
       (let* ((intent (car remaining-intents))
              (store-ref
@@ -471,26 +643,30 @@
              (already-seen? (member store-ref seen-store-refs))
              (spec (poo-flow-memory-catalog-find catalog store-ref))
              (intent-diagnostics
-              (if spec
-                (poo-flow-memory-store-intent-diagnostics spec intent)
-                (list (poo-flow-memory-diagnostic
-                       'memory-store-not-in-catalog
-                       intent)))))
+              (poo-flow-memory-policy-catalog-intent-diagnostics
+               spec
+               intent)))
         (loop
          (cdr remaining-intents)
-         (if already-seen?
-           seen-store-refs
-           (cons store-ref seen-store-refs))
+         (poo-flow-memory-policy-catalog-seen-store-refs
+          already-seen?
+          store-ref
+          seen-store-refs)
          (+ intent-count 1)
-         (if already-seen?
-           intent-store-refs-rev
-           (cons store-ref intent-store-refs-rev))
-         (if (and (not already-seen?) spec)
-           (cons store-ref resolved-store-refs-rev)
-           resolved-store-refs-rev)
-         (if (and (not already-seen?) (not spec))
-           (cons store-ref unresolved-store-refs-rev)
-           unresolved-store-refs-rev)
+         (poo-flow-memory-policy-catalog-intent-store-refs/rev
+          already-seen?
+          store-ref
+          intent-store-refs-rev)
+         (poo-flow-memory-policy-catalog-resolved-store-refs/rev
+          already-seen?
+          spec
+          store-ref
+          resolved-store-refs-rev)
+         (poo-flow-memory-policy-catalog-unresolved-store-refs/rev
+          already-seen?
+          spec
+          store-ref
+          unresolved-store-refs-rev)
          (poo-flow-memory-reverse-onto intent-diagnostics
                                        diagnostics-rev)))))))
 
@@ -542,66 +718,106 @@
                                       '()))
          (diagnostics
           (poo-flow-session-alist-ref validation-summary 'diagnostics '())))
-    (object<-alist
-     (list
-      (cons 'kind +poo-flow-memory-core-policy-validation-receipt-kind+)
-      (cons 'schema 'poo-flow.modules.memory-core.policy-catalog-validation.v1)
-      (cons 'validation-id validation-id)
-      (cons 'catalog-ref (poo-flow-memory-catalog-ref catalog))
-      (cons 'catalog-store-count (poo-flow-memory-catalog-store-count catalog))
-      (cons 'catalog-store-refs (poo-flow-memory-catalog-store-refs catalog))
-      (cons 'intent-count intent-count-value)
-      (cons 'intent-store-refs intent-store-refs)
-      (cons 'resolved-store-refs resolved-store-refs)
-      (cons 'unresolved-store-refs unresolved-store-refs)
-      (cons 'valid? (null? diagnostics))
-      (cons 'diagnostic-count (length diagnostics))
-      (cons 'diagnostics diagnostics)
-      (cons 'runtime-owner "marlin-agent-core")
-      (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata)
-                        '()
-                        (car maybe-metadata)))))))
+    (poo-flow-memory-runtime-object
+     (poo-flow-memory-policy-catalog-validation-receipt->alist
+      (make-poo-flow-memory-policy-validation-receipt-record
+       +poo-flow-memory-core-policy-validation-receipt-kind+
+       'poo-flow.modules.memory-core.policy-catalog-validation.v1
+       validation-id
+       (poo-flow-memory-catalog-ref catalog)
+       (poo-flow-memory-catalog-store-count catalog)
+       (poo-flow-memory-catalog-store-refs catalog)
+       intent-count-value
+       intent-store-refs
+       resolved-store-refs
+       unresolved-store-refs
+       (null? diagnostics)
+       (length diagnostics)
+       diagnostics
+       "marlin-agent-core"
+       #f
+       (if (null? maybe-metadata)
+         '()
+         (car maybe-metadata)))))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-memory-policy-catalog-validation-receipt? value)
-  (and (object? value)
-       (eq? (poo-flow-memory-slot value 'kind #f)
-            +poo-flow-memory-core-policy-validation-receipt-kind+)))
+  (or (poo-flow-memory-policy-validation-receipt-record? value)
+      (and (object? value)
+           (eq? (poo-flow-memory-slot value 'kind #f)
+                +poo-flow-memory-core-policy-validation-receipt-kind+))))
 
 ;; : (-> PooMemoryPolicyCatalogValidationReceipt Boolean)
 (def (poo-flow-memory-policy-catalog-validation-receipt-valid? receipt)
-  (.ref receipt 'valid?))
+  (if (poo-flow-memory-policy-validation-receipt-record? receipt)
+    (poo-flow-memory-policy-validation-receipt-record-valid? receipt)
+    (.ref receipt 'valid?)))
 
 ;; : (-> PooMemoryPolicyCatalogValidationReceipt [Alist])
 (def (poo-flow-memory-policy-catalog-validation-receipt-diagnostics receipt)
-  (.ref receipt 'diagnostics))
+  (if (poo-flow-memory-policy-validation-receipt-record? receipt)
+    (poo-flow-memory-policy-validation-receipt-record-diagnostics receipt)
+    (.ref receipt 'diagnostics)))
 
 ;; : (-> PooMemoryPolicyCatalogValidationReceipt Alist)
-(defpoo-module-final-projection
-  poo-flow-memory-policy-catalog-validation-receipt->alist (receipt)
-  (bindings ((checked-receipt
-              (poo-flow-session-require
-               "memory policy validation projection requires a validation receipt"
-               (poo-flow-memory-policy-catalog-validation-receipt? receipt)
-               receipt))))
-  (fields ((kind (.ref checked-receipt 'kind))
-           (schema (.ref checked-receipt 'schema))
-           (validation-id (.ref checked-receipt 'validation-id))
-           (catalog-ref (.ref checked-receipt 'catalog-ref))
-           (catalog-store-count (.ref checked-receipt 'catalog-store-count))
-           (catalog-store-refs (.ref checked-receipt 'catalog-store-refs))
-           (intent-count (.ref checked-receipt 'intent-count))
-           (intent-store-refs (.ref checked-receipt 'intent-store-refs))
-           (resolved-store-refs (.ref checked-receipt 'resolved-store-refs))
-           (unresolved-store-refs
-            (.ref checked-receipt 'unresolved-store-refs))
-           (valid? (.ref checked-receipt 'valid?))
-           (diagnostic-count (.ref checked-receipt 'diagnostic-count))
-           (diagnostics (.ref checked-receipt 'diagnostics))
-           (runtime-owner (.ref checked-receipt 'runtime-owner))
-           (runtime-executed (.ref checked-receipt 'runtime-executed))
-           (metadata (.ref checked-receipt 'metadata)))))
+(def (poo-flow-memory-policy-catalog-validation-receipt->alist receipt)
+  (let (checked-receipt
+        (poo-flow-session-require
+         "memory policy validation projection requires a validation receipt"
+         (poo-flow-memory-policy-catalog-validation-receipt? receipt)
+         receipt))
+    (if (poo-flow-memory-policy-validation-receipt-record? checked-receipt)
+      (list
+       (cons 'kind
+             (poo-flow-memory-policy-validation-receipt-record-kind checked-receipt))
+       (cons 'schema
+             (poo-flow-memory-policy-validation-receipt-record-schema checked-receipt))
+       (cons 'validation-id
+             (poo-flow-memory-policy-validation-receipt-record-validation-id checked-receipt))
+       (cons 'catalog-ref
+             (poo-flow-memory-policy-validation-receipt-record-catalog-ref checked-receipt))
+       (cons 'catalog-store-count
+             (poo-flow-memory-policy-validation-receipt-record-catalog-store-count checked-receipt))
+       (cons 'catalog-store-refs
+             (poo-flow-memory-policy-validation-receipt-record-catalog-store-refs checked-receipt))
+       (cons 'intent-count
+             (poo-flow-memory-policy-validation-receipt-record-intent-count checked-receipt))
+       (cons 'intent-store-refs
+             (poo-flow-memory-policy-validation-receipt-record-intent-store-refs checked-receipt))
+       (cons 'resolved-store-refs
+             (poo-flow-memory-policy-validation-receipt-record-resolved-store-refs checked-receipt))
+       (cons 'unresolved-store-refs
+             (poo-flow-memory-policy-validation-receipt-record-unresolved-store-refs checked-receipt))
+       (cons 'valid?
+             (poo-flow-memory-policy-validation-receipt-record-valid? checked-receipt))
+       (cons 'diagnostic-count
+             (poo-flow-memory-policy-validation-receipt-record-diagnostic-count checked-receipt))
+       (cons 'diagnostics
+             (poo-flow-memory-policy-validation-receipt-record-diagnostics checked-receipt))
+       (cons 'runtime-owner
+             (poo-flow-memory-policy-validation-receipt-record-runtime-owner checked-receipt))
+       (cons 'runtime-executed
+             (poo-flow-memory-policy-validation-receipt-record-runtime-executed checked-receipt))
+       (cons 'metadata
+             (poo-flow-memory-policy-validation-receipt-record-metadata checked-receipt)))
+      (list
+       (cons 'kind (.ref checked-receipt 'kind))
+       (cons 'schema (.ref checked-receipt 'schema))
+       (cons 'validation-id (.ref checked-receipt 'validation-id))
+       (cons 'catalog-ref (.ref checked-receipt 'catalog-ref))
+       (cons 'catalog-store-count (.ref checked-receipt 'catalog-store-count))
+       (cons 'catalog-store-refs (.ref checked-receipt 'catalog-store-refs))
+       (cons 'intent-count (.ref checked-receipt 'intent-count))
+       (cons 'intent-store-refs (.ref checked-receipt 'intent-store-refs))
+       (cons 'resolved-store-refs (.ref checked-receipt 'resolved-store-refs))
+       (cons 'unresolved-store-refs
+             (.ref checked-receipt 'unresolved-store-refs))
+       (cons 'valid? (.ref checked-receipt 'valid?))
+       (cons 'diagnostic-count (.ref checked-receipt 'diagnostic-count))
+       (cons 'diagnostics (.ref checked-receipt 'diagnostics))
+       (cons 'runtime-owner (.ref checked-receipt 'runtime-owner))
+       (cons 'runtime-executed (.ref checked-receipt 'runtime-executed))
+       (cons 'metadata (.ref checked-receipt 'metadata))))))
 
 ;; : (-> Symbol Boolean)
 (def (poo-flow-memory-durable-job-kind? value)
@@ -624,6 +840,12 @@
         (cons 'severity 'error)
         (cons 'recoverable? #t)
         (cons 'runtime-executed #f)))
+
+(def (poo-flow-memory-durable-job-diagnostic-prepend tail ok? code slot value)
+  (if ok?
+    tail
+    (cons (poo-flow-memory-durable-job-diagnostic code slot value)
+          tail)))
 
 ;; : (-> Symbol Symbol Value [Alist])
 (def (poo-flow-memory-required-symbol-diagnostics/tail code slot value tail)
@@ -667,6 +889,8 @@
       (list (poo-flow-memory-diagnostic 'memory-store-not-in-catalog
                                         intent)))))
 
+;;; Boundary: durable job diagnostics validate session memory intent and catalog
+;;; evidence before any durable store operation is scheduled.
 ;; : (-> Symbol Symbol Symbol Symbol Symbol MaybeSymbol PooMemoryCatalog PooSessionMemoryIntent Alist [Alist])
 (def (poo-flow-memory-durable-job-diagnostics job-kind
                                               job-state
@@ -690,13 +914,12 @@
     (let* ((intent-tail
             (poo-flow-memory-durable-intent-diagnostics catalog intent))
            (usage-tail
-            (if (and (integer? usage-counter) (>= usage-counter 0))
-              intent-tail
-              (cons (poo-flow-memory-durable-job-diagnostic
-                     'invalid-usage-counter
-                     'usage-counter
-                     usage-counter)
-                    intent-tail)))
+            (poo-flow-memory-durable-job-diagnostic-prepend
+             intent-tail
+             (and (integer? usage-counter) (>= usage-counter 0))
+             'invalid-usage-counter
+             'usage-counter
+             usage-counter))
            (checkpoint-tail
             (poo-flow-memory-required-symbol-diagnostics/tail
              'missing-checkpoint-store-ref
@@ -716,13 +939,12 @@
              durable-policy-ref
              job-store-tail))
            (agent-tail
-            (if (or (symbol? agent-id) (not agent-id))
-              durable-policy-tail
-              (cons (poo-flow-memory-durable-job-diagnostic
-                     'invalid-agent-id
-                     'agent-id
-                     agent-id)
-                    durable-policy-tail)))
+            (poo-flow-memory-durable-job-diagnostic-prepend
+             durable-policy-tail
+             (or (symbol? agent-id) (not agent-id))
+             'invalid-agent-id
+             'agent-id
+             agent-id))
            (session-tail
             (poo-flow-memory-required-symbol-diagnostics/tail
              'missing-session-id
@@ -742,20 +964,18 @@
              project-id
              root-tail))
            (job-state-tail
-            (if (poo-flow-memory-durable-job-state? job-state)
-              project-tail
-              (cons (poo-flow-memory-durable-job-diagnostic
-                     'unsupported-memory-job-state
-                     'job-state
-                     job-state)
-                    project-tail))))
-      (if (poo-flow-memory-durable-job-kind? job-kind)
-        job-state-tail
-        (cons (poo-flow-memory-durable-job-diagnostic
-               'unsupported-memory-job-kind
-               'job-kind
-               job-kind)
-              job-state-tail)))))
+            (poo-flow-memory-durable-job-diagnostic-prepend
+             project-tail
+             (poo-flow-memory-durable-job-state? job-state)
+             'unsupported-memory-job-state
+             'job-state
+             job-state)))
+      (poo-flow-memory-durable-job-diagnostic-prepend
+       job-state-tail
+       (poo-flow-memory-durable-job-kind? job-kind)
+       'unsupported-memory-job-kind
+       'job-kind
+       job-kind))))
 
 ;; : PooMemoryDurableJobReceipt
 (defstruct poo-flow-memory-durable-job-receipt
@@ -788,6 +1008,8 @@
    runtime-executed)
   transparent: #t)
 
+;;; Boundary: durable job receipts materialize memory checkpoint intent as a
+;;; policy-visible value without executing provider storage.
 ;; : (-> Symbol Symbol Symbol Symbol Symbol MaybeSymbol PooMemoryCatalog PooSessionMemoryIntent [Alist] PooMemoryDurableJobReceipt)
 (def (poo-flow-memory-durable-job-receipt-from-intent job-id
                                                        job-kind

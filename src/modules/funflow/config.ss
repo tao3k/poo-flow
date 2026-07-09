@@ -23,6 +23,8 @@
         funflow-dag-edge
         funflow-composition-step
         funflow-functional-dag
+        funflow-normalized-flow
+        funflow-plan
         poo-flow-funflow-dag-edge
         poo-flow-funflow-dag-edge?
         poo-flow-funflow-dag-edge->alist
@@ -31,8 +33,18 @@
         poo-flow-funflow-composition-step->alist
         poo-flow-funflow-functional-dag?
         poo-flow-funflow-functional-dag->alist
+        poo-flow-funflow-normalized-flow?
+        poo-flow-funflow-normalized-flow->alist
+        poo-flow-funflow-plan?
+        poo-flow-funflow-plan->alist
+        poo-flow-funflow-plan->runtime-projection
         poo-flow-funflow-check-map->functional-dag
+        poo-flow-funflow-check-map->normalized-flow
+        poo-flow-funflow-normalized-flow->plan
+        poo-flow-funflow-check-map->plan
         poo-flow-funflow-poo-pipeline->functional-dag
+        poo-flow-funflow-poo-pipeline->normalized-flow
+        poo-flow-funflow-poo-pipeline->plan
         poo-flow-funflow-poo-config-flags
         poo-flow-funflow-workflow-ref?
         poo-flow-funflow-workflow-agreement
@@ -384,6 +396,69 @@
            (runtime-owner (.ref dag 'runtime-owner))
            (runtime-executed (.ref dag 'runtime-executed)))))
 
+;; : (-> PooFlowFunflowNormalizedFlow Alist)
+(defpoo-module-final-projection
+  poo-flow-funflow-normalized-flow->alist (flow)
+  (bindings ((_guard
+              (poo-flow-funflow-require
+               "funflow normalized-flow projection requires a normalized-flow"
+               (poo-flow-funflow-normalized-flow? flow)
+               flow))))
+  (fields ((kind (.ref flow 'kind))
+           (schema (.ref flow 'schema))
+           (name (.ref flow 'name))
+           (pipeline-name (.ref flow 'pipeline-name))
+           (source (.ref flow 'source))
+           (normalized-form (.ref flow 'normalized-form))
+           (policy-family (.ref flow 'policy-family))
+           (stages (.ref flow 'stages))
+           (source-map (.ref flow 'source-map))
+           (runtime-contract (.ref flow 'runtime-contract))
+           (metadata (.ref flow 'metadata))
+           (diagnostics (.ref flow 'diagnostics))
+           (valid? (.ref flow 'valid?))
+           (runtime-executed (.ref flow 'runtime-executed)))))
+
+;; : (-> PooFlowFunflowPlan Alist)
+(defpoo-module-final-projection
+  poo-flow-funflow-plan->alist (plan)
+  (bindings ((_guard
+              (poo-flow-funflow-require
+               "funflow plan projection requires a plan"
+               (poo-flow-funflow-plan? plan)
+               plan))))
+  (fields ((kind (.ref plan 'kind))
+           (schema (.ref plan 'schema))
+           (name (.ref plan 'name))
+           (version (.ref plan 'version))
+           (origin (.ref plan 'origin))
+           (normalized-flow (.ref plan 'normalized-flow))
+           (node-table (.ref plan 'node-table))
+           (edge-table (.ref plan 'edge-table))
+           (policy-table (.ref plan 'policy-table))
+           (effect-table (.ref plan 'effect-table))
+           (runtime-contract (.ref plan 'runtime-contract))
+           (source-map (.ref plan 'source-map))
+           (diagnostics (.ref plan 'diagnostics))
+           (valid? (.ref plan 'valid?))
+           (runtime-owner (.ref plan 'runtime-owner))
+           (runtime-executed (.ref plan 'runtime-executed)))))
+
+;; : (-> PooFlowFunflowPlan Alist)
+(def (poo-flow-funflow-plan->runtime-projection plan)
+  (poo-flow-funflow-require
+   "funflow runtime projection requires a plan"
+   (poo-flow-funflow-plan? plan)
+   plan)
+   (poo-flow-module-field-rows
+   (kind 'poo-flow.funflow.plan-projection)
+   (schema 'poo-flow.funflow-plan-projection.v1)
+   (origin (.ref plan 'origin))
+   (runtime-contract (.ref plan 'runtime-contract))
+   (source-map (.ref plan 'source-map))
+   (plan (poo-flow-funflow-plan->alist plan))
+   (runtime-executed #f)))
+
 ;; : (-> PooFlowFunflowCheckPrototype Alist)
 (def (poo-flow-funflow-poo-check-metadata check)
   (let ((dependency-refs (.ref check 'dependency-refs))
@@ -538,6 +613,127 @@
   (poo-flow-funflow-check-map->functional-dag
    (poo-flow-funflow-poo-pipeline->check-map pipeline)))
 
+;; : (-> Symbol [Symbol] [Alist])
+(def (poo-flow-funflow-source-map-rows flow-name stages)
+  (cond
+   ((null? stages) '())
+   ((pair? stages)
+    (cons
+     (poo-flow-module-field-rows
+      (stage (car stages))
+      (source 'use-module-funflow)
+      (path (list 'use-module 'funflow flow-name (car stages))))
+     (poo-flow-funflow-source-map-rows flow-name (cdr stages))))
+   (else
+    (error "funflow normalized-flow stages must be a list" stages))))
+
+;; : (-> PooFlowFunflowFunctionalDag Alist PooFlowFunflowNormalizedFlow)
+(def (poo-flow-funflow-functional-dag->normalized-flow dag metadata)
+  (poo-flow-funflow-require
+   "funflow normalized-flow requires a functional DAG"
+   (poo-flow-funflow-functional-dag? dag)
+   dag)
+  (let* ((flow-name (.ref dag 'pipeline-name))
+         (stages (.ref dag 'nodes)))
+    (object<-alist
+     (list
+      (cons 'kind +poo-flow-funflow-normalized-flow-prototype-kind+)
+      (cons 'schema 'poo-flow.modules.funflow.normalized-flow.v1)
+      (cons 'name flow-name)
+      (cons 'pipeline-name flow-name)
+      (cons 'source 'use-module-funflow)
+      (cons 'normalized-form '(use-module funflow normalized-flow))
+      (cons 'policy-family 'funflow)
+      (cons 'functional-dag dag)
+      (cons 'stages stages)
+      (cons 'source-map (poo-flow-funflow-source-map-rows flow-name stages))
+      (cons 'runtime-contract 'poo-flow.anyio.v1)
+      (cons 'metadata metadata)
+      (cons 'diagnostics (.ref dag 'diagnostics))
+      (cons 'valid? (.ref dag 'valid?))
+      (cons 'runtime-executed #f)))))
+
+;; : (-> PooFlowCicdCheckMap PooFlowFunflowNormalizedFlow)
+(def (poo-flow-funflow-check-map->normalized-flow check-map)
+  (let* ((dag (poo-flow-funflow-check-map->functional-dag check-map))
+         (metadata
+          (poo-flow-module-field-rows
+           (source 'use-module-funflow)
+           (check-map (poo-flow-cicd-check-map-name check-map)))))
+    (poo-flow-funflow-functional-dag->normalized-flow dag metadata)))
+
+;; : (-> PooFlowFunflowPipelinePrototype PooFlowFunflowNormalizedFlow)
+(def (poo-flow-funflow-poo-pipeline->normalized-flow pipeline)
+  (poo-flow-funflow-check-map->normalized-flow
+   (poo-flow-funflow-poo-pipeline->check-map pipeline)))
+
+;; : (-> [Symbol] [Alist])
+(def (poo-flow-funflow-node-table-rows nodes)
+  (cond
+   ((null? nodes) '())
+   ((pair? nodes)
+    (cons
+     (poo-flow-module-field-rows
+      (name (car nodes))
+      (kind 'funflow-step)
+      (runtime-executed #f))
+     (poo-flow-funflow-node-table-rows (cdr nodes))))
+   (else
+    (error "funflow plan nodes must be a list" nodes))))
+
+;; : (-> [PooFlowFunflowDagEdge] [Alist])
+(def (poo-flow-funflow-edge-table-rows edges)
+  (cond
+   ((null? edges) '())
+   ((pair? edges)
+    (cons (poo-flow-funflow-dag-edge->alist (car edges))
+          (poo-flow-funflow-edge-table-rows (cdr edges))))
+   (else
+    (error "funflow plan edges must be a list" edges))))
+
+;; : (-> PooFlowFunflowNormalizedFlow PooFlowFunflowPlan)
+(def (poo-flow-funflow-normalized-flow->plan flow)
+  (poo-flow-funflow-require
+   "funflow plan requires a normalized-flow"
+   (poo-flow-funflow-normalized-flow? flow)
+   flow)
+  (let* ((dag (.ref flow 'functional-dag))
+         (nodes (.ref dag 'nodes))
+         (edges (.ref dag 'edges)))
+    (object<-alist
+     (list
+      (cons 'kind +poo-flow-funflow-plan-prototype-kind+)
+      (cons 'schema 'poo-flow.modules.funflow.plan.v1)
+      (cons 'name (.ref flow 'name))
+      (cons 'version 1)
+      (cons 'origin 'use-module-funflow)
+      (cons 'normalized-flow (.ref flow 'name))
+      (cons 'node-table
+            (list->vector (poo-flow-funflow-node-table-rows nodes)))
+      (cons 'edge-table
+            (list->vector (poo-flow-funflow-edge-table-rows edges)))
+      (cons 'policy-table
+            (vector
+             (poo-flow-module-field-rows
+              (policy-family (.ref flow 'policy-family)))))
+      (cons 'effect-table '#())
+      (cons 'runtime-contract (.ref flow 'runtime-contract))
+      (cons 'source-map (.ref flow 'source-map))
+      (cons 'diagnostics (.ref flow 'diagnostics))
+      (cons 'valid? (.ref flow 'valid?))
+      (cons 'runtime-owner "python-anyio")
+      (cons 'runtime-executed #f)))))
+
+;; : (-> PooFlowCicdCheckMap PooFlowFunflowPlan)
+(def (poo-flow-funflow-check-map->plan check-map)
+  (poo-flow-funflow-normalized-flow->plan
+   (poo-flow-funflow-check-map->normalized-flow check-map)))
+
+;; : (-> PooFlowFunflowPipelinePrototype PooFlowFunflowPlan)
+(def (poo-flow-funflow-poo-pipeline->plan pipeline)
+  (poo-flow-funflow-check-map->plan
+   (poo-flow-funflow-poo-pipeline->check-map pipeline)))
+
 ;;; Boundary: funflow poo config pipelines is the policy-visible edge for
 ;;; policy behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
@@ -590,14 +786,20 @@
 ;;; tools a typed object to inspect before runtime handoff.
 ;; : (-> PooFlowCicdCheckMap Alist [UserModuleFlagEntry])
 (def (poo-flow-funflow-config-flags pipeline user-config)
-  (list '+functional
-        '+dag
-        '+typed-receipts
-        '+runtime-manifest
-        poo-flow-funflow-cicd-default-payload
-        (cons ':config (list pipeline))
-        (cons ':workflow-pipeline pipeline)
-        (cons ':user-config user-config)))
+  (let* ((normalized-flow
+          (poo-flow-funflow-check-map->normalized-flow pipeline))
+         (plan
+          (poo-flow-funflow-normalized-flow->plan normalized-flow)))
+    (list '+functional
+          '+dag
+          '+typed-receipts
+          '+runtime-manifest
+          poo-flow-funflow-cicd-default-payload
+          (cons ':config (list pipeline))
+          (cons ':workflow-pipeline pipeline)
+          (cons ':normalized-flow normalized-flow)
+          (cons ':funflow-plan plan)
+          (cons ':user-config user-config))))
 
 ;;; The Funflow module is the default functional DAG flow surface.
 ;; : (-> Unit [[PooUserModuleSelection]])

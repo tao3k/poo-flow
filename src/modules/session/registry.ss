@@ -2,7 +2,7 @@
 ;;; Boundary: report-only project/root/child session registry receipts.
 ;;; Invariant: the registry is a projection, not a live runtime store.
 
-(import (only-in :clan/poo/object .ref object? object<-alist)
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy
         :poo-flow/src/modules/session/receipt-syntax)
@@ -29,6 +29,17 @@
   (let (entry (and (list? row) (assoc key row)))
     (if entry (cdr entry) default)))
 
+;;; Boundary: registry field rows keep session registry receipt slots stable for
+;;; parent, child, and peer-agent lookup policy.
+;; poo-flow-session-registry-field-rows
+;; : (-> Syntax Syntax)
+;; | doc m%
+;;   Expands session registry field clauses into lookup receipt rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-registry-field-rows (root-session-id 'root))
+;;   ;; => ((root-session-id . root))
+;;   ```
 (defrules poo-flow-session-registry-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
@@ -45,30 +56,17 @@
      'policy-id
      #f)))
 
-;; : (-> [PooSessionRegistryEntry] ([Symbol] [Symbol]))
+;; : (-> [PooSessionRegistryEntry] SessionRegistryEntrySummary)
 (def (poo-flow-session-registry-entry-summary entries)
-  (let loop ((remaining-entries entries)
-             (session-ids-rev '())
-             (durable-policy-refs-rev '()))
-    (cond
-     ((null? remaining-entries)
-      (list (reverse session-ids-rev)
-            (reverse durable-policy-refs-rev)))
-     (else
-      (let* ((entry (car remaining-entries))
-             (session-id
-              (poo-flow-session-registry-entry-session-id entry))
-             (durable-policy-ref
-              (poo-flow-session-alist-ref
-               entry
-               'durable-policy-ref
-               #f)))
-        (loop (cdr remaining-entries)
-              (cons session-id session-ids-rev)
-              (if durable-policy-ref
-                (cons durable-policy-ref durable-policy-refs-rev)
-                durable-policy-refs-rev)))))))
+  (list
+   (map poo-flow-session-registry-entry-session-id entries)
+   (filter-map
+    (lambda (entry)
+      (poo-flow-session-alist-ref entry 'durable-policy-ref #f))
+    entries)))
 
+;;; Boundary: registry entries preserve parent/child session identity and
+;;; allowed communication refs for later lookup policy.
 ;; : (-> PooSession Symbol [Symbol] Alist [Alist] PooSessionRegistryEntry)
 (def (poo-flow-session-registry-entry session
                                       agent-id
@@ -148,7 +146,7 @@
                  '()
                  (car maybe-metadata))))))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-registry-entry? value)
   (and (list? value)
        (eq? (poo-flow-session-alist-ref value 'kind #f)
@@ -165,6 +163,23 @@
 ;; : (-> PooSessionRegistryEntry [Symbol])
 (def (poo-flow-session-registry-entry-parent-session-ids entry)
   (poo-flow-session-alist-ref entry 'parent-session-ids '()))
+
+;; : PooSessionRegistryReceiptRecordStruct
+(defstruct poo-flow-session-registry-receipt-record
+  (kind
+   schema
+   project-id
+   root-session-ids
+   child-session-ids
+   session-ids
+   active-session-ref
+   durable-policy-refs
+   entry-count
+   entries
+   runtime-owner
+   runtime-executed
+   metadata)
+  transparent: #t)
 
 ;; : (-> Symbol [Symbol] [Symbol] Symbol [PooSessionRegistryEntry] [Alist] PooSessionRegistryReceipt)
 (def (poo-flow-session-registry-receipt project-id
@@ -198,41 +213,40 @@
           (poo-flow-session-registry-entry-summary entries))
          (session-ids (car entry-summary))
          (durable-policy-refs (cadr entry-summary)))
-    (object<-alist
-     (poo-flow-session-registry-field-rows
-      (kind 'poo-flow.session.registry-receipt)
-      (schema 'poo-flow.modules.session.registry-receipt.v1)
-      (project-id project-id)
-      (root-session-ids root-session-ids)
-      (child-session-ids child-session-ids)
-      (session-ids session-ids)
-      (active-session-ref active-session-ref)
-      (durable-policy-refs durable-policy-refs)
-      (entry-count (length entries))
-      (entries entries)
-      (runtime-owner "marlin-agent-core")
-      (runtime-executed #f)
-      (metadata (if (null? maybe-metadata)
-                  '()
-                  (car maybe-metadata)))))))
+    (make-poo-flow-session-registry-receipt-record
+     'poo-flow.session.registry-receipt
+     'poo-flow.modules.session.registry-receipt.v1
+     project-id
+     root-session-ids
+     child-session-ids
+     session-ids
+     active-session-ref
+     durable-policy-refs
+     (length entries)
+     entries
+     "marlin-agent-core"
+     #f
+     (if (null? maybe-metadata)
+       '()
+       (car maybe-metadata)))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-registry-receipt? value)
-  (and (object? value)
-       (eq? (.ref value 'kind)
+  (and (poo-flow-session-registry-receipt-record? value)
+       (eq? (poo-flow-session-registry-receipt-record-kind value)
             'poo-flow.session.registry-receipt)))
 
 ;; : (-> PooSessionRegistryReceipt Symbol)
 (def (poo-flow-session-registry-receipt-project-id receipt)
-  (.ref receipt 'project-id))
+  (poo-flow-session-registry-receipt-record-project-id receipt))
 
 ;; : (-> PooSessionRegistryReceipt [Symbol])
 (def (poo-flow-session-registry-receipt-session-ids receipt)
-  (.ref receipt 'session-ids))
+  (poo-flow-session-registry-receipt-record-session-ids receipt))
 
 ;; : (-> PooSessionRegistryReceipt [PooSessionRegistryEntry])
 (def (poo-flow-session-registry-receipt-entries receipt)
-  (.ref receipt 'entries))
+  (poo-flow-session-registry-receipt-record-entries receipt))
 
 ;; : (-> PooSessionRegistryReceipt Alist)
 (defpoo-session-receipt-projection
@@ -244,16 +258,24 @@
            receipt)
   (bindings ())
   (fields
-   (('kind (.ref receipt 'kind))
-    ('schema (.ref receipt 'schema))
-    ('project-id (.ref receipt 'project-id))
-    ('root-session-ids (.ref receipt 'root-session-ids))
-    ('child-session-ids (.ref receipt 'child-session-ids))
-    ('session-ids (.ref receipt 'session-ids))
-    ('active-session-ref (.ref receipt 'active-session-ref))
-    ('durable-policy-refs (.ref receipt 'durable-policy-refs))
-    ('entry-count (.ref receipt 'entry-count))
-    ('entries (.ref receipt 'entries))
-    ('runtime-owner (.ref receipt 'runtime-owner))
-    ('runtime-executed (.ref receipt 'runtime-executed))
-    ('metadata (.ref receipt 'metadata)))))
+    (('kind (poo-flow-session-registry-receipt-record-kind receipt))
+     ('schema (poo-flow-session-registry-receipt-record-schema receipt))
+     ('project-id (poo-flow-session-registry-receipt-record-project-id receipt))
+     ('root-session-ids
+      (poo-flow-session-registry-receipt-record-root-session-ids receipt))
+     ('child-session-ids
+      (poo-flow-session-registry-receipt-record-child-session-ids receipt))
+     ('session-ids
+      (poo-flow-session-registry-receipt-record-session-ids receipt))
+     ('active-session-ref
+      (poo-flow-session-registry-receipt-record-active-session-ref receipt))
+     ('durable-policy-refs
+      (poo-flow-session-registry-receipt-record-durable-policy-refs receipt))
+     ('entry-count
+      (poo-flow-session-registry-receipt-record-entry-count receipt))
+     ('entries (poo-flow-session-registry-receipt-record-entries receipt))
+     ('runtime-owner
+      (poo-flow-session-registry-receipt-record-runtime-owner receipt))
+     ('runtime-executed
+      (poo-flow-session-registry-receipt-record-runtime-executed receipt))
+     ('metadata (poo-flow-session-registry-receipt-record-metadata receipt)))))

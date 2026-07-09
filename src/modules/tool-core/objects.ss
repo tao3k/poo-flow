@@ -3,7 +3,7 @@
 ;;; Invariant: this module describes tools and validates policy refs; it never
 ;;; starts shells, filesystem IO, MCP servers, or backend runtimes.
 
-(import (only-in :clan/poo/object .ref object? object<-alist)
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy)
@@ -41,6 +41,17 @@
         poo-flow-tool-core-mcp-tool
         poo-flow-tool-core-default-catalog)
 
+;;; Boundary: tool field rows preserve the POO object slot ABI for tool policy
+;;; catalog validation.
+;; poo-flow-tool-field-rows
+;; : (-> Syntax Syntax)
+;; | doc m%
+;;   Expands tool object field clauses into stable catalog policy rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-tool-field-rows (tool-ref 'shell))
+;;   ;; => ((tool-ref . shell))
+;;   ```
 (defrules poo-flow-tool-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
@@ -59,7 +70,7 @@
 (def +poo-flow-tool-core-policy-validation-receipt-kind+
   'poo-flow.tool-core.policy-catalog-validation-receipt)
 
-;; : (-> POOObject Symbol Value Value)
+;; : (-> POOObject Symbol Object Object)
 (def (poo-flow-tool-slot object key default-value)
   (with-catch
    (lambda (_failure) default-value)
@@ -70,22 +81,22 @@
 (def (poo-flow-tool-ref? value)
   (symbol? value))
 
-;; : (-> [Any] Boolean)
+;; : (-> Object Boolean)
 (def (poo-flow-tool-symbol-list? values)
   (and (list? values)
        (poo-flow-session-every? symbol? values)))
 
-;; : (-> [Any] Boolean)
+;; : (-> Object Boolean)
 (def (poo-flow-tool-alist? value)
   (list? value))
 
-;; : (-> Boolean Value Boolean)
+;; : (-> Boolean Object Boolean)
 (def (poo-flow-tool-valid-sandbox-profile-ref? sandbox-required?
                                                sandbox-profile-ref)
   (or (not sandbox-required?)
       (symbol? sandbox-profile-ref)))
 
-;; : (-> Symbol Symbol [Symbol] Alist Alist String Symbol Boolean MaybeSymbol Symbol [Alist] PooToolSpec)
+;; : (-> Symbol Symbol [Symbol] Alist Alist String Symbol Boolean Object Symbol [Alist] PooToolSpec)
 (def (poo-flow-tool-spec tool-ref
                          tool-kind
                          actions
@@ -165,7 +176,7 @@
 (def (poo-flow-tool-spec-sandbox-required? spec)
   (.ref spec 'sandbox-required?))
 
-;; : (-> PooToolSpec MaybeSymbol)
+;; : (-> PooToolSpec Object)
 (def (poo-flow-tool-spec-sandbox-profile-ref spec)
   (.ref spec 'sandbox-profile-ref))
 
@@ -199,6 +210,27 @@
   (error-message "tool spec serialization requires a list"))
 
 ;; : (-> Symbol PooToolSpec [Alist] PooToolHandoffManifest)
+(defstruct poo-flow-tool-handoff-manifest-record
+  (kind
+   schema
+   request-id
+   tool-ref
+   tool-kind
+   actions
+   operation
+   input-schema
+   output-schema
+   runtime-owner
+   runtime-backend
+   sandbox-required?
+   sandbox-profile-ref
+   handoff-ready?
+   diagnostic-count
+   diagnostics
+   runtime-executed
+   metadata)
+  transparent: #t)
+
 (def (poo-flow-tool-handoff-manifest request-id spec . maybe-metadata)
   (poo-flow-session-require "tool handoff request id must be a symbol"
                             (symbol? request-id)
@@ -220,33 +252,32 @@
               (code 'tool-spec-missing-sandbox-profile)
               (tool-ref (poo-flow-tool-spec-ref spec))
               (severity 'error))))))
-    (object<-alist
-     (list
-      (cons 'kind +poo-flow-tool-core-handoff-manifest-kind+)
-      (cons 'schema 'poo-flow.modules.tool-core.handoff-manifest.v1)
-      (cons 'request-id request-id)
-      (cons 'tool-ref (poo-flow-tool-spec-ref spec))
-      (cons 'tool-kind (poo-flow-tool-spec-tool-kind spec))
-      (cons 'actions (poo-flow-tool-spec-actions spec))
-      (cons 'operation (.ref spec 'handoff-operation))
-      (cons 'input-schema (.ref spec 'input-schema))
-      (cons 'output-schema (.ref spec 'output-schema))
-      (cons 'runtime-owner (.ref spec 'runtime-owner))
-      (cons 'runtime-backend (.ref spec 'runtime-backend))
-      (cons 'sandbox-required? sandbox-required?)
-      (cons 'sandbox-profile-ref sandbox-profile-ref)
-      (cons 'handoff-ready? (null? diagnostics))
-      (cons 'diagnostic-count (length diagnostics))
-      (cons 'diagnostics diagnostics)
-      (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata)
-                        '()
-                        (car maybe-metadata)))))))
+    (make-poo-flow-tool-handoff-manifest-record
+     +poo-flow-tool-core-handoff-manifest-kind+
+     'poo-flow.modules.tool-core.handoff-manifest.v1
+     request-id
+     (poo-flow-tool-spec-ref spec)
+     (poo-flow-tool-spec-tool-kind spec)
+     (poo-flow-tool-spec-actions spec)
+     (.ref spec 'handoff-operation)
+     (.ref spec 'input-schema)
+     (.ref spec 'output-schema)
+     (.ref spec 'runtime-owner)
+     (.ref spec 'runtime-backend)
+     sandbox-required?
+     sandbox-profile-ref
+     (null? diagnostics)
+     (length diagnostics)
+     diagnostics
+     #f
+     (if (null? maybe-metadata)
+       '()
+       (car maybe-metadata)))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-tool-handoff-manifest? value)
-  (and (object? value)
-       (eq? (poo-flow-tool-slot value 'kind #f)
+  (and (poo-flow-tool-handoff-manifest-record? value)
+       (eq? (poo-flow-tool-handoff-manifest-record-kind value)
             +poo-flow-tool-core-handoff-manifest-kind+)))
 
 ;; : (-> PooToolHandoffManifest Alist)
@@ -257,36 +288,50 @@
                "tool handoff projection requires a handoff manifest"
                (poo-flow-tool-handoff-manifest? manifest)
                manifest))))
-  (fields ((kind (.ref checked-manifest 'kind))
-           (schema (.ref checked-manifest 'schema))
-           (request-id (.ref checked-manifest 'request-id))
-           (tool-ref (.ref checked-manifest 'tool-ref))
-           (tool-kind (.ref checked-manifest 'tool-kind))
-           (actions (.ref checked-manifest 'actions))
-           (operation (.ref checked-manifest 'operation))
-           (input-schema (.ref checked-manifest 'input-schema))
-           (output-schema (.ref checked-manifest 'output-schema))
-           (runtime-owner (.ref checked-manifest 'runtime-owner))
-           (runtime-backend (.ref checked-manifest 'runtime-backend))
-           (sandbox-required? (.ref checked-manifest 'sandbox-required?))
-           (sandbox-profile-ref (.ref checked-manifest 'sandbox-profile-ref))
-           (handoff-ready? (.ref checked-manifest 'handoff-ready?))
-           (diagnostic-count (.ref checked-manifest 'diagnostic-count))
-           (diagnostics (.ref checked-manifest 'diagnostics))
-           (runtime-executed (.ref checked-manifest 'runtime-executed))
-           (metadata (.ref checked-manifest 'metadata)))))
+  (fields ((kind (poo-flow-tool-handoff-manifest-record-kind checked-manifest))
+           (schema (poo-flow-tool-handoff-manifest-record-schema
+                    checked-manifest))
+           (request-id (poo-flow-tool-handoff-manifest-record-request-id
+                        checked-manifest))
+           (tool-ref (poo-flow-tool-handoff-manifest-record-tool-ref
+                      checked-manifest))
+           (tool-kind (poo-flow-tool-handoff-manifest-record-tool-kind
+                       checked-manifest))
+           (actions (poo-flow-tool-handoff-manifest-record-actions
+                     checked-manifest))
+           (operation (poo-flow-tool-handoff-manifest-record-operation
+                       checked-manifest))
+           (input-schema (poo-flow-tool-handoff-manifest-record-input-schema
+                          checked-manifest))
+           (output-schema (poo-flow-tool-handoff-manifest-record-output-schema
+                           checked-manifest))
+           (runtime-owner (poo-flow-tool-handoff-manifest-record-runtime-owner
+                           checked-manifest))
+           (runtime-backend (poo-flow-tool-handoff-manifest-record-runtime-backend
+                             checked-manifest))
+           (sandbox-required?
+            (poo-flow-tool-handoff-manifest-record-sandbox-required?
+             checked-manifest))
+           (sandbox-profile-ref
+            (poo-flow-tool-handoff-manifest-record-sandbox-profile-ref
+             checked-manifest))
+           (handoff-ready? (poo-flow-tool-handoff-manifest-record-handoff-ready?
+                            checked-manifest))
+           (diagnostic-count
+            (poo-flow-tool-handoff-manifest-record-diagnostic-count
+             checked-manifest))
+           (diagnostics (poo-flow-tool-handoff-manifest-record-diagnostics
+                         checked-manifest))
+           (runtime-executed
+            (poo-flow-tool-handoff-manifest-record-runtime-executed
+             checked-manifest))
+           (metadata (poo-flow-tool-handoff-manifest-record-metadata
+                      checked-manifest)))))
 
 ;; : (-> [PooToolSpec] (Cons [Symbol] Integer))
 (def (poo-flow-tool-catalog-summary tools)
-  (let loop ((remaining-tools tools)
-             (tool-refs-rev '())
-             (tool-count 0))
-    (if (null? remaining-tools)
-      (cons (reverse tool-refs-rev) tool-count)
-      (loop (cdr remaining-tools)
-            (cons (poo-flow-tool-spec-ref (car remaining-tools))
-                  tool-refs-rev)
-            (+ tool-count 1)))))
+  (cons (map poo-flow-tool-spec-ref tools)
+        (length tools)))
 
 ;; : (-> Symbol [PooToolSpec] [Alist] PooToolCatalog)
 (def (poo-flow-tool-catalog catalog-ref tools . maybe-metadata)
@@ -547,7 +592,7 @@
      (cons 'rows (reverse (car hook-bundle)))
      (cons 'diagnostics (reverse (cdr hook-bundle))))))
 
-;; : (-> [Value] [Value] [Value])
+;; : (-> [ToolCoreProjectionValue] [ToolCoreProjectionValue] [ToolCoreProjectionValue])
 (def (poo-flow-tool-reverse-onto values tail)
   (if (null? values)
     tail
@@ -570,7 +615,121 @@
                                              sandbox-diagnostics-rev
                                              '()))
 
-;; : (-> PooToolCatalog [Symbol] Alist)
+;; : (-> [Symbol] [Symbol] [Symbol] [Alist] [Alist] Alist)
+(def (poo-flow-tool-policy-catalog-validation-summary-finish resolved-tool-refs-rev
+                                                             unresolved-tool-refs-rev
+                                                             sandbox-required-tool-refs-rev
+                                                             unresolved-diagnostics-rev
+                                                             sandbox-diagnostics-rev)
+  (list
+   (cons 'resolved-tool-refs (reverse resolved-tool-refs-rev))
+   (cons 'unresolved-tool-refs (reverse unresolved-tool-refs-rev))
+   (cons 'sandbox-required-tool-refs
+         (reverse sandbox-required-tool-refs-rev))
+   (cons 'unresolved-diagnostics-rev unresolved-diagnostics-rev)
+   (cons 'sandbox-diagnostics-rev sandbox-diagnostics-rev)
+   (cons 'diagnostics
+         (poo-flow-tool-validation-diagnostics
+          unresolved-diagnostics-rev
+          sandbox-diagnostics-rev))))
+
+;; : (-> Symbol Boolean [Symbol] [Symbol])
+(def (poo-flow-tool-sandbox-required-refs/rev tool-ref sandbox-required? refs)
+  (if sandbox-required?
+    (cons tool-ref refs)
+    refs))
+
+;; : (-> Symbol Boolean Object [Alist] [Alist])
+(def (poo-flow-tool-sandbox-diagnostics/rev tool-ref
+                                            sandbox-required?
+                                            sandbox-profile-ref
+                                            diagnostics)
+  (if (and sandbox-required?
+           (not (symbol? sandbox-profile-ref)))
+    (cons (poo-flow-tool-diagnostic 'tool-spec-missing-sandbox-profile tool-ref)
+          diagnostics)
+    diagnostics))
+
+;; : (-> Symbol [Symbol] [Symbol] [Symbol] [Alist] [Alist] [ToolPolicyValidationStateValue])
+(def (poo-flow-tool-policy-catalog-missing-step tool-ref
+                                                resolved-tool-refs-rev
+                                                unresolved-tool-refs-rev
+                                                sandbox-required-tool-refs-rev
+                                                unresolved-diagnostics-rev
+                                                sandbox-diagnostics-rev)
+  (list resolved-tool-refs-rev
+        (cons tool-ref unresolved-tool-refs-rev)
+        sandbox-required-tool-refs-rev
+        (cons (poo-flow-tool-diagnostic 'tool-spec-not-in-catalog tool-ref)
+              unresolved-diagnostics-rev)
+        sandbox-diagnostics-rev))
+
+;; : (-> Symbol PooToolSpec [Symbol] [Symbol] [Symbol] [Alist] [Alist] [ToolPolicyValidationStateValue])
+(def (poo-flow-tool-policy-catalog-resolved-step tool-ref
+                                                 spec
+                                                 resolved-tool-refs-rev
+                                                 unresolved-tool-refs-rev
+                                                 sandbox-required-tool-refs-rev
+                                                 unresolved-diagnostics-rev
+                                                 sandbox-diagnostics-rev)
+  (let ((sandbox-required?
+         (poo-flow-tool-spec-sandbox-required? spec))
+        (sandbox-profile-ref
+         (poo-flow-tool-spec-sandbox-profile-ref spec)))
+    (list (cons tool-ref resolved-tool-refs-rev)
+          unresolved-tool-refs-rev
+          (poo-flow-tool-sandbox-required-refs/rev
+           tool-ref
+           sandbox-required?
+           sandbox-required-tool-refs-rev)
+          unresolved-diagnostics-rev
+          (poo-flow-tool-sandbox-diagnostics/rev
+           tool-ref
+           sandbox-required?
+           sandbox-profile-ref
+           sandbox-diagnostics-rev))))
+
+;; : (-> PooToolCatalog Symbol [Symbol] [Symbol] [Symbol] [Alist] [Alist] [ToolPolicyValidationStateValue])
+(def (poo-flow-tool-policy-catalog-validation-step catalog
+                                                   tool-ref
+                                                   resolved-tool-refs-rev
+                                                   unresolved-tool-refs-rev
+                                                   sandbox-required-tool-refs-rev
+                                                   unresolved-diagnostics-rev
+                                                   sandbox-diagnostics-rev)
+  (let (spec (poo-flow-tool-catalog-find catalog tool-ref))
+    (if spec
+      (poo-flow-tool-policy-catalog-resolved-step
+       tool-ref
+       spec
+       resolved-tool-refs-rev
+       unresolved-tool-refs-rev
+       sandbox-required-tool-refs-rev
+       unresolved-diagnostics-rev
+       sandbox-diagnostics-rev)
+      (poo-flow-tool-policy-catalog-missing-step
+       tool-ref
+       resolved-tool-refs-rev
+       unresolved-tool-refs-rev
+       sandbox-required-tool-refs-rev
+       unresolved-diagnostics-rev
+       sandbox-diagnostics-rev))))
+
+;; poo-flow-tool-policy-catalog-validation-summary
+;;   : (-> PooToolCatalog [Symbol] Alist)
+;;   | doc m%
+;;       Validate policy-selected tool refs against the declared tool catalog and
+;;       return a compact receipt summary. The summary separates resolved refs,
+;;       unresolved refs, sandbox-required refs, and diagnostics so session
+;;       policy validation can project tool-scope failures without invoking a
+;;       runtime tool.
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-tool-policy-catalog-validation-summary catalog '(read-workspace-file))
+;;       ```
+;;       # Result
+;;       An alist with resolved, unresolved, sandbox-required, and diagnostic rows.
+;;     %
 (def (poo-flow-tool-policy-catalog-validation-summary catalog tool-refs)
   (let loop ((remaining-tool-refs tool-refs)
              (resolved-tool-refs-rev '())
@@ -578,54 +737,67 @@
              (sandbox-required-tool-refs-rev '())
              (unresolved-diagnostics-rev '())
              (sandbox-diagnostics-rev '()))
-    (cond
-     ((null? remaining-tool-refs)
-      (list
-       (cons 'resolved-tool-refs (reverse resolved-tool-refs-rev))
-       (cons 'unresolved-tool-refs (reverse unresolved-tool-refs-rev))
-       (cons 'sandbox-required-tool-refs
-             (reverse sandbox-required-tool-refs-rev))
-       (cons 'unresolved-diagnostics-rev unresolved-diagnostics-rev)
-       (cons 'sandbox-diagnostics-rev sandbox-diagnostics-rev)
-       (cons 'diagnostics
-             (poo-flow-tool-validation-diagnostics
+    (if (null? remaining-tool-refs)
+      (poo-flow-tool-policy-catalog-validation-summary-finish
+       resolved-tool-refs-rev
+       unresolved-tool-refs-rev
+       sandbox-required-tool-refs-rev
+       unresolved-diagnostics-rev
+       sandbox-diagnostics-rev)
+      (let ((step
+             (poo-flow-tool-policy-catalog-validation-step
+              catalog
+              (car remaining-tool-refs)
+              resolved-tool-refs-rev
+              unresolved-tool-refs-rev
+              sandbox-required-tool-refs-rev
               unresolved-diagnostics-rev
-              sandbox-diagnostics-rev))))
-     (else
-      (let* ((tool-ref (car remaining-tool-refs))
-             (spec (poo-flow-tool-catalog-find catalog tool-ref)))
-        (cond
-         (spec
-          (let ((sandbox-required?
-                 (poo-flow-tool-spec-sandbox-required? spec))
-                (sandbox-profile-ref
-                 (poo-flow-tool-spec-sandbox-profile-ref spec)))
-            (loop
-             (cdr remaining-tool-refs)
-             (cons tool-ref resolved-tool-refs-rev)
-             unresolved-tool-refs-rev
-             (if sandbox-required?
-               (cons tool-ref sandbox-required-tool-refs-rev)
-               sandbox-required-tool-refs-rev)
-             unresolved-diagnostics-rev
-             (if (and sandbox-required?
-                      (not (symbol? sandbox-profile-ref)))
-               (cons (poo-flow-tool-diagnostic
-                      'tool-spec-missing-sandbox-profile
-                      tool-ref)
-                     sandbox-diagnostics-rev)
-               sandbox-diagnostics-rev))))
-         (else
-          (loop
-           (cdr remaining-tool-refs)
-           resolved-tool-refs-rev
-           (cons tool-ref unresolved-tool-refs-rev)
-           sandbox-required-tool-refs-rev
-           (cons (poo-flow-tool-diagnostic 'tool-spec-not-in-catalog tool-ref)
-                 unresolved-diagnostics-rev)
-           sandbox-diagnostics-rev))))))))
+              sandbox-diagnostics-rev)))
+        (loop (cdr remaining-tool-refs)
+              (car step)
+              (cadr step)
+              (caddr step)
+              (cadddr step)
+              (car (cddddr step)))))))
 
 ;; : (-> Symbol PooToolCatalog PooSessionPolicy PooSessionPolicy [Alist] PooToolPolicyCatalogValidationReceipt)
+(defstruct poo-flow-tool-policy-catalog-validation-receipt-record
+  (kind
+   schema
+   validation-id
+   catalog-ref
+   catalog-tool-count
+   catalog-tool-refs
+   agent-tool-policy-ref
+   hook-tool-policy-ref
+   policy-tool-refs
+   resolved-tool-refs
+   unresolved-tool-refs
+   sandbox-required-tool-refs
+   action-mismatch-grants
+   valid?
+   diagnostic-count
+   diagnostics
+   runtime-owner
+   runtime-executed
+   metadata)
+  transparent: #t)
+
+;; poo-flow-tool-policy-catalog-validation-receipt
+;;   : (-> Symbol PooToolCatalog PooSessionPolicy PooSessionPolicy [Alist] PooToolPolicyCatalogValidationReceipt)
+;;   | doc m%
+;;       Build the fixed receipt object for tool-policy catalog validation. The
+;;       receipt records resolved tool refs, unresolved policy refs, sandbox
+;;       requirements, action mismatches, and diagnostics while keeping provider
+;;       tool execution outside the Scheme control plane.
+;;       # Examples
+;;       ```scheme
+;;       (poo-flow-tool-policy-catalog-validation-receipt
+;;        'validation/session-policy-tool-catalog catalog agent-policy hook-policy)
+;;       ```
+;;       # Result
+;;       A validation receipt whose alist projection feeds session policy checks.
+;;     %
 (def (poo-flow-tool-policy-catalog-validation-receipt validation-id
                                                       catalog
                                                       agent-tool-policy
@@ -696,45 +868,42 @@
             'sandbox-diagnostics-rev
             '())
            action-diagnostics)))
-    (object<-alist
-     (list
-      (cons 'kind +poo-flow-tool-core-policy-validation-receipt-kind+)
-      (cons 'schema 'poo-flow.modules.tool-core.policy-catalog-validation.v1)
-      (cons 'validation-id validation-id)
-      (cons 'catalog-ref (poo-flow-tool-catalog-ref catalog))
-      (cons 'catalog-tool-count (poo-flow-tool-catalog-tool-count catalog))
-      (cons 'catalog-tool-refs (poo-flow-tool-catalog-tool-refs catalog))
-      (cons 'agent-tool-policy-ref
-            (poo-flow-session-policy-name agent-tool-policy))
-      (cons 'hook-tool-policy-ref
-            (poo-flow-session-policy-name hook-tool-policy))
-      (cons 'policy-tool-refs policy-tool-refs)
-      (cons 'resolved-tool-refs resolved-tool-refs)
-      (cons 'unresolved-tool-refs unresolved-tool-refs)
-      (cons 'sandbox-required-tool-refs sandbox-required-tool-refs)
-      (cons 'action-mismatch-grants action-mismatch-grants)
-      (cons 'valid? (null? diagnostics))
-      (cons 'diagnostic-count (length diagnostics))
-      (cons 'diagnostics diagnostics)
-      (cons 'runtime-owner "marlin-agent-core")
-      (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata)
-                        '()
-                        (car maybe-metadata)))))))
+    (make-poo-flow-tool-policy-catalog-validation-receipt-record
+     +poo-flow-tool-core-policy-validation-receipt-kind+
+     'poo-flow.modules.tool-core.policy-catalog-validation.v1
+     validation-id
+     (poo-flow-tool-catalog-ref catalog)
+     (poo-flow-tool-catalog-tool-count catalog)
+     (poo-flow-tool-catalog-tool-refs catalog)
+     (poo-flow-session-policy-name agent-tool-policy)
+     (poo-flow-session-policy-name hook-tool-policy)
+     policy-tool-refs
+     resolved-tool-refs
+     unresolved-tool-refs
+     sandbox-required-tool-refs
+     action-mismatch-grants
+     (null? diagnostics)
+     (length diagnostics)
+     diagnostics
+     "marlin-agent-core"
+     #f
+     (if (null? maybe-metadata)
+       '()
+       (car maybe-metadata)))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-tool-policy-catalog-validation-receipt? value)
-  (and (object? value)
-       (eq? (poo-flow-tool-slot value 'kind #f)
+  (and (poo-flow-tool-policy-catalog-validation-receipt-record? value)
+       (eq? (poo-flow-tool-policy-catalog-validation-receipt-record-kind value)
             +poo-flow-tool-core-policy-validation-receipt-kind+)))
 
 ;; : (-> PooToolPolicyCatalogValidationReceipt Boolean)
 (def (poo-flow-tool-policy-catalog-validation-receipt-valid? receipt)
-  (.ref receipt 'valid?))
+  (poo-flow-tool-policy-catalog-validation-receipt-record-valid? receipt))
 
 ;; : (-> PooToolPolicyCatalogValidationReceipt [Alist])
 (def (poo-flow-tool-policy-catalog-validation-receipt-diagnostics receipt)
-  (.ref receipt 'diagnostics))
+  (poo-flow-tool-policy-catalog-validation-receipt-record-diagnostics receipt))
 
 ;; : (-> PooToolPolicyCatalogValidationReceipt Alist)
 (defpoo-module-final-projection
@@ -744,29 +913,63 @@
                "tool policy validation projection requires a validation receipt"
                (poo-flow-tool-policy-catalog-validation-receipt? receipt)
                receipt))))
-  (fields ((kind (.ref checked-receipt 'kind))
-           (schema (.ref checked-receipt 'schema))
-           (validation-id (.ref checked-receipt 'validation-id))
-           (catalog-ref (.ref checked-receipt 'catalog-ref))
-           (catalog-tool-count (.ref checked-receipt 'catalog-tool-count))
-           (catalog-tool-refs (.ref checked-receipt 'catalog-tool-refs))
+  (fields ((kind
+            (poo-flow-tool-policy-catalog-validation-receipt-record-kind
+             checked-receipt))
+           (schema
+            (poo-flow-tool-policy-catalog-validation-receipt-record-schema
+             checked-receipt))
+           (validation-id
+            (poo-flow-tool-policy-catalog-validation-receipt-record-validation-id
+             checked-receipt))
+           (catalog-ref
+            (poo-flow-tool-policy-catalog-validation-receipt-record-catalog-ref
+             checked-receipt))
+           (catalog-tool-count
+            (poo-flow-tool-policy-catalog-validation-receipt-record-catalog-tool-count
+             checked-receipt))
+           (catalog-tool-refs
+            (poo-flow-tool-policy-catalog-validation-receipt-record-catalog-tool-refs
+             checked-receipt))
            (agent-tool-policy-ref
-            (.ref checked-receipt 'agent-tool-policy-ref))
+            (poo-flow-tool-policy-catalog-validation-receipt-record-agent-tool-policy-ref
+             checked-receipt))
            (hook-tool-policy-ref
-            (.ref checked-receipt 'hook-tool-policy-ref))
-           (policy-tool-refs (.ref checked-receipt 'policy-tool-refs))
-           (resolved-tool-refs (.ref checked-receipt 'resolved-tool-refs))
-           (unresolved-tool-refs (.ref checked-receipt 'unresolved-tool-refs))
+            (poo-flow-tool-policy-catalog-validation-receipt-record-hook-tool-policy-ref
+             checked-receipt))
+           (policy-tool-refs
+            (poo-flow-tool-policy-catalog-validation-receipt-record-policy-tool-refs
+             checked-receipt))
+           (resolved-tool-refs
+            (poo-flow-tool-policy-catalog-validation-receipt-record-resolved-tool-refs
+             checked-receipt))
+           (unresolved-tool-refs
+            (poo-flow-tool-policy-catalog-validation-receipt-record-unresolved-tool-refs
+             checked-receipt))
            (sandbox-required-tool-refs
-            (.ref checked-receipt 'sandbox-required-tool-refs))
+            (poo-flow-tool-policy-catalog-validation-receipt-record-sandbox-required-tool-refs
+             checked-receipt))
            (action-mismatch-grants
-            (.ref checked-receipt 'action-mismatch-grants))
-           (valid? (.ref checked-receipt 'valid?))
-           (diagnostic-count (.ref checked-receipt 'diagnostic-count))
-           (diagnostics (.ref checked-receipt 'diagnostics))
-           (runtime-owner (.ref checked-receipt 'runtime-owner))
-           (runtime-executed (.ref checked-receipt 'runtime-executed))
-           (metadata (.ref checked-receipt 'metadata)))))
+            (poo-flow-tool-policy-catalog-validation-receipt-record-action-mismatch-grants
+             checked-receipt))
+           (valid?
+            (poo-flow-tool-policy-catalog-validation-receipt-record-valid?
+             checked-receipt))
+           (diagnostic-count
+            (poo-flow-tool-policy-catalog-validation-receipt-record-diagnostic-count
+             checked-receipt))
+           (diagnostics
+            (poo-flow-tool-policy-catalog-validation-receipt-record-diagnostics
+             checked-receipt))
+           (runtime-owner
+            (poo-flow-tool-policy-catalog-validation-receipt-record-runtime-owner
+             checked-receipt))
+           (runtime-executed
+            (poo-flow-tool-policy-catalog-validation-receipt-record-runtime-executed
+             checked-receipt))
+           (metadata
+            (poo-flow-tool-policy-catalog-validation-receipt-record-metadata
+             checked-receipt)))))
 
 ;; : PooToolSpec
 (def poo-flow-tool-core-builtin-read-workspace-file

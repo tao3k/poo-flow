@@ -30,14 +30,14 @@
 (def user-interface-presentation-fixture-path
   "t/scenarios/performance/user-interface-presentation-batch-projection/benchmark.ss")
 
-;; : Alist
+;; : UserInterfacePresentationFixture
 (def user-interface-presentation-fixture
   (call-with-input-file user-interface-presentation-fixture-path read))
 
 ;; : Integer
 (def user-interface-presentation-module-count 8)
 
-;; : (-> Value Symbol Value)
+;; : (-> UserInterfacePresentationRow UserInterfacePresentationKey UserInterfacePresentationValue)
 (def (user-interface-presentation-ref value key)
   (cond
    ((and (object? value) (.slot? value key))
@@ -47,7 +47,7 @@
       (and entry (cdr entry))))
    (else #f)))
 
-;; : (-> [Value] Boolean)
+;; : (-> [UserInterfacePresentationValue] Bool)
 (def (user-interface-presentation-all-capability-receipts? values)
   (cond
    ((null? values) #t)
@@ -55,7 +55,7 @@
     (user-interface-presentation-all-capability-receipts? (cdr values)))
    (else #f)))
 
-;; : (-> [Value] Boolean)
+;; : (-> [UserInterfacePresentationValue] Bool)
 (def (user-interface-presentation-all-alists? values)
   (cond
    ((null? values) #t)
@@ -71,7 +71,7 @@
    (lambda (_index)
      poo-flow-custom-my-module-loop-engine-case)))
 
-;; : (-> Integer POOObject)
+;; : (-> Integer UserInterfacePresentationObject)
 (def (user-interface-presentation-build count)
   (pooFlowUserConfigPresentation
    (pooFlowUserConfig
@@ -79,7 +79,7 @@
      (user-interface-presentation-module-bundles count))
     (poo-flow-settings))))
 
-;; : (-> Integer Alist)
+;; : (-> Integer UserInterfacePresentationSummary)
 (def (user-interface-presentation-summary count)
   (let* ((presentation
           (user-interface-presentation-build count))
@@ -112,7 +112,7 @@
             'kind))
      (cons 'runtime-executed (.ref presentation 'runtime-executed)))))
 
-;; : (-> Alist Void)
+;; : (-> UserInterfacePresentationSummary ReceiptDisplayResult)
 (def (user-interface-presentation-display-receipt receipt)
   (display "[poo-flow-benchmark] user-interface-presentation-batch-projection ")
   (write receipt)

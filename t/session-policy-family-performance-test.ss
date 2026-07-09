@@ -178,29 +178,45 @@
      (cdr policies)
      (cons (poo-flow-session-policy->alist (car policies)) rows))))
 
-;; : (-> Integer [Alist])
+;; session-policy-family-performance-rows
+;;   : (-> Integer [SessionPolicyFamilyPerformanceRow])
+;;   | doc m%
+;;       Build the policy family projection rows used by the performance test
+;;       from the generated session policy objects.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (length (session-policy-family-performance-rows 0))
+;;       ;; => 0
+;;       ```
+;;     %
 (def (session-policy-family-performance-rows count)
-  (let loop ((index 0)
-             (rows []))
-    (if (= index count)
-      (reverse rows)
-      (loop (+ index 1)
-            (session-policy-family-performance-project/rev
-             (session-policy-family-performance-policies index)
-             rows)))))
+  (let (row-groups
+        (poo-flow-performance-build-list
+         count
+         (lambda (index)
+           (map poo-flow-session-policy->alist
+                (session-policy-family-performance-policies index)))))
+    (if (null? row-groups) [] (apply append row-groups))))
 
-;; : (-> [Alist] Symbol Integer)
+;; session-policy-family-performance-count-kind
+;;   : (-> [SessionPolicyFamilyPerformanceRow] SessionPolicyFamilyKindSymbol Integer)
+;;   | doc m%
+;;       Count rows by policy kind so the benchmark verifies composition shape
+;;       and not only total row volume.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (session-policy-family-performance-count-kind '() 'missing)
+;;       ;; => 0
+;;       ```
+;;     %
 (def (session-policy-family-performance-count-kind rows policy-kind)
-  (let loop ((remaining rows)
-             (count 0))
-    (cond
-     ((null? remaining) count)
-     ((eq? (session-policy-family-performance-ref
-            (car remaining)
-            'policy-kind)
-           policy-kind)
-      (loop (cdr remaining) (+ count 1)))
-     (else (loop (cdr remaining) count)))))
+  (length
+   (filter (lambda (row)
+             (eq? (session-policy-family-performance-ref row 'policy-kind)
+                  policy-kind))
+           rows)))
 
 ;; : (-> Integer Alist)
 (def (session-policy-family-performance-summary family-count)

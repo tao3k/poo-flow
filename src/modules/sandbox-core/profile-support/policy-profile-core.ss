@@ -1,4 +1,7 @@
 ;;; -*- Gerbil -*-
+;;; Boundary: sandbox profile core owns reusable profile objects before
+;;; backend-specific modules specialize filesystem, network, and resource policy.
+;;; Invariant: profile objects must remain composable through POO inheritance.
 
 (import :gerbil/gambit
         (only-in :clan/poo/object object<-alist .ref .slot?)
@@ -35,6 +38,9 @@
 ;;       ;; => sandbox profile policy object
 ;;       ```
 ;;     %
+;;; Sandbox profile policy objects carry required capabilities and runtime policy knobs.
+;;; - Keep durable, resource, and sandbox handle policy fields on one POO object boundary.
+;; : (-> List List Object)
 (def (poo-flow-sandbox-profile-policy required-capabilities . maybe-options)
   (let (options (if (null? maybe-options) '() (car maybe-options)))
     (object<-alist

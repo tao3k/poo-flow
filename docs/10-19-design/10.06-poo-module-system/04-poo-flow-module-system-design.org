@@ -48,6 +48,156 @@ The implementation lives under =src/module-system/*= and is re-exported by
 =src/module-system.ss=. It imports core descriptor and config APIs, but core
 does not import or re-export it.
 
+** 10.06.04.15 Module Kernel, Factor, Plugin, And Fixture Boundary
+Every module is made from four layers:
+
+1. Kernel factors.
+2. Module factors.
+3. Plugin factors.
+4. Fixtures and scenarios.
+
+Doom Emacs is the right reference shape here.  Its strength is not that users
+can override the core.  Its strength is that core implementation, feature
+implementation, and macro implementation have clear jobs:
+
+- core implementation stays maintained, stable, and mostly hidden;
+- feature implementation adds named capabilities through declared module
+  surfaces;
+- macro implementation compresses authoring syntax without becoming the
+  semantic owner;
+- package/plugin behavior is incremental and goes through the module boundary;
+- doctor/sync-style diagnostics keep the system robust when modules are added.
+
+The detailed evidence and mapping live in
+[[file:86-doom-emacs-core-module-boundary-research.org][86 Doom Emacs Core Module Boundary Research]].  This section records only the
+design consequence.  Agents should read the dedicated research note before
+changing module kernel, public factor, plugin, macro, fixture, or diagnostic
+semantics.
+
+The lesson from Doom is not to copy its dynamic Emacs runtime.  The lesson is
+the module boundary:
+
+- keep core semantics owned by the module;
+- let users select named modules and public feature factors;
+- use macros only to compress authoring into inspectable module data;
+- keep sync/doctor-style operations as diagnostics, not as hidden semantic
+  owners.
+
+POO Flow should follow the same separation in Gerbil POO terms:
+
+- kernel factors are the core implementation;
+- public module factors are feature implementation;
+- plugins are external upward extensions through declared slots;
+- macros are authoring helpers that expand to inspectable POO descriptors,
+  profiles, factors, receipts, or projections;
+- fixtures and scenarios are proof, not configuration.
+
+Kernel factors are internal, inherited, and required.  They include the pieces
+without which the module is not a coherent feature.  For a session/flow module,
+that means session value, composition strategy, graph strategy, lifecycle/event
+defaults, resolver projection, runtime handoff projection, base validation, and
+diagnostics.
+
+Kernel factors are module-owned.  They are enabled by default when the module is
+selected, and normal users should not see or compose them.  They can be
+inspected by maintainers, tested by scenario fixtures, and used by advanced POO
+authors only through explicitly marked internal APIs.
+
+Kernel factors must not be user-overridable through normal =use-module=,
+=compose=, or plugin routes.  If users can replace the kernel, then the module
+no longer has a stable contract, and every downstream framework will pressure
+the module into becoming a pile of ad hoc hooks.
+
+Module factors are selectable or configurable parts of a complete module.  They
+can be enabled, disabled, narrowed, or parameterized only when the module owner
+declares them as public factors.  A public factor is not a kernel override.  It
+is a stable extension point maintained by the module.
+
+Examples:
+
+- enable a memory factor;
+- disable a telemetry factor;
+- select a durable backend factor;
+- narrow a network capability factor;
+- select a result-validation factor.
+
+The module owner decides which factors are public.  Public factors must have
+contracts, defaults, validation phases, and projection behavior.
+
+Macro implementation is a separate concern from both kernel and features.  A
+macro may make a module pleasant to use, but it must expand into the same
+module-owned data model.  It must not:
+
+- run module activation;
+- bypass kernel validation;
+- expose private kernel hooks as user options;
+- create a second alist or record DSL;
+- silently change plugin attachment rules.
+
+Plugins are upward extensions:
+
+- a plugin contributes a new profile, transform, backend, validator, role
+  policy, or projection;
+- it attaches only through declared extension slots;
+- it cannot remove kernel safety or required lifecycle behavior by default;
+- it must publish capability and projection contracts;
+- it is selected explicitly by the user or by a higher-level profile.
+
+Fixtures and scenarios are not extension mechanisms.  They prove the kernel,
+module factors, and plugin factors behave correctly.  They may expose internal
+receipts and diagnostic projections, but they do not make internal hooks public.
+
+The boundary is:
+
+#+begin_src text
+use-module funflow
+  => loads module kernel defaults
+  => exposes stable session/composition concepts
+  => hides internal hooks
+
+use-module audit-roles
+  => adds plugin profiles
+  => extends declared slots
+  => stays outside the FunFlow kernel ontology
+#+end_src
+
+This keeps the public surface small.  Users select modules, compose stable
+concepts, and select public extensions.  They do not compose kernel hooks.
+
+Normal users can:
+
+- select modules;
+- select public module factors;
+- configure declared public slots;
+- add plugin profiles through declared extension slots;
+- use high-level POO object syntax where a module exposes it.
+
+Normal users cannot:
+
+- replace kernel factors;
+- bypass kernel validation;
+- delete required lifecycle events;
+- weaken required safety policy;
+- swap resolver semantics;
+- mutate internal handoff schemas;
+- attach plugins to undeclared internal hooks.
+
+Advanced POO authors may use lower-level object abstractions only when the
+module explicitly marks an abstraction as advanced and stable.  Even then, the
+object should extend a public factor or declared slot.  It should not override
+the private kernel.
+
+In short:
+
+#+begin_src text
+kernel = closed by default
+public factor = configurable under contract
+plugin = upward extension through declared slots
+fixture = proof and diagnostics, not API
+#+end_src
+
+This extends the root user-interface contract: upstream modules own kernel
+profiles; users should not repeat them just to get a working profile.
 ** 10.06.04.20 Core Types
 *** PooModuleSourceRef
 Source refs describe where a module descriptor came from without making

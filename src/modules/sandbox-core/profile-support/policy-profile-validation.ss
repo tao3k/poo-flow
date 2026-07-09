@@ -1,4 +1,8 @@
 ;;; -*- Gerbil -*-
+;;; Boundary: sandbox profile validation is the policy gate between inherited
+;;; profile objects and runtime sandbox execution.
+;;; Invariant: profile validation must reject unsafe partial profiles before a
+;;; backend can materialize filesystem or resource isolation.
 
 (import :gerbil/gambit
         (only-in :clan/poo/object object? .slot? .ref object<-alist)
@@ -44,6 +48,8 @@
 ;;       ;; => #t
 ;;       ```
 ;;     %
+;;; Profile validation diagnostics keep sandbox resource and durable checks explicit.
+;;; - Keep filesystem capability failures visible before runtime profile projection.
 (defstruct poo-flow-sandbox-profile-policy-diagnostic-entry
   (kind schema code phase severity payload))
 
@@ -101,7 +107,7 @@
    payload))
 
 ;; poo-flow-sandbox-profile-policy-diagnostic?
-;;   : (-> Value Boolean)
+;;   : (-> Datum Boolean)
 ;;   | contract: recognize fixed sandbox profile diagnostic structs
 ;;   | result: #t only for sandbox profile policy diagnostic struct values
 ;;   | doc m%
@@ -569,6 +575,8 @@
     required
     '())))
 
+;;; Boundary: sandbox profile policy validation binds backend capabilities to
+;;; inherited profile policy before runtime sandbox materialization.
 ;; : (-> Symbol Symbol Symbol PooSandboxBackendCapability PooSandboxProfilePolicy [Symbol] POOObject)
 (def (poo-flow-sandbox-profile-policy-validation profile-name
                                                  backend-kind

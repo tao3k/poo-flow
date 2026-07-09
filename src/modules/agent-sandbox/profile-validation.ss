@@ -355,24 +355,15 @@
 ;;; can report all bad mounts instead of failing on the first row.
 ;; : (-> (-> Alist [ValidationError]) Alist [ValidationError] [ValidationError])
 (def (agent-sandbox-profile-entry-diagnostics/rev entry-diagnostics entry errors)
-  (let loop ((remaining-errors (entry-diagnostics entry))
-             (error-values errors))
-    (if (null? remaining-errors)
-      error-values
-      (loop (cdr remaining-errors)
-            (cons (car remaining-errors) error-values)))))
+  (foldl cons errors (entry-diagnostics entry)))
 
 ;; : (-> (-> Alist [ValidationError]) [Alist] [ValidationError])
 (def (agent-sandbox-profile-entries-diagnostics entry-diagnostics entries)
-  (let loop ((remaining-entries entries)
-             (error-values '()))
-    (if (null? remaining-entries)
-      (reverse error-values)
-      (loop (cdr remaining-entries)
-            (agent-sandbox-profile-entry-diagnostics/rev
-             entry-diagnostics
-             (car remaining-entries)
-             error-values)))))
+  (foldr
+   (lambda (entry tail)
+     (foldr cons tail (entry-diagnostics entry)))
+   '()
+   entries))
 
 ;; : (-> [Alist] [ValidationError])
 (def (agent-sandbox-profile-filesystem-paths-diagnostics entries)

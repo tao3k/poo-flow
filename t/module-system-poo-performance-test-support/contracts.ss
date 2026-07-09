@@ -9,6 +9,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
+        :poo-flow/t/support/poo-performance-fixtures
         :poo-flow/t/support/poo-performance
         :poo-flow/src/module-system/indexed-family
         :poo-flow/src/core/runtime-protocol
@@ -22,7 +23,7 @@
 (def module-system-poo-performance-fixture-contract-case
   (test-case "keeps every POO performance fixture inside upstream benchmark contract"
         (let (fixtures (poo-performance-fixtures))
-        (check-equal? (length fixtures) 27)
+        (check-equal? (length fixtures) 29)
         (check-equal?
          (map (lambda (fixture)
                 (benchmark-fixture-ref fixture 'sourcePath))

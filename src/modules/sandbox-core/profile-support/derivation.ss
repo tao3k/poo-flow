@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: sandbox profile derivation metadata and row contributions.
 
-(import :gerbil/gambit
+(import (only-in :std/srfi/1 any fold)
+        :gerbil/gambit
         (only-in :clan/poo/object .def .o .ref .slot? object?)
         :poo-flow/src/module-system/extension
         :poo-flow/src/module-system/object-core
@@ -46,21 +47,16 @@
 (def (poo-flow-sandbox-profile-object-metadata-without/rev metadata
                                                            keys
                                                            result-rev)
-  (cond
-   ((null? metadata) result-rev)
-   ((and (pair? (car metadata))
-         (poo-flow-sandbox-profile-object-metadata-key?
-          (caar metadata)
-          keys))
-    (poo-flow-sandbox-profile-object-metadata-without/rev
-     (cdr metadata)
-     keys
-     result-rev))
-   (else
-    (poo-flow-sandbox-profile-object-metadata-without/rev
-     (cdr metadata)
-     keys
-     (cons (car metadata) result-rev)))))
+  (fold
+   (lambda (entry result)
+     (if (and (pair? entry)
+              (poo-flow-sandbox-profile-object-metadata-key?
+               (car entry)
+               keys))
+       result
+       (cons entry result)))
+   result-rev
+   metadata))
 
 ;; : (-> Alist [Symbol] Alist)
 (def (poo-flow-sandbox-profile-object-metadata-without metadata keys)
@@ -131,18 +127,17 @@
 ;;; project-workspace/path safety checks.
 ;; : (-> [AgentSandboxResourcePolicyEntry] Boolean)
 (def (poo-flow-sandbox-profile-object-unsafe-filesystem-resource? resources)
-  (cond
-   ((null? resources) #f)
-   ((not (pair? resources)) #f)
-   ((and (agent-sandbox-profile-resource-policy-filesystem-entry?
-          (car resources))
-         (not (null?
-               (agent-sandbox-profile-resource-policy-filesystem-diagnostics
-                resources))))
-    #t)
-   (else
-     (poo-flow-sandbox-profile-object-unsafe-filesystem-resource?
-      (cdr resources)))))
+  (and (list? resources)
+       (if (any
+            (lambda (resource)
+              (and (agent-sandbox-profile-resource-policy-filesystem-entry?
+                    resource)
+                   (not (null?
+                         (agent-sandbox-profile-resource-policy-filesystem-diagnostics
+                          resources)))))
+            resources)
+         #t
+         #f)))
 
 ;;; Resource-policy rows get an extra semantic safety check after the structural
 ;;; field contract accepts the list shape. Other fields are already fully

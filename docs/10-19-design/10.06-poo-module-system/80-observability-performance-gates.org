@@ -78,6 +78,48 @@ The cache contract is:
 
 This matters for macro work because a stale =.ssi= can hide a missing export. The source may show the correct performance counter or profile API while the running test imports an older interface. That is an observability failure, not a user error.
 
+** Package Builder Boundary
+The package builder is now split into a thin facade plus focused support owners:
+- =options= owns entry option rows and option predicates.
+- =specs= owns build specs, module discovery, and special-source exclusion.
+- =env= owns package root, worker count, std/make bridge, and generated-file deletion.
+- =launcher= owns generated CLI launchers.
+- =stage-output= owns source/output projection and bounded native object probing.
+- =stage-cache= owns stamp/receipt currentness and retouch/write behavior.
+- =observability= owns debug lines, watchdog, and budget status.
+- =engine= owns std/make, direct-gxc, bootstrap, clean, and package compile dispatch.
+
+The source facade =src/cli-support/package-build.ss= remains the bootstrap entry
+used when compiled builder modules are absent or stale. A separate warm facade,
+=src/cli-support/package-build-compiled.ss=, imports package-path compiled
+support modules after currentness is proven. This avoids making normal no-op
+builds parse every support source file while still preserving bootstrap safety.
+
+This design is useful beyond POO Flow. If it becomes a general optimization, it
+belongs in the GSLPH Testing Framework rather than remaining only in one package
+script. The reusable GSLPH shape should provide:
+- a source-bootstrap facade contract
+- a compiled-facade warm path contract
+- source/output currentness for every builder support module
+- a no-op package-build benchmark gate
+- a stale-single-gxc benchmark gate
+- a non-gxc stage-order gate for =gsc:/ssi:= pairs
+- policy diagnostics for oversized builder owners and broad facade imports
+
+The current local evidence is:
+- first rebuild after the split is expected to be slow because every support
+  owner compiles once
+- source facade warm no-op regressed to about 5.04 seconds
+- compiled facade warm no-op recovered to about 2.78 seconds
+- a non-gxc stale subset exposed an invalid =gsc:= only stage; =engine= now
+  preserves the original stage sequence for std/make and only uses stale subsets
+  for direct all-gxc compiles
+
+Therefore the package builder is justified as a project-local optimization
+today, but should move into GSLPH only with the benchmark and stage-order gates
+above. Without those gates, splitting a builder can improve modularity while
+silently making every build slower.
+
 ** Current Baseline
 The current composition gate baseline after the fix:
 - =gxpkg build -g= passes

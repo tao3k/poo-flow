@@ -48,9 +48,11 @@ Local =src= evidence shows these current POO Flow anchors:
 - =src/core/runtime-protocol.ss=: runtime request/response schemas,
   runtime response normalization, adapter conversion, and invalid response
   handling.
-- =src/cli-support/package-build.ss=: build specs, test specs, compile targets,
-  build observability budget status, live watchdog, debug tracking lines, and
-  package compile entry points.
+- =src/cli-support/package-build.ss= and
+  =src/cli-support/package-build-support/*.ss=: package build facade,
+  build specs, test specs, compile targets, stage cache, bounded native-output
+  probing, build observability budget status, live watchdog, debug tracking
+  lines, and package compile entry points.
 
 These anchors prove that POO Flow already has object-like surfaces and
 performance gates. The missing piece is stronger reuse: common object families

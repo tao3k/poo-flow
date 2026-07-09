@@ -37,4 +37,4 @@
         (loop (+ round 1)
               (if (and runtime-value operation-value policy-value)
                 (+ accepted 1)
-                accepted)))))))
+                accepted))))))

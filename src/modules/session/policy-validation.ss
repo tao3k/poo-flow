@@ -3,7 +3,8 @@
 ;;; Invariant: validation inspects composed POO policy objects and bounded
 ;;; attempt rows; it does not execute tools, hooks, communication, or runtime IO.
 
-(import (only-in :clan/poo/object .ref)
+(import (only-in :std/srfi/1 fold)
+        (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/modules/session/communication
                  poo-flow-session-communication-channel-receipt?
                  poo-flow-session-communication-channel-receipt->alist
@@ -50,28 +51,39 @@
         poo-flow-session-policy-validation-receipt->alist
         poo-flow-session-policy-validation-receipts->alists)
 
-;; : (-> POOObject Symbol Value Value)
+;; : (-> POOObject Symbol Object Object)
 (def (poo-flow-session-validation-slot policy key default)
   (with-catch
    (lambda (_failure) default)
    (lambda ()
      (.ref policy key))))
 
-;; : (-> Alist Symbol Value Value)
+;; : (-> Alist Symbol Object Object)
 (def (poo-flow-session-validation-alist-ref row key default)
   (poo-flow-session-alist-ref row key default))
 
-;; : (-> Any Symbol Value Value)
+;; : (-> Datum Symbol Object Object)
 (def (poo-flow-session-validation-row-ref row key default)
   (if (list? row)
     (poo-flow-session-validation-alist-ref row key default)
     (poo-flow-session-validation-slot row key default)))
 
+;;; Boundary: policy-validation field rows preserve receipt slot names for
+;;; session policy diagnostics.
+;; poo-flow-session-policy-validation-field-rows
+;; : (-> Syntax Syntax)
+;; | doc m%
+;;   Expands session policy validation fields into diagnostic receipt rows.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-session-policy-validation-field-rows (valid? #t))
+;;   ;; => ((valid? . #t))
+;;   ```
 (defrules poo-flow-session-policy-validation-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))
 
-;; : (-> Any [Any] Boolean)
+;; : (-> Datum List Boolean)
 (def (poo-flow-session-validation-member? value values)
   (if (member value values) #t #f))
 
@@ -83,12 +95,12 @@
      (cdr values)
      (cons (car values) tail))))
 
-;; : (-> Any [Any] Boolean)
+;; : (-> Datum List Boolean)
 (def (poo-flow-session-validation-granted? value values)
   (or (poo-flow-session-validation-member? value values)
       (poo-flow-session-validation-member? '* values)))
 
-;; : (-> Procedure [Any] [Any] [Any] ([Any] [Any]))
+;; : (-> Procedure List List List SessionValidationPartition)
 (def (poo-flow-session-validation-partition/rev predicate
                                                    values
                                                    accepted-rev
@@ -108,7 +120,7 @@
      accepted-rev
      (cons (car values) rejected-rev)))))
 
-;; : (-> Procedure [Any] ([Any] [Any]))
+;; : (-> Procedure List SessionValidationPartition)
 (def (poo-flow-session-validation-partition predicate values)
   (let* ((partition
           (poo-flow-session-validation-partition/rev
@@ -121,14 +133,9 @@
     (list (reverse accepted-values-rev)
           (reverse rejected-values-rev))))
 
-;; : (-> [Any] [Any] [Any])
+;; : (forall (a) (-> (List a) (List a) (List a)))
 (def (poo-flow-session-reverse-onto values tail)
-  (let loop ((remaining-values values)
-             (result tail))
-    (if (null? remaining-values)
-      result
-      (loop (cdr remaining-values)
-            (cons (car remaining-values) result)))))
+  (foldl cons tail values))
 
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol [Alist] PooSessionToolAttempt)
 (def (poo-flow-session-policy-tool-attempt attempt-id
@@ -170,13 +177,13 @@
                (car maybe-metadata)))
    (runtime-executed #f)))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-policy-tool-attempt? value)
   (and (list? value)
        (eq? (poo-flow-session-validation-alist-ref value 'kind #f)
             'poo-flow.session.policy.tool-attempt)))
 
-;; : PooSessionToolAttempt -> Value accessors
+;;; Generated alist accessors for stable session policy tool attempts.
 (defpoo-session-alist-accessors
   poo-flow-session-validation-alist-ref
   (poo-flow-session-policy-tool-attempt-id attempt-id #f)
@@ -186,7 +193,7 @@
   (poo-flow-session-policy-tool-attempt-resource-ref resource-ref #f)
   (poo-flow-session-policy-tool-attempt-principal-ref principal-ref #f))
 
-;; : (-> Symbol Symbol Any Alist)
+;; : (-> Symbol Symbol Datum Alist)
 (def (poo-flow-session-policy-diagnostic code scope-ref detail)
   (poo-flow-session-policy-validation-field-rows
    (kind 'poo-flow.session.policy.diagnostic)
@@ -197,11 +204,11 @@
    (severity 'error)
    (runtime-executed #f)))
 
-;; : (-> PooSessionPolicy Symbol Value)
+;; : (-> PooSessionPolicy Symbol Object)
 (def (poo-flow-session-policy-slot-value policy key default)
   (poo-flow-session-validation-slot policy key default))
 
-;; : (-> PooSessionPolicy Symbol Value)
+;; : (-> PooSessionPolicy Symbol Object)
 (def (poo-flow-session-policy-nested-slot policy key default)
   (let (slots (poo-flow-session-validation-slot policy 'policy-slots '()))
     (poo-flow-session-validation-alist-ref slots key default)))
@@ -226,7 +233,7 @@
 (def (poo-flow-session-policy-resource-capabilities policy)
   (poo-flow-session-policy-nested-slot policy 'capability-refs '()))
 
-;; : (-> PooSessionPolicy Value)
+;; : (-> PooSessionPolicy Object)
 (def (poo-flow-session-policy-resource-accounting-owner policy)
   (poo-flow-session-policy-nested-slot policy 'accounting-owner #f))
 
@@ -309,7 +316,7 @@
          poo-flow-session-resource-grant-accounted?
          resource-grants))))
 
-;; : (-> [Symbol] [Symbol] ([Symbol] [Symbol]))
+;; : (-> [Symbol] [Symbol] SessionValidationPartition)
 (def (poo-flow-session-policy-partition-refs requested allowed)
   (poo-flow-session-validation-partition
    (lambda (value)
@@ -462,7 +469,7 @@
 (def (poo-flow-session-tool-catalog-validation-present? validation-row)
   (if validation-row #t #f))
 
-;; : (-> MaybeToolCatalogValidationRow Symbol Value)
+;; : (-> MaybeToolCatalogValidationRow Symbol Object)
 (def (poo-flow-session-tool-catalog-validation-ref validation-row key default)
   (if (poo-flow-session-tool-catalog-validation-present? validation-row)
     (poo-flow-session-validation-row-ref validation-row key default)
@@ -489,7 +496,7 @@
     hook-attempts
     (poo-flow-session-policy-attempt-tool-refs/rev agent-attempts '()))))
 
-;; : (-> MaybeToolCatalogValidationRow [Symbol] ([Symbol] [Symbol]))
+;; : (-> MaybeToolCatalogValidationRow [Symbol] SessionValidationPartition)
 (def (poo-flow-session-policy-catalog-attempt-ref-partition
       tool-catalog-validation
       attempt-tool-refs)
@@ -511,7 +518,7 @@
 (def (poo-flow-session-memory-catalog-validation-present? validation-row)
   (if validation-row #t #f))
 
-;; : (-> MaybeMemoryCatalogValidationRow Symbol Value)
+;; : (-> MaybeMemoryCatalogValidationRow Symbol Object)
 (def (poo-flow-session-memory-catalog-validation-ref validation-row key default)
   (if (poo-flow-session-memory-catalog-validation-present? validation-row)
     (poo-flow-session-validation-row-ref validation-row key default)
@@ -522,31 +529,26 @@
                                                    scope-ref
                                                    refs
                                                    diagnostics-rev)
-  (cond
-   ((null? refs) diagnostics-rev)
-   (else
-    (poo-flow-session-denied-ref-diagnostics/rev
-     code
-     scope-ref
-     (cdr refs)
+  (fold
+   (lambda (ref diagnostics)
      (cons (poo-flow-session-policy-diagnostic
             code
             scope-ref
-            (list (cons 'ref (car refs))))
-           diagnostics-rev)))))
+            (list (cons 'ref ref)))
+           diagnostics))
+   diagnostics-rev
+   refs))
 
 ;; : (-> Symbol [PooSessionToolAttempt] [Alist] [Alist])
 (def (poo-flow-session-tool-attempt-diagnostics/rev code
                                                      attempts
                                                      diagnostics-rev)
-  (cond
-   ((null? attempts) diagnostics-rev)
-   (else
-    (poo-flow-session-tool-attempt-diagnostics/rev
-     code
-     (cdr attempts)
-     (cons (poo-flow-session-tool-attempt-diagnostic code (car attempts))
-           diagnostics-rev)))))
+  (fold
+   (lambda (attempt diagnostics)
+     (cons (poo-flow-session-tool-attempt-diagnostic code attempt)
+           diagnostics))
+   diagnostics-rev
+   attempts))
 
 ;; : (-> Symbol Symbol Alist Alist)
 (def (poo-flow-session-communication-receipt-diagnostic code
@@ -596,103 +598,76 @@
       policy
       rows
       diagnostics-rev)
-  (cond
-   ((null? rows) diagnostics-rev)
-   ((poo-flow-session-policy-communication-channel-receipt-allowed?
-     policy
-     (car rows))
-    (poo-flow-session-communication-channel-receipt-diagnostics/rev
-     scope-ref
-     policy
-     (cdr rows)
-     diagnostics-rev))
-   (else
-    (poo-flow-session-communication-channel-receipt-diagnostics/rev
-     scope-ref
-     policy
-     (cdr rows)
-     (cons (poo-flow-session-communication-channel-receipt-diagnostic
-            'communication-channel-receipt-not-granted
-            scope-ref
-            (car rows))
-           diagnostics-rev)))))
+  (fold
+   (lambda (row diagnostics)
+     (if (poo-flow-session-policy-communication-channel-receipt-allowed?
+          policy
+          row)
+       diagnostics
+       (cons (poo-flow-session-communication-channel-receipt-diagnostic
+              'communication-channel-receipt-not-granted
+              scope-ref
+              row)
+             diagnostics)))
+   diagnostics-rev
+   rows))
 
 ;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
 (def (poo-flow-session-communication-channel-diagnostics/rev scope-ref
                                                              policy
                                                              rows
                                                              diagnostics-rev)
-  (cond
-   ((null? rows) diagnostics-rev)
-   ((poo-flow-session-policy-communication-receipt-channel-allowed?
-     policy
-     (car rows))
-    (poo-flow-session-communication-channel-diagnostics/rev
-     scope-ref
-     policy
-     (cdr rows)
-     diagnostics-rev))
-   (else
-    (poo-flow-session-communication-channel-diagnostics/rev
-     scope-ref
-     policy
-     (cdr rows)
-     (cons (poo-flow-session-communication-receipt-diagnostic
-            'communication-receipt-channel-not-granted
-            scope-ref
-            (car rows))
-           diagnostics-rev)))))
+  (fold
+   (lambda (row diagnostics)
+     (if (poo-flow-session-policy-communication-receipt-channel-allowed?
+          policy
+          row)
+       diagnostics
+       (cons (poo-flow-session-communication-receipt-diagnostic
+              'communication-receipt-channel-not-granted
+              scope-ref
+              row)
+             diagnostics)))
+   diagnostics-rev
+   rows))
 
 ;; : (-> Symbol PooSessionPolicy [Alist] [Alist] [Alist])
 (def (poo-flow-session-communication-target-diagnostics/rev scope-ref
                                                             policy
                                                             rows
                                                             diagnostics-rev)
-  (cond
-   ((null? rows) diagnostics-rev)
-   ((poo-flow-session-policy-communication-receipt-target-allowed?
-     policy
-     (car rows))
-    (poo-flow-session-communication-target-diagnostics/rev
-     scope-ref
-     policy
-     (cdr rows)
-     diagnostics-rev))
-   (else
-    (poo-flow-session-communication-target-diagnostics/rev
-     scope-ref
-     policy
-     (cdr rows)
-     (cons (poo-flow-session-communication-receipt-diagnostic
-            'communication-receipt-target-not-granted
-            scope-ref
-            (car rows))
-           diagnostics-rev)))))
+  (fold
+   (lambda (row diagnostics)
+     (if (poo-flow-session-policy-communication-receipt-target-allowed?
+          policy
+          row)
+       diagnostics
+       (cons (poo-flow-session-communication-receipt-diagnostic
+              'communication-receipt-target-not-granted
+              scope-ref
+              row)
+             diagnostics)))
+   diagnostics-rev
+   rows))
 
 ;; : (-> PooSessionPolicy [PooSessionToolAttempt] [Alist] [Alist])
 (def (poo-flow-session-hook-inheritance-diagnostics/rev agent-tool-policy
                                                         denied-hook-attempts
                                                         diagnostics-rev)
-  (cond
-   ((null? denied-hook-attempts) diagnostics-rev)
-   (else
-    (let (attempt (car denied-hook-attempts))
-      (if (poo-flow-session-agent-tool-attempt-allowed?
-           agent-tool-policy
-           attempt)
-        (poo-flow-session-hook-inheritance-diagnostics/rev
-         agent-tool-policy
-         (cdr denied-hook-attempts)
-         (cons (poo-flow-session-tool-attempt-diagnostic
-                'hook-tool-agent-permission-not-inherited
-                attempt)
-               diagnostics-rev))
-        (poo-flow-session-hook-inheritance-diagnostics/rev
-         agent-tool-policy
-         (cdr denied-hook-attempts)
-         diagnostics-rev))))))
+  (fold
+   (lambda (attempt diagnostics)
+     (if (poo-flow-session-agent-tool-attempt-allowed?
+          agent-tool-policy
+          attempt)
+       (cons (poo-flow-session-tool-attempt-diagnostic
+              'hook-tool-agent-permission-not-inherited
+              attempt)
+             diagnostics)
+       diagnostics))
+   diagnostics-rev
+   denied-hook-attempts))
 
-;; : PooSessionPolicyValidationReceiptRecord
+;; : PooSessionPolicyValidationReceiptRecordStruct
 (defstruct poo-flow-session-policy-validation-receipt-record
   (validation-id
    scope-ref
@@ -750,6 +725,8 @@
    metadata)
   transparent: #t)
 
+;;; Boundary: session policy validation receipts aggregate lineage, selector,
+;;; resource, capability, memory, compression, and tool policy checks.
 ;; : (-> Symbol Symbol PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy PooSessionPolicy [Symbol] [Symbol] [Symbol] [Symbol] [PooSessionToolAttempt] [PooSessionToolAttempt] [Alist] PooSessionPolicyValidationReceipt)
 (def (poo-flow-session-policy-validation-receipt validation-id
                                                 scope-ref
@@ -1138,62 +1115,145 @@
      #f
      metadata)))
 
-;; : (-> Any Boolean)
+;; : (-> Datum Boolean)
 (def (poo-flow-session-policy-validation-receipt? value)
   (poo-flow-session-policy-validation-receipt-record? value))
 
-;; : PooSessionPolicyValidationReceipt -> Value accessors
-(defpoo-session-record-accessors
-  (poo-flow-session-policy-validation-receipt-validation-id
-   poo-flow-session-policy-validation-receipt-record-validation-id)
-  (poo-flow-session-policy-validation-receipt-effective-model-ref
-   poo-flow-session-policy-validation-receipt-record-effective-model-ref)
-  (poo-flow-session-policy-validation-receipt-effective-prompt-session-ref
-   poo-flow-session-policy-validation-receipt-record-effective-prompt-session-ref)
-  (poo-flow-session-policy-validation-receipt-effective-prompt-chunk-refs
-   poo-flow-session-policy-validation-receipt-record-effective-prompt-chunk-refs)
-  (poo-flow-session-policy-validation-receipt-effective-isolation-mode
-   poo-flow-session-policy-validation-receipt-record-effective-isolation-mode)
-  (poo-flow-session-policy-validation-receipt-effective-sandbox-profile-ref
-   poo-flow-session-policy-validation-receipt-record-effective-sandbox-profile-ref)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-ref
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-ref)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-valid?
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-valid?)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-policy-tool-refs
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-policy-tool-refs)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-resolved-tool-refs
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-resolved-tool-refs)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-tool-refs
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-tool-refs)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-allowed-attempt-tool-refs
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-allowed-attempt-tool-refs)
-  (poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-attempt-tool-refs
-   poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-attempt-tool-refs)
-  (poo-flow-session-policy-validation-receipt-memory-catalog-ref
-   poo-flow-session-policy-validation-receipt-record-memory-catalog-ref)
-  (poo-flow-session-policy-validation-receipt-memory-catalog-valid?
-   poo-flow-session-policy-validation-receipt-record-memory-catalog-valid?)
-  (poo-flow-session-policy-validation-receipt-memory-catalog-resolved-store-refs
-   poo-flow-session-policy-validation-receipt-record-memory-catalog-resolved-store-refs)
-  (poo-flow-session-policy-validation-receipt-memory-catalog-unresolved-store-refs
-   poo-flow-session-policy-validation-receipt-record-memory-catalog-unresolved-store-refs)
-  (poo-flow-session-policy-validation-receipt-allowed-communication-channel-receipts
-   poo-flow-session-policy-validation-receipt-record-allowed-communication-channel-receipts)
-  (poo-flow-session-policy-validation-receipt-denied-communication-channel-receipts
-   poo-flow-session-policy-validation-receipt-record-denied-communication-channel-receipts)
-  (poo-flow-session-policy-validation-receipt-allowed-communication-receipts
-   poo-flow-session-policy-validation-receipt-record-allowed-communication-receipts)
-  (poo-flow-session-policy-validation-receipt-denied-communication-receipts
-   poo-flow-session-policy-validation-receipt-record-denied-communication-receipts)
-  (poo-flow-session-policy-validation-receipt-valid?
-   poo-flow-session-policy-validation-receipt-record-valid?)
-  (poo-flow-session-policy-validation-receipt-diagnostic-count
-   poo-flow-session-policy-validation-receipt-record-diagnostic-count)
-  (poo-flow-session-policy-validation-receipt-diagnostics
-   poo-flow-session-policy-validation-receipt-record-diagnostics)
-  (poo-flow-session-policy-validation-receipt-runtime-executed?
-   poo-flow-session-policy-validation-receipt-record-runtime-executed?))
+;;; Keep these as named definitions so policy reports attach diagnostics to
+;;; stable runtime bindings rather than a top-level accessor macro call.
+;; : (-> PooSessionPolicyValidationReceipt Symbol)
+(def (poo-flow-session-policy-validation-receipt-validation-id receipt)
+  (poo-flow-session-policy-validation-receipt-record-validation-id receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Object)
+(def (poo-flow-session-policy-validation-receipt-effective-model-ref receipt)
+  (poo-flow-session-policy-validation-receipt-record-effective-model-ref
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Object)
+(def (poo-flow-session-policy-validation-receipt-effective-prompt-session-ref
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-effective-prompt-session-ref
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-effective-prompt-chunk-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-effective-prompt-chunk-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Object)
+(def (poo-flow-session-policy-validation-receipt-effective-isolation-mode
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-effective-isolation-mode
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Object)
+(def (poo-flow-session-policy-validation-receipt-effective-sandbox-profile-ref
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-effective-sandbox-profile-ref
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Object)
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-ref receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-ref receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Boolean)
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-valid? receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-valid?
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-policy-tool-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-policy-tool-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-resolved-tool-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-resolved-tool-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-tool-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-tool-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-allowed-attempt-tool-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-allowed-attempt-tool-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-tool-catalog-unresolved-attempt-tool-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-tool-catalog-unresolved-attempt-tool-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Object)
+(def (poo-flow-session-policy-validation-receipt-memory-catalog-ref receipt)
+  (poo-flow-session-policy-validation-receipt-record-memory-catalog-ref
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Boolean)
+(def (poo-flow-session-policy-validation-receipt-memory-catalog-valid? receipt)
+  (poo-flow-session-policy-validation-receipt-record-memory-catalog-valid?
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-memory-catalog-resolved-store-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-memory-catalog-resolved-store-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Symbol])
+(def (poo-flow-session-policy-validation-receipt-memory-catalog-unresolved-store-refs
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-memory-catalog-unresolved-store-refs
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Alist])
+(def (poo-flow-session-policy-validation-receipt-allowed-communication-channel-receipts
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-allowed-communication-channel-receipts
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Alist])
+(def (poo-flow-session-policy-validation-receipt-denied-communication-channel-receipts
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-denied-communication-channel-receipts
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Alist])
+(def (poo-flow-session-policy-validation-receipt-allowed-communication-receipts
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-allowed-communication-receipts
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Alist])
+(def (poo-flow-session-policy-validation-receipt-denied-communication-receipts
+      receipt)
+  (poo-flow-session-policy-validation-receipt-record-denied-communication-receipts
+   receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Boolean)
+(def (poo-flow-session-policy-validation-receipt-valid? receipt)
+  (poo-flow-session-policy-validation-receipt-record-valid? receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Integer)
+(def (poo-flow-session-policy-validation-receipt-diagnostic-count receipt)
+  (poo-flow-session-policy-validation-receipt-record-diagnostic-count receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt [Alist])
+(def (poo-flow-session-policy-validation-receipt-diagnostics receipt)
+  (poo-flow-session-policy-validation-receipt-record-diagnostics receipt))
+
+;; : (-> PooSessionPolicyValidationReceipt Boolean)
+(def (poo-flow-session-policy-validation-receipt-runtime-executed? receipt)
+  (poo-flow-session-policy-validation-receipt-record-runtime-executed? receipt))
 
 ;; : (-> PooSessionPolicyValidationReceipt Alist)
 (defpoo-session-receipt-projection

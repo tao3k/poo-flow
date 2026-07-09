@@ -50,17 +50,84 @@
     ai.lifecycle/reusable-policy-surface
     ai.lifecycle/experimental))
 
+(defstruct poo-flow-agent-lifecycle-receipt-record
+  (kind
+   lifecycle-receipt-session-id
+   lifecycle-receipt-sandbox-profile-ref
+   lifecycle-receipt-loop-policy-ref
+   lifecycle-receipt-subagent-refs
+   lifecycle-receipt-tool-capability-refs
+   lifecycle-receipt-test-receipts
+   lifecycle-receipt-proof-receipts
+   lifecycle-receipt-session-created
+   lifecycle-receipt-parent-session-bound
+   lifecycle-receipt-sandbox-attached
+   lifecycle-receipt-sandbox-scope-contained
+   lifecycle-receipt-tool-permissions-contained
+   lifecycle-receipt-loop-start-guarded
+   lifecycle-receipt-loop-exit-defined
+   lifecycle-receipt-loop-handoff-guarded
+   lifecycle-receipt-subagents-parented
+   lifecycle-receipt-dependency-closed
+   lifecycle-receipt-observability-clean
+   lifecycle-receipt-counterexample-rejected)
+  transparent: #t)
+
 ;;; Receipt predicates stay local to this owner so lifecycle gate validation can
 ;;; distinguish a missing receipt from a receipt that explicitly rejects safety.
 ;; : (-> PooFlowAgentLifecycleReceiptCandidate Boolean)
 (def (poo-flow-agent-lifecycle-receipt? value)
-  (and (object? value)
-       (equal? (.ref value 'kind)
-               poo-flow-agent-lifecycle-receipt-kind)))
+  (or (poo-flow-agent-lifecycle-receipt-record? value)
+      (and (object? value)
+           (equal? (.ref value 'kind)
+                   poo-flow-agent-lifecycle-receipt-kind))))
 
 ;; : (-> PooFlowAgentLifecycleReceipt Symbol PooFlowAgentLifecycleReceiptSlotValue)
 (def (poo-flow-agent-lifecycle-receipt-slot receipt key)
-  (.ref receipt key))
+  (if (poo-flow-agent-lifecycle-receipt-record? receipt)
+    (case key
+      ((kind)
+       (poo-flow-agent-lifecycle-receipt-record-kind receipt))
+      ((lifecycle-receipt-session-id)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-session-id receipt))
+      ((lifecycle-receipt-sandbox-profile-ref)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-sandbox-profile-ref receipt))
+      ((lifecycle-receipt-loop-policy-ref)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-loop-policy-ref receipt))
+      ((lifecycle-receipt-subagent-refs)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-subagent-refs receipt))
+      ((lifecycle-receipt-tool-capability-refs)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-tool-capability-refs receipt))
+      ((lifecycle-receipt-test-receipts)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-test-receipts receipt))
+      ((lifecycle-receipt-proof-receipts)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-proof-receipts receipt))
+      ((lifecycle-receipt-session-created)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-session-created receipt))
+      ((lifecycle-receipt-parent-session-bound)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-parent-session-bound receipt))
+      ((lifecycle-receipt-sandbox-attached)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-sandbox-attached receipt))
+      ((lifecycle-receipt-sandbox-scope-contained)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-sandbox-scope-contained receipt))
+      ((lifecycle-receipt-tool-permissions-contained)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-tool-permissions-contained receipt))
+      ((lifecycle-receipt-loop-start-guarded)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-loop-start-guarded receipt))
+      ((lifecycle-receipt-loop-exit-defined)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-loop-exit-defined receipt))
+      ((lifecycle-receipt-loop-handoff-guarded)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-loop-handoff-guarded receipt))
+      ((lifecycle-receipt-subagents-parented)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-subagents-parented receipt))
+      ((lifecycle-receipt-dependency-closed)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-dependency-closed receipt))
+      ((lifecycle-receipt-observability-clean)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-observability-clean receipt))
+      ((lifecycle-receipt-counterexample-rejected)
+       (poo-flow-agent-lifecycle-receipt-record-lifecycle-receipt-counterexample-rejected receipt))
+      (else #f))
+    (.ref receipt key)))
 
 ;;; Optional receipt access is intentionally private. Missing receipt facts
 ;;; project to false values instead of becoming partial public accessors.
@@ -97,26 +164,27 @@
                                        dependency-closed?
                                        observability-clean?
                                        counterexample-rejected?)
-  (.o kind: poo-flow-agent-lifecycle-receipt-kind
-      lifecycle-receipt-session-id: session-id
-      lifecycle-receipt-sandbox-profile-ref: sandbox-profile-ref
-      lifecycle-receipt-loop-policy-ref: loop-policy-ref
-      lifecycle-receipt-subagent-refs: subagent-refs
-      lifecycle-receipt-tool-capability-refs: tool-capability-refs
-      lifecycle-receipt-test-receipts: test-receipts
-      lifecycle-receipt-proof-receipts: proof-receipts
-      lifecycle-receipt-session-created: session-created?
-      lifecycle-receipt-parent-session-bound: parent-session-bound?
-      lifecycle-receipt-sandbox-attached: sandbox-attached?
-      lifecycle-receipt-sandbox-scope-contained: sandbox-scope-contained?
-      lifecycle-receipt-tool-permissions-contained: tool-permissions-contained?
-      lifecycle-receipt-loop-start-guarded: loop-start-guarded?
-      lifecycle-receipt-loop-exit-defined: loop-exit-defined?
-      lifecycle-receipt-loop-handoff-guarded: loop-handoff-guarded?
-      lifecycle-receipt-subagents-parented: subagents-parented?
-      lifecycle-receipt-dependency-closed: dependency-closed?
-      lifecycle-receipt-observability-clean: observability-clean?
-      lifecycle-receipt-counterexample-rejected: counterexample-rejected?))
+  (make-poo-flow-agent-lifecycle-receipt-record
+   poo-flow-agent-lifecycle-receipt-kind
+   session-id
+   sandbox-profile-ref
+   loop-policy-ref
+   subagent-refs
+   tool-capability-refs
+   test-receipts
+   proof-receipts
+   session-created?
+   parent-session-bound?
+   sandbox-attached?
+   sandbox-scope-contained?
+   tool-permissions-contained?
+   loop-start-guarded?
+   loop-exit-defined?
+   loop-handoff-guarded?
+   subagents-parented?
+   dependency-closed?
+   observability-clean?
+   counterexample-rejected?))
 
 ;; : (-> Symbol Symbol Symbol [Symbol] [Symbol] [Symbol] [Symbol] Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean POOObject)
 (def (pooFlowAgentLifecycleReceipt session-id
