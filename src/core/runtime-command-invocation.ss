@@ -32,7 +32,20 @@
    metadata)
   transparent: #t)
 
-;; : (-> Symbol Invoker [Alist] RuntimeCommand)
+;; make-procedure-runtime-command
+;;   : (forall (metadata) (-> Symbol Invoker [metadata] RuntimeCommand))
+;;   : (-> Symbol Invoker MetadataList RuntimeCommand)
+;;   : (-> Symbol Invoker [Alist] RuntimeCommand)
+;;   | doc m%
+;;       Build a procedure-backed runtime command with optional metadata rows.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (runtime-command-kind
+;;        (make-procedure-runtime-command 'noop (lambda args 'ok)))
+;;       ;; => procedure
+;;       ```
+;;     %
 (def (make-procedure-runtime-command name invoker . maybe-metadata)
   (make-runtime-command name
                         'procedure
@@ -62,7 +75,8 @@
 ;;; Runtime command row assembly is a projection-only helper. It keeps row
 ;;; ordering explicit at call sites while avoiding a second runtime adapter DSL.
 ;; runtime-command-rows/tail
-;;   : (-> Alist Alist Alist)
+;;   : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
+;;   : (-> List Alist Alist)
 ;;   | contract: ordered runtime-command projection rows followed by tail rows
 ;;   | doc m%
 ;;       # Examples
@@ -77,10 +91,14 @@
 
 ;; runtime-command-field-rows/tail
 ;;   : (-> Alist RuntimeCommandFieldRow... Alist)
-;;   | contract: lower fixed field clauses and append caller-owned tail rows
+;;   | contract: lower runtime-command field clauses and append caller-owned tail rows
+;;   | result: ordered runtime-command field rows followed by the supplied tail alist
 ;;   | doc m%
-;;       # Examples
+;;       `runtime-command-field-rows/tail` lowers fixed field clauses into
+;;       ordered runtime-command rows and appends caller-owned tail metadata
+;;       without introducing a second runtime adapter DSL.
 ;;
+;;       # Examples
 ;;       ```scheme
 ;;       (runtime-command-field-rows/tail '((tail . value)) (name 'rust))
 ;;       ;; => ((name . rust) (tail . value))
@@ -92,7 +110,21 @@
     (list (cons 'field value) ...)
     tail)))
 
-;; : (-> Symbol Path ArgumentsBuilder ResponseDecoder [Alist] RuntimeCommand)
+;; make-process-runtime-command
+;;   : (forall (metadata) (-> Symbol Path ArgumentsBuilder ResponseDecoder [metadata] RuntimeCommand))
+;;   : (-> Symbol Path ArgumentsBuilder ResponseDecoder MetadataList RuntimeCommand)
+;;   : (-> Symbol Path ArgumentsBuilder ResponseDecoder [Alist] RuntimeCommand)
+;;   | doc m%
+;;       Build a process-backed runtime command with explicit argument and
+;;       response decoder boundaries.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (runtime-command-kind
+;;        (make-process-runtime-command 'cat "/bin/cat" (lambda args args) read))
+;;       ;; => process
+;;       ```
+;;     %
 (def (make-process-runtime-command name executable arguments response-decoder . maybe-metadata)
   (let (metadata
         (runtime-command-field-rows/tail
@@ -113,6 +145,8 @@
 ;;; Stdout protocol commands print one runtime-response s-expression. This keeps
 ;;; process-backed tests close to the future Rust CLI contract without forcing
 ;;; each caller to install a custom decoder.
+;; : (forall (response) (-> Alist String response))
+;; : (-> Alist String RuntimeResponseLike)
 ;; : (-> Alist String RuntimeResponseLike)
 (def (runtime-command-read-response envelope stdout)
   (with-catch
@@ -124,7 +158,20 @@
    (lambda ()
      (call-with-input-string stdout read))))
 
-;; : (-> Symbol Path ArgumentsBuilder [Alist] RuntimeCommand)
+;; make-stdout-runtime-command
+;;   : (forall (metadata) (-> Symbol Path ArgumentsBuilder [metadata] RuntimeCommand))
+;;   : (-> Symbol Path ArgumentsBuilder MetadataList RuntimeCommand)
+;;   : (-> Symbol Path ArgumentsBuilder [Alist] RuntimeCommand)
+;;   | doc m%
+;;       Build a process runtime command that decodes stdout as a Scheme value.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (runtime-command-kind
+;;        (make-stdout-runtime-command 'echo "/bin/echo" (lambda args args)))
+;;       ;; => process
+;;       ```
+;;     %
 (def (make-stdout-runtime-command name executable arguments . maybe-metadata)
   (apply make-process-runtime-command
          name
@@ -148,6 +195,8 @@
 
 ;;; Runtime command invocation is the narrow process/IPC boundary: the command
 ;;; sees one stable request envelope and must return a normalizable response.
+;; : (forall (result) (-> RuntimeCommand Alist result))
+;; : (-> RuntimeCommand Alist AdapterResult)
 ;; : (-> RuntimeCommand Alist AdapterResult)
 (def (runtime-command-result command envelope)
   (with-catch

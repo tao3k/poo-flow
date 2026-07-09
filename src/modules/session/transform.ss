@@ -7,6 +7,7 @@
         (only-in :clan/poo/object .o .ref object? object<-alist)
         :poo-flow/src/modules/session/objects)
 
+
 (export poo-flow-session-transform
         poo-flow-session-transform?
         poo-flow-session-transform-name
@@ -33,6 +34,8 @@
         poo-flow-session-memory-receipt-ref
         poo-flow-session-memory-receipt?
         poo-flow-session-memory-receipt-name)
+
+(import :poo-flow/src/modules/session/transform-support/memory-intent)
 
 (defstruct poo-flow-session-memory-receipt-record
   (kind
@@ -186,65 +189,16 @@
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> PooSessionMemoryIntent Symbol Value Value)
-(def (poo-flow-session-memory-intent-ref intent key default)
-  (if (object? intent)
-    (.ref intent key)
-    (poo-flow-session-alist-ref intent key default)))
-
 ;; : (-> SessionMemoryIntentCandidate Boolean)
 ;; | type SessionMemoryIntentCandidate = (U PooSessionMemoryIntent Alist POOObject)
-(def (poo-flow-session-memory-intent? value)
-  (or (and (object? value)
-           (eq? (.ref value 'kind) 'poo-flow.session.memory-intent))
-      (and (list? value)
-           (eq? (poo-flow-session-alist-ref value 'kind #f)
-                'poo-flow.session.memory-intent))))
-
 ;; : (-> PooSessionMemoryIntent Symbol)
-(def (poo-flow-session-memory-intent-name intent)
-  (poo-flow-session-memory-intent-ref intent 'intent-name #f))
-
 ;; : (-> PooSessionMemoryIntent Symbol)
-(def (poo-flow-session-memory-intent-store-ref intent)
-  (poo-flow-session-memory-intent-ref intent 'store-ref #f))
-
 ;; : (-> PooSessionMemoryIntent Symbol)
-(def (poo-flow-session-memory-intent-scope intent)
-  (poo-flow-session-memory-intent-ref intent 'scope #f))
-
 ;; : (-> PooSessionMemoryIntent [Symbol/String])
-(def (poo-flow-session-memory-intent-recall intent)
-  (poo-flow-session-memory-intent-ref intent 'recall '()))
-
 ;; : (-> PooSessionMemoryIntent Symbol)
-(def (poo-flow-session-memory-intent-commit-policy intent)
-  (poo-flow-session-memory-intent-ref intent 'commit-policy #f))
-
 ;; : (-> PooSessionMemoryIntent String)
-(def (poo-flow-session-memory-intent-runtime-owner intent)
-  (poo-flow-session-memory-intent-ref intent 'runtime-owner "marlin-agent-core"))
-
 ;; : (-> PooSessionMemoryIntent Alist)
-(def (poo-flow-session-memory-intent-metadata intent)
-  (poo-flow-session-memory-intent-ref intent 'metadata '()))
-
 ;; : (-> PooSessionMemoryIntent Alist)
-(def (poo-flow-session-memory-intent-handoff intent)
-  (list
-   (cons 'kind 'poo-flow.session.memory-intent.handoff)
-   (cons 'schema 'poo-flow.modules.session.memory-intent.handoff.v1)
-   (cons 'intent-name (poo-flow-session-memory-intent-name intent))
-   (cons 'store-ref (poo-flow-session-memory-intent-store-ref intent))
-   (cons 'scope (poo-flow-session-memory-intent-scope intent))
-   (cons 'recall (poo-flow-session-memory-intent-recall intent))
-   (cons 'commit-policy
-         (poo-flow-session-memory-intent-commit-policy intent))
-   (cons 'runtime-owner
-         (poo-flow-session-memory-intent-runtime-owner intent))
-   (cons 'handoff-required #t)
-   (cons 'descriptor-realized? #f)
-   (cons 'runtime-executed #f)))
-
 ;; poo-flow-session-memory-intent-handoff-bundle
 ;;   : (-> [PooSessionMemoryIntent] (Cons [Alist] Fixnum))
 ;;   | doc m%
@@ -258,26 +212,7 @@
 ;;       ```
 ;;     %
 ;; : (-> [PooSessionMemoryIntent] [Alist] Fixnum (Cons [Alist] Fixnum))
-(def (poo-flow-session-memory-intent-handoff-bundle/rev memory-intents
-                                                        rows-rev
-                                                        count)
-  (if (null? memory-intents)
-    (cons rows-rev count)
-    (poo-flow-session-memory-intent-handoff-bundle/rev
-     (cdr memory-intents)
-     (cons (poo-flow-session-memory-intent-handoff (car memory-intents))
-           rows-rev)
-     (fx+ count 1))))
-
 ;; : (-> [PooSessionMemoryIntent] (Cons [Alist] Fixnum))
-(def (poo-flow-session-memory-intent-handoff-bundle memory-intents)
-  (let (bundle
-        (poo-flow-session-memory-intent-handoff-bundle/rev
-         memory-intents
-         '()
-         0))
-    (cons (reverse (car bundle)) (cdr bundle))))
-
 ;; poo-flow-session-memory-intent-count
 ;;   : (-> [PooSessionMemoryIntent] Fixnum)
 ;;   | doc m%
@@ -291,9 +226,6 @@
 ;;       ```
 ;;     %
 ;; : (-> [PooSessionMemoryIntent] Fixnum)
-(def (poo-flow-session-memory-intent-count memory-intents)
-  (length memory-intents))
-
 ;; : (-> [PooSessionTransformOption] (Cons Alist [PooSessionMemoryIntent]))
 ;; | type PooSessionTransformOption = (U Alist PooSessionMemoryIntent)
 (def (poo-flow-session-transform-options options)

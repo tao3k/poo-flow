@@ -12,7 +12,11 @@
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/workflow-cicd-pipeline-run-config
         :poo-flow/src/module-system/loop-engine-config
-        :poo-flow/src/module-system/presentation
+        (only-in :poo-flow/src/module-system/presentation
+                 pooFlowUserConfigPresentation)
+        (only-in :poo-flow/src/module-system/presentation-config-support
+                 poo-flow-user-config-presentation-trace
+                 poo-flow-user-config-sandbox-profile-derivations)
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profile-doctor)

@@ -1,0 +1,81 @@
+;;; -*- Gerbil -*-
+;;; Boundary: memory catalog objects and lookup helpers.
+
+(import (only-in :clan/poo/object .o .ref object? object<-alist)
+        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/modules/session/objects
+        :poo-flow/src/modules/session/transform
+        :poo-flow/src/modules/memory-core/objects-core)
+
+(export poo-flow-memory-catalog-summary
+        poo-flow-memory-catalog
+        poo-flow-memory-catalog?
+        poo-flow-memory-catalog-ref
+        poo-flow-memory-catalog-store-refs
+        poo-flow-memory-catalog-store-count
+        poo-flow-memory-store-spec-find
+        poo-flow-memory-catalog-find
+        poo-flow-memory-catalog->alist)
+
+(def (poo-flow-memory-catalog-summary stores)
+  (cons (map poo-flow-memory-store-spec-ref stores)
+        (length stores)))
+
+;; : (-> Symbol [PooMemoryStoreSpec] [Alist] PooMemoryCatalog)
+(def (poo-flow-memory-catalog catalog-ref stores . maybe-metadata)
+  (poo-flow-session-require "memory catalog ref must be a symbol"
+                            (symbol? catalog-ref)
+                            catalog-ref)
+  (poo-flow-session-require "memory catalog stores must be specs"
+                            (poo-flow-session-every? poo-flow-memory-store-spec?
+                                                     stores)
+                            stores)
+  (let* ((catalog-summary (poo-flow-memory-catalog-summary stores))
+         (store-refs (car catalog-summary))
+         (store-count (cdr catalog-summary)))
+    (object<-alist
+     (list
+      (cons 'kind +poo-flow-memory-core-catalog-kind+)
+      (cons 'schema 'poo-flow.modules.memory-core.catalog.v1)
+      (cons 'catalog-ref catalog-ref)
+      (cons 'stores stores)
+      (cons 'store-refs store-refs)
+      (cons 'store-count store-count)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f)
+      (cons 'metadata (if (null? maybe-metadata)
+                        '()
+                        (car maybe-metadata)))))))
+
+;; : (-> POOObject Boolean)
+(def (poo-flow-memory-catalog? value)
+  (and (object? value)
+       (eq? (poo-flow-memory-slot value 'kind #f)
+            +poo-flow-memory-core-catalog-kind+)))
+
+;; : (-> PooMemoryCatalog Symbol)
+(def (poo-flow-memory-catalog-ref catalog)
+  (.ref catalog 'catalog-ref))
+
+;; : (-> PooMemoryCatalog [Symbol])
+(def (poo-flow-memory-catalog-store-refs catalog)
+  (.ref catalog 'store-refs))
+
+;; : (-> PooMemoryCatalog Integer)
+(def (poo-flow-memory-catalog-store-count catalog)
+  (.ref catalog 'store-count))
+
+;; : (-> [PooMemoryStoreSpec] Symbol MaybePooMemoryStoreSpec)
+(def (poo-flow-memory-store-spec-find stores store-ref)
+  (cond
+   ((null? stores) #f)
+   ((eq? (poo-flow-memory-store-spec-ref (car stores)) store-ref) (car stores))
+   (else
+    (poo-flow-memory-store-spec-find (cdr stores) store-ref))))
+
+;; : (-> PooMemoryCatalog Symbol MaybePooMemoryStoreSpec)
+(def (poo-flow-memory-catalog-find catalog store-ref)
+  (poo-flow-memory-store-spec-find (.ref catalog 'stores) store-ref))
+;; : (-> PooMemoryCatalog Alist)
+(def (poo-flow-memory-catalog->alist catalog)
+  (poo-flow-memory-catalog-summary catalog))

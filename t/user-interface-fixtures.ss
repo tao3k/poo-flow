@@ -4,6 +4,7 @@
 
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/profile-config
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profiles/kernel)
@@ -24,12 +25,6 @@
        profile-selection-bundles: (list module ...)
        user-settings: (.o setting ...)
        public-setting-keys: '(key ...))))
-
-(defrules use-module (:config)
-  ((_ module :config config ...)
-   (poo-flow-modules-system-use-module 'module '()))
-  ((_ module feature ...)
-   (poo-flow-modules-system-use-module 'module '(feature ...))))
 
 (defrules poo-flow-user-module-bundle ()
   ((_ (category module feature ...) ...)
@@ -92,22 +87,6 @@
    (append (.ref base-profile 'profile-selection-bundles) module-bundles)
    (.ref base-profile 'user-settings)
    (.ref base-profile 'public-setting-keys)))
-
-(def poo-flow-kernel-profile-module-bundles
-  (list
-   (poo-flow-user-module-bundle
-    (sandbox nono-sandbox +nono +native-ffi +doctor))
-   (poo-flow-user-module-bundle
-    (sandbox cubeSandbox +cube +doctor))
-   (poo-flow-user-module-bundle
-    (sandbox docker-sandbox +docker +doctor))))
-
-(def poo-flow-kernel-profile
-  (pooFlowUserProfile
-   'kernel
-   poo-flow-kernel-profile-module-bundles
-   (pooFlowDefaultUserSettings 'kernel)
-   poo-flow-default-user-setting-keys))
 
 (export test-poo-flow-user-module-bundles
         test-poo-flow-user-modules

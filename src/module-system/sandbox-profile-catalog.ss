@@ -8,7 +8,14 @@
         :poo-flow/src/module-system/base)
 
 (export poo-flow-user-module-selection-sandbox-profiles
+        poo-flow-sandbox-profile-catalog-defaults
         poo-flow-user-config-sandbox-profile-catalog)
+
+;;; Catalog defaults are owned by this facade so inlined catalog helpers do not
+;;; leak imported agent-sandbox/config identifiers into callers.
+;; : [PooSandboxProfile]
+(def poo-flow-sandbox-profile-catalog-defaults
+  poo-flow-default-sandbox-profiles)
 
 ;;; Config rows may mix profile objects with other declarations. Filtering keeps
 ;;; only validated POO sandbox profiles for downstream runtime handoff catalogs.
@@ -52,4 +59,4 @@
 ;; : (-> [PooUserModuleSelection] [PooSandboxProfile])
 (def (poo-flow-user-config-sandbox-profile-catalog selected-modules)
   (append (poo-flow-user-config-sandbox-profile-catalog/add selected-modules)
-          poo-flow-default-sandbox-profiles))
+          poo-flow-sandbox-profile-catalog-defaults))

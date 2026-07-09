@@ -174,6 +174,8 @@
 ;;; Boundary: render config arguments is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
+;; : (forall (source argument value) (-> source [argument] [value]))
+;; : (-> Alist List List)
 ;; : (-> Alist [ConfigArgument] [Value])
 (def (render-config-arguments source arguments)
   (map (lambda (argument) (render-config-argument source argument))
@@ -348,7 +350,19 @@
 ;;; Boundary: config requirement collection projection is the policy-visible edge for core
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
-;; : (-> [ConfigRequirement] [Alist])
+;; config-requirement-alists
+;;   : (forall (requirement row) (-> [requirement] [row]))
+;;   : (-> List Alist)
+;;   : (-> [ConfigRequirement] [Alist])
+;;   | doc m%
+;;       Project config requirement objects into ordered boundary alists.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (config-requirement-alists '())
+;;       ;; => ()
+;;       ```
+;;     %
 (def (config-requirement-alists requirements)
   (map config-requirement->alist requirements))
 

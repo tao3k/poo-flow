@@ -26,6 +26,7 @@
  (feature . funflow-config-pipeline)
  (optimizationFocus . "POO-native Funflow check/pipeline authoring with bounded runtime handoff projection")
  (inputShape . "32 user-interface Funflow CI/CD configs projected through presentation and Marlin handoff receipt summaries")
+ (expectedOutcome . "bounded Funflow pipeline receipts stay within the user-interface projection budget while preserving runtime handoff summaries")
  (expectedRepair . "keep user authoring as shallow POO prototypes; serialize only bounded runtime handoff receipts at presentation/ABI boundaries")
  (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate assert-memory-gate)
  (tags poo funflow workflow cicd user-interface scenario performance))

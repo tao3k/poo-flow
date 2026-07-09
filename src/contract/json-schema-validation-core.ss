@@ -80,14 +80,38 @@
    (else '())))
 
 ;; : (-> JsonSchemaCandidateRows Symbol JsonSchemaCandidateSlotValue)
+;; : (forall (k v) (-> [(Pair k v)] k v))
+;; : (-> JsonObjectRows JsonObjectSlot JsonObjectValue)
+;; | doc Returns the normalized JSON object row value for a requested slot, or
+;; | doc the validation missing sentinel when the candidate does not provide it.
+;; # Examples
+;; (poo-flow-json-schema-candidate-row-slot '(("jobs" . jobs)) 'jobs) => jobs
+;; result: Any | +poo-flow-json-schema-validation-missing+
+;;
+;; Optimization boundary: JSON Schema object keys commonly arrive as strings,
+;; while generated contracts address slots as symbols.  This is intentionally a
+;; single-pass normalized lookup so recursive map-value validation does not pay
+;; an assq miss plus generic object-ref fallback for every row.
 (def (poo-flow-json-schema-candidate-row-slot rows slot)
-  (let (row (assq slot rows))
-    (if row
-      (cdr row)
-      (poo-flow-contract-object-ref
-       rows
-       slot
-       +poo-flow-json-schema-validation-missing+))))
+  (let* ((slot-symbol (poo-flow-contract-key->symbol slot))
+         (slot-string (poo-flow-contract-key->string slot)))
+    (let loop ((rest rows))
+      (cond
+       ((null? rest)
+        (poo-flow-contract-object-ref
+         rows
+         slot
+         +poo-flow-json-schema-validation-missing+))
+       (else
+        (let* ((row (car rest))
+               (key (car row))
+               (key-symbol (poo-flow-contract-key->symbol key)))
+          (if (or (eq? key-symbol slot-symbol)
+                  (and slot-string
+                       (equal? (poo-flow-contract-key->string key)
+                               slot-string)))
+            (cdr row)
+            (loop (cdr rest)))))))))
 
 ;; : (-> JsonSchemaPathPart String)
 (def (poo-flow-json-schema-path-part->string part)

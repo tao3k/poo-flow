@@ -44,6 +44,20 @@
 
 ;;; Boundary: session agent nodes preserve parent/child session identity and
 ;;; sandbox policy refs as inert POO values.
+;; poo-flow-session-agent-node
+;;   | contract: adjacent signature fixes the agent graph node constructor.
+;;   | doc m%
+;;       Create one inert session agent node for graph, sandbox, and policy
+;;       validation. The node records session links and policy refs; it does
+;;       not start an agent or execute runtime work.
+;;       # Examples
+;;       (poo-flow-session-agent-node 'agent 'project 'root 'parent 'system
+;;                                    'input 'output '() '() 'model 'prompt
+;;                                    'tool 'hook 'sharing 'durable '() '()
+;;                                    'sandbox 'worker 'result)
+;;       # Result
+;;       A POO object whose slots can be projected into session graph receipts.
+;;     %
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol Symbol Symbol Symbol [Symbol] [Symbol] Symbol Symbol Symbol [Alist] PooSessionAgentNode)
 (def (poo-flow-session-agent-node agent-id
                                   project-ref
@@ -181,6 +195,18 @@
 (def (poo-flow-session-agent-node-durable-policy-ref node)
   (.ref node 'durable-policy-ref))
 
+;; poo-flow-session-agent-node->alist
+;;   | contract: adjacent projection signature defines the receipt boundary.
+;;   | doc m%
+;;       Project an inert agent node into a stable receipt row for registry,
+;;       graph, and policy validation. Projection reads slots only and does not
+;;       execute agent runtime behavior.
+;;       # Examples
+;;       (poo-flow-session-agent-node->alist node)
+;;       # Result
+;;       An alist containing session identity, policy refs, sandbox ref, and
+;;       runtime handoff metadata.
+;;     %
 ;; : (-> PooSessionAgentNode Alist)
 (defpoo-session-receipt-projection
   poo-flow-session-agent-node->alist
@@ -220,12 +246,35 @@
     ('runtime-executed (.ref node 'runtime-executed))
     ('metadata (.ref node 'metadata)))))
 
+;; poo-flow-session-agent-nodes->alists
+;;   | contract: adjacent batch signature defines list projection.
+;;   | doc m%
+;;       Project a list of inert agent nodes into receipt rows while preserving
+;;       the same runtime handoff boundary as the single-node projector.
+;;       # Examples
+;;       (poo-flow-session-agent-nodes->alists nodes)
+;;       # Result
+;;       A list of agent-node receipt alists.
+;;     %
 ;; : (-> [PooSessionAgentNode] [Alist])
 (defpoo-session-receipt-projection-batch
   poo-flow-session-agent-nodes->alists (nodes)
   (projector poo-flow-session-agent-node->alist)
   (error-message "session agent node serialization requires a list"))
 
+;; poo-flow-session-agent-node->registry-entry
+;;   | contract: adjacent signature fixes the node-to-registry projection.
+;;   | doc m%
+;;       Convert one inert agent node plus its session into a registry entry for
+;;       lifecycle, policy, and communication validation. The helper preserves
+;;       durable policy, communication channel, prompt, and resource-sharing
+;;       refs without starting or resuming an agent.
+;;       # Examples
+;;       (poo-flow-session-agent-node->registry-entry node session)
+;;       # Result
+;;       A session registry entry whose metadata records the agent-node source
+;;       and role for downstream handoff checks.
+;;     %
 ;; : (-> PooSessionAgentNode PooSession PooSessionRegistryEntry)
 (def (poo-flow-session-agent-node->registry-entry node session)
   (poo-flow-session-registry-entry
@@ -243,6 +292,19 @@
    (list (cons 'source 'agent-node)
          (cons 'role (.ref node 'role)))))
 
+;; poo-flow-session-agent-node-topology-summary
+;;   | contract: adjacent signature fixes the node topology summary projection.
+;;   | doc m%
+;;       Summarize session agent nodes into agent ids, lineage edge pairs, and
+;;       durable policy refs for graph-level policy validation. The helper walks
+;;       inert POO node values only; it does not inspect runtime state or start
+;;       agent processes.
+;;       # Examples
+;;       (poo-flow-session-agent-node-topology-summary agent-nodes)
+;;       # Result
+;;       A three-part topology summary: agent ids, parent/output edge pairs, and
+;;       durable policy refs.
+;;     %
 ;; : (-> [PooSessionAgentNode] [Symbol])
 (def (poo-flow-session-agent-node-topology-summary nodes)
   (let loop ((remaining-nodes nodes)
@@ -296,19 +358,50 @@
    'communication-channel-receipts
    '()))
 
+;; : (-> PooSessionCommunicationChannelReceipt [Symbol] Boolean)
+(def (poo-flow-session-agent-channel-receipt-authorized? receipt agent-ids)
+  (let* ((row
+          (and
+           (poo-flow-session-communication-channel-receipt? receipt)
+           (poo-flow-session-communication-channel-receipt->alist receipt)))
+         (source-cell (and row (assoc 'source-agent-id row)))
+         (target-cell (and row (assoc 'target-agent-id row)))
+         (source-agent-id (and source-cell (cdr source-cell)))
+         (target-agent-id (and target-cell (cdr target-cell))))
+    (and
+     (or (memq source-agent-id agent-ids)
+         (eq? source-agent-id 'loop-engine))
+     (or (memq target-agent-id agent-ids)
+         (eq? target-agent-id 'loop-engine))
+     (or (memq source-agent-id agent-ids)
+         (memq target-agent-id agent-ids)))))
+
+;; : (-> [PooSessionCommunicationChannelReceipt] [Symbol] Boolean)
+(def (poo-flow-session-agent-channel-receipts-authorized? receipts agent-ids)
+  (and
+   (pair? receipts)
+   (andmap
+    (lambda (receipt)
+      (poo-flow-session-agent-channel-receipt-authorized? receipt agent-ids))
+    receipts)))
+
 ;;; Boundary: session agent graphs join nodes, registry, and communication
 ;;; receipts without sharing mutable runtime context.
 ;; poo-flow-session-agent-graph
-;; : (-> SessionAgentGraphReceiptSyntax SessionAgentGraphReceiptValue)
-;; | doc m%
-;;   Constructs the policy-visible graph receipt for parent, child, and peer
-;;   session agent relationships.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-session-agent-graph 'graph 'root '() '() registry '() '())
-;;   ;; => #<poo-flow-session-agent-graph>
-;;   ```
-;; : (-> Symbol Symbol [PooSessionAgentNode] [PooSession] PooSessionRegistryReceipt [PooSessionCommunicationReceipt] [Alist] PooSessionAgentGraph)
+;;   | contract: adjacent signature fixes the session agent graph constructor.
+;;   | doc m%
+;;       Build the session agent graph that the control plane hands to policy,
+;;       sandbox, and communication gates. The graph is a POO object receipt: it
+;;       records agent node ids, session ids, communication receipts, and
+;;       registry receipt metadata without starting any agent runtime.
+;;       # Examples
+;;       (poo-flow-session-agent-graph 'project 'root agent-nodes sessions
+;;                                     registry-receipt communication-receipts)
+;;       # Result
+;;       A POO graph object with stable agent, session, communication, and
+;;       registry receipt slots for downstream validation.
+;;     %
+;; : (-> Symbol Symbol [PooFlowSessionAgentNode] [PooFlowSession] PooFlowRegistryReceipt [PooFlowCommunicationReceipt] [Alist] PooSessionAgentGraph)
 (def (poo-flow-session-agent-graph project-id
                                    root-session-ref
                                    agent-nodes
@@ -353,34 +446,9 @@
          (lineage-edge-pairs (cadr agent-topology-summary))
          (durable-policy-refs (caddr agent-topology-summary))
          (channel-authorized?
-          (and
-           (pair? communication-channel-receipts)
-           (let loop ((remaining communication-channel-receipts))
-             (if (null? remaining)
-               #t
-               (let* ((receipt (car remaining))
-                      (row
-                       (and
-                        (poo-flow-session-communication-channel-receipt?
-                         receipt)
-                        (poo-flow-session-communication-channel-receipt->alist
-                         receipt)))
-                      (source-cell
-                       (and row (assoc 'source-agent-id row)))
-                      (target-cell
-                       (and row (assoc 'target-agent-id row)))
-                      (source-agent-id
-                       (and source-cell (cdr source-cell)))
-                      (target-agent-id
-                       (and target-cell (cdr target-cell))))
-                 (and
-                  (or (memq source-agent-id agent-ids)
-                      (eq? source-agent-id 'loop-engine))
-                  (or (memq target-agent-id agent-ids)
-                      (eq? target-agent-id 'loop-engine))
-                  (or (memq source-agent-id agent-ids)
-                      (memq target-agent-id agent-ids))
-                  (loop (cdr remaining))))))))
+          (poo-flow-session-agent-channel-receipts-authorized?
+           communication-channel-receipts
+           agent-ids))
          (handoff-metadata
           (poo-flow-session-topology->handoff-metadata
            (list

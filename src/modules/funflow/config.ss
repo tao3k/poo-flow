@@ -55,6 +55,8 @@
 ;;; The CI/CD payload is a Funflow feature, not a new top-level category. It is
 ;;; inspectable module data; adapters such as GitHub, Docker, or Nix stay out.
 ;; : UserModuleFlagEntry
+(import ./config-adapter.ss)
+
 (def poo-flow-funflow-cicd-default-payload
   '(+cicd
     (checks +parallel +typed-receipts)
@@ -143,40 +145,17 @@
 ;;; prototype surface, while sandbox profile refs and runtime descriptors remain
 ;;; unresolved until later module/object validation.
 ;; : (forall (a) (-> String Boolean a Void))
-(def (poo-flow-funflow-require message ok? value)
-  (if ok?
-    (void)
-    (error message value)))
-
 ;;; Funflow `:needs` names other checks in the same pipeline. Object/profile
 ;;; inheritance stays in `:inherits` so the two extension axes do not blur.
 ;; : (-> [FunflowPipelineDependencyRefCandidate] Boolean)
-(def (poo-flow-funflow-symbol-list? values)
-  (cond
-   ((null? values) #t)
-   ((and (pair? values)
-         (symbol? (car values)))
-    (poo-flow-funflow-symbol-list? (cdr values)))
-   (else #f)))
-
 ;;; Boundary: funflow optional metadata is the policy-visible edge for policy
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (forall (a) (-> Symbol a [Pair] [Pair]))
-(def (poo-flow-funflow-optional-metadata/tail key value tail)
-  (if value
-    (cons (cons key value) tail)
-    tail))
-
 ;;; Boundary: funflow list metadata is the policy-visible edge for policy
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> Symbol List [Pair] [Pair])
-(def (poo-flow-funflow-list-metadata/tail key values tail)
-  (if (null? values)
-    tail
-    (cons (cons key values) tail)))
-
 ;; : (-> Symbol Symbol [Alist] PooFlowFunflowDagEdge)
 (def (poo-flow-funflow-dag-edge from to . maybe-metadata)
   (poo-flow-funflow-require "funflow DAG edge from must be a symbol"
@@ -460,99 +439,12 @@
    (runtime-executed #f)))
 
 ;; : (-> PooFlowFunflowCheckPrototype Alist)
-(def (poo-flow-funflow-poo-check-metadata check)
-  (let ((dependency-refs (.ref check 'dependency-refs))
-        (metadata (.ref check 'metadata)))
-    (poo-flow-funflow-require
-     "funflow POO check dependency-refs must be a list of symbols"
-     (poo-flow-funflow-symbol-list? dependency-refs)
-     dependency-refs)
-    (poo-flow-funflow-require
-     "funflow POO check metadata must be an alist"
-     (list? metadata)
-     metadata)
-    (cons (cons 'source 'funflow-poo-prototype)
-          (cons (cons 'check (.ref check 'check-name))
-                (cons (cons 'dependency-refs dependency-refs)
-                      (poo-flow-funflow-optional-metadata/tail
-                       'observability
-                       (.ref check 'observability)
-                       (poo-flow-funflow-optional-metadata/tail
-                        'durable-task-id
-                        (.ref check 'durable-task-id)
-                        (poo-flow-funflow-optional-metadata/tail
-                         'action-class
-                         (.ref check 'action-class)
-                         (poo-flow-funflow-list-metadata/tail
-                          'compensation-refs
-                          (.ref check 'compensation-refs)
-                          (poo-flow-funflow-optional-metadata/tail
-                           'artifact-retention
-                           (.ref check 'artifact-retention)
-                           (poo-flow-funflow-list-metadata/tail
-                            'observes
-                            (.ref check 'observes)
-                            (poo-flow-funflow-list-metadata/tail
-                             'guards
-                             (.ref check 'guards)
-                             (poo-flow-funflow-optional-metadata/tail
-                              'report
-                              (.ref check 'report)
-                              metadata)))))))))))))
-
 ;; : (-> PooFlowFunflowCheckPrototype PooFlowCicdCheck)
-(def (poo-flow-funflow-poo-check->cicd-check check)
-  (poo-flow-funflow-require
-   "funflow config object must extend funflow-check"
-   (poo-flow-funflow-poo-check? check)
-   check)
-  (poo-flow-cicd-check
-   (.ref check 'check-name)
-   (.ref check 'profile-ref)
-   (.ref check 'command-vector)
-   (.ref check 'input-bindings)
-   (.ref check 'config-sources)
-   (.ref check 'artifact-outputs)
-   (.ref check 'cache-intents)
-   (.ref check 'secret-requirements)
-   (.ref check 'result-protocol)
-   (.ref check 'runtime-mode)
-   (poo-flow-funflow-poo-check-metadata check)))
-
 ;;; Boundary: funflow poo checks to cicd checks is the policy-visible edge for
 ;;; policy behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> [PooFlowFunflowCheckPrototype] [PooFlowCicdCheck])
-(def (poo-flow-funflow-poo-checks->cicd-checks checks)
-  (cond
-   ((null? checks) '())
-   ((pair? checks)
-    (cons (poo-flow-funflow-poo-check->cicd-check (car checks))
-          (poo-flow-funflow-poo-checks->cicd-checks (cdr checks))))
-   (else
-    (error "funflow POO pipeline checks slot must be a list" checks))))
-
 ;; : (-> PooFlowFunflowPipelinePrototype PooFlowCicdCheckMap)
-(def (poo-flow-funflow-poo-pipeline->check-map pipeline)
-  (poo-flow-funflow-require
-   "funflow config object must extend funflow-pipeline"
-   (poo-flow-funflow-poo-pipeline? pipeline)
-   pipeline)
-  (let ((pipeline-name (.ref pipeline 'pipeline-name))
-        (metadata (.ref pipeline 'metadata)))
-    (poo-flow-funflow-require
-     "funflow POO pipeline metadata must be an alist"
-     (list? metadata)
-     metadata)
-    (poo-flow-cicd-check-map
-     pipeline-name
-     (poo-flow-funflow-poo-checks->cicd-checks
-      (.ref pipeline 'checks))
-     (poo-flow-module-field-rows/tail
-      metadata
-      (source 'funflow-poo-config)
-      (pipeline pipeline-name)))))
-
 ;;; Functional DAGs are Funflow-owned POO objects derived from a pipeline. They
 ;;; keep the authoring model functional and inspectable while leaving runtime
 ;;; scheduling to Marlin.

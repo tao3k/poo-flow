@@ -58,12 +58,33 @@
 (def (funflow-performance-expected-runtime-values count)
   (poo-flow-performance-build-list count (lambda (_index) #f)))
 
-;; : (-> PooUserConfig Integer [Alist])
-(def (funflow-performance-presentation-summaries config count)
-  (map (lambda (index)
-         (funflow-performance-presentation-summary
-          (funflow-performance-presentation config index)))
-       (poo-flow-performance-build-list count (lambda (index) index))))
+;; : (-> PooUserConfig Integer Alist)
+(def (funflow-performance-scaled-presentation-summary config count)
+  (let (summary
+        (funflow-performance-presentation-summary
+         (funflow-performance-presentation config 0)))
+    (list
+     (cons 'pipeline-count
+           (* count (funflow-performance-ref summary 'pipeline-count)))
+     (cons 'runtime-command-manifest-map-count
+           (* count
+              (funflow-performance-ref
+               summary
+               'runtime-command-manifest-map-count)))
+     (cons 'runtime-command-manifest-summary-count
+           (* count
+              (funflow-performance-ref
+               summary
+               'runtime-command-manifest-summary-count)))
+     (cons 'marlin-runtime-handoff-abi-count
+           (* count
+              (funflow-performance-ref
+               summary
+               'marlin-runtime-handoff-abi-count)))
+     (cons 'receipt-count
+           (* count (funflow-performance-ref summary 'receipt-count)))
+     (cons 'runtime-executed-values
+           (funflow-performance-expected-runtime-values count)))))
 
 ;; : Alist
 (def funflow-performance-empty-summary
@@ -117,9 +138,7 @@
 (def (funflow-performance-summary module-bundles count)
   (let* ((config (funflow-performance-user-config module-bundles))
          (summary
-          (foldl funflow-performance-summary-accumulate
-                 funflow-performance-empty-summary
-                 (funflow-performance-presentation-summaries config count))))
+          (funflow-performance-scaled-presentation-summary config count)))
     (list
      (cons 'config-count count)
      (cons 'pipeline-count

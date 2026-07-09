@@ -150,8 +150,19 @@
    output-contract)
   transparent: #t)
 
-;; : (-> Step Symbol)
-;; : (-> Symbol [Step] Contract Contract Flow)
+;; flow-compose
+;;   : (forall (step) (-> Symbol [step] Contract Contract Flow))
+;;   : (-> Symbol List Contract Contract Flow)
+;;   : (-> Symbol [Step] Contract Contract Flow)
+;;   | doc m%
+;;       Compose a named flow from ordered step objects and boundary contracts.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (flow-name (flow-compose 'empty '() #f #f))
+;;       ;; => empty
+;;       ```
+;;     %
 (def (flow-compose name steps input-contract output-contract)
   (make-flow name steps input-contract output-contract))
 
@@ -220,6 +231,8 @@
 ;;; Boundary:
 ;;; - This helper owns local value selection for QuickReference.
 ;;; - Graph fan-out remains =flow-branch= and scheduler-owned planning.
+;; : (forall (input output) (-> Symbol Predicate (-> input output) (-> input output) Contract Contract Flow))
+;; : (-> Symbol Predicate Procedure Procedure Contract Contract Flow)
 ;; : (-> Symbol Predicate Procedure Procedure Contract Contract Flow)
 (def (conditional-flow name predicate then-proc else-proc input-contract output-contract)
   (scheme-flow name

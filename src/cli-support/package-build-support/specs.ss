@@ -197,6 +197,23 @@
     "src/contract/json-schema-validate.ss"
     "src/module-system/durable-policy.ss"
     "src/module-system/indexed-family.ss"
+    "src/module-system/object-family-syntax.ss"
+    "src/core/projection-syntax.ss"
+    "src/core/failure.ss"
+    "src/core/roles.ss"
+    "src/core/object-syntax.ss"
+    "src/loops/descriptor.ss"
+    "src/loops/strategy.ss"
+    "src/loops/governor-core.ss"
+    "src/loops/governor-policy-sets.ss"
+    "src/module-system/extension.ss"
+    "src/module-system/object-core-support/contracts.ss"
+    "src/module-system/object-core-support/merge.ss"
+    "src/module-system/object-core-support/object-slots.ss"
+    "src/modules/sandbox-core/profile-support/policy-core.ss"
+    "src/modules/sandbox-core/profile-support/projection-syntax.ss"
+    "src/modules/sandbox-core/profile-support/policy-backend-capability.ss"
+    "src/modules/sandbox-core/profile-support/policy-backend-validation.ss"
     "src/core/runtime-protocol.ss"
     "src/core/runtime-command-invocation.ss"
     "src/core/runtime-command-descriptor.ss"
@@ -206,6 +223,9 @@
     "src/modules/session/objects-handoff.ss"
     "src/modules/session/objects-graph.ss"
     "src/modules/session/objects.ss"
+    "src/modules/session/transform-support/memory-intent.ss"
+    "src/modules/model-core/objects.ss"
+    "src/modules/model-core/config.ss"
     "src/modules/session/communication.ss"
     "src/modules/session/registry.ss"
     "src/modules/session/agent.ss"
@@ -219,6 +239,23 @@
     "src/module-system/durable-recovery-scenario.ss"
     "src/module-system/load-syntax.ss"
     "src/modules/session/receipt-syntax.ss"
+    "src/modules/session/policy-syntax.ss"
+    "src/modules/session/config-session-syntax-core.ss"
+    "src/modules/session/config-session-syntax-selector.ss"
+    "src/modules/session/config-session-syntax-communication.ss"
+    "src/modules/session/config-session-syntax-materialization.ss"
+    "src/modules/session/config-session-syntax-agent-node.ss"
+    "src/modules/session/config-session-syntax-agent.ss"
+    "src/modules/session/config-session-syntax.ss"
+    "src/modules/session/policy-core.ss"
+    "src/modules/session/policy-tool-grant.ss"
+    "src/modules/session/policy-families.ss"
+    "src/modules/session/policy-permissions.ss"
+    "src/modules/session/policy.ss"
+    "src/modules/session/policy-validation-support.ss"
+    "src/modules/session/policy-validation-communication.ss"
+    "src/modules/session/policy-validation-catalog.ss"
+    "src/modules/session/policy-validation-receipt.ss"
     "src/modules/session/config-session-syntax-core.ss"
     "src/modules/session/config-session-syntax-communication.ss"
     "src/modules/session/config-session-syntax-selector.ss"
@@ -461,7 +498,66 @@
 
 ;; : (-> String BuildOptions BuildSpec)
 (def (poo-flow-gxc-target file _options)
-  [gxc: file])
+  (if (string=? file "src/module-system/object-family-syntax.ss")
+    [ssi: file]
+    (let (gsc-options (poo-flow-build-gsc-options))
+      (if (null? gsc-options)
+        [gxc: file]
+        (cons 'gxc: (cons file gsc-options))))))
+
+;; : (-> String MaybeString)
+(def (poo-flow-build-nonempty-env name)
+  (let (value (getenv name #f))
+    (and value
+         (not (string=? value ""))
+         value)))
+
+;; : (-> MaybeString MaybeString)
+(def (poo-flow-build-system-default-gsc-cc sdkroot)
+  (cond-expand
+   (darwin (and sdkroot "clang"))
+   (else #f)))
+
+;; : (-> MaybeString MaybeString)
+(def (poo-flow-build-system-default-gsc-cc-options sdkroot)
+  (cond-expand
+   (darwin
+    (and sdkroot
+         "-Wno-ignored-optimization-argument -Wno-unused-command-line-argument"))
+   (else #f)))
+
+;; : (-> MaybeString MaybeString)
+(def (poo-flow-build-system-default-gsc-ld-options sdkroot)
+  (cond-expand
+   (darwin (and sdkroot "-bundle -Wl,-undefined,dynamic_lookup"))
+   (else #f)))
+
+;; : (-> [String])
+(def (poo-flow-build-gsc-options)
+  (let* ((explicit-cc (poo-flow-build-nonempty-env "POO_FLOW_GSC_CC"))
+         (sdkroot (poo-flow-build-nonempty-env "SDKROOT"))
+         (cc (or explicit-cc
+                 (poo-flow-build-system-default-gsc-cc sdkroot)))
+         (explicit-cc-options
+          (poo-flow-build-nonempty-env "POO_FLOW_GSC_CC_OPTIONS"))
+         (cc-options (or explicit-cc-options
+                         (poo-flow-build-system-default-gsc-cc-options
+                          sdkroot))))
+    (if cc
+      (let (cc-args (list "-cc" cc))
+        (let* ((with-cc-options
+                (if cc-options
+                  (append cc-args (list "-cc-options" cc-options))
+                  cc-args))
+               (explicit-ld-options
+                (poo-flow-build-nonempty-env "POO_FLOW_GSC_LD_OPTIONS"))
+               (ld-options (or explicit-ld-options
+                               (poo-flow-build-system-default-gsc-ld-options
+                                sdkroot))))
+          (if ld-options
+            (append with-cc-options (list "-ld-options" ld-options))
+            with-cc-options)))
+      '())))
 
 ;; : (-> [String] BuildOptions [BuildSpec] [BuildSpec])
 (def (poo-flow-gxc-spec/rev files options specs-rev)

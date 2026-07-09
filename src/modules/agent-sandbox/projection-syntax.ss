@@ -22,6 +22,8 @@
 ;;       ;; => ((kind . sandbox) (metadata))
 ;;       ```
 ;;     %
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
+;; : (-> Alist Alist Alist)
 (def (agent-sandbox-rows/tail rows tail)
   (append rows tail))
 
@@ -37,6 +39,8 @@
 ;;       ;; => ((b . 2) (a . 1) (tail))
 ;;       ```
 ;;     %
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
+;; : (-> Alist Alist Alist)
 (def (agent-sandbox-rows-into/rev rows rows-rev)
   (foldl cons rows-rev rows))
 

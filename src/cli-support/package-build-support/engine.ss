@@ -12,6 +12,7 @@
                  file-info
                  file-info-type
                  getenv
+                 setenv
                  jiffies-per-second
                  path-expand
                  string=?
@@ -49,6 +50,8 @@
                  poo-flow-cli-only-build-spec
                  poo-flow-cli-only-module-build-spec
                  poo-flow-entry-build-spec
+                 poo-flow-build-gsc-options
+                 poo-flow-build-nonempty-env
                  poo-flow-package-build-spec
                  poo-flow-runtime-bootstrap-build-spec
                  poo-flow-runtime-main-build-spec
@@ -397,6 +400,7 @@
 (def (poo-flow-make-uncached label stage options)
   (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "compile" label stage)
+  (poo-flow-build-prepare-system-compiler!)
   (apply poo-flow-apply-make stage
          srcdir: (poo-flow-package-srcdir)
          (poo-flow-make-options options))
@@ -551,6 +555,18 @@
 (def (poo-flow-make-cleanable-stage stage)
   (filter poo-flow-make-cleanable-spec? stage))
 
+;; : (-> MaybeString Boolean)
+(def (poo-flow-build-nix-sdkroot? sdkroot)
+  (cond-expand
+   (darwin (and sdkroot (string-prefix? "/nix/store/" sdkroot)))
+   (else #f)))
+
+;; : (-> Void)
+(def (poo-flow-build-prepare-system-compiler!)
+  (when (poo-flow-build-nix-sdkroot?
+         (poo-flow-build-nonempty-env "SDKROOT"))
+    (setenv "SDKROOT" "")))
+
 ;; : (-> BuildSpec String)
 (def (poo-flow-gxc-spec-file spec)
   (match spec
@@ -564,8 +580,10 @@
 ;;       by the package build process, avoiding a second external `gxc` startup.
 ;;     %
 (def (poo-flow-compile-module/direct-gxc! label source)
+  (poo-flow-build-prepare-system-compiler!)
   (compile-module source
                   [invoke-gsc: #t
+                   gsc-options: (poo-flow-build-gsc-options)
                    keep-scm: #f
                    output-dir: (poo-flow-package-libdir)
                    optimize: #f

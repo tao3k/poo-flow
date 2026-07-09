@@ -15,6 +15,8 @@
         :poo-flow/src/module-system/object-core-support/contracts
         :poo-flow/src/module-system/object-core-support/merge)
 
+(import :poo-flow/src/module-system/object-core-support/object-slots)
+
 (export poo-flow-module-object
         poo-flow-module-object?
         poo-flow-module-object-identity
@@ -116,12 +118,6 @@
   (poo-flow-module-object-constant-slot-ref object 'inheritance-chain-cache))
 
 ;; : (-> Symbol Value PooModuleObjectSlotSpec)
-(def (poo-flow-module-object-constant-slot key value)
-  (cons key ($constant-slot-spec value)))
-
-(def +poo-flow-module-object-slot-missing+
-  (list 'poo-flow-module-object-slot-missing))
-
 ;;; Descriptor slots are plain POO constant slot specs. Read them from the POO
 ;;; object's slot table so metadata projections do not instantiate every object.
 ;; poo-flow-module-object-constant-slot-ref/default
@@ -134,27 +130,7 @@
 ;;   (poo-flow-module-object-constant-slot-ref/default object 'enabled? #f)
 ;;   ;; => #t
 ;;   ```
-(def (poo-flow-module-object-constant-slot-ref/default object key default)
-  (let loop ((slots (object-slots object)))
-    (cond
-     ((null? slots) default)
-     ((eq? (caar slots) key)
-      (let (spec (cdar slots))
-        (if ($constant-slot-spec? spec)
-          ($constant-slot-spec-value spec)
-          default)))
-     (else (loop (cdr slots))))))
-
 ;; : (-> PooModuleObject Symbol Value)
-(def (poo-flow-module-object-constant-slot-ref object key)
-  (let (value (poo-flow-module-object-constant-slot-ref/default
-               object
-               key
-               +poo-flow-module-object-slot-missing+))
-    (if (eq? value +poo-flow-module-object-slot-missing+)
-      (.ref object key)
-      value)))
-
 ;;; Field slots are computed from the superclass chain, letting child objects
 ;;; override or add fields without duplicating inherited object metadata.
 ;; : (-> [PooModuleFieldContract] PooModuleObjectSlotSpec)
@@ -169,42 +145,13 @@
 ;;; Field identity accepts contracts and raw symbols so lookup paths share one
 ;;; boundary between parsed field contracts and caller-provided keys.
 ;; : (-> (U PooModuleFieldContract Symbol) Symbol)
-(def (poo-flow-module-object-field-identity field)
-  (if (poo-flow-module-field-contract? field)
-    (poo-flow-module-field-contract-identity field)
-    field))
-
 ;;; Field indexes keep the first declaration authoritative for lookup while
 ;;; ordered merge code handles replacement and append materialization.
 ;; : (-> [PooModuleFieldContract] HashTable)
-(def (poo-flow-module-object-field-index fields)
-  (let (index (make-hash-table))
-    (for-each
-     (lambda (field)
-       (let (identity (poo-flow-module-object-field-identity field))
-         (if (poo-flow-module-object-identity-hash-ref index identity)
-           index
-           (hash-put! index identity field))))
-     fields)
-    index))
-
 ;; : (-> HashTable Symbol Value)
-(def (poo-flow-module-object-identity-hash-ref table identity)
-  (hash-get table identity))
-
 ;;; Field set is the small-list replacement path used before hash indexes are
 ;;; worth materializing, preserving inherited field order.
 ;; : (-> [PooModuleFieldContract] PooModuleFieldContract [PooModuleFieldContract])
-(def (poo-flow-module-object-field-set fields field)
-  (let (field-identity (poo-flow-module-object-field-identity field))
-    (cond ((null? fields) (list field))
-          ((equal? (poo-flow-module-object-field-identity (car fields))
-                   field-identity)
-           (cons field (cdr fields)))
-          (else
-           (cons (car fields)
-                 (poo-flow-module-object-field-set (cdr fields) field))))))
-
 ;; poo-flow-module-object-fields-merge
 ;;   : (-> [PooModuleFieldContract] [PooModuleFieldContract] [PooModuleFieldContract])
 ;;   | doc m%

@@ -41,6 +41,8 @@
                  loop-governor-state-key
                  loop-governor-strategy))
 
+(import ./governor-policy-sets.ss)
+
 (export loop-governor-state-field
         loop-governor-budget-limit
         loop-governor-pattern-action-key
@@ -73,11 +75,6 @@
 ;;; Pattern action keys come from descriptor metadata when present.
 ;;; Falling back to the pattern name keeps report-only examples inspectable.
 ;; : (-> LoopPatternDescriptor ActionKey)
-(def (loop-governor-pattern-action-key descriptor)
-  (loop-governor-alist-ref (loop-pattern-metadata descriptor)
-                           'acting_on
-                           (loop-pattern-name descriptor)))
-
 ;;; Runtime state snapshots use the governor state field by convention.
 ;;; Missing or empty values mean no active ownership claim.
 ;; : (-> LoopGovernor Alist MaybeActionKey)
@@ -90,54 +87,22 @@
 ;;; loop behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> ActionKey [ActionKey] Boolean)
-(def (loop-governor-member? value values)
-  (cond
-   ((null? values) #f)
-   ((equal? value (car values)) #t)
-   (else
-    (loop-governor-member? value (cdr values)))))
-
 ;;; Boundary: loop governor value set is the policy-visible edge for loop
 ;;; behavior, keeping validation, lookup, or projection responsibilities
 ;;; centralized for callers.
 ;; : (-> [Value] HashTable)
-(def (loop-governor-value-set values)
-  (let (table (make-hash-table))
-    (for-each
-     (lambda (value)
-       (hash-put! table value #t))
-     values)
-    table))
-
 ;;; Hash lookup is deliberately truthy instead of mutating policy state. The
 ;;; caller owns table construction and this helper only answers membership.
 ;; : (-> HashTable Value Boolean)
-(def (loop-governor-set-member? table value)
-  (and value (hash-get table value)))
-
 ;;; Denyset classification checks both action scope and descriptor identity.
 ;;; This lets shared denylist policy block broad targets or named patterns.
 ;; : (-> LoopPatternDescriptor HashTable Boolean)
-(def (loop-governor-pattern-denied-by-set? descriptor denylist-set)
-  (let ((action-key (loop-governor-pattern-action-key descriptor))
-        (pattern-name (loop-pattern-name descriptor)))
-    (or (loop-governor-set-member? denylist-set action-key)
-        (loop-governor-set-member? denylist-set pattern-name))))
-
 ;;; Conflict classification compares the descriptor action key with runtime
 ;;; state facts. It never claims or rewrites the state key.
 ;; : (-> LoopPatternDescriptor HashTable Boolean)
-(def (loop-governor-pattern-conflicted-by-set? descriptor state-action-key-set)
-  (let (action-key (loop-governor-pattern-action-key descriptor))
-    (and action-key
-         (loop-governor-set-member? state-action-key-set action-key))))
-
 ;;; Open classification is the intersection that survived static denylist and
 ;;; runtime-state conflict checks.
 ;; : (-> Boolean Boolean Boolean)
-(def (loop-governor-pattern-open? denied? conflicted?)
-  (and (not denied?) (not conflicted?)))
-
 ;;; Conditional cons keeps the accumulator update branch at the leaf, so the
 ;;; classifier can remain a named reducer instead of nested dispatch.
 ;; : (forall (a) (-> Boolean a [a] [a]))
@@ -330,6 +295,11 @@
 ;;; Denylist checks both action keys and pattern names so policy authors can
 ;;; block a target scope or a named loop with the same slot.
 ;; : (-> LoopGovernor LoopPatternDescriptor Boolean)
+(def (loop-governor-pattern-action-key descriptor)
+  (loop-governor-alist-ref (loop-pattern-metadata descriptor)
+                           'acting_on
+                           (loop-pattern-name descriptor)))
+
 (def (loop-governor-pattern-denied? governor descriptor)
   (let (denylist (loop-governor-shared-denylist governor))
     (or (loop-governor-member? (loop-governor-pattern-action-key descriptor)

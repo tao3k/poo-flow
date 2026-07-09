@@ -17,6 +17,7 @@
 
 ;;; nono profile defaults model local zero-setup agent sandboxing. The ordinary
 ;;; helper form keeps backend defaults explicit and avoids macro-only evidence.
+;; : (forall (o) (-> BackendRef [o] AgentSandboxProfileDescriptor))
 ;; : (-> BackendRef [Alist] AgentSandboxProfileDescriptor)
 (def (make-nono-agent-sandbox-profile-descriptor backend-ref . maybe-options)
   (make-agent-sandbox-backend-profile-descriptor

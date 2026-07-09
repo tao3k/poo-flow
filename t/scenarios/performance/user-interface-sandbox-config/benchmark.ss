@@ -26,6 +26,7 @@
  (feature . user-interface-sandbox-config)
  (optimizationFocus . "sandbox module feature lookup and default sandbox profile presentation without descriptor realization or backend execution")
  (inputShape . "kernel user profile selecting nono, cube, and docker sandbox modules plus default sandbox profile presentation")
+ (expectedOutcome . pass)
  (expectedRepair . "keep sandbox declarations POO-native, keep benchmark contracts under t/scenarios/performance, and do not move benchmark payloads into user-interface modules")
  (nativePooAuthoring . #t)
  (runtimeExecuted . #f)

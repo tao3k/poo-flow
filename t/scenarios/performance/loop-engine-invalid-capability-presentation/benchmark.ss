@@ -26,6 +26,7 @@
  (feature . loop-engine-invalid-capability-presentation)
  (optimizationFocus . "defstruct capability receipt with bounded ->alist projection for invalid loop-engine backend diagnostics")
  (inputShape . "one user-authored native POO loop-engine profile with unsupported backend capability")
+ (expectedOutcome . "bounded invalid capability receipt with supported backend diagnostics and no descriptor realization")
  (expectedRepair . "keep user POO authoring native, model generated capability receipts as fixed Gerbil structs, and serialize once through bounded alists at presentation/runtime ABI boundaries")
  (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate assert-memory-gate)
  (tags loop-engine capability performance projection invalid-backend defstruct boundary-alist))

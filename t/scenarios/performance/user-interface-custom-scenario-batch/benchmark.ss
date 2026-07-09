@@ -26,6 +26,7 @@
  (feature . user-interface-custom-scenario-batch)
  (optimizationFocus . "batch aggregation of custom user-interface scenario rows without executing runtime, sandbox, provider, tool, or durable store work")
  (inputShape . "custom/my-module scenarios spanning cicd, funflow, loop-engine, session transform/policy/topology/materialization, durable session memory, tool-core, memory-core, and durable recovery/store handoff cases")
+ (expectedOutcome . pass)
  (expectedRepair . "keep scenario fixtures in t/scenarios/performance, keep user-interface declarations POO-native, and summarize final report rows without moving benchmark contracts into user modules")
  (nativePooAuthoring . #t)
  (runtimeExecuted . #f)

@@ -114,7 +114,20 @@
 ;;; Intent: extend the core Rust request envelope at the bridge edge, not in
 ;;; core task structs. Marlin can consume these projection fields without
 ;;; depending on Gerbil's internal =('agent-sandbox request)= pair shape.
-;; : (-> ExecutionRequest [Symbol] Alist)
+;; make-agent-sandbox-bridge-envelope
+;;   : (forall (operation) (-> ExecutionRequest [operation] Alist))
+;;   : (-> ExecutionRequest List Alist)
+;;   : (-> ExecutionRequest [Symbol] Alist)
+;;   | doc m%
+;;       Project an agent sandbox request into a bridge envelope for runtime
+;;       handoff while preserving the operation boundary.
+;;
+;;       # Examples
+;;       ```scheme
+;;       (make-agent-sandbox-bridge-envelope request 'submit)
+;;       ;; => ((operation . submit) ...)
+;;       ```
+;;     %
 (def (make-agent-sandbox-bridge-envelope request . maybe-operation)
   (let* ((operation (if (null? maybe-operation) 'submit (car maybe-operation)))
          (valid-request (agent-sandbox-validate-execution-request request))
@@ -138,6 +151,8 @@
 
 ;;; Runtime command errors keep the bridge envelope identifiers, so Marlin-side
 ;;; failures can be correlated without knowing the underlying Gerbil task.
+;; : (forall (result) (-> RuntimeCommand Alist result))
+;; : (-> RuntimeCommand Alist AdapterResult)
 ;; : (-> RuntimeCommand Alist AdapterResult)
 (def (agent-sandbox-runtime-command-result command envelope)
   (with-catch
