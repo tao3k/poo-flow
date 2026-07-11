@@ -182,6 +182,15 @@ AC-01 deliberately stops before the C ABI, Python runtime, Cedar policy
 adapter, and Lean/Evidence bridge.  Those remain downstream acceptance lanes
 over the canonical bundle identity established here.
 
+* AC-02 Immutable Bundle Kernel
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Immutable lifecycle state | =src/semantic/organization-bundle-kernel.ss= | =t/scenarios/organization-bundle-kernel-test.ss= |
+| Open and validation transitions | same semantic owner, reusing AC-01 | positive and invalid-current cases |
+| Compare-and-advance | same semantic owner | advance, no-op, conflict, stale, rejection, immutability cases |
+| Kernel receipts | same semantic owner | stable codes and embedded AC-01 receipt checks |
+
 * Related RFCs
 
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][Architecture RFC]]

@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *AC-01 implemented and focused qualification complete*
+Status: *AC-02 Bundle Kernel implemented and focused qualification complete*
 
 RFC 90–94 are accepted for implementation planning. This document turns their P0–P6 migration into bounded work packages with explicit owners, deliverables, validation, stop conditions, and commit boundaries.
 
