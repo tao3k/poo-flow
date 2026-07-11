@@ -6,7 +6,9 @@
         :std/text/hex)
 
 (def +poo-flow-organization-bundle-schema+
-  'poo-flow.organization-bundle.v1)
+  'poo-flow.organization-bundle.v2)
+(def +poo-flow-organization-facet-schema+
+  'poo-flow.organization-facet.v1)
 
 (def +poo-flow-organization-bundle-digest-algorithm+ 'sha256)
 
@@ -53,19 +55,76 @@
       (capability-id capability-id-value)
       (effect-kind effect-kind-value)))
 
-(def (poo-flow-organization-bundle epoch-value principals-value roles-value
-                                   agents-value capabilities-value
-                                   delegations-value context-projections-value
-                                   tool-effects-value)
+(def (poo-flow-organization-protocol-transition transition-id-value
+                                                participants-value
+                                                capability-id-value)
+  (.o (kind 'protocol-transition)
+      (id transition-id-value)
+      (participants participants-value)
+      (capability-id capability-id-value)))
+
+(def (poo-flow-organization-evidence-obligation obligation-id-value
+                                                subject-id-value
+                                                target-kind-value
+                                                target-id-value)
+  (.o (kind 'evidence-obligation)
+      (id obligation-id-value)
+      (subject-id subject-id-value)
+      (target-kind target-kind-value)
+      (target-id target-id-value)))
+
+(def (poo-flow-organization-facet facet-name-value entities-value relations-value
+                                  constraints-value)
+  (.o (kind (case facet-name-value
+              ((organization) 'poo-flow.organization-facet.organization)
+              ((authority) 'poo-flow.organization-facet.authority)
+              ((context) 'poo-flow.organization-facet.context)
+              ((protocol) 'poo-flow.organization-facet.protocol)
+              ((evidence) 'poo-flow.organization-facet.evidence)
+              (else (error "unknown organization facet" facet-name-value))))
+      (schema +poo-flow-organization-facet-schema+)
+      (facet-name facet-name-value)
+      (entities entities-value)
+      (relations relations-value)
+      (constraints constraints-value)))
+
+(def (poo-flow-organization-organization-facet entities . rest)
+  (poo-flow-organization-facet 'organization entities
+                               (if (pair? rest) (car rest) '())
+                               (if (and (pair? rest) (pair? (cdr rest)))
+                                 (cadr rest) '())))
+(def (poo-flow-organization-authority-facet entities relations . constraints)
+  (poo-flow-organization-facet 'authority entities relations
+                               (if (pair? constraints) (car constraints) '())))
+(def (poo-flow-organization-context-facet entities . constraints)
+  (poo-flow-organization-facet 'context entities '()
+                               (if (pair? constraints) (car constraints) '())))
+(def (poo-flow-organization-protocol-facet entities relations . constraints)
+  (poo-flow-organization-facet 'protocol entities relations
+                               (if (pair? constraints) (car constraints) '())))
+(def (poo-flow-organization-evidence-facet entities relations . constraints)
+  (poo-flow-organization-facet 'evidence entities relations
+                               (if (pair? constraints) (car constraints) '())))
+(def (poo-flow-organization-empty-organization-facet)
+  (poo-flow-organization-organization-facet '()))
+(def (poo-flow-organization-empty-authority-facet)
+  (poo-flow-organization-authority-facet '() '()))
+(def (poo-flow-organization-empty-context-facet)
+  (poo-flow-organization-context-facet '()))
+(def (poo-flow-organization-empty-protocol-facet)
+  (poo-flow-organization-protocol-facet '() '()))
+(def (poo-flow-organization-empty-evidence-facet)
+  (poo-flow-organization-evidence-facet '() '()))
+
+(def (poo-flow-organization-bundle epoch-value organization-value authority-value
+                                   context-value protocol-value evidence-value)
   (.o (kind +poo-flow-organization-bundle-schema+)
       (epoch epoch-value)
-      (principals principals-value)
-      (roles roles-value)
-      (agents agents-value)
-      (capabilities capabilities-value)
-      (delegations delegations-value)
-      (context-projections context-projections-value)
-      (tool-effects tool-effects-value)))
+      (organization organization-value)
+      (authority authority-value)
+      (context context-value)
+      (protocol protocol-value)
+      (evidence evidence-value)))
 
 (def (poo-flow-organization-object? value expected-kind)
   (and (object? value)
@@ -137,33 +196,60 @@
         (poo-flow-organization-object-id value)
         (list 'capability (.ref value 'capability-id))
         (list 'effect-kind (.ref value 'effect-kind))))
+(def (protocol-transition->canonical value)
+  (list 'protocol-transition (poo-flow-organization-object-id value)
+        (cons 'participants (semantic-symbol-sort (.ref value 'participants)))
+        (list 'capability (.ref value 'capability-id))))
+(def (evidence-obligation->canonical value)
+  (list 'evidence-obligation (poo-flow-organization-object-id value)
+        (list 'subject (.ref value 'subject-id))
+        (list 'target-kind (.ref value 'target-kind))
+        (list 'target (.ref value 'target-id))))
+
+(def (semantic-kind=? value kind)
+  (and (object? value)
+       (with-catch (lambda (_failure) #f)
+                   (lambda () (eq? (.ref value 'kind) kind)))))
+(def (facet-entities facet kind)
+  (filter (lambda (value) (semantic-kind=? value kind))
+          (.ref facet 'entities)))
+(def (facet-relations facet kind)
+  (filter (lambda (value) (semantic-kind=? value kind))
+          (.ref facet 'relations)))
+(def (facet->canonical facet)
+  (list (.ref facet 'facet-name)
+        (list 'schema (.ref facet 'schema))
+        (cons 'entities
+              (map (lambda (value)
+                     (case (.ref value 'kind)
+                       ((principal) (principal->canonical value))
+                       ((role) (role->canonical value))
+                       ((agent) (agent->canonical value))
+                       ((capability) (capability->canonical value))
+                       ((context-projection) (context-projection->canonical value))
+                       ((tool-effect) (tool-effect->canonical value))
+                       ((protocol-transition) (protocol-transition->canonical value))
+                       ((evidence-obligation) (evidence-obligation->canonical value))
+                       (else (error "unsupported facet entity" value))))
+                   (semantic-sort (.ref facet 'entities))))
+        (cons 'relations
+              (map (lambda (value)
+                     (case (.ref value 'kind)
+                       ((delegation) (delegation->canonical value))
+                       (else (error "unsupported facet relation" value))))
+                   (semantic-sort (.ref facet 'relations))))
+        (cons 'constraints (semantic-symbol-sort (.ref facet 'constraints)))))
 
 (def (poo-flow-organization-bundle-normalize/object bundle)
   (unless (poo-flow-organization-bundle? bundle)
     (error "expected POO organization Bundle" bundle))
   (list +poo-flow-organization-bundle-schema+
         (list 'epoch (.ref bundle 'epoch))
-        (cons 'principals
-              (map principal->canonical
-                   (semantic-sort (.ref bundle 'principals))))
-        (cons 'roles
-              (map role->canonical
-                   (semantic-sort (.ref bundle 'roles))))
-        (cons 'agents
-              (map agent->canonical
-                   (semantic-sort (.ref bundle 'agents))))
-        (cons 'capabilities
-              (map capability->canonical
-                   (semantic-sort (.ref bundle 'capabilities))))
-        (cons 'delegations
-              (map delegation->canonical
-                   (semantic-sort (.ref bundle 'delegations))))
-        (cons 'context-projections
-              (map context-projection->canonical
-                   (semantic-sort (.ref bundle 'context-projections))))
-        (cons 'tool-effects
-              (map tool-effect->canonical
-                   (semantic-sort (.ref bundle 'tool-effects))))
+        (facet->canonical (.ref bundle 'organization))
+        (facet->canonical (.ref bundle 'authority))
+        (facet->canonical (.ref bundle 'context))
+        (facet->canonical (.ref bundle 'protocol))
+        (facet->canonical (.ref bundle 'evidence))
         '(outcomes start allow deny timeout retry cancellation checkpoint
                    restore stale-epoch evidence)))
 
@@ -252,13 +338,20 @@
         (cons 'observed observed)))
 
 (def (poo-flow-organization-bundle-validate/unsafe bundle . maybe-identity)
-  (let* ((principals (.ref bundle 'principals))
-         (roles (.ref bundle 'roles))
-         (agents (.ref bundle 'agents))
-         (capabilities (.ref bundle 'capabilities))
-         (delegations (.ref bundle 'delegations))
-         (contexts (.ref bundle 'context-projections))
-         (effects (.ref bundle 'tool-effects))
+  (let* ((organization (.ref bundle 'organization))
+         (authority (.ref bundle 'authority))
+         (context-facet (.ref bundle 'context))
+         (protocol (.ref bundle 'protocol))
+         (evidence (.ref bundle 'evidence))
+         (principals (facet-entities organization 'principal))
+         (roles (facet-entities organization 'role))
+         (agents (facet-entities organization 'agent))
+         (capabilities (facet-entities authority 'capability))
+         (delegations (facet-relations authority 'delegation))
+         (contexts (facet-entities context-facet 'context-projection))
+         (effects (facet-entities protocol 'tool-effect))
+         (transitions (facet-entities protocol 'protocol-transition))
+         (obligations (facet-entities evidence 'evidence-obligation))
          (epoch (.ref bundle 'epoch))
          (identity-value (if (pair? maybe-identity)
                            (car maybe-identity)
@@ -268,6 +361,18 @@
       (set! diagnostic-values
             (append diagnostic-values
                     (list (diagnostic code path expected observed)))))
+    (for-each
+     (lambda (entry)
+       (let ((name (car entry)) (facet (cdr entry)))
+         (unless (and (object? facet)
+                      (eq? (.ref facet 'schema)
+                           +poo-flow-organization-facet-schema+)
+                      (eq? (.ref facet 'facet-name) name))
+           (reject! 'invalid-facet (list 'facets name)
+                    'typed-facet 'invalid))))
+     (list (cons 'organization organization) (cons 'authority authority)
+           (cons 'context context-facet) (cons 'protocol protocol)
+           (cons 'evidence evidence)))
     (unless (and (integer? epoch) (>= epoch 0))
       (reject! 'invalid-epoch '(epoch) 'nonnegative-integer 'invalid))
     (for-each
@@ -285,6 +390,19 @@
            (cons 'capabilities capabilities)
            (cons 'context-projections contexts)
            (cons 'tool-effects effects)))
+    (let ((identity-entities
+           (append principals roles agents capabilities effects
+                   transitions obligations)))
+      (for-each
+       (lambda (id)
+         (let ((kinds (map (lambda (value) (.ref value 'kind))
+                           (filter (lambda (value)
+                                     (equal? (.ref value 'id) id))
+                                   identity-entities))))
+           (when (> (semantic-unique-count kinds) 1)
+             (reject! 'incompatible-shared-identity
+                      (list 'identity-universe id) 'one-kind kinds))))
+       (semantic-duplicate-ids identity-entities)))
     (for-each
      (lambda (agent)
        (let ((agent-id (.ref agent 'id))
@@ -350,6 +468,42 @@
                     (list 'tool-effects effect-id 'capability)
                     'declared capability-id))))
      effects)
+    (for-each
+     (lambda (transition)
+       (let ((transition-id (.ref transition 'id))
+             (capability-id (.ref transition 'capability-id)))
+         (for-each
+          (lambda (participant)
+            (unless (semantic-find participant agents)
+              (reject! 'missing-protocol-participant
+                       (list 'protocol transition-id 'participants participant)
+                       'declared-agent participant)))
+          (.ref transition 'participants))
+         (unless (semantic-find capability-id capabilities)
+           (reject! 'unauthorized-protocol-capability
+                    (list 'protocol transition-id 'capability)
+                    'declared-capability capability-id))))
+     transitions)
+    (for-each
+     (lambda (obligation)
+       (let ((obligation-id (.ref obligation 'id))
+             (subject-id (.ref obligation 'subject-id))
+             (target-kind (.ref obligation 'target-kind))
+             (target-id (.ref obligation 'target-id)))
+         (unless (semantic-find subject-id agents)
+           (reject! 'missing-evidence-subject
+                    (list 'evidence obligation-id 'subject)
+                    'declared-agent subject-id))
+         (unless
+          (case target-kind
+            ((transition) (semantic-find target-id transitions))
+            ((effect) (semantic-find target-id effects))
+            ((subject) (semantic-find target-id agents))
+            (else #f))
+          (reject! 'missing-evidence-target
+                   (list 'evidence obligation-id 'target)
+                   target-kind target-id))))
+     obligations)
     (unless (stable-semantic-value?
              (poo-flow-organization-bundle-normalize bundle))
       (reject! 'unstable-semantic-value '(bundle) 'canonical 'unstable))

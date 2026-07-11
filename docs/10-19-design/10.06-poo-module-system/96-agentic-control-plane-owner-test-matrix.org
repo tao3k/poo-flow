@@ -191,6 +191,15 @@ over the canonical bundle identity established here.
 | Compare-and-advance | same semantic owner | advance, no-op, conflict, stale, rejection, immutability cases |
 | Kernel receipts | same semantic owner | stable codes and embedded AC-01 receipt checks |
 
+* AC-03 Five Typed Facets
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Facet object family and canonical Bundle v2 | =src/semantic/organization-bundle.ss= | =t/scenarios/organization-bundle-five-facets-test.ss= |
+| Cross-facet validation | same semantic owner | Protocol, Evidence, shared identity, missing facet cases |
+| AC-01 migration | canonical Bundle scenario | 8 cases / 20 checks |
+| AC-02 integration | immutable Kernel scenario | 6 cases / 19 checks |
+
 * Related RFCs
 
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][Architecture RFC]]

@@ -26,29 +26,54 @@
          (effect
           (poo-flow-organization-tool-effect
            'search-tool 'search 'external-tool)))
-    (if (pair? reverse-order?)
+    (let ((principals (if (pair? reverse-order?)
+                        (list child-principal parent-principal)
+                        (list parent-principal child-principal)))
+          (roles (if (pair? reverse-order?)
+                   (list child-role parent-role)
+                   (list parent-role child-role)))
+          (agents (if (pair? reverse-order?)
+                    (list child parent) (list parent child)))
+          (capabilities (if (pair? reverse-order?)
+                          (list write-capability search-capability)
+                          (list search-capability write-capability))))
       (poo-flow-organization-bundle
        7
-       (list child-principal parent-principal)
-       (list child-role parent-role)
-       (list child parent)
-       (list write-capability search-capability)
-       (list delegation)
-       (list context)
-       (list effect))
-      (poo-flow-organization-bundle
-       7
-       (list parent-principal child-principal)
-       (list parent-role child-role)
-       (list parent child)
-       (list search-capability write-capability)
-       (list delegation)
-       (list context)
-       (list effect)))))
+       (poo-flow-organization-organization-facet
+        (append principals roles agents))
+       (poo-flow-organization-authority-facet capabilities (list delegation))
+       (poo-flow-organization-context-facet (list context))
+       (poo-flow-organization-protocol-facet (list effect) '())
+       (poo-flow-organization-empty-evidence-facet)))))
 
 (def (diagnostic-codes receipt)
   (map (lambda (entry) (cdr (assq 'code entry)))
        (poo-flow-organization-validation-diagnostics receipt)))
+
+(def (bundle-principals bundle)
+  (facet-entities (.ref bundle 'organization) 'principal))
+(def (bundle-roles bundle)
+  (facet-entities (.ref bundle 'organization) 'role))
+(def (bundle-agents bundle)
+  (facet-entities (.ref bundle 'organization) 'agent))
+(def (bundle-capabilities bundle)
+  (facet-entities (.ref bundle 'authority) 'capability))
+(def (bundle-delegations bundle)
+  (facet-relations (.ref bundle 'authority) 'delegation))
+(def (bundle-contexts bundle)
+  (facet-entities (.ref bundle 'context) 'context-projection))
+(def (bundle-effects bundle)
+  (facet-entities (.ref bundle 'protocol) 'tool-effect))
+(def (flat-test-bundle epoch principals roles agents capabilities delegations
+                       contexts effects)
+  (poo-flow-organization-bundle
+   epoch
+   (poo-flow-organization-organization-facet
+    (append principals roles agents))
+   (poo-flow-organization-authority-facet capabilities delegations)
+   (poo-flow-organization-context-facet contexts)
+   (poo-flow-organization-protocol-facet effects '())
+   (poo-flow-organization-empty-evidence-facet)))
 
 (def canonical-organization-bundle-test
   (test-suite
@@ -84,33 +109,33 @@
    (test-case "semantic mutation changes digest"
      (let* ((bundle (canonical-bundle))
             (mutated
-             (poo-flow-organization-bundle
+             (flat-test-bundle
               8
-              (.ref bundle 'principals)
-              (.ref bundle 'roles)
-              (.ref bundle 'agents)
-              (.ref bundle 'capabilities)
-              (.ref bundle 'delegations)
-              (.ref bundle 'context-projections)
-              (.ref bundle 'tool-effects))))
+              (bundle-principals bundle)
+              (bundle-roles bundle)
+              (bundle-agents bundle)
+              (bundle-capabilities bundle)
+              (bundle-delegations bundle)
+              (bundle-contexts bundle)
+              (bundle-effects bundle))))
        (check (equal? (.ref (poo-flow-organization-bundle-identity bundle) 'digest)
                       (.ref (poo-flow-organization-bundle-identity mutated) 'digest))
               => #f)))
 
    (test-case "authority equality is rejected"
      (let* ((base (canonical-bundle))
-            (parent (car (.ref base 'agents)))
-            (child (cadr (.ref base 'agents)))
+            (parent (car (bundle-agents base)))
+            (child (cadr (bundle-agents base)))
             (invalid-child
              (poo-flow-organization-agent
               (.ref child 'id) (.ref child 'principal-id) (.ref child 'role-id)
               (.ref child 'parent-id) '(write search) '(public)))
             (invalid
-             (poo-flow-organization-bundle
-              (.ref base 'epoch) (.ref base 'principals) (.ref base 'roles)
-              (list parent invalid-child) (.ref base 'capabilities)
-              (.ref base 'delegations) (.ref base 'context-projections)
-              (.ref base 'tool-effects)))
+             (flat-test-bundle
+              (.ref base 'epoch) (bundle-principals base) (bundle-roles base)
+              (list parent invalid-child) (bundle-capabilities base)
+              (bundle-delegations base) (bundle-contexts base)
+              (bundle-effects base)))
             (receipt (poo-flow-organization-bundle-validate invalid)))
        (check (not (not (member 'authority-not-strict-subset
                                 (diagnostic-codes receipt))))
@@ -122,11 +147,11 @@
              (poo-flow-organization-context-projection
               'agent-child '(public secret)))
             (invalid
-             (poo-flow-organization-bundle
-              (.ref base 'epoch) (.ref base 'principals) (.ref base 'roles)
-              (.ref base 'agents) (.ref base 'capabilities)
-              (.ref base 'delegations) (list leaked-context)
-              (.ref base 'tool-effects)))
+             (flat-test-bundle
+              (.ref base 'epoch) (bundle-principals base) (bundle-roles base)
+              (bundle-agents base) (bundle-capabilities base)
+              (bundle-delegations base) (list leaked-context)
+              (bundle-effects base)))
             (wrong-identity
              (.o (kind 'poo-flow.organization-bundle.identity.v1)
                  (algorithm 'sha256) (digest "00") (epoch 7)))
@@ -142,10 +167,10 @@
              (poo-flow-organization-tool-effect
               'unknown-tool 'unknown 'external-tool))
             (invalid
-             (poo-flow-organization-bundle
-              -1 (.ref base 'principals) (.ref base 'roles)
-              (.ref base 'agents) (.ref base 'capabilities)
-              (.ref base 'delegations) (.ref base 'context-projections)
+             (flat-test-bundle
+              -1 (bundle-principals base) (bundle-roles base)
+              (bundle-agents base) (bundle-capabilities base)
+              (bundle-delegations base) (bundle-contexts base)
               (list effect)))
             (codes
              (diagnostic-codes
@@ -155,17 +180,17 @@
 
    (test-case "duplicate and missing semantic identities are rejected"
      (let* ((base (canonical-bundle))
-            (principal (car (.ref base 'principals)))
+            (principal (car (bundle-principals base)))
             (invalid
-             (poo-flow-organization-bundle
+             (flat-test-bundle
               (.ref base 'epoch)
               (list principal principal)
               '()
-              (.ref base 'agents)
-              (.ref base 'capabilities)
-              (.ref base 'delegations)
-              (.ref base 'context-projections)
-              (.ref base 'tool-effects)))
+              (bundle-agents base)
+              (bundle-capabilities base)
+              (bundle-delegations base)
+              (bundle-contexts base)
+              (bundle-effects base)))
             (codes
              (diagnostic-codes
               (poo-flow-organization-bundle-validate invalid))))
@@ -175,18 +200,18 @@
 
    (test-case "unstable semantic values fail closed"
      (let* ((base (canonical-bundle))
-            (parent (car (.ref base 'agents)))
-            (child (cadr (.ref base 'agents)))
+            (parent (car (bundle-agents base)))
+            (child (cadr (bundle-agents base)))
             (unstable-child
              (poo-flow-organization-agent
               (.ref child 'id) (.ref child 'principal-id) (.ref child 'role-id)
               (.ref child 'parent-id) (vector 'search) '(public)))
             (invalid
-             (poo-flow-organization-bundle
-              (.ref base 'epoch) (.ref base 'principals) (.ref base 'roles)
-              (list parent unstable-child) (.ref base 'capabilities)
-              (.ref base 'delegations) (.ref base 'context-projections)
-              (.ref base 'tool-effects)))
+             (flat-test-bundle
+              (.ref base 'epoch) (bundle-principals base) (bundle-roles base)
+              (list parent unstable-child) (bundle-capabilities base)
+              (bundle-delegations base) (bundle-contexts base)
+              (bundle-effects base)))
             (receipt (poo-flow-organization-bundle-validate invalid)))
        (check-equal? (poo-flow-organization-validation-accepted? receipt) #f)
        (check-equal? (diagnostic-codes receipt) '(unstable-semantic-value))))))

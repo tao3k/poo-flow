@@ -5,19 +5,24 @@
 (def (bundle epoch child-authority)
   (poo-flow-organization-bundle
    epoch
-   (list (poo-flow-organization-principal 'pp)
-         (poo-flow-organization-principal 'pc))
-   (list (poo-flow-organization-role 'rp)
-         (poo-flow-organization-role 'rc))
-   (list (poo-flow-organization-agent 'parent 'pp 'rp #f
-                                      '(write search) '(public private))
-         (poo-flow-organization-agent 'child 'pc 'rc 'parent
-                                      child-authority '(public)))
-   (list (poo-flow-organization-capability 'write #t)
-         (poo-flow-organization-capability 'search #t))
-   (list (poo-flow-organization-delegation 'parent 'child 'search))
-   (list (poo-flow-organization-context-projection 'child '(public)))
-   (list (poo-flow-organization-tool-effect 'tool 'search 'external-tool))))
+   (poo-flow-organization-organization-facet
+    (list (poo-flow-organization-principal 'pp)
+          (poo-flow-organization-principal 'pc)
+          (poo-flow-organization-role 'rp)
+          (poo-flow-organization-role 'rc)
+          (poo-flow-organization-agent 'parent 'pp 'rp #f
+                                       '(write search) '(public private))
+          (poo-flow-organization-agent 'child 'pc 'rc 'parent
+                                       child-authority '(public))))
+   (poo-flow-organization-authority-facet
+    (list (poo-flow-organization-capability 'write #t)
+          (poo-flow-organization-capability 'search #t))
+    (list (poo-flow-organization-delegation 'parent 'child 'search)))
+   (poo-flow-organization-context-facet
+    (list (poo-flow-organization-context-projection 'child '(public))))
+   (poo-flow-organization-protocol-facet
+    (list (poo-flow-organization-tool-effect 'tool 'search 'external-tool)) '())
+   (poo-flow-organization-empty-evidence-facet)))
 
 (def (open+validate value)
   (let-values (((candidate _open)
