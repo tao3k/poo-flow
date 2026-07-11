@@ -313,9 +313,9 @@
            (facts (poo-flow-graph-runtime-receipt->lean-facts receipt))
            (lean-source
             (poo-flow-graph-runtime-receipt->lean-module receipt)))
-      (check-equal? (.ref receipt 'runtime-executed) #t)
-      (check-equal? (.ref receipt 'finished) #t)
-      (check-equal? (.ref receipt 'trace)
+      (check-equal? (poo-flow-graph-runtime-receipt-ref receipt 'runtime-executed) #t)
+      (check-equal? (poo-flow-graph-runtime-receipt-ref receipt 'finished) #t)
+      (check-equal? (poo-flow-graph-runtime-receipt-ref receipt 'trace)
                     '(session
                       sandbox
                       router
@@ -326,8 +326,8 @@
                       checkpoint
                       human-approval
                       runtime-handoff))
-      (check-equal? (.ref receipt 'fuel-after) 7)
-      (check-equal? (.ref receipt 'diagnostics) '())
+      (check-equal? (poo-flow-graph-runtime-receipt-ref receipt 'fuel-after) 7)
+      (check-equal? (poo-flow-graph-runtime-receipt-ref receipt 'diagnostics) '())
       (check-equal? (alist-value facts 'graph.runtime/executed) #t)
       (check-equal? (alist-value facts 'graph.runtime/finished) #t)
       (check-equal? (alist-value facts 'graph.runtime/handoff-reached) #t)
@@ -356,8 +356,8 @@
              langgraph-production-runtime-graph
              langgraph-human-approval-missing-policy))
            (facts (poo-flow-graph-runtime-receipt->lean-facts receipt)))
-      (check-equal? (.ref receipt 'finished) #t)
-      (check-equal? (alist-value (.ref receipt 'diagnostics)
+      (check-equal? (poo-flow-graph-runtime-receipt-ref receipt 'finished) #t)
+      (check-equal? (alist-value (poo-flow-graph-runtime-receipt-ref receipt 'diagnostics)
                                  'human-approval-missing)
                     'langgraph-production-runtime)
       (check-equal? (alist-value facts 'graph.runtime/human-approval-sound)

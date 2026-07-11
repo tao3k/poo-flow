@@ -14,6 +14,7 @@
         poo-flow-graph-runtime-policy
         poo-flow-graph-runtime-policy?
         poo-flow-graph-runtime-receipt?
+        poo-flow-graph-runtime-receipt-ref
         poo-flow-graph-runtime-execute
         poo-flow-graph-runtime-receipt->lean-facts
         poo-flow-graph-runtime-receipt->lean-module

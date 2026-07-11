@@ -1,5 +1,3 @@
-(import :poo-flow/src/module-system/profile-composition)
-
 (use-composition tool-calling-agent-loop-composition
   (use-module tool
     (profiles tool-calling
