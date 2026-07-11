@@ -23,7 +23,7 @@ The public user path is POO-native composition:
 #+begin_src scheme
 (use-composition my-composition
   (modules
-    (use-profile crewai #:as crew))
+    (use-profile crewai as crew))
   (stage production
     (compose
       (profile crew agent)

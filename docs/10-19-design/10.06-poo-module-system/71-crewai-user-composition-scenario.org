@@ -10,7 +10,7 @@ The goal is to show that a CrewAI-like crew/flow can be expressed as a small reu
 #+begin_src scheme
 (use-composition crewai-research-flow-composition
   (modules
-    (use-profile crewai #:as crew))
+    (use-profile crewai as crew))
   (stage production
     (compose
       (profile crew agent)

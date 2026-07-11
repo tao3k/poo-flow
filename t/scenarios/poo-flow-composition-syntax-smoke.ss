@@ -4,34 +4,6 @@
 (import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/profile-composition)
 
-(def session-module
-  (.o (hardened (.o (name 'session-hardened)))
-      (audited (.o (name 'session-audited)))))
-
-(def sandbox-module
-  (.o (restricted (.o (name 'sandbox-restricted)))))
-
-(def syntax-smoke-composition
-  (poo-flow-composition syntax-smoke
-    (modules
-     (use-module session-module #:as session)
-     (use-module sandbox-module #:as sandbox))
-    (stage production
-      (compose
-       (profiles session hardened audited)
-       (profiles sandbox restricted))
-      (graph guarded-flow)
-      (loop #:fuel 2 #:exit done))))
-
-(unless (poo-flow-composition? syntax-smoke-composition)
-  (error "syntax smoke did not build a composition object"))
-
-(let* ((stage (car (poo-flow-composition-stages syntax-smoke-composition)))
-       (profiles (poo-flow-composition-stage-compose-profiles stage)))
-  (unless (equal? (map (lambda (profile) (.ref profile 'name)) profiles)
-                  '(session-hardened session-audited sandbox-restricted))
-    (error "syntax smoke selected the wrong profile slots")))
-
 (def report/base
   (.o (name 'report/base)
       (kind 'report)
@@ -55,7 +27,7 @@
 
 (def native-poo-extension-composition
   (use-composition native-poo-extension
-    (use-module artifact
+    (use-module artifact as artifact
       (profile research-report
         :extends report/base
         :analysis (checksum schema provenance)
@@ -65,12 +37,12 @@
         :with (with-audit-retention)
         :publish (human-approved proof-gated internal-registry))
       (profile enterprise-report))
+    (compose
+      (profiles artifact
+        research-report
+        audited-report
+        enterprise-report))
     (stage production
-      (compose
-       (profiles artifact
-         research-report
-         audited-report
-         enterprise-report))
       (graph artifact-control-plane)
       (loop #:fuel 1 #:exit publish-ready)
       (prove artifact-scope-contained
@@ -86,7 +58,8 @@
        (enterprise-report* (.ref artifact 'enterprise-report))
        (stage (car (poo-flow-composition-stages
                     native-poo-extension-composition)))
-       (profiles (poo-flow-composition-stage-compose-profiles stage)))
+       (profiles (poo-flow-composition-profiles
+                  native-poo-extension-composition)))
   (unless (and (equal? (.ref research-report 'scope)
                        '(session human-handoff publish-channel))
                (equal? (.ref research-report 'analysis)
@@ -105,7 +78,7 @@
 
 (def local-funflow-module-composition
   (use-composition repo-ci
-    (use-module funflow #:as ff
+    (use-module funflow as ff
       (profiles github-ci))
 
     (compose
@@ -145,7 +118,7 @@
 
 (def local-funflow-batch-composition
   (use-composition repo-ci-batch
-    (use-module funflow #:as ff
+    (use-module funflow as ff
       (profiles github-ci python-anyio))
 
     (compose

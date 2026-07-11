@@ -32,7 +32,8 @@
  (test-suite "crewai user composition"
   (test-case "crewai declares one reusable production composition"
     (let* ((stage (single-stage crewai-composition))
-           (compose-payload (stage-clause-payload stage 'compose))
+           (compose-payload
+            (poo-flow-composition-profiles crewai-composition))
            (graph-payload (stage-clause-payload stage 'graph))
            (loop-payload (stage-clause-payload stage 'loop))
            (prove-payload (stage-clause-payload stage 'prove))
@@ -46,20 +47,20 @@
       (check-equal? (length compose-payload) 14)
       (check-equal? (map (lambda (profile) (.ref profile 'name))
                          compose-payload)
-                    '(crewai-agent
-                      crewai-task
-                      crewai-crew
-                      crewai-planning
-                      crewai-memory
-                      crewai-knowledge
-                      crewai-sequential-process
-                      crewai-flow-state
-                      crewai-flow-router
-                      crewai-flow-persist
-                      crewai-guardrail
-                      crewai-human-input
-                      crewai-observability
-                      crewai-runtime-handoff))
+                    '(agent
+                      task
+                      crew
+                      planning
+                      memory
+                      knowledge
+                      sequential-process
+                      flow-state
+                      flow-router
+                      flow-persist
+                      guardrail
+                      human-input
+                      observability
+                      runtime-handoff))
       (check-equal? graph-payload '(crewai-flow-graph))
       (check-equal? (length loop-payload) 4)
       (check-equal? (cadr loop-payload) 6)

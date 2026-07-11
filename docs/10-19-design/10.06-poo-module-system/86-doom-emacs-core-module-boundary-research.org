@@ -322,7 +322,7 @@ core, or diagnostics core just to get a usable flow module.
 Public factors and plugins should be explicitly declared:
 
 #+begin_src scheme
-(use-module funflow #:as ff
+(use-module funflow as ff
   (profiles github-ci))
 
 (use-composition repo-ci

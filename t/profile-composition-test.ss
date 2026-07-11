@@ -1,8 +1,9 @@
 ;;; -*- Gerbil -*-
 
 (import :std/test
+        :std/srfi/13
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil/gambit with-exception-catcher)
+        :gerbil/gambit
         (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/module-system/profile-composition
         (only-in :poo-flow/src/module-system/profile-composition-syntax-plan
@@ -57,10 +58,12 @@
           :scope (session)))
       (compose (profile artifact local-report)))))
 
-(def (composition-syntax-rejected? module-datum)
+(def (composition-syntax-error-message module-datum)
   (let (module-form (datum->syntax #f module-datum))
     (with-exception-catcher
-     (lambda (_exn) #t)
+     (lambda (exn)
+       (call-with-output-string
+        (lambda (port) (display-exception exn port))))
      (lambda ()
        (parse-poo-flow-composition-syntax-plan
         (datum->syntax #f 'invalid-composition)
@@ -101,19 +104,23 @@
       (check-equal? (.ref profile 'kind) 'hygienic-profile)
       (check-equal? (.ref profile 'scope) '(session))))
    (test-case
-    "legacy alias-only module grammar is rejected during parsing"
+    "non-canonical module grammar reports the single canonical diagnostic"
     (check-equal?
-     (composition-syntax-rejected?
-      '(use-module artifact
-         (profile report :kind report)))
+     (integer?
+      (string-contains
+       (composition-syntax-error-message '(module artifact))
+       "composition-invalid-module-form"))
      #t))
    (test-case
     "duplicate profile declarations are rejected during parsing"
     (check-equal?
-     (composition-syntax-rejected?
-      '(use-module artifact-catalog as artifact
-         (profile report :kind report)
-         (profile report :kind report)))
+     (integer?
+      (string-contains
+       (composition-syntax-error-message
+        '(use-module artifact-catalog as artifact
+           (profile report :kind report)
+           (profile report :kind report)))
+       "composition-duplicate-profile"))
      #t))))
 
 (run-tests! profile-composition-tests)

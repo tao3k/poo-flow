@@ -13,7 +13,7 @@ then compose those profiles before declaring stages, steps, edges, or routes.
 
 #+begin_src scheme
 (use-composition repo-ci
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles github-ci))
 
   (compose
@@ -31,7 +31,7 @@ then compose those profiles before declaring stages, steps, edges, or routes.
 The important relationship is local and explicit:
 
 #+begin_src text
-use-module funflow #:as ff
+use-module funflow as ff
   -> ff/github-ci profile slot
   -> compose consumes (profile ff github-ci)
   -> stages consume generic flow/DAG clauses
@@ -47,7 +47,7 @@ profile.
 The boundary is:
 
 - =use-module funflow= loads FunFlow-owned profiles and capability contracts.
-- =#:as ff= creates a composition-local module binding.
+- =as ff= creates a composition-local module binding.
 - =(profiles github-ci)= selects profiles exported by the loaded module.
 - =compose= combines selected profiles; it does not expose FunFlow internals.
 - =stage=, =step=, =edges=, and =route= describe generic flow/DAG structure.
@@ -62,7 +62,7 @@ project-specific durable profile.
 This should not be split into a global import plus a separate composition:
 
 #+begin_src scheme
-(use-module funflow #:as ff
+(use-module funflow as ff
   (profiles github-ci))
 
 (use-composition repo-ci
@@ -83,7 +83,7 @@ The user interface has three levels.
 The default level is module profile selection:
 
 #+begin_src scheme
-(use-module funflow #:as ff
+(use-module funflow as ff
   (profiles github-ci))
 #+end_src
 
@@ -91,7 +91,7 @@ The local override level extends a selected profile only when the specialization
 belongs to this composition:
 
 #+begin_src scheme
-(use-module funflow #:as ff
+(use-module funflow as ff
   (profiles github-ci)
   (profile strict-ci
     :extends (profile ff github-ci)
@@ -108,7 +108,7 @@ The advanced POO-native level reuses an existing object directly:
       (capabilities '(runner cache artifact permissions audit-log))))
 
 (use-composition repo-ci
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profile enterprise-ci))
   (compose
     (profile ff enterprise-ci))
@@ -126,7 +126,7 @@ fixture loaded by =poo_flow_runtime.load(...)= should therefore return a
 
 #+begin_src scheme
 (use-composition python-runtime-ci
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles github-ci python-anyio))
   (compose
     (profiles ff github-ci python-anyio))
@@ -346,7 +346,7 @@ in-process cache own steady-state repeated calls.
 
 The interface is acceptable when:
 
-- =use-composition= accepts an inline =(use-module funflow #:as ff ...)= form;
+- =use-composition= accepts an inline =(use-module funflow as ff ...)= form;
 - =compose= can consume =(profile ff github-ci)= and batch =(profiles ff ...)=;
 - =stage= can carry generic =step=, =edges=, and =route= clauses without
   interpreting backend details;

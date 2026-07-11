@@ -15,7 +15,15 @@
                  poo-flow-composition-inline-profile-normalize
                  poo-flow-composition-inline-apply-hooks
                  poo-flow-composition-inline-module
-                 poo-flow-composition-inline-profile))
+                 poo-flow-composition-inline-profile)
+        (only-in :poo-flow/src/module-system/profile-composition-accessors
+                 poo-flow-composition?
+                 poo-flow-composition-name
+                 poo-flow-composition-modules
+                 poo-flow-composition-profiles
+                 poo-flow-composition-stages
+                 poo-flow-composition-stage-name
+                 poo-flow-composition-stage-clauses))
 
 (export use-composition
         poo-flow-profile-ref
@@ -28,4 +36,11 @@
         poo-flow-composition-inline-profile-normalize
         poo-flow-composition-inline-apply-hooks
         poo-flow-composition-inline-module
-        poo-flow-composition-inline-profile)
+        poo-flow-composition-inline-profile
+        poo-flow-composition?
+        poo-flow-composition-name
+        poo-flow-composition-modules
+        poo-flow-composition-profiles
+        poo-flow-composition-stages
+        poo-flow-composition-stage-name
+        poo-flow-composition-stage-clauses)

@@ -343,7 +343,7 @@ the module provide its kernel defaults implicitly:
 
 #+begin_src scheme
 (use-composition framework-audit
-  (use-module funflow #:as ff)
+  (use-module funflow as ff)
 
   (session audit/root
     (transform coordinator
@@ -381,8 +381,8 @@ Plugin extension stays POO-native, but it is explicit and upward:
 
 #+begin_src scheme
 (use-composition framework-audit
-  (use-module funflow #:as ff)
-  (use-module audit-roles #:as audit
+  (use-module funflow as ff)
+  (use-module audit-roles as audit
     (profiles audit-leader-role))
 
   (compose
@@ -705,7 +705,7 @@ The role model should be expressed as reusable POO families:
 
 #+begin_src scheme
 (use-composition research-team
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles agent-team durable-projects))
 
   (compose
@@ -966,7 +966,7 @@ A compact AgentTeams-style composition should look like:
 
 #+begin_src scheme
 (use-composition repo-ci
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles github-ci agentteams))
 
   (compose
@@ -987,7 +987,7 @@ For an AgentTeams-style project:
 
 #+begin_src scheme
 (use-composition research-team
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles role-topology durable-projects loop-policy artifact-contract))
 
   (compose
@@ -1020,7 +1020,7 @@ The advanced native POO override remains available:
       low-information-ack-policy: 'block))
 
 (use-composition research-team
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles role-topology durable-projects task-lifecycle))
 
   (compose

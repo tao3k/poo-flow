@@ -46,7 +46,7 @@ The reusable profile lives at =user-interface/profiles/tool-calling.ss=. The reu
 #+begin_src scheme
 (use-composition tool-calling-agent-loop-composition
   (modules
-    (use-profile tool-calling #:as tool))
+    (use-profile tool-calling as tool))
   (stage production
     (compose
       (profile tool tool-request)

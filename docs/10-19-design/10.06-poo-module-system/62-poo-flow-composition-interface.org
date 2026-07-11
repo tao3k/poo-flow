@@ -31,10 +31,10 @@ catalog DSL in the normal user path.
 #+begin_src scheme
 (use-composition rag-agent
   (modules
-    (use-module session-module #:as session)
-    (use-module sandbox-module #:as sandbox)
-    (use-module retriever-module #:as retriever)
-    (use-module llm-module #:as llm))
+    (use-module session-module as session)
+    (use-module sandbox-module as sandbox)
+    (use-module retriever-module as retriever)
+    (use-module llm-module as llm))
 
   (stage develop
     (compose
@@ -76,8 +76,8 @@ object expression:
 #+begin_src scheme
 (use-composition rag-agent
   (modules
-    (use-module session-module #:as session)
-    (use-module sandbox-module #:as sandbox))
+    (use-module session-module as session)
+    (use-module sandbox-module as sandbox))
   (stage production
     (compose
       (profile session hardened)
@@ -106,7 +106,7 @@ shape stays declarative by using `use-profile` inside `use-composition`:
 ;; user-interface/cases/langchain-linear.ss
 (use-composition langchain-linear-composition
   (modules
-    (use-profile langchain #:as chain))
+    (use-profile langchain as chain))
   (stage production
     (compose
       (profile chain memory)
@@ -149,7 +149,7 @@ forcing every temporary edge, router, or loop policy into a shared module file.
        (composition
         (use-composition audited-langchain-linear-composition
           (modules
-            (use-module audited-chain #:as chain))
+            (use-module audited-chain as chain))
           (stage production
             (compose
               (profile chain memory)
@@ -206,7 +206,7 @@ redeclare the same override locally:
 ;; user-interface/cases/langgraph-state.ss
 (use-composition langgraph-state-composition
   (modules
-    (use-profile langgraph #:as graph))
+    (use-profile langgraph as graph))
   (stage production
     (compose
       (profile graph router)

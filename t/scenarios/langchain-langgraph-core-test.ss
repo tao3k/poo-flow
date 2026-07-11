@@ -44,9 +44,9 @@
         model
         parser
         no-tool))
+    (compose
+      (profiles chain memory prompt model parser no-tool))
     (stage production
-      (compose
-       (profiles chain memory prompt model parser no-tool))
       (graph langchain-linear-chain)
       (loop #:fuel 1 #:exit parsed-output)
       (prove chain-order
@@ -199,7 +199,8 @@
  (test-suite "langchain and langgraph user compositions"
   (test-case "langchain linear chain declares one production stage"
     (let* ((stage (single-stage langchain-composition))
-           (compose-payload (stage-clause-payload stage 'compose))
+           (compose-payload
+            (poo-flow-composition-profiles langchain-composition))
            (graph-payload (stage-clause-payload stage 'graph))
            (loop-payload (stage-clause-payload stage 'loop))
            (prove-payload (stage-clause-payload stage 'prove)))
@@ -238,21 +239,25 @@
       (check-equal? (alist-value metadata 'conditional-edge-pairs) '())
       (check-equal? (alist-value metadata 'dead-end-ids) '())))
 
-  (test-case "local override keeps the reusable case and replaces one profile"
+  (test-case "local composition preserves source module and selected profiles"
     (let* ((stage (single-stage audited-langchain-composition))
-           (compose-payload (stage-clause-payload stage 'compose)))
+           (compose-payload
+            (poo-flow-composition-profiles
+             audited-langchain-composition))
+           (module-binding
+            (car (poo-flow-composition-modules
+                  audited-langchain-composition)))
+           (module (.ref module-binding 'module)))
       (check-equal? (length compose-payload) 5)
       (check-equal? (map (lambda (profile) (.ref profile 'name))
                          compose-payload)
-                    '(langchain-stateless-memory
-                      langchain-prompt-template
-                      langchain-audited-chat-model
-                      langchain-output-parser
-                      langchain-no-tool))))
+                    '(memory prompt model parser no-tool))
+      (check-equal? (.ref (.ref module 'model) 'module) 'chain)))
 
   (test-case "langgraph state graph declares bounded loop and handoff"
     (let* ((stage (single-stage langgraph-composition))
-           (compose-payload (stage-clause-payload stage 'compose))
+           (compose-payload
+            (poo-flow-composition-profiles langgraph-composition))
            (graph-payload (stage-clause-payload stage 'graph))
            (loop-payload (stage-clause-payload stage 'loop))
            (prove-payload (stage-clause-payload stage 'prove))

@@ -53,7 +53,8 @@
 ;; : (-> Syntax Syntax Boolean)
 (def (composition-literal=? candidate literal)
   (and (identifier? candidate)
-       (free-identifier=? candidate literal)))
+       (eq? (syntax->datum candidate)
+            (syntax->datum literal))))
 
 ;; : (-> Syntax Symbol String [Syntax])
 (def (composition-syntax-list source category message)
@@ -397,7 +398,7 @@
          'composition-invalid-module-form
          "expected canonical (use-module module-name as alias ...)"))
     (match module-items
-      ([head module-name marker alias . profile-clauses]
+      ([head module-name marker alias profile-clauses ...]
        (unless (composition-literal=? head #'use-module)
          (composition-raise-syntax-error
           'composition-invalid-module-form
@@ -405,8 +406,8 @@
           module-form))
        (unless (composition-literal=? marker #'as)
          (composition-raise-syntax-error
-          'composition-legacy-module-form
-          "alias-only use-module syntax was removed; use (use-module module-name as alias ...)"
+          'composition-invalid-module-form
+          "expected canonical (use-module module-name as alias ...)"
           module-form))
        (composition-require-identifier
         module-name
@@ -476,15 +477,10 @@
                    "use-composition expects parenthesized compose or stage forms"
                    form))))))))
       ([head . _]
-       (if (composition-literal=? head #'use-module)
-         (composition-raise-syntax-error
-          'composition-legacy-module-form
-          "alias-only use-module syntax was removed; use (use-module module-name as alias ...)"
-          module-form)
-         (composition-raise-syntax-error
-          'composition-invalid-module-form
-          "expected canonical (use-module module-name as alias ...)"
-          module-form)))
+       (composition-raise-syntax-error
+        'composition-invalid-module-form
+        "expected canonical (use-module module-name as alias ...)"
+        module-form))
       (else
        (composition-raise-syntax-error
         'composition-invalid-module-form

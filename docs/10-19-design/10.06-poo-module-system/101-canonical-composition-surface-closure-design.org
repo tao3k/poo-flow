@@ -1,0 +1,116 @@
+#+title: Canonical Composition Surface Closure Design
+
+* Status
+
+Approved in conversation on 2026-07-11.  Implementation and focused
+qualification are complete.
+
+* Objective
+
+Close the module-composition refactor around one unambiguous public grammar:
+
+#+begin_src scheme
+(use-composition composition-name
+  (use-module module-name as alias profile-clause ...)
+  composition-clause ...)
+#+end_src
+
+The parser, facade exports, user-interface cases, tests, and diagnostics must
+agree on that grammar.  Legacy alias-only syntax is removed rather than
+normalized, preserved as an escape hatch, or mentioned as an alternative.
+
+* Scope
+
+This feature owns:
+
+- canonical =use-module ... as ...= parsing inside =use-composition=;
+- removal of legacy parser branches, legacy diagnostic codes, and legacy
+  examples;
+- complete facade projection of composition accessors from their existing
+  owner;
+- focused regression repair for composition smoke, profile composition,
+  LangChain/LangGraph, CrewAI, and tool-calling cases;
+- documentation and a compact qualification receipt.
+
+It does not change organization Bundle semantics, runtime execution policy,
+profile meaning, stage meaning, or the C ABI/runtime-adapter roadmap.
+
+* Architecture
+
+** Canonical parser
+
+=profile-composition-syntax-plan.ss= remains the sole parser owner.  It
+deconstructs the module form into exactly four required elements followed by
+zero or more profile clauses:
+
+1. literal =use-module=;
+2. a module identifier;
+3. literal =as=;
+4. an alias identifier;
+5. optional canonical profile clauses.
+
+All other shapes fail with =composition-invalid-module-form=.  The diagnostic
+shows only the canonical grammar.  There is no
+=composition-legacy-module-form= branch and no legacy-specific recovery text.
+
+** Accessor facade
+
+=profile-composition-accessors.ss= remains the implementation owner for
+composition accessors.  =profile-composition.ss= re-exports the accessors used
+by public scenarios, including =poo-flow-composition-profiles=.  The facade does
+not duplicate accessor logic or expose representation-specific mutation.
+
+** Consumer cleanup
+
+All repository-owned composition examples and tests use the canonical form.
+Legacy-positive fixtures are deleted.  One negative parser fixture may pass an
+invalid non-canonical form, but its expected receipt is the generic canonical
+diagnostic and must not teach the removed syntax.
+
+* Data flow
+
+#+begin_src mermaid
+flowchart LR
+  Source["Canonical use-composition form"] --> Parser["Syntax plan parser"]
+  Parser --> Plan["Composition syntax plan"]
+  Plan --> Lowering["POO profile and stage lowering"]
+  Lowering --> Object["Composition POO object"]
+  Accessors["Accessor owner"] --> Facade["Public composition facade"]
+  Facade --> Consumers["UI cases and tests"]
+  Object --> Consumers
+#+end_src
+
+* Error contract
+
+- Non-list module forms fail closed.
+- Forms without the exact =use-module module-name as alias= prefix fail with
+  =composition-invalid-module-form=.
+- Module names and aliases must be identifiers.
+- Invalid or duplicate profile, compose, and stage clauses keep their existing
+  focused diagnostics after the canonical prefix has been accepted.
+- Diagnostics never advertise alias-only or other removed grammars.
+
+* Qualification
+
+The feature is complete only when all of the following pass in the current
+checkout:
+
+1. composition syntax smoke;
+2. profile composition tests;
+3. LangChain/LangGraph scenario;
+4. CrewAI scenario;
+5. tool-calling control-plane scenario;
+6. AC-01 canonical organization Bundle scenario;
+7. a negative non-canonical module-form test proving the single generic
+   diagnostic;
+8. Org parsing and =git diff --check=.
+
+The implementation refreshes the relevant Gerbil module artifacts before
+running consumers so stale compiled macros cannot mask source behavior.
+
+* Delivery
+
+The design, implementation, regression repairs, tests, and receipt are one
+complete feature.  They are committed once, after all qualification gates pass.
+Pre-existing build and CLI-support changes in the checkout remain outside the
+commit.
