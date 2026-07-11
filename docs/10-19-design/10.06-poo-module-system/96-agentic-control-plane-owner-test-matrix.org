@@ -169,6 +169,19 @@ authorization.
 - No dual-runtime semantic ownership is introduced.
 - AC-00 remains the only ready implementation tranche.
 
+* AC-01 Canonical Organization Bundle
+
+| Concern | Runtime owner | Contract owner | Qualification owner |
+|---------+---------------+----------------+---------------------|
+| POO-native organization values | =src/semantic/organization-bundle.ss= | =src/contract/organization-bundle.ss= | =t/scenarios/canonical-organization-bundle-test.ss= |
+| Canonical S-expression v1 | =poo-flow-organization-bundle-normalize= | =poo-flow-organization-bundle-contract= | order-invariance and idempotence cases |
+| SHA-256 identity | =poo-flow-organization-bundle-identity= | read-only identity projection | frozen digest and mutation cases |
+| Fail-closed authority checks | =poo-flow-organization-bundle-validate= | deterministic validation receipt | authority, context, delegation, effect, reference, epoch, and unstable-value cases |
+
+AC-01 deliberately stops before the C ABI, Python runtime, Cedar policy
+adapter, and Lean/Evidence bridge.  Those remain downstream acceptance lanes
+over the canonical bundle identity established here.
+
 * Related RFCs
 
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][Architecture RFC]]
