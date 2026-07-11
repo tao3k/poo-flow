@@ -11,6 +11,7 @@ The public facade lives in =src/module-system/facade.ss=. The implementation own
 - [[file:94-agentic-control-plane-migration-rfc.org][94 Agentic Control Plane Migration RFC]]
 - [[file:95-agentic-control-plane-execution-plan.org][95 Agentic Control Plane Execution Plan]]
 - [[file:96-agentic-control-plane-owner-test-matrix.org][96 Agentic Control Plane Owner And Test Matrix]]
+- [[file:97-agentic-control-plane-ac00-baseline-receipt.org][97 Agentic Control Plane AC-00 Baseline Receipt]]
 ** 10.06.20 Reading Order
 - [[file:01-doom-core-audit.org][01 Doom Core Audit]]
 [[file:01-doom-core-audit.org][01 Doom Core Audit]]

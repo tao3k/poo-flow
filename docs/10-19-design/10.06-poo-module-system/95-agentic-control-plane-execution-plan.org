@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *Ready for AC-00; implementation not started*
+Status: *AC-00 baseline captured; AC-01 blocked by two Gerbil scenario failures*
 
 RFC 90–94 are accepted for implementation planning. This document turns their P0–P6 migration into bounded work packages with explicit owners, deliverables, validation, stop conditions, and commit boundaries.
 

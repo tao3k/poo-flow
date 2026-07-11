@@ -2,7 +2,7 @@
 #+subtitle: RFC 90--94 implementation ownership, validation lanes, and readiness gates
 #+author: POO Flow Contributors
 #+date: 2026-07-10
-#+status: Planned baseline; AC-00 confirmation required
+#+status: AC-00 baseline captured; AC-01 blocked
 #+options: toc:3 num:t
 
 * Purpose
@@ -124,7 +124,7 @@ durable-I/O performance claims.
 
 | Package | Readiness | Entry condition | Exit evidence |
 |-
-| AC-00 | Ready after plan approval | Isolated clean worktree or completed clean tranche | Owner inventory, baseline receipt, frozen first slice |
+| AC-00 | Baseline captured; remediation open | Isolated clean worktree or completed clean tranche | Owner inventory, baseline receipt, frozen first slice |
 | AC-01 | Planned | AC-00 accepted | One end-to-end semantic contract with focused scenarios |
 | AC-02 | Planned | AC-01 | Canonical Bundle kernel and identity receipts |
 | AC-03 | Planned | AC-02 | Five facets composed through POO-native public APIs |
