@@ -3,6 +3,12 @@
 This document pack defines the module-system layer for =poo-flow=. The package is not a port of Doom Emacs and not a copy of Marlin's Gerbil module API. =poo-flow= remains the core control plane. External systems are reference material for interface shape, diagnostics, and modular organization.
 
 The public facade lives in =src/module-system/facade.ss=. The implementation owners live under =src/module-system/*=; =src/modules/*= is reserved for concrete workflow and sandbox modules. The module system depends on core registries and config APIs, but core does not import or re-export it.
+** 10.06.15 Agentic Control Plane RFC Suite
+- [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][90 POO Flow Agentic Control Plane Architecture RFC]]
+- [[file:91-canonical-organization-bundle-rfc.org][91 Canonical Organization Bundle RFC]]
+- [[file:92-c-runtime-interface-and-python-validation-runtime-rfc.org][92 C Runtime Interface And Python Validation Runtime RFC]]
+- [[file:93-assurance-proof-and-evidence-chain-rfc.org][93 Assurance, Proof, And Evidence Chain RFC]]
+- [[file:94-agentic-control-plane-migration-rfc.org][94 Agentic Control Plane Migration RFC]]
 ** 10.06.20 Reading Order
 - [[file:01-doom-core-audit.org][01 Doom Core Audit]]
 [[file:01-doom-core-audit.org][01 Doom Core Audit]]
