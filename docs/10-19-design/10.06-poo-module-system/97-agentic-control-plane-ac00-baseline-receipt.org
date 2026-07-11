@@ -131,7 +131,17 @@ lake build
 
 Result: pass, 51 jobs.
 
-* Open Baseline Failures
+* Baseline Remediations
+
+Status: *resolved*. The failure observations retained below describe the AC-00
+discovery state; commit =4ea467ad= closes both without introducing Bundle
+semantics or a new receipt model.
+
+The tool-calling include fragment no longer contains an illegal top-level
+import. The graph runtime receipt accessor is now exported and used for all
+seven record reads in the LangChain/LangGraph scenario. The focused Gerbil
+suite passes, the Python runtime reports 225 passed, both C ABI probes report
+=ok=, and Lean completes 51 jobs.
 
 ** Tool-Calling Control Plane Import
 
@@ -182,9 +192,13 @@ facets.
 
 * AC-01 Entry Decision
 
-Decision: *blocked*.
+Decision: *ready*.
 
-Required remediation before entry:
+AC-00 is complete. AC-01 may enter the frozen semantic/normalized-contract
+vertical slice; C ABI transport, Python execution, Cedar evaluation, and Lean
+theorem expansion remain outside AC-01.
+
+Completed remediation before entry:
 
 1. make the tool-calling control-plane scenario import cleanly;
 2. make the LangChain/LangGraph runtime receipt accessor contract consistent;
