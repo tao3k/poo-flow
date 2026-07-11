@@ -1,3 +1,8 @@
+;;; Boundary: CI/CD runtime command projection prepares declarative handoff
+;;; payloads for runtime owners and never invokes CI commands from Scheme.
+;;; Invariant: manifest summaries preserve declaration order and record only
+;;; policy data, while Marlin owns execution, process lifecycle, and retries.
+
 (import :poo-flow/src/module-system/base
         :poo-flow/src/module-system/sandbox-profile-catalog
         :poo-flow/src/modules/funflow/config
@@ -248,6 +253,8 @@
      (cons 'compensation-refs
            (poo-flow-user-alist-ref request 'compensation-refs '())))))
 
+;;; Projection uses reverse accumulators to traverse manifest maps once, then
+;;; restores declaration order only at the public summary boundary.
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-manifests
       manifests
       manifests-rev
@@ -264,6 +271,8 @@
        (car manifests))
       summaries-rev)))))
 
+;;; Map traversal threads both reverse accumulators through each manifest list,
+;;; avoiding append chains and ensuring every manifest is summarized once.
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-summary-projection/add-maps
       manifest-maps
       manifests-rev
@@ -438,6 +447,9 @@
    (poo-flow-user-workflow-cicd-mismatch-diagnostics
     summary-present? compensation-refs-match? 'compensation-refs-mismatch)))
 
+;;; Agreement rows compare one manifest with its bounded receipt summary. Keep
+;;; matching here so diagnostics remain declarative and runtime execution stays
+;;; outside the Scheme control plane.
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement-row
       manifest
       summary
@@ -672,6 +684,8 @@
      (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement-row-diagnostics
       (cdr rows))))))
 
+;;; Aggregate agreement preserves cardinality mismatches as data for the
+;;; runtime handoff rather than silently selecting or discarding a manifest.
 (def (poo-flow-user-workflow-cicd-runtime-command-manifest-agreement/from-manifests
       manifests
       summaries)

@@ -1,6 +1,6 @@
 (export defpoo-object-family)
 
-(import (only-in :clan/poo/object .ref))
+(import (only-in :clan/poo/object .ref object?))
 
 (defrules defpoo-object-family (accessors projections)
   ((_ kind-constant predicate-name
@@ -9,7 +9,11 @@
        (projection-name (field-name projection-slot-name) ...) ...))
    (begin
      (def (predicate-name value)
-       (eq? (.ref value 'kind) kind-constant))
+       (and (object? value)
+            (with-catch
+             (lambda (_failure) #f)
+             (lambda ()
+               (eq? (.ref value 'kind) kind-constant)))))
      (def (accessor-name value)
        (.ref value 'slot-name))
      ...

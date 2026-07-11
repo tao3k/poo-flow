@@ -212,6 +212,7 @@
      #t
      #f)))
 
+;; : (forall (k v) (-> PooDurableRuntimeStoreNegotiationReceipt [(Pair k v)] [PooDurableRuntimeStoreOperationReceipt]))
 ;; : (-> PooDurableRuntimeStoreNegotiationReceipt [Alist] [PooDurableRuntimeStoreOperationReceipt])
 (def (poo-flow-durable-runtime-store-operation-receipts negotiation
                                                          . maybe-options)

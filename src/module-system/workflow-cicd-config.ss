@@ -160,67 +160,6 @@
     ('runtime-executed
      (poo-flow-user-alist-ref request 'runtime-executed #f)))))
 
-;;; Summary projection is a pure sequence transform over manifest maps. It keeps
-;;; user-facing audit rows small while leaving the full command payload intact.
-;; : (-> [Alist] [Alist] [Alist] Values)
-;; : (-> [Alist] [Alist] [Alist] Values)
-;;; The manifest summary projection keeps full manifests and compact summaries
-;;; in the same declaration order without building a flattened manifest list and
-;;; then mapping it again.
-;; : (-> [Alist] Alist)
-;; : (-> [Alist] [Alist])
-;;; Runtime owner is pinned at the presentation boundary so user-facing receipts
-;;; do not drift from the Marlin handoff ABI when check-map internals change.
-;; : RuntimeOwnerName
-;;; Runtime agreement rows require every nested runtime-executed flag to remain
-;;; false, because Scheme only manufactures handoff data for Marlin.
-;; : (-> [RuntimeExecutedFlag] Boolean)
-;;; Matching summaries by request-id and check name preserves duplicate
-;;; detection; callers need the full match set, not first-match lookup.
-;; : (-> [Alist] Value Value [Alist])
-;;; Extra-summary detection guards presentation drift: a summary without a
-;;; source manifest means UI projection has invented handoff data.
-;; : (-> [Alist] Alist Boolean)
-;;; Diagnostics walk summaries rather than manifests so every stray audit row
-;;; is reported, even when command-manifest generation is otherwise empty.
-;; : (-> [Alist] [Alist] [Symbol])
-;; poo-flow-user-workflow-cicd-summary-count-diagnostics
-;;   : (-> Integer (List Symbol))
-;;   | doc m%
-;;       `poo-flow-user-workflow-cicd-summary-count-diagnostics` records summary
-;;       cardinality drift before manifest fields are compared.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (poo-flow-user-workflow-cicd-summary-count-diagnostics 0)
-;;       ;; => (missing-summary)
-;;       ```
-;;     %
-;;; Boundary: user workflow cicd mismatch diagnostics is the policy-visible
-;;; edge for module-system, workflow behavior, keeping validation, lookup, or
-;;; projection responsibilities centralized for callers.
-;; : (-> Boolean Boolean Symbol [Symbol])
-;; : (-> Integer Boolean Boolean Boolean Boolean Boolean Boolean [Symbol])
-;; : (-> Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean Boolean [Symbol])
-;;; Boundary:
-;;; - Agreement rows are audit data only; they never execute CI commands.
-;;; - Manifest and summary fields stay separate so each drift reason is visible.
-;; : (-> Alist MaybeAlist Integer Alist)
-;;; Boundary: user workflow cicd runtime command manifest agreement rows is the
-;;; policy-visible edge for module-system, workflow behavior, keeping
-;;; validation, lookup, or projection responsibilities centralized for callers.
-;; : (-> [Alist] [Alist] [Alist])
-;;; Boundary: user workflow cicd runtime command manifest agreement row
-;;; diagnostics is the policy-visible edge for module-system, workflow
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
-;; : (-> [Alist] [Symbol])
-;;; Agreement validation is the pure contract between the full runtime handoff
-;;; payload and compact user/agent audit rows. It checks shape equivalence only;
-;;; runtime execution and provider semantics stay outside Scheme.
-;; : (-> [Alist] [Alist] Alist)
-;; : (-> [Alist] [Alist] Alist)
-;; : (-> PooUserConfig Alist)
 ;;; Marlin ABI projections reuse the already validated manifest maps. The user
 ;;; interface sees a stable handoff payload without learning workflow object
 ;;; internals or executing any runtime adapter.
@@ -433,6 +372,17 @@
      (poo-flow-user-config-workflow-cicd-check-maps config)
      profile-catalog)))
 
+;; poo-flow-user-workflow-cicd-check-map-names
+;;   : (forall (k v) (-> [(Pair k v)] [k]))
+;;   | contract: Project declared CI/CD check identities without resolving them.
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-user-workflow-cicd-check-map-names check-maps)
+;;       ;; => '(build test)
+;;       ```
+;;     %
 ;; : (-> [PooFlowCicdCheckMap] [Symbol])
 (def (poo-flow-user-workflow-cicd-check-map-names check-maps)
   (cond
@@ -640,7 +590,19 @@
 
 ;;; Field collection keeps repeated sandbox summary fields in declaration
 ;;; order; empty fields stay absent rather than fabricated.
+;; poo-flow-user-workflow-cicd-checks-field-values
+;; : (forall (v) (-> [Alist] Symbol [v]))
 ;; : (-> [Alist] Symbol [Value])
+;; | doc m%
+;;   Collect one repeated check field in declaration order without fabricating
+;;   values for checks where the field is absent.
+;;   # Examples
+;;   ```scheme
+;;   (poo-flow-user-workflow-cicd-checks-field-values
+;;    '(((name . build) (tags . (fast))) ((name . test) (tags . (unit))))
+;;    'tags)
+;;   ;; => (fast unit)
+;;   ```
 (def (poo-flow-user-workflow-cicd-checks-field-values checks field)
   (foldr
    (lambda (check values)

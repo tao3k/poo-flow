@@ -1,7 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: stable facade for POO-native tool specs, catalogs, and receipts.
 
-(import :poo-flow/src/modules/tool-core/objects-core
+(import :poo-flow/src/modules/tool-core/objects-spec
+        :poo-flow/src/modules/tool-core/objects-catalog
+        :poo-flow/src/modules/tool-core/objects-handoff
+        :poo-flow/src/modules/tool-core/objects-receipt
         :poo-flow/src/modules/tool-core/objects-builtin)
 
 (export +poo-flow-tool-core-spec-kind+

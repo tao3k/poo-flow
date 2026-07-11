@@ -2,6 +2,8 @@
 ;;; Boundary: reusable POO composition performance scenarios and gates.
 
 (import (only-in :clan/poo/object .o .ref)
+        (only-in :poo-flow/t/support/poo-performance-fixtures
+                 poo-performance-composition-lazy-demand-fixture)
         :poo-flow/t/module-system-poo-performance-test-support/composition-gates
         :poo-flow/t/module-system-poo-performance-test-support/composition-large-library)
 
@@ -17,6 +19,8 @@
         poo-performance-composition-native-object-reuse-gate-receipt
         poo-performance-composition-native-object-reuse-large-library-valid-count
         poo-performance-composition-native-object-reuse-large-library-gate-receipt
+        poo-performance-composition-lazy-demand-valid-count
+        poo-performance-composition-lazy-demand-gate-receipt
         poo-performance-native-object-list-indexed-family-valid-count
         poo-performance-native-object-list-indexed-family-gate-receipt
         poo-performance-composition-macro-style-matrix-valid-count
@@ -284,6 +288,32 @@
        (poo-performance-composition-native-object-reuse-large-library-valid-count*
         composition
         rounds)))))
+
+;; : (-> Integer Integer)
+(def (poo-performance-composition-lazy-demand-valid-count rounds)
+  (def evidence (poo-performance-composition-lazy-demand-evidence))
+  (if (and (eq? (.ref evidence 'selected-route) 'triage-fast-path)
+           (eq? (.ref evidence 'repeated-route) 'triage-fast-path)
+           (eq? (.ref evidence 'shared-route) 'triage-fast-path)
+           (eq? (.ref evidence 'selected-image) 'gerbil-runtime)
+           (eq? (.ref evidence 'unused-route) 'cold-path)
+           (.ref evidence 'shared-model?)
+           (= (.ref evidence 'shared-model-route-force-count-before-full) 1)
+           (= (.ref evidence 'shared-model-route-force-count-after-full) 1)
+           (= (.ref evidence 'shared-sandbox-image-force-count-before-full) 1)
+           (= (.ref evidence 'shared-sandbox-image-force-count-after-full) 1)
+           (= (.ref evidence 'large-library-force-count) 0)
+           (= (.ref evidence 'unused-route-force-count-before-full) 0)
+           (= (.ref evidence 'unused-route-force-count-after-full) 1))
+    rounds
+    0))
+
+(def (poo-performance-composition-lazy-demand-gate-receipt rounds)
+  (poo-performance-family-run-gate
+   +poo-performance-benchmark-receipt-family+
+   (poo-performance-composition-lazy-demand-fixture)
+   (lambda ()
+     (poo-performance-composition-lazy-demand-valid-count rounds))))
 
 ;; : (-> Integer Integer)
 (def (poo-performance-native-object-list-indexed-family-valid-count rounds)

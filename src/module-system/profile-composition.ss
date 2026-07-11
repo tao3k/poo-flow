@@ -1,17 +1,31 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: public facade for POO-native profile composition.
-;;; Invariant: public import stays stable while owner modules remain small.
+;;; Boundary: stable public facade for declarative and native POO composition.
 
-(import :poo-flow/src/module-system/profile-composition-core
-        :poo-flow/src/module-system/profile-composition-clause-syntax
-        :poo-flow/src/module-system/profile-composition-main-syntax
-        :poo-flow/src/module-system/profile-composition-profile-syntax
-        :poo-flow/src/module-system/profile-composition-inline-runtime
-        :poo-flow/src/module-system/profile-composition-use-syntax)
+(import (only-in :poo-flow/src/module-system/profile-composition-use-syntax
+                 use-composition)
+        (only-in :poo-flow/src/module-system/profile-composition-builders
+                 poo-flow-profile-ref
+                 poo-flow-composition-module-binding
+                 poo-flow-composition-clause
+                 poo-flow-composition-stage
+                 poo-flow-composition-object
+                 poo-flow-composition-object/profiles)
+        (only-in :poo-flow/src/module-system/profile-composition-inline-runtime
+                 poo-flow-composition-inline-profile-ref/default
+                 poo-flow-composition-inline-profile-normalize
+                 poo-flow-composition-inline-apply-hooks
+                 poo-flow-composition-inline-module
+                 poo-flow-composition-inline-profile))
 
-(export (import: :poo-flow/src/module-system/profile-composition-core)
-        (import: :poo-flow/src/module-system/profile-composition-clause-syntax)
-        (import: :poo-flow/src/module-system/profile-composition-main-syntax)
-        (import: :poo-flow/src/module-system/profile-composition-profile-syntax)
-        (import: :poo-flow/src/module-system/profile-composition-inline-runtime)
-        (import: :poo-flow/src/module-system/profile-composition-use-syntax))
+(export use-composition
+        poo-flow-profile-ref
+        poo-flow-composition-module-binding
+        poo-flow-composition-clause
+        poo-flow-composition-stage
+        poo-flow-composition-object
+        poo-flow-composition-object/profiles
+        poo-flow-composition-inline-profile-ref/default
+        poo-flow-composition-inline-profile-normalize
+        poo-flow-composition-inline-apply-hooks
+        poo-flow-composition-inline-module
+        poo-flow-composition-inline-profile)

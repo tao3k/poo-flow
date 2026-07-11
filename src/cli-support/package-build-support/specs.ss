@@ -118,7 +118,9 @@
 
 ;; : [[String]]
 (def +poo-flow-build-macro-dependency-source-files+
-  '(("src/module-system/sandbox-backend-object-syntax.ss"
+  '(("src/module-system/projection-syntax.ss"
+     "src/module-system/durable-policy.ss")
+    ("src/module-system/sandbox-backend-object-syntax.ss"
      "src/modules/nono-sandbox/objects.ss"
      "src/modules/cubeSandbox/objects.ss"
      "src/modules/docker-sandbox/objects.ss")))
@@ -163,6 +165,19 @@
   '((gxc: "src/testing/project.ss")))
 
 ;; : [BuildSpec]
+;;; Ordered native interfaces required before the Harness loads user-facing
+;;; scenarios.  Each owner keeps its declaration family behind `load!`.
+(def +poo-flow-testing-bootstrap-build-spec+
+  '((gxc: "user-interface/custom/my-module/profiles/all.ss")
+    (gxc: "user-interface/custom/my-module/cases/cicd-owner.ss")
+    (gxc: "user-interface/custom/my-module/cases/loop-engine-owner.ss")
+    (gxc: "user-interface/custom/my-module/cases/session-owner.ss")
+    (gxc: "user-interface/custom/my-module/cases/runtime-owner.ss")
+    (gxc: "user-interface/custom/my-module/cases/durable-owner.ss")
+    (gxc: "user-interface/custom/my-module/config.ss")
+    (gxc: "src/testing/project.ss")))
+
+;; : [BuildSpec]
 (def +poo-flow-cli-entry-module-build-spec+
   '((gxc: "user-interface/init")
     (gxc: "user-interface/custom/my-module/profiles/all")
@@ -195,6 +210,7 @@
     "src/contract/json-schema-validation-core.ss"
     "src/contract/json-schema-valid.ss"
     "src/contract/json-schema-validate.ss"
+    "src/module-system/projection-syntax.ss"
     "src/module-system/durable-policy.ss"
     "src/module-system/indexed-family.ss"
     "src/module-system/object-family-syntax.ss"
@@ -533,9 +549,33 @@
    (else #f)))
 
 ;; : (-> [String])
+(def (poo-flow-build-module-gsc-options)
+  '("-dynamic"))
+
+;; The Gerbil runtime resolves its own compiler; do not infer it from PATH.
+;; : (-> String)
+(def (poo-flow-build-effective-gsc)
+  (path-expand "~~bin/gsc"))
+
+;; : (-> String Boolean)
+(def (poo-flow-build-homebrew-gsc? gsc)
+  (or (string-prefix? "/opt/homebrew/" gsc)
+      (string-prefix? "/usr/local/Cellar/" gsc)))
+
+;; : (-> Boolean)
+(def (poo-flow-build-homebrew-static-clean?)
+  (cond-expand
+   (darwin
+    (poo-flow-build-homebrew-gsc?
+     (poo-flow-build-effective-gsc)))
+   (else #f)))
+
+;; : (-> [String])
 (def (poo-flow-build-gsc-options)
-  (let* ((explicit-cc (poo-flow-build-nonempty-env "POO_FLOW_GSC_CC"))
-         (sdkroot (poo-flow-build-nonempty-env "SDKROOT"))
+  (let* ((sdkroot (if (poo-flow-build-homebrew-static-clean?)
+                    #f
+                    (poo-flow-build-nonempty-env "SDKROOT")))
+         (explicit-cc (poo-flow-build-nonempty-env "POO_FLOW_GSC_CC"))
          (cc (or explicit-cc
                  (poo-flow-build-system-default-gsc-cc sdkroot)))
          (explicit-cc-options
@@ -543,21 +583,22 @@
          (cc-options (or explicit-cc-options
                          (poo-flow-build-system-default-gsc-cc-options
                           sdkroot))))
-    (if cc
-      (let (cc-args (list "-cc" cc))
-        (let* ((with-cc-options
-                (if cc-options
-                  (append cc-args (list "-cc-options" cc-options))
-                  cc-args))
-               (explicit-ld-options
-                (poo-flow-build-nonempty-env "POO_FLOW_GSC_LD_OPTIONS"))
-               (ld-options (or explicit-ld-options
-                               (poo-flow-build-system-default-gsc-ld-options
-                                sdkroot))))
-          (if ld-options
-            (append with-cc-options (list "-ld-options" ld-options))
-            with-cc-options)))
-      '())))
+    (let* ((module-options (poo-flow-build-module-gsc-options))
+           (cc-args (if cc
+                      (append module-options (list "-cc" cc))
+                      module-options))
+           (with-cc-options
+            (if cc-options
+              (append cc-args (list "-cc-options" cc-options))
+              cc-args))
+           (explicit-ld-options
+            (poo-flow-build-nonempty-env "POO_FLOW_GSC_LD_OPTIONS"))
+           (ld-options (or explicit-ld-options
+                           (poo-flow-build-system-default-gsc-ld-options
+                            sdkroot))))
+      (if ld-options
+        (append with-cc-options (list "-ld-options" ld-options))
+        with-cc-options))))
 
 ;; : (-> [String] BuildOptions [BuildSpec] [BuildSpec])
 (def (poo-flow-gxc-spec/rev files options specs-rev)

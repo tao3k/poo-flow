@@ -3,8 +3,8 @@
 ;;; Invariant: included by load!; the loader owns binding and export.
 
 (use-composition langgraph
-  (use-module graph
-    (profiles langgraph
+  (use-module langgraph as graph
+    (profiles
       session
       state
       router
@@ -12,16 +12,16 @@
       tool-node
       bounded-loop
       runtime-handoff))
+  (compose
+   (profiles graph
+     session
+     state
+     router
+     agent-node
+     tool-node
+     bounded-loop
+     runtime-handoff))
   (stage production
-    (compose
-     (profiles graph
-       session
-       state
-       router
-       agent-node
-       tool-node
-       bounded-loop
-       runtime-handoff))
     (graph langgraph-state-graph)
     (loop #:fuel 8 #:exit terminal-edge)
     (prove declared-branch-targets

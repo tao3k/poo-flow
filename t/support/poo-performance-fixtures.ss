@@ -58,6 +58,8 @@
         poo-performance-composition-native-object-reuse-fixture
         poo-performance-composition-native-object-reuse-large-library-fixture-path
         poo-performance-composition-native-object-reuse-large-library-fixture
+        poo-performance-composition-lazy-demand-fixture-path
+        poo-performance-composition-lazy-demand-fixture
         poo-performance-composition-macro-style-matrix-fixture-path
         poo-performance-composition-macro-style-matrix-fixture
         poo-performance-fixture-paths
@@ -306,10 +308,18 @@
 (def poo-performance-composition-native-object-reuse-large-library-fixture-path
   "t/scenarios/performance/poo-composition-native-object-reuse-large-library/benchmark.ss")
 
+(def poo-performance-composition-lazy-demand-fixture-path
+  "t/scenarios/performance/poo-composition-lazy-demand/benchmark.ss")
+
 ;; : (-> Alist)
 (def (poo-performance-composition-native-object-reuse-large-library-fixture)
   (poo-performance-load-fixture
    poo-performance-composition-native-object-reuse-large-library-fixture-path))
+
+;; : (-> Alist)
+(def (poo-performance-composition-lazy-demand-fixture)
+  (poo-performance-load-fixture
+   poo-performance-composition-lazy-demand-fixture-path))
 
 ;; : String
 (def poo-performance-composition-macro-style-matrix-fixture-path
@@ -349,6 +359,7 @@
         poo-performance-composition-hook-override-fixture-path
         poo-performance-composition-native-object-reuse-fixture-path
         poo-performance-composition-native-object-reuse-large-library-fixture-path
+        poo-performance-composition-lazy-demand-fixture-path
         poo-performance-composition-macro-style-matrix-fixture-path
         poo-performance-composition-fixture-path))
 

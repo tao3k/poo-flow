@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: builtin tool specs and default tool catalog.
 
-(import :poo-flow/src/modules/tool-core/objects-core)
+(import :poo-flow/src/modules/tool-core/objects-spec
+        :poo-flow/src/modules/tool-core/objects-catalog)
 
 (export poo-flow-tool-core-builtin-read-workspace-file
         poo-flow-tool-core-builtin-write-workspace-file

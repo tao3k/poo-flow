@@ -274,6 +274,7 @@
     (car slot-initializer)
     (cdr slot-initializer))))
 
+;; : (forall (k v) (-> Symbol [(Pair k v)] [Alist]))
 ;; : (-> Symbol [Pair] [Alist])
 (def (poo-flow-poo-slot-authoring-observations scope slot-initializers)
   (map (lambda (slot-initializer)
@@ -290,6 +291,7 @@
 (def (poo-flow-poo-slot-authoring-observation-ok? observation)
   (eq? (cdr (assoc 'status observation)) 'ok))
 
+;; : (forall (k v) (-> [(Pair k v)] [Symbol]))
 ;; : (-> [Alist] [Symbol])
 (def (poo-flow-poo-slot-authoring-statuses observations)
   (map (lambda (observation)
@@ -299,6 +301,7 @@
 ;;; Boundary: poo slot authoring diagnostics is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)]))
 ;; : (-> [Alist] [Alist])
 (def (poo-flow-poo-slot-authoring-diagnostics observations)
   (map (lambda (observation)

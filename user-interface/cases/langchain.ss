@@ -3,11 +3,11 @@
 ;;; Invariant: included by load!; the loader owns binding and export.
 
 (use-composition langchain
-  (use-module chain
-    (profiles langchain memory prompt model parser no-tool))
+  (use-module langchain as chain
+    (profiles memory prompt model parser no-tool))
+  (compose
+   (profiles chain memory prompt model parser no-tool))
   (stage production
-    (compose
-     (profiles chain memory prompt model parser no-tool))
     (graph langchain-linear-chain)
     (loop #:fuel 1 #:exit parsed-output)
     (prove chain-order

@@ -448,6 +448,7 @@
      (cons 'ai.lifecycle/experimental
            (eq? status 'experimental)))))
 
+;; : (forall (k v) (-> [(Pair k v)] Boolean))
 ;; : (-> Alist Boolean)
 (def (poo-flow-agent-lifecycle-lean-fact-contract-complete? facts)
   (and (andmap (lambda (key)

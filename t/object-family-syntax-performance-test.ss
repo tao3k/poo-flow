@@ -10,8 +10,10 @@
         (only-in :gslph/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
-                 benchmark-run/result)
-        (only-in :clan/poo/object object<-alist)
+                 )
+        (only-in :gslph/src/testing/performance
+                 testing-benchmark-run/result)
+        (only-in :clan/poo/object .ref object<-alist)
         (only-in :poo-flow/t/support/poo-performance-object-scenarios
                  poo-performance-build-list)
         :poo-flow/src/module-system/object-family-syntax)
@@ -47,34 +49,36 @@
   (let (entry (assq key row))
     (if entry (cdr entry) #f)))
 
-;; : (-> String Integer Symbol)
-(def (object-family-syntax-performance-symbol prefix index)
-  (string->symbol
-   (string-append prefix "/" (number->string index))))
-
 ;; : (-> Integer PooObject)
 (def (object-family-syntax-performance-model index)
   (object<-alist
    (list
     (cons 'kind +poo-object-family-performance-kind+)
-    (cons 'ref
-          (object-family-syntax-performance-symbol "model" index))
+    (cons 'ref index)
     (cons 'provider 'runtime-local)
     (cons 'capabilities '(chat text json tool-calling))
     (cons 'runtime-executed #f))))
 
 ;; : (-> Integer [Alist])
-(def (object-family-syntax-performance-rows count)
-  (map poo-object-family-performance->alist
-       (poo-performance-build-list
-        count
-        object-family-syntax-performance-model)))
+(def (object-family-syntax-performance-objects count)
+  (poo-performance-build-list
+   count
+   object-family-syntax-performance-model))
 
-;; : (-> Integer Alist)
-(def (object-family-syntax-performance-summary count)
-  (let* ((rows (object-family-syntax-performance-rows count))
-         (first-row (car rows))
-         (last-row (list-ref rows (- count 1))))
+;; : (-> [PooObject] [Alist])
+(def (object-family-syntax-performance-rows objects)
+  (map poo-object-family-performance->alist
+       objects))
+
+;; : (-> [Alist] (Cons Alist Alist))
+(def (object-family-syntax-performance-selection rows)
+  (cons (car rows)
+        (list-ref rows (- (length rows) 1))))
+
+;; : (-> [Alist] (Cons Alist Alist) Alist)
+(def (object-family-syntax-performance-summary rows selection)
+  (let* ((first-row (car selection))
+         (last-row (cdr selection)))
     (list
      (cons 'object-count (length rows))
      (cons 'first-ref
@@ -89,42 +93,141 @@
             first-row
             'runtime-executed)))))
 
+;; : (-> Alist Alist)
+(def (object-family-syntax-performance-receipt-summary receipt)
+  (list
+   (cons 'feature
+         (object-family-syntax-performance-ref receipt 'feature))
+   (cons 'rule
+         (object-family-syntax-performance-ref receipt 'rule))
+   (cons 'elapsedMs
+         (object-family-syntax-performance-ref receipt 'elapsedMs))
+   (cons 'max-total
+         (object-family-syntax-performance-ref receipt 'max_total))
+   (cons 'status
+         (object-family-syntax-performance-ref receipt 'status))))
+
 ;; : (-> Alist Void)
 (def (object-family-syntax-performance-display-receipt receipt)
   (display "[poo-flow-benchmark] poo-object-family-syntax ")
-  (write receipt)
+  (write (object-family-syntax-performance-receipt-summary receipt))
   (newline)
   (force-output))
+
+;; : (-> Symbol TestingReceipt Void)
+(def (object-family-syntax-performance-display-phase phase receipt)
+  (display "[poo-flow-benchmark-phase] ")
+  (write phase)
+  (display " ")
+  (write (.ref receipt 'details))
+  (newline)
+  (force-output))
+
+;; : (-> TestingReceipt Symbol MaybeValue)
+(def (object-family-syntax-performance-phase-detail receipt key)
+  (object-family-syntax-performance-ref (.ref receipt 'details) key))
 
 ;; : TestSuite
 (def object-family-syntax-performance-test
   (test-suite "object family syntax performance"
     (test-case "keeps generated POO object-family projections inside benchmark contract"
-      (let-values (((receipt summary)
-                    (benchmark-run/result
+      (let-values (((construction-receipt objects construction-phase)
+                    (testing-benchmark-run/result
+                     'poo-object-family-syntax
                      object-family-syntax-performance-fixture
                      (lambda ()
-                       (object-family-syntax-performance-summary 128)))))
-        (check-equal?
-         (benchmark-fixture-contract-pass?
-          object-family-syntax-performance-fixture)
-         #t)
-        (check-equal?
-         (object-family-syntax-performance-ref summary 'object-count)
-         128)
-        (check-equal?
-         (object-family-syntax-performance-ref summary 'first-ref)
-         'model/0)
-        (check-equal?
-         (object-family-syntax-performance-ref summary 'last-ref)
-         'model/127)
-        (check-equal?
-         (object-family-syntax-performance-ref summary 'capability-count)
-         4)
-        (check-equal?
-         (object-family-syntax-performance-ref summary 'runtime-executed)
-         #f)
-        (object-family-syntax-performance-display-receipt receipt)
-        (check-equal? (benchmark-receipt-pass? receipt) #t)))))
+                       (object-family-syntax-performance-objects 1000))
+                     '((phase . object-construction)))))
+        (let-values (((projection-receipt rows projection-phase)
+                      (testing-benchmark-run/result
+                       'poo-object-family-syntax
+                       object-family-syntax-performance-fixture
+                       (lambda ()
+                         (object-family-syntax-performance-rows objects))
+                       '((phase . boundary-projection)))))
+          (let-values (((selection-receipt selection selection-phase)
+                        (testing-benchmark-run/result
+                         'poo-object-family-syntax
+                         object-family-syntax-performance-fixture
+                         (lambda ()
+                           (object-family-syntax-performance-selection rows))
+                         '((phase . object-selection)))))
+            (let ((summary (object-family-syntax-performance-summary rows selection))
+                  (first-row (car selection))
+                  (last-row (cdr selection)))
+              (check-equal?
+               (benchmark-fixture-contract-pass?
+                object-family-syntax-performance-fixture)
+               #t)
+              (check-equal?
+               (object-family-syntax-performance-ref summary 'object-count)
+               1000)
+              (check-equal?
+               (object-family-syntax-performance-ref summary 'first-ref)
+               0)
+              (check-equal?
+               (object-family-syntax-performance-ref summary 'last-ref)
+               999)
+              (check-equal?
+               (object-family-syntax-performance-ref summary 'capability-count)
+               4)
+              (check-equal?
+               (object-family-syntax-performance-ref summary 'runtime-executed)
+               #f)
+              (check-equal?
+               (object-family-syntax-performance-ref first-row 'ref)
+               0)
+              (check-equal?
+               (object-family-syntax-performance-ref last-row 'ref)
+               999)
+              (object-family-syntax-performance-display-receipt construction-receipt)
+              (object-family-syntax-performance-display-phase
+               'object-construction construction-phase)
+              (object-family-syntax-performance-display-phase
+               'boundary-projection projection-phase)
+              (object-family-syntax-performance-display-phase
+               'object-selection selection-phase)
+              (check-equal?
+               (object-family-syntax-performance-phase-detail
+                construction-phase
+                'phase)
+               'object-construction)
+              (check-equal?
+               (object-family-syntax-performance-phase-detail
+                projection-phase
+                'phase)
+               'boundary-projection)
+              (check-equal?
+               (object-family-syntax-performance-phase-detail
+                selection-phase
+                'phase)
+               'object-selection)
+              (check-equal?
+               (number?
+                (object-family-syntax-performance-phase-detail
+                 construction-phase
+                 'elapsedMs))
+               #t)
+              (check-equal?
+               (number?
+                (object-family-syntax-performance-phase-detail
+                 projection-phase
+                 'elapsedMs))
+               #t)
+              (check-equal?
+               (number?
+                (object-family-syntax-performance-phase-detail
+                 selection-phase
+                 'elapsedMs))
+               #t)
+              (check-equal?
+               (object-family-syntax-performance-ref
+                (object-family-syntax-performance-receipt-summary
+                 construction-receipt)
+                'status)
+               'pass)
+              (check-equal? (benchmark-receipt-pass? construction-receipt) #t)
+              (check-equal? (benchmark-receipt-pass? projection-receipt) #t)
+              (check-equal? (benchmark-receipt-pass? selection-receipt) #t))))))))
 
 (run-tests! object-family-syntax-performance-test)

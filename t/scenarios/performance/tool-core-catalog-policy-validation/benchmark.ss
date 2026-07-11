@@ -28,4 +28,7 @@
  (inputShape . "160 tool specs and 160 session tool grants resolved through a catalog validation receipt")
  (expectedRepair . "keep tool specs shallow POO objects and validate symbolic session grants against a concrete catalog before runtime handoff")
  (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate assert-memory-gate)
+ (expectedOutcome
+  .
+  "One POO-native catalog validation receipt resolves tool grants without runtime execution.")
  (tags poo tool-core session policy catalog performance))

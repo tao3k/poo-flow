@@ -80,7 +80,8 @@
 
 ;; : (-> CustomScenarioRowValue Bool)
 (def (custom-scenario-alist-row? value)
-  (and (pair? value)
+  (and (list? value)
+       (pair? value)
        (pair? (car value))
        (symbol? (caar value))))
 
@@ -137,7 +138,7 @@
         (if entry
           (list (cdr entry))
           '())))
-     ((pair? value)
+     ((list? value)
       (custom-scenario-runtime-flags/list value))
      (else '()))))
 
@@ -223,4 +224,8 @@
          (custom-scenario-summary-ref summary 'user-interface-benchmark-payload?)
          #f)
         (custom-scenario-display-receipt receipt)
-        (check-equal? (benchmark-receipt-pass? receipt) #t)))))
+        (check-equal? (benchmark-receipt-pass? receipt) #t)))
+    (test-case "ignores dotted selection-count rows as runtime flags"
+      (check-equal?
+       (custom-scenario-runtime-flags '((memory/project) . 1))
+       '()))))

@@ -10,6 +10,8 @@
                  define-multicall-main)
         (only-in :gslph/src/build-api/source-coverage
                  gslph-source-coverage)
+        :gslph/src/build-api/framework
+        :gslph/src/testing/framework
         (only-in :gerbil/gambit
                  exit
                  file-exists?
@@ -48,110 +50,44 @@
 
 (define-multicall-main)
 
-(def +poo-flow-package-build-source-files+
-  '("src/cli-support/package-build.ss"
-    "src/cli-support/package-build-support/options.ss"
-    "src/cli-support/package-build-support/specs.ss"
-    "src/cli-support/package-build-support/env.ss"
-    "src/cli-support/package-build-support/launcher.ss"
-    "src/cli-support/package-build-support/receipt.ss"
-    "src/cli-support/package-build-support/stage-output.ss"
-    "src/cli-support/package-build-support/stage-cache.ss"
-    "src/cli-support/package-build-support/observability.ss"
-    "src/cli-support/package-build-support/engine.ss"
-    "src/cli-support/package-build-compiled.ss"))
-
-(def +poo-flow-package-build-compiled-files+
-  '("lib/poo-flow/src/cli-support/package-build.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/options.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/specs.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/env.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/launcher.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/receipt.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/stage-output.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/stage-cache.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/observability.ssi"
-    "lib/poo-flow/src/cli-support/package-build-support/engine.ssi"
-    "lib/poo-flow/src/cli-support/package-build-compiled.ssi"))
-
-(def (poo-flow-build-file-mtime-seconds path)
-  (and (file-exists? path)
-       (time->seconds
-        (file-info-last-modification-time
-         (file-info path)))))
-
-(def (poo-flow-build-source-current-against-output?/mtime source output)
-  (let ((source-time (poo-flow-build-file-mtime-seconds source))
-        (output-time (poo-flow-build-file-mtime-seconds output)))
-    (and source-time
-         output-time
-         (<= source-time output-time))))
-
-(def (poo-flow-package-build-compiled-output-path output)
-  (let (gerbil-path (getenv "GERBIL_PATH" #f))
-    (and gerbil-path
-         (path-expand output gerbil-path))))
-
-(def (poo-flow-package-build-compiled-current? sources outputs)
-  (cond
-   ((and (null? sources) (null? outputs))
-    #t)
-   ((or (null? sources) (null? outputs))
-    #f)
-   (else
-    (let (compiled-output
-          (poo-flow-package-build-compiled-output-path (car outputs)))
-      (and compiled-output
-           (poo-flow-build-source-current-against-output?/mtime
-            (path-expand (car sources))
-            compiled-output)
-           (poo-flow-package-build-compiled-current?
-            (cdr sources)
-            (cdr outputs)))))))
-
 (def (poo-flow-load-package-build!)
-  (if (poo-flow-package-build-compiled-current?
-       +poo-flow-package-build-source-files+
-       +poo-flow-package-build-compiled-files+)
-    (with-exception-catcher
-     (lambda (_exn)
-       (eval '(import "./src/cli-support/package-build.ss")))
-     (lambda ()
-       (eval '(import :poo-flow/src/cli-support/package-build-compiled))))
-    (eval '(import "./src/cli-support/package-build.ss"))))
+  (eval '(import "./src/cli-support/package-build.ss")))
+
+(def (poo-flow-build-testing-bootstrap!)
+  (poo-flow-load-package-build!)
+  ((eval 'poo-flow-package-build-testing-bootstrap!)))
 
 (def (poo-flow-load-testing!)
+  (poo-flow-build-testing-bootstrap!)
   (eval '(import :gslph/src/testing/build-runner
                  :gslph/src/testing/model
-                 "./src/testing/project.ss")))
+                 "./src/testing/project.ss"
+                 "./src/testing/policy-debug.ss")))
 
 (def (poo-flow-package-entry-options release optimized debug cli tests force verbose)
   ((eval 'poo-flow-entry-options) release optimized debug cli tests force verbose))
 
-(def (poo-flow-test-error-status exn files)
-  (display "|poo-flow-test-error ")
-  (write [files: files
-          exception: exn])
-  (newline)
-  (force-output)
-  11)
+(def (poo-flow-package-entry-options . arguments)
+  (poo-flow-load-package-build!)
+  (apply (eval 'poo-flow-entry-options) arguments))
 
-(def (poo-flow-test files)
-  (with-exception-catcher
-   (lambda (exn)
-     (poo-flow-test-error-status exn files))
-   (lambda ()
-     (poo-flow-load-testing!)
-     (let (receipt
-           ((eval 'testing-build-main)
-            ((eval 'poo-flow-testing-project) "." ".")
-            files))
-       (if ((eval 'testing-receipt-ok?) receipt) 0 1)))))
+(define-build-commands
+ (poo-flow-build-spec! poo-flow-build-compile! poo-flow-build-clean!)
+ load!: poo-flow-load-package-build!
+ spec: (lambda () (eval 'poo-flow-compile-build-spec))
+ compile: (lambda () (eval 'poo-flow-package-compile))
+ clean: (lambda () (eval 'poo-flow-clean)))
+
+(define-project-test poo-flow-test
+  bootstrap!: poo-flow-load-testing!
+  project: (lambda () ((eval 'poo-flow-testing-project) "." "."))
+  run: (lambda (project files) ((eval 'testing-build-main) project files))
+  ok?: (lambda (receipt) ((eval 'testing-receipt-ok?) receipt)))
 
 (define-entry-point (meta)
   (help: "List package build targets"
    getopt: [])
-  (write '("spec" "compile" "test" "clean"))
+  (write '("spec" "compile" "test" "policy-debug" "clean"))
   (newline))
 
 (define-entry-point (spec release: (release #f)
@@ -163,9 +99,8 @@
                           verbose: (verbose #f))
   (help: "Print the package build spec"
    getopt: +poo-flow-build-getopt+)
-  (poo-flow-load-package-build!)
   (pretty-print
-   ((eval 'poo-flow-compile-build-spec)
+   (poo-flow-build-spec!
     (poo-flow-package-entry-options release optimized debug cli tests force verbose))))
 
 (define-entry-point (compile release: (release #f)
@@ -177,8 +112,7 @@
                              verbose: (verbose #f))
   (help: "Compile the package"
    getopt: +poo-flow-build-getopt+)
-  (poo-flow-load-package-build!)
-  ((eval 'poo-flow-package-compile)
+  (poo-flow-build-compile!
    (poo-flow-package-entry-options release optimized debug cli tests force verbose)))
 
 (define-entry-point (test . files)
@@ -186,9 +120,14 @@
    getopt: +poo-flow-test-getopt+)
   (exit (poo-flow-test files)))
 
+(define-entry-point (policy-debug . files)
+  (help: "Print parser-backed Harness policy repair targets for selected tests"
+   getopt: +poo-flow-test-getopt+)
+  (poo-flow-load-testing!)
+  (exit ((eval 'poo-flow-policy-debug-report!) files)))
+
 (define-entry-point (clean)
   (help: "Clean package build artifacts"
    getopt: [])
-  (poo-flow-load-package-build!)
-  ((eval 'poo-flow-clean))
+  (poo-flow-build-clean!)
   (exit 0))

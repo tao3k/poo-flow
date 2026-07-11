@@ -1,6 +1,22 @@
 (use-composition crewai
-  (use-module crew
-    (profiles crewai
+  (use-module crewai as crew
+    (profiles
+      agent
+      task
+      crew
+      planning
+      memory
+      knowledge
+      sequential-process
+      flow-state
+      flow-router
+      flow-persist
+      guardrail
+      human-input
+      observability
+      runtime-handoff))
+  (compose
+    (profiles crew
       agent
       task
       crew
@@ -16,22 +32,6 @@
       observability
       runtime-handoff))
   (stage production
-    (compose
-      (profiles crew
-        agent
-        task
-        crew
-        planning
-        memory
-        knowledge
-        sequential-process
-        flow-state
-        flow-router
-        flow-persist
-        guardrail
-        human-input
-        observability
-        runtime-handoff))
     (graph crewai-flow-graph)
     (loop #:fuel 6 #:exit final-output)
     (prove agent-tool-scope-contained

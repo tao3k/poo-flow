@@ -20,7 +20,8 @@
         poo-performance-large-native-profile-family-profile-at
         poo-performance-large-native-profile-family-variant-profile-at
         poo-performance-large-native-profile-composition
-        poo-performance-large-native-profile-valid-count*)
+        poo-performance-large-native-profile-valid-count*
+        poo-performance-composition-lazy-demand-evidence)
 
 ;; : Integer
 (def +poo-performance-large-native-profile-count+ 2048)
@@ -309,6 +310,122 @@
 ;;       ;; => 1
 ;;       ```
 ;;     %
+(def (poo-performance-composition-lazy-demand-evidence)
+  (def shared-model-route-force-count-value 0)
+  (def shared-sandbox-image-force-count-value 0)
+  (def unused-model-route-force-count-value 0)
+  (def large-library-force-count-value 0)
+
+  (def (force-shared-model-route route-value)
+    (set! shared-model-route-force-count-value
+      (+ shared-model-route-force-count-value 1))
+    route-value)
+
+  (def (force-shared-sandbox-image image-value)
+    (set! shared-sandbox-image-force-count-value
+      (+ shared-sandbox-image-force-count-value 1))
+    image-value)
+
+  (def (force-unused-model-route route-value)
+    (set! unused-model-route-force-count-value
+      (+ unused-model-route-force-count-value 1))
+    route-value)
+
+  (def (force-large-library)
+    (set! large-library-force-count-value
+      (+ large-library-force-count-value 1))
+    (poo-performance-large-native-profile-composition))
+
+  (def shared-model-value
+    (.o (kind 'model)
+        (family 'incident-response-model)
+        (route (force-shared-model-route 'triage-fast-path))
+        (context-window 'short)
+        (cost-class 'interactive)))
+
+  (def shared-sandbox-value
+    (.o (kind 'sandbox)
+        (family 'incident-response-sandbox)
+        (image (force-shared-sandbox-image 'gerbil-runtime))
+        (network 'off)
+        (cpu 'bounded)))
+
+  (def pull-request-agent-value
+    (.o (kind 'agent)
+        (family 'incident-response-agent)
+        (role 'pull-request-triage)
+        (model shared-model-value)
+        (sandbox shared-sandbox-value)))
+
+  (def scheduled-audit-agent-value
+    (.o (kind 'agent)
+        (family 'incident-response-agent)
+        (role 'scheduled-audit)
+        (model shared-model-value)
+        (sandbox shared-sandbox-value)))
+
+  (def unused-candidate-agent-value
+    (.o (kind 'agent)
+        (family 'incident-response-agent)
+        (role 'unused-candidate)
+        (model
+         (.o (kind 'model)
+             (family 'incident-response-model)
+             (route (force-unused-model-route 'cold-path))
+             (context-window 'long)
+             (cost-class 'batch)))
+        (sandbox shared-sandbox-value)))
+
+  (def composition-value
+    (.o (kind 'composition)
+        (family 'poo-composition-lazy-demand)
+        (large-library (force-large-library))
+        (pull-request pull-request-agent-value)
+        (scheduled-audit scheduled-audit-agent-value)
+        (unused-candidate unused-candidate-agent-value)))
+
+  (let* ((pull-request-value (.ref composition-value 'pull-request))
+         (pull-request-model-value (.ref pull-request-value 'model))
+         (selected-route-value (.ref pull-request-model-value 'route))
+         (repeated-route-value (.ref pull-request-model-value 'route))
+         (scheduled-audit-value (.ref composition-value 'scheduled-audit))
+         (scheduled-audit-model-value (.ref scheduled-audit-value 'model))
+         (shared-model?-value
+          (eq? pull-request-model-value scheduled-audit-model-value))
+         (shared-route-value (.ref scheduled-audit-model-value 'route))
+         (pull-request-sandbox-value (.ref pull-request-value 'sandbox))
+         (selected-image-value (.ref pull-request-sandbox-value 'image))
+         (unused-route-force-count-before-full-value
+          unused-model-route-force-count-value)
+         (shared-model-route-force-count-before-full-value
+          shared-model-route-force-count-value)
+         (shared-sandbox-image-force-count-before-full-value
+          shared-sandbox-image-force-count-value)
+         (unused-candidate-value (.ref composition-value 'unused-candidate))
+         (unused-candidate-model-value (.ref unused-candidate-value 'model))
+         (unused-route-value (.ref unused-candidate-model-value 'route)))
+    (.o (kind 'poo-composition-lazy-demand-evidence)
+        (family 'poo-composition-lazy-demand)
+        (selected-route selected-route-value)
+        (repeated-route repeated-route-value)
+        (shared-route shared-route-value)
+        (selected-image selected-image-value)
+        (unused-route unused-route-value)
+        (shared-model? shared-model?-value)
+        (shared-model-route-force-count-before-full
+         shared-model-route-force-count-before-full-value)
+        (shared-model-route-force-count-after-full
+         shared-model-route-force-count-value)
+        (shared-sandbox-image-force-count-before-full
+         shared-sandbox-image-force-count-before-full-value)
+        (shared-sandbox-image-force-count-after-full
+         shared-sandbox-image-force-count-value)
+        (large-library-force-count large-library-force-count-value)
+        (unused-route-force-count-before-full
+         unused-route-force-count-before-full-value)
+        (unused-route-force-count-after-full
+         unused-model-route-force-count-value))))
+
 (def (poo-performance-large-native-profile-valid-count* composition rounds)
   (let* ((family (.ref (car (.ref composition 'modules)) 'value))
          (stage (car (.ref composition 'stages)))

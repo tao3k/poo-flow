@@ -295,6 +295,52 @@ The architecture is complete when all of the following are true:
 - user-interface compositions and focused tests use the canonical facade;
 - no direct consumer depends on a legacy composition or tool-core owner.
 
+* Implemented Evidence
+
+The phase-aware refactor landed on 2026-07-09 with these owners:
+
+- =profile-composition.ss= is the stable facade;
+- =profile-composition-use-syntax.ss= exports only =use-composition= and owns
+  final lowering;
+- =profile-composition-syntax-plan.ss= is imported with =for-syntax= and owns
+  binding-aware validation plus immutable syntax-plan classes;
+- =profile-composition-builders.ss= and
+  =profile-composition-inline-runtime.ss= remain ordinary POO runtime owners;
+- the legacy =profile-composition-main-syntax.ss= owner was removed without a
+  compatibility wrapper.
+
+CrewAI, LangChain, LangGraph, and tool-calling user cases now use the canonical
+=(use-module module-name as alias ...)= grammar, with composition-level
+=compose= outside stage declarations.  =t/profile-composition-test.ss= proves
+native POO profile reuse, local =:extends=, named =:with= hooks, lexical alias
+hygiene, duplicate rejection, and expansion-time rejection of alias-only legacy
+syntax.
+
+The real expansion gate lives in
+=t/scenarios/performance/composition-macro-expansion/=.  Its current receipt is:
+
+| Case | Gerbil elapsed | Peak RSS | Result |
+|------+----------------+----------+--------|
+| 1,000 profiles | 1.000 s | 124.75 MiB | pass |
+| 5,000 profiles, first run | 2.850 s | 192.77 MiB | pass |
+| 5,000 profiles, second run | 2.570 s | 193.41 MiB | pass |
+
+Repeated 5,000-profile RSS drift is 0.64 MiB.  The gate uses =gxc -S= so it
+measures Gerbil expansion and Scheme generation without attributing Gambit C
+compiler memory to the composition macro.  Full native compilation remains a
+separate package-build backend gate.
+
+The upstream Harness owns three corresponding policy scenarios:
+
+- =macro-hygiene-context-preservation=;
+- =phase-aware-helper-split=;
+- =single-instantiation-composition-expansion=.
+
+Their focused test proves parser-owned call facts for =syntax->datum=,
+=symbol->string=, =free-identifier=?=, =load=, and =set!=, together with a
+module-import fact whose phase is =syntax= and modifier is =for-syntax=.  These
+facts are evidence first; this change does not enable a new broad warning.
+
 * Non-Goals
 
 - executing agent runtimes in Scheme;

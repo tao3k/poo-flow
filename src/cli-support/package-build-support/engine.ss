@@ -51,6 +51,7 @@
                  poo-flow-cli-only-module-build-spec
                  poo-flow-entry-build-spec
                  poo-flow-build-gsc-options
+                 poo-flow-build-homebrew-static-clean?
                  poo-flow-build-nonempty-env
                  poo-flow-package-build-spec
                  poo-flow-runtime-bootstrap-build-spec
@@ -74,6 +75,7 @@
                  poo-flow-package-libdir)
         (only-in "./stage-cache.ss"
                  poo-flow-bootstrap-spec-current?
+                 poo-flow-bootstrap-stale-specs
                  poo-flow-delete-native-object-siblings!
                  poo-flow-spec-output-files-retouch!
                  poo-flow-stage-cache-assess
@@ -88,6 +90,9 @@
                  poo-flow-build-debug-start-line
                  poo-flow-build-debug-tracking-line
                  poo-flow-build-observability-with-live-watchdog))
+
+(import (only-in "./stage-result.ss"
+                 make-poo-flow-stage-result))
 
 (export #t)
 
@@ -123,10 +128,12 @@
 	         "profiled std/make"
 	         stage
 	         options
-	         (lambda ()
-	           (apply poo-flow-apply-make stage
-	                  srcdir: (poo-flow-package-srcdir)
-	                  (poo-flow-make-options spec-options))))
+         (lambda ()
+           (poo-flow-build-with-homebrew-static-clean
+            (lambda ()
+              (apply poo-flow-apply-make stage
+                     srcdir: (poo-flow-package-srcdir)
+                     (poo-flow-make-options spec-options))))))
 	        (poo-flow-native-object-output-directory-cache-clear!)
 	        (poo-flow-spec-output-files-retouch! spec spec-options)
 	        (poo-flow-build-debug-tracking-line
@@ -150,28 +157,38 @@
    stale-stage))
 
 ;; poo-flow-direct-gxc-stale-stage?
-;;   : (-> [BuildSpec] Boolean)
+;;   : (-> [BuildSpec] [BuildSpec] Boolean)
 ;;   | doc m%
-;;       Small all-gxc stale stages are cheaper to compile directly than through
-;;       std/make startup and dependency planning.
+;;       A direct gxc rebuild is valid only for a singleton stage: std/make owns
+;;       dependency timestamp propagation for every multi-spec stage.
 ;;     %
-(def (poo-flow-direct-gxc-stale-stage? stale-stage)
+(def (poo-flow-direct-gxc-stale-stage? stage stale-stage)
+  (and (= (length stage) 1)
+       (not (null? stale-stage))
+       (<= (length stale-stage)
+           +poo-flow-direct-gxc-stale-stage-target-limit+)
+       (poo-flow-all? poo-flow-diagnostic-gxc-spec? stale-stage)))
+
+;; : (-> [BuildSpec] Boolean)
+(def (poo-flow-bootstrap-direct-gxc-stale-stage? stale-stage)
   (and (not (null? stale-stage))
        (<= (length stale-stage)
            +poo-flow-direct-gxc-stale-stage-target-limit+)
        (poo-flow-all? poo-flow-diagnostic-gxc-spec? stale-stage)))
 
 ;; poo-flow-make-direct-gxc-stage!
-;;   : (-> String [BuildSpec] BuildOptions Void)
+;;   : (-> String [BuildSpec] BuildOptions Boolean Void)
 ;;   | doc m%
 ;;       Compile a small focused stale stage with direct gxc calls.
 ;;     %
-(def (poo-flow-make-direct-gxc-stage! label stale-stage options)
+(def (poo-flow-make-direct-gxc-stage! label stale-stage options . maybe-force?)
   (poo-flow-package-message "compile-direct-gxc" label stale-stage)
-  (for-each
-   (lambda (spec)
-     (poo-flow-run-gxc-spec! label spec options))
-   stale-stage))
+  (let (force? (and (pair? maybe-force?)
+                     (car maybe-force?)))
+    (for-each
+     (lambda (spec)
+       (poo-flow-run-gxc-spec! label spec options force?))
+     stale-stage)))
 
 ;; : (-> String [BuildSpec] BuildOptions Symbol MaybeAlist MaybeString Integer Void)
 (def (poo-flow-make-skip-current! label
@@ -235,17 +252,19 @@
    stale-stage
    options
    (lambda ()
-     (apply poo-flow-apply-make stale-stage
-            srcdir: (poo-flow-package-srcdir)
-            (poo-flow-package-stage-options
-             stale-stage
-             options))))
+     (poo-flow-build-with-homebrew-static-clean
+      (lambda ()
+        (apply poo-flow-apply-make stale-stage
+               srcdir: (poo-flow-package-srcdir)
+               (poo-flow-package-stage-options
+                stale-stage
+                options))))))
   (poo-flow-native-object-output-directory-cache-clear!))
 
 ;; : (-> Boolean String [BuildSpec] [BuildSpec] BuildOptions Void)
 (def (poo-flow-make-run-stale-stage! profiled? label stage stale-stage options)
   (cond
-   ((poo-flow-direct-gxc-stale-stage? stale-stage)
+   ((poo-flow-direct-gxc-stale-stage? stage stale-stage)
     (poo-flow-make-direct-gxc-stage! label stale-stage options))
    (profiled?
     (poo-flow-make-profiled-stage label stale-stage options))
@@ -258,10 +277,10 @@
     "profiled std/make"
     "profiled std/make per-spec"))
 
-;; : (-> Boolean [BuildSpec] String)
-(def (poo-flow-make-stage-engine-label profiled? stale-stage)
+;; : (-> Boolean [BuildSpec] [BuildSpec] String)
+(def (poo-flow-make-stage-engine-label profiled? stage stale-stage)
   (cond
-   ((poo-flow-direct-gxc-stale-stage? stale-stage)
+   ((poo-flow-direct-gxc-stale-stage? stage stale-stage)
     "direct gxc")
    (profiled?
     (poo-flow-make-profiled-engine-label stale-stage))
@@ -269,17 +288,17 @@
     "std/make")))
 
 ;; poo-flow-compiled-stage-cache-fast-retouch?
-;;   : (-> Symbol MaybeString [BuildSpec] Boolean)
+;;   : (-> Symbol MaybeString [BuildSpec] [BuildSpec] Boolean)
 ;;   | doc m%
 ;;       A small direct-gxc rebuild for a sources-stale stage does not change the
 ;;       stage source/output membership, so retouching the existing receipt stamp
 ;;       avoids rewriting large expected-output receipts.
 ;;     %
-(def (poo-flow-compiled-stage-cache-fast-retouch? reason stamp stale-stage)
+(def (poo-flow-compiled-stage-cache-fast-retouch? reason stamp stage stale-stage)
   (and (eq? reason 'sources-stale)
        stamp
        (file-exists? stamp)
-       (poo-flow-direct-gxc-stale-stage? stale-stage)))
+       (poo-flow-direct-gxc-stale-stage? stage stale-stage)))
 
 ;; poo-flow-compiled-stage-cache-complete!
 ;;   : (-> [BuildSpec] BuildOptions String Symbol MaybeString [BuildSpec] Void)
@@ -292,7 +311,7 @@
                                              reason
                                              stamp
                                              stale-stage)
-  (if (poo-flow-compiled-stage-cache-fast-retouch? reason stamp stale-stage)
+  (if (poo-flow-compiled-stage-cache-fast-retouch? reason stamp stage stale-stage)
     (poo-flow-stage-cache-retouch! stamp)
     (poo-flow-stage-cache-refresh! stage options label)))
 
@@ -318,7 +337,7 @@
     (poo-flow-build-debug-tracking-line
      'package-stage
      label
-     (poo-flow-make-stage-engine-label profiled? stale-stage)
+     (poo-flow-make-stage-engine-label profiled? stage stale-stage)
      'compiled
      reason
      stale-stage
@@ -327,7 +346,7 @@
      receipt-status
      start-jiffy)))
 
-;; : (-> String [BuildSpec] BuildOptions Symbol MaybeAlist MaybeString Integer Void)
+;; : (-> String [BuildSpec] BuildOptions Symbol MaybeAlist MaybeString Integer Boolean)
 (def (poo-flow-make-stale-stage! label
                                  stage
                                  options
@@ -338,22 +357,26 @@
   (let (stale-stage
         (poo-flow-stage-stale-specs stage options label))
     (if (null? stale-stage)
-      (poo-flow-make-skip-stale-current! label
-                                         stage
-                                         options
-                                         receipt-status
-                                         stamp
-                                         start-jiffy)
-      (poo-flow-make-compile-stale-stage! label
-                                          stage
-                                          options
-                                          reason
-                                          receipt-status
-                                          stamp
-                                          start-jiffy
-                                          stale-stage))))
+      (begin
+        (poo-flow-make-skip-stale-current! label
+                                           stage
+                                           options
+                                           receipt-status
+                                           stamp
+                                           start-jiffy)
+        #f)
+      (begin
+        (poo-flow-make-compile-stale-stage! label
+                                            stage
+                                            options
+                                            reason
+                                            receipt-status
+                                            stamp
+                                            start-jiffy
+                                            stale-stage)
+        #t))))
 
-;; : (-> String [BuildSpec] BuildOptions Boolean Symbol MaybeAlist MaybeString Integer Void)
+;; : (-> String [BuildSpec] BuildOptions Boolean Symbol MaybeAlist MaybeString Integer Boolean)
 (def (poo-flow-make-dispatch! label
                               stage
                               options
@@ -363,13 +386,15 @@
                               stamp
                               start-jiffy)
   (if current?
-    (poo-flow-make-skip-current! label
-                                 stage
-                                 options
-                                 reason
-                                 receipt-status
-                                 stamp
-                                 start-jiffy)
+    (begin
+      (poo-flow-make-skip-current! label
+                                   stage
+                                   options
+                                   reason
+                                   receipt-status
+                                   stamp
+                                   start-jiffy)
+      #f)
     (poo-flow-make-stale-stage! label
                                 stage
                                 options
@@ -378,32 +403,78 @@
                                 stamp
                                 start-jiffy)))
 
-;; : (-> String [BuildSpec] BuildOptions Void)
-(def (poo-flow-make label stage options)
+;; : (-> String [BuildSpec] Boolean)
+(def (poo-flow-composition-refresh-stage? label stage)
+  (and (string=? label "entry")
+       (poo-flow-all? poo-flow-diagnostic-gxc-spec? stage)))
+
+;; : (-> String [BuildSpec] String)
+(def (poo-flow-upstream-dirty-stage-engine-label label stage)
+  (if (poo-flow-composition-refresh-stage? label stage)
+    "direct gxc composition-refresh"
+    "std/make dependency-check"))
+
+;; : (-> String [BuildSpec] BuildOptions MaybeAlist MaybeString Integer Boolean)
+(def (poo-flow-make-upstream-dirty-stage! label
+                                           stage
+                                           options
+                                           receipt-status
+                                           stamp
+                                           start-jiffy)
+  (if (poo-flow-composition-refresh-stage? label stage)
+    (poo-flow-make-direct-gxc-stage! label stage options #t)
+    (poo-flow-make-std-stage! label stage options))
+  (poo-flow-stage-cache-refresh! stage options label)
+  (poo-flow-build-debug-tracking-line
+   'package-stage
+   label
+   (poo-flow-upstream-dirty-stage-engine-label label stage)
+   'compiled
+   'upstream-stage-dirty
+   stage
+   options
+   stamp
+   receipt-status
+   start-jiffy)
+  #t)
+
+;; : (-> String [BuildSpec] BuildOptions Boolean Boolean)
+(def (poo-flow-make label stage options . maybe-upstream-dirty?)
   (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "check" label stage)
-  (let (start-jiffy (current-jiffy))
+  (let* ((start-jiffy (current-jiffy))
+         (upstream-dirty?
+          (and (pair? maybe-upstream-dirty?)
+               (car maybe-upstream-dirty?))))
     (call-with-values
       (lambda ()
         (poo-flow-stage-cache-assess stage options label))
       (lambda (current? reason receipt-status stamp)
-        (poo-flow-make-dispatch! label
-                                 stage
-                                 options
-                                 current?
-                                 reason
-                                 receipt-status
-                                 stamp
-                                 start-jiffy)))))
+        (if upstream-dirty?
+          (poo-flow-make-upstream-dirty-stage! label
+                                                stage
+                                                options
+                                                receipt-status
+                                                stamp
+                                                start-jiffy)
+          (poo-flow-make-dispatch! label
+                                   stage
+                                   options
+                                   current?
+                                   reason
+                                   receipt-status
+                                   stamp
+                                   start-jiffy))))))
 
 ;; : (-> String [BuildSpec] BuildOptions Void)
 (def (poo-flow-make-uncached label stage options)
   (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "compile" label stage)
-  (poo-flow-build-prepare-system-compiler!)
-  (apply poo-flow-apply-make stage
-         srcdir: (poo-flow-package-srcdir)
-         (poo-flow-make-options options))
+  (poo-flow-build-with-homebrew-static-clean
+   (lambda ()
+     (apply poo-flow-apply-make stage
+            srcdir: (poo-flow-package-srcdir)
+            (poo-flow-make-options options))))
   (poo-flow-native-object-output-directory-cache-clear!))
 
 ;; : (-> String BuildSpec BuildOptions Void)
@@ -462,7 +533,7 @@
    receipt-status
    start-jiffy))
 
-;; : (-> String [BuildSpec] BuildOptions Symbol MaybeAlist MaybeString Integer [BuildSpec] Void)
+;; : (-> String [BuildSpec] BuildOptions Symbol MaybeAlist MaybeString Integer [BuildSpec] Boolean)
 (def (poo-flow-make-bootstrap-compile-stale-stage! label
                                                    stage
                                                    options
@@ -471,7 +542,7 @@
                                                    stamp
                                                    start-jiffy
                                                    stale-stage)
-  (if (poo-flow-direct-gxc-stale-stage? stale-stage)
+  (if (poo-flow-bootstrap-direct-gxc-stale-stage? stale-stage)
     (poo-flow-make-direct-gxc-stage! label stale-stage options)
     (for-each
      (lambda (spec)
@@ -481,16 +552,19 @@
   (poo-flow-build-debug-tracking-line
    'package-bootstrap-stage
    label
-   (poo-flow-make-stage-engine-label #f stale-stage)
+   (if (poo-flow-bootstrap-direct-gxc-stale-stage? stale-stage)
+     "direct gxc"
+     "sequential std/make")
    'compiled
    reason
    stale-stage
    options
    stamp
    receipt-status
-   start-jiffy))
+   start-jiffy)
+  #t)
 
-;; : (-> String [BuildSpec] BuildOptions Void)
+;; : (-> String [BuildSpec] BuildOptions Boolean)
 (def (poo-flow-make-bootstrap label stage options)
   (poo-flow-package-require-gxpkg-env!)
   (poo-flow-package-message "check" label stage)
@@ -514,18 +588,21 @@
              options
              stamp
              receipt-status
-             start-jiffy))
+             start-jiffy)
+            #f)
           (begin
             (let (stale-stage
-                  (poo-flow-stage-stale-specs stage options label))
+                  (poo-flow-bootstrap-stale-specs stage options label))
               (if (null? stale-stage)
-                (poo-flow-make-bootstrap-skip-stale-current!
-                 label
-                 stage
-                 options
-                 receipt-status
-                 stamp
-                 start-jiffy)
+                (begin
+                  (poo-flow-make-bootstrap-skip-stale-current!
+                   label
+                   stage
+                   options
+                   receipt-status
+                   stamp
+                   start-jiffy)
+                  #f)
                 (poo-flow-make-bootstrap-compile-stale-stage!
                  label
                  stage
@@ -555,23 +632,26 @@
 (def (poo-flow-make-cleanable-stage stage)
   (filter poo-flow-make-cleanable-spec? stage))
 
-;; : (-> MaybeString Boolean)
-(def (poo-flow-build-nix-sdkroot? sdkroot)
-  (cond-expand
-   (darwin (and sdkroot (string-prefix? "/nix/store/" sdkroot)))
-   (else #f)))
-
-;; : (-> Void)
-(def (poo-flow-build-prepare-system-compiler!)
-  (when (poo-flow-build-nix-sdkroot?
-         (poo-flow-build-nonempty-env "SDKROOT"))
-    (setenv "SDKROOT" "")))
-
 ;; : (-> BuildSpec String)
 (def (poo-flow-gxc-spec-file spec)
   (match spec
     ([gxc: file . _] file)
     (_ (error "poo-flow direct gxc stage only supports gxc specs" spec))))
+
+;; Scope SDKROOT cleanup to the active Homebrew compiler on macOS only.
+;; : (forall (a) (-> (-> a) a))
+(def (poo-flow-build-with-homebrew-static-clean thunk)
+  (cond-expand
+   (darwin
+    (let (sdkroot (getenv "SDKROOT" #f))
+      (if (and sdkroot
+               (poo-flow-build-homebrew-static-clean?))
+        (dynamic-wind
+          (lambda () (setenv "SDKROOT" ""))
+          thunk
+          (lambda () (setenv "SDKROOT" sdkroot)))
+        (thunk))))
+   (else (thunk))))
 
 ;; poo-flow-compile-module/direct-gxc!
 ;;   : (-> String Void)
@@ -580,23 +660,61 @@
 ;;       by the package build process, avoiding a second external `gxc` startup.
 ;;     %
 (def (poo-flow-compile-module/direct-gxc! label source)
-  (poo-flow-build-prepare-system-compiler!)
-  (compile-module source
-                  [invoke-gsc: #t
-                   gsc-options: (poo-flow-build-gsc-options)
-                   keep-scm: #f
-                   output-dir: (poo-flow-package-libdir)
-                   optimize: #f
-                   debug: #f
-                   generate-ssxi: #t]))
+  (poo-flow-build-with-homebrew-static-clean
+   (lambda ()
+     (compile-module source
+                     [invoke-gsc: #t
+                      gsc-options: (poo-flow-build-gsc-options)
+                      keep-scm: #f
+                      output-dir: (poo-flow-package-libdir)
+                      optimize: #f
+                      debug: #f
+                      generate-ssxi: #t]))))
 
-;; : (-> String BuildSpec BuildOptions Void)
-(def (poo-flow-run-gxc-spec! label spec options)
+;; : (-> String BuildSpec BuildOptions Boolean Void)
+(def (poo-flow-stage-result-elapsed-micros start-jiffy)
+  (quotient
+   (* (- (current-jiffy) start-jiffy) 1000000)
+   (jiffies-per-second)))
+
+(def (poo-flow-make-stage-result label specs outcome reason cache-status start-jiffy)
+  (make-poo-flow-stage-result
+   label
+   specs
+   outcome
+   reason
+   cache-status
+   (poo-flow-stage-result-elapsed-micros start-jiffy)))
+
+(def (poo-flow-run-gxc-specs! label specs options)
+  (cond
+   ((null? specs) '())
+   (else
+    (cons (poo-flow-run-gxc-spec/result! label (car specs) options)
+          (poo-flow-run-gxc-specs!
+           label
+           (cdr specs)
+           options)))))
+
+(def (poo-flow-run-gxc-specs/force! label specs options)
+  (cond
+   ((null? specs) '())
+   (else
+    (cons (poo-flow-run-gxc-spec/result! label (car specs) options #t)
+          (poo-flow-run-gxc-specs/force!
+           label
+           (cdr specs)
+           options)))))
+
+(def (poo-flow-run-gxc-spec! label spec options . maybe-force?)
   (let* ((file (poo-flow-gxc-spec-file spec))
          (source (poo-flow-gxc-source-file file))
          (stage (list spec))
-         (start-jiffy (current-jiffy)))
-    (if (poo-flow-stage-spec-current? spec options label)
+         (start-jiffy (current-jiffy))
+         (force? (and (pair? maybe-force?)
+                      (car maybe-force?))))
+    (if (and (not force?)
+             (poo-flow-stage-spec-current? spec options label))
       (begin
         (poo-flow-package-message "skip" label stage)
         (poo-flow-build-debug-tracking-line
@@ -632,10 +750,10 @@
 	        (poo-flow-native-object-output-directory-cache-clear!)
 	        (poo-flow-build-debug-tracking-line
 	         'direct-gxc-spec
-	         label
-	         "gxc"
-	         'compiled
-	         'stale
+         label
+         "gxc"
+         'compiled
+         (if force? 'upstream-stage-dirty 'stale)
 	         stage
 	         options
 	         #f
@@ -643,15 +761,42 @@
 	         start-jiffy)))))
 
 ;; : (-> String [BuildSpec] BuildOptions Void)
+(def (poo-flow-run-gxc-spec/result! label spec options . maybe-force?)
+  (let* ((stage (list spec))
+         (start-jiffy (current-jiffy))
+         (force? (and (pair? maybe-force?)
+                      (car maybe-force?)))
+         (current? (and (not force?)
+                        (poo-flow-stage-spec-current? spec options label))))
+    (if force?
+      (poo-flow-run-gxc-spec! label spec options #t)
+      (poo-flow-run-gxc-spec! label spec options))
+    (poo-flow-make-stage-result
+     label
+     stage
+     (if current? 'skip 'compile)
+     (if current?
+       'mtime-current
+       (if force? 'upstream-stage-dirty 'stale))
+     (if current? 'current 'stale)
+     start-jiffy)))
+
 (def (poo-flow-gxc-stage label stage options)
-  (poo-flow-package-require-gxpkg-env!)
-  (poo-flow-package-message "check" label stage)
-  (if (poo-flow-stage-cache-valid? stage options)
-    (begin
-      (poo-flow-package-message "skip" label stage)
-      (display "|note kind=build-cache message=\"package-local direct gxc outputs are current; skipped focused cli rebuild\"")
-      (newline))
-    (begin
+  (let (start-jiffy (current-jiffy))
+    (poo-flow-package-require-gxpkg-env!)
+    (poo-flow-package-message "check" label stage)
+    (if (poo-flow-stage-cache-valid? stage options)
+      (begin
+        (poo-flow-package-message "skip" label stage)
+        (display "|note kind=build-cache message=\"package-local direct gxc outputs are current; skipped focused cli rebuild\"")
+        (newline)
+        (list (poo-flow-make-stage-result
+               label
+               stage
+               'skip
+               'stage-cache-valid
+               'current
+               start-jiffy)))
       (let (stale-stage
             (poo-flow-stage-stale-specs stage options label))
         (if (null? stale-stage)
@@ -659,14 +804,47 @@
             (poo-flow-package-message "skip" label stage)
             (display "|note kind=build-cache message=\"package-local direct gxc outputs are current after stale target scan; skipped focused cli rebuild\"")
             (newline)
-            (poo-flow-stage-cache-refresh! stage options label))
+            (poo-flow-stage-cache-refresh! stage options label)
+            (list (poo-flow-make-stage-result
+                   label
+                   stage
+                   'skip
+                   'stale-spec-current
+                   'current
+                   start-jiffy)))
           (begin
             (poo-flow-package-message "compile" label stale-stage)
-            (for-each
-             (lambda (spec)
-               (poo-flow-run-gxc-spec! label spec options))
-             stale-stage)
-            (poo-flow-stage-cache-refresh! stage options label)))))))
+            (let (results
+                  (poo-flow-run-gxc-specs! label stale-stage options))
+              (poo-flow-stage-cache-refresh! stage options label)
+              results)))))))
+
+;; : (-> String [BuildSpec] PooFlowBuildOptions Void)
+;;; A test bootstrap cannot trust pre-existing native objects after a source
+;;; tree or package identity change.  Rebuild its ordered interface closure on
+;;; a stage-cache miss, then retain the regular warm-cache path.
+(def (poo-flow-gxc-stage/force-on-cache-miss! label stage options)
+  (let (start-jiffy (current-jiffy))
+    (poo-flow-package-require-gxpkg-env!)
+    (poo-flow-package-message "check" label stage)
+    (if (poo-flow-stage-cache-valid? stage options)
+      (begin
+        (poo-flow-package-message "skip" label stage)
+        (display "|note kind=build-cache message=\"test bootstrap outputs are current; skipped focused rebuild\"")
+        (newline)
+        (list (poo-flow-make-stage-result
+               label
+               stage
+               'skip
+               'stage-cache-valid
+               'current
+               start-jiffy)))
+      (begin
+        (poo-flow-package-message "compile" label stage)
+        (let (results
+              (poo-flow-run-gxc-specs/force! label stage options))
+          (poo-flow-stage-cache-refresh! stage options label)
+          results)))))
 
 ;; : (-> BuildOptions [BuildSpec])
 (def (poo-flow-compile-build-spec options)
@@ -679,47 +857,6 @@
     (poo-flow-package-build-spec options))))
 
 ;; : (-> BuildOptions Void)
-(def (poo-flow-package-compile options)
-  (let (start-jiffy (current-jiffy))
-    (if (poo-flow-cli-build-options? options)
-      (begin
-        (poo-flow-gxc-stage "cli-modules"
-                            (poo-flow-cli-only-module-build-spec options)
-                            options)
-        (poo-flow-write-cli-launcher!))
-      (begin
-        (poo-flow-make-bootstrap
-         "runtime-bootstrap"
-         (poo-flow-runtime-bootstrap-build-spec options)
-         options)
-        (when (poo-flow-native-build-options? options)
-          (poo-flow-make
-           "ffi"
-           +poo-flow-ffi-build-spec+
-           options))
-        (poo-flow-make
-         "runtime"
-         (poo-flow-runtime-main-build-spec options)
-         options)
-        (poo-flow-make
-         "testing-project"
-         +poo-flow-testing-project-build-spec+
-         options)
-        (when (poo-flow-tests-build-options? options)
-          (poo-flow-make
-           "tests"
-           (poo-flow-test-build-spec options)
-           options))
-        (poo-flow-make
-         "cli-library"
-         +poo-flow-cli-library-build-spec+
-         options)
-        (poo-flow-make
-         "entry"
-         (poo-flow-entry-build-spec options)
-         options)
-        (poo-flow-write-cli-launcher!)))
-    (poo-flow-build-debug-package-total-line options start-jiffy)))
 
 ;; : (-> Void)
 (def (poo-flow-clean)

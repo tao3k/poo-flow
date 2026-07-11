@@ -64,6 +64,8 @@
   ["t/support/performance.ss"
    "t/support/json-schema-contract-performance.ss"
    "t/support/type-contract-performance.ss"
+   "t/support/poo-performance-fixtures.ss"
+   "t/support/poo-performance-object-scenarios.ss"
    "t/support/poo-performance.ss"
    "t/support/loop-engine-runtime-manifest-receipts.ss"
    "t/module-system-poo-performance-test-support/composition-gates.ss"
@@ -129,6 +131,7 @@
   (let (gxtest-suites
         [["unit" "t/unit-tests.ss"]
          ["contract" "t/contract-tests.ss"]
+         ["cli-support" "t/cli-support-tests.ss"]
          ["scenario-funflow-cicd" "t/user-interface-cicd-test.ss"]
          ["scenario-loop-workflow-agreement" "t/user-interface-custom-loop-workflow-agreement-test.ss"]
          ["scenario-loop-sandbox-agreement" "t/user-interface-custom-loop-sandbox-agreement-test.ss"]

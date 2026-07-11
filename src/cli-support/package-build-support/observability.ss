@@ -174,37 +174,43 @@
                                                       _options
                                                       thunk)
   (let ((completed? #f)
-        (target-count (length stage)))
+        (target-count (length stage))
+        (watchdog-thread #f))
     (when (= target-count 1)
-      (let ((fail-seconds
-             (poo-flow-build-observability-budget-seconds
-              "POO_FLOW_BUILD_FAIL_SINGLE_TARGET_SECONDS"
-              120))
-            (targets-preview
-             (poo-flow-build-observability-targets-preview stage)))
-        (thread-start!
-         (make-thread
-          (lambda ()
-            (thread-sleep! fail-seconds)
-            (unless completed?
-              (display "|poo-flow-build-observability ")
-              (write
-               [phase: phase
-                label: label
-                command: command
-                status: 'running
-                reason: 'live-watchdog
-                budget-status: 'single-target-live-time-budget-exceeded
-                target-count: target-count
-                timeout-seconds: fail-seconds
-                targets-preview: targets-preview])
-              (newline)
-              (force-output)
-              (exit 124)))))))
+      (let* ((fail-seconds
+              (poo-flow-build-observability-budget-seconds
+               "POO_FLOW_BUILD_FAIL_SINGLE_TARGET_SECONDS"
+               120))
+             (targets-preview
+              (poo-flow-build-observability-targets-preview stage))
+             (watchdog
+              (make-thread
+               (lambda ()
+                 (thread-sleep! fail-seconds)
+                 (unless completed?
+                   (display "|poo-flow-build-observability ")
+                   (write
+                    [phase: phase
+                     label: label
+                     command: command
+                     status: 'running
+                     reason: 'live-watchdog
+                     budget-status: 'single-target-live-time-budget-exceeded
+                     target-count: target-count
+                     timeout-seconds: fail-seconds
+                     targets-preview: targets-preview])
+                   (newline)
+                   (force-output)
+                   (exit 124))))))
+        (set! watchdog-thread watchdog)
+        (thread-start! watchdog)))
     (dynamic-wind
       (lambda () #!void)
       thunk
-      (lambda () (set! completed? #t)))))
+      (lambda ()
+        (set! completed? #t)
+        (when watchdog-thread
+          (thread-terminate! watchdog-thread))))))
 
 ;; : (-> [BuildSpec] BuildOptions Symbol Symbol Integer)
 (def (poo-flow-build-debug-output-count stage options status reason)

@@ -139,6 +139,7 @@
 
 ;;; Conflict receipts are data so doctors can report naming drift without
 ;;; forcing source loading or descriptor realization.
+;; : (forall (path role) (-> [(Pair path [role])] [Alist]))
 ;; : (-> [(Path Symbol...)] [Alist])
 (def (poo-flow-module-tree-entrypoint-conflicts entrypoint-specs)
   (map (lambda (entrypoint-spec)
@@ -162,6 +163,7 @@
   (string-append poo-flow-src-modules-root "/" module-name))
 
 ;;; Internal expansion keeps module entrypoints ordered for stable diagnostics.
+;; : (forall (path role) (-> (Pair path [role]) [PooModuleSourceRef]))
 ;; : (-> (Path Symbol...) [PooModuleSourceRef])
 (def (poo-flow-src-module-tree-entrypoint-source-refs entrypoint-spec)
   (let ((module-root
@@ -172,6 +174,7 @@
          entrypoint-roles)))
 
 ;;; Internal recursion flattens the declared tree without forcing source loads.
+;; : (forall (a b) (-> [(Pair a [b])] [PooModuleSourceRef]))
 ;; : (-> [(Path Symbol...)] [PooModuleSourceRef])
 (def (poo-flow-src-module-tree-entrypoint-source-refs* entrypoint-specs)
   (foldr append
@@ -283,6 +286,7 @@
 ;;; Boundary: user tree source policy violations is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
+;; : (forall (a) (-> PooModuleSourceRef [a] [a]))
 ;; : (-> PooModuleSourceRef [Symbol] [Symbol])
 (def (poo-flow-user-tree-source-policy-violations source-ref responsibilities)
   (filter (lambda (responsibility)

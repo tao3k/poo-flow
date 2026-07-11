@@ -128,6 +128,7 @@
            loop-prioritization-role
            loop-strategy-engine-role)))
 
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
 ;; : (-> Alist Alist Alist)
 (def (loop-strategy-slot-rows/tail rows tail)
   (foldr cons tail rows))
@@ -255,7 +256,8 @@
 
 ;;; Strategy helpers keep filtering explicit so policy predicates remain visible
 ;;; to tests and harness diagnostics.
-;; : (-> Predicate [Value] [Value])
+;; : (forall (a) (-> (-> a Boolean) [a] [a]))
+;; : (-> Predicate List List)
 (def (loop-filter predicate values)
   (cond
    ((null? values) '())
@@ -458,8 +460,26 @@
 
 ;;; Name projection is the compact user-facing summary for selected patterns.
 ;; : (-> [LoopPatternDescriptor] [Symbol])
+;; : (forall (pattern contract) (-> [pattern] [contract]))
+;; : (-> LoopPatternList LoopPatternContractList)
+(def (loop-strategy-pattern-contracts->contract descriptors)
+  (cond
+   ((null? descriptors) '())
+   (else
+    (cons (loop-pattern-descriptor->contract (car descriptors))
+          (loop-strategy-pattern-contracts->contract (cdr descriptors))))))
+
+;; : (forall (pattern name) (-> [pattern] [name]))
+;; : (-> LoopPatternList PatternNameList)
+(def (loop-strategy-pattern-names->contract descriptors)
+  (cond
+   ((null? descriptors) '())
+   (else
+    (cons (loop-pattern-name (car descriptors))
+          (loop-strategy-pattern-names->contract (cdr descriptors))))))
+
 (def (loop-pattern-names descriptors)
-  (map loop-pattern-name descriptors))
+  (loop-strategy-pattern-names->contract descriptors))
 
 ;;; Boundary: projection is the only local "execution" outcome.
 ;;; Invariant: contract data can be tested locally, but Marlin owns the run.
@@ -492,7 +512,7 @@
             (cons 'level-ceiling level-ceiling)
             (cons 'pattern-count (length patterns))
             (cons 'selected-patterns
-                  (map loop-pattern-descriptor->contract selected-patterns))
+                  (loop-strategy-pattern-contracts->contract selected-patterns))
             (cons 'actionable-patterns
                   (loop-pattern-names actionable-patterns))
             (cons 'next-pattern

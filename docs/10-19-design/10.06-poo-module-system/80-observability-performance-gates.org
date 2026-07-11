@@ -62,6 +62,7 @@ The POO performance fixture policy is still enforced at the benchmark boundary:
 - the upstream benchmark fixture contract must pass
 - =maxRssMb= and memory metric fields must be valid
 - canonical input/expected timing phases must be present
+- =expectedOutcome= must state the semantic result of the measured POO path
 - required POO form evidence must be present
 - required POO usage-call evidence must be present
 
@@ -121,6 +122,37 @@ above. Without those gates, splitting a builder can improve modularity while
 silently making every build slower.
 
 ** Current Baseline
+*** Focused Test Runner
+
+Use the test runner that owns test process lifecycle for focused package tests:
+
+#+begin_src sh
+gxpkg env gxtest -q t/model-core-test.ss
+gxpkg env gxtest -q t/object-family-syntax-performance-test.ss
+#+end_src
+
+Do not use =gxpkg env gxi t/<test-file>.ss= as the normal focused-test gate.
+That shape can execute the assertions successfully while retaining the direct
+interpreter process and its dynamic-load tail.  It makes a small POO benchmark
+look like a runtime or macro regression.
+
+The 2026-07-09 warm-path measurements establish the distinction:
+
+- bare =gxi -e '(void)'=: 0.11 seconds;
+- =gxpkg env gxi -e '(void)'=: 2.36 seconds;
+- direct =gxi= execution of the model-core test: 17.59 seconds;
+- direct =gxi= execution of the object-family performance test: 30.71 seconds;
+- =gxtest -q= model-core focused test: 2.65 seconds;
+- =gxtest -q= object-family focused test: 3.13 seconds.
+
+The object-family benchmark itself remained inside its algorithm gate (0.998
+milliseconds measured, 3 milliseconds observed total, 25 milliseconds maximum).
+The large direct-=gxi= wall-clock time was therefore runner lifecycle cost, not
+POO construction, projection, or macro expansion cost.
+
+Use bare =gxi= for trivial interpreter probes.  Use =gxpkg env= only when a
+package registry import is required, and use =gxtest= for package test files.
+
 The current composition gate baseline after the fix:
 - =gxpkg build -g= passes
 - hot-cache =gxpkg build -g= is about 3.6 seconds

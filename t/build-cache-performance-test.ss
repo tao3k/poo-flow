@@ -181,6 +181,12 @@
   (force-output))
 
 ;; : TestSuite
+(def (build-cache-live-warm-stage-results)
+  (poo-flow-gxc-stage
+   "testing-bootstrap"
+   +poo-flow-testing-bootstrap-build-spec+
+   (poo-flow-entry-options #f #f #f #f #f #f #f)))
+
 (def build-cache-performance-test
   (test-suite "build-cache-performance"
     (test-case "fixture fixes observed and target no-op parameters"
@@ -226,4 +232,32 @@
 	         'direct-gxc)
 	        (check-equal?
 	         (build-cache-performance-ref target 'status)
-	         'pass)))))
+         'pass))
+    (test-case "live warm stage returns a POO-native skip receipt"
+      (let* ((fixture (build-cache-performance-load-fixture))
+             (results (build-cache-live-warm-stage-results))
+             (result (car results)))
+        (check-equal? (length results) 1)
+        (check-equal? (poo-flow-stage-result? result) #t)
+        (check-equal? (poo-flow-stage-result-outcome result) 'skip)
+        (check-equal? (poo-flow-stage-result-reason result)
+                      'stage-cache-valid)
+        (check-equal?
+         (<= (poo-flow-stage-result-elapsed-micros result)
+             (* (build-cache-performance-ref fixture 'targetNoopElapsedMs)
+                1000))
+         #t)
+        (check-equal? (poo-flow-stage-result-cache-status result)
+                      'current))))))
+(import (only-in :poo-flow/src/cli-support/package-build-support/engine
+                 poo-flow-gxc-stage)
+        (only-in :poo-flow/src/cli-support/package-build-support/options
+                 poo-flow-entry-options)
+        (only-in :poo-flow/src/cli-support/package-build-support/specs
+                 +poo-flow-testing-bootstrap-build-spec+)
+        (only-in :poo-flow/src/cli-support/package-build-support/stage-result
+                 poo-flow-stage-result?
+                   poo-flow-stage-result-cache-status
+                   poo-flow-stage-result-elapsed-micros
+                 poo-flow-stage-result-outcome
+                 poo-flow-stage-result-reason))

@@ -78,4 +78,4 @@
   (poo-flow-memory-store-spec-find (.ref catalog 'stores) store-ref))
 ;; : (-> PooMemoryCatalog Alist)
 (def (poo-flow-memory-catalog->alist catalog)
-  (poo-flow-memory-catalog-summary catalog))
+  (poo-flow-memory-catalog-summary (.ref catalog 'stores)))

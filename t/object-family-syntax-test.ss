@@ -33,6 +33,11 @@
       (check-equal? (poo-object-family-syntax-test?
                      poo-object-family-syntax-test-object)
                     #t)
+      (check-equal? (poo-object-family-syntax-test? 'not-a-poo-object) #f)
+      (check-equal?
+       (poo-object-family-syntax-test?
+        (object<-alist (list (cons 'ref 'missing-kind))))
+       #f)
       (check-equal? (poo-object-family-syntax-test-ref
                      poo-object-family-syntax-test-object)
                     'scenario-model)

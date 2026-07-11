@@ -460,6 +460,7 @@
                         'runtime-executed
                         #f)))))
 
+;; : (forall (receipt) (-> [receipt] [Alist]))
 ;; : (-> SpecChangeProposal Alist)
 (def (spec-change-proposal->alist proposal)
   (let (valid-proposal (validate-spec-change-proposal proposal))

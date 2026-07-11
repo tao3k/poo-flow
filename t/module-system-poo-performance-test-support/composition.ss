@@ -100,6 +100,19 @@
       (check-equal? construction-count 1)
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
+(def module-system-poo-performance-composition-lazy-demand-case
+  (test-case "gates POO composition lazy demand object reuse"
+    (let* ((observed
+            (poo-performance-composition-run-observed-gate
+             poo-performance-composition-lazy-demand-gate-receipt))
+           (receipt (car observed))
+           (construction-count (cadr observed)))
+      (check-equal?
+       (poo-performance-composition-lazy-demand-valid-count 1)
+       1)
+      (check-equal? construction-count 0)
+      (check-equal? (benchmark-receipt-pass? receipt) #t))))
+
 ;; : TestCase
 (def module-system-poo-performance-native-object-list-indexed-family-case
   (test-case "gates Project Harness-style POO object-list indexed family"
@@ -137,5 +150,6 @@
     module-system-poo-performance-hook-override-case
     module-system-poo-performance-native-object-reuse-case
     module-system-poo-performance-native-object-reuse-large-library-case
+    module-system-poo-performance-composition-lazy-demand-case
     module-system-poo-performance-native-object-list-indexed-family-case
     module-system-poo-performance-macro-style-matrix-case))

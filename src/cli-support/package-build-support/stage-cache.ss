@@ -401,11 +401,39 @@
           stage))
 
 ;; : (-> BuildSpec BuildOptions [String] Boolean)
+;;; Bootstrap gxc specs may intentionally emit only their declared interface
+;;; output. Requiring a synthetic .scm would make a current bootstrap target
+;;; look stale and force sequential work on every warm package compile.
+;; : (-> PooFlowBuildSpec PooFlowBuildOptions Label Boolean)
 (def (poo-flow-bootstrap-spec-current? spec options . maybe-label)
-  (apply poo-flow-stage-spec-current?
-         spec
-         options
-         maybe-label))
+  (match spec
+    ([gxc: _ . _]
+     (poo-flow-gxc-spec-lightweight-outputs-current?/mtime spec))
+    ([ssi: _ . _]
+     (let* ((file (poo-flow-gxc-source-file (cadr spec)))
+            (source (path-expand file (poo-flow-package-srcdir))))
+       (and (file-exists? source)
+            (poo-flow-source-current-against-output?/mtime
+             source
+             (poo-flow-package-output-path
+              (poo-flow-source-stem file)
+              ".ssi")))))
+    (_
+     (apply poo-flow-stage-spec-current?
+            spec
+            options
+            maybe-label))))
+
+;; : (-> [BuildSpec] PooFlowBuildOptions String [BuildSpec])
+;;; Bootstrap stages include interface-only `ssi:` targets, whose freshness
+;;; contract is narrower than ordinary native-output stages.
+(def (poo-flow-bootstrap-stale-specs stage options . maybe-label)
+  (filter (lambda (spec)
+            (not (apply poo-flow-bootstrap-spec-current?
+                        spec
+                        options
+                        maybe-label)))
+          stage))
 
 ;; : (-> String [String] [String] Void)
 (def (poo-flow-stage-cache-write! stamp sources outputs)

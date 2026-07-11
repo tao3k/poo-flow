@@ -373,21 +373,47 @@
    (else #f)))
 
 ;; : (-> [PooSandboxProfilePolicyProjection] [PooSandboxProfilePolicyDiagnostic])
-(def (poo-flow-sandbox-profile-policy-presentation-diagnostics/rev
+
+;; : (forall (p d) (-> [p] [d] [d]))
+;; poo-flow-sandbox-profile-policy-presentation-diagnostics-rev
+;; : (-> (List SandboxPolicyProjection)
+;;        (List SandboxDiagnosticRow)
+;;        (List SandboxDiagnosticRow))
+;; | doc m%
+;; Accumulates presentation diagnostics in reverse order while preserving the
+;; policy projection order at the public boundary.
+;; # Examples
+;; ```scheme
+;; (poo-flow-sandbox-profile-policy-presentation-diagnostics-rev '() '())
+;; => '()
+;; ```
+;; Optimization boundary: the recursive branch accumulates reversed rows so the
+;; public projection pays one final reverse instead of appending per projection.
+(def (poo-flow-sandbox-profile-policy-presentation-diagnostics-rev
       projections
       diagnostics-rev)
   (if (null? projections)
     diagnostics-rev
-    (poo-flow-sandbox-profile-policy-presentation-diagnostics/rev
+    (poo-flow-sandbox-profile-policy-presentation-diagnostics-rev
      (cdr projections)
      (agent-sandbox-rows-into/rev
       (poo-flow-sandbox-profile-policy-projection-diagnostics
        (car projections))
       diagnostics-rev))))
 
+;; : (forall (p d) (-> [p] [d]))
+;; poo-flow-sandbox-profile-policy-presentation-diagnostics
+;; : (-> (List SandboxPolicyProjection) (List SandboxDiagnosticRow))
+;; | doc m%
+;; Produces stable presentation diagnostics from sandbox policy projections.
+;; # Examples
+;; ```scheme
+;; (poo-flow-sandbox-profile-policy-presentation-diagnostics '())
+;; => '()
+;; ```
 (def (poo-flow-sandbox-profile-policy-presentation-diagnostics projections)
   (reverse
-   (poo-flow-sandbox-profile-policy-presentation-diagnostics/rev
+   (poo-flow-sandbox-profile-policy-presentation-diagnostics-rev
     projections
     '())))
 
@@ -434,6 +460,19 @@
 ;;; the sandbox-owned summary of the realized agent profile, while the public
 ;;; POO profile name remains visible for user-interface projections.
 ;; : (-> PooSandboxProfile Alist)
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
+;; poo-flow-sandbox-profile-runtime-summary
+;; : (-> SandboxProfile (List FieldRow))
+;; | doc m%
+;; Preserves the generic field-row extension law through
+;; agent-sandbox-field-rows/tail, then projects a sandbox profile through the
+;; unchecked runtime boundary for a runtime consumer.
+;; # Examples
+;; ```scheme
+;; (poo-flow-sandbox-profile-runtime-summary
+;;  (car poo-flow-default-sandbox-profiles))
+;; => '((profile-name . agent/nono) (descriptor-realized? . #t) ...)
+;; ```
 (def (poo-flow-sandbox-profile-runtime-summary profile)
   (agent-sandbox-field-rows/tail
    (agent-sandbox-profile-runtime-summary
@@ -444,6 +483,19 @@
 ;;; Handoff summaries are the stricter bridge-facing form. Invalid profile rows
 ;;; fail at the sandbox profile owner before workflow code sees them.
 ;; : (-> PooSandboxProfile Alist)
+;; : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
+;; poo-flow-sandbox-profile-handoff-summary
+;; : (-> SandboxProfile (List FieldRow))
+;; | doc m%
+;; Preserves the generic field-row extension law through
+;; agent-sandbox-field-rows/tail, then projects a sandbox profile through the
+;; checked handoff boundary for a downstream runtime consumer.
+;; # Examples
+;; ```scheme
+;; (poo-flow-sandbox-profile-handoff-summary
+;;  (car poo-flow-default-sandbox-profiles))
+;; => '((profile-name . agent/nono) (descriptor-realized? . #t) ...)
+;; ```
 (def (poo-flow-sandbox-profile-handoff-summary profile)
   (agent-sandbox-field-rows/tail
    (agent-sandbox-profile-handoff-summary

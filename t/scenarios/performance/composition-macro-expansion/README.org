@@ -1,0 +1,48 @@
+#+title: Composition Macro Expansion Performance Scenario
+
+* Purpose
+
+This scenario exercises the real =use-composition= expander path with 1,000 and
+5,000 distinct local POO profiles.  It does not generate Scheme source text or
+measure string construction.  =generator-syntax.ss= creates syntax objects with
+the caller's lexical context, after which the production composition parser and
+lowerer perform their normal work.
+
+The 1,000-profile case is the regression gate.  The 5,000-profile case is the
+stress and allocation gate.  Profile count, iteration count, and compiler
+concurrency must not be reduced to obtain a passing receipt.
+
+* Verification
+
+#+begin_src sh
+env -u SDKROOT gxpkg env gxc \
+  t/scenarios/performance/composition-macro-expansion/generator-syntax.ss
+env -u SDKROOT gxpkg env gxc \
+  t/scenarios/performance/composition-macro-expansion/case-1000.ss
+env -u SDKROOT gxpkg env gxc \
+  t/scenarios/performance/composition-macro-expansion/case-5000.ss
+gxpkg env gxtest -q t/profile-composition-performance-test.ss
+#+end_src
+
+The focused test records cold compiler elapsed time, peak RSS, generated profile
+count, and repeated-run RSS stability through the Harness performance receipt.
+
+* Current Receipt
+
+The 2026-07-09 focused receipt is:
+
+| Case | Gerbil elapsed | Peak RSS | Result |
+|------+----------------+----------+--------|
+| 1,000 profiles | 1.000 s | 124.75 MiB | pass |
+| 5,000 profiles, first run | 2.850 s | 192.77 MiB | pass |
+| 5,000 profiles, second run | 2.570 s | 193.41 MiB | pass |
+
+The repeated 5,000-profile RSS drift is 0.64 MiB, below the 32 MiB stability
+budget.  The focused =gxtest= gate completes in approximately 13.5 seconds on
+the recorded machine.
+
+The compiler subprocess uses =gxc -S=: Gerbil expands the production macro,
+validates module context, and generates Scheme, while Gambit C compilation is
+intentionally excluded.  A full =gxc= observation includes C generation and
+native compiler memory and therefore must not be reported as composition macro
+RSS.  Full package builds continue to own that separate backend gate.

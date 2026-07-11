@@ -38,8 +38,9 @@
             (gatePass . #t)))
  (rule . GERBIL-SCHEME-AGENT-R052)
  (optimizationFocus . "large native POO object-list scenarios should keep profile objects reusable while keeping the hot path indexed and avoiding large slot payloads")
- (inputShape . "2048 native POO base profiles and 2048 hook variants held as scenario fixture objects with a small POO control-plane handle")
- (expectedRepair . "build large profile families once as scenario fixtures, expose small POO descriptors, use indexed accessors in benchmark gates, and avoid dynamic slot fan-out")
+(inputShape . "2048 native POO base profiles and 2048 hook variants held as scenario fixture objects with a small POO control-plane handle")
+(expectedOutcome . "indexed object-family access keeps large POO fixture traversal off the hot path")
+(expectedRepair . "build large profile families once as scenario fixtures, expose small POO descriptors, use indexed accessors in benchmark gates, and avoid dynamic slot fan-out")
  (forbiddenShapes . (dynamic-slot-per-profile
                      full-object-list-poo-slot
                      closure-slot-capturing-large-vector

@@ -64,11 +64,37 @@
         (import: :poo-flow/src/module-system/durable-artifact-policy)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
-;; : (forall (a) (-> [a] [a] [a]))
+;;; The completed group copies only its own list spine; `tail` remains shared,
+;;; so composition never builds a reverse/append chain across session groups.
+;; poo-flow-session-case-rows/tail
+;;   : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
+;; : (-> [Alist] [Alist] [Alist])
+;;   | contract: Preserve the ordered POO session-case row boundary.
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-session-case-rows/tail '(base) '(extension))
+;;       ;; => (base extension)
+;;       ```
+;;     %
 (def (poo-flow-session-case-rows/tail rows tail)
   (append rows tail))
 
+;;; The recursive branch advances one reusable group at a time. Each row spine
+;;; is copied once, while the already-built tail is shared by the next group.
+;; poo-flow-session-case-row-groups/tail
+;;   : (forall (k v) (-> [[(Pair k v)]] [(Pair k v)] [(Pair k v)]))
 ;; : (-> [[Alist]] [Alist] [Alist])
+;;   | contract: Flatten reusable POO row groups without changing their order.
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-session-case-row-groups/tail '((a) (b)) '(tail))
+;;       ;; => (a b tail)
+;;       ```
+;;     %
 (def (poo-flow-session-case-row-groups/tail row-groups tail)
   (if (null? row-groups)
     tail
@@ -76,7 +102,20 @@
      (car row-groups)
      (poo-flow-session-case-row-groups/tail (cdr row-groups) tail))))
 
+;;; Direct rows are copied once before the grouped tail is attached, keeping
+;;; session-case expansion linear in declared rows without intermediate lists.
+;; poo-flow-session-case-row-groups->rows
+;;   : (forall (k v) (-> [(Pair k v)] [[(Pair k v)]] [(Pair k v)]))
 ;; : (-> [Alist] [[Alist]] [Alist])
+;;   | contract: Compose direct rows with reusable POO row-group extensions.
+;;   | doc m%
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-session-case-row-groups->rows '(base) '((policy) (runtime)))
+;;       ;; => (base policy runtime)
+;;       ```
+;;     %
 (def (poo-flow-session-case-row-groups->rows rows row-groups)
   (poo-flow-session-case-rows/tail
    rows
@@ -550,14 +589,13 @@
 ;;   : (-> PooFlowInitRow... [[PooUserModuleSelection]])
 ;;   | contract: parses flat Doom-style category rows into POO module bundles
 ;;   | doc m%
+;;       Category markers dispatch to their POO-native row walker while direct
+;;       module and custom rows remain reusable composition values.
+;;
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (poo-flow-init-module-bundles
-;;         :workflow
-;;         (funflow +functional)
-;;         :sandbox
-;;         (nono-sandbox +doctor))
+;;       (poo-flow-init-module-bundles :workflow (funflow +functional) :sandbox (nono-sandbox +doctor))
 ;;       ;; => bundles
 ;;       ```
 ;;     %
@@ -622,13 +660,13 @@
 ;;   : (-> PooFlowInitRow... [[PooUserModuleSelection]])
 ;;   | contract: parses rows after :workflow until the next category marker
 ;;   | doc m%
+;;       Workflow rows stay in the functional-flow category until another
+;;       marker transfers control to its own POO-native walker.
+;;
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (poo-flow-init-flow-bundles
-;;         (funflow +dag)
-;;         :sandbox
-;;         (cubeSandbox +doctor))
+;;       (poo-flow-init-flow-bundles (funflow +dag) :sandbox (cubeSandbox +doctor))
 ;;       ;; => bundles
 ;;       ```
 ;;     %
@@ -728,14 +766,15 @@
 ;;   : (-> ModuleRows CustomRows PooUserProfileSet)
 ;;   | contract: defines call-site profile and profile-set bindings
 ;;   | doc m%
+;;       The root form declares one reusable profile object and its profile-set
+;;       binding without realizing modules or any runtime adapter.
+;;
 ;;       # Examples
 ;;
 ;;       ```scheme
 ;;       (poo-flow! poo-flow-user-profile poo-flow-user-profile-set
-;;         (profile users (extends poo-flow-kernel-profile))
-;;         :workflow
-;;         (funflow (+cicd (checks +parallel)))
-;;         :custom
+;;         (profile users (extends poo-flow-kernel-profile)) :workflow
+;;         (funflow (+cicd (checks +parallel))) :custom
 ;;         (my-module "./custom/my-module" +private))
 ;;       ;; => profile-bindings
 ;;       ```

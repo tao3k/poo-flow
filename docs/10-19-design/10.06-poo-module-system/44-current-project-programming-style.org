@@ -110,6 +110,42 @@ Use the smallest macro tier:
 4. Macro objects only when the macro itself has classed behavior and the owner
    module benefits from explicit expander state.
 
+** 10.06.44.42 Phase, Hygiene, And Module Context
+Macros that parse a project language must preserve Gerbil syntax context.  The
+parser owns syntax objects, source locations, grammar validation, and a bounded
+compile-time plan.  Runtime modules own POO construction and policy behavior.
+
+Use these ownership rules:
+
+- put reusable grammar parsing and immutable expansion plans in a dedicated
+  syntax-support module;
+- import syntax support through =for-syntax= rather than loading or evaluating
+  its source;
+- keep the public macro owner thin and export only the user-facing macro;
+- expose selected POO/runtime extension helpers through a stable facade, not a
+  wildcard re-export from the syntax owner;
+- rely on Gerbil module registration for one compiled module context instead of
+  mutable global macro registries or bespoke source collectors;
+- keep runtime and macro artifacts in their native phases and never project a
+  syntax plan into JSON, an alist DSL, or a runtime row.
+
+Grammar identifiers must be compared with binding-aware syntax operations.
+Do not identify fixed grammar with =symbol->string=, printed text, or unscoped
+string tables.  Keep user expressions as syntax objects until a deliberate
+quoted payload boundary.  Generated identifiers must inherit a template syntax
+context, and expansion errors must retain the offending source syntax.
+
+The compile-time hot path follows the same allocation discipline as runtime
+code.  Parse each declaration once, accumulate with bounded reverse collectors
+or an equivalent linear builder, and lower the completed plan once.  Nested
+=map= plus =apply append=, repeated rescans of the same forms, temporary runtime
+POO objects during expansion, and source loading during expansion are forbidden.
+For =n= declarations and =m= clauses, target both work and generated form count
+at =O(n + m)=.
+
+The reference architecture is
+[[file:88-phase-aware-composition-macro-architecture.org][Phase-Aware Composition Macro Architecture]].
+
 ** 10.06.44.45 Landed Object Family Rule
 Stable large POO object families must not hand-write the same predicate,
 accessor, and boundary projection pattern for every object.
@@ -291,12 +327,110 @@ Performance is part of style.
 - Add focused performance scenarios for object-family, macro-expansion,
   projection, and selection hot paths when a change touches shared behavior.
 
+** 10.06.44.125 Build-Stage Receipts And Warm-Cache Measurement
+
+Build and control-plane outcomes are part of the POO boundary. A caller that
+needs to make a decision about a stage must receive a stable POO-native receipt,
+not parse diagnostic output. Human-readable =stdout= remains useful for
+operators, but it is never the input to a runtime, policy, test, or cache
+decision.
+
+For a repeated result family, define one static prototype for its invariant
+identity, then construct each result with =.mix= and dynamic slot rows. This
+keeps the result shape explicit, permits prototype reuse, and avoids treating a
+fresh interpreted =.o= allocation as a hot-path construction technique. The
+public receipt exposes the stage label, specs, outcome, reason, cache-status,
+elapsed time, and a named contract projection. Runtime adapters consume that
+projection; they do not consume build logs.
+
+The performance boundary is defined by the work that actually happened:
+
+- A changed-cache run that compiles one or more targets is a repair or cold-path
+  observation. Report it separately from the warm baseline.
+- A warm run is valid only when every stage returns =skip= and the compiled
+  target count is zero. Do not lower configured parallelism to make that
+  observation look better.
+- Measure package AOT build execution. A direct interpreted =gxi= probe includes
+  module loading and is not a substitute for the package warm-build benchmark.
+- Keep the measurement in a project-owned Harness scenario with explicit input
+  and expected values. The live stage receipt supplies observed elapsed
+  microseconds; its bound is derived from the scenario target in milliseconds.
+  This joins type, cache state, outcome, and timing in one check rather than
+  separate synthetic benchmarks.
+
+When a performance gate fails, first identify whether it is a changed-cache
+compile, a cache-validity miss, or an actual warm-path regression. Repair the
+owner of that boundary and retain the receipt evidence; do not disable the gate,
+parse stdout, or reduce concurrency as a workaround.
+
+** 10.06.44.126 Native Lazy Evaluation And Lazy Load Boundary
+
+Gerbil POO is the normal lazy substrate for large semantic objects. Object
+construction may compile precedence and slot functions, but ordinary values are
+materialized only when a consumer reads the corresponding slot. Write large
+policy, profile, graph, and presentation objects as demand graphs.
+
+The evidence and semantic rationale live in
+[[file:89-poo-native-lazy-evaluation-research.org][POO Native Lazy Evaluation Research]].
+
+The optimization unit is a large POO composition. A composition is both the
+namespace that names profile, agent, model, sandbox, strategy, task, graph, and
+handoff objects, and the object/prototype graph that connects them. A runtime
+demand starts from one composition slot and must force only its reachable object
+subgraph. Do not replace this graph with a policy descriptor table, raw registry
+rows, string lookup, or a second data-model language.
+
+Compose the stable namespace and prototype topology once. Reuse the resulting
+composition object for repeated demands. Share high-fanout semantic facts by
+direct POO object reference. An extension overlay changes only its object slots
+and retains unchanged fact-object references. The normal first-demand cost is
+proportional to the reachable object subgraph; repeated demand reuses the
+object-local slot values already materialized by =.ref=.
+
+1. Use constant, thunk, self, and computed POO slots for semantic values. Do
+   not add a parallel vector, alist, or global memo cache around normal POO
+   computed slots.
+2. Treat =.ref= as demand, and reserve =force-object=, =.alist=,
+   =object-values=, complete =MonomorphicObject= validation, and complete
+   serialization for named materialization or ABI boundaries.
+3. Compose a stable prototype family once at its composition root and reuse the
+   composed object. Do not recreate =.mix= or a prototype chain in a request or
+   per-slot loop.
+4. =.extend= reuses slot definitions but creates a new object demand graph.
+   When derived objects need the same expensive fact, reference one shared POO
+   fact object; do not assume that a forced parent instance cache is inherited.
+5. Evolve semantic policy objects through prototype extension or composition.
+   Do not use instance mutation as a policy-evolution mechanism.
+6. Keep slot names distinct from lexical value bindings in dynamic POO forms.
+   Public macros must preserve hygiene and generate distinct value bindings so
+   a slot cannot recursively force itself through a same-name capture.
+7. Use =std/lazy= only for a pure deferred calculation that is not naturally a
+   POO slot. It is a Scheme control-plane mechanism, not a runtime concurrency
+   primitive.
+
+=lazy-load= is a separate project macro. It lowers a runtime source-ref or
+resolver expression to =std/lazy= delay semantics. It must not wrap =load!=:
+=load!= is compile-time inclusion, while =lazy-load= is runtime deferred module
+resolution. The public module surface has no compatibility lazy-load-plan
+record. Runtime singleflight, cancellation, retries, and scheduling remain
+outside Scheme.
+
+Every lazy change needs a real Scenario input and expected result. The Scenario
+must distinguish partial slot demand, repeated demand of the same slot, derived
+object reuse through shared fact objects, full materialization at a named
+boundary, and hygienic rejection of same-name dynamic slot/value forms.
+
 ** 10.06.44.130 Agent Checklist
 Before committing Scheme changes, check:
 
 - Is the semantic owner a POO object, contract, validator, graph fact, or
   functional combinator rather than a final payload row?
 - Did any new macro expand to ordinary POO-native or functional code?
+- Are grammar literals binding-aware and are user expressions retained as
+  syntax objects until an intentional payload boundary?
+- Are compile-time parsing, public syntax, and runtime construction owned by
+  separate modules with explicit phase imports?
+- Does a large declaration path parse and lower once with linear allocation?
 - Are public inputs validated once at the boundary?
 - Are runtime handoff values projections with receipts?
 - Are kernel factors hidden from ordinary users?
