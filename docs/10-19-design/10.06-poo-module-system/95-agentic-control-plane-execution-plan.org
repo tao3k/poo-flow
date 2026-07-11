@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *AC-07 Python production CFFI runtime implemented and qualified; ABI v1 unfrozen*
+Status: *AC-08 completed; AC-09 design approved; ABI v1 unfrozen*
 
 RFC 90–94 are accepted for implementation planning. This document turns their P0–P6 migration into bounded work packages with explicit owners, deliverables, validation, stop conditions, and commit boundaries.
 
