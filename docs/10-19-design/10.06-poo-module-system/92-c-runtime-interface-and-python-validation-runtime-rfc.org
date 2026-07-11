@@ -5,7 +5,7 @@
 
 * Status
 
-Status: *Design-approved; written-review pending*
+Status: *Accepted; implementation planning*
 
 ABI freeze readiness: *blocked* until the gerbil-mysql owner-index research gate and every conformance, memory, fault, and performance gate in this RFC pass.
 

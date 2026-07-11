@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *Design-approved; written-review pending*
+Status: *Accepted; implementation planning*
 
 This RFC records the approved architectural boundary. It does not claim that the described compiler, Bundle, C ABI, Python runtime, Cedar projection, Lean linkage, or evidence chain is already implemented.
 

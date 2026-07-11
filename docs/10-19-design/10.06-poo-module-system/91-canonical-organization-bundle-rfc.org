@@ -5,7 +5,7 @@
 
 * Status
 
-Status: *Design-approved; written-review pending*
+Status: *Accepted; implementation planning*
 
 Implementation readiness depends on written suite review and the P0 gate in RFC 94.
 

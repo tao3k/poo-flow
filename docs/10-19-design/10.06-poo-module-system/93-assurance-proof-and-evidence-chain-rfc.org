@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *Design-approved; written-review pending*
+Status: *Accepted; implementation planning*
 
 This RFC defines claim boundaries and assurance semantics. It does not claim that every listed proof, token, receipt, mediator, signer, or external anchor is implemented.
 

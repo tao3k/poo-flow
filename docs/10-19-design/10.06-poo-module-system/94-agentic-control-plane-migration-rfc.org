@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *Design-approved; written-review pending*
+Status: *Accepted; implementation planning*
 
 This RFC defines migration order and acceptance gates. It does not authorize implementation before the written RFC suite is reviewed.
 

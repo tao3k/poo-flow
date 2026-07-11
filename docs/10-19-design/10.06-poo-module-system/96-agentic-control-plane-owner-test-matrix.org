@@ -1,0 +1,179 @@
+#+title: POO Flow Agentic Control Plane Owner and Test Matrix
+#+subtitle: RFC 90--94 implementation ownership, validation lanes, and readiness gates
+#+author: POO Flow Contributors
+#+date: 2026-07-10
+#+status: Planned baseline; AC-00 confirmation required
+#+options: toc:3 num:t
+
+* Purpose
+
+This document assigns semantic, contract, implementation, validation, artifact,
+and downstream ownership for the implementation plan in
+[[file:95-agentic-control-plane-execution-plan.org][95-agentic-control-plane-execution-plan.org]].  It is a planning baseline, not
+a claim that the proposed files already exist.  AC-00 must confirm every current
+owner through the repository's parser-owned ASP routes before any new owner is
+created.
+
+The matrix keeps three boundaries explicit:
+
+1. POO Flow owns the canonical Gerbil control plane and the stable C ABI.
+2. The Python package is the complete production-grade validation runtime for
+   that ABI; it does not become a second semantic owner.
+3. Rust, TypeScript, and other downstream runtimes are adapters maintained
+   outside this implementation tranche.
+
+* Ownership vocabulary
+
+| Role | Responsibility | Non-responsibility |
+|-
+| Semantic owner | Defines the canonical meaning and invariants of a concept | Foreign-language convenience APIs |
+| Contract owner | Defines normalized schemas, projections, compatibility, and validation | Runtime scheduling policy |
+| Implementation owner | Executes a contract without redefining it | Silent semantic extensions |
+| Validation owner | Proves behavior through scenarios, conformance, fuzzing, or benchmarks | Replacing the semantic owner |
+| Artifact owner | Publishes headers, wheels, manifests, evidence, and version metadata | Inventing new semantics during packaging |
+| Downstream owner | Adapts the stable ABI into another language or host | Changing POO Flow's canonical contract |
+
+* Existing owner inventory to confirm in AC-00
+
+| Concern | Current owner candidate | Required AC-00 evidence |
+|-
+| Public POO-native authoring | =src/module-system/init-syntax.ss=, including =session-case= | Exact definitions, exports, and scenario consumers |
+| Profile composition | =src/module-system/profile-composition.ss= and its accessors | Composition order, override rules, and receipt path |
+| Session policy | =src/modules/session/policy-syntax.ss=, validation and receipt modules; =src/core/policy.ss= | Policy normalization, validation, evaluation, and public surface |
+| Core receipts | =src/core/receipt.ss= and policy-validation receipt owners | Stable fields, digest inputs, and serialization boundaries |
+| Lifecycle assurance | =src/module-system/agent-lifecycle-gate.ss= | Gate inputs, decision outputs, and failure semantics |
+| Proof and evidence | =src/proof/= and =packages/proof/lean/= | Wire format, bridge, gate bundle, decision, receipts, and checked theorem linkage |
+| Semantic namespaces | =src/semantic/=, including =boundary-namespace.ss= | Namespace registry, canonical identifiers, and projection rules |
+| Contract infrastructure | =src/contract/= | Schema IR, normalization, validation, and receipt ownership |
+| Stable C ABI | =bindings/runtime-c/include/poo_flow_runtime_abi.h= and =bindings/runtime-c/probe/= | Exported symbols, ownership rules, layout, versioning, and probe coverage |
+| Python runtime | =packages/python-runtime/= | Current ctypes calls, graph executor, receipts, checkpoints, stores, builders, tests, wheel, and benchmarks |
+
+If ASP shows that an owner has moved, AC-00 records the actual owner and updates
+this matrix before AC-01 begins.  A missing owner is an architecture decision,
+not permission to create a duplicate implicitly.
+
+* Proposed owner allocation
+
+The paths below are allocation targets.  AC-00 may refine filenames while
+preserving the ownership boundaries.
+
+| Work package | Semantic or contract owner | Implementation or artifact owner | Validation owner |
+|-
+| AC-00 Inventory | Existing owners only | No new implementation owner | ASP owner receipts, baseline tests, ABI probe, Python suite |
+| AC-01 Vertical-slice contract | =src/semantic/organization-*.ss= and =src/contract/organization-bundle*.ss= | Existing public module facade | Focused Gerbil contract scenarios |
+| AC-02 Bundle kernel | =src/semantic/organization-bundle*.ss= | POO-native module-system/core implementation | Bundle identity, composition, digest, and immutability scenarios |
+| AC-03 Five facets | =src/semantic/organization-*.ss= and corresponding contract projections | POO-native facet implementations | Per-facet invariants plus cross-facet composition scenarios |
+| AC-04 Shadow projection | Contract projection owners in =src/contract/= | Projection adapters under the canonical module facade | Round-trip, rejection, and digest-stability tests |
+| AC-05 C control lane | Runtime and evidence contracts in =src/contract/= | =src/boundary/runtime-c*.ss= and =bindings/runtime-c/= | C probe and ABI conformance harness |
+| AC-06 C hot and bulk lanes | Same contract owners as AC-05 | Boundary implementation plus public ABI artifacts | Microbenchmarks, allocation counters, payload and batch fixtures |
+| AC-07 Python CFFI runtime | No new semantic owner | =packages/python-runtime/= and its wheel artifacts | Python conformance, integration, packaging, and benchmark suites |
+| AC-08 Cedar and evidence | Policy/evidence semantic and contract owners | Cedar adapter and evidence-chain implementation | Allow/deny, token, provenance, replay, and fork scenarios |
+| AC-09 Lean linkage | Proof-fact and theorem contract owners | =src/proof/= and =packages/proof/lean/= | Checked theorem, bridge, mismatch, and stale-proof tests |
+| AC-10 Qualification | All frozen owners | Release artifact assembly | Cross-language conformance, soak, fuzz, performance, evidence audit |
+| AC-11 Cutover | Canonical public facade owners | Removal and migration artifacts | Absence tests, documentation checks, downstream compatibility receipts |
+
+* Scenario and test matrix
+
+** Behavioral scenarios
+
+| Scenario | First required package | Gerbil/control-plane assertion | C ABI assertion | Python assertion | Evidence/proof assertion |
+|-
+| Parent-child delegation | AC-01 | Capability and context only narrow across the edge | Stable identifiers and explicit result status | Delegated execution matches canonical receipt | Delegation edge is attributable and replayable |
+| Context filtering | AC-03 | Child sees only projected context | No implicit host pointer or ambient state crosses ABI | Filtered context is preserved through CFFI | Projection digest binds the observed context |
+| Allow and deny effect | AC-03 | Policy result is deterministic for normalized input | Decision and failure are explicit, not sentinel-overloaded | Python cannot bypass the decision lane | Policy input, result, and authority token are linked |
+| Cancel, replay, and epoch | AC-05 | State transition rules are canonical | Cancellation and epoch values have versioned representations | Runtime handles retries without duplicating committed effects | Replay identity distinguishes valid replay from evidence fork |
+| Checkpoint and restore | AC-05 | Checkpoint semantics preserve bundle identity | Buffers and handles have explicit lifetime rules | Existing checkpoint/store behavior conforms to ABI | Restore receipt binds checkpoint, bundle, and epoch |
+| Batch and payload transport | AC-06 | Batching does not change semantics or ordering guarantees | Borrowed/owned buffers, vector calls, and error lanes are measurable | CFFI avoids per-field conversion on hot paths | Batch receipt retains item-level attribution |
+| Evidence fork detection | AC-08 | Conflicting successors cannot both extend one canonical head | Evidence identifiers survive boundary transport | Python surfaces the fork as a typed failure | Chain verification rejects the conflicting branch |
+| Proof mismatch | AC-09 | Proof status never substitutes for runtime policy | Proof reference and digest are unambiguous | Python reports mismatch without reinterpretation | Lean theorem identity, assumptions, and artifact digest must agree |
+
+** Existing validation assets to preserve and extend
+
+AC-00 confirms the exact owners and current command lines for these assets:
+
+- =t/scenarios/crewai-user-composition-test.ss=
+- =t/scenarios/langchain-langgraph-core-test.ss=
+- =t/scenarios/agent-lifecycle-gate-test.ss=
+- =t/scenarios/proof-gate-bundle-test.ss=
+- =t/scenarios/proof-gate-decision-test.ss=
+- =t/scenarios/proof-gate-receipts-test.ss=
+- =t/scenarios/proof-ffi-bridge-test.ss=
+- =t/scenarios/tool-calling-control-plane-test.ss=
+- =t/scenarios/policy/harness-policy-composition-observability.org=
+- =packages/python-runtime/tests/=
+- =packages/python-runtime/benchmarks/=
+- =bindings/runtime-c/probe/=
+
+Existing benchmark results measure deterministic control-plane work.  They are
+baseline evidence for regression comparison, not end-to-end LLM, network, or
+durable-I/O performance claims.
+
+* Gate ownership
+
+| Gate | Accountable owner | Required independent evidence | Failure consequence |
+|-
+| Semantic freeze | Canonical Gerbil semantic owners | Contract scenarios and normalized projections | ABI work cannot begin |
+| ABI freeze | C boundary and contract owners | Header/layout checks, symbol probe, ownership audit | Python CFFI migration cannot claim conformance |
+| Python production validation | Python runtime owner | Full suite, wheel install, CFFI integration, checkpoint and failure scenarios | No production-runtime claim |
+| Performance qualification | Boundary and Python validation owners | Reproducible hot/bulk benchmarks with allocation and copy counts | Hot or bulk lane remains experimental |
+| Evidence qualification | Evidence and policy owners | Chain, token, replay, and fork scenarios | Assurance surface cannot be released |
+| Proof linkage | Proof contract and Lean owners | Checked theorem plus artifact/digest mismatch tests | Proof status remains advisory |
+| Cutover | Public facade and release owners | Old-route absence checks and downstream receipt set | Deprecated route remains supported and documented |
+
+* Package readiness
+
+| Package | Readiness | Entry condition | Exit evidence |
+|-
+| AC-00 | Ready after plan approval | Isolated clean worktree or completed clean tranche | Owner inventory, baseline receipt, frozen first slice |
+| AC-01 | Planned | AC-00 accepted | One end-to-end semantic contract with focused scenarios |
+| AC-02 | Planned | AC-01 | Canonical Bundle kernel and identity receipts |
+| AC-03 | Planned | AC-02 | Five facets composed through POO-native public APIs |
+| AC-04 | Planned | AC-03 | Stable shadow projection and round-trip receipts |
+| AC-05 | Planned | AC-04 | Versioned control-lane ABI and passing C harness |
+| AC-06 | Planned | AC-05 | Qualified hot/bulk lanes with copy and allocation budgets |
+| AC-07 | Planned | AC-05; AC-06 for performance claims | Installable CFFI runtime passing conformance and packaging gates |
+| AC-08 | Planned | AC-03 and AC-05 | Cedar/token/evidence semantics and fork-safe receipts |
+| AC-09 | Planned | AC-08 | Checked Lean linkage with mismatch rejection |
+| AC-10 | Planned | AC-06 through AC-09 | Integrated release qualification receipt |
+| AC-11 | Planned | AC-10 and migration approval | Canonical route cutover and stale-route removal evidence |
+
+Only AC-00 is authorized by this readiness table.  Later packages require their
+entry gates and an updated matrix; their presence here is not implementation
+authorization.
+
+* Matrix maintenance rules
+
+1. Update the matrix in the same commit that changes an owner, public contract,
+   ABI lane, or required validation scenario.
+2. One concept has one semantic owner.  Adapters reference that owner through a
+   versioned projection; they do not mirror it as an independent model.
+3. A public ABI symbol requires a contract owner, a lifetime rule, a failure
+   rule, a C-harness assertion, and a Python conformance assertion.
+4. A performance claim requires a reproducible fixture, environment receipt,
+   payload distribution, warm/cold distinction, and copy/allocation accounting.
+5. A proof claim identifies the theorem, assumptions, checked artifact, toolchain
+   version, semantic digest, and failure behavior when any link differs.
+6. Removed public routes receive absence tests.  Compatibility aliases are added
+   only by an explicit RFC amendment.
+7. Downstream Rust, TypeScript, and other adapters remain consumers of the C ABI;
+   their design cannot delay correction of a false or inefficient ABI boundary.
+
+* Acceptance criteria for this planning artifact
+
+- Every implementation work package has a named semantic or contract owner.
+- Every public boundary has both native C and Python validation responsibility.
+- Functional correctness, performance, evidence integrity, and proof linkage
+  have separate gates.
+- The current ctypes runtime is treated as migration input; production validation
+  targets out-of-line CFFI API mode after ABI freeze.
+- No dual-runtime semantic ownership is introduced.
+- AC-00 remains the only ready implementation tranche.
+
+* Related RFCs
+
+- [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][Architecture RFC]]
+- [[file:91-canonical-organization-bundle-rfc.org][Canonical Organization Bundle RFC]]
+- [[file:92-c-runtime-interface-and-python-validation-runtime-rfc.org][C Runtime Interface and Python Validation Runtime RFC]]
+- [[file:93-assurance-proof-and-evidence-chain-rfc.org][Assurance, Proof, and Evidence Chain RFC]]
+- [[file:94-agentic-control-plane-migration-rfc.org][Migration RFC]]
+- [[file:95-agentic-control-plane-execution-plan.org][Execution Plan]]
