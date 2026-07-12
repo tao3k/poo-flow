@@ -164,9 +164,9 @@ The repair must use the existing record accessor or an already canonical
 POO-native projection consistently; AC-00 does not authorize a new receipt
 model.
 
-Until both scenarios pass in the isolated worktree, AC-01 remains blocked even
-though the compiler, proof lane, C ABI lane, Python suite, and Lean lane are
-green.
+At discovery time AC-01 remained blocked until both scenarios passed. The
+resolved status and AC-01 entry decision below supersede that historical stop
+condition.
 
 * Frozen First Vertical Slice
 
