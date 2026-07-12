@@ -7,18 +7,28 @@ heap type.
 | Owner | Path |
 |-------+------|
 | Public C11 header | =include/poo_flow/runtime_v0.h= |
-| Control contract | =schema/runtime_v0_control.org= |
+| POO-native ABI schema | =src/contract/runtime-v0-abi-schema.ss= |
+| Control contract notes | =schema/runtime_v0_control.org= |
 | Handle/lifecycle engine | =src/runtime_v0.c= |
 | Pure C harness | =tests/runtime_v0_harness.c= |
+| Hot/bulk harness | =tests/runtime_v0_batch_harness.c= |
+| Installed consumer | =tests/runtime_v0_installed_consumer.c= |
 
 The Bundle remains the semantic owner.  The C engine owns negotiation, opaque
 handles, lifecycle state, checkpoint envelopes, owned bytes, and typed boundary
 errors only.
 
+Hot headers are fixed native structs with an explicit =header_stride=.  The v0
+lane requires that stride to equal the generated header size, rejects
+count/stride and payload-range overflow, and uses one =lower_bound= followed by
+an ordered sequential merge for total batch lookup cost =O(log n + k)=.
+
 Run the focused gates:
 
 #+begin_src sh
 make -C bindings/runtime-c clean test sanitize
+make -C bindings/runtime-c install-consumer leak
+make -C bindings/runtime-c benchmark gerbil-benchmark
 #+end_src
 
 The installed contract is ABI v0.1 and Bundle schema

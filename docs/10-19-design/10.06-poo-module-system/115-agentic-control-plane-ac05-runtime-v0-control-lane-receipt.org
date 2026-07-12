@@ -9,7 +9,9 @@ pre-v1 control lane.  =abi-v1-frozen?= remains =#f=.
 
 - Installed public header =poo_flow/runtime_v0.h=.
 - Installed static and shared =libpoo_flow_runtime_v0= libraries.
-- JSON contract generating the version/capability header and conformance vector.
+- Version/capability contract generating the public header and conformance
+  vector.  AC-06 subsequently moved this owner to POO-native Scheme types and
+  removed the intermediate JSON/Python generator route.
 - Gerbil projection from validated Bundle Kernel state to
   =poo-flow.runtime-v0.control-packet.1=.
 - Fixed-width opaque handles with instance, resource, generation, and kind.

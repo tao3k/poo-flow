@@ -200,6 +200,31 @@ over the canonical bundle identity established here.
 | AC-01 migration | canonical Bundle scenario | 8 cases / 20 checks |
 | AC-02 integration | immutable Kernel scenario | 6 cases / 19 checks |
 
+* AC-04 Read-only Shadow Projection
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Current-runtime comparison | =src/contract/organization-bundle-shadow.ss= | =t/scenarios/organization-bundle-shadow-test.ss= |
+| Draft evidence only | same contract owner | deterministic differences and fail-closed cases |
+
+* AC-05 Runtime v0 Control Lane
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Typed Scheme control packet | =src/contract/organization-bundle-runtime-v0.ss= | =t/scenarios/organization-bundle-runtime-v0-test.ss= |
+| Native C control ABI | =bindings/runtime-c/src/runtime_v0.c= | strict C and installed public consumer |
+
+* AC-06 Native Hot and Bulk Lanes
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Scheme-owned ABI schema | =src/contract/runtime-v0-abi-schema.ss= | generated header/vector freshness |
+| Typed batch projection | =src/contract/organization-bundle-runtime-v0-batch.ss= | =t/scenarios/organization-bundle-runtime-v0-batch-test.ss= |
+| Ordered native batch engine | =bindings/runtime-c/src/runtime_v0.c= | C fault, UBSan, leak, installed-consumer, and 140-block performance matrix |
+| Algorithmic bound | ordered pending window and persistent poll cursor | one =lower_bound= plus sequential merge, =O(log n + k)= |
+| Python validation runtime | =packages/python-runtime= | retained suite: 176 passed |
+| ABI freeze | RFC 116 and qualification receipt 119 | =abi-v1-frozen? #f= |
+
 * Related RFCs
 
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][Architecture RFC]]

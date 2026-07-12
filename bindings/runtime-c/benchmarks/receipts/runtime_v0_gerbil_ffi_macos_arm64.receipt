@@ -1,0 +1,8 @@
+schema=poo-flow.runtime-v0.gerbil-ffi-benchmark.1
+path=gerbil-char-string-control
+iterations=100000
+elapsed-seconds=.005558967590332031
+crossings=100000
+payload-zero-copy=false
+purpose=conversion-control-not-production-hot-path
+abi-v1-frozen=false

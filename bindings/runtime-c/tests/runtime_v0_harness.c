@@ -28,7 +28,7 @@ int main(void) {
   assert(poo_flow_runtime_v0_negotiate(instance, &request, &negotiated) ==
          POO_FLOW_RUNTIME_V0_OK);
 
-  request.required_capabilities = POO_FLOW_RUNTIME_V0_CAP_HOT_BATCH;
+  request.required_capabilities = UINT64_C(1) << 63;
   assert(poo_flow_runtime_v0_negotiate(instance, &request, &negotiated) ==
          POO_FLOW_RUNTIME_V0_UNSUPPORTED_CAPABILITY);
   request.required_capabilities = POO_FLOW_RUNTIME_V0_CAP_CONTROL;

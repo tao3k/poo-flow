@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *AC-03 five-facet Bundle and cross-facet validation implemented*
+Status: *AC-06 native hot/bulk runtime lanes implemented and qualified; ABI v1 unfrozen*
 
 RFC 90–94 are accepted for implementation planning. This document turns their P0–P6 migration into bounded work packages with explicit owners, deliverables, validation, stop conditions, and commit boundaries.
 

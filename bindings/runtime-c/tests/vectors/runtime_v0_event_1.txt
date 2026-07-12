@@ -1,0 +1,17 @@
+schema=poo-flow.runtime-v0.native-event-vector.1
+layout-version=1
+header-bytes=96
+event-kind=1
+flags=0
+sequence=7
+event-id-high=1
+event-id-low=2
+correlation-id-high=3
+correlation-id-low=4
+authorization-id-high=5
+authorization-id-low=6
+payload-offset=64
+payload-length=128
+deadline-mono-ns=9000
+required-evidence-bits=3
+reserved0=0
