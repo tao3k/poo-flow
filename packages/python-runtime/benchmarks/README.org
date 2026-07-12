@@ -1,10 +1,10 @@
-#+title: LangChain/LangGraph/CrewAI C ABI Benchmark Report
+#+title: LangChain/LangGraph/CrewAI vs POO Flow Benchmark Report
 #+startup: overview
 
 * Scope
-This benchmark compares native LangChain/LangGraph/CrewAI orchestration with the POO Flow runtime surfaces used to hand graph receipts to a runtime language.
+This benchmark compares native LangChain/LangGraph/CrewAI orchestration with semantically aligned POO Flow executor surfaces.
 
-It does not measure real LLM latency, network tools, or durable storage IO. The deterministic actions model the control-plane cost of AI Agent Flow shapes: policy routing, graph edges, dynamic handoff, reducers, checkpoint interrupt/resume, long graph scale, stream/event consumption, receipt materialization, and C ABI validation gates.
+It does not measure real LLM latency, network tools, or durable storage IO. The deterministic actions model control-plane costs for policy routing, graph edges, dynamic handoff, reducers, checkpoint interrupt/resume, long graph scale, and stream/event consumption.
 
 * Local Clone Inputs
 - LangChain: =../../.data/langchain/libs/core=
@@ -18,7 +18,7 @@ uv run \
   --with-editable ../../.data/langgraph/libs/langgraph \
   --with-editable ../../.data/langchain/libs/core \
   --with-editable ../../.data/crewai/lib/crewai \
-  python benchmarks/bench_langchain_langgraph_cabi.py \
+  python benchmarks/bench_frameworks.py \
   --iterations 2000 \
   --warmup 200 \
   --progress \
@@ -27,8 +27,8 @@ uv run \
 #+end_src
 
 * Run Metadata
-- Generated at: =2026-07-07T03:08:21.222510+00:00=
-- Command: =benchmarks/bench_langchain_langgraph_cabi.py --iterations 2000 --warmup 200 --progress --format org --report-org benchmarks/README.org=
+- Generated at: =2026-07-12T17:19:56.967131+00:00=
+- Command: =benchmarks/bench_frameworks.py --iterations 2000 --warmup 200 --progress --format text --report-org benchmarks/README.org --fail-on-gap=
 - Python: =3.13.11 (main, Dec 17 2025, 20:55:16) [Clang 21.1.4 ]=
 - Platform: =macOS-26.5-arm64-arm-64bit-Mach-O=
 - Iterations: =2000=
@@ -37,52 +37,44 @@ uv run \
 - GC during measurement: =false=
 
 * Summary
-- POO Flow runtime surfaces are 14.74x to 71.79x faster than the measured LangChain native orchestration cases in this run.
-- POO Flow runtime surfaces are 29.30x to 103.33x faster than the measured LangGraph native orchestration cases in this run.
-- POO Flow runtime surfaces are 1103.04x to 1103.04x faster than the measured CrewAI native orchestration cases in this run.
+- POO Flow runtime surfaces are 20.64x to 20.64x faster than the measured LangChain native orchestration cases in this run.
+- POO Flow runtime surfaces are 34.72x to 99.49x faster than the measured LangGraph native orchestration cases in this run.
+- POO Flow runtime surfaces are 691.65x to 691.65x faster than the measured CrewAI native orchestration cases in this run.
 - All comparison rows report deterministic control-plane latency only; they do not include LLM, network, or durable storage IO.
 
 | comparison | native mean ms | poo-flow mean ms | speedup |
 |-
-| LangChain linear runnable vs POO Flow C ABI linear receipt | 0.7508 | 0.0105 | 71.79x |
-| LangChain branch/tool route vs POO Flow executor router | 0.6284 | 0.0426 | 14.74x |
-| LangGraph router agent vs POO Flow executor router | 1.2490 | 0.0426 | 29.30x |
-| LangGraph handoff/reducer vs POO Flow executor handoff/reducer | 2.5975 | 0.0745 | 34.89x |
-| LangGraph interrupt/resume vs POO Flow executor interrupt/resume | 4.2771 | 0.0414 | 103.33x |
-| LangGraph long graph vs POO Flow executor long graph | 7.3555 | 0.1529 | 48.12x |
-| LangGraph stream/events vs POO Flow executor stream/events | 0.7117 | 0.0238 | 29.87x |
-| CrewAI sequential crew vs POO Flow executor crew composition | 37.6087 | 0.0341 | 1103.04x |
-| LangGraph long graph vs POO Flow C ABI long-graph receipt | 7.3555 | 0.2509 | 29.31x |
+| LangChain branch/tool route | 0.2386 | 0.0116 | 20.64x |
+| LangGraph router | 0.4535 | 0.0116 | 39.22x |
+| LangGraph handoff/reducer | 0.7717 | 0.0222 | 34.72x |
+| LangGraph interrupt/resume | 1.3768 | 0.0138 | 99.49x |
+| LangGraph long graph | 3.1973 | 0.0847 | 37.76x |
+| LangGraph stream/events | 0.4170 | 0.0087 | 47.72x |
+| CrewAI sequential crew | 11.0340 | 0.0160 | 691.65x |
 
 * Benchmark Results
 | name | family | features | mean ms | p50 ms | p95 ms | min ms | max ms | checksum |
 |-
-| crewai-sequential-crew-native | crewai-native | crew, sequential-process, agent, task-context | 37.6087 | 37.3297 | 46.3726 | 23.2248 | 49.2881 | 440557 |
-| langchain-branch-tool-native | langchain-native | runnable-branch, policy-router, tool-selection, handoff-route | 0.6284 | 0.2527 | 1.9548 | 0.1892 | 20.1241 | 133065 |
-| langchain-linear-agent-native | langchain-native | prompt-template, output-parser, runnable-sequence, agent-policy | 0.7508 | 0.2492 | 3.4369 | 0.2339 | 30.7948 | 5292 |
-| langgraph-handoff-reducer-native | langgraph-native | state-graph, send, multi-agent-handoff, reducer | 2.5975 | 1.9806 | 4.5705 | 0.7627 | 34.6785 | 139366 |
-| langgraph-interrupt-resume-native | langgraph-native | interrupt, resume, checkpoint, human-in-loop | 4.2771 | 2.9067 | 8.6298 | 1.3317 | 41.3185 | 638974 |
-| langgraph-long-graph-native | langgraph-native | state-graph, long-graph, scale, linear-graph | 7.3555 | 4.2606 | 20.4617 | 2.8425 | 25.9699 | 341567 |
-| langgraph-router-agent-native | langgraph-native | state-graph, conditional-edge, policy-router, agent-state | 1.2490 | 0.4478 | 4.8622 | 0.4228 | 21.8941 | 431648 |
-| langgraph-router-stream-native | langgraph-native | state-graph, stream, events, conditional-edge | 0.7117 | 0.4072 | 2.1417 | 0.3967 | 12.5145 | 372039 |
-| poo-flow-cabi-describe-linear | poo-flow-cabi | c-abi, receipt, materialization, linear-graph | 0.0105 | 0.0100 | 0.0103 | 0.0097 | 0.1102 | 398000 |
-| poo-flow-cabi-describe-long-graph | poo-flow-cabi | c-abi, receipt, materialization, long-graph, scale | 0.2509 | 0.0734 | 0.3738 | 0.0721 | 10.0751 | 101000 |
-| poo-flow-cabi-program-long-graph | poo-flow-cabi | c-abi, validate, runtime-graph-program, long-graph, scale | 1.3628 | 0.6056 | 4.8187 | 0.5593 | 14.2035 | 446932 |
-| poo-flow-cabi-program-router | poo-flow-cabi | c-abi, validate, runtime-graph-program, policy-router | 0.1069 | 0.0524 | 0.1790 | 0.0490 | 9.5478 | 439051 |
-| poo-flow-executor-crewai-sequential | poo-flow-executor | runtime-graph, crewai, sequential-process, agent-task, executor-only | 0.0341 | 0.0160 | 0.0616 | 0.0150 | 5.8859 | 910496 |
-| poo-flow-executor-handoff-reducer | poo-flow-executor | runtime-graph, send, multi-agent-handoff, reducer, executor-only | 0.0745 | 0.0223 | 0.0769 | 0.0217 | 44.4380 | 110844 |
-| poo-flow-executor-interrupt-resume | poo-flow-executor | runtime-graph, interrupt, resume, human-in-loop, executor-only | 0.0414 | 0.0139 | 0.0533 | 0.0133 | 15.7400 | 552858 |
-| poo-flow-executor-long-graph | poo-flow-executor | runtime-graph, long-graph, scale, executor-only | 0.1529 | 0.0848 | 0.2683 | 0.0827 | 9.4020 | 876351 |
-| poo-flow-executor-router-agent | poo-flow-executor | runtime-graph, conditional-edge, policy-router, executor-only | 0.0426 | 0.0119 | 0.0452 | 0.0115 | 15.4995 | 819897 |
-| poo-flow-executor-router-stream-events | poo-flow-executor | runtime-graph, stream, events, conditional-edge, executor-only | 0.0238 | 0.0088 | 0.0270 | 0.0084 | 16.9808 | 486065 |
+| crewai-sequential-crew-native | crewai-native | crew, sequential-process, agent, task-context | 11.0340 | 10.7730 | 12.9284 | 10.0847 | 16.5610 | 440557 |
+| langchain-branch-tool-native | langchain-native | runnable-branch, policy-router, tool-selection, handoff-route | 0.2386 | 0.2477 | 0.2685 | 0.1880 | 0.7498 | 133065 |
+| langchain-linear-agent-native | langchain-native | prompt-template, output-parser, runnable-sequence, agent-policy | 0.2920 | 0.2400 | 0.6755 | 0.2293 | 1.4421 | 5292 |
+| langgraph-handoff-reducer-native | langgraph-native | state-graph, send, multi-agent-handoff, reducer | 0.7717 | 0.7597 | 0.8988 | 0.6562 | 0.9992 | 139366 |
+| langgraph-interrupt-resume-native | langgraph-native | interrupt, resume, checkpoint, human-in-loop | 1.3768 | 1.3258 | 1.7155 | 1.1371 | 2.3353 | 638974 |
+| langgraph-long-graph-native | langgraph-native | state-graph, long-graph, scale, linear-graph | 3.1973 | 2.8896 | 4.7452 | 2.7896 | 11.6980 | 341567 |
+| langgraph-router-agent-native | langgraph-native | state-graph, conditional-edge, policy-router, agent-state | 0.4535 | 0.4395 | 0.5386 | 0.4189 | 0.6797 | 431648 |
+| langgraph-router-stream-native | langgraph-native | state-graph, stream, events, conditional-edge | 0.4170 | 0.4048 | 0.5061 | 0.3933 | 0.6411 | 372039 |
+| poo-flow-executor-crewai-sequential | poo-flow-executor | runtime-graph, crewai-sequential, executor-only | 0.0160 | 0.0157 | 0.0168 | 0.0147 | 0.0598 | 910496 |
+| poo-flow-executor-handoff-reducer | poo-flow-executor | runtime-graph, handoff-reducer, executor-only | 0.0222 | 0.0220 | 0.0225 | 0.0211 | 0.0709 | 110844 |
+| poo-flow-executor-interrupt-resume | poo-flow-executor | runtime-graph, interrupt-resume, executor-only | 0.0138 | 0.0137 | 0.0140 | 0.0129 | 0.0470 | 552858 |
+| poo-flow-executor-long-graph | poo-flow-executor | runtime-graph, long-graph, executor-only | 0.0847 | 0.0843 | 0.0869 | 0.0808 | 0.1253 | 876351 |
+| poo-flow-executor-router-agent | poo-flow-executor | runtime-graph, conditional-edge, executor-only | 0.0116 | 0.0115 | 0.0118 | 0.0110 | 0.0143 | 819897 |
+| poo-flow-executor-router-stream-events | poo-flow-executor | runtime-graph, stream-events, executor-only | 0.0087 | 0.0087 | 0.0089 | 0.0084 | 0.0573 | 486065 |
 
-* C ABI Gates
+* Retired Graph ABI
+The legacy graph-specific C ABI rows and validation gates are intentionally absent. POO Flow runtime-v0 C ABI performance is qualified by the separate runtime ABI benchmark; it is not presented as graph orchestration equivalence.
+
 | name | status | features | error | receipt summary |
 |-
-| poo-flow-cabi-linear-validate | passed | c-abi, validate, linear-graph |  | kind=runtime-graph-plan nodes=3 state-reducers=0 edges=4 conditional-routes=0 plan-digest=966fc6bcc603b0cf |
-| poo-flow-cabi-conditional-validate | passed | c-abi, validate, conditional-edge, policy-router |  | kind=runtime-graph-plan nodes=4 state-reducers=0 edges=4 conditional-routes=3 plan-digest=478a51ecad59c4ad |
-| poo-flow-cabi-reducer-validate | passed | c-abi, validate, reducer, handoff |  | kind=runtime-graph-plan nodes=3 state-reducers=1 edges=4 conditional-routes=0 plan-digest=6bbb93f5797a4705 |
-| poo-flow-cabi-long-graph-validate | passed | c-abi, validate, long-graph, scale |  | kind=runtime-graph-plan nodes=32 state-reducers=0 edges=33 conditional-routes=0 plan-digest=5ebceb53bb1be9f1 |
 
 * Failures
 | name | family | phase | features | error |
@@ -95,9 +87,8 @@ uv run \
 - CrewAI cases cover sequential crew kickoff with agents, task context, and deterministic local LLM execution so the runtime-language boundary is tested without network or model latency.
 - Long graph cases use a fixed 32-node linear graph to expose scale cost without introducing LLM or IO latency.
 - Stream cases consume framework/runtime stream outputs so the benchmark is not limited to invoke-only happy paths.
-- POO executor cases measure the current Python graph semantics without crossing the C ABI validation gate.
-- POO C ABI receipt cases measure graph handle materialization and receipt creation with explicit handle close, so the benchmark does not hide handle lifetime leaks.
-- POO C ABI validation failures are reported as gates and failures instead of being converted into fake performance numbers.
+- POO executor cases measure the current Python runtime graph semantics.
+- The removed graph ABI is not reconstructed as a compatibility layer; runtime-v0 C ABI measurements remain in their dedicated benchmark record.
 
 * Current Gaps Exposed
 - The next benchmark expansion should add durable checkpoint persistence, larger graph-size sweeps, generated Scheme receipt -> Lean fact alignment, and a stable JSON artifact for CI trend comparison.
