@@ -74,7 +74,7 @@ def test_turso_durable_adapter_runs_async_thread_workflow(tmp_path) -> None:
         await anyio.sleep(0)
         return {"done": state["approved"]}
 
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=RuntimeGraphPlan(
             nodes=("load", "approve", "done"),
             edges=(

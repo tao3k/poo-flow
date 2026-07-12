@@ -39,7 +39,7 @@ $(BUILD_DIR)/libpoo_flow_runtime_v0.$(SHARED_EXT): $(BUILD_DIR)/runtime_v0.o
 $(BUILD_DIR)/runtime_v0_harness: src/runtime_v0.c tests/runtime_v0_harness.c include/poo_flow/runtime_v0.h | $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) src/runtime_v0.c tests/runtime_v0_harness.c -o $@
 
-$(BUILD_DIR)/runtime_v0_batch_harness: src/runtime_v0.c src/runtime_v0_internal.h tests/runtime_v0_batch_harness.c include/poo_flow/runtime_v0.h | $(BUILD_DIR)
+$(BUILD_DIR)/runtime_v0_batch_harness: src/runtime_v0.c tests/runtime_v0_batch_harness.c include/poo_flow/runtime_v0.h | $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) src/runtime_v0.c tests/runtime_v0_batch_harness.c -o $@
 
 $(BUILD_DIR)/runtime_v0_vector_harness: tests/runtime_v0_vector_harness.c include/poo_flow/runtime_v0.h | $(BUILD_DIR)
@@ -79,7 +79,7 @@ install-consumer: all
 	$(CC) $(CFLAGS) -I$(abspath $(BUILD_DIR)/install-root/usr/include) tests/runtime_v0_installed_consumer.c $(abspath $(BUILD_DIR)/install-root/usr/lib/libpoo_flow_runtime_v0.a) -o $(BUILD_DIR)/runtime_v0_installed_consumer
 	./$(BUILD_DIR)/runtime_v0_installed_consumer
 
-$(BUILD_DIR)/runtime_v0_batch_benchmark: src/runtime_v0.c src/runtime_v0_internal.h benchmarks/runtime_v0_batch_benchmark.c include/poo_flow/runtime_v0.h | $(BUILD_DIR)
+$(BUILD_DIR)/runtime_v0_batch_benchmark: src/runtime_v0.c benchmarks/runtime_v0_batch_benchmark.c include/poo_flow/runtime_v0.h | $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -O3 src/runtime_v0.c benchmarks/runtime_v0_batch_benchmark.c -o $@
 
 benchmark: check-generated $(BUILD_DIR)/runtime_v0_batch_benchmark

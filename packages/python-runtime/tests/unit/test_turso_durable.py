@@ -68,7 +68,7 @@ def test_turso_runtime_graph_store_async_facade(tmp_path) -> None:
 
 
 def test_turso_checkpointer_resumes_runtime_graph_thread(tmp_path) -> None:
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=RuntimeGraphPlan(
             nodes=("load", "approve", "done"),
             edges=(
@@ -142,7 +142,7 @@ def test_turso_checkpointer_async_runtime_graph_thread(tmp_path) -> None:
         await anyio.sleep(0)
         return {"done": state["approved"]}
 
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=RuntimeGraphPlan(
             nodes=("load", "approve", "done"),
             edges=(

@@ -7,6 +7,7 @@ from poo_flow_runtime import (
     MemoryRuntimeGraphStore,
     RuntimeGraphBuilder,
     RuntimeGraphError,
+    RuntimeGraphRuntime,
     RuntimeRouteResult,
     RuntimeGraphSend,
 )
@@ -55,7 +56,7 @@ def test_builder_compile_program_accepts_runtime_options() -> None:
         .add_node("read", lambda state, runtime: {"thread_id": runtime.require_thread_id()})
         .set_entry_point("read")
         .set_finish_point("read")
-        .compile_program(thread_id="program-thread")
+        .compile_program(runtime=RuntimeGraphRuntime.reference(thread_id="program-thread"))
     )
 
     assert graph.invoke({}) == {"thread_id": "program-thread"}
@@ -68,7 +69,7 @@ def test_program_invoke_thread_saves_successful_checkpoint() -> None:
         .add_node("step", lambda state: {"value": state.get("value", 0) + 1})
         .set_entry_point("step")
         .set_finish_point("step")
-        .compile_program()
+        .compile_reference_program()
     )
 
     execution = graph.invoke_thread("thread-1", {}, checkpointer)
@@ -87,7 +88,7 @@ def test_program_state_facade_matches_langgraph_state_access() -> None:
         .add_node("step", lambda state: {"value": state.get("value", 0) + 1})
         .set_entry_point("step")
         .set_finish_point("step")
-        .compile_program()
+        .compile_reference_program()
     )
 
     graph.invoke_thread("thread-1", {}, checkpointer)
@@ -114,7 +115,7 @@ def test_program_async_state_facade_uses_same_checkpoint_surface() -> None:
             .add_node("step", lambda state: {"value": state.get("value", 0) + 1})
             .set_entry_point("step")
             .set_finish_point("step")
-            .compile_program()
+            .compile_reference_program()
         )
 
         await graph.ainvoke_thread("thread-1", {}, checkpointer)

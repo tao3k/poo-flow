@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any, Literal, Mapping
 
 
 class RuntimeGraphRuntimeError(RuntimeError):
@@ -14,6 +14,35 @@ class RuntimeGraphRuntime:
     store: Any = None
     checkpointer: Any = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    backend: Literal["native", "reference"] = "native"
+    native_context: Any = None
+
+    def __post_init__(self) -> None:
+        if self.backend not in ("native", "reference"):
+            raise RuntimeGraphRuntimeError(f"unknown runtime backend: {self.backend}")
+        if self.backend == "reference" and self.native_context is not None:
+            raise RuntimeGraphRuntimeError(
+                "reference backend cannot carry a native runtime context"
+            )
+
+    @classmethod
+    def reference(cls, **kwargs: Any) -> "RuntimeGraphRuntime":
+        return cls(backend="reference", **kwargs)
+
+    @classmethod
+    def native(cls, native_context: Any, **kwargs: Any) -> "RuntimeGraphRuntime":
+        if native_context is None:
+            raise RuntimeGraphRuntimeError("native runtime context is required")
+        return cls(backend="native", native_context=native_context, **kwargs)
+
+    def require_native_context(self) -> Any:
+        if self.backend != "native" or self.native_context is None:
+            raise RuntimeGraphRuntimeError(
+                "production runtime requires a negotiated native context"
+            )
+        if getattr(self.native_context, "closed", False):
+            raise RuntimeGraphRuntimeError("native runtime context is closed")
+        return self.native_context
 
     def emit_custom(self, value: Any) -> Any:
         sink = self.metadata.get("_poo_flow_runtime_custom_stream")

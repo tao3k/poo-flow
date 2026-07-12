@@ -15,7 +15,7 @@ def test_runtime_graph_program_describe_receipt_returns_typed_receipt() -> None:
         nodes=("first",),
         edges=(RuntimeGraphEdge(START, "first"), RuntimeGraphEdge("first", END)),
     )
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=plan,
         registries=RuntimeGraphRegistries(actions={"first": lambda state: {"x": 1}}),
     )
@@ -49,6 +49,6 @@ def test_runtime_graph_program_invokes_conditional_router_registry() -> None:
         },
         routers={"route": lambda state: state["route"]},
     )
-    program = RuntimeGraphProgram(plan=plan, registries=registries)
+    program = RuntimeGraphProgram.reference(plan=plan, registries=registries)
 
     assert program.invoke({"route": "right"}) == {"route": "right", "value": "right"}

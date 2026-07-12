@@ -1,4 +1,4 @@
-#include "../src/runtime_v0_internal.h"
+#include <poo_flow/runtime_v0.h>
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -91,11 +91,19 @@ static uint64_t run_once(
   poo_flow_runtime_v0_handle arena = {0};
   require_ok(poo_flow_runtime_v0_arena_register(instance, &arena_desc, &arena));
   for (uint64_t i = 0; i < batch_size; ++i) {
-    poo_flow_runtime_v0_event_header header =
-        make_event(i + 1, payload_size, disposition);
-    require_ok(poo_flow_runtime_v0_internal_publish(instance, session, arena, 1,
-                                                     &header));
+    headers[i] = make_event(i + 1, payload_size, disposition);
   }
+  poo_flow_runtime_v0_publish_request publish = {0};
+  publish.struct_size = sizeof(publish);
+  publish.arena = arena;
+  publish.arena_generation = 1;
+  publish.headers = headers;
+  publish.header_stride = sizeof(*headers);
+  publish.item_count = batch_size;
+  poo_flow_runtime_v0_publish_result published = {0};
+  published.struct_size = sizeof(published);
+  require_ok(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                                &published));
 
   poo_flow_runtime_v0_poll_request poll = {0};
   poll.struct_size = sizeof(poll);
@@ -118,7 +126,7 @@ static uint64_t run_once(
   submit.item_statuses = statuses;
   submit.item_status_capacity = batch_size;
   submit.accepted_bitmap = bitmap;
-  submit.accepted_bitmap_bytes = (batch_size + 7) / 8;
+  submit.accepted_bitmap_bytes = batch_size / 8 + (batch_size % 8 != 0);
   poo_flow_runtime_v0_submit_result submitted = {0};
   submitted.struct_size = sizeof(submitted);
 

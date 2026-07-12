@@ -22,7 +22,7 @@ def test_runtime_graph_program_execution_carries_events() -> None:
             RuntimeGraphEdge("load", END),
         ),
     )
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=plan,
         graph_bindings=RuntimeGraphBindings(node_actions={"load": "poo.load"}),
         registries=RuntimeGraphRegistries(
@@ -54,7 +54,7 @@ def test_runtime_graph_program_interrupt_does_not_leak_internal_handle() -> None
             RuntimeGraphEdge("pause", END),
         ),
     )
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=plan,
         graph_bindings=RuntimeGraphBindings(
             node_actions={
@@ -94,7 +94,7 @@ def test_runtime_graph_program_resumes_from_interrupt() -> None:
             RuntimeGraphEdge("done", END),
         ),
     )
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=plan,
         graph_bindings=RuntimeGraphBindings(
             node_actions={

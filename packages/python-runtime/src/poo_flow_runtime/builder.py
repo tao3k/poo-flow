@@ -138,6 +138,9 @@ class RuntimeGraphBuilder:
             ),
         )
 
+    def compile_reference_program(self) -> RuntimeGraphProgram:
+        return self.compile_program(runtime=RuntimeGraphRuntime.reference())
+
     def plan(self) -> RuntimeGraphPlan:
         return RuntimeGraphPlan(
             nodes=tuple(self.nodes),
@@ -158,7 +161,7 @@ def _runtime_from_compile_options(
 ) -> RuntimeGraphRuntime | None:
     if runtime is None:
         if thread_id is None and store is None and checkpointer is None and metadata is None:
-            return None
+            return RuntimeGraphRuntime()
         return RuntimeGraphRuntime(
             thread_id=thread_id,
             store=store,
@@ -172,4 +175,6 @@ def _runtime_from_compile_options(
         store=store if store is not None else runtime.store,
         checkpointer=checkpointer if checkpointer is not None else runtime.checkpointer,
         metadata={**dict(runtime.metadata), **dict(metadata or {})},
+        backend=runtime.backend,
+        native_context=runtime.native_context,
     )

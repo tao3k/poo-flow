@@ -84,7 +84,7 @@ def test_executor_stream_messages_project_message_updates():
 
 
 def test_executor_stream_custom_projects_runtime_writer_chunks():
-    runtime = RuntimeGraphRuntime()
+    runtime = RuntimeGraphRuntime.reference()
 
     def action(state, runtime):
         runtime.emit_custom({"phase": "thinking"})
@@ -123,7 +123,7 @@ def test_executor_stream_tasks_project_node_lifecycle():
 
 def test_executor_stream_checkpoints_persists_step_checkpoints():
     checkpointer = MemoryRuntimeGraphCheckpointer()
-    runtime = RuntimeGraphRuntime(thread_id="thread-1", checkpointer=checkpointer)
+    runtime = RuntimeGraphRuntime.reference(thread_id="thread-1", checkpointer=checkpointer)
     builder = RuntimeGraphBuilder()
     builder.add_node("first", lambda state: {"x": 1})
     builder.add_node("second", lambda state: {"y": state["x"] + 1})
@@ -161,7 +161,7 @@ def test_program_stream_hides_internal_runtime_plan_state():
     builder.set_finish_point("second")
 
     chunks = list(
-        builder.compile_program().stream({}, stream_mode=("values", "events"))
+        builder.compile_reference_program().stream({}, stream_mode=("values", "events"))
     )
 
     for mode, chunk in chunks:
@@ -172,7 +172,7 @@ def test_program_stream_hides_internal_runtime_plan_state():
 
 def test_program_stream_checkpoints_hide_internal_runtime_plan_state():
     checkpointer = MemoryRuntimeGraphCheckpointer()
-    runtime = RuntimeGraphRuntime(thread_id="thread-1", checkpointer=checkpointer)
+    runtime = RuntimeGraphRuntime.reference(thread_id="thread-1", checkpointer=checkpointer)
     builder = RuntimeGraphBuilder()
     builder.add_node("first", lambda state: {"x": 1})
     builder.set_entry_point("first")

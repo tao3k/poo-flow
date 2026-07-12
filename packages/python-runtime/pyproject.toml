@@ -21,11 +21,18 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling>=1.25"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=75", "wheel", "cffi>=2.0.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/poo_flow_runtime"]
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+poo_flow_runtime = ["_native/lib/*"]
 
 [tool.pytest.ini_options]
 addopts = ["--python-project-harness"]

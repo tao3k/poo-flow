@@ -76,6 +76,15 @@ class RuntimeGraphProgram:
         self.registries = registries or RuntimeGraphRegistries()
         self.runtime = runtime or RuntimeGraphRuntime()
 
+    @classmethod
+    def reference(cls, **kwargs: Any) -> "RuntimeGraphProgram":
+        runtime = kwargs.pop("runtime", None)
+        if runtime is None:
+            runtime = RuntimeGraphRuntime.reference()
+        elif runtime.backend != "reference":
+            raise RuntimeGraphError("reference program requires a reference runtime")
+        return cls(runtime=runtime, **kwargs)
+
     def describe(self) -> bytes:
         return describe_runtime_graph_plan(self.plan, self.graph_bindings)
 
@@ -340,6 +349,8 @@ class RuntimeGraphProgram:
         return self._execution(state, trace, validation_receipt, events)
 
     def _validated_plan(self) -> tuple[bytes, str | None]:
+        if self.runtime.backend == "native":
+            self.runtime.require_native_context()
         receipt = self.describe()
         return receipt, parse_runtime_receipt(receipt).plan_digest
 

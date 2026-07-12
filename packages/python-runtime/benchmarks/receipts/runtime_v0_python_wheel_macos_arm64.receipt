@@ -1,0 +1,5 @@
+schema=poo-flow.runtime-v0.python-wheel-benchmark.1 batch=1 iterations=20 p50-ns=2687 crossings-per-item=4.000000000 payload-zero-copy=true lookup-complexity=O(log-n-plus-k) abi-v1-frozen=false
+schema=poo-flow.runtime-v0.python-wheel-benchmark.1 batch=8 iterations=20 p50-ns=6292 crossings-per-item=0.500000000 payload-zero-copy=true lookup-complexity=O(log-n-plus-k) abi-v1-frozen=false
+schema=poo-flow.runtime-v0.python-wheel-benchmark.1 batch=32 iterations=20 p50-ns=18020 crossings-per-item=0.125000000 payload-zero-copy=true lookup-complexity=O(log-n-plus-k) abi-v1-frozen=false
+schema=poo-flow.runtime-v0.python-wheel-benchmark.1 batch=128 iterations=20 p50-ns=64020 crossings-per-item=0.031250000 payload-zero-copy=true lookup-complexity=O(log-n-plus-k) abi-v1-frozen=false
+schema=poo-flow.runtime-v0.python-wheel-benchmark.1 batch=1024 iterations=20 p50-ns=505479 crossings-per-item=0.003906250 payload-zero-copy=true lookup-complexity=O(log-n-plus-k) abi-v1-frozen=false

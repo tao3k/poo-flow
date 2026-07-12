@@ -16,7 +16,7 @@ from poo_flow_runtime import (
 
 def test_runtime_graph_executor_injects_runtime_context() -> None:
     store = MemoryRuntimeGraphStore()
-    runtime = RuntimeGraphRuntime(thread_id="thread-1", store=store)
+    runtime = RuntimeGraphRuntime.reference(thread_id="thread-1", store=store)
     executor = RuntimeGraphExecutor(
         RuntimeGraphPlan(
             nodes=("remember", "recall"),
@@ -49,8 +49,8 @@ def test_runtime_graph_executor_injects_runtime_context() -> None:
 
 def test_runtime_graph_program_injects_runtime_context() -> None:
     store = MemoryRuntimeGraphStore()
-    runtime = RuntimeGraphRuntime(thread_id="thread-1", store=store)
-    program = RuntimeGraphProgram(
+    runtime = RuntimeGraphRuntime.reference(thread_id="thread-1", store=store)
+    program = RuntimeGraphProgram.reference(
         plan=RuntimeGraphPlan(
             nodes=("remember", "recall"),
             edges=(
@@ -88,7 +88,7 @@ def test_runtime_graph_program_injects_runtime_context() -> None:
 
 
 def test_runtime_graph_runtime_requires_configured_resources() -> None:
-    runtime = RuntimeGraphRuntime()
+    runtime = RuntimeGraphRuntime.reference()
 
     with pytest.raises(RuntimeGraphRuntimeError, match="thread_id"):
         runtime.require_thread_id()
@@ -98,3 +98,18 @@ def test_runtime_graph_runtime_requires_configured_resources() -> None:
 
     with pytest.raises(RuntimeGraphRuntimeError, match="checkpointer"):
         runtime.require_checkpointer()
+
+
+def test_runtime_graph_runtime_native_backend_fails_closed_without_public_capability() -> None:
+    runtime = RuntimeGraphRuntime()
+
+    with pytest.raises(RuntimeGraphRuntimeError, match="negotiated native context"):
+        runtime.require_native_context()
+
+
+def test_runtime_graph_runtime_reference_backend_is_explicit() -> None:
+    runtime = RuntimeGraphRuntime.reference()
+
+    assert runtime.backend == "reference"
+    with pytest.raises(RuntimeGraphRuntimeError, match="negotiated native context"):
+        runtime.require_native_context()

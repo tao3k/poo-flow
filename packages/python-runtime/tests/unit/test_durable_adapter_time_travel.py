@@ -18,7 +18,7 @@ def _interrupting_program():
     builder.add_edge("pause", "done")
     builder.set_entry_point("pause")
     builder.set_finish_point("done")
-    return builder.compile_program()
+    return builder.compile_reference_program()
 
 
 def test_durable_adapter_exposes_checkpoint_time_travel(tmp_path):

@@ -133,6 +133,23 @@ typedef struct {
   uint32_t reserved0;
   poo_flow_runtime_v0_handle arena;
   uint64_t arena_generation;
+  const poo_flow_runtime_v0_event_header *headers;
+  uint64_t header_stride;
+  uint64_t item_count;
+} poo_flow_runtime_v0_publish_request;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  uint64_t published_count;
+  uint64_t last_sequence;
+} poo_flow_runtime_v0_publish_result;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  poo_flow_runtime_v0_handle arena;
+  uint64_t arena_generation;
   poo_flow_runtime_v0_event_header *headers;
   uint64_t header_stride;
   uint64_t header_capacity;
@@ -213,6 +230,10 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_arena_register(
     poo_flow_runtime_v0_handle *arena_out);
 poo_flow_runtime_v0_status poo_flow_runtime_v0_arena_release(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle arena);
+poo_flow_runtime_v0_status poo_flow_runtime_v0_publish_batch(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_publish_request *request,
+    poo_flow_runtime_v0_publish_result *result);
 poo_flow_runtime_v0_status poo_flow_runtime_v0_poll_batch(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
     const poo_flow_runtime_v0_poll_request *request,

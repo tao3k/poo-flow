@@ -9,7 +9,7 @@ from poo_flow_runtime.messages import ai_message
 
 def test_executor_stream_projection_splits_typed_iterators():
     message = ai_message("ready", id="m1")
-    runtime = RuntimeGraphRuntime()
+    runtime = RuntimeGraphRuntime.reference()
 
     def action(state, runtime):
         runtime.emit_custom({"phase": "model"})
@@ -40,7 +40,7 @@ def test_executor_stream_projection_splits_typed_iterators():
 
 def test_program_stream_projection_supports_checkpoint_projection():
     checkpointer = MemoryRuntimeGraphCheckpointer()
-    runtime = RuntimeGraphRuntime(thread_id="thread-1", checkpointer=checkpointer)
+    runtime = RuntimeGraphRuntime.reference(thread_id="thread-1", checkpointer=checkpointer)
     builder = RuntimeGraphBuilder()
     builder.add_node("first", lambda state: {"x": 1})
     builder.set_entry_point("first")

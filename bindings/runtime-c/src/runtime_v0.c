@@ -1,5 +1,5 @@
 #include "poo_flow/runtime_v0.h"
-#include "runtime_v0_internal.h"
+#include <poo_flow/runtime_v0.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -438,37 +438,65 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_arena_release(
   return release_resource(entry);
 }
 
-poo_flow_runtime_v0_status poo_flow_runtime_v0_internal_publish(
+poo_flow_runtime_v0_status poo_flow_runtime_v0_publish_batch(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
-    poo_flow_runtime_v0_handle arena, uint64_t arena_generation,
-    const poo_flow_runtime_v0_event_header *header) {
+    const poo_flow_runtime_v0_publish_request *request,
+    poo_flow_runtime_v0_publish_result *result) {
   resource *session_entry = NULL;
   resource *arena_entry = NULL;
   poo_flow_runtime_v0_status status = resolve(instance, session, KIND_SESSION,
                                                &session_entry);
   if (status != POO_FLOW_RUNTIME_V0_OK) return status;
-  status = resolve(instance, arena, KIND_ARENA, &arena_entry);
-  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
-  if (header == NULL) return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
-  if (arena_entry->arena_generation != arena_generation)
-    return POO_FLOW_RUNTIME_V0_STALE_GENERATION;
-  if (header->layout_version != POO_FLOW_RUNTIME_V0_LAYOUT_VERSION ||
-      header->reserved0 != 0)
+  if (request == NULL || result == NULL)
+    return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+  if (request->struct_size != sizeof(*request) ||
+      result->struct_size != sizeof(*result) || request->reserved0 != 0 ||
+      result->reserved0 != 0 ||
+      request->header_stride != sizeof(poo_flow_runtime_v0_event_header) ||
+      request->item_count > SIZE_MAX / request->header_stride ||
+      (request->item_count != 0 && request->headers == NULL))
     return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
-  if (!slice_in_bounds(header->payload_offset, header->payload_length,
-                       arena_entry->arena_capacity))
-    return POO_FLOW_RUNTIME_V0_PAYLOAD_BOUNDS;
-  if (session_entry->pending_count >= session_entry->pending_capacity)
+  status = resolve(instance, request->arena, KIND_ARENA, &arena_entry);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (arena_entry->arena_generation != request->arena_generation)
+    return POO_FLOW_RUNTIME_V0_STALE_GENERATION;
+  if (request->item_count >
+      session_entry->pending_capacity - session_entry->pending_count)
     return POO_FLOW_RUNTIME_V0_OUTSTANDING_WORK;
-  if (session_entry->pending_count != 0 &&
-      header->sequence <= session_entry->pending[session_entry->pending_count - 1]
-                              .header.sequence)
-    return POO_FLOW_RUNTIME_V0_INVALID_STATE;
-  pending_event *pending = &session_entry->pending[session_entry->pending_count++];
-  memset(pending, 0, sizeof(*pending));
-  pending->header = *header;
-  pending->arena_id = arena.resource_id;
-  pending->arena_generation = arena_generation;
+  uint64_t previous_sequence = session_entry->pending_count == 0
+      ? 0
+      : session_entry->pending[session_entry->pending_count - 1].header.sequence;
+  for (uint64_t i = 0; i < request->item_count; ++i) {
+    const poo_flow_runtime_v0_event_header *header =
+        (const poo_flow_runtime_v0_event_header *)
+            ((const uint8_t *)request->headers + i * request->header_stride);
+    if (header->layout_version != POO_FLOW_RUNTIME_V0_LAYOUT_VERSION ||
+        header->reserved0 != 0)
+      return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+    if (!slice_in_bounds(header->payload_offset, header->payload_length,
+                         arena_entry->arena_capacity))
+      return POO_FLOW_RUNTIME_V0_PAYLOAD_BOUNDS;
+    if ((session_entry->pending_count != 0 || i != 0) &&
+        header->sequence <= previous_sequence)
+      return POO_FLOW_RUNTIME_V0_INVALID_STATE;
+    previous_sequence = header->sequence;
+  }
+  for (uint64_t i = 0; i < request->item_count; ++i) {
+    const poo_flow_runtime_v0_event_header *header =
+        (const poo_flow_runtime_v0_event_header *)
+            ((const uint8_t *)request->headers + i * request->header_stride);
+    pending_event *pending =
+        &session_entry->pending[session_entry->pending_count++];
+    memset(pending, 0, sizeof(*pending));
+    pending->header = *header;
+    pending->arena_id = request->arena.resource_id;
+    pending->arena_generation = request->arena_generation;
+  }
+  result->published_count = request->item_count;
+  result->last_sequence = request->item_count == 0 ? previous_sequence :
+      ((const poo_flow_runtime_v0_event_header *)
+           ((const uint8_t *)request->headers +
+            (request->item_count - 1u) * request->header_stride))->sequence;
   return POO_FLOW_RUNTIME_V0_OK;
 }
 

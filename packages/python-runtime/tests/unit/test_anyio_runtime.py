@@ -35,7 +35,7 @@ def test_runtime_graph_executor_anyio_invocation() -> None:
 
 
 def test_runtime_graph_program_anyio_invocation() -> None:
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=linear_plan("load"),
         registries=RuntimeGraphRegistries(
             actions={"load": lambda state: {"value": state["value"] + 1}},
@@ -99,7 +99,7 @@ def test_runtime_graph_program_awaits_async_action() -> None:
         await anyio.sleep(0)
         return {"value": state["value"] + 1}
 
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=linear_plan("load"),
         registries=RuntimeGraphRegistries(actions={"load": load}),
     )

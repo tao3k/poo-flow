@@ -225,6 +225,17 @@ over the canonical bundle identity established here.
 | Python validation runtime | =packages/python-runtime= | retained suite: 176 passed |
 | ABI freeze | RFC 116 and qualification receipt 119 | =abi-v1-frozen? #f= |
 
+* AC-07 Python Production CFFI Runtime
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Public atomic producer batch | =bindings/runtime-c/src/runtime_v0.c= | strict C, UBSan, leak, installed consumer |
+| Out-of-line CFFI build and wheel | =packages/python-runtime/setup.py= and =poo_flow_runtime/_native/_build.py= | isolated wheel without Gerbil |
+| Native loading and ownership | =poo_flow_runtime/_native/loader.py=, =session.py=, =arena.py= | Bundle/session/arena lifecycle and fail-closed tests |
+| Production graph boundary | =RuntimeGraphRuntime= and =RuntimeGraphProgram._validated_plan= | negotiated native required; explicit reference API |
+| Actual-wheel performance | =poo_flow_runtime/_native/benchmark.py= | batches 1/8/32/128/1024 and receipt 122 |
+| ABI freeze | RFC 120 and qualification receipt 122 | =abi-v1-frozen? #f= |
+
 * Related RFCs
 
 - [[file:90-poo-flow-agentic-control-plane-architecture-rfc.org][Architecture RFC]]

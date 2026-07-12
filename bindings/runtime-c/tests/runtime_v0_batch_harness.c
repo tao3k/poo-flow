@@ -1,4 +1,4 @@
-#include "../src/runtime_v0_internal.h"
+#include <poo_flow/runtime_v0.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -76,13 +76,44 @@ int main(void) {
   poo_flow_runtime_v0_event_header first = event(1, 0, 16);
   poo_flow_runtime_v0_event_header second = event(2, 64, 32);
   poo_flow_runtime_v0_event_header overflow = event(3, UINT64_MAX - 7u, 16);
-  assert(poo_flow_runtime_v0_internal_publish(instance, session, arena, 1,
-                                               &overflow) ==
+  poo_flow_runtime_v0_publish_request publish = {0};
+  publish.struct_size = sizeof(publish);
+  publish.arena = arena;
+  publish.arena_generation = 1;
+  publish.headers = &overflow;
+  publish.header_stride = sizeof(overflow);
+  publish.item_count = 1;
+  poo_flow_runtime_v0_publish_result published = {0};
+  published.struct_size = sizeof(published);
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
          POO_FLOW_RUNTIME_V0_PAYLOAD_BOUNDS);
-  assert(poo_flow_runtime_v0_internal_publish(instance, session, arena, 1, &first) ==
+  poo_flow_runtime_v0_event_header inputs[2] = {first, second};
+  publish.headers = inputs;
+  publish.item_count = 2;
+  publish.header_stride = sizeof(inputs[0]) - 1u;
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
+         POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR);
+  publish.header_stride = sizeof(inputs[0]);
+  publish.item_count = UINT64_MAX;
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
+         POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR);
+  publish.item_count = 1025;
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
+         POO_FLOW_RUNTIME_V0_OUTSTANDING_WORK);
+  publish.item_count = 2;
+  inputs[1].sequence = 1;
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
+         POO_FLOW_RUNTIME_V0_INVALID_STATE);
+  inputs[1] = second;
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
          POO_FLOW_RUNTIME_V0_OK);
-  assert(poo_flow_runtime_v0_internal_publish(instance, session, arena, 1, &second) ==
-         POO_FLOW_RUNTIME_V0_OK);
+  assert(published.published_count == 2 && published.last_sequence == 2);
   poo_flow_runtime_v0_event_header out[2] = {{0}};
   poo_flow_runtime_v0_poll_request poll = {0};
   poll.struct_size = sizeof(poll);
@@ -153,7 +184,10 @@ int main(void) {
          POO_FLOW_RUNTIME_V0_OK);
   assert(poo_flow_runtime_v0_arena_recycle(instance, arena, 1, 2) ==
          POO_FLOW_RUNTIME_V0_OK);
-  assert(poo_flow_runtime_v0_internal_publish(instance, session, arena, 1, &first) ==
+  publish.headers = &first;
+  publish.item_count = 1;
+  assert(poo_flow_runtime_v0_publish_batch(instance, session, &publish,
+                                           &published) ==
          POO_FLOW_RUNTIME_V0_STALE_GENERATION);
 
   assert(poo_flow_runtime_v0_arena_release(instance, arena) ==

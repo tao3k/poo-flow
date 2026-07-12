@@ -29,7 +29,7 @@ def test_runtime_graph_program_invokes_action_and_reducer_registries() -> None:
         },
         reducers={"append-items": lambda left, right: [*(left or []), *right]},
     )
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=plan, graph_bindings=bindings, registries=registries
     )
 
@@ -51,7 +51,7 @@ def test_runtime_graph_program_returns_execution_trace() -> None:
             "second": lambda state: {"y": state["x"] + 1},
         }
     )
-    program = RuntimeGraphProgram(plan=plan, registries=registries)
+    program = RuntimeGraphProgram.reference(plan=plan, registries=registries)
 
     execution = program.invoke_with_trace({})
 

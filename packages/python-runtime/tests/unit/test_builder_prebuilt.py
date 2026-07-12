@@ -30,7 +30,7 @@ def test_runtime_graph_builder_compiles_program() -> None:
     builder.add_edge("load", "double")
     builder.set_finish_point("double")
 
-    execution = builder.compile_program().invoke_with_trace({"seed": 20})
+    execution = builder.compile_reference_program().invoke_with_trace({"seed": 20})
 
     assert execution.state["value"] == 42
     assert execution.trace == ("load", "double")

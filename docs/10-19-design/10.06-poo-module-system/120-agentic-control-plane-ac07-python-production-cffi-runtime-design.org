@@ -3,15 +3,17 @@
 
 * Status
 
-Approved in conversation on 2026-07-12.  This document is the AC-07 design
-gate.  Implementation and qualification have not started.
+Approved in conversation on 2026-07-12.  Implemented and qualified by receipt
+122.  Runtime v0 gained the approved public atomic producer amendment; ABI v1
+remains deliberately unfrozen.
 
 * Objective
 
 AC-07 proves that the public runtime v0 C ABI supports a production-capable
-Python runtime without making Python a semantic owner.  The existing
-=RuntimeGraphRuntime= graph-domain facade remains public.  One internal,
-out-of-line CFFI API-mode adapter becomes the mandatory production backend.
+Python runtime without making Python a semantic owner.  =RuntimeGraphProgram=
+remains the graph-domain execution owner; =RuntimeGraphRuntime= remains its
+public runtime context boundary.  One internal, out-of-line CFFI API-mode
+adapter becomes the mandatory production backend.
 
 The pure Python implementation remains an explicitly selected reference and
 test backend.  Native loading or negotiation failure is fatal in production;
@@ -73,6 +75,27 @@ flowchart LR
   public native submission contract.
 - Python consumes only published projection artifacts.  A production wheel
   requires no Gerbil installation or private Gerbil bypass.
+- Python receives a formal Bundle descriptor from its caller.  It cannot derive
+  Bundle identity from a graph-plan digest or synthesize canonical Bundle bytes.
+
+* Required runtime v0 amendment
+
+AC-06 exposed consumer =poll_batch= and =submit_batch= operations while leaving
+event publication behind a private header.  That boundary cannot support an
+independent downstream runtime using installed artifacts only.  Before the
+Python adapter is connected, runtime v0 adds a public =publish_batch= producer
+operation with these invariants:
+
+- installed public header only; the private producer header is removed;
+- one FFI crossing for =k= fixed-stride headers;
+- full descriptor, stride, count arithmetic, sequence, generation, and payload
+  validation before the first queue mutation;
+- atomic failure: malformed or out-of-capacity batches publish zero items;
+- monotonic append cost =O(k)= and no per-item allocation;
+- a result reports published count and last sequence.
+
+This amendment changes only ABI v0, which remains unfrozen.  It does not assign
+event-kind semantics to Python or expose graph plans through the C ABI.
 
 * Runtime data flow
 

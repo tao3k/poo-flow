@@ -28,7 +28,7 @@ def _approval_program() -> RuntimeGraphProgram:
             RuntimeGraphEdge("done", END),
         ),
     )
-    return RuntimeGraphProgram(
+    return RuntimeGraphProgram.reference(
         plan=plan,
         graph_bindings=RuntimeGraphBindings(
             node_actions={
@@ -208,7 +208,7 @@ def test_runtime_graph_program_rejects_checkpoint_for_changed_plan() -> None:
             RuntimeGraphEdge("done", END),
         ),
     )
-    changed_program = RuntimeGraphProgram(
+    changed_program = RuntimeGraphProgram.reference(
         plan=changed_plan,
         graph_bindings=RuntimeGraphBindings(
             node_actions={

@@ -57,7 +57,7 @@ def test_runtime_graph_subgraph_runs_as_parent_action() -> None:
 
 def test_runtime_graph_program_can_use_subgraph_action() -> None:
     subgraph = _math_subgraph()
-    program = RuntimeGraphProgram(
+    program = RuntimeGraphProgram.reference(
         plan=RuntimeGraphPlan(
             nodes=("child", "finish"),
             edges=(

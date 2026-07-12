@@ -127,7 +127,7 @@ def run_thread_state_facade(iterations: int) -> LangGraphAlignmentBenchmark:
         .add_node("step", _increment_state)
         .set_entry_point("step")
         .set_finish_point("step")
-        .compile_program()
+        .compile_reference_program()
     )
 
     def invoke_and_update() -> None:
