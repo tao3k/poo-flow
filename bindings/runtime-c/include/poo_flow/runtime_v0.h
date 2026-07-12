@@ -55,7 +55,11 @@ enum {
   POO_FLOW_RUNTIME_V0_DUPLICATE_ACCEPTED = 17,
   POO_FLOW_RUNTIME_V0_PAYLOAD_BOUNDS = 18,
   POO_FLOW_RUNTIME_V0_STALE_GENERATION = 19,
-  POO_FLOW_RUNTIME_V0_ARENA_BUSY = 20
+  POO_FLOW_RUNTIME_V0_ARENA_BUSY = 20,
+  POO_FLOW_RUNTIME_V0_TOKEN_REPLAY = 21,
+  POO_FLOW_RUNTIME_V0_EXECUTION_ROOT_FORK = 22,
+  POO_FLOW_RUNTIME_V0_TOKEN_BINDING_MISMATCH = 23,
+  POO_FLOW_RUNTIME_V0_DIAGNOSTIC_CANNOT_EXECUTE = 24
 };
 
 typedef struct {
@@ -76,6 +80,18 @@ typedef struct {
   uint64_t capacity;
   poo_flow_runtime_v0_handle owner;
 } poo_flow_runtime_v0_owned_bytes;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  poo_flow_runtime_v0_handle session;
+  uint64_t mediation_sequence;
+  uint64_t first_sequence;
+  uint64_t last_sequence;
+  poo_flow_runtime_v0_compact_id nonce;
+  uint8_t semantic_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t before_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_evidence_reservation;
 
 typedef struct {
   uint32_t struct_size;
@@ -118,6 +134,21 @@ typedef struct {
   uint64_t outstanding_work;
   uint64_t reserved0;
 } poo_flow_runtime_v0_session_descriptor;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  uint64_t mediation_sequence;
+  uint64_t runtime_sequence;
+  const poo_flow_runtime_v0_compact_id *consumed_nonces;
+  uint64_t consumed_nonce_count;
+  const uint64_t *staged_mediation_sequences;
+  const uint8_t *staged_leaf_digests;
+  uint64_t staged_leaf_digest_stride;
+  uint64_t staged_leaf_count;
+  uint8_t semantic_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_evidence_reconciliation;
 
 typedef struct {
   uint32_t struct_size;
@@ -190,6 +221,181 @@ typedef struct {
   uint64_t accepted_watermark;
 } poo_flow_runtime_v0_submit_result;
 
+enum {
+  POO_FLOW_RUNTIME_V0_DURABILITY_STRICT = 1,
+  POO_FLOW_RUNTIME_V0_DURABILITY_BATCHED = 2,
+  POO_FLOW_RUNTIME_V0_DURABILITY_DIAGNOSTIC = 3,
+  POO_FLOW_RUNTIME_V0_MEDIATION_COMMITTED = 1,
+  POO_FLOW_RUNTIME_V0_MEDIATION_BUFFERED = 2,
+  POO_FLOW_RUNTIME_V0_MEDIATION_INDETERMINATE = 4,
+  POO_FLOW_RUNTIME_V0_EVIDENCE_SIGNATURE_VERIFIED = 1u << 0,
+  POO_FLOW_RUNTIME_V0_EVIDENCE_INCLUSION_VERIFIED = 1u << 1
+};
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t outcome;
+  poo_flow_runtime_v0_status adapter_status;
+  uint32_t reserved0;
+  uint8_t input_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t observation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_adapter_result;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  poo_flow_runtime_v0_handle arena;
+  poo_flow_runtime_v0_handle lease;
+  uint64_t arena_generation;
+  uint64_t first_sequence;
+  uint64_t last_sequence;
+  const poo_flow_runtime_v0_event_header *headers;
+  uint64_t header_stride;
+  uint64_t item_count;
+  const uint8_t *payload;
+  uint64_t payload_capacity;
+} poo_flow_runtime_v0_adapter_invocation;
+
+/*
+ * The kernel calls execute synchronously after consuming the one-shot nonce.
+ * Invocation views are borrowed and valid only for the duration of the call.
+ * Implementations must not retain the pointers or re-enter strict_mediate.
+ * A non-OK return produces an Indeterminate receipt and never restores nonce.
+ */
+typedef poo_flow_runtime_v0_status (*poo_flow_runtime_v0_adapter_execute_fn)(
+    void *context, const poo_flow_runtime_v0_adapter_invocation *invocation,
+    poo_flow_runtime_v0_adapter_result *result);
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  void *context;
+  poo_flow_runtime_v0_adapter_execute_fn execute;
+} poo_flow_runtime_v0_adapter_vtable;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t outcome;
+  poo_flow_runtime_v0_status adapter_status;
+  uint32_t reserved0;
+  poo_flow_runtime_v0_handle session;
+  uint64_t mediation_sequence;
+  uint64_t first_sequence;
+  uint64_t last_sequence;
+  poo_flow_runtime_v0_compact_id nonce;
+  uint8_t semantic_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t before_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t input_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t observation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_evidence_invocation;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t verification_flags;
+  uint32_t reserved0;
+  uint32_t reserved1;
+  uint8_t after_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t evidence_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t attestation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_evidence_result;
+
+typedef poo_flow_runtime_v0_status (*poo_flow_runtime_v0_evidence_finalize_fn)(
+    void *context, const poo_flow_runtime_v0_evidence_invocation *invocation,
+    poo_flow_runtime_v0_evidence_result *result);
+
+typedef poo_flow_runtime_v0_status (*poo_flow_runtime_v0_evidence_reserve_fn)(
+    void *context, const poo_flow_runtime_v0_evidence_reservation *reservation);
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  poo_flow_runtime_v0_handle session;
+  uint64_t first_mediation_sequence;
+  uint64_t last_mediation_sequence;
+  const uint8_t *leaf_digests;
+  uint64_t leaf_digest_stride;
+  uint64_t leaf_count;
+  uint8_t before_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_evidence_flush_invocation;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t verification_flags;
+  uint32_t reserved0;
+  uint32_t reserved1;
+  uint8_t after_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t batch_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t evidence_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t attestation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_evidence_flush_result;
+
+typedef poo_flow_runtime_v0_status (*poo_flow_runtime_v0_evidence_flush_fn)(
+    void *context,
+    const poo_flow_runtime_v0_evidence_flush_invocation *invocation,
+    poo_flow_runtime_v0_evidence_flush_result *result);
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  void *context;
+  poo_flow_runtime_v0_evidence_reserve_fn reserve;
+  poo_flow_runtime_v0_evidence_finalize_fn finalize;
+  poo_flow_runtime_v0_evidence_flush_fn flush;
+} poo_flow_runtime_v0_evidence_vtable;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t durability;
+  uint32_t reserved0;
+  uint32_t reserved1;
+  poo_flow_runtime_v0_handle arena;
+  poo_flow_runtime_v0_handle lease;
+  uint64_t arena_generation;
+  uint64_t bundle_epoch;
+  uint64_t first_sequence;
+  uint64_t last_sequence;
+  poo_flow_runtime_v0_compact_id nonce;
+  uint8_t semantic_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t before_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  const poo_flow_runtime_v0_adapter_vtable *adapter;
+  const poo_flow_runtime_v0_evidence_vtable *evidence;
+} poo_flow_runtime_v0_strict_mediation_request;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t outcome;
+  poo_flow_runtime_v0_status adapter_status;
+  poo_flow_runtime_v0_status evidence_status;
+  uint32_t verification_flags;
+  uint32_t reserved0;
+  uint64_t mediation_sequence;
+  uint8_t execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t observation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t evidence_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t attestation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_strict_mediation_result;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t reserved0;
+  const poo_flow_runtime_v0_evidence_vtable *evidence;
+  uint8_t expected_execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_batched_flush_request;
+
+typedef struct {
+  uint32_t struct_size;
+  uint32_t verification_flags;
+  poo_flow_runtime_v0_status evidence_status;
+  uint32_t reserved0;
+  uint64_t leaf_count;
+  uint64_t first_mediation_sequence;
+  uint64_t last_mediation_sequence;
+  uint8_t execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t batch_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t evidence_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t attestation_digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} poo_flow_runtime_v0_batched_flush_result;
+
 poo_flow_runtime_v0_status poo_flow_runtime_v0_instance_create(
     poo_flow_runtime_v0_handle *instance_out);
 poo_flow_runtime_v0_status poo_flow_runtime_v0_instance_release(
@@ -217,6 +423,9 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_session_close(
     uint32_t disposition);
 poo_flow_runtime_v0_status poo_flow_runtime_v0_session_release(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session);
+poo_flow_runtime_v0_status poo_flow_runtime_v0_session_reconcile_evidence(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_evidence_reconciliation *reconciliation);
 poo_flow_runtime_v0_status poo_flow_runtime_v0_session_checkpoint(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
     poo_flow_runtime_v0_owned_bytes *checkpoint_out);
@@ -242,6 +451,14 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_submit_batch(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
     const poo_flow_runtime_v0_submit_request *request,
     poo_flow_runtime_v0_submit_result *result);
+poo_flow_runtime_v0_status poo_flow_runtime_v0_strict_mediate(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_strict_mediation_request *request,
+    poo_flow_runtime_v0_strict_mediation_result *result);
+poo_flow_runtime_v0_status poo_flow_runtime_v0_batched_flush(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_batched_flush_request *request,
+    poo_flow_runtime_v0_batched_flush_result *result);
 poo_flow_runtime_v0_status poo_flow_runtime_v0_batch_ack(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
     poo_flow_runtime_v0_handle lease);

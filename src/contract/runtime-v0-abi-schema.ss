@@ -22,7 +22,8 @@
              (runtime-v0-capability "HOT_BATCH" 2)
              (runtime-v0-capability "BULK_BUFFER" 3)
              (runtime-v0-capability "CALLER_ARENA" 4)
-             (runtime-v0-capability "PARTIAL_ACCEPTANCE" 5)))))
+             (runtime-v0-capability "PARTIAL_ACCEPTANCE" 5)
+             (runtime-v0-capability "BATCHED_EVIDENCE" 6)))))
 
 (def (emit-line port . values)
   (for-each (lambda (value) (display value port)) values)

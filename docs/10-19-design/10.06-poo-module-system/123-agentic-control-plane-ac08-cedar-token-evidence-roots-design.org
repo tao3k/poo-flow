@@ -233,6 +233,9 @@ to =Executing= or authorize a production effect.
 - Scheme projection, C kernel, and Python CFFI agree on shared token vectors.
 - Cedar decision receipt agrees with the semantic root.
 - Lean/Evidence fixtures verify declared bindings without overstating L3.
+  Implemented: the proof lane distinguishes signature presence from verified
+  signature status, requires verified inclusion for L3, and keeps Buffered at
+  L1 until a committed root-linked batch receipt exists.
 
 ** Performance
 

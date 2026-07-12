@@ -3,7 +3,18 @@
 from .errors import NativeRuntimeError, NativeRuntimeLoadError
 from .loader import NativeRuntimeHealth, probe_native_runtime
 from .session import NativeBundleDescriptor, NativeRuntimeSession
-from .arena import NativeArena, NativeBatchResult, NativeEvent
+from .arena import (
+    NativeArena,
+    NativeBatchResult,
+    NativeEvent,
+    NativeMediation,
+)
+from .evidence import (
+    NativeEvidenceCommit,
+    NativeEvidenceInvocation,
+    NativeEvidenceReservation,
+    NativeEvidenceSink,
+)
 
 __all__ = (
     "NativeRuntimeError",
@@ -15,4 +26,9 @@ __all__ = (
     "NativeArena",
     "NativeBatchResult",
     "NativeEvent",
+    "NativeEvidenceCommit",
+    "NativeEvidenceInvocation",
+    "NativeEvidenceReservation",
+    "NativeEvidenceSink",
+    "NativeMediation",
 )

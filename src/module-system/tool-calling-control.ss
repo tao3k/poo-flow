@@ -10,7 +10,24 @@
         poo-flow-tool-call-fact-family-build
         poo-flow-tool-call-fact-family-ref
         poo-flow-tool-call-runtime-validation-proof-facts
+        poo-flow-tool-call-mediated-receipt
         poo-flow-tool-call-fact-ref)
+
+;; : (-> PooObject PooObject PooObject PooObject)
+(def (poo-flow-tool-call-mediated-receipt runtime token-validation
+                                          token-consumption)
+  (unless (.ref token-validation 'accepted?)
+    (error "tool call requires an accepted AuthorizedEffectToken"))
+  (unless (eq? (.ref token-consumption 'outcome) 'committed)
+    (error "tool call requires a committed token consumption receipt"))
+  (.o (kind 'poo-flow-tool-call-mediated-receipt)
+      (runtime-receipt runtime)
+      (token-id (.ref token-consumption 'token-id))
+      (nonce (.ref token-consumption 'nonce))
+      (semantic-root (.ref token-consumption 'semantic-root))
+      (execution-root (.ref token-consumption 'execution-root))
+      (durability (.ref token-consumption 'durability))
+      (status 'committed)))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-truthy? value)

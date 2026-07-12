@@ -19,6 +19,8 @@ import PooFlowProof.Generated.ScenarioGapRuntimeRow
 import PooFlowProof.Generated.ScenarioGapRuntimeRowRejections
 import PooFlowProof.PooC3.CompositionReceipt
 import PooFlowProof.Generated.CompositionReceipt
+import PooFlowProof.PooC3.AuthorizedEffectEvidence
+import PooFlowProof.Generated.AuthorizedEffectEvidence
 import PooFlowProof.PooC3.ControlPlaneHandoff
 import PooFlowProof.Generated.ControlPlaneHandoff
 import PooFlowProof.PooC3.ProofGateBundle

@@ -21,6 +21,16 @@ from .durable import (
     TursoRuntimeGraphCheckpointer,
     TursoRuntimeGraphStore,
 )
+from .batched_evidence import (
+    BatchedEvidenceLeaf,
+    BatchedMerkleProof,
+    BatchedMerkleProofStep,
+    batched_evidence_leaf,
+    batched_merkle_proof,
+    batched_merkle_proof_verify,
+    batched_merkle_root,
+    batched_merkle_root_digests,
+)
 from .durable_turso_backend import (
     TursoRuntimeGraphBackend,
     turso_runtime_graph_backend,
@@ -38,6 +48,16 @@ from .durable_policy import (
 from .event_stream import (
     DEFAULT_RUNTIME_GRAPH_STREAM_MODES,
     RuntimeGraphStreamProjection,
+)
+from .evidence import TursoAuthorizedEffectEvidenceStore
+from .evidence_model import (
+    AuthorizedEffectEvidenceError,
+    AuthorizedEffectEvidenceReconciliation,
+    AuthorizedEffectEvidenceReservation,
+    AuthorizedEffectEvidenceReceipt,
+    BatchedEvidenceCommitReceipt,
+    authorized_effect_evidence_from_native,
+    authorized_effect_evidence_receipt,
 )
 from ._scheme_load import clear_load_cache, load, precompile_load, preproject_load
 from .funflow import (
@@ -98,6 +118,14 @@ from .tools import RuntimeGraphTool, RuntimeGraphToolError, RuntimeGraphToolNode
 
 __all__ = (
     "RuntimeGraphBindings",
+    "BatchedEvidenceLeaf",
+    "BatchedMerkleProof",
+    "BatchedMerkleProofStep",
+    "batched_evidence_leaf",
+    "batched_merkle_proof",
+    "batched_merkle_proof_verify",
+    "batched_merkle_root",
+    "batched_merkle_root_digests",
     "RuntimeGraphBuilder",
     "CrewAIAgentSpec",
     "CrewAIFlowResult",
@@ -161,6 +189,14 @@ __all__ = (
     "coerce_runtime_durable_policy_manifest",
     "RuntimeGraphStreamProjection",
     "DEFAULT_RUNTIME_GRAPH_STREAM_MODES",
+    "AuthorizedEffectEvidenceError",
+    "AuthorizedEffectEvidenceReconciliation",
+    "AuthorizedEffectEvidenceReservation",
+    "AuthorizedEffectEvidenceReceipt",
+    "BatchedEvidenceCommitReceipt",
+    "TursoAuthorizedEffectEvidenceStore",
+    "authorized_effect_evidence_from_native",
+    "authorized_effect_evidence_receipt",
     "load",
     "precompile_load",
     "preproject_load",

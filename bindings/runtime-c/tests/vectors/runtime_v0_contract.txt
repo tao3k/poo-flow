@@ -13,3 +13,4 @@ capability-HOT_BATCH=2
 capability-BULK_BUFFER=3
 capability-CALLER_ARENA=4
 capability-PARTIAL_ACCEPTANCE=5
+capability-BATCHED_EVIDENCE=6

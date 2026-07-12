@@ -1,4 +1,3 @@
-#include "poo_flow/runtime_v0.h"
 #include <poo_flow/runtime_v0.h>
 
 #include <stdlib.h>
@@ -17,6 +16,9 @@
 #define STATE_CLOSED 3u
 #define CHECKPOINT_MAGIC UINT64_C(0x504f4f4350303031)
 #define MAX_PENDING_EVENTS 1024u
+#define MAX_CONSUMED_NONCES 1024u
+#define NONCE_TABLE_CAPACITY 2048u
+#define MAX_STAGED_LEAVES 1024u
 
 typedef struct {
   poo_flow_runtime_v0_event_header header;
@@ -29,6 +31,11 @@ typedef struct {
 } pending_event;
 
 typedef struct {
+  uint64_t mediation_sequence;
+  uint8_t digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+} staged_leaf;
+
+typedef struct {
   uint8_t alive;
   uint8_t released;
   uint16_t reserved;
@@ -39,6 +46,7 @@ typedef struct {
   uint64_t parent_id;
   uint64_t epoch;
   uint64_t sequence;
+  uint64_t capabilities;
   uint64_t outstanding;
   uint8_t digest[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
   uint8_t *bytes;
@@ -53,6 +61,15 @@ typedef struct {
   uint64_t poll_cursor;
   uint64_t lease_first_sequence;
   uint64_t lease_last_sequence;
+  poo_flow_runtime_v0_compact_id consumed_nonces[NONCE_TABLE_CAPACITY];
+  uint8_t consumed_nonce_used[NONCE_TABLE_CAPACITY];
+  uint64_t consumed_nonce_count;
+  uint8_t semantic_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint8_t semantic_root_bound;
+  uint8_t execution_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES];
+  uint64_t mediation_sequence;
+  staged_leaf staged_leaves[MAX_STAGED_LEAVES];
+  uint64_t staged_leaf_count;
 } resource;
 
 typedef struct {
@@ -108,6 +125,39 @@ static uint64_t pending_lower_bound(resource *session, uint64_t sequence) {
     else return middle;
   }
   return left;
+}
+
+static int nonce_equal(poo_flow_runtime_v0_compact_id left,
+                       poo_flow_runtime_v0_compact_id right) {
+  return left.high == right.high && left.low == right.low;
+}
+
+static uint64_t mix64(uint64_t value) {
+  value ^= value >> 30;
+  value *= UINT64_C(0xbf58476d1ce4e5b9);
+  value ^= value >> 27;
+  value *= UINT64_C(0x94d049bb133111eb);
+  return value ^ (value >> 31);
+}
+
+static uint64_t nonce_slot(resource *session,
+                           poo_flow_runtime_v0_compact_id nonce,
+                           int *found) {
+  uint64_t index = mix64(nonce.high ^ mix64(nonce.low)) &
+                   (NONCE_TABLE_CAPACITY - 1u);
+  for (uint64_t probe = 0; probe < NONCE_TABLE_CAPACITY; ++probe) {
+    if (!session->consumed_nonce_used[index]) {
+      *found = 0;
+      return index;
+    }
+    if (nonce_equal(session->consumed_nonces[index], nonce)) {
+      *found = 1;
+      return index;
+    }
+    index = (index + 1u) & (NONCE_TABLE_CAPACITY - 1u);
+  }
+  *found = 0;
+  return NONCE_TABLE_CAPACITY;
 }
 
 static resource *slot(uint64_t resource_id) {
@@ -213,7 +263,8 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_negotiate(
                              POO_FLOW_RUNTIME_V0_CAP_HOT_BATCH |
                              POO_FLOW_RUNTIME_V0_CAP_BULK_BUFFER |
                              POO_FLOW_RUNTIME_V0_CAP_CALLER_ARENA |
-                             POO_FLOW_RUNTIME_V0_CAP_PARTIAL_ACCEPTANCE;
+                             POO_FLOW_RUNTIME_V0_CAP_PARTIAL_ACCEPTANCE |
+                             POO_FLOW_RUNTIME_V0_CAP_BATCHED_EVIDENCE;
   if ((request->required_capabilities & ~supported) != 0)
     return POO_FLOW_RUNTIME_V0_UNSUPPORTED_CAPABILITY;
   poo_flow_runtime_v0_handle profile = null_handle();
@@ -227,6 +278,7 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_negotiate(
   result->reserved0 = 0;
   result->max_payload_bytes = request->max_payload_bytes;
   result->profile = profile;
+  slot(profile.resource_id)->capabilities = result->capabilities;
   return POO_FLOW_RUNTIME_V0_OK;
 }
 
@@ -256,6 +308,7 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_bundle_open(
   if (status != POO_FLOW_RUNTIME_V0_OK) return status;
   resource *entry = slot(bundle_out->resource_id);
   entry->parent_id = profile.resource_id;
+  entry->capabilities = profile_entry->capabilities;
   entry->epoch = descriptor->bundle_epoch;
   memcpy(entry->digest, descriptor->digest, sizeof(entry->digest));
   return POO_FLOW_RUNTIME_V0_OK;
@@ -297,6 +350,7 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_session_open(
   entry->pending_capacity = MAX_PENDING_EVENTS;
   entry->state = STATE_OPEN;
   entry->parent_id = bundle.resource_id;
+  entry->capabilities = bundle_entry->capabilities;
   entry->epoch = bundle_entry->epoch;
   entry->sequence = descriptor->initial_sequence;
   entry->outstanding = descriptor->outstanding_work;
@@ -311,6 +365,78 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_session_cancel(
   if (status != POO_FLOW_RUNTIME_V0_OK) return status;
   if (entry->state == STATE_CLOSED) return POO_FLOW_RUNTIME_V0_INVALID_STATE;
   entry->state = STATE_CANCELLED;
+  return POO_FLOW_RUNTIME_V0_OK;
+}
+
+poo_flow_runtime_v0_status poo_flow_runtime_v0_session_reconcile_evidence(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_evidence_reconciliation *reconciliation) {
+  resource *entry = NULL;
+  poo_flow_runtime_v0_status status = resolve(instance, session, KIND_SESSION,
+                                               &entry);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (reconciliation == NULL) return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+  if (reconciliation->struct_size != sizeof(*reconciliation) ||
+      reconciliation->reserved0 != 0 ||
+      reconciliation->consumed_nonce_count > MAX_CONSUMED_NONCES ||
+      reconciliation->staged_leaf_count > MAX_STAGED_LEAVES ||
+      reconciliation->staged_leaf_count >
+          reconciliation->consumed_nonce_count ||
+      reconciliation->consumed_nonce_count !=
+          reconciliation->mediation_sequence ||
+      (reconciliation->consumed_nonce_count != 0 &&
+       reconciliation->consumed_nonces == NULL) ||
+      (reconciliation->staged_leaf_count != 0 &&
+       (reconciliation->staged_mediation_sequences == NULL ||
+        reconciliation->staged_leaf_digests == NULL ||
+        reconciliation->staged_leaf_digest_stride <
+            POO_FLOW_RUNTIME_V0_DIGEST_BYTES)))
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  for (uint64_t i = 0; i < reconciliation->staged_leaf_count; ++i) {
+    if (reconciliation->staged_mediation_sequences[i] == 0 ||
+        reconciliation->staged_mediation_sequences[i] >
+            reconciliation->mediation_sequence ||
+        (i != 0 && reconciliation->staged_mediation_sequences[i] <=
+                       reconciliation->staged_mediation_sequences[i - 1u]))
+      return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  }
+  uint8_t zero_root[POO_FLOW_RUNTIME_V0_DIGEST_BYTES] = {0};
+  if (entry->state != STATE_OPEN || entry->pending_count != 0 ||
+      entry->outstanding != 0 || entry->mediation_sequence != 0 ||
+      entry->consumed_nonce_count != 0 || entry->semantic_root_bound ||
+      memcmp(entry->execution_root, zero_root, sizeof(zero_root)) != 0)
+    return POO_FLOW_RUNTIME_V0_INVALID_STATE;
+  for (uint64_t i = 0; i < reconciliation->consumed_nonce_count; ++i) {
+    int found = 0;
+    uint64_t index = nonce_slot(entry, reconciliation->consumed_nonces[i],
+                                &found);
+    if (found || index == NONCE_TABLE_CAPACITY) {
+      memset(entry->consumed_nonce_used, 0,
+             sizeof(entry->consumed_nonce_used));
+      memset(entry->consumed_nonces, 0, sizeof(entry->consumed_nonces));
+      entry->consumed_nonce_count = 0;
+      return POO_FLOW_RUNTIME_V0_TOKEN_REPLAY;
+    }
+    entry->consumed_nonces[index] = reconciliation->consumed_nonces[i];
+    entry->consumed_nonce_used[index] = 1;
+    ++entry->consumed_nonce_count;
+  }
+  memcpy(entry->semantic_root, reconciliation->semantic_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  entry->semantic_root_bound = 1;
+  memcpy(entry->execution_root, reconciliation->execution_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  entry->mediation_sequence = reconciliation->mediation_sequence;
+  entry->sequence = reconciliation->runtime_sequence;
+  for (uint64_t i = 0; i < reconciliation->staged_leaf_count; ++i) {
+    staged_leaf *leaf = &entry->staged_leaves[i];
+    leaf->mediation_sequence = reconciliation->staged_mediation_sequences[i];
+    memcpy(leaf->digest,
+           reconciliation->staged_leaf_digests +
+               i * reconciliation->staged_leaf_digest_stride,
+           POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+    ++entry->staged_leaf_count;
+  }
   return POO_FLOW_RUNTIME_V0_OK;
 }
 
@@ -398,6 +524,7 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_session_restore(
   entry->pending_capacity = MAX_PENDING_EVENTS;
   entry->state = packet.state == STATE_CLOSED ? STATE_OPEN : packet.state;
   entry->parent_id = bundle.resource_id;
+  entry->capabilities = bundle_entry->capabilities;
   entry->epoch = packet.epoch;
   entry->sequence = packet.sequence;
   memcpy(entry->digest, packet.digest, sizeof(entry->digest));
@@ -708,6 +835,280 @@ poo_flow_runtime_v0_status poo_flow_runtime_v0_batch_ack(
   return release_resource(lease_entry);
 }
 
+poo_flow_runtime_v0_status poo_flow_runtime_v0_strict_mediate(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_strict_mediation_request *request,
+    poo_flow_runtime_v0_strict_mediation_result *result) {
+  resource *session_entry = NULL;
+  resource *arena_entry = NULL;
+  resource *lease_entry = NULL;
+  poo_flow_runtime_v0_status status = resolve(instance, session, KIND_SESSION,
+                                               &session_entry);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (request == NULL || result == NULL)
+    return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+  if (request->struct_size != sizeof(*request) ||
+      result->struct_size != sizeof(*result) || request->reserved0 != 0 ||
+      request->reserved1 != 0 || result->reserved0 != 0 ||
+      request->adapter == NULL ||
+      request->adapter->struct_size != sizeof(*request->adapter) ||
+      request->adapter->reserved0 != 0 || request->adapter->execute == NULL ||
+      request->evidence == NULL ||
+      request->evidence->struct_size != sizeof(*request->evidence) ||
+      request->evidence->reserved0 != 0 ||
+      request->evidence->reserve == NULL ||
+      request->evidence->finalize == NULL)
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  if (request->durability == POO_FLOW_RUNTIME_V0_DURABILITY_DIAGNOSTIC)
+    return POO_FLOW_RUNTIME_V0_DIAGNOSTIC_CANNOT_EXECUTE;
+  if (request->durability != POO_FLOW_RUNTIME_V0_DURABILITY_STRICT &&
+      request->durability != POO_FLOW_RUNTIME_V0_DURABILITY_BATCHED)
+    return POO_FLOW_RUNTIME_V0_TOKEN_BINDING_MISMATCH;
+  if (request->durability == POO_FLOW_RUNTIME_V0_DURABILITY_BATCHED &&
+      (session_entry->capabilities &
+       POO_FLOW_RUNTIME_V0_CAP_BATCHED_EVIDENCE) == 0)
+    return POO_FLOW_RUNTIME_V0_UNSUPPORTED_CAPABILITY;
+  if (request->durability == POO_FLOW_RUNTIME_V0_DURABILITY_BATCHED &&
+      request->evidence->flush == NULL)
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  if (request->durability == POO_FLOW_RUNTIME_V0_DURABILITY_BATCHED &&
+      session_entry->staged_leaf_count >= MAX_STAGED_LEAVES)
+    return POO_FLOW_RUNTIME_V0_OUTSTANDING_WORK;
+  status = resolve(instance, request->arena, KIND_ARENA, &arena_entry);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  status = resolve(instance, request->lease, KIND_LEASE, &lease_entry);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (arena_entry->arena_generation != request->arena_generation ||
+      lease_entry->parent_id != request->arena.resource_id ||
+      lease_entry->outstanding != session.resource_id ||
+      lease_entry->epoch != request->arena_generation ||
+      session_entry->epoch != request->bundle_epoch ||
+      request->first_sequence > request->last_sequence ||
+      lease_entry->lease_first_sequence != request->first_sequence ||
+      lease_entry->lease_last_sequence != request->last_sequence)
+    return POO_FLOW_RUNTIME_V0_TOKEN_BINDING_MISMATCH;
+  uint64_t first_event = pending_lower_bound(session_entry,
+                                              request->first_sequence);
+  uint64_t last_event = pending_lower_bound(session_entry,
+                                             request->last_sequence);
+  if (first_event >= session_entry->pending_count ||
+      last_event >= session_entry->pending_count ||
+      session_entry->pending[first_event].header.sequence !=
+          request->first_sequence ||
+      session_entry->pending[last_event].header.sequence !=
+          request->last_sequence ||
+      last_event - first_event != request->last_sequence -
+                                    request->first_sequence)
+    return POO_FLOW_RUNTIME_V0_INTERNAL_INVARIANT;
+  if (memcmp(session_entry->execution_root, request->before_execution_root,
+             POO_FLOW_RUNTIME_V0_DIGEST_BYTES) != 0)
+    return POO_FLOW_RUNTIME_V0_EXECUTION_ROOT_FORK;
+  if (session_entry->semantic_root_bound &&
+      memcmp(session_entry->semantic_root, request->semantic_root,
+             POO_FLOW_RUNTIME_V0_DIGEST_BYTES) != 0)
+    return POO_FLOW_RUNTIME_V0_TOKEN_BINDING_MISMATCH;
+  int nonce_found = 0;
+  uint64_t nonce_index = nonce_slot(session_entry, request->nonce, &nonce_found);
+  if (nonce_found)
+    return POO_FLOW_RUNTIME_V0_TOKEN_REPLAY;
+  if (session_entry->consumed_nonce_count >= MAX_CONSUMED_NONCES ||
+      nonce_index == NONCE_TABLE_CAPACITY)
+    return POO_FLOW_RUNTIME_V0_OUTSTANDING_WORK;
+  poo_flow_runtime_v0_evidence_reservation reservation = {0};
+  reservation.struct_size = sizeof(reservation);
+  reservation.session = session;
+  reservation.mediation_sequence = session_entry->mediation_sequence + 1u;
+  reservation.first_sequence = request->first_sequence;
+  reservation.last_sequence = request->last_sequence;
+  reservation.nonce = request->nonce;
+  memcpy(reservation.semantic_root, request->semantic_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(reservation.before_execution_root, request->before_execution_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  status = request->evidence->reserve(request->evidence->context, &reservation);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (!session_entry->semantic_root_bound) {
+    memcpy(session_entry->semantic_root, request->semantic_root,
+           POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+    session_entry->semantic_root_bound = 1;
+  }
+  session_entry->consumed_nonces[nonce_index] = request->nonce;
+  session_entry->consumed_nonce_used[nonce_index] = 1;
+  ++session_entry->consumed_nonce_count;
+  poo_flow_runtime_v0_adapter_invocation invocation = {0};
+  invocation.struct_size = sizeof(invocation);
+  invocation.arena = request->arena;
+  invocation.lease = request->lease;
+  invocation.arena_generation = request->arena_generation;
+  invocation.first_sequence = request->first_sequence;
+  invocation.last_sequence = request->last_sequence;
+  invocation.headers = &session_entry->pending[first_event].header;
+  invocation.header_stride = sizeof(*session_entry->pending);
+  invocation.item_count = request->last_sequence - request->first_sequence + 1u;
+  invocation.payload = arena_entry->arena_ptr;
+  invocation.payload_capacity = arena_entry->arena_capacity;
+  poo_flow_runtime_v0_adapter_result adapter_result = {0};
+  adapter_result.struct_size = sizeof(adapter_result);
+  poo_flow_runtime_v0_status adapter_status = request->adapter->execute(
+      request->adapter->context, &invocation, &adapter_result);
+  uint32_t outcome = POO_FLOW_RUNTIME_V0_MEDIATION_INDETERMINATE;
+  if (adapter_status == POO_FLOW_RUNTIME_V0_OK &&
+      adapter_result.struct_size == sizeof(adapter_result) &&
+      adapter_result.reserved0 == 0 &&
+      adapter_result.adapter_status == POO_FLOW_RUNTIME_V0_OK &&
+      adapter_result.outcome == POO_FLOW_RUNTIME_V0_MEDIATION_COMMITTED) {
+    outcome = POO_FLOW_RUNTIME_V0_MEDIATION_COMMITTED;
+    adapter_status = adapter_result.adapter_status;
+  } else if (adapter_status == POO_FLOW_RUNTIME_V0_OK &&
+             (adapter_result.struct_size != sizeof(adapter_result) ||
+              adapter_result.reserved0 != 0 ||
+              adapter_result.adapter_status != POO_FLOW_RUNTIME_V0_OK ||
+              adapter_result.outcome !=
+                  POO_FLOW_RUNTIME_V0_MEDIATION_INDETERMINATE)) {
+    adapter_status = POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  } else if (adapter_status == POO_FLOW_RUNTIME_V0_OK) {
+    adapter_status = adapter_result.adapter_status;
+  }
+  if (outcome == POO_FLOW_RUNTIME_V0_MEDIATION_COMMITTED &&
+      request->durability == POO_FLOW_RUNTIME_V0_DURABILITY_BATCHED)
+    outcome = POO_FLOW_RUNTIME_V0_MEDIATION_BUFFERED;
+  poo_flow_runtime_v0_evidence_invocation evidence_invocation = {0};
+  evidence_invocation.struct_size = sizeof(evidence_invocation);
+  evidence_invocation.outcome = outcome;
+  evidence_invocation.adapter_status = adapter_status;
+  evidence_invocation.session = session;
+  evidence_invocation.mediation_sequence = session_entry->mediation_sequence + 1u;
+  evidence_invocation.first_sequence = request->first_sequence;
+  evidence_invocation.last_sequence = request->last_sequence;
+  evidence_invocation.nonce = request->nonce;
+  memcpy(evidence_invocation.semantic_root, request->semantic_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(evidence_invocation.before_execution_root,
+         request->before_execution_root, POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(evidence_invocation.input_digest, adapter_result.input_digest,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(evidence_invocation.observation_digest,
+         adapter_result.observation_digest, POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  poo_flow_runtime_v0_evidence_result evidence_result = {0};
+  evidence_result.struct_size = sizeof(evidence_result);
+  poo_flow_runtime_v0_status evidence_status = request->evidence->finalize(
+      request->evidence->context, &evidence_invocation, &evidence_result);
+  int evidence_valid = evidence_status == POO_FLOW_RUNTIME_V0_OK &&
+      evidence_result.struct_size == sizeof(evidence_result) &&
+      evidence_result.reserved0 == 0 && evidence_result.reserved1 == 0 &&
+      (evidence_result.verification_flags &
+       ~(POO_FLOW_RUNTIME_V0_EVIDENCE_SIGNATURE_VERIFIED |
+         POO_FLOW_RUNTIME_V0_EVIDENCE_INCLUSION_VERIFIED)) == 0;
+  if (evidence_valid &&
+      (outcome == POO_FLOW_RUNTIME_V0_MEDIATION_INDETERMINATE ||
+       outcome == POO_FLOW_RUNTIME_V0_MEDIATION_BUFFERED) &&
+      memcmp(evidence_result.after_execution_root,
+             request->before_execution_root,
+             POO_FLOW_RUNTIME_V0_DIGEST_BYTES) != 0) {
+    evidence_valid = 0;
+    evidence_status = POO_FLOW_RUNTIME_V0_TOKEN_BINDING_MISMATCH;
+  }
+  if (!evidence_valid) {
+    outcome = POO_FLOW_RUNTIME_V0_MEDIATION_INDETERMINATE;
+    if (evidence_status == POO_FLOW_RUNTIME_V0_OK)
+      evidence_status = POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  } else if (outcome == POO_FLOW_RUNTIME_V0_MEDIATION_COMMITTED) {
+    memcpy(session_entry->execution_root,
+           evidence_result.after_execution_root,
+           POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  } else if (outcome == POO_FLOW_RUNTIME_V0_MEDIATION_BUFFERED) {
+    staged_leaf *leaf =
+        &session_entry->staged_leaves[session_entry->staged_leaf_count++];
+    leaf->mediation_sequence = evidence_invocation.mediation_sequence;
+    memcpy(leaf->digest, evidence_result.evidence_digest,
+           POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  }
+  ++session_entry->mediation_sequence;
+  result->outcome = outcome;
+  result->adapter_status = adapter_status;
+  result->evidence_status = evidence_status;
+  result->verification_flags = evidence_valid
+      ? evidence_result.verification_flags : 0;
+  result->mediation_sequence = session_entry->mediation_sequence;
+  memcpy(result->execution_root, session_entry->execution_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(result->observation_digest, adapter_result.observation_digest,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  if (evidence_valid) {
+    memcpy(result->evidence_digest, evidence_result.evidence_digest,
+           POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+    memcpy(result->attestation_digest, evidence_result.attestation_digest,
+           POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  }
+  return POO_FLOW_RUNTIME_V0_OK;
+}
+
+poo_flow_runtime_v0_status poo_flow_runtime_v0_batched_flush(
+    poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle session,
+    const poo_flow_runtime_v0_batched_flush_request *request,
+    poo_flow_runtime_v0_batched_flush_result *result) {
+  resource *entry = NULL;
+  poo_flow_runtime_v0_status status = resolve(instance, session, KIND_SESSION,
+                                               &entry);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (request == NULL || result == NULL)
+    return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+  if (request->struct_size != sizeof(*request) || request->reserved0 != 0 ||
+      result->struct_size != sizeof(*result) || result->reserved0 != 0 ||
+      request->evidence == NULL ||
+      request->evidence->struct_size != sizeof(*request->evidence) ||
+      request->evidence->reserved0 != 0 || request->evidence->flush == NULL)
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  if ((entry->capabilities & POO_FLOW_RUNTIME_V0_CAP_BATCHED_EVIDENCE) == 0)
+    return POO_FLOW_RUNTIME_V0_UNSUPPORTED_CAPABILITY;
+  if (entry->state != STATE_OPEN) return POO_FLOW_RUNTIME_V0_INVALID_STATE;
+  if (entry->staged_leaf_count == 0) return POO_FLOW_RUNTIME_V0_INVALID_STATE;
+  if (memcmp(entry->execution_root, request->expected_execution_root,
+             POO_FLOW_RUNTIME_V0_DIGEST_BYTES) != 0)
+    return POO_FLOW_RUNTIME_V0_EXECUTION_ROOT_FORK;
+  poo_flow_runtime_v0_evidence_flush_invocation invocation = {0};
+  invocation.struct_size = sizeof(invocation);
+  invocation.session = session;
+  invocation.first_mediation_sequence =
+      entry->staged_leaves[0].mediation_sequence;
+  invocation.last_mediation_sequence =
+      entry->staged_leaves[entry->staged_leaf_count - 1u].mediation_sequence;
+  invocation.leaf_digests = entry->staged_leaves[0].digest;
+  invocation.leaf_digest_stride = sizeof(staged_leaf);
+  invocation.leaf_count = entry->staged_leaf_count;
+  memcpy(invocation.before_execution_root, entry->execution_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  poo_flow_runtime_v0_evidence_flush_result flushed = {0};
+  flushed.struct_size = sizeof(flushed);
+  status = request->evidence->flush(request->evidence->context, &invocation,
+                                    &flushed);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  if (flushed.struct_size != sizeof(flushed) || flushed.reserved0 != 0 ||
+      flushed.reserved1 != 0 ||
+      (flushed.verification_flags &
+       ~(POO_FLOW_RUNTIME_V0_EVIDENCE_SIGNATURE_VERIFIED |
+         POO_FLOW_RUNTIME_V0_EVIDENCE_INCLUSION_VERIFIED)) != 0)
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  result->leaf_count = entry->staged_leaf_count;
+  result->first_mediation_sequence = invocation.first_mediation_sequence;
+  result->last_mediation_sequence = invocation.last_mediation_sequence;
+  result->evidence_status = POO_FLOW_RUNTIME_V0_OK;
+  result->verification_flags = flushed.verification_flags;
+  memcpy(entry->execution_root, flushed.after_execution_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(result->execution_root, entry->execution_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(result->batch_root, flushed.batch_root,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(result->evidence_digest, flushed.evidence_digest,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memcpy(result->attestation_digest, flushed.attestation_digest,
+         POO_FLOW_RUNTIME_V0_DIGEST_BYTES);
+  memset(entry->staged_leaves, 0, sizeof(entry->staged_leaves));
+  entry->staged_leaf_count = 0;
+  return POO_FLOW_RUNTIME_V0_OK;
+}
+
 poo_flow_runtime_v0_status poo_flow_runtime_v0_arena_recycle(
     poo_flow_runtime_v0_handle instance, poo_flow_runtime_v0_handle arena,
     uint64_t expected_generation, uint64_t next_generation) {
@@ -763,7 +1164,10 @@ const char *poo_flow_runtime_v0_status_name(poo_flow_runtime_v0_status status) {
     "stale-handle", "cross-instance-handle", "already-released",
     "invalid-state", "bundle-identity-mismatch", "checkpoint-incompatible",
     "cancelled", "outstanding-work", "allocation-failure", "internal-invariant",
-    "duplicate-accepted", "payload-bounds", "stale-generation", "arena-busy"
+    "duplicate-accepted", "payload-bounds", "stale-generation", "arena-busy",
+    "token-replay", "execution-root-fork", "token-binding-mismatch",
+    "diagnostic-cannot-execute"
   };
-  return status <= POO_FLOW_RUNTIME_V0_ARENA_BUSY ? names[status] : "unknown";
+  return status <= POO_FLOW_RUNTIME_V0_DIAGNOSTIC_CANNOT_EXECUTE
+      ? names[status] : "unknown";
 }

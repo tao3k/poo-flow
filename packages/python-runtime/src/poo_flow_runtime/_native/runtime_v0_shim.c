@@ -20,6 +20,16 @@ typedef void *poo_flow_library_handle;
 #endif
 
 typedef struct {
+  uint64_t mediation_sequence;
+  uint64_t first_sequence;
+  uint64_t last_sequence;
+  uint64_t nonce_high;
+  uint64_t nonce_low;
+  uint8_t semantic_root[32];
+  uint8_t before_execution_root[32];
+} poo_flow_python_runtime_v0_evidence_reservation;
+
+typedef struct {
   uint32_t status;
   uint16_t abi_major;
   uint16_t abi_minor;
@@ -50,6 +60,9 @@ typedef poo_flow_runtime_v0_status (*session_close_fn)(
     poo_flow_runtime_v0_handle, poo_flow_runtime_v0_handle, uint32_t);
 typedef poo_flow_runtime_v0_status (*session_release_fn)(
     poo_flow_runtime_v0_handle, poo_flow_runtime_v0_handle);
+typedef poo_flow_runtime_v0_status (*session_reconcile_evidence_fn)(
+    poo_flow_runtime_v0_handle, poo_flow_runtime_v0_handle,
+    const poo_flow_runtime_v0_evidence_reconciliation *);
 typedef poo_flow_runtime_v0_status (*arena_register_fn)(
     poo_flow_runtime_v0_handle, const poo_flow_runtime_v0_arena_descriptor *,
     poo_flow_runtime_v0_handle *);
@@ -69,6 +82,14 @@ typedef poo_flow_runtime_v0_status (*submit_batch_fn)(
 typedef poo_flow_runtime_v0_status (*batch_ack_fn)(
     poo_flow_runtime_v0_handle, poo_flow_runtime_v0_handle,
     poo_flow_runtime_v0_handle);
+typedef poo_flow_runtime_v0_status (*strict_mediate_fn)(
+    poo_flow_runtime_v0_handle, poo_flow_runtime_v0_handle,
+    const poo_flow_runtime_v0_strict_mediation_request *,
+    poo_flow_runtime_v0_strict_mediation_result *);
+typedef poo_flow_runtime_v0_status (*batched_flush_fn)(
+    poo_flow_runtime_v0_handle, poo_flow_runtime_v0_handle,
+    const poo_flow_runtime_v0_batched_flush_request *,
+    poo_flow_runtime_v0_batched_flush_result *);
 
 typedef struct {
   uint16_t layout_version;
@@ -99,7 +120,80 @@ typedef struct {
   uint64_t accepted_count;
   uint64_t rejected_count;
   uint64_t accepted_watermark;
+  uint32_t mediation_outcome;
+  uint32_t adapter_status;
+  uint32_t evidence_status;
+  uint32_t verification_flags;
+  uint64_t mediation_sequence;
+  uint8_t execution_root[32];
+  uint8_t observation_digest[32];
+  uint8_t evidence_digest[32];
+  uint8_t attestation_digest[32];
 } poo_flow_python_runtime_v0_batch_result;
+
+typedef struct {
+  uint32_t durability;
+  uint32_t outcome;
+  uint64_t bundle_epoch;
+  uint64_t nonce_high;
+  uint64_t nonce_low;
+  uint8_t semantic_root[32];
+  uint8_t before_execution_root[32];
+  uint8_t after_execution_root[32];
+  uint8_t input_digest[32];
+  uint8_t observation_digest[32];
+} poo_flow_python_runtime_v0_mediation;
+
+typedef struct {
+  uint32_t outcome;
+  uint32_t adapter_status;
+  uint64_t mediation_sequence;
+  uint64_t first_sequence;
+  uint64_t last_sequence;
+  uint64_t nonce_high;
+  uint64_t nonce_low;
+  uint8_t semantic_root[32];
+  uint8_t before_execution_root[32];
+  uint8_t input_digest[32];
+  uint8_t observation_digest[32];
+} poo_flow_python_runtime_v0_evidence_invocation;
+
+typedef struct {
+  uint32_t verification_flags;
+  uint8_t after_execution_root[32];
+  uint8_t evidence_digest[32];
+  uint8_t attestation_digest[32];
+} poo_flow_python_runtime_v0_evidence_result;
+
+typedef uint32_t (*poo_flow_python_runtime_v0_evidence_reserve_fn)(
+    void *context,
+    const poo_flow_python_runtime_v0_evidence_reservation *reservation);
+
+typedef uint32_t (*poo_flow_python_runtime_v0_evidence_finalize_fn)(
+    void *context,
+    const poo_flow_python_runtime_v0_evidence_invocation *invocation,
+    poo_flow_python_runtime_v0_evidence_result *result);
+
+typedef struct {
+  uint64_t first_mediation_sequence;
+  uint64_t last_mediation_sequence;
+  const uint8_t *leaf_digests;
+  uint64_t leaf_count;
+  uint8_t before_execution_root[32];
+} poo_flow_python_runtime_v0_evidence_flush_invocation;
+
+typedef struct {
+  uint32_t verification_flags;
+  uint8_t after_execution_root[32];
+  uint8_t batch_root[32];
+  uint8_t evidence_digest[32];
+  uint8_t attestation_digest[32];
+} poo_flow_python_runtime_v0_evidence_flush_result;
+
+typedef uint32_t (*poo_flow_python_runtime_v0_evidence_flush_fn)(
+    void *context,
+    const poo_flow_python_runtime_v0_evidence_flush_invocation *invocation,
+    poo_flow_python_runtime_v0_evidence_flush_result *result);
 
 typedef struct poo_flow_python_runtime_v0_context {
   poo_flow_library_handle library;
@@ -108,6 +202,7 @@ typedef struct poo_flow_python_runtime_v0_context {
   bundle_release_fn bundle_release;
   session_close_fn session_close;
   session_release_fn session_release;
+  session_reconcile_evidence_fn session_reconcile_evidence;
   arena_register_fn arena_register;
   arena_release_fn arena_release;
   arena_recycle_fn arena_recycle;
@@ -115,6 +210,8 @@ typedef struct poo_flow_python_runtime_v0_context {
   poll_batch_fn poll_batch;
   submit_batch_fn submit_batch;
   batch_ack_fn batch_ack;
+  strict_mediate_fn strict_mediate;
+  batched_flush_fn batched_flush;
   poo_flow_runtime_v0_handle instance;
   poo_flow_runtime_v0_handle profile;
   poo_flow_runtime_v0_handle bundle;
@@ -124,6 +221,116 @@ typedef struct poo_flow_python_runtime_v0_context {
   uint64_t arena_generation;
   int arena_alive;
 } poo_flow_python_runtime_v0_context;
+
+typedef struct {
+  poo_flow_python_runtime_v0_context *runtime;
+  const poo_flow_runtime_v0_submit_request *request;
+  poo_flow_runtime_v0_submit_result *submitted;
+  const poo_flow_python_runtime_v0_mediation *mediation;
+  poo_flow_python_runtime_v0_batch_result *batch;
+} poo_flow_python_runtime_v0_adapter_context;
+
+typedef struct {
+  poo_flow_python_runtime_v0_evidence_reserve_fn reserve;
+  poo_flow_python_runtime_v0_evidence_finalize_fn finalize;
+  poo_flow_python_runtime_v0_evidence_flush_fn flush;
+  void *context;
+} poo_flow_python_runtime_v0_evidence_context;
+
+static poo_flow_runtime_v0_status python_runtime_adapter_execute(
+    void *opaque, const poo_flow_runtime_v0_adapter_invocation *invocation,
+    poo_flow_runtime_v0_adapter_result *result) {
+  poo_flow_python_runtime_v0_adapter_context *context = opaque;
+  if (invocation == NULL || result == NULL ||
+      invocation->struct_size != sizeof(*invocation))
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  poo_flow_runtime_v0_status status = context->runtime->submit_batch(
+      context->runtime->instance, context->runtime->session, context->request,
+      context->submitted);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  context->batch->accepted_count = context->submitted->accepted_count;
+  context->batch->rejected_count = context->submitted->rejected_count;
+  context->batch->accepted_watermark = context->submitted->accepted_watermark;
+  result->outcome = context->mediation->outcome;
+  result->adapter_status = POO_FLOW_RUNTIME_V0_OK;
+  memcpy(result->input_digest, context->mediation->input_digest, 32);
+  memcpy(result->observation_digest, context->mediation->observation_digest, 32);
+  return POO_FLOW_RUNTIME_V0_OK;
+}
+
+static poo_flow_runtime_v0_status python_runtime_evidence_reserve(
+    void *opaque, const poo_flow_runtime_v0_evidence_reservation *reservation) {
+  poo_flow_python_runtime_v0_evidence_context *context = opaque;
+  poo_flow_python_runtime_v0_evidence_reservation projected = {0};
+  projected.mediation_sequence = reservation->mediation_sequence;
+  projected.first_sequence = reservation->first_sequence;
+  projected.last_sequence = reservation->last_sequence;
+  projected.nonce_high = reservation->nonce.high;
+  projected.nonce_low = reservation->nonce.low;
+  memcpy(projected.semantic_root, reservation->semantic_root, 32);
+  memcpy(projected.before_execution_root,
+         reservation->before_execution_root, 32);
+  return context->reserve(context->context, &projected);
+}
+
+static poo_flow_runtime_v0_status python_runtime_evidence_finalize(
+    void *opaque, const poo_flow_runtime_v0_evidence_invocation *invocation,
+    poo_flow_runtime_v0_evidence_result *result) {
+  poo_flow_python_runtime_v0_evidence_context *context = opaque;
+  poo_flow_python_runtime_v0_evidence_invocation projected = {0};
+  poo_flow_python_runtime_v0_evidence_result committed = {0};
+  projected.outcome = invocation->outcome;
+  projected.adapter_status = invocation->adapter_status;
+  projected.mediation_sequence = invocation->mediation_sequence;
+  projected.first_sequence = invocation->first_sequence;
+  projected.last_sequence = invocation->last_sequence;
+  projected.nonce_high = invocation->nonce.high;
+  projected.nonce_low = invocation->nonce.low;
+  memcpy(projected.semantic_root, invocation->semantic_root, 32);
+  memcpy(projected.before_execution_root,
+         invocation->before_execution_root, 32);
+  memcpy(projected.input_digest, invocation->input_digest, 32);
+  memcpy(projected.observation_digest, invocation->observation_digest, 32);
+  poo_flow_runtime_v0_status status = context->finalize(
+      context->context, &projected, &committed);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  result->verification_flags = committed.verification_flags;
+  memcpy(result->after_execution_root, committed.after_execution_root, 32);
+  memcpy(result->evidence_digest, committed.evidence_digest, 32);
+  memcpy(result->attestation_digest, committed.attestation_digest, 32);
+  return POO_FLOW_RUNTIME_V0_OK;
+}
+
+static poo_flow_runtime_v0_status python_runtime_evidence_flush(
+    void *opaque, const poo_flow_runtime_v0_evidence_flush_invocation *invocation,
+    poo_flow_runtime_v0_evidence_flush_result *result) {
+  poo_flow_python_runtime_v0_evidence_context *context = opaque;
+  if (context->flush == NULL || invocation->leaf_count > SIZE_MAX / 32u)
+    return POO_FLOW_RUNTIME_V0_MALFORMED_DESCRIPTOR;
+  size_t bytes = (size_t)invocation->leaf_count * 32u;
+  uint8_t *digests = malloc(bytes);
+  if (digests == NULL) return POO_FLOW_RUNTIME_V0_ALLOCATION_FAILURE;
+  for (uint64_t i = 0; i < invocation->leaf_count; ++i)
+    memcpy(digests + i * 32u,
+           invocation->leaf_digests + i * invocation->leaf_digest_stride, 32);
+  poo_flow_python_runtime_v0_evidence_flush_invocation projected = {0};
+  projected.first_mediation_sequence = invocation->first_mediation_sequence;
+  projected.last_mediation_sequence = invocation->last_mediation_sequence;
+  projected.leaf_digests = digests;
+  projected.leaf_count = invocation->leaf_count;
+  memcpy(projected.before_execution_root, invocation->before_execution_root, 32);
+  poo_flow_python_runtime_v0_evidence_flush_result committed = {0};
+  poo_flow_runtime_v0_status status = context->flush(
+      context->context, &projected, &committed);
+  free(digests);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  result->verification_flags = committed.verification_flags;
+  memcpy(result->after_execution_root, committed.after_execution_root, 32);
+  memcpy(result->batch_root, committed.batch_root, 32);
+  memcpy(result->evidence_digest, committed.evidence_digest, 32);
+  memcpy(result->attestation_digest, committed.attestation_digest, 32);
+  return POO_FLOW_RUNTIME_V0_OK;
+}
 
 static void health_error(poo_flow_python_runtime_v0_health *health,
                          const char *message) {
@@ -240,7 +447,8 @@ poo_flow_python_runtime_v0_context *poo_flow_python_runtime_v0_open(
     size_t runtime_identity_length, uint32_t digest_algorithm,
     const uint8_t *bundle_digest, size_t bundle_digest_length,
     uint64_t bundle_epoch, const uint8_t *canonical_packet,
-    size_t canonical_packet_length, poo_flow_python_runtime_v0_health *health) {
+    size_t canonical_packet_length, uint32_t enable_batched,
+    poo_flow_python_runtime_v0_health *health) {
   if (library_path == NULL || bundle_schema == NULL || runtime_identity == NULL ||
       bundle_digest == NULL || bundle_digest_length != POO_FLOW_RUNTIME_V0_DIGEST_BYTES ||
       canonical_packet == NULL || health == NULL) return NULL;
@@ -275,13 +483,16 @@ poo_flow_python_runtime_v0_context *poo_flow_python_runtime_v0_open(
       !LOAD_CONTEXT_FIELD(bundle_release) ||
       !LOAD_CONTEXT_FIELD(session_close) ||
       !LOAD_CONTEXT_FIELD(session_release) ||
+      !LOAD_CONTEXT_FIELD(session_reconcile_evidence) ||
       !LOAD_CONTEXT_FIELD(arena_register) ||
       !LOAD_CONTEXT_FIELD(arena_release) ||
       !LOAD_CONTEXT_FIELD(arena_recycle) ||
       !LOAD_CONTEXT_FIELD(publish_batch) ||
       !LOAD_CONTEXT_FIELD(poll_batch) ||
       !LOAD_CONTEXT_FIELD(submit_batch) ||
-      !LOAD_CONTEXT_FIELD(batch_ack)) {
+      !LOAD_CONTEXT_FIELD(batch_ack) ||
+      !LOAD_CONTEXT_FIELD(strict_mediate) ||
+      !LOAD_CONTEXT_FIELD(batched_flush)) {
     POO_FLOW_LIBRARY_CLOSE(context->library);
     free(context);
     return NULL;
@@ -296,6 +507,8 @@ poo_flow_python_runtime_v0_context *poo_flow_python_runtime_v0_open(
   request.abi_minor = POO_FLOW_RUNTIME_V0_ABI_MINOR;
   request.required_capabilities = POO_FLOW_RUNTIME_V0_CAP_CONTROL |
       POO_FLOW_RUNTIME_V0_CAP_HOT_BATCH | POO_FLOW_RUNTIME_V0_CAP_CALLER_ARENA;
+  if (enable_batched)
+    request.required_capabilities |= POO_FLOW_RUNTIME_V0_CAP_BATCHED_EVIDENCE;
   request.bundle_schema.ptr = bundle_schema;
   request.bundle_schema.len = bundle_schema_length;
   request.runtime_identity.ptr = runtime_identity;
@@ -341,6 +554,75 @@ fail_instance:
   POO_FLOW_LIBRARY_CLOSE(context->library);
   free(context);
   return NULL;
+}
+
+uint32_t poo_flow_python_runtime_v0_reconcile_evidence(
+    poo_flow_python_runtime_v0_context *context,
+    uint64_t mediation_sequence, uint64_t runtime_sequence,
+    const uint64_t *nonce_high, const uint64_t *nonce_low,
+    uint64_t nonce_count, const uint64_t *staged_mediation_sequences,
+    const uint8_t *staged_leaf_digests, uint64_t staged_leaf_count,
+    const uint8_t *semantic_root,
+    const uint8_t *execution_root) {
+  if (context == NULL || semantic_root == NULL || execution_root == NULL ||
+      (nonce_count != 0 && (nonce_high == NULL || nonce_low == NULL)))
+    return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+  poo_flow_runtime_v0_compact_id *nonces = NULL;
+  if (nonce_count != 0) {
+    nonces = calloc((size_t)nonce_count, sizeof(*nonces));
+    if (nonces == NULL) return POO_FLOW_RUNTIME_V0_ALLOCATION_FAILURE;
+    for (uint64_t i = 0; i < nonce_count; ++i) {
+      nonces[i].high = nonce_high[i];
+      nonces[i].low = nonce_low[i];
+    }
+  }
+  poo_flow_runtime_v0_evidence_reconciliation reconciliation = {0};
+  reconciliation.struct_size = sizeof(reconciliation);
+  reconciliation.mediation_sequence = mediation_sequence;
+  reconciliation.runtime_sequence = runtime_sequence;
+  reconciliation.consumed_nonces = nonces;
+  reconciliation.consumed_nonce_count = nonce_count;
+  reconciliation.staged_mediation_sequences = staged_mediation_sequences;
+  reconciliation.staged_leaf_digests = staged_leaf_digests;
+  reconciliation.staged_leaf_digest_stride = 32;
+  reconciliation.staged_leaf_count = staged_leaf_count;
+  memcpy(reconciliation.semantic_root, semantic_root, 32);
+  memcpy(reconciliation.execution_root, execution_root, 32);
+  poo_flow_runtime_v0_status status = context->session_reconcile_evidence(
+      context->instance, context->session, &reconciliation);
+  free(nonces);
+  return status;
+}
+
+uint32_t poo_flow_python_runtime_v0_flush_batched(
+    poo_flow_python_runtime_v0_context *context,
+    const uint8_t *expected_execution_root,
+    poo_flow_python_runtime_v0_evidence_flush_fn evidence_flush,
+    void *evidence_context,
+    poo_flow_python_runtime_v0_evidence_flush_result *result) {
+  if (context == NULL || expected_execution_root == NULL ||
+      evidence_flush == NULL || result == NULL)
+    return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+  poo_flow_python_runtime_v0_evidence_context sink_context = {
+      NULL, NULL, evidence_flush, evidence_context};
+  poo_flow_runtime_v0_evidence_vtable evidence = {
+      sizeof(evidence), 0, &sink_context, NULL, NULL,
+      python_runtime_evidence_flush};
+  poo_flow_runtime_v0_batched_flush_request request = {0};
+  request.struct_size = sizeof(request);
+  request.evidence = &evidence;
+  memcpy(request.expected_execution_root, expected_execution_root, 32);
+  poo_flow_runtime_v0_batched_flush_result flushed = {0};
+  flushed.struct_size = sizeof(flushed);
+  poo_flow_runtime_v0_status status = context->batched_flush(
+      context->instance, context->session, &request, &flushed);
+  if (status != POO_FLOW_RUNTIME_V0_OK) return status;
+  result->verification_flags = flushed.verification_flags;
+  memcpy(result->after_execution_root, flushed.execution_root, 32);
+  memcpy(result->batch_root, flushed.batch_root, 32);
+  memcpy(result->evidence_digest, flushed.evidence_digest, 32);
+  memcpy(result->attestation_digest, flushed.attestation_digest, 32);
+  return POO_FLOW_RUNTIME_V0_OK;
 }
 
 uint32_t poo_flow_python_runtime_v0_arena_register(
@@ -391,9 +673,16 @@ uint32_t poo_flow_python_runtime_v0_roundtrip(
     poo_flow_python_runtime_v0_event *events, uint64_t event_count,
     uint32_t *item_statuses, uint64_t item_status_capacity,
     uint8_t *accepted_bitmap, uint64_t accepted_bitmap_bytes,
+    const poo_flow_python_runtime_v0_mediation *mediation,
+    poo_flow_python_runtime_v0_evidence_reserve_fn evidence_reserve,
+    poo_flow_python_runtime_v0_evidence_finalize_fn evidence_finalize,
+    poo_flow_python_runtime_v0_evidence_flush_fn evidence_flush,
+    void *evidence_context,
     poo_flow_python_runtime_v0_batch_result *result) {
   if (context == NULL || !context->arena_alive || events == NULL ||
-      result == NULL) return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
+      mediation == NULL || evidence_reserve == NULL ||
+      evidence_finalize == NULL || result == NULL)
+    return POO_FLOW_RUNTIME_V0_INVALID_ARGUMENT;
   memset(result, 0, sizeof(*result));
   poo_flow_runtime_v0_event_header *headers =
       (poo_flow_runtime_v0_event_header *)events;
@@ -440,12 +729,48 @@ uint32_t poo_flow_python_runtime_v0_roundtrip(
   submit.accepted_bitmap_bytes = accepted_bitmap_bytes;
   poo_flow_runtime_v0_submit_result submitted = {0};
   submitted.struct_size = sizeof(submitted);
-  status = context->submit_batch(context->instance, context->session, &submit,
-                                 &submitted);
-  if (status != POO_FLOW_RUNTIME_V0_OK) goto done;
-  result->accepted_count = submitted.accepted_count;
-  result->rejected_count = submitted.rejected_count;
-  result->accepted_watermark = submitted.accepted_watermark;
+  poo_flow_runtime_v0_strict_mediation_request mediation_request = {0};
+  mediation_request.struct_size = sizeof(mediation_request);
+  mediation_request.durability = mediation->durability;
+  mediation_request.arena = context->arena;
+  mediation_request.lease = polled.lease;
+  mediation_request.arena_generation = context->arena_generation;
+  mediation_request.bundle_epoch = mediation->bundle_epoch;
+  mediation_request.first_sequence = polled.first_sequence;
+  mediation_request.last_sequence = polled.last_sequence;
+  mediation_request.nonce.high = mediation->nonce_high;
+  mediation_request.nonce.low = mediation->nonce_low;
+  memcpy(mediation_request.semantic_root, mediation->semantic_root, 32);
+  memcpy(mediation_request.before_execution_root,
+         mediation->before_execution_root, 32);
+  poo_flow_python_runtime_v0_adapter_context adapter_context = {
+      context, &submit, &submitted, mediation, result};
+  poo_flow_runtime_v0_adapter_vtable adapter = {
+      sizeof(adapter), 0, &adapter_context, python_runtime_adapter_execute};
+  mediation_request.adapter = &adapter;
+  poo_flow_python_runtime_v0_evidence_context sink_context = {
+      evidence_reserve, evidence_finalize, evidence_flush, evidence_context};
+  poo_flow_runtime_v0_evidence_vtable evidence = {
+      sizeof(evidence), 0, &sink_context, python_runtime_evidence_reserve,
+      python_runtime_evidence_finalize, python_runtime_evidence_flush};
+  mediation_request.evidence = &evidence;
+  poo_flow_runtime_v0_strict_mediation_result mediation_result = {0};
+  mediation_result.struct_size = sizeof(mediation_result);
+  status = context->strict_mediate(context->instance, context->session,
+                                   &mediation_request, &mediation_result);
+  if (status != POO_FLOW_RUNTIME_V0_OK) {
+    context->batch_ack(context->instance, context->session, polled.lease);
+    goto done;
+  }
+  result->mediation_sequence = mediation_result.mediation_sequence;
+  result->mediation_outcome = mediation_result.outcome;
+  result->adapter_status = mediation_result.adapter_status;
+  result->evidence_status = mediation_result.evidence_status;
+  result->verification_flags = mediation_result.verification_flags;
+  memcpy(result->execution_root, mediation_result.execution_root, 32);
+  memcpy(result->observation_digest, mediation_result.observation_digest, 32);
+  memcpy(result->evidence_digest, mediation_result.evidence_digest, 32);
+  memcpy(result->attestation_digest, mediation_result.attestation_digest, 32);
   status = context->batch_ack(context->instance, context->session, polled.lease);
 done:
   result->status = status;

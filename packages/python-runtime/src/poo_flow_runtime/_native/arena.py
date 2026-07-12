@@ -2,36 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from types import TracebackType
 from typing import Self
 
 from .errors import NativeRuntimeError
-
-
-@dataclass(frozen=True, slots=True)
-class NativeEvent:
-    sequence: int
-    event_kind: int = 1
-    flags: int = 0
-    event_identity: tuple[int, int] = (0, 0)
-    correlation_identity: tuple[int, int] = (0, 0)
-    authorization_identity: tuple[int, int] = (0, 0)
-    payload_offset: int = 0
-    payload_length: int = 0
-    deadline_mono_ns: int = 0
-    required_evidence_bits: int = 0
-
-
-@dataclass(frozen=True, slots=True)
-class NativeBatchResult:
-    published_count: int
-    produced_count: int
-    accepted_count: int
-    rejected_count: int
-    accepted_watermark: int
-    item_statuses: tuple[int, ...]
-    accepted_bitmap: bytes
+from .evidence import NativeEvidenceSink, build_native_evidence_callbacks
+from .arena_model import NativeBatchResult, NativeEvent, NativeMediation
 
 
 class NativeArena:
@@ -77,7 +53,12 @@ class NativeArena:
     def closed(self) -> bool:
         return self._closed
 
-    def roundtrip(self, events: tuple[NativeEvent, ...]) -> NativeBatchResult:
+    def roundtrip(
+        self,
+        events: tuple[NativeEvent, ...],
+        mediation: NativeMediation,
+        evidence_sink: NativeEvidenceSink,
+    ) -> NativeBatchResult:
         if self._closed:
             raise NativeRuntimeError("native arena is closed")
         if not events:
@@ -104,6 +85,29 @@ class NativeArena:
         bitmap_bytes = len(events) // 8 + (len(events) % 8 != 0)
         bitmap = ffi.new("uint8_t[]", bitmap_bytes)
         result = ffi.new("poo_flow_python_runtime_v0_batch_result *")
+        native_mediation = ffi.new("poo_flow_python_runtime_v0_mediation *")
+        native_mediation.durability = mediation.durability
+        native_mediation.outcome = mediation.outcome
+        native_mediation.bundle_epoch = self._session.bundle_epoch
+        native_mediation.nonce_high, native_mediation.nonce_low = mediation.nonce
+        ffi.memmove(native_mediation.semantic_root, mediation.semantic_root, 32)
+        ffi.memmove(
+            native_mediation.before_execution_root,
+            mediation.before_execution_root,
+            32,
+        )
+        ffi.memmove(
+            native_mediation.after_execution_root,
+            mediation.after_execution_root,
+            32,
+        )
+        ffi.memmove(native_mediation.input_digest, mediation.input_digest, 32)
+        ffi.memmove(
+            native_mediation.observation_digest, mediation.observation_digest, 32
+        )
+        native_evidence_reserve, native_evidence_finalize, native_evidence_flush = (
+            build_native_evidence_callbacks(ffi, evidence_sink)
+        )
         status = int(
             self._session._lib.poo_flow_python_runtime_v0_roundtrip(
                 self._session._context,
@@ -113,6 +117,11 @@ class NativeArena:
                 len(events),
                 bitmap,
                 bitmap_bytes,
+                native_mediation,
+                native_evidence_reserve,
+                native_evidence_finalize,
+                native_evidence_flush,
+                ffi.NULL,
                 result,
             )
         )
@@ -126,6 +135,15 @@ class NativeArena:
             int(result.accepted_watermark),
             tuple(int(statuses[index]) for index in range(len(events))),
             bytes(ffi.buffer(bitmap, bitmap_bytes)),
+            int(result.mediation_outcome),
+            int(result.adapter_status),
+            int(result.evidence_status),
+            int(result.verification_flags),
+            int(result.mediation_sequence),
+            bytes(ffi.buffer(result.execution_root, 32)),
+            bytes(ffi.buffer(result.observation_digest, 32)),
+            bytes(ffi.buffer(result.evidence_digest, 32)),
+            bytes(ffi.buffer(result.attestation_digest, 32)),
         )
 
     def recycle(self, next_generation: int) -> None:

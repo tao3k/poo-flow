@@ -5,10 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from .errors import NativeRuntimeError, NativeRuntimeLoadError
 from .loader import BUNDLE_SCHEMA, NativeRuntimeHealth, native_library_path
+
+if TYPE_CHECKING:
+    from ..evidence_model import AuthorizedEffectEvidenceReconciliation
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,12 +37,14 @@ class NativeRuntimeSession:
         bundle: NativeBundleDescriptor,
         *,
         library_path: str | Path | None = None,
+        batched_evidence: bool = False,
     ) -> None:
         from ._runtime_v0_cffi import ffi, lib
 
         self._ffi = ffi
         self._lib = lib
         self._closed = False
+        self.bundle_epoch = bundle.epoch
         self._library_path = (
             Path(library_path).resolve()
             if library_path is not None
@@ -63,6 +68,7 @@ class NativeRuntimeSession:
             bundle.epoch,
             packet,
             len(bundle.canonical_packet),
+            int(batched_evidence),
             health,
         )
         if self._context == ffi.NULL:
@@ -100,6 +106,81 @@ class NativeRuntimeSession:
         from .arena import NativeArena
 
         return NativeArena(self, buffer, generation=generation)
+
+    def reconcile_evidence(
+        self, reconciliation: AuthorizedEffectEvidenceReconciliation
+    ) -> None:
+        if self._closed:
+            raise NativeRuntimeError("native runtime session is closed")
+        ffi = self._ffi
+        nonce_count = len(reconciliation.consumed_nonces)
+        nonce_high = ffi.new("uint64_t[]", nonce_count)
+        nonce_low = ffi.new("uint64_t[]", nonce_count)
+        for index, (high, low) in enumerate(reconciliation.consumed_nonces):
+            nonce_high[index] = high
+            nonce_low[index] = low
+        semantic_root = ffi.new("uint8_t[]", reconciliation.semantic_root)
+        execution_root = ffi.new("uint8_t[]", reconciliation.execution_root)
+        staged_count = len(reconciliation.staged_mediation_sequences)
+        if staged_count != len(reconciliation.staged_leaf_digests):
+            raise ValueError("staged evidence reconciliation shape mismatch")
+        staged_sequences = ffi.new(
+            "uint64_t[]", reconciliation.staged_mediation_sequences
+        )
+        staged_digests = ffi.new("uint8_t[]", b"".join(
+            reconciliation.staged_leaf_digests
+        ))
+        status = int(
+            self._lib.poo_flow_python_runtime_v0_reconcile_evidence(
+                self._context,
+                reconciliation.mediation_sequence,
+                reconciliation.runtime_sequence,
+                nonce_high,
+                nonce_low,
+                nonce_count,
+                staged_sequences,
+                staged_digests,
+                staged_count,
+                semantic_root,
+                execution_root,
+            )
+        )
+        if status != 0:
+            raise NativeRuntimeError(
+                "native evidence reconciliation failed", status=status
+            )
+
+    def flush_batched(self, expected_execution_root: bytes, evidence_sink):
+        if self._closed:
+            raise NativeRuntimeError("native runtime session is closed")
+        if len(expected_execution_root) != 32:
+            raise ValueError("expected execution root must be exactly 32 bytes")
+        from .evidence import (
+            NativeEvidenceFlushCommit,
+            build_native_evidence_callbacks,
+        )
+
+        _, _, native_flush = build_native_evidence_callbacks(
+            self._ffi, evidence_sink
+        )
+        if native_flush == self._ffi.NULL:
+            raise ValueError("Batched evidence sink requires flush callback")
+        expected = self._ffi.new("uint8_t[]", expected_execution_root)
+        result = self._ffi.new(
+            "poo_flow_python_runtime_v0_evidence_flush_result *"
+        )
+        status = int(self._lib.poo_flow_python_runtime_v0_flush_batched(
+            self._context, expected, native_flush, self._ffi.NULL, result
+        ))
+        if status != 0:
+            raise NativeRuntimeError("native Batched flush failed", status=status)
+        return NativeEvidenceFlushCommit(
+            bytes(self._ffi.buffer(result.after_execution_root, 32)),
+            bytes(self._ffi.buffer(result.batch_root, 32)),
+            bytes(self._ffi.buffer(result.evidence_digest, 32)),
+            bytes(self._ffi.buffer(result.attestation_digest, 32)),
+            int(result.verification_flags),
+        )
 
     def __enter__(self) -> Self:
         return self
