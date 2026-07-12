@@ -7,6 +7,8 @@ from pathlib import Path
 
 from .lean_emit import manifest_to_lean
 from .model import canonical_loop_engine_manifest
+from .proof_case_emit import write_generated_artifacts
+from .proof_case_manifest import load_proof_case_schema
 
 
 def _emit_lean(args: argparse.Namespace) -> int:
@@ -20,6 +22,17 @@ def _emit_lean(args: argparse.Namespace) -> int:
     return 0
 
 
+def _emit_proof_case_artifacts(args: argparse.Namespace) -> int:
+    proof_root = Path(args.proof_root).resolve()
+    schema = load_proof_case_schema(proof_root / "proof-case-vector-v1.toml")
+    stale = write_generated_artifacts(proof_root, schema, check=args.check)
+    if args.check and stale:
+        for path in stale:
+            print(f"stale generated proof artifact: {path}")
+        return 1
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="poo-flow-proof")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -28,6 +41,14 @@ def build_parser() -> argparse.ArgumentParser:
     emit_lean.add_argument("--module-name", default="PooFlowProof.Generated.LoopEngine")
     emit_lean.add_argument("--output")
     emit_lean.set_defaults(func=_emit_lean)
+
+    emit_proof_case = subparsers.add_parser("emit-proof-case-artifacts")
+    emit_proof_case.add_argument(
+        "--proof-root",
+        default=str(Path(__file__).resolve().parents[3]),
+    )
+    emit_proof_case.add_argument("--check", action="store_true")
+    emit_proof_case.set_defaults(func=_emit_proof_case_artifacts)
     return parser
 
 

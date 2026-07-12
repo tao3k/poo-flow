@@ -1,0 +1,197 @@
+schema = "poo-flow-proof-case-vector"
+version = 1
+endianness = "little"
+alignment = 8
+total_size = 424
+
+[[fields]]
+name = "abi_version"
+offset = 0
+width = 4
+kind = "u32"
+
+[[fields]]
+name = "case_kind"
+offset = 4
+width = 4
+kind = "u32"
+
+[[fields]]
+name = "schema_fingerprint"
+offset = 8
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "token_digest"
+offset = 40
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "policy_revision"
+offset = 72
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "effect_digest"
+offset = 104
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "semantic_root"
+offset = 136
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "execution_root"
+offset = 168
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "batch_root"
+offset = 200
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "subject_binding"
+offset = 232
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "resource_binding"
+offset = 264
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "action_binding"
+offset = 296
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "previous_evidence_root"
+offset = 328
+width = 32
+kind = "bytes"
+
+[[fields]]
+name = "nonce"
+offset = 360
+width = 8
+kind = "u64"
+
+[[fields]]
+name = "epoch"
+offset = 368
+width = 8
+kind = "u64"
+
+[[fields]]
+name = "sequence"
+offset = 376
+width = 8
+kind = "u64"
+
+[[fields]]
+name = "required_obligation_mask"
+offset = 384
+width = 8
+kind = "u64"
+
+[[fields]]
+name = "present_obligation_mask"
+offset = 392
+width = 8
+kind = "u64"
+
+[[fields]]
+name = "obligation_count"
+offset = 400
+width = 4
+kind = "u32"
+
+[[fields]]
+name = "mediation_outcome"
+offset = 404
+width = 4
+kind = "u32"
+
+[[fields]]
+name = "durability_profile"
+offset = 408
+width = 4
+kind = "u32"
+
+[[fields]]
+name = "reserved"
+offset = 412
+width = 12
+kind = "bytes"
+
+[[case_kinds]]
+name = "authorized_effect_token"
+tag = 1
+
+[[mediation_outcomes]]
+name = "allow"
+tag = 1
+
+[[mediation_outcomes]]
+name = "deny"
+tag = 2
+
+[[mediation_outcomes]]
+name = "invalid_token"
+tag = 3
+
+[[durability_profiles]]
+name = "strict"
+tag = 1
+
+[[durability_profiles]]
+name = "batched"
+tag = 2
+
+[[durability_profiles]]
+name = "diagnostic"
+tag = 3
+
+[[obligations]]
+name = "policy_revision_bound"
+bit = 0
+
+[[obligations]]
+name = "effect_digest_bound"
+bit = 1
+
+[[obligations]]
+name = "semantic_root_bound"
+bit = 2
+
+[[obligations]]
+name = "execution_root_bound"
+bit = 3
+
+[[obligations]]
+name = "obligation_set_complete"
+bit = 4
+
+[[obligations]]
+name = "nonce_epoch_fresh"
+bit = 5
+
+[[obligations]]
+name = "diagnostic_non_executable"
+bit = 6
+
+[[obligations]]
+name = "l3_chain_complete"
+bit = 7
