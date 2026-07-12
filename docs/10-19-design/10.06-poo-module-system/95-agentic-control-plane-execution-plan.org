@@ -142,7 +142,7 @@ AC-06, AC-08, and the first part of AC-09 may proceed in separate commits after 
 | AC-01 | P0/P1 | first vertical-slice contract and fixtures | AC-00 | planned |
 | AC-02 | P1 | identity, manifest, epoch, canonical digest | AC-01 | planned |
 | AC-03 | P2 | five facet algebras and cross-validation | AC-02 | planned |
-| AC-04 | P2 | read-only shadow projection and difference ledger | AC-03 | planned |
+| AC-04 | P2 | read-only shadow projection and difference ledger | AC-03 | complete |
 | AC-05 | P3 | negotiated C ABI control lane and pure C harness | AC-04 | planned |
 | AC-06 | P3 | batched hot lane, bulk buffers, FFI performance evidence | AC-05 | planned |
 | AC-07 | P3 | production Python CFFI runtime | AC-06 | planned |

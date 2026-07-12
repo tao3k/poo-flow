@@ -6,9 +6,9 @@
         :std/text/hex)
 
 (def +poo-flow-organization-bundle-schema+
-  'poo-flow.organization-bundle.v2)
+  'poo-flow.organization-bundle.draft.3)
 (def +poo-flow-organization-facet-schema+
-  'poo-flow.organization-facet.v1)
+  'poo-flow.organization-facet.draft.3)
 
 (def +poo-flow-organization-bundle-digest-algorithm+ 'sha256)
 
