@@ -153,6 +153,18 @@
          ["scenario-user-interface-profile-library" "t/scenarios/user-interface-profile-library-gate-test.ss"]
          ["scenario-agent-lifecycle-gate" "t/scenarios/agent-lifecycle-gate-test.ss"]
          ["scenario-poo-flow-composition" "t/scenarios/poo-flow-composition-test.ss"]
+         ["scenario-authorized-effect-token" "t/scenarios/authorized-effect-token-test.ss"]
+         ["scenario-batched-merkle-evidence" "t/scenarios/batched-merkle-evidence-test.ss"]
+         ["scenario-canonical-organization-bundle" "t/scenarios/canonical-organization-bundle-test.ss"]
+         ["scenario-crewai-user-composition" "t/scenarios/crewai-user-composition-test.ss"]
+         ["scenario-durable-artifact-policy" "t/scenarios/durable-artifact-policy-test.ss"]
+         ["scenario-langchain-langgraph-core" "t/scenarios/langchain-langgraph-core-test.ss"]
+         ["scenario-organization-bundle-five-facets" "t/scenarios/organization-bundle-five-facets-test.ss"]
+         ["scenario-organization-bundle-kernel" "t/scenarios/organization-bundle-kernel-test.ss"]
+         ["scenario-organization-bundle-runtime-v0-batch" "t/scenarios/organization-bundle-runtime-v0-batch-test.ss"]
+         ["scenario-organization-bundle-runtime-v0" "t/scenarios/organization-bundle-runtime-v0-test.ss"]
+         ["scenario-organization-bundle-shadow" "t/scenarios/organization-bundle-shadow-test.ss"]
+         ["scenario-user-interface-composition" "t/scenarios/user-interface-composition-test.ss"]
          ["scenario-boundary-namespace" "t/boundary-namespace-test.ss"]
          ["scenario-observability-feedback" "t/observability-feedback-test.ss"]
          ["scenario-utilities-contracts" "t/utilities-contracts-test.ss"]
@@ -181,7 +193,7 @@
      scenario-suite-name: "policy-scenarios"
      roots: ["src" "user-interface" "t"]
      policy: #t
-     batch-size: 2
+     batch-size: 1
      max-selected-files: 4
      max-selected-sources: 8
      max-selected-outputs: 8)))

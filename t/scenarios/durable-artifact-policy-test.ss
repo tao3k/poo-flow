@@ -1,10 +1,21 @@
 (import :std/test
+        :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/module-system/durable-artifact-policy
         :poo-flow/src/module-system/profile-composition)
 
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
+
 (def (clause-payload clause)
   (.ref clause 'payload))
+
+(def (stage-clause-payload composition-stage clause-kind)
+  (let loop ((clauses (poo-flow-composition-stage-clauses composition-stage)))
+    (cond
+     ((null? clauses) #f)
+     ((eq? (.ref (car clauses) 'clause-kind) clause-kind)
+      (.ref (car clauses) 'payload))
+     (else (loop (cdr clauses))))))
 
 (def (test-ref row key)
   (let (entry (assoc key row))
@@ -77,7 +88,7 @@
 
 (def artifact-composition
   (use-composition agent-artifacts
-    (use-module artifact
+    (use-module artifact as artifact
       (profile research-report
         :extends report/base
         :scope (session human-handoff publish-channel)
@@ -97,10 +108,10 @@
                        local-first-push-pull
                        ai-vector-search
                        vector-top-k)))
+    (compose (profile artifact research-report)
+             (profile artifact tool-output)
+             (profile artifact turso))
     (stage production
-      (compose (profile artifact research-report)
-               (profile artifact tool-output)
-               (profile artifact turso))
       (graph artifact-lifecycle)
       (loop #:fuel 4 #:exit published)
       (prove artifact-scope-contained
@@ -109,7 +120,7 @@
 
 (def inline-artifact-composition
   (use-composition inline-agent-artifacts
-    (use-module artifact
+    (use-module artifact as artifact
       (profile research-report
         :extends report/base
         :scope (session human-handoff publish-channel)
@@ -120,9 +131,9 @@
         :extends research-report
         :publish (human-approved proof-gated internal-registry)
         :retention (project-retained audit-log)))
+    (compose (profile artifact research-report)
+             (profile artifact internal-report))
     (stage production
-      (compose (profile artifact research-report)
-               (profile artifact internal-report))
       (prove artifact-scope-contained artifact-publish-gated))))
 
 (def report-artifact
@@ -261,22 +272,46 @@
       (check-equal? (poo-flow-durable-artifact-policy-receipt-valid?
                      artifact-policy-receipt)
                     #t)
-      (check-equal? (.ref artifact-policy-receipt 'artifact-id)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'artifact-id)
                     'report/artifact-1)
-      (check-equal? (.ref artifact-policy-receipt 'profile-name)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'profile-name)
                     'research-report)
-      (check-equal? (.ref artifact-policy-receipt 'database-name)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'database-name)
                     'turso)
-      (check-equal? (.ref artifact-policy-receipt 'valid?) #t)
-      (check-equal? (.ref artifact-policy-receipt 'runtime-executed) #f)
-      (check-equal? (.ref artifact-policy-receipt 'source)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'valid?) #t)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'runtime-executed) #f)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'source)
                     'poo-flow.durable.artifact.policy)
-      (check-equal? (.ref artifact-policy-receipt 'diagnostics)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      artifact-policy-receipt)
+                     'diagnostics)
                     '())
       (check-equal? (poo-flow-durable-artifact-policy-receipt-valid?
                      invalid-artifact-policy-receipt)
                     #f)
-      (check-equal? (.ref invalid-artifact-policy-receipt 'diagnostics)
+      (check-equal? (test-ref
+                     (poo-flow-durable-artifact-policy-receipt->alist
+                      invalid-artifact-policy-receipt)
+                     'diagnostics)
                     '(artifact-scope-not-contained-by-profile
                       artifact-storage-not-supported-by-profile
                       artifact-analysis-not-supported-by-profile
@@ -334,11 +369,11 @@
     (test-case "artifact and database profiles feed inline composition syntax"
       (let* ((stages (poo-flow-composition-stages artifact-composition))
              (stage (car stages))
-             (clauses (poo-flow-composition-stage-clauses stage))
-             (compose-payload (clause-payload (list-ref clauses 0)))
-             (graph-payload (clause-payload (list-ref clauses 1)))
-             (loop-payload (clause-payload (list-ref clauses 2)))
-             (prove-payload (clause-payload (list-ref clauses 3))))
+             (compose-payload (poo-flow-composition-profiles
+                               artifact-composition))
+             (graph-payload (stage-clause-payload stage 'graph))
+             (loop-payload (stage-clause-payload stage 'loop))
+             (prove-payload (stage-clause-payload stage 'prove)))
         (check-equal? (poo-flow-composition? artifact-composition) #t)
         (check-equal? (poo-flow-composition-name artifact-composition)
                       'agent-artifacts)
@@ -364,11 +399,8 @@
              (module-object (.ref module-binding 'module))
              (research-profile (.ref module-object 'research-report))
              (internal-profile (.ref module-object 'internal-report))
-             (stage (car (poo-flow-composition-stages
-                          inline-artifact-composition)))
-             (compose-payload (clause-payload
-                               (car (poo-flow-composition-stage-clauses
-                                     stage)))))
+             (compose-payload (poo-flow-composition-profiles
+                               inline-artifact-composition)))
         (check-equal? (poo-flow-composition? inline-artifact-composition) #t)
         (check-equal? (.ref research-profile 'name) 'research-report)
         (check-equal? (.ref research-profile 'source)

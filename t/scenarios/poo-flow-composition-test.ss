@@ -3,8 +3,11 @@
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/test check-equal? test-case test-suite)
+        :gslph/src/testing/memory-profile
         :poo-flow/src/module-system/profile-composition-builders
         :poo-flow/src/module-system/profile-composition-accessors)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 ;; : PooModule
 (def session-module

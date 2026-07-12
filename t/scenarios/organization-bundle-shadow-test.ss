@@ -1,7 +1,10 @@
 (import :clan/poo/object :std/test
+        :gslph/src/testing/memory-profile
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel
         :poo-flow/src/semantic/organization-bundle-shadow)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (shadow-bundle)
   (poo-flow-organization-bundle

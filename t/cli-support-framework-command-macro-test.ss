@@ -11,6 +11,10 @@
 (def (cli-support-command-load!)
   (cli-support-command-record! 'load))
 
+(define-build-options cli-support-command-options
+  load!: cli-support-command-load!
+  make: (lambda () (lambda arguments (cons 'options arguments))))
+
 (define-build-commands
  (cli-support-command-spec!
   cli-support-command-compile!
@@ -39,6 +43,11 @@
       (check-equal? (cli-support-command-clean!) 'clean)
       (check-equal? +cli-support-command-events+
                     '(load load load)))
+    (test-case "loads the package facade before constructing options"
+      (set! +cli-support-command-events+ '())
+      (check-equal? (cli-support-command-options 'release 'verbose)
+                    '(options release verbose))
+      (check-equal? +cli-support-command-events+ '(load)))
     (test-case "standardizes selected test bootstrap and status"
       (set! +cli-support-command-events+ '())
       (check-equal? (cli-support-command-test! '("t/example.ss")) 0)

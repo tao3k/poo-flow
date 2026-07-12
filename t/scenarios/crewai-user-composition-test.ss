@@ -3,9 +3,12 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :std/test check-equal? run-tests! test-case test-suite)
+        :gslph/src/testing/memory-profile
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/profile-composition
         :poo-flow/src/module-system/profile-composition-accessors)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def crewai
   (eval (call-with-input-file "user-interface/profiles/crewai.ss" read)))

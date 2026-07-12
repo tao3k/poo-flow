@@ -132,9 +132,6 @@ jobs:
       - name: Build Gerbil
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
         run: |
-          build_cores() {
-            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
-          }
           mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
           rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
           git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
@@ -147,7 +144,7 @@ jobs:
           echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
           . ./build-env.sh
           for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
-            GERBIL_BUILD_CORES="$(build_cores)" ./src/build.sh "$target"
+            ./src/build.sh "$target"
           done
           ./install.sh
 
@@ -205,9 +202,6 @@ jobs:
           GERBIL_PKG_CACHE_HIT: ${{ steps.gerbil-pkg-cache.outputs.cache-hit }}
         run: |
           set -euo pipefail
-          build_cores() {
-            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
-          }
           reset_stale_package_cache() {
             gxpkg uninstall -f \
               github.com/tao3k/gerbil-scheme-language-project-harness \
@@ -257,7 +251,7 @@ jobs:
             gxpkg link "$pkg" "$src"
           }
           build_package() {
-            GERBIL_BUILD_CORES="$(build_cores)" gxpkg build "$1"
+            gxpkg build "$1"
           }
           install_gerbil_package_dependencies() {
             link_package \
@@ -300,10 +294,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          build_cores() {
-            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
-          }
-          GERBIL_BUILD_CORES="$(build_cores)" gxpkg env ./build.ss compile --release --optimized
+          gxpkg env ./build.ss compile --release --optimized
           test -x .gerbil/bin/poo-flow
           .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
           test -s /tmp/poo-flow-help.txt

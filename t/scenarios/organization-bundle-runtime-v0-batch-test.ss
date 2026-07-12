@@ -1,5 +1,8 @@
 (import :clan/poo/object :std/test
+        :gslph/src/testing/memory-profile
         :poo-flow/src/contract/organization-bundle-runtime-v0-batch)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (id high low) (poo-flow-runtime-v0-compact-id high low))
 

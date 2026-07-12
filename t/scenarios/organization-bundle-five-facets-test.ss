@@ -1,5 +1,8 @@
 (import :clan/poo/object :std/test
+        :gslph/src/testing/memory-profile
         :poo-flow/src/semantic/organization-bundle)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (five-facet-bundle . overrides)
   (let* ((bad-protocol? (memq 'bad-protocol overrides))

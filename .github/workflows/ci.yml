@@ -153,9 +153,6 @@ jobs:
       - name: Build Gerbil
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
         run: |
-          build_cores() {
-            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
-          }
           mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
           rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
           git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
@@ -168,7 +165,7 @@ jobs:
           echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
           . ./build-env.sh
           for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
-            GERBIL_BUILD_CORES="$(build_cores)" ./src/build.sh "$target"
+            ./src/build.sh "$target"
           done
           ./install.sh
 
@@ -253,20 +250,13 @@ jobs:
         run: gxpkg env ./build.ss clean
 
       - name: Build package
-        run: |
-          build_cores() {
-            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
-          }
-          GERBIL_BUILD_CORES="$(build_cores)" gxpkg build
+        run: gxpkg build
 
       - name: Build poo-flow CLI binary
         shell: bash
         run: |
           set -euo pipefail
-          build_cores() {
-            nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2
-          }
-          GERBIL_BUILD_CORES="$(build_cores)" gxpkg env ./build.ss compile --release --optimized
+          gxpkg env ./build.ss compile --release --optimized
           test -x .gerbil/bin/poo-flow
           .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
           test -s /tmp/poo-flow-help.txt

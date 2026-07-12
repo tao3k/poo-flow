@@ -6,9 +6,12 @@
                  check-equal?
                  test-case
                  test-suite)
+        :gslph/src/testing/memory-profile
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profile-gate)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (export user-interface-profile-library-gate-test)
 

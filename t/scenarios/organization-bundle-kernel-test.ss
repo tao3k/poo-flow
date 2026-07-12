@@ -1,6 +1,9 @@
 (import :clan/poo/object :std/test
+        :gslph/src/testing/memory-profile
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (bundle epoch child-authority)
   (poo-flow-organization-bundle

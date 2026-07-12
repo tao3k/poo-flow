@@ -3,6 +3,7 @@
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/test check-equal? run-tests! test-case test-suite)
+        :gslph/src/testing/memory-profile
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-analysis
@@ -10,6 +11,8 @@
         :poo-flow/src/module-system/init-syntax
         :poo-flow/src/module-system/profile-composition
         :poo-flow/src/module-system/profile-composition-accessors)
+
+(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def langchain
   (eval (call-with-input-file "user-interface/profiles/langchain.ss" read)))
