@@ -1,0 +1,15 @@
+#ifndef POO_FLOW_RUNTIME_V0_CONTRACT_H
+#define POO_FLOW_RUNTIME_V0_CONTRACT_H
+
+#include <stdint.h>
+
+#define POO_FLOW_RUNTIME_V0_ABI_MAJOR 0u
+#define POO_FLOW_RUNTIME_V0_ABI_MINOR 1u
+#define POO_FLOW_RUNTIME_V0_BUNDLE_SCHEMA "poo-flow.organization-bundle.draft.3"
+#define POO_FLOW_RUNTIME_V0_CONTROL_PACKET_SCHEMA "poo-flow.runtime-v0.control-packet.1"
+#define POO_FLOW_RUNTIME_V0_CAP_CONTROL (UINT64_C(1) << 0)
+#define POO_FLOW_RUNTIME_V0_CAP_CHECKPOINT (UINT64_C(1) << 1)
+#define POO_FLOW_RUNTIME_V0_CAP_HOT_BATCH (UINT64_C(1) << 2)
+#define POO_FLOW_RUNTIME_V0_CAP_BULK_BUFFER (UINT64_C(1) << 3)
+
+#endif

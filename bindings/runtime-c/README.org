@@ -1,39 +1,25 @@
-#+title: Runtime C Bindings
+#+title: Runtime v0.1 C Bindings
 
-This directory owns the stable C ABI surface for runtime-language integration.
+This directory owns the installed pre-v1 C control-lane ABI.  It contains no
+graph-plan compatibility API and exposes no Gerbil, Gambit, Python, or Scheme
+heap type.
 
-The files here are upstream bindings, not examples:
+| Owner | Path |
+|-------+------|
+| Public C11 header | =include/poo_flow/runtime_v0.h= |
+| Control contract | =schema/runtime_v0_control.org= |
+| Handle/lifecycle engine | =src/runtime_v0.c= |
+| Pure C harness | =tests/runtime_v0_harness.c= |
 
-- =include/poo_flow_runtime_abi.h= defines the narrow runtime C ABI;
-- =probe/poo_flow_runtime_abi_probe.c= is the current standalone ABI probe
-  implementation.
+The Bundle remains the semantic owner.  The C engine owns negotiation, opaque
+handles, lifecycle state, checkpoint envelopes, owned bytes, and typed boundary
+errors only.
 
-The probe implementation is not the final runtime implementation. It fixes the
-ABI and memory ownership contract before replacing the C body with a
-Gerbil/Gambit compiled module.
-
-The ABI includes opaque runtime graph plan handles. Runtimes can create a plan,
-add nodes, bind nodes to runtime action symbols, add ordinary edges, add
-conditional routes, bind state keys to reducer symbols, set a step limit, and
-ask the control-plane binding for a graph handoff receipt without introducing a
-second serialization protocol. The ABI also validates graph plans before
-handoff so duplicate nodes, dangling endpoints, missing START/END boundaries,
-unreachable nodes, and nodes that cannot reach END fail at the boundary.
-
-Runtime language packages should consume this directory. They should not own or
-fork the ABI definition.
-
-Graph validation and handoff receipts include a stable plan digest so runtimes
-can compare graph identity without receiving a second serialized graph format.
-
-Run:
+Run the focused gates:
 
 #+begin_src sh
-uv run --project packages/python-runtime poo-flow-runtime-probe
+make -C bindings/runtime-c clean test sanitize
 #+end_src
 
-Expected output:
-
-#+begin_example
-python-runtime-c-abi: ok
-#+end_example
+The installed contract is ABI v0.1 and Bundle schema
+=poo-flow.organization-bundle.draft.3=.  Neither is an ABI v1 freeze claim.

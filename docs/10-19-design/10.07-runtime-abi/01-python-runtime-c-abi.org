@@ -2,6 +2,12 @@
 #+author: POO Flow
 #+date: 2026-07-06
 
+* Status
+
+Retired legacy graph-ABI evidence.  It is not an active public contract.  AC-05
+replaces it with =poo_flow/runtime_v0.h= and =libpoo_flow_runtime_v0=; AC-07
+owns the new Python CFFI binding.
+
 * Purpose
 
 POO Flow Scheme is the policy and control-plane layer. Runtime languages

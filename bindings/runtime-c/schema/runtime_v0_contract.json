@@ -1,0 +1,13 @@
+{
+  "abi_major": 0,
+  "abi_minor": 1,
+  "bundle_schema": "poo-flow.organization-bundle.draft.3",
+  "control_packet_schema": "poo-flow.runtime-v0.control-packet.1",
+  "abi_v1_frozen": false,
+  "capabilities": {
+    "control": 0,
+    "checkpoint": 1,
+    "hot_batch": 2,
+    "bulk_buffer": 3
+  }
+}

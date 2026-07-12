@@ -1,6 +1,10 @@
 #+title: LangChain/LangGraph C ABI Benchmark
 #+startup: overview
 
+* Status
+
+Retired legacy graph C ABI benchmark.  It cannot qualify runtime v0.1 or ABI v1.
+
 * Canonical Report
 
 The runnable benchmark and latest generated Org report live under the Python runtime benchmark directory:

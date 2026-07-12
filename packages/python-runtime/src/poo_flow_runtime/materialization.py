@@ -1,11 +1,11 @@
-"""Materialize typed runtime graph plans into C ABI graph handles."""
+"""Pure runtime-graph domain description, independent of the retired C ABI."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from hashlib import sha256
 from typing import Mapping
 
-from .bindings import PooFlowGraphPlan, PooFlowRuntimeBinding
 from .runtime_graph import RuntimeGraphPlan
 
 
@@ -20,45 +20,40 @@ class RuntimeGraphBindings:
         return self.node_actions.get(node, node)
 
 
-def materialize_runtime_graph_plan(
-    binding: PooFlowRuntimeBinding,
+def describe_runtime_graph_plan(
     plan: RuntimeGraphPlan,
     graph_bindings: RuntimeGraphBindings | None = None,
-) -> PooFlowGraphPlan:
-    """Create and validate a C ABI graph plan handle from a typed plan."""
+) -> bytes:
+    """Return a deterministic domain receipt without crossing a runtime ABI."""
 
-    graph_bindings = graph_bindings or RuntimeGraphBindings()
-    _validate_graph_bindings(plan, graph_bindings)
-
-    graph_plan = binding.graph_plan()
-    try:
-        graph_plan.set_step_limit(plan.step_limit)
-
-        for node in plan.nodes:
-            graph_plan.add_node(node)
-            graph_plan.set_node_action(node, graph_bindings.action_for(node))
-
-        for state_key, reducer in graph_bindings.state_reducers.items():
-            graph_plan.set_state_reducer(state_key, reducer)
-
-        for edge in plan.edges:
-            graph_plan.add_edge(edge.source, edge.target)
-
-        for conditional_edge in plan.conditional_edges:
-            for route_key, target in conditional_edge.routes.items():
-                graph_plan.add_conditional_route(
-                    source=conditional_edge.source,
-                    router=conditional_edge.router,
-                    route_key=route_key,
-                    target=target,
-                )
-
-        graph_plan.validate()
-    except Exception:
-        graph_plan.close()
-        raise
-
-    return graph_plan
+    bindings = graph_bindings or RuntimeGraphBindings()
+    _validate_graph_bindings(plan, bindings)
+    canonical = repr(
+        (
+            tuple(plan.nodes),
+            tuple((edge.source, edge.target) for edge in plan.edges),
+            tuple(
+                (edge.source, edge.router, tuple(sorted(edge.routes.items())))
+                for edge in plan.conditional_edges
+            ),
+            plan.step_limit,
+            tuple(sorted(bindings.node_actions.items())),
+            tuple(sorted(bindings.state_reducers.items())),
+        )
+    ).encode("utf-8")
+    digest = sha256(canonical).hexdigest()[:16]
+    lines = (
+        "poo-flow-receipt.v1",
+        "kind=runtime-graph-domain-validation",
+        f"nodes={len(plan.nodes)}",
+        f"node-actions={len(plan.nodes)}",
+        f"state-reducers={len(bindings.state_reducers)}",
+        f"edges={len(plan.edges)}",
+        f"conditional-routes={sum(len(edge.routes) for edge in plan.conditional_edges)}",
+        f"step-limit={plan.step_limit}",
+        f"plan-digest={digest}",
+    )
+    return ("\n".join(lines) + "\n").encode("utf-8")
 
 
 def _validate_graph_bindings(
@@ -67,7 +62,7 @@ def _validate_graph_bindings(
 ) -> None:
     nodes = set(plan.nodes)
     extra_actions = sorted(
-        node for node in graph_bindings.node_actions.keys() if node not in nodes
+        node for node in graph_bindings.node_actions if node not in nodes
     )
     if extra_actions:
         raise ValueError(

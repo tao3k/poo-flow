@@ -8,11 +8,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..builder import RuntimeGraphBuilder
-from ..bindings import PooFlowRuntimeBinding
 from ..checkpoints import MemoryRuntimeGraphCheckpointer, RuntimeGraphCheckpoint
 from ..funflow import benchmark_funflow_cicd_sandbox_dag
 from ..subgraphs import RuntimeGraphSubgraph
-from ..validation import RuntimeValidationInput, ValidationRuntime
 
 RuntimeState = Mapping[str, Any]
 
@@ -32,8 +30,6 @@ def run_composition_cases(
         _run_strategy_combinator_pipeline(iterations),
         _run_durable_fanout_strategy(iterations, fanout),
         _run_nested_subgraph_stream_projection(iterations),
-        _run_cabi_status_hot_call(iterations),
-        _run_validation_workflow_round_trip(iterations),
         _run_funflow_cicd_sandbox_dag(iterations, fanout),
     ]
 
@@ -97,41 +93,6 @@ def _run_nested_subgraph_stream_projection(iterations: int) -> CompositionBenchm
         iterations=iterations,
         elapsed_micros=elapsed,
         detail="subgraph action projected through runtime stream surface",
-    )
-
-
-def _run_cabi_status_hot_call(iterations: int) -> CompositionBenchmarkCase:
-    binding = PooFlowRuntimeBinding.from_probe()
-
-    def read_status_name() -> None:
-        binding.status_name(0)
-
-    elapsed = _elapsed_micros(read_status_name, iterations)
-    return CompositionBenchmarkCase(
-        scenario="cabi-status-hot-call",
-        iterations=iterations,
-        elapsed_micros=elapsed,
-        detail="loaded C ABI binding hot status lookup",
-    )
-
-
-def _run_validation_workflow_round_trip(iterations: int) -> CompositionBenchmarkCase:
-    runtime = ValidationRuntime.from_probe()
-    runtime.describe_validation_graph_receipt()
-    validation_input = RuntimeValidationInput(
-        manifest=b'{"policy":"composition-benchmark"}',
-        request=b'{"value":5}',
-    )
-
-    def validate_request() -> None:
-        runtime.validate(validation_input)
-
-    elapsed = _elapsed_micros(validate_request, iterations)
-    return CompositionBenchmarkCase(
-        scenario="validation-workflow-round-trip",
-        iterations=iterations,
-        elapsed_micros=elapsed,
-        detail="manifest validation plus graph handoff workflow",
     )
 
 

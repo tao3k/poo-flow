@@ -1,5 +1,10 @@
 #+title: Python Runtime ABI Surface Manifest
 
+* Status
+
+Retired with the old Python graph ABI binding.  AC-07 will derive its CFFI
+surface from the installed runtime v0 header rather than this manifest.
+
 * Purpose
 
 =poo-flow.python-runtime.abi-surface.v1= is a machine-readable line manifest for

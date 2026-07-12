@@ -1,5 +1,10 @@
 #+TITLE: Python Runtime ABI Surface Self Test
 
+* Status
+
+Retired with the old Python graph ABI binding.  This command is no longer a
+public conformance gate.
+
 * Purpose
 
 The Python runtime package exposes a stable ABI surface manifest for downstream

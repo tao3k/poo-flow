@@ -11,10 +11,6 @@ dependencies = [
 ]
 
 [project.scripts]
-poo-flow-runtime-probe = "poo_flow_runtime.probe:main"
-poo-flow-runtime-validate = "poo_flow_runtime.validation:main"
-poo-flow-runtime-program-probe = "poo_flow_runtime.probe:program_main"
-poo-flow-runtime-abi-surface = "poo_flow_runtime.abi_surface_cli:main"
 poo-flow-build-profile = "poo_flow_runtime.build_profile:main"
 poo-flow-jsonschema-contract = "poo_flow_runtime.json_schema_contract:main"
 

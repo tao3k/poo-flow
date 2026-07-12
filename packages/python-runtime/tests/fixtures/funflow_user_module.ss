@@ -2,7 +2,7 @@
 ;;; Boundary: user-authored Scheme FunFlow module loaded from Python.
 
 (use-composition python-runtime-ci
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles github-ci python-anyio))
 
   (compose

@@ -64,7 +64,7 @@ preserving the ownership boundaries.
 | AC-02 Bundle kernel | =src/semantic/organization-bundle*.ss= | POO-native module-system/core implementation | Bundle identity, composition, digest, and immutability scenarios |
 | AC-03 Five facets | =src/semantic/organization-*.ss= and corresponding contract projections | POO-native facet implementations | Per-facet invariants plus cross-facet composition scenarios |
 | AC-04 Shadow projection | =src/semantic/organization-bundle-shadow.ss= | Internal POO-native typed-fact comparator; no public facade export | Equivalence, precise difference, rejection, order, and Kernel-immutability scenarios |
-| AC-05 C control lane | Runtime and evidence contracts in =src/contract/= | =src/boundary/runtime-c*.ss= and =bindings/runtime-c/= | C probe and ABI conformance harness |
+| AC-05 C control lane | =src/contract/organization-bundle-runtime-v0.ss= and =bindings/runtime-c/schema/= | =bindings/runtime-c/include/poo_flow/runtime_v0.h= and =bindings/runtime-c/src/runtime_v0.c= | Pure C install/harness, handle-negative, checkpoint, regeneration, sanitizer, and retained-domain tests |
 | AC-06 C hot and bulk lanes | Same contract owners as AC-05 | Boundary implementation plus public ABI artifacts | Microbenchmarks, allocation counters, payload and batch fixtures |
 | AC-07 Python CFFI runtime | No new semantic owner | =packages/python-runtime/= and its wheel artifacts | Python conformance, integration, packaging, and benchmark suites |
 | AC-08 Cedar and evidence | Policy/evidence semantic and contract owners | Cedar adapter and evidence-chain implementation | Allow/deny, token, provenance, replay, and fork scenarios |
@@ -129,7 +129,7 @@ durable-I/O performance claims.
 | AC-02 | Planned | AC-01 | Canonical Bundle kernel and identity receipts |
 | AC-03 | Planned | AC-02 | Five facets composed through POO-native public APIs |
 | AC-04 | Complete | AC-03 | Stable internal shadow projection and deterministic difference receipts; Bundle remains draft |
-| AC-05 | Planned | AC-04 | Versioned control-lane ABI and passing C harness |
+| AC-05 | Complete | AC-04 | Installed runtime v0.1 control lane; ABI v1 remains unfrozen |
 | AC-06 | Planned | AC-05 | Qualified hot/bulk lanes with copy and allocation budgets |
 | AC-07 | Planned | AC-05; AC-06 for performance claims | Installable CFFI runtime passing conformance and packaging gates |
 | AC-08 | Planned | AC-03 and AC-05 | Cedar/token/evidence semantics and fork-safe receipts |

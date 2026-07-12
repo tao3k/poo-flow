@@ -1,5 +1,10 @@
 #+title: Runtime Benchmark Surface
 
+* Status
+
+The graph-domain benchmarks remain historical/domain evidence.  Old C ABI hot
+path claims are retired and do not qualify runtime v0.1 or the future ABI v1.
+
 * Intent
 
 Benchmarks are package module surfaces, not pyproject script expansion.

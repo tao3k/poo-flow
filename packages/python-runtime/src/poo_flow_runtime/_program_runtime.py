@@ -6,10 +6,9 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Mapping
 
 from ._program_resolution import resolve_actions, resolve_reducers
-from .bindings import PooFlowRuntimeBinding
 from .checkpoints import RuntimeGraphCheckpoint
 from .event_stream import RuntimeGraphStreamProjection, normalize_stream_modes
-from .materialization import RuntimeGraphBindings, materialize_runtime_graph_plan
+from .materialization import RuntimeGraphBindings, describe_runtime_graph_plan
 from .receipts import RuntimeReceipt, parse_runtime_receipt
 from .runtime import RuntimeGraphRuntime
 from .runtime_graph import (
@@ -70,19 +69,15 @@ class RuntimeGraphProgram:
         plan: RuntimeGraphPlan,
         graph_bindings: RuntimeGraphBindings | None = None,
         registries: RuntimeGraphRegistries | None = None,
-        binding: PooFlowRuntimeBinding | None = None,
         runtime: RuntimeGraphRuntime | None = None,
     ) -> None:
         self.plan = plan
         self.graph_bindings = graph_bindings or RuntimeGraphBindings()
         self.registries = registries or RuntimeGraphRegistries()
-        self.binding = binding or PooFlowRuntimeBinding.from_probe()
         self.runtime = runtime or RuntimeGraphRuntime()
 
     def describe(self) -> bytes:
-        return materialize_runtime_graph_plan(
-            self.binding, self.plan, self.graph_bindings
-        ).validate()
+        return describe_runtime_graph_plan(self.plan, self.graph_bindings)
 
     def describe_receipt(self) -> RuntimeReceipt:
         return parse_runtime_receipt(self.describe())

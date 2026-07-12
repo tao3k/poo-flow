@@ -1,38 +1,5 @@
 """Public package facade for the POO Flow Python runtime."""
 
-from .bindings import (
-    PooFlowCffiContext,
-    PooFlowCffiGraphPlan,
-    PooFlowContext,
-    PooFlowGraphPlan,
-    PooFlowRuntimeCffiBinding,
-    PooFlowRuntimeBinding,
-    PooFlowRuntimeError,
-    Status,
-)
-from .abi_surface import (
-    RUNTIME_ABI_ENTRYPOINTS,
-    RUNTIME_ABI_GATES,
-    RUNTIME_ABI_MANIFEST_SCHEMAS,
-    RUNTIME_ABI_RECEIPT_SCHEMAS,
-    RUNTIME_ABI_SURFACE_SCHEMA,
-    RUNTIME_ABI_SURFACE_VALIDATION_SCHEMA,
-    RUNTIME_ABI_VALIDATION_ENTRYPOINTS,
-    RUNTIME_DURABLE_ADAPTER_FACADE,
-    RuntimeAbiSurfaceError,
-    RuntimeAbiSurfaceManifest,
-    RuntimeAbiSurfaceSelfTestError,
-    RuntimeAbiSurfaceValidationReceipt,
-    coerce_runtime_abi_surface_manifest,
-    coerce_runtime_abi_surface_validation_receipt,
-    runtime_abi_surface_self_test,
-    runtime_abi_surface_self_test_receipt,
-    runtime_abi_surface_validation_receipt,
-    runtime_abi_surface_manifest,
-    runtime_abi_surface_manifest_bytes,
-    runtime_abi_surface_manifest_lines,
-    runtime_abi_surface_manifest_string,
-)
 from .builder import RuntimeGraphBuilder
 from .crewai import (
     CrewAIAgentSpec,
@@ -87,7 +54,7 @@ from .json_schema_contract import (
     json_schema_to_scheme_contract,
     load_json_schema,
 )
-from .materialization import RuntimeGraphBindings, materialize_runtime_graph_plan
+from .materialization import RuntimeGraphBindings, describe_runtime_graph_plan
 from .messages import (
     RuntimeGraphMessage,
     RuntimeGraphToolCall,
@@ -128,53 +95,8 @@ from .stores import (
 )
 from .subgraphs import RuntimeGraphSubgraph
 from .tools import RuntimeGraphTool, RuntimeGraphToolError, RuntimeGraphToolNode
-from .validation import (
-    RuntimeValidationFailure,
-    RuntimeValidationInput,
-    RuntimeValidationResult,
-    ValidationRuntime,
-    runtime_request,
-    runtime_validation_graph_bindings,
-    runtime_validation_graph_plan,
-)
 
 __all__ = (
-    "PooFlowCffiContext",
-    "PooFlowCffiGraphPlan",
-    "PooFlowContext",
-    "PooFlowGraphPlan",
-    "PooFlowRuntimeCffiBinding",
-    "PooFlowRuntimeBinding",
-    "PooFlowRuntimeError",
-    "Status",
-    "RUNTIME_ABI_ENTRYPOINTS",
-    "RUNTIME_ABI_GATES",
-    "RUNTIME_ABI_MANIFEST_SCHEMAS",
-    "RUNTIME_ABI_RECEIPT_SCHEMAS",
-    "RUNTIME_ABI_SURFACE_SCHEMA",
-    "RUNTIME_ABI_SURFACE_VALIDATION_SCHEMA",
-    "RUNTIME_ABI_VALIDATION_ENTRYPOINTS",
-    "RUNTIME_DURABLE_ADAPTER_FACADE",
-    "RuntimeAbiSurfaceError",
-    "RuntimeAbiSurfaceManifest",
-    "RuntimeAbiSurfaceSelfTestError",
-    "RuntimeAbiSurfaceValidationReceipt",
-    "coerce_runtime_abi_surface_manifest",
-    "coerce_runtime_abi_surface_validation_receipt",
-    "runtime_abi_surface_self_test",
-    "runtime_abi_surface_self_test_receipt",
-    "runtime_abi_surface_validation_receipt",
-    "runtime_abi_surface_manifest",
-    "runtime_abi_surface_manifest_bytes",
-    "runtime_abi_surface_manifest_lines",
-    "runtime_abi_surface_manifest_string",
-    "RuntimeValidationFailure",
-    "RuntimeValidationInput",
-    "RuntimeValidationResult",
-    "ValidationRuntime",
-    "runtime_validation_graph_bindings",
-    "runtime_validation_graph_plan",
-    "runtime_request",
     "RuntimeGraphBindings",
     "RuntimeGraphBuilder",
     "CrewAIAgentSpec",
@@ -185,7 +107,7 @@ __all__ = (
     "crewai_flow_plan",
     "crewai_flow_receipt",
     "run_crewai_flow",
-    "materialize_runtime_graph_plan",
+    "describe_runtime_graph_plan",
     "RuntimeGraphExecution",
     "RuntimeGraphProgram",
     "RuntimeGraphRegistries",

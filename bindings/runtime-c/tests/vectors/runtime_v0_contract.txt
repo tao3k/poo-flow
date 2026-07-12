@@ -1,0 +1,10 @@
+schema=poo-flow.runtime-v0.contract-vector.1
+abi-major=0
+abi-minor=1
+bundle-schema=poo-flow.organization-bundle.draft.3
+control-packet-schema=poo-flow.runtime-v0.control-packet.1
+abi-v1-frozen=false
+capability-control=0
+capability-checkpoint=1
+capability-hot_batch=2
+capability-bulk_buffer=3
