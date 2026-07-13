@@ -2,12 +2,11 @@
 ;;; POO Flow package declaration for the upstream Building Framework.
 
 (import (only-in :gerbil/gambit current-directory)
+        (only-in :gerbil/compiler/base __available-cores)
         (only-in :clan/building all-gerbil-modules)
         (only-in :std/srfi/1 filter filter-map)
         (only-in :std/misc/path path-expand path-normalize)
-        :gslph/src/building/facade
-        (only-in :gslph/src/build-api/worker-count
-                 sync-build-worker-count!))
+        :gslph/src/building/facade)
 
 (export poo-flow-project-build-options
         poo-flow-project-build-spec
@@ -82,11 +81,31 @@
        modules))
 
 ;; : (-> [PackageSourceStage])
+(def (poo-flow-project-build-positive-integer-from-env name)
+  (let* ((raw (getenv name #f))
+         (configured (and raw (string->number raw))))
+    (and configured
+         (integer? configured)
+         (> configured 0)
+         configured)))
+
+(def (poo-flow-project-build-worker-count)
+  (or (poo-flow-project-build-positive-integer-from-env "GERBIL_BUILD_CORES")
+      (poo-flow-project-build-positive-integer-from-env "CARGO_BUILD_JOBS")
+      (poo-flow-project-build-positive-integer-from-env "NUM_JOBS")
+      (max 1 (##cpu-count))))
+
+(def (poo-flow-project-sync-build-worker-count!)
+  (let (worker-count (poo-flow-project-build-worker-count))
+    (set! __available-cores worker-count)
+    (setenv "GERBIL_BUILD_CORES" (number->string worker-count))
+    worker-count))
+
 (def (poo-flow-project-source-stages)
   (let* ((root (poo-flow-project-require-build-root))
          (runtime-root (path-expand "src" root))
          (interface-root (path-expand "user-interface" root))
-         (parallelize (sync-build-worker-count!)))
+         (parallelize (poo-flow-project-sync-build-worker-count!)))
     (list
      (make-package-source-stage
       "runtime"

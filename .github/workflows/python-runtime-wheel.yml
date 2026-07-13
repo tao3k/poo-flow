@@ -138,7 +138,7 @@ jobs:
         uses: actions/cache/restore@v6.1.0
         with:
           path: |
-            ~/.gerbil
+            ~/.gerbil/pkg
             .gerbil
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
@@ -168,7 +168,7 @@ jobs:
         uses: actions/cache/save@v6.1.0
         with:
           path: |
-            ~/.gerbil
+            ~/.gerbil/pkg
             .gerbil
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 

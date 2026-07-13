@@ -3,8 +3,7 @@ set -euo pipefail
 
 workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source_root="$(dirname "$workspace")"
-user_root="${GERBIL_USER_PATH:-$HOME/.gerbil}"
 
 exec gxpkg env env \
-  "GERBIL_LOADPATH=$source_root:$user_root/lib" \
+  "GERBIL_LOADPATH=$source_root" \
   gxi "$workspace/build.ss" "$@"

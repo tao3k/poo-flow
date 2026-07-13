@@ -3,6 +3,6 @@
 
 (import :clan/base
         :clan/poo/object
-        :gslph/src/build-api/worker-count)
+        :gslph/src/building/facade)
 
 (displayln "gerbil-package-cache-ready")
