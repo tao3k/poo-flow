@@ -183,7 +183,9 @@ jobs:
           cache-dependency-glob: packages/python-runtime/uv.lock
 
       - name: Build native Scheme package
-        run: gxpkg env gxi build.ss compile
+        run: |
+          GERBIL_LOADPATH="$(dirname "$GITHUB_WORKSPACE")" \
+            gxpkg env gxi build.ss compile
 
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@0.19.0
