@@ -4,14 +4,14 @@
 #+LANGUAGE: en
 
 * Status
-Status: *AC-08 completed; AC-09 design approved; ABI v1 unfrozen*
+Status: *AC-09 completed; AC-10 design approved; ABI v1 unfrozen*
 
 RFC 90–94 are accepted for implementation planning. This document turns their P0–P6 migration into bounded work packages with explicit owners, deliverables, validation, stop conditions, and commit boundaries.
 
-AC-00 completed the baseline and workspace gate. The current main checkout is
-the canonical implementation checkout and is clean. AC-09 implementation may
-start only after its approved design is projected into the AC-09 implementation
-plan.
+AC-00 through AC-09 are complete.  The current main checkout is the canonical
+implementation checkout.  AC-10 is specified by
+=130-agentic-control-plane-ac10-integrated-qualification-design.org= and its
+bounded delivery plan.
 
 * Purpose
 This plan is operational rather than aspirational.
@@ -141,17 +141,17 @@ AC-06, AC-08, and the first part of AC-09 may proceed in separate commits after 
 * Work Package Summary
 | Package | RFC phase | Output | Entry dependency | Initial status |
 |---------+-----------+--------+------------------+----------------|
-| AC-00 | P0 | isolated workspace, owner map, baseline receipts | accepted plan | ready |
-| AC-01 | P0/P1 | first vertical-slice contract and fixtures | AC-00 | planned |
-| AC-02 | P1 | identity, manifest, epoch, canonical digest | AC-01 | planned |
-| AC-03 | P2 | five facet algebras and cross-validation | AC-02 | planned |
+| AC-00 | P0 | isolated workspace, owner map, baseline receipts | accepted plan | complete |
+| AC-01 | P0/P1 | first vertical-slice contract and fixtures | AC-00 | complete |
+| AC-02 | P1 | identity, manifest, epoch, canonical digest | AC-01 | complete |
+| AC-03 | P2 | five facet algebras and cross-validation | AC-02 | complete |
 | AC-04 | P2 | read-only shadow projection and difference ledger | AC-03 | complete |
 | AC-05 | P3 | negotiated C ABI control lane and pure C harness | AC-04 | complete |
-| AC-06 | P3 | batched hot lane, bulk buffers, FFI performance evidence | AC-05 | planned |
-| AC-07 | P3 | production Python CFFI runtime | AC-06 | planned |
-| AC-08 | P4 | Cedar projection, tokens, receipts, evidence roots | AC-04, AC-05 | planned |
-| AC-09 | P5 | Lean-linked named claims | AC-03, AC-08 | planned |
-| AC-10 | P3–P5 | complete vertical slice and qualification pack | AC-06–AC-09 | planned |
+| AC-06 | P3 | batched hot lane, bulk buffers, FFI performance evidence | AC-05 | complete |
+| AC-07 | P3 | production Python CFFI runtime | AC-06 | complete |
+| AC-08 | P4 | Cedar projection, tokens, receipts, evidence roots | AC-04, AC-05 | complete |
+| AC-09 | P5 | Lean-linked named claims | AC-03, AC-08 | complete |
+| AC-10 | P3–P5 | complete vertical slice and qualification pack | AC-06–AC-09 | ready |
 | AC-11 | P6 | canonical cutover and stale-route removal | AC-10 | planned |
 
 * Proposed Owner Allocation

@@ -1,0 +1,87 @@
+#+title: AC-10 Integrated Qualification Implementation Plan
+#+date: 2026-07-12
+#+status: approved-for-implementation
+
+* Delivery
+
+Implement RFC 130 as six bounded, validated features.  Each feature is
+committed only when its focused tests and artifact freshness gates pass.
+
+=abi-v1-frozen? #f=
+
+* Dependency graph
+
+#+begin_src mermaid
+flowchart TD
+    S1["S1 POO-native assurance manifest"] --> S2["S2 Claim and TCB verifier"]
+    S2 --> S3["S3 Canonical vertical fixture"]
+    S3 --> S4["S4 Cross-language qualification runner"]
+    S4 --> S5["S5 Fault and performance closure"]
+    S5 --> S6["S6 AC-10 qualification receipt"]
+#+end_src
+
+* S1 — POO-native assurance manifest
+
+Create the canonical manifest, claim, TCB, evidence-reference, gate-result, and
+ABI-decision object families.  Add deterministic normalization, digest identity,
+duplicate rejection, construction-order invariance, and incomplete-manifest
+tests.  Keep interchange serialization outside the native C ABI.
+
+* S2 — Claim and TCB verifier
+
+Implement cumulative L0–L4 validation without global-level promotion.  Require
+claim-specific TCB families, evidence owners, immutable artifact digests,
+exclusions, and fail-closed states.  Prove that Lean evidence only labels named
+claims and that L3 requires mediation evidence.
+
+* S3 — Canonical vertical fixture
+
+Build one deterministic fixture joining Bundle/facets, runtime-v0 batch,
+installed Python CFFI, Cedar/token, mediation/evidence roots, ProofCaseVector,
+and Lean ProofReceipt identities.  Add deny, replay, revocation, substitution,
+and stale-proof variants before widening the fault matrix.
+
+* S4 — Cross-language qualification runner
+
+Add a declarative gate registry and runner under
+=t/qualification/agentic-control-plane/=.  Execute exact existing owners,
+capture environment and artifact identities, reject missing/stale receipts, and
+assemble the manifest without reimplementing semantic decisions.
+
+The runner must support focused development subsets and a clean-build release
+mode.  The release mode rejects checkout-only Python imports and requires the
+installed C and wheel consumers.
+
+* S5 — Fault and performance closure
+
+Complete crash, timeout, cancel, retry, restore, indeterminate, fork, truncation,
+TOCTOU, malformed-vector, sanitizer, leak, and absence audits.  Aggregate the
+full supported performance matrix from native and Python benchmark owners.
+Record unsupported dimensions and host identity explicitly.  Keep concrete
+budgets unfrozen until reproducible supported-host series exist.
+
+* S6 — AC-10 qualification receipt
+
+Run all focused owners from a clean build, emit the release-candidate assurance
+manifest, audit private bypasses and retired graph ABI absence, and record the
+explicit ABI decision.  Update the execution plan and owner matrix from measured
+evidence.  AC-11 starts only after separate migration approval.
+
+* Stop conditions
+
+- Stop if the runner becomes a semantic, policy, runtime, or theorem owner.
+- Stop if a public manifest API is a raw alist or record DSL.
+- Stop if JSON enters the native C ABI.
+- Stop if L3 lacks isolation or independent-observation evidence.
+- Stop if L4 is inferred from artifact presence rather than a named checked claim.
+- Stop if installed-consumer gates are replaced by checkout imports.
+- Stop if one host baseline is presented as a frozen performance budget.
+- Stop if a graph ABI compatibility path is proposed.
+
+* Validation order
+
+Run manifest and verifier unit owners first, then the canonical vertical fixture,
+installed native/Python consumers, Lean linkage, fault/security suites,
+performance matrices, full AC regression, and repository hygiene.  Expensive
+clean builds, sanitizer/leak gates, and benchmarks run only after focused
+functional gates are green.

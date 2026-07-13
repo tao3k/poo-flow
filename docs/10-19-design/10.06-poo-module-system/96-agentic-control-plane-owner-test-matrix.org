@@ -69,7 +69,7 @@ preserving the ownership boundaries.
 | AC-07 Python CFFI runtime | No new semantic owner | =packages/python-runtime/= and its wheel artifacts | Python conformance, integration, packaging, and benchmark suites |
 | AC-08 Cedar and evidence | Policy/evidence semantic and contract owners | Cedar adapter and evidence-chain implementation | Allow/deny, token, provenance, replay, and fork scenarios |
 | AC-09 Lean linkage | Proof-fact and theorem contract owners | =src/proof/= and =packages/proof/lean/= | Checked theorem, bridge, mismatch, and stale-proof tests |
-| AC-10 Qualification | All frozen owners | Release artifact assembly | Cross-language conformance, soak, fuzz, performance, evidence audit |
+| AC-10 Qualification | All qualified AC-01–09 owners | Release artifact assembly | Cross-language conformance, soak, fuzz, performance, evidence audit |
 | AC-11 Cutover | Canonical public facade owners | Removal and migration artifacts | Absence tests, documentation checks, downstream compatibility receipts |
 
 * Scenario and test matrix
@@ -125,21 +125,20 @@ durable-I/O performance claims.
 | Package | Readiness | Entry condition | Exit evidence |
 |-
 | AC-00 | Baseline captured; remediation open | Isolated clean worktree or completed clean tranche | Owner inventory, baseline receipt, frozen first slice |
-| AC-01 | Planned | AC-00 accepted | One end-to-end semantic contract with focused scenarios |
-| AC-02 | Planned | AC-01 | Canonical Bundle kernel and identity receipts |
-| AC-03 | Planned | AC-02 | Five facets composed through POO-native public APIs |
+| AC-01 | Complete | AC-00 accepted | One end-to-end semantic contract with focused scenarios |
+| AC-02 | Complete | AC-01 | Canonical Bundle kernel and identity receipts |
+| AC-03 | Complete | AC-02 | Five facets composed through POO-native public APIs |
 | AC-04 | Complete | AC-03 | Stable internal shadow projection and deterministic difference receipts; Bundle remains draft |
 | AC-05 | Complete | AC-04 | Installed runtime v0.1 control lane; ABI v1 remains unfrozen |
-| AC-06 | Planned | AC-05 | Qualified hot/bulk lanes with copy and allocation budgets |
-| AC-07 | Planned | AC-05; AC-06 for performance claims | Installable CFFI runtime passing conformance and packaging gates |
-| AC-08 | Planned | AC-03 and AC-05 | Cedar/token/evidence semantics and fork-safe receipts |
-| AC-09 | Planned | AC-08 | Checked Lean linkage with mismatch rejection |
-| AC-10 | Planned | AC-06 through AC-09 | Integrated release qualification receipt |
+| AC-06 | Complete | AC-05 | Qualified hot/bulk lanes with copy and allocation baselines |
+| AC-07 | Complete | AC-05; AC-06 for performance claims | Installable CFFI runtime passing conformance and packaging gates |
+| AC-08 | Complete | AC-03 and AC-05 | Cedar/token/evidence semantics and fork-safe receipts |
+| AC-09 | Complete | AC-08 | Checked Lean linkage with mismatch rejection |
+| AC-10 | Ready | AC-06 through AC-09 | Integrated release qualification receipt |
 | AC-11 | Planned | AC-10 and migration approval | Canonical route cutover and stale-route removal evidence |
 
-Only AC-00 is authorized by this readiness table.  Later packages require their
-entry gates and an updated matrix; their presence here is not implementation
-authorization.
+AC-10 is the active implementation package.  AC-11 remains blocked until the
+integrated qualification and explicit migration approval are complete.
 
 * Matrix maintenance rules
 
@@ -235,6 +234,38 @@ over the canonical bundle identity established here.
 | Production graph boundary | =RuntimeGraphRuntime= and =RuntimeGraphProgram._validated_plan= | negotiated native required; explicit reference API |
 | Actual-wheel performance | =poo_flow_runtime/_native/benchmark.py= | batches 1/8/32/128/1024 and receipt 122 |
 | ABI freeze | RFC 120 and qualification receipt 122 | =abi-v1-frozen? #f= |
+
+* AC-08 Cedar, Tokens, And Evidence Roots
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| POO-native authorization input and token | =src/policy/authorized-effect-token.ss= | allow, deny, replay, revocation, expiry, and substitution scenarios |
+| Runtime evidence sink | runtime-v0 native kernel and public C ABI | Strict, Batched, Diagnostic, fork, truncation, and root-history gates |
+| Batched Merkle evidence | Scheme evidence objects and native batch owner | deterministic roots and inclusion receipts |
+| Qualification | RFC 123–126 and their focused owners | AC-08 owner suites green |
+
+* AC-09 Lean / Evidence Proof Bridge
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Canonical ProofCaseVector v1 | proof manifest and generated projections | freshness plus four-way differential |
+| POO-native proof projection | Scheme proof-case object family | projection and vector scenario owners |
+| Native proof ABI | runtime-v0 caller-owned =measure/write= | C, installed consumer, sanitizer, leak, and benchmark gates |
+| Named claims | =packages/proof/lean/= | Lake build, typed decoder, theorem set, and FFI smoke |
+| Production Python differential | =packages/proof/python/= | isolated wheel, mutation, determinism, and performance receipts |
+| Qualification | receipt 129 | =abi-v1-frozen? #f= |
+
+* AC-10 Integrated Qualification
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Assurance manifest schema | =src/contract/release-assurance-manifest.ss= | POO-native construction, canonical identity, completeness, and mutation gates |
+| Qualification runner | =t/qualification/agentic-control-plane/= | clean-build lane orchestration and machine-readable receipts |
+| Claim registry | RFC 93 claim-specific TCB and assurance ladder | every claim names its TCB, level, evidence, exclusions, and failure state |
+| Cross-language replay | Scheme, C, Python, and Lean existing owners | one canonical fixture traverses every accepted boundary |
+| Fault matrix | existing runtime/evidence/proof owners | crash, timeout, cancel, retry, restore, indeterminate, fork, and truncation |
+| Performance matrix | existing native and Python benchmark owners | actual paths, reproducible environment, allocation/copy/crossing accounting |
+| ABI review | public C contract owner plus qualification receipt | explicit freeze decision; no implicit stability claim |
 
 * Related RFCs
 
