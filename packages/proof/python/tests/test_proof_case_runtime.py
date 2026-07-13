@@ -106,6 +106,14 @@ def test_scheme_c_python_and_lean_fixture_share_one_vector(
     assert_native_differential(native_runtime, scheme)
 
 
+def test_scheme_process_reproduces_vector_and_digest() -> None:
+    first_vector, first_digest = scheme_vector()
+    second_vector, second_digest = scheme_vector()
+
+    assert first_vector == second_vector
+    assert first_digest == second_digest
+
+
 def test_differential_reports_first_owner_and_field() -> None:
     generated = positive_vector()
     mutated = bytearray(generated)

@@ -291,6 +291,11 @@ are not committed merely because they were edited together.
   substitution, mutable-buffer TOCTOU, and receipt omission fail closed.
 
 ** Determinism
+Qualification repeats Strict mediation from the same immutable state, repeats
+Batched Merkle root and inclusion-receipt construction, and launches the
+Scheme vector encoder in separate processes. Canonical bytes, roots, proof
+steps, and digests must match exactly. Organization bundle normalization keeps
+construction-order invariance as the semantic-root upstream gate.
 
 - Construction order does not change the semantic root.
 - The same mediation sequence produces the same execution root and vector bytes.

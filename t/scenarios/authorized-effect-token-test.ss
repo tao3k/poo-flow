@@ -64,7 +64,11 @@
     (test-case "Strict mediation commits, rejects forks, and spends unknown outcomes"
       (let* ((state (poo-flow-strict-mediation-state "root-0" 0 '() 4))
              (committed (poo-flow-strict-mediate state token context "root-0" "obs"))
+             (committed-again
+              (poo-flow-strict-mediate state token context "root-0" "obs"))
              (next (poo-flow-strict-mediation-result-state committed))
+             (next-again
+              (poo-flow-strict-mediation-result-state committed-again))
              (forked (poo-flow-strict-mediate state token context "other" "obs"))
              (unknown-token (poo-flow-authorized-effect-token
                              'token-3 'nonce-3 root binding validity 'strict 1
@@ -76,6 +80,12 @@
                        (.ref next 'execution-root) #f)))
         (check (.ref (poo-flow-strict-mediation-result-receipt committed) 'outcome)
                => 'committed)
+        (check (.ref (poo-flow-strict-mediation-result-receipt committed) 'after-root)
+               =>
+               (.ref (poo-flow-strict-mediation-result-receipt committed-again)
+                     'after-root))
+        (check (.ref next 'sequence) => (.ref next-again 'sequence))
+        (check (.ref next 'consumed-nonces) => (.ref next-again 'consumed-nonces))
         (check (.ref (poo-flow-strict-mediation-result-receipt forked) 'code)
                => 'execution-root-fork)
         (check (.ref (poo-flow-strict-mediation-result-receipt unknown) 'outcome)

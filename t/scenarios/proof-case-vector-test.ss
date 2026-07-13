@@ -42,9 +42,14 @@
 (def proof-case-vector-test
   (test-suite "AC-09 Scheme native proof vector"
     (test-case "caller-owned write follows the canonical layout"
-      (let (vector (make-u8vector poo-flow-proof-case-vector-size #xff))
+      (let ((vector (make-u8vector poo-flow-proof-case-vector-size #xff))
+            (repeated (make-u8vector poo-flow-proof-case-vector-size #x5a)))
         (check (poo-flow-proof-case-vector-write! canonical-proof-case vector)
                => vector)
+        (poo-flow-proof-case-vector-write! canonical-proof-case repeated)
+        (check vector => repeated)
+        (check (poo-flow-proof-case-vector-digest vector)
+               => (poo-flow-proof-case-vector-digest repeated))
         (check (u8vector-length vector) => 424)
         (check (u8vector-ref vector poo-flow-proof-field-abi-version-offset) => 1)
         (check (u8vector-ref vector poo-flow-proof-field-case-kind-offset) => 1)

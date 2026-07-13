@@ -116,6 +116,10 @@ Focused gates:
 - installed wheel consumer.
 
 * Step 6 — Security, Property, And Performance Qualification
+Determinism gates repeat Strict mediation, Batched roots/inclusion receipts,
+and Scheme vector emission across fresh processes. Compare projected receipt
+fields rather than POO object identity, and retain organization bundle
+construction-order invariance as the upstream semantic-root property.
 Run table-driven structural mutations through both Python and C, including
 both reserved boundaries and mutable borrowed-buffer TOCTOU. Run every
 token/root/binding substitution through digest identity checks and require the
