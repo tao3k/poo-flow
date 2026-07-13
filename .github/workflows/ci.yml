@@ -198,6 +198,7 @@ jobs:
           } > "$gsc_wrapper"
           chmod +x "$gsc_wrapper"
           echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
+          echo "GERBIL_LOADPATH=$(dirname "$GITHUB_WORKSPACE"):$GITHUB_WORKSPACE/.gerbil/lib" >> "$GITHUB_ENV"
           "$GERBIL_PREFIX/bin/gxi" --version
           "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
           "$gsc_wrapper" -v
@@ -248,16 +249,16 @@ jobs:
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Clean package outputs
-        run: gxpkg env ./build.ss clean
+        run: gxi build.ss clean
 
       - name: Build package
-        run: gxpkg build
+        run: gxi build.ss compile
 
       - name: Build poo-flow CLI binary
         shell: bash
         run: |
           set -euo pipefail
-          gxpkg env ./build.ss compile --release --optimized
+          gxi build.ss compile --release --optimized
           test -x .gerbil/bin/poo-flow
           .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
           test -s /tmp/poo-flow-help.txt
@@ -266,7 +267,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gxpkg env gxtest t/unit-tests.ss
-          gxpkg env gxtest t/contract-tests.ss
-          gxpkg env gxc t/fixtures/object-load-valid/objects.ss
-          gxpkg env gxtest t/integration-tests.ss
+          gxtest t/unit-tests.ss
+          gxtest t/contract-tests.ss
+          gxc t/fixtures/object-load-valid/objects.ss
+          gxtest t/integration-tests.ss
