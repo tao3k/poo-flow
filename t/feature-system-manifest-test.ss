@@ -106,6 +106,21 @@
               descriptor
               (cons descriptor descriptors))))))
 
+(def (manifest-index-hit-count bundle feature-ids rounds)
+  (let outer ((round rounds)
+              (hits 0))
+    (if (zero? round)
+      hits
+      (let inner ((feature-ids feature-ids)
+                  (hits hits))
+        (match feature-ids
+          ([feature-id . rest]
+           (inner rest
+                  (if (feature-manifest-bundle-ref bundle feature-id)
+                    (+ hits 1)
+                    hits)))
+          ([] (outer (- round 1) hits)))))))
+
 (def feature-system-manifest-test
   (test-suite "feature system immutable manifests"
     (test-case "descriptor projects to an immutable POO manifest"
@@ -118,16 +133,31 @@
         (check (.ref manifest 'requires) => '(manifest-base))))
 
     (test-case "explicit bundle reuses the resolver activation plan"
-      (check (.ref manifest-valid-bundle 'kind)
-             => 'feature-manifest-bundle)
-      (check (.ref manifest-valid-bundle 'status) => 'ready)
-      (check (.ref manifest-valid-bundle 'accepted?) => #t)
-      (check (.ref manifest-valid-bundle 'feature-ids)
-             => '(manifest-base manifest-dependent))
-      (check (eq? (require-valid-feature-manifest-bundle
-                   manifest-valid-bundle)
-                  manifest-valid-bundle)
-             => #t))
+      (let ((index (.ref manifest-valid-bundle 'manifest-index))
+            (base-manifest (car (.ref manifest-valid-bundle 'manifests))))
+        (check (.ref manifest-valid-bundle 'kind)
+               => 'feature-manifest-bundle)
+        (check (.ref manifest-valid-bundle 'status) => 'ready)
+        (check (.ref manifest-valid-bundle 'accepted?) => #t)
+        (check (.ref manifest-valid-bundle 'feature-ids)
+               => '(manifest-base manifest-dependent))
+        (check (.ref index 'kind) => 'feature-manifest-index)
+        (check (.ref index 'size) => 2)
+        (check (eq? (feature-manifest-bundle-ref
+                     manifest-valid-bundle 'manifest-base)
+                    base-manifest)
+               => #t)
+        (check (eq? (require-feature-manifest-bundle-ref
+                     manifest-valid-bundle 'manifest-base)
+                    base-manifest)
+               => #t)
+        (check (feature-manifest-bundle-ref
+                manifest-valid-bundle 'manifest-absent)
+               => #f)
+        (check (eq? (require-valid-feature-manifest-bundle
+                     manifest-valid-bundle)
+                    manifest-valid-bundle)
+               => #t)))
 
     (test-case "empty explicit bundle is a valid identity plan"
       (check (.ref manifest-empty-bundle 'status) => 'ready)
@@ -144,6 +174,7 @@
 
     (test-case "duplicate feature identities reject the bundle"
       (check (.ref manifest-duplicate-id-bundle 'status) => 'rejected)
+      (check (.ref manifest-duplicate-id-bundle 'manifest-index) => #f)
       (check (memq 'duplicate-selection
                    (diagnostic-codes manifest-duplicate-id-bundle))
              ? values))
@@ -169,7 +200,13 @@
              (feature-ids (.ref bundle 'feature-ids)))
         (check (.ref bundle 'status) => 'ready)
         (check (length (.ref bundle 'manifests)) => 1024)
+        (check (.ref (.ref bundle 'manifest-index) 'size) => 1024)
         (check (length feature-ids) => 1024)
         (check (car feature-ids) => 'manifest-stress-0)
         (check (car (reverse feature-ids))
-               => 'manifest-stress-1023)))))
+               => 'manifest-stress-1023)
+        (check (manifest-index-hit-count bundle feature-ids 64)
+               => 65536)
+        (check (feature-manifest-bundle-ref
+                bundle 'manifest-stress-absent)
+               => #f)))))

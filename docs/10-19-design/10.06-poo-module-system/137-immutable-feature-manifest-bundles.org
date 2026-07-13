@@ -189,6 +189,73 @@ The qualification suite includes a 1024-feature dependency chain.  It proves
 manifest cardinality, activation order, accepted status, source-mode completion,
 and bounded RSS under the same POO-native public interface.
 
+* Implemented optimization: bundle-owned manifest lookup index
+
+Resolved bundles serve many downstream agents, adapters, policy projections,
+and evidence collectors.  Repeatedly scanning the manifest list by feature id
+would make those consumers pay =O(F)= per lookup even though bundle construction
+already observes every identity.
+
+The qualification fold now builds a bundle-owned =FeatureManifestIndex= POO
+object at the same time as it projects manifests.  Its hash storage is written
+only during construction and is stored under a module-private =gensym= slot key.
+The raw table is neither exported nor addressable through a stable public slot
+name.  POO debugging reflection can still inspect object storage by design, but
+that is not the ordinary extension contract.  Public consumers use
+=feature-manifest-bundle-ref= or
+=require-feature-manifest-bundle-ref= and receive a =FeatureManifest= POO value,
+never the underlying hash.
+
+#+begin_src mermaid
+flowchart LR
+    DS["descriptor sequence"]
+    QF["single qualification fold"]
+    FM["immutable FeatureManifest values"]
+    HI["construction-only hash writes"]
+    PI["POO FeatureManifestIndex<br/>private gensym storage key"]
+    RP["resolver plan"]
+    AB["accepted bundle"]
+    RB["rejected bundle"]
+    LR["feature-manifest-bundle-ref"]
+    MF["FeatureManifest or #f"]
+
+    DS --> QF
+    QF --> FM
+    QF --> HI
+    HI --> PI
+    FM --> RP
+    RP -->|"ready"| AB
+    RP -->|"diagnostics"| RB
+    PI --> AB
+    RB -->|"manifest-index = #f"| RB
+    AB --> LR
+    LR --> MF
+#+end_src
+
+An accepted bundle exposes the index as a constant-slot POO object with only
+=kind= and =size= as stable public facts.  A rejected bundle exposes =#f= instead
+of an ambiguous first-or-last duplicate entry; attempting to query it raises
+with the bundle diagnostics.  A normal lookup returns =#f= for absence, while
+the =require-= variant raises with the bundle id and missing feature id.
+
+Construction remains =O(F + O)= expected time and adds =O(F)= retained index
+space.  Lookup changes from a list scan of =O(F)= to expected =O(1)=.  The
+qualification gate executes 65,536 public lookups across a 1024-feature bundle
+and also verifies miss, duplicate, and rejected-bundle behavior.
+
+The isolated quiet AOT qualification receipt on 2026-07-13 includes bundle
+construction as well as lookup execution:
+
+| feature count | public lookups | real seconds | user seconds | max RSS bytes | swaps |
+|---------------+----------------+--------------+--------------+---------------+-------|
+|          1024 |          65536 |         0.71 |         0.35 |     138510336 |     0 |
+
+The gate emits only the hit count, so terminal output backpressure is excluded
+from the lookup measurement.
+
+This index is owned by one explicit bundle.  It is not a cross-module registry,
+expander-global state, compatibility layer, or second dependency resolver.
+
 * Follow-up
 
 Phase 3C may investigate phase-bound manifest bindings.  It must begin from an
