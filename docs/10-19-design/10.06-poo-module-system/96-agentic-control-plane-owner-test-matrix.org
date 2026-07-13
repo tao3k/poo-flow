@@ -134,7 +134,7 @@ durable-I/O performance claims.
 | AC-07 | Complete | AC-05; AC-06 for performance claims | Installable CFFI runtime passing conformance and packaging gates |
 | AC-08 | Complete | AC-03 and AC-05 | Cedar/token/evidence semantics and fork-safe receipts |
 | AC-09 | Complete | AC-08 | Checked Lean linkage with mismatch rejection |
-| AC-10 | Ready | AC-06 through AC-09 | Integrated release qualification receipt |
+| AC-10 | Complete | AC-06 through AC-09 | Integrated release qualification receipt 132 |
 | AC-11 | Planned | AC-10 and migration approval | Canonical route cutover and stale-route removal evidence |
 
 AC-10 is the active implementation package.  AC-11 remains blocked until the

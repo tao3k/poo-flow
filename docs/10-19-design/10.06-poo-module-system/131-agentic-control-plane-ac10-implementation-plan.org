@@ -1,6 +1,6 @@
 #+title: AC-10 Integrated Qualification Implementation Plan
 #+date: 2026-07-12
-#+status: approved-for-implementation
+#+status: completed
 
 * Delivery
 
@@ -112,6 +112,14 @@ Run all focused owners from a clean build, emit the release-candidate assurance
 manifest, audit private bypasses and retired graph ABI absence, and record the
 explicit ABI decision.  Update the execution plan and owner matrix from measured
 evidence.  AC-11 starts only after separate migration approval.
+
+Delivery result: complete.  Clean revision =0206ff3= produced a verified
+12-gate release run, five claim-specific assurance receipts, and canonical
+manifest digest
+=968d37adf2ea1008f535020379985b0d00b75a1f465610bdd2633f6660b06035=.
+The measured qualification is recorded in
+=132-agentic-control-plane-ac10-qualification-receipt.org=.  AC-11 remains
+blocked on separate migration approval.
 
 * Stop conditions
 

@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 
 * Status
-Status: *AC-09 completed; AC-10 design approved; ABI v1 unfrozen*
+Status: *AC-10 completed; AC-11 blocked on migration approval; ABI v1 unfrozen*
 
 RFC 90–94 are accepted for implementation planning. This document turns their P0–P6 migration into bounded work packages with explicit owners, deliverables, validation, stop conditions, and commit boundaries.
 
@@ -151,7 +151,7 @@ AC-06, AC-08, and the first part of AC-09 may proceed in separate commits after 
 | AC-07 | P3 | production Python CFFI runtime | AC-06 | complete |
 | AC-08 | P4 | Cedar projection, tokens, receipts, evidence roots | AC-04, AC-05 | complete |
 | AC-09 | P5 | Lean-linked named claims | AC-03, AC-08 | complete |
-| AC-10 | P3–P5 | complete vertical slice and qualification pack | AC-06–AC-09 | ready |
+| AC-10 | P3–P5 | complete vertical slice and qualification pack | AC-06–AC-09 | complete |
 | AC-11 | P6 | canonical cutover and stale-route removal | AC-10 | planned |
 
 * Proposed Owner Allocation
