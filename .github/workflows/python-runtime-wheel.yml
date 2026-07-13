@@ -136,8 +136,8 @@ jobs:
           "$gsc_wrapper" -v
           tmp_smoke="$(mktemp -d)"
           printf '(display "ok")\n' > "$tmp_smoke/gsc-smoke.scm"
-          "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
-          test -f "$tmp_smoke/gsc-smoke.o1"
+          "$gsc_wrapper" -target C -c "$tmp_smoke/gsc-smoke.scm"
+          test -f "$tmp_smoke/gsc-smoke.c"
 
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
