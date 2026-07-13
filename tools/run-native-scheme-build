@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source_root="$(dirname "$workspace")"
+
+exec gxpkg env env \
+  "GERBIL_LOADPATH=$source_root" \
+  gxi "$workspace/build.ss" "$@"
