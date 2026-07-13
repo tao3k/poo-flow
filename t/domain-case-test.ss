@@ -178,14 +178,22 @@
                 (and all-case-bindings-correct?
                      (eq? (.ref instance 'domain-case/ref) case-value)))
           (loop (+ index 1)))))
-    (let (instance-mix-count
-          (let loop ((index 0) (total 0))
-            (if (= index unique-count)
-                total
-                (loop (+ index 1)
-                      (+ total
-                         (poo-flow-domain-case-instance-mix-count
-                          (vector-ref cases index)))))))
+    (let* ((instance-mix-count
+            (let loop ((index 0) (total 0))
+              (if (= index unique-count)
+                  total
+                  (loop (+ index 1)
+                        (+ total
+                           (poo-flow-domain-case-instance-mix-count
+                            (vector-ref cases index)))))))
+           (instance-overlay-count
+            (let loop ((index 0) (total 0))
+              (if (= index unique-count)
+                  total
+                  (loop (+ index 1)
+                        (+ total
+                           (poo-flow-domain-case-instance-overlay-count
+                            (vector-ref cases index))))))))
       (poo-core-role-object
        (slots ((kind 'poo-flow.sparse-domain-case-scale-receipt.v1)
                (agent-count 1000)
@@ -198,7 +206,8 @@
                 (poo-flow-domain-case-cache-closure-count cache))
                (cache-hit-count
                 (poo-flow-domain-case-cache-hit-count cache))
-               (instance-mix-count instance-mix-count)))
+               (instance-mix-count instance-mix-count)
+               (instance-overlay-count instance-overlay-count)))
        (supers)))))
 
 (def domain-case-test
@@ -226,6 +235,9 @@
         (check (poo-flow-domain-case-cache-hit-count cache) => 1)
         (check (poo-flow-domain-case-instance-mix-count
                 (.ref cold 'domain-case))
+               => 0)
+        (check (poo-flow-domain-case-instance-overlay-count
+                (.ref cold 'domain-case))
                => 2)
         (check (.ref left-receipt 'accepted?) => #t)
         (check (.ref right-receipt 'accepted?) => #t)
@@ -235,8 +247,60 @@
         (check (.ref right 'source-revision) => "revision-2")
         (check (eq? (.ref left 'domain-case/ref) (.ref cold 'domain-case))
                => #t)
+        (check (.ref left 'domain-case/instance-overlay-kind)
+               => 'poo-flow.role-instance-overlay.v1)
+        (check (.ref left 'domain-case/instance-composition-kind)
+               => 'poo-flow.role-instance-overlay.v1)
+        (check (.ref left 'domain-case/instance-overlay-resolver-depth) => 1)
         (check (.ref left 'qualification/versioned?) => #t)
         (check (.ref left 'qualification/revision-bound?) => #t)))
+
+    (test-case "instance overlay preserves marker, local, and shared precedence"
+      (let* ((case-value
+              (.ref (close-base (poo-flow-domain-case-cache)) 'domain-case))
+             (local-role
+              (poo-core-role-object
+               (slots ((agent-id 'overlay-agent)
+                       (schema-id 'agent.case.v1)
+                       (schema-version 1)
+                       (source-revision "overlay-revision")
+                       (qualification/versioned? 'local-override)
+                       (domain-case/ref #f)
+                       (domain-case/key 'spoofed-key)))
+               (supers)))
+             (receipt
+              (poo-flow-domain-case-instantiate case-value local-role))
+             (instance (.ref receipt 'instance)))
+        (check (.ref receipt 'accepted?) => #t)
+        (check (.ref instance 'qualification/versioned?) => 'local-override)
+        (check (.ref instance 'qualification/revision-bound?) => #t)
+        (check (eq? (.ref instance 'domain-case/ref) case-value) => #t)
+        (check (.ref instance 'domain-case/key) => (.ref case-value 'key))
+        (check (poo-flow-domain-case-instance-mix-count case-value) => 0)
+        (check (poo-flow-domain-case-instance-overlay-count case-value) => 1)))
+
+    (test-case "computed POO slots retain native mix semantics"
+      (let* ((case-value
+              (.ref (close-base (poo-flow-domain-case-cache)) 'domain-case))
+             (computed-local-role
+              (.o (agent-id 'computed-agent)
+                  (schema-id 'agent.case.v1)
+                  (schema-version 1)
+                  (source-revision "computed-revision")))
+             (receipt
+              (poo-flow-domain-case-instantiate
+               case-value computed-local-role))
+             (instance (.ref receipt 'instance)))
+        (check (.ref receipt 'accepted?) => #t)
+        (check (.ref instance 'agent-id) => 'computed-agent)
+        (check (.ref instance 'qualification/versioned?) => #t)
+        (check (.ref instance 'domain-case/instance-overlay-kind) => #f)
+        (check (.ref instance 'domain-case/instance-composition-kind)
+               => 'poo-flow.role-compose-mix.v1)
+        (check (.ref instance 'domain-case/instance-overlay-resolver-depth)
+               => #f)
+        (check (poo-flow-domain-case-instance-mix-count case-value) => 1)
+        (check (poo-flow-domain-case-instance-overlay-count case-value) => 0)))
 
     (test-case "canonical key is deterministic and excludes procedures"
       (let* ((left
@@ -596,7 +660,8 @@
                            (eq? (.ref case-value 'shared-prototype)
                                 shared))))))
         (check (poo-flow-domain-case-cache-closure-count cache) => 1)
-        (check (poo-flow-domain-case-instance-mix-count case-value) => 1000)
+        (check (poo-flow-domain-case-instance-mix-count case-value) => 0)
+        (check (poo-flow-domain-case-instance-overlay-count case-value) => 1000)
         (check (.ref closure 'cache-hit?) => #f)))
 
     (test-case "1000 Agents use sparse U=8/32/64 role-policy-strategy cases"
@@ -611,7 +676,8 @@
            (check (.ref receipt 'all-case-bindings-correct?) => #t)
            (check (.ref receipt 'closure-count) => unique-count)
            (check (.ref receipt 'cache-hit-count) => unique-count)
-           (check (.ref receipt 'instance-mix-count) => 1000)))
+           (check (.ref receipt 'instance-mix-count) => 0)
+           (check (.ref receipt 'instance-overlay-count) => 1000)))
        '(8 32 64)))))
 
 (run-tests! domain-case-test)

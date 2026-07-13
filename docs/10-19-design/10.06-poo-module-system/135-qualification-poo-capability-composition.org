@@ -518,6 +518,69 @@ Focused tests cover:
 - cold closure, warm reuse, allocation, RSS, and rejection-cost measurements;
 - byte-identical JSON receipts before and after migration.
 
+* Phase 3: Constant-Slot Instance Overlay
+
+The repository owns =role-instance-overlay= as a POO-native instance
+composition primitive.  It accepts POO role objects and returns a Clan POO
+object; it does not expose an alist DSL, record DSL, patch language, or raw
+=self/super= hook as the ordinary interface.
+
+Eligibility is semantic, not nominal.  Every reachable slot specification in
+the marker, local role, and shared prototype MUST be a =$constant-slot-spec=.
+The ordinary =poo-core-role-object= path satisfies this constraint, and the
+module-owned =control-plane-role= is lowered to the same constant-slot form.
+If a role contains a self/computed/super slot, DomainCase instantiation uses the
+native =role-compose/.mix= path.  That fallback is required because delegating a
+computed slot to its source object would change the meaning of =self= and
+=super=.
+
+#+begin_src mermaid
+flowchart LR
+    DC["Closed DomainCase shared across U cases"] --> SP["Retained shared prototype and cached visible slots"]
+    SP --> SAFE{"All reachable slot specs constant?"}
+    MK["Case marker role"] --> FAST["role-instance-overlay"]
+    LR["Local Agent role"] --> FAST
+    SAFE -->|"yes"| FAST
+    FAST --> IDX["Marker/local owner index"]
+    FAST --> WRAP["object<-fun POO wrapper"]
+    WRAP --> THUNK["One thunk per visible slot key"]
+    THUNK --> LOOKUP["One owner-table decision then source .ref"]
+    SAFE -->|"no: self/computed/super"| MIX["Native role-compose/.mix fallback"]
+    MIX --> C3["Per-instance C3 with exact POO semantics"]
+#+end_src
+
+Let =K= be the visible slot-key count of the shared case and =L= the visible
+marker/local slot count.  The fast lane removes full per-Agent C3
+linearization, but =object<-fun= still materializes one thunk slot per supplied
+key.  Construction is therefore =O(K + L)= time and storage, not =O(1)=.  The
+owner index contains only marker/local overrides; every other key falls through
+to the already closed shared prototype.  A realized wrapper lookup performs one
+expected-=O(1)= owner-table decision followed by one source =.ref=.
+
+The DomainCase receipt separates =instance-overlay-count= from
+=instance-mix-count=.  Every instance exposes
+=domain-case/instance-composition-kind=.  Fast-lane instances additionally
+expose =domain-case/instance-overlay-kind= and a resolver depth of one; fallback
+instances expose false overlay metadata and retain the native mix counter.
+
+A benchmark receipt is conforming only when it records =N=, =K=, the
+baseline/overlay mix counts, resolver depth, construction and lookup complexity
+labels, supplied/materialized slot count, retained shared-prototype identity,
+local precedence, elapsed microseconds, correctness, timing status, and a
+Scheme-runner RSS budget.  The =K=8/32/64= fixture MUST keep semantic equality, zero
+overlay-path mix operations, and a measured large-case crossover win.  It MUST
+NOT report the fast lane as constant-time construction.
+
+The 2026-07-13 local focused receipt used =N=1000= for each case.  Timings are
+observations, not portable absolute budgets; the structural gates and crossover
+rule are normative.
+
+| K | materialized slots | baseline .mix us | overlay us | speedup | overlay mix count | resolver depth | pass |
+|---+--------------------+------------------+------------+---------+-------------------+----------------+------|
+| 8 |                 12 |             8951 |       7893 |   1.134 |                 0 |              1 | true |
+| 32 |                36 |            24967 |      13837 |   1.804 |                 0 |              1 | true |
+| 64 |                68 |           120914 |      66293 |   1.824 |                 0 |              1 | true |
+
 * Next decision
 
 Before facade promotion, freeze the internal CaseComponent descriptor,

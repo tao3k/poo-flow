@@ -614,6 +614,13 @@
   (let (metrics (.ref domain-case 'metrics))
     (vector-set! metrics 0 (+ 1 (vector-ref metrics 0)))))
 
+(def (poo-flow-domain-case-instance-overlay-count domain-case)
+  (vector-ref (.ref domain-case 'metrics) 1))
+
+(def (domain-case-instance-overlay-increment! domain-case)
+  (let (metrics (.ref domain-case 'metrics))
+    (vector-set! metrics 1 (+ 1 (vector-ref metrics 1)))))
+
 (def (domain-case-make-closure-receipt accepted? key case-value diagnostics
                                        cache-hit?)
   (poo-core-role-object
@@ -713,6 +720,8 @@
      (components components)
      (local-overrides local-overrides)
      (shared-prototype composition)
+     (instance-overlay-compatible?
+      (role-instance-overlay-compatible? composition))
      (type-contracts
       (poo-flow-map
        (lambda (component) (.ref component 'type-contract))
@@ -724,7 +733,7 @@
      (policy-algebra policy-algebra)
      (strategy-algebra strategy-algebra)
      (canonical-descriptor descriptor)
-     (metrics (vector 0))
+     (metrics (vector 0 0))
      (closed? #t)))
    (supers)))
 
@@ -903,19 +912,40 @@
                        local-role)))))
        (supers))
       (let* ((shared-prototype (.ref domain-case 'shared-prototype))
+             (overlay-compatible?
+              (and (.ref domain-case 'instance-overlay-compatible?)
+                   (role-instance-overlay-compatible? local-role)))
              (case-marker-role
               (poo-core-role-object
                (slots ((domain-case/ref domain-case)
-                       (domain-case/key (.ref domain-case 'key))))
+                       (domain-case/key (.ref domain-case 'key))
+                       (domain-case/instance-overlay-kind
+                        (and overlay-compatible?
+                             'poo-flow.role-instance-overlay.v1))
+                       (domain-case/instance-composition-kind
+                        (if overlay-compatible?
+                            'poo-flow.role-instance-overlay.v1
+                            'poo-flow.role-compose-mix.v1))
+                       (domain-case/instance-overlay-resolver-depth
+                        (and overlay-compatible? 1))))
                (supers)))
-             (instance
+             (composition-result
               (with-catch
                (lambda (failure)
                  (domain-case-diagnostic
                   'instance-role-composition-failed '(instance) failure))
                (lambda ()
-                 (role-compose case-marker-role local-role
-                               shared-prototype)))))
+                 (if overlay-compatible?
+                     (cons 'overlay
+                           (role-instance-overlay
+                            case-marker-role local-role shared-prototype))
+                     (cons 'mix
+                           (role-compose case-marker-role local-role
+                                         shared-prototype))))))
+             (instance
+              (if (pair? composition-result)
+                  (cdr composition-result)
+                  composition-result)))
         (if (domain-case-object-kind?
              instance 'poo-flow.domain-case-diagnostic.v1)
             (poo-core-role-object
@@ -925,7 +955,9 @@
                      (diagnostics (list instance))))
              (supers))
             (begin
-              (domain-case-instance-mix-increment! domain-case)
+              (if (eq? (car composition-result) 'overlay)
+                  (domain-case-instance-overlay-increment! domain-case)
+                  (domain-case-instance-mix-increment! domain-case))
               (let (diagnostics
                     (domain-case-instance-diagnostics domain-case instance))
                 (poo-core-role-object
