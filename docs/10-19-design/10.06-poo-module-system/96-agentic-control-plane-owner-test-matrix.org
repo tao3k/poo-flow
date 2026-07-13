@@ -2,7 +2,7 @@
 #+subtitle: RFC 90--94 implementation ownership, validation lanes, and readiness gates
 #+author: POO Flow Contributors
 #+date: 2026-07-10
-#+status: AC-00 baseline captured; AC-01 blocked
+#+status: AC-10 complete; AC-11 inventory ready and migration approval blocked
 #+options: toc:3 num:t
 
 * Purpose
@@ -135,10 +135,11 @@ durable-I/O performance claims.
 | AC-08 | Complete | AC-03 and AC-05 | Cedar/token/evidence semantics and fork-safe receipts |
 | AC-09 | Complete | AC-08 | Checked Lean linkage with mismatch rejection |
 | AC-10 | Complete | AC-06 through AC-09 | Integrated release qualification receipt 132 |
-| AC-11 | Planned | AC-10 and migration approval | Canonical route cutover and stale-route removal evidence |
+| AC-11 | Inventory ready; approval blocked | AC-10 and explicit migration approval of ledger 133 | Canonical route cutover and stale-route removal evidence |
 
-AC-10 is the active implementation package.  AC-11 remains blocked until the
-integrated qualification and explicit migration approval are complete.
+AC-10 is complete.  AC-11's non-destructive inventory is recorded in
+[[file:133-agentic-control-plane-ac11-cutover-ledger.org][ledger 133]].  Mutating cutover work remains blocked until an explicit release
+decision accepts that ledger's canonical routes and authorized removals.
 
 * Matrix maintenance rules
 
@@ -266,6 +267,15 @@ over the canonical bundle identity established here.
 | Fault matrix | existing runtime/evidence/proof owners | crash, timeout, cancel, retry, restore, indeterminate, fork, and truncation |
 | Performance matrix | existing native and Python benchmark owners | actual paths, reproducible environment, allocation/copy/crossing accounting |
 | ABI review | public C contract owner plus qualification receipt | explicit freeze decision; no implicit stability claim |
+
+* AC-11 Canonical Cutover
+
+| Concern | Owner | Qualification |
+|---------+-------+---------------|
+| Canonical and retirement inventory | [[file:133-agentic-control-plane-ac11-cutover-ledger.org][cutover ledger 133]] | exact owner, replacement, deletion gate, and approval state per capability |
+| Release decision | RFC 94 P6 plus public facade/release owners | explicit accepted ledger revision; Bundle/ABI versions; authorized deletion set |
+| Removal | owner named by each accepted ledger row | absence tests, no retired docs/tests, installed downstream consumer, full release qualification |
+| ABI freeze | public C contract and artifact owners | explicit decision only; never inferred from AC-10 success |
 
 * Related RFCs
 

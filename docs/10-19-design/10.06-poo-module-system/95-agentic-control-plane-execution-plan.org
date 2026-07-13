@@ -152,7 +152,7 @@ AC-06, AC-08, and the first part of AC-09 may proceed in separate commits after 
 | AC-08 | P4 | Cedar projection, tokens, receipts, evidence roots | AC-04, AC-05 | complete |
 | AC-09 | P5 | Lean-linked named claims | AC-03, AC-08 | complete |
 | AC-10 | P3–P5 | complete vertical slice and qualification pack | AC-06–AC-09 | complete |
-| AC-11 | P6 | canonical cutover and stale-route removal | AC-10 | planned |
+| AC-11 | P6 | canonical cutover and stale-route removal | AC-10 | inventory ready; migration approval blocked |
 
 * Proposed Owner Allocation
 The following allocation is proposed. AC-00 must confirm each path with ASP owner evidence before the first code commit. If provider evidence identifies a better existing owner, update 10.06.96 before creating a competing module.
@@ -428,6 +428,11 @@ POO/session authoring
 * AC-11 — Canonical Cutover And Removal
 ** Purpose
 Make the new path canonical once and remove weaker or duplicate public semantics.
+
+The non-destructive route and retirement inventory is maintained in
+[[file:133-agentic-control-plane-ac11-cutover-ledger.org][AC-11 Canonical Cutover Ledger]].  Its inventory does not itself authorize
+deletion, publication, or ABI freeze; RFC 94 P6 still requires an explicit
+release decision accepting the canonical routes.
 
 ** Tasks
 - Activate the Bundle compiler and accepted runtime ABI as canonical.
