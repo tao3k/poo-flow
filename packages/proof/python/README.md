@@ -25,6 +25,15 @@ runtime = NativeProofCaseRuntime("/path/to/libpoo_flow_runtime.dylib")
 layout = assert_native_differential(runtime, native_vector)
 ```
 
+For the production caller-owned path, reuse an output buffer. ABI layout and
+fingerprint negotiation happens once per runtime instance; thread-local CFFI
+scratch objects are reused after their first call:
+
+```python
+output = bytearray(424)
+layout = runtime.validate_and_write(native_vector, output)
+```
+
 The differential gate requires Python and C to agree on validation status,
 schema fingerprint, ABI layout, and the exact round-trip bytes. Rust,
 TypeScript, and other language runtimes remain downstream adapters over the

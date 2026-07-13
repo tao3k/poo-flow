@@ -302,6 +302,12 @@ construction-order invariance as the semantic-root upstream gate.
 - Batch inclusion and proof receipts are reproducible.
 
 ** Performance
+The production Python wheel caches layout/fingerprint negotiation after one
+measurement and reuses thread-local CFFI scratch plus caller-owned output.
+Steady-state processing uses three crossings per item instead of four and has
+zero caller-output allocations per item. The installed-wheel benchmark runs
+Strict and Batched separately; its first receipt is baseline-only because host
+scheduling produces large p99 outliers at higher batches.
 The proof-case benchmark measures the real caller-owned C path for Strict and
 Batched profiles at batch sizes 1, 8, 32, 128, and 1024. Storage is allocated
 before timing; each item performs one whole-vector init, write, and release,

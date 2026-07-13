@@ -12,6 +12,7 @@ REPO_ROOT = Path(__file__).parents[4]
 PACKAGE_ROOT = Path(__file__).parents[1]
 VECTOR = REPO_ROOT / "packages/proof/vectors/proof_case_vector_v1_positive.hex"
 CONSUMER = Path(__file__).with_name("installed_wheel_consumer.py")
+BENCHMARK = PACKAGE_ROOT / "benchmarks/proof_case_cffi_benchmark.py"
 
 
 def test_installed_wheel_consumes_public_c_abi(tmp_path: Path) -> None:
@@ -91,3 +92,27 @@ def test_installed_wheel_consumes_public_c_abi(tmp_path: Path) -> None:
         completed.stdout
     )
     assert "site-packages" in completed.stdout
+
+    benchmark = subprocess.run(
+        [
+            str(python),
+            str(BENCHMARK),
+            "--library",
+            str(library),
+            "--vector",
+            str(VECTOR),
+            "--iterations",
+            "2",
+            "--max-batch",
+            "8",
+        ],
+        cwd=tmp_path,
+        env=consumer_env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "path=installed-wheel-caller-owned" in benchmark.stdout
+    assert "crossings-per-item-steady=3" in benchmark.stdout
+    assert "layout-measurements=1" in benchmark.stdout
+    assert "caller-output-allocations-per-item=0" in benchmark.stdout

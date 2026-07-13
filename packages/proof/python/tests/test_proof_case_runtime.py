@@ -90,6 +90,33 @@ def test_native_cffi_round_trip_matches_python_contract(
     assert validate_proof_case_vector(vector) is ProofStatus.OK
 
 
+def test_layout_negotiates_once_and_hot_path_reuses_caller_buffer(
+    native_runtime: NativeProofCaseRuntime,
+) -> None:
+    vector = positive_vector()
+    first = bytearray(VECTOR_SIZE)
+    second = bytearray([0xA5]) * VECTOR_SIZE
+
+    first_layout = native_runtime.validate_and_write(vector, first)
+    second_layout = native_runtime.validate_and_write(vector, second)
+
+    assert first_layout == second_layout
+    assert native_runtime.layout_measurements == 1
+    assert first == vector
+    assert second == vector
+
+
+def test_caller_buffer_capacity_failure_is_atomic(
+    native_runtime: NativeProofCaseRuntime,
+) -> None:
+    output = bytearray([0xA5]) * (VECTOR_SIZE - 1)
+
+    with pytest.raises(ProofCaseError) as caught:
+        native_runtime.validate_and_write(positive_vector(), output)
+    assert caught.value.status is ProofStatus.BUFFER_TOO_SMALL
+    assert output == bytearray([0xA5]) * (VECTOR_SIZE - 1)
+
+
 def test_scheme_c_python_and_lean_fixture_share_one_vector(
     native_runtime: NativeProofCaseRuntime,
 ) -> None:

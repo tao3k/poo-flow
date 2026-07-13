@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from os import PathLike
 from struct import unpack_from
+from threading import Lock, local
 
 from cffi import FFI
 
@@ -152,43 +153,95 @@ class NativeProofCaseRuntime:
         self.ffi = FFI()
         self.ffi.cdef(_CDEF)
         self.lib = self.ffi.dlopen(str(library))
+        self._layout: ProofCaseLayout | None = None
+        self._layout_lock = Lock()
+        self._layout_measurements = 0
+        self._thread_local = local()
+
+    @property
+    def layout_measurements(self) -> int:
+        with self._layout_lock:
+            return self._layout_measurements
+
+    def _scratch(self) -> tuple[object, object, object]:
+        scratch = getattr(self._thread_local, "proof_case_scratch", None)
+        if scratch is None:
+            scratch = (
+                self.ffi.new("poo_flow_proof_case_handle *"),
+                self.ffi.new("size_t *"),
+                self.ffi.new("poo_flow_proof_case_layout *"),
+            )
+            self._thread_local.proof_case_scratch = scratch
+        return scratch
 
     def _raise(self, raw_status: int) -> None:
         status = ProofStatus(raw_status)
         name = self.ffi.string(self.lib.poo_flow_proof_status_name(raw_status)).decode()
         raise ProofCaseError(status, name)
 
-    def validate_and_copy(self, vector: bytes) -> tuple[ProofCaseLayout, bytes]:
+    def _negotiate_layout(self, handle: object, raw_layout: object) -> ProofCaseLayout:
+        layout = self._layout
+        if layout is not None:
+            return layout
+        with self._layout_lock:
+            if self._layout is not None:
+                return self._layout
+            status = self.lib.poo_flow_proof_case_measure(handle, raw_layout)
+            if status != ProofStatus.OK:
+                self._raise(status)
+            measured = ProofCaseLayout(
+                required_size=raw_layout.required_size,
+                alignment=raw_layout.alignment,
+                abi_version=raw_layout.abi_version,
+                schema_fingerprint=bytes(
+                    self.ffi.buffer(raw_layout.schema_fingerprint, 32)
+                ),
+            )
+            expected = ProofCaseLayout(
+                VECTOR_SIZE,
+                VECTOR_ALIGNMENT,
+                ABI_VERSION,
+                bytes.fromhex(SCHEMA_FINGERPRINT_HEX),
+            )
+            if measured != expected:
+                raise ProofCaseError(
+                    ProofStatus.SCHEMA_MISMATCH,
+                    "C ABI layout differs from generated Python contract",
+                )
+            self._layout = measured
+            self._layout_measurements += 1
+            return measured
+
+    def validate_and_write(
+        self, vector: bytes, output: bytearray
+    ) -> ProofCaseLayout:
+        """Validate and write into caller-owned output with cached negotiation."""
         backing = self.ffi.from_buffer("const unsigned char[]", vector)
-        handle = self.ffi.new("poo_flow_proof_case_handle *")
+        output_view = self.ffi.from_buffer("unsigned char[]", output)
+        handle, written, raw_layout = self._scratch()
         status = self.lib.poo_flow_proof_case_init(backing, len(vector), handle)
         if status != ProofStatus.OK:
             self._raise(status)
         try:
-            raw_layout = self.ffi.new("poo_flow_proof_case_layout *")
-            status = self.lib.poo_flow_proof_case_measure(handle, raw_layout)
-            if status != ProofStatus.OK:
-                self._raise(status)
-            layout = ProofCaseLayout(
-                required_size=raw_layout.required_size,
-                alignment=raw_layout.alignment,
-                abi_version=raw_layout.abi_version,
-                schema_fingerprint=bytes(self.ffi.buffer(raw_layout.schema_fingerprint, 32)),
-            )
-            output = self.ffi.new("unsigned char[]", layout.required_size)
-            written = self.ffi.new("size_t *")
+            layout = self._negotiate_layout(handle, raw_layout)
+            written[0] = 0
             status = self.lib.poo_flow_proof_case_write(
-                handle, output, layout.required_size, written
+                handle, output_view, len(output), written
             )
             if status != ProofStatus.OK:
                 self._raise(status)
             if written[0] != layout.required_size:
                 raise RuntimeError("C ABI returned an inconsistent proof-case length")
-            return layout, bytes(self.ffi.buffer(output, written[0]))
+            return layout
         finally:
             status = self.lib.poo_flow_proof_case_release(handle)
             if status != ProofStatus.OK:
                 self._raise(status)
+
+    def validate_and_copy(self, vector: bytes) -> tuple[ProofCaseLayout, bytes]:
+        output = bytearray(VECTOR_SIZE)
+        layout = self.validate_and_write(vector, output)
+        return layout, bytes(output)
 
 
 def assert_native_differential(

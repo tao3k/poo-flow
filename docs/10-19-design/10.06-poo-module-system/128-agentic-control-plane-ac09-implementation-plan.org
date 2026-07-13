@@ -116,6 +116,10 @@ Focused gates:
 - installed wheel consumer.
 
 * Step 6 — Security, Property, And Performance Qualification
+For Python CFFI, negotiate layout/fingerprint once per loaded runtime, reuse
+thread-local scratch and caller-owned output, and prove steady-state crossings
+fall from four to three. Benchmark the non-editable installed wheel and keep
+the initial host result baseline-only.
 Benchmark Strict and Batched separately over the real caller-owned whole-vector
 C path. Record crossings, copied bytes, allocations, p50/p99, and batch scaling.
 Use the binary-search implementation owner for root-history complexity and keep
