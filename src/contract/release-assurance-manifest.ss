@@ -4,7 +4,9 @@
         :std/crypto/digest
         :std/sort
         :std/text/hex
-        :poo-flow/src/module-system/object-family-syntax)
+        :poo-flow/src/core/object-syntax
+        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/qualification/capability-prototypes)
 
 (def +poo-flow-release-assurance-manifest-schema+
   'poo-flow.release-assurance-manifest.v1)
@@ -138,6 +140,9 @@
                                            identities-value tcbs-value
                                            claims-value gates-value
                                            abi-decision-value)
+  (poo-flow-qualification-capability-composition-assert!
+   (list (cons 'versioned +poo-flow-versioned-capability-slots+)
+         (cons 'revision-bound +poo-flow-revision-bound-capability-slots+)))
   (let ((release-value
          (object<-alist
           (list (cons 'kind 'poo-flow.release-assurance-release.v1)
@@ -155,13 +160,17 @@
                 (cons 'tcbs tcbs-value)
                 (cons 'claims claims-value)
                 (cons 'gates gates-value)))))
-    (object<-alist
-     (list (cons 'kind +poo-flow-release-assurance-manifest-schema+)
-           (cons 'schema +poo-flow-release-assurance-manifest-schema+)
-           (cons 'release release-value)
-           (cons 'environment environment-value)
-           (cons 'assurance assurance-value)
-           (cons 'abi-decision abi-decision-value)))))
+    (poo-core-role-object
+     (slots ((kind +poo-flow-release-assurance-manifest-schema+)
+             (schema +poo-flow-release-assurance-manifest-schema+)
+             (release release-value)
+             (environment environment-value)
+             (assurance assurance-value)
+             (abi-decision abi-decision-value)))
+     (supers
+      (poo-flow-versioned-capability
+       +poo-flow-release-assurance-manifest-schema+ 1)
+      (poo-flow-revision-bound-capability revision-value)))))
 
 (def (assurance-id->string value)
   (cond
@@ -292,6 +301,28 @@
     (unless (poo-flow-release-assurance-manifest? manifest)
       (reject! 'invalid-manifest '(kind) manifest))
     (when (poo-flow-release-assurance-manifest? manifest)
+      (let (capabilities-valid?
+            (poo-flow-qualification-capabilities-valid?
+             manifest
+             (list poo-flow-versioned-capability-valid?
+                   poo-flow-revision-bound-capability-valid?)))
+        (unless capabilities-valid?
+          (reject! 'invalid-capability-composition '(capabilities) #f))
+        (when capabilities-valid?
+          (unless (and (equal? (.ref manifest 'schema-id)
+                               +poo-flow-release-assurance-manifest-schema+)
+                       (= (.ref manifest 'schema-version) 1))
+            (reject! 'capability-schema-mismatch
+                     '(capabilities versioned)
+                     (list (.ref manifest 'schema-id)
+                           (.ref manifest 'schema-version))))
+          (unless (equal?
+                   (.ref manifest 'source-revision)
+                   (poo-flow-release-assurance-manifest-source-revision
+                    manifest))
+            (reject! 'capability-revision-mismatch
+                     '(capabilities revision-bound source-revision)
+                     (.ref manifest 'source-revision)))))
       (unless (nonempty-id?
                (poo-flow-release-assurance-manifest-release-id manifest))
         (reject! 'missing-release-id '(release-id) #f))

@@ -1,7 +1,9 @@
 (import :std/test
         :gslph/src/testing/memory-profile
         :clan/poo/object
-        :poo-flow/src/contract/release-assurance-manifest)
+        :poo-flow/src/contract/release-assurance-manifest
+        :poo-flow/src/core/object-syntax
+        :poo-flow/src/qualification/capability-prototypes)
 
 (declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
@@ -37,6 +39,28 @@
    '((bundle . "bundle-digest") (proof-vector . "vector-digest"))
    tcbs claims gates abi))
 
+(def (manifest-local-shell value)
+  (list (cons 'kind +poo-flow-release-assurance-manifest-schema+)
+        (cons 'schema +poo-flow-release-assurance-manifest-schema+)
+        (cons 'release (.ref value 'release))
+        (cons 'environment (.ref value 'environment))
+        (cons 'assurance (.ref value 'assurance))
+        (cons 'abi-decision (.ref value 'abi-decision))))
+
+(def (manifest-with-capabilities value schema-id-value schema-version-value
+                                 revision-value)
+  (poo-core-role-object
+   (slots ((kind +poo-flow-release-assurance-manifest-schema+)
+           (schema +poo-flow-release-assurance-manifest-schema+)
+           (release (.ref value 'release))
+           (environment (.ref value 'environment))
+           (assurance (.ref value 'assurance))
+           (abi-decision (.ref value 'abi-decision))))
+   (supers
+    (poo-flow-versioned-capability
+     schema-id-value schema-version-value)
+    (poo-flow-revision-bound-capability revision-value))))
+
 (def release-assurance-manifest-test
   (test-suite "AC-10 S1 ReleaseAssuranceManifest v1"
     (test-case "POO-native object family and complete manifest validate"
@@ -49,8 +73,50 @@
           (check (poo-flow-assurance-evidence-reference? evidence-a) => #t)
           (check (poo-flow-assurance-gate-result? gate-a) => #t)
           (check (poo-flow-assurance-abi-decision? abi) => #t)
+          (check (.ref value 'qualification/versioned?) => #t)
+          (check (.ref value 'schema-id)
+                 => +poo-flow-release-assurance-manifest-schema+)
+          (check (.ref value 'schema-version) => 1)
+          (check (.ref value 'qualification/revision-bound?) => #t)
+          (check (.ref value 'source-revision) => "revision-1")
           (check (.ref receipt 'accepted?) => #t)
           (check (.ref receipt 'diagnostics) => '()))))
+    (test-case "capability instances are isolated"
+      (let ((left (manifest (list claim-a) (list gate-a) (list tcb)))
+            (right (poo-flow-release-assurance-manifest
+                    'rc-2 "revision-2" 'macos-arm64
+                    '((gerbil . "0.18.2"))
+                    '((bundle . "bundle-digest"))
+                    (list tcb) (list claim-a) (list gate-a) abi)))
+        (check (.ref left 'source-revision) => "revision-1")
+        (check (.ref right 'source-revision) => "revision-2")
+        (check (.ref left 'schema-version) => 1)
+        (check (.ref right 'schema-version) => 1)))
+    (test-case "missing and divergent capability bindings fail closed"
+      (let* ((valid (manifest (list claim-a) (list gate-a) (list tcb)))
+             (flat (object<-alist (manifest-local-shell valid)))
+             (wrong-schema
+              (manifest-with-capabilities
+               valid 'poo-flow.release-assurance-manifest.other 2
+               "revision-1"))
+             (divergent
+              (manifest-with-capabilities
+               valid +poo-flow-release-assurance-manifest-schema+ 1
+               "other-revision")))
+        (check (map (lambda (entry) (cdr (assq 'code entry)))
+                    (.ref (poo-flow-release-assurance-manifest-validate flat)
+                          'diagnostics))
+               => '(invalid-capability-composition))
+        (check (map (lambda (entry) (cdr (assq 'code entry)))
+                    (.ref
+                     (poo-flow-release-assurance-manifest-validate wrong-schema)
+                     'diagnostics))
+               => '(capability-schema-mismatch))
+        (check (map (lambda (entry) (cdr (assq 'code entry)))
+                    (.ref
+                     (poo-flow-release-assurance-manifest-validate divergent)
+                     'diagnostics))
+               => '(capability-revision-mismatch))))
     (test-case "construction order does not change canonical identity"
       (let* ((left (manifest (list claim-a claim-b)
                              (list gate-a gate-b) (list tcb)))

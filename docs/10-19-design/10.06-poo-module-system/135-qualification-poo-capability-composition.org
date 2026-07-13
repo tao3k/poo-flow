@@ -2,7 +2,7 @@
 #+subtitle: Recovering prototype reuse without changing wire or receipt contracts
 #+author: POO Flow Contributors
 #+date: 2026-07-12
-#+status: First bounded migration implemented
+#+status: Second bounded migration implemented
 #+options: toc:3 num:t
 
 * Problem
@@ -26,6 +26,7 @@ flowchart TD
 
     M["ReleaseVersionMatrix"]
     C["CutoverReadinessInput"]
+    A["ReleaseAssuranceManifest"]
 
     V --> M
     O --> M
@@ -34,6 +35,8 @@ flowchart TD
     R --> C
     E --> C
     D --> C
+    V --> A
+    R --> A
 #+end_src
 
 Each capability is a parameterized POO parent prototype and owns a disjoint
@@ -63,6 +66,27 @@ diagnostics, JSON key order, and fixed safety flags remain unchanged.
 Wire vectors, hot buffers, cryptographic tokens, evidence snapshots, and Bundle
 facet algebras are deliberately outside this inheritance tranche.
 
+* Second migration
+
+=ReleaseAssuranceManifest= now composes Versioned and RevisionBound only.  The
+existing =release.source-revision= projection remains the canonical receipt and
+digest source; validation requires it to equal the inherited
+=source-revision=.  This deliberate duplicate projection preserves the v1
+contract while making revision-bound behavior reusable.
+
+OwnerBound is not composed because the manifest does not expose the same
+=owner-artifacts= domain.  EvidenceBound is not composed because claims,
+evidence references, TCBs, and their ordering/inclusion rules form a stronger
+proof-linked contract.  DecisionState is not composed because assurance claim
+validity and ABI review are not AC-11 cutover decision/freeze/delete state.
+The release, environment, assurance, claim, TCB, evidence, gate, and ABI
+subobjects therefore retain their current owners in this tranche.
+
+The normalized form remains an explicit functional projection.  It does not
+materialize prototype markers, =schema-id=, or =schema-version=.  The frozen
+fixture digest remains
+=871e2303fcabbaffb4b3a95dfbafdef4fb65768ad9a5ae4c75e409b20bd73de5=.
+
 * Qualification
 
 Focused tests cover:
@@ -74,11 +98,15 @@ Focused tests cover:
 - missing-slot rejection;
 - duplicate capability and cross-capability slot collision rejection;
 - existing release-version and cutover-readiness positive and negative suites;
+- inherited manifest schema/revision resolution and instance isolation;
+- rejection of a flat manifest without capability parents;
+- rejection when inherited and release-projected revisions diverge;
 - byte-identical JSON receipts before and after migration.
 
 * Next decision
 
-Measure the removed duplicate construction/validation code and review whether
-ReleaseAssuranceManifest has the same orthogonal capabilities.  Do not migrate
-Bundle facets merely because they share field names; their composition algebras
-remain distinct.
+Review repeated behavior in the release/environment/assurance subobjects only
+when a semantic capability contract, rather than a shared field name, is
+proven.  Do not migrate proof-linked evidence or Bundle facets merely because
+they resemble generic qualification slots; their validation and composition
+algebras remain distinct.
