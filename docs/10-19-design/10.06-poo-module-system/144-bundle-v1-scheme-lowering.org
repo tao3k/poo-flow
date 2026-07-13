@@ -1,0 +1,233 @@
+#+title: RFC 0144: POO-native Bundle v1 Scheme Lowering
+#+status: accepted
+#+phase: 3I
+
+* 结论
+
+Phase 3I 在 Scheme 控制面中实现 Bundle v1 的纯 lowering plan。公开输入和输出都
+是 POO object；alist 只作为 POO implementation 内部的 slot assembly 机制，既不
+导出，也不是用户 DSL。
+
+这个阶段不直接写 C pointer，也不调用 Python。它把 Domain Case 所需的
+component、edge、evidence identity 降低成固定宽度 compact-id、严格排序的 native
+row、对齐 region、256-byte descriptor receipt 和 32-byte Bundle digest。下一阶段
+只需按 receipt 向已注册 foreign arena 写入字节，不再重新解释 POO 语义。
+
+* 控制面与 native 边界
+
+#+begin_src mermaid
+flowchart LR
+  CASE["Domain Case composition"]
+  COMPONENT["POO Bundle component<br/>object + type + contract"]
+  EDGE["POO composition edge"]
+  EVIDENCE["POO evidence obligation"]
+  LOWER["Functional Scheme lowering"]
+  IDS["Domain-separated SHA-256<br/>128-bit compact IDs"]
+  SORT["Pure stable sort<br/>strict unique keys"]
+  PLAN["POO lowering plan"]
+  DESCRIPTOR["Bundle v1 descriptor receipt"]
+  ARENA["Phase 3J foreign arena writer"]
+  CABI["Bundle v1 C validator / lookup"]
+
+  CASE --> COMPONENT
+  CASE --> EDGE
+  CASE --> EVIDENCE
+  COMPONENT --> LOWER
+  EDGE --> LOWER
+  EVIDENCE --> LOWER
+  LOWER --> IDS --> SORT --> PLAN --> DESCRIPTOR
+  DESCRIPTOR --> ARENA --> CABI
+#+end_src
+
+Phase 3I 的 plan 是 immutable semantic value。C ABI 看不到 Scheme object；Scheme
+控制面也不直接拼 C struct。
+
+* POO-native 公共面
+
+公开构造器：
+
+- =feature-bundle-v1-component=：case、component、object、type、contract、role、
+  capability、policy、strategy、adapter、projection 和 composition order；
+- =feature-bundle-v1-edge=：case、source、target、relation 和 order；
+- =feature-bundle-v1-evidence=：case、obligation、contract、evidence type、proof
+  system 和 order；
+- =feature-bundle-v1-lowering=：Bundle identity、uint64 epoch 与三类 POO value
+  list；
+- =require-feature-bundle-v1-lowering-plan=：只接受 =accepted?=#t= 的 plan。
+
+输出依旧是 POO object：
+
+- =feature-bundle-v1-compact-id=；
+- =feature-bundle-v1-region=；
+- =feature-bundle-v1-descriptor=；
+- =feature-bundle-v1-diagnostic=；
+- =feature-bundle-v1-lowering-plan=。
+
+重复 object family 通过本模块的 declarative macro 生成 constructor，展开结果是
+普通 POO object construction。模块使用显式 export list；内部 macro、native-row
+constructor、validator 与 layout helper 都不会泄漏为公共 API。没有 raw
+=(lambda (self super) ...)= compute hook，也没有公开 record/alist patch language。
+
+* Scheme identity 到 C compact-id
+
+每个 native identity 使用以下 canonical input：
+
+#+begin_example
+poo-flow.bundle-v1.id/<domain>/<typed-semantic-id>
+#+end_example
+
+=typed-semantic-id= 显式区分 symbol、string 与 exact integer。对 canonical string
+计算 SHA-256，前 8 bytes 按 big-endian 组成 =high=，随后 8 bytes 组成 =low=。
+
+domain separation 防止同名 =role=、=component=、=contract= 被意外视作一个 C
+identity。稳定向量：
+
+#+begin_example
+domain=obligation source=0
+high=15650260190551699577
+low=10580127755728368254
+#+end_example
+
+这个向量必须由未来 Rust、Python、TypeScript adapter 共同复用。
+
+* Functional lowering
+
+实现复用 =src/utilities/functional.ss= 的 =poo-flow-map=、
+=poo-flow-fold-left=、=poo-flow-all?= 与 =poo-flow-list-of?=，并使用 Gerbil
+=stable-sort= 生成新 list，不修改输入 composition。
+
+#+begin_src mermaid
+flowchart TD
+  INPUT["POO values"] --> VALIDATE["all? identity/order validation"]
+  VALIDATE -->|"invalid"| REJECT["POO diagnostic + rejected plan"]
+  VALIDATE --> MAP["map semantic IDs to compact IDs"]
+  MAP --> SORT["stable-sort by frozen C key order"]
+  SORT --> UNIQUE["strict adjacent-key validation"]
+  UNIQUE -->|"duplicate"| REJECT
+  UNIQUE --> LAYOUT["fold sizes into aligned regions"]
+  LAYOUT --> DIGEST["canonical SHA-256 Bundle digest"]
+  DIGEST --> READY["accepted POO lowering plan"]
+#+end_src
+
+排序 key 与 C validator 完全一致：
+
+- component：=(case-id, component-id)=；
+- edge：=(case-id, source-component-id, composition-order,
+  target-component-id, relation-id)=；
+- evidence：=(case-id, obligation-id)=。
+
+打开 Bundle 时 C validator 做一次 =O(n)= 严格排序验证；运行期 component lookup
+继续使用 RFC 0143 的 =O(log n)= lower-bound。
+
+* Frozen layout receipt
+
+Scheme plan 固定以下 C layout fact：
+
+| Region | Stride | Alignment |
+|--------+--------+-----------|
+| symbols | 32 B | 8 B |
+| components | 200 B | 8 B |
+| edges | 80 B | 8 B |
+| evidence obligations | 96 B | 8 B |
+| metadata bytes | 1 B | 1 B |
+
+descriptor size 固定为 256 B；arena 至少 64 B，并向 64-byte boundary 对齐。
+lowering plan 已经逐项固定 C descriptor 的 =struct_size=、flags、schema major/minor、
+reserved0、bundle id、digest、epoch、arena bytes、五个 region 和七个 reserved
+uint64。native component/edge/evidence row 也显式携带必须为零的 reserved 字段，
+因此 arena writer 只负责编码，不再补充或猜测 ABI 语义。
+
+Phase 3I 没有 symbol metadata materialization，所以 symbols 与 metadata region
+合法地为空；所有执行期 identity 已经是 compact-id。
+
+* Fail-closed 规则
+
+以下输入生成 =status=rejected= 的 POO plan：
+
+- Bundle id 不是非空 symbol/string 或 uint64；
+- Bundle epoch 不是 uint64；
+- collection 不是 proper list；
+- component、edge、evidence 不是对应 POO object；
+- identity slot 缺失或类型非法；
+- composition order 超出 uint64；
+- component、edge 或 evidence key 重复。
+
+lowering 不接受 raw alist component。=require-feature-bundle-v1-lowering-plan=
+用于 runtime handoff 前最后一道 fail-closed gate。
+
+* fold-left 语义回归
+
+千 agent benchmark 首次运行正确拒绝了重复 evidence key。审计定位到公共
+=poo-flow-fold-left= 的 callback 顺序是 =(element accumulator)=，而 compact-id
+实现误写成 =(accumulator element)=，导致 SHA-256 segment 被压缩成小整数。
+
+修复后增加两个门禁：
+
+- compact-id 的 high/low 必须保留完整 64-bit SHA-256 prefix；
+- =obligation/0= 使用上面的固定 golden vector。
+
+这证明 fail-closed duplicate validation 不只是输入检查，也能发现 identity
+lowering 的算法错误。
+
+* 1,000-agent 验证
+
+本机 Scheme benchmark 输入：
+
+- 1,000 components；
+- 999 dependency edges；
+- 1,000 Lean evidence obligations；
+- 不同 type、contract、role、capability、policy、strategy、adapter 与 projection。
+
+结果：
+
+#+begin_example
+bundle-epoch=1
+arena-bytes=375936
+digest-bytes=32
+elapsed-seconds=.618149995803833
+input-interface=poo-native
+layout=typed-native-regions
+json-in-hot-path=false
+#+end_example
+
+整个 =gxi= 进程峰值约 226 MB、0 swap。该数据是当前机器的工程回归证据，不是
+跨硬件 SLA。
+
+* 与 Phase 3G 的关系
+
+Phase 3G 的 =FeatureRuntimeHandoffPlan= 已经把 Bundle、Cedar 与 Lean/Evidence
+handoff 分开；Phase 3I 固定这些 handoff 最终使用的 native identity 与 table
+layout。
+
+下一阶段需要增加一个 POO-native projection：从 accepted Domain Case assembly
+和 adapter/projection binding 自动生成本 RFC 的 component/edge/evidence object。
+用户不应长期手工枚举 row。projection 完成后，再实现 foreign arena writer，并让
+Runtime v1 直接消费 Bundle v1。
+
+* AOT 与 Scheme memory guard
+
+本阶段不以 =gxi/gxc= 进程退出码单独判定成功；门禁同时检查错误文本、目标产物、
+进程树 RSS、outer RSS 与 swap：
+
+- 标准 =gxpkg build= 增量构建完成，Scheme build-api guard 记录进程树峰值
+  397,364,416 B，小于 805,306,368 B 上限；
+- 只编译 =bundle-v1-lowering.ss= 到独立 artifact root 时退出码为 0，生成 9
+  个 artifact，错误匹配为 0，峰值 RSS 为 263,634,944 B；
+- 全树从空 artifact root 执行 =build.ss compile= 时，guard 在
+  813,491,984 B fail closed，超过上限 8,185,616 B，退出码为 70，且没有 swap。
+
+单模块 AOT 证明 Phase 3I 自身没有逼近内存上限；全树门禁仍是正式 release
+blocker，不能通过提高 RSS 上限隐藏。该全树包含本工作树中不属于 Phase 3I 的其他
+未提交模块，因此需要在后续阶段按 active compile unit 继续归因，而不能把聚合越界
+错误归因给本 lowering 模块。
+
+* 后续门禁
+
+1. Domain Case 到 Bundle v1 POO projection；
+2. Scheme-side registered foreign arena writer；
+3. 同一 arena 通过 C validator 与 Python CFFI；
+4. Cedar/evidence consumer 读取同一 obligation rows；
+5. 一次性移除 runtime-v0 header、symbol、Python module、环境变量和测试；
+6. Runtime v1 symbol surface、ASan/UBSan、AOT/RSS、wheel install 全绿。
+
+不增加 v0 wrapper，也不提供 legacy row syntax。
