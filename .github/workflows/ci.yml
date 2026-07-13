@@ -234,7 +234,7 @@ jobs:
           if [ "$package_cache_ready" = "true" ]; then
             echo "Using cached Gerbil package dependency build products"
           else
-            gxpkg deps --install
+            GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gxpkg deps --install
           fi
           gxpkg list
 
