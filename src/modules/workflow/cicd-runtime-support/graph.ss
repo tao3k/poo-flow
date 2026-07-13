@@ -29,8 +29,8 @@
 
 ;; Duplicate names make dependency refs ambiguous, so the graph reports them
 ;; before any downstream scheduler tries to interpret edges.
-;; : (-> Pair Symbol Pair)
-(def (poo-flow-cicd-duplicate-symbol-state state name)
+;; : (-> Symbol Pair Pair)
+(def (poo-flow-cicd-duplicate-symbol-state name state)
   (let ((seen (car state))
         (duplicates (cdr state)))
     (if (poo-flow-cicd-symbol-member? name seen)

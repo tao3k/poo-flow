@@ -20,10 +20,16 @@
 (def (poo-flow-project-nono-c-binding-include-option)
   (string-append "-I" (path-expand "bindings/nono-c")))
 
+(def (poo-flow-project-nono-c-binding-link-options)
+  (cond-expand
+    (darwin '("-ld-options" "-Wl,-undefined,dynamic_lookup"))
+    (else '("-ld-options" "-ldl"))))
+
 (def (poo-flow-project-ffi-build-spec)
-  `((gsc: "src/modules/nono-sandbox/_nono.ss"
-          "-cc-options" ,(poo-flow-project-nono-c-binding-include-option))
-    (ssi: "src/modules/nono-sandbox/_nono.ss")))
+  `((gsc: "src/modules/nono-sandbox/_nono"
+          "-cc-options" ,(poo-flow-project-nono-c-binding-include-option)
+          ,@(poo-flow-project-nono-c-binding-link-options))
+    (ssi: "src/modules/nono-sandbox/_nono")))
 
 (def +poo-flow-project-interface-only-modules+
   '("module-system/object-family-syntax.ss"
@@ -115,14 +121,18 @@
          (interface-root (path-expand "user-interface" root)))
     (list
      (make-package-source-stage
+      "nono-c-ffi"
+      root
+      "poo-flow"
+      (poo-flow-project-ffi-build-spec)
+      #t)
+     (make-package-source-stage
       "runtime"
       root
       "poo-flow"
-      (append
-       (poo-flow-project-ffi-build-spec)
-       (map poo-flow-project-runtime-spec
-            (filter poo-flow-project-runtime-module?
-                    (poo-flow-project-source-modules runtime-root))))
+      (map poo-flow-project-runtime-spec
+           (filter poo-flow-project-runtime-module?
+                   (poo-flow-project-source-modules runtime-root)))
       'topology)
      (make-package-source-stage
       "user-interface"
