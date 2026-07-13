@@ -218,16 +218,7 @@ jobs:
             //bindings/runtime-c:runtime_v0_gerbil_ffi_benchmark
 
       - name: Reject stale runtime-C Make routes
-        run: |
-          set -euo pipefail
-          if git grep -n -E \
-            'make -C bindings/runtime-c|bindings/runtime-c/build/libpoo_flow_runtime_v0|subprocess\.run\(\["make"' \
-            -- . \
-            ':!docs/10-19-design/10.06-poo-module-system/119-agentic-control-plane-ac06-qualification-receipt.org' \
-            ':!docs/10-19-design/10.06-poo-module-system/128-bazel-runtime-c-external-build-design.org'; then
-            echo "stale runtime-C Make route remains" >&2
-            exit 1
-          fi
+        run: tools/ci/check-runtime-c-build-boundary
 
       - name: Test Python native runtime against Bazel library
         run: |
