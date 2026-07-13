@@ -255,9 +255,4 @@ jobs:
 
       - name: Run package test roots through gxtest
         shell: bash
-        run: |
-          set -euo pipefail
-          tools/run-native-scheme-env gxtest t/unit-tests.ss
-          tools/run-native-scheme-env gxtest t/contract-tests.ss
-          tools/run-native-scheme-env gxc t/fixtures/object-load-valid/objects.ss
-          tools/run-native-scheme-env gxtest t/integration-tests.ss
+        run: tools/run-native-scheme-tests

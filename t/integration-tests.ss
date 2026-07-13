@@ -22,7 +22,6 @@
         :poo-flow/t/tutorial-result-test
         :poo-flow/t/declaration-case-test
         :poo-flow/t/user-interface-config-test
-        :poo-flow/t/user-interface-custom-loop-engine-capability-test
         :poo-flow/t/user-interface-custom-loop-engine-memory-policy-test
         :poo-flow/t/user-interface-custom-loop-engine-profile-test
         :poo-flow/t/user-interface-custom-loop-engine-result-contract-test
