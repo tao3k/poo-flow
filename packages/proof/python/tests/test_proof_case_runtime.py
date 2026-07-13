@@ -154,3 +154,79 @@ def test_python_and_c_reject_truncated_vector(
     with pytest.raises(ProofCaseError) as caught:
         assert_native_differential(native_runtime, vector)
     assert caught.value.status is ProofStatus.MALFORMED_EVIDENCE
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "format_", "expected"),
+    [
+        ("case_kind", 0, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("case_kind", 2, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("mediation_outcome", 0, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("mediation_outcome", 4, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("durability_profile", 0, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("durability_profile", 4, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("obligation_count", 9, "<I", ProofStatus.MALFORMED_EVIDENCE),
+        ("required_obligation_mask", 0x100, "<Q", ProofStatus.UNSUPPORTED_OBLIGATION),
+        ("present_obligation_mask", 0x100, "<Q", ProofStatus.UNSUPPORTED_OBLIGATION),
+    ],
+)
+def test_table_driven_structural_mutations_fail_closed(
+    native_runtime: NativeProofCaseRuntime,
+    field: str,
+    value: int,
+    format_: str,
+    expected: ProofStatus,
+) -> None:
+    vector = bytearray(positive_vector())
+    pack_into(format_, vector, FIELD_OFFSETS[field], value)
+
+    assert validate_proof_case_vector(bytes(vector)) is expected
+    with pytest.raises(ProofCaseError) as caught:
+        assert_native_differential(native_runtime, bytes(vector))
+    assert caught.value.status is expected
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "token_digest",
+        "policy_revision",
+        "effect_digest",
+        "semantic_root",
+        "execution_root",
+        "batch_root",
+        "subject_binding",
+        "resource_binding",
+        "action_binding",
+        "previous_evidence_root",
+    ],
+)
+def test_digest_and_root_substitution_changes_receipt_identity(field: str) -> None:
+    canonical = positive_vector()
+    substituted = bytearray(canonical)
+    substituted[FIELD_OFFSETS[field]] ^= 1
+    substituted = bytes(substituted)
+
+    assert validate_proof_case_vector(substituted) is ProofStatus.OK
+    assert proof_case_vector_digest(substituted) != proof_case_vector_digest(canonical)
+    assert first_vector_divergence(
+        canonical,
+        substituted,
+        expected_owner="verified-receipt",
+        actual_owner="substituted-vector",
+    ) == VectorDivergence(
+        "verified-receipt", "substituted-vector", field, FIELD_OFFSETS[field]
+    )
+
+
+@pytest.mark.parametrize("reserved_index", [0, 11])
+def test_reserved_boundary_bytes_fail_closed(
+    native_runtime: NativeProofCaseRuntime, reserved_index: int
+) -> None:
+    vector = bytearray(positive_vector())
+    vector[FIELD_OFFSETS["reserved"] + reserved_index] = 1
+
+    assert validate_proof_case_vector(bytes(vector)) is ProofStatus.MALFORMED_EVIDENCE
+    with pytest.raises(ProofCaseError) as caught:
+        assert_native_differential(native_runtime, bytes(vector))
+    assert caught.value.status is ProofStatus.MALFORMED_EVIDENCE

@@ -154,6 +154,42 @@ int main(void) {
     return 1;
   }
 
+  make_vector(vector);
+  if (expect_status("toctou-init",
+                    poo_flow_proof_case_init(vector, sizeof(vector), &handle),
+                    POO_FLOW_PROOF_STATUS_OK) != 0) {
+    return 1;
+  }
+  vector[POO_FLOW_PROOF_FIELD_RESERVED_OFFSET + 11u] = 1u;
+  if (expect_status("toctou-measure",
+                    poo_flow_proof_case_measure(&handle, &layout),
+                    POO_FLOW_PROOF_STATUS_MALFORMED_EVIDENCE) != 0 ||
+      expect_status("toctou-release", poo_flow_proof_case_release(&handle),
+                    POO_FLOW_PROOF_STATUS_OK) != 0) {
+    return 1;
+  }
+
+  make_vector(vector);
+  if (expect_status("toctou-write-init",
+                    poo_flow_proof_case_init(vector, sizeof(vector), &handle),
+                    POO_FLOW_PROOF_STATUS_OK) != 0) {
+    return 1;
+  }
+  vector[POO_FLOW_PROOF_FIELD_SCHEMA_FINGERPRINT_OFFSET + 31u] ^= 1u;
+  memset(guard, 0xa5, sizeof(guard));
+  written = sizeof(vector);
+  if (expect_status("toctou-write",
+                    poo_flow_proof_case_write(&handle, guard, sizeof(guard),
+                                              &written),
+                    POO_FLOW_PROOF_STATUS_SCHEMA_MISMATCH) != 0 ||
+      written != 0u || guard[0] != 0xa5u ||
+      expect_status("toctou-write-release",
+                    poo_flow_proof_case_release(&handle),
+                    POO_FLOW_PROOF_STATUS_OK) != 0) {
+    fprintf(stderr, "TOCTOU write was not fail-closed and atomic\n");
+    return 1;
+  }
+
   puts("proof-case-v1: ok");
   return 0;
 }

@@ -116,6 +116,10 @@ Focused gates:
 - installed wheel consumer.
 
 * Step 6 — Security, Property, And Performance Qualification
+Run table-driven structural mutations through both Python and C, including
+both reserved boundaries and mutable borrowed-buffer TOCTOU. Run every
+token/root/binding substitution through digest identity checks and require the
+first divergent owner, field, and offset.
 
 Add replay, fork, nonce reuse, token/effect/policy/root substitution,
 cross-runtime/session/lease/batch substitution, mutable-buffer TOCTOU, omitted

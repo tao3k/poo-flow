@@ -237,6 +237,11 @@ Consume the same bulk ABI from the production-capable Python runtime and compare
 Scheme/kernel vectors at byte, field, and semantic levels.
 
 ** S6 Negative, property, and performance gates
+The table-driven mutation gate separates structural rejection from semantic
+identity. Unknown tags, unsupported masks, reserved bytes, malformed sizing,
+and borrowed-buffer TOCTOU fail at the C/Python boundary. Root and binding
+substitutions remain structurally valid but must change the vector digest and
+identify the first divergent field.
 
 Qualify replay, substitution, TOCTOU, omitted receipts, malformed vectors,
 missing obligations, root mismatch, determinism, algorithmic complexity, and
