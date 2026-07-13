@@ -28,6 +28,24 @@
         (check (.ref validation 'accepted?) => #t)
         (check (.ref validation 'code) => 'token-reserved)
         (check (.ref left 'execution-root) => (.ref right 'execution-root))))
+    (test-case "semantic reconstruction preserves binding and token digests"
+      (let* ((binding-copy
+              (poo-flow-effect-binding
+               "bundle" 7 "policy" "entities" "allow" "intent"
+               'attempt-1 'external-tool 'python-runtime 'session-1
+               1 1 'arena-1 3 0 16 "payload" 'lease-1))
+             (root-copy
+              (poo-flow-semantic-root
+               "bundle" "policy" "entities" "allow" "intent"))
+             (validity-copy (poo-flow-token-validity 10 10 20 4))
+             (token-copy
+              (poo-flow-authorized-effect-token
+               'token-1 'nonce-1 root-copy binding-copy validity-copy
+               'strict 1 'scheme-control "sig")))
+        (check (poo-flow-effect-binding-digest binding)
+               => (poo-flow-effect-binding-digest binding-copy))
+        (check (poo-flow-authorized-effect-token-digest token)
+               => (poo-flow-authorized-effect-token-digest token-copy))))
     (test-case "one-shot nonce reuse fails closed"
       (let (receipt (poo-flow-authorized-effect-token-validate
                      token (poo-flow-token-validation-context root binding 15 4 '(nonce-1))))

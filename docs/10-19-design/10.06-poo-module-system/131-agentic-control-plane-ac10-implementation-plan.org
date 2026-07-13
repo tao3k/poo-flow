@@ -66,6 +66,13 @@ installed Python CFFI, Cedar/token, mediation/evidence roots, ProofCaseVector,
 and Lean ProofReceipt identities.  Add deny, replay, revocation, substitution,
 and stale-proof variants before widening the fault matrix.
 
+Delivery result: complete.  The POO fixture owner in
+=src/qualification/agentic-control-plane-fixture.ss= joins the canonical Bundle,
+runtime-v0 batch event, Cedar decision/token, Strict mediation roots, and exact
+ProofCaseVector identity.  It declares installed C, Python wheel, and Lean FFI
+as required S4 consumers without claiming they ran.  The negative family covers
+deny, replay, revocation, binding substitution, and stale proof vectors.
+
 * S4 — Cross-language qualification runner
 
 Add a declarative gate registry and runner under

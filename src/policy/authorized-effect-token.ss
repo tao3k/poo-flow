@@ -20,12 +20,28 @@
 (def (poo-flow-effect-binding-digest binding-object)
   (unless (eq? (.ref binding-object 'kind) 'poo-flow-effect-binding)
     (error "effect binding digest requires EffectBinding" binding-object))
-  (canonical-digest binding-object))
+  (canonical-digest
+   (cons 'poo-flow.effect-binding.v1
+         (binding-projection binding-object))))
 
 (def (poo-flow-authorized-effect-token-digest token-object)
   (unless (eq? (.ref token-object 'kind) 'poo-flow-authorized-effect-token)
     (error "token digest requires AuthorizedEffectToken" token-object))
-  (canonical-digest token-object))
+  (let (validity (.ref token-object 'validity))
+    (canonical-digest
+     (list 'poo-flow.authorized-effect-token.v1
+           (.ref token-object 'token-id)
+           (.ref token-object 'nonce)
+           (.ref (.ref token-object 'semantic-root) 'digest)
+           (poo-flow-effect-binding-digest (.ref token-object 'binding))
+           (list (.ref validity 'issued-at)
+                 (.ref validity 'not-before)
+                 (.ref validity 'expiry)
+                 (.ref validity 'revocation-epoch))
+           (.ref token-object 'durability)
+           (.ref token-object 'required-evidence-bits)
+           (.ref token-object 'issuer-id)
+           (.ref token-object 'signature)))))
 
 (def (poo-flow-semantic-root b-digest p-digest e-digest d-digest i-digest)
   (let (canonical
@@ -41,16 +57,17 @@
 (def (poo-flow-effect-binding b-digest b-epoch p-digest e-digest d-digest i-digest
                               attempt effect runtime session seq-start seq-end
                               arena arena-gen offset length pld-digest lease)
-  (.o (kind 'poo-flow-effect-binding)
-      (bundle-digest b-digest) (bundle-epoch b-epoch)
-      (policy-digest p-digest) (entity-digest e-digest)
-      (decision-digest d-digest) (intent-digest i-digest)
-      (attempt-id attempt) (effect-kind effect)
-      (runtime-id runtime) (session-id session)
-      (sequence-start seq-start) (sequence-end seq-end)
-      (arena-id arena) (arena-generation arena-gen)
-      (payload-offset offset) (payload-length length)
-      (payload-digest pld-digest) (lease-id lease)))
+  (object<-alist
+   (list (cons 'kind 'poo-flow-effect-binding)
+         (cons 'bundle-digest b-digest) (cons 'bundle-epoch b-epoch)
+         (cons 'policy-digest p-digest) (cons 'entity-digest e-digest)
+         (cons 'decision-digest d-digest) (cons 'intent-digest i-digest)
+         (cons 'attempt-id attempt) (cons 'effect-kind effect)
+         (cons 'runtime-id runtime) (cons 'session-id session)
+         (cons 'sequence-start seq-start) (cons 'sequence-end seq-end)
+         (cons 'arena-id arena) (cons 'arena-generation arena-gen)
+         (cons 'payload-offset offset) (cons 'payload-length length)
+         (cons 'payload-digest pld-digest) (cons 'lease-id lease))))
 
 (def (poo-flow-token-validity issued not-before-time expiry-time revocation)
   (.o (kind 'poo-flow-token-validity)
@@ -60,12 +77,14 @@
 (def (poo-flow-authorized-effect-token identity token-nonce root effect-binding
                                        token-validity profile evidence-bits
                                        issuer token-signature)
-  (.o (kind 'poo-flow-authorized-effect-token)
-      (schema 'poo-flow.authorized-effect-token.draft.1)
-      (token-id identity) (nonce token-nonce) (semantic-root root)
-      (binding effect-binding) (validity token-validity) (durability profile)
-      (required-evidence-bits evidence-bits)
-      (issuer-id issuer) (signature token-signature)))
+  (object<-alist
+   (list (cons 'kind 'poo-flow-authorized-effect-token)
+         (cons 'schema 'poo-flow.authorized-effect-token.draft.1)
+         (cons 'token-id identity) (cons 'nonce token-nonce)
+         (cons 'semantic-root root) (cons 'binding effect-binding)
+         (cons 'validity token-validity) (cons 'durability profile)
+         (cons 'required-evidence-bits evidence-bits)
+         (cons 'issuer-id issuer) (cons 'signature token-signature))))
 
 (def (poo-flow-token-validation-context root expected-binding current-time
                                          current-revocation spent-nonces)
