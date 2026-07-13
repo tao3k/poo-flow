@@ -91,6 +91,9 @@ Focused gates:
 - no constructor that treats Scheme runtime execution as already proved.
 
 * Step 5 — Python CFFI Differential Runtime
+The installed-consumer gate builds a non-editable wheel, installs it in an
+isolated environment without checkout =PYTHONPATH=, and consumes the public C
+shared library with the canonical vector and digest.
 The differential harness executes Scheme rather than substituting a Python
 fixture, compares against the generator-owned Lean bytes, and round-trips the
 same buffer through CFFI. Failures identify the first divergent owner, field,

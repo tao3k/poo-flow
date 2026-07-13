@@ -29,3 +29,11 @@ The differential gate requires Python and C to agree on validation status,
 schema fingerprint, ABI layout, and the exact round-trip bytes. Rust,
 TypeScript, and other language runtimes remain downstream adapters over the
 same C ABI.
+
+The installed-consumer gate builds a non-editable wheel, installs it into an
+isolated virtual environment, removes `PYTHONPATH`, and verifies the canonical
+vector through the public shared library:
+
+```sh
+uv run pytest -q tests/test_installed_wheel.py
+```

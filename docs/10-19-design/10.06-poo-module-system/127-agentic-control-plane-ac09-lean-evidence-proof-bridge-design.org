@@ -223,6 +223,8 @@ Decode the canonical vector, implement the AuthorizedEffectToken theorem set,
 and emit a ProofReceipt bound to the vector and theorem set.
 
 ** S5 Python CFFI differential
+Qualification includes a non-editable installed wheel consumer. Importing the
+checkout source or relying on development =PYTHONPATH= fails the gate.
 The executable gate launches the Scheme encoder, compares its complete native
 vector and SHA-256 with the manifest/Lean fixture, and then sends those same
 bytes through the CFFI C ABI. A mismatch reports the two owners, first field,
