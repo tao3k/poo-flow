@@ -12,7 +12,9 @@
 (def +poo-flow-ac10-release-gates+
   '(scheme-canonical-fixture runtime-v0-installed-consumer
     proof-case-installed-consumer python-production-runtime
-    python-proof-installed-wheel lean-build lean-ffi-smoke))
+    python-proof-installed-wheel lean-build lean-ffi-smoke
+    runtime-c-functional runtime-c-sanitizers runtime-c-leaks
+    python-proof-functional performance-matrix))
 
 (def (poo-flow-qualification-gate gate-id owner cwd argv installed-consumer?
                                   artifact max-rss-mib timeout-seconds modes)
@@ -69,7 +71,30 @@
    (poo-flow-qualification-gate
     'lean-ffi-smoke 'lean "packages/proof/lean"
     '("lake" "exe" "ffiSmoke") #t "lean-native-ffi-smoke" 2048 180
-    '(release))))
+    '(release))
+   (poo-flow-qualification-gate
+    'runtime-c-functional 'runtime-c "."
+    '("npx" "-y" "@bazel/bazelisk" "test"
+      "//bindings/runtime-c:runtime_c_tests" "--nocache_test_results")
+    #f "runtime-c-functional" 2048 180 '(release))
+   (poo-flow-qualification-gate
+    'runtime-c-sanitizers 'runtime-c "."
+    '("npx" "-y" "@bazel/bazelisk" "test"
+      "//bindings/runtime-c:runtime_c_sanitizer_tests" "--nocache_test_results")
+    #f "runtime-c-sanitizers" 2048 180 '(release))
+   (poo-flow-qualification-gate
+    'runtime-c-leaks 'runtime-c "."
+    '("npx" "-y" "@bazel/bazelisk" "test"
+      "//bindings/runtime-c:runtime_c_leak_test" "--nocache_test_results")
+    #f "runtime-c-leaks" 2048 180 '(release))
+   (poo-flow-qualification-gate
+    'python-proof-functional 'python "packages/proof/python"
+    '("uv" "run" "pytest" "-q")
+    #f "python-proof-security-and-differential" 2048 180 '(release))
+   (poo-flow-qualification-gate
+    'performance-matrix 'scheme "."
+    '("gxi" "t/qualification/agentic-control-plane/performance-matrix-test.ss")
+    #f "supported-performance-cartesian-matrix" 512 30 '(release))))
 
 (def (gate-in-mode? gate mode)
   (memq mode (.ref gate 'modes)))

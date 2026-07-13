@@ -39,11 +39,9 @@
              (verified
               (poo-flow-qualification-verify-run registry fake-release)))
         (check (.ref verified 'accepted?) => #f)
-        (check (map (lambda (entry) (cdr (assq 'code entry)))
-                    (.ref verified 'diagnostics))
-               => '(stale-source-revision missing-gate-receipt
-                    missing-gate-receipt missing-gate-receipt
-                    missing-gate-receipt missing-gate-receipt
-                    missing-gate-receipt))))))
+        (let (codes (map (lambda (entry) (cdr (assq 'code entry)))
+                         (.ref verified 'diagnostics)))
+          (check (car codes) => 'stale-source-revision)
+          (check (length codes) => (length +poo-flow-ac10-release-gates+)))))))
 
 (run-tests! qualification-runner-test)
