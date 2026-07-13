@@ -302,6 +302,16 @@ construction-order invariance as the semantic-root upstream gate.
 - Batch inclusion and proof receipts are reproducible.
 
 ** Performance
+The proof-case benchmark measures the real caller-owned C path for Strict and
+Batched profiles at batch sizes 1, 8, 32, 128, and 1024. Storage is allocated
+before timing; each item performs one whole-vector init, write, and release,
+with no per-field crossing and no timed allocation. The fixed 424-byte item
+path is =O(1)= and the k-item loop is =O(k)=.
+
+Root-history lookup is owned by =runtime_v0.c:pending_lower_bound=, a binary
+search followed by a linear k-item window, establishing =O(log n + k)=. The
+first receipt is baseline-only; no millisecond threshold is frozen from one
+host run.
 
 - Per-item vector construction remains O(1).
 - A k-item batch remains O(k).

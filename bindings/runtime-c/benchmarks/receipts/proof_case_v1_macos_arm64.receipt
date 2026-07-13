@@ -1,0 +1,26 @@
+schema=poo-flow.proof-case-v1.benchmark-receipt.1
+path=caller-owned-whole-vector
+system=Darwin
+machine=arm64
+iterations=100
+vector-bytes=424
+crossings-per-item=3
+allocations-per-item=0
+vector-construction-complexity=O(1)
+batch-complexity=O(k)
+root-history-owner=runtime_v0.c:pending_lower_bound
+root-history-complexity=O(log-n-plus-k)
+threshold-status=baseline-only
+abi-v1-frozen=false
+
+# profile,batch,p50-ns,p99-ns
+strict,1,84,167
+strict,8,792,834
+strict,32,3208,3292
+strict,128,12875,13167
+strict,1024,129667,3959750
+batched,1,84,167
+batched,8,792,917
+batched,32,3209,3334
+batched,128,12875,13041
+batched,1024,103334,1236458

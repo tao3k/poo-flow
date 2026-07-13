@@ -116,6 +116,10 @@ Focused gates:
 - installed wheel consumer.
 
 * Step 6 — Security, Property, And Performance Qualification
+Benchmark Strict and Batched separately over the real caller-owned whole-vector
+C path. Record crossings, copied bytes, allocations, p50/p99, and batch scaling.
+Use the binary-search implementation owner for root-history complexity and keep
+the initial receipt baseline-only until a supported-host series exists.
 Determinism gates repeat Strict mediation, Batched roots/inclusion receipts,
 and Scheme vector emission across fresh processes. Compare projected receipt
 fields rather than POO object identity, and retain organization bundle

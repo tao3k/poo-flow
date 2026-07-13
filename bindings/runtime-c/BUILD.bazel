@@ -247,6 +247,21 @@ cc_binary(
     deps = [":runtime_c_library"],
 )
 
+cc_binary(
+    name = "proof_case_v1_benchmark",
+    srcs = ["benchmarks/proof_case_v1_benchmark.c"],
+    copts = ["-O3"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "proof_case_v1_benchmark_smoke",
+    srcs = ["benchmarks/proof_case_v1_benchmark.c"],
+    args = ["5"],
+    copts = ["-O3"],
+    deps = [":runtime_c_library"],
+)
+
 cc_test(
     name = "runtime_v0_batch_benchmark_smoke",
     srcs = ["benchmarks/runtime_v0_batch_benchmark.c"],
@@ -258,6 +273,7 @@ cc_test(
 test_suite(
     name = "runtime_c_tests",
     tests = [
+        ":proof_case_v1_benchmark_smoke",
         ":proof_case_v1_harness",
         ":proof_case_v1_installed_consumer",
         ":runtime_v0_batch_harness",
