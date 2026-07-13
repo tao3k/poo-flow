@@ -150,6 +150,10 @@ validation receipt.
 
 * Approval record required for mutation
 
+The revision-bound readiness contract is defined by
+[[file:134-agentic-control-plane-ac11-cutover-readiness.org][preflight 134]].  A successful preflight is necessary evidence for the release
+decision below, but is not itself approval.
+
 The P6 release decision must record all of the following in one reviewable
 receipt:
 
