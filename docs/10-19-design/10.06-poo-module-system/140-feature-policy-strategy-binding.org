@@ -186,10 +186,10 @@ The implementation proves:
   guard;
 - isolated AOT execution does not depend on the repository source tree.
 
-* Next mainline stage
+* Subsequent stage
 
-Phase 3F should bind adapter requirements to an explicit module-owned adapter
-capability catalog and relate Feature projection requests to the already closed
-Domain Case projection catalog.  That stage must remain a pure POO receipt;
-adapter loading, C calls, Cedar evaluation, runtime execution, and evidence
-emission remain later handoff boundaries.
+RFC 141 binds adapter requirements to an explicit module-owned adapter
+capability catalog and relates POO Feature projection requests to the selected
+Domain Case projection catalog.  Phase 3G then materializes the immutable
+runtime handoff plan.  Adapter loading, C calls, Cedar evaluation, runtime
+execution, and evidence emission remain later handoff boundaries.

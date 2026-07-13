@@ -16,6 +16,8 @@
 
 (def (domain-case-test-value? value) #t)
 
+(def (domain-case-test-project value) value)
+
 (def domain-case-base-type
   (poo-flow-case-type-contract
    'domain-case-base-type '() domain-case-test-value?))
@@ -26,6 +28,30 @@
    '(domain-case-base-type)
    domain-case-test-value?))
 
+(def domain-case-runtime-projection
+  (poo-flow-case-projection
+   'domain-case-runtime-projection
+   'domain-case-base-component
+   'runtime-v1
+   domain-case-test-project))
+
+(def domain-case-evidence-projection
+  (poo-flow-case-projection
+   'domain-case-evidence-projection
+   'domain-case-agent-component
+   'evidence-v1
+   domain-case-test-project))
+
+(defpoo-feature-projection-request domain-case-runtime-request
+  (request-id 'domain-case-runtime-request)
+  (projection-id 'domain-case-runtime-projection)
+  (schema-id 'runtime-v1))
+
+(defpoo-feature-projection-request domain-case-evidence-request
+  (request-id 'domain-case-evidence-request)
+  (projection-id 'domain-case-evidence-projection)
+  (schema-id 'evidence-v1))
+
 (def domain-case-base-component
   (poo-flow-case-component
    'domain-case-base-component
@@ -34,7 +60,7 @@
    domain-case-base-type
    '()
    '()
-   '()))
+   (list domain-case-runtime-projection)))
 
 (def domain-case-agent-component
   (poo-flow-case-component
@@ -44,7 +70,7 @@
    domain-case-agent-type
    '()
    '()
-   '()
+   (list domain-case-evidence-projection)
    '(domain-case-base-component)))
 
 (defpoo-feature domain-case-base-feature
@@ -53,7 +79,7 @@
   (components domain-case-base-component)
   (policy-contributions 'domain-case-base-policy)
   (adapter-requirements 'python-runtime-v1)
-  (projections 'runtime-v1))
+  (projections domain-case-runtime-request))
 
 (defpoo-feature domain-case-agent-feature
   (feature-id 'domain-case-agent-feature)
@@ -63,7 +89,7 @@
   (policy-contributions 'domain-case-agent-policy)
   (strategy-contributions 'domain-case-agent-strategy)
   (adapter-requirements 'cedar-policy-adapter)
-  (projections 'evidence-v1))
+  (projections domain-case-evidence-request))
 
 (defpoo-feature-manifest-bundle domain-case-feature-bundle
   (bundle-id 'domain-case-feature-bundle)
@@ -114,6 +140,25 @@
   (domain-case-id 'feature-agent-case-unordered)
   (domain-case-version 1)
   (from-plan domain-case-unordered-plan))
+
+(defpoo-feature domain-case-raw-projection-feature
+  (feature-id 'domain-case-raw-projection-feature)
+  (owner-module-id 'feature-system-domain-case-assembly-test)
+  (components domain-case-base-component)
+  (projections 'runtime-v1))
+
+(defpoo-feature-manifest-bundle domain-case-raw-projection-bundle
+  (bundle-id 'domain-case-raw-projection-bundle)
+  (features domain-case-raw-projection-feature))
+
+(defpoo-feature-composition-plan domain-case-raw-projection-plan
+  (from-bundle domain-case-raw-projection-bundle))
+
+(defpoo-feature-domain-case-assembly domain-case-raw-projection-assembly
+  (using-cache domain-case-feature-cache)
+  (domain-case-id 'feature-agent-case-raw-projection)
+  (domain-case-version 1)
+  (from-plan domain-case-raw-projection-plan))
 
 (def (domain-case-assembly-diagnostic-codes assembly)
   (poo-flow-map (lambda (diagnostic) (.ref diagnostic 'code))
@@ -204,7 +249,15 @@
       (check (.ref domain-case-feature-assembly 'adapter-requirements)
              => '(python-runtime-v1 cedar-policy-adapter))
       (check (.ref domain-case-feature-assembly 'projections)
-             => '(runtime-v1 evidence-v1)))
+             => (list domain-case-runtime-request
+                      domain-case-evidence-request))
+      (check (.ref domain-case-feature-assembly 'selected-projection-ids)
+             => '(domain-case-runtime-projection
+                  domain-case-evidence-projection))
+      (check (length (.ref
+                      (.ref domain-case-feature-assembly 'domain-case)
+                      'projection-catalog))
+             => 2))
 
     (test-case "module-owned Domain Case cache reuses the closure"
       (let ((first-domain-case
@@ -229,6 +282,17 @@
       (check (memq 'missing-or-forward-parent-type
                    (domain-case-assembly-diagnostic-codes
                     domain-case-unordered-assembly))
+             ? values))
+
+    (test-case "raw projection syntax is rejected before Domain Case closure"
+      (check (.ref domain-case-raw-projection-assembly 'status) => 'rejected)
+      (check (.ref domain-case-raw-projection-assembly 'closure-receipt) => #f)
+      (check (.ref domain-case-raw-projection-assembly
+                   'selected-projection-ids)
+             => '())
+      (check (memq 'invalid-feature-projection-request
+                   (domain-case-assembly-diagnostic-codes
+                    domain-case-raw-projection-assembly))
              ? values))
 
     (test-case "256-Feature inheritance chain closes under the memory guard"
