@@ -6,14 +6,26 @@
 
 (export poo-flow-semantic-root
         poo-flow-effect-binding
+        poo-flow-effect-binding-digest
         poo-flow-token-validity
         poo-flow-authorized-effect-token
+        poo-flow-authorized-effect-token-digest
         poo-flow-token-validation-context
         poo-flow-authorized-effect-token-validate
         poo-flow-authorized-effect-token-consume)
 
 (def (canonical-digest value)
   (hex-encode (sha256 (call-with-output-string (lambda (port) (write value port))))))
+
+(def (poo-flow-effect-binding-digest binding-object)
+  (unless (eq? (.ref binding-object 'kind) 'poo-flow-effect-binding)
+    (error "effect binding digest requires EffectBinding" binding-object))
+  (canonical-digest binding-object))
+
+(def (poo-flow-authorized-effect-token-digest token-object)
+  (unless (eq? (.ref token-object 'kind) 'poo-flow-authorized-effect-token)
+    (error "token digest requires AuthorizedEffectToken" token-object))
+  (canonical-digest token-object))
 
 (def (poo-flow-semantic-root b-digest p-digest e-digest d-digest i-digest)
   (let (canonical

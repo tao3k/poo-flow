@@ -1,4 +1,5 @@
-(import :clan/poo/object)
+(import :clan/poo/object
+        :poo-flow/src/policy/authorized-effect-token)
 
 (export poo-flow-proof-obligation
         poo-flow-proof-obligation-family-build
@@ -152,11 +153,18 @@
                (eq? (.ref obligation-family 'name) 'authorized-effect-token))
     (error "proof case requires authorized-effect obligation family"
            obligation-family))
-  (.o (kind 'poo-flow-authorized-effect-proof-case)
+  (let (binding-object (.ref token-object 'binding))
+    (.o (kind 'poo-flow-authorized-effect-proof-case)
       (schema 'poo-flow.proof-case-vector.v1)
       (token token-object)
       (token-id (.ref token-object 'token-id))
-      (binding (.ref token-object 'binding))
+      (token-digest (poo-flow-authorized-effect-token-digest token-object))
+      (binding binding-object)
+      (policy-revision (.ref binding-object 'policy-digest))
+      (effect-digest (poo-flow-effect-binding-digest binding-object))
+      (subject-binding (.ref binding-object 'entity-digest))
+      (resource-binding (.ref binding-object 'payload-digest))
+      (action-binding (.ref binding-object 'intent-digest))
       (nonce (.ref token-object 'nonce))
       (epoch epoch-value)
       (sequence sequence-value)
@@ -169,7 +177,7 @@
       (obligations obligation-family)
       (required-obligation-mask (.ref obligation-family 'required-mask))
       (present-obligation-mask (.ref obligation-family 'present-mask))
-      (obligation-count (length (.ref obligation-family 'obligations)))))
+      (obligation-count (length (.ref obligation-family 'obligations))))))
 
 (def (poo-flow-authorized-effect-proof-case-valid? proof-case)
   (and (eq? (.ref proof-case 'kind) 'poo-flow-authorized-effect-proof-case)
