@@ -8,7 +8,7 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/type-facts
+        (only-in :poo-flow/src/type-facts/objects
                  poo-flow-type-validation-receipt-harness-validation)
         :poo-flow/src/modules/sandbox-core/resource-contract)
 
