@@ -1,0 +1,111 @@
+load(":runtime_contract.bzl", "runtime_contract")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+runtime_contract(
+    name = "runtime_v0_contract",
+    generator = "tools/generate-runtime-v0-contract.ss",
+    gerbil_path = "@local_gerbil//:gerbil_path",
+    gerbil_root = "@local_gerbil//:gerbil_root.marker",
+    gxi = "@local_gerbil//:gxi",
+    scheme_sources = "//:scheme_runtime_sources",
+)
+
+filegroup(
+    name = "runtime_v0_contract_header",
+    srcs = [":runtime_v0_contract"],
+    output_group = "header",
+)
+
+filegroup(
+    name = "runtime_v0_contract_vector",
+    srcs = [":runtime_v0_contract"],
+    output_group = "vector",
+)
+
+filegroup(
+    name = "runtime_v0_event_vector",
+    srcs = [":runtime_v0_contract"],
+    output_group = "event_vector",
+)
+
+cc_library(
+    name = "runtime_v0_contract_headers",
+    hdrs = [":runtime_v0_contract_header"],
+    strip_include_prefix = "generated/include",
+)
+
+cc_library(
+    name = "runtime_c_library",
+    srcs = ["src/runtime_v0.c"],
+    hdrs = ["include/poo_flow/runtime_v0.h"],
+    copts = [
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+    ],
+    strip_include_prefix = "include",
+    deps = [":runtime_v0_contract_headers"],
+)
+
+cc_binary(
+    name = "runtime_c_shared",
+    linkshared = True,
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "runtime_v0_harness",
+    srcs = ["tests/runtime_v0_harness.c"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "runtime_v0_batch_harness",
+    srcs = ["tests/runtime_v0_batch_harness.c"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "runtime_v0_vector_harness",
+    srcs = ["tests/runtime_v0_vector_harness.c"],
+    args = ["$(location :runtime_v0_event_vector)"],
+    data = [":runtime_v0_event_vector"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "runtime_v0_installed_consumer",
+    srcs = ["tests/runtime_v0_installed_consumer.c"],
+    deps = [":runtime_c_library"],
+)
+
+cc_binary(
+    name = "runtime_v0_batch_benchmark",
+    srcs = ["benchmarks/runtime_v0_batch_benchmark.c"],
+    copts = ["-O3"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "runtime_v0_batch_benchmark_smoke",
+    srcs = ["benchmarks/runtime_v0_batch_benchmark.c"],
+    args = ["20"],
+    copts = ["-O3"],
+    deps = [":runtime_c_library"],
+)
+
+test_suite(
+    name = "runtime_c_tests",
+    tests = [
+        ":runtime_v0_batch_harness",
+        ":runtime_v0_harness",
+        ":runtime_v0_installed_consumer",
+        ":runtime_v0_vector_harness",
+    ],
+)

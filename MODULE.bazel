@@ -1,0 +1,13 @@
+module(
+    name = "poo_flow",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.17")
+
+local_gerbil_repository = use_repo_rule(
+    "//tools/bazel:gerbil_repository.bzl",
+    "local_gerbil_repository",
+)
+
+local_gerbil_repository(name = "local_gerbil")

@@ -7,6 +7,16 @@
 (def event-vector-path
   "bindings/runtime-c/tests/vectors/runtime_v0_event_1.txt")
 
+(def (command-line-option name default)
+  (let loop ((rest (command-line)))
+    (cond
+     ((null? rest) default)
+     ((equal? (car rest) name)
+      (if (pair? (cdr rest))
+        (cadr rest)
+        (error "missing command-line option value" name)))
+     (else (loop (cdr rest))))))
+
 (def (read-text path)
   (let ((port (open-input-file path)) (out (open-output-string)))
     (let loop ()
@@ -31,13 +41,19 @@
 (def event-vector
   (poo-flow-runtime-v0-abi-schema->event-vector
    +poo-flow-runtime-v0-abi-schema+))
+(def selected-header-path
+  (command-line-option "--header-output" header-path))
+(def selected-vector-path
+  (command-line-option "--vector-output" vector-path))
+(def selected-event-vector-path
+  (command-line-option "--event-vector-output" event-vector-path))
 (def check? (member "--check" (command-line)))
 
 (if check?
-  (unless (and (equal? (read-text header-path) header)
-               (equal? (read-text vector-path) vector)
-               (equal? (read-text event-vector-path) event-vector))
+  (unless (and (equal? (read-text selected-header-path) header)
+               (equal? (read-text selected-vector-path) vector)
+               (equal? (read-text selected-event-vector-path) event-vector))
     (error "stale generated runtime v0 contract artifacts"))
-  (begin (write-text header-path header)
-         (write-text vector-path vector)
-         (write-text event-vector-path event-vector)))
+  (begin (write-text selected-header-path header)
+         (write-text selected-vector-path vector)
+         (write-text selected-event-vector-path event-vector)))
