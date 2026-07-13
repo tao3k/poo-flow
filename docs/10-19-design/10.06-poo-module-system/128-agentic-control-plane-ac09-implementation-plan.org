@@ -1,6 +1,6 @@
 #+title: AC-09 Lean / Evidence Proof Bridge Implementation Plan
 #+date: 2026-07-12
-#+status: approved-for-implementation
+#+status: completed
 
 * Delivery
 
@@ -8,6 +8,9 @@ Implement the approved design in
 =127-agentic-control-plane-ac09-lean-evidence-proof-bridge-design.org= as seven
 bounded features. Each step must leave its focused gates green and is committed
 only when the feature is complete.
+
+Steps 1 through 7 are complete.  The measured result is recorded in
+=129-agentic-control-plane-ac09-qualification-receipt.org=.
 
 The plan does not freeze ABI v1 and does not introduce a graph ABI compatibility
 surface.
@@ -160,6 +163,9 @@ Completion must state:
 - no retired graph ABI wrapper;
 - =abi-v1-frozen? #f=;
 - AC-10 integrated qualification is next.
+
+Delivery result: complete.  See
+=129-agentic-control-plane-ac09-qualification-receipt.org=.
 
 * Dependency Graph
 

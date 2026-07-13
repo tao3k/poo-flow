@@ -1,10 +1,12 @@
 #+title: AC-09 Lean / Evidence Proof Bridge Design
 #+date: 2026-07-12
-#+status: approved-design
+#+status: qualified
 
 * Status
 
-Approved design. Implementation has not started.
+Qualified implementation.  S1 through S7 are complete and the measured
+qualification receipt is recorded in
+=129-agentic-control-plane-ac09-qualification-receipt.org=.
 
 This RFC is the formal AC-09 owner for the Agentic Control Plane roadmap. It
 specializes the earlier research in =54-lean-c-ffi-proof-bridge-rfc.org= for
