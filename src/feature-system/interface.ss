@@ -6,6 +6,7 @@
         :poo-flow/src/feature-system/domain-case-assembly
         :poo-flow/src/feature-system/policy-strategy-binding
         :poo-flow/src/feature-system/adapter-projection-binding
+        :poo-flow/src/feature-system/runtime-handoff-plan
         :poo-flow/src/feature-system/syntax)
 
 (export (import: :poo-flow/src/feature-system/model)
@@ -16,4 +17,5 @@
         (import: :poo-flow/src/feature-system/domain-case-assembly)
         (import: :poo-flow/src/feature-system/policy-strategy-binding)
         (import: :poo-flow/src/feature-system/adapter-projection-binding)
+        (import: :poo-flow/src/feature-system/runtime-handoff-plan)
         (import: :poo-flow/src/feature-system/syntax))

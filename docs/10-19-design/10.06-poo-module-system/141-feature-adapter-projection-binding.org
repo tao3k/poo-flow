@@ -223,10 +223,9 @@ The implementation proves:
   order under the Scheme memory guard;
 - empty-root AOT execution does not use repository source fallback.
 
-* Next mainline stage
+* Subsequent stage
 
-Phase 3G should materialize an immutable runtime handoff plan from the accepted
-policy/strategy and adapter/projection bindings.  The plan may name Bundle v1 C
-ABI contracts, Python runtime providers, Cedar inputs, and Lean/Evidence
-obligations, but it must not call C, import Python, evaluate Cedar, or emit
-evidence during planning.
+RFC 142 materializes an immutable runtime handoff plan from the accepted
+adapter/projection binding.  It names Bundle v1 C ABI contracts, Python runtime
+providers, Cedar inputs, and Lean/Evidence obligations without calling C,
+importing Python, evaluating Cedar, or emitting evidence during planning.
