@@ -1,10 +1,15 @@
 ;;; -*- Gerbil -*-
 ;;; POO Flow package declaration for the upstream Building Framework.
 
-(import (only-in :gerbil/gambit current-directory)
+(import (only-in :gerbil/gambit
+                 current-directory
+                 delete-file
+                 directory-files
+                 file-exists?)
         (only-in :gerbil/compiler/base __available-cores)
         (only-in :clan/building all-gerbil-modules)
         (only-in :std/srfi/1 filter filter-map)
+        (only-in :std/srfi/13 string-prefix?)
         (only-in :std/misc/path path-expand path-normalize)
         :gslph/src/building/facade)
 
@@ -30,6 +35,23 @@
           "-cc-options" ,(poo-flow-project-nono-c-binding-include-option)
           ,@(poo-flow-project-nono-c-binding-link-options))
     (ssi: "src/modules/nono-sandbox/_nono")))
+
+(def (poo-flow-project-ffi-output? name)
+  (or (equal? name "_nono.ssi")
+      (string-prefix? "_nono.o" name)))
+
+(def (poo-flow-project-clean-ffi-outputs!)
+  (let* ((gerbil-path (or (getenv "GERBIL_PATH" #f) ".gerbil"))
+         (output-directory
+          (path-expand
+           "lib/poo-flow/src/modules/nono-sandbox"
+           gerbil-path)))
+    (when (file-exists? output-directory)
+      (for-each
+       (lambda (name)
+         (when (poo-flow-project-ffi-output? name)
+           (delete-file (path-expand name output-directory))))
+       (directory-files output-directory)))))
 
 (def +poo-flow-project-interface-only-modules+
   '("module-system/object-family-syntax.ss"
@@ -115,55 +137,60 @@
     (setenv "GERBIL_BUILD_CORES" (number->string worker-count))
     worker-count))
 
-(def (poo-flow-project-source-stages)
+(def (poo-flow-project-source-stages include-ffi?)
   (let* ((root (poo-flow-project-require-build-root))
          (runtime-root (path-expand "src" root))
          (interface-root (path-expand "user-interface" root)))
-    (list
-     (make-package-source-stage
-      "nono-c-ffi"
-      root
-      "poo-flow"
-      (poo-flow-project-ffi-build-spec)
-      #t)
-     (make-package-source-stage
-      "runtime"
-      root
-      "poo-flow"
-      (map poo-flow-project-runtime-spec
-           (filter poo-flow-project-runtime-module?
-                   (poo-flow-project-source-modules runtime-root)))
-      'topology)
-     (make-package-source-stage
-      "user-interface"
-      root
-      "poo-flow"
-      (poo-flow-project-prefix-modules
-       "user-interface/"
-       +poo-flow-project-user-interface-modules+)
-      'topology))))
+    (append
+     (if include-ffi?
+       (list
+        (make-package-source-stage
+         "nono-c-ffi"
+         root
+         "poo-flow"
+         (poo-flow-project-ffi-build-spec)
+         #t))
+       '())
+     (list
+      (make-package-source-stage
+       "runtime"
+       root
+       "poo-flow"
+       (map poo-flow-project-runtime-spec
+            (filter poo-flow-project-runtime-module?
+                    (poo-flow-project-source-modules runtime-root)))
+       'topology)
+      (make-package-source-stage
+       "user-interface"
+       root
+       "poo-flow"
+       (poo-flow-project-prefix-modules
+        "user-interface/"
+        +poo-flow-project-user-interface-modules+)
+       'topology)))))
 
 ;; : (-> [BuildOption] [BuildRequest])
 (def (poo-flow-project-build-requests options)
   (package-source-stages->requests
-   (poo-flow-project-source-stages)
+   (poo-flow-project-source-stages #t)
    options))
 
 ;; : (-> [BuildOption] [[ModulePath]])
 (def (poo-flow-project-build-spec options)
   (package-source-stages-spec
-   (poo-flow-project-source-stages)))
+   (poo-flow-project-source-stages #t)))
 
 ;; : (-> [BuildOption] [BuildStageReceipt])
 (def (poo-flow-project-compile! options)
   (build-plan-receipts-summary
    (package-source-stages-run!
-    (poo-flow-project-source-stages)
+    (poo-flow-project-source-stages #t)
     (append options
             [parallelize: (poo-flow-project-sync-build-worker-count!)]))))
 
 ;; : (-> Void)
 (def (poo-flow-project-clean!)
   (package-source-stages-clean!
-   (poo-flow-project-source-stages))
+   (poo-flow-project-source-stages #f))
+  (poo-flow-project-clean-ffi-outputs!)
   #!void)
