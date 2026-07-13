@@ -7,8 +7,20 @@
         :std/crypto/digest
         :std/sort
         :std/text/hex
+        (only-in :std/srfi/1 every)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/core/roles)
+        :poo-flow/src/core/roles
+        (only-in :poo-flow/src/utilities/functional
+                 poo-flow-fold-left
+                 poo-flow-fold-right
+                 poo-flow-map
+                 poo-flow-find
+                 poo-flow-filter-map
+                 poo-flow-remove
+                 poo-flow-append-map
+                 poo-flow-all?
+                 poo-flow-member?
+                 poo-flow-list-of?))
 
 (def +poo-flow-case-slot-contract-kind+ 'poo-flow.case-slot-contract.v1)
 (def +poo-flow-case-type-contract-kind+ 'poo-flow.case-type-contract.v1)
@@ -62,29 +74,31 @@
                     (domain-case-id->string right)))))
 
 (def (domain-case-unique values)
-  (let loop ((rest values) (seen '()) (result '()))
-    (if (null? rest)
-        (reverse result)
-        (if (member (car rest) seen)
-            (loop (cdr rest) seen result)
-            (loop (cdr rest)
-                  (cons (car rest) seen)
-                  (cons (car rest) result))))))
+  (reverse
+   (poo-flow-fold-left
+    (lambda (value unique-reversed)
+      (if (poo-flow-member? value unique-reversed)
+          unique-reversed
+          (cons value unique-reversed)))
+    '()
+    values)))
 
 (def (domain-case-duplicates values)
-  (let loop ((rest values) (seen '()) (duplicates '()))
-    (if (null? rest)
-        (reverse (domain-case-unique duplicates))
-        (if (member (car rest) seen)
-            (loop (cdr rest) seen (cons (car rest) duplicates))
-            (loop (cdr rest) (cons (car rest) seen) duplicates)))))
+  (let (seen+duplicates
+        (poo-flow-fold-left
+         (lambda (value state)
+           (let ((seen (car state))
+                 (duplicates-reversed (cdr state)))
+             (if (poo-flow-member? value seen)
+                 (cons seen (cons value duplicates-reversed))
+                 (cons (cons value seen) duplicates-reversed))))
+         (cons '() '())
+         values))
+    (reverse (domain-case-unique (cdr seen+duplicates)))))
 
 (def (domain-case-every-eq? left right)
   (and (= (length left) (length right))
-       (let loop ((left-rest left) (right-rest right))
-         (or (null? left-rest)
-             (and (eq? (car left-rest) (car right-rest))
-                  (loop (cdr left-rest) (cdr right-rest)))))))
+       (if (every eq? left right) #t #f)))
 
 (def (poo-flow-case-slot-contract slot-id-value owner-id-value type-id-value
                                   default-id-value merge-algebra-value
@@ -187,8 +201,8 @@
        (domain-case-id? (.ref value 'type-id))
        (domain-case-id? (.ref value 'default-id))
        (domain-case-id? (.ref value 'merge-algebra))
-       (list? (.ref value 'override-owner-ids))
-       (andmap domain-case-id? (.ref value 'override-owner-ids))
+       (poo-flow-list-of? domain-case-id?
+                          (.ref value 'override-owner-ids))
        (or (not (.ref value 'compatibility-witness-id))
            (domain-case-id? (.ref value 'compatibility-witness-id)))
        (procedure? (.ref value 'validator))))
@@ -196,8 +210,7 @@
 (def (case-type-contract-valid? value)
   (and (poo-flow-case-type-contract? value)
        (domain-case-id? (.ref value 'type-id))
-       (list? (.ref value 'parent-type-ids))
-       (andmap domain-case-id? (.ref value 'parent-type-ids))
+       (poo-flow-list-of? domain-case-id? (.ref value 'parent-type-ids))
        (procedure? (.ref value 'predicate))))
 
 (def (case-method-contract-valid? value)
@@ -210,8 +223,8 @@
        (domain-case-id? (.ref value 'precondition-id))
        (domain-case-id? (.ref value 'postcondition-id))
        (procedure? (.ref value 'validator))
-       (list? (.ref value 'refines-contract-ids))
-       (andmap domain-case-id? (.ref value 'refines-contract-ids))
+       (poo-flow-list-of? domain-case-id?
+                          (.ref value 'refines-contract-ids))
        (or (and (null? (.ref value 'refines-contract-ids))
                 (not (.ref value 'compatibility-witness-id))
                 (not (.ref value 'compatibility-witness)))
@@ -234,14 +247,14 @@
        (> (.ref value 'component-version) 0)
        (.ref value 'role-prototype)
        (case-type-contract-valid? (.ref value 'type-contract))
-       (list? (.ref value 'slot-contracts))
-       (andmap case-slot-contract-valid? (.ref value 'slot-contracts))
-       (list? (.ref value 'method-contracts))
-       (andmap case-method-contract-valid? (.ref value 'method-contracts))
-       (list? (.ref value 'projections))
-       (andmap case-projection-valid? (.ref value 'projections))
-       (list? (.ref value 'parent-component-ids))
-       (andmap domain-case-id? (.ref value 'parent-component-ids))
+       (poo-flow-list-of? case-slot-contract-valid?
+                          (.ref value 'slot-contracts))
+       (poo-flow-list-of? case-method-contract-valid?
+                          (.ref value 'method-contracts))
+       (poo-flow-list-of? case-projection-valid?
+                          (.ref value 'projections))
+       (poo-flow-list-of? domain-case-id?
+                          (.ref value 'parent-component-ids))
        (or (not (.ref value 'policy-algebra))
            (domain-case-id? (.ref value 'policy-algebra)))
        (or (not (.ref value 'strategy-algebra))
@@ -295,19 +308,22 @@
         (cons 'parents (.ref value 'parent-component-ids))
         (case-type-contract-normalize (.ref value 'type-contract))
         (cons 'slots
-              (map case-slot-contract-normalize
-                   (domain-case-sort (.ref value 'slot-contracts)
-                                     (lambda (slot) (.ref slot 'slot-id)))))
+              (poo-flow-map
+               case-slot-contract-normalize
+               (domain-case-sort (.ref value 'slot-contracts)
+                                 (lambda (slot) (.ref slot 'slot-id)))))
         (cons 'contracts
-              (map case-method-contract-normalize
-                   (domain-case-sort
-                    (.ref value 'method-contracts)
-                    (lambda (contract) (.ref contract 'contract-id)))))
+              (poo-flow-map
+               case-method-contract-normalize
+               (domain-case-sort
+                (.ref value 'method-contracts)
+                (lambda (contract) (.ref contract 'contract-id)))))
         (cons 'projections
-              (map case-projection-normalize
-                   (domain-case-sort
-                    (.ref value 'projections)
-                    (lambda (projection) (.ref projection 'projection-id)))))
+              (poo-flow-map
+               case-projection-normalize
+               (domain-case-sort
+                (.ref value 'projections)
+                (lambda (projection) (.ref projection 'projection-id)))))
         (list 'policy-algebra (.ref value 'policy-algebra))
         (list 'strategy-algebra (.ref value 'strategy-algebra))))
 
@@ -319,11 +335,12 @@
   (list +poo-flow-domain-case-key-domain+
         (list 'schema-id schema-id-value)
         (list 'schema-version schema-version-value)
-        (cons 'components (map case-component-normalize components))
+        (cons 'components (poo-flow-map case-component-normalize components))
         (cons 'local-overrides
-              (map case-slot-contract-normalize
-                   (domain-case-sort local-overrides
-                                     (lambda (slot) (.ref slot 'slot-id)))))
+              (poo-flow-map
+               case-slot-contract-normalize
+               (domain-case-sort local-overrides
+                                 (lambda (slot) (.ref slot 'slot-id)))))
         (cons 'selected-projections
               (domain-case-sort-ids selected-projection-ids))))
 
@@ -345,8 +362,8 @@
           (case-slot-contract-normalize right)))
 
 (def (domain-case-explicit-override? candidate inherited)
-  (and (member (.ref inherited 'owner-id)
-               (.ref candidate 'override-owner-ids))
+  (and (poo-flow-member? (.ref inherited 'owner-id)
+                         (.ref candidate 'override-owner-ids))
        (.ref candidate 'compatibility-witness-id)))
 
 (def (domain-case-resolve-slots slots)
@@ -355,10 +372,11 @@
         (values (reverse effective) (reverse diagnostics))
         (let* ((candidate (car rest))
                (existing
-                (find (lambda (slot)
-                        (equal? (.ref slot 'slot-id)
-                                (.ref candidate 'slot-id)))
-                      effective)))
+                (poo-flow-find
+                 (lambda (slot)
+                   (equal? (.ref slot 'slot-id)
+                           (.ref candidate 'slot-id)))
+                 effective)))
           (cond
            ((not existing)
             (loop (cdr rest) (cons candidate effective) diagnostics))
@@ -375,7 +393,11 @@
                         diagnostics)))
            ((domain-case-explicit-override? candidate existing)
             (loop (cdr rest)
-                  (cons candidate (remq existing effective)) diagnostics))
+                  (cons candidate
+                        (poo-flow-remove
+                         (lambda (value) (eq? value existing))
+                         effective))
+                  diagnostics))
            ((domain-case-explicit-override? existing candidate)
             (loop (cdr rest) effective diagnostics))
            (else
@@ -392,8 +414,8 @@
           (case-method-contract-normalize right)))
 
 (def (domain-case-contract-refines? candidate inherited)
-  (and (member (.ref inherited 'contract-id)
-               (.ref candidate 'refines-contract-ids))
+  (and (poo-flow-member? (.ref inherited 'contract-id)
+                         (.ref candidate 'refines-contract-ids))
        (equal? (.ref candidate 'domain-id) (.ref inherited 'domain-id))
        (domain-case-safe-binary-call
         (.ref candidate 'compatibility-witness) candidate inherited)))
@@ -406,11 +428,12 @@
                (kind (.ref candidate 'contract-kind))
                (existing
                 (and (eq? kind 'method)
-                     (find (lambda (contract)
-                             (and (eq? (.ref contract 'contract-kind) 'method)
-                                  (equal? (.ref contract 'subject-id)
-                                          (.ref candidate 'subject-id))))
-                           effective))))
+                     (poo-flow-find
+                      (lambda (contract)
+                        (and (eq? (.ref contract 'contract-kind) 'method)
+                             (equal? (.ref contract 'subject-id)
+                                     (.ref candidate 'subject-id))))
+                      effective))))
           (cond
            ((or (eq? kind 'state) (not existing))
             (loop (cdr rest) (cons candidate effective) diagnostics))
@@ -427,7 +450,11 @@
                         diagnostics)))
            ((domain-case-contract-refines? candidate existing)
             (loop (cdr rest)
-                  (cons candidate (remq existing effective)) diagnostics))
+                  (cons candidate
+                        (poo-flow-remove
+                         (lambda (value) (eq? value existing))
+                         effective))
+                  diagnostics))
            ((domain-case-contract-refines? existing candidate)
             (loop (cdr rest) effective diagnostics))
            (else
@@ -440,104 +467,122 @@
                         diagnostics))))))))
 
 (def (domain-case-projection-conflicts projections)
-  (let loop ((rest projections) (seen '()) (diagnostics '()))
-    (if (null? rest)
-        (reverse diagnostics)
-        (let* ((candidate (car rest))
-               (id (.ref candidate 'projection-id))
-               (existing (find (lambda (projection)
-                                 (equal? id (.ref projection 'projection-id)))
-                               seen)))
-          (loop (cdr rest)
-                (if existing seen (cons candidate seen))
-                (if existing
-                    (cons (domain-case-diagnostic
-                           'projection-name-conflict
-                           (list 'projections id)
-                           (list (.ref existing 'owner-id)
-                                 (.ref candidate 'owner-id)))
-                          diagnostics)
-                    diagnostics))))))
+  (cdr
+   (poo-flow-fold-left
+    (lambda (candidate state)
+      (let* ((seen (car state))
+             (diagnostics (cdr state))
+             (id (.ref candidate 'projection-id))
+             (existing
+              (poo-flow-find
+               (lambda (projection)
+                 (equal? id (.ref projection 'projection-id)))
+               seen)))
+        (cons
+         (if existing seen (cons candidate seen))
+         (if existing
+             (append
+              diagnostics
+              (list
+               (domain-case-diagnostic
+                'projection-name-conflict
+                (list 'projections id)
+                (list (.ref existing 'owner-id)
+                      (.ref candidate 'owner-id)))))
+             diagnostics))))
+    (cons '() '())
+    projections)))
 
 (def (domain-case-single-algebra components slot code)
   (let (algebras
         (domain-case-unique
-         (filter (lambda (value) value)
-                 (map (lambda (component) (.ref component slot)) components))))
+         (poo-flow-filter-map
+          (lambda (component) (.ref component slot))
+          components)))
     (if (> (length algebras) 1)
         (values #f (list (domain-case-diagnostic code (list slot) algebras)))
         (values (and (pair? algebras) (car algebras)) '()))))
 
 (def (domain-case-parent-diagnostics components)
-  (let loop ((rest components) (seen '()) (diagnostics '()))
-    (if (null? rest)
-        (reverse diagnostics)
-        (let* ((component (car rest))
-               (id (.ref component 'component-id))
-               (missing
-                (filter (lambda (parent-id) (not (member parent-id seen)))
-                        (.ref component 'parent-component-ids))))
-          (loop (cdr rest) (cons id seen)
-                (append
-                 (map (lambda (parent-id)
-                        (domain-case-diagnostic
-                         'missing-or-forward-parent-component
-                         (list 'components id 'parents)
-                         parent-id))
-                      missing)
-                 diagnostics))))))
+  (cdr
+   (poo-flow-fold-left
+    (lambda (component state)
+      (let* ((seen (car state))
+             (diagnostics (cdr state))
+             (id (.ref component 'component-id))
+             (new-diagnostics
+              (poo-flow-filter-map
+               (lambda (parent-id)
+                 (and (not (poo-flow-member? parent-id seen))
+                      (domain-case-diagnostic
+                       'missing-or-forward-parent-component
+                       (list 'components id 'parents)
+                       parent-id)))
+               (.ref component 'parent-component-ids))))
+        (cons (cons id seen) (append diagnostics new-diagnostics))))
+    (cons '() '())
+    components)))
 
 (def (domain-case-type-diagnostics components)
-  (let loop ((rest components) (seen '()) (diagnostics '()))
-    (if (null? rest)
-        (reverse diagnostics)
-        (let* ((component (car rest))
-               (type-contract (.ref component 'type-contract))
-               (type-id (.ref type-contract 'type-id))
-               (existing (assoc type-id seen))
-               (missing
-                (filter (lambda (parent-id) (not (assoc parent-id seen)))
-                        (.ref type-contract 'parent-type-ids))))
-          (loop
-           (cdr rest)
-           (if existing seen (cons (cons type-id type-contract) seen))
-           (append
-            (if (and existing (not (eq? (cdr existing) type-contract)))
-                (list
-                 (domain-case-diagnostic
-                  'type-identity-conflict
-                  (list 'types type-id)
-                  (list (.ref (cdr existing) 'parent-type-ids)
-                        (.ref type-contract 'parent-type-ids))))
-                '())
-            (map (lambda (parent-id)
+  (cdr
+   (poo-flow-fold-left
+    (lambda (component state)
+      (let* ((seen (car state))
+             (diagnostics (cdr state))
+             (type-contract (.ref component 'type-contract))
+             (type-id (.ref type-contract 'type-id))
+             (existing (assoc type-id seen))
+             (identity-diagnostic
+              (and existing
+                   (not (eq? (cdr existing) type-contract))
                    (domain-case-diagnostic
-                    'missing-or-forward-parent-type
-                    (list 'types type-id 'parents)
-                    parent-id))
-                 missing)
-            diagnostics))))))
+                    'type-identity-conflict
+                    (list 'types type-id)
+                    (list (.ref (cdr existing) 'parent-type-ids)
+                          (.ref type-contract 'parent-type-ids)))))
+             (parent-diagnostics
+              (poo-flow-filter-map
+               (lambda (parent-id)
+                 (and (not (assoc parent-id seen))
+                      (domain-case-diagnostic
+                       'missing-or-forward-parent-type
+                       (list 'types type-id 'parents)
+                       parent-id)))
+               (.ref type-contract 'parent-type-ids))))
+        (cons
+         (if existing seen (cons (cons type-id type-contract) seen))
+         (append diagnostics
+                 (if identity-diagnostic
+                     (list identity-diagnostic)
+                     '())
+                 parent-diagnostics))))
+    (cons '() '())
+    components)))
 
 (def (domain-case-select-projections projections selected-ids)
-  (let loop ((rest selected-ids) (catalog '()) (diagnostics '()))
-    (if (null? rest)
-        (values (reverse catalog) (reverse diagnostics))
-        (let* ((id (car rest))
-               (matches
-                (filter (lambda (projection)
-                          (equal? id (.ref projection 'projection-id)))
-                        projections)))
-          (cond
-           ((null? matches)
-            (loop (cdr rest) catalog
-                  (cons (domain-case-diagnostic
-                         'unknown-projection
-                         (list 'selected-projections id) #f)
-                        diagnostics)))
-           ((> (length matches) 1)
-            (loop (cdr rest) catalog diagnostics))
-           (else
-            (loop (cdr rest) (cons (car matches) catalog) diagnostics)))))))
+  (let (catalog+diagnostics
+        (poo-flow-fold-right
+         (lambda (id state)
+           (let* ((catalog (car state))
+                  (diagnostics (cdr state))
+                  (matches
+                   (poo-flow-filter-map
+                    (lambda (projection)
+                      (and (equal? id (.ref projection 'projection-id))
+                           projection))
+                    projections)))
+             (cond
+              ((null? matches)
+               (cons catalog
+                     (cons (domain-case-diagnostic
+                            'unknown-projection
+                            (list 'selected-projections id) #f)
+                           diagnostics)))
+              ((> (length matches) 1) state)
+              (else (cons (cons (car matches) catalog) diagnostics)))))
+         (cons '() '())
+         selected-ids))
+    (values (car catalog+diagnostics) (cdr catalog+diagnostics))))
 
 (def (poo-flow-domain-case-cache)
   (poo-core-role-object
@@ -580,88 +625,179 @@
            (cache-hit? cache-hit?)))
    (supers)))
 
+(def (domain-case-closure-input-diagnostics cache schema-id-value
+                                            schema-version-value components
+                                            local-overrides
+                                            selected-projection-ids)
+  (append
+   (poo-flow-filter-map
+    (lambda (diagnostic) diagnostic)
+    (list
+     (and (not (poo-flow-domain-case-cache? cache))
+          (domain-case-diagnostic 'invalid-domain-case-cache '(cache) cache))
+     (and (not (domain-case-id? schema-id-value))
+          (domain-case-diagnostic
+           'invalid-domain-case-schema '(schema-id) schema-id-value))
+     (and (not (and (exact-integer? schema-version-value)
+                    (> schema-version-value 0)))
+          (domain-case-diagnostic
+           'invalid-domain-case-version '(schema-version)
+           schema-version-value))
+     (and (not (and (list? components) (pair? components)))
+          (domain-case-diagnostic
+           'missing-case-components '(components) components))
+     (and (not (poo-flow-list-of? case-slot-contract-valid?
+                                  local-overrides))
+          (domain-case-diagnostic
+           'invalid-local-overrides '(local-overrides) local-overrides))
+     (and (not (poo-flow-list-of? domain-case-id?
+                                  selected-projection-ids))
+          (domain-case-diagnostic
+           'invalid-projection-selection '(selected-projections)
+           selected-projection-ids))))
+   (if (list? selected-projection-ids)
+       (poo-flow-map
+        (lambda (projection-id)
+          (domain-case-diagnostic
+           'duplicate-projection-selection '(selected-projections)
+           projection-id))
+        (domain-case-duplicates selected-projection-ids))
+       '())
+   (if (list? components)
+       (poo-flow-filter-map
+        (lambda (component)
+          (and (not (poo-flow-case-component-valid? component))
+               (domain-case-diagnostic
+                'invalid-case-component '(components) component)))
+        components)
+       '())))
+
+(def (domain-case-closure-structural-diagnostics components projections)
+  (append
+   (poo-flow-map
+    (lambda (component-id)
+      (domain-case-diagnostic
+       'duplicate-component-id '(components) component-id))
+    (domain-case-duplicates
+     (poo-flow-map
+      (lambda (component) (.ref component 'component-id))
+      components)))
+   (domain-case-parent-diagnostics components)
+   (domain-case-type-diagnostics components)
+   (domain-case-projection-conflicts projections)))
+
+(def (domain-case-compose-components components)
+  (with-catch
+   (lambda (failure)
+     (domain-case-diagnostic
+      'role-composition-failed '(components) failure))
+   (lambda ()
+     (apply role-compose
+            (reverse
+             (poo-flow-map
+              (lambda (component) (.ref component 'role-prototype))
+              components))))))
+
+(def (domain-case-make-closed-value schema-id-value schema-version-value
+                                    key descriptor components local-overrides
+                                    selected-projection-ids composition
+                                    effective-slots effective-contracts
+                                    projection-catalog policy-algebra
+                                    strategy-algebra)
+  (poo-core-role-object
+   (slots
+    ((kind +poo-flow-domain-case-kind+)
+     (schema-id schema-id-value)
+     (schema-version schema-version-value)
+     (key key)
+     (components components)
+     (local-overrides local-overrides)
+     (shared-prototype composition)
+     (type-contracts
+      (poo-flow-map
+       (lambda (component) (.ref component 'type-contract))
+       components))
+     (effective-slots effective-slots)
+     (effective-contracts effective-contracts)
+     (projection-catalog projection-catalog)
+     (selected-projection-ids selected-projection-ids)
+     (policy-algebra policy-algebra)
+     (strategy-algebra strategy-algebra)
+     (canonical-descriptor descriptor)
+     (metrics (vector 0))
+     (closed? #t)))
+   (supers)))
+
+(def (domain-case-cache-resolve cache schema-id-value schema-version-value
+                                key descriptor components local-overrides
+                                selected-projection-ids effective-slots
+                                effective-contracts projection-catalog
+                                policy-algebra strategy-algebra)
+  (let (cached (hash-get (.ref cache 'entries) key))
+    (cond
+     ((and cached
+           (domain-case-every-eq? components (.ref cached 'components))
+           (domain-case-every-eq?
+            local-overrides (.ref cached 'local-overrides)))
+      (domain-case-cache-increment! cache 1)
+      (domain-case-make-closure-receipt #t key cached '() #t))
+     (cached
+      (domain-case-make-closure-receipt
+       #f key #f
+       (list
+        (domain-case-diagnostic
+         'module-owner-identity-alias '(key) key))
+       #f))
+     (else
+      (let (composition (domain-case-compose-components components))
+        (if (domain-case-object-kind?
+             composition 'poo-flow.domain-case-diagnostic.v1)
+            (domain-case-make-closure-receipt
+             #f key #f (list composition) #f)
+            (let (case-value
+                  (domain-case-make-closed-value
+                   schema-id-value schema-version-value key descriptor
+                   components local-overrides selected-projection-ids
+                   composition effective-slots effective-contracts
+                   projection-catalog policy-algebra strategy-algebra))
+              (hash-put! (.ref cache 'entries) key case-value)
+              (domain-case-cache-increment! cache 0)
+              (domain-case-make-closure-receipt
+               #t key case-value '() #f))))))))
+
 (def (poo-flow-domain-case-close cache schema-id-value schema-version-value
                                  components
                                  (local-overrides '())
                                  (selected-projection-ids '()))
-  (let (diagnostics '())
-    (def (reject! diagnostic)
-      (set! diagnostics (cons diagnostic diagnostics)))
-    (unless (poo-flow-domain-case-cache? cache)
-      (reject! (domain-case-diagnostic 'invalid-domain-case-cache '(cache)
-                                       cache)))
-    (unless (domain-case-id? schema-id-value)
-      (reject! (domain-case-diagnostic 'invalid-domain-case-schema
-                                       '(schema-id) schema-id-value)))
-    (unless (and (exact-integer? schema-version-value)
-                 (> schema-version-value 0))
-      (reject! (domain-case-diagnostic 'invalid-domain-case-version
-                                       '(schema-version)
-                                       schema-version-value)))
-    (unless (and (list? components) (pair? components))
-      (reject! (domain-case-diagnostic 'missing-case-components
-                                       '(components) components)))
-    (unless (and (list? local-overrides)
-                 (andmap case-slot-contract-valid? local-overrides))
-      (reject! (domain-case-diagnostic 'invalid-local-overrides
-                                       '(local-overrides) local-overrides)))
-    (unless (and (list? selected-projection-ids)
-                 (andmap domain-case-id? selected-projection-ids))
-      (reject! (domain-case-diagnostic 'invalid-projection-selection
-                                       '(selected-projections)
-                                       selected-projection-ids)))
-    (when (list? selected-projection-ids)
-      (for-each
-       (lambda (projection-id)
-         (reject! (domain-case-diagnostic
-                   'duplicate-projection-selection
-                   '(selected-projections) projection-id)))
-       (domain-case-duplicates selected-projection-ids)))
-    (when (list? components)
-      (for-each
-       (lambda (component)
-         (unless (poo-flow-case-component-valid? component)
-           (reject! (domain-case-diagnostic 'invalid-case-component
-                                            '(components) component))))
-       components))
-    (if (pair? diagnostics)
+  (let (input-diagnostics
+        (domain-case-closure-input-diagnostics
+         cache schema-id-value schema-version-value components
+         local-overrides selected-projection-ids))
+    (if (pair? input-diagnostics)
         (domain-case-make-closure-receipt
-         #f #f #f (reverse diagnostics) #f)
+         #f #f #f input-diagnostics #f)
         (let* ((normalized-local-overrides
                 (domain-case-sort
                  local-overrides (lambda (slot) (.ref slot 'slot-id))))
                (normalized-selected-projection-ids
                 (domain-case-sort-ids selected-projection-ids))
-               (component-ids
-                (map (lambda (component) (.ref component 'component-id))
-                     components))
-               (duplicate-component-ids
-                (domain-case-duplicates component-ids))
                (all-slots
                 (append
                  normalized-local-overrides
-                 (apply append
-                        (map (lambda (component)
-                               (.ref component 'slot-contracts))
-                             components))))
+                 (poo-flow-append-map
+                  (lambda (component) (.ref component 'slot-contracts))
+                  components)))
                (all-contracts
-                (apply append
-                       (map (lambda (component)
-                              (.ref component 'method-contracts))
-                            components)))
+                (poo-flow-append-map
+                 (lambda (component) (.ref component 'method-contracts))
+                 components))
                (all-projections
-                (apply append
-                       (map (lambda (component)
-                              (.ref component 'projections))
-                            components))))
-          (for-each
-           (lambda (id)
-             (reject! (domain-case-diagnostic 'duplicate-component-id
-                                              '(components) id)))
-          duplicate-component-ids)
-          (for-each reject! (domain-case-parent-diagnostics components))
-          (for-each reject! (domain-case-type-diagnostics components))
-          (for-each reject! (domain-case-projection-conflicts all-projections))
+                (poo-flow-append-map
+                 (lambda (component) (.ref component 'projections))
+                 components))
+               (structural-diagnostics
+                (domain-case-closure-structural-diagnostics
+                 components all-projections)))
           (let-values (((effective-slots slot-diagnostics)
                         (domain-case-resolve-slots all-slots))
                        ((effective-contracts contract-diagnostics)
@@ -677,12 +813,14 @@
                         (domain-case-single-algebra
                          components 'strategy-algebra
                          'strategy-algebra-conflict)))
-            (for-each reject! slot-diagnostics)
-            (for-each reject! contract-diagnostics)
-            (for-each reject! projection-diagnostics)
-            (for-each reject! policy-diagnostics)
-            (for-each reject! strategy-diagnostics)
-            (let* ((descriptor
+            (let* ((diagnostics
+                    (append structural-diagnostics
+                            slot-diagnostics
+                            contract-diagnostics
+                            projection-diagnostics
+                            policy-diagnostics
+                            strategy-diagnostics))
+                   (descriptor
                     (poo-flow-domain-case-canonical-descriptor
                      schema-id-value schema-version-value components
                      normalized-local-overrides
@@ -690,78 +828,66 @@
                    (key (poo-flow-domain-case-canonical-key descriptor)))
               (if (pair? diagnostics)
                   (domain-case-make-closure-receipt
-                   #f key #f (reverse diagnostics) #f)
-                  (let (cached (hash-get (.ref cache 'entries) key))
-                    (cond
-                     ((and cached
-                           (domain-case-every-eq?
-                            components (.ref cached 'components))
-                           (domain-case-every-eq?
-                            normalized-local-overrides
-                            (.ref cached 'local-overrides)))
-                      (domain-case-cache-increment! cache 1)
-                      (domain-case-make-closure-receipt
-                       #t key cached '() #t))
-                     (cached
-                      (domain-case-make-closure-receipt
-                       #f key #f
-                        (list
-                        (domain-case-diagnostic
-                         'module-owner-identity-alias '(key) key))
-                       #f))
-                     (else
-                      (let (composition
-                            (with-catch
-                             (lambda (failure)
-                               (domain-case-diagnostic
-                                'role-composition-failed '(components)
-                                failure))
-                             (lambda ()
-                               (apply role-compose
-                                      (reverse
-                                       (map (lambda (component)
-                                              (.ref component
-                                                    'role-prototype))
-                                            components))))))
-                        (if (domain-case-object-kind?
-                             composition 'poo-flow.domain-case-diagnostic.v1)
-                            (domain-case-make-closure-receipt
-                             #f key #f (list composition) #f)
-                            (let* ((type-contracts
-                                    (map (lambda (component)
-                                           (.ref component 'type-contract))
-                                         components))
-                                   (case-value
-                                    (poo-core-role-object
-                                     (slots
-                                      ((kind +poo-flow-domain-case-kind+)
-                                       (schema-id schema-id-value)
-                                       (schema-version schema-version-value)
-                                       (key key)
-                                       (components components)
-                                       (local-overrides
-                                        normalized-local-overrides)
-                                       (shared-prototype composition)
-                                       (type-contracts type-contracts)
-                                       (effective-slots effective-slots)
-                                       (effective-contracts
-                                        effective-contracts)
-                                       (projection-catalog projection-catalog)
-                                       (selected-projection-ids
-                                        normalized-selected-projection-ids)
-                                       (policy-algebra policy-algebra)
-                                       (strategy-algebra strategy-algebra)
-                                       (canonical-descriptor descriptor)
-                                       (metrics (vector 0))
-                                       (closed? #t)))
-                                     (supers))))
-                              (hash-put! (.ref cache 'entries) key case-value)
-                              (domain-case-cache-increment! cache 0)
-                              (domain-case-make-closure-receipt
-                               #t key case-value '() #f))))))))))))))
+                   #f key #f diagnostics #f)
+                  (domain-case-cache-resolve
+                   cache schema-id-value schema-version-value key descriptor
+                   components normalized-local-overrides
+                   normalized-selected-projection-ids effective-slots
+                   effective-contracts projection-catalog policy-algebra
+                   strategy-algebra))))))))
 
 (def (domain-case-instance-diagnostic code owner observed)
   (domain-case-diagnostic code (list 'instance owner) observed))
+
+(def (domain-case-slot-instance-diagnostic instance slot-contract)
+  (let* ((missing-marker (list 'missing-slot))
+         (slot-id (.ref slot-contract 'slot-id))
+         (value
+          (with-catch
+           (lambda (_failure) missing-marker)
+           (lambda () (.ref instance slot-id)))))
+    (cond
+     ((and (eq? value missing-marker)
+           (eq? (.ref slot-contract 'default-id) 'required))
+      (domain-case-instance-diagnostic
+       'required-slot-missing slot-id #f))
+     ((and (not (eq? value missing-marker))
+           (not (domain-case-safe-call
+                 (.ref slot-contract 'validator) value)))
+      (domain-case-instance-diagnostic
+       'slot-contract-rejected slot-id value))
+     (else #f))))
+
+(def (domain-case-type-instance-diagnostic instance type-contract)
+  (and (not (domain-case-safe-call
+             (.ref type-contract 'predicate) instance))
+       (domain-case-instance-diagnostic
+        'type-contract-rejected
+        (.ref type-contract 'type-id)
+        instance)))
+
+(def (domain-case-state-instance-diagnostic instance contract)
+  (and (eq? (.ref contract 'contract-kind) 'state)
+       (not (domain-case-safe-call (.ref contract 'validator) instance))
+       (domain-case-instance-diagnostic
+        'state-contract-rejected
+        (.ref contract 'contract-id)
+        instance)))
+
+(def (domain-case-instance-diagnostics domain-case instance)
+  (append
+   (poo-flow-filter-map
+    (lambda (slot-contract)
+      (domain-case-slot-instance-diagnostic instance slot-contract))
+    (.ref domain-case 'effective-slots))
+   (poo-flow-filter-map
+    (lambda (type-contract)
+      (domain-case-type-instance-diagnostic instance type-contract))
+    (.ref domain-case 'type-contracts))
+   (poo-flow-filter-map
+    (lambda (contract)
+      (domain-case-state-instance-diagnostic instance contract))
+    (.ref domain-case 'effective-contracts))))
 
 (def (poo-flow-domain-case-instantiate domain-case local-role)
   (if (not (and (poo-flow-domain-case? domain-case)
@@ -798,67 +924,26 @@
                      (instance #f)
                      (diagnostics (list instance))))
              (supers))
-            (let (diagnostics '())
+            (begin
               (domain-case-instance-mix-increment! domain-case)
-              (for-each
-               (lambda (slot-contract)
-                 (let* ((missing-marker (list 'missing-slot))
-                        (slot-id (.ref slot-contract 'slot-id))
-                        (value
-                         (with-catch
-                          (lambda (_failure) missing-marker)
-                          (lambda () (.ref instance slot-id)))))
-                   (cond
-                    ((and (eq? value missing-marker)
-                          (eq? (.ref slot-contract 'default-id) 'required))
-                     (set! diagnostics
-                           (cons (domain-case-instance-diagnostic
-                                  'required-slot-missing slot-id #f)
-                                 diagnostics)))
-                    ((and (not (eq? value missing-marker))
-                          (not (domain-case-safe-call
-                                (.ref slot-contract 'validator) value)))
-                     (set! diagnostics
-                           (cons (domain-case-instance-diagnostic
-                                  'slot-contract-rejected slot-id value)
-                                 diagnostics))))))
-               (.ref domain-case 'effective-slots))
-              (for-each
-               (lambda (type-contract)
-                 (unless (domain-case-safe-call
-                          (.ref type-contract 'predicate) instance)
-                   (set! diagnostics
-                         (cons (domain-case-instance-diagnostic
-                                'type-contract-rejected
-                                (.ref type-contract 'type-id) instance)
-                               diagnostics))))
-               (.ref domain-case 'type-contracts))
-              (for-each
-               (lambda (contract)
-                 (when (eq? (.ref contract 'contract-kind) 'state)
-                   (unless (domain-case-safe-call
-                            (.ref contract 'validator) instance)
-                     (set! diagnostics
-                           (cons (domain-case-instance-diagnostic
-                                  'state-contract-rejected
-                                  (.ref contract 'contract-id) instance)
-                                 diagnostics)))))
-               (.ref domain-case 'effective-contracts))
-              (poo-core-role-object
-               (slots ((kind +poo-flow-domain-case-instance-receipt-kind+)
-                       (accepted? (null? diagnostics))
-                       (instance instance)
-                       (diagnostics (reverse diagnostics))))
-               (supers)))))))
+              (let (diagnostics
+                    (domain-case-instance-diagnostics domain-case instance))
+                (poo-core-role-object
+                 (slots ((kind +poo-flow-domain-case-instance-receipt-kind+)
+                         (accepted? (null? diagnostics))
+                         (instance instance)
+                         (diagnostics diagnostics)))
+                 (supers))))))))
 
 (def (poo-flow-domain-case-check-method domain-case subject-id-value context)
   (let (contract
         (and (poo-flow-domain-case? domain-case)
-             (find (lambda (candidate)
-                     (and (eq? (.ref candidate 'contract-kind) 'method)
-                          (equal? (.ref candidate 'subject-id)
-                                  subject-id-value)))
-                   (.ref domain-case 'effective-contracts))))
+             (poo-flow-find
+              (lambda (candidate)
+                (and (eq? (.ref candidate 'contract-kind) 'method)
+                     (equal? (.ref candidate 'subject-id)
+                             subject-id-value)))
+              (.ref domain-case 'effective-contracts))))
     (let (accepted?
           (and contract
                (domain-case-safe-call (.ref contract 'validator) context)))
@@ -880,10 +965,11 @@
 (def (poo-flow-domain-case-project domain-case projection-id-value instance)
   (let (projection
         (and (poo-flow-domain-case? domain-case)
-             (find (lambda (candidate)
-                     (equal? projection-id-value
-                             (.ref candidate 'projection-id)))
-                   (.ref domain-case 'projection-catalog))))
+             (poo-flow-find
+              (lambda (candidate)
+                (equal? projection-id-value
+                        (.ref candidate 'projection-id)))
+              (.ref domain-case 'projection-catalog))))
     (if (not projection)
         (poo-core-role-object
          (slots ((kind +poo-flow-domain-case-projection-receipt-kind+)

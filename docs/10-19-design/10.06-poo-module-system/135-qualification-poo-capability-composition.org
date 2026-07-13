@@ -351,6 +351,36 @@ CaseComponent, DomainCase, cache, closure, instance, diagnostic, and projection
 receipts.  It does not change =defpoo-object-family= or export a new public
 authoring DSL.
 
+#+begin_src mermaid
+flowchart LR
+    Components["CaseComponent values"] --> Pure["Pure closure and validation"]
+    Functional["utilities/functional.ss"] --> Pure
+    Pure -->|"diagnostics"| Reject["POO rejection receipt"]
+    Pure -->|"resolved values"| Boundary["Explicit effect boundary"]
+    Boundary --> Compose["role-compose"]
+    Boundary --> Cache["cache and observability counters"]
+    Compose --> Closed["Closed DomainCase"]
+    Cache --> Closed
+#+end_src
+
+The implementation imports the project-owned combinators from
+=src/utilities/functional.ss=.  Normalization, lookup, flattening, validation,
+duplicate detection, ordered parent/type diagnostics, projection selection,
+closure diagnostics, and instance diagnostics use =poo-flow-fold-left=,
+=poo-flow-fold-right=, =poo-flow-map=, =poo-flow-find=,
+=poo-flow-filter-map=, =poo-flow-append-map=, =poo-flow-remove=,
+=poo-flow-all?=, =poo-flow-member?=, and =poo-flow-list-of?= instead of local
+list algorithms.  The only remaining hand-written recursion owns the two pure
+ordered state machines for slot precedence and method-contract refinement.
+Their encounter order is semantic and is therefore not hidden behind an
+unordered generic merge.
+
+Mutation is restricted to three named observability/runtime boundaries:
+DomainCase cache insertion, cache counters, and successful instance-mix
+counters.  Diagnostic accumulation is immutable and encounter ordered; the
+close and instantiate paths construct diagnostic values before constructing
+their POO receipts.
+
 Closure validates ordered component and parent identities, slot ownership and
 witnessed override rules, nominal type identity and ordered parent-type
 membership, executable method-refinement witnesses within one contract domain,
@@ -382,12 +412,12 @@ receipt reports exactly 1000 successful instance mixes; this truthfully exposes
 the current per-Agent overlay cost.  The performance gap above remains open and
 is not hidden by these correctness receipts.
 
-A local Scheme-side qualification run on 2026-07-12 completed all =U= 1, 8,
-32, and 64 fixtures in 1.19 seconds wall time with a maximum resident set of
-173506560 bytes and peak memory footprint of 161038840 bytes.  This is an
-observability receipt under the declared 512 MiB =gxi= profile, not a portable
-latency/RSS benchmark gate; repeatable CI distributions and the zero-C3 hot-path
-gate remain future qualification work.
+A local Scheme-side qualification rerun after the functional refactor on
+2026-07-12 completed all =U= 1, 8, 32, and 64 fixtures in 1.48 seconds wall
+time with a maximum resident set of 173932544 bytes and peak memory footprint
+of 161415672 bytes.  This is an observability receipt under the declared 512
+MiB =gxi= profile, not a portable latency/RSS benchmark gate; repeatable CI
+distributions and the zero-C3 hot-path gate remain future qualification work.
 
 * Safety rules
 
