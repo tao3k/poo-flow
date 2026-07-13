@@ -9,6 +9,12 @@
         feature-required-dependencies
         feature-optional-dependencies
         feature-conflicts-with
+        feature-required-features
+        feature-optional-features
+        feature-conflicting-features
+        feature-option-schema
+        feature-option-value
+        feature-option-values
         feature-option-schemas
         feature-components
         feature-policy-contributions
@@ -54,6 +60,45 @@
 
 (def (feature-conflicts-with . feature-ids)
   (one-feature-slot 'conflicts feature-ids))
+
+(def (feature-descriptor-ids descriptors)
+  (poo-flow-map
+   (lambda (descriptor) (.ref descriptor 'feature-id))
+   descriptors))
+
+(def (feature-required-features . descriptors)
+  (apply feature-required-dependencies
+         (feature-descriptor-ids descriptors)))
+
+(def (feature-optional-features . descriptors)
+  (apply feature-optional-dependencies
+         (feature-descriptor-ids descriptors)))
+
+(def (feature-conflicting-features . descriptors)
+  (apply feature-conflicts-with
+         (feature-descriptor-ids descriptors)))
+
+(def (feature-option-schema option-id value-type default-value required?)
+  (constant-feature-object
+   (list
+    (cons 'kind 'feature-option-schema)
+    (cons 'option-id option-id)
+    (cons 'value-type value-type)
+    (cons 'default-value default-value)
+    (cons 'required? required?))))
+
+(def (feature-option-value option-id value)
+  (constant-feature-object
+   (list
+    (cons 'kind 'feature-option-value)
+    (cons 'option-id option-id)
+    (cons 'value value))))
+
+(def (feature-option-values . option-values)
+  (constant-feature-object
+   (list
+    (cons 'kind 'feature-option-values)
+    (cons 'values (copy-feature-values option-values)))))
 
 (def (feature-option-schemas . option-schemas)
   (one-feature-slot 'option-schemas option-schemas))
@@ -122,7 +167,7 @@
            (feature-slot/default spec 'projections '()))))))
 
 (def (empty-feature-options)
-  (constant-feature-object (list (cons 'kind 'feature-options))))
+  (feature-option-values))
 
 (def (feature-selection descriptor (option-values (empty-feature-options)))
   (constant-feature-object

@@ -310,13 +310,42 @@ system.
 
 * Delivery phases
 
+** Phase 3 compiled declaration boundary
+
+Phase 3A introduces hygienic =defrules= declarations.  A Feature declaration
+has a fixed identity prefix followed by named clauses; a FeatureProfile owns an
+explicit selections block.  Clauses lower only to the named POO fragments from
+=model.ss=.  They never emit alists, mutate a compiler registry, or activate a
+runtime adapter.
+
+Feature option schemas, option values, and option-value collections are also
+constant-slot POO objects.  A =select= form may attach one explicit
+=FeatureOptionValues= object.  Phase 3A preserves this typed object boundary;
+Phase 3B validates values against the selected Feature's schema manifest.
+
+#+begin_src mermaid
+flowchart LR
+    DF["defpoo-feature"] --> CM["Compiled hygienic defrules"]
+    DP["defpoo-feature-profile"] --> CM
+    CM --> PF["Named constant-slot POO fragments"]
+    PF --> FV["FeatureDescriptor and FeatureProfile"]
+    FV --> PR["Pure Feature resolver"]
+    PR --> AP["FeatureActivationPlan"]
+#+end_src
+
+Phase 3B remains explicit future work: cross-declaration dependency-cycle and
+conflict validation at expansion/build time requires syntax-safe manifests and
+must not be implemented as mutable expander-global state.  Until that manifest
+owner exists, the same checks remain deterministic resolver diagnostics.
+
 ** Implementation status
 
 - [X] Phase 1: canonical vocabulary, four-layer boundary, and legacy guidance
   removal.
 - [X] Phase 2: POO-native Feature fragments, Descriptor, Selection, Profile,
   ActivationPlan, and pure resolver under =src/feature-system=.
-- [ ] Phase 3: compiled declaration macros and expansion-time diagnostics.
+- [X] Phase 3A: compiled declaration macros and hygienic POO lowering.
+- [ ] Phase 3B: syntax-safe manifests and cross-declaration build diagnostics.
 - [ ] Phase 4: replace the remaining project-owned =use-module= code surface.
 - [ ] Phase 5: compile one real session FeatureProfile into DomainCases.
 - [ ] Phase 6: explicit dynamic plugin loader and provenance receipts.
