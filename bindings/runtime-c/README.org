@@ -26,10 +26,15 @@ an ordered sequential merge for total batch lookup cost =O(log n + k)=.
 Run the focused gates:
 
 #+begin_src sh
-make -C bindings/runtime-c clean test sanitize
-make -C bindings/runtime-c install-consumer leak
-make -C bindings/runtime-c benchmark gerbil-benchmark
+bazel test //bindings/runtime-c:runtime_c_tests
+bazel test //bindings/runtime-c:runtime_c_sanitizer_tests
+bazel test //bindings/runtime-c:runtime_c_leak_test
+bazel test //bindings/runtime-c:runtime_v0_batch_benchmark_smoke
+bazel build //bindings/runtime-c:runtime_c_shared
 #+end_src
+
+Bazel is the external runtime-C action graph.  =build.ss= remains the native
+Scheme build authority and is not called or replaced by these C targets.
 
 The installed contract is ABI v0.1 and Bundle schema
 =poo-flow.organization-bundle.draft.3=.  Neither is an ABI v1 freeze claim.

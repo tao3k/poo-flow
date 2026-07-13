@@ -1,4 +1,5 @@
 load(":runtime_contract.bzl", "runtime_contract")
+load(":runtime_checks.bzl", "runtime_gerbil_benchmark_test", "runtime_leak_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
@@ -39,9 +40,16 @@ cc_library(
 )
 
 cc_library(
-    name = "runtime_c_library",
-    srcs = ["src/runtime_v0.c"],
+    name = "runtime_v0_headers",
     hdrs = ["include/poo_flow/runtime_v0.h"],
+    strip_include_prefix = "include",
+    deps = [":runtime_v0_contract_headers"],
+)
+
+cc_library(
+    name = "runtime_c_library",
+    alwayslink = True,
+    srcs = ["src/runtime_v0.c"],
     copts = [
         "-std=c11",
         "-Wall",
@@ -49,8 +57,7 @@ cc_library(
         "-Werror",
         "-pedantic",
     ],
-    strip_include_prefix = "include",
-    deps = [":runtime_v0_contract_headers"],
+    deps = [":runtime_v0_headers"],
 )
 
 cc_binary(
@@ -63,6 +70,19 @@ cc_test(
     name = "runtime_v0_harness",
     srcs = ["tests/runtime_v0_harness.c"],
     deps = [":runtime_c_library"],
+)
+
+runtime_gerbil_benchmark_test(
+    name = "runtime_v0_gerbil_ffi_benchmark",
+    contract_header = ":runtime_v0_contract_header",
+    gerbil_cc = "@local_gerbil//:gerbil_cc",
+    gxc = "@local_gerbil//:gxc",
+    gxi = "@local_gerbil//:gxi",
+    header = "include/poo_flow/runtime_v0.h",
+    library = ":runtime_c_shared",
+    package_file = "//:gerbil.pkg",
+    source = "benchmarks/runtime-v0-gerbil-ffi-benchmark.ss",
+    tags = ["manual"],
 )
 
 cc_test(
@@ -83,6 +103,81 @@ cc_test(
     name = "runtime_v0_installed_consumer",
     srcs = ["tests/runtime_v0_installed_consumer.c"],
     deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "runtime_v0_harness_ubsan",
+    srcs = [
+        "src/runtime_v0.c",
+        "tests/runtime_v0_harness.c",
+    ],
+    copts = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=undefined",
+    ],
+    linkopts = ["-fsanitize=undefined"],
+    deps = [":runtime_v0_headers"],
+)
+
+cc_test(
+    name = "runtime_v0_batch_harness_ubsan",
+    srcs = [
+        "src/runtime_v0.c",
+        "tests/runtime_v0_batch_harness.c",
+    ],
+    copts = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=undefined",
+    ],
+    linkopts = ["-fsanitize=undefined"],
+    deps = [":runtime_v0_headers"],
+)
+
+cc_test(
+    name = "runtime_v0_harness_asan",
+    srcs = [
+        "src/runtime_v0.c",
+        "tests/runtime_v0_harness.c",
+    ],
+    copts = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=address",
+    ],
+    linkopts = ["-fsanitize=address"],
+    deps = [":runtime_v0_headers"],
+)
+
+cc_test(
+    name = "runtime_v0_batch_harness_asan",
+    srcs = [
+        "src/runtime_v0.c",
+        "tests/runtime_v0_batch_harness.c",
+    ],
+    copts = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=address",
+    ],
+    linkopts = ["-fsanitize=address"],
+    deps = [":runtime_v0_headers"],
+)
+
+test_suite(
+    name = "runtime_c_sanitizer_tests",
+    tests = [
+        ":runtime_v0_batch_harness_asan",
+        ":runtime_v0_batch_harness_ubsan",
+        ":runtime_v0_harness_asan",
+        ":runtime_v0_harness_ubsan",
+    ],
+)
+
+runtime_leak_test(
+    name = "runtime_c_leak_test",
+    binaries = [
+        ":runtime_v0_batch_harness",
+        ":runtime_v0_harness",
+    ],
+    tags = ["manual"],
 )
 
 cc_binary(
