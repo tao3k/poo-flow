@@ -47,6 +47,7 @@ flowchart LR
 | =audit= | Exact public owner and consumers must be resolved before a decision |
 | =remove-after-approval= | Bounded retirement candidate; deletion is P6 work |
 | =publish-after-approval= | Qualified artifact that becomes a release surface only through the release decision |
+| =absence-guarded= | No implementation owner exists and a bounded regression gate preserves that fact |
 | =blocked= | No mutating action is authorized yet |
 
 * Canonical route ledger
@@ -67,8 +68,9 @@ flowchart LR
 | Capability being retired | Retirement owner or candidate | Replacement | Required deletion evidence | Status |
 |--------------------------+-------------------------------+-------------+----------------------------+--------|
 | AC-04 semantic shadow comparison | =src/semantic/organization-bundle-shadow.ss=, its contract facade, and =t/scenarios/organization-bundle-shadow-test.ss= | Canonical Bundle plus AC-10 cross-boundary fixture | No public export or consumer; shadow owner/test absent; qualification still passes | =remove-after-approval= |
-| Retired alist, raw-record, and legacy =.def= authoring routes | Exact public facade/export owners still require parser-owned consumer audit | POO-native Bundle/facet constructors and functional combinators | Exact export/consumer ledger; fail-fast or absence tests; no public doc/example use | =audit= |
-| Python =ctypes= production hot path | Historical documentation/classification only; no qualified production owner | Out-of-line CFFI API mode | No production import/call owner; isolated wheel and full Python gates pass | =audit= |
+| Agent-sandbox alist authoring helpers | Four exports in =src/modules/agent-sandbox/alist.ss=; zero parser-visible consumers or facade re-exports | Named POO-native helpers in =src/modules/sandbox-core/profile-support/authoring.ss= | Fresh consumer audit; remove module/exports; old-symbol absence gate; sandbox profile suites | =remove-after-approval= |
+| Other raw-record, alist serialization, and =.def= occurrences | No competing public authoring owner proven | Retain internal representations and POO implementation syntax | A future candidate requires exact public export and consumer evidence | =retain= |
+| Python =ctypes= production hot path | No parser-visible import/call/test owner under =packages/python-runtime= | Out-of-line CFFI API mode | AST import/dynamic-import guard over =src/= and =tests/=; README absence; isolated wheel and full Python gates | =absence-guarded= |
 | Runtime graph or ABI compatibility aliases | No graph-plan compatibility API is accepted by runtime v0.1 | Installed =runtime_v0.h= route | Exported-symbol exact-set check and installed downstream consumer | =audit= |
 | Draft labels on qualified Bundle/shadow artifacts | Schema and artifact owners named by each row | Explicit release versions chosen by the release decision | Version matrix, regeneration parity, migration/rollback statement | =blocked= |
 | Shadow dual-read or dual-projection documentation | RFC 94, plan 95, matrix 96, AC-04 design 110 | Canonical-route documentation | Documentation link/term audit and no retired examples | =remove-after-approval= |
@@ -77,6 +79,38 @@ Internal =object<-alist= construction, alist serialization at explicit contract
 boundaries, and POO implementation use of =.def= are not retired merely by name.
 Only a public authoring route that competes with the accepted POO-native surface
 is eligible for removal.  The exact-owner audit must distinguish those cases.
+
+** Authoring audit receipt
+
+The parser-owned audit resolves exactly four competitive public alist exports,
+all owned by =src/modules/agent-sandbox/alist.ss= and currently reporting zero
+parser-visible consumers and zero facade re-exports:
+
+| Retired export candidate | Canonical POO-native replacement |
+|--------------------------+----------------------------------|
+| =agent-sandbox-option= | =poo-flow-sandbox-profile-object-row-slot= and =poo-flow-sandbox-profile-object-row-value/default= |
+| =agent-sandbox-alist-ref= | =poo-flow-sandbox-profile-object-row-value= and =poo-flow-sandbox-profile-object-row-field= |
+| =agent-sandbox-merge-alists= | =poo-flow-sandbox-profile-object-row-merge= and =poo-flow-sandbox-profile-object-field-with-merge= |
+| =agent-sandbox-override= | =poo-flow-sandbox-profile-object-row-contribution= and =poo-flow-sandbox-profile-object-row-operator= |
+
+These counts are dependency-topology evidence, not permission to delete.  The
+source index freshness gap must be repaired or compensated by the bounded
+old-symbol absence gate in the approved removal commit.
+
+The same audit explicitly retains:
+
+- =object<-alist= in durable-artifact decoding as bounded internal conversion;
+- =defstruct= values in =src/contract/json-schema-ir.ss= as internal schema IR;
+- =.def= used to define POO prototypes rather than a competing public DSL.
+
+** Python no-ctypes receipt
+
+The Python parser resolves CFFI as the package dependency owner and finds no
+=ctypes=, =CDLL=, or =PyDLL= owner.  The existing public-surface contract test
+now enforces this boundary with an AST-based import and dynamic-import scan over
+=packages/python-runtime/src= and =packages/python-runtime/tests=, plus an
+explicit README absence assertion.  This is a regression guard, not a deletion
+claim.
 
 * Package and publication ledger
 
@@ -123,15 +157,16 @@ branch to the pre-cutover revision; it does not add a compatibility wrapper.
 
 * Immediate next gate
 
-Before requesting the release decision, close two parser-owned audits:
+The initial authoring and Python =ctypes= audits are closed.  Before requesting
+the release decision:
 
-- exact public exports and consumers for alist, raw-record, and legacy =.def=
-  authoring routes;
-- exact Python =ctypes= imports/calls, distinguishing stale documentation and
-  diagnostic probes from any production runtime path.
+- repair or refresh the ASP source index so the four zero-consumer results can
+  be independently reproduced;
+- bind the four old-symbol absence checks to the dedicated post-approval
+  removal tranche;
+- resolve the remaining runtime graph/ABI alias and explicit version rows.
 
-Their results update the =audit= rows in this ledger.  No candidate is removed
-as part of that audit.
+No candidate is removed as part of this audit.
 
 * Normative references
 
