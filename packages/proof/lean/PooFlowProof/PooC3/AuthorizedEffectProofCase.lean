@@ -35,7 +35,11 @@ deriving Repr, DecidableEq
 
 structure Digest32 where
   bytes : List UInt8
+  size_eq : bytes.length = 32
 deriving Repr, DecidableEq
+
+instance : Nonempty Digest32 :=
+  ⟨{ bytes := List.replicate 32 0, size_eq := by simp }⟩
 
 def Digest32.NonZero (digest : Digest32) : Prop :=
   digest.bytes ≠ List.replicate 32 0
@@ -88,8 +92,8 @@ structure ProofCaseVector where
 deriving Repr, DecidableEq
 
 def decodeDigest (bytes : List UInt8) : Except DecodeError Digest32 :=
-  if bytes.length = 32 then
-    .ok { bytes := bytes }
+  if h : bytes.length = 32 then
+    .ok { bytes := bytes, size_eq := h }
   else
     .error .malformedDigest
 
@@ -230,6 +234,83 @@ theorem zeroSemanticRootRejectsComplete
   intro complete
   exact complete.2.2.2.2.2.2.2.2.2.1 hzero
 
+def uint32LE (value : UInt32) : List UInt8 :=
+  [value.toUInt8, (value >>> 8).toUInt8, (value >>> 16).toUInt8,
+    (value >>> 24).toUInt8]
+
+def uint64LE (value : UInt64) : List UInt8 :=
+  [value.toUInt8, (value >>> 8).toUInt8, (value >>> 16).toUInt8,
+    (value >>> 24).toUInt8, (value >>> 32).toUInt8,
+    (value >>> 40).toUInt8, (value >>> 48).toUInt8,
+    (value >>> 56).toUInt8]
+
+def caseKindTag : CaseKind → UInt32
+  | .authorizedEffectToken => caseKindAuthorizedEffectToken
+
+def mediationOutcomeTag : MediationOutcome → UInt32
+  | .allow => mediationAllow
+  | .deny => mediationDeny
+  | .invalidToken => mediationInvalidToken
+
+def durabilityProfileTag : DurabilityProfile → UInt32
+  | .strict => durabilityStrict
+  | .batched => durabilityBatched
+  | .diagnostic => durabilityDiagnostic
+
+def encodeProofCaseVector (vector : ProofCaseVector) : List UInt8 :=
+  uint32LE abiVersion ++
+  uint32LE (caseKindTag vector.caseKind) ++
+  schemaFingerprintBytes ++
+  vector.tokenDigest.bytes ++
+  vector.policyRevision.bytes ++
+  vector.effectDigest.bytes ++
+  vector.semanticRoot.bytes ++
+  vector.executionRoot.bytes ++
+  vector.batchRoot.bytes ++
+  vector.subjectBinding.bytes ++
+  vector.resourceBinding.bytes ++
+  vector.actionBinding.bytes ++
+  vector.previousEvidenceRoot.bytes ++
+  uint64LE vector.nonce ++
+  uint64LE vector.epoch ++
+  uint64LE vector.sequence ++
+  uint64LE vector.requiredObligationMask ++
+  uint64LE vector.presentObligationMask ++
+  uint32LE vector.obligationCount ++
+  uint32LE (mediationOutcomeTag vector.mediationOutcome) ++
+  uint32LE (durabilityProfileTag vector.durabilityProfile) ++
+  List.replicate 12 0
+
+theorem encodeProofCaseVector_size (vector : ProofCaseVector) :
+    (encodeProofCaseVector vector).length = vectorSize := by
+  simp [encodeProofCaseVector, uint32LE, uint64LE, vectorSize,
+    schemaFingerprintBytes, vector.tokenDigest.size_eq,
+    vector.policyRevision.size_eq, vector.effectDigest.size_eq,
+    vector.semanticRoot.size_eq, vector.executionRoot.size_eq,
+    vector.batchRoot.size_eq, vector.subjectBinding.size_eq,
+    vector.resourceBinding.size_eq, vector.actionBinding.size_eq,
+    vector.previousEvidenceRoot.size_eq]
+
+def domainSeparatedPayload (domain : String) (payload : List UInt8) : List UInt8 :=
+  domain.toUTF8.toList ++ [0] ++ payload
+
+def authorizedEffectTheoremSetPayload : List UInt8 :=
+  domainSeparatedPayload theoremSetDigestDomain
+    (String.intercalate "\n" authorizedEffectTheoremNames).toUTF8.toList
+
+noncomputable section
+
+/-- Trusted SHA-256 primitive. Executable runtimes discharge this boundary
+    through their native digest provider and differential gates. -/
+opaque sha256Digest (payload : List UInt8) : Digest32
+
+def proofVectorDigest (vector : ProofCaseVector) : Digest32 :=
+  sha256Digest (domainSeparatedPayload vectorDigestDomain
+    (encodeProofCaseVector vector))
+
+def authorizedEffectTheoremSetDigest : Digest32 :=
+  sha256Digest authorizedEffectTheoremSetPayload
+
 structure ProofReceipt where
   vectorDigest : Digest32
   theoremSetDigest : Digest32
@@ -242,16 +323,17 @@ deriving Repr, DecidableEq
 
 def verifiedProofReceipt
     (vector : ProofCaseVector)
-    (_verified : CompleteAuthorizedEffect vector)
-    (vectorDigest theoremSetDigest : Digest32) : ProofReceipt :=
+    (_verified : CompleteAuthorizedEffect vector) : ProofReceipt :=
   {
-    vectorDigest := vectorDigest
-    theoremSetDigest := theoremSetDigest
+    vectorDigest := proofVectorDigest vector
+    theoremSetDigest := authorizedEffectTheoremSetDigest
     semanticRoot := vector.semanticRoot
     executionRoot := vector.executionRoot
     batchRoot := vector.batchRoot
     nonce := vector.nonce
     epoch := vector.epoch
   }
+
+end
 
 end PooFlowProof.PooC3.AuthorizedEffectProofCase

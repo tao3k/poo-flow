@@ -5,7 +5,21 @@ def abiVersion : UInt32 := 1
 def vectorSize : Nat := 424
 def vectorAlignment : Nat := 8
 def schemaFingerprintHex : String := "bad9c5d0781d0a99e2f8d58cb94abae9dfc2eda4c71a01009897f7fc5419e0e7"
+def schemaFingerprintBytes : List UInt8 := [0xba, 0xd9, 0xc5, 0xd0, 0x78, 0x1d, 0x0a, 0x99, 0xe2, 0xf8, 0xd5, 0x8c, 0xb9, 0x4a, 0xba, 0xe9, 0xdf, 0xc2, 0xed, 0xa4, 0xc7, 0x1a, 0x01, 0x00, 0x98, 0x97, 0xf7, 0xfc, 0x54, 0x19, 0xe0, 0xe7]
 def requiredObligationMask : UInt64 := 0x00000000000000ff
+def proofDigestAlgorithm : String := "sha256"
+def vectorDigestDomain : String := "poo-flow.proof-case-vector.v1"
+def theoremSetDigestDomain : String := "poo-flow.authorized-effect-theorem-set.v1"
+def authorizedEffectTheoremNames : List String := [
+  "policy_revision_bound",
+  "effect_digest_bound",
+  "semantic_root_bound",
+  "execution_root_bound",
+  "obligation_set_complete",
+  "nonce_epoch_fresh",
+  "diagnostic_non_executable",
+  "l3_chain_complete",
+]
 
 def caseKindAuthorizedEffectToken : UInt32 := 1
 def mediationAllow : UInt32 := 1

@@ -4,6 +4,21 @@ endianness = "little"
 alignment = 8
 total_size = 424
 
+[proof_identity]
+digest_algorithm = "sha256"
+vector_domain = "poo-flow.proof-case-vector.v1"
+theorem_set_domain = "poo-flow.authorized-effect-theorem-set.v1"
+theorems = [
+  "policy_revision_bound",
+  "effect_digest_bound",
+  "semantic_root_bound",
+  "execution_root_bound",
+  "obligation_set_complete",
+  "nonce_epoch_fresh",
+  "diagnostic_non_executable",
+  "l3_chain_complete",
+]
+
 [[fields]]
 name = "abi_version"
 offset = 0

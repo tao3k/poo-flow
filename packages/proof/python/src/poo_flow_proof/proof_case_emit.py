@@ -33,6 +33,9 @@ def emit_c(schema: ProofCaseSchema) -> str:
         + ", ".join(f"0x{value:02x}" for value in schema.fingerprint)
         + " }",
         f"#define POO_FLOW_PROOF_REQUIRED_OBLIGATION_MASK UINT64_C(0x{schema.required_obligation_mask:016x})",
+        f'#define POO_FLOW_PROOF_DIGEST_ALGORITHM "{schema.proof_identity.digest_algorithm}"',
+        f'#define POO_FLOW_PROOF_VECTOR_DIGEST_DOMAIN "{schema.proof_identity.vector_domain}"',
+        f'#define POO_FLOW_PROOF_THEOREM_SET_DIGEST_DOMAIN "{schema.proof_identity.theorem_set_domain}"',
         "",
     ]
     lines.extend(
@@ -67,6 +70,12 @@ def emit_python(schema: ProofCaseSchema) -> str:
         f"VECTOR_ALIGNMENT = {schema.alignment}",
         f'SCHEMA_FINGERPRINT_HEX = "{schema.fingerprint_hex}"',
         f"REQUIRED_OBLIGATION_MASK = 0x{schema.required_obligation_mask:016x}",
+        f'PROOF_DIGEST_ALGORITHM = "{schema.proof_identity.digest_algorithm}"',
+        f'VECTOR_DIGEST_DOMAIN = "{schema.proof_identity.vector_domain}"',
+        f'THEOREM_SET_DIGEST_DOMAIN = "{schema.proof_identity.theorem_set_domain}"',
+        "AUTHORIZED_EFFECT_THEOREM_NAMES = (",
+        *(f'    "{name}",' for name in schema.proof_identity.theorems),
+        ")",
         "",
         "FIELD_OFFSETS = {",
     ]
@@ -98,7 +107,16 @@ def emit_lean(schema: ProofCaseSchema) -> str:
         f"def vectorSize : Nat := {schema.total_size}",
         f"def vectorAlignment : Nat := {schema.alignment}",
         f'def schemaFingerprintHex : String := "{schema.fingerprint_hex}"',
+        "def schemaFingerprintBytes : List UInt8 := ["
+        + ", ".join(f"0x{value:02x}" for value in schema.fingerprint)
+        + "]",
         f"def requiredObligationMask : UInt64 := 0x{schema.required_obligation_mask:016x}",
+        f'def proofDigestAlgorithm : String := "{schema.proof_identity.digest_algorithm}"',
+        f'def vectorDigestDomain : String := "{schema.proof_identity.vector_domain}"',
+        f'def theoremSetDigestDomain : String := "{schema.proof_identity.theorem_set_domain}"',
+        "def authorizedEffectTheoremNames : List String := [",
+        *(f'  "{name}",' for name in schema.proof_identity.theorems),
+        "]",
         "",
     ]
     for prefix, tags in (

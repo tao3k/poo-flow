@@ -11,6 +11,9 @@
 #define POO_FLOW_PROOF_CASE_SCHEMA_FINGERPRINT_BYTES \
   { 0xba, 0xd9, 0xc5, 0xd0, 0x78, 0x1d, 0x0a, 0x99, 0xe2, 0xf8, 0xd5, 0x8c, 0xb9, 0x4a, 0xba, 0xe9, 0xdf, 0xc2, 0xed, 0xa4, 0xc7, 0x1a, 0x01, 0x00, 0x98, 0x97, 0xf7, 0xfc, 0x54, 0x19, 0xe0, 0xe7 }
 #define POO_FLOW_PROOF_REQUIRED_OBLIGATION_MASK UINT64_C(0x00000000000000ff)
+#define POO_FLOW_PROOF_DIGEST_ALGORITHM "sha256"
+#define POO_FLOW_PROOF_VECTOR_DIGEST_DOMAIN "poo-flow.proof-case-vector.v1"
+#define POO_FLOW_PROOF_THEOREM_SET_DIGEST_DOMAIN "poo-flow.authorized-effect-theorem-set.v1"
 
 #define POO_FLOW_PROOF_FIELD_ABI_VERSION_OFFSET 0u
 #define POO_FLOW_PROOF_FIELD_CASE_KIND_OFFSET 4u

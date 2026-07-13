@@ -5,6 +5,19 @@ VECTOR_SIZE = 424
 VECTOR_ALIGNMENT = 8
 SCHEMA_FINGERPRINT_HEX = "bad9c5d0781d0a99e2f8d58cb94abae9dfc2eda4c71a01009897f7fc5419e0e7"
 REQUIRED_OBLIGATION_MASK = 0x00000000000000ff
+PROOF_DIGEST_ALGORITHM = "sha256"
+VECTOR_DIGEST_DOMAIN = "poo-flow.proof-case-vector.v1"
+THEOREM_SET_DIGEST_DOMAIN = "poo-flow.authorized-effect-theorem-set.v1"
+AUTHORIZED_EFFECT_THEOREM_NAMES = (
+    "policy_revision_bound",
+    "effect_digest_bound",
+    "semantic_root_bound",
+    "execution_root_bound",
+    "obligation_set_complete",
+    "nonce_epoch_fresh",
+    "diagnostic_non_executable",
+    "l3_chain_complete",
+)
 
 FIELD_OFFSETS = {
     "abi_version": 0,

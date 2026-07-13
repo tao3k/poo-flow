@@ -71,6 +71,10 @@ Focused gates:
 - no per-field FFI reconstruction on the production path.
 
 * Step 4 — Lean Typed AuthorizedEffectToken Proof
+The typed vector covers every field in the 424-byte manifest. Receipt digests
+are derived internally with manifest-owned SHA-256 domains and are not
+constructor arguments. Lean treats SHA-256 as a trusted primitive; native
+differential tests verify its executable realization.
 
 Decode ProofCaseVector v1 into typed Lean values. Implement the first theorem
 set for policy/effect binding, semantic/execution roots, obligation completeness,

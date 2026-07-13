@@ -92,6 +92,20 @@ reserved space. A single canonical manifest generates:
 Generated artifacts have a freshness gate. Hand-edited language projections
 are invalid.
 
+** Digest identity derivation
+Proof identity v1 uses =sha256= with two distinct, manifest-owned domains:
+- =poo-flow.proof-case-vector.v1= hashes the domain, one zero separator byte,
+  and the exact canonical 424-byte native vector;
+- =poo-flow.authorized-effect-theorem-set.v1= hashes the domain, one zero
+  separator byte, and the ordered newline-separated theorem names.
+
+The digest algorithm, domains, and ordered theorem set are part of the
+canonical manifest and generated into C, Lean, and Python projections. Lean
+models SHA-256 as a trusted primitive, but =verifiedProofReceipt= applies that
+primitive internally. Callers cannot supply =vectorDigest= or
+=theoremSetDigest=. Executable runtimes discharge the trusted primitive
+through native SHA-256 and cross-runtime differential gates.
+
 ** Rejected representations
 
 - JSON is not part of the ABI or the Proof-Case Vector IR.

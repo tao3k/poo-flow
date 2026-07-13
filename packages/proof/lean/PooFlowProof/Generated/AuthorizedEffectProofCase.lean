@@ -6,7 +6,7 @@ open PooFlowProof.Generated.ProofCaseVector
 open PooFlowProof.PooC3.AuthorizedEffectProofCase
 
 def digest (value : UInt8) : Digest32 :=
-  { bytes := List.replicate 32 value }
+  { bytes := List.replicate 32 value, size_eq := by simp }
 
 def validVector : ProofCaseVector where
   caseKind := .authorizedEffectToken
@@ -101,11 +101,18 @@ theorem missingObligationVectorRejected :
     ¬ CompleteAuthorizedEffect missingObligationVector :=
   missingObligationRejectsComplete missingObligationVector (by native_decide)
 
-def vectorDigest : Digest32 := digest 11
-def theoremSetDigest : Digest32 := digest 12
+noncomputable def validProofReceipt : ProofReceipt :=
+  verifiedProofReceipt validVector validVectorComplete
 
-def validProofReceipt : ProofReceipt :=
-  verifiedProofReceipt validVector validVectorComplete vectorDigest theoremSetDigest
+theorem validVectorHasCanonicalSize :
+    (encodeProofCaseVector validVector).length = vectorSize := by
+  native_decide
+
+theorem validReceiptDerivesVectorDigest :
+    validProofReceipt.vectorDigest = proofVectorDigest validVector := rfl
+
+theorem validReceiptDerivesTheoremSetDigest :
+    validProofReceipt.theoremSetDigest = authorizedEffectTheoremSetDigest := rfl
 
 theorem validReceiptBindsSemanticRoot :
     validProofReceipt.semanticRoot = validVector.semanticRoot := rfl

@@ -26,6 +26,11 @@ def test_manifest_has_stable_native_layout() -> None:
         == "bad9c5d0781d0a99e2f8d58cb94abae9dfc2eda4c71a01009897f7fc5419e0e7"
     )
     assert schema.required_obligation_mask == 0xFF
+    assert schema.proof_identity.digest_algorithm == "sha256"
+    assert schema.proof_identity.vector_domain != schema.proof_identity.theorem_set_domain
+    assert schema.proof_identity.theorems == tuple(
+        obligation.name for obligation in schema.obligations
+    )
     assert schema.fields[-1].offset + schema.fields[-1].width == schema.total_size
 
 
@@ -79,4 +84,16 @@ def test_duplicate_obligation_bits_are_rejected(tmp_path: Path) -> None:
     candidate.write_text(text, encoding="utf-8")
 
     with pytest.raises(ValueError, match="duplicate obligation bit"):
+        load_proof_case_schema(candidate)
+
+
+def test_theorem_set_must_match_canonical_obligations(tmp_path: Path) -> None:
+    text = MANIFEST.read_text(encoding="utf-8").replace(
+        '  "policy_revision_bound",\n  "effect_digest_bound",',
+        '  "effect_digest_bound",\n  "policy_revision_bound",',
+    )
+    candidate = tmp_path / "reordered-theorem-set.toml"
+    candidate.write_text(text, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="theorem set must match"):
         load_proof_case_schema(candidate)
