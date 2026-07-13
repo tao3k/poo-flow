@@ -2,18 +2,21 @@
 #+status: accepted
 #+phase: 3I
 
-* 结论
+* Conclusion
 
-Phase 3I 在 Scheme 控制面中实现 Bundle v1 的纯 lowering plan。公开输入和输出都
-是 POO object；alist 只作为 POO implementation 内部的 slot assembly 机制，既不
-导出，也不是用户 DSL。
+Phase 3I implements a pure Bundle v1 lowering plan in the Scheme control
+plane. Its public inputs and outputs are POO objects. Alists are used only by
+the internal POO slot assembly implementation; they are neither exported nor
+accepted as a user DSL.
 
-这个阶段不直接写 C pointer，也不调用 Python。它把 Domain Case 所需的
-component、edge、evidence identity 降低成固定宽度 compact-id、严格排序的 native
-row、对齐 region、256-byte descriptor receipt 和 32-byte Bundle digest。下一阶段
-只需按 receipt 向已注册 foreign arena 写入字节，不再重新解释 POO 语义。
+This phase does not write through C pointers and does not call Python. It
+lowers the component, edge, and evidence identities required by a Domain Case
+into fixed-width compact IDs, strictly sorted native rows, aligned regions, a
+256-byte descriptor receipt, and a 32-byte Bundle digest. The next phase can
+encode this receipt into a registered foreign arena without interpreting POO
+semantics again.
 
-* 控制面与 native 边界
+* Control-plane and native boundary
 
 #+begin_src mermaid
 flowchart LR
@@ -39,48 +42,55 @@ flowchart LR
   DESCRIPTOR --> ARENA --> CABI
 #+end_src
 
-Phase 3I 的 plan 是 immutable semantic value。C ABI 看不到 Scheme object；Scheme
-控制面也不直接拼 C struct。
+The Phase 3I plan is an immutable semantic value. The C ABI never observes a
+Scheme object, and the Scheme control plane does not assemble C structs
+directly.
 
-* POO-native 公共面
+* POO-native public surface
 
-公开构造器：
+Public constructors and operations:
 
-- =feature-bundle-v1-component=：case、component、object、type、contract、role、
-  capability、policy、strategy、adapter、projection 和 composition order；
-- =feature-bundle-v1-edge=：case、source、target、relation 和 order；
-- =feature-bundle-v1-evidence=：case、obligation、contract、evidence type、proof
-  system 和 order；
-- =feature-bundle-v1-lowering=：Bundle identity、uint64 epoch 与三类 POO value
-  list；
-- =require-feature-bundle-v1-lowering-plan=：只接受 =accepted?=#t= 的 plan。
+- =feature-bundle-v1-component=: case, component, object, type, contract,
+  role, capability, policy, strategy, adapter, projection, and composition
+  order;
+- =feature-bundle-v1-edge=: case, source, target, relation, and order;
+- =feature-bundle-v1-evidence=: case, obligation, contract, evidence type,
+  proof system, and order;
+- =feature-bundle-v1-lowering=: Bundle identity, uint64 epoch, and the three
+  POO value lists;
+- =require-feature-bundle-v1-lowering-plan=: accepts only a plan whose
+  =accepted?= slot is =#t=.
 
-输出依旧是 POO object：
+The output surface also consists entirely of POO objects:
 
-- =feature-bundle-v1-compact-id=；
-- =feature-bundle-v1-region=；
-- =feature-bundle-v1-descriptor=；
-- =feature-bundle-v1-diagnostic=；
-- =feature-bundle-v1-lowering-plan=。
+- =feature-bundle-v1-compact-id=;
+- =feature-bundle-v1-region=;
+- =feature-bundle-v1-descriptor=;
+- =feature-bundle-v1-diagnostic=;
+- =feature-bundle-v1-lowering-plan=.
 
-重复 object family 通过本模块的 declarative macro 生成 constructor，展开结果是
-普通 POO object construction。模块使用显式 export list；内部 macro、native-row
-constructor、validator 与 layout helper 都不会泄漏为公共 API。没有 raw
-=(lambda (self super) ...)= compute hook，也没有公开 record/alist patch language。
+A module-local declarative macro generates the repeated object-family
+constructors and expands into ordinary POO object construction. The module
+uses an explicit export list, so its macro, native-row constructors,
+validators, and layout helpers do not leak into the public API. There is no
+raw =(lambda (self super) ...)= compute hook and no public record, alist, or
+patch language.
 
-* Scheme identity 到 C compact-id
+* Scheme identity to C compact ID
 
-每个 native identity 使用以下 canonical input：
+Every native identity uses the following canonical input:
 
 #+begin_example
 poo-flow.bundle-v1.id/<domain>/<typed-semantic-id>
 #+end_example
 
-=typed-semantic-id= 显式区分 symbol、string 与 exact integer。对 canonical string
-计算 SHA-256，前 8 bytes 按 big-endian 组成 =high=，随后 8 bytes 组成 =low=。
+The typed semantic ID explicitly distinguishes symbols, strings, and exact
+integers. SHA-256 is calculated over the canonical string. The first eight
+bytes form =high= in big-endian order, and the following eight bytes form
+=low=.
 
-domain separation 防止同名 =role=、=component=、=contract= 被意外视作一个 C
-identity。稳定向量：
+Domain separation prevents identically named roles, components, and contracts
+from being treated as the same C identity. The frozen vector is:
 
 #+begin_example
 domain=obligation source=0
@@ -88,13 +98,14 @@ high=15650260190551699577
 low=10580127755728368254
 #+end_example
 
-这个向量必须由未来 Rust、Python、TypeScript adapter 共同复用。
+Future Rust, Python, and TypeScript adapters must reuse this vector.
 
 * Functional lowering
 
-实现复用 =src/utilities/functional.ss= 的 =poo-flow-map=、
-=poo-flow-fold-left=、=poo-flow-all?= 与 =poo-flow-list-of?=，并使用 Gerbil
-=stable-sort= 生成新 list，不修改输入 composition。
+The implementation reuses =poo-flow-map=, =poo-flow-fold-left=,
+=poo-flow-all?=, and =poo-flow-list-of?= from
+=src/utilities/functional.ss=. Gerbil =stable-sort= produces a new list and
+does not mutate the input composition.
 
 #+begin_src mermaid
 flowchart TD
@@ -109,19 +120,20 @@ flowchart TD
   DIGEST --> READY["accepted POO lowering plan"]
 #+end_src
 
-排序 key 与 C validator 完全一致：
+Sort keys exactly match the C validator:
 
-- component：=(case-id, component-id)=；
-- edge：=(case-id, source-component-id, composition-order,
-  target-component-id, relation-id)=；
-- evidence：=(case-id, obligation-id)=。
+- component: =(case-id, component-id)=;
+- edge: =(case-id, source-component-id, composition-order,
+  target-component-id, relation-id)=;
+- evidence: =(case-id, obligation-id)=.
 
-打开 Bundle 时 C validator 做一次 =O(n)= 严格排序验证；运行期 component lookup
-继续使用 RFC 0143 的 =O(log n)= lower-bound。
+The C validator performs one =O(n)= strict-order validation when opening a
+Bundle. Runtime component lookup continues to use the =O(log n)= lower-bound
+algorithm defined by RFC 0143.
 
 * Frozen layout receipt
 
-Scheme plan 固定以下 C layout fact：
+The Scheme plan freezes the following C layout facts:
 
 | Region | Stride | Alignment |
 |--------+--------+-----------|
@@ -131,54 +143,62 @@ Scheme plan 固定以下 C layout fact：
 | evidence obligations | 96 B | 8 B |
 | metadata bytes | 1 B | 1 B |
 
-descriptor size 固定为 256 B；arena 至少 64 B，并向 64-byte boundary 对齐。
-lowering plan 已经逐项固定 C descriptor 的 =struct_size=、flags、schema major/minor、
-reserved0、bundle id、digest、epoch、arena bytes、五个 region 和七个 reserved
-uint64。native component/edge/evidence row 也显式携带必须为零的 reserved 字段，
-因此 arena writer 只负责编码，不再补充或猜测 ABI 语义。
+The descriptor size is fixed at 256 bytes. The arena is at least 64 bytes and
+is rounded to a 64-byte boundary. The lowering plan fixes every C descriptor
+field: =struct_size=, flags, schema major and minor, =reserved0=, Bundle ID,
+digest, epoch, arena bytes, five regions, and seven reserved uint64 values.
+Native component, edge, and evidence rows also carry their required zeroed
+reserved fields explicitly. The arena writer therefore encodes the receipt;
+it does not add or infer ABI semantics.
 
-Phase 3I 没有 symbol metadata materialization，所以 symbols 与 metadata region
-合法地为空；所有执行期 identity 已经是 compact-id。
+Phase 3I does not materialize symbol metadata, so the symbols and metadata
+regions are valid empty regions. Every execution-time identity has already
+been lowered into a compact ID.
 
-* Fail-closed 规则
+* Fail-closed rules
 
-以下输入生成 =status=rejected= 的 POO plan：
+The following inputs produce a POO plan with =status=rejected=:
 
-- Bundle id 不是非空 symbol/string 或 uint64；
-- Bundle epoch 不是 uint64；
-- collection 不是 proper list；
-- component、edge、evidence 不是对应 POO object；
-- identity slot 缺失或类型非法；
-- composition order 超出 uint64；
-- component、edge 或 evidence key 重复。
+- the Bundle ID is not a non-empty symbol, string, or uint64;
+- the Bundle epoch is not a uint64;
+- a collection is not a proper list;
+- a component, edge, or evidence value is not the corresponding POO object;
+- an identity slot is absent or has an invalid type;
+- a composition order is outside the uint64 range;
+- a component, edge, or evidence key is duplicated.
 
-lowering 不接受 raw alist component。=require-feature-bundle-v1-lowering-plan=
-用于 runtime handoff 前最后一道 fail-closed gate。
+The lowering operation does not accept raw alist components.
+=require-feature-bundle-v1-lowering-plan= is the final fail-closed gate before
+runtime handoff.
 
-* fold-left 语义回归
+* fold-left semantic regression
 
-千 agent benchmark 首次运行正确拒绝了重复 evidence key。审计定位到公共
-=poo-flow-fold-left= 的 callback 顺序是 =(element accumulator)=，而 compact-id
-实现误写成 =(accumulator element)=，导致 SHA-256 segment 被压缩成小整数。
+The first 1,000-agent benchmark correctly rejected a duplicate evidence key.
+The audit found that the shared =poo-flow-fold-left= callback order is
+=(element accumulator)=, while the first compact-ID implementation used
+=(accumulator element)=. That error collapsed SHA-256 segments into small
+integers.
 
-修复后增加两个门禁：
+The correction added two gates:
 
-- compact-id 的 high/low 必须保留完整 64-bit SHA-256 prefix；
-- =obligation/0= 使用上面的固定 golden vector。
+- compact-ID high and low segments must preserve the complete 64-bit SHA-256
+  prefix;
+- =obligation/0= must match the frozen vector above.
 
-这证明 fail-closed duplicate validation 不只是输入检查，也能发现 identity
-lowering 的算法错误。
+This demonstrates that fail-closed duplicate validation detects identity
+lowering defects in addition to malformed input.
 
-* 1,000-agent 验证
+* 1,000-agent validation
 
-本机 Scheme benchmark 输入：
+The Scheme benchmark constructs:
 
-- 1,000 components；
-- 999 dependency edges；
-- 1,000 Lean evidence obligations；
-- 不同 type、contract、role、capability、policy、strategy、adapter 与 projection。
+- 1,000 components;
+- 999 dependency edges;
+- 1,000 Lean evidence obligations;
+- varied types, contracts, roles, capabilities, policies, strategies,
+  adapters, and projections.
 
-结果：
+The observed result is:
 
 #+begin_example
 bundle-epoch=1
@@ -190,44 +210,55 @@ layout=typed-native-regions
 json-in-hot-path=false
 #+end_example
 
-整个 =gxi= 进程峰值约 226 MB、0 swap。该数据是当前机器的工程回归证据，不是
-跨硬件 SLA。
+The complete =gxi= process peaked at approximately 226 MB with zero swap.
+This is an engineering regression receipt for the current machine, not a
+cross-hardware SLA.
 
-* 与 Phase 3G 的关系
+* Relationship to Phase 3G
 
-Phase 3G 的 =FeatureRuntimeHandoffPlan= 已经把 Bundle、Cedar 与 Lean/Evidence
-handoff 分开；Phase 3I 固定这些 handoff 最终使用的 native identity 与 table
-layout。
+The Phase 3G =FeatureRuntimeHandoffPlan= separates Bundle, Cedar, and
+Lean/Evidence handoffs. Phase 3I freezes the native identities and table
+layouts ultimately consumed by those handoffs.
 
-下一阶段需要增加一个 POO-native projection：从 accepted Domain Case assembly
-和 adapter/projection binding 自动生成本 RFC 的 component/edge/evidence object。
-用户不应长期手工枚举 row。projection 完成后，再实现 foreign arena writer，并让
-Runtime v1 直接消费 Bundle v1。
+The next phase must add a POO-native projection from an accepted Domain Case
+assembly and its adapter/projection bindings into the component, edge, and
+evidence objects defined by this RFC. Users must not be required to enumerate
+native rows manually. After that projection is complete, the implementation
+can add the foreign arena writer and make Runtime v1 consume Bundle v1
+directly.
 
-* AOT 与 Scheme memory guard
+* AOT and Scheme memory guard
 
-本阶段不以 =gxi/gxc= 进程退出码单独判定成功；门禁同时检查错误文本、目标产物、
-进程树 RSS、outer RSS 与 swap：
+This phase does not use the =gxi/gxc= process exit code as its only success
+criterion. The gates also inspect error text, expected artifacts, process-tree
+RSS, outer RSS, and swap:
 
-- 标准 =gxpkg build= 增量构建完成，Scheme build-api guard 记录进程树峰值
-  397,364,416 B，小于 805,306,368 B 上限；
-- 只编译 =bundle-v1-lowering.ss= 到独立 artifact root 时退出码为 0，生成 9
-  个 artifact，错误匹配为 0，峰值 RSS 为 263,634,944 B；
-- 全树从空 artifact root 执行 =build.ss compile= 时，guard 在
-  813,491,984 B fail closed，超过上限 8,185,616 B，退出码为 70，且没有 swap。
+- the standard incremental =gxpkg build= completed; the Scheme build-API
+  guard recorded a process-tree peak of 397,364,416 bytes, below the
+  805,306,368-byte limit;
+- compiling only =bundle-v1-lowering.ss= into an isolated artifact root
+  exited with code 0, produced nine artifacts, matched no errors, and peaked
+  at 263,634,944 bytes RSS;
+- compiling the entire tree from an empty artifact root with
+  =build.ss compile= failed closed at 813,491,984 bytes, exceeding the limit
+  by 8,185,616 bytes. It exited with code 70 and used no swap.
 
-单模块 AOT 证明 Phase 3I 自身没有逼近内存上限；全树门禁仍是正式 release
-blocker，不能通过提高 RSS 上限隐藏。该全树包含本工作树中不属于 Phase 3I 的其他
-未提交模块，因此需要在后续阶段按 active compile unit 继续归因，而不能把聚合越界
-错误归因给本 lowering 模块。
+The focused AOT gate demonstrates that Phase 3I itself does not approach the
+memory limit. The full-tree gate remains a release blocker and must not be
+hidden by raising the RSS limit. That full tree includes unrelated uncommitted
+modules from the current worktree, so a later phase must attribute the peak by
+active compile unit instead of assigning the aggregate failure to this
+lowering module.
 
-* 后续门禁
+* Follow-up gates
 
-1. Domain Case 到 Bundle v1 POO projection；
-2. Scheme-side registered foreign arena writer；
-3. 同一 arena 通过 C validator 与 Python CFFI；
-4. Cedar/evidence consumer 读取同一 obligation rows；
-5. 一次性移除 runtime-v0 header、symbol、Python module、环境变量和测试；
-6. Runtime v1 symbol surface、ASan/UBSan、AOT/RSS、wheel install 全绿。
+1. Domain Case to Bundle v1 POO projection;
+2. Scheme-side registered foreign arena writer;
+3. validation of the same arena through the C validator and Python CFFI;
+4. Cedar and evidence consumers reading the same obligation rows;
+5. one-step removal of the runtime-v0 header, symbols, Python module,
+   environment variables, and tests;
+6. green Runtime v1 symbol-surface, ASan/UBSan, AOT/RSS, and wheel-install
+   gates.
 
-不增加 v0 wrapper，也不提供 legacy row syntax。
+No v0 wrapper and no legacy row syntax will be added.
