@@ -139,6 +139,24 @@ cc_test(
     deps = [":runtime_c_library"],
 )
 
+sh_test(
+    name = "runtime_v0_symbol_surface_test",
+    srcs = ["tests/runtime_v0_symbol_surface_test.sh"],
+    args = [
+        "$(location :runtime_c_shared)",
+        "$(location :runtime_v0_exported_symbols)",
+    ],
+    data = [
+        ":runtime_c_shared",
+        ":runtime_v0_exported_symbols",
+    ],
+)
+
+filegroup(
+    name = "runtime_v0_exported_symbols",
+    srcs = ["tests/runtime_v0_exported_symbols.txt"],
+)
+
 cc_test(
     name = "proof_case_v1_harness",
     srcs = ["tests/proof_case_v1_harness.c"],
@@ -297,6 +315,7 @@ test_suite(
         ":runtime_v0_batch_harness",
         ":runtime_v0_harness",
         ":runtime_v0_installed_consumer",
+        ":runtime_v0_symbol_surface_test",
         ":runtime_v0_vector_harness",
     ],
 )

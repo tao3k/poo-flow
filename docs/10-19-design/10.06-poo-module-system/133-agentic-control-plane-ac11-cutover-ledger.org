@@ -71,7 +71,7 @@ flowchart LR
 | Agent-sandbox alist authoring helpers | Four exports in =src/modules/agent-sandbox/alist.ss=; zero parser-visible consumers or facade re-exports | Named POO-native helpers in =src/modules/sandbox-core/profile-support/authoring.ss= | Fresh consumer audit; remove module/exports; old-symbol absence gate; sandbox profile suites | =remove-after-approval= |
 | Other raw-record, alist serialization, and =.def= occurrences | No competing public authoring owner proven | Retain internal representations and POO implementation syntax | A future candidate requires exact public export and consumer evidence | =retain= |
 | Python =ctypes= production hot path | No parser-visible import/call/test owner under =packages/python-runtime= | Out-of-line CFFI API mode | AST import/dynamic-import guard over =src/= and =tests/=; README absence; isolated wheel and full Python gates | =absence-guarded= |
-| Runtime graph or ABI compatibility aliases | No graph-plan compatibility API is accepted by runtime v0.1 | Installed =runtime_v0.h= route | Exported-symbol exact-set check and installed downstream consumer | =audit= |
+| Runtime graph or ABI compatibility aliases | No parser-visible owner, consumer, wrapper, or installed graph symbol | Installed =runtime_v0.h= and ProofCaseVector v1 routes | Shared-library exported-symbol allowlist plus graph/compat/legacy denylist and installed consumers | =absence-guarded= |
 | Draft labels on qualified Bundle/shadow artifacts | Schema and artifact owners named by each row | Explicit release versions chosen by the release decision | Version matrix, regeneration parity, migration/rollback statement | =blocked= |
 | Shadow dual-read or dual-projection documentation | RFC 94, plan 95, matrix 96, AC-04 design 110 | Canonical-route documentation | Documentation link/term audit and no retired examples | =remove-after-approval= |
 
@@ -122,6 +122,30 @@ claim.
 | Proof vector, Lean environment, and proof package metadata | Publish exact schema, theorem-set, and import-environment identities | Generated freshness, Lean build, Python/C/Scheme differential | =publish-after-approval= |
 | Benchmark and qualification receipts | Bind source revision, environment, schemas, and declared unsupported claims | AC-10 manifest verification | =publish-after-approval= |
 
+* Release version matrix
+
+The executable owner is =src/qualification/release-version-matrix.ss=.  It
+binds the qualified artifacts without promoting or renaming them:
+
+| Dimension | Current bound value | Normative owner | Freeze state |
+|-----------+---------------------+-----------------+--------------|
+| Bundle schema | =poo-flow.organization-bundle.draft.3= | =src/semantic/organization-bundle.ss= | pre-release |
+| Runtime ABI | major =0=, minor =1= | =src/contract/runtime-v0-abi-schema.ss= and generated C contract | =abi-v1-frozen? #f= |
+| Proof vector | version =1= plus schema fingerprint and digest domains | generated ProofCaseVector v1 and TOML source | qualified v1 artifact |
+| Evidence/assurance | =poo-flow.release-assurance-manifest.v1= | assurance manifest, verifier, and qualification owners | qualified v1 artifact |
+
+The verifier fails closed on owner/version drift and on any implicit ABI v1
+freeze.  A release decision remains required even when this matrix verifies.
+The machine-readable current receipt is emitted with:
+
+#+begin_src sh
+gxi tools/run-ac11-release-version-matrix.ss
+#+end_src
+
+The runtime shared-library gate owns the exact exported-symbol allowlist beside
+the installed C consumers.  It rejects any unreviewed export and explicitly
+denies graph, compatibility, or legacy-named public symbols.
+
 * Approval record required for mutation
 
 The P6 release decision must record all of the following in one reviewable
@@ -160,11 +184,13 @@ branch to the pre-cutover revision; it does not add a compatibility wrapper.
 The initial authoring and Python =ctypes= audits are closed.  Before requesting
 the release decision:
 
-- repair or refresh the ASP source index so the four zero-consumer results can
-  be independently reproduced;
+- wait for or repair the external ASP provider/state-schema migration so exact
+  owner selectors can be independently re-certified; this is not a POO Flow
+  product-source defect;
 - bind the four old-symbol absence checks to the dedicated post-approval
   removal tranche;
-- resolve the remaining runtime graph/ABI alias and explicit version rows.
+- bind the approved deletion set and chosen release versions into the P6
+  release decision.
 
 No candidate is removed as part of this audit.
 
