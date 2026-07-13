@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 (import :gerbil/gambit
         :clan/poo/object
-        :poo-flow/src/cli-support/process-memory-guard)
+        :poo-flow/src/build-api/process-memory-guard)
 
 (def args (cddr (command-line)))
 (unless (>= (length args) 3)

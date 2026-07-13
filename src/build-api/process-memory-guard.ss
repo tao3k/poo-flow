@@ -1,12 +1,13 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: Scheme-owned fail-closed process RSS and elapsed-time guard.
+;;; Boundary: Build API fail-closed process RSS and elapsed-time guard.
 
 (export #t)
 
 (import :gerbil/gambit
         :clan/poo/object
+        (only-in :std/misc/process run-process)
         (only-in :std/srfi/13 string-trim-both)
-        :poo-flow/src/cli-support/support)
+        )
 
 (def +poo-flow-process-memory-guard-schema+
   'poo-flow.process-memory-guard.v1)
@@ -14,8 +15,22 @@
 (def (guard-now-seconds)
   (time->seconds (current-time)))
 
+(def (guard-exit-code status)
+  (cond ((< status 0) 1)
+        ((> status 255) (quotient status 256))
+        (else status)))
+
+(def (guard-run-captured argv)
+  (let (status 0)
+    (let (output
+          (run-process argv stderr-redirection: #t
+                       check-status:
+                       (lambda (exit-status _settings)
+                         (set! status exit-status))))
+      (cons (guard-exit-code status) output))))
+
 (def (guard-process-rss-bytes pid)
-  (let* ((result (poo-flow-cli-run-captured
+  (let* ((result (guard-run-captured
                   (list "ps" "-o" "rss=" "-p" (number->string pid))))
          (text (string-trim-both (cdr result)))
          (kib (and (= (car result) 0)
@@ -24,7 +39,7 @@
     (if kib (* kib 1024) 0)))
 
 (def (guard-terminate! pid)
-  (poo-flow-cli-run-captured
+  (guard-run-captured
    (list "kill" "-TERM" (number->string pid))))
 
 (def (guard-receipt label outcome exit-code child-exit peak-rss max-rss
@@ -65,7 +80,7 @@
           (spawn
            (lambda ()
              (vector-set! state 1
-                          (poo-flow-cli-exit-code (process-status child)))
+                          (guard-exit-code (process-status child)))
              (vector-set! state 0 #t))))
          (peak-rss 0)
          (outcome 'running)

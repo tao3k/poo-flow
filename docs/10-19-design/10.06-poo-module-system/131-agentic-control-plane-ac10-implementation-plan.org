@@ -35,8 +35,10 @@ mutation gates are owned by =src/contract/release-assurance-manifest.ss= and
 interpreted large-=.o= slot composition observed during qualification.
 
 The focused =gxi= owner is guarded in Scheme by
-=src/cli-support/process-memory-guard.ss= and
-=tools/run-gxi-memory-guard.ss=.  A lightweight parent =gxi= launches the test
+=src/build-api/process-memory-guard.ss=.  The declarative
+=define-guarded-gxi-stage= macro in =src/build-api/guarded-stage-syntax.ss=
+lowers package policy into an ordinary Building Framework =BuildStage=; it does
+not execute work during expansion.  A lightweight parent =gxi= launches the test
 child, samples its RSS, enforces elapsed time, and terminates it on violation.
 It preserves the child status otherwise and returns a POO-native
 =poo-flow.process-memory-guard.v1= receipt; the CLI alist is only an operator
