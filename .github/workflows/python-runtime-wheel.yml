@@ -182,10 +182,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: packages/python-runtime/uv.lock
 
-      - name: Build POO Flow package
-        run: gxpkg build
-
-      - name: Verify native Scheme build independence
+      - name: Build native Scheme package
         run: gxpkg env gxi build.ss compile
 
       - name: Set up Bazel
