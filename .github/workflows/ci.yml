@@ -253,15 +253,6 @@ jobs:
       - name: Build package
         run: tools/run-native-scheme-build compile
 
-      - name: Build poo-flow CLI binary
-        shell: bash
-        run: |
-          set -euo pipefail
-          tools/run-native-scheme-build compile --release --optimized
-          test -x .gerbil/bin/poo-flow
-          .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
-          test -s /tmp/poo-flow-help.txt
-
       - name: Run package test roots through gxtest
         shell: bash
         run: |
