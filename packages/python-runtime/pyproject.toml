@@ -32,7 +32,11 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-poo_flow_runtime = ["_native/lib/*"]
+poo_flow_runtime = [
+  "_native/lib/*",
+  "projections/*.ss",
+  "projections/*.sexp",
+]
 
 [tool.pytest.ini_options]
 addopts = ["--python-project-harness"]
