@@ -47,6 +47,47 @@ runtime_leak_test = rule(
     },
 )
 
+def _runtime_contract_parity_test_impl(ctx):
+    executable = ctx.actions.declare_file(ctx.label.name + ".sh")
+    pairs = [
+        (ctx.file.generated_header, ctx.file.checked_header),
+        (ctx.file.generated_vector, ctx.file.checked_vector),
+        (ctx.file.generated_event_vector, ctx.file.checked_event_vector),
+    ]
+    commands = []
+    for generated, checked in pairs:
+        commands.append(
+            "diff -u \"$runfiles/%s\" \"$runfiles/%s\"" % (
+                checked.short_path,
+                generated.short_path,
+            ),
+        )
+    ctx.actions.write(
+        output = executable,
+        content = "#!/bin/sh\nset -eu\nrunfiles=\"${TEST_SRCDIR}/${TEST_WORKSPACE}\"\n%s\n" % "\n".join(commands),
+        is_executable = True,
+    )
+    files = []
+    for generated, checked in pairs:
+        files.extend([generated, checked])
+    return [DefaultInfo(
+        executable = executable,
+        runfiles = ctx.runfiles(files = files),
+    )]
+
+runtime_contract_parity_test = rule(
+    implementation = _runtime_contract_parity_test_impl,
+    test = True,
+    attrs = {
+        "checked_event_vector": attr.label(allow_single_file = True, mandatory = True),
+        "checked_header": attr.label(allow_single_file = True, mandatory = True),
+        "checked_vector": attr.label(allow_single_file = True, mandatory = True),
+        "generated_event_vector": attr.label(allow_single_file = True, mandatory = True),
+        "generated_header": attr.label(allow_single_file = True, mandatory = True),
+        "generated_vector": attr.label(allow_single_file = True, mandatory = True),
+    },
+)
+
 def _runtime_gerbil_benchmark_test_impl(ctx):
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
     library = ctx.attr.library[DefaultInfo].files.to_list()[0]

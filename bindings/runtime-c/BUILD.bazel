@@ -1,7 +1,8 @@
 load(":runtime_contract.bzl", "runtime_contract")
-load(":runtime_checks.bzl", "runtime_gerbil_benchmark_test", "runtime_leak_test")
+load(":runtime_checks.bzl", "runtime_contract_parity_test", "runtime_gerbil_benchmark_test", "runtime_leak_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_static_library.bzl", "cc_static_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -14,7 +15,18 @@ runtime_contract(
     clan_utils_sources = "@gerbil_utils_sources//:sources",
     generator = "tools/generate-runtime-v0-contract.ss",
     gxi = "@local_gerbil//:gxi",
+    schema = "//:runtime_v0_schema",
     scheme_sources = "//:scheme_runtime_sources",
+)
+
+runtime_contract_parity_test(
+    name = "runtime_v0_contract_parity_test",
+    checked_event_vector = "tests/vectors/runtime_v0_event_1.txt",
+    checked_header = "include/poo_flow/runtime_v0_contract.h",
+    checked_vector = "tests/vectors/runtime_v0_contract.txt",
+    generated_event_vector = ":runtime_v0_event_vector",
+    generated_header = ":runtime_v0_contract_header",
+    generated_vector = ":runtime_v0_contract_vector",
 )
 
 filegroup(
@@ -80,6 +92,11 @@ cc_library(
 cc_binary(
     name = "runtime_c_shared",
     linkshared = True,
+    deps = [":runtime_c_library"],
+)
+
+cc_static_library(
+    name = "runtime_c_static",
     deps = [":runtime_c_library"],
 )
 
@@ -221,6 +238,7 @@ cc_test(
 test_suite(
     name = "runtime_c_sanitizer_tests",
     tests = [
+        ":runtime_v0_contract_parity_test",
         ":proof_case_v1_harness_asan",
         ":proof_case_v1_harness_ubsan",
         ":runtime_v0_batch_harness_asan",

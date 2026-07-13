@@ -45,4 +45,7 @@ local_gerbil_repository = use_repo_rule(
     "local_gerbil_repository",
 )
 
-local_gerbil_repository(name = "local_gerbil")
+local_gerbil_repository(
+    name = "local_gerbil",
+    expected_version_prefix = "Gerbil v0.18.2 ",
+)

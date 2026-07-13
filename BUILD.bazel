@@ -1,6 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
+    name = "runtime_v0_schema",
+    srcs = ["src/contract/runtime-v0-abi-schema.ss"],
+)
+
+filegroup(
     name = "scheme_runtime_sources",
     srcs = glob([
         "gerbil.pkg",

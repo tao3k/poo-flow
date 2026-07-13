@@ -26,6 +26,7 @@ def _runtime_contract_impl(ctx):
                 ctx.file.clan_poo_root,
                 ctx.file.clan_utils_root,
                 ctx.file.generator,
+                ctx.file.schema,
             ],
             transitive = [
                 ctx.attr.clan_poo_sources[DefaultInfo].files,
@@ -122,5 +123,9 @@ runtime_contract = rule(
             mandatory = True,
         ),
         "scheme_sources": attr.label(mandatory = True),
+        "schema": attr.label(
+            allow_single_file = [".ss"],
+            mandatory = True,
+        ),
     },
 )

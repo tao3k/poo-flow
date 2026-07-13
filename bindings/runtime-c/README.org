@@ -30,8 +30,16 @@ bazel test //bindings/runtime-c:runtime_c_tests
 bazel test //bindings/runtime-c:runtime_c_sanitizer_tests
 bazel test //bindings/runtime-c:runtime_c_leak_test
 bazel test //bindings/runtime-c:runtime_v0_batch_benchmark_smoke
-bazel build //bindings/runtime-c:runtime_c_shared
+bazel test //bindings/runtime-c:runtime_v0_gerbil_ffi_benchmark
+bazel build \
+  //bindings/runtime-c:runtime_c_static \
+  //bindings/runtime-c:runtime_c_shared
 #+end_src
+
+=runtime_c_tests= includes a parity test between the Scheme-generated Bazel
+contract outputs and the checked-in header/vector artifacts.  The contract rule
+has an explicit dependency on =//:runtime_v0_schema=, so schema edits invalidate
+generation and all downstream C consumers.
 
 Bazel is the external runtime-C action graph.  =build.ss= remains the native
 Scheme build authority and is not called or replaced by these C targets.

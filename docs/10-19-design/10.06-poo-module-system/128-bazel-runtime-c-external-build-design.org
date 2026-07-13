@@ -201,6 +201,12 @@ The Bazel action assembles only the declared =clan= and =clan/poo= source
 roots in its temporary =GERBIL_LOADPATH=.  It sets an empty =HOME= and
 =GERBIL_PATH= and MUST NOT run =gxpkg= during a normal build action.
 
+The local Gerbil tool repository rejects =gxi= or =gxc= whose version does not
+start with =Gerbil v0.18.2=.  It emits a repository-local toolchain receipt with
+the resolved executable paths and version.  Source archives are remotely
+cacheable; the host Gerbil executable remains an explicit local execution-tool
+constraint rather than an undeclared =PATH= lookup inside build actions.
+
 * Failure Model and Diagnostics
 
 A Scheme generator failure is a hard Bazel action failure, and its diagnostic

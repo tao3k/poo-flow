@@ -59,6 +59,7 @@ jobs:
             openssl \
             pkg-config \
             sqlite3 \
+            valgrind \
             zlib1g-dev
 
       - name: Restore ccache
@@ -190,6 +191,9 @@ jobs:
       - name: Build POO Flow package
         run: gxpkg build
 
+      - name: Verify native Scheme build independence
+        run: gxpkg env gxi build.ss compile
+
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@v0.19.0
         with:
@@ -206,6 +210,31 @@ jobs:
           mkdir -p .ci/runtime-c
           cp "$library" .ci/runtime-c/libpoo_flow_runtime_v0.so
           echo "POO_FLOW_RUNTIME_V0_LIBRARY=$GITHUB_WORKSPACE/.ci/runtime-c/libpoo_flow_runtime_v0.so" >> "$GITHUB_ENV"
+
+      - name: Run Bazel runtime acceptance matrix
+        run: |
+          set -euo pipefail
+          bazel build \
+            //bindings/runtime-c:runtime_c_static \
+            //bindings/runtime-c:runtime_c_shared
+          bazel test \
+            //bindings/runtime-c:runtime_c_tests \
+            //bindings/runtime-c:runtime_c_sanitizer_tests \
+            //bindings/runtime-c:runtime_c_leak_test \
+            //bindings/runtime-c:runtime_v0_batch_benchmark_smoke \
+            //bindings/runtime-c:runtime_v0_gerbil_ffi_benchmark
+
+      - name: Reject stale runtime-C Make routes
+        run: |
+          set -euo pipefail
+          if git grep -n -E \
+            'make -C bindings/runtime-c|bindings/runtime-c/build/libpoo_flow_runtime_v0|subprocess\.run\(\["make"' \
+            -- . \
+            ':!docs/10-19-design/10.06-poo-module-system/119-agentic-control-plane-ac06-qualification-receipt.org' \
+            ':!docs/10-19-design/10.06-poo-module-system/128-bazel-runtime-c-external-build-design.org'; then
+            echo "stale runtime-C Make route remains" >&2
+            exit 1
+          fi
 
       - name: Test Python native runtime against Bazel library
         run: |
