@@ -276,6 +276,7 @@ over the canonical bundle identity established here.
 | Runtime exported-symbol surface | schema-versioned =runtime_v0_exported_symbols.json= plus Scheme validator and =nm= adapter | exact allowlist, unknown-version rejection, graph/compat/legacy denylist, JSON receipt, installed C consumers |
 | Release version matrix | =src/qualification/release-version-matrix.ss= | Bundle/runtime/proof/assurance owner binding, drift rejection, explicit non-freeze receipt |
 | Cutover readiness preflight | =src/qualification/cutover-readiness.ss= and [[file:134-agentic-control-plane-ac11-cutover-readiness.org][contract 134]] | revision binding, AC-10 identity, symbol/version receipts, legacy guards, external blocker, no-freeze/no-delete gates |
+| Qualification capability composition | =src/qualification/capability-prototypes.ss= and [[file:135-qualification-poo-capability-composition.org][design 135]] | multi-parent inheritance, C3 order stability, override, isolation, missing-slot, duplicate-parent and slot-owner-conflict gates |
 | Release decision | RFC 94 P6 plus public facade/release owners | explicit accepted ledger revision; Bundle/ABI versions; authorized deletion set |
 | Removal | owner named by each accepted ledger row | absence tests, no retired docs/tests, installed downstream consumer, full release qualification |
 | ABI freeze | public C contract and artifact owners | explicit decision only; never inferred from AC-10 success |

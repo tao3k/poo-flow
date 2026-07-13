@@ -4,7 +4,9 @@
 (export #t)
 
 (import :clan/poo/object
-        :poo-flow/src/module-system/object-family-syntax)
+        :poo-flow/src/core/object-syntax
+        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/qualification/capability-prototypes)
 
 (def +poo-flow-cutover-readiness-input-kind+
   'poo-flow.cutover-readiness-input.v1)
@@ -55,21 +57,27 @@
                                        decision-required-value?
                                        abi-v1-frozen-value?
                                        deletion-authorized-value?)
-  (object<-alist
-   (list
-    (cons 'kind +poo-flow-cutover-readiness-input-kind+)
-    (cons 'source-revision source-revision-value)
-    (cons 'ac10-source-revision ac10-source-revision-value)
-    (cons 'ac10-manifest-digest ac10-manifest-digest-value)
-    (cons 'symbol-source-revision symbol-source-revision-value)
-    (cons 'symbol-receipt symbol-receipt-value)
-    (cons 'version-source-revision version-source-revision-value)
-    (cons 'version-receipt version-receipt-value)
-    (cons 'legacy-guards legacy-guards-value)
-    (cons 'external-blocker external-blocker-value)
-    (cons 'decision-required? decision-required-value?)
-    (cons 'abi-v1-frozen? abi-v1-frozen-value?)
-    (cons 'deletion-authorized? deletion-authorized-value?))))
+  (poo-flow-qualification-capability-composition-assert!
+   (list (cons 'versioned +poo-flow-versioned-capability-slots+)
+         (cons 'revision-bound +poo-flow-revision-bound-capability-slots+)
+         (cons 'evidence-bound +poo-flow-evidence-bound-capability-slots+)
+         (cons 'decision-state +poo-flow-decision-state-capability-slots+)))
+  (poo-core-role-object
+   (slots ((kind +poo-flow-cutover-readiness-input-kind+)
+           (ac10-source-revision ac10-source-revision-value)
+           (ac10-manifest-digest ac10-manifest-digest-value)
+           (symbol-source-revision symbol-source-revision-value)
+           (version-source-revision version-source-revision-value)))
+   (supers
+    (poo-flow-versioned-capability
+     +poo-flow-cutover-readiness-input-kind+ 1)
+    (poo-flow-revision-bound-capability source-revision-value)
+    (poo-flow-evidence-bound-capability
+     symbol-receipt-value version-receipt-value legacy-guards-value
+     external-blocker-value)
+    (poo-flow-decision-state-capability
+     decision-required-value? abi-v1-frozen-value?
+     deletion-authorized-value? #f))))
 
 (def +poo-flow-cutover-required-legacy-guards+
   '(python-no-ctypes agent-sandbox-zero-consumer))
@@ -101,6 +109,13 @@
   (let ((diagnostics '())
         (revision (poo-flow-cutover-readiness-source-revision input)))
     (def (reject! code) (set! diagnostics (cons code diagnostics)))
+    (unless (poo-flow-qualification-capabilities-valid?
+             input
+             (list poo-flow-versioned-capability-valid?
+                   poo-flow-revision-bound-capability-valid?
+                   poo-flow-evidence-bound-capability-valid?
+                   poo-flow-decision-state-capability-valid?))
+      (reject! 'invalid-capability-composition))
     (unless (and (cutover-present-string? revision)
                  (cutover-present-string?
                   (poo-flow-cutover-readiness-ac10-source-revision input))

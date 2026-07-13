@@ -4,7 +4,9 @@
 (export #t)
 
 (import :clan/poo/object
+        :poo-flow/src/core/object-syntax
         :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/qualification/capability-prototypes
         (only-in :poo-flow/src/semantic/organization-bundle
                  +poo-flow-organization-bundle-schema+)
         (only-in :poo-flow/src/contract/runtime-v0-abi-schema
@@ -41,14 +43,21 @@
 (def (poo-flow-release-version-matrix bundle-schema-value runtime-abi-value
                                       proof-vector-value assurance-schema-value
                                       owner-artifacts-value frozen-value?)
-  (object<-alist
-   (list (cons 'kind +poo-flow-release-version-matrix-kind+)
-         (cons 'bundle-schema bundle-schema-value)
-         (cons 'runtime-abi runtime-abi-value)
-         (cons 'proof-vector proof-vector-value)
-         (cons 'assurance-schema assurance-schema-value)
-         (cons 'owner-artifacts owner-artifacts-value)
-         (cons 'abi-v1-frozen? frozen-value?))))
+  (poo-flow-qualification-capability-composition-assert!
+   (list (cons 'versioned +poo-flow-versioned-capability-slots+)
+         (cons 'owner-bound +poo-flow-owner-bound-capability-slots+)
+         (cons 'decision-state +poo-flow-decision-state-capability-slots+)))
+  (poo-core-role-object
+   (slots ((kind +poo-flow-release-version-matrix-kind+)
+           (bundle-schema bundle-schema-value)
+           (runtime-abi runtime-abi-value)
+           (proof-vector proof-vector-value)
+           (assurance-schema assurance-schema-value)))
+   (supers
+    (poo-flow-versioned-capability
+     +poo-flow-release-version-matrix-kind+ 1)
+    (poo-flow-owner-bound-capability owner-artifacts-value)
+    (poo-flow-decision-state-capability #t frozen-value? #f #f))))
 
 (def (poo-flow-ac11-current-release-version-matrix)
   (poo-flow-release-version-matrix
@@ -89,7 +98,12 @@
 (def (poo-flow-ac11-release-version-matrix-verify matrix)
   (let* ((expected (poo-flow-ac11-current-release-version-matrix))
          (accepted?
-          (and (poo-flow-release-version-matrix? matrix)
+         (and (poo-flow-release-version-matrix? matrix)
+               (poo-flow-qualification-capabilities-valid?
+                matrix
+                (list poo-flow-versioned-capability-valid?
+                      poo-flow-owner-bound-capability-valid?
+                      poo-flow-decision-state-capability-valid?))
                (equal? (poo-flow-release-version-matrix-bundle-schema matrix)
                        (poo-flow-release-version-matrix-bundle-schema expected))
                (release-runtime-abi=?

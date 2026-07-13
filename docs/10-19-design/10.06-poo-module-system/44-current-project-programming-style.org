@@ -208,6 +208,33 @@ Object-family code should look like current =tool-core=, =memory-core=, and
 Prefer a macro such as a field-row helper when many projections repeat the same
 frame.  Prefer a normal function when the logic is data-dependent.
 
+** 10.06.44.55 Capability Prototype Composition
+POO object families must not use objects only as record containers when two or
+more families share a stable, orthogonal behavior axis.
+
+Extract a parameterized capability prototype when the shared axis owns:
+
+- a disjoint slot set;
+- a named validator or operation;
+- at least two real object-family consumers;
+- extension semantics that remain valid under C3 composition.
+
+Compose capabilities through multiple POO parents.  Reject duplicate
+capability identities and cross-capability slot ownership conflicts before
+object construction.  Keep validators named per capability and aggregate them
+explicitly instead of defining several ambiguous =validate= overrides.
+
+Do not use inheritance merely because fields have the same names.  Wire
+vectors, ABI structs, immutable cryptographic values, and facets with distinct
+composition algebras remain explicit values and functional projections.
+
+Prototype metadata, parent order, and internal capability markers MUST NOT enter
+JSON, ABI, digest, or receipt projections.  Migration requires golden boundary
+equality before and after composition.
+
+The reference implementation and Mermaid composition graph are
+[[file:135-qualification-poo-capability-composition.org][Qualification POO Capability Composition]].
+
 ** 10.06.44.60 Interfaces, Methods, And Dispatch
 Use interfaces, generic methods, or prototype dispatch when downstream modules
 need to add behavior without editing a central symbolic branch.

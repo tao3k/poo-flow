@@ -1,0 +1,84 @@
+#+title: Qualification POO Capability Composition
+#+subtitle: Recovering prototype reuse without changing wire or receipt contracts
+#+author: POO Flow Contributors
+#+date: 2026-07-12
+#+status: First bounded migration implemented
+#+options: toc:3 num:t
+
+* Problem
+
+The AC-01--AC-11 implementation used POO objects extensively but reused little
+prototype behavior.  Manifest, version, readiness, evidence, and receipt owners
+often behaved as independent record families with repeated slot validation.
+
+This design restores POO as a composition system while preserving functional
+control-plane projection and immutable boundary values.
+
+* Capability graph
+
+#+begin_src mermaid
+flowchart TD
+    V["Versioned(schema-id, schema-version)"]
+    R["RevisionBound(source-revision)"]
+    O["OwnerBound(owner-artifacts)"]
+    E["EvidenceBound(symbol/version receipts, guards, blocker)"]
+    D["DecisionState(decision, freeze, deletion, ready)"]
+
+    M["ReleaseVersionMatrix"]
+    C["CutoverReadinessInput"]
+
+    V --> M
+    O --> M
+    D --> M
+    V --> C
+    R --> C
+    E --> C
+    D --> C
+#+end_src
+
+Each capability is a parameterized POO parent prototype and owns a disjoint
+slot set.  Domain objects use multiple parents through C3-backed =.mix= via the
+project's =poo-core-role-object= macro.  Existing accessors continue to resolve
+slots through =.ref=, so callers do not learn where a slot is inherited.
+
+* Safety rules
+
+- Capability slot ownership MUST be disjoint.  Duplicate capability identities
+  and cross-capability slot collisions fail before object construction.
+- Validators are named per capability and aggregated explicitly.  No five-way
+  competing =validate= method override is introduced.
+- Local domain slots may intentionally override an inherited default, and the
+  override must be covered by a focused test.
+- C3 is a reuse and dispatch mechanism, not an authorization boundary.
+- Prototype metadata and parent order never enter JSON, ABI, digest, or receipt
+  projections.
+
+* First migration
+
+=ReleaseVersionMatrix= now composes Versioned, OwnerBound, and DecisionState.
+=CutoverReadinessInput= composes Versioned, RevisionBound, EvidenceBound, and
+DecisionState.  Their public constructors, predicates, accessors, schemas,
+diagnostics, JSON key order, and fixed safety flags remain unchanged.
+
+Wire vectors, hot buffers, cryptographic tokens, evidence snapshots, and Bundle
+facet algebras are deliberately outside this inheritance tranche.
+
+* Qualification
+
+Focused tests cover:
+
+- three-parent inherited slot resolution;
+- parent-order stability for orthogonal capabilities;
+- intentional local override precedence;
+- independent instance composition;
+- missing-slot rejection;
+- duplicate capability and cross-capability slot collision rejection;
+- existing release-version and cutover-readiness positive and negative suites;
+- byte-identical JSON receipts before and after migration.
+
+* Next decision
+
+Measure the removed duplicate construction/validation code and review whether
+ReleaseAssuranceManifest has the same orthogonal capabilities.  Do not migrate
+Bundle facets merely because they share field names; their composition algebras
+remain distinct.
