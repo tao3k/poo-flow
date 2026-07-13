@@ -16,7 +16,10 @@ def validVector : ProofCaseVector where
   semanticRoot := digest 4
   executionRoot := digest 5
   batchRoot := digest 6
-  previousEvidenceRoot := digest 7
+  subjectBinding := digest 7
+  resourceBinding := digest 8
+  actionBinding := digest 9
+  previousEvidenceRoot := digest 10
   nonce := 11
   epoch := 4
   sequence := 19
@@ -39,7 +42,10 @@ def validRaw : RawProofCaseVector where
   semanticRoot := (digest 4).bytes
   executionRoot := (digest 5).bytes
   batchRoot := (digest 6).bytes
-  previousEvidenceRoot := (digest 7).bytes
+  subjectBinding := (digest 7).bytes
+  resourceBinding := (digest 8).bytes
+  actionBinding := (digest 9).bytes
+  previousEvidenceRoot := (digest 10).bytes
   nonce := 11
   epoch := 4
   sequence := 19
@@ -74,6 +80,13 @@ theorem malformedDigestRejected :
     decode malformedDigestRaw = .error .malformedDigest := by
   native_decide
 
+def malformedSubjectBindingRaw : RawProofCaseVector :=
+  { validRaw with subjectBinding := List.replicate 31 7 }
+
+theorem malformedSubjectBindingRejected :
+    decode malformedSubjectBindingRaw = .error .malformedDigest := by
+  native_decide
+
 def diagnosticVector : ProofCaseVector :=
   { validVector with durabilityProfile := .diagnostic }
 
@@ -88,8 +101,8 @@ theorem missingObligationVectorRejected :
     ¬ CompleteAuthorizedEffect missingObligationVector :=
   missingObligationRejectsComplete missingObligationVector (by native_decide)
 
-def vectorDigest : Digest32 := digest 8
-def theoremSetDigest : Digest32 := digest 9
+def vectorDigest : Digest32 := digest 11
+def theoremSetDigest : Digest32 := digest 12
 
 def validProofReceipt : ProofReceipt :=
   verifiedProofReceipt validVector validVectorComplete vectorDigest theoremSetDigest
@@ -99,5 +112,20 @@ theorem validReceiptBindsSemanticRoot :
 
 theorem validReceiptBindsExecutionRoot :
     validProofReceipt.executionRoot = validVector.executionRoot := rfl
+
+theorem validDecodeBindsSubject :
+    (decode validRaw).map (fun vector => vector.subjectBinding) =
+      .ok validVector.subjectBinding := by
+  native_decide
+
+theorem validDecodeBindsResource :
+    (decode validRaw).map (fun vector => vector.resourceBinding) =
+      .ok validVector.resourceBinding := by
+  native_decide
+
+theorem validDecodeBindsAction :
+    (decode validRaw).map (fun vector => vector.actionBinding) =
+      .ok validVector.actionBinding := by
+  native_decide
 
 end PooFlowProof.Generated.AuthorizedEffectProofCase

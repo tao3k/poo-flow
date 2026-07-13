@@ -50,6 +50,9 @@ structure RawProofCaseVector where
   semanticRoot : List UInt8
   executionRoot : List UInt8
   batchRoot : List UInt8
+  subjectBinding : List UInt8
+  resourceBinding : List UInt8
+  actionBinding : List UInt8
   previousEvidenceRoot : List UInt8
   nonce : UInt64
   epoch : UInt64
@@ -70,6 +73,9 @@ structure ProofCaseVector where
   semanticRoot : Digest32
   executionRoot : Digest32
   batchRoot : Digest32
+  subjectBinding : Digest32
+  resourceBinding : Digest32
+  actionBinding : Digest32
   previousEvidenceRoot : Digest32
   nonce : UInt64
   epoch : UInt64
@@ -134,6 +140,9 @@ def decode (raw : RawProofCaseVector) : Except DecodeError ProofCaseVector := do
   let semanticRoot ← decodeDigest raw.semanticRoot
   let executionRoot ← decodeDigest raw.executionRoot
   let batchRoot ← decodeDigest raw.batchRoot
+  let subjectBinding ← decodeDigest raw.subjectBinding
+  let resourceBinding ← decodeDigest raw.resourceBinding
+  let actionBinding ← decodeDigest raw.actionBinding
   let previousEvidenceRoot ← decodeDigest raw.previousEvidenceRoot
   pure {
     caseKind := caseKind
@@ -143,6 +152,9 @@ def decode (raw : RawProofCaseVector) : Except DecodeError ProofCaseVector := do
     semanticRoot := semanticRoot
     executionRoot := executionRoot
     batchRoot := batchRoot
+    subjectBinding := subjectBinding
+    resourceBinding := resourceBinding
+    actionBinding := actionBinding
     previousEvidenceRoot := previousEvidenceRoot
     nonce := raw.nonce
     epoch := raw.epoch
