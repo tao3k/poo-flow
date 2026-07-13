@@ -35,11 +35,11 @@
      (adapter-requirements . ,(.ref descriptor 'adapter-requirements))
      (projections . ,(.ref descriptor 'projections)))))
 
-(def (feature-manifest-option-diagnostics manifest)
+(def (feature-manifest-option-diagnostics manifest diagnostics)
   (let ((feature-id (.ref manifest 'feature-id))
         (seen (make-hash-table-eq)))
     (let loop ((schemas (.ref manifest 'option-schemas))
-               (diagnostics []))
+               (diagnostics diagnostics))
       (match schemas
         ([schema . rest]
          (let ((option-id (.ref schema 'option-id)))
@@ -54,32 +54,43 @@
              (begin
                (hash-put! seen option-id #t)
                (loop rest diagnostics)))))
-        ([] (reverse diagnostics))))))
+        ([] diagnostics)))))
 
-(def (feature-manifest-structural-diagnostics manifests)
-  (apply append
-         (poo-flow-map feature-manifest-option-diagnostics manifests)))
+(def (feature-manifests+diagnostics descriptors)
+  (let loop ((descriptors descriptors)
+             (manifests [])
+             (diagnostics []))
+    (match descriptors
+      ([descriptor . rest]
+       (let ((manifest (feature-manifest descriptor)))
+         (loop rest
+               (cons manifest manifests)
+               (feature-manifest-option-diagnostics
+                manifest diagnostics))))
+      ([] (values (reverse manifests)
+                  (reverse diagnostics))))))
 
 (def (feature-manifest-bundle bundle-id descriptors)
-  (let* ((manifests (poo-flow-map feature-manifest descriptors))
-         (selections (poo-flow-map feature-selection descriptors))
-         (profile (feature-profile bundle-id selections))
-         (activation-plan (resolve-feature-profile profile))
-         (diagnostics
-          (append (.ref activation-plan 'diagnostics)
-                  (feature-manifest-structural-diagnostics manifests)))
-         (status (if (null? diagnostics) 'ready 'rejected)))
-    (constant-manifest-object
-     `((kind . feature-manifest-bundle)
-       (schema-version . 1)
-       (bundle-id . ,bundle-id)
-       (descriptors . ,descriptors)
-       (manifests . ,manifests)
-       (activation-plan . ,activation-plan)
-       (feature-ids . ,(.ref activation-plan 'feature-ids))
-       (status . ,status)
-       (accepted? . ,(eq? status 'ready))
-       (diagnostics . ,diagnostics)))))
+  (let-values (((manifests structural-diagnostics)
+                (feature-manifests+diagnostics descriptors)))
+    (let* ((selections (poo-flow-map feature-selection descriptors))
+           (profile (feature-profile bundle-id selections))
+           (activation-plan (resolve-feature-profile profile))
+           (diagnostics
+            (append (.ref activation-plan 'diagnostics)
+                    structural-diagnostics))
+           (status (if (null? diagnostics) 'ready 'rejected)))
+      (constant-manifest-object
+       `((kind . feature-manifest-bundle)
+         (schema-version . 1)
+         (bundle-id . ,bundle-id)
+         (descriptors . ,descriptors)
+         (manifests . ,manifests)
+         (activation-plan . ,activation-plan)
+         (feature-ids . ,(.ref activation-plan 'feature-ids))
+         (status . ,status)
+         (accepted? . ,(eq? status 'ready))
+         (diagnostics . ,diagnostics))))))
 
 (def (require-valid-feature-manifest-bundle bundle)
   (if (.ref bundle 'accepted?)

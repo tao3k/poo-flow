@@ -141,6 +141,54 @@ The implementation is complete only when all of the following hold:
   process result;
 - no stale compiled artifact is required to run the compiled test suite.
 
+* Implemented optimization: single-pass structural qualification
+
+The initial implementation projected all manifests, mapped every manifest to a
+separate diagnostic list, and then called =apply append= across the =F= lists.
+Although asymptotically linear, that shape retained an avoidable list-of-lists
+and expanded one procedure argument per feature.  The latter is unnecessary
+pressure when bundles contain hundreds or thousands of agent capabilities.
+
+The optimized implementation uses one tail-recursive functional fold over the
+descriptor sequence.  Each step creates one immutable manifest and folds that
+manifest's option schemas directly into a reverse diagnostic accumulator.  One
+final reverse restores declaration order.  The existing =poo-flow-map= selection
+projection and =resolve-feature-profile= graph owner remain unchanged.
+
+#+begin_src mermaid
+flowchart LR
+    DS["descriptor sequence<br/>F values"]
+    SF["single tail-recursive fold"]
+    MP["manifest projection"]
+    OI["bundle-local option-id hash"]
+    MA["reverse manifest accumulator"]
+    DA["reverse diagnostic accumulator"]
+    RV["two final reverses"]
+    RR["existing resolver<br/>O(F + E)"]
+    BR["immutable bundle receipt"]
+
+    DS --> SF
+    SF --> MP
+    MP --> MA
+    MP --> OI
+    OI --> DA
+    MA --> RV
+    DA --> RV
+    DS -->|"poo-flow-map selections"| RR
+    RV --> BR
+    RR --> BR
+#+end_src
+
+The structural path is =O(F + O)= expected time and =O(F + D)= retained output,
+where =O= is the number of option schemas and =D= is the number of diagnostics.
+It has no =F=-wide =apply= call and no intermediate diagnostic list per feature.
+The graph path remains =O(F + E)=; this optimization does not create a second
+resolver or change diagnostic semantics.
+
+The qualification suite includes a 1024-feature dependency chain.  It proves
+manifest cardinality, activation order, accepted status, source-mode completion,
+and bounded RSS under the same POO-native public interface.
+
 * Follow-up
 
 Phase 3C may investigate phase-bound manifest bindings.  It must begin from an

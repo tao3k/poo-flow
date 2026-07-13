@@ -43,6 +43,11 @@
   (owner-module-id 'feature-system-manifest-test)
   (option-schemas manifest-option-a manifest-option-a-duplicate))
 
+(defpoo-feature manifest-duplicate-option-second-feature
+  (feature-id 'manifest-duplicate-option-second)
+  (owner-module-id 'feature-system-manifest-test)
+  (option-schemas manifest-option-a manifest-option-a-duplicate))
+
 (defpoo-feature-manifest-bundle manifest-valid-bundle
   (bundle-id 'manifest-valid)
   (features manifest-base-feature manifest-dependent-feature))
@@ -65,11 +70,41 @@
 
 (defpoo-feature-manifest-bundle manifest-duplicate-option-bundle
   (bundle-id 'manifest-duplicate-option)
-  (features manifest-duplicate-option-feature))
+  (features manifest-duplicate-option-feature
+            manifest-duplicate-option-second-feature))
 
 (def (diagnostic-codes bundle)
   (poo-flow-map (lambda (diagnostic) (.ref diagnostic 'code))
                 (.ref bundle 'diagnostics)))
+
+(def (diagnostic-feature-ids bundle)
+  (poo-flow-map (lambda (diagnostic) (.ref diagnostic 'feature-id))
+                (.ref bundle 'diagnostics)))
+
+(def (manifest-stress-feature-id index)
+  (string->symbol
+   (string-append "manifest-stress-" (number->string index))))
+
+(def (manifest-linear-feature-descriptors count)
+  (let loop ((index 0)
+             (previous #f)
+             (descriptors []))
+    (if (= index count)
+      (reverse descriptors)
+      (let* ((base
+              (feature-descriptor-base
+               (manifest-stress-feature-id index)
+               'feature-system-manifest-stress))
+             (spec
+              (if previous
+                (feature-spec-compose
+                 base
+                 (feature-required-features previous))
+                base))
+             (descriptor (feature-descriptor spec)))
+        (loop (+ index 1)
+              descriptor
+              (cons descriptor descriptors))))))
 
 (def feature-system-manifest-test
   (test-suite "feature system immutable manifests"
@@ -121,6 +156,20 @@
 
     (test-case "duplicate option identities reject the bundle"
       (check (.ref manifest-duplicate-option-bundle 'status) => 'rejected)
-      (check (memq 'duplicate-option-schema
-                   (diagnostic-codes manifest-duplicate-option-bundle))
-             ? values))))
+      (check (diagnostic-codes manifest-duplicate-option-bundle)
+             => '(duplicate-option-schema duplicate-option-schema))
+      (check (diagnostic-feature-ids manifest-duplicate-option-bundle)
+             => '(manifest-duplicate-option
+                  manifest-duplicate-option-second)))
+
+    (test-case "1024-Feature bundle keeps one linear manifest pass"
+      (let* ((descriptors (manifest-linear-feature-descriptors 1024))
+             (bundle (feature-manifest-bundle
+                      'manifest-linear-stress descriptors))
+             (feature-ids (.ref bundle 'feature-ids)))
+        (check (.ref bundle 'status) => 'ready)
+        (check (length (.ref bundle 'manifests)) => 1024)
+        (check (length feature-ids) => 1024)
+        (check (car feature-ids) => 'manifest-stress-0)
+        (check (car (reverse feature-ids))
+               => 'manifest-stress-1023)))))
