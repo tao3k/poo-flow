@@ -8,9 +8,11 @@ package(default_visibility = ["//visibility:public"])
 
 runtime_contract(
     name = "runtime_v0_contract",
+    clan_poo_root = "@gerbil_poo_sources//:gerbil.pkg",
+    clan_poo_sources = "@gerbil_poo_sources//:sources",
+    clan_utils_root = "@gerbil_utils_sources//:gerbil.pkg",
+    clan_utils_sources = "@gerbil_utils_sources//:sources",
     generator = "tools/generate-runtime-v0-contract.ss",
-    gerbil_path = "@local_gerbil//:gerbil_path",
-    gerbil_root = "@local_gerbil//:gerbil_root.marker",
     gxi = "@local_gerbil//:gxi",
     scheme_sources = "//:scheme_runtime_sources",
 )
@@ -47,9 +49,21 @@ cc_library(
 )
 
 cc_library(
+    name = "proof_case_v1_headers",
+    hdrs = [
+        "include/poo_flow/proof_case_v1.h",
+        "include/poo_flow/proof_case_vector_v1.h",
+    ],
+    strip_include_prefix = "include",
+)
+
+cc_library(
     name = "runtime_c_library",
     alwayslink = True,
-    srcs = ["src/runtime_v0.c"],
+    srcs = [
+        "src/proof_case_v1.c",
+        "src/runtime_v0.c",
+    ],
     copts = [
         "-std=c11",
         "-Wall",
@@ -57,7 +71,10 @@ cc_library(
         "-Werror",
         "-pedantic",
     ],
-    deps = [":runtime_v0_headers"],
+    deps = [
+        ":proof_case_v1_headers",
+        ":runtime_v0_headers",
+    ],
 )
 
 cc_binary(
@@ -103,6 +120,46 @@ cc_test(
     name = "runtime_v0_installed_consumer",
     srcs = ["tests/runtime_v0_installed_consumer.c"],
     deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "proof_case_v1_harness",
+    srcs = ["tests/proof_case_v1_harness.c"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "proof_case_v1_installed_consumer",
+    srcs = ["tests/proof_case_v1_installed_consumer.c"],
+    deps = [":runtime_c_library"],
+)
+
+cc_test(
+    name = "proof_case_v1_harness_ubsan",
+    srcs = [
+        "src/proof_case_v1.c",
+        "tests/proof_case_v1_harness.c",
+    ],
+    copts = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=undefined",
+    ],
+    linkopts = ["-fsanitize=undefined"],
+    deps = [":proof_case_v1_headers"],
+)
+
+cc_test(
+    name = "proof_case_v1_harness_asan",
+    srcs = [
+        "src/proof_case_v1.c",
+        "tests/proof_case_v1_harness.c",
+    ],
+    copts = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=address",
+    ],
+    linkopts = ["-fsanitize=address"],
+    deps = [":proof_case_v1_headers"],
 )
 
 cc_test(
@@ -164,6 +221,8 @@ cc_test(
 test_suite(
     name = "runtime_c_sanitizer_tests",
     tests = [
+        ":proof_case_v1_harness_asan",
+        ":proof_case_v1_harness_ubsan",
         ":runtime_v0_batch_harness_asan",
         ":runtime_v0_batch_harness_ubsan",
         ":runtime_v0_harness_asan",
@@ -174,6 +233,7 @@ test_suite(
 runtime_leak_test(
     name = "runtime_c_leak_test",
     binaries = [
+        ":proof_case_v1_harness",
         ":runtime_v0_batch_harness",
         ":runtime_v0_harness",
     ],
@@ -198,6 +258,8 @@ cc_test(
 test_suite(
     name = "runtime_c_tests",
     tests = [
+        ":proof_case_v1_harness",
+        ":proof_case_v1_installed_consumer",
         ":runtime_v0_batch_harness",
         ":runtime_v0_harness",
         ":runtime_v0_installed_consumer",

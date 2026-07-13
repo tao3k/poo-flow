@@ -28,6 +28,10 @@ def emit_c(schema: ProofCaseSchema) -> str:
         f"#define POO_FLOW_PROOF_CASE_VECTOR_SIZE {schema.total_size}u",
         f"#define POO_FLOW_PROOF_CASE_VECTOR_ALIGNMENT {schema.alignment}u",
         f'#define POO_FLOW_PROOF_CASE_SCHEMA_FINGERPRINT "{schema.fingerprint_hex}"',
+        "#define POO_FLOW_PROOF_CASE_SCHEMA_FINGERPRINT_BYTES \\",
+        "  { "
+        + ", ".join(f"0x{value:02x}" for value in schema.fingerprint)
+        + " }",
         f"#define POO_FLOW_PROOF_REQUIRED_OBLIGATION_MASK UINT64_C(0x{schema.required_obligation_mask:016x})",
         "",
     ]
@@ -146,6 +150,9 @@ def generated_artifacts(schema: ProofCaseSchema) -> dict[Path, str]:
     positive, malformed = emit_vectors(schema)
     return {
         Path("lean/native/poo_flow_proof_case_vector_v1.h"): emit_c(schema),
+        Path("../../bindings/runtime-c/include/poo_flow/proof_case_vector_v1.h"): emit_c(
+            schema
+        ),
         Path("lean/PooFlowProof/Generated/ProofCaseVector.lean"): emit_lean(schema),
         Path("python/src/poo_flow_proof/generated/proof_case_vector.py"): emit_python(
             schema
