@@ -186,6 +186,21 @@ Changes to the schema, generator, generation parameters, C sources, or relevant
 toolchain inputs MUST invalidate the corresponding actions and downstream
 dependents.
 
+** Bazel Gerbil source lock
+
+Contract generation uses immutable source archives rather than a workspace or
+user =.gerbil/lib= cache.  The native =gerbil.pkg= declarations and Bazel
+archive pins MUST identify the same revisions.
+
+| Package owner | Revision | Archive SHA-256 |
+|---------------+----------+-----------------|
+| =github.com/mighty-gerbils/gerbil-poo= | =f4b322299830acbd1cd5b91984c4107ac56bdac3= | =673bd98e0731cec0fabdb3d46164d26b22a1fc96cbea74f4127237aa75c52f1b= |
+| =github.com/mighty-gerbils/gerbil-utils= | =f45a4ef3bfecd2af39e114ed736ce9082cbb8244= | =e7777c505e71de490dc05f8e3ff4473dddbc998a99899c085d31750add551296= |
+
+The Bazel action assembles only the declared =clan= and =clan/poo= source
+roots in its temporary =GERBIL_LOADPATH=.  It sets an empty =HOME= and
+=GERBIL_PATH= and MUST NOT run =gxpkg= during a normal build action.
+
 * Failure Model and Diagnostics
 
 A Scheme generator failure is a hard Bazel action failure, and its diagnostic

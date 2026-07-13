@@ -22,9 +22,14 @@ def _runtime_contract_impl(ctx):
 
     ctx.actions.run_shell(
         inputs = depset(
-            direct = [ctx.file.generator, ctx.file.gerbil_root],
+            direct = [
+                ctx.file.clan_poo_root,
+                ctx.file.clan_utils_root,
+                ctx.file.generator,
+            ],
             transitive = [
-                ctx.attr.gerbil_path[DefaultInfo].files,
+                ctx.attr.clan_poo_sources[DefaultInfo].files,
+                ctx.attr.clan_utils_sources[DefaultInfo].files,
                 ctx.attr.scheme_sources[DefaultInfo].files,
             ],
         ),
@@ -36,7 +41,8 @@ def _runtime_contract_impl(ctx):
             header.path,
             vector.path,
             event_vector.path,
-            ctx.file.gerbil_root.path,
+            ctx.file.clan_utils_root.path,
+            ctx.file.clan_poo_root.path,
         ],
         command = """
 set -eu
@@ -45,14 +51,31 @@ generator="$2"
 header="$3"
 vector="$4"
 event_vector="$5"
-gerbil_root="$(dirname "$6")/gerbil_path"
+clan_root="$(dirname "$6")"
+poo_root="$(dirname "$7")"
 loadpath="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-gerbil-loadpath.XXXXXX")"
 trap 'rm -rf "$loadpath"' EXIT
 ln -s "$PWD" "$loadpath/poo-flow"
+mkdir -p "$loadpath/clan"
+for entry in "$clan_root"/*; do
+  name="$(basename "$entry")"
+  if [ "$name" != "BUILD.bazel" ]; then
+    cp -R "$entry" "$loadpath/clan/$name"
+  fi
+done
+mkdir -p "$loadpath/clan/poo"
+for entry in "$poo_root"/*; do
+  name="$(basename "$entry")"
+  if [ "$name" != "BUILD.bazel" ]; then
+    cp -R "$entry" "$loadpath/clan/poo/$name"
+  fi
+done
 mkdir -p "$(dirname "$header")" "$(dirname "$vector")" "$(dirname "$event_vector")"
+home="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-gerbil-home.XXXXXX")"
 env -u CPATH -u SDKROOT -u C_INCLUDE_PATH -u LIBRARY_PATH \
+  HOME="$home" \
   GERBIL_LOADPATH="$loadpath" \
-  GERBIL_PATH="$gerbil_root" \
+  GERBIL_PATH="$home/.gerbil" \
   "$gxi" "$generator" \
   --header-output "$header" \
   --vector-output "$vector" \
@@ -83,11 +106,16 @@ runtime_contract = rule(
             allow_single_file = [".ss"],
             mandatory = True,
         ),
-        "gerbil_path": attr.label(mandatory = True),
-        "gerbil_root": attr.label(
+        "clan_poo_root": attr.label(
             allow_single_file = True,
             mandatory = True,
         ),
+        "clan_poo_sources": attr.label(mandatory = True),
+        "clan_utils_root": attr.label(
+            allow_single_file = True,
+            mandatory = True,
+        ),
+        "clan_utils_sources": attr.label(mandatory = True),
         "gxi": attr.label(
             allow_single_file = True,
             cfg = "exec",

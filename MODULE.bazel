@@ -5,6 +5,41 @@ module(
 
 bazel_dep(name = "rules_cc", version = "0.2.17")
 
+http_archive = use_repo_rule(
+    "@bazel_tools//tools/build_defs/repo:http.bzl",
+    "http_archive",
+)
+
+http_archive(
+    name = "gerbil_poo_sources",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+exports_files(["gerbil.pkg"])
+filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
+""",
+    sha256 = "673bd98e0731cec0fabdb3d46164d26b22a1fc96cbea74f4127237aa75c52f1b",
+    strip_prefix = "gerbil-poo-f4b322299830acbd1cd5b91984c4107ac56bdac3",
+    type = "tar.gz",
+    urls = [
+        "https://codeload.github.com/mighty-gerbils/gerbil-poo/tar.gz/f4b322299830acbd1cd5b91984c4107ac56bdac3",
+    ],
+)
+
+http_archive(
+    name = "gerbil_utils_sources",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+exports_files(["gerbil.pkg"])
+filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
+""",
+    sha256 = "e7777c505e71de490dc05f8e3ff4473dddbc998a99899c085d31750add551296",
+    strip_prefix = "gerbil-utils-f45a4ef3bfecd2af39e114ed736ce9082cbb8244",
+    type = "tar.gz",
+    urls = [
+        "https://codeload.github.com/mighty-gerbils/gerbil-utils/tar.gz/f45a4ef3bfecd2af39e114ed736ce9082cbb8244",
+    ],
+)
+
 local_gerbil_repository = use_repo_rule(
     "//tools/bazel:gerbil_repository.bzl",
     "local_gerbil_repository",
