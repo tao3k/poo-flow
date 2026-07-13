@@ -5,8 +5,8 @@
         :poo-flow/src/modules/workflow/cicd-core
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
-        :poo-flow/src/modules/workflow/cicd-runtime/checks
-        :poo-flow/src/modules/workflow/cicd-runtime/graph)
+        :poo-flow/src/modules/workflow/cicd-runtime-support/checks
+        :poo-flow/src/modules/workflow/cicd-runtime-support/graph)
 
 (export poo-flow-cicd-pipeline-run-step-status
         poo-flow-cicd-pipeline-run-step-diagnostics
