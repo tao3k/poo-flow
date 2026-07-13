@@ -285,6 +285,8 @@ Every scale receipt records:
 
 - =N=, =U=, component-reference count, and invalid-case count;
 - DomainCase cache hit ratio and instance-to-case reuse ratio;
+- successful per-instance dynamic =.mix= count, reported separately from =U=
+  closure count until the zero-per-Agent-C3 target is implemented;
 - cold closure and warm lookup latency;
 - construct, validate, policy/strategy resolve, and project p50/p95/p99;
 - allocation count, generated form count, peak RSS, and retained cache size;
@@ -311,6 +313,15 @@ The =gxi= Scenario harness also declares and observes its memory profile so an
 expander or closure regression cannot be hidden by a Python wrapper, CLI-only
 limit, reduced concurrency, or an operating-system kill.
 
+The initial internal closure phase has one explicit open performance gap.
+=role-compose= can close the =U= shared DomainCase prototypes once, but the
+currently proven POO API still uses dynamic =.mix= to overlay each Agent's local
+role on its computed shared prototype.  The Phase 1 scale fixture may prove
+correct sharing, key reuse, isolation, and bounded memory; it MUST NOT claim the
+zero-per-Agent-C3 target.  That target remains open until a repository-owned
+overlay/extension primitive proves local precedence and prototype reuse without
+full C3 recomposition, with a benchmark showing the actual hot-path reduction.
+
 * Design simulations
 
 The model currently passes the following paper simulations and must later pass
@@ -331,6 +342,52 @@ executable Scenario fixtures:
    combinations close.
 7. Inheriting Versioned does not add =schema-version= to a digest or C ABI
    projection unless the DomainCase projection explicitly selects it.
+
+* Phase 1 internal implementation
+
+=src/module-system/domain-case.ss= owns the first non-facade implementation.
+It provides POO-native slot, type, method/state contract, projection,
+CaseComponent, DomainCase, cache, closure, instance, diagnostic, and projection
+receipts.  It does not change =defpoo-object-family= or export a new public
+authoring DSL.
+
+Closure validates ordered component and parent identities, slot ownership and
+witnessed override rules, nominal type identity and ordered parent-type
+membership, executable method-refinement witnesses within one contract domain,
+projection selection, policy/strategy algebra agreement, and cache identity
+aliasing before calling =role-compose=.  Parent components remain declaration
+ordered, while their role prototypes are reversed at the left-precedence POO
+composition boundary so a child overrides its declared parent.  Effective slot
+validators then reject missing required slots and invalid runtime values at the
+instance boundary.
+
+The canonical SHA-256 key is domain-separated and contains only stable
+normalized identifiers, versions, refinements, witness identifiers, algebras,
+and a sorted projection-selection set.  Procedures, prototypes, object
+addresses, Agent identity, and instance values are excluded.  Consequently a
+warm hit additionally requires the exact module-owned CaseComponent and local
+override singleton objects used by the original closure.  A reconstructed
+definition with the same canonical descriptor is rejected as
+=module-owner-identity-alias= instead of reusing a cached case whose excluded
+procedures or prototypes may differ.  This is an intentional module-ownership
+policy, not structural cache equivalence.
+
+=t/domain-case-test.ss= proves cold/warm cache identity, one real shared
+prototype per unique case, instance isolation, explicit projection boundaries,
+parent-before-child declaration with child runtime precedence, slot/type/state
+validation, executable contract witnesses, and pre-cache conflict rejection.
+Its Scheme memory profile exercises one homogeneous 1000-Agent fleet and sparse
+1000-Agent fleets with =U= 8, 32, and 64 role/policy/strategy cases.  Each scale
+receipt reports exactly 1000 successful instance mixes; this truthfully exposes
+the current per-Agent overlay cost.  The performance gap above remains open and
+is not hidden by these correctness receipts.
+
+A local Scheme-side qualification run on 2026-07-12 completed all =U= 1, 8,
+32, and 64 fixtures in 1.19 seconds wall time with a maximum resident set of
+173506560 bytes and peak memory footprint of 161038840 bytes.  This is an
+observability receipt under the declared 512 MiB =gxi= profile, not a portable
+latency/RSS benchmark gate; repeatable CI distributions and the zero-C3 hot-path
+gate remain future qualification work.
 
 * Safety rules
 
