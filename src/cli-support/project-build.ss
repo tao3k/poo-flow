@@ -104,8 +104,7 @@
 (def (poo-flow-project-source-stages)
   (let* ((root (poo-flow-project-require-build-root))
          (runtime-root (path-expand "src" root))
-         (interface-root (path-expand "user-interface" root))
-         (parallelize (poo-flow-project-sync-build-worker-count!)))
+         (interface-root (path-expand "user-interface" root)))
     (list
      (make-package-source-stage
       "runtime"
@@ -114,7 +113,6 @@
       (map poo-flow-project-runtime-spec
            (filter poo-flow-project-runtime-module?
                    (poo-flow-project-source-modules runtime-root)))
-      parallelize
       'topology)
      (make-package-source-stage
       "user-interface"
@@ -123,7 +121,6 @@
       (poo-flow-project-prefix-modules
        "user-interface/"
        +poo-flow-project-user-interface-modules+)
-      parallelize
       'topology))))
 
 ;; : (-> [BuildOption] [BuildRequest])
@@ -142,7 +139,8 @@
   (build-plan-receipts-summary
    (package-source-stages-run!
     (poo-flow-project-source-stages)
-    options)))
+    (append options
+            [parallelize: (poo-flow-project-sync-build-worker-count!)]))))
 
 ;; : (-> Void)
 (def (poo-flow-project-clean!)
