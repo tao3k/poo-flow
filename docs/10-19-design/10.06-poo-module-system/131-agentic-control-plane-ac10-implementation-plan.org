@@ -52,6 +52,13 @@ claim-specific TCB families, evidence owners, immutable artifact digests,
 exclusions, and fail-closed states.  Prove that Lean evidence only labels named
 claims and that L3 requires mediation evidence.
 
+Delivery result: complete.  The verifier in
+=src/contract/release-assurance-claim-verifier.ss= keeps L0–L4 claim-specific,
+requires family-specific TCB components and immutable evidence references, and
+rejects L3 without runtime-kernel mediation or isolation/observation.  L4
+requires a complete Lean TCB and Lean-owned named proof evidence; it cannot
+promote an actual-effect claim.
+
 * S3 — Canonical vertical fixture
 
 Build one deterministic fixture joining Bundle/facets, runtime-v0 batch,
