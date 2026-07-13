@@ -16,7 +16,7 @@
         (only-in "../../utilities/contract-syntax.ss"
                  defcontract-family)
         :poo-flow/src/module-system/projection-syntax
-        :poo-flow/src/type-facts)
+        :poo-flow/src/type-facts/objects)
 
 (export poo-flow-runtime-filesystem-prototype
         poo-flow-runtime-volume-filesystem-prototype
