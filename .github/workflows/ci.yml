@@ -224,7 +224,8 @@ jobs:
           gxpkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           package_cache_ready=false
           if [ -d .gerbil/lib ]; then
-            if gxi -e '(begin (import :clan/base :clan/poo/object) (displayln "gerbil-package-cache-ready"))'; then
+            if GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" \
+              gxi tools/ci/gerbil-deps-ready.ss; then
               package_cache_ready=true
             else
               echo "Cached Gerbil packages are missing compiled dependency libraries; rebuilding"
