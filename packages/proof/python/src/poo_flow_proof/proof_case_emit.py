@@ -141,6 +141,54 @@ def emit_lean(schema: ProofCaseSchema) -> str:
     return "\n".join(lines)
 
 
+def emit_scheme(schema: ProofCaseSchema) -> str:
+    constants = [
+        ("poo-flow-proof-case-abi-version", schema.version),
+        ("poo-flow-proof-case-vector-size", schema.total_size),
+        ("poo-flow-proof-case-vector-alignment", schema.alignment),
+        ("poo-flow-proof-required-obligation-mask", schema.required_obligation_mask),
+    ]
+    constants.extend(
+        (f"poo-flow-proof-field-{field.name.replace('_', '-')}-offset", field.offset)
+        for field in schema.fields
+    )
+    constants.extend(
+        (f"poo-flow-proof-case-kind-{tag.name.replace('_', '-')}", tag.tag)
+        for tag in schema.case_kinds
+    )
+    constants.extend(
+        (f"poo-flow-proof-mediation-{tag.name.replace('_', '-')}", tag.tag)
+        for tag in schema.mediation_outcomes
+    )
+    constants.extend(
+        (f"poo-flow-proof-durability-{tag.name.replace('_', '-')}", tag.tag)
+        for tag in schema.durability_profiles
+    )
+    names = [name for name, _ in constants]
+    names.extend(
+        [
+            "poo-flow-proof-case-schema-fingerprint",
+            "poo-flow-proof-vector-digest-domain",
+            "poo-flow-proof-theorem-set-digest-domain",
+        ]
+    )
+    lines = [
+        ";;; Generated from proof-case-vector-v1.toml. Do not edit.",
+        "(export " + "\n        ".join(names) + ")",
+        "",
+    ]
+    lines.extend(f"(def {name} {value})" for name, value in constants)
+    lines.extend(
+        [
+            f'(def poo-flow-proof-case-schema-fingerprint "{schema.fingerprint_hex}")',
+            f'(def poo-flow-proof-vector-digest-domain "{schema.proof_identity.vector_domain}")',
+            f'(def poo-flow-proof-theorem-set-digest-domain "{schema.proof_identity.theorem_set_domain}")',
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def emit_vectors(schema: ProofCaseSchema) -> tuple[str, str]:
     vector = bytearray(schema.total_size)
     offsets = {field.name: field.offset for field in schema.fields}
@@ -181,6 +229,7 @@ def generated_artifacts(schema: ProofCaseSchema) -> dict[Path, str]:
             schema
         ),
         Path("lean/PooFlowProof/Generated/ProofCaseVector.lean"): emit_lean(schema),
+        Path("../../src/proof/generated/proof-case-vector-v1.ss"): emit_scheme(schema),
         Path("python/src/poo_flow_proof/generated/proof_case_vector.py"): emit_python(
             schema
         ),

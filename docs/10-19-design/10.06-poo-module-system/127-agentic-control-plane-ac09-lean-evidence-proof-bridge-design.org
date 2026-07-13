@@ -223,6 +223,9 @@ Decode the canonical vector, implement the AuthorizedEffectToken theorem set,
 and emit a ProofReceipt bound to the vector and theorem set.
 
 ** S5 Python CFFI differential
+Use the Scheme caller-owned native encoder as the upstream vector owner, then
+compare the C round trip, Python layout/status projection, and Lean canonical
+fixture without introducing a JSON representation.
 
 Consume the same bulk ABI from the production-capable Python runtime and compare
 Scheme/kernel vectors at byte, field, and semantic levels.

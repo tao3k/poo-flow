@@ -91,6 +91,10 @@ Focused gates:
 - no constructor that treats Scheme runtime execution as already proved.
 
 * Step 5 — Python CFFI Differential Runtime
+Scheme first projects the POO proof case into the exact caller-owned 424-byte
+native vector and computes the manifest-owned domain-separated SHA-256. The
+encoder rejects malformed digest widths, invalid hex, unsupported tags, and
+incorrect target sizes before the C/Python differential comparison.
 
 Expose the bulk proof-case ABI through the retained production Python runtime.
 Compare Scheme/kernel vectors at byte, field, and semantic levels. Python remains
