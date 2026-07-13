@@ -3,7 +3,18 @@ set -euo pipefail
 
 workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source_root="$(dirname "$workspace")"
+build_library="$workspace/.gerbil/lib"
+local_loadpath="$build_library:$source_root"
+
+if [[ "${1:-}" == "--source-first" ]]; then
+  local_loadpath="$source_root:$build_library"
+  shift
+fi
+
+if [[ -n "${GERBIL_LOADPATH:-}" ]]; then
+  local_loadpath="$local_loadpath:$GERBIL_LOADPATH"
+fi
 
 exec gxpkg env env \
-  "GERBIL_LOADPATH=$source_root" \
+  "GERBIL_LOADPATH=$local_loadpath" \
   "$@"

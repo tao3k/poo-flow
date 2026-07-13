@@ -4,4 +4,5 @@ set -euo pipefail
 workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 exec "$workspace/tools/run-native-scheme-env" \
+  --source-first \
   gxi "$workspace/build.ss" "$@"
