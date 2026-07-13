@@ -144,10 +144,21 @@ sh_test(
     name = "runtime_v0_symbol_surface_test",
     srcs = ["tests/runtime_v0_symbol_surface_test.sh"],
     args = [
+        "$(location @local_gerbil//:gxi)",
+        "$(location //:tools/validate-runtime-v0-symbol-surface.ss)",
         "$(location :runtime_c_shared)",
         "$(location :runtime_v0_exported_symbols)",
+        "$(location @clan_poo_sources//:gerbil.pkg)",
+        "$(location @gerbil_utils_sources//:gerbil.pkg)",
     ],
     data = [
+        "//:scheme_runtime_sources",
+        "//:tools/validate-runtime-v0-symbol-surface.ss",
+        "@clan_poo_sources//:sources",
+        "@clan_poo_sources//:gerbil.pkg",
+        "@gerbil_utils_sources//:gerbil.pkg",
+        "@gerbil_utils_sources//:sources",
+        "@local_gerbil//:gxi",
         ":runtime_c_shared",
         ":runtime_v0_exported_symbols",
     ],
@@ -155,7 +166,7 @@ sh_test(
 
 filegroup(
     name = "runtime_v0_exported_symbols",
-    srcs = ["tests/runtime_v0_exported_symbols.txt"],
+    srcs = ["tests/runtime_v0_exported_symbols.json"],
 )
 
 cc_test(

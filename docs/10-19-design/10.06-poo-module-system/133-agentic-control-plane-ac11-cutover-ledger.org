@@ -139,12 +139,14 @@ freeze.  A release decision remains required even when this matrix verifies.
 The machine-readable current receipt is emitted with:
 
 #+begin_src sh
-gxi tools/run-ac11-release-version-matrix.ss
+gxi tools/run-ac11-release-version-matrix.ss "$(git rev-parse HEAD)"
 #+end_src
 
-The runtime shared-library gate owns the exact exported-symbol allowlist beside
-the installed C consumers.  It rejects any unreviewed export and explicitly
-denies graph, compatibility, or legacy-named public symbols.
+The runtime shared-library gate owns a schema-versioned JSON symbol manifest
+beside the installed C consumers.  Shell collects =nm= output only; Scheme uses
+=:std/text/json= to parse the manifest, compare the exact symbol set, reject
+unknown schema versions, deny graph/compatibility/legacy names, and emit a JSON
+validation receipt.
 
 * Approval record required for mutation
 
