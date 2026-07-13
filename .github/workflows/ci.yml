@@ -213,7 +213,7 @@ jobs:
         uses: actions/cache/restore@v6.1.0
         with:
           path: |
-            ~/.gerbil/pkg
+            ~/.gerbil
             .gerbil
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
@@ -234,7 +234,7 @@ jobs:
           if [ "$package_cache_ready" = "true" ]; then
             echo "Using cached Gerbil package dependency build products"
           else
-            GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gxpkg deps --install
+            gxpkg deps --install
           fi
           gxpkg list
 
@@ -243,7 +243,7 @@ jobs:
         uses: actions/cache/save@v6.1.0
         with:
           path: |
-            ~/.gerbil/pkg
+            ~/.gerbil
             .gerbil
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
