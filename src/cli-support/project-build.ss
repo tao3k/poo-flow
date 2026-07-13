@@ -17,6 +17,14 @@
 
 (def poo-flow-project-root #f)
 
+(def (poo-flow-project-nono-c-binding-include-option)
+  (string-append "-I" (path-expand "bindings/nono-c")))
+
+(def (poo-flow-project-ffi-build-spec)
+  `((gsc: "src/modules/nono-sandbox/_nono"
+          "-cc-options" ,(poo-flow-project-nono-c-binding-include-option))
+    (ssi: "src/modules/nono-sandbox/_nono")))
+
 (def +poo-flow-project-interface-only-modules+
   '("module-system/object-family-syntax.ss"
     "module-system/init-syntax.ss"))
@@ -110,9 +118,11 @@
       "runtime"
       root
       "poo-flow"
-      (map poo-flow-project-runtime-spec
-           (filter poo-flow-project-runtime-module?
-                   (poo-flow-project-source-modules runtime-root)))
+      (append
+       (poo-flow-project-ffi-build-spec)
+       (map poo-flow-project-runtime-spec
+            (filter poo-flow-project-runtime-module?
+                    (poo-flow-project-source-modules runtime-root))))
       'topology)
      (make-package-source-stage
       "user-interface"

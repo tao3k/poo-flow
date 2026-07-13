@@ -257,7 +257,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gxpkg env gxtest t/unit-tests.ss
-          gxpkg env gxtest t/contract-tests.ss
-          gxpkg env gxc t/fixtures/object-load-valid/objects.ss
-          gxpkg env gxtest t/integration-tests.ss
+          tools/run-native-scheme-env gxtest t/unit-tests.ss
+          tools/run-native-scheme-env gxtest t/contract-tests.ss
+          tools/run-native-scheme-env gxc t/fixtures/object-load-valid/objects.ss
+          tools/run-native-scheme-env gxtest t/integration-tests.ss

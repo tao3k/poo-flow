@@ -2,6 +2,8 @@
 set -euo pipefail
 
 workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source_root="$(dirname "$workspace")"
 
-exec "$workspace/tools/run-native-scheme-env" \
-  gxi "$workspace/build.ss" "$@"
+exec gxpkg env env \
+  "GERBIL_LOADPATH=$source_root" \
+  "$@"
