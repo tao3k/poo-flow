@@ -21,9 +21,9 @@
   (string-append "-I" (path-expand "bindings/nono-c")))
 
 (def (poo-flow-project-ffi-build-spec)
-  `((gsc: "src/modules/nono-sandbox/_nono"
+  `((gsc: "src/modules/nono-sandbox/_nono.ss"
           "-cc-options" ,(poo-flow-project-nono-c-binding-include-option))
-    (ssi: "src/modules/nono-sandbox/_nono")))
+    (ssi: "src/modules/nono-sandbox/_nono.ss")))
 
 (def +poo-flow-project-interface-only-modules+
   '("module-system/object-family-syntax.ss"
