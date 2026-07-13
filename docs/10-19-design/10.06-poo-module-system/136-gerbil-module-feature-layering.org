@@ -310,6 +310,23 @@ system.
 
 * Delivery phases
 
+** Implementation status
+
+- [X] Phase 1: canonical vocabulary, four-layer boundary, and legacy guidance
+  removal.
+- [X] Phase 2: POO-native Feature fragments, Descriptor, Selection, Profile,
+  ActivationPlan, and pure resolver under =src/feature-system=.
+- [ ] Phase 3: compiled declaration macros and expansion-time diagnostics.
+- [ ] Phase 4: replace the remaining project-owned =use-module= code surface.
+- [ ] Phase 5: compile one real session FeatureProfile into DomainCases.
+- [ ] Phase 6: explicit dynamic plugin loader and provenance receipts.
+
+Phase 2 is split across three Gerbil modules: =model.ss= owns immutable POO
+values and named functional fragments, =resolver.ss= owns graph validation and
+ordering, and =interface.ss= is the explicit import/export facade.  POO object
+construction uses constant-slot instance overlays; it does not run C3 for every
+FeatureDescriptor, FeatureSelection, FeatureProfile, or Agent instance.
+
 1. Land this vocabulary and layering decision; reduce the old =use-module=
    Macro IR path to a non-compatibility canonical-link page with no legacy
    examples or contract.
