@@ -34,6 +34,13 @@ mutation gates are owned by =src/contract/release-assurance-manifest.ss= and
 =object<-alist= constructor still returns POO objects and avoids the unbounded
 interpreted large-=.o= slot composition observed during qualification.
 
+The focused =gxi= owner is guarded by =tools/process_memory_guard.py=.  The
+guard samples aggregate process-tree RSS, enforces elapsed time, terminates the
+whole process group on violation, preserves the child exit status otherwise,
+and emits an atomic =poo-flow.process-memory-guard.v1= JSON receipt.  S1 uses a
+512 MiB RSS ceiling and a bounded timeout; an exit 70 or 71 is a qualification
+failure, never an allowed memory exception.
+
 * S2 — Claim and TCB verifier
 
 Implement cumulative L0–L4 validation without global-level promotion.  Require
