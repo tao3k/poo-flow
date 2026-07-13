@@ -1,8 +1,8 @@
-#+title: Qualification POO Capability Composition
-#+subtitle: Recovering prototype reuse without changing wire or receipt contracts
+#+title: Qualification POO CaseComponent And DomainCase Composition
+#+subtitle: Binding reusable objects, types, and contracts without composition explosion
 #+author: POO Flow Contributors
 #+date: 2026-07-12
-#+status: Second bounded migration implemented
+#+status: DomainCase design; two bounded capability migrations implemented
 #+options: toc:3 num:t
 
 * Problem
@@ -12,7 +12,10 @@ prototype behavior.  Manifest, version, readiness, evidence, and receipt owners
 often behaved as independent record families with repeated slot validation.
 
 This design restores POO as a composition system while preserving functional
-control-plane projection and immutable boundary values.
+control-plane projection and immutable boundary values.  It also closes a
+larger gap: an object family currently has separate object, type, contract, and
+projection owners, but no repository-owned case closure that proves they were
+composed from the same reusable definition.
 
 * Capability graph
 
@@ -43,6 +46,291 @@ Each capability is a parameterized POO parent prototype and owns a disjoint
 slot set.  Domain objects use multiple parents through C3-backed =.mix= via the
 project's =poo-core-role-object= macro.  Existing accessors continue to resolve
 slots through =.ref=, so callers do not learn where a slot is inherited.
+
+* Decision: CaseComponent and DomainCase
+
+A reusable unit is not merely a parent prototype.  It is a module-owned
+=CaseComponent= that binds three inseparable specifications:
+
+#+begin_src text
+CaseComponent = <ObjectSpec, TypeSpec, ContractSpec>
+#+end_src
+
+- =ObjectSpec= owns prototype slots, methods, defaults, and extension
+  behavior.
+- =TypeSpec= owns nominal identity, parent-type membership, slot refinements,
+  and the family predicate.
+- =ContractSpec= owns construction requirements, state invariants, and method
+  pre/postconditions.
+
+A =DomainCase= is the sealed closure of an ordered component set plus local
+domain definitions:
+
+#+begin_src text
+DomainCase = close(CaseComponent*, LocalObject, LocalType, LocalContract,
+                   ExplicitProjectionSet)
+#+end_src
+
+An instance is constructed through a closed DomainCase.  Type and contract are
+therefore bound by construction and prototype lineage; they are not validators
+attached to an unrelated object afterward.  Binding does not require eager
+materialization of every lazy slot.  Static closure, lightweight construction
+checks, full domain validation, and external projection remain named stages.
+
+#+begin_src mermaid
+flowchart LR
+    subgraph Library["Module-owned CaseComponent library"]
+        V["Versioned\nObject + Type + Contract"]
+        R["RevisionBound\nObject + Type + Contract"]
+        ROLE["Role\nObject + Type + Contract"]
+        POLICY["Policy\nPOO value + Type + Contract"]
+        STRATEGY["Strategy\nCombinator + Type + Contract"]
+    end
+
+    DECL["defpoo-object-family declaration"]
+    CLOSE["Compile-time case closure\nownership + type + contract checks"]
+    CONFLICT["Reject conflict\nwith source-located diagnostic"]
+    CASE["Sealed DomainCase\nshared family prototype"]
+    INSTANCE["Domain instances"]
+    PROJECT["Explicit receipt / JSON / C ABI projection"]
+
+    V --> DECL
+    R --> DECL
+    ROLE --> DECL
+    POLICY --> DECL
+    STRATEGY --> DECL
+    DECL --> CLOSE
+    CLOSE -->|"ambiguous or incompatible"| CONFLICT
+    CLOSE -->|"closed"| CASE
+    CASE --> INSTANCE
+    INSTANCE --> PROJECT
+#+end_src
+
+The component list is the single semantic lineage.  No object, type, contract,
+policy, strategy, or projection implementation may silently substitute a
+different parent list.  Each dimension still uses its own correct algebra:
+C3 linearizes object behavior; type refinement follows subtype rules; contracts
+follow implication and invariant rules; policies use named functional policy
+algebras; strategies use named combinators; projections are explicitly
+selected.  C3 does not decide authorization, contract compatibility, or wire
+shape.
+
+* Component kinds
+
+The same CaseComponent closure applies to different reusable axes without
+pretending that all axes are ordinary inheritance:
+
+| Component kind | Object contribution | Type and contract contribution | Composition rule |
+|----------------+---------------------+--------------------------------+------------------|
+| Capability | slots and reusable operations | capability membership and invariant | C3 plus disjoint ownership |
+| Role | behavior defaults and required capabilities | delegation, communication, and result obligations | role refinement plus requirement satisfaction |
+| Policy | immutable POO policy value | input domain, decision range, and safety properties | named algebra such as deny-overrides or intersection |
+| Strategy | functional combinator value | input/output types and pre/postconditions | explicit sequencing, choice, or routing combinator |
+| Domain local | family slots and methods | nominal family type and cross-component invariants | explicit statically checked override |
+
+Policy and strategy values remain functional.  Making them CaseComponents binds
+their type and contract to the object family that selects them; it does not turn
+policy decisions or strategy execution into C3 method precedence.
+
+* Case closure rules
+
+Closure MUST reject an unresolved composition before a DomainCase is cached or
+instantiated.
+
+1. Compute one ordered component identity list and C3-linearize its object
+   prototypes.
+2. Union required slots.  A same-name slot is legal only when ownership is the
+   same and type, default, mutability, and merge semantics are compatible, or
+   when the declaration contains one explicit validated override.
+3. Derive a nominal domain subtype and all parent-type memberships.  Slot type
+   refinements must be compatible and result refinements must be covariant.
+4. Combine state invariants only when their declared domains are compatible.
+   A method override may keep or weaken an inherited precondition and may keep
+   or strengthen its postcondition.  It may not narrow calls promised by a
+   parent type.
+5. Select policy and strategy algebras by name.  A missing, competing, or
+   implicit last-wins algebra is a closure error.
+6. Select and rename external projections explicitly.  Projection candidates
+   may be reusable, but inherited prototype/type/contract metadata never enters
+   a projection automatically.
+
+The expander can decide binding, ownership, literal type relations, duplicate
+names, known algebras, and structural compatibility.  It cannot decide logical
+implication between arbitrary Scheme predicates.  Non-trivial contract
+refinement therefore requires an explicit compatibility witness, and may later
+bind a Lean proof/evidence receipt.  Runtime checks validate actual dynamic
+values; they do not retroactively legalize an unclosed static case.
+
+* Module and macro ownership
+
+Gerbil modules own reusable CaseComponents and sealed DomainCases.  Single
+module instantiation lets a compiled program share static prototypes, type
+descriptors, contracts, and closed family prototypes.  Module identity and
+stable schema/version identifiers, not pointer identity, form durable case
+identity.
+
+The macro system is the case compiler, not the semantic owner.  Extend the
+existing =defpoo-object-family= declaration surface with bounded component,
+type, contract, and projection clauses.  An internal =defpoo-case-component=
+helper may remove repeated owner definitions, but there MUST NOT be a second
+public alist/record/patch DSL or a =defpoo-module= shadow module system.
+
+Static declarations expand to ordinary Gerbil and POO definitions.  Imported
+components remain explicit module bindings.  Expansion validates the closure,
+preserves source locations, and generates direct AOT-linkable references.  It
+does not run domain work, discover modules dynamically, or populate a mutable
+process-global registry.
+
+* Multi-agent composition
+
+An Agent is an instance of a shared =AgentDomainCase=, not a unique inheritance
+graph.  Identity, session, task, artifact namespace, current budget, and other
+values that satisfy an existing contract belong to the instance.  Static facts
+that change slots, type membership, contract obligations, policy algebra,
+strategy input/output, or projection schema belong to the DomainCase key.
+
+Multi-agent relations close at a second level.  An =OrganizationDomainCase=
+references sealed AgentDomainCases and owns topology, delegation,
+communication, lifecycle, and aggregate result contracts.  It does not copy
+the Agent CaseComponents into every member.
+
+#+begin_src mermaid
+flowchart TD
+    LIB["CaseComponent library\ncapability / role / policy / strategy"]
+    VALIDATE["Declaration and closure validator"]
+    KEY["Canonical DomainCase key"]
+    CACHE["Scoped bounded DomainCase cache"]
+
+    A1["Explorer AgentDomainCase"]
+    A2["Worker AgentDomainCase"]
+    A3["Reviewer AgentDomainCase"]
+    A4["Manager AgentDomainCase"]
+    ORG["OrganizationDomainCase\ntopology + delegation + channel contracts"]
+    AGENTS["100--1000 Agent instances"]
+    BATCH["Batched explicit projections"]
+    REJECT["Conflict receipt\nno cache, no instance"]
+
+    LIB --> VALIDATE
+    VALIDATE -->|"invalid closure"| REJECT
+    VALIDATE -->|"valid sparse declaration"| KEY
+    KEY --> CACHE
+    CACHE --> A1
+    CACHE --> A2
+    CACHE --> A3
+    CACHE --> A4
+    A1 --> ORG
+    A2 --> ORG
+    A3 --> ORG
+    A4 --> ORG
+    ORG --> AGENTS
+    AGENTS --> BATCH
+#+end_src
+
+The case dependency graph is acyclic and module-linkable even when the runtime
+communication graph permits cycles.  Cross-agent rules such as
+=manager -> team-leader= and =team-leader -> worker= are OrganizationDomainCase
+contracts, not parent methods on every Agent.
+
+This design refines the scaling evidence in
+[[file:85-agentteams-composition-replication-research.org][AgentTeams Composition Replication Research]]:
+roles remain cheap overlays, policies remain explicit, strategies remain
+shallow functional combinators, and runtime adapters execute normalized
+projections rather than owning the organization semantics.
+
+* Sparse composition and case identity
+
+Let =N= be the Agent instance count and =U= the number of unique closed
+DomainCases.  The design target is =U << N=.  Closure work is proportional to
+the components referenced by the =U= demanded cases; instance work is
+proportional to =N=.  The system MUST NOT pre-materialize the Cartesian product
+of capabilities, roles, policies, strategies, and adapters.
+
+A canonical DomainCase key includes:
+
+- domain schema and version;
+- ordered component identities and versions;
+- static slot/type refinements and explicit overrides;
+- contract identities or digests and compatibility witnesses;
+- named policy and strategy algebras;
+- selected projection schemas.
+
+It excludes Agent identity, session identity, task value, current budget, and
+other dynamic values already admitted by the same contract.  Otherwise benign
+per-Agent values would force =U = N= and destroy reuse.  Keys use stable
+symbolic identities and digests, never prototype addresses.
+
+Static AOT declarations bind module-owned DomainCase constants directly.  A
+dynamic/plugin composition lane, when enabled, uses the same closure validator
+and an explicit scoped bounded cache.  It may lazily materialize only requested
+cases and evict unused dynamic cases; it may not introduce a mutable global
+registry or bypass module/plugin ownership.
+
+* Scale qualification model
+
+The implementation is not qualified by a small inheritance unit test alone.
+It must exercise Agent fleets while reporting =N= and =U= separately.
+
+| Scenario | N Agents | U DomainCases | Required observation |
+|----------+----------+---------------+----------------------|
+| Homogeneous fleet | 100, 500, 1000 | 1 | one closed case, isolated instances, no per-Agent C3 reconstruction |
+| Role-stratified fleet | 1000 | 4, 8, 16 | shared role cases and valid organization topology |
+| Policy/strategy variants | 1000 | 16, 32, 64 | only declared cases materialize; no Cartesian expansion |
+| Adversarial declarations | 0 instances | 100+ invalid cases | all ownership/type/contract/policy/projection conflicts reject before cache insertion |
+| Cold/warm reuse | 1000 | 1--64 | first-close cost separated from warm cache hits |
+| Clone isolation | 1000 | 1--16 | dynamic Agent state cannot leak through shared prototypes or contracts |
+| Batched handoff | 1000 | 1--64 | explicit projections preserve order/schema and exclude prototype metadata |
+| Memory guard | 1000 | 1--64 | bounded RSS, timeout receipt, and no =gxi= runaway expansion/materialization |
+
+Every scale receipt records:
+
+- =N=, =U=, component-reference count, and invalid-case count;
+- DomainCase cache hit ratio and instance-to-case reuse ratio;
+- cold closure and warm lookup latency;
+- construct, validate, policy/strategy resolve, and project p50/p95/p99;
+- allocation count, generated form count, peak RSS, and retained cache size;
+- invalid-composition rejection latency and proof/diagnostic owner;
+- batch size, projected bytes, and external schema/digest identity.
+
+Target complexity is sparse closure plus instance construction:
+
+#+begin_src text
+case closure    O(sum(components in demanded U cases))
+instantiation   O(N)
+retained shape  O(U * closed-case-size + N * live-instance-state)
+#+end_src
+
+These are qualification targets, not assumptions.  The performance harness
+must measure cold and warm paths and fail closed on unexpected allocation,
+timeout, or RSS growth.
+
+The guard belongs in Scheme.  Static expansion and dynamic closure expose
+bounded counters for component count, demanded case count, generated form
+count, closure depth, and materialized instance count.  A limit breach produces
+a POO-native rejection/guard receipt before further composition allocation.
+The =gxi= Scenario harness also declares and observes its memory profile so an
+expander or closure regression cannot be hidden by a Python wrapper, CLI-only
+limit, reduced concurrency, or an operating-system kill.
+
+* Design simulations
+
+The model currently passes the following paper simulations and must later pass
+executable Scenario fixtures:
+
+1. =Versioned + RevisionBound= closes because slot ownership, types, and
+   invariants are orthogonal.
+2. Two components owning =status= as Boolean and Symbol reject even if C3 could
+   select one value.
+3. An override that accepts fewer inputs than its inherited method rejects; a
+   stronger result guarantee remains admissible.
+4. Generic EvidenceBound and proof-linked assurance evidence do not compose
+   merely because both contain evidence-like fields.
+5. One Explorer AgentDomainCase can back 1000 isolated Agents while an
+   OrganizationDomainCase validates their topology once.
+6. Sixteen roles, thirty-two capability profiles, eight policies, and eight
+   strategies do not create 32768 cases; only explicitly referenced sparse
+   combinations close.
+7. Inheriting Versioned does not add =schema-version= to a digest or C ABI
+   projection unless the DomainCase projection explicitly selects it.
 
 * Safety rules
 
@@ -101,12 +389,23 @@ Focused tests cover:
 - inherited manifest schema/revision resolution and instance isolation;
 - rejection of a flat manifest without capability parents;
 - rejection when inherited and release-projected revisions diverge;
+- CaseComponent object/type/contract binding and DomainCase closure;
+- contract-variance, slot-type, policy-algebra, and projection conflicts;
+- sparse 100--1000 Agent composition with =N= and =U= reported separately;
+- shared AgentDomainCase instance isolation and OrganizationDomainCase topology;
+- cold closure, warm reuse, allocation, RSS, and rejection-cost measurements;
 - byte-identical JSON receipts before and after migration.
 
 * Next decision
 
-Review repeated behavior in the release/environment/assurance subobjects only
-when a semantic capability contract, rather than a shared field name, is
-proven.  Do not migrate proof-linked evidence or Bundle facets merely because
-they resemble generic qualification slots; their validation and composition
-algebras remain distinct.
+Before code migration, freeze the internal CaseComponent descriptor, DomainCase
+key, closure diagnostics, and the optional clauses added to
+=defpoo-object-family=.  Prove expansion hygiene and static conflict rejection
+without changing any public constructor or runtime projection.  Then rewire the
+three already composed qualification families through the generated closure and
+require golden JSON/receipt/canonical digest equality.
+
+Review repeated behavior in other object families only when object structure,
+type refinement, and contract semantics are all reusable.  Shared field names
+alone are insufficient.  Proof-linked evidence, Bundle facets, wire vectors,
+and runtime buffers keep their distinct composition algebras.

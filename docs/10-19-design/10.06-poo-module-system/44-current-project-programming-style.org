@@ -233,7 +233,24 @@ JSON, ABI, digest, or receipt projections.  Migration requires golden boundary
 equality before and after composition.
 
 The reference implementation and Mermaid composition graph are
-[[file:135-qualification-poo-capability-composition.org][Qualification POO Capability Composition]].
+[[file:135-qualification-poo-capability-composition.org][Qualification POO CaseComponent And DomainCase Composition]].
+
+Reusable inheritance units are module-owned =CaseComponents= that bind one POO
+object/prototype specification, one type refinement, and one contract
+refinement.  A constructible object family is a sealed =DomainCase= produced by
+closing an ordered component set plus local domain definitions.  The same
+component lineage governs all dimensions, but each keeps its correct algebra:
+C3 linearizes object behavior, subtype rules govern types, implication and
+invariant rules govern contracts, named functional combinators govern policies
+and strategies, and projections remain explicit.
+
+=defpoo-object-family= remains the single public declaration surface.  Gerbil
+modules own shared CaseComponents and DomainCases; bounded macros validate and
+lower declarations to ordinary POO and functional code.  Agents instantiate
+shared closed cases.  They MUST NOT synthesize or pre-materialize Cartesian
+products of capability, role, policy, strategy, and adapter variants.  See
+[[file:135-qualification-poo-capability-composition.org][CaseComponent And DomainCase Composition]]
+for closure laws, multi-agent scaling, and qualification gates.
 
 ** 10.06.44.60 Interfaces, Methods, And Dispatch
 Use interfaces, generic methods, or prototype dispatch when downstream modules
