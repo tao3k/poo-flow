@@ -16,6 +16,45 @@ def _camel(name: str) -> str:
     return "".join(part.capitalize() for part in name.split("_"))
 
 
+def positive_vector_bytes(schema: ProofCaseSchema) -> bytes:
+    vector = bytearray(schema.total_size)
+    offsets = {field.name: field.offset for field in schema.fields}
+    struct.pack_into("<I", vector, offsets["abi_version"], schema.version)
+    struct.pack_into("<I", vector, offsets["case_kind"], schema.case_kinds[0].tag)
+    vector[offsets["schema_fingerprint"] : offsets["schema_fingerprint"] + 32] = (
+        schema.fingerprint
+    )
+    for name, value in (
+        ("token_digest", 0x11),
+        ("policy_revision", 0x22),
+        ("effect_digest", 0x33),
+        ("semantic_root", 0x44),
+        ("execution_root", 0x55),
+        ("batch_root", 0x00),
+        ("subject_binding", 0x66),
+        ("resource_binding", 0x77),
+        ("action_binding", 0x88),
+        ("previous_evidence_root", 0x99),
+    ):
+        vector[offsets[name] : offsets[name] + 32] = bytes([value]) * 32
+    for name, value in (
+        ("nonce", 11),
+        ("epoch", 4),
+        ("sequence", 19),
+        ("required_obligation_mask", schema.required_obligation_mask),
+        ("present_obligation_mask", schema.required_obligation_mask),
+    ):
+        struct.pack_into("<Q", vector, offsets[name], value)
+    struct.pack_into("<I", vector, offsets["obligation_count"], len(schema.obligations))
+    struct.pack_into(
+        "<I", vector, offsets["mediation_outcome"], schema.mediation_outcomes[0].tag
+    )
+    struct.pack_into(
+        "<I", vector, offsets["durability_profile"], schema.durability_profiles[0].tag
+    )
+    return bytes(vector)
+
+
 def emit_c(schema: ProofCaseSchema) -> str:
     lines = [
         "/* Generated from proof-case-vector-v1.toml. Do not edit. */",
@@ -99,6 +138,7 @@ def emit_python(schema: ProofCaseSchema) -> str:
 
 
 def emit_lean(schema: ProofCaseSchema) -> str:
+    positive = positive_vector_bytes(schema)
     lines = [
         "/- Generated from proof-case-vector-v1.toml. Do not edit. -/",
         "namespace PooFlowProof.Generated.ProofCaseVector",
@@ -117,6 +157,9 @@ def emit_lean(schema: ProofCaseSchema) -> str:
         "def authorizedEffectTheoremNames : List String := [",
         *(f'  "{name}",' for name in schema.proof_identity.theorems),
         "]",
+        "def canonicalPositiveVectorBytes : List UInt8 := ["
+        + ", ".join(f"0x{value:02x}" for value in positive)
+        + "]",
         "",
     ]
     for prefix, tags in (
@@ -190,32 +233,7 @@ def emit_scheme(schema: ProofCaseSchema) -> str:
 
 
 def emit_vectors(schema: ProofCaseSchema) -> tuple[str, str]:
-    vector = bytearray(schema.total_size)
-    offsets = {field.name: field.offset for field in schema.fields}
-    struct.pack_into("<I", vector, offsets["abi_version"], schema.version)
-    struct.pack_into("<I", vector, offsets["case_kind"], schema.case_kinds[0].tag)
-    vector[offsets["schema_fingerprint"] : offsets["schema_fingerprint"] + 32] = (
-        schema.fingerprint
-    )
-    struct.pack_into(
-        "<Q",
-        vector,
-        offsets["required_obligation_mask"],
-        schema.required_obligation_mask,
-    )
-    struct.pack_into(
-        "<Q",
-        vector,
-        offsets["present_obligation_mask"],
-        schema.required_obligation_mask,
-    )
-    struct.pack_into("<I", vector, offsets["obligation_count"], len(schema.obligations))
-    struct.pack_into(
-        "<I", vector, offsets["mediation_outcome"], schema.mediation_outcomes[0].tag
-    )
-    struct.pack_into(
-        "<I", vector, offsets["durability_profile"], schema.durability_profiles[0].tag
-    )
+    vector = positive_vector_bytes(schema)
     positive = vector.hex() + "\n"
     malformed = vector[:-1].hex() + "\n"
     return positive, malformed

@@ -10,16 +10,16 @@ def digest (value : UInt8) : Digest32 :=
 
 def validVector : ProofCaseVector where
   caseKind := .authorizedEffectToken
-  tokenDigest := digest 1
-  policyRevision := digest 2
-  effectDigest := digest 3
-  semanticRoot := digest 4
-  executionRoot := digest 5
-  batchRoot := digest 6
-  subjectBinding := digest 7
-  resourceBinding := digest 8
-  actionBinding := digest 9
-  previousEvidenceRoot := digest 10
+  tokenDigest := digest 0x11
+  policyRevision := digest 0x22
+  effectDigest := digest 0x33
+  semanticRoot := digest 0x44
+  executionRoot := digest 0x55
+  batchRoot := digest 0x00
+  subjectBinding := digest 0x66
+  resourceBinding := digest 0x77
+  actionBinding := digest 0x88
+  previousEvidenceRoot := digest 0x99
   nonce := 11
   epoch := 4
   sequence := 19
@@ -36,16 +36,16 @@ def validRaw : RawProofCaseVector where
   abiVersion := abiVersion
   caseKind := caseKindAuthorizedEffectToken
   schemaFingerprintHex := schemaFingerprintHex
-  tokenDigest := (digest 1).bytes
-  policyRevision := (digest 2).bytes
-  effectDigest := (digest 3).bytes
-  semanticRoot := (digest 4).bytes
-  executionRoot := (digest 5).bytes
-  batchRoot := (digest 6).bytes
-  subjectBinding := (digest 7).bytes
-  resourceBinding := (digest 8).bytes
-  actionBinding := (digest 9).bytes
-  previousEvidenceRoot := (digest 10).bytes
+  tokenDigest := (digest 0x11).bytes
+  policyRevision := (digest 0x22).bytes
+  effectDigest := (digest 0x33).bytes
+  semanticRoot := (digest 0x44).bytes
+  executionRoot := (digest 0x55).bytes
+  batchRoot := (digest 0x00).bytes
+  subjectBinding := (digest 0x66).bytes
+  resourceBinding := (digest 0x77).bytes
+  actionBinding := (digest 0x88).bytes
+  previousEvidenceRoot := (digest 0x99).bytes
   nonce := 11
   epoch := 4
   sequence := 19
@@ -106,6 +106,10 @@ noncomputable def validProofReceipt : ProofReceipt :=
 
 theorem validVectorHasCanonicalSize :
     (encodeProofCaseVector validVector).length = vectorSize := by
+  native_decide
+
+theorem validVectorMatchesCanonicalPositiveBytes :
+    encodeProofCaseVector validVector = canonicalPositiveVectorBytes := by
   native_decide
 
 theorem validReceiptDerivesVectorDigest :

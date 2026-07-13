@@ -91,6 +91,10 @@ Focused gates:
 - no constructor that treats Scheme runtime execution as already proved.
 
 * Step 5 — Python CFFI Differential Runtime
+The differential harness executes Scheme rather than substituting a Python
+fixture, compares against the generator-owned Lean bytes, and round-trips the
+same buffer through CFFI. Failures identify the first divergent owner, field,
+and offset.
 Scheme first projects the POO proof case into the exact caller-owned 424-byte
 native vector and computes the manifest-owned domain-separated SHA-256. The
 encoder rejects malformed digest widths, invalid hex, unsupported tags, and

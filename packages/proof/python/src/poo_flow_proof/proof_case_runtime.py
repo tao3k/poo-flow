@@ -7,6 +7,7 @@ cross-runtime conformance byte-for-byte testable without a JSON boundary.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from enum import IntEnum
 from os import PathLike
@@ -22,6 +23,7 @@ from poo_flow_proof.generated.proof_case_vector import (
     MEDIATION_OUTCOMES,
     REQUIRED_OBLIGATION_MASK,
     SCHEMA_FINGERPRINT_HEX,
+    VECTOR_DIGEST_DOMAIN,
     VECTOR_ALIGNMENT,
     VECTOR_SIZE,
 )
@@ -49,6 +51,14 @@ class ProofCaseLayout:
     alignment: int
     abi_version: int
     schema_fingerprint: bytes
+
+
+@dataclass(frozen=True)
+class VectorDivergence:
+    expected_owner: str
+    actual_owner: str
+    field: str
+    offset: int
 
 
 def _u32(vector: bytes, field: str) -> int:
@@ -89,6 +99,29 @@ def validate_proof_case_vector(vector: bytes) -> ProofStatus:
     if any(vector[FIELD_OFFSETS["reserved"] :]):
         return ProofStatus.MALFORMED_EVIDENCE
     return ProofStatus.OK
+
+
+def proof_case_vector_digest(vector: bytes) -> bytes:
+    if len(vector) != VECTOR_SIZE:
+        raise ValueError("proof vector digest requires canonical vector size")
+    return hashlib.sha256(VECTOR_DIGEST_DOMAIN.encode() + b"\0" + vector).digest()
+
+
+def first_vector_divergence(
+    expected: bytes,
+    actual: bytes,
+    *,
+    expected_owner: str,
+    actual_owner: str,
+) -> VectorDivergence | None:
+    if len(expected) != len(actual):
+        return VectorDivergence(expected_owner, actual_owner, "vector_size", 0)
+    ordered = sorted(FIELD_OFFSETS.items(), key=lambda item: item[1])
+    for index, (field, offset) in enumerate(ordered):
+        end = ordered[index + 1][1] if index + 1 < len(ordered) else VECTOR_SIZE
+        if expected[offset:end] != actual[offset:end]:
+            return VectorDivergence(expected_owner, actual_owner, field, offset)
+    return None
 
 
 _CDEF = """

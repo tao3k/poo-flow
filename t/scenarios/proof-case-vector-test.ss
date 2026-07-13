@@ -3,7 +3,8 @@
         :poo-flow/src/proof/generated/proof-case-vector-v1
         :poo-flow/src/proof/proof-case-vector)
 
-(export proof-case-vector-test)
+(export proof-case-vector-test
+        canonical-proof-case)
 
 (def (hex-byte byte)
   (let (digits "0123456789abcdef")
