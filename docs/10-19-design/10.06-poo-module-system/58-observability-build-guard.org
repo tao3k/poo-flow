@@ -116,10 +116,97 @@ current build process with status 124. This is the minimal prevention layer that
 was missing in the earlier failure: an abnormal single-target compile no longer
 requires a human to notice and manually kill Gerbil.
 
-This is still not a full live RSS watchdog. A future deeper guard should run
-Gerbil compile targets under a supervised subprocess or expose compiler process
-identity so RSS and artifact growth can be sampled while the target is still
-running.
+** 10.06.58.42 P0 Compiler-Heap Containment
+The live watchdog above was not sufficient for a full =build.ss compile=.  A
+compiler invoked repeatedly through =std/make= can retain its compiler heap in
+the long-lived control-plane =gxi=.  Adding more watcher work to that process
+does not contain the heap; it can increase pressure while the compiler is still
+live.  Runs that grow to gigabyte scale must therefore never be reported as a
+successful build.
+
+The corrected boundary is process isolation, while build planning and policy
+remain Scheme-native:
+
+#+begin_src mermaid
+flowchart TB
+  BuildAPI["build.ss compile\nScheme build API"]
+  Plan["POO compile plan\ntopology layers + currentness"]
+  ControlGuard["Scheme control-plane guard\nRSS + total timeout"]
+  Unit["one stale compile unit"]
+  GXC["short-lived native gxc\ncompiler heap dies on exit"]
+  Structured["atomic structured spec\nminimal std/make child"]
+  Artifact["verified artifacts"]
+  Receipt["POO compile receipt\ncompleted or failed"]
+
+  BuildAPI --> Plan
+  Plan --> ControlGuard
+  ControlGuard --> Unit
+  Unit -->|plain Scheme source| GXC
+  Unit -->|gsc/ssi group| Structured
+  GXC --> Artifact
+  Structured --> Artifact
+  Artifact --> Receipt
+  ControlGuard --> Receipt
+#+end_src
+
+The implementation invariants are:
+- =build.ss compile= enters the guarded project-compile API; it must not call
+  the unguarded whole-project compiler directly;
+- Scheme owns topology order, stale-target selection, budgets, and the final
+  POO-native receipt;
+- a plain stale =.ss= target is compiled by a short-lived native =gxc=, so one
+  target's compiler heap cannot accumulate across the complete project;
+- structured =gsc:/ssi:= specs remain atomic and execute in a minimal child
+  =gxi= that imports only =std/make=;
+- the long-lived control-plane =gxi= has a Scheme-side RSS guard.  The default
+  limit is =768 MiB= and a violation exits with a non-zero guard receipt;
+- =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS= owns the whole compile timeout and
+  defaults to =1800= seconds.  It is intentionally distinct from historical
+  single-stage timing diagnostics;
+- native commands are resolved from the scrubbed project environment (or an
+  explicit =POO_FLOW_GXC=/=POO_FLOW_GXI= override); the build must not silently
+  select a Nix Gerbil toolchain;
+- TERM of the supervising build is not sufficient evidence of cleanup.  Final
+  verification must show no descendant or orphan =gxi=/=gxc= compiler process.
+
+This containment changes the safety property from observation after an
+unbounded compile to a bounded lifetime for every compiler heap:
+
+#+begin_src latex
+\operatorname{Compile}(P)
+  = \operatorname{TopoFold}
+      (\lambda u.\operatorname{SpawnAndReap}(\operatorname{Compiler},u), P)
+
+\forall u \in P:\quad
+  \operatorname{HeapLifetime}(u)
+  \subseteq \operatorname{ProcessLifetime}(u)
+#+end_src
+
+** 10.06.58.43 P0 Validation Receipt (2026-07-13)
+The first complete cold run after introducing compiler-heap containment returned
+status 0 with the following Scheme guard facts:
+- elapsed: =1,733,255 ms=;
+- control-plane peak: =709,100,728 bytes=;
+- control-plane limit: =805,306,368 bytes=;
+- total timeout: =1,800,000 ms=;
+- remaining compiler processes after completion: zero.
+
+One macro-heavy unit, =module-system/init-syntax.ss=, transiently used a child
+=gxc= plus =gsc= tree of roughly 0.50 GiB plus 1.18 GiB.  That cost was confined
+to one compiler tree and the complete tree was reaped before the next unit.  It
+must not be confused with permission to run multiple such trees in parallel.
+Future child-RSS policy must aggregate the whole descendant tree, not only the
+immediate =gxc= process.
+
+The immediate warm rerun returned status 0 with:
+- Scheme guard elapsed: =1,373 ms=;
+- Scheme guard peak: =406,802,840 bytes=;
+- operating-system maximum resident set size: =225,034,240 bytes=;
+- remaining compiler processes after completion: zero.
+
+These receipts are the P0 acceptance shape: a cold compile must finish inside
+the hard control-plane budgets, and a warm compile must prove that current
+artifacts are skipped without reviving compiler children.
 
 ** 10.06.58.45 Scenario Test Placement Rule
 The profile library gate exposed a second build-shape issue. A scenario test placed directly under =t/= became part of the package =tests= compile stage, even though it was meant to run through the gxtest scenario harness. On a cold compile this single target took more than a minute and emitted:

@@ -12,6 +12,7 @@
                  gslph-source-coverage)
         :gslph/src/build-api/framework
         :poo-flow/src/cli-support/project-build
+        :poo-flow/src/build-api/project-compile-guard
         (only-in :gerbil/gambit
                  exit
                  pretty-print))
@@ -60,7 +61,7 @@
                              verbose: (verbose #f))
   (help: "Compile the package"
    getopt: +poo-flow-build-getopt+)
-  (poo-flow-project-compile!
+  (poo-flow-project-compile-guarded!
    (poo-flow-project-options release optimized debug verbose)))
 
 (define-entry-point (clean)
