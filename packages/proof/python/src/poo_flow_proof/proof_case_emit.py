@@ -101,6 +101,15 @@ def emit_lean(schema: ProofCaseSchema) -> str:
         f"def requiredObligationMask : UInt64 := 0x{schema.required_obligation_mask:016x}",
         "",
     ]
+    for prefix, tags in (
+        ("caseKind", schema.case_kinds),
+        ("mediation", schema.mediation_outcomes),
+        ("durability", schema.durability_profiles),
+    ):
+        lines.extend(
+            f"def {prefix}{_camel(tag.name)} : UInt32 := {tag.tag}" for tag in tags
+        )
+    lines.append("")
     lines.extend(
         f"def field{_camel(field.name)}Offset : Nat := {field.offset}"
         for field in schema.fields

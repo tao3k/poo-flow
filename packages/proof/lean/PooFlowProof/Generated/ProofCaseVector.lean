@@ -7,6 +7,14 @@ def vectorAlignment : Nat := 8
 def schemaFingerprintHex : String := "bad9c5d0781d0a99e2f8d58cb94abae9dfc2eda4c71a01009897f7fc5419e0e7"
 def requiredObligationMask : UInt64 := 0x00000000000000ff
 
+def caseKindAuthorizedEffectToken : UInt32 := 1
+def mediationAllow : UInt32 := 1
+def mediationDeny : UInt32 := 2
+def mediationInvalidToken : UInt32 := 3
+def durabilityStrict : UInt32 := 1
+def durabilityBatched : UInt32 := 2
+def durabilityDiagnostic : UInt32 := 3
+
 def fieldAbiVersionOffset : Nat := 0
 def fieldCaseKindOffset : Nat := 4
 def fieldSchemaFingerprintOffset : Nat := 8
