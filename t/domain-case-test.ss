@@ -2,7 +2,8 @@
         :gslph/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/domain-case)
+        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/module-system/domain-case-syntax)
 
 (declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
@@ -82,19 +83,25 @@
      (list (cons 'agent-id (.ref value 'agent-id))
            (cons 'source-revision (.ref value 'source-revision))))))
 
-(def versioned-component
-  (poo-flow-case-component
-   'versioned 1 versioned-role versioned-type
-   (list schema-id-slot schema-version-slot)
-   (list versioned-contract)
-   (list runtime-projection)))
+(defpoo-case-component versioned-component versioned 1
+  (role versioned-role)
+  (type versioned-type)
+  (slots schema-id-slot schema-version-slot)
+  (contracts versioned-contract)
+  (projections runtime-projection)
+  (parents)
+  (policy-algebra #f)
+  (strategy-algebra #f))
 
-(def revision-component
-  (poo-flow-case-component
-   'revision-bound 1 revision-bound-role revision-type
-   (list revision-slot)
-   (list revision-contract)
-   '()))
+(defpoo-case-component revision-component revision-bound 1
+  (role revision-bound-role)
+  (type revision-type)
+  (slots revision-slot)
+  (contracts revision-contract)
+  (projections)
+  (parents)
+  (policy-algebra #f)
+  (strategy-algebra #f))
 
 (def (agent-role id revision (version 1))
   (poo-core-role-object

@@ -419,6 +419,41 @@ of 161415672 bytes.  This is an observability receipt under the declared 512
 MiB =gxi= profile, not a portable latency/RSS benchmark gate; repeatable CI
 distributions and the zero-C3 hot-path gate remain future qualification work.
 
+* Phase 2 declarative module authoring
+
+=src/module-system/domain-case-syntax.ss= owns two internal hygienic forms:
+=defpoo-case-component= and =defpoo-domain-case=.  They follow the existing
+Gerbil =defrules= style and expand to ordinary =poo-flow-case-component=,
+=poo-flow-domain-case-close=, =def=, =list=, and POO slot access.  They do not
+introduce an alist descriptor language, execute runtime work during expansion,
+or merge object/type/contract semantics into one macro layer.
+
+#+begin_src mermaid
+flowchart LR
+    Objects["Module-owned POO role/type/contract/projection objects"] --> ComponentMacro["defpoo-case-component"]
+    ComponentMacro --> Component["Ordinary CaseComponent POO object"]
+    Component --> DomainMacro["defpoo-domain-case"]
+    Cache["DomainCase cache"] --> DomainMacro
+    DomainMacro --> Expansion["Ordinary functional closure code"]
+    Expansion --> Receipt["Fail-closed closure receipt"]
+    Expansion --> Domain["DomainCase POO object or false"]
+#+end_src
+
+Clause order is fixed at expansion time.  Component and schema identities,
+parent component identities, and selected projection identities are hygienically
+lowered to symbols.  Role prototypes, type contracts, slot contracts, method or
+state contracts, projections, local overrides, policy algebra, and strategy
+algebra remain expressions whose resulting POO values are validated by the
+runtime closure.  This keeps the three semantic layers connected but distinct.
+
+The static Versioned and RevisionBound fixtures now use
+=defpoo-case-component= as the ordinary path, while the direct constructor
+remains available internally for dynamically generated benchmark variants.
+=t/domain-case-syntax-test.ss= adds fifteen checks covering identifier lowering,
+POO object identity, parent membership, DomainCase receipt/case bindings, child
+precedence, policy/strategy algebras, instance construction, and selected
+projection execution.  It does not change the per-instance dynamic =.mix= gap.
+
 * Safety rules
 
 - Capability slot ownership MUST be disjoint.  Duplicate capability identities
@@ -485,12 +520,18 @@ Focused tests cover:
 
 * Next decision
 
-Before code migration, freeze the internal CaseComponent descriptor, DomainCase
-key, closure diagnostics, and the optional clauses added to
-=defpoo-object-family=.  Prove expansion hygiene and static conflict rejection
-without changing any public constructor or runtime projection.  Then rewire the
-three already composed qualification families through the generated closure and
-require golden JSON/receipt/canonical digest equality.
+Before facade promotion, freeze the internal CaseComponent descriptor,
+DomainCase key, closure diagnostics, and the two declaration macro shapes.
+Keep direct constructors as an internal dynamic-generation escape hatch, not
+the ordinary module-authoring path.  Then rewire the three already composed
+qualification families through the generated closure and require golden
+JSON/receipt/canonical digest equality.
+
+The next independent performance slice must address the measured per-instance
+=role-compose= boundary.  It may replace that boundary only after a
+repository-owned overlay primitive proves local precedence, instance isolation,
+and prototype reuse without full C3 recomposition; the declaration macros do
+not conceal or solve that runtime cost.
 
 Review repeated behavior in other object families only when object structure,
 type refinement, and contract semantics are all reusable.  Shared field names
