@@ -84,6 +84,13 @@ The runner must support focused development subsets and a clean-build release
 mode.  The release mode rejects checkout-only Python imports and requires the
 installed C and wheel consumers.
 
+Delivery result: complete.  The POO-native registry and runner in
+=src/qualification/runner.ss= bind every receipt to its gate declaration digest,
+source revision, artifact, owner, and installed-consumer state.  Focused mode
+runs only selected development owners.  Release mode requires the canonical
+Scheme fixture, both installed C consumers, production Python, an isolated
+wheel with =PYTHONPATH= removed, Lean build, and native Lean FFI smoke.
+
 * S5 — Fault and performance closure
 
 Complete crash, timeout, cancel, retry, restore, indeterminate, fork, truncation,
