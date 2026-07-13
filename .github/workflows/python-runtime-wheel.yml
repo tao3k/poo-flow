@@ -185,7 +185,8 @@ jobs:
       - name: Build native Scheme package
         run: |
           GERBIL_LOADPATH="$(dirname "$GITHUB_WORKSPACE")" \
-            gxpkg env gxi build.ss compile
+          GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" \
+            gxi build.ss compile
 
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@0.19.0
