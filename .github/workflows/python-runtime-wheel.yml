@@ -118,21 +118,10 @@ jobs:
         run: |
           set -euo pipefail
           echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          ccache_gcc="$RUNNER_TEMP/ccache-gcc"
-          {
-            printf '#!/bin/sh\n'
-            printf 'exec ccache gcc "$@"\n'
-          } > "$ccache_gcc"
-          chmod +x "$ccache_gcc"
           gsc_wrapper="$RUNNER_TEMP/gerbil-gsc"
           {
             printf '#!/bin/sh\n'
-            printf 'mode=-dynamic\n'
-            printf 'for arg in "$@"; do\n'
-            printf '  case "$arg" in -c|-obj|-exe|-dynamic|-link) mode= ;; esac\n'
-            printf 'done\n'
-            printf 'if [ -n "$mode" ]; then set -- "$mode" "$@"; fi\n'
-            printf 'exec "%s" "-:~~=%s,~~bin=%s,~~include=%s,~~lib=%s" "-cc" "%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX" "$GERBIL_PREFIX/bin" "$GERBIL_PREFIX/include" "$GERBIL_PREFIX/lib" "$ccache_gcc"
+            printf 'exec "%s" "-:~~=%s,~~bin=%s,~~include=%s,~~lib=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX" "$GERBIL_PREFIX/bin" "$GERBIL_PREFIX/include" "$GERBIL_PREFIX/lib"
           } > "$gsc_wrapper"
           chmod +x "$gsc_wrapper"
           echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
@@ -141,11 +130,8 @@ jobs:
           "$gsc_wrapper" -v
           tmp_smoke="$(mktemp -d)"
           printf '(display "ok")\n' > "$tmp_smoke/gsc-smoke.scm"
-          (
-            cd "$tmp_smoke"
-            "$gsc_wrapper" -target C -c gsc-smoke.scm
-            test -f gsc-smoke.c
-          )
+          "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
+          test -f "$tmp_smoke/gsc-smoke.o1"
 
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
