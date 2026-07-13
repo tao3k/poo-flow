@@ -27,6 +27,13 @@ ABI-decision object families.  Add deterministic normalization, digest identity,
 duplicate rejection, construction-order invariance, and incomplete-manifest
 tests.  Keep interchange serialization outside the native C ABI.
 
+Delivery result: complete.  The object family, canonical normalization,
+SHA-256 identity, construction-order invariance, completeness, duplicate, and
+mutation gates are owned by =src/contract/release-assurance-manifest.ss= and
+=t/scenarios/release-assurance-manifest-test.ss=.  The accepted internal
+=object<-alist= constructor still returns POO objects and avoids the unbounded
+interpreted large-=.o= slot composition observed during qualification.
+
 * S2 — Claim and TCB verifier
 
 Implement cumulative L0–L4 validation without global-level promotion.  Require
