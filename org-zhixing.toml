@@ -1,0 +1,22 @@
+theme = "documents"
+theme_variant = "mocha"
+
+[theme_config]
+
+[site]
+title = "POO Flow Documentation"
+locale = "en-US"
+base_url = "https://tao3k.github.io/poo-flow/"
+
+[content]
+content_dir = "docs"
+content_base = "workspace"
+
+[behavior]
+lazy_lint = true
+
+[attachments]
+attach_id_dir = ".attach"
+check_vcs = false
+check_annex = false
+scan_orphans = false

@@ -1,0 +1,86 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/github-page.yml"
+      - "docs/**"
+      - "org-zhixing.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  ORG_ZHIXING_REPOSITORY: tao3k/org-zhixing-themes
+  # Replace main with an immutable release tag or commit after the first
+  # org-zhixing release. The config and workflow are otherwise version-ready.
+  ORG_ZHIXING_REF: main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ORG_ZHIXING_ROOT: ${{ runner.temp }}/org-zhixing
+      PAGES_OUTPUT: ${{ runner.temp }}/poo-flow-pages
+    steps:
+      - name: Checkout POO Flow content
+        uses: actions/checkout@v7
+
+      - name: Fetch Org Zhixing site builder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$ORG_ZHIXING_ROOT"
+          git -C "$ORG_ZHIXING_ROOT" remote add origin \
+            "https://github.com/${ORG_ZHIXING_REPOSITORY}.git"
+          git -C "$ORG_ZHIXING_ROOT" fetch --depth=1 origin "$ORG_ZHIXING_REF"
+          git -C "$ORG_ZHIXING_ROOT" checkout --detach FETCH_HEAD
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Org Zhixing
+        working-directory: ${{ runner.temp }}/org-zhixing
+        run: npm ci
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Build documents site
+        working-directory: ${{ runner.temp }}/org-zhixing
+        run: |
+          npm run pages:build -- \
+            --config "$GITHUB_WORKSPACE/org-zhixing.toml" \
+            --content "$GITHUB_WORKSPACE/docs" \
+            --base /poo-flow/ \
+            --out "$PAGES_OUTPUT"
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ env.PAGES_OUTPUT }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
