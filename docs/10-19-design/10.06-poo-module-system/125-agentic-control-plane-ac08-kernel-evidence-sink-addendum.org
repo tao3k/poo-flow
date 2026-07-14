@@ -33,7 +33,7 @@ sequenceDiagram
     E-->>K: "durable after-root and verified attestation"
     K->>K: "advance session root only after durable commit"
     else "reservation failed"
-    K-->>S: "effect not executed; reservation failure"
+    K-->>S: "effect not executed, reservation failure"
     end
     K-->>S: "committed or indeterminate receipt"
 #+end_src
