@@ -19,7 +19,10 @@
                  package-source-stages->requests
                  package-source-stages-clean!
                  package-source-stages-run!
-                 package-source-stages-spec))
+                 package-source-stages-spec)
+        (only-in :gslph/src/building/std-builder
+                 execution-window-controller?)
+        "../build-api/adaptive-execution-window.ss")
 
 (export poo-flow-project-build-options
         poo-flow-project-build-stage-labels
@@ -28,7 +31,8 @@
         poo-flow-project-clean!
         poo-flow-project-compile!
         poo-flow-project-configure-build-root!
-        poo-flow-project-build-requests)
+        poo-flow-project-build-requests
+        poo-flow-project-adaptive-cold-gate-available?)
 
 (def poo-flow-project-root #f)
 
@@ -146,6 +150,16 @@
          (> configured 0)
          configured)))
 
+(def (poo-flow-project-build-nonnegative-integer-from-env name fallback)
+  (let* ((raw (getenv name #f))
+         (configured (and raw (string->number raw))))
+    (cond
+     ((not raw) fallback)
+     ((and (integer? configured) (>= configured 0)) configured)
+     (else
+      (error "build environment value must be a nonnegative integer"
+             name raw)))))
+
 (def (poo-flow-project-build-worker-count)
   (or (poo-flow-project-build-positive-integer-from-env "GERBIL_BUILD_CORES")
       (poo-flow-project-build-positive-integer-from-env "CARGO_BUILD_JOBS")
@@ -158,56 +172,89 @@
     (setenv "GERBIL_BUILD_CORES" (number->string worker-count))
     worker-count))
 
-(def (poo-flow-project-source-stages include-ffi?)
-  (let* ((root (poo-flow-project-require-build-root))
+(def (poo-flow-project-adaptive-controller-from-env)
+  (let (hard-max-rss-bytes
+        (poo-flow-project-build-positive-integer-from-env
+         "POO_FLOW_BUILD_MAX_RSS_BYTES"))
+    (and hard-max-rss-bytes
+         (let (headroom-bytes
+               (poo-flow-project-build-nonnegative-integer-from-env
+                "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" 0))
+           (make-poo-flow-adaptive-execution-window-controller
+            (poo-flow-project-build-worker-count)
+            hard-max-rss-bytes
+            headroom-bytes)))))
+
+(def (poo-flow-project-resolve-adaptive-controller controller)
+  (cond
+   ((execution-window-controller? controller) controller)
+   (controller
+    (error "invalid POO Flow adaptive execution-window controller"
+           controller))
+   (else (poo-flow-project-adaptive-controller-from-env))))
+
+(def (poo-flow-project-adaptive-cold-gate-available? (controller #f))
+  (and (poo-flow-project-resolve-adaptive-controller controller) #t))
+
+(def (poo-flow-project-source-stages include-ffi? (controller #f))
+  (unless (or (not controller) (execution-window-controller? controller))
+    (error "invalid explicit execution-window controller" controller))
+  (let* ((runtime-batching (or controller 'topology))
+         (root (poo-flow-project-require-build-root))
          (runtime-root (path-expand "src" root))
          (interface-root (path-expand "user-interface" root)))
     (append
      (if include-ffi?
        (list
          (make-package-source-stage
-          +poo-flow-project-ffi-stage-label+
-         root
-         "poo-flow"
-         (poo-flow-project-ffi-build-spec)
-         #t))
+         +poo-flow-project-ffi-stage-label+
+          root
+          "poo-flow"
+          (poo-flow-project-ffi-build-spec)
+          #t))
        '())
      (list
        (make-package-source-stage
-        +poo-flow-project-runtime-stage-label+
-       root
-       "poo-flow"
-       (map poo-flow-project-runtime-spec
-            (filter poo-flow-project-runtime-module?
-                    (poo-flow-project-source-modules runtime-root)))
-       'topology)
+       +poo-flow-project-runtime-stage-label+
+        root
+        "poo-flow"
+        (map poo-flow-project-runtime-spec
+             (filter poo-flow-project-runtime-module?
+                     (poo-flow-project-source-modules runtime-root)))
+        runtime-batching)
        (make-package-source-stage
-        +poo-flow-project-user-interface-stage-label+
-       root
-       "poo-flow"
-       (poo-flow-project-prefix-modules
-        "user-interface/"
-        +poo-flow-project-user-interface-modules+)
-       'topology)))))
+       +poo-flow-project-user-interface-stage-label+
+        root
+        "poo-flow"
+        (poo-flow-project-prefix-modules
+         "user-interface/"
+         +poo-flow-project-user-interface-modules+)
+        runtime-batching)))))
 
 ;; : (-> [BuildOption] [BuildRequest])
-(def (poo-flow-project-build-requests options)
-  (package-source-stages->requests
-   (poo-flow-project-source-stages #t)
-   options))
+(def (poo-flow-project-build-requests options (controller #f))
+  (let (adaptive-controller
+        (poo-flow-project-resolve-adaptive-controller controller))
+    (package-source-stages->requests
+     (poo-flow-project-source-stages #t adaptive-controller)
+     options)))
 
 ;; : (-> [BuildOption] [[ModulePath]])
-(def (poo-flow-project-build-spec options)
-  (package-source-stages-spec
-   (poo-flow-project-source-stages #t)))
+(def (poo-flow-project-build-spec options (controller #f))
+  (let (adaptive-controller
+        (poo-flow-project-resolve-adaptive-controller controller))
+    (package-source-stages-spec
+     (poo-flow-project-source-stages #t adaptive-controller))))
 
 ;; : (-> [BuildOption] [BuildStageReceipt])
-(def (poo-flow-project-compile! options)
-  (build-plan-receipts-summary
-   (package-source-stages-run!
-    (poo-flow-project-source-stages #t)
-    (append options
-            [parallelize: (poo-flow-project-sync-build-worker-count!)]))))
+(def (poo-flow-project-compile! options (controller #f))
+  (let (adaptive-controller
+        (poo-flow-project-resolve-adaptive-controller controller))
+    (build-plan-receipts-summary
+     (package-source-stages-run!
+      (poo-flow-project-source-stages #t adaptive-controller)
+      (append options
+              [parallelize: (poo-flow-project-sync-build-worker-count!)])))))
 
 ;; : (-> Void)
 (def (poo-flow-project-clean!)

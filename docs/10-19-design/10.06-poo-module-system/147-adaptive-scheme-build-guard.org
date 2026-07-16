@@ -1,349 +1,363 @@
-#+title: RFC 0147 — Building Framework Gerbil Make Guard
+#+title: RFC 0147 - Adaptive Scheme Build Guard and Execution Windows
 #+author: POO Flow
-#+status: Accepted and Implemented
+#+status: Accepted and Implemented; Full Cold Gate Blocked
 #+language: en
 
 * Decision
 
-POO Flow defines exactly one standard Gerbil make project through the existing
-Building Framework.  The Scheme build guard observes that project; it does not
-replace, partition, or reschedule it.
+POO Flow keeps =std/make= as the only Scheme build executor and extends the
+Building Framework with an optional POO-native adaptive execution-window
+controller.  The controller does not create another scheduler.  It submits one
+contiguous, dependency-order-preserving window to one =std/make= coordinator,
+observes a Scheme-owned process-tree memory receipt, derives an immutable next
+controller, and then submits the next window.
 
-=build.ss= remains the canonical command surface.  Its =compile= entry point
-invokes =poo-flow-project-compile-guarded!=.  The guard starts one Scheme-owned
-process-tree monitor and then calls =poo-flow-project-compile!= exactly once.
-That function delegates the complete project to
-=package-source-stages-run!= with the machine-selected =parallelize:= value.
+The existing topology projection remains the default.  When no adaptive
+controller is supplied and =POO_FLOW_BUILD_MAX_RSS_BYTES= is not a positive
+integer, the runtime and user-interface stages retain the established one-window
+topology behavior.  Adaptive execution is activated only by an explicit POO
+controller or by a positive =POO_FLOW_BUILD_MAX_RSS_BYTES= value.
 
-The following responsibilities belong exclusively to Building Framework:
+The adaptive cold gate requires an explicit hard RSS cap.  A machine-derived
+outer project-guard fallback is useful protection, but it is not authorization
+for an adaptive full cold run.
 
-- conversion of package source stages into standard Gerbil make requests;
-- currentness checks and incremental rebuild selection;
-- dependency topology and source ordering;
-- compiler parallelism;
-- stage execution and build receipts.
+* Invariants
 
-The guard MUST NOT create its own spec plan, chunks, topology layers, retry
-queue, or child =gxi= process per subset.  Those mechanisms duplicate the
-build system and destroy the performance properties of a standard make
-project.
+1. =std/make= remains the only native executor.
+2. At most one =std/make= coordinator session is active at a time.
+3. Windows are contiguous prefixes of the remaining topology-ordered specs.
+4. No spec is reordered, dropped, or duplicated.
+5. There is no fixed global spec or chunk cap.
+6. Window changes are derived from named POO observations.
+7. Any invalid observation, non-completed outcome, cap mismatch, or cap breach
+   fails closed.
+8. One spec that cannot fit the hard cap fails closed rather than being retried
+   without a bound.
+9. Clean never receives an adaptive plan.
+10. Portable receipts are canonical JSON, not text logs or printed alists.
 
-* Canonical project
+* Measured bounded A/B evidence
 
-=src/cli-support/project-build.ss= declares three package source stages:
+The bounded comparisons use the same owners, source sets, and host.  The
+optimized lane merges unnecessary Building Framework barriers while retaining
+the single upstream executor.
 
-1. =nono-c-ffi= owns the generated C/SSI boundary;
-2. =runtime= owns the complete =src= module graph in topology mode;
-3. =user-interface= owns the declared composition modules in topology mode.
+** User-interface batch
 
-The public project functions have one direction of travel:
+| Metric                    | Baseline       | Optimized      | Delta    |
+|---------------------------+----------------+----------------+----------|
+| Specs                     | 8              | 8              | 0        |
+| Outer wall time           | 12.06 s        | 11.58 s        | -3.980%  |
+| Control-plane wall time   | 10.587950 s    | 9.996911 s     | -5.582%  |
+| Control-plane allocation  | 11.317668112 GB| 8.700916696 GB | -23.121% |
+
+The UI result establishes a real but secondary barrier-merging gain.  It does
+not establish that one unbounded session is safe for a full cold project.
+
+** Runtime target-cold 16-spec batch
+
+| Metric                    | Baseline       | Optimized      | Delta    |
+|---------------------------+----------------+----------------+----------|
+| Specs                     | 16             | 16             | 0        |
+| Outer wall time           | 18.48 s        | 16.39 s        | -11.310% |
+| Control-plane wall time   | 17.009764 s    | 14.741602 s    | -13.334% |
+| Control-plane allocation  | 3.761618040 GB | 4.880065216 GB | +29.733% |
+| Peak process-tree RSS     | 713572352 B    | 757792768 B    | +6.197%  |
+| Average active cores      | 1.733          | 1.989          | +0.256   |
+
+The runtime result improves wall time and average core use, but allocation and
+RSS increase.  This is the evidence that makes an always-one-window cold policy
+unsafe: the wall-time win cannot be generalized without a hard memory bound.
+
+* Cold-build truth and current gate
+
+An empty output root produces 39 dependency-closed topology groups containing
+376 specs.  The first 8 groups alone contain 223 specs.  The bounded baseline
+for those first groups reached approximately 104.046505 seconds and was
+terminated.  No complete cold receipt was produced, so a full cold build
+remains blocked.
+
+** Historical standardized baseline and regression interrupt
+
+The adaptive work does not erase the earlier build-system evidence.  The
+discarded per-subset child-=gxi= scheduler completed in 2,919,108 ms, about
+48.7 minutes.  That design duplicated Building Framework planning and paid
+process startup repeatedly, so it remains rejected evidence rather than a
+performance baseline.
+
+After the project was converted to one canonical Building Framework Gerbil
+make project, the same host completed a cold build in 571.71 seconds, about
+9.53 minutes, with a 2,617,507,840-byte peak process-tree RSS receipt.  A later
+cold attempt crossed twelve minutes while still compiling and was interrupted;
+its temporary progress stream contained 237 compile entries, but it produced
+no accepted final timing receipt.  The twelve-minute observation is therefore
+a regression stop, not a replacement baseline.
+
+These historical receipts define the performance rule for the next authorized
+cold run: it must use the canonical =build.ss= / Building Framework path, must
+retain Scheme-owned guard receipts, and must not silently accept a result slower
+than the 571.71-second host baseline.  The adaptive controller addresses the
+memory risk exposed by larger sessions; it does not waive the elapsed-time
+regression gate.
+
+The evidence supports two separate conclusions:
+
+- Barrier merging is real and useful, but it is a secondary gain.
+- The dominant cost remains expansion and import serialization followed by a
+  delayed flush of native compilation jobs.
+
+The observed core increase from 1.733 to 1.989 is too small to indicate broad
+phase overlap.  Merging barriers shortens coordinator overhead, while the main
+pipeline still waits too long before native work becomes available.  A single
+large session also raises memory pressure.  The local controller therefore
+bounds memory and preserves order; it does not claim to solve upstream phase
+serialization.
+
+* Landed architecture
+
+** Building Framework owner
+
+The harness implementation is owned by these files:
+
+- =src/building/std-builder.ss= defines the POO controller and observation
+  contracts, adaptive plan and result objects, sequential window runner, and
+  package-stage integration.
+- =src/building/observability.ss= owns topology and adaptive canonical JSON.
+- =t/std-builder-execution-window-test.ss= validates fake =make-proc=
+  execution, order, observations, empty plans, and one-spec cap failure.
+- =t/building-observability-test.ss= validates canonical adaptive JSON.
+
+The principal public APIs are:
+
+- =execution-window-controller?=
+- =execution-window-controller-observe-run!=
+- =execution-window-controller-next-state=
+- =make-execution-window-observation=
+- =make-adaptive-execution-window-plan=
+- =std-builder-run-adaptive-plan!=
+- =adaptive-execution-window-result-execution-windows=
+- =adaptive-execution-window-result-window-observations=
+- =build-adaptive-execution-windows->json-object=
+- =build-adaptive-execution-windows->json-string=
+
+The observation is a POO object with named slots for =result=, =outcome=,
+=baseline-rss-bytes=, =peak-rss-bytes=, =max-rss-bytes=, and =elapsed-ms=.
+=.next-state= receives the complete observation object and the actual spec
+count.  Loose multiple values are not the protocol.
+
+** POO Flow adapter and project activation
+
+The downstream implementation is owned by these files:
+
+- =src/build-api/process-memory-guard.ss= samples current-process-tree RSS,
+  creates POO guard receipts, and emits canonical JSON.
+- =src/build-api/adaptive-execution-window.ss= owns the immutable POO Flow
+  controller constructor, live guard adapter, and pure sizing transition.
+- =src/cli-support/project-build.ss= resolves optional caller or environment
+  activation for build truth while preserving non-adaptive clean behavior.
+- =t/build-api-adaptive-execution-window-test.ss= validates immutable sizing,
+  fail-closed outcomes, guard JSON, stage activation, and zero headroom.
+
+The principal POO Flow APIs are:
+
+- =make-poo-flow-adaptive-execution-window-controller=
+- =poo-flow-adaptive-execution-window-controller?=
+- =poo-flow-adaptive-execution-window-controller-next-state/with-current-rss=
+- =poo-flow-process-memory-guard-receipt->json-object=
+- =poo-flow-process-memory-guard-receipt->json-string=
+- =poo-flow-project-adaptive-cold-gate-available?=
+- the optional controller arguments on =poo-flow-project-source-stages=,
+  =poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
+  =poo-flow-project-compile!=.
+
+=poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
+=poo-flow-project-compile!= resolve the same caller or environment controller,
+so inspection and execution report the same build truth.  In contrast,
+=poo-flow-project-clean!= calls =poo-flow-project-source-stages= with no
+controller.  Clean therefore retains plain topology specs even when an RSS
+environment variable exists in the caller.
+
+* Adaptive sizing policy
+
+The POO controller stores:
+
+- worker count;
+- hard maximum RSS bytes;
+- caller headroom bytes;
+- current window size;
+- baseline RSS bytes;
+- last estimated bytes per spec;
+- window index;
+- named =.observe-run!= and =.next-state= methods.
+
+The initial window size is the worker count.  The caller supplies the hard RSS
+cap.  =POO_FLOW_BUILD_RSS_HEADROOM_BYTES= is optional and nonnegative; its
+default is exactly 0.  There is no percentage-derived default and no fixed
+global spec cap.
+
+The constructor fails early unless:
+
+#+begin_example
+hard-max-rss-bytes > baseline-rss-bytes + headroom-bytes
+#+end_example
+
+Each observation wraps the upstream thunk with the current-process Scheme
+guard under =dynamic-wind=.  RSS is the complete process tree rooted at the
+current =gxi=, including native compiler descendants.
+
+After a completed receipt, the controller computes:
+
+#+begin_example
+observed-bytes-per-spec =
+  max(1, ceil(max(0, peak-rss - start-baseline-rss) / actual-spec-count))
+
+estimated-bytes-per-spec =
+  max(previous-estimate, observed-bytes-per-spec)
+
+available-bytes =
+  hard-cap - current-process-tree-rss - caller-headroom
+
+measured-capacity =
+  max(1, floor(max(0, available-bytes) / estimated-bytes-per-spec))
+
+next-window-size =
+  max(1, min(measured-capacity, current-window-size + worker-count))
+#+end_example
+
+Growth is therefore limited to one worker-count quantum per successful
+window.  Shrinkage is immediate.  The conservative maximum of the previous and
+current estimates prevents an optimistic low-growth sample from erasing a
+known higher memory cost.
+
+Only =completed= and =ok= outcomes are accepted.  Invalid receipt shape,
+non-integer measurements, hard-cap mismatch, guard failure, or peak RSS above
+the controller cap raises an error before another window is attempted.
+
+* Single-executor control flow
 
 #+begin_src mermaid
 flowchart TD
-  A["build.ss compile"] --> B["Scheme guard config"]
-  B --> C["Start one process-tree RSS monitor"]
-  C --> D["poo-flow-project-compile! once"]
-  D --> E["POO Flow package source stages"]
-  E --> F["Building Framework package-source-stages-run!"]
-  F --> G["Standard Gerbil make requests"]
-  G --> H["Currentness, DAG, and parallel compilation"]
-  H --> I["Building Framework receipt summary"]
-  I --> J["Stop Scheme monitor"]
-  J --> K["Combined POO-native build and guard receipt"]
-  C --> L{"RSS or optional deadline exceeded?"}
-  L -->|"yes"| M["Fail closed with guard receipt"]
-  L -->|"no"| H
+  C["POO immutable controller"] --> P["Building Framework adaptive plan"]
+  P --> W["Next contiguous dependency-ordered window"]
+  W --> M["One std/make coordinator session"]
+  M --> G["Scheme process-tree guard and POO observation"]
+  G --> Q{"Outcome completed and peak within hard cap?"}
+  Q -->|"no"| F["Fail closed; do not attempt another window"]
+  Q -->|"yes"| N["Derive immutable next controller"]
+  N --> R{"Specs remain?"}
+  R -->|"yes"| W
+  R -->|"no"| J["Canonical adaptive JSON result"]
+  X["No second executor and no concurrent coordinator"] -. invariant .-> M
 #+end_src
 
-=poo-flow-project-build-requests= is the inspection surface for the standard
-Building Framework requests.  =poo-flow-project-build-spec= is the declared
-Gerbil make source specification.  =poo-flow-project-compile!= is the sole
-execution surface.  The guard calls the execution surface rather than
-reconstructing requests from the inspection surfaces.
+The loop is a Building Framework extension around its existing effect
+boundary.  It does not call =gsc= directly, create a per-spec =gxi= scheduler,
+or overlap multiple =std/make= coordinators.
 
-* Ownership
+* Canonical receipt contracts
 
-- =build.ss= owns the public =spec=, =compile=, and =clean= commands.
-- =src/cli-support/project-build.ss= owns project discovery, stage
-  declarations, build options, worker selection, standard request execution,
-  and clean behavior.
-- Building Framework owns make request semantics, currentness, topology,
-  parallelism, execution, and build receipt aggregation.
-- =src/build-api/project-compile-guard.ss= owns only adaptive guard
-  configuration and the combined POO-native receipt.
-- =src/build-api/process-memory-guard.ss= owns process-tree RSS sampling,
-  optional elapsed-time enforcement, fail-closed termination, and the raw
-  guard receipt.
-- The configured =gxi= and Gerbil tools on =PATH= are authoritative.  No
-  Cellar-internal or Nix-specific executable path is embedded in the project.
+The established topology schema remains unchanged:
 
-* Resource policy
+- =gslph.build-topology-execution-windows.v1=
 
-The guard protects the full build process tree rooted at the current =gxi=.
-It therefore observes the Scheme process and compiler descendants without
-starting another compile scheduler.
+It describes the default topology projection, including group count, upstream
+session count, eliminated barriers, spec count, and dependency-order
+preservation.
 
-The default RSS ceiling is half of detected physical memory, with 768 MiB as
-the minimum and as the conservative discovery fallback.  This limit is a
-machine-derived safety boundary, not a worker-count formula.  Building
-Framework independently selects the highest standard parallelism allowed by
-=GERBIL_BUILD_CORES=, =CARGO_BUILD_JOBS=, =NUM_JOBS=, or the detected CPU
-count.
+Adaptive execution uses a distinct schema:
 
-There is no machine-independent build timeout.  An operator or CI policy may
-set =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=; unset or zero means no deadline.
-The available policy inputs are:
+- =gslph.build-adaptive-execution-windows.v1=
 
-- =POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES=;
-- =POO_FLOW_BUILD_MAX_RSS_BYTES=;
-- =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=;
-- =POO_FLOW_BUILD_GUARD_SAMPLE_SECONDS=;
-- the Building Framework worker variables listed above.
+It projects only windows that were actually attempted and completed into the
+result.  It records actual window specs and per-window spec counts, dependency
+order preservation, worker count, hard RSS cap, and each observation's outcome,
+baseline RSS, peak RSS, maximum RSS, and elapsed milliseconds.
 
-The former chunk variables are not part of this design.  A future adaptive
-parallelism feature, if required, must be implemented as a Building Framework
-extension over its standard request executor rather than as a second project
-scheduler.
+The Scheme guard uses:
 
-* Receipt contract
+- =poo-flow.process-memory-guard.v1=
 
-Successful compilation returns one POO-native receipt containing:
+Its public JSON contains stable =kind= and =schema= strings, numeric =version:
+1=, outcome, exit fields, process-tree peak and maximum RSS, elapsed
+milliseconds, optional timeout, and a JSON-safe label.
 
-- =build-owner=gslph-building-framework=;
-- =build-mode=standard-gerbil-make-project=;
-- the three canonical stage labels;
-- detected physical memory and the effective RSS ceiling;
-- peak process-tree RSS and optional deadline;
-- the original Building Framework receipt summary;
-- the Scheme guard receipt.
+All three contracts use Gerbil's native JSON support with sorted keys for the
+canonical string.  A =.txt= progress stream is diagnostic only and is not a
+receipt.  Printed alists remain internal or compatibility projections and are
+not the public record format.
 
-On an RSS or explicit deadline violation, the raw guard receipt is emitted
-before fail-closed termination.  Build receipts remain owned by Building
-Framework; the guard does not translate individual modules into a second
-receipt vocabulary.
+* Focused implementation receipts
 
-* Implemented topology execution window phase
+No full build was run.  Every focused command was bounded by 90 seconds.
 
-The Building Framework now projects dependency-closed topology groups into one
-upstream execution window.  The projection preserves the full dependency order,
-flattens the non-empty stale or affected topology layers in that order, and
-submits the resulting outer spec list through one upstream =std/make= session.
-An empty plan produces no execution window and therefore no upstream session.
+| Check | Exact focused receipt |
+|-------+-----------------------|
+| Harness dynamic compile | =timeout 90s gxpkg env gxc src/building/model.ss src/building/native-toolchain.ss src/building/std-builder.ss src/building/observability.ss t/std-builder-execution-window-test.ss t/building-observability-test.ss=; exit 0; 13.25 s |
+| Harness execution-window runtime | Imported =:gslph/t/std-builder-execution-window-test= and ran =main= under =timeout 90s gxpkg env gxi=; exit 0; seven cases; =All tests OK= |
+| Harness observability runtime | Imported =:gslph/t/building-observability-test= under =timeout 90s gxpkg env gxi=; exit 0; adaptive canonical JSON assertions completed |
+| POO Flow targeted compile | Compiled =process-memory-guard.ss=, =adaptive-execution-window.ss=, =project-build.ss=, and =build-api-adaptive-execution-window-test.ss= from the non-Nix harness environment with the refreshed harness load path; exit 0; 6.87 s |
+| POO Flow focused runtime | Imported =:poo-flow/t/build-api-adaptive-execution-window-test= under a 90-second timeout; exit 0; seven cases; =All tests OK=; canonical guard JSON emitted |
+| Diff hygiene | =rtk git diff --check= in both repositories; exit 0 |
 
-The effect owner remains =src/building/std-builder.ss=.  The Building Framework
-does not add a thread pool, call =gsc= directly, replace the upstream scheduler,
-or change the positional ABI of =build-stage= or =build-request=.  Parallel work,
-when available, remains owned by the upstream =std/make= implementation.  The
-new planning helper is a pure transformation; =std-builder-run-spec!= remains
-the only effect boundary for each projected window.
+The POO Flow focused suite covers immutable growth, immediate shrink with a
+conservative estimate, constructor rejection when the cap cannot cover the
+live baseline plus headroom, non-completed hard-cap failure, canonical guard
+JSON parsing and round trip, explicit versus default stage batching, and
+environment activation with headroom 0.
 
-#+begin_src mermaid
-flowchart LR
-  DAG["Full Scheme dependency DAG"] --> GROUPS["Dependency-closed topology groups"]
-  GROUPS --> WINDOW["One ordered Building Framework execution window"]
-  WINDOW --> COORDINATOR["One std/make coordinator session"]
-  COORDINATOR --> WORKERS["Upstream workers (std/make owned)"]
-  WORKERS --> RECEIPT["gslph.build-topology-execution-windows.v1 JSON receipt"]
-#+end_src
+The direct Nix compile environment still exposes the known Apple SDK and
+Homebrew Gerbil =stdio.h= conflict.  The focused receipts use the non-Nix
+Gerbil environment and therefore validate the feature without treating that
+toolchain collision as a code result.
 
-** Stable JSON receipt
+* Acceptance and full-cold gate
 
-The sibling schema is =gslph.build-topology-execution-windows.v1=.  Its public
-serializers produce a native Gerbil JSON object and a canonical JSON string;
-raw alists are not a public DSL.  The schema uses English kebab-case keys:
+The landed code and focused receipts close the bounded implementation phase.
+They do not authorize a full cold build.
 
-- =schema=
-- =version=
-- =metric-scope=
-- =upstream-executor=
-- =topology-group-count=
-- =upstream-session-count=
-- =eliminated-barrier-count=
-- =spec-count=
-- =dependency-order-preserved=
+A full cold run MUST NOT start until both conditions hold:
 
-=eliminated-barrier-count= is =max(0, topology-group-count -
-upstream-session-count)=.  =spec-count= is measured from the topology groups
-before window projection.  =dependency-order-preserved= compares the flattened
-topology plan with the flattened execution-window plan.
+1. the caller supplies an explicit POO controller or a positive
+   =POO_FLOW_BUILD_MAX_RSS_BYTES= hard cap; and
+2. bounded receipts on the same host demonstrate valid canonical JSON,
+   completed outcomes, preserved dependency order, and peak RSS below the cap.
 
-** Live pure-plan receipts
+If either condition is absent, =poo-flow-project-adaptive-cold-gate-available?=
+must report the unavailable state and the project retains its default
+one-window topology behavior.  The first authorized cold run must preserve all
+completed per-window receipts and stop at the first failed boundary.
 
-| Lane              | Topology groups | Specs | Upstream sessions | Eliminated barriers | Dependency order preserved |
-|-------------------+-----------------+-------+-------------------+---------------------+----------------------------|
-| Runtime modules   |              33 |   144 |                 1 |                  32 | true                       |
-| User interface    |               3 |     8 |                 1 |                   2 | true                       |
-
-These receipts describe the pure plan projection.  They do not claim that the
-guard owns worker scheduling or that every project-wide cold-build dependency
-has been exercised.
-
-** Focused verification receipts
-
-| Check                                      | Result | Elapsed time |
-|--------------------------------------------+--------+--------------|
-| =std-builder.ss= source expansion          | pass   | 0.81 s       |
-| =std-builder.ss= dynamic module compile    | pass   | 2.97 s       |
-| Focused std-builder suite, six checks      | pass   | 0.57 s       |
-| Observability module and test rebuild      | pass   | each < 90 s  |
-| Focused observability JSON import and run  | pass   | 1.48 s       |
-
-The focused tests cover ordered multi-layer projection into one window, the
-zero-work case, a counting fake =make-proc=, preserved =current?=/=skipped=
-semantics, canonical JSON parsing and round-trip serialization, the =3 -> 1=
-barrier example, and the empty receipt.
-
-A full cold build remains gated.  The focused receipts above are intentionally
-not presented as a substitute for a separately authorized project-wide cold
-build with the complete native toolchain and dependency closure available.
-
-* Performance evidence and regression gate
-
-The discarded scheduler produced 48 chunks for 386 specifications, including
-44 runtime chunks.  A fresh no-op =gxi= import cost approximately 7.67 seconds
-on the observed host, so process startup alone imposed a floor above six
-minutes.  The complete guarded recovery build reported 2,919,108 ms, or about
-48.7 minutes.  That receipt demonstrated monitoring, not acceptable build
-performance.
-
-Reducing the duplicate scheduler to three stage processes produced an
-incremental receipt near 60.2 seconds, but it still reconstructed Building
-Framework requests outside their owner and was therefore rejected.
-
-The corrected regression gate measures the canonical command, not an
-alternate harness:
-
-1. a warm =build.ss compile= must execute one standard project request path;
-2. a cold build must not scale wall time with an artificial =gxi= process
-   count;
-3. receipts must identify Building Framework as the build owner;
-4. RSS observability must remain Scheme-owned and active for the complete
-   project;
-5. no project compile plan, chunk, split, or per-chunk environment API may be
-   exported.
-
-The corrected path passed both measurements on the same 32 GiB macOS host:
-
-#+begin_example
-warm no-op
-  real=5.97s
-  guard-elapsed-ms=495
-  peak-rss-bytes=232456192
-
-cold project build after build.ss clean
-  real=571.71s
-  guard-elapsed-ms=567319
-  peak-rss-bytes=2617507840
-  max-rss-bytes=17179869184
-  timeout-ms=#f
-#+end_example
-
-The cold standard-project build took approximately 9.53 minutes, 19.6% of
-the former 48.7-minute guarded recovery time, a wall-time reduction of about
-80.4%.  The old result is retained solely as rejected-design evidence.
-
-* Validation
-
-- =t/cli-support-project-building-test.ss= validates the three canonical
-  Building Framework requests and their source ownership.
-- =t/build-api-project-compile-guard-test.ss= validates the guard owner,
-  standard-project mode, stage identity, machine-derived RSS policy, and the
-  absence of a fixed timeout.
-- =t/build-api-process-memory-guard-test.ss= validates process-tree RSS,
-  fail-closed limits, optional deadlines, and receipt fields.
-- Warm and cold =build.ss compile= receipts close implementation validation:
-  5.97 seconds warm and 571.71 seconds cold on the recorded host.
+Phase-level overlap remains an upstream proposal.  The next performance path
+is to change the upstream expansion/import and native-job flush behavior so
+native compilation can overlap earlier with Scheme expansion.  That work must
+remain inside the canonical =std/make= coordinator; it must not introduce a
+second executor in POO Flow.
 
 * Rejected alternatives
 
-** Per-spec or per-chunk child gxi scheduler
+** Always one unbounded session
 
-Rejected.  It duplicates currentness, topology, scheduling, and receipt
-ownership already provided by Building Framework.  Its startup multiplicity
-was a root cause of the 48.7-minute build.
+Rejected for adaptive cold execution.  It improves bounded wall time but the
+runtime A/B increases allocation by 29.733% and RSS by 6.197%.
 
-** Three hand-built stage requests in the guard
+** Fixed chunk sizes or a global spec ceiling
 
-Rejected.  Fewer duplicate processes reduce the symptom but retain the wrong
-owner boundary.  Stage construction belongs to =project-build.ss=.
+Rejected.  They encode one host's behavior and cannot explain changes from
+receipts.
 
-** Fixed chunk sizes or worker envelopes
+** Concurrent std/make coordinators
 
-Rejected.  They encode one machine's behavior and compete with standard
-Gerbil make parallelism.
+Rejected.  They duplicate scheduling ownership and make the hard RSS cap more
+difficult to enforce.
 
-** Python-owned monitoring
+** Per-spec child gxi scheduling
 
-Rejected.  Gerbil build truth and its safety guard are Scheme responsibilities
-and must remain testable by =gxi= without a Python control plane.
+Rejected.  Prior process multiplicity imposed dominant startup overhead and
+duplicated Building Framework currentness, topology, and receipt ownership.
 
-* 2026-07-16 Regression Interrupt and JSON Receipt Contract
+** Python-owned build policy
 
-The historical cold-build receipt for this machine is 571.71 seconds.  The
-observed cold run on 2026-07-16 crossed twelve minutes while still compiling
-and was therefore interrupted.  At interruption, the temporary progress stream
-contained 237 compile entries.  No final timing receipt was accepted because
-the previous observer emitted its aggregate only after the complete plan.
-
-This is a regression stop, not a new baseline.  A slower run MUST NOT replace a
-known-good machine baseline merely because it eventually completes.
-
-** Guard ownership
-
-The Building Framework owns the execution-boundary mechanism.  The caller owns
-the machine-specific budget policy and supplies a guard derived from a prior
-receipt.  The framework contains no universal nine-minute or thirty-minute
-constant.
-
-The guard is evaluated before and after every topology-layer item.  Completed
-layer observations are emitted immediately through a callback.  A budget
-violation raises a Scheme error at the next layer boundary, so the maximum
-overrun is bounded by the currently executing layer rather than the remaining
-build plan.
-
-#+begin_src mermaid
-flowchart LR
-    A["Machine baseline JSON receipt"] --> B["Caller derives elapsed budget"]
-    B --> C["Scheme layer-boundary guard"]
-    C --> D["Run one topology layer"]
-    D --> E["Emit stage JSON receipt"]
-    E --> C
-    C -->|"budget exceeded"| F["Block build and preserve completed receipts"]
-    C -->|"plan complete"| G["Emit summary JSON receipt"]
-#+end_src
-
-** Canonical metadata format
-
-Formal observability metadata is JSON generated by Gerbil's native
-=:std/text/json= library.  The public observability API exposes JSON objects,
-canonical JSON strings, and JSON writers.  It does not expose alist or printed
-Scheme metadata projections.
-
-The stage and summary schemas are:
-
-- =gslph.build-stage-observation.v1=
-- =gslph.build-observations.v1=
-- =gslph.build-observations-summary.v1=
-
-The arbitrary runner result remains available only on the in-process Scheme
-receipt.  It is deliberately excluded from portable metadata because it is not
-guaranteed to be JSON-serializable.  The JSON receipt records status, work-item
-count, wall time, control-plane CPU and GC metrics, and allocation metrics.
-Native compiler child CPU remains explicitly marked as excluded.
-
-The interrupted textual progress log was temporary diagnostic output and was
-removed.  It is not a receipt artifact and MUST NOT be committed or consumed as
-metadata.
-
-** Verification receipt
-
-- The observability module compiles with Homebrew Gerbil under a Nix-clean
-  compiler environment.
-- The focused observability test round-trips the emitted JSON through
-  =string->json-object=.
-- The public export audit confirms the alist projections are absent and the
-  JSON writers plus guarded package-stage executor are present.
-- A project-level guard that rejects the first boundary returns =blocked=
-  before starting compilation.
-- The complete cold benchmark remains pending and MUST use the historical
-  machine receipt as its guard input.
+Rejected.  The Scheme build and its safety policy are Gerbil-owned.  Python may
+remain a validation runtime below other interfaces, but it is not the owner of
+this build controller.

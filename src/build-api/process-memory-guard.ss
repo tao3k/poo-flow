@@ -7,6 +7,9 @@
         :clan/poo/object
         (only-in :std/misc/process run-process)
         (only-in :std/srfi/13 string-trim-both string-tokenize)
+        (only-in :std/text/json
+                 json-object->string
+                 write-json-sort-keys?)
         )
 
 (def +poo-flow-process-memory-guard-schema+
@@ -108,13 +111,44 @@
        '(schema label outcome exit-code child-exit-code peak-rss-bytes
                 max-rss-bytes elapsed-ms timeout-ms)))
 
+(def (poo-flow-process-memory-guard-json-value value)
+  (cond
+   ((symbol? value) (symbol->string value))
+   ((pair? value)
+    (map poo-flow-process-memory-guard-json-value value))
+   ((null? value) [])
+   (else value)))
+
+(def (poo-flow-process-memory-guard-receipt->json-object receipt)
+  (hash
+   ("kind"
+    (poo-flow-process-memory-guard-json-value (.ref receipt 'kind)))
+   ("schema"
+    (poo-flow-process-memory-guard-json-value (.ref receipt 'schema)))
+   ("version" 1)
+   ("label"
+    (poo-flow-process-memory-guard-json-value (.ref receipt 'label)))
+   ("outcome"
+    (poo-flow-process-memory-guard-json-value (.ref receipt 'outcome)))
+   ("exit-code" (.ref receipt 'exit-code))
+   ("child-exit-code" (.ref receipt 'child-exit-code))
+   ("peak-rss-bytes" (.ref receipt 'peak-rss-bytes))
+   ("max-rss-bytes" (.ref receipt 'max-rss-bytes))
+   ("elapsed-ms" (.ref receipt 'elapsed-ms))
+   ("timeout-ms" (.ref receipt 'timeout-ms))))
+
+(def (poo-flow-process-memory-guard-receipt->json-string receipt)
+  (parameterize ((write-json-sort-keys? #t))
+    (json-object->string
+     (poo-flow-process-memory-guard-receipt->json-object receipt))))
+
 (def (poo-flow-current-process-memory-bytes)
   (guard-process-rss-bytes (##os-getpid)))
 
 (def (poo-flow-current-process-memory-guard-emit! receipt)
   (display "POO_FLOW_BUILD_GUARD_RECEIPT " (current-error-port))
-  (write (poo-flow-process-memory-guard-receipt->alist receipt)
-         (current-error-port))
+  (display (poo-flow-process-memory-guard-receipt->json-string receipt)
+           (current-error-port))
   (newline (current-error-port))
   (force-output (current-error-port)))
 
