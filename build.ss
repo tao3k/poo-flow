@@ -70,3 +70,27 @@
    getopt: [])
   (poo-flow-project-clean!)
   (exit 0))
+(import :gslph/src/building/observability
+        (only-in :poo-flow/src/cli-support/project-build
+                 poo-flow-project-configure-build-root!
+                 poo-flow-project-source-stages
+                 poo-flow-project-build-requests))
+(export poo-flow-project-observe!
+        poo-flow-project-observe/guard!)
+
+(def (poo-flow-project-observe! root worker-count)
+  (poo-flow-project-configure-build-root! root)
+  ;; Keep worker-count explicit at this boundary so callers can apply the
+  ;; machine-specific policy before the canonical requests are built.
+  (package-source-stages-observe!
+   (poo-flow-project-source-stages worker-count)
+   (poo-flow-project-build-requests worker-count)))
+
+(def (poo-flow-project-observe/guard!
+      root worker-count guard on-observation)
+  (poo-flow-project-configure-build-root! root)
+  (package-source-stages-observe/guard!
+   (poo-flow-project-source-stages worker-count)
+   (poo-flow-project-build-requests worker-count)
+   guard
+   on-observation))

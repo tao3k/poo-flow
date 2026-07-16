@@ -216,3 +216,4 @@
   (poo-flow-project-clean-package-outputs!
    (or (getenv "GERBIL_PATH" #f) ".gerbil"))
   #!void)
+(export poo-flow-project-source-stages)
