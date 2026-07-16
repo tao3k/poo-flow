@@ -192,12 +192,9 @@
     (error "adaptive observation hard RSS cap changed" observation))
   (poo-flow-adaptive-nonnegative-integer current-rss-bytes
                                          'current-rss-bytes)
-  (let* ((observed-estimated-bytes-per-spec
+  (let* ((estimated-bytes-per-spec
           (poo-flow-adaptive-estimated-bytes-per-spec
            observation spec-count))
-         (estimated-bytes-per-spec
-          (max observed-estimated-bytes-per-spec
-               (or (.ref controller 'last-estimated-bytes-per-spec) 1)))
          (next-window-size
           (poo-flow-adaptive-next-window-size
            controller estimated-bytes-per-spec current-rss-bytes)))

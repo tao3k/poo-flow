@@ -12,6 +12,7 @@
         "../src/cli-support/project-build.ss")
 
 (def +test-gibibyte+ (* 1024 1024 1024))
+(def +test-mebibyte+ (* 1024 1024))
 (def +test-hard-max-rss-bytes+ (* 8 +test-gibibyte+))
 (def +test-headroom-bytes+ +test-gibibyte+)
 
@@ -26,44 +27,53 @@
 
 (def build-api-adaptive-execution-window-test
   (test-suite "POO Flow adaptive execution windows"
-    (test-case "immutable controller grows by one worker quantum"
+    (test-case "high startup window shrinks to measured capacity"
       (let* ((controller
               (make-poo-flow-adaptive-execution-window-controller
                4 +test-hard-max-rss-bytes+ +test-headroom-bytes+))
-             (next
-              (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
-               controller
-               (test-observation 'completed 100 500)
-               4
-               1000)))
-        (check (execution-window-controller-window-size controller) => 4)
-        (check (execution-window-controller-window-size next) => 8)
-        (check (.ref next 'last-estimated-bytes-per-spec) => 100)
-        (check (.ref next 'baseline-rss-bytes) => 1000)
-        (check (.ref next 'window-index) => 1)))
-
-    (test-case "immutable controller shrinks immediately to measured capacity"
-      (let* ((controller
-              (make-poo-flow-adaptive-execution-window-controller
-               4 +test-hard-max-rss-bytes+ +test-headroom-bytes+))
-             (grown
-              (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
-               controller
-               (test-observation 'completed 100 500)
-               4
-               1000))
              (shrunk
               (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
-               grown
+               controller
                (test-observation
                 'completed 1000 (+ 1000 (* 4 +test-gibibyte+)))
                4
                (* 4 +test-gibibyte+))))
-        (check (execution-window-controller-window-size grown) => 8)
+        (check (execution-window-controller-window-size controller) => 4)
         (check (execution-window-controller-window-size shrunk) => 3)
         (check (.ref shrunk 'last-estimated-bytes-per-spec)
                => +test-gibibyte+)
-        (check (.ref shrunk 'window-index) => 2)))
+        (check (.ref shrunk 'baseline-rss-bytes)
+               => (* 4 +test-gibibyte+))
+        (check (.ref shrunk 'window-index) => 1)))
+
+    (test-case "latest low-transient window recovers by one worker quantum"
+      (let* ((controller
+              (make-poo-flow-adaptive-execution-window-controller
+               4 +test-hard-max-rss-bytes+ +test-headroom-bytes+))
+             (shrunk
+              (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
+               controller
+               (test-observation
+                'completed 1000 (+ 1000 (* 4 +test-gibibyte+)))
+               4
+               (* 4 +test-gibibyte+)))
+             (recovered
+              (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
+               shrunk
+               (test-observation
+                'completed
+                (* 4 +test-gibibyte+)
+                (+ (* 4 +test-gibibyte+) (* 300 +test-mebibyte+)))
+               3
+               +test-gibibyte+)))
+        (check (execution-window-controller-window-size shrunk) => 3)
+        (check (execution-window-controller-window-size recovered) => 7)
+        (check (- (execution-window-controller-window-size recovered)
+                  (execution-window-controller-window-size shrunk))
+               => 4)
+        (check (.ref recovered 'last-estimated-bytes-per-spec)
+               => (* 100 +test-mebibyte+))
+        (check (.ref recovered 'window-index) => 2)))
 
     (test-case "constructor rejects cap below live baseline plus headroom"
       (let (blocked?

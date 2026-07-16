@@ -213,7 +213,7 @@ observed-bytes-per-spec =
   max(1, ceil(max(0, peak-rss - start-baseline-rss) / actual-spec-count))
 
 estimated-bytes-per-spec =
-  max(previous-estimate, observed-bytes-per-spec)
+  observed-bytes-per-spec
 
 available-bytes =
   hard-cap - current-process-tree-rss - caller-headroom
@@ -226,9 +226,15 @@ next-window-size =
 #+end_example
 
 Growth is therefore limited to one worker-count quantum per successful
-window.  Shrinkage is immediate.  The conservative maximum of the previous and
-current estimates prevents an optimistic low-growth sample from erasing a
-known higher memory cost.
+window.  Shrinkage is immediate.  The next decision deliberately uses the
+latest completed window's observed bytes per spec rather than a monotonic
+maximum.  This avoids treating one-time compiler residency from an earlier
+window as permanent marginal per-spec cost, while the hard cap remains the
+safety authority.  The immutable next state retains
+=last-estimated-bytes-per-spec= as receipt evidence and history only; it is not
+an input that can pin later windows to an older estimate.  Every window still
+passes through the same pre-launch guard, and any missing, malformed,
+non-completed, or cap-breaching receipt fails closed.
 
 Only =completed= and =ok= outcomes are accepted.  Invalid receipt shape,
 non-integer measurements, hard-cap mismatch, guard failure, or peak RSS above
@@ -300,11 +306,46 @@ No full build was run.  Every focused command was bounded by 90 seconds.
 | POO Flow focused runtime | Imported =:poo-flow/t/build-api-adaptive-execution-window-test= under a 90-second timeout; exit 0; seven cases; =All tests OK=; canonical guard JSON emitted |
 | Diff hygiene | =rtk git diff --check= in both repositories; exit 0 |
 
-The POO Flow focused suite covers immutable growth, immediate shrink with a
-conservative estimate, constructor rejection when the cap cannot cover the
-live baseline plus headroom, non-completed hard-cap failure, canonical guard
-JSON parsing and round trip, explicit versus default stage batching, and
-environment activation with headroom 0.
+The POO Flow focused suite covers immutable growth, immediate startup shrink,
+and later recovery from =3= to =7= after a lower-cost completed window.  The
+recovery replaces the earlier one-gibibyte-per-spec history with the latest
+100-mebibyte-per-spec observation and grows by exactly one four-worker quantum.
+It also covers constructor rejection when the cap cannot cover the live
+baseline plus headroom, non-completed hard-cap failure, canonical guard JSON
+parsing and round trip, explicit versus default stage batching, and environment
+activation with headroom 0.
+
+The latest non-Nix estimator-tuning pass compiled the adaptive module and its
+focused test with exit 0 in 4.07 seconds.  The focused runtime then exited 0
+with =All tests OK= in 3.72 seconds.
+
+** Bounded real UI controller integration
+
+A bounded controller A/B used the same eight topology-ordered UI specs with
+=workers=2=, a 2,147,483,648-byte hard cap, 268,435,456 bytes of caller
+headroom, fresh isolated output roots, and a 90-second outer timeout.  This was
+a controller safety and integration receipt, not a full cold build.
+
+| Measure | Initial monotonic estimator | Tuned latest-window estimator | Change |
+|---------+-----------------------------+-------------------------------+--------|
+| Specs per upstream session | =(2 1 1 1 1 1 1)= | =(2 1 3 2)= | recovery after startup shrink |
+| Upstream sessions | 7 | 4 | 42.857% fewer |
+| Outer wall time | 30.29 s | 27.75 s | 8.386% improvement |
+| Process-tree maximum | 1,481,261,056 B | 1,479,344,128 B | both below the hard cap |
+| Outer maximum RSS | 1,291,386,880 B | 1,289,961,472 B | bounded |
+| Completion | all receipts completed | all receipts completed | no fail-close outcome |
+
+The tuned run dispatched =init= with =profiles/all=, then
+=loop-engine-owner=, then =cicd-owner= with =session-owner= and
+=runtime-owner=, and finally =durable-owner= with =config=.  It preserved the
+exact topology order and multiplicity: no spec was omitted or duplicated.
+Both runs completed without a lingering =gxi= or =gsc= process.
+
+This bounded A/B is explicitly not comparable to the earlier 12-worker,
+one-window performance baseline.  The worker count, controller geometry, cap,
+and output-root conditions differ, so the 27.75-second result is evidence for
+safe controller recovery rather than a replacement performance number.  Full
+cold acceptance remains blocked.
 
 The direct Nix compile environment still exposes the known Apple SDK and
 Homebrew Gerbil =stdio.h= conflict.  The focused receipts use the non-Nix
