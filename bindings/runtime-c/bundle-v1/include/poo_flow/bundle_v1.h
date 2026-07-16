@@ -34,7 +34,10 @@ enum {
   POO_FLOW_BUNDLE_V1_REGION_LAYOUT = 5,
   POO_FLOW_BUNDLE_V1_UNSORTED_TABLE = 6,
   POO_FLOW_BUNDLE_V1_DUPLICATE_KEY = 7,
-  POO_FLOW_BUNDLE_V1_NOT_FOUND = 8
+  POO_FLOW_BUNDLE_V1_NOT_FOUND = 8,
+  POO_FLOW_BUNDLE_V1_OUT_OF_MEMORY = 9,
+  POO_FLOW_BUNDLE_V1_REFERENCE_LIMIT = 10,
+  POO_FLOW_BUNDLE_V1_UNSUPPORTED_ENDIAN = 11
 };
 
 typedef struct poo_flow_bundle_v1_compact_id {
@@ -128,6 +131,29 @@ typedef struct poo_flow_bundle_v1_descriptor {
   uint64_t reserved[7];
 } poo_flow_bundle_v1_descriptor;
 
+typedef uint32_t poo_flow_bundle_v1_region_kind;
+
+enum {
+  POO_FLOW_BUNDLE_V1_REGION_SYMBOLS = 1,
+  POO_FLOW_BUNDLE_V1_REGION_COMPONENTS = 2,
+  POO_FLOW_BUNDLE_V1_REGION_EDGES = 3,
+  POO_FLOW_BUNDLE_V1_REGION_EVIDENCE_OBLIGATIONS = 4,
+  POO_FLOW_BUNDLE_V1_REGION_METADATA_BYTES = 5
+};
+
+/*
+ * A slice borrows immutable storage from an arena handle. Its data pointer is
+ * valid until the caller releases the reference that protects the handle.
+ */
+typedef struct poo_flow_bundle_v1_slice {
+  const void *data;
+  uint64_t length;
+  uint32_t stride;
+  uint32_t alignment;
+} poo_flow_bundle_v1_slice;
+
+typedef struct poo_flow_bundle_v1_arena poo_flow_bundle_v1_arena;
+
 #ifdef __cplusplus
 #define POO_FLOW_BUNDLE_V1_STATIC_ASSERT static_assert
 #else
@@ -149,6 +175,8 @@ POO_FLOW_BUNDLE_V1_STATIC_ASSERT(sizeof(poo_flow_bundle_v1_evidence_entry) == 96
                                  "Bundle v1 evidence layout changed");
 POO_FLOW_BUNDLE_V1_STATIC_ASSERT(sizeof(poo_flow_bundle_v1_descriptor) == 256,
                                  "Bundle v1 descriptor layout changed");
+POO_FLOW_BUNDLE_V1_STATIC_ASSERT(sizeof(poo_flow_bundle_v1_slice) == 24,
+                                 "Bundle v1 slice layout changed");
 
 #undef POO_FLOW_BUNDLE_V1_STATIC_ASSERT
 
@@ -160,6 +188,52 @@ poo_flow_bundle_v1_status poo_flow_bundle_v1_validate(
 poo_flow_bundle_v1_status poo_flow_bundle_v1_find_component(
     const poo_flow_bundle_v1_descriptor *descriptor,
     const void *arena,
+    poo_flow_bundle_v1_compact_id case_id,
+    poo_flow_bundle_v1_compact_id component_id,
+    const poo_flow_bundle_v1_component_entry **out_component);
+
+/*
+ * Create one C-owned immutable arena. The descriptor and payload are copied
+ * once at the ABI boundary, validated, and retained in 64-byte-aligned native
+ * storage. Runtime slice and lookup operations are zero-copy thereafter.
+ */
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_create(
+    const poo_flow_bundle_v1_descriptor *descriptor,
+    const void *arena,
+    uint64_t arena_bytes,
+    poo_flow_bundle_v1_arena **out_arena);
+
+/*
+ * Safe entry point for Scheme/Python CFFI buffers whose descriptor alignment
+ * is not guaranteed. Packed descriptors use the canonical little-endian byte
+ * order. descriptor_bytes must equal the Bundle v1 descriptor size; the
+ * implementation copies through an aligned native descriptor.
+ */
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_create_packed(
+    const void *descriptor_bytes,
+    uint64_t descriptor_length,
+    const void *arena,
+    uint64_t arena_bytes,
+    poo_flow_bundle_v1_arena **out_arena);
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_retain(
+    poo_flow_bundle_v1_arena *arena);
+
+void poo_flow_bundle_v1_arena_release(poo_flow_bundle_v1_arena *arena);
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_view(
+    const poo_flow_bundle_v1_arena *arena,
+    const poo_flow_bundle_v1_descriptor **out_descriptor,
+    const void **out_data,
+    uint64_t *out_bytes);
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_slice(
+    const poo_flow_bundle_v1_arena *arena,
+    poo_flow_bundle_v1_region_kind region_kind,
+    poo_flow_bundle_v1_slice *out_slice);
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_find_component(
+    const poo_flow_bundle_v1_arena *arena,
     poo_flow_bundle_v1_compact_id case_id,
     poo_flow_bundle_v1_compact_id component_id,
     const poo_flow_bundle_v1_component_entry **out_component);

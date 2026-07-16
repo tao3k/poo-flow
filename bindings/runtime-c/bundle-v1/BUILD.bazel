@@ -56,6 +56,19 @@ cc_test(
     deps = [":bundle_v1"],
 )
 
+cc_binary(
+    name = "bundle_v1_scheme_image_harness",
+    srcs = ["tests/bundle_v1_scheme_image_harness.c"],
+    copts = [
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+    ],
+    deps = [":bundle_v1"],
+)
+
 cc_test(
     name = "bundle_v1_harness_asan",
     srcs = [

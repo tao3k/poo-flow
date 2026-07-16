@@ -1,7 +1,16 @@
 #include "poo_flow/bundle_v1.h"
 
 #include <stddef.h>
+#include <stdatomic.h>
+#include <stdlib.h>
 #include <string.h>
+
+struct poo_flow_bundle_v1_arena {
+  atomic_uint_least64_t reference_count;
+  poo_flow_bundle_v1_descriptor descriptor;
+  uint64_t arena_bytes;
+  void *data;
+};
 
 static int compact_id_compare(poo_flow_bundle_v1_compact_id left,
                               poo_flow_bundle_v1_compact_id right) {
@@ -18,6 +27,11 @@ static int compact_id_compare(poo_flow_bundle_v1_compact_id left,
     return 1;
   }
   return 0;
+}
+
+static int host_is_little_endian(void) {
+  const uint16_t marker = UINT16_C(1);
+  return *((const uint8_t *)&marker) == UINT8_C(1);
 }
 
 static int component_key_compare(
@@ -63,6 +77,25 @@ static poo_flow_bundle_v1_status validate_region(
 static const uint8_t *region_base(const void *arena,
                                   const poo_flow_bundle_v1_region *region) {
   return (const uint8_t *)arena + region->offset;
+}
+
+static const poo_flow_bundle_v1_region *descriptor_region(
+    const poo_flow_bundle_v1_descriptor *descriptor,
+    poo_flow_bundle_v1_region_kind region_kind) {
+  switch (region_kind) {
+    case POO_FLOW_BUNDLE_V1_REGION_SYMBOLS:
+      return &descriptor->symbols;
+    case POO_FLOW_BUNDLE_V1_REGION_COMPONENTS:
+      return &descriptor->components;
+    case POO_FLOW_BUNDLE_V1_REGION_EDGES:
+      return &descriptor->edges;
+    case POO_FLOW_BUNDLE_V1_REGION_EVIDENCE_OBLIGATIONS:
+      return &descriptor->evidence_obligations;
+    case POO_FLOW_BUNDLE_V1_REGION_METADATA_BYTES:
+      return &descriptor->metadata_bytes;
+    default:
+      return NULL;
+  }
 }
 
 static poo_flow_bundle_v1_status validate_digest(
@@ -328,6 +361,160 @@ poo_flow_bundle_v1_status poo_flow_bundle_v1_find_component(
   return POO_FLOW_BUNDLE_V1_NOT_FOUND;
 }
 
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_create(
+    const poo_flow_bundle_v1_descriptor *descriptor,
+    const void *arena,
+    uint64_t arena_bytes,
+    poo_flow_bundle_v1_arena **out_arena) {
+  poo_flow_bundle_v1_arena *owned = NULL;
+  void *owned_data = NULL;
+  size_t allocation_bytes = 0u;
+  poo_flow_bundle_v1_status status = POO_FLOW_BUNDLE_V1_OK;
+  if (out_arena == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  *out_arena = NULL;
+  status = poo_flow_bundle_v1_validate(descriptor, arena, arena_bytes);
+  if (status != POO_FLOW_BUNDLE_V1_OK) {
+    return status;
+  }
+  if (arena_bytes > (uint64_t)SIZE_MAX -
+                        (POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT - 1u)) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  allocation_bytes =
+      (size_t)((arena_bytes +
+                (POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT - 1u)) &
+               ~(uint64_t)(POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT -
+                           1u));
+  if (allocation_bytes == 0u) {
+    allocation_bytes = POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT;
+  }
+  owned = (poo_flow_bundle_v1_arena *)malloc(sizeof(*owned));
+  if (owned == NULL) {
+    return POO_FLOW_BUNDLE_V1_OUT_OF_MEMORY;
+  }
+  owned_data =
+      aligned_alloc(POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT,
+                    allocation_bytes);
+  if (owned_data == NULL) {
+    free(owned);
+    return POO_FLOW_BUNDLE_V1_OUT_OF_MEMORY;
+  }
+  memcpy(owned_data, arena, (size_t)arena_bytes);
+  atomic_init(&owned->reference_count, UINT64_C(1));
+  owned->descriptor = *descriptor;
+  owned->arena_bytes = arena_bytes;
+  owned->data = owned_data;
+  status = poo_flow_bundle_v1_validate(&owned->descriptor, owned->data,
+                                       owned->arena_bytes);
+  if (status != POO_FLOW_BUNDLE_V1_OK) {
+    free(owned_data);
+    free(owned);
+    return status;
+  }
+  *out_arena = owned;
+  return POO_FLOW_BUNDLE_V1_OK;
+}
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_create_packed(
+    const void *descriptor_bytes,
+    uint64_t descriptor_length,
+    const void *arena,
+    uint64_t arena_bytes,
+    poo_flow_bundle_v1_arena **out_arena) {
+  poo_flow_bundle_v1_descriptor descriptor;
+  if (out_arena == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  *out_arena = NULL;
+  if (!host_is_little_endian()) {
+    return POO_FLOW_BUNDLE_V1_UNSUPPORTED_ENDIAN;
+  }
+  if (descriptor_bytes == NULL ||
+      descriptor_length != (uint64_t)sizeof(descriptor)) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  memcpy(&descriptor, descriptor_bytes, sizeof(descriptor));
+  return poo_flow_bundle_v1_arena_create(&descriptor, arena, arena_bytes,
+                                         out_arena);
+}
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_retain(
+    poo_flow_bundle_v1_arena *arena) {
+  uint_least64_t references = 0u;
+  if (arena == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  references = atomic_load(&arena->reference_count);
+  for (;;) {
+    if (references == UINT64_MAX) {
+      return POO_FLOW_BUNDLE_V1_REFERENCE_LIMIT;
+    }
+    if (atomic_compare_exchange_weak(&arena->reference_count, &references,
+                                     references + 1u)) {
+      return POO_FLOW_BUNDLE_V1_OK;
+    }
+  }
+}
+
+void poo_flow_bundle_v1_arena_release(poo_flow_bundle_v1_arena *arena) {
+  if (arena != NULL &&
+      atomic_fetch_sub(&arena->reference_count, UINT64_C(1)) == UINT64_C(1)) {
+    free(arena->data);
+    arena->data = NULL;
+    free(arena);
+  }
+}
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_view(
+    const poo_flow_bundle_v1_arena *arena,
+    const poo_flow_bundle_v1_descriptor **out_descriptor,
+    const void **out_data,
+    uint64_t *out_bytes) {
+  if (arena == NULL || out_descriptor == NULL || out_data == NULL ||
+      out_bytes == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  *out_descriptor = &arena->descriptor;
+  *out_data = arena->data;
+  *out_bytes = arena->arena_bytes;
+  return POO_FLOW_BUNDLE_V1_OK;
+}
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_slice(
+    const poo_flow_bundle_v1_arena *arena,
+    poo_flow_bundle_v1_region_kind region_kind,
+    poo_flow_bundle_v1_slice *out_slice) {
+  const poo_flow_bundle_v1_region *region = NULL;
+  if (arena == NULL || out_slice == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  region = descriptor_region(&arena->descriptor, region_kind);
+  if (region == NULL) {
+    memset(out_slice, 0, sizeof(*out_slice));
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  out_slice->data = region_base(arena->data, region);
+  out_slice->length = region->length;
+  out_slice->stride = region->stride;
+  out_slice->alignment = region->alignment;
+  return POO_FLOW_BUNDLE_V1_OK;
+}
+
+poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_find_component(
+    const poo_flow_bundle_v1_arena *arena,
+    poo_flow_bundle_v1_compact_id case_id,
+    poo_flow_bundle_v1_compact_id component_id,
+    const poo_flow_bundle_v1_component_entry **out_component) {
+  if (arena == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  return poo_flow_bundle_v1_find_component(&arena->descriptor, arena->data,
+                                           case_id, component_id,
+                                           out_component);
+}
+
 const char *poo_flow_bundle_v1_status_name(poo_flow_bundle_v1_status status) {
   switch (status) {
     case POO_FLOW_BUNDLE_V1_OK:
@@ -348,6 +535,12 @@ const char *poo_flow_bundle_v1_status_name(poo_flow_bundle_v1_status status) {
       return "duplicate-key";
     case POO_FLOW_BUNDLE_V1_NOT_FOUND:
       return "not-found";
+    case POO_FLOW_BUNDLE_V1_OUT_OF_MEMORY:
+      return "out-of-memory";
+    case POO_FLOW_BUNDLE_V1_REFERENCE_LIMIT:
+      return "reference-limit";
+    case POO_FLOW_BUNDLE_V1_UNSUPPORTED_ENDIAN:
+      return "unsupported-endian";
     default:
       return "unknown";
   }

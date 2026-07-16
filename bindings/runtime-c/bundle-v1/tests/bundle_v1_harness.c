@@ -78,6 +78,11 @@ int main(void) {
   poo_flow_bundle_v1_edge_entry edges[2];
   poo_flow_bundle_v1_evidence_entry evidence[2];
   poo_flow_bundle_v1_descriptor descriptor;
+  poo_flow_bundle_v1_arena *owned_arena = NULL;
+  const poo_flow_bundle_v1_descriptor *owned_descriptor = NULL;
+  const void *owned_data = NULL;
+  uint64_t owned_bytes = 0u;
+  poo_flow_bundle_v1_slice component_slice;
   const poo_flow_bundle_v1_component_entry *found = NULL;
   size_t index = 0u;
 
@@ -114,6 +119,63 @@ int main(void) {
     fprintf(stderr, "binary lookup did not return an arena-backed row\n");
     failures += 1;
   }
+
+  expect_status("packed descriptor length rejected",
+                poo_flow_bundle_v1_arena_create_packed(
+                    &descriptor, sizeof(descriptor) - 1u, arena.bytes,
+                    sizeof(arena.bytes), &owned_arena),
+                POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT);
+  expect_status("owned arena created",
+                poo_flow_bundle_v1_arena_create_packed(
+                    &descriptor, sizeof(descriptor), arena.bytes,
+                    sizeof(arena.bytes), &owned_arena),
+                POO_FLOW_BUNDLE_V1_OK);
+  expect_status("owned arena view",
+                poo_flow_bundle_v1_arena_view(
+                    owned_arena, &owned_descriptor, &owned_data, &owned_bytes),
+                POO_FLOW_BUNDLE_V1_OK);
+  if (owned_descriptor == NULL || owned_data == NULL ||
+      owned_data == arena.bytes || owned_bytes != sizeof(arena.bytes) ||
+      ((uintptr_t)owned_data %
+       POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT) != 0u) {
+    fprintf(stderr, "owned arena view did not preserve aligned ownership\n");
+    failures += 1;
+  }
+  memset(&component_slice, 0, sizeof(component_slice));
+  expect_status("owned component slice",
+                poo_flow_bundle_v1_arena_slice(
+                    owned_arena, POO_FLOW_BUNDLE_V1_REGION_COMPONENTS,
+                    &component_slice),
+                POO_FLOW_BUNDLE_V1_OK);
+  if (component_slice.data == NULL ||
+      component_slice.length != sizeof(components) ||
+      component_slice.stride != sizeof(components[0]) ||
+      ((uintptr_t)component_slice.data % component_slice.alignment) != 0u) {
+    fprintf(stderr, "owned component slice did not preserve region layout\n");
+    failures += 1;
+  }
+  expect_status("unknown owned slice rejected",
+                poo_flow_bundle_v1_arena_slice(owned_arena, UINT32_MAX,
+                                               &component_slice),
+                POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT);
+  found = NULL;
+  expect_status("owned binary lookup",
+                poo_flow_bundle_v1_arena_find_component(
+                    owned_arena, compact_id(20u), compact_id(2u), &found),
+                POO_FLOW_BUNDLE_V1_OK);
+  if (found == NULL || found->object_id.low != 103u ||
+      (const uint8_t *)found < (const uint8_t *)owned_data ||
+      (const uint8_t *)found >=
+          (const uint8_t *)owned_data + owned_bytes) {
+    fprintf(stderr, "owned lookup did not return a handle-backed row\n");
+    failures += 1;
+  }
+  expect_status("owned arena retained",
+                poo_flow_bundle_v1_arena_retain(owned_arena),
+                POO_FLOW_BUNDLE_V1_OK);
+  poo_flow_bundle_v1_arena_release(owned_arena);
+  poo_flow_bundle_v1_arena_release(owned_arena);
+  owned_arena = NULL;
 
   found = NULL;
   expect_status("missing component",
@@ -190,6 +252,9 @@ int main(void) {
   printf("layout=typed-native-regions\n");
   printf("lookup=binary-search\n");
   printf("payload-zero-copy=true\n");
+  printf("arena-lifetime=reference-counted\n");
+  printf("slice-view=immutable\n");
+  printf("packed-byte-order=little-endian\n");
   printf("json-in-hot-path=false\n");
   return 0;
 }
