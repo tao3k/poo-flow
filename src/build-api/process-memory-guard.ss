@@ -109,11 +109,7 @@
                 max-rss-bytes elapsed-ms timeout-ms)))
 
 (def (poo-flow-current-process-memory-bytes)
-  (let (statistics (##process-statistics))
-    (inexact->exact
-     (ceiling
-      (max (f64vector-ref statistics 7)
-           (f64vector-ref statistics 15))))))
+  (guard-process-rss-bytes (##os-getpid)))
 
 (def (poo-flow-current-process-memory-guard-emit! receipt)
   (display "POO_FLOW_BUILD_GUARD_RECEIPT " (current-error-port))
@@ -124,8 +120,10 @@
 
 (def (poo-flow-current-process-memory-guard-start!
       label max-rss-bytes timeout-seconds . maybe-sample-seconds)
-  (unless (and (> max-rss-bytes 0) (> timeout-seconds 0))
-    (error "current process memory guard requires positive limits"))
+  (unless (and (> max-rss-bytes 0)
+               (or (not timeout-seconds) (> timeout-seconds 0)))
+    (error
+     "current process memory guard requires a positive RSS limit and an optional positive timeout"))
   (let* ((sample-seconds
           (if (pair? maybe-sample-seconds)
             (car maybe-sample-seconds)
@@ -148,9 +146,11 @@
                       (guard-receipt
                        label 'rss-limit-exceeded 70 70 peak max-rss-bytes
                        (inexact->exact (round (* elapsed 1000)))
-                       (inexact->exact (round (* timeout-seconds 1000)))))
+                       (and timeout-seconds
+                            (inexact->exact
+                             (round (* timeout-seconds 1000))))))
                      (exit 70))
-                    ((> elapsed timeout-seconds)
+                    ((and timeout-seconds (> elapsed timeout-seconds))
                      (vector-set! state 2 'timeout)
                      (poo-flow-current-process-memory-guard-emit!
                       (guard-receipt
@@ -186,15 +186,20 @@
            (.ref guard 'max-rss-bytes)
            (inexact->exact
             (round (* 1000 (- (guard-now-seconds) started))))
-           (inexact->exact
-            (round (* 1000 (.ref guard 'timeout-seconds))))))
+           (let (timeout-seconds (.ref guard 'timeout-seconds))
+             (and timeout-seconds
+                  (inexact->exact
+                   (round (* 1000 timeout-seconds)))))))
       (poo-flow-current-process-memory-guard-emit! receipt)
       receipt)))
 
 (def (poo-flow-process-memory-guard-run label max-rss-bytes timeout-seconds argv
                                         . maybe-sample-seconds)
-  (unless (and (pair? argv) (> max-rss-bytes 0) (> timeout-seconds 0))
-    (error "process memory guard requires command and positive limits"))
+  (unless (and (pair? argv)
+               (> max-rss-bytes 0)
+               (or (not timeout-seconds) (> timeout-seconds 0)))
+    (error
+     "process memory guard requires a command, positive RSS limit, and optional positive timeout"))
   (let* ((sample-seconds (if (pair? maybe-sample-seconds)
                            (car maybe-sample-seconds) 0.05))
          (started (guard-now-seconds))
@@ -225,7 +230,7 @@
             (set! outcome 'rss-limit-exceeded)
             (set! guard-exit 70)
             (guard-terminate! pid))
-           ((> elapsed timeout-seconds)
+           ((and timeout-seconds (> elapsed timeout-seconds))
             (set! outcome 'timeout)
             (set! guard-exit 71)
             (guard-terminate! pid))
@@ -241,4 +246,6 @@
              (round (* 1000 (- (guard-now-seconds) started))))))
       (guard-receipt label final-outcome final-exit child-exit peak-rss
                      max-rss-bytes elapsed-ms
-                     (inexact->exact (round (* timeout-seconds 1000)))))))
+                     (and timeout-seconds
+                          (inexact->exact
+                           (round (* timeout-seconds 1000))))))))

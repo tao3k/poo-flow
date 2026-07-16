@@ -3,24 +3,44 @@
 
 (import (only-in :gerbil/gambit
                  current-directory
+                 delete-directory
                  delete-file
                  directory-files
-                 file-exists?)
+                 file-exists?
+                 file-info
+                 file-info-type)
         (only-in :gerbil/compiler/base __available-cores)
         (only-in :clan/building all-gerbil-modules)
-        (only-in :std/srfi/1 filter filter-map)
-        (only-in :std/srfi/13 string-prefix?)
+        (only-in :std/srfi/1 filter)
         (only-in :std/misc/path path-expand path-normalize)
-        :gslph/src/building/facade)
+        (only-in :gslph/src/building/facade
+                 build-plan-receipts-summary
+                 make-package-source-stage
+                 package-source-stages->requests
+                 package-source-stages-clean!
+                 package-source-stages-run!
+                 package-source-stages-spec))
 
 (export poo-flow-project-build-options
+        poo-flow-project-build-stage-labels
         poo-flow-project-build-spec
+        poo-flow-project-clean-package-outputs!
         poo-flow-project-clean!
         poo-flow-project-compile!
         poo-flow-project-configure-build-root!
         poo-flow-project-build-requests)
 
 (def poo-flow-project-root #f)
+
+(def +poo-flow-project-ffi-stage-label+ "nono-c-ffi")
+(def +poo-flow-project-runtime-stage-label+ "runtime")
+(def +poo-flow-project-user-interface-stage-label+ "user-interface")
+
+;; : (-> [String])
+(def (poo-flow-project-build-stage-labels)
+  (list +poo-flow-project-ffi-stage-label+
+        +poo-flow-project-runtime-stage-label+
+        +poo-flow-project-user-interface-stage-label+))
 
 (def (poo-flow-project-nono-c-binding-include-option)
   (string-append "-I" (path-expand "bindings/nono-c")))
@@ -36,22 +56,24 @@
           ,@(poo-flow-project-nono-c-binding-link-options))
     (ssi: "src/modules/nono-sandbox/_nono")))
 
-(def (poo-flow-project-ffi-output? name)
-  (or (equal? name "_nono.ssi")
-      (string-prefix? "_nono.o" name)))
+(def (poo-flow-project-delete-output-tree! path)
+  (when (file-exists? path)
+    (if (eq? (file-info-type (file-info path)) 'directory)
+      (begin
+        (for-each
+         (lambda (name)
+           (unless (member name '("." ".."))
+             (poo-flow-project-delete-output-tree!
+              (path-expand name path))))
+         (directory-files path))
+        (delete-directory path))
+      (delete-file path))))
 
-(def (poo-flow-project-clean-ffi-outputs!)
-  (let* ((gerbil-path (or (getenv "GERBIL_PATH" #f) ".gerbil"))
-         (output-directory
-          (path-expand
-           "lib/poo-flow/src/modules/nono-sandbox"
-           gerbil-path)))
-    (when (file-exists? output-directory)
-      (for-each
-       (lambda (name)
-         (when (poo-flow-project-ffi-output? name)
-           (delete-file (path-expand name output-directory))))
-       (directory-files output-directory)))))
+;; : (-> Path Void)
+(def (poo-flow-project-clean-package-outputs! gerbil-path)
+  (poo-flow-project-delete-output-tree!
+   (path-expand "lib/poo-flow" gerbil-path))
+  #!void)
 
 (def +poo-flow-project-interface-only-modules+
   '("module-system/object-family-syntax.ss"
@@ -73,7 +95,10 @@
 
 ;; : (-> Path Void)
 (def (poo-flow-project-configure-build-root! root)
-  (set! poo-flow-project-root (path-normalize root)))
+  (set! poo-flow-project-root (path-normalize root))
+  (unless (getenv "GERBIL_PATH" #f)
+    (setenv "GERBIL_PATH"
+            (path-expand ".gerbil" poo-flow-project-root))))
 
 ;; : (-> Path)
 (def (poo-flow-project-require-build-root)
@@ -82,14 +107,10 @@
 
 ;; : (-> Boolean Boolean Boolean Boolean [BuildOption])
 (def (poo-flow-project-build-options release optimized debug verbose)
-  (apply append
-         (filter-map
-          (lambda (entry)
-            (and (car entry) (cdr entry)))
-          `((,release . [build-release: #t])
-            (,optimized . [build-optimized: #t])
-            (,debug . [debug: #t])
-            (,verbose . [verbose: 9])))))
+  (append (if release [build-release: #t] [])
+          (if optimized [build-optimized: #t] [])
+          (if debug [debug: #t] [])
+          (if verbose [verbose: 1] [])))
 
 ;; : (-> Path [ModulePath])
 (def (poo-flow-project-source-modules source-root)
@@ -144,24 +165,24 @@
     (append
      (if include-ffi?
        (list
-        (make-package-source-stage
-         "nono-c-ffi"
+         (make-package-source-stage
+          +poo-flow-project-ffi-stage-label+
          root
          "poo-flow"
          (poo-flow-project-ffi-build-spec)
          #t))
        '())
      (list
-      (make-package-source-stage
-       "runtime"
+       (make-package-source-stage
+        +poo-flow-project-runtime-stage-label+
        root
        "poo-flow"
        (map poo-flow-project-runtime-spec
             (filter poo-flow-project-runtime-module?
                     (poo-flow-project-source-modules runtime-root)))
        'topology)
-      (make-package-source-stage
-       "user-interface"
+       (make-package-source-stage
+        +poo-flow-project-user-interface-stage-label+
        root
        "poo-flow"
        (poo-flow-project-prefix-modules
@@ -192,5 +213,6 @@
 (def (poo-flow-project-clean!)
   (package-source-stages-clean!
    (poo-flow-project-source-stages #f))
-  (poo-flow-project-clean-ffi-outputs!)
+  (poo-flow-project-clean-package-outputs!
+   (or (getenv "GERBIL_PATH" #f) ".gerbil"))
   #!void)

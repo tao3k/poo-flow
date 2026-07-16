@@ -1,0 +1,203 @@
+#+title: RFC 0147 — Building Framework Gerbil Make Guard
+#+author: POO Flow
+#+status: Accepted and Implemented
+#+language: en
+
+* Decision
+
+POO Flow defines exactly one standard Gerbil make project through the existing
+Building Framework.  The Scheme build guard observes that project; it does not
+replace, partition, or reschedule it.
+
+=build.ss= remains the canonical command surface.  Its =compile= entry point
+invokes =poo-flow-project-compile-guarded!=.  The guard starts one Scheme-owned
+process-tree monitor and then calls =poo-flow-project-compile!= exactly once.
+That function delegates the complete project to
+=package-source-stages-run!= with the machine-selected =parallelize:= value.
+
+The following responsibilities belong exclusively to Building Framework:
+
+- conversion of package source stages into standard Gerbil make requests;
+- currentness checks and incremental rebuild selection;
+- dependency topology and source ordering;
+- compiler parallelism;
+- stage execution and build receipts.
+
+The guard MUST NOT create its own spec plan, chunks, topology layers, retry
+queue, or child =gxi= process per subset.  Those mechanisms duplicate the
+build system and destroy the performance properties of a standard make
+project.
+
+* Canonical project
+
+=src/cli-support/project-build.ss= declares three package source stages:
+
+1. =nono-c-ffi= owns the generated C/SSI boundary;
+2. =runtime= owns the complete =src= module graph in topology mode;
+3. =user-interface= owns the declared composition modules in topology mode.
+
+The public project functions have one direction of travel:
+
+#+begin_src mermaid
+flowchart TD
+  A["build.ss compile"] --> B["Scheme guard config"]
+  B --> C["Start one process-tree RSS monitor"]
+  C --> D["poo-flow-project-compile! once"]
+  D --> E["POO Flow package source stages"]
+  E --> F["Building Framework package-source-stages-run!"]
+  F --> G["Standard Gerbil make requests"]
+  G --> H["Currentness, DAG, and parallel compilation"]
+  H --> I["Building Framework receipt summary"]
+  I --> J["Stop Scheme monitor"]
+  J --> K["Combined POO-native build and guard receipt"]
+  C --> L{"RSS or optional deadline exceeded?"}
+  L -->|"yes"| M["Fail closed with guard receipt"]
+  L -->|"no"| H
+#+end_src
+
+=poo-flow-project-build-requests= is the inspection surface for the standard
+Building Framework requests.  =poo-flow-project-build-spec= is the declared
+Gerbil make source specification.  =poo-flow-project-compile!= is the sole
+execution surface.  The guard calls the execution surface rather than
+reconstructing requests from the inspection surfaces.
+
+* Ownership
+
+- =build.ss= owns the public =spec=, =compile=, and =clean= commands.
+- =src/cli-support/project-build.ss= owns project discovery, stage
+  declarations, build options, worker selection, standard request execution,
+  and clean behavior.
+- Building Framework owns make request semantics, currentness, topology,
+  parallelism, execution, and build receipt aggregation.
+- =src/build-api/project-compile-guard.ss= owns only adaptive guard
+  configuration and the combined POO-native receipt.
+- =src/build-api/process-memory-guard.ss= owns process-tree RSS sampling,
+  optional elapsed-time enforcement, fail-closed termination, and the raw
+  guard receipt.
+- The configured =gxi= and Gerbil tools on =PATH= are authoritative.  No
+  Cellar-internal or Nix-specific executable path is embedded in the project.
+
+* Resource policy
+
+The guard protects the full build process tree rooted at the current =gxi=.
+It therefore observes the Scheme process and compiler descendants without
+starting another compile scheduler.
+
+The default RSS ceiling is half of detected physical memory, with 768 MiB as
+the minimum and as the conservative discovery fallback.  This limit is a
+machine-derived safety boundary, not a worker-count formula.  Building
+Framework independently selects the highest standard parallelism allowed by
+=GERBIL_BUILD_CORES=, =CARGO_BUILD_JOBS=, =NUM_JOBS=, or the detected CPU
+count.
+
+There is no machine-independent build timeout.  An operator or CI policy may
+set =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=; unset or zero means no deadline.
+The available policy inputs are:
+
+- =POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES=;
+- =POO_FLOW_BUILD_MAX_RSS_BYTES=;
+- =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=;
+- =POO_FLOW_BUILD_GUARD_SAMPLE_SECONDS=;
+- the Building Framework worker variables listed above.
+
+The former chunk variables are not part of this design.  A future adaptive
+parallelism feature, if required, must be implemented as a Building Framework
+extension over its standard request executor rather than as a second project
+scheduler.
+
+* Receipt contract
+
+Successful compilation returns one POO-native receipt containing:
+
+- =build-owner=gslph-building-framework=;
+- =build-mode=standard-gerbil-make-project=;
+- the three canonical stage labels;
+- detected physical memory and the effective RSS ceiling;
+- peak process-tree RSS and optional deadline;
+- the original Building Framework receipt summary;
+- the Scheme guard receipt.
+
+On an RSS or explicit deadline violation, the raw guard receipt is emitted
+before fail-closed termination.  Build receipts remain owned by Building
+Framework; the guard does not translate individual modules into a second
+receipt vocabulary.
+
+* Performance evidence and regression gate
+
+The discarded scheduler produced 48 chunks for 386 specifications, including
+44 runtime chunks.  A fresh no-op =gxi= import cost approximately 7.67 seconds
+on the observed host, so process startup alone imposed a floor above six
+minutes.  The complete guarded recovery build reported 2,919,108 ms, or about
+48.7 minutes.  That receipt demonstrated monitoring, not acceptable build
+performance.
+
+Reducing the duplicate scheduler to three stage processes produced an
+incremental receipt near 60.2 seconds, but it still reconstructed Building
+Framework requests outside their owner and was therefore rejected.
+
+The corrected regression gate measures the canonical command, not an
+alternate harness:
+
+1. a warm =build.ss compile= must execute one standard project request path;
+2. a cold build must not scale wall time with an artificial =gxi= process
+   count;
+3. receipts must identify Building Framework as the build owner;
+4. RSS observability must remain Scheme-owned and active for the complete
+   project;
+5. no project compile plan, chunk, split, or per-chunk environment API may be
+   exported.
+
+The corrected path passed both measurements on the same 32 GiB macOS host:
+
+#+begin_example
+warm no-op
+  real=5.97s
+  guard-elapsed-ms=495
+  peak-rss-bytes=232456192
+
+cold project build after build.ss clean
+  real=571.71s
+  guard-elapsed-ms=567319
+  peak-rss-bytes=2617507840
+  max-rss-bytes=17179869184
+  timeout-ms=#f
+#+end_example
+
+The cold standard-project build took approximately 9.53 minutes, 19.6% of
+the former 48.7-minute guarded recovery time, a wall-time reduction of about
+80.4%.  The old result is retained solely as rejected-design evidence.
+
+* Validation
+
+- =t/cli-support-project-building-test.ss= validates the three canonical
+  Building Framework requests and their source ownership.
+- =t/build-api-project-compile-guard-test.ss= validates the guard owner,
+  standard-project mode, stage identity, machine-derived RSS policy, and the
+  absence of a fixed timeout.
+- =t/build-api-process-memory-guard-test.ss= validates process-tree RSS,
+  fail-closed limits, optional deadlines, and receipt fields.
+- Warm and cold =build.ss compile= receipts close implementation validation:
+  5.97 seconds warm and 571.71 seconds cold on the recorded host.
+
+* Rejected alternatives
+
+** Per-spec or per-chunk child gxi scheduler
+
+Rejected.  It duplicates currentness, topology, scheduling, and receipt
+ownership already provided by Building Framework.  Its startup multiplicity
+was a root cause of the 48.7-minute build.
+
+** Three hand-built stage requests in the guard
+
+Rejected.  Fewer duplicate processes reduce the symptom but retain the wrong
+owner boundary.  Stage construction belongs to =project-build.ss=.
+
+** Fixed chunk sizes or worker envelopes
+
+Rejected.  They encode one machine's behavior and compete with standard
+Gerbil make parallelism.
+
+** Python-owned monitoring
+
+Rejected.  Gerbil build truth and its safety guard are Scheme responsibilities
+and must remain testable by =gxi= without a Python control plane.
