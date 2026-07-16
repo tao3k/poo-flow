@@ -122,6 +122,81 @@ before fail-closed termination.  Build receipts remain owned by Building
 Framework; the guard does not translate individual modules into a second
 receipt vocabulary.
 
+* Implemented topology execution window phase
+
+The Building Framework now projects dependency-closed topology groups into one
+upstream execution window.  The projection preserves the full dependency order,
+flattens the non-empty stale or affected topology layers in that order, and
+submits the resulting outer spec list through one upstream =std/make= session.
+An empty plan produces no execution window and therefore no upstream session.
+
+The effect owner remains =src/building/std-builder.ss=.  The Building Framework
+does not add a thread pool, call =gsc= directly, replace the upstream scheduler,
+or change the positional ABI of =build-stage= or =build-request=.  Parallel work,
+when available, remains owned by the upstream =std/make= implementation.  The
+new planning helper is a pure transformation; =std-builder-run-spec!= remains
+the only effect boundary for each projected window.
+
+#+begin_src mermaid
+flowchart LR
+  DAG["Full Scheme dependency DAG"] --> GROUPS["Dependency-closed topology groups"]
+  GROUPS --> WINDOW["One ordered Building Framework execution window"]
+  WINDOW --> COORDINATOR["One std/make coordinator session"]
+  COORDINATOR --> WORKERS["Upstream workers (std/make owned)"]
+  WORKERS --> RECEIPT["gslph.build-topology-execution-windows.v1 JSON receipt"]
+#+end_src
+
+** Stable JSON receipt
+
+The sibling schema is =gslph.build-topology-execution-windows.v1=.  Its public
+serializers produce a native Gerbil JSON object and a canonical JSON string;
+raw alists are not a public DSL.  The schema uses English kebab-case keys:
+
+- =schema=
+- =version=
+- =metric-scope=
+- =upstream-executor=
+- =topology-group-count=
+- =upstream-session-count=
+- =eliminated-barrier-count=
+- =spec-count=
+- =dependency-order-preserved=
+
+=eliminated-barrier-count= is =max(0, topology-group-count -
+upstream-session-count)=.  =spec-count= is measured from the topology groups
+before window projection.  =dependency-order-preserved= compares the flattened
+topology plan with the flattened execution-window plan.
+
+** Live pure-plan receipts
+
+| Lane              | Topology groups | Specs | Upstream sessions | Eliminated barriers | Dependency order preserved |
+|-------------------+-----------------+-------+-------------------+---------------------+----------------------------|
+| Runtime modules   |              33 |   144 |                 1 |                  32 | true                       |
+| User interface    |               3 |     8 |                 1 |                   2 | true                       |
+
+These receipts describe the pure plan projection.  They do not claim that the
+guard owns worker scheduling or that every project-wide cold-build dependency
+has been exercised.
+
+** Focused verification receipts
+
+| Check                                      | Result | Elapsed time |
+|--------------------------------------------+--------+--------------|
+| =std-builder.ss= source expansion          | pass   | 0.81 s       |
+| =std-builder.ss= dynamic module compile    | pass   | 2.97 s       |
+| Focused std-builder suite, six checks      | pass   | 0.57 s       |
+| Observability module and test rebuild      | pass   | each < 90 s  |
+| Focused observability JSON import and run  | pass   | 1.48 s       |
+
+The focused tests cover ordered multi-layer projection into one window, the
+zero-work case, a counting fake =make-proc=, preserved =current?=/=skipped=
+semantics, canonical JSON parsing and round-trip serialization, the =3 -> 1=
+barrier example, and the empty receipt.
+
+A full cold build remains gated.  The focused receipts above are intentionally
+not presented as a substitute for a separately authorized project-wide cold
+build with the complete native toolchain and dependency closure available.
+
 * Performance evidence and regression gate
 
 The discarded scheduler produced 48 chunks for 386 specifications, including
