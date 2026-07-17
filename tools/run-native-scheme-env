@@ -15,6 +15,28 @@ if [[ -n "${GERBIL_LOADPATH:-}" ]]; then
   local_loadpath="$local_loadpath:$GERBIL_LOADPATH"
 fi
 
-exec gxpkg env env -u SDKROOT -u DEVELOPER_DIR \
+native_environment=()
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  developer_dir="${DEVELOPER_DIR:-}"
+  sdkroot="${SDKROOT:-}"
+  resolve_sdkroot=false
+
+  if [[ -z "$developer_dir" || "$developer_dir" == /nix/store/* || ! -d "$developer_dir" ]]; then
+    developer_dir="$(env -u DEVELOPER_DIR -u SDKROOT \
+      /usr/bin/xcode-select --print-path)"
+    resolve_sdkroot=true
+  fi
+  if [[ "$resolve_sdkroot" == true || -z "$sdkroot" || "$sdkroot" == /nix/store/* || ! -d "$sdkroot" ]]; then
+    sdkroot="$(env -u SDKROOT DEVELOPER_DIR="$developer_dir" \
+      /usr/bin/xcrun --sdk macosx --show-sdk-path)"
+  fi
+
+  native_environment=(
+    "DEVELOPER_DIR=$developer_dir"
+    "SDKROOT=$sdkroot"
+  )
+fi
+
+exec gxpkg env env "${native_environment[@]}" \
   "GERBIL_LOADPATH=$local_loadpath" \
   "$@"

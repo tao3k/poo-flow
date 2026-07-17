@@ -1,1 +1,7 @@
 exports_files(["gerbil_repository.bzl"])
+
+alias(
+    name = "native_scheme_env",
+    actual = "@local_gerbil//:native_scheme_env",
+    visibility = ["//visibility:public"],
+)

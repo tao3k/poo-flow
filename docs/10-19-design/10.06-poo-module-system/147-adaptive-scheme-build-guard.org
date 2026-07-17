@@ -261,10 +261,14 @@ The downstream implementation is owned by these files:
   build-root contract.
 - =src/build-api/project-compile-guard.ss= owns the outer project receipt and
   emits it as canonical native Scheme JSON.
-- =tools/run-native-scheme-env= removes inherited =SDKROOT= and
-  =DEVELOPER_DIR= only after =gxpkg env= constructs the final command
-  environment.  This allows the host's active developer toolchain to resolve
-  adaptively instead of retaining a stale Nix Apple-SDK wrapper.
+- =tools/bazel/gerbil_repository.bzl= is the Bazel host-toolchain owner.  It
+  resolves the host OS, rejects missing, invalid, or Nix-store Apple SDK
+  selectors on Darwin, preserves valid custom Xcode selectors, and generates a
+  platform-specific =native_scheme_env= executable plus a durable toolchain
+  receipt.  Non-Darwin hosts preserve their environment unchanged.
+- =tools/run-native-scheme-env= is the direct non-Bazel fallback.  It applies
+  the same Darwin validity policy and injects the resolved Xcode values after
+  =gxpkg env= rather than unconditionally deleting SDK variables.
 - =t/build-api-adaptive-execution-window-test.ss= validates immutable sizing,
   fail-closed outcomes, guard JSON, stage activation, zero headroom, and the
   cross-module-instance build-root contract.
@@ -359,9 +363,14 @@ the controller cap raises an error before another window is attempted.
 #+begin_src mermaid
 flowchart TD
   E["Caller environment"] --> X["gxpkg env builds package environment"]
-  X --> T["Remove inherited SDKROOT and DEVELOPER_DIR"]
-  T --> H["Host toolchain resolves through active xcrun"]
-  H --> P{"Explicit tight RSS cap?"}
+  X --> B{"Bazel-owned launch?"}
+  B -->|"yes"| BT["local_gerbil_repository resolves host OS and toolchain"]
+  BT --> BR["Generated runner and durable toolchain receipt"]
+  B -->|"no"| ST["Direct wrapper applies the same host policy"]
+  BR --> H["Preserve valid selectors or inject active Xcode paths"]
+  ST --> H
+  H --> L["xcrun resolves the host Xcode linker"]
+  L --> P{"Explicit tight RSS cap?"}
   P -->|"no"| TP["Building Framework topology policy"]
   TP --> F["Flatten dependency groups into one ordered window"]
   P -->|"yes"| AP["POO immutable adaptive controller"]
@@ -382,8 +391,10 @@ flowchart TD
 The loop is a Building Framework extension around its existing effect
 boundary.  It does not call =gsc= directly, create a per-spec =gxi= scheduler,
 or overlap multiple =std/make= coordinators.  The toolchain gate does not pin a
-machine-specific Xcode path.  It removes an inherited incompatible override so
-the active host selection remains authoritative.
+machine-specific Xcode path and does not delete SDK selectors on every OS.  On
+Darwin it preserves an existing non-Nix directory or resolves the active paths
+through =xcode-select= and =xcrun=; on other systems it preserves the host
+environment.
 
 * Canonical receipt contracts
 
@@ -444,7 +455,9 @@ gate.
 | POO Flow targeted compile | Compiled =process-memory-guard.ss=, =adaptive-execution-window.ss=, =project-build.ss=, and =build-api-adaptive-execution-window-test.ss= from the non-Nix harness environment with the refreshed harness load path; exit 0; 6.87 s |
 | POO Flow focused runtime | Imported =:poo-flow/t/build-api-adaptive-execution-window-test= under a 90-second timeout; exit 0; seven cases; =All tests OK=; canonical guard JSON emitted |
 | Project compile receipt runtime | Ran =build-api-project-compile-guard-test= through the consistent Building Framework overlay under a 40-second timeout; exit 0; five cases; =All tests OK=; canonical project JSON parsed and round-tripped |
-| Native environment projection | =tools/run-native-scheme-env= reported empty inherited =SDKROOT= and =DEVELOPER_DIR= after =gxpkg env=; the host active toolchain remained discoverable through =xcrun= |
+| Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
+| Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed; the generated receipt recorded =host_os=mac os x=, Homebrew =gxi/gxc/gxpkg=, =native_env_policy=darwin-active-xcode=, and active Xcode paths |
+| Bazel linker smoke | The Bazel-generated runner resolved =xcrun -f ld= to =XcodeDefault.xctoolchain/usr/bin/ld= and executed =Gerbil v0.18.2=; exit 0 |
 | Canonical full cold | =build.ss compile= against a fresh output root; exit 0; inner 199,289 ms; outer 202,061 ms; =/usr/bin/time= 202.87 s; all Scheme guard outcomes =completed= |
 | Public incremental receipt | =build.ss compile= against the accepted output root; exit 0; 3,214 ms; canonical JSON recorded =execution-policy=topology= and two active Building Framework stages |
 | POO macro expansion guard | A same-name =.o= slot/value binding reached 6,124,306,432 B RSS in 9.32 seconds and was interrupted; the explicit =execution-policy-value= projection reduced the equivalent import probe to 1.99 seconds and 176,226,304 B |
@@ -494,9 +507,12 @@ The original toolchain failure was not a Scheme algorithm result.  =gxpkg env=
 injected a Nix =DEVELOPER_DIR= into a Homebrew Gerbil/Gambit compiler configured
 with GCC.  GCC's =collect2= delegated to =xcrun=; the Nix =xcrun ld= wrapper then
 recursively invoked an equivalent =xcrun ld= process.  That process chain
-explains the earlier extreme latency and memory growth.  Clearing the inherited
-SDK selectors in the final wrapper environment resolves =xcrun= through the
-host developer tools without hard-coding one machine's path.
+explains the earlier extreme latency and memory growth.  The Bazel repository
+rule now owns host-system resolution and emits both the runner and its receipt.
+It replaces only absent, invalid, or Nix-store Apple SDK paths on Darwin and
+resolves =xcrun= through the active host developer tools without hard-coding
+one machine's path.  The direct wrapper mirrors this policy for invocations
+that intentionally do not enter through Bazel.
 
 * Acceptance outcome and continuing gates
 
@@ -515,8 +531,9 @@ The following continuing rules remain normative:
    closed before the next adaptive window;
 4. =571.71= seconds remains the historical regression ceiling, while =202.87=
    seconds is the current accepted host reference;
-5. the build wrapper must not restore an inherited Nix Apple-SDK selector after
-   environment construction; and
+5. the Bazel host-toolchain rule must select system-specific environment
+   behavior, preserve valid custom selectors, and never project a Nix Apple SDK
+   into a Homebrew Gerbil compile; and
 6. no accepted path may introduce a second executor or concurrent
    =std/make= coordinators.
 
