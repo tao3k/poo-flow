@@ -236,6 +236,37 @@ without changing project BUILD declarations.  It must not replace =build.ss=:
 the native Scheme project and Building Framework remain the only owners of
 topology, scheduling, compilation policy, guards, and receipts.
 
+** Declarative Just command surface
+
+The repository maintains one root =justfile= as the human and CI command
+catalog above Bazel.  It is intentionally a thin declarative layer: variables
+name stable Bazel targets, recipe groups expose discovery, build, test, and
+check intents, and recipe dependencies compose those intents.  The Just layer
+does not inspect the host OS, rewrite SDK variables, locate Gerbil binaries,
+construct runfiles, invoke =gxi= or =gxc=, parse receipts, or reproduce any
+=build.ss= or Building Framework policy.
+
+The maintained surface is:
+
+- =just query= for the complete Bazel target graph;
+- =just build= for =//scheme:compile=;
+- =just build-runtime-c= and =just build-bundle-v1= for their declared C
+  library targets;
+- =just toolchain= for explicit registered-toolchain resolution evidence;
+- =just test= for the ordinary =//scheme:tests= acceptance suite;
+- =just test-runtime-c= and =just test-bundle-v1= for their ordinary suites;
+- =just test-runtime-c-sanitizers= and =just test-runtime-c-leaks= for explicit
+  native diagnostic gates;
+- =just test-performance= for the separately visible performance gate; and
+- =just check= as the dependency composition =query -> build -> test=.
+
+=BAZEL= may select the Bazel executable without changing recipe semantics.
+Every target, platform decision, cache key, sandbox, and output remains
+Bazel-owned.  Every Scheme topology, scheduling, compilation, guard, and
+receipt decision remains =build.ss= and Building Framework-owned.  A recipe is
+therefore a maintained command alias and dependency edge, never a third build
+implementation.
+
 ** Historical standardized baseline and regression interrupt
 
 The adaptive work does not erase the earlier build-system evidence.  The
@@ -347,6 +378,9 @@ The downstream implementation is owned by these files:
   four ordinary gxtest roots, the separate performance root, =//scheme:tests=,
   and =//scheme:all_tests=.  Scheme tests are exclusive so multiple =gxtest=
   processes cannot multiply host RSS accidentally.
+- =justfile= is the declarative developer command catalog.  It names stable
+  Bazel targets and composes =check= from =query=, =build=, and =test= without
+  owning tools, platform policy, Scheme build semantics, or output paths.
 - =tools/run-native-scheme-env= is the direct non-Bazel fallback.  It applies
   the same explicit Darwin-or-Linux boundary.  Darwin injects resolved Xcode
   values after =gxpkg env=, Linux preserves the environment, and unsupported
@@ -444,7 +478,10 @@ the controller cap raises an error before another window is attempted.
 
 #+begin_src mermaid
 flowchart TD
-  E["Caller"] --> B{"Bazel-owned launch?"}
+  E["Caller"] --> J{"Maintained just recipe?"}
+  J -->|"yes"| JR["Resolve a stable Bazel target alias"]
+  JR --> B{"Bazel-owned launch?"}
+  J -->|"no"| B
   B -->|"yes"| BT["host_system.bzl maps Bazel host OS"]
   B -->|"no"| ST["Direct wrapper resolves Darwin or Linux policy"]
   BT --> S{"Declared system"}
@@ -551,6 +588,7 @@ gate.
 | Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
 | Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
 | Bazel registered toolchain analysis | =bazel build --toolchain_resolution_debug=//tools/bazel:gerbil_toolchain_type //scheme:compile= selected =@local_gerbil//:toolchain_impl= through =@local_gerbil//:registered_toolchain= on =@platforms//host:host=; exit 0; the compile action remained an action-cache hit; Scheme compile and test rule implementations contain no =@local_gerbil= labels |
+| Declarative Just surface | =just 1.56.0= parsed and formatted the root =justfile=; =just --list= exposed four recipe groups and twelve explicit commands plus =default=; =just check= queried 62 targets, reused =//scheme:compile= in 0.433 s, and passed four of four ordinary Scheme tests in 37.809 s; =just build-runtime-c= completed in 8.944 s and =just test-runtime-c= passed eight of eight tests in 2.739 s; =just toolchain= selected the registered host implementation with exit 0 |
 | Bazel linker smoke | The Bazel-generated runner resolved =xcrun -f ld= to =XcodeDefault.xctoolchain/usr/bin/ld= and executed =Gerbil v0.18.2=; exit 0 |
 | Bazel workspace boundary | =bazel query //...= completed after =.bazelignore= excluded =.data=, =.devenv=, =.direnv=, and =.gerbil= foreign workspaces |
 | Bazel isolated Scheme cold | =bazel build //scheme:compile=; Darwin sandbox; exit 0; 161.694 s wall; Scheme receipt =completed= in 155,837 ms with 3,359,752,192 B peak RSS; three of three stages compiled |
@@ -644,7 +682,10 @@ The following continuing rules remain normative:
    native fixture-contract drift is repaired; and
 8. =build.ss= must cold-start without importing =:poo-flow= from an installed
    output tree, and Bazel actions must declare every =.ss=, =.ssi=, =.scm=,
-   =.inc=, user-interface, and native-header input they consume.
+   =.inc=, user-interface, and native-header input they consume; and
+9. the root =justfile= must remain a declarative catalog of Bazel targets and
+   recipe dependencies; it must not acquire platform detection, native tool
+   discovery, direct Scheme execution, receipt parsing, or output ownership.
 
 Phase-level overlap remains an upstream proposal.  The next performance path
 is to change the upstream expansion/import and native-job flush behavior so
