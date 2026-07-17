@@ -14,6 +14,11 @@ _TOOL_CANDIDATES = {
 
 _VERSIONED_TOOLS = ["gxi", "gxc"]
 
+_EXEC_CONSTRAINT_BY_SYSTEM = {
+    "darwin": "@platforms//os:macos",
+    "linux": "@platforms//os:linux",
+}
+
 def _shell_quote(value):
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
@@ -119,6 +124,7 @@ def _local_gerbil_repository_impl(repository_ctx):
         "BUILD.bazel",
         repository_ctx.attr.build_file_template,
         substitutions = {
+            "%{ExecCompatibleWith}": _EXEC_CONSTRAINT_BY_SYSTEM[native_environment.system],
             "%{SystemMemoryBytes}": str(native_environment.system_memory_bytes),
         },
     )

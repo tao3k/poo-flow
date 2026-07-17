@@ -211,6 +211,31 @@ observability helper, and the source declaration omitted tracked =.ssi=,
 =.scm=, and =.inc= inputs.  The accepted action removes the self-import cycle
 and declares those inputs.  It cannot read =.gerbil/lib/poo-flow=.
 
+** Registered Gerbil toolchain convergence
+
+The Scheme Bazel surface now requests a Gerbil capability through Bazel's
+native toolchain resolution instead of binding project rules to labels inside
+=@local_gerbil=.  =MODULE.bazel= registers one host-derived toolchain;
+=local_gerbil_repository= emits a private implementation plus a public
+=registered_toolchain= target constrained to the detected Darwin or Linux
+execution platform; and both project compile and project test rules consume the
+resolved =ToolchainInfo= through =ctx.toolchains=.
+
+This separation makes the BUILD surface declarative: =scheme/BUILD.bazel=
+declares source sets, output projections, and test roots, while the selected
+execution platform supplies =gxi=, =gxc=, =gxpkg=, =gxtest=, native tools,
+compiled external dependencies, physical memory, runfiles, and the canonical
+host receipt.  No Scheme project rule names =@local_gerbil= or depends on its
+internal target layout.
+
+The current registered toolchain remains intentionally host-derived and local.
+It normalizes an installed Gerbil and the canonical compiled dependency view;
+it does not claim remote-execution hermeticity.  A future Nix or archive-backed
+repository may register another implementation of the same toolchain type
+without changing project BUILD declarations.  It must not replace =build.ss=:
+the native Scheme project and Building Framework remain the only owners of
+topology, scheduling, compilation policy, guards, and receipts.
+
 ** Historical standardized baseline and regression interrupt
 
 The adaptive work does not erase the earlier build-system evidence.  The
@@ -307,13 +332,17 @@ The downstream implementation is owned by these files:
   =host_system.bzl=, exports normalized =gxi=, =gxc=, =gxpkg=, and =gxtest=
   wrappers, and exposes only compiled external dependency libraries.
 - =tools/bazel/gerbil_toolchain.bzl= projects those host resources through one
-  explicit =GerbilToolchainInfo= provider, including physical memory, compiler,
-  assembler, linker, dependency root, and receipt.
+  explicit =GerbilToolchainInfo= provider and a native =ToolchainInfo= wrapper,
+  including physical memory, compiler, assembler, linker, dependency root,
+  runfiles, and receipt.  =MODULE.bazel= registers the OS-constrained toolchain
+  target; its implementation target is not a consumer API.
 - =tools/bazel/gerbil_project.bzl= declares the canonical project compile action
-  and the isolated gxtest macro.  =tools/bazel/run_scheme_project.sh= invokes
-  =build.ss compile= once, removes temporary tool links, and extracts the native
-  Scheme JSON receipt.  =tools/bazel/run_scheme_tests.sh= composes the compiled
-  tree, declared source runfiles, and external dependency root.
+  and an isolated custom gxtest rule.  Both resolve the registered capability
+  through =ctx.toolchains= and contain no =@local_gerbil= labels.
+  =tools/bazel/run_scheme_project.sh= invokes =build.ss compile= once, removes
+  temporary tool links, and extracts the native Scheme JSON receipt.
+  =tools/bazel/run_scheme_tests.sh= composes the compiled tree, declared source
+  runfiles, and external dependency root.
 - =scheme/BUILD.bazel= exposes =//scheme:compile=, receipt and log output groups,
   four ordinary gxtest roots, the separate performance root, =//scheme:tests=,
   and =//scheme:all_tests=.  Scheme tests are exclusive so multiple =gxtest=
@@ -423,9 +452,12 @@ flowchart TD
   S -->|"linux"| LH["Preserve host environment and derive memory from getconf"]
   S -->|"unsupported"| U["Fail closed before Gerbil execution"]
   ST -->|"unsupported"| U
-  H --> GT["GerbilToolchainInfo and canonical host JSON receipt"]
+  H --> GT["Private ToolchainInfo and canonical host JSON receipt"]
   LH --> GT
-  GT --> BC["//scheme:compile declares sources, tools, and three outputs"]
+  GT --> RT["registered_toolchain constrained to the host OS"]
+  MR["MODULE.bazel register_toolchains"] --> RT
+  RT --> TR["Compile and test rules resolve ctx.toolchains"]
+  TR --> BC["//scheme:compile declares sources and three outputs"]
   BC --> X["Normalized gxpkg env runs build.ss compile once"]
   ST -->|"supported"| X
   X --> P{"Explicit tight RSS cap?"}
@@ -444,7 +476,7 @@ flowchart TD
   N --> W
   C -->|"no"| R["Canonical project JSON receipt"]
   R --> O["Tree artifact, JSON receipt, and complete log"]
-  O --> T["Exclusive //scheme:*_tests use gxtest with declared runfiles"]
+  O --> T["Exclusive custom test rules use gxtest with declared runfiles"]
   Z["No second executor and no concurrent coordinator"] -. invariant .-> M
 #+end_src
 
@@ -518,10 +550,11 @@ gate.
 | Project compile receipt runtime | Ran =build-api-project-compile-guard-test= through the consistent Building Framework overlay under a 40-second timeout; exit 0; five cases; =All tests OK=; canonical project JSON parsed and round-tripped |
 | Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
 | Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
+| Bazel registered toolchain analysis | =bazel build --toolchain_resolution_debug=//tools/bazel:gerbil_toolchain_type //scheme:compile= selected =@local_gerbil//:toolchain_impl= through =@local_gerbil//:registered_toolchain= on =@platforms//host:host=; exit 0; the compile action remained an action-cache hit; Scheme compile and test rule implementations contain no =@local_gerbil= labels |
 | Bazel linker smoke | The Bazel-generated runner resolved =xcrun -f ld= to =XcodeDefault.xctoolchain/usr/bin/ld= and executed =Gerbil v0.18.2=; exit 0 |
 | Bazel workspace boundary | =bazel query //...= completed after =.bazelignore= excluded =.data=, =.devenv=, =.direnv=, and =.gerbil= foreign workspaces |
 | Bazel isolated Scheme cold | =bazel build //scheme:compile=; Darwin sandbox; exit 0; 161.694 s wall; Scheme receipt =completed= in 155,837 ms with 3,359,752,192 B peak RSS; three of three stages compiled |
-| Bazel ordinary Scheme tests | =bazel test //scheme:tests= uses exclusive gxtest actions; unit 77.5 s, contract 13.4 s, CLI support 4.7 s, and integration 14.2 s all passed |
+| Bazel ordinary Scheme tests | Final =bazel test //scheme:tests= resolved the registered toolchain for four exclusive custom gxtest rules; unit 9.6 s, contract 6.5 s, CLI support 4.3 s, and integration 10.1 s all passed; total Bazel wall time 37.013 s |
 | Performance drift audit | =//scheme:performance_tests= and the direct native =gxtest t/performance-tests.ss= reproduce the same pre-existing fixture drift: 30 fixtures versus 29, three build requests versus two, and old benchmark rows missing =expectedOutcome=; this remains a distinct red performance gate rather than a Bazel runner failure |
 | Canonical full cold | =build.ss compile= against a fresh output root; exit 0; inner 199,289 ms; outer 202,061 ms; =/usr/bin/time= 202.87 s; all Scheme guard outcomes =completed= |
 | Public incremental receipt | =build.ss compile= against the accepted output root; exit 0; 3,214 ms; canonical JSON recorded =execution-policy=topology= and two active Building Framework stages |
@@ -601,7 +634,9 @@ The following continuing rules remain normative:
    accepted Bazel host reference;
 5. the Bazel host-toolchain rule must classify the host explicitly as =darwin=
    or =linux=, reject every unsupported system, preserve valid custom selectors,
-   and never project a Nix Apple SDK into a Homebrew Gerbil compile; and
+   never project a Nix Apple SDK into a Homebrew Gerbil compile, register an
+   execution-platform-constrained implementation, and keep consumer rules on
+   native toolchain resolution rather than repository-internal labels; and
 6. no accepted path may introduce a second executor or concurrent
    =std/make= coordinators;
 7. =//scheme:tests= is the ordinary serial acceptance suite, while

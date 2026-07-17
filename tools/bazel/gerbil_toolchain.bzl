@@ -14,6 +14,7 @@ GerbilToolchainInfo = provider(
         "dependency_libraries": "Compiled external Gerbil dependency files.",
         "dependency_library_root": "Marker whose parent is the dependency library root.",
         "receipt": "Canonical JSON host-toolchain receipt.",
+        "runfiles": "Complete runfiles closure for the normalized tools.",
         "system_memory_bytes": "Positive host physical-memory byte count.",
     },
 )
@@ -40,33 +41,37 @@ def _gerbil_toolchain_impl(ctx):
         runfiles = runfiles.merge(target[DefaultInfo].default_runfiles)
 
     files_to_run = [target[DefaultInfo].files_to_run for target in executable_targets]
+    toolchain_info = GerbilToolchainInfo(
+        dependency_libraries = ctx.attr.dependency_libraries[DefaultInfo].files,
+        dependency_library_root = ctx.file.dependency_library_root,
+        gerbil_as = ctx.file.gerbil_as,
+        gerbil_cc = ctx.file.gerbil_cc,
+        gerbil_ld = ctx.file.gerbil_ld,
+        gxc = ctx.attr.gxc[DefaultInfo].files_to_run,
+        gxi = ctx.attr.gxi[DefaultInfo].files_to_run,
+        gxpkg = ctx.attr.gxpkg[DefaultInfo].files_to_run,
+        gxtest = ctx.attr.gxtest[DefaultInfo].files_to_run,
+        native_scheme_env = ctx.attr.native_scheme_env[DefaultInfo].files_to_run,
+        receipt = ctx.file.receipt,
+        runfiles = runfiles,
+        system_memory_bytes = ctx.attr.system_memory_bytes,
+    )
+    default_info = DefaultInfo(
+        files = depset(
+            direct = [
+                ctx.file.gerbil_cc,
+                ctx.file.gerbil_as,
+                ctx.file.gerbil_ld,
+                ctx.file.receipt,
+            ] + [tool.executable for tool in files_to_run],
+            transitive = [ctx.attr.dependency_libraries[DefaultInfo].files],
+        ),
+        runfiles = runfiles,
+    )
     return [
-        DefaultInfo(
-            files = depset(
-                direct = [
-                    ctx.file.gerbil_cc,
-                    ctx.file.gerbil_as,
-                    ctx.file.gerbil_ld,
-                    ctx.file.receipt,
-                ] + [tool.executable for tool in files_to_run],
-                transitive = [ctx.attr.dependency_libraries[DefaultInfo].files],
-            ),
-            runfiles = runfiles,
-        ),
-        GerbilToolchainInfo(
-            dependency_libraries = ctx.attr.dependency_libraries[DefaultInfo].files,
-            dependency_library_root = ctx.file.dependency_library_root,
-            gerbil_as = ctx.file.gerbil_as,
-            gerbil_cc = ctx.file.gerbil_cc,
-            gerbil_ld = ctx.file.gerbil_ld,
-            gxc = ctx.attr.gxc[DefaultInfo].files_to_run,
-            gxi = ctx.attr.gxi[DefaultInfo].files_to_run,
-            gxpkg = ctx.attr.gxpkg[DefaultInfo].files_to_run,
-            gxtest = ctx.attr.gxtest[DefaultInfo].files_to_run,
-            native_scheme_env = ctx.attr.native_scheme_env[DefaultInfo].files_to_run,
-            receipt = ctx.file.receipt,
-            system_memory_bytes = ctx.attr.system_memory_bytes,
-        ),
+        default_info,
+        toolchain_info,
+        platform_common.ToolchainInfo(gerbil = toolchain_info),
     ]
 
 gerbil_toolchain = rule(

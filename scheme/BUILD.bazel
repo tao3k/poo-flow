@@ -32,31 +32,31 @@ filegroup(
 
 gerbil_project_test(
     name = "unit_tests",
-    test_root = "t/unit-tests.ss",
+    test_root = "//:t/unit-tests.ss",
 )
 
 gerbil_project_test(
     name = "contract_tests",
     size = "small",
-    test_root = "t/contract-tests.ss",
+    test_root = "//:t/contract-tests.ss",
 )
 
 gerbil_project_test(
     name = "cli_support_tests",
     size = "small",
-    test_root = "t/cli-support-tests.ss",
+    test_root = "//:t/cli-support-tests.ss",
 )
 
 gerbil_project_test(
     name = "integration_tests",
     size = "small",
-    test_root = "t/integration-tests.ss",
+    test_root = "//:t/integration-tests.ss",
 )
 
 gerbil_project_test(
     name = "performance_tests",
     size = "large",
-    test_root = "t/performance-tests.ss",
+    test_root = "//:t/performance-tests.ss",
 )
 
 test_suite(

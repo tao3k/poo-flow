@@ -1,7 +1,6 @@
 """Bazel orchestration rules for the canonical POO Flow Scheme project."""
 
-load("@rules_shell//shell:sh_test.bzl", "sh_test")
-load(":gerbil_toolchain.bzl", "GerbilToolchainInfo")
+_GERBIL_TOOLCHAIN_TYPE = "//tools/bazel:gerbil_toolchain_type"
 
 GerbilProjectInfo = provider(
     doc = "Declared outputs from one canonical build.ss compile action.",
@@ -12,8 +11,14 @@ GerbilProjectInfo = provider(
     },
 )
 
+def _resolved_gerbil_toolchain(ctx):
+    return ctx.toolchains[_GERBIL_TOOLCHAIN_TYPE].gerbil
+
+def _shell_quote(value):
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
 def _gerbil_project_compile_impl(ctx):
-    toolchain = ctx.attr.gerbil_toolchain[GerbilToolchainInfo]
+    toolchain = _resolved_gerbil_toolchain(ctx)
     compiled_root = ctx.actions.declare_directory(ctx.label.name + ".gerbil")
     receipt = ctx.actions.declare_file(ctx.label.name + ".receipt.json")
     log = ctx.actions.declare_file(ctx.label.name + ".log")
@@ -83,10 +88,6 @@ gerbil_project_compile = rule(
             mandatory = True,
         ),
         "compile_args": attr.string_list(),
-        "gerbil_toolchain": attr.label(
-            default = Label("@local_gerbil//:toolchain"),
-            providers = [GerbilToolchainInfo],
-        ),
         "srcs": attr.label(mandatory = True),
         "_runner": attr.label(
             cfg = "exec",
@@ -94,39 +95,87 @@ gerbil_project_compile = rule(
             executable = True,
         ),
     },
+    toolchains = [_GERBIL_TOOLCHAIN_TYPE],
 )
 
-def gerbil_project_test(name, test_root, size = "medium"):
-    """Declares one gxtest root against the isolated compiled project tree."""
-    sh_test(
+def _gerbil_project_test_impl(ctx):
+    toolchain = _resolved_gerbil_toolchain(ctx)
+    launcher = ctx.actions.declare_file(ctx.label.name + ".sh")
+    test_arguments = [
+        toolchain.gxtest.executable.short_path,
+        toolchain.gxi.executable.short_path,
+        toolchain.gxc.executable.short_path,
+        toolchain.gxpkg.executable.short_path,
+        toolchain.gerbil_cc.short_path,
+        toolchain.gerbil_as.short_path,
+        toolchain.gerbil_ld.short_path,
+        toolchain.dependency_library_root.short_path,
+        ctx.file.compiled_root.short_path,
+        ctx.file.test_root.short_path,
+    ]
+    launcher_lines = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "runfiles_workspace=${TEST_SRCDIR:?}/${TEST_WORKSPACE:?}",
+        "runner=%s" % _shell_quote(ctx.file._test_runner.short_path),
+        "exec \"$runfiles_workspace/$runner\" \\",
+    ]
+    for index, argument in enumerate(test_arguments):
+        continuation = " \\" if index < len(test_arguments) - 1 else ""
+        launcher_lines.append("  %s%s" % (_shell_quote(argument), continuation))
+    ctx.actions.write(
+        content = "\n".join(launcher_lines) + "\n",
+        is_executable = True,
+        output = launcher,
+    )
+
+    runfiles = ctx.runfiles(
+        files = [
+            ctx.file._test_runner,
+            ctx.file.compiled_root,
+            ctx.file.test_root,
+        ],
+        transitive_files = depset(transitive = [
+            ctx.attr.srcs[DefaultInfo].files,
+            toolchain.dependency_libraries,
+        ]),
+    ).merge(toolchain.runfiles)
+    return [
+        DefaultInfo(
+            executable = launcher,
+            runfiles = runfiles,
+        ),
+    ]
+
+_gerbil_project_test = rule(
+    implementation = _gerbil_project_test_impl,
+    attrs = {
+        "compiled_root": attr.label(allow_single_file = True, mandatory = True),
+        "srcs": attr.label(mandatory = True),
+        "test_root": attr.label(allow_single_file = [".ss"], mandatory = True),
+        "_test_runner": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:run_scheme_tests.sh"),
+        ),
+    },
+    test = True,
+    toolchains = [_GERBIL_TOOLCHAIN_TYPE],
+)
+
+def gerbil_project_test(
+        name,
+        test_root,
+        compiled_root = ":compiled_root",
+        srcs = "//:scheme_test_sources",
+        tags = None,
+        **kwargs):
+    """Declare one exclusive gxtest root through the registered toolchain."""
+    declared_tags = [] if tags == None else tags
+    _gerbil_project_test(
         name = name,
-        srcs = ["//tools/bazel:run_scheme_tests.sh"],
-        args = [
-            "$(rootpath @local_gerbil//:gxtest)",
-            "$(rootpath @local_gerbil//:gxi)",
-            "$(rootpath @local_gerbil//:gxc)",
-            "$(rootpath @local_gerbil//:gxpkg)",
-            "$(rootpath @local_gerbil//:gerbil_cc)",
-            "$(rootpath @local_gerbil//:gerbil_as)",
-            "$(rootpath @local_gerbil//:gerbil_ld)",
-            "$(rootpath @local_gerbil//:dependency_library_root)",
-            "$(rootpath :compiled_root)",
-            "$(rootpath //:%s)" % test_root,
-        ],
-        data = [
-            "//:scheme_test_sources",
-            "//:%s" % test_root,
-            ":compiled_root",
-            "@local_gerbil//:dependency_library_root",
-            "@local_gerbil//:gerbil_as",
-            "@local_gerbil//:gerbil_cc",
-            "@local_gerbil//:gerbil_ld",
-            "@local_gerbil//:gxc",
-            "@local_gerbil//:gxi",
-            "@local_gerbil//:gxpkg",
-            "@local_gerbil//:gxtest",
-            "@local_gerbil//:toolchain",
-        ],
-        size = size,
-        tags = ["exclusive"],
+        compiled_root = compiled_root,
+        srcs = srcs,
+        tags = ["exclusive"] + declared_tags,
+        test_root = test_root,
+        **kwargs
     )

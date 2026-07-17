@@ -1,3 +1,5 @@
+"""Generated targets for one system-adaptive local Gerbil toolchain."""
+
 load("@//tools/bazel:gerbil_toolchain.bzl", "gerbil_toolchain")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
@@ -52,7 +54,7 @@ filegroup(
 )
 
 gerbil_toolchain(
-    name = "toolchain",
+    name = "toolchain_impl",
     dependency_libraries = ":dependency_libraries",
     dependency_library_root = "lib/.root",
     gerbil_as = "gerbil_as",
@@ -65,6 +67,13 @@ gerbil_toolchain(
     native_scheme_env = ":native_scheme_env",
     receipt = "toolchain.receipt.json",
     system_memory_bytes = "%{SystemMemoryBytes}",
+)
+
+toolchain(
+    name = "registered_toolchain",
+    exec_compatible_with = ["%{ExecCompatibleWith}"],
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@//tools/bazel:gerbil_toolchain_type",
     visibility = ["//visibility:public"],
 )
 

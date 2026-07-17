@@ -17,14 +17,13 @@ sh_binary(
     srcs = ["run_scheme_project.sh"],
 )
 
-alias(
-    name = "native_scheme_env",
-    actual = "@local_gerbil//:native_scheme_env",
+toolchain_type(
+    name = "gerbil_toolchain_type",
     visibility = ["//visibility:public"],
 )
 
 alias(
-    name = "gerbil_toolchain",
-    actual = "@local_gerbil//:toolchain",
+    name = "native_scheme_env",
+    actual = "@local_gerbil//:native_scheme_env",
     visibility = ["//visibility:public"],
 )
