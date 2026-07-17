@@ -91,11 +91,20 @@ ccache directory remains a separate object-level fallback.  A completed build
 still installs into a fresh prefix and must pass the existing activity and
 runtime guards before that prefix can become the primary cache.
 
+The source tree also carries a configure signature over the Gerbil ref,
+installation prefix, resolved compiler command, and architecture profile.  A
+matching signature reuses =config.status= and skips unconditional configure
+regeneration; a mismatch reruns configure and replaces the stamp.  Existing
+capability-keyed CI trees may adopt a completed =config.status= once when
+migrating from the pre-stamp cache format.
+
 #+begin_src mermaid
 flowchart LR
   Key["OS + architecture + Gerbil label + compiler ABI"]
   Install{"Installed prefix cache"}
   Tree{"Resumable source build tree"}
+  Configure{"Configure signature matches"}
+  Reconfigure["Run configure and write signature"]
   Objects["ccache object fallback"]
   Bootstrap["Upstream parallel bootstrap"]
   SaveTree["Save partial or complete build tree"]
@@ -106,7 +115,10 @@ flowchart LR
   Key --> Install
   Install -->|hit| Project
   Install -->|miss| Tree
-  Tree --> Objects
+  Tree --> Configure
+  Configure -->|yes| Objects
+  Configure -->|no| Reconfigure
+  Reconfigure --> Objects
   Objects --> Bootstrap
   Bootstrap --> SaveTree
   SaveTree --> Validate

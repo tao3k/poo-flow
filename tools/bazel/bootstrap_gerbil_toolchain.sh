@@ -84,7 +84,23 @@ git -C "$GERBIL_SRC" fetch --depth=1 origin "$GERBIL_REF"
 git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
 
 cd "$GERBIL_SRC"
-./configure --prefix="$GERBIL_PREFIX" "${configure_architecture[@]}"
+configure_signature="$GERBIL_REF|$GERBIL_PREFIX|$compiler_command|$architecture_profile"
+configure_stamp="$GERBIL_SRC/.poo-flow-configure-signature"
+
+# A GitHub-hosted runner starts with an empty workspace, so an existing
+# config.status here can only come from the capability-keyed bootstrap-tree
+# cache.  Adopt it once when migrating older cached trees that predate the
+# explicit signature stamp.
+if [[ ! -f "$configure_stamp" && "${CI:-}" == "true" && -f "$GERBIL_SRC/config.status" ]]; then
+  printf '%s\n' "$configure_signature" >"$configure_stamp"
+fi
+
+if [[ -f "$configure_stamp" && "$(<"$configure_stamp")" == "$configure_signature" ]]; then
+  echo "Reusing Gerbil configure state for $architecture_profile"
+else
+  ./configure --prefix="$GERBIL_PREFIX" "${configure_architecture[@]}"
+  printf '%s\n' "$configure_signature" >"$configure_stamp"
+fi
 
 export GERBIL_BUILD_CORES="$build_cores"
 make -j"$build_cores"
