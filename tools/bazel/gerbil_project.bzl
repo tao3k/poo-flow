@@ -43,6 +43,7 @@ def _gerbil_project_compile_impl(ctx):
         executable = ctx.executable._runner,
         env = {
             "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES": toolchain.system_memory_bytes,
+            "POO_FLOW_GERBIL_NATIVE_ABI": toolchain.native_abi_fingerprint,
         },
         inputs = depset(
             direct = [
@@ -51,6 +52,7 @@ def _gerbil_project_compile_impl(ctx):
                 toolchain.gerbil_as,
                 toolchain.gerbil_cc,
                 toolchain.gerbil_ld,
+                toolchain.native_abi_fingerprint_file,
             ],
             transitive = [
                 ctx.attr.srcs[DefaultInfo].files,

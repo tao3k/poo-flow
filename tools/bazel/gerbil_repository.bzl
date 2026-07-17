@@ -1,6 +1,10 @@
 """Declare the host Gerbil toolchain used by Bazel outer orchestration."""
 
-load(":host_system.bzl", "resolve_host_environment")
+load(
+    ":host_system.bzl",
+    "resolve_host_environment",
+    "resolve_native_abi_fingerprint",
+)
 
 _TOOL_CANDIDATES = {
     "gerbil_as": ["as"],
@@ -65,6 +69,12 @@ def _tool_paths(tools):
 def _local_gerbil_repository_impl(repository_ctx):
     native_environment = resolve_host_environment(repository_ctx)
     tools = _resolve_tools(repository_ctx, native_environment.tool_overrides)
+    native_abi_fingerprint = resolve_native_abi_fingerprint(
+        repository_ctx,
+        str(tools["gerbil_cc"]),
+        str(repository_ctx.path(repository_ctx.attr.native_abi_probe)),
+        native_environment.environment,
+    )
     versions = _read_versions(
         repository_ctx,
         tools,
@@ -89,6 +99,7 @@ def _local_gerbil_repository_impl(repository_ctx):
     package_root = repository_ctx.path(repository_ctx.attr.project_package_file).dirname
     project_library_root = repository_ctx.path(str(package_root) + "/.gerbil/lib")
     repository_ctx.file("lib/.root", "local Gerbil dependency library root\n")
+    repository_ctx.file("native_abi.txt", native_abi_fingerprint + "\n")
     if repository_ctx.attr.include_project_dependencies:
         for name in ["clan", "gslph"]:
             dependency_library = repository_ctx.path(str(project_library_root) + "/" + name)
@@ -126,6 +137,7 @@ def _local_gerbil_repository_impl(repository_ctx):
             "environment_policy": native_environment.policy,
             "environment": native_environment.environment,
             "dependency_policy": "project-library-view" if repository_ctx.attr.include_project_dependencies else "bootstrap-host-only",
+            "native_abi_fingerprint": native_abi_fingerprint,
             "system_memory_bytes": native_environment.system_memory_bytes,
             "tools": _tool_paths(tools),
             "versions": versions,
@@ -136,6 +148,7 @@ def _local_gerbil_repository_impl(repository_ctx):
         repository_ctx.attr.build_file_template,
         substitutions = {
             "%{ExecCompatibleWith}": _EXEC_CONSTRAINT_BY_SYSTEM[native_environment.system],
+            "%{NativeAbiFingerprint}": native_abi_fingerprint,
             "%{SystemMemoryBytes}": str(native_environment.system_memory_bytes),
         },
     )
@@ -156,6 +169,10 @@ local_gerbil_repository = repository_rule(
             allow_single_file = True,
             default = Label("//tools/bazel:native_scheme_env.sh.tpl"),
         ),
+        "native_abi_probe": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:native_abi_fingerprint.sh"),
+        ),
         "native_tool_template": attr.label(
             allow_single_file = True,
             default = Label("//tools/bazel:native_tool.sh.tpl"),
@@ -172,6 +189,7 @@ local_gerbil_repository = repository_rule(
         "DEVELOPER_DIR",
         "LDFLAGS",
         "LIBRARY_PATH",
+        "GERBIL_NATIVE_ABI",
         "PKG_CONFIG_PATH",
         "SDKROOT",
     ],

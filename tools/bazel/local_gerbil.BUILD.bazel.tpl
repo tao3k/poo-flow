@@ -6,42 +6,42 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 sh_binary(
     name = "native_scheme_env",
     srcs = ["native_scheme_env.sh"],
-    data = ["gxpkg_raw"],
+    data = ["gxpkg_raw", "native_abi.txt"],
     visibility = ["//visibility:public"],
 )
 
 sh_binary(
     name = "install_dependencies",
     srcs = ["install_gerbil_dependencies.sh"],
-    data = ["gxpkg_raw"],
+    data = ["gxpkg_raw", "native_abi.txt"],
     visibility = ["//visibility:public"],
 )
 
 sh_binary(
     name = "gxc",
     srcs = ["gxc.sh"],
-    data = ["gxc_raw"],
+    data = ["gxc_raw", "native_abi.txt"],
     visibility = ["//visibility:public"],
 )
 
 sh_binary(
     name = "gxi",
     srcs = ["gxi.sh"],
-    data = ["gxi_raw"],
+    data = ["gxi_raw", "native_abi.txt"],
     visibility = ["//visibility:public"],
 )
 
 sh_binary(
     name = "gxpkg",
     srcs = ["gxpkg.sh"],
-    data = ["gxpkg_raw"],
+    data = ["gxpkg_raw", "native_abi.txt"],
     visibility = ["//visibility:public"],
 )
 
 sh_binary(
     name = "gxtest",
     srcs = ["gxtest.sh"],
-    data = ["gxtest_raw"],
+    data = ["gxtest_raw", "native_abi.txt"],
     visibility = ["//visibility:public"],
 )
 
@@ -72,6 +72,8 @@ gerbil_toolchain(
     gxpkg = ":gxpkg",
     gxtest = ":gxtest",
     native_scheme_env = ":native_scheme_env",
+    native_abi_fingerprint = "%{NativeAbiFingerprint}",
+    native_abi_fingerprint_file = "native_abi.txt",
     receipt = "toolchain.receipt.json",
     system_memory_bytes = "%{SystemMemoryBytes}",
 )
@@ -95,6 +97,7 @@ exports_files(
         "gxtest_raw",
         "install_gerbil_dependencies.sh",
         "lib/.root",
+        "native_abi.txt",
         "toolchain.receipt.json",
     ],
     visibility = ["//visibility:public"],

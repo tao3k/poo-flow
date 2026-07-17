@@ -238,6 +238,49 @@ topology, scheduling, compilation policy, guards, and receipts.
 
 ** Runtime-C Gerbil capability convergence
 
+*** Native ABI identity owns native cache compatibility
+
+Gerbil and Gambit are configured with =--enable-march=native=.  A cache key
+containing only the operating system, architecture, and Gerbil revision is
+therefore unsound: two hosted runners can share those labels while selecting
+different native instruction sets.  Reusing that installation or any compiled
+Gerbil dependency can terminate a later code path with =SIGILL= (exit 132).
+
+The native ABI identity is a Bazel toolchain capability, not a CI policy.  The
+single probe at =tools/bazel/native_abi_fingerprint.sh= hashes the host system,
+architecture, compiler version, and the compiler-selected =-march=native=
+target.  =host_system.bzl= resolves or validates that identity and the local
+Gerbil repository projects it into =native_abi.txt=, the toolchain receipt, and
+every normalized Gerbil tool runfiles closure.  Consequently the fingerprint
+participates in Bazel action identity even when a consumer only requests =gxi=,
+=gxc=, =gxpkg=, or =gxtest=.
+
+GitHub Actions remains a bootstrap consumer because its Gerbil installation
+cache is restored before the Gerbil Bazel toolchain exists.  CI invokes the
+same probe once, exports the result as =GERBIL_NATIVE_ABI=, and includes it in
+the Gerbil installation, compiled dependency, Bazel disk, and ccache keys.  A
+broad restore prefix must never cross a native ABI boundary.
+
+#+begin_src mermaid
+flowchart LR
+  Probe["Bazel-owned host capability probe"] --> ABI["Native ABI fingerprint"]
+  ABI --> Install["CI Gerbil install cache key"]
+  ABI --> Dependencies["CI compiled dependency and ccache keys"]
+  ABI --> Toolchain["Bazel Gerbil toolchain identity"]
+  Toolchain --> Scheme["Scheme compile and test actions"]
+  Toolchain --> RuntimeC["Runtime-C contract and library actions"]
+#+end_src
+
+Validation receipts on the Darwin development host:
+
+- ABI-invalidated =//scheme:compile=: =175.997 s=.
+- Immediate same-ABI rebuild: =0.825 s= with zero critical-path work.
+- Final Bazel acceptance: =17/17= Scheme, Runtime-C, and Bundle-v1 tests pass.
+
+This preserves the highest compiler-selected performance for each machine
+without allowing native artifacts to escape the capability domain that created
+them.
+
 Runtime-C rules now consume the same registered Gerbil capability as the
 canonical Scheme project.  The public helper
 =resolved_gerbil_toolchain(ctx)= is the single Starlark resolution path for the

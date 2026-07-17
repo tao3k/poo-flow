@@ -56,6 +56,31 @@ def _required_inherited_path(repository_ctx):
         fail("Gerbil toolchain discovery requires a non-empty host PATH")
     return path
 
+def _validated_native_abi_fingerprint(value):
+    if len(value) != 40:
+        fail("Gerbil native ABI fingerprint must be a 40-character Git object id")
+    for index in range(len(value)):
+        character = value[index]
+        if character not in "0123456789abcdef":
+            fail("Gerbil native ABI fingerprint contains a non-hex character")
+    return value
+
+def resolve_native_abi_fingerprint(repository_ctx, compiler, probe, environment):
+    """Return the compiler-selected native ABI identity for this host."""
+    inherited = repository_ctx.os.environ.get("GERBIL_NATIVE_ABI", "").strip()
+    if inherited:
+        return _validated_native_abi_fingerprint(inherited)
+    bash = repository_ctx.which("bash")
+    if bash == None:
+        fail("Gerbil native ABI discovery requires bash on PATH")
+    result = repository_ctx.execute(
+        [bash, probe, compiler],
+        environment = environment,
+    )
+    if result.return_code != 0:
+        fail("Gerbil native ABI fingerprint probe failed: %s" % result.stderr)
+    return _validated_native_abi_fingerprint(result.stdout.strip())
+
 def _resolve_darwin_native_dependency_environment(repository_ctx):
     brew = repository_ctx.which("brew")
     if brew == None:

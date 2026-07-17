@@ -87,14 +87,6 @@ jobs:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
 
-      - name: Set up Bazel
-        uses: bazel-contrib/setup-bazel@0.19.0
-        with:
-          bazelisk-cache: true
-          cache-save: ${{ github.event_name == 'push' }}
-          disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
-          repository-cache: true
-
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -154,15 +146,31 @@ jobs:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
 
+      - name: Resolve native Gerbil ABI capability
+        id: gerbil-native-abi
+        shell: bash
+        run: |
+          set -euo pipefail
+          native_abi="$(bash tools/bazel/native_abi_fingerprint.sh "${GERBIL_GCC:-}")"
+          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
+          echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
+          echo "Gerbil native ABI: $native_abi"
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: ${{ github.event_name == 'push' }}
+          disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
+          repository-cache: true
+
       - name: Restore Gerbil install cache
         if: matrix.gerbil-install == 'source'
         id: gerbil-cache
         uses: actions/cache/restore@v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
-          restore-keys: |
-            gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
+          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
 
       - name: Build Gerbil
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
@@ -188,7 +196,7 @@ jobs:
         uses: actions/cache/save@v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
+          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
 
       - name: Use Homebrew Gerbil
         if: matrix.gerbil-install == 'homebrew'
@@ -229,7 +237,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         run: |
@@ -257,7 +265,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Validate Bazel target graph
         run: bazel query //...

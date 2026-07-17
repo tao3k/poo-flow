@@ -72,15 +72,24 @@ jobs:
             valgrind \
             zlib1g-dev
 
+      - name: Resolve native Gerbil ABI capability
+        id: gerbil-native-abi
+        shell: bash
+        run: |
+          set -euo pipefail
+          native_abi="$(bash tools/bazel/native_abi_fingerprint.sh gcc)"
+          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
+          echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
+          echo "Gerbil native ABI: $native_abi"
+
       - name: Restore ccache
         id: ccache-cache
         uses: actions/cache/restore@v6.1.0
         with:
           path: .ci/ccache
-          key: ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-
-            ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-
+            ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-
 
       - name: Configure ccache
         run: |
@@ -95,9 +104,7 @@ jobs:
         uses: actions/cache/restore@v6.1.0
         with:
           path: .ci/gerbil/${{ env.GERBIL_LABEL }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}
-          restore-keys: |
-            gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-
+          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}
 
       - name: Build Gerbil
         if: steps.gerbil-cache.outputs.cache-hit != 'true'
@@ -122,7 +129,7 @@ jobs:
         uses: actions/cache/save@v6.1.0
         with:
           path: .ci/gerbil/${{ env.GERBIL_LABEL }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}
+          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}
 
       - name: Activate Gerbil
         run: |
@@ -147,7 +154,7 @@ jobs:
         uses: bazel-contrib/setup-bazel@0.19.0
         with:
           bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
+          disk-cache: ${{ github.workflow }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
           repository-cache: true
 
       - name: Restore Gerbil package dependency cache
@@ -157,7 +164,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         run: |
@@ -185,7 +192,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Set up Python
         uses: actions/setup-python@v6.0.0
@@ -252,7 +259,7 @@ jobs:
         uses: actions/cache/save@v6.1.0
         with:
           path: .ci/ccache
-          key: ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload projection artifact
         uses: actions/upload-artifact@v6.0.0
