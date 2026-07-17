@@ -65,6 +65,79 @@
               (> value 0)
               value))))))
 
+(def +poo-flow-project-compile-headroom-share-denominator+ 16)
+(def +poo-flow-project-compile-runnable-limit-per-cpu+ 2)
+
+(def (poo-flow-project-compile-logical-cpu-count)
+  (poo-flow-project-compile-positive-integer-from-env
+   "POO_FLOW_BUILD_LOGICAL_CPU_COUNT"
+   (max 1 (##cpu-count))))
+
+(def (poo-flow-project-compile-configured-worker-count
+      logical-cpu-count)
+  (min
+   logical-cpu-count
+   (or (poo-flow-project-compile-positive-integer-from-env
+        "GERBIL_BUILD_CORES" #f)
+       (poo-flow-project-compile-positive-integer-from-env
+        "CARGO_BUILD_JOBS" #f)
+       (poo-flow-project-compile-positive-integer-from-env
+        "NUM_JOBS" #f)
+       logical-cpu-count)))
+
+(def (poo-flow-project-compile-runnable-process-count)
+  (or (poo-flow-project-compile-positive-integer-from-env
+       "POO_FLOW_BUILD_RUNNABLE_PROCESSES" #f)
+      (poo-flow-project-compile-command-positive-integer
+       (list
+        "sh" "-c"
+        "ps -axo state= 2>/dev/null | awk '$1 ~ /^R/ {n++} END {print n+0}'"))
+      1))
+
+(def (poo-flow-project-compile-darwin-available-memory-percent)
+  (poo-flow-project-compile-command-positive-integer
+   (list
+    "sh" "-c"
+    "if command -v memory_pressure >/dev/null 2>&1; then memory_pressure -Q 2>/dev/null | awk '/System-wide memory free percentage:/ {gsub(/%/, \"\", $NF); print $NF; exit}'; fi")))
+
+(def (poo-flow-project-compile-linux-available-memory-bytes)
+  (poo-flow-project-compile-command-positive-integer
+   (list
+    "sh" "-c"
+    "if test -r /proc/meminfo; then awk '/^MemAvailable:/ {printf \"%.0f\\n\", $2 * 1024; exit}' /proc/meminfo; fi")))
+
+(def (poo-flow-project-compile-available-memory-bytes system-memory-bytes)
+  (or (poo-flow-project-compile-positive-integer-from-env
+       "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" #f)
+      (poo-flow-project-compile-linux-available-memory-bytes)
+      (let (percent
+            (poo-flow-project-compile-darwin-available-memory-percent))
+        (and percent
+             (quotient (* system-memory-bytes percent) 100)))
+      system-memory-bytes))
+
+(def (poo-flow-project-compile-default-rss-headroom-bytes
+      system-memory-bytes)
+  (max +poo-flow-project-compile-minimum-max-rss-bytes+
+       (quotient
+        system-memory-bytes
+        +poo-flow-project-compile-headroom-share-denominator+)))
+
+(def (poo-flow-project-compile-admission-reasons
+      logical-cpu-count runnable-process-count available-memory-bytes
+      rss-headroom-bytes)
+  (append
+   (if (> runnable-process-count
+          (* logical-cpu-count
+             +poo-flow-project-compile-runnable-limit-per-cpu+))
+     '(runnable-saturation)
+     '())
+   (if (< available-memory-bytes
+          (+ rss-headroom-bytes
+             +poo-flow-project-compile-minimum-max-rss-bytes+))
+     '(insufficient-memory-headroom)
+     '())))
+
 (def (poo-flow-project-compile-system-memory-bytes)
   (or (poo-flow-project-compile-positive-integer-from-env
        "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" #f)
@@ -88,11 +161,27 @@
 (def (poo-flow-project-compile-guard-config _options)
   (let* ((system-memory-bytes
           (poo-flow-project-compile-system-memory-bytes))
-         (max-rss-bytes
+         (logical-cpu-count
+          (poo-flow-project-compile-logical-cpu-count))
+         (runnable-process-count
+          (poo-flow-project-compile-runnable-process-count))
+         (available-memory-bytes
+          (poo-flow-project-compile-available-memory-bytes
+           system-memory-bytes))
+         (rss-headroom-bytes
+          (poo-flow-project-compile-positive-integer-from-env
+           "POO_FLOW_BUILD_RSS_HEADROOM_BYTES"
+           (poo-flow-project-compile-default-rss-headroom-bytes
+            system-memory-bytes)))
+         (requested-max-rss-bytes
           (poo-flow-project-compile-positive-integer-from-env
            "POO_FLOW_BUILD_MAX_RSS_BYTES"
            (poo-flow-project-compile-adaptive-max-rss-bytes
             system-memory-bytes)))
+         (max-rss-bytes
+          (min requested-max-rss-bytes
+               (max 1 (- available-memory-bytes
+                         rss-headroom-bytes))))
          (timeout-seconds
           (poo-flow-project-compile-optional-timeout-from-env
            "POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS"))
@@ -100,14 +189,38 @@
           (poo-flow-project-compile-real-from-env
            "POO_FLOW_BUILD_GUARD_SAMPLE_SECONDS"
            +poo-flow-project-compile-default-sample-seconds+))
-         (execution-policy
-          (if (poo-flow-project-compile-positive-integer-from-env
-               "POO_FLOW_BUILD_MAX_RSS_BYTES" #f)
-            'adaptive
-            'topology))
+         (configured-worker-count
+          (poo-flow-project-compile-configured-worker-count
+           logical-cpu-count))
+         (external-runnable-count
+          (max 0
+               (- runnable-process-count
+                  logical-cpu-count)))
+         (worker-count
+          (max 1
+               (- configured-worker-count
+                  external-runnable-count)))
+         (admission-reasons
+          (poo-flow-project-compile-admission-reasons
+           logical-cpu-count
+           runnable-process-count
+           available-memory-bytes
+           rss-headroom-bytes))
+         (admission-outcome
+          (if (null? admission-reasons)
+            'ready
+            'blocked-host-pressure))
+         (execution-policy 'adaptive)
          (request-labels (poo-flow-project-build-stage-labels)))
     (let ((request-labels-value request-labels)
           (execution-policy-value execution-policy)
+          (logical-cpu-count-value logical-cpu-count)
+          (runnable-process-count-value runnable-process-count)
+          (available-memory-bytes-value available-memory-bytes)
+          (rss-headroom-bytes-value rss-headroom-bytes)
+          (worker-count-value worker-count)
+          (admission-outcome-value admission-outcome)
+          (admission-reasons-value admission-reasons)
           (system-memory-bytes-value system-memory-bytes)
           (max-rss-bytes-value max-rss-bytes)
           (timeout-seconds-value timeout-seconds)
@@ -117,6 +230,13 @@
           (build-owner 'gslph-building-framework)
           (build-mode 'standard-gerbil-make-project)
           (execution-policy execution-policy-value)
+          (logical-cpu-count logical-cpu-count-value)
+          (runnable-process-count runnable-process-count-value)
+          (available-memory-bytes available-memory-bytes-value)
+          (rss-headroom-bytes rss-headroom-bytes-value)
+          (worker-count worker-count-value)
+          (admission-outcome admission-outcome-value)
+          (admission-reasons admission-reasons-value)
           (request-labels request-labels-value)
           (system-memory-bytes system-memory-bytes-value)
           (max-rss-bytes max-rss-bytes-value)
@@ -126,6 +246,9 @@
 (def (poo-flow-project-compile-receipt->alist receipt)
   (map (lambda (slot) (cons slot (.ref receipt slot)))
        '(schema outcome build-owner build-mode execution-policy request-labels
+                admission-outcome admission-reasons logical-cpu-count
+                runnable-process-count available-memory-bytes
+                rss-headroom-bytes worker-count
                 system-memory-bytes max-rss-bytes peak-rss-bytes
                 elapsed-ms timeout-ms)))
 
@@ -182,6 +305,17 @@
      (.ref receipt 'execution-policy)))
    ("request-labels"
     (poo-flow-process-memory-guard-json-value (.ref receipt 'request-labels)))
+   ("admission-outcome"
+    (poo-flow-process-memory-guard-json-value
+     (.ref receipt 'admission-outcome)))
+   ("admission-reasons"
+    (poo-flow-process-memory-guard-json-value
+     (.ref receipt 'admission-reasons)))
+   ("logical-cpu-count" (.ref receipt 'logical-cpu-count))
+   ("runnable-process-count" (.ref receipt 'runnable-process-count))
+   ("available-memory-bytes" (.ref receipt 'available-memory-bytes))
+   ("rss-headroom-bytes" (.ref receipt 'rss-headroom-bytes))
+   ("worker-count" (.ref receipt 'worker-count))
    ("system-memory-bytes" (.ref receipt 'system-memory-bytes))
    ("max-rss-bytes" (.ref receipt 'max-rss-bytes))
    ("peak-rss-bytes" (.ref receipt 'peak-rss-bytes))
@@ -203,9 +337,60 @@
   (newline (current-error-port))
   (force-output (current-error-port)))
 
+(def (poo-flow-project-compile-blocked-receipt config)
+  (.o (schema +poo-flow-project-compile-guard-schema+)
+      (kind 'project-compile-receipt)
+      (outcome 'blocked-host-pressure)
+      (build-owner (.ref config 'build-owner))
+      (build-mode (.ref config 'build-mode))
+      (execution-policy (.ref config 'execution-policy))
+      (request-labels (.ref config 'request-labels))
+      (admission-outcome (.ref config 'admission-outcome))
+      (admission-reasons (.ref config 'admission-reasons))
+      (logical-cpu-count (.ref config 'logical-cpu-count))
+      (runnable-process-count (.ref config 'runnable-process-count))
+      (available-memory-bytes (.ref config 'available-memory-bytes))
+      (rss-headroom-bytes (.ref config 'rss-headroom-bytes))
+      (worker-count (.ref config 'worker-count))
+      (system-memory-bytes (.ref config 'system-memory-bytes))
+      (max-rss-bytes (.ref config 'max-rss-bytes))
+      (peak-rss-bytes 0)
+      (elapsed-ms 0)
+      (timeout-ms #f)
+      (build '())))
+
+(def (poo-flow-project-compile-with-adaptive-environment options config)
+  (let* ((bindings
+          (list
+           (cons "GERBIL_BUILD_CORES"
+                 (number->string (.ref config 'worker-count)))
+           (cons "POO_FLOW_BUILD_MAX_RSS_BYTES"
+                 (number->string (.ref config 'max-rss-bytes)))
+           (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "0")))
+         (previous
+          (map (lambda (entry)
+                 (cons (car entry) (getenv (car entry) #f)))
+               bindings)))
+    (dynamic-wind
+      (lambda ()
+        (for-each
+         (lambda (entry) (setenv (car entry) (cdr entry)))
+         bindings))
+      (lambda () (poo-flow-project-compile! options))
+      (lambda ()
+        (for-each
+         (lambda (entry)
+           (setenv (car entry) (or (cdr entry) "")))
+         previous)))))
+
 (def (poo-flow-project-compile-guarded! options)
-  (let* ((config (poo-flow-project-compile-guard-config options))
-         (guard
+  (let (config (poo-flow-project-compile-guard-config options))
+    (unless (eq? (.ref config 'admission-outcome) 'ready)
+      (let (receipt (poo-flow-project-compile-blocked-receipt config))
+        (poo-flow-project-compile-receipt-emit! receipt)
+        (error "POO Flow project compile blocked by host pressure"
+               (.ref config 'admission-reasons))))
+    (let* ((guard
           (poo-flow-current-process-memory-guard-start!
            '(compile building-framework-project)
            (.ref config 'max-rss-bytes)
@@ -223,7 +408,9 @@
       (dynamic-wind
         (lambda () #!void)
         (lambda ()
-          (let* ((build-receipt (poo-flow-project-compile! options))
+          (let* ((build-receipt
+                  (poo-flow-project-compile-with-adaptive-environment
+                   options config))
                  (completed-guard-receipt (stop!)))
             (let (receipt
                   (.o (schema +poo-flow-project-compile-guard-schema+)
@@ -233,6 +420,16 @@
                       (build-mode (.ref config 'build-mode))
                       (execution-policy (.ref config 'execution-policy))
                       (request-labels (.ref config 'request-labels))
+                      (admission-outcome (.ref config 'admission-outcome))
+                      (admission-reasons (.ref config 'admission-reasons))
+                      (logical-cpu-count (.ref config 'logical-cpu-count))
+                      (runnable-process-count
+                       (.ref config 'runnable-process-count))
+                      (available-memory-bytes
+                       (.ref config 'available-memory-bytes))
+                      (rss-headroom-bytes
+                       (.ref config 'rss-headroom-bytes))
+                      (worker-count (.ref config 'worker-count))
                       (system-memory-bytes
                        (.ref config 'system-memory-bytes))
                       (max-rss-bytes (.ref config 'max-rss-bytes))
@@ -245,4 +442,4 @@
                       (guard completed-guard-receipt)))
               (poo-flow-project-compile-receipt-emit! receipt)
               receipt)))
-        (lambda () (stop!))))))
+        (lambda () (stop!)))))))

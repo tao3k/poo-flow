@@ -22,7 +22,9 @@
       (check (.ref config 'build-mode)
              => 'standard-gerbil-make-project)
       (check (.ref config 'execution-policy)
-             => 'topology)
+             => 'adaptive)
+      (check (>= (.ref config 'worker-count) 1) => #t)
+      (check (> (.ref config 'available-memory-bytes) 0) => #t)
       (check (.ref config 'request-labels)
              => '("nono-c-ffi" "runtime" "user-interface")))
     (test-case "derives the RSS ceiling from machine capacity"
@@ -35,11 +37,11 @@
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-optional-timeout-from-env
        "POO_FLOW_TEST_UNSET_BUILD_TIMEOUT")
        => #f))
-    (test-case "records adaptive policy only for an explicit RSS cap"
+    (test-case "uses adaptive policy without requiring an explicit RSS cap"
       (let (previous (getenv "POO_FLOW_BUILD_MAX_RSS_BYTES" #f))
         (dynamic-wind
           (lambda ()
-            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" "2147483648"))
+            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" ""))
           (lambda ()
             (check
              (.ref (poo-flow-project-compile-guard-config '())
@@ -47,6 +49,41 @@
              => 'adaptive))
           (lambda ()
             (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" (or previous ""))))))
+    (test-case "blocks topology-relative host pressure"
+      (let* ((overrides
+              '(("POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" . "8589934592")
+                ("POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" . "2147483648")
+                ("POO_FLOW_BUILD_RSS_HEADROOM_BYTES" . "2147483648")
+                ("POO_FLOW_BUILD_LOGICAL_CPU_COUNT" . "12")
+                ("POO_FLOW_BUILD_RUNNABLE_PROCESSES" . "25")
+                ("GERBIL_BUILD_CORES" . "12")))
+             (previous
+              (map (lambda (entry)
+                     (cons (car entry) (getenv (car entry) #f)))
+                   overrides)))
+        (dynamic-wind
+          (lambda ()
+            (for-each
+             (lambda (entry) (setenv (car entry) (cdr entry)))
+             overrides))
+          (lambda ()
+            (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'admission-outcome)
+                     => 'blocked-host-pressure)
+              (check (.ref config 'admission-reasons)
+                     => '(runnable-saturation
+                          insufficient-memory-headroom))
+              (check (.ref config 'worker-count) => 1))
+            (setenv "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "8")
+            (setenv "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "6442450944")
+            (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'admission-outcome) => 'ready)
+              (check (.ref config 'worker-count) => 12)))
+          (lambda ()
+            (for-each
+             (lambda (entry)
+               (setenv (car entry) (or (cdr entry) "")))
+             previous)))))
     (test-case "emits a canonical native Scheme JSON receipt"
       (let* ((receipt
               (.o (schema 'poo-flow.project-compile-guard.v1)
@@ -55,6 +92,13 @@
                   (build-mode 'standard-gerbil-make-project)
                   (execution-policy 'topology)
                   (request-labels '("runtime" "user-interface"))
+                  (admission-outcome 'ready)
+                  (admission-reasons '())
+                  (logical-cpu-count 12)
+                  (runnable-process-count 4)
+                  (available-memory-bytes 25769803776)
+                  (rss-headroom-bytes 2147483648)
+                  (worker-count 10)
                   (system-memory-bytes 34359738368)
                   (max-rss-bytes 17179869184)
                   (peak-rss-bytes 2460680192)
@@ -83,6 +127,8 @@
         (check (hash-get object "version") => 1)
         (check (hash-get object "elapsed-ms") => 199289)
         (check (hash-get object "execution-policy") => "topology")
+        (check (hash-get object "admission-outcome") => "ready")
+        (check (hash-get object "worker-count") => 10)
         (check
          (hash-get (hash-get object "build-summary") "stage-count")
          => 3)
