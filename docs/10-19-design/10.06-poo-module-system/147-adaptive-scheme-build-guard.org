@@ -236,6 +236,35 @@ without changing project BUILD declarations.  It must not replace =build.ss=:
 the native Scheme project and Building Framework remain the only owners of
 topology, scheduling, compilation policy, guards, and receipts.
 
+** Runtime-C Gerbil capability convergence
+
+Runtime-C rules now consume the same registered Gerbil capability as the
+canonical Scheme project.  The public helper
+=resolved_gerbil_toolchain(ctx)= is the single Starlark resolution path for the
+current execution platform.  Runtime-C BUILD declarations no longer name
+=@local_gerbil= targets or expose =gxi=, =gxc=, compiler, assembler, or linker
+attributes.
+
+The migrated consumers are deliberately capability-oriented:
+
+- =runtime_contract= resolves =gxi= for the Scheme-owned runtime-v0 contract
+  generation action;
+- =runtime_gerbil_benchmark_test= resolves =gxc=, =gxi=, the native compiler,
+  assembler, linker, and the exact wrapper runfiles for those two Gerbil tools;
+- =runtime_gerbil_script_test= is one reusable Scheme-backed test rule that
+  injects resolved =gxi= ahead of declared business arguments; and
+- the runtime symbol-surface test declares only its script, domain inputs,
+  source runfiles, and native library.
+
+There are no per-tool proxy aliases and no compatibility wrapper around the old
+BUILD API.  The rule implementations request =GERBIL_TOOLCHAIN_TYPE= directly,
+so another registered implementation can satisfy runtime-C without changing
+its BUILD declarations.  The provider exposes precise per-tool runfiles as well
+as the full Scheme-project closure: runtime-C script tests merge only =gxi=,
+and the benchmark merges only =gxi=, =gxc=, and its three declared native tool
+files.  Compiled project dependency libraries are not copied into those test
+runfile trees.
+
 ** Declarative Just command surface
 
 The repository maintains one root =justfile= as the human and CI command
@@ -365,8 +394,10 @@ The downstream implementation is owned by these files:
 - =tools/bazel/gerbil_toolchain.bzl= projects those host resources through one
   explicit =GerbilToolchainInfo= provider and a native =ToolchainInfo= wrapper,
   including physical memory, compiler, assembler, linker, dependency root,
-  runfiles, and receipt.  =MODULE.bazel= registers the OS-constrained toolchain
-  target; its implementation target is not a consumer API.
+  runfiles, and receipt.  Its public type constant and resolution helper are
+  shared by Scheme and runtime-C rules.  =MODULE.bazel= registers the
+  OS-constrained toolchain target; its implementation target is not a consumer
+  API.
 - =tools/bazel/gerbil_project.bzl= declares the canonical project compile action
   and an isolated custom gxtest rule.  Both resolve the registered capability
   through =ctx.toolchains= and contain no =@local_gerbil= labels.
@@ -378,6 +409,11 @@ The downstream implementation is owned by these files:
   four ordinary gxtest roots, the separate performance root, =//scheme:tests=,
   and =//scheme:all_tests=.  Scheme tests are exclusive so multiple =gxtest=
   processes cannot multiply host RSS accidentally.
+- =bindings/runtime-c/runtime_contract.bzl= resolves the registered =gxi= for
+  runtime-v0 contract generation instead of accepting a tool label.
+- =bindings/runtime-c/runtime_checks.bzl= owns the toolchain-aware Gerbil
+  benchmark and generic Scheme-backed script-test rules.  The root runtime-C
+  BUILD file provides domain arguments and data only.
 - =justfile= is the declarative developer command catalog.  It names stable
   Bazel targets and composes =check= from =query=, =build=, and =test= without
   owning tools, platform policy, Scheme build semantics, or output paths.
@@ -495,6 +531,8 @@ flowchart TD
   MR["MODULE.bazel register_toolchains"] --> RT
   RT --> TR["Compile and test rules resolve ctx.toolchains"]
   TR --> BC["//scheme:compile declares sources and three outputs"]
+  TR --> RC["Runtime-C contract, benchmark, and script-test rules"]
+  RC --> RR["Generated C contract and native test receipts"]
   BC --> X["Normalized gxpkg env runs build.ss compile once"]
   ST -->|"supported"| X
   X --> P{"Explicit tight RSS cap?"}
@@ -588,6 +626,7 @@ gate.
 | Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
 | Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
 | Bazel registered toolchain analysis | =bazel build --toolchain_resolution_debug=//tools/bazel:gerbil_toolchain_type //scheme:compile= selected =@local_gerbil//:toolchain_impl= through =@local_gerbil//:registered_toolchain= on =@platforms//host:host=; exit 0; the compile action remained an action-cache hit; Scheme compile and test rule implementations contain no =@local_gerbil= labels |
+| Runtime-C registered toolchain consumers | Toolchain-resolution debug selected the registered host implementation for runtime contract, benchmark, and symbol-surface targets; final contract parity passed in 0.4 s, the Gerbil FFI benchmark in 7.9 s, and symbol-surface validation in 4.7 s; action-graph audits found zero compiled =clan/gslph= dependency artifacts in both runtime-C test closures; =just test-runtime-c= retained eight of eight passing tests; Scheme compile remained an action-cache hit and four of four Scheme tests passed after the shared-helper refactor |
 | Declarative Just surface | =just 1.56.0= parsed and formatted the root =justfile=; =just --list= exposed four recipe groups and twelve explicit commands plus =default=; =just check= queried 62 targets, reused =//scheme:compile= in 0.433 s, and passed four of four ordinary Scheme tests in 37.809 s; =just build-runtime-c= completed in 8.944 s and =just test-runtime-c= passed eight of eight tests in 2.739 s; =just toolchain= selected the registered host implementation with exit 0 |
 | Bazel linker smoke | The Bazel-generated runner resolved =xcrun -f ld= to =XcodeDefault.xctoolchain/usr/bin/ld= and executed =Gerbil v0.18.2=; exit 0 |
 | Bazel workspace boundary | =bazel query //...= completed after =.bazelignore= excluded =.data=, =.devenv=, =.direnv=, and =.gerbil= foreign workspaces |
@@ -685,7 +724,12 @@ The following continuing rules remain normative:
    =.inc=, user-interface, and native-header input they consume; and
 9. the root =justfile= must remain a declarative catalog of Bazel targets and
    recipe dependencies; it must not acquire platform detection, native tool
-   discovery, direct Scheme execution, receipt parsing, or output ownership.
+   discovery, direct Scheme execution, receipt parsing, or output ownership;
+   and
+10. Scheme and runtime-C Starlark consumers must resolve
+    =GERBIL_TOOLCHAIN_TYPE= through the shared capability helper; runtime-C
+    BUILD declarations must not name =@local_gerbil= or expose individual
+    Gerbil/native tool attributes.
 
 Phase-level overlap remains an upstream proposal.  The next performance path
 is to change the upstream expansion/import and native-job flush behavior so

@@ -1,4 +1,6 @@
-"""Provider for the host Gerbil tools selected by local_gerbil_repository."""
+"""Provider and resolution helpers for registered Gerbil toolchains."""
+
+GERBIL_TOOLCHAIN_TYPE = "//tools/bazel:gerbil_toolchain_type"
 
 GerbilToolchainInfo = provider(
     doc = "Host Gerbil tools with system-normalized execution wrappers.",
@@ -7,10 +9,15 @@ GerbilToolchainInfo = provider(
         "gerbil_as": "Native assembler file selected for Gerbil.",
         "gerbil_ld": "Native linker file selected for Gerbil.",
         "gxc": "FilesToRunProvider for the normalized gxc wrapper.",
+        "gxc_runfiles": "Runfiles for the normalized gxc wrapper.",
         "gxi": "FilesToRunProvider for the normalized gxi wrapper.",
+        "gxi_runfiles": "Runfiles for the normalized gxi wrapper.",
         "gxpkg": "FilesToRunProvider for the normalized gxpkg wrapper.",
+        "gxpkg_runfiles": "Runfiles for the normalized gxpkg wrapper.",
         "gxtest": "FilesToRunProvider for the normalized gxtest wrapper.",
+        "gxtest_runfiles": "Runfiles for the normalized gxtest wrapper.",
         "native_scheme_env": "FilesToRunProvider for arbitrary normalized commands.",
+        "native_scheme_env_runfiles": "Runfiles for the normalized command wrapper.",
         "dependency_libraries": "Compiled external Gerbil dependency files.",
         "dependency_library_root": "Marker whose parent is the dependency library root.",
         "receipt": "Canonical JSON host-toolchain receipt.",
@@ -18,6 +25,10 @@ GerbilToolchainInfo = provider(
         "system_memory_bytes": "Positive host physical-memory byte count.",
     },
 )
+
+def resolved_gerbil_toolchain(ctx):
+    """Return the Gerbil capability selected for the current execution platform."""
+    return ctx.toolchains[GERBIL_TOOLCHAIN_TYPE].gerbil
 
 def _gerbil_toolchain_impl(ctx):
     executable_targets = [
@@ -48,10 +59,15 @@ def _gerbil_toolchain_impl(ctx):
         gerbil_cc = ctx.file.gerbil_cc,
         gerbil_ld = ctx.file.gerbil_ld,
         gxc = ctx.attr.gxc[DefaultInfo].files_to_run,
+        gxc_runfiles = ctx.attr.gxc[DefaultInfo].default_runfiles,
         gxi = ctx.attr.gxi[DefaultInfo].files_to_run,
+        gxi_runfiles = ctx.attr.gxi[DefaultInfo].default_runfiles,
         gxpkg = ctx.attr.gxpkg[DefaultInfo].files_to_run,
+        gxpkg_runfiles = ctx.attr.gxpkg[DefaultInfo].default_runfiles,
         gxtest = ctx.attr.gxtest[DefaultInfo].files_to_run,
+        gxtest_runfiles = ctx.attr.gxtest[DefaultInfo].default_runfiles,
         native_scheme_env = ctx.attr.native_scheme_env[DefaultInfo].files_to_run,
+        native_scheme_env_runfiles = ctx.attr.native_scheme_env[DefaultInfo].default_runfiles,
         receipt = ctx.file.receipt,
         runfiles = runfiles,
         system_memory_bytes = ctx.attr.system_memory_bytes,

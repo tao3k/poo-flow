@@ -1,5 +1,11 @@
 """Runtime-C checks that need a small Bazel-native test launcher."""
 
+load(
+    "//tools/bazel:gerbil_toolchain.bzl",
+    "GERBIL_TOOLCHAIN_TYPE",
+    "resolved_gerbil_toolchain",
+)
+
 def _runtime_leak_test_impl(ctx):
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
     binary_paths = [binary[DefaultInfo].files_to_run.executable.short_path for binary in ctx.attr.binaries]
@@ -88,7 +94,61 @@ runtime_contract_parity_test = rule(
     },
 )
 
+def _runtime_gerbil_script_test_impl(ctx):
+    toolchain = resolved_gerbil_toolchain(ctx)
+    executable = ctx.actions.declare_file(ctx.label.name + ".sh")
+    argument_files = []
+    for target in ctx.attr.arguments:
+        files = target[DefaultInfo].files.to_list()
+        if len(files) != 1:
+            fail(
+                "runtime_gerbil_script_test argument %s must provide exactly one file, got %d" %
+                (target.label, len(files)),
+            )
+        argument_files.append(files[0])
+
+    command_arguments = [
+        "\"$runfiles/%s\"" % toolchain.gxi.executable.short_path,
+    ] + ["\"$runfiles/%s\"" % file.short_path for file in argument_files]
+    ctx.actions.write(
+        output = executable,
+        content = """#!/bin/sh
+set -eu
+runfiles="${TEST_SRCDIR}/${TEST_WORKSPACE}"
+cd "$runfiles"
+exec "$runfiles/%s" %s
+""" % (
+            ctx.file.script.short_path,
+            " ".join(command_arguments),
+        ),
+        is_executable = True,
+    )
+
+    transitive_files = [target[DefaultInfo].files for target in ctx.attr.data]
+    transitive_files.extend([target[DefaultInfo].files for target in ctx.attr.arguments])
+    runfiles = ctx.runfiles(
+        files = [ctx.file.script],
+        transitive_files = depset(transitive = transitive_files),
+    ).merge(toolchain.gxi_runfiles)
+    for target in ctx.attr.arguments + ctx.attr.data:
+        runfiles = runfiles.merge(target[DefaultInfo].default_runfiles)
+        runfiles = runfiles.merge(target[DefaultInfo].data_runfiles)
+
+    return [DefaultInfo(executable = executable, runfiles = runfiles)]
+
+runtime_gerbil_script_test = rule(
+    implementation = _runtime_gerbil_script_test_impl,
+    test = True,
+    attrs = {
+        "arguments": attr.label_list(allow_files = True),
+        "data": attr.label_list(allow_files = True),
+        "script": attr.label(allow_single_file = True, mandatory = True),
+    },
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
+)
+
 def _runtime_gerbil_benchmark_test_impl(ctx):
+    toolchain = resolved_gerbil_toolchain(ctx)
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
     library = ctx.attr.library[DefaultInfo].files.to_list()[0]
     ctx.actions.write(
@@ -129,28 +189,26 @@ env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
             ctx.file.header.short_path,
             ctx.file.contract_header.short_path,
             library.short_path,
-            ctx.executable.gxc.short_path,
-            ctx.executable.gxi.short_path,
-            ctx.file.gerbil_cc.short_path,
-            ctx.file.gerbil_as.short_path,
-            ctx.file.gerbil_ld.short_path,
+            toolchain.gxc.executable.short_path,
+            toolchain.gxi.executable.short_path,
+            toolchain.gerbil_cc.short_path,
+            toolchain.gerbil_as.short_path,
+            toolchain.gerbil_ld.short_path,
         ),
         is_executable = True,
     )
     runfiles = ctx.runfiles(files = [
         ctx.file.contract_header,
-        ctx.executable.gxc,
-        ctx.executable.gxi,
-        ctx.file.gerbil_cc,
-        ctx.file.gerbil_as,
-        ctx.file.gerbil_ld,
         ctx.file.header,
         ctx.file.package_file,
         ctx.file.source,
         library,
+        toolchain.gerbil_as,
+        toolchain.gerbil_cc,
+        toolchain.gerbil_ld,
     ])
-    runfiles = runfiles.merge(ctx.attr.gxc[DefaultInfo].default_runfiles)
-    runfiles = runfiles.merge(ctx.attr.gxi[DefaultInfo].default_runfiles)
+    runfiles = runfiles.merge(toolchain.gxc_runfiles)
+    runfiles = runfiles.merge(toolchain.gxi_runfiles)
     return [DefaultInfo(executable = executable, runfiles = runfiles)]
 
 runtime_gerbil_benchmark_test = rule(
@@ -158,22 +216,10 @@ runtime_gerbil_benchmark_test = rule(
     test = True,
     attrs = {
         "contract_header": attr.label(allow_single_file = True, mandatory = True),
-        "gxc": attr.label(cfg = "exec", executable = True, mandatory = True),
-        "gxi": attr.label(cfg = "exec", executable = True, mandatory = True),
-        "gerbil_cc": attr.label(allow_single_file = True, cfg = "exec", mandatory = True),
-        "gerbil_as": attr.label(
-            allow_single_file = True,
-            cfg = "exec",
-            default = "@local_gerbil//:gerbil_as",
-        ),
-        "gerbil_ld": attr.label(
-            allow_single_file = True,
-            cfg = "exec",
-            default = "@local_gerbil//:gerbil_ld",
-        ),
         "header": attr.label(allow_single_file = True, mandatory = True),
         "library": attr.label(mandatory = True),
         "package_file": attr.label(allow_single_file = True, mandatory = True),
         "source": attr.label(allow_single_file = [".ss"], mandatory = True),
     },
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )

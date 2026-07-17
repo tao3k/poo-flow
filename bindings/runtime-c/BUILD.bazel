@@ -1,10 +1,9 @@
 load(":runtime_contract.bzl", "runtime_contract")
-load(":runtime_checks.bzl", "runtime_contract_parity_test", "runtime_gerbil_benchmark_test", "runtime_leak_test")
+load(":runtime_checks.bzl", "runtime_contract_parity_test", "runtime_gerbil_benchmark_test", "runtime_gerbil_script_test", "runtime_leak_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_static_library.bzl", "cc_static_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
-load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -15,7 +14,6 @@ runtime_contract(
     clan_utils_root = "@gerbil_utils_sources//:gerbil.pkg",
     clan_utils_sources = "@gerbil_utils_sources//:sources",
     generator = "tools/generate-runtime-v0-contract.ss",
-    gxi = "@local_gerbil//:gxi",
     schema = "//:runtime_v0_schema",
     scheme_sources = "//:scheme_runtime_sources",
 )
@@ -110,9 +108,6 @@ cc_test(
 runtime_gerbil_benchmark_test(
     name = "runtime_v0_gerbil_ffi_benchmark",
     contract_header = ":runtime_v0_contract_header",
-    gerbil_cc = "@local_gerbil//:gerbil_cc",
-    gxc = "@local_gerbil//:gxc",
-    gxi = "@local_gerbil//:gxi",
     header = "include/poo_flow/runtime_v0.h",
     library = ":runtime_c_shared",
     package_file = "//:gerbil.pkg",
@@ -140,28 +135,21 @@ cc_test(
     deps = [":runtime_c_library"],
 )
 
-sh_test(
+runtime_gerbil_script_test(
     name = "runtime_v0_symbol_surface_test",
-    srcs = ["tests/runtime_v0_symbol_surface_test.sh"],
-    args = [
-        "$(location @local_gerbil//:gxi)",
-        "$(location //:tools/validate-runtime-v0-symbol-surface.ss)",
-        "$(location :runtime_c_shared)",
-        "$(location :runtime_v0_exported_symbols)",
-        "$(location @gerbil_poo_sources//:gerbil.pkg)",
-        "$(location @gerbil_utils_sources//:gerbil.pkg)",
+    arguments = [
+        "//:tools/validate-runtime-v0-symbol-surface.ss",
+        ":runtime_c_shared",
+        ":runtime_v0_exported_symbols",
+        "@gerbil_poo_sources//:gerbil.pkg",
+        "@gerbil_utils_sources//:gerbil.pkg",
     ],
     data = [
         "//:scheme_runtime_sources",
-        "//:tools/validate-runtime-v0-symbol-surface.ss",
         "@gerbil_poo_sources//:sources",
-        "@gerbil_poo_sources//:gerbil.pkg",
-        "@gerbil_utils_sources//:gerbil.pkg",
         "@gerbil_utils_sources//:sources",
-        "@local_gerbil//:gxi",
-        ":runtime_c_shared",
-        ":runtime_v0_exported_symbols",
     ],
+    script = "tests/runtime_v0_symbol_surface_test.sh",
 )
 
 filegroup(

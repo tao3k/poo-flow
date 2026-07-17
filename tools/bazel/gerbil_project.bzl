@@ -1,6 +1,10 @@
 """Bazel orchestration rules for the canonical POO Flow Scheme project."""
 
-_GERBIL_TOOLCHAIN_TYPE = "//tools/bazel:gerbil_toolchain_type"
+load(
+    ":gerbil_toolchain.bzl",
+    "GERBIL_TOOLCHAIN_TYPE",
+    "resolved_gerbil_toolchain",
+)
 
 GerbilProjectInfo = provider(
     doc = "Declared outputs from one canonical build.ss compile action.",
@@ -11,14 +15,11 @@ GerbilProjectInfo = provider(
     },
 )
 
-def _resolved_gerbil_toolchain(ctx):
-    return ctx.toolchains[_GERBIL_TOOLCHAIN_TYPE].gerbil
-
 def _shell_quote(value):
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
 def _gerbil_project_compile_impl(ctx):
-    toolchain = _resolved_gerbil_toolchain(ctx)
+    toolchain = resolved_gerbil_toolchain(ctx)
     compiled_root = ctx.actions.declare_directory(ctx.label.name + ".gerbil")
     receipt = ctx.actions.declare_file(ctx.label.name + ".receipt.json")
     log = ctx.actions.declare_file(ctx.label.name + ".log")
@@ -95,11 +96,11 @@ gerbil_project_compile = rule(
             executable = True,
         ),
     },
-    toolchains = [_GERBIL_TOOLCHAIN_TYPE],
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )
 
 def _gerbil_project_test_impl(ctx):
-    toolchain = _resolved_gerbil_toolchain(ctx)
+    toolchain = resolved_gerbil_toolchain(ctx)
     launcher = ctx.actions.declare_file(ctx.label.name + ".sh")
     test_arguments = [
         toolchain.gxtest.executable.short_path,
@@ -159,7 +160,7 @@ _gerbil_project_test = rule(
         ),
     },
     test = True,
-    toolchains = [_GERBIL_TOOLCHAIN_TYPE],
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )
 
 def gerbil_project_test(

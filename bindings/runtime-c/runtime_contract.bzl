@@ -1,5 +1,11 @@
 """Rules for generating the runtime-v0 C contract with the Scheme owner."""
 
+load(
+    "//tools/bazel:gerbil_toolchain.bzl",
+    "GERBIL_TOOLCHAIN_TYPE",
+    "resolved_gerbil_toolchain",
+)
+
 RuntimeContractInfo = provider(
     doc = "Generated runtime-v0 contract artifacts.",
     fields = {
@@ -10,6 +16,7 @@ RuntimeContractInfo = provider(
 )
 
 def _runtime_contract_impl(ctx):
+    toolchain = resolved_gerbil_toolchain(ctx)
     header = ctx.actions.declare_file(
         "generated/include/poo_flow/runtime_v0_contract.h",
     )
@@ -35,9 +42,9 @@ def _runtime_contract_impl(ctx):
             ],
         ),
         outputs = [header, vector, event_vector],
-        tools = [ctx.attr.gxi[DefaultInfo].files_to_run],
+        tools = [toolchain.gxi],
         arguments = [
-            ctx.executable.gxi.path,
+            toolchain.gxi.executable.path,
             ctx.file.generator.path,
             header.path,
             vector.path,
@@ -117,15 +124,11 @@ runtime_contract = rule(
             mandatory = True,
         ),
         "clan_utils_sources": attr.label(mandatory = True),
-        "gxi": attr.label(
-            cfg = "exec",
-            executable = True,
-            mandatory = True,
-        ),
         "scheme_sources": attr.label(mandatory = True),
         "schema": attr.label(
             allow_single_file = [".ss"],
             mandatory = True,
         ),
     },
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )
