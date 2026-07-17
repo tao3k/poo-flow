@@ -2,10 +2,16 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lean-proof:
@@ -80,6 +86,14 @@ jobs:
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: ${{ github.event_name == 'push' }}
+          disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
+          repository-cache: true
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -246,6 +260,17 @@ jobs:
             ~/.gerbil/pkg
             .gerbil
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+
+      - name: Validate Bazel target graph
+        run: bazel query //...
+
+      - name: Build Scheme package through Bazel
+        run: bazel build //scheme:compile
+
+      - name: Run Bazel acceptance suites
+        run: |
+          bazel test //scheme:tests
+          bazel test //bindings/runtime-c:runtime_c_tests //bindings/runtime-c/bundle-v1:bundle_v1_tests
 
       - name: Clean package outputs
         run: tools/run-native-scheme-build clean
