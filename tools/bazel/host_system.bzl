@@ -50,6 +50,12 @@ def _prepend_path_entries(entries, inherited):
 def _prepend_flag_entries(entries, inherited):
     return " ".join(entries + ([inherited] if inherited else []))
 
+def _required_inherited_path(repository_ctx):
+    path = repository_ctx.os.environ.get("PATH", "")
+    if not path:
+        fail("Gerbil toolchain discovery requires a non-empty host PATH")
+    return path
+
 def _resolve_darwin_native_dependency_environment(repository_ctx):
     brew = repository_ctx.which("brew")
     if brew == None:
@@ -150,6 +156,7 @@ def _resolve_darwin_environment(repository_ctx):
 
     environment = {
         "DEVELOPER_DIR": developer_dir,
+        "PATH": _required_inherited_path(repository_ctx),
         "SDKROOT": sdkroot,
     }
     environment.update(_resolve_darwin_native_dependency_environment(repository_ctx))
@@ -188,7 +195,9 @@ def _resolve_linux_environment(repository_ctx):
         policy = "preserve-host-environment",
         system_memory_bytes = page_count * page_size,
         tool_overrides = {},
-        environment = {},
+        environment = {
+            "PATH": _required_inherited_path(repository_ctx),
+        },
     )
 
 _ENVIRONMENT_RESOLVERS = {
