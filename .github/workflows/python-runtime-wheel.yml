@@ -101,6 +101,15 @@ jobs:
           path: .ci/gerbil/${{ env.GERBIL_LABEL }}
           key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}
 
+      - name: Restore resumable Gerbil bootstrap tree
+        if: steps.gerbil-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .ci/gerbil-src/${{ env.GERBIL_LABEL }}
+          key: gerbil-bootstrap-tree-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            gerbil-bootstrap-tree-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-
+
       - name: Build Gerbil
         if: steps.gerbil-cache.outputs.cache-hit != 'true'
         run: bash tools/bazel/bootstrap_gerbil_toolchain.sh
@@ -115,6 +124,13 @@ jobs:
         with:
           path: .ci/ccache
           key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Save resumable Gerbil bootstrap tree
+        if: always() && steps.gerbil-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .ci/gerbil-src/${{ env.GERBIL_LABEL }}
+          key: gerbil-bootstrap-tree-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save Gerbil install cache
         if: steps.gerbil-cache.outputs.cache-hit != 'true'

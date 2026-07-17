@@ -73,9 +73,13 @@ export CC="$compiler_command"
 
 started_at="$SECONDS"
 mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
-rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
+rm -rf "$GERBIL_PREFIX"
 git init --quiet "$GERBIL_SRC"
-git -C "$GERBIL_SRC" remote add origin https://git.cons.io/mighty-gerbils/gerbil
+if git -C "$GERBIL_SRC" remote get-url origin >/dev/null 2>&1; then
+  git -C "$GERBIL_SRC" remote set-url origin https://git.cons.io/mighty-gerbils/gerbil
+else
+  git -C "$GERBIL_SRC" remote add origin https://git.cons.io/mighty-gerbils/gerbil
+fi
 git -C "$GERBIL_SRC" fetch --depth=1 origin "$GERBIL_REF"
 git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
 

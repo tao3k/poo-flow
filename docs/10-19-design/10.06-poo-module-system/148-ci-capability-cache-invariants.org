@@ -79,6 +79,41 @@ it does not reimplement toolchain or package-root policy.
 - A non-deterministic fingerprint is a cache correctness failure, not an
   acceptable cache miss.
 
+* Resumable Gerbil bootstrap tree
+
+The installed Gerbil prefix remains the primary capability cache.  When that
+cache is absent, CI restores the in-tree upstream build directory before
+running the bootstrap.  The directory is keyed by runner OS, architecture,
+Gerbil source label, and the deterministic native compiler ABI fingerprint.
+Interrupted builds save the partial tree with a unique run-attempt suffix, so
+the next attempt resumes upstream =make= work instead of deleting it.  The
+ccache directory remains a separate object-level fallback.  A completed build
+still installs into a fresh prefix and must pass the existing activity and
+runtime guards before that prefix can become the primary cache.
+
+#+begin_src mermaid
+flowchart LR
+  Key["OS + architecture + Gerbil label + compiler ABI"]
+  Install{"Installed prefix cache"}
+  Tree{"Resumable source build tree"}
+  Objects["ccache object fallback"]
+  Bootstrap["Upstream parallel bootstrap"]
+  SaveTree["Save partial or complete build tree"]
+  Validate["Validate installed Gerbil capability"]
+  SaveInstall["Save installed prefix"]
+  Project["POO Flow build.ss through Bazel"]
+
+  Key --> Install
+  Install -->|hit| Project
+  Install -->|miss| Tree
+  Tree --> Objects
+  Objects --> Bootstrap
+  Bootstrap --> SaveTree
+  SaveTree --> Validate
+  Validate --> SaveInstall
+  SaveInstall --> Project
+#+end_src
+
 * Acceptance receipts
 
 The implementation is accepted only when all of the following hold:
