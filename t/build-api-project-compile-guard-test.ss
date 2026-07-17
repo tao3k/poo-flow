@@ -9,6 +9,9 @@
 
 (export build-api-project-compile-guard-test)
 
+(def (build-api-project-compile-guard-available-cpu-count)
+  (max 1 (##cpu-count)))
+
 (def build-api-project-compile-guard-test
   (test-suite "POO project compile guard"
     (test-case "delegates one standard project to Building Framework"
@@ -50,13 +53,21 @@
           (lambda ()
             (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" (or previous ""))))))
     (test-case "blocks topology-relative host pressure"
-      (let* ((overrides
-              '(("POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" . "8589934592")
-                ("POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" . "2147483648")
-                ("POO_FLOW_BUILD_RSS_HEADROOM_BYTES" . "2147483648")
-                ("POO_FLOW_BUILD_LOGICAL_CPU_COUNT" . "12")
-                ("POO_FLOW_BUILD_RUNNABLE_PROCESSES" . "25")
-                ("GERBIL_BUILD_CORES" . "12")))
+      (let* ((available-cpu-count
+              (build-api-project-compile-guard-available-cpu-count))
+             (saturated-runnable-count
+              (+ (* available-cpu-count 2) 1))
+             (overrides
+              (list
+               (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "8589934592")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT"
+                     (number->string available-cpu-count))
+               (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES"
+                     (number->string saturated-runnable-count))
+               (cons "GERBIL_BUILD_CORES"
+                     (number->string available-cpu-count))))
              (previous
               (map (lambda (entry)
                      (cons (car entry) (getenv (car entry) #f)))
@@ -74,18 +85,22 @@
                      => '(runnable-saturation
                           insufficient-memory-headroom))
               (check (.ref config 'worker-count) => 1))
-            (setenv "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "8")
+            (setenv "POO_FLOW_BUILD_RUNNABLE_PROCESSES"
+                    (number->string available-cpu-count))
             (setenv "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "6442450944")
             (let (config (poo-flow-project-compile-guard-config '()))
               (check (.ref config 'admission-outcome) => 'ready)
-              (check (.ref config 'worker-count) => 12)))
+              (check (.ref config 'worker-count)
+                     => available-cpu-count)))
           (lambda ()
             (for-each
              (lambda (entry)
                (setenv (car entry) (or (cdr entry) "")))
              previous)))))
     (test-case "emits a canonical native Scheme JSON receipt"
-      (let* ((receipt
+      (let* ((available-cpu-count
+              (build-api-project-compile-guard-available-cpu-count))
+             (receipt
               (.o (schema 'poo-flow.project-compile-guard.v1)
                   (outcome 'completed)
                   (build-owner 'gslph-building-framework)
@@ -94,11 +109,11 @@
                   (request-labels '("runtime" "user-interface"))
                   (admission-outcome 'ready)
                   (admission-reasons '())
-                  (logical-cpu-count 12)
+                  (logical-cpu-count available-cpu-count)
                   (runnable-process-count 4)
                   (available-memory-bytes 25769803776)
                   (rss-headroom-bytes 2147483648)
-                  (worker-count 10)
+                  (worker-count available-cpu-count)
                   (system-memory-bytes 34359738368)
                   (max-rss-bytes 17179869184)
                   (peak-rss-bytes 2460680192)
@@ -128,7 +143,8 @@
         (check (hash-get object "elapsed-ms") => 199289)
         (check (hash-get object "execution-policy") => "topology")
         (check (hash-get object "admission-outcome") => "ready")
-        (check (hash-get object "worker-count") => 10)
+        (check (hash-get object "worker-count")
+               => available-cpu-count)
         (check
          (hash-get (hash-get object "build-summary") "stage-count")
          => 3)
