@@ -24,7 +24,9 @@ to restore the toolchain cache and return to the project-level measurement.
    reusable across compatible runners.
 3. The ABI fingerprint hashes compiler-selected diagnostics, compiler identity,
    target tuple, and architecture profile.  Random =cc*.s= paths and probe file
-   locations are execution noise and MUST NOT enter the cache key.
+   locations are execution noise and MUST NOT enter the cache key.  A missing
+   compiler argument resolves through the host's =cc= capability, while a
+   command name such as =gcc= resolves through =PATH= before validation.
 4. The dependency installer derives its writable package root from
    =GERBIL_PATH=, falling back to =$HOME/.gerbil= only when =GERBIL_PATH= is
    absent.  Bazel owns this invariant; workflow-specific directory creation is

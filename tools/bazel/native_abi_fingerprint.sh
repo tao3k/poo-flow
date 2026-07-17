@@ -2,16 +2,17 @@
 
 set -euo pipefail
 
-compiler="${1:-}"
+compiler_request="${1:-cc}"
 architecture_profile="${2:-native}"
 
-if [[ -z "$compiler" ]]; then
-  printf 'usage: %s <compiler> [native|portable]\n' "$0" >&2
-  exit 64
+if [[ "$compiler_request" == */* ]]; then
+  compiler="$compiler_request"
+else
+  compiler="$(command -v "$compiler_request" || true)"
 fi
 
-if [[ ! -x "$compiler" ]]; then
-  printf 'compiler is not executable: %s\n' "$compiler" >&2
+if [[ -z "$compiler" || ! -x "$compiler" ]]; then
+  printf 'compiler is not executable or discoverable: %s\n' "$compiler_request" >&2
   exit 69
 fi
 
