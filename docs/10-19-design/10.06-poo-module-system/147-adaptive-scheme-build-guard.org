@@ -268,6 +268,32 @@ compile and test actions still receive the complete dependency files as direct
 Bazel inputs, and the toolchain receipt records the state of every projected
 dependency.
 
+**** Upstream-parallel toolchain bootstrap
+
+The Gerbil source bootstrap must use the upstream build scheduler.  CI must not
+reproduce the upstream dependency graph as a shell loop over individual
+=build.sh= stages.  The Bazel-owned bootstrap capability invokes =make= with
+the host's available online processor count and exports the same value through
+=GERBIL_BUILD_CORES=.  Both the main acceptance workflow and the Python runtime
+workflow consume this capability before the registered Gerbil toolchain exists.
+
+#+begin_src mermaid
+flowchart LR
+  Host["Host online processor capability"] --> Cores["GERBIL_BUILD_CORES"]
+  Source["Pinned Gerbil source ref"] --> Bootstrap["Bazel-owned bootstrap capability"]
+  Cores --> Bootstrap
+  Bootstrap --> Make["Upstream make -jN scheduler"]
+  Make --> Install["Native Gerbil toolchain install"]
+  Install --> Receipt["JSON bootstrap receipt"]
+  Install --> Cache["ABI-keyed toolchain cache"]
+#+end_src
+
+The JSON bootstrap receipt records the pinned source identity, compiler,
+available build parallelism, elapsed time, installation prefix, and outcome.
+This metric is separate from the POO Flow project cold-build baseline: a slow
+toolchain bootstrap cannot be reported as a regression in the project compile,
+and it cannot be hidden by that project's faster result.
+
 Gerbil and Gambit are configured with =--enable-march=native=.  A cache key
 containing only the operating system, architecture, and Gerbil revision is
 therefore unsound: two hosted runners can share those labels while selecting

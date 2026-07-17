@@ -175,21 +175,10 @@ jobs:
       - name: Build Gerbil
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
-          rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
-          git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
-          cd "$GERBIL_SRC"
-          git checkout "$GERBIL_REF"
           if [ -n "${GERBIL_GCC:-}" ]; then
             export CC="$GERBIL_GCC"
           fi
-          ./configure --prefix="$GERBIL_PREFIX"
-          echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
-          . ./build-env.sh
-          for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
-            ./src/build.sh "$target"
-          done
-          ./install.sh
+          bash tools/bazel/bootstrap_gerbil_toolchain.sh
 
       - name: Save Gerbil install cache
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
