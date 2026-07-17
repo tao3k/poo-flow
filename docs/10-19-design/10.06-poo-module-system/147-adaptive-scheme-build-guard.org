@@ -240,6 +240,34 @@ topology, scheduling, compilation policy, guards, and receipts.
 
 *** Native ABI identity owns native cache compatibility
 
+**** Bootstrap-safe dependency view
+
+The registered Gerbil toolchain must remain analyzable before project
+dependencies exist.  Otherwise toolchain resolution can block the
+=//scheme:deps= target that is responsible for creating those dependencies.
+The local repository therefore observes the =.gerbil/lib/clan= and
+=.gerbil/lib/gslph= paths as Bazel repository inputs.  A missing path produces
+an explicit empty dependency view instead of an analysis failure.  When the
+dependency installer creates or changes either tree, Bazel invalidates and
+re-evaluates the repository, then projects the compiled libraries into the
+registered toolchain.
+
+#+begin_src mermaid
+flowchart LR
+  Resolve["Resolve registered Gerbil toolchain"] --> Observe["Observe project dependency paths"]
+  Observe -->|"missing"| Empty["Bootstrap-safe empty dependency view"]
+  Empty --> Install["Run //scheme:deps"]
+  Install --> Change["Dependency tree changes"]
+  Change --> Refresh["Invalidate and re-evaluate local repository"]
+  Observe -->|"ready"| Ready["Registered toolchain with compiled dependencies"]
+  Refresh --> Ready
+#+end_src
+
+This is a dependency-state transition, not a compatibility fallback.  Scheme
+compile and test actions still receive the complete dependency files as direct
+Bazel inputs, and the toolchain receipt records the state of every projected
+dependency.
+
 Gerbil and Gambit are configured with =--enable-march=native=.  A cache key
 containing only the operating system, architecture, and Gerbil revision is
 therefore unsound: two hosted runners can share those labels while selecting

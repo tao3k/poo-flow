@@ -66,6 +66,19 @@ def _environment_arguments(environment):
 def _tool_paths(tools):
     return {name: str(path) for name, path in tools.items()}
 
+def _project_dependency_state(repository_ctx, project_library_root):
+    state = {}
+    for name in ["clan", "gslph"]:
+        dependency_library = repository_ctx.path(str(project_library_root) + "/" + name)
+        repository_ctx.watch(dependency_library)
+        if dependency_library.exists:
+            repository_ctx.watch_tree(dependency_library)
+            repository_ctx.symlink(dependency_library, "lib/" + name)
+            state[name] = "ready"
+        else:
+            state[name] = "missing"
+    return state
+
 def _local_gerbil_repository_impl(repository_ctx):
     native_environment = resolve_host_environment(repository_ctx)
     tools = _resolve_tools(repository_ctx, native_environment.tool_overrides)
@@ -100,15 +113,9 @@ def _local_gerbil_repository_impl(repository_ctx):
     project_library_root = repository_ctx.path(str(package_root) + "/.gerbil/lib")
     repository_ctx.file("lib/.root", "local Gerbil dependency library root\n")
     repository_ctx.file("native_abi.txt", native_abi_fingerprint + "\n")
+    dependency_state = {}
     if repository_ctx.attr.include_project_dependencies:
-        for name in ["clan", "gslph"]:
-            dependency_library = repository_ctx.path(str(project_library_root) + "/" + name)
-            if not dependency_library.exists:
-                fail(
-                    "compiled Gerbil dependency %s is missing under %s; run `bazel run //scheme:deps` first" %
-                    (name, project_library_root),
-                )
-            repository_ctx.symlink(dependency_library, "lib/" + name)
+        dependency_state = _project_dependency_state(repository_ctx, project_library_root)
 
     repository_ctx.template(
         "native_scheme_env.sh",
@@ -137,6 +144,7 @@ def _local_gerbil_repository_impl(repository_ctx):
             "environment_policy": native_environment.policy,
             "environment": native_environment.environment,
             "dependency_policy": "project-library-view" if repository_ctx.attr.include_project_dependencies else "bootstrap-host-only",
+            "dependency_state": dependency_state,
             "native_abi_fingerprint": native_abi_fingerprint,
             "system_memory_bytes": native_environment.system_memory_bytes,
             "tools": _tool_paths(tools),
