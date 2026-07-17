@@ -5,6 +5,20 @@ set -euo pipefail
 : "${GERBIL_SRC:?GERBIL_SRC is required}"
 : "${GERBIL_PREFIX:?GERBIL_PREFIX is required}"
 
+architecture_profile="${GERBIL_ARCH_PROFILE:-native}"
+case "$architecture_profile" in
+  native)
+    configure_architecture=(--enable-march=native)
+    ;;
+  portable)
+    configure_architecture=(--enable-march=)
+    ;;
+  *)
+    printf 'unsupported Gerbil architecture profile: %s\n' "$architecture_profile" >&2
+    exit 64
+    ;;
+esac
+
 build_cores="${GERBIL_BUILD_CORES:-}"
 if [[ -z "$build_cores" ]]; then
   build_cores="$(getconf _NPROCESSORS_ONLN)"
@@ -29,7 +43,7 @@ git -C "$GERBIL_SRC" fetch --depth=1 origin "$GERBIL_REF"
 git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
 
 cd "$GERBIL_SRC"
-./configure --prefix="$GERBIL_PREFIX"
+./configure --prefix="$GERBIL_PREFIX" "${configure_architecture[@]}"
 
 export GERBIL_BUILD_CORES="$build_cores"
 make -j"$build_cores"
@@ -38,6 +52,7 @@ make install
 elapsed_seconds=$((SECONDS - started_at))
 gerbil_version="$("$GERBIL_PREFIX/bin/gxi" --version)"
 jq -n \
+  --arg architecture_profile "$architecture_profile" \
   --arg compiler "${CC:-cc}" \
   --arg gerbil_version "$gerbil_version" \
   --arg prefix "$GERBIL_PREFIX" \
@@ -48,6 +63,7 @@ jq -n \
     schema: "poo-flow.gerbil-toolchain-bootstrap-receipt.v1",
     version: 1,
     outcome: "ready",
+    architecture_profile: $architecture_profile,
     source_ref: $source_ref,
     gerbil_version: $gerbil_version,
     compiler: $compiler,

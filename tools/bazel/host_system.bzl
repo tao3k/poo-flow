@@ -65,8 +65,16 @@ def _validated_native_abi_fingerprint(value):
             fail("Gerbil native ABI fingerprint contains a non-hex character")
     return value
 
+def _validated_architecture_profile(value):
+    if value not in ["native", "portable"]:
+        fail("unsupported Gerbil architecture profile %r" % value)
+    return value
+
 def resolve_native_abi_fingerprint(repository_ctx, compiler, probe, environment):
     """Return the compiler-selected native ABI identity for this host."""
+    architecture_profile = _validated_architecture_profile(
+        repository_ctx.os.environ.get("GERBIL_ARCH_PROFILE", "native").strip(),
+    )
     inherited = repository_ctx.os.environ.get("GERBIL_NATIVE_ABI", "").strip()
     if inherited:
         return _validated_native_abi_fingerprint(inherited)
@@ -74,7 +82,7 @@ def resolve_native_abi_fingerprint(repository_ctx, compiler, probe, environment)
     if bash == None:
         fail("Gerbil native ABI discovery requires bash on PATH")
     result = repository_ctx.execute(
-        [bash, probe, compiler],
+        [bash, probe, compiler, architecture_profile],
         environment = environment,
     )
     if result.return_code != 0:

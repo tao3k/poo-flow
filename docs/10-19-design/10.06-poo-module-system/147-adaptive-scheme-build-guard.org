@@ -297,6 +297,32 @@ This metric is separate from the POO Flow project cold-build baseline: a slow
 toolchain bootstrap cannot be reported as a regression in the project compile,
 and it cannot be hidden by that project's faster result.
 
+**** Architecture profiles preserve performance and cache locality
+
+The Gerbil toolchain declares an architecture profile instead of assuming that
+every execution surface has the same cache-locality requirements.  The default
+=native= profile retains the upstream highest-performance behavior and keys
+artifacts by the compiler-selected CPU target.  The =portable= profile uses the
+upstream-supported empty =--enable-march== value and keys artifacts by the host
+OS, architecture, compiler, and profile without binding them to one transient
+runner CPU model.
+
+#+begin_src mermaid
+flowchart LR
+  Local["Local or production build"] --> Native["native profile and exact CPU ABI"]
+  CI["CI validation build"] --> Portable["portable profile and stable runner ABI"]
+  Native --> Toolchain["Registered Bazel Gerbil toolchain"]
+  Portable --> Toolchain
+  Toolchain --> Receipt["Profile-aware JSON receipts"]
+  Toolchain --> Cache["Profile-aware native caches"]
+#+end_src
+
+CI selects =portable= because its install cache must be reusable across
+heterogeneous hosted runners.  Local and downstream production builds remain
+=native= unless they explicitly request another profile.  Both choices flow
+through the same Bazel-owned capability probe, repository receipt, and compile
+action identity.
+
 Gerbil and Gambit are configured with =--enable-march=native=.  A cache key
 containing only the operating system, architecture, and Gerbil revision is
 therefore unsound: two hosted runners can share those labels while selecting

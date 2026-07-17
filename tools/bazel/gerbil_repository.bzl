@@ -87,6 +87,7 @@ def _project_dependency_state(repository_ctx, project_library_root):
 
 def _local_gerbil_repository_impl(repository_ctx):
     native_environment = resolve_host_environment(repository_ctx)
+    architecture_profile = repository_ctx.os.environ.get("GERBIL_ARCH_PROFILE", "native").strip()
     tools = _resolve_tools(repository_ctx, native_environment.tool_overrides)
     native_abi_fingerprint = resolve_native_abi_fingerprint(
         repository_ctx,
@@ -145,6 +146,7 @@ def _local_gerbil_repository_impl(repository_ctx):
         "toolchain.receipt.json",
         json.encode_indent({
             "schema": "poo-flow.bazel.local-gerbil-toolchain-receipt.v1",
+            "architecture_profile": architecture_profile,
             "host_os": repository_ctx.os.name,
             "system": native_environment.system,
             "environment_policy": native_environment.policy,
@@ -204,6 +206,7 @@ local_gerbil_repository = repository_rule(
         "LDFLAGS",
         "LIBRARY_PATH",
         "GERBIL_NATIVE_ABI",
+        "GERBIL_ARCH_PROFILE",
         "PKG_CONFIG_PATH",
         "SDKROOT",
     ],
