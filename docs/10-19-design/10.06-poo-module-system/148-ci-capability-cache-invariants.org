@@ -28,11 +28,16 @@ to restore the toolchain cache and return to the project-level measurement.
    compiler argument resolves through the host's =cc= capability, while a
    command name such as =gcc= resolves through =PATH= before validation.
 4. The dependency installer derives its writable package root from
-   =GERBIL_PATH=, falling back to =$HOME/.gerbil= only when =GERBIL_PATH= is
-   absent.  Bazel owns this invariant; workflow-specific directory creation is
-   not an acceptable substitute.
+   =GERBIL_PATH=, falling back to the Bazel run workspace's project-local
+   =.gerbil= root when =GERBIL_PATH= is absent.  The installer exports the
+   selected root before invoking =gxpkg=.  Bazel owns this invariant;
+   workflow-specific directory creation is not an acceptable substitute.
 5. CPU parallelism is discovered from the executing system.  No workflow,
    test, or cache rule may encode a fixed logical CPU count.
+6. CI requires ccache as a bootstrap capability.  The Bazel-owned bootstrap
+   tool wraps the selected compiler, observes compiler activity, and records
+   the result in its receipt.  Restoring a ccache directory without proving
+   compiler activity is not accepted as cache integration.
 
 * Declarative ownership
 
@@ -46,11 +51,15 @@ flowchart TD
     Probe --> ToolchainKey["Gerbil toolchain cache key"]
     ToolchainKey --> Restore{"Cache restore"}
     Restore -->|hit| ProjectBuild["POO Flow project cold build"]
-    Restore -->|miss| Bootstrap["Upstream parallel Gerbil bootstrap"]
-    Bootstrap --> Save["Save capability-keyed toolchain"]
+    Restore -->|miss| CcacheRestore["Restore shared bootstrap ccache"]
+    CcacheRestore --> Bootstrap["Upstream parallel Gerbil bootstrap"]
+    Bootstrap --> CcacheGuard{"Observed ccache compiler activity"}
+    CcacheGuard -->|no| Block["Fail closed"]
+    CcacheGuard -->|yes| SaveCcache["Save shared bootstrap ccache"]
+    SaveCcache --> Save["Save capability-keyed toolchain"]
     Save --> ProjectBuild
     ProjectBuild --> Dependencies["Bazel dependency installer"]
-    GerbilPath["GERBIL_PATH or HOME fallback"] --> Dependencies
+    GerbilPath["GERBIL_PATH or workspace .gerbil fallback"] --> Dependencies
     Dependencies --> PackageRoot["Selected root/pkg exists"]
 #+end_src
 
@@ -65,6 +74,8 @@ it does not reimplement toolchain or package-root policy.
 - A host without SHA-256 tooling terminates fingerprint generation.
 - A dependency install cannot begin until the selected Gerbil package root
   exists.
+- CI bootstrap terminates when ccache is absent or observes zero compiler
+  activity.
 - A non-deterministic fingerprint is a cache correctness failure, not an
   acceptable cache miss.
 
@@ -77,6 +88,9 @@ The implementation is accepted only when all of the following hold:
 - Repeated portable fingerprints are identical on one unchanged host.
 - Native and portable fingerprints are distinct.
 - =bazel build //scheme:deps= rematerializes the dependency installer.
+- Main CI and Python runtime CI use one OS/compiler/ref-keyed ccache namespace.
+- The bootstrap receipt reports ccache as required and enabled with non-zero
+  compiler activity.
 - The first portable CI run saves the toolchain cache.
 - A rerun of the same commit restores that cache and reports project cold-build
   time independently from any first-use bootstrap time.

@@ -48,7 +48,8 @@ jobs:
       GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/source-v0.18.2-4-gadd92248
       GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/source-v0.18.2-4-gadd92248
       CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
-      CCACHE_MAXSIZE: 1G
+      CCACHE_MAXSIZE: 2G
+      GERBIL_REQUIRE_CCACHE: 1
       PROJECTION_SOURCE: packages/python-runtime/src/poo_flow_runtime/projections/wheel_smoke.ss
       PROJECTION_ARTIFACT: packages/python-runtime/src/poo_flow_runtime/projections/wheel_smoke.ss.poo-flow-projection.sexp
     steps:
@@ -83,22 +84,15 @@ jobs:
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Restore ccache
-        id: ccache-cache
+      - name: Restore Gerbil bootstrap ccache
+        id: gerbil-ccache-cache
         uses: actions/cache/restore@v6.1.0
         with:
           path: .ci/ccache
-          key: ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
+            gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-
             ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-
-
-      - name: Configure ccache
-        run: |
-          set -euo pipefail
-          mkdir -p "$CCACHE_DIR"
-          ccache --set-config=max_size="$CCACHE_MAXSIZE"
-          ccache --zero-stats
-          ccache --show-config
 
       - name: Restore Gerbil install cache
         id: gerbil-cache
@@ -109,8 +103,18 @@ jobs:
 
       - name: Build Gerbil
         if: steps.gerbil-cache.outputs.cache-hit != 'true'
-        run: |
-          CC="ccache gcc" bash tools/bazel/bootstrap_gerbil_toolchain.sh
+        run: bash tools/bazel/bootstrap_gerbil_toolchain.sh
+
+      - name: Show Gerbil bootstrap ccache stats
+        if: ${{ always() && steps.gerbil-cache.outputs.cache-hit != 'true' }}
+        run: ccache --show-stats
+
+      - name: Save Gerbil bootstrap ccache
+        if: ${{ always() && steps.gerbil-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: .ci/ccache
+          key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save Gerbil install cache
         if: steps.gerbil-cache.outputs.cache-hit != 'true'
@@ -237,17 +241,6 @@ jobs:
             --cwd . \
             --force
           test -s "$PROJECTION_ARTIFACT"
-
-      - name: Show ccache stats
-        if: always()
-        run: ccache --show-stats || true
-
-      - name: Save ccache
-        if: success()
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: .ci/ccache
-          key: ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload projection artifact
         uses: actions/upload-artifact@v6.0.0
