@@ -5,6 +5,7 @@ exports_files([
     "gerbil_repository.bzl",
     "gerbil_toolchain.bzl",
     "host_system.bzl",
+    "install_gerbil_dependencies.sh.tpl",
     "local_gerbil.BUILD.bazel.tpl",
     "native_scheme_env.sh.tpl",
     "native_tool.sh.tpl",

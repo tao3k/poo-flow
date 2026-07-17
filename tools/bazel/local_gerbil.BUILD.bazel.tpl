@@ -11,6 +11,13 @@ sh_binary(
 )
 
 sh_binary(
+    name = "install_dependencies",
+    srcs = ["install_gerbil_dependencies.sh"],
+    data = ["gxpkg_raw"],
+    visibility = ["//visibility:public"],
+)
+
+sh_binary(
     name = "gxc",
     srcs = ["gxc.sh"],
     data = ["gxc_raw"],
@@ -43,7 +50,7 @@ filegroup(
     srcs = glob([
         "lib/clan/**",
         "lib/gslph/**",
-    ]),
+    ], allow_empty = True),
     visibility = ["//visibility:public"],
 )
 
@@ -86,6 +93,7 @@ exports_files(
         "gxi_raw",
         "gxpkg_raw",
         "gxtest_raw",
+        "install_gerbil_dependencies.sh",
         "lib/.root",
         "toolchain.receipt.json",
     ],

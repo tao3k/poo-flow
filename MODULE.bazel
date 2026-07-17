@@ -48,6 +48,12 @@ local_gerbil_repository = use_repo_rule(
 )
 
 local_gerbil_repository(
+    name = "bootstrap_gerbil",
+    expected_version_prefix = "Gerbil v0.18.2",
+    include_project_dependencies = False,
+)
+
+local_gerbil_repository(
     name = "local_gerbil",
     expected_version_prefix = "Gerbil v0.18.2",
 )

@@ -89,18 +89,28 @@ def _local_gerbil_repository_impl(repository_ctx):
     package_root = repository_ctx.path(repository_ctx.attr.project_package_file).dirname
     project_library_root = repository_ctx.path(str(package_root) + "/.gerbil/lib")
     repository_ctx.file("lib/.root", "local Gerbil dependency library root\n")
-    for name in ["clan", "gslph"]:
-        dependency_library = repository_ctx.path(str(project_library_root) + "/" + name)
-        if not dependency_library.exists:
-            fail(
-                "compiled Gerbil dependency %s is missing under %s; refresh the canonical project library view" %
-                (name, project_library_root),
-            )
-        repository_ctx.symlink(dependency_library, "lib/" + name)
+    if repository_ctx.attr.include_project_dependencies:
+        for name in ["clan", "gslph"]:
+            dependency_library = repository_ctx.path(str(project_library_root) + "/" + name)
+            if not dependency_library.exists:
+                fail(
+                    "compiled Gerbil dependency %s is missing under %s; run `bazel run //scheme:deps` first" %
+                    (name, project_library_root),
+                )
+            repository_ctx.symlink(dependency_library, "lib/" + name)
 
     repository_ctx.template(
         "native_scheme_env.sh",
         repository_ctx.attr.native_runner_template,
+        substitutions = {
+            "%{GXPkg}": _shell_quote(str(tools["gxpkg"])),
+            "%{NativeEnvironment}": _environment_arguments(native_environment.environment),
+        },
+        executable = True,
+    )
+    repository_ctx.template(
+        "install_gerbil_dependencies.sh",
+        repository_ctx.attr.dependency_installer_template,
         substitutions = {
             "%{GXPkg}": _shell_quote(str(tools["gxpkg"])),
             "%{NativeEnvironment}": _environment_arguments(native_environment.environment),
@@ -115,6 +125,7 @@ def _local_gerbil_repository_impl(repository_ctx):
             "system": native_environment.system,
             "environment_policy": native_environment.policy,
             "environment": native_environment.environment,
+            "dependency_policy": "project-library-view" if repository_ctx.attr.include_project_dependencies else "bootstrap-host-only",
             "system_memory_bytes": native_environment.system_memory_bytes,
             "tools": _tool_paths(tools),
             "versions": versions,
@@ -135,7 +146,12 @@ local_gerbil_repository = repository_rule(
             allow_single_file = True,
             default = Label("//tools/bazel:local_gerbil.BUILD.bazel.tpl"),
         ),
+        "dependency_installer_template": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:install_gerbil_dependencies.sh.tpl"),
+        ),
         "expected_version_prefix": attr.string(mandatory = True),
+        "include_project_dependencies": attr.bool(default = True),
         "native_runner_template": attr.label(
             allow_single_file = True,
             default = Label("//tools/bazel:native_scheme_env.sh.tpl"),
@@ -150,6 +166,14 @@ local_gerbil_repository = repository_rule(
         ),
     },
     implementation = _local_gerbil_repository_impl,
-    environ = ["PATH", "DEVELOPER_DIR", "SDKROOT"],
+    environ = [
+        "PATH",
+        "CPATH",
+        "DEVELOPER_DIR",
+        "LDFLAGS",
+        "LIBRARY_PATH",
+        "PKG_CONFIG_PATH",
+        "SDKROOT",
+    ],
     local = True,
 )

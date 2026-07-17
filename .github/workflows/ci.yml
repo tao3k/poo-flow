@@ -131,26 +131,6 @@ jobs:
           brew install gerbil-scheme jq openssl pkg-config sqlite zlib
           brew link --overwrite gerbil-scheme
 
-      - name: Configure macOS native dependency capabilities
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set -euo pipefail
-          openssl_prefix="$(brew --prefix openssl@3)"
-          sqlite_prefix="$(brew --prefix sqlite)"
-          zlib_prefix="$(brew --prefix zlib)"
-          native_include_path="$openssl_prefix/include:$sqlite_prefix/include:$zlib_prefix/include"
-          native_library_path="$openssl_prefix/lib:$sqlite_prefix/lib:$zlib_prefix/lib"
-          native_pkg_config_path="$openssl_prefix/lib/pkgconfig:$sqlite_prefix/lib/pkgconfig:$zlib_prefix/lib/pkgconfig"
-          {
-            echo "CPATH=$native_include_path${CPATH:+:$CPATH}"
-            echo "LIBRARY_PATH=$native_library_path${LIBRARY_PATH:+:$LIBRARY_PATH}"
-            echo "LDFLAGS=-L$openssl_prefix/lib -L$sqlite_prefix/lib -L$zlib_prefix/lib${LDFLAGS:+ $LDFLAGS}"
-            echo "PKG_CONFIG_PATH=$native_pkg_config_path${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
-          } >> "$GITHUB_ENV"
-          test -f "$openssl_prefix/lib/libssl.dylib"
-          test -f "$openssl_prefix/lib/libcrypto.dylib"
-
       - name: Select macOS Gerbil compiler
         if: runner.os == 'macOS' && matrix.gerbil-install == 'source'
         run: |
@@ -254,8 +234,6 @@ jobs:
       - name: Install Gerbil package dependencies from gerbil.pkg
         run: |
           set -euo pipefail
-          mkdir -p "$HOME/.gerbil/pkg"
-          gxpkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
           package_cache_ready=false
           if [ -d .gerbil/lib ]; then
             if GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" \
@@ -268,7 +246,7 @@ jobs:
           if [ "$package_cache_ready" = "true" ]; then
             echo "Using cached Gerbil package dependency build products"
           else
-            gxpkg deps --install
+            bazel run //scheme:deps
           fi
           gxpkg list
 

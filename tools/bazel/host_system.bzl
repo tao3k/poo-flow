@@ -13,6 +13,18 @@ _DARWIN_TOOLS = {
     "xcrun": "/usr/bin/xcrun",
 }
 
+_DARWIN_HOMEBREW_DEPENDENCIES = [
+    "openssl@3",
+    "sqlite",
+    "zlib",
+]
+
+_DARWIN_HOMEBREW_REQUIRED_LIBRARIES = {
+    "openssl@3": ["libssl.dylib", "libcrypto.dylib"],
+    "sqlite": ["libsqlite3.dylib"],
+    "zlib": ["libz.dylib"],
+}
+
 def _checked_output(repository_ctx, argv, description):
     result = repository_ctx.execute(argv)
     if result.return_code != 0:
@@ -31,6 +43,52 @@ def _checked_positive_integer_output(repository_ctx, argv, description):
     if parsed <= 0:
         fail("%s returned a non-positive value: %s" % (description, value))
     return parsed
+
+def _prepend_path_entries(entries, inherited):
+    return ":".join(entries + ([inherited] if inherited else []))
+
+def _prepend_flag_entries(entries, inherited):
+    return " ".join(entries + ([inherited] if inherited else []))
+
+def _resolve_darwin_native_dependency_environment(repository_ctx):
+    brew = repository_ctx.which("brew")
+    if brew == None:
+        fail("Darwin Gerbil builds require Homebrew on PATH")
+
+    prefixes = []
+    for formula in _DARWIN_HOMEBREW_DEPENDENCIES:
+        prefix = _checked_output(
+            repository_ctx,
+            [brew, "--prefix", formula],
+            "brew --prefix %s" % formula,
+        )
+        for library in _DARWIN_HOMEBREW_REQUIRED_LIBRARIES[formula]:
+            library_path = repository_ctx.path("%s/lib/%s" % (prefix, library))
+            if not library_path.exists:
+                fail("Homebrew capability %s is missing %s" % (formula, library_path))
+        prefixes.append(prefix)
+
+    include_paths = ["%s/include" % prefix for prefix in prefixes]
+    library_paths = ["%s/lib" % prefix for prefix in prefixes]
+    pkg_config_paths = ["%s/lib/pkgconfig" % prefix for prefix in prefixes]
+    return {
+        "CPATH": _prepend_path_entries(
+            include_paths,
+            repository_ctx.os.environ.get("CPATH", ""),
+        ),
+        "LDFLAGS": _prepend_flag_entries(
+            ["-L%s" % path for path in library_paths],
+            repository_ctx.os.environ.get("LDFLAGS", ""),
+        ),
+        "LIBRARY_PATH": _prepend_path_entries(
+            library_paths,
+            repository_ctx.os.environ.get("LIBRARY_PATH", ""),
+        ),
+        "PKG_CONFIG_PATH": _prepend_path_entries(
+            pkg_config_paths,
+            repository_ctx.os.environ.get("PKG_CONFIG_PATH", ""),
+        ),
+    }
 
 def _resolve_darwin_environment(repository_ctx):
     for name, path in _DARWIN_TOOLS.items():
@@ -90,6 +148,12 @@ def _resolve_darwin_environment(repository_ctx):
         "xcrun --sdk macosx --find ld",
     )
 
+    environment = {
+        "DEVELOPER_DIR": developer_dir,
+        "SDKROOT": sdkroot,
+    }
+    environment.update(_resolve_darwin_native_dependency_environment(repository_ctx))
+
     return struct(
         system = "darwin",
         policy = "active-xcode",
@@ -102,10 +166,7 @@ def _resolve_darwin_environment(repository_ctx):
             "gerbil_as": "/usr/bin/as",
             "gerbil_ld": linker,
         },
-        environment = {
-            "DEVELOPER_DIR": developer_dir,
-            "SDKROOT": sdkroot,
-        },
+        environment = environment,
     )
 
 def _resolve_linux_environment(repository_ctx):
