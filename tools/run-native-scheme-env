@@ -15,6 +15,6 @@ if [[ -n "${GERBIL_LOADPATH:-}" ]]; then
   local_loadpath="$local_loadpath:$GERBIL_LOADPATH"
 fi
 
-exec gxpkg env env \
+exec gxpkg env env -u SDKROOT -u DEVELOPER_DIR \
   "GERBIL_LOADPATH=$local_loadpath" \
   "$@"

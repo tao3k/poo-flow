@@ -35,6 +35,8 @@
         poo-flow-project-adaptive-cold-gate-available?)
 
 (def poo-flow-project-root #f)
+(def +poo-flow-project-build-root-environment-name+
+  "POO_FLOW_PROJECT_BUILD_ROOT")
 
 (def +poo-flow-project-ffi-stage-label+ "nono-c-ffi")
 (def +poo-flow-project-runtime-stage-label+ "runtime")
@@ -99,7 +101,13 @@
 
 ;; : (-> Path Void)
 (def (poo-flow-project-configure-build-root! root)
-  (set! poo-flow-project-root (path-normalize root))
+  (let (normalized-root (path-normalize root))
+    (set! poo-flow-project-root normalized-root)
+    ;; Build entrypoints can load the source and compiled forms of this module
+    ;; in distinct Gerbil instantiations.  Keep the configured source root in a
+    ;; process-wide slot so every Building Framework boundary resolves the same
+    ;; explicit value without assuming module-instance identity.
+    (setenv +poo-flow-project-build-root-environment-name+ normalized-root))
   (unless (getenv "GERBIL_PATH" #f)
     (setenv "GERBIL_PATH"
             (path-expand ".gerbil" poo-flow-project-root))))
@@ -107,6 +115,9 @@
 ;; : (-> Path)
 (def (poo-flow-project-require-build-root)
   (or poo-flow-project-root
+      (and (getenv +poo-flow-project-build-root-environment-name+ #f)
+           (path-normalize
+            (getenv +poo-flow-project-build-root-environment-name+)))
       (error "POO Flow build root is not configured")))
 
 ;; : (-> Boolean Boolean Boolean Boolean [BuildOption])

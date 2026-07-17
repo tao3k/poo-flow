@@ -1,5 +1,6 @@
 (import :std/test
         :std/text/json
+        (only-in :std/misc/path path-normalize)
         (only-in :clan/poo/object .ref)
         (only-in :gslph/src/building/facade
                  package-source-stage-batched?)
@@ -141,8 +142,14 @@
          (andmap
           (lambda (stage)
             (eq? (package-source-stage-batched? stage) controller))
-          stages)
+         stages)
          => #t)))
+
+    (test-case "configured build root crosses Gerbil module instances"
+      (poo-flow-project-configure-build-root! ".")
+      (check
+       (getenv "POO_FLOW_PROJECT_BUILD_ROOT" #f)
+       => (path-normalize ".")))
 
     (test-case "environment activation accepts zero caller headroom"
       (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES"

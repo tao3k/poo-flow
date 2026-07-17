@@ -1,6 +1,6 @@
 #+title: RFC 0147 - Adaptive Scheme Build Guard and Execution Windows
 #+author: POO Flow
-#+status: Accepted and Implemented; Full Cold Gate Blocked
+#+status: Accepted, Implemented, and Full-Cold Validated
 #+language: en
 
 * Decision
@@ -70,7 +70,7 @@ The runtime result improves wall time and average core use, but allocation and
 RSS increase.  This is the evidence that makes an always-one-window cold policy
 unsafe: the wall-time win cannot be generalized without a hard memory bound.
 
-** Runtime target-cold 48-spec calibration
+** Pre-acceptance runtime target-cold 48-spec calibration
 
 The runtime-only calibration used one isolated output root, the installed
 Gerbil libraries through =GERBIL_LOADPATH=, 12 workers, a
@@ -97,7 +97,7 @@ flowchart LR
   A --> R1["Peak: 1,396,244,480 bytes"]
   R1 --> B["Tranche 2: 12 + 12 specs"]
   B --> R2["Peak: 724,107,264 bytes"]
-  R2 --> G["48 specs covered; full cold still gated"]
+  R2 --> G["48 specs covered; pre-acceptance gate remained closed"]
 #+end_src
 
 The maximum observed process-tree RSS was =1,396,244,480= bytes, about 65%
@@ -106,18 +106,76 @@ latest two transient estimates converged to approximately 26 MiB per spec.
 Because 12 is also the configured worker ceiling, retaining =12 + 12= is the
 expected adaptive decision rather than evidence of a fixed-width scheduler.
 
-This run covers 48 of 377 runtime specs (12.7%) and 48 of the widest group's
-58 specs. It authorizes the bounded adaptive path, but it does not authorize
-a full cold build. Full cold remains blocked until the acceptance gate below
-is satisfied with an explicit cap and durable receipts.
+This historical run covers 48 of 377 runtime specs (12.7%) and 48 of the widest
+group's 58 specs.  It authorized the bounded adaptive path at that stage.  The
+later strict A/B and full-cold receipts below supersede its then-blocked
+acceptance state without changing the receipt.
 
-* Cold-build truth and current gate
+** Strict same-Framework topology versus adaptive A/B
 
-An empty output root produces 39 dependency-closed topology groups containing
-377 specs.  The first 8 groups alone contain 223 specs.  The bounded baseline
-for those first groups reached approximately 104.046505 seconds and was
-terminated.  No complete cold receipt was produced, so a full cold build
-remains blocked.
+The decisive comparison does not compare Building Framework against a raw
+=std/make= script.  Both lanes use the same Building Framework declaration,
+the same upstream =std/make= executor, the same non-Nix Gerbil installation,
+fresh output roots, 12 workers, and a 2,147,483,648-byte hard cap.  Only the
+Building Framework execution policy changes:
+
+- =topology= flattens every dependency-ordered topology group into one ordered
+  upstream =std/make= session;
+- =adaptive= divides that same ordered spec stream into guarded sessions when
+  the caller supplies an explicit memory budget.
+
+| Cold slice | Policy | Windows or sessions | Guard elapsed | Process-tree peak RSS | Outer wall time |
+|------------+--------+---------------------+---------------+-----------------------+-----------------|
+| 24 specs | adaptive | =12 + 12= | 29,792 ms | 1,420,820,480 B | 32.72 s |
+| 24 specs | topology | one session | 24,059 ms | 1,665,728,512 B | 26.44 s |
+| 58 specs | adaptive | =12 + 13 + 25 + 8= | 48,341 ms | 1,411,432,448 B | 51.34 s |
+| 58 specs | topology | one session | 41,159 ms | 1,885,782,016 B | 43.65 s |
+
+For 24 specs, topology is approximately 19.2% faster and uses approximately
+17.2% more process-tree peak RSS.  For 58 specs, topology is approximately
+14.9% faster and adds 474,349,568 bytes of peak RSS.  The 58-spec topology run
+is below the hard cap but exceeds the cap minus the reserved 256-MiB headroom
+by approximately 6.7 MiB.  This confirms the existing policy boundary:
+topology is the performance default when the caller does not declare a tight
+cap, while adaptive windows are the safety path under an explicit cap and
+headroom contract.
+
+A bounded continuation compiled the next topology groups of 38, 35, and 30
+specs in 23,058 ms, 24,144 ms, and 19,161 ms.  Together with the first
+58-spec group, the first 161 specs completed in approximately 107.5 seconds
+without a superlinear topology anomaly.
+
+An experimental pending-native-queue flusher reduced the 58-spec guard time
+from 41,159 ms to 39,822 ms, only 3.25%, while retaining essentially the same
+memory peak.  It is not productized: a polling wrapper around an upstream
+queue is not a sufficient gain and would duplicate coordinator policy.
+
+* Cold-build truth and accepted full-cold receipt
+
+An empty output root produces 39 dependency-closed runtime topology groups
+containing 377 specs, followed by the declarative user-interface stage.  After
+the bounded A/B established both the memory geometry and the performance
+default, the canonical =build.ss compile= entrypoint completed against a fresh
+output root.
+
+| Metric | Accepted receipt |
+|--------+------------------|
+| Building owner | =gslph-building-framework= |
+| Build mode | =standard-gerbil-make-project= |
+| Execution policy | default one-session topology |
+| Workers | 12 |
+| Inner Scheme-guard elapsed | 199,289 ms |
+| Inner process-tree peak RSS | 2,460,680,192 B |
+| Outer Scheme-guard elapsed | 202,061 ms |
+| Outer process-tree peak RSS | 2,693,447,680 B |
+| =/usr/bin/time= wall time | 202.87 s, approximately 3.38 minutes |
+| Completion | exit 0; all guard outcomes =completed= |
+
+Against the previous accepted 571.71-second host baseline, the new full-cold
+wall time is 368.84 seconds lower, a reduction of approximately 64.5%.  It is
+also far below the interrupted twelve-minute regression boundary.  The inner
+Scheme process-tree peak is approximately 6.0% below the historical
+2,617,507,840-byte receipt.
 
 ** Historical standardized baseline and regression interrupt
 
@@ -135,12 +193,12 @@ its temporary progress stream contained 237 compile entries, but it produced
 no accepted final timing receipt.  The twelve-minute observation is therefore
 a regression stop, not a replacement baseline.
 
-These historical receipts define the performance rule for the next authorized
-cold run: it must use the canonical =build.ss= / Building Framework path, must
-retain Scheme-owned guard receipts, and must not silently accept a result slower
-than the 571.71-second host baseline.  The adaptive controller addresses the
-memory risk exposed by larger sessions; it does not waive the elapsed-time
-regression gate.
+These historical receipts define the continuing regression rule: cold builds
+must use the canonical =build.ss= / Building Framework path, retain
+Scheme-owned JSON guard receipts, and must not silently accept a result slower
+than the 571.71-second historical baseline.  The new 202.87-second receipt is
+the current host reference, while the old baseline remains the fail-closed
+upper regression boundary until a separately approved policy changes it.
 
 The evidence supports two separate conclusions:
 
@@ -150,10 +208,11 @@ The evidence supports two separate conclusions:
 
 The observed core increase from 1.733 to 1.989 is too small to indicate broad
 phase overlap.  Merging barriers shortens coordinator overhead, while the main
-pipeline still waits too long before native work becomes available.  A single
-large session also raises memory pressure.  The local controller therefore
-bounds memory and preserves order; it does not claim to solve upstream phase
-serialization.
+pipeline still defers most native work until expansion has populated the
+pending queue.  The 3.25% streaming experiment confirms that ad hoc polling is
+not the missing order-of-magnitude optimization.  A single large session also
+raises memory pressure.  The local controller therefore bounds memory and
+preserves order; it does not claim to solve upstream phase serialization.
 
 * Landed architecture
 
@@ -196,9 +255,21 @@ The downstream implementation is owned by these files:
 - =src/build-api/adaptive-execution-window.ss= owns the immutable POO Flow
   controller constructor, live guard adapter, and pure sizing transition.
 - =src/cli-support/project-build.ss= resolves optional caller or environment
-  activation for build truth while preserving non-adaptive clean behavior.
+  activation for build truth while preserving non-adaptive clean behavior.  It
+  also projects the configured root through =POO_FLOW_PROJECT_BUILD_ROOT= so
+  source and compiled Gerbil module instances share one explicit process-wide
+  build-root contract.
+- =src/build-api/project-compile-guard.ss= owns the outer project receipt and
+  emits it as canonical native Scheme JSON.
+- =tools/run-native-scheme-env= removes inherited =SDKROOT= and
+  =DEVELOPER_DIR= only after =gxpkg env= constructs the final command
+  environment.  This allows the host's active developer toolchain to resolve
+  adaptively instead of retaining a stale Nix Apple-SDK wrapper.
 - =t/build-api-adaptive-execution-window-test.ss= validates immutable sizing,
-  fail-closed outcomes, guard JSON, stage activation, and zero headroom.
+  fail-closed outcomes, guard JSON, stage activation, zero headroom, and the
+  cross-module-instance build-root contract.
+- =t/build-api-project-compile-guard-test.ss= validates the project guard
+  policy and canonical project receipt JSON.
 
 The principal POO Flow APIs are:
 
@@ -207,6 +278,8 @@ The principal POO Flow APIs are:
 - =poo-flow-adaptive-execution-window-controller-next-state/with-current-rss=
 - =poo-flow-process-memory-guard-receipt->json-object=
 - =poo-flow-process-memory-guard-receipt->json-string=
+- =poo-flow-project-compile-receipt->json-object=
+- =poo-flow-project-compile-receipt->json-string=
 - =poo-flow-project-adaptive-cold-gate-available?=
 - the optional controller arguments on =poo-flow-project-source-stages=,
   =poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
@@ -281,26 +354,36 @@ Only =completed= and =ok= outcomes are accepted.  Invalid receipt shape,
 non-integer measurements, hard-cap mismatch, guard failure, or peak RSS above
 the controller cap raises an error before another window is attempted.
 
-* Single-executor control flow
+* Single-executor control flow and toolchain gate
 
 #+begin_src mermaid
 flowchart TD
-  C["POO immutable controller"] --> P["Building Framework adaptive plan"]
-  P --> W["Next contiguous dependency-ordered window"]
-  W --> M["One std/make coordinator session"]
-  M --> G["Scheme process-tree guard and POO observation"]
-  G --> Q{"Outcome completed and peak within hard cap?"}
-  Q -->|"no"| F["Fail closed; do not attempt another window"]
-  Q -->|"yes"| N["Derive immutable next controller"]
-  N --> R{"Specs remain?"}
-  R -->|"yes"| W
-  R -->|"no"| J["Canonical adaptive JSON result"]
-  X["No second executor and no concurrent coordinator"] -. invariant .-> M
+  E["Caller environment"] --> X["gxpkg env builds package environment"]
+  X --> T["Remove inherited SDKROOT and DEVELOPER_DIR"]
+  T --> H["Host toolchain resolves through active xcrun"]
+  H --> P{"Explicit tight RSS cap?"}
+  P -->|"no"| TP["Building Framework topology policy"]
+  TP --> F["Flatten dependency groups into one ordered window"]
+  P -->|"yes"| AP["POO immutable adaptive controller"]
+  AP --> W["Next contiguous dependency-ordered window"]
+  F --> M["One std/make coordinator session"]
+  W --> M
+  M --> I["Coordinator expands modules and serializes imports"]
+  I --> Q["Native compile jobs enter upstream pending queue"]
+  Q --> D["std/make drains and joins native jobs"]
+  D --> G["Scheme process-tree guard emits canonical JSON"]
+  G --> C{"Adaptive specs remain?"}
+  C -->|"yes"| N["Derive immutable next controller"]
+  N --> W
+  C -->|"no"| R["Canonical project JSON receipt"]
+  Z["No second executor and no concurrent coordinator"] -. invariant .-> M
 #+end_src
 
 The loop is a Building Framework extension around its existing effect
 boundary.  It does not call =gsc= directly, create a per-spec =gxi= scheduler,
-or overlap multiple =std/make= coordinators.
+or overlap multiple =std/make= coordinators.  The toolchain gate does not pin a
+machine-specific Xcode path.  It removes an inherited incompatible override so
+the active host selection remains authoritative.
 
 * Canonical receipt contracts
 
@@ -329,14 +412,29 @@ Its public JSON contains stable =kind= and =schema= strings, numeric =version:
 1=, outcome, exit fields, process-tree peak and maximum RSS, elapsed
 milliseconds, optional timeout, and a JSON-safe label.
 
-All three contracts use Gerbil's native JSON support with sorted keys for the
+The canonical project compile receipt uses:
+
+- =poo-flow.project-compile-guard.v1=
+
+It records stable =kind=, =schema=, and =version= fields, the Building Framework
+owner and build mode, the selected =topology= or =adaptive= execution policy,
+request labels, detected system memory, maximum and peak RSS, elapsed
+milliseconds, optional timeout, final outcome, and a JSON-safe Building
+Framework stage summary.  The stage summary retains counts, active-stage
+labels, kinds, statuses, descriptions, and elapsed jiffies while excluding
+arbitrary in-process Scheme results.  The public
+=POO_FLOW_PROJECT_BUILD_RECEIPT= line is JSON; its earlier printed alist form is
+no longer emitted.
+
+All four contracts use Gerbil's native JSON support with sorted keys for the
 canonical string.  A =.txt= progress stream is diagnostic only and is not a
 receipt.  Printed alists remain internal or compatibility projections and are
 not the public record format.
 
 * Focused implementation receipts
 
-No full build was run.  Every focused command was bounded by 90 seconds.
+The focused commands remained bounded independently of the accepted full-cold
+gate.
 
 | Check | Exact focused receipt |
 |-------+-----------------------|
@@ -345,6 +443,11 @@ No full build was run.  Every focused command was bounded by 90 seconds.
 | Harness observability runtime | Imported =:gslph/t/building-observability-test= under =timeout 90s gxpkg env gxi=; exit 0; adaptive canonical JSON assertions completed |
 | POO Flow targeted compile | Compiled =process-memory-guard.ss=, =adaptive-execution-window.ss=, =project-build.ss=, and =build-api-adaptive-execution-window-test.ss= from the non-Nix harness environment with the refreshed harness load path; exit 0; 6.87 s |
 | POO Flow focused runtime | Imported =:poo-flow/t/build-api-adaptive-execution-window-test= under a 90-second timeout; exit 0; seven cases; =All tests OK=; canonical guard JSON emitted |
+| Project compile receipt runtime | Ran =build-api-project-compile-guard-test= through the consistent Building Framework overlay under a 40-second timeout; exit 0; five cases; =All tests OK=; canonical project JSON parsed and round-tripped |
+| Native environment projection | =tools/run-native-scheme-env= reported empty inherited =SDKROOT= and =DEVELOPER_DIR= after =gxpkg env=; the host active toolchain remained discoverable through =xcrun= |
+| Canonical full cold | =build.ss compile= against a fresh output root; exit 0; inner 199,289 ms; outer 202,061 ms; =/usr/bin/time= 202.87 s; all Scheme guard outcomes =completed= |
+| Public incremental receipt | =build.ss compile= against the accepted output root; exit 0; 3,214 ms; canonical JSON recorded =execution-policy=topology= and two active Building Framework stages |
+| POO macro expansion guard | A same-name =.o= slot/value binding reached 6,124,306,432 B RSS in 9.32 seconds and was interrupted; the explicit =execution-policy-value= projection reduced the equivalent import probe to 1.99 seconds and 176,226,304 B |
 | Diff hygiene | =rtk git diff --check= in both repositories; exit 0 |
 
 The POO Flow focused suite covers immutable growth, immediate startup shrink,
@@ -382,33 +485,40 @@ The tuned run dispatched =init= with =profiles/all=, then
 exact topology order and multiplicity: no spec was omitted or duplicated.
 Both runs completed without a lingering =gxi= or =gsc= process.
 
-This bounded A/B is explicitly not comparable to the earlier 12-worker,
-one-window performance baseline.  The worker count, controller geometry, cap,
-and output-root conditions differ, so the 27.75-second result is evidence for
-safe controller recovery rather than a replacement performance number.  Full
-cold acceptance remains blocked.
+This historical bounded A/B is explicitly not comparable to the later
+12-worker strict A/B.  The worker count, controller geometry, cap, and
+output-root conditions differ, so the 27.75-second result remains evidence for
+safe controller recovery rather than a replacement performance number.
 
-The direct Nix compile environment still exposes the known Apple SDK and
-Homebrew Gerbil =stdio.h= conflict.  The focused receipts use the non-Nix
-Gerbil environment and therefore validate the feature without treating that
-toolchain collision as a code result.
+The original toolchain failure was not a Scheme algorithm result.  =gxpkg env=
+injected a Nix =DEVELOPER_DIR= into a Homebrew Gerbil/Gambit compiler configured
+with GCC.  GCC's =collect2= delegated to =xcrun=; the Nix =xcrun ld= wrapper then
+recursively invoked an equivalent =xcrun ld= process.  That process chain
+explains the earlier extreme latency and memory growth.  Clearing the inherited
+SDK selectors in the final wrapper environment resolves =xcrun= through the
+host developer tools without hard-coding one machine's path.
 
-* Acceptance and full-cold gate
+* Acceptance outcome and continuing gates
 
-The landed code and focused receipts close the bounded implementation phase.
-They do not authorize a full cold build.
+The bounded implementation phase and the full-cold gate are complete.  The
+accepted 202.87-second receipt establishes that the canonical Building
+Framework topology policy is healthy on this host after the toolchain boundary
+is corrected.
 
-A full cold run MUST NOT start until both conditions hold:
+The following continuing rules remain normative:
 
-1. the caller supplies an explicit POO controller or a positive
-   =POO_FLOW_BUILD_MAX_RSS_BYTES= hard cap; and
-2. bounded receipts on the same host demonstrate valid canonical JSON,
-   completed outcomes, preserved dependency order, and peak RSS below the cap.
-
-If either condition is absent, =poo-flow-project-adaptive-cold-gate-available?=
-must report the unavailable state and the project retains its default
-one-window topology behavior.  The first authorized cold run must preserve all
-completed per-window receipts and stop at the first failed boundary.
+1. default builds use Building Framework topology and one upstream
+   =std/make= session when the caller declares no tight memory cap;
+2. a positive =POO_FLOW_BUILD_MAX_RSS_BYTES= activates adaptive windows, and
+   every completed window must retain canonical JSON evidence;
+3. any invalid receipt, cap breach, timeout, or non-completed outcome fails
+   closed before the next adaptive window;
+4. =571.71= seconds remains the historical regression ceiling, while =202.87=
+   seconds is the current accepted host reference;
+5. the build wrapper must not restore an inherited Nix Apple-SDK selector after
+   environment construction; and
+6. no accepted path may introduce a second executor or concurrent
+   =std/make= coordinators.
 
 Phase-level overlap remains an upstream proposal.  The next performance path
 is to change the upstream expansion/import and native-job flush behavior so
