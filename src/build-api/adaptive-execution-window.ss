@@ -182,6 +182,8 @@
   (unless (poo-flow-adaptive-execution-window-controller? controller)
     (error "invalid POO Flow adaptive execution-window controller"
            controller))
+  (unless (execution-window-observation? observation)
+    (error "invalid adaptive execution-window observation" observation))
   (unless (poo-flow-adaptive-observation-completed? observation)
     (error "adaptive execution-window observation failed closed"
            (execution-window-observation-outcome observation)))
