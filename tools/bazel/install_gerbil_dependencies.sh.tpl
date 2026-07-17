@@ -3,6 +3,7 @@ set -euo pipefail
 
 workspace=${BUILD_WORKSPACE_DIRECTORY:?bazel run must provide BUILD_WORKSPACE_DIRECTORY}
 native_environment=(%{NativeEnvironment})
+export "${native_environment[@]}"
 
 cd "$workspace"
 mkdir -p "${HOME:?}/.gerbil/pkg"
