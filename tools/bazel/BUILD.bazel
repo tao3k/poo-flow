@@ -1,4 +1,9 @@
-exports_files(["gerbil_repository.bzl"])
+exports_files([
+    "gerbil_repository.bzl",
+    "host_system.bzl",
+    "local_gerbil.BUILD.bazel.tpl",
+    "native_scheme_env.sh.tpl",
+])
 
 alias(
     name = "native_scheme_env",

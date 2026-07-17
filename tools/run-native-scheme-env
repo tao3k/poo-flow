@@ -15,8 +15,7 @@ if [[ -n "${GERBIL_LOADPATH:-}" ]]; then
   local_loadpath="$local_loadpath:$GERBIL_LOADPATH"
 fi
 
-native_environment=()
-if [[ "$(uname -s)" == "Darwin" ]]; then
+resolve_darwin_environment() {
   developer_dir="${DEVELOPER_DIR:-}"
   sdkroot="${SDKROOT:-}"
   resolve_sdkroot=false
@@ -31,12 +30,26 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
       /usr/bin/xcrun --sdk macosx --show-sdk-path)"
   fi
 
-  native_environment=(
+  NATIVE_ENVIRONMENT=(
     "DEVELOPER_DIR=$developer_dir"
     "SDKROOT=$sdkroot"
   )
-fi
+}
 
-exec gxpkg env env "${native_environment[@]}" \
+NATIVE_ENVIRONMENT=()
+host_system="$(uname -s)"
+case "$host_system" in
+  Darwin)
+    resolve_darwin_environment
+    ;;
+  Linux)
+    ;;
+  *)
+    printf 'unsupported Gerbil host system: %s (expected Darwin or Linux)\n' "$host_system" >&2
+    exit 64
+    ;;
+esac
+
+exec gxpkg env env "${NATIVE_ENVIRONMENT[@]}" \
   "GERBIL_LOADPATH=$local_loadpath" \
   "$@"

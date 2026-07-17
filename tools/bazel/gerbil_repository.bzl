@@ -1,186 +1,101 @@
-"""Local repository rule that makes the selected Gerbil toolchain explicit."""
+"""Declare the host Gerbil toolchain used by Bazel outer orchestration."""
+
+load(":host_system.bzl", "resolve_host_environment")
+
+_TOOL_CANDIDATES = {
+    "gerbil_cc": ["gcc-16", "cc"],
+    "gxc": ["gxc"],
+    "gxi": ["gxi"],
+    "gxpkg": ["gxpkg"],
+}
+
+_VERSIONED_TOOLS = ["gxi", "gxc"]
 
 def _shell_quote(value):
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
-def _checked_output(repository_ctx, argv, description):
-    result = repository_ctx.execute(argv)
-    if result.return_code != 0:
-        fail("%s failed: %s" % (description, result.stderr))
-    value = result.stdout.strip()
-    if not value:
-        fail("%s returned an empty path" % description)
-    return value
+def _resolve_tools(repository_ctx):
+    tools = {}
+    for name, candidates in _TOOL_CANDIDATES.items():
+        for candidate in candidates:
+            path = repository_ctx.which(candidate)
+            if path != None:
+                tools[name] = path
+                break
+        if name not in tools:
+            fail("%s was not found on PATH; tried %s" % (name, ", ".join(candidates)))
+    return tools
 
-def _usable_non_nix_directory(repository_ctx, value):
-    return bool(value) and not value.startswith("/nix/store/") and repository_ctx.path(value).exists
+def _read_versions(repository_ctx, tools, expected_prefix):
+    versions = {}
+    for name in _VERSIONED_TOOLS:
+        result = repository_ctx.execute([tools[name], "--version"])
+        if result.return_code != 0:
+            fail("%s --version failed: %s" % (name, result.stderr))
+        version = result.stdout.strip()
+        if not version.startswith(expected_prefix):
+            fail("%s version mismatch: expected prefix %r, got %r" % (name, expected_prefix, version))
+        versions[name] = version
+    return versions
 
-def _native_environment(repository_ctx):
-    host_os = repository_ctx.os.name.lower()
-    if not host_os.startswith("mac"):
-        return struct(
-            policy = "preserve-host-environment",
-            developer_dir = "",
-            sdkroot = "",
-        )
+def _environment_arguments(environment):
+    return " ".join([
+        _shell_quote("%s=%s" % (name, environment[name]))
+        for name in sorted(environment.keys())
+    ])
 
-    xcode_select = repository_ctx.path("/usr/bin/xcode-select")
-    xcrun = repository_ctx.path("/usr/bin/xcrun")
-    env = repository_ctx.path("/usr/bin/env")
-    if not xcode_select.exists or not xcrun.exists or not env.exists:
-        fail("Darwin Gerbil builds require /usr/bin/xcode-select, /usr/bin/xcrun, and /usr/bin/env")
-
-    inherited_developer_dir = repository_ctx.os.environ.get("DEVELOPER_DIR", "")
-    inherited_sdkroot = repository_ctx.os.environ.get("SDKROOT", "")
-    developer_dir = inherited_developer_dir
-    inherited_developer_dir_usable = _usable_non_nix_directory(repository_ctx, developer_dir)
-    if not inherited_developer_dir_usable:
-        developer_dir = _checked_output(
-            repository_ctx,
-            [
-                env,
-                "-u",
-                "DEVELOPER_DIR",
-                "-u",
-                "SDKROOT",
-                xcode_select,
-                "--print-path",
-            ],
-            "xcode-select --print-path",
-        )
-
-    sdkroot = inherited_sdkroot
-    if not inherited_developer_dir_usable or not _usable_non_nix_directory(repository_ctx, sdkroot):
-        sdkroot = _checked_output(
-            repository_ctx,
-            [
-                env,
-                "-u",
-                "SDKROOT",
-                "DEVELOPER_DIR=%s" % developer_dir,
-                xcrun,
-                "--sdk",
-                "macosx",
-                "--show-sdk-path",
-            ],
-            "xcrun --sdk macosx --show-sdk-path",
-        )
-
-    return struct(
-        policy = "darwin-active-xcode",
-        developer_dir = developer_dir,
-        sdkroot = sdkroot,
-    )
-
-def _native_scheme_env_script(gxpkg, native_environment):
-    lines = [
-        "#!/usr/bin/env bash",
-        "set -euo pipefail",
-    ]
-    if native_environment.policy == "darwin-active-xcode":
-        lines.extend([
-            "exec %s env env \\" % _shell_quote(str(gxpkg)),
-            "  %s \\" % _shell_quote("DEVELOPER_DIR=%s" % native_environment.developer_dir),
-            "  %s \\" % _shell_quote("SDKROOT=%s" % native_environment.sdkroot),
-            "  \"$@\"",
-        ])
-    else:
-        lines.append("exec %s env env \"$@\"" % _shell_quote(str(gxpkg)))
-    return "\n".join(lines) + "\n"
+def _tool_paths(tools):
+    return {name: str(path) for name, path in tools.items()}
 
 def _local_gerbil_repository_impl(repository_ctx):
-    gxi = repository_ctx.which("gxi")
-    if gxi == None:
-        fail("gxi was not found on PATH while configuring the Gerbil tool repository")
-    gxc = repository_ctx.which("gxc")
-    if gxc == None:
-        fail("gxc was not found on PATH while configuring the Gerbil tool repository")
-    gxpkg = repository_ctx.which("gxpkg")
-    if gxpkg == None:
-        fail("gxpkg was not found on PATH while configuring the Gerbil tool repository")
-    gerbil_cc = repository_ctx.which("gcc-16")
-    if gerbil_cc == None:
-        gerbil_cc = repository_ctx.which("cc")
-    if gerbil_cc == None:
-        fail("neither gcc-16 nor cc was found for the Gerbil compiler")
+    tools = _resolve_tools(repository_ctx)
+    versions = _read_versions(
+        repository_ctx,
+        tools,
+        repository_ctx.attr.expected_version_prefix,
+    )
+    native_environment = resolve_host_environment(repository_ctx)
 
-    gxi_version = repository_ctx.execute([gxi, "--version"])
-    if gxi_version.return_code != 0:
-        fail("gxi --version failed: %s" % gxi_version.stderr)
-    gxc_version = repository_ctx.execute([gxc, "--version"])
-    if gxc_version.return_code != 0:
-        fail("gxc --version failed: %s" % gxc_version.stderr)
-    expected = repository_ctx.attr.expected_version_prefix
-    if not gxi_version.stdout.startswith(expected):
-        fail("gxi version mismatch: expected prefix %r, got %r" % (expected, gxi_version.stdout.strip()))
-    if not gxc_version.stdout.startswith(expected):
-        fail("gxc version mismatch: expected prefix %r, got %r" % (expected, gxc_version.stdout.strip()))
+    for name, path in tools.items():
+        repository_ctx.symlink(path, name)
 
-    native_environment = _native_environment(repository_ctx)
-
-    repository_ctx.symlink(gerbil_cc, "gerbil_cc")
-    repository_ctx.symlink(gxc, "gxc")
-    repository_ctx.symlink(gxi, "gxi")
-    repository_ctx.file(
+    repository_ctx.template(
         "native_scheme_env.sh",
-        _native_scheme_env_script(gxpkg, native_environment),
+        repository_ctx.attr.native_runner_template,
+        substitutions = {
+            "%{GXPkg}": _shell_quote(str(tools["gxpkg"])),
+            "%{NativeEnvironment}": _environment_arguments(native_environment.environment),
+        },
         executable = True,
     )
     repository_ctx.file(
-        "native_scheme_env.bzl",
-        """def _native_scheme_env_impl(ctx):
-    executable = ctx.actions.declare_file(ctx.label.name)
-    ctx.actions.symlink(
-        output = executable,
-        target_file = ctx.file.src,
-        is_executable = True,
+        "toolchain.receipt.json",
+        json.encode_indent({
+            "schema": "poo-flow.bazel.local-gerbil-toolchain-receipt.v1",
+            "host_os": repository_ctx.os.name,
+            "system": native_environment.system,
+            "environment_policy": native_environment.policy,
+            "environment": native_environment.environment,
+            "tools": _tool_paths(tools),
+            "versions": versions,
+        }, indent = "  ") + "\n",
     )
-    return [DefaultInfo(
-        executable = executable,
-        files = depset([executable]),
-        runfiles = ctx.runfiles(files = [ctx.file.src]),
-    )]
-
-native_scheme_env = rule(
-    implementation = _native_scheme_env_impl,
-    attrs = {"src": attr.label(allow_single_file = True, mandatory = True)},
-    executable = True,
-)
-""",
-    )
-    repository_ctx.file(
-        "toolchain.receipt",
-        "host_os=%s\ngxi=%s\ngxc=%s\ngxpkg=%s\nversion=%s\nnative_env_policy=%s\ndeveloper_dir=%s\nsdkroot=%s\n" % (
-            repository_ctx.os.name,
-            gxi,
-            gxc,
-            gxpkg,
-            gxi_version.stdout.strip(),
-            native_environment.policy,
-            native_environment.developer_dir,
-            native_environment.sdkroot,
-        ),
-    )
-    repository_ctx.file(
+    repository_ctx.template(
         "BUILD.bazel",
-        """load(":native_scheme_env.bzl", "native_scheme_env")
-
-native_scheme_env(
-    name = "native_scheme_env",
-    src = "native_scheme_env.sh",
-    visibility = ["//visibility:public"],
-)
-
-exports_files(
-    ["gerbil_cc", "gxc", "gxi", "toolchain.receipt"],
-    visibility = ["//visibility:public"],
-)
-""",
+        repository_ctx.attr.build_file_template,
     )
 
 local_gerbil_repository = repository_rule(
     attrs = {
+        "build_file_template": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:local_gerbil.BUILD.bazel.tpl"),
+        ),
         "expected_version_prefix": attr.string(mandatory = True),
+        "native_runner_template": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:native_scheme_env.sh.tpl"),
+        ),
     },
     implementation = _local_gerbil_repository_impl,
     environ = ["PATH", "DEVELOPER_DIR", "SDKROOT"],
