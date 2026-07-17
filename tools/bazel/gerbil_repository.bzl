@@ -45,15 +45,21 @@ def _resolve_tools(repository_ctx, tool_overrides):
             fail("%s was not found on PATH; tried %s" % (name, ", ".join(candidates)))
     return tools
 
-def _read_versions(repository_ctx, tools, expected_prefix):
+def _version_matches_prefix(version, expected_prefixes):
+    for prefix in expected_prefixes:
+        if version.startswith(prefix):
+            return True
+    return False
+
+def _read_versions(repository_ctx, tools, expected_prefixes):
     versions = {}
     for name in _VERSIONED_TOOLS:
         result = repository_ctx.execute([tools[name], "--version"])
         if result.return_code != 0:
             fail("%s --version failed: %s" % (name, result.stderr))
         version = result.stdout.strip()
-        if not version.startswith(expected_prefix):
-            fail("%s version mismatch: expected prefix %r, got %r" % (name, expected_prefix, version))
+        if not _version_matches_prefix(version, expected_prefixes):
+            fail("%s version mismatch: expected one of %r, got %r" % (name, expected_prefixes, version))
         versions[name] = version
     return versions
 
@@ -91,7 +97,7 @@ def _local_gerbil_repository_impl(repository_ctx):
     versions = _read_versions(
         repository_ctx,
         tools,
-        repository_ctx.attr.expected_version_prefix,
+        repository_ctx.attr.expected_version_prefixes,
     )
     repository_ctx.symlink(tools["gerbil_as"], "gerbil_as")
     repository_ctx.symlink(tools["gerbil_cc"], "gerbil_cc")
@@ -171,7 +177,7 @@ local_gerbil_repository = repository_rule(
             allow_single_file = True,
             default = Label("//tools/bazel:install_gerbil_dependencies.sh.tpl"),
         ),
-        "expected_version_prefix": attr.string(mandatory = True),
+        "expected_version_prefixes": attr.string_list(mandatory = True),
         "include_project_dependencies": attr.bool(default = True),
         "native_runner_template": attr.label(
             allow_single_file = True,

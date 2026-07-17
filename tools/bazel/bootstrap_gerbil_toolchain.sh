@@ -30,15 +30,16 @@ git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
 
 cd "$GERBIL_SRC"
 ./configure --prefix="$GERBIL_PREFIX"
-printf '(def (gerbil-version-string) "ci-%s")\n' "$GERBIL_REF" >src/gerbil/runtime/version.ss
 
 export GERBIL_BUILD_CORES="$build_cores"
 make -j"$build_cores"
 make install
 
 elapsed_seconds=$((SECONDS - started_at))
+gerbil_version="$("$GERBIL_PREFIX/bin/gxi" --version)"
 jq -n \
   --arg compiler "${CC:-cc}" \
+  --arg gerbil_version "$gerbil_version" \
   --arg prefix "$GERBIL_PREFIX" \
   --arg source_ref "$GERBIL_REF" \
   --argjson build_cores "$build_cores" \
@@ -48,6 +49,7 @@ jq -n \
     version: 1,
     outcome: "ready",
     source_ref: $source_ref,
+    gerbil_version: $gerbil_version,
     compiler: $compiler,
     build_cores: $build_cores,
     elapsed_seconds: $elapsed_seconds,
