@@ -64,6 +64,12 @@ gerbil_project_test(
     test_root = "//:t/performance-tests.ss",
 )
 
+gerbil_project_test(
+    name = "user_interface_custom_loop_engine_capability_test",
+    size = "large",
+    test_root = "//:t/user-interface-custom-loop-engine-capability-test.ss",
+)
+
 test_suite(
     name = "tests",
     tests = [
@@ -71,6 +77,7 @@ test_suite(
         ":contract_tests",
         ":integration_tests",
         ":unit_tests",
+        ":user_interface_custom_loop_engine_capability_test",
     ],
 )
 

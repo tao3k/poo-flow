@@ -75,10 +75,12 @@ jobs:
             gerbil-label: source-v0.18.2-4-gadd92248
             gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
             gerbil-install: source
+            gerbil-home-version: ""
           - os: macos-latest
-            gerbil-label: source-v0.18.2-4-gadd92248
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
-            gerbil-install: source
+            gerbil-label: homebrew-v0.18.2
+            gerbil-ref: ""
+            gerbil-install: homebrew
+            gerbil-home-version: v0.18.2
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
       CCACHE_MAXSIZE: 2G
@@ -187,15 +189,6 @@ jobs:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
           key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
 
-      - name: Restore resumable Gerbil bootstrap tree
-        if: steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v4
-        with:
-          path: .ci/gerbil-src/${{ matrix.gerbil-label }}
-          key: gerbil-bootstrap-tree-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            gerbil-bootstrap-tree-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-
-
       - name: Build Gerbil
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
         run: |
@@ -215,12 +208,14 @@ jobs:
           path: .ci/ccache
           key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Save resumable Gerbil bootstrap tree
-        if: always() && steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+      - name: Upload Gerbil bootstrap phase receipt
+        if: always() && matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
         with:
-          path: .ci/gerbil-src/${{ matrix.gerbil-label }}
-          key: gerbil-bootstrap-tree-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: gerbil-bootstrap-receipt-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}
+          path: .ci/gerbil-src/${{ matrix.gerbil-label }}/.poo-flow-bootstrap-state.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Save Gerbil install cache
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
@@ -239,6 +234,66 @@ jobs:
           "$prefix/bin/gsc" -v | tee /tmp/gambit-version.txt
           grep -F "v0.18.2" /tmp/gerbil-version.txt
           grep -F "v4.9.7" /tmp/gambit-version.txt
+
+      - name: Resolve Homebrew Gerbil capability root
+        if: matrix.gerbil-install == 'homebrew'
+        run: |
+          set -euo pipefail
+          prefix="$(brew --prefix gerbil-scheme)"
+          cellar="$(brew --cellar gerbil-scheme)"
+          gerbil_home=""
+          candidates=("$prefix/current" "$prefix"/v* "$prefix")
+          for keg in "$cellar"/*; do
+            candidates+=("$keg/current" "$keg"/v* "$keg")
+          done
+          while IFS= read -r gxi_path; do
+            candidates+=("${gxi_path%/bin/gxi}")
+          done < <(brew list gerbil-scheme | awk '/\/bin\/gxi$/')
+
+          for candidate in "${candidates[@]}"; do
+            if [ -x "$candidate/bin/gxi" ] && \
+               [ -x "$candidate/bin/gsc" ] && \
+               [ -d "$candidate/lib" ]; then
+              gerbil_home="$(cd "$candidate" && pwd -P)"
+              break
+            fi
+          done
+          if [ -z "$gerbil_home" ]; then
+            echo "No usable Homebrew Gerbil capability root below $prefix or $cellar" >&2
+            brew list gerbil-scheme >&2
+            exit 1
+          fi
+          gerbil_home_version="${{ matrix.gerbil-home-version }}"
+          if [ -n "$gerbil_home_version" ]; then
+            case "$gerbil_home" in
+              */"$gerbil_home_version")
+                versioned_home="$gerbil_home"
+                ;;
+              *)
+                versioned_home="$gerbil_home/$gerbil_home_version"
+                if [ ! -e "$versioned_home" ]; then
+                  mkdir -p "$versioned_home"
+                fi
+                for capability in bin include lib share; do
+                  if [ -e "$gerbil_home/$capability" ] && \
+                     [ ! -e "$versioned_home/$capability" ]; then
+                    ln -s "../$capability" "$versioned_home/$capability"
+                  fi
+                done
+                ;;
+            esac
+            if [ ! -x "$versioned_home/bin/gxi" ] || \
+               [ ! -x "$versioned_home/bin/gsc" ] || \
+               [ ! -d "$versioned_home/lib" ]; then
+              echo "Incomplete Gerbil versioned capability view: $versioned_home" >&2
+              exit 1
+            fi
+            echo "Resolved Gerbil versioned capability view: $versioned_home"
+          fi
+          echo "Resolved Homebrew Gerbil capability root: $gerbil_home"
+          echo "GERBIL_PREFIX=$gerbil_home" >> "$GITHUB_ENV"
+          echo "GERBIL_HOME=$gerbil_home" >> "$GITHUB_ENV"
+          echo "$gerbil_home/bin" >> "$GITHUB_PATH"
 
       - name: Activate Gerbil
         run: |
@@ -260,6 +315,28 @@ jobs:
           test -f "$tmp_smoke/gsc-smoke.o1"
           "$GERBIL_PREFIX/bin/gxi" -e '(displayln "gerbil-ready")'
           "$GERBIL_PREFIX/bin/gxpkg" list
+
+      - name: Restore Gerbil gxpkg capability overlay
+        if: matrix.gerbil-install == 'homebrew'
+        id: gerbil-gxpkg-overlay-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .ci/gerbil-gxpkg-overlay/${{ matrix.gerbil-label }}
+          key: gerbil-gxpkg-overlay-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-add922481cec81d05431db014bcb91b30485cf21
+
+      - name: Activate Gerbil gxpkg provider capability
+        if: matrix.gerbil-install == 'homebrew'
+        env:
+          GERBIL_GXPKG_OVERLAY: ${{ github.workspace }}/.ci/gerbil-gxpkg-overlay/${{ matrix.gerbil-label }}
+          GERBIL_GXPKG_REF: add922481cec81d05431db014bcb91b30485cf21
+        run: bazel run //tools/bazel:activate_gxpkg_overlay
+
+      - name: Save Gerbil gxpkg capability overlay
+        if: matrix.gerbil-install == 'homebrew' && steps.gerbil-gxpkg-overlay-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .ci/gerbil-gxpkg-overlay/${{ matrix.gerbil-label }}
+          key: gerbil-gxpkg-overlay-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-add922481cec81d05431db014bcb91b30485cf21
 
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
@@ -308,13 +385,3 @@ jobs:
         run: |
           bazel test //scheme:tests
           bazel test //bindings/runtime-c:runtime_c_tests //bindings/runtime-c/bundle-v1:bundle_v1_tests
-
-      - name: Clean package outputs
-        run: tools/run-native-scheme-build clean
-
-      - name: Build package
-        run: tools/run-native-scheme-build compile
-
-      - name: Run package test roots through gxtest
-        shell: bash
-        run: tools/run-native-scheme-tests

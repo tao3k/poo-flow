@@ -73,7 +73,7 @@ export CC="$compiler_command"
 
 started_at="$SECONDS"
 mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
-rm -rf "$GERBIL_PREFIX"
+rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
 git init --quiet "$GERBIL_SRC"
 if git -C "$GERBIL_SRC" remote get-url origin >/dev/null 2>&1; then
   git -C "$GERBIL_SRC" remote set-url origin https://git.cons.io/mighty-gerbils/gerbil
@@ -84,26 +84,85 @@ git -C "$GERBIL_SRC" fetch --depth=1 origin "$GERBIL_REF"
 git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
 
 cd "$GERBIL_SRC"
-configure_signature="$GERBIL_REF|$GERBIL_PREFIX|$compiler_command|$architecture_profile"
-configure_stamp="$GERBIL_SRC/.poo-flow-configure-signature"
+bootstrap_state_path="$GERBIL_SRC/.poo-flow-bootstrap-state.json"
+bootstrap_started_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+bootstrap_started_epoch="$(date '+%s')"
+bootstrap_phase="prepare"
+
+write_bootstrap_state() {
+  local status="$1"
+  local exit_code="${2:-0}"
+  local updated_at updated_epoch elapsed_ms temporary_path
+  updated_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  updated_epoch="$(date '+%s')"
+  elapsed_ms="$(( (updated_epoch - bootstrap_started_epoch) * 1000 ))"
+  temporary_path="${bootstrap_state_path}.tmp"
+
+  jq -n \
+    --arg schema "poo-flow.gerbil-bootstrap-state.v1" \
+    --arg status "$status" \
+    --arg phase "$bootstrap_phase" \
+    --arg ref "$GERBIL_REF" \
+    --arg source "$GERBIL_SRC" \
+    --arg prefix "$GERBIL_PREFIX" \
+    --arg compiler "$compiler_command" \
+    --arg architecture "$architecture_profile" \
+    --arg startedAt "$bootstrap_started_at" \
+    --arg updatedAt "$updated_at" \
+    --argjson buildCores "$build_cores" \
+    --argjson elapsedMs "$elapsed_ms" \
+    --argjson exitCode "$exit_code" \
+    '{
+      schema: $schema,
+      status: $status,
+      phase: $phase,
+      ref: $ref,
+      source: $source,
+      prefix: $prefix,
+      compiler: $compiler,
+      architecture: $architecture,
+      buildCores: $buildCores,
+      startedAt: $startedAt,
+      updatedAt: $updatedAt,
+      elapsedMs: $elapsedMs,
+      exitCode: $exitCode
+    }' >"$temporary_path"
+  mv "$temporary_path" "$bootstrap_state_path"
+}
+
+begin_bootstrap_phase() {
+  bootstrap_phase="$1"
+  write_bootstrap_state "running" 0
+}
+
+finish_bootstrap_state() {
+  local exit_code="$?"
+  trap - EXIT
+  if (( exit_code == 0 )); then
+    bootstrap_phase="complete"
+    write_bootstrap_state "success" 0 || true
+  else
+    write_bootstrap_state "interrupted" "$exit_code" || true
+  fi
+  exit "$exit_code"
+}
+
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap finish_bootstrap_state EXIT
+
+begin_bootstrap_phase "configure"
 
 # A GitHub-hosted runner starts with an empty workspace, so an existing
 # config.status here can only come from the capability-keyed bootstrap-tree
 # cache.  Adopt it once when migrating older cached trees that predate the
 # explicit signature stamp.
-if [[ ! -f "$configure_stamp" && "${CI:-}" == "true" && -f "$GERBIL_SRC/config.status" ]]; then
-  printf '%s\n' "$configure_signature" >"$configure_stamp"
-fi
-
-if [[ -f "$configure_stamp" && "$(<"$configure_stamp")" == "$configure_signature" ]]; then
-  echo "Reusing Gerbil configure state for $architecture_profile"
-else
-  ./configure --prefix="$GERBIL_PREFIX" "${configure_architecture[@]}"
-  printf '%s\n' "$configure_signature" >"$configure_stamp"
-fi
+./configure --prefix="$GERBIL_PREFIX" "${configure_architecture[@]}"
 
 export GERBIL_BUILD_CORES="$build_cores"
+begin_bootstrap_phase "build"
 make -j"$build_cores"
+begin_bootstrap_phase "install"
 make install
 
 if [[ "$ccache_enabled" == true ]]; then
