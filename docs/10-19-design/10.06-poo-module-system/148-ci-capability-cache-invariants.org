@@ -1,0 +1,80 @@
+#+title: CI Capability Cache Invariants
+#+language: en
+
+* Status
+
+This document records the implemented CI cache boundary that follows the
+adaptive Scheme build guard.  It is normative for Bazel-owned Gerbil toolchain
+and dependency bootstrap behavior.
+
+* Metric boundaries
+
+The accepted POO Flow project cold-build reference is =161.694s=.  A first-use
+Gerbil toolchain bootstrap is a separate provisioning metric and MUST NOT be
+reported as project cold-build time.  A repeated CI run for the same source,
+compiler capability, architecture profile, and dependency inputs is expected
+to restore the toolchain cache and return to the project-level measurement.
+
+* Capability cache invariants
+
+1. Local and downstream builds default to the =native= architecture profile so
+   the compiler may select the highest-performance instructions available on
+   the current machine.
+2. Hosted CI uses the =portable= architecture profile so cache identity remains
+   reusable across compatible runners.
+3. The ABI fingerprint hashes compiler-selected diagnostics, compiler identity,
+   target tuple, and architecture profile.  Random =cc*.s= paths and probe file
+   locations are execution noise and MUST NOT enter the cache key.
+4. The dependency installer derives its writable package root from
+   =GERBIL_PATH=, falling back to =$HOME/.gerbil= only when =GERBIL_PATH= is
+   absent.  Bazel owns this invariant; workflow-specific directory creation is
+   not an acceptable substitute.
+5. CPU parallelism is discovered from the executing system.  No workflow,
+   test, or cache rule may encode a fixed logical CPU count.
+
+* Declarative ownership
+
+#+begin_src mermaid
+flowchart TD
+    Host["Host capabilities"] --> Profile{"GERBIL_ARCH_PROFILE"}
+    Profile -->|native| Native["Compiler native instruction selection"]
+    Profile -->|portable| Portable["Compatible hosted-runner target"]
+    Native --> Probe["Deterministic ABI fingerprint"]
+    Portable --> Probe
+    Probe --> ToolchainKey["Gerbil toolchain cache key"]
+    ToolchainKey --> Restore{"Cache restore"}
+    Restore -->|hit| ProjectBuild["POO Flow project cold build"]
+    Restore -->|miss| Bootstrap["Upstream parallel Gerbil bootstrap"]
+    Bootstrap --> Save["Save capability-keyed toolchain"]
+    Save --> ProjectBuild
+    ProjectBuild --> Dependencies["Bazel dependency installer"]
+    GerbilPath["GERBIL_PATH or HOME fallback"] --> Dependencies
+    Dependencies --> PackageRoot["Selected root/pkg exists"]
+#+end_src
+
+The Bazel repository rules and their generated tools own the arrows in this
+graph.  GitHub Actions selects the portable profile and supplies cache storage;
+it does not reimplement toolchain or package-root policy.
+
+* Failure-closed behavior
+
+- A missing or non-executable compiler terminates fingerprint generation.
+- An unknown architecture profile terminates fingerprint generation.
+- A host without SHA-256 tooling terminates fingerprint generation.
+- A dependency install cannot begin until the selected Gerbil package root
+  exists.
+- A non-deterministic fingerprint is a cache correctness failure, not an
+  acceptable cache miss.
+
+* Acceptance receipts
+
+The implementation is accepted only when all of the following hold:
+
+- Bash 3.2 parses the fingerprint and dependency installer tools.
+- Repeated native fingerprints are identical on one unchanged host.
+- Repeated portable fingerprints are identical on one unchanged host.
+- Native and portable fingerprints are distinct.
+- =bazel build //scheme:deps= rematerializes the dependency installer.
+- The first portable CI run saves the toolchain cache.
+- A rerun of the same commit restores that cache and reports project cold-build
+  time independently from any first-use bootstrap time.

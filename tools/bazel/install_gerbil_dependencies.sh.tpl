@@ -6,7 +6,8 @@ native_environment=(%{NativeEnvironment})
 export "${native_environment[@]}"
 
 cd "$workspace"
-mkdir -p "${HOME:?}/.gerbil/pkg"
+gerbil_root=${GERBIL_PATH:-${HOME:?}/.gerbil}
+mkdir -p "${gerbil_root%/}/pkg"
 
 %{GXPkg} env env "${native_environment[@]}" \
   %{GXPkg} dir --add git.cons.io/mighty-gerbils/gerbil-directory
