@@ -1,0 +1,78 @@
+load(
+    "//tools/bazel:gerbil_project.bzl",
+    "gerbil_project_compile",
+    "gerbil_project_test",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+gerbil_project_compile(
+    name = "compile",
+    srcs = "//:scheme_build_sources",
+    build_script = "//:build.ss",
+)
+
+filegroup(
+    name = "compiled_root",
+    srcs = [":compile"],
+    output_group = "compiled_root",
+)
+
+filegroup(
+    name = "compile_log",
+    srcs = [":compile"],
+    output_group = "log",
+)
+
+filegroup(
+    name = "compile_receipt",
+    srcs = [":compile"],
+    output_group = "receipt",
+)
+
+gerbil_project_test(
+    name = "unit_tests",
+    test_root = "t/unit-tests.ss",
+)
+
+gerbil_project_test(
+    name = "contract_tests",
+    size = "small",
+    test_root = "t/contract-tests.ss",
+)
+
+gerbil_project_test(
+    name = "cli_support_tests",
+    size = "small",
+    test_root = "t/cli-support-tests.ss",
+)
+
+gerbil_project_test(
+    name = "integration_tests",
+    size = "small",
+    test_root = "t/integration-tests.ss",
+)
+
+gerbil_project_test(
+    name = "performance_tests",
+    size = "large",
+    test_root = "t/performance-tests.ss",
+)
+
+test_suite(
+    name = "tests",
+    tests = [
+        ":cli_support_tests",
+        ":contract_tests",
+        ":integration_tests",
+        ":unit_tests",
+    ],
+)
+
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":performance_tests",
+        ":tests",
+    ],
+)

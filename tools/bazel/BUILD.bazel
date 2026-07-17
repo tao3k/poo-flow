@@ -1,12 +1,30 @@
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
 exports_files([
+    "gerbil_project.bzl",
     "gerbil_repository.bzl",
+    "gerbil_toolchain.bzl",
     "host_system.bzl",
     "local_gerbil.BUILD.bazel.tpl",
     "native_scheme_env.sh.tpl",
+    "native_tool.sh.tpl",
+    "run_scheme_project.sh",
+    "run_scheme_tests.sh",
 ])
+
+sh_binary(
+    name = "run_scheme_project",
+    srcs = ["run_scheme_project.sh"],
+)
 
 alias(
     name = "native_scheme_env",
     actual = "@local_gerbil//:native_scheme_env",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "gerbil_toolchain",
+    actual = "@local_gerbil//:toolchain",
     visibility = ["//visibility:public"],
 )

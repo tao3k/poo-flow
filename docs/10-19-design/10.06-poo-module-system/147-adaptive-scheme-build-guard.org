@@ -177,6 +177,40 @@ also far below the interrupted twelve-minute regression boundary.  The inner
 Scheme process-tree peak is approximately 6.0% below the historical
 2,617,507,840-byte receipt.
 
+** Bazel-declared isolated cold receipt
+
+The Bazel outer layer now declares the complete Scheme action without replacing
+=build.ss= or Building Framework.  The action receives only declared project
+sources, compiled =clan= and =gslph= dependencies, host Gerbil tools, and the
+host-system receipt.  It produces an isolated tree artifact, a complete build
+log, and the Scheme-owned canonical JSON receipt.
+
+| Metric | Accepted Bazel cold receipt |
+|--------+-----------------------------|
+| Target | =//scheme:compile= |
+| Bazel execution | Darwin sandbox; exit 0 |
+| Bazel wall time | 161.694 s, approximately 2.69 minutes |
+| Scheme guard elapsed | 155,837 ms |
+| Scheme process-tree peak RSS | 3,359,752,192 B |
+| Detected physical memory | 34,359,738,368 B |
+| Scheme-derived maximum RSS | 17,179,869,184 B |
+| Build stages | 3 of 3 compiled |
+| Output tree | 73 MiB; no temporary tool symlinks |
+| Receipt | =poo-flow.project-compile-guard.v1=; =completed= |
+
+The Bazel wall time is 41.176 seconds below the previous 202.87-second accepted
+reference, an improvement of approximately 20.3%, and 410.016 seconds below
+the historical 571.71-second ceiling, an improvement of approximately 71.7%.
+The result is not a second build implementation: Bazel owns declared inputs,
+host-tool projection, sandboxing, caching, and outputs; =build.ss= and Building
+Framework still own topology, scheduling, compilation, guards, and receipts.
+
+The first isolated attempt also exposed two bootstrap defects that a populated
+workspace had hidden: =build.ss= imported its own installed package for the
+observability helper, and the source declaration omitted tracked =.ssi=,
+=.scm=, and =.inc= inputs.  The accepted action removes the self-import cycle
+and declares those inputs.  It cannot read =.gerbil/lib/poo-flow=.
+
 ** Historical standardized baseline and regression interrupt
 
 The adaptive work does not erase the earlier build-system evidence.  The
@@ -265,12 +299,25 @@ The downstream implementation is owned by these files:
   OS names map explicitly to =darwin= or =linux=; every other system fails
   closed.  The Darwin resolver rejects missing, invalid, or Nix-store Apple SDK
   selectors and preserves valid custom Xcode selectors.  The Linux resolver
-  preserves the host environment without projecting Apple variables.
+  preserves the host environment without projecting Apple variables.  Both
+  resolvers also declare physical memory from their native host interfaces so
+  sandboxed Scheme guards do not fall back to a machine-independent guess.
 - =tools/bazel/gerbil_repository.bzl= declares tool candidates, version gates,
   templates, and the canonical JSON receipt.  It delegates platform policy to
-  =host_system.bzl= and exposes the generated runner through the repository's
-  existing =rules_shell= dependency instead of generating another executable
-  rule.
+  =host_system.bzl=, exports normalized =gxi=, =gxc=, =gxpkg=, and =gxtest=
+  wrappers, and exposes only compiled external dependency libraries.
+- =tools/bazel/gerbil_toolchain.bzl= projects those host resources through one
+  explicit =GerbilToolchainInfo= provider, including physical memory, compiler,
+  assembler, linker, dependency root, and receipt.
+- =tools/bazel/gerbil_project.bzl= declares the canonical project compile action
+  and the isolated gxtest macro.  =tools/bazel/run_scheme_project.sh= invokes
+  =build.ss compile= once, removes temporary tool links, and extracts the native
+  Scheme JSON receipt.  =tools/bazel/run_scheme_tests.sh= composes the compiled
+  tree, declared source runfiles, and external dependency root.
+- =scheme/BUILD.bazel= exposes =//scheme:compile=, receipt and log output groups,
+  four ordinary gxtest roots, the separate performance root, =//scheme:tests=,
+  and =//scheme:all_tests=.  Scheme tests are exclusive so multiple =gxtest=
+  processes cannot multiply host RSS accidentally.
 - =tools/run-native-scheme-env= is the direct non-Bazel fallback.  It applies
   the same explicit Darwin-or-Linux boundary.  Darwin injects resolved Xcode
   values after =gxpkg env=, Linux preserves the environment, and unsupported
@@ -368,19 +415,20 @@ the controller cap raises an error before another window is attempted.
 
 #+begin_src mermaid
 flowchart TD
-  E["Caller environment"] --> X["gxpkg env builds package environment"]
-  X --> B{"Bazel-owned launch?"}
+  E["Caller"] --> B{"Bazel-owned launch?"}
   B -->|"yes"| BT["host_system.bzl maps Bazel host OS"]
-  B -->|"no"| ST["Direct wrapper classifies uname"]
+  B -->|"no"| ST["Direct wrapper resolves Darwin or Linux policy"]
   BT --> S{"Declared system"}
-  ST --> S
-  S -->|"darwin"| H["Preserve valid selectors or resolve active Xcode"]
-  H --> L["xcrun resolves the host Xcode linker"]
-  S -->|"linux"| LH["Preserve Linux host environment"]
+  S -->|"darwin"| H["Resolve active Xcode, native tools, and hw.memsize"]
+  S -->|"linux"| LH["Preserve host environment and derive memory from getconf"]
   S -->|"unsupported"| U["Fail closed before Gerbil execution"]
-  L --> BR["rules_shell runner and canonical JSON toolchain receipt"]
-  LH --> BR
-  BR --> P{"Explicit tight RSS cap?"}
+  ST -->|"unsupported"| U
+  H --> GT["GerbilToolchainInfo and canonical host JSON receipt"]
+  LH --> GT
+  GT --> BC["//scheme:compile declares sources, tools, and three outputs"]
+  BC --> X["Normalized gxpkg env runs build.ss compile once"]
+  ST -->|"supported"| X
+  X --> P{"Explicit tight RSS cap?"}
   P -->|"no"| TP["Building Framework topology policy"]
   TP --> F["Flatten dependency groups into one ordered window"]
   P -->|"yes"| AP["POO immutable adaptive controller"]
@@ -395,6 +443,8 @@ flowchart TD
   C -->|"yes"| N["Derive immutable next controller"]
   N --> W
   C -->|"no"| R["Canonical project JSON receipt"]
+  R --> O["Tree artifact, JSON receipt, and complete log"]
+  O --> T["Exclusive //scheme:*_tests use gxtest with declared runfiles"]
   Z["No second executor and no concurrent coordinator"] -. invariant .-> M
 #+end_src
 
@@ -469,6 +519,10 @@ gate.
 | Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
 | Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
 | Bazel linker smoke | The Bazel-generated runner resolved =xcrun -f ld= to =XcodeDefault.xctoolchain/usr/bin/ld= and executed =Gerbil v0.18.2=; exit 0 |
+| Bazel workspace boundary | =bazel query //...= completed after =.bazelignore= excluded =.data=, =.devenv=, =.direnv=, and =.gerbil= foreign workspaces |
+| Bazel isolated Scheme cold | =bazel build //scheme:compile=; Darwin sandbox; exit 0; 161.694 s wall; Scheme receipt =completed= in 155,837 ms with 3,359,752,192 B peak RSS; three of three stages compiled |
+| Bazel ordinary Scheme tests | =bazel test //scheme:tests= uses exclusive gxtest actions; unit 77.5 s, contract 13.4 s, CLI support 4.7 s, and integration 14.2 s all passed |
+| Performance drift audit | =//scheme:performance_tests= and the direct native =gxtest t/performance-tests.ss= reproduce the same pre-existing fixture drift: 30 fixtures versus 29, three build requests versus two, and old benchmark rows missing =expectedOutcome=; this remains a distinct red performance gate rather than a Bazel runner failure |
 | Canonical full cold | =build.ss compile= against a fresh output root; exit 0; inner 199,289 ms; outer 202,061 ms; =/usr/bin/time= 202.87 s; all Scheme guard outcomes =completed= |
 | Public incremental receipt | =build.ss compile= against the accepted output root; exit 0; 3,214 ms; canonical JSON recorded =execution-policy=topology= and two active Building Framework stages |
 | POO macro expansion guard | A same-name =.o= slot/value binding reached 6,124,306,432 B RSS in 9.32 seconds and was interrupted; the explicit =execution-policy-value= projection reduced the equivalent import probe to 1.99 seconds and 176,226,304 B |
@@ -529,9 +583,10 @@ intentionally do not enter through Bazel.
 * Acceptance outcome and continuing gates
 
 The bounded implementation phase and the full-cold gate are complete.  The
-accepted 202.87-second receipt establishes that the canonical Building
-Framework topology policy is healthy on this host after the toolchain boundary
-is corrected.
+accepted 161.694-second Bazel receipt establishes that the canonical Building
+Framework topology policy is healthy inside a declared Darwin sandbox after
+the toolchain and source-bootstrap boundaries are corrected.  The earlier
+202.87-second direct receipt remains the previous accepted reference.
 
 The following continuing rules remain normative:
 
@@ -541,13 +596,20 @@ The following continuing rules remain normative:
    every completed window must retain canonical JSON evidence;
 3. any invalid receipt, cap breach, timeout, or non-completed outcome fails
    closed before the next adaptive window;
-4. =571.71= seconds remains the historical regression ceiling, while =202.87=
-   seconds is the current accepted host reference;
+4. =571.71= seconds remains the historical regression ceiling, =202.87= seconds
+   is the previous direct reference, and =161.694= seconds is the current
+   accepted Bazel host reference;
 5. the Bazel host-toolchain rule must classify the host explicitly as =darwin=
    or =linux=, reject every unsupported system, preserve valid custom selectors,
    and never project a Nix Apple SDK into a Homebrew Gerbil compile; and
 6. no accepted path may introduce a second executor or concurrent
-   =std/make= coordinators.
+   =std/make= coordinators;
+7. =//scheme:tests= is the ordinary serial acceptance suite, while
+   =//scheme:performance_tests= remains an explicit separate gate until its
+   native fixture-contract drift is repaired; and
+8. =build.ss= must cold-start without importing =:poo-flow= from an installed
+   output tree, and Bazel actions must declare every =.ss=, =.ssi=, =.scm=,
+   =.inc=, user-interface, and native-header input they consume.
 
 Phase-level overlap remains an upstream proposal.  The next performance path
 is to change the upstream expansion/import and native-job flush behavior so

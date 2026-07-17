@@ -11,6 +11,29 @@ filegroup(
     name = "scheme_runtime_sources",
     srcs = glob([
         "gerbil.pkg",
+        "src/**/*.inc",
+        "src/**/*.scm",
         "src/**/*.ss",
+        "src/**/*.ssi",
+    ]),
+)
+
+filegroup(
+    name = "scheme_build_sources",
+    srcs = [
+        "build.ss",
+        ":scheme_runtime_sources",
+    ] + glob([
+        "bindings/nono-c/**/*.h",
+        "user-interface/**/*.ss",
+    ]),
+)
+
+filegroup(
+    name = "scheme_test_sources",
+    srcs = [":scheme_build_sources"] + glob([
+        "README.org",
+        "docs/**/*.org",
+        "t/**",
     ]),
 )

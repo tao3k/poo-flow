@@ -35,9 +35,9 @@ def _runtime_contract_impl(ctx):
             ],
         ),
         outputs = [header, vector, event_vector],
-        tools = [ctx.file.gxi],
+        tools = [ctx.attr.gxi[DefaultInfo].files_to_run],
         arguments = [
-            ctx.file.gxi.path,
+            ctx.executable.gxi.path,
             ctx.file.generator.path,
             header.path,
             vector.path,
@@ -73,7 +73,7 @@ for entry in "$poo_root"/*; do
 done
 mkdir -p "$(dirname "$header")" "$(dirname "$vector")" "$(dirname "$event_vector")"
 home="$(mktemp -d "${TMPDIR:-/tmp}/poo-flow-gerbil-home.XXXXXX")"
-env -u CPATH -u SDKROOT -u C_INCLUDE_PATH -u LIBRARY_PATH \
+env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
   HOME="$home" \
   GERBIL_LOADPATH="$loadpath" \
   GERBIL_PATH="$home/.gerbil" \
@@ -118,8 +118,8 @@ runtime_contract = rule(
         ),
         "clan_utils_sources": attr.label(mandatory = True),
         "gxi": attr.label(
-            allow_single_file = True,
             cfg = "exec",
+            executable = True,
             mandatory = True,
         ),
         "scheme_sources": attr.label(mandatory = True),

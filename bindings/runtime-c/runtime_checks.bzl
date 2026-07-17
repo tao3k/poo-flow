@@ -100,23 +100,28 @@ source="$runfiles/%s"
 header="$runfiles/%s"
 contract_header="$runfiles/%s"
 library="$runfiles/%s"
+library_dir="$(dirname "$library")"
 gxc="$runfiles/%s"
 gxi="$runfiles/%s"
 gerbil_cc="$runfiles/%s"
+gerbil_as="$runfiles/%s"
+gerbil_ld="$runfiles/%s"
 output_root="$TEST_TMPDIR/gerbil"
 mkdir -p "$output_root/lib"
 compiler_dir="$TEST_TMPDIR/compiler-bin"
 mkdir -p "$compiler_dir"
 ln -s "$gerbil_cc" "$compiler_dir/gcc-16"
-env -u CPATH -u SDKROOT -u C_INCLUDE_PATH -u LIBRARY_PATH \
+ln -s "$gerbil_as" "$compiler_dir/as"
+ln -s "$gerbil_ld" "$compiler_dir/ld"
+env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
   PATH="$compiler_dir:$PATH" \
   "$gxc" -O -d "$output_root/lib" \
   -cc-options "-I$(dirname "$(dirname "$header")") -I$(dirname "$(dirname "$contract_header")")" \
-  -ld-options "-L$(dirname "$library") -lruntime_c_shared" \
+  -ld-options "-L$library_dir -lruntime_c_shared -Wl,-rpath,$library_dir" \
   "$source"
-env -u CPATH -u SDKROOT -u C_INCLUDE_PATH -u LIBRARY_PATH \
-  DYLD_LIBRARY_PATH="$(dirname "$library")" \
-  LD_LIBRARY_PATH="$(dirname "$library")" \
+env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
+  DYLD_LIBRARY_PATH="$library_dir" \
+  LD_LIBRARY_PATH="$library_dir" \
   GERBIL_PATH="$output_root" \
   "$gxi" -e '(begin (import :poo-flow/bindings/runtime-c/benchmarks/runtime-v0-gerbil-ffi-benchmark) (main))'
 """ % (
@@ -124,22 +129,28 @@ env -u CPATH -u SDKROOT -u C_INCLUDE_PATH -u LIBRARY_PATH \
             ctx.file.header.short_path,
             ctx.file.contract_header.short_path,
             library.short_path,
-            ctx.file.gxc.short_path,
-            ctx.file.gxi.short_path,
+            ctx.executable.gxc.short_path,
+            ctx.executable.gxi.short_path,
             ctx.file.gerbil_cc.short_path,
+            ctx.file.gerbil_as.short_path,
+            ctx.file.gerbil_ld.short_path,
         ),
         is_executable = True,
     )
     runfiles = ctx.runfiles(files = [
         ctx.file.contract_header,
-        ctx.file.gxc,
-        ctx.file.gxi,
+        ctx.executable.gxc,
+        ctx.executable.gxi,
         ctx.file.gerbil_cc,
+        ctx.file.gerbil_as,
+        ctx.file.gerbil_ld,
         ctx.file.header,
         ctx.file.package_file,
         ctx.file.source,
         library,
     ])
+    runfiles = runfiles.merge(ctx.attr.gxc[DefaultInfo].default_runfiles)
+    runfiles = runfiles.merge(ctx.attr.gxi[DefaultInfo].default_runfiles)
     return [DefaultInfo(executable = executable, runfiles = runfiles)]
 
 runtime_gerbil_benchmark_test = rule(
@@ -147,9 +158,19 @@ runtime_gerbil_benchmark_test = rule(
     test = True,
     attrs = {
         "contract_header": attr.label(allow_single_file = True, mandatory = True),
-        "gxc": attr.label(allow_single_file = True, cfg = "exec", mandatory = True),
-        "gxi": attr.label(allow_single_file = True, cfg = "exec", mandatory = True),
+        "gxc": attr.label(cfg = "exec", executable = True, mandatory = True),
+        "gxi": attr.label(cfg = "exec", executable = True, mandatory = True),
         "gerbil_cc": attr.label(allow_single_file = True, cfg = "exec", mandatory = True),
+        "gerbil_as": attr.label(
+            allow_single_file = True,
+            cfg = "exec",
+            default = "@local_gerbil//:gerbil_as",
+        ),
+        "gerbil_ld": attr.label(
+            allow_single_file = True,
+            cfg = "exec",
+            default = "@local_gerbil//:gerbil_ld",
+        ),
         "header": attr.label(allow_single_file = True, mandatory = True),
         "library": attr.label(mandatory = True),
         "package_file": attr.label(allow_single_file = True, mandatory = True),

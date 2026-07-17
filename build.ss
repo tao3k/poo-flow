@@ -70,11 +70,7 @@
    getopt: [])
   (poo-flow-project-clean!)
   (exit 0))
-(import :gslph/src/building/observability
-        (only-in :poo-flow/src/cli-support/project-build
-                 poo-flow-project-configure-build-root!
-                 poo-flow-project-source-stages
-                 poo-flow-project-build-requests))
+(import :gslph/src/building/observability)
 (export poo-flow-project-observe!
         poo-flow-project-observe/guard!)
 

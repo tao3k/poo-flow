@@ -8,6 +8,7 @@ _SYSTEM_BY_BAZEL_OS = {
 
 _DARWIN_TOOLS = {
     "env": "/usr/bin/env",
+    "sysctl": "/usr/sbin/sysctl",
     "xcode-select": "/usr/bin/xcode-select",
     "xcrun": "/usr/bin/xcrun",
 }
@@ -23,6 +24,13 @@ def _checked_output(repository_ctx, argv, description):
 
 def _existing_non_nix_directory(repository_ctx, value):
     return bool(value) and not value.startswith("/nix/store/") and repository_ctx.path(value).exists
+
+def _checked_positive_integer_output(repository_ctx, argv, description):
+    value = _checked_output(repository_ctx, argv, description)
+    parsed = int(value)
+    if parsed <= 0:
+        fail("%s returned a non-positive value: %s" % (description, value))
+    return parsed
 
 def _resolve_darwin_environment(repository_ctx):
     for name, path in _DARWIN_TOOLS.items():
@@ -66,19 +74,59 @@ def _resolve_darwin_environment(repository_ctx):
             "xcrun --sdk macosx --show-sdk-path",
         )
 
+    linker = _checked_output(
+        repository_ctx,
+        [
+            _DARWIN_TOOLS["env"],
+            "-u",
+            "SDKROOT",
+            "DEVELOPER_DIR=%s" % developer_dir,
+            _DARWIN_TOOLS["xcrun"],
+            "--sdk",
+            "macosx",
+            "--find",
+            "ld",
+        ],
+        "xcrun --sdk macosx --find ld",
+    )
+
     return struct(
         system = "darwin",
         policy = "active-xcode",
+        system_memory_bytes = _checked_positive_integer_output(
+            repository_ctx,
+            [_DARWIN_TOOLS["sysctl"], "-n", "hw.memsize"],
+            "sysctl -n hw.memsize",
+        ),
+        tool_overrides = {
+            "gerbil_as": "/usr/bin/as",
+            "gerbil_ld": linker,
+        },
         environment = {
             "DEVELOPER_DIR": developer_dir,
             "SDKROOT": sdkroot,
         },
     )
 
-def _resolve_linux_environment(_repository_ctx):
+def _resolve_linux_environment(repository_ctx):
+    getconf = repository_ctx.which("getconf")
+    if getconf == None:
+        fail("Linux Gerbil builds require getconf on PATH")
+    page_count = _checked_positive_integer_output(
+        repository_ctx,
+        [getconf, "_PHYS_PAGES"],
+        "getconf _PHYS_PAGES",
+    )
+    page_size = _checked_positive_integer_output(
+        repository_ctx,
+        [getconf, "PAGE_SIZE"],
+        "getconf PAGE_SIZE",
+    )
     return struct(
         system = "linux",
         policy = "preserve-host-environment",
+        system_memory_bytes = page_count * page_size,
+        tool_overrides = {},
         environment = {},
     )
 

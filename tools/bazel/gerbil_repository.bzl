@@ -3,10 +3,13 @@
 load(":host_system.bzl", "resolve_host_environment")
 
 _TOOL_CANDIDATES = {
+    "gerbil_as": ["as"],
     "gerbil_cc": ["gcc-16", "cc"],
+    "gerbil_ld": ["ld"],
     "gxc": ["gxc"],
     "gxi": ["gxi"],
     "gxpkg": ["gxpkg"],
+    "gxtest": ["gxtest"],
 }
 
 _VERSIONED_TOOLS = ["gxi", "gxc"]
@@ -14,9 +17,16 @@ _VERSIONED_TOOLS = ["gxi", "gxc"]
 def _shell_quote(value):
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
-def _resolve_tools(repository_ctx):
+def _resolve_tools(repository_ctx, tool_overrides):
     tools = {}
     for name, candidates in _TOOL_CANDIDATES.items():
+        override = tool_overrides.get(name)
+        if override != None:
+            path = repository_ctx.path(override)
+            if not path.exists:
+                fail("%s tool override does not exist: %s" % (name, override))
+            tools[name] = path
+            continue
         for candidate in candidates:
             path = repository_ctx.which(candidate)
             if path != None:
@@ -48,16 +58,40 @@ def _tool_paths(tools):
     return {name: str(path) for name, path in tools.items()}
 
 def _local_gerbil_repository_impl(repository_ctx):
-    tools = _resolve_tools(repository_ctx)
+    native_environment = resolve_host_environment(repository_ctx)
+    tools = _resolve_tools(repository_ctx, native_environment.tool_overrides)
     versions = _read_versions(
         repository_ctx,
         tools,
         repository_ctx.attr.expected_version_prefix,
     )
-    native_environment = resolve_host_environment(repository_ctx)
+    repository_ctx.symlink(tools["gerbil_as"], "gerbil_as")
+    repository_ctx.symlink(tools["gerbil_cc"], "gerbil_cc")
+    repository_ctx.symlink(tools["gerbil_ld"], "gerbil_ld")
+    for name in ["gxc", "gxi", "gxpkg", "gxtest"]:
+        repository_ctx.symlink(tools[name], name + "_raw")
+        repository_ctx.template(
+            name + ".sh",
+            repository_ctx.attr.native_tool_template,
+            substitutions = {
+                "%{GXPkg}": _shell_quote(str(tools["gxpkg"])),
+                "%{NativeEnvironment}": _environment_arguments(native_environment.environment),
+                "%{Tool}": _shell_quote(str(tools[name])),
+            },
+            executable = True,
+        )
 
-    for name, path in tools.items():
-        repository_ctx.symlink(path, name)
+    package_root = repository_ctx.path(repository_ctx.attr.project_package_file).dirname
+    project_library_root = repository_ctx.path(str(package_root) + "/.gerbil/lib")
+    repository_ctx.file("lib/.root", "local Gerbil dependency library root\n")
+    for name in ["clan", "gslph"]:
+        dependency_library = repository_ctx.path(str(project_library_root) + "/" + name)
+        if not dependency_library.exists:
+            fail(
+                "compiled Gerbil dependency %s is missing under %s; refresh the canonical project library view" %
+                (name, project_library_root),
+            )
+        repository_ctx.symlink(dependency_library, "lib/" + name)
 
     repository_ctx.template(
         "native_scheme_env.sh",
@@ -76,6 +110,7 @@ def _local_gerbil_repository_impl(repository_ctx):
             "system": native_environment.system,
             "environment_policy": native_environment.policy,
             "environment": native_environment.environment,
+            "system_memory_bytes": native_environment.system_memory_bytes,
             "tools": _tool_paths(tools),
             "versions": versions,
         }, indent = "  ") + "\n",
@@ -83,6 +118,9 @@ def _local_gerbil_repository_impl(repository_ctx):
     repository_ctx.template(
         "BUILD.bazel",
         repository_ctx.attr.build_file_template,
+        substitutions = {
+            "%{SystemMemoryBytes}": str(native_environment.system_memory_bytes),
+        },
     )
 
 local_gerbil_repository = repository_rule(
@@ -95,6 +133,14 @@ local_gerbil_repository = repository_rule(
         "native_runner_template": attr.label(
             allow_single_file = True,
             default = Label("//tools/bazel:native_scheme_env.sh.tpl"),
+        ),
+        "native_tool_template": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:native_tool.sh.tpl"),
+        ),
+        "project_package_file": attr.label(
+            allow_single_file = True,
+            default = Label("//:gerbil.pkg"),
         ),
     },
     implementation = _local_gerbil_repository_impl,
