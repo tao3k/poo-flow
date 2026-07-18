@@ -380,9 +380,21 @@ cache lineage and records the resulting Scheme action reuse.
 | macOS |   220.211s |       210453ms |     18433466 bytes |       3 |    7516192768 | ready     | successful |
 | Linux |   242.831s |       224292ms |     18024368 bytes |       4 |   16766423040 | ready     | successful |
 
-The follow-up warm-cache receipt must record the restoring run, cache-hit
-identity, Bazel and Scheme elapsed times, worker count, admission fields, and
-post-save outcome before warm-cache performance is accepted.
+The required warm-cache acceptance is GitHub Actions run =29641556197=. Both
+jobs restored the source-population lineage ending in =71f8a21e8d66=, Bazel
+reported one disk-cache hit, and the current consumer receipts completed inside
+the 30-second stop line. The cached Scheme receipt remains producer provenance
+from run =29636418527=; its worker and admission fields must not be interpreted
+as a fresh host probe on the consuming runner.
+
+| Host  | Restored cache | Bazel wall | Consumer receipt | Disk hits | Source-to-warm speedup | Wall reduction | Post-save  |
+|-------+----------------+------------+------------------+-----------+------------------------+----------------+------------|
+| macOS | 18433466 bytes |     9.799s |              10s |         1 |                 22.47x |         95.55% | successful |
+| Linux | 18024368 bytes |    27.184s |              28s |         1 |                  8.93x |         88.81% | successful |
+
+This accepts the dual-platform warm-cache gate. Source changes still require a
+real Scheme action execution with a live host probe; documentation-only changes
+may reuse the compiled action while advancing the immutable CI cache generation.
 
 ** Registered Gerbil toolchain convergence
 
