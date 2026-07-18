@@ -301,6 +301,7 @@ jobs:
           key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
 
       - name: Build Gerbil
+        id: gerbil-build
         if: matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
         timeout-minutes: ${{ matrix.bootstrap-timeout-minutes }}
         run: |
@@ -308,6 +309,14 @@ jobs:
             export CC="$GERBIL_GCC"
           fi
           bash tools/bazel/bootstrap_gerbil_toolchain.sh
+
+      - name: Finalize Gerbil bootstrap phase state
+        if: always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
+        env:
+          GERBIL_BOOTSTRAP_STATE: .ci/gerbil-src/${{ matrix.gerbil-label }}/.poo-flow-bootstrap-state.json
+          GERBIL_BOOTSTRAP_STEP_OUTCOME: ${{ steps.gerbil-build.outcome }}
+          GERBIL_BOOTSTRAP_TIMEOUT_MINUTES: ${{ matrix.bootstrap-timeout-minutes }}
+        run: bash tools/bazel/finalize_gerbil_bootstrap_state.sh
 
       - name: Show Gerbil bootstrap ccache stats
         if: ${{ always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true') }}
@@ -593,6 +602,7 @@ jobs:
           targets=(
             //scheme:tests
             //tools/bazel:bootstrap_gerbil_toolchain_test
+            //tools/bazel:finalize_gerbil_bootstrap_state_test
             //bindings/runtime-c:runtime_c_tests
             //bindings/runtime-c/bundle-v1:bundle_v1_tests
           )

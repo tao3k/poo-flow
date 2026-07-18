@@ -237,6 +237,32 @@ The resulting declared limits are:
   confirmed receipt at the same commit is two minutes for Linux and 2 minutes
   47 seconds for macOS.
 
+*** 2026-07-18 install-miss timeout receipt
+
+The =install-miss= dispatch at commit
+=1b29317237b72167563e6e0dcf6f2f4769e85ddb= was run =29657309639=.  It
+restored the capability-keyed ccache, bypassed the complete Gerbil install
+cache, and entered =Build Gerbil= at =2026-07-18T19:11:41Z=.  The native
+12-minute step guard terminated it at =2026-07-18T19:23:54Z=, and the Linux job
+failed at =2026-07-18T19:24:02Z=.  The outer 45-minute ceiling was not involved.
+
+Artifact =8433366850= proves that hidden receipt upload now works on the timeout
+path.  Its state ledger records an adaptive four-core build, =fetch= in 8,000
+milliseconds, =configure= in 9,000 milliseconds, and entry into =build= at
+=2026-07-18T19:11:58Z=.  No install or verify phase began.  This isolates the
+regression owner to Gerbil's self-hosted build phase rather than checkout,
+configuration, installation, Bazel, or downstream project compilation.
+
+The artifact also exposed the signal-ordering boundary: GitHub advanced to the
+always-run upload step before the terminated child shell could execute its exit
+trap, so the saved state still said =running=.  The workflow now runs an
+idempotent finalizer after =Build Gerbil=.  It derives total and current-phase
+elapsed time from the state anchors, classifies a failed step at or beyond its
+declared limit as =timed-out= with exit code 124, appends the terminal phase,
+and preserves already-terminal receipts.  A successful build whose state is
+still =running= is classified as =incomplete= and fails the finalizer with exit
+code 70.
+
 ** Development incremental receipt: 2026-07-18
 
 On the current Darwin arm64 development machine, a force-rematerialized
@@ -488,6 +514,11 @@ hold:
   phase ledger justifies a different declared envelope.
 - A forced source bootstrap must upload its hidden state receipt even when the
   build fails or times out; a missing receipt is itself an acceptance failure.
+- The always-run bootstrap finalizer must close a =running= timeout receipt as
+  =timed-out=, append the terminal phase, and remain idempotent when invoked on
+  an already-terminal state.
+- A successful source-build step with an unclosed state receipt must fail the
+  finalizer with exit code 70 instead of publishing ambiguous evidence.
 
 ** Runtime-C producer-consumer gate
 

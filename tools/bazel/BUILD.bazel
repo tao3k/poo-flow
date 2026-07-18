@@ -33,6 +33,20 @@ sh_test(
 )
 
 sh_binary(
+    name = "finalize_gerbil_bootstrap_state",
+    srcs = ["finalize_gerbil_bootstrap_state.sh"],
+    visibility = ["//visibility:public"],
+)
+
+sh_test(
+    name = "finalize_gerbil_bootstrap_state_test",
+    size = "small",
+    srcs = ["finalize_gerbil_bootstrap_state_test.sh"],
+    data = ["finalize_gerbil_bootstrap_state.sh"],
+    env_inherit = ["PATH"],
+)
+
+sh_binary(
     name = "native_abi_fingerprint",
     srcs = ["native_abi_fingerprint.sh"],
     visibility = ["//visibility:public"],
