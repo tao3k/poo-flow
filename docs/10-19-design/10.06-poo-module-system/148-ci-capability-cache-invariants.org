@@ -159,6 +159,10 @@ evidence fields, not permission to reuse a cache with a different revision.
 8. Adaptive slow-window diagnostics expose a logarithmic frontier for further
    diagnosis.  A selected window is not reported as per-module timing or as
    proof that the underlying compiler work is logarithmic.
+9. Native CI job and dependency-materialization timeouts are explicit matrix
+   capability fields.  The outer job timeout must leave every declared phase
+   budget executable; it must not cancel a Scheme compile before that compile's
+   own timeout or receipt guard can decide the result.
 
 ** Development incremental receipt: 2026-07-18
 
@@ -183,6 +187,28 @@ attempted windows: 247,639 milliseconds for 192 specs, 133,466 milliseconds
 for 96 specs, and 121,516 milliseconds for 12 specs.  These windows identify
 the bounded frontier that needs finer future diagnosis; they do not assign the
 cost to individual modules.
+
+** CI cold dependency timeout receipt: run 29654454695
+
+Attempt 1 rematerialized the newly pinned Building Framework dependency on both
+native platforms.  Linux completed the full native producer in 11 minutes 59
+seconds.  The macOS job reached =//scheme:compile= only after approximately 10
+minutes 45 seconds, then the outer 12-minute job timeout cancelled Bazel after
+88 seconds.  The Scheme step had its own eight-minute timeout and emitted no
+compiler failure before the outer cancellation.
+
+Attempt 2 reused the dependency products saved by attempt 1.  The macOS native
+job completed in 5 minutes 29 seconds and the downstream Python wheel consumer
+completed in 31 seconds; the complete run passed.  This establishes a cold
+dependency-materialization timeout mismatch rather than a Scheme or Bazel graph
+failure.
+
+The native matrix therefore declares the dependency phase budget separately at
+15 minutes and names the outer job budgets per capability: 60 minutes for the
+source-Gerbil Linux lane and 30 minutes for the Homebrew macOS lane.  The Scheme
+compile keeps its independent eight-minute guard.  These outer limits preserve
+phase execution and evidence collection; they do not relax any compile receipt
+budget.
 
 * Build ownership
 

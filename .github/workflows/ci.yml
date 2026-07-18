@@ -67,7 +67,7 @@ jobs:
   native:
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ matrix.gerbil-install == 'homebrew' && 12 || 60 }}
+    timeout-minutes: ${{ matrix.job-timeout-minutes }}
     strategy:
       fail-fast: false
       matrix:
@@ -77,11 +77,15 @@ jobs:
             gerbil-ref: 07c8481588a8b07dbf05832687817cd398902ac0
             gerbil-install: source
             gerbil-formula: ""
+            dependency-timeout-minutes: 15
+            job-timeout-minutes: 60
           - os: macos-26
             gerbil-label: homebrew-tao3k-v0.18.2-07c84815
             gerbil-ref: 07c8481588a8b07dbf05832687817cd398902ac0
             gerbil-install: homebrew
             gerbil-formula: tao3k/gerbil/gerbil-scheme
+            dependency-timeout-minutes: 15
+            job-timeout-minutes: 30
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
       CCACHE_MAXSIZE: 2G
@@ -366,6 +370,7 @@ jobs:
           key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
+        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         run: |
           set -euo pipefail
           package_cache_ready=false
