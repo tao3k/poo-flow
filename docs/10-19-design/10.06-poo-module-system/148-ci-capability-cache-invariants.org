@@ -213,6 +213,56 @@ the wheel.  It performs zero Gerbil setup and zero Bazel invocation.  Disk
 cache state is therefore an acceleration concern of the native producer, not a
 cross-job delivery protocol.
 
+**** CI receipt: run 29650370739
+
+The first complete runtime-C native-producer run passed for branch head
+=eafc59f21195174dbb01a460ba4f47085b53fc29=.  GitHub tested pull-request merge
+commit =671a3299e2bdf5be179a1a60af30e0e8a5c3a19e=.  The authoritative run is
+[[https://github.com/tao3k/poo-flow/actions/runs/29650370739][CI run 29650370739]].
+
+The workflow ran from =2026-07-18T15:38:00Z= through
+=2026-07-18T15:41:01Z=: 181 seconds.  The comparable pre-change run
+29648716785 required 240 seconds, so the topology change removed 59 seconds,
+or 24.6 percent, while expanding runtime-C acceptance.  Job receipts were:
+
+- Linux native producer: 97 seconds.
+- macOS native acceptance: 135 seconds.
+- Lean proof bridge: 29 seconds.
+- The single Python wheel consumer: 39 seconds.
+- The former 88-second intermediate projection/runtime producer job is absent.
+
+Within Linux native, canonical Scheme compilation required 26 seconds, the
+Scheme projection handoff required 5 seconds, runtime-C static/shared production
+required 5 seconds against its 90-second budget, and the expanded acceptance
+matrix required 21 seconds against its 150-second budget.
+
+The runtime-C producer receipt reported:
+
+- schema =poo-flow.ci.runtime-c-handoff.v1=;
+- producer target =//bindings/runtime-c:runtime_c_shared= on =Linux-X64=;
+- Gerbil native-ABI capability
+  =8f2f6ea8e4a6c1e86c5b5a31a8e36d185cd9a5d0=;
+- a 35,200-byte artifact with SHA-256
+  =4a0bd9822157a03c0bbdf966f793e775b6aee44b9ab5eb758e13a236da147a62=;
+- 33 exported symbols with digest
+  =da1a38e9d0cf49f3c68fce1757f66d713675030d19efc45e99cd247ee4f0748e=;
+- acceptance-receipt digest
+  =058262da445b0afaca6a991ba8db1f255bed422ccd80f51efb37a51219340925=;
+- =status: 0=, =artifactAvailable: true=, and =withinBudget: true=.
+
+The Scheme producer preserved projection digest
+=23da5f5bf0da0831a800fe1a6124abebef0dd0c97b805890ce57985bdf32cf13=
+and completed in 5 seconds against its 120-second budget.  The final wheel
+consumer verified both producer artifacts through GitHub Actions artifact
+transport.  Its expected and actual runtime digests were byte-for-byte equal,
+and the receipt reported =verified: true=, =gerbilSetupAbsent: true=, and
+=bazelInvocationAbsent: true=.
+
+All six pull-request checks passed.  Node.js 20 action-deprecation annotations
+were eliminated.  The macOS hosted runner still reports its unrelated ambient
+=aws/tap= trust warning; the workflow does not suppress Homebrew trust checks,
+and that runner-image hygiene remains outside this producer-handoff change.
+
 *** CI receipt: run 29648488933
 
 The first declared-artifact handoff run completed successfully on 2026-07-18.
