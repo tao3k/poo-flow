@@ -300,6 +300,45 @@ The process-tree RSS cap remains active throughout compilation.  Admission
 still fails closed when available memory cannot cover caller headroom plus the
 minimum guarded RSS floor.
 
+*** Controlled cache-population receipt
+
+Run =29634116940= restored the old exact 7.36-MB disk cache, but a documentation
+commit still entered =GerbilProjectCompile= for more than two minutes.  The run
+was cancelled instead of completing another redundant build.  The preceding
+Scheme-source run had changed the Bazel action key while =setup-bazel= retained
+the same BUILD-derived GitHub key; because that restore was exact, its post step
+did not publish the new action result.
+
+Run =29634518224= proved the generation transition itself: =setup-bazel=
+reported a restore-prefix hit rather than an exact hit and subsequently saved a
+new generation.  Scheme then rejected the otherwise memory-safe host because
+one instantaneous sample reported 15 runnable processes on three logical CPUs.
+The run ended in 16 seconds with =runnable-saturation= and no compiler work;
+this receipt exposed and authorized the advisory-versus-blocking split above.
+
+Run =29634881564= populated the corrected generation through one intentional
+source action miss:
+
+| Metric | macOS ARM64 | Linux X64 |
+|--------+-------------+-----------|
+| Logical CPUs / workers | =3 / 3= | =4 / 4= |
+| Admission outcome / advisories | =ready / ()= | =ready / ()= |
+| Scheme guard elapsed | =225,064 ms= | =243,569 ms= |
+| Process-tree peak RSS | =2,983,493,632 B= | =2,984,734,720 B= |
+| Bazel Scheme phase | =236 s= | =278 s= |
+| Combined acceptance | =57 s= | =28 s= |
+| Complete job | =6 min 01 s= | =5 min 55 s= |
+| Outcome | completed | completed |
+
+All six pull-request checks passed, and the macOS post step published a
+=13,270,713=-byte compressed disk-cache generation.  The Linux runtime and UI
+stages were uniformly about 28.0% and 27.5% slower than run =29633871888= while
+retaining the same four workers, topology, memory cap, and lower peak RSS.  That
+uniform whole-run variation is recorded but does not replace the accepted
+=190,275=-ms Linux Scheme reference with a slower baseline.  The next gate is a
+documentation-only commit that must restore the populated generation and report
+a disk-cache hit instead of executing Scheme compilation.
+
 #+begin_src mermaid
 flowchart LR
   Commit["Pull-request merge commit"] --> Generation["Ignored synthetic BUILD cache generation"]
