@@ -191,6 +191,27 @@ digest, and fail-closed verification result.  The projection action must emit
 the declared wheel projection artifact within 120 seconds.  The Python wheel
 consumer must never invoke =//scheme:compile= or rebuild the projection.
 
+*** CI receipt: run 29648488933
+
+The first declared-artifact handoff run completed successfully on 2026-07-18.
+The workflow-lint run =29648488847= also completed successfully.
+
+- full CI wall time: 257 seconds;
+- Linux native producer job: 79 seconds;
+- macOS native job: 128 seconds;
+- declared projection action: 7 seconds of a 120-second budget;
+- Python runtime/projection consumer job: 92 seconds;
+- clean wheel build and install job: 28 seconds;
+- producer action: =//scheme:wheel_smoke_projection_artifact=;
+- canonical compile owner: =//scheme:compile=;
+- transport: =github-actions-artifact=;
+- artifact digest:
+  =23da5f5bf0da0831a800fe1a6124abebef0dd0c97b805890ce57985bdf32cf13=;
+- producer status: =0=, =withinBudget=true=,
+  =artifactAvailable=true=;
+- consumer verification: =verified=true= with an identical digest;
+- Python wheel consumer Scheme build invocations: zero.
+
 * Acceptance gates
 
 A v0.18.2 provider-boundary change is complete only when all of the following
