@@ -1,6 +1,7 @@
 load(
     "//tools/bazel:gerbil_project.bzl",
     "gerbil_project_compile",
+    "gerbil_project_projection",
     "gerbil_project_test",
 )
 
@@ -33,6 +34,14 @@ filegroup(
     name = "compile_receipt",
     srcs = [":compile"],
     output_group = "receipt",
+)
+
+gerbil_project_projection(
+    name = "wheel_smoke_projection_artifact",
+    output_name = "wheel_smoke.ss.poo-flow-projection.sexp",
+    project = ":compile",
+    projection_source = "//:runtime_load_projection_source",
+    source = "//packages/python-runtime/src/poo_flow_runtime:wheel_smoke_projection_source",
 )
 
 gerbil_project_test(

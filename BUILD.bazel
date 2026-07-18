@@ -33,6 +33,11 @@ filegroup(
 )
 
 filegroup(
+    name = "runtime_load_projection_source",
+    srcs = ["src/module-system/runtime-load-projection.ss"],
+)
+
+filegroup(
     name = "scheme_test_sources",
     srcs = [":scheme_build_sources"] + glob([
         "README.org",

@@ -15,6 +15,14 @@ GerbilProjectInfo = provider(
     },
 )
 
+GerbilProjectionInfo = provider(
+    doc = "One projection artifact derived from a canonical Gerbil project.",
+    fields = {
+        "artifact": "Packaged no-Gerbil projection artifact.",
+        "project": "Canonical Gerbil project provider used by the action.",
+    },
+)
+
 def _shell_quote(value):
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
@@ -94,6 +102,80 @@ gerbil_project_compile = rule(
         "_runner": attr.label(
             cfg = "exec",
             default = Label("//tools/bazel:run_scheme_project"),
+            executable = True,
+        ),
+    },
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
+)
+
+def _gerbil_project_projection_impl(ctx):
+    toolchain = resolved_gerbil_toolchain(ctx)
+    project = ctx.attr.project[GerbilProjectInfo]
+    artifact = ctx.actions.declare_file(ctx.attr.output_name)
+
+    arguments = ctx.actions.args()
+    arguments.add("--gxi")
+    arguments.add(toolchain.gxi.executable.path)
+    arguments.add("--compiled-root")
+    arguments.add(project.compiled_root.path)
+    arguments.add("--dependency-root-marker")
+    arguments.add(toolchain.dependency_library_root.path)
+    arguments.add("--projection-source")
+    arguments.add(ctx.file.projection_source.path)
+    arguments.add("--source")
+    arguments.add(ctx.file.source.path)
+    arguments.add("--output")
+    arguments.add(artifact.path)
+
+    ctx.actions.run(
+        arguments = [arguments],
+        executable = ctx.attr._exporter[DefaultInfo].files_to_run,
+        env = {
+            "POO_FLOW_GERBIL_NATIVE_ABI": toolchain.native_abi_fingerprint,
+        },
+        inputs = depset(
+            direct = [
+                ctx.file.projection_source,
+                ctx.file.source,
+                project.compiled_root,
+                toolchain.dependency_library_root,
+                toolchain.native_abi_fingerprint_file,
+            ],
+            transitive = [toolchain.dependency_libraries],
+        ),
+        mnemonic = "GerbilProjectProjection",
+        outputs = [artifact],
+        progress_message = "Projecting canonical Gerbil module %{label}",
+        tools = [toolchain.gxi],
+    )
+
+    return [
+        DefaultInfo(files = depset([artifact])),
+        GerbilProjectionInfo(
+            artifact = artifact,
+            project = project,
+        ),
+    ]
+
+gerbil_project_projection = rule(
+    implementation = _gerbil_project_projection_impl,
+    attrs = {
+        "output_name": attr.string(mandatory = True),
+        "project": attr.label(
+            mandatory = True,
+            providers = [GerbilProjectInfo],
+        ),
+        "projection_source": attr.label(
+            allow_single_file = [".ss"],
+            mandatory = True,
+        ),
+        "source": attr.label(
+            allow_single_file = [".ss"],
+            mandatory = True,
+        ),
+        "_exporter": attr.label(
+            cfg = "exec",
+            default = Label("//tools/bazel:scheme_projection_artifact_tool"),
             executable = True,
         ),
     },

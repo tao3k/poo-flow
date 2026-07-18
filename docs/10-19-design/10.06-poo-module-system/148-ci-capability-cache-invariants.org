@@ -164,6 +164,27 @@ persists capability-keyed caches.
 This separation prevents a CI-only shell recipe from becoming a second build
 system.
 
+** Python wheel canonical Scheme-action reuse
+
+The Linux =native= job produces the canonical =//scheme:compile= Bazel
+action.  The reusable Python wheel workflow depends on that job and consumes
+the same capability-keyed =setup-bazel= disk-cache namespace.  Its distinct
+BUILD generation restores through the namespace prefix and then saves the
+enriched cache containing the projection action.  The consumer receipt must
+distinguish its requested generation from the cache lineage it consumed.
+
+=GerbilProjectProjection= consumes
+=GerbilProjectInfo.compiled_root= and declares one projection action.  It
+must not invoke =build.ss=, compile the project again, or copy the compiled
+tree.  =build.ss= remains the only Scheme build owner.
+
+The Python wheel CI receipt records the producer/consumer phase, requested
+cache generation and role, cache lineage, restore mode, elapsed time, status,
+disk-cache hit count, and canonical Scheme receipt availability.  A
+non-dispatch consumer must complete the warm =//scheme:compile= gate within
+30 seconds and observe at least one disk-cache hit.  The projection action
+must emit the declared wheel projection artifact within 120 seconds.
+
 * Acceptance gates
 
 A v0.18.2 provider-boundary change is complete only when all of the following

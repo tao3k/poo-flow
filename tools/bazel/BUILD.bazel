@@ -1,3 +1,5 @@
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@rules_python//python:py_test.bzl", "py_test")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 exports_files([
@@ -30,6 +32,25 @@ sh_binary(
 sh_binary(
     name = "run_scheme_project",
     srcs = ["run_scheme_project.sh"],
+)
+
+py_binary(
+    name = "scheme_projection_artifact_tool",
+    srcs = ["scheme_projection_artifact_tool.py"],
+    main = "scheme_projection_artifact_tool.py",
+    python_version = "3.12",
+    deps = ["//packages/python-runtime/src/poo_flow_runtime:scheme_datum_tool"],
+)
+
+py_test(
+    name = "scheme_projection_artifact_tool_test",
+    srcs = [
+        "scheme_projection_artifact_tool.py",
+        "scheme_projection_artifact_tool_test.py",
+    ],
+    main = "scheme_projection_artifact_tool_test.py",
+    python_version = "3.12",
+    deps = ["//packages/python-runtime/src/poo_flow_runtime:scheme_datum_tool"],
 )
 
 toolchain_type(

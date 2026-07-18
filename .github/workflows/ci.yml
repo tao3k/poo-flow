@@ -501,3 +501,8 @@ jobs:
             ${{ steps.bazel-acceptance.outputs.profile }}
           if-no-files-found: warn
           retention-days: 7
+
+  python-runtime-wheel:
+    name: Python runtime wheel
+    needs: native
+    uses: ./.github/workflows/python-runtime-wheel.yml
