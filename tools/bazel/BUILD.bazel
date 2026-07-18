@@ -4,57 +4,27 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 exports_files([
-    "bootstrap_gerbil_toolchain.sh",
     "gerbil_project.bzl",
-    "gerbil_repository.bzl",
-    "gerbil_toolchain.bzl",
-    "host_system.bzl",
-    "install_gerbil_dependencies.sh.tpl",
-    "local_gerbil.BUILD.bazel.tpl",
-    "native_scheme_env.sh.tpl",
-    "native_abi_fingerprint.sh",
-    "native_tool.sh.tpl",
     "run_scheme_project.sh",
     "run_scheme_tests.sh",
 ])
 
 sh_binary(
-    name = "bootstrap_gerbil_toolchain",
-    srcs = ["bootstrap_gerbil_toolchain.sh"],
-    visibility = ["//visibility:public"],
-)
-
-sh_test(
-    name = "bootstrap_gerbil_toolchain_test",
-    size = "small",
-    srcs = ["bootstrap_gerbil_toolchain_test.sh"],
-    data = ["bootstrap_gerbil_toolchain.sh"],
-    env_inherit = ["PATH"],
-)
-
-sh_binary(
-    name = "finalize_gerbil_bootstrap_state",
-    srcs = ["finalize_gerbil_bootstrap_state.sh"],
-    visibility = ["//visibility:public"],
-)
-
-sh_test(
-    name = "finalize_gerbil_bootstrap_state_test",
-    size = "small",
-    srcs = ["finalize_gerbil_bootstrap_state_test.sh"],
-    data = ["finalize_gerbil_bootstrap_state.sh"],
-    env_inherit = ["PATH"],
-)
-
-sh_binary(
-    name = "native_abi_fingerprint",
-    srcs = ["native_abi_fingerprint.sh"],
-    visibility = ["//visibility:public"],
-)
-
-sh_binary(
     name = "run_scheme_project",
     srcs = ["run_scheme_project.sh"],
+)
+
+sh_test(
+    name = "shared_gerbil_capability_test",
+    srcs = ["shared_gerbil_capability_test.sh"],
+    args = [
+        "$(rlocationpath @local_gerbil//:toolchain.receipt.json)",
+        "$(rlocationpath @bootstrap_gerbil//:install_dependencies)",
+    ],
+    data = [
+        "@bootstrap_gerbil//:install_dependencies",
+        "@local_gerbil//:toolchain.receipt.json",
+    ],
 )
 
 py_binary(
@@ -74,15 +44,4 @@ py_test(
     main = "scheme_projection_artifact_tool_test.py",
     python_version = "3.12",
     deps = ["//packages/python-runtime/src/poo_flow_runtime:scheme_datum_tool"],
-)
-
-toolchain_type(
-    name = "gerbil_toolchain_type",
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "native_scheme_env",
-    actual = "@local_gerbil//:native_scheme_env",
-    visibility = ["//visibility:public"],
 )

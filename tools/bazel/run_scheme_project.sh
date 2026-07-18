@@ -13,6 +13,23 @@ absolute_path() {
   printf '%s/%s\n' "$(cd "$directory" && pwd)" "$(basename "$path")"
 }
 
+canonical_file() {
+  local path=$1
+  local directory target
+  path=$(absolute_path "$path")
+  while [[ -L "$path" ]]; do
+    directory=$(cd "$(dirname "$path")" && pwd -P)
+    target=$(readlink "$path")
+    if [[ "$target" = /* ]]; then
+      path=$target
+    else
+      path="$directory/$target"
+    fi
+  done
+  directory=$(cd "$(dirname "$path")" && pwd -P)
+  printf '%s/%s\n' "$directory" "$(basename "$path")"
+}
+
 gxi=$(absolute_path "$1")
 gxc=$(absolute_path "$2")
 gxpkg=$(absolute_path "$3")
@@ -20,13 +37,14 @@ gerbil_cc=$(absolute_path "$4")
 gerbil_as=$(absolute_path "$5")
 gerbil_ld=$(absolute_path "$6")
 dependency_root_marker=$(absolute_path "$7")
-build_script=$(absolute_path "$8")
+build_script=$(canonical_file "$8")
 output_root=$(absolute_path "$9")
 receipt=$(absolute_path "${10}")
 log=$(absolute_path "${11}")
 shift 11
 
 dependency_root=$(dirname "$dependency_root_marker")
+project_root=$(dirname "$build_script")
 tool_bin="$output_root/.tool-bin"
 rm -rf "$tool_bin"
 mkdir -p "$output_root/lib" "$tool_bin"
@@ -50,6 +68,7 @@ export GERBIL_PATH="$output_root"
 export PATH="$tool_bin:$PATH"
 
 set +e
+cd "$project_root"
 "$gxi" "$build_script" compile "$@" >"$log" 2>&1
 status=$?
 set -e

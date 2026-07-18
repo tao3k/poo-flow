@@ -1,7 +1,7 @@
 """Bazel orchestration rules for the canonical POO Flow Scheme project."""
 
 load(
-    ":gerbil_toolchain.bzl",
+    "@gerbil_bazel//gerbil:defs.bzl",
     "GERBIL_TOOLCHAIN_TYPE",
     "resolved_gerbil_toolchain",
 )
@@ -36,9 +36,9 @@ def _gerbil_project_compile_impl(ctx):
     arguments.add(toolchain.gxi.executable.path)
     arguments.add(toolchain.gxc.executable.path)
     arguments.add(toolchain.gxpkg.executable.path)
-    arguments.add(toolchain.gerbil_cc.path)
-    arguments.add(toolchain.gerbil_as.path)
-    arguments.add(toolchain.gerbil_ld.path)
+    arguments.add(toolchain.gerbil_cc)
+    arguments.add(toolchain.gerbil_as)
+    arguments.add(toolchain.gerbil_ld)
     arguments.add(toolchain.dependency_library_root.path)
     arguments.add(ctx.file.build_script.path)
     arguments.add(compiled_root.path)
@@ -56,9 +56,6 @@ def _gerbil_project_compile_impl(ctx):
             direct = [
                 ctx.file.build_script,
                 toolchain.dependency_library_root,
-                toolchain.gerbil_as,
-                toolchain.gerbil_cc,
-                toolchain.gerbil_ld,
                 toolchain.native_abi_fingerprint_file,
             ],
             transitive = [
@@ -138,9 +135,9 @@ def _gerbil_project_dev_impl(ctx):
         _gerbil_project_dev_runfile(toolchain.gxi.executable),
         _gerbil_project_dev_runfile(toolchain.gxc.executable),
         _gerbil_project_dev_runfile(toolchain.gxpkg.executable),
-        _gerbil_project_dev_runfile(toolchain.gerbil_cc),
-        _gerbil_project_dev_runfile(toolchain.gerbil_as),
-        _gerbil_project_dev_runfile(toolchain.gerbil_ld),
+        _shell_quote(toolchain.gerbil_cc),
+        _shell_quote(toolchain.gerbil_as),
+        _shell_quote(toolchain.gerbil_ld),
         _gerbil_project_dev_runfile(toolchain.dependency_library_root),
         _gerbil_project_dev_runfile(ctx.file.build_script),
         '"$output_root"',
@@ -182,9 +179,9 @@ def _gerbil_project_dev_impl(ctx):
                 _gerbil_project_dev_runfile(toolchain.gxi.executable),
                 _gerbil_project_dev_runfile(toolchain.gxc.executable),
                 _gerbil_project_dev_runfile(toolchain.gxpkg.executable),
-                _gerbil_project_dev_runfile(toolchain.gerbil_cc),
-                _gerbil_project_dev_runfile(toolchain.gerbil_as),
-                _gerbil_project_dev_runfile(toolchain.gerbil_ld),
+                _shell_quote(toolchain.gerbil_cc),
+                _shell_quote(toolchain.gerbil_as),
+                _shell_quote(toolchain.gerbil_ld),
                 _gerbil_project_dev_runfile(toolchain.dependency_library_root),
                 '"$output_root"',
                 _gerbil_project_dev_runfile(test_root),
@@ -203,9 +200,6 @@ def _gerbil_project_dev_impl(ctx):
         ctx.executable._runner,
         ctx.file._test_runner,
         toolchain.dependency_library_root,
-        toolchain.gerbil_as,
-        toolchain.gerbil_cc,
-        toolchain.gerbil_ld,
         toolchain.native_abi_fingerprint_file,
     ]
     if test_root:
@@ -216,8 +210,9 @@ def _gerbil_project_dev_impl(ctx):
         transitive_files = depset(transitive = [
             ctx.attr.srcs[DefaultInfo].files,
             toolchain.dependency_libraries,
+            toolchain.runfiles,
         ]),
-    ).merge(toolchain.runfiles)
+    )
     return [DefaultInfo(executable = launcher, runfiles = runfiles)]
 
 gerbil_project_dev = rule(
@@ -327,9 +322,9 @@ def _gerbil_project_test_impl(ctx):
         toolchain.gxi.executable.short_path,
         toolchain.gxc.executable.short_path,
         toolchain.gxpkg.executable.short_path,
-        toolchain.gerbil_cc.short_path,
-        toolchain.gerbil_as.short_path,
-        toolchain.gerbil_ld.short_path,
+        toolchain.gerbil_cc,
+        toolchain.gerbil_as,
+        toolchain.gerbil_ld,
         toolchain.dependency_library_root.short_path,
         ctx.file.compiled_root.short_path,
         ctx.file.test_root.short_path,
@@ -359,8 +354,9 @@ def _gerbil_project_test_impl(ctx):
         transitive_files = depset(transitive = [
             ctx.attr.srcs[DefaultInfo].files,
             toolchain.dependency_libraries,
+            toolchain.runfiles,
         ]),
-    ).merge(toolchain.runfiles)
+    )
     return [
         DefaultInfo(
             executable = launcher,

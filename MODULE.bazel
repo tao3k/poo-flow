@@ -7,6 +7,12 @@ bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "rules_python", version = "1.7.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "gerbil_bazel", version = "0.1.0")
+git_override(
+    module_name = "gerbil_bazel",
+    commit = "75d123ed75fe095eb06645ae87715a0c60fa98eb",
+    remote = "https://github.com/tao3k/gerbil-bazel.git",
+)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.defaults(python_version = "3.12")
@@ -48,26 +54,26 @@ filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
     ],
 )
 
-local_gerbil_repository = use_repo_rule(
-    "//tools/bazel:gerbil_repository.bzl",
-    "local_gerbil_repository",
-)
-
-local_gerbil_repository(
+gerbil = use_extension("@gerbil_bazel//gerbil:extensions.bzl", "gerbil")
+gerbil.host(
     name = "bootstrap_gerbil",
     expected_version_prefixes = [
         "Gerbil 07c8481",
         "Gerbil v0.18.2",
     ],
-    include_project_dependencies = False,
 )
-
-local_gerbil_repository(
+gerbil.host(
     name = "local_gerbil",
     expected_version_prefixes = [
         "Gerbil 07c8481",
         "Gerbil v0.18.2",
     ],
+    project_dependency_packages = [
+        "clan",
+        "gslph",
+    ],
+    project_root_marker = "//:gerbil.pkg",
 )
+use_repo(gerbil, "bootstrap_gerbil", "local_gerbil")
 
 register_toolchains("@local_gerbil//:registered_toolchain")

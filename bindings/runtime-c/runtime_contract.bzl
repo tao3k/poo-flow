@@ -1,7 +1,7 @@
 """Rules for generating the runtime-v0 C contract with the Scheme owner."""
 
 load(
-    "//tools/bazel:gerbil_toolchain.bzl",
+    "@gerbil_bazel//gerbil:defs.bzl",
     "GERBIL_TOOLCHAIN_TYPE",
     "resolved_gerbil_toolchain",
 )

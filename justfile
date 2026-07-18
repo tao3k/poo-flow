@@ -5,7 +5,7 @@ scheme_compile := "//scheme:compile"
 scheme_dev_compile := "//scheme:dev_compile"
 scheme_dev_unit_tests := "//scheme:dev_unit_tests"
 scheme_tests := "//scheme:tests"
-bootstrap_toolchain_tests := "//tools/bazel:bootstrap_gerbil_toolchain_test //tools/bazel:finalize_gerbil_bootstrap_state_test"
+gerbil_capability_tests := "//tools/bazel:shared_gerbil_capability_test"
 scheme_performance_tests := "//scheme:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
 runtime_c_tests := "//bindings/runtime-c:runtime_c_tests"
@@ -13,7 +13,7 @@ runtime_c_sanitizer_tests := "//bindings/runtime-c:runtime_c_sanitizer_tests"
 runtime_c_leak_test := "//bindings/runtime-c:runtime_c_leak_test"
 bundle_v1_library := "//bindings/runtime-c/bundle-v1:bundle_v1"
 bundle_v1_tests := "//bindings/runtime-c/bundle-v1:bundle_v1_tests"
-gerbil_toolchain_type := "//tools/bazel:gerbil_toolchain_type"
+gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 
 # Show the maintained developer entrypoints.
 [group('discovery')]
@@ -55,10 +55,10 @@ toolchain:
 test:
     {{ bazel }} test --test_output=errors {{ scheme_tests }}
 
-# Validate the Gerbil source-bootstrap phase ledger and cache-mode contract.
+# Validate the shared Gerbil toolchain and dependency-install capabilities.
 [group('test')]
-test-build-tools:
-    {{ bazel }} test --test_output=errors {{ bootstrap_toolchain_tests }}
+test-gerbil-capability:
+    {{ bazel }} test --test_output=errors {{ gerbil_capability_tests }}
 
 # Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
 [group('test')]
@@ -92,4 +92,4 @@ test-performance:
 
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
-check: query build test test-build-tools
+check: query build test test-gerbil-capability

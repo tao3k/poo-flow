@@ -189,6 +189,57 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
+    "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
+      "general": {
+        "bzlTransitiveDigest": "mqZ0OCt1XC/WqTWnueVn6sV3Zq7naUIVL6eee/IVC1c=",
+        "usagesDigest": "KowuJBiGAeoKuagAhPq7udMTRzVX1XTivs6WUOM/BnU=",
+        "recordedInputs": [],
+        "generatedRepoSpecs": {
+          "bootstrap_gerbil": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:repository.bzl%local_gerbil_repository",
+            "attributes": {
+              "darwin_homebrew_formulae": [
+                "openssl@3",
+                "sqlite",
+                "zlib"
+              ],
+              "dependency_roots": [],
+              "environment": {},
+              "expected_version_prefixes": [
+                "Gerbil 07c8481",
+                "Gerbil v0.18.2"
+              ],
+              "project_dependency_packages": [],
+              "project_library_relative_path": ".gerbil/lib",
+              "tool_paths": {}
+            }
+          },
+          "local_gerbil": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:repository.bzl%local_gerbil_repository",
+            "attributes": {
+              "darwin_homebrew_formulae": [
+                "openssl@3",
+                "sqlite",
+                "zlib"
+              ],
+              "dependency_roots": [],
+              "environment": {},
+              "expected_version_prefixes": [
+                "Gerbil 07c8481",
+                "Gerbil v0.18.2"
+              ],
+              "project_dependency_packages": [
+                "clan",
+                "gslph"
+              ],
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg",
+              "tool_paths": {}
+            }
+          }
+        }
+      }
+    },
     "@@pybind11_bazel+//:internal_configure.bzl%internal_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "b+RP7Sgl8KN0VHamrgTqzGLuYPcQ/Mo4ptNkkHUIIlA=",

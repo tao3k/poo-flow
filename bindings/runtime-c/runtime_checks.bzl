@@ -1,7 +1,7 @@
 """Runtime-C checks that need a small Bazel-native test launcher."""
 
 load(
-    "//tools/bazel:gerbil_toolchain.bzl",
+    "@gerbil_bazel//gerbil:defs.bzl",
     "GERBIL_TOOLCHAIN_TYPE",
     "resolved_gerbil_toolchain",
 )
@@ -128,8 +128,8 @@ exec "$runfiles/%s" %s
     transitive_files.extend([target[DefaultInfo].files for target in ctx.attr.arguments])
     runfiles = ctx.runfiles(
         files = [ctx.file.script],
-        transitive_files = depset(transitive = transitive_files),
-    ).merge(toolchain.gxi_runfiles)
+        transitive_files = depset(transitive = transitive_files + [toolchain.runfiles]),
+    )
     for target in ctx.attr.arguments + ctx.attr.data:
         runfiles = runfiles.merge(target[DefaultInfo].default_runfiles)
         runfiles = runfiles.merge(target[DefaultInfo].data_runfiles)
@@ -207,8 +207,7 @@ env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
         toolchain.gerbil_cc,
         toolchain.gerbil_ld,
     ])
-    runfiles = runfiles.merge(toolchain.gxc_runfiles)
-    runfiles = runfiles.merge(toolchain.gxi_runfiles)
+    runfiles = runfiles.merge(toolchain.runfiles)
     return [DefaultInfo(executable = executable, runfiles = runfiles)]
 
 runtime_gerbil_benchmark_test = rule(

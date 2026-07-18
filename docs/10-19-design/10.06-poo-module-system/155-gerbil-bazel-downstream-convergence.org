@@ -1,0 +1,111 @@
+#+title: Gerbil Bazel Downstream Convergence
+#+startup: overview
+
+* Status
+
+Implemented for the shared capability and the POO Flow consumer.  The final
+cold-build timing gate remains evidence-driven: it must run only when the
+Scheme admission guard reports host pressure below the CPU-adaptive runnable
+limit.
+
+* Decision
+
+=gerbil-bazel= is the sole owner of generic Gerbil Bazel capabilities:
+
+- host discovery and Darwin/Linux normalization;
+- toolchain and native ABI providers;
+- normalized =gxi=, =gxc=, =gxpkg=, and =gxtest= executables;
+- project-declared Gerbil library views;
+- the workspace-aware =install_dependencies= capability.
+
+Downstream repositories retain only domain rules and build truth.  POO Flow
+retains =build.ss=, Scheme project projection, runtime-C rules, receipts, and
+POO-specific policy.  =gerbil-scheme-rust= retains Rust/FFI and Cargo domain
+rules.  Neither downstream owns a second generic Gerbil repository or
+toolchain implementation.
+
+#+begin_src mermaid
+flowchart LR
+  GB["gerbil-bazel<br/>generic Gerbil capabilities"]
+  PF["poo-flow<br/>build.ss + POO/runtime-C rules"]
+  SR["gerbil-scheme-rust<br/>Rust/FFI + Cargo rules"]
+  HOST["Darwin / Linux host"]
+  DEPS["gxpkg dependency state"]
+
+  HOST --> GB
+  GB --> PF
+  GB --> SR
+  GB --> DEPS
+  DEPS --> PF
+  DEPS --> SR
+#+end_src
+
+* Public capability contract
+
+Every discovered host repository publishes:
+
+- =registered_toolchain= and =toolchain_impl=;
+- =native_scheme_env= and the four normalized Gerbil tools;
+- =dependency_libraries= and =dependency_library_root=;
+- =toolchain.receipt.json=;
+- =install_dependencies=.
+
+The dependency installer enters =BUILD_WORKSPACE_DIRECTORY=, defaults
+=GERBIL_PATH= to the workspace-local =.gerbil= tree, invokes the standard
+=gxpkg deps --install= path through the normalized native environment, and
+finishes with =gxpkg list=.
+
+* Removed POO Flow legacy surface
+
+The POO Flow consumer no longer carries compatibility implementations for:
+
+- local Gerbil repository discovery;
+- a local Gerbil toolchain provider or toolchain type;
+- host-system normalization;
+- native ABI fingerprinting;
+- native tool and environment templates;
+- dependency-install templates;
+- bootstrap/finalize shell targets and their tests.
+
+Runtime-C contract and test rules consume the same public
+=GERBIL_TOOLCHAIN_TYPE= and unified toolchain =runfiles= depset as the Scheme
+project rules.
+
+* Acceptance receipts
+
+** Shared provider
+
+- =gerbil-bazel= commit: =75d123ed75fe095eb06645ae87715a0c60fa98eb=
+- local =just check=: query, build, four smoke tests, and prebuilt consumer
+  validation passed;
+- GitHub Actions run =29663075954=:
+  - macOS/Homebrew passed in 1 minute 22 seconds;
+  - Linux/source passed in 1 minute 54 seconds.
+
+** POO Flow consumer
+
+- =//scheme:deps= resolves to
+  =@bootstrap_gerbil//:install_dependencies=;
+- the full Bazel target graph queries successfully after legacy deletion;
+- runtime-C resolves through
+  =@gerbil_bazel//gerbil:toolchain_type=;
+- =//tools/bazel:shared_gerbil_capability_test= passed in 0.6 seconds;
+- =//bindings/runtime-c:runtime_v0_symbol_surface_test= passed in 10.5
+  seconds.
+
+* Performance gate
+
+Cold timing is invalid under runnable saturation.  The observed host had 12
+logical CPUs and up to 95 runnable processes.  The Scheme guard uses the
+machine-adaptive threshold =logical-cpu-count * 2=, emitted
+=blocked-host-pressure= with =runnable-saturation=, and reported
+=compiled-stage-count=0=.  No downstream migration may bypass that guard or
+replace it with a hard-coded CPU count.
+
+The cold acceptance gate is:
+
+1. admission outcome is =ready=;
+2. default Bazel sandbox execution completes;
+3. the total compile receipt is compared with a receipt carrying the same
+   cache state, strategy, CPU count, worker count, and host-pressure fields;
+4. a second run proves the incremental cache hit.
