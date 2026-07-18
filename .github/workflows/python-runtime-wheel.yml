@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          native_abi="$(bash tools/bazel/native_abi_fingerprint.sh gcc "$GERBIL_ARCH_PROFILE")"
+          native_abi="$(bash tools/bazel/native_abi_fingerprint.sh "${GERBIL_GCC:-}" "$GERBIL_ARCH_PROFILE")"
           echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
