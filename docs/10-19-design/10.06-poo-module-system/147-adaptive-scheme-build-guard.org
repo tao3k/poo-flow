@@ -39,6 +39,8 @@ for an adaptive full cold run.
    without a bound.
 10. Clean never receives an adaptive plan.
 11. Portable receipts are canonical JSON, not text logs or printed alists.
+12. Runnable-process saturation is observable advisory evidence; only a memory
+    safety-floor failure blocks admission before the guarded build starts.
 
 * Measured bounded A/B evidence
 
@@ -273,6 +275,45 @@ without adding compiler concurrency, a second executor, a fixed machine value,
 or an unguarded memory path.  Relative to the earlier 9-minute-05-second hosted
 macOS baseline, the accepted 5-minute-41-second job is 37.4% faster; relative
 to the historical 52-minute-28-second job, it is approximately 89.2% lower.
+
+** CI cache generations and pressure admission
+
+GitHub's cache store is immutable, while =setup-bazel= derives its disk-cache
+key from BUILD-file content.  A Scheme source change can therefore create a new
+Bazel action result without changing the surrounding GitHub cache key.  An
+exact restore then suppresses the post-job save and strands that new action
+result on the ephemeral runner.
+
+CI now materializes the pull-request merge commit as an ignored synthetic
+=.ci/bazel-cache-generation/BUILD.bazel= before =setup-bazel=.  Each commit gets
+a new exact generation, but the stable runner/toolchain prefix restores the
+latest preceding disk cache.  Bazel reuses every valid CAS/action entry, runs
+only actual misses, and the post step publishes the merged cache under the new
+generation.  Reruns of the same commit remain exact hits.  This is a GitHub
+cache-store adapter only; it does not enter =build.ss= or Building Framework.
+
+CPU and memory pressure have different safety semantics.  The Scheme guard
+records an instantaneous runnable-process saturation observation as an
+=admission-advisories= value, but it does not treat that noisy system-wide
+sample as a hard failure or override the detected/configured worker capability.
+The process-tree RSS cap remains active throughout compilation.  Admission
+still fails closed when available memory cannot cover caller headroom plus the
+minimum guarded RSS floor.
+
+#+begin_src mermaid
+flowchart LR
+  Commit["Pull-request merge commit"] --> Generation["Ignored synthetic BUILD cache generation"]
+  Generation --> Restore{"Exact cache generation?"}
+  Restore -->|"yes"| Exact["Reuse exact Bazel disk cache"]
+  Restore -->|"no"| Prefix["Restore newest runner/toolchain prefix"]
+  Prefix --> Bazel["Bazel validates action inputs and executes only misses"]
+  Bazel --> Save["Publish merged immutable generation"]
+  CPU["Detected CPU capability"] --> Workers["Configured worker ceiling"]
+  Runnable["Runnable-process saturation"] --> Advisory["Receipt advisory only"]
+  Memory["Available memory and RSS headroom"] --> Gate{"Memory safety floor admitted?"}
+  Gate -->|"yes"| Bazel
+  Gate -->|"no"| Block["Fail closed before gxi compilation"]
+#+end_src
 
 ** Registered Gerbil toolchain convergence
 
@@ -859,9 +900,10 @@ The canonical project compile receipt uses:
 
 It records stable =kind=, =schema=, and =version= fields, the Building Framework
 owner and build mode, the selected =topology= or =adaptive= execution policy,
-request labels, detected system memory, maximum and peak RSS, elapsed
-milliseconds, optional timeout, final outcome, and a JSON-safe Building
-Framework stage summary.  The stage summary retains counts, active-stage
+request labels, admission outcome, non-blocking pressure advisories, blocking
+reasons, detected system memory, maximum and peak RSS, elapsed milliseconds,
+optional timeout, final outcome, and a JSON-safe Building Framework stage
+summary.  The stage summary retains counts, active-stage
 labels, kinds, statuses, descriptions, and elapsed jiffies while excluding
 arbitrary in-process Scheme results.  The public
 =POO_FLOW_PROJECT_BUILD_RECEIPT= line is JSON; its earlier printed alist form is

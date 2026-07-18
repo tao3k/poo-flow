@@ -123,20 +123,21 @@
         system-memory-bytes
         +poo-flow-project-compile-headroom-share-denominator+)))
 
+(def (poo-flow-project-compile-admission-advisories
+      logical-cpu-count runnable-process-count)
+  (if (> runnable-process-count
+         (* logical-cpu-count
+            +poo-flow-project-compile-runnable-limit-per-cpu+))
+    '(runnable-saturation)
+    '()))
+
 (def (poo-flow-project-compile-admission-reasons
-      logical-cpu-count runnable-process-count available-memory-bytes
-      rss-headroom-bytes)
-  (append
-   (if (> runnable-process-count
-          (* logical-cpu-count
-             +poo-flow-project-compile-runnable-limit-per-cpu+))
-     '(runnable-saturation)
-     '())
-   (if (< available-memory-bytes
-          (+ rss-headroom-bytes
-             +poo-flow-project-compile-minimum-max-rss-bytes+))
-     '(insufficient-memory-headroom)
-     '())))
+      available-memory-bytes rss-headroom-bytes)
+  (if (< available-memory-bytes
+         (+ rss-headroom-bytes
+            +poo-flow-project-compile-minimum-max-rss-bytes+))
+    '(insufficient-memory-headroom)
+    '()))
 
 (def (poo-flow-project-compile-system-memory-bytes)
   (or (poo-flow-project-compile-positive-integer-from-env
@@ -192,18 +193,13 @@
          (configured-worker-count
           (poo-flow-project-compile-configured-worker-count
            logical-cpu-count))
-         (external-runnable-count
-          (max 0
-               (- runnable-process-count
-                  logical-cpu-count)))
-         (worker-count
-          (max 1
-               (- configured-worker-count
-                  external-runnable-count)))
+         (worker-count configured-worker-count)
+         (admission-advisories
+          (poo-flow-project-compile-admission-advisories
+           logical-cpu-count
+           runnable-process-count))
          (admission-reasons
           (poo-flow-project-compile-admission-reasons
-           logical-cpu-count
-           runnable-process-count
            available-memory-bytes
            rss-headroom-bytes))
          (admission-outcome
@@ -220,6 +216,7 @@
           (rss-headroom-bytes-value rss-headroom-bytes)
           (worker-count-value worker-count)
           (admission-outcome-value admission-outcome)
+          (admission-advisories-value admission-advisories)
           (admission-reasons-value admission-reasons)
           (system-memory-bytes-value system-memory-bytes)
           (max-rss-bytes-value max-rss-bytes)
@@ -236,6 +233,7 @@
           (rss-headroom-bytes rss-headroom-bytes-value)
           (worker-count worker-count-value)
           (admission-outcome admission-outcome-value)
+          (admission-advisories admission-advisories-value)
           (admission-reasons admission-reasons-value)
           (request-labels request-labels-value)
           (system-memory-bytes system-memory-bytes-value)
@@ -246,7 +244,8 @@
 (def (poo-flow-project-compile-receipt->alist receipt)
   (map (lambda (slot) (cons slot (.ref receipt slot)))
        '(schema outcome build-owner build-mode execution-policy request-labels
-                admission-outcome admission-reasons logical-cpu-count
+                admission-outcome admission-advisories admission-reasons
+                logical-cpu-count
                 runnable-process-count available-memory-bytes
                 rss-headroom-bytes worker-count
                 system-memory-bytes max-rss-bytes peak-rss-bytes
@@ -308,6 +307,9 @@
    ("admission-outcome"
     (poo-flow-process-memory-guard-json-value
      (.ref receipt 'admission-outcome)))
+   ("admission-advisories"
+    (poo-flow-process-memory-guard-json-value
+     (.ref receipt 'admission-advisories)))
    ("admission-reasons"
     (poo-flow-process-memory-guard-json-value
      (.ref receipt 'admission-reasons)))
@@ -346,6 +348,7 @@
       (execution-policy (.ref config 'execution-policy))
       (request-labels (.ref config 'request-labels))
       (admission-outcome (.ref config 'admission-outcome))
+      (admission-advisories (.ref config 'admission-advisories))
       (admission-reasons (.ref config 'admission-reasons))
       (logical-cpu-count (.ref config 'logical-cpu-count))
       (runnable-process-count (.ref config 'runnable-process-count))
@@ -421,6 +424,8 @@
                       (execution-policy (.ref config 'execution-policy))
                       (request-labels (.ref config 'request-labels))
                       (admission-outcome (.ref config 'admission-outcome))
+                      (admission-advisories
+                       (.ref config 'admission-advisories))
                       (admission-reasons (.ref config 'admission-reasons))
                       (logical-cpu-count (.ref config 'logical-cpu-count))
                       (runnable-process-count

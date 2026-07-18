@@ -52,7 +52,7 @@
              => 'adaptive))
           (lambda ()
             (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" (or previous ""))))))
-    (test-case "blocks topology-relative host pressure"
+    (test-case "degrades runnable saturation to an observable advisory"
       (let* ((available-cpu-count
               (build-api-project-compile-guard-available-cpu-count))
              (saturated-runnable-count
@@ -60,7 +60,7 @@
              (overrides
               (list
                (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "8589934592")
-               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "6442450944")
                (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "2147483648")
                (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT"
                      (number->string available-cpu-count))
@@ -79,17 +79,47 @@
              overrides))
           (lambda ()
             (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'admission-outcome) => 'ready)
+              (check (.ref config 'admission-advisories)
+                     => '(runnable-saturation))
+              (check (.ref config 'admission-reasons) => '())
+              (check (.ref config 'worker-count)
+                     => available-cpu-count)))
+          (lambda ()
+            (for-each
+             (lambda (entry)
+               (setenv (car entry) (or (cdr entry) "")))
+             previous)))))
+    (test-case "blocks only when the memory safety floor cannot be admitted"
+      (let* ((available-cpu-count
+              (build-api-project-compile-guard-available-cpu-count))
+             (overrides
+              (list
+               (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "8589934592")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT"
+                     (number->string available-cpu-count))
+               (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES"
+                     (number->string available-cpu-count))
+               (cons "GERBIL_BUILD_CORES"
+                     (number->string available-cpu-count))))
+             (previous
+              (map (lambda (entry)
+                     (cons (car entry) (getenv (car entry) #f)))
+                   overrides)))
+        (dynamic-wind
+          (lambda ()
+            (for-each
+             (lambda (entry) (setenv (car entry) (cdr entry)))
+             overrides))
+          (lambda ()
+            (let (config (poo-flow-project-compile-guard-config '()))
               (check (.ref config 'admission-outcome)
                      => 'blocked-host-pressure)
+              (check (.ref config 'admission-advisories) => '())
               (check (.ref config 'admission-reasons)
-                     => '(runnable-saturation
-                          insufficient-memory-headroom))
-              (check (.ref config 'worker-count) => 1))
-            (setenv "POO_FLOW_BUILD_RUNNABLE_PROCESSES"
-                    (number->string available-cpu-count))
-            (setenv "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "6442450944")
-            (let (config (poo-flow-project-compile-guard-config '()))
-              (check (.ref config 'admission-outcome) => 'ready)
+                     => '(insufficient-memory-headroom))
               (check (.ref config 'worker-count)
                      => available-cpu-count)))
           (lambda ()
@@ -108,6 +138,7 @@
                   (execution-policy 'topology)
                   (request-labels '("runtime" "user-interface"))
                   (admission-outcome 'ready)
+                  (admission-advisories '())
                   (admission-reasons '())
                   (logical-cpu-count available-cpu-count)
                   (runnable-process-count 4)
@@ -143,6 +174,7 @@
         (check (hash-get object "elapsed-ms") => 199289)
         (check (hash-get object "execution-policy") => "topology")
         (check (hash-get object "admission-outcome") => "ready")
+        (check (hash-get object "admission-advisories") => '())
         (check (hash-get object "worker-count")
                => available-cpu-count)
         (check
