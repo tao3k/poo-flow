@@ -80,7 +80,7 @@ project rules.
 
 ** Shared provider
 
-- =gerbil-bazel= commit: =a9d7bf7dc145a47af6fb4311d1e02b0fb61e4dab=;
+- =gerbil-bazel= commit: =c3f9ef9eed755095630e32185822984f2139a683=;
 - local =just check=: 10 query targets, build, and four of four smoke tests
   passed;
 - platform-adaptive host consumer: passed in 46 seconds;
@@ -96,6 +96,8 @@ project rules.
   and project consumption are separate named capabilities;
 - both repositories use =gerbil.auto=: Darwin selects the native Homebrew
   provider and Linux selects the immutable prebuilt provider;
+- the module extension is =os_dependent=True=, preventing a checked-in
+  Darwin evaluation from being replayed as a host provider on Linux;
 - the full Bazel target graph queries successfully after legacy deletion;
 - runtime-C resolves through
   =@gerbil_bazel//gerbil:toolchain_type=;

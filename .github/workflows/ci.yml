@@ -247,9 +247,6 @@ jobs:
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Validate shared Gerbil provider
-        run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
-
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
         uses: actions/cache/restore@v6.1.0
@@ -262,6 +259,9 @@ jobs:
       - name: Install Gerbil package dependencies from gerbil.pkg
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         run: bazel run //scheme:deps
+
+      - name: Validate shared Gerbil provider
+        run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
 
       - name: Save Gerbil package dependency cache
         if: steps.gerbil-pkg-cache.outputs.cache-hit != 'true'
