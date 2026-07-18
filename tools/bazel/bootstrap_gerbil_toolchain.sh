@@ -6,6 +6,15 @@ set -euo pipefail
 : "${GERBIL_PREFIX:?GERBIL_PREFIX is required}"
 
 gerbil_source_url="${GERBIL_SOURCE_URL:-https://github.com/mighty-gerbils/gerbil.git}"
+bootstrap_cache_mode="${GERBIL_BOOTSTRAP_CACHE_MODE:-normal}"
+case "$bootstrap_cache_mode" in
+  normal | install-miss | cold)
+    ;;
+  *)
+    printf 'unsupported Gerbil bootstrap cache mode: %s\n' "$bootstrap_cache_mode" >&2
+    exit 64
+    ;;
+esac
 
 architecture_profile="${GERBIL_ARCH_PROFILE:-native}"
 case "$architecture_profile" in
@@ -77,27 +86,28 @@ started_at="$SECONDS"
 mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
 rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
 git init --quiet "$GERBIL_SRC"
-if git -C "$GERBIL_SRC" remote get-url origin >/dev/null 2>&1; then
-  git -C "$GERBIL_SRC" remote set-url origin "$gerbil_source_url"
-else
-  git -C "$GERBIL_SRC" remote add origin "$gerbil_source_url"
-fi
-git -C "$GERBIL_SRC" fetch --depth=1 origin "$GERBIL_REF"
-git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
-
 cd "$GERBIL_SRC"
 bootstrap_state_path="$GERBIL_SRC/.poo-flow-bootstrap-state.json"
 bootstrap_started_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 bootstrap_started_epoch="$(date '+%s')"
 bootstrap_phase="prepare"
+bootstrap_phase_started_at="$bootstrap_started_at"
+bootstrap_phase_started_epoch="$bootstrap_started_epoch"
+bootstrap_phase_open=false
+bootstrap_phases='[]'
 
 write_bootstrap_state() {
   local status="$1"
   local exit_code="${2:-0}"
-  local updated_at updated_epoch elapsed_ms temporary_path
+  local updated_at updated_epoch elapsed_ms phase_elapsed_ms temporary_path
   updated_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   updated_epoch="$(date '+%s')"
   elapsed_ms="$(( (updated_epoch - bootstrap_started_epoch) * 1000 ))"
+  if [[ "$bootstrap_phase_open" == true ]]; then
+    phase_elapsed_ms="$(( (updated_epoch - bootstrap_phase_started_epoch) * 1000 ))"
+  else
+    phase_elapsed_ms=0
+  fi
   temporary_path="${bootstrap_state_path}.tmp"
 
   jq -n \
@@ -110,21 +120,29 @@ write_bootstrap_state() {
     --arg prefix "$GERBIL_PREFIX" \
     --arg compiler "$compiler_command" \
     --arg architecture "$architecture_profile" \
+    --arg cacheMode "$bootstrap_cache_mode" \
     --arg startedAt "$bootstrap_started_at" \
+    --arg phaseStartedAt "$bootstrap_phase_started_at" \
     --arg updatedAt "$updated_at" \
     --argjson buildCores "$build_cores" \
     --argjson elapsedMs "$elapsed_ms" \
+    --argjson phaseElapsedMs "$phase_elapsed_ms" \
     --argjson exitCode "$exit_code" \
+    --argjson phases "$bootstrap_phases" \
     '{
       schema: $schema,
       status: $status,
       phase: $phase,
+      phaseStartedAt: $phaseStartedAt,
+      phaseElapsedMs: $phaseElapsedMs,
+      phases: $phases,
       ref: $ref,
       sourceUrl: $sourceUrl,
       source: $source,
       prefix: $prefix,
       compiler: $compiler,
       architecture: $architecture,
+      cacheMode: $cacheMode,
       buildCores: $buildCores,
       startedAt: $startedAt,
       updatedAt: $updatedAt,
@@ -134,8 +152,46 @@ write_bootstrap_state() {
   mv "$temporary_path" "$bootstrap_state_path"
 }
 
+close_bootstrap_phase() {
+  local status="$1"
+  local exit_code="${2:-0}"
+  local completed_at completed_epoch phase_elapsed_ms
+  if [[ "$bootstrap_phase_open" != true ]]; then
+    return
+  fi
+
+  completed_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  completed_epoch="$(date '+%s')"
+  phase_elapsed_ms="$(( (completed_epoch - bootstrap_phase_started_epoch) * 1000 ))"
+  bootstrap_phases="$(
+    jq -cn \
+      --argjson phases "$bootstrap_phases" \
+      --arg phase "$bootstrap_phase" \
+      --arg status "$status" \
+      --arg startedAt "$bootstrap_phase_started_at" \
+      --arg completedAt "$completed_at" \
+      --argjson elapsedMs "$phase_elapsed_ms" \
+      --argjson exitCode "$exit_code" \
+      '$phases + [{
+        phase: $phase,
+        status: $status,
+        startedAt: $startedAt,
+        completedAt: $completedAt,
+        elapsedMs: $elapsedMs,
+        exitCode: $exitCode
+      }]'
+  )"
+  bootstrap_phase_open=false
+}
+
 begin_bootstrap_phase() {
+  if [[ "$bootstrap_phase_open" == true ]]; then
+    close_bootstrap_phase "success" 0
+  fi
   bootstrap_phase="$1"
+  bootstrap_phase_started_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  bootstrap_phase_started_epoch="$(date '+%s')"
+  bootstrap_phase_open=true
   write_bootstrap_state "running" 0
 }
 
@@ -143,9 +199,11 @@ finish_bootstrap_state() {
   local exit_code="$?"
   trap - EXIT
   if (( exit_code == 0 )); then
+    close_bootstrap_phase "success" 0
     bootstrap_phase="complete"
     write_bootstrap_state "success" 0 || true
   else
+    close_bootstrap_phase "interrupted" "$exit_code" || true
     write_bootstrap_state "interrupted" "$exit_code" || true
   fi
   exit "$exit_code"
@@ -154,6 +212,15 @@ finish_bootstrap_state() {
 trap 'exit 130' INT
 trap 'exit 143' TERM
 trap finish_bootstrap_state EXIT
+
+begin_bootstrap_phase "fetch"
+if git remote get-url origin >/dev/null 2>&1; then
+  git remote set-url origin "$gerbil_source_url"
+else
+  git remote add origin "$gerbil_source_url"
+fi
+git fetch --depth=1 origin "$GERBIL_REF"
+git checkout --quiet --detach FETCH_HEAD
 
 begin_bootstrap_phase "configure"
 
@@ -169,6 +236,7 @@ make -j"$build_cores"
 begin_bootstrap_phase "install"
 make install
 
+begin_bootstrap_phase "verify"
 if [[ "$ccache_enabled" == true ]]; then
   ccache_stats="$("$ccache_executable" --print-stats 2>/dev/null || true)"
   ccache_activity="$({
@@ -188,8 +256,10 @@ fi
 
 elapsed_seconds=$((SECONDS - started_at))
 gerbil_version="$("$GERBIL_PREFIX/bin/gxi" --version)"
+begin_bootstrap_phase "receipt"
 jq -n \
   --arg architecture_profile "$architecture_profile" \
+  --arg bootstrap_cache_mode "$bootstrap_cache_mode" \
   --arg compiler "$compiler_request" \
   --arg compiler_command "$compiler_command" \
   --arg ccache_dir "${CCACHE_DIR:-}" \
@@ -198,16 +268,19 @@ jq -n \
   --arg prefix "$GERBIL_PREFIX" \
   --arg source_url "$gerbil_source_url" \
   --arg source_ref "$GERBIL_REF" \
+  --arg state_receipt "$bootstrap_state_path" \
   --argjson build_cores "$build_cores" \
   --argjson ccache_activity "$ccache_activity" \
   --argjson ccache_enabled "$ccache_enabled" \
   --argjson ccache_required "$require_ccache" \
   --argjson elapsed_seconds "$elapsed_seconds" \
+  --argjson phases "$bootstrap_phases" \
   '{
     schema: "poo-flow.gerbil-toolchain-bootstrap-receipt.v1",
     version: 1,
     outcome: "ready",
     architecture_profile: $architecture_profile,
+    bootstrap_cache_mode: $bootstrap_cache_mode,
     source_ref: $source_ref,
     source_url: $source_url,
     gerbil_version: $gerbil_version,
@@ -222,6 +295,12 @@ jq -n \
     },
     build_cores: $build_cores,
     elapsed_seconds: $elapsed_seconds,
+    phases: $phases,
+    state_receipt: $state_receipt,
     prefix: $prefix
   }' >"$GERBIL_PREFIX/bootstrap.receipt.json"
+close_bootstrap_phase "success" 0
+bootstrap_phase="complete"
+write_bootstrap_state "success" 0
+trap - EXIT
 jq -c . "$GERBIL_PREFIX/bootstrap.receipt.json"

@@ -6,6 +6,16 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+    inputs:
+      gerbil_source_bootstrap_cache_mode:
+        description: Select the Linux source-bootstrap cache evidence mode.
+        required: true
+        default: normal
+        type: choice
+        options:
+          - normal
+          - install-miss
+          - cold
 
 permissions:
   contents: read
@@ -90,6 +100,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
       CCACHE_MAXSIZE: 2G
       GERBIL_ARCH_PROFILE: portable
+      GERBIL_BOOTSTRAP_CACHE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.gerbil_source_bootstrap_cache_mode || 'normal' }}
       GERBIL_REQUIRE_CCACHE: 1
       GERBIL_REF: ${{ matrix.gerbil-ref }}
       GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/${{ matrix.gerbil-label }}
@@ -245,6 +256,7 @@ jobs:
           echo "Gerbil native ABI: $native_abi"
 
       - name: Restore Gerbil bootstrap ccache
+        if: matrix.gerbil-install != 'source' || env.GERBIL_BOOTSTRAP_CACHE_MODE != 'cold'
         id: gerbil-ccache-cache
         uses: actions/cache/restore@v6.1.0
         with:
@@ -279,7 +291,7 @@ jobs:
           repository-cache: true
 
       - name: Restore Gerbil install cache
-        if: matrix.gerbil-install == 'source'
+        if: matrix.gerbil-install == 'source' && env.GERBIL_BOOTSTRAP_CACHE_MODE == 'normal'
         id: gerbil-cache
         uses: actions/cache/restore@v6.1.0
         with:
@@ -287,7 +299,7 @@ jobs:
           key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
 
       - name: Build Gerbil
-        if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
+        if: matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
         run: |
           if [ -n "${GERBIL_GCC:-}" ]; then
             export CC="$GERBIL_GCC"
@@ -295,27 +307,29 @@ jobs:
           bash tools/bazel/bootstrap_gerbil_toolchain.sh
 
       - name: Show Gerbil bootstrap ccache stats
-        if: ${{ always() && matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true' }}
+        if: ${{ always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true') }}
         run: ccache --show-stats
 
       - name: Save Gerbil bootstrap ccache
-        if: ${{ always() && matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true' }}
+        if: ${{ always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true') }}
         uses: actions/cache/save@v6.1.0
         with:
           path: .ci/ccache
           key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload Gerbil bootstrap phase receipt
-        if: always() && matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
+        if: always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
         uses: actions/upload-artifact@v4
         with:
           name: gerbil-bootstrap-receipt-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}
-          path: .ci/gerbil-src/${{ matrix.gerbil-label }}/.poo-flow-bootstrap-state.json
+          path: |
+            .ci/gerbil-src/${{ matrix.gerbil-label }}/.poo-flow-bootstrap-state.json
+            .ci/gerbil/${{ matrix.gerbil-label }}/bootstrap.receipt.json
           if-no-files-found: warn
           retention-days: 7
 
       - name: Save Gerbil install cache
-        if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
+        if: matrix.gerbil-install == 'source' && env.GERBIL_BOOTSTRAP_CACHE_MODE == 'normal' && steps.gerbil-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
@@ -574,6 +588,7 @@ jobs:
 
           targets=(
             //scheme:tests
+            //tools/bazel:bootstrap_gerbil_toolchain_test
             //bindings/runtime-c:runtime_c_tests
             //bindings/runtime-c/bundle-v1:bundle_v1_tests
           )

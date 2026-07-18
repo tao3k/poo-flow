@@ -5,6 +5,7 @@ scheme_compile := "//scheme:compile"
 scheme_dev_compile := "//scheme:dev_compile"
 scheme_dev_unit_tests := "//scheme:dev_unit_tests"
 scheme_tests := "//scheme:tests"
+bootstrap_toolchain_tests := "//tools/bazel:bootstrap_gerbil_toolchain_test"
 scheme_performance_tests := "//scheme:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
 runtime_c_tests := "//bindings/runtime-c:runtime_c_tests"
@@ -54,6 +55,11 @@ toolchain:
 test:
     {{ bazel }} test --test_output=errors {{ scheme_tests }}
 
+# Validate the Gerbil source-bootstrap phase ledger and cache-mode contract.
+[group('test')]
+test-build-tools:
+    {{ bazel }} test --test_output=errors {{ bootstrap_toolchain_tests }}
+
 # Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
 [group('test')]
 test-dev:
@@ -86,4 +92,4 @@ test-performance:
 
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
-check: query build test
+check: query build test test-build-tools

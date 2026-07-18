@@ -1,6 +1,7 @@
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@rules_python//python:py_test.bzl", "py_test")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 exports_files([
     "bootstrap_gerbil_toolchain.sh",
@@ -21,6 +22,14 @@ sh_binary(
     name = "bootstrap_gerbil_toolchain",
     srcs = ["bootstrap_gerbil_toolchain.sh"],
     visibility = ["//visibility:public"],
+)
+
+sh_test(
+    name = "bootstrap_gerbil_toolchain_test",
+    size = "small",
+    srcs = ["bootstrap_gerbil_toolchain_test.sh"],
+    data = ["bootstrap_gerbil_toolchain.sh"],
+    env_inherit = ["PATH"],
 )
 
 sh_binary(

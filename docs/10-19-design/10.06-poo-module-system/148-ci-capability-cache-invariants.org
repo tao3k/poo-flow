@@ -163,6 +163,41 @@ evidence fields, not permission to reuse a cache with a different revision.
    capability fields.  The outer job timeout must leave every declared phase
    budget executable; it must not cancel a Scheme compile before that compile's
    own timeout or receipt guard can decide the result.
+10. A source-bootstrap measurement names its cache mode.  A normal, install
+    cache-miss, and fully cold receipt are different evidence classes and may
+    not be compared as if they exercised the same capability state.
+11. Bootstrap state records an ordered phase ledger for fetch, configure,
+    build, install, verification, and receipt production.  The final receipt
+    retains the completed build phases instead of projecting only the last
+    active phase.
+
+** Controlled Linux source-bootstrap evidence lane
+
+The manual CI input =gerbil_source_bootstrap_cache_mode= exposes three bounded
+evidence modes without deleting a shared GitHub cache:
+
+- =normal= preserves the pull-request and push behavior: restore the Gerbil
+  install cache and bootstrap ccache, and build only after an install-cache
+  miss;
+- =install-miss= bypasses the Gerbil install cache but restores capability-keyed
+  ccache, measuring a source bootstrap with compiler-product reuse;
+- =cold= bypasses both the Gerbil install cache and bootstrap ccache, measuring
+  the complete source bootstrap on the hosted Linux capability.
+
+Forced evidence runs do not save the Gerbil install tree into the immutable
+production key.  A completed compiler cache remains safe to publish under its
+run-scoped, native-ABI-keyed ccache identity; subsequent =cold= runs bypass that
+cache explicitly.  Pull-request and push events always select =normal=.
+
+The state JSON records the current phase, its elapsed time, and the completed
+phase ledger.  The terminal bootstrap receipt records cache mode, adaptive
+available-core selection, compiler and ccache activity, total elapsed time, and
+the same completed phase ledger.  CI uploads both receipts.
+
+The Linux 60-minute job timeout remains a provisional liveness ceiling while
+this controlled cold receipt is absent.  It is not an accepted performance
+budget.  After the cold run, the measured bootstrap phase receives its own
+timeout and the outer job timeout is reduced to the declared phase envelope.
 
 ** Development incremental receipt: 2026-07-18
 
@@ -397,6 +432,18 @@ hold:
   products reusable.
 - A development receipt cannot replace hermetic =//scheme:compile=,
   =//scheme:unit_tests=, or a named CI producer artifact.
+
+** Linux source-bootstrap evidence gate
+
+- Manual =normal=, =install-miss=, and =cold= modes must preserve distinct cache
+  semantics and emit their selected mode in the terminal receipt.
+- The =cold= mode must skip both install-cache and ccache restoration without
+  deleting or overwriting an existing install-cache key.
+- The bootstrap test must verify the ordered phase ledger, cache mode, adaptive
+  core count, ccache activity, terminal receipt, and fail-closed invalid-mode
+  handling.
+- No measured cold receipt may be converted into a new outer timeout until the
+  bootstrap phase has its own explicit guard.
 
 ** Runtime-C producer-consumer gate
 
