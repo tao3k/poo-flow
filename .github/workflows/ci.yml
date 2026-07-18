@@ -66,7 +66,7 @@ jobs:
   native:
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ matrix.gerbil-install == 'homebrew' && 30 || 60 }}
+    timeout-minutes: ${{ matrix.gerbil-install == 'homebrew' && 12 || 60 }}
     strategy:
       fail-fast: false
       matrix:
@@ -252,7 +252,9 @@ jobs:
         uses: bazel-contrib/setup-bazel@0.19.0
         with:
           bazelisk-cache: true
-          cache-save: ${{ github.event_name == 'push' }}
+          # Same-repository PR caches are isolated by GitHub's ref scope and
+          # make subsequent commits incremental.  Forks remain restore-only.
+          cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
           repository-cache: true
 
@@ -379,9 +381,109 @@ jobs:
         run: bazel query //...
 
       - name: Build Scheme package through Bazel
-        run: bazel build //scheme:compile
+        id: scheme-compile
+        timeout-minutes: 8
+        env:
+          COMPILE_BUDGET_SECONDS: 480
+        shell: bash
+        run: |
+          set -euo pipefail
+          profile="$RUNNER_TEMP/bazel-scheme-compile-profile.gz"
+          ci_receipt="$RUNNER_TEMP/bazel-scheme-compile-ci-receipt.json"
+          start_seconds=$SECONDS
+
+          set +e
+          bazel build --profile="$profile" //scheme:compile
+          build_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          scheme_receipt="bazel-bin/scheme/compile.receipt.json"
+          jq -n \
+            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg phase "scheme-compile" \
+            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --argjson status "$build_status" \
+            --argjson elapsedSeconds "$elapsed_seconds" \
+            --argjson budgetSeconds "$COMPILE_BUDGET_SECONDS" \
+            --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
+            '{schema: $schema, phase: $phase, runner: $runner, status: $status,
+              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              schemeReceiptAvailable: $schemeReceiptAvailable}' > "$ci_receipt"
+          echo "profile=$profile" >> "$GITHUB_OUTPUT"
+          echo "ci-receipt=$ci_receipt" >> "$GITHUB_OUTPUT"
+
+          if (( build_status != 0 )); then
+            exit "$build_status"
+          fi
+          if (( elapsed_seconds > COMPILE_BUDGET_SECONDS )); then
+            echo "Scheme compile exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+
+      - name: Upload Scheme compile evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-scheme-compile-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ steps.scheme-compile.outputs.ci-receipt }}
+            ${{ steps.scheme-compile.outputs.profile }}
+            bazel-bin/scheme/compile.receipt.json
+            bazel-bin/scheme/compile.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Run Bazel acceptance suites
+        id: bazel-acceptance
+        timeout-minutes: 3
+        env:
+          ACCEPTANCE_BUDGET_SECONDS: 150
+        shell: bash
         run: |
-          bazel test //scheme:tests
-          bazel test //bindings/runtime-c:runtime_c_tests //bindings/runtime-c/bundle-v1:bundle_v1_tests
+          set -euo pipefail
+          profile="$RUNNER_TEMP/bazel-acceptance-profile.gz"
+          receipt="$RUNNER_TEMP/bazel-acceptance-ci-receipt.json"
+          start_seconds=$SECONDS
+
+          set +e
+          bazel test --profile="$profile" \
+            //scheme:tests \
+            //bindings/runtime-c:runtime_c_tests \
+            //bindings/runtime-c/bundle-v1:bundle_v1_tests
+          test_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          jq -n \
+            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg phase "acceptance" \
+            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --argjson status "$test_status" \
+            --argjson elapsedSeconds "$elapsed_seconds" \
+            --argjson budgetSeconds "$ACCEPTANCE_BUDGET_SECONDS" \
+            '{schema: $schema, phase: $phase, runner: $runner, status: $status,
+              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds)}' > "$receipt"
+          echo "profile=$profile" >> "$GITHUB_OUTPUT"
+          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+
+          if (( test_status != 0 )); then
+            exit "$test_status"
+          fi
+          if (( elapsed_seconds > ACCEPTANCE_BUDGET_SECONDS )); then
+            echo "Bazel acceptance exceeded ${ACCEPTANCE_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+
+      - name: Upload Bazel acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-acceptance-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ steps.bazel-acceptance.outputs.receipt }}
+            ${{ steps.bazel-acceptance.outputs.profile }}
+          if-no-files-found: warn
+          retention-days: 7
