@@ -296,9 +296,13 @@ CPU and memory pressure have different safety semantics.  The Scheme guard
 records an instantaneous runnable-process saturation observation as an
 =admission-advisories= value, but it does not treat that noisy system-wide
 sample as a hard failure or override the detected/configured worker capability.
-The process-tree RSS cap remains active throughout compilation.  Admission
-still fails closed when available memory cannot cover caller headroom plus the
-minimum guarded RSS floor.
+Exact physical memory is observed by Scheme only when the action executes; it
+does not enter the Bazel action key because it changes scheduling and guard
+limits, not the semantic compiled tree.  The process-tree RSS cap remains active
+throughout compilation.  Admission still fails closed when available memory
+cannot cover caller headroom plus the minimum guarded RSS floor.  A cached
+Scheme receipt describes the producer execution of that cached artifact, while
+the CI phase receipt describes the current cache consumer.
 
 *** Controlled cache-population receipt
 
@@ -338,6 +342,17 @@ uniform whole-run variation is recorded but does not replace the accepted
 =190,275=-ms Linux Scheme reference with a slower baseline.  The next gate is a
 documentation-only commit that must restore the populated generation and report
 a disk-cache hit instead of executing Scheme compilation.
+
+The first documentation-only gate, run =29635233346=, completed the macOS
+Scheme phase in eight seconds from the populated disk cache.  Linux restored the
+complete =12,847,340=-byte preceding generation but still started
+=GerbilProjectCompile=; the run was cancelled after 100 action seconds.  The
+Linux action had the same 3,236 configured targets and dependency cache as its
+producer.  The remaining key difference was the exact host physical-memory
+string injected into the action environment.  Because physical memory affects
+only Scheme scheduling and RSS admission, not compiled output semantics, the
+compile rule no longer injects that value.  Scheme performs the live probe only
+when an actual action miss executes.
 
 #+begin_src mermaid
 flowchart LR

@@ -27,6 +27,7 @@
       (check (.ref config 'execution-policy)
              => 'adaptive)
       (check (>= (.ref config 'worker-count) 1) => #t)
+      (check (> (.ref config 'system-memory-bytes) 0) => #t)
       (check (> (.ref config 'available-memory-bytes) 0) => #t)
       (check (.ref config 'request-labels)
              => '("nono-c-ffi" "runtime" "user-interface")))
