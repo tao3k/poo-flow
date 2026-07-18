@@ -242,9 +242,11 @@ jobs:
               withinBudget: ($elapsedSeconds <= $budgetSeconds),
               diskCacheHits: $diskCacheHits,
               schemeReceiptAvailable: $schemeReceiptAvailable}' > "$receipt"
-          echo "profile=$profile" >> "$GITHUB_OUTPUT"
-          echo "log=$log" >> "$GITHUB_OUTPUT"
-          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+          {
+            echo "profile=$profile"
+            echo "log=$log"
+            echo "receipt=$receipt"
+          } >> "$GITHUB_OUTPUT"
 
           if (( build_status != 0 )); then
             exit "$build_status"
@@ -291,8 +293,10 @@ jobs:
               budgetSeconds: $budgetSeconds,
               withinBudget: ($elapsedSeconds <= $budgetSeconds),
               artifactAvailable: $artifactAvailable}' > "$receipt"
-          echo "profile=$profile" >> "$GITHUB_OUTPUT"
-          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+          {
+            echo "profile=$profile"
+            echo "receipt=$receipt"
+          } >> "$GITHUB_OUTPUT"
 
           if (( build_status != 0 )); then
             exit "$build_status"
