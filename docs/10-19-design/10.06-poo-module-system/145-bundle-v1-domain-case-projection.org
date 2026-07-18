@@ -271,6 +271,24 @@ The final guarded full build recorded:
 - memory limit: =805,306,368= bytes;
 - elapsed time: =15,105= milliseconds.
 
+** Legacy graph ABI hard-removal receipt
+
+The retired graph-handle ABI has been removed completely.  No alias,
+compatibility wrapper, deprecated declaration, or stub remains.  Unrelated
+LangGraph benchmark semantics are retained because they do not consume or
+represent the retired native ABI.  RFC 143 through RFC 146 are the sole
+canonical Bundle v1 owner set.
+
+| Check                                 | Receipt             |
+|---------------------------------------+---------------------|
+| =poo_flow_graph_plan_t=               | zero hits           |
+| =poo_flow_graph_plan_*=               | zero hits           |
+| =poo_flow_plan_runtime_graph_handoff= | zero hits           |
+| Retired owner document                | absent              |
+| Alias, wrapper, or stub               | none                |
+| Unrelated LangGraph benchmarks        | retained            |
+| Canonical owner set                   | RFC 143 through 146 |
+
 * Consequences
 
 This decision establishes one canonical semantic route from a composed Domain
