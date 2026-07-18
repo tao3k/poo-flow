@@ -138,12 +138,14 @@
     '()))
 
 (def (poo-flow-project-compile-admission-reasons
+      logical-cpu-count runnable-process-count
       available-memory-bytes rss-headroom-bytes)
-  (if (< available-memory-bytes
+  (append (poo-flow-project-compile-admission-advisories logical-cpu-count runnable-process-count)
+          (if (< available-memory-bytes
          (+ rss-headroom-bytes
             +poo-flow-project-compile-minimum-max-rss-bytes+))
     '(insufficient-memory-headroom)
-    '()))
+    '())))
 
 (def (poo-flow-project-compile-system-memory-bytes)
   (or (poo-flow-project-compile-positive-integer-from-env
@@ -206,6 +208,8 @@
            runnable-process-count))
          (admission-reasons
           (poo-flow-project-compile-admission-reasons
+           logical-cpu-count
+           runnable-process-count
            available-memory-bytes
            rss-headroom-bytes))
          (admission-outcome

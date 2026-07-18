@@ -57,7 +57,7 @@
              => 'adaptive))
           (lambda ()
             (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" (or previous ""))))))
-    (test-case "degrades runnable saturation to an observable advisory"
+    (test-case "blocks runnable saturation with an observable receipt"
       (let* ((available-cpu-count
               (build-api-project-compile-guard-available-cpu-count))
              (saturated-runnable-count
@@ -84,10 +84,10 @@
              overrides))
           (lambda ()
             (let (config (poo-flow-project-compile-guard-config '()))
-              (check (.ref config 'admission-outcome) => 'ready)
+              (check (.ref config 'admission-outcome) => 'blocked-host-pressure)
               (check (.ref config 'admission-advisories)
                      => '(runnable-saturation))
-              (check (.ref config 'admission-reasons) => '())
+              (check (.ref config 'admission-reasons) => '(runnable-saturation))
               (check (.ref config 'worker-count)
                      => available-cpu-count)))
           (lambda ()
