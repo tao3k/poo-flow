@@ -263,6 +263,18 @@ and preserves already-terminal receipts.  A successful build whose state is
 still =running= is classified as =incomplete= and fails the finalizer with exit
 code 70.
 
+The final integration dispatch at commit
+=9f860a4fee5f0d02e71cb2d01608617ac1ba15e1= was run =29658117716=.
+The guarded build ran from =2026-07-18T19:36:59Z= through
+=2026-07-18T19:49:11Z=.  The finalizer completed successfully before artifact
+upload, and artifact =8433598874= contains a closed =timed-out= state with
+=stepOutcome: failure=, total elapsed time 733,000 milliseconds, build-phase
+elapsed time 717,000 milliseconds, and exit code 124.  Its ledger records
+=fetch= and =configure= at 8,000 milliseconds each, followed by the terminal
+=build= phase on four available cores.  This second independent =install-miss=
+timeout closes the integration acceptance and rules out a one-run scheduling
+anomaly; it does not authorize a larger timeout.
+
 ** Development incremental receipt: 2026-07-18
 
 On the current Darwin arm64 development machine, a force-rematerialized
