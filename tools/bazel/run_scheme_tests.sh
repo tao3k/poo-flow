@@ -28,8 +28,13 @@ compiled_root=$(absolute_runfile "$9")
 test_root=$(absolute_runfile "${10}")
 
 dependency_root=$(dirname "$dependency_root_marker")
-tool_bin=${TEST_TMPDIR:?}/gerbil-toolchain-bin
-mkdir -p "$tool_bin"
+mkdir -p "${TEST_TMPDIR:?}"
+tool_bin=$(mktemp -d "$TEST_TMPDIR/gerbil-toolchain-bin.XXXXXX")
+
+cleanup_tool_bin() {
+  rm -rf "$tool_bin"
+}
+trap cleanup_tool_bin EXIT
 
 ln -s "$gxtest" "$tool_bin/gxtest"
 ln -s "$gxi" "$tool_bin/gxi"
@@ -45,4 +50,4 @@ export GERBIL_LOADPATH="$compiled_root/lib:$runfiles_workspace:$dependency_root"
 export GERBIL_PATH="$compiled_root"
 export PATH="$tool_bin:$PATH"
 
-exec "$gxtest" "$test_root"
+"$gxtest" "$test_root"

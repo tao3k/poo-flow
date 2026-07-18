@@ -28,7 +28,13 @@ shift 11
 
 dependency_root=$(dirname "$dependency_root_marker")
 tool_bin="$output_root/.tool-bin"
+rm -rf "$tool_bin"
 mkdir -p "$output_root/lib" "$tool_bin"
+
+cleanup_tool_bin() {
+  rm -rf "$tool_bin"
+}
+trap cleanup_tool_bin EXIT
 
 ln -s "$gxi" "$tool_bin/gxi"
 ln -s "$gxc" "$tool_bin/gxc"
@@ -47,7 +53,6 @@ set +e
 "$gxi" "$build_script" compile "$@" >"$log" 2>&1
 status=$?
 set -e
-rm -rf "$tool_bin"
 
 if (( status != 0 )); then
   printf 'canonical build.ss compile failed with exit %d; final log follows\n' "$status" >&2

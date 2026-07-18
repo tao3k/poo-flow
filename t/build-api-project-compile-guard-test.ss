@@ -7,6 +7,10 @@
                  write-json-sort-keys?)
         "../src/build-api/project-compile-guard.ss")
 
+(import (only-in :gslph/src/building/std-builder
+                 make-adaptive-execution-window-result
+                 make-execution-window-observation))
+
 (export build-api-project-compile-guard-test)
 
 (def (build-api-project-compile-guard-available-cpu-count)
@@ -162,7 +166,24 @@
                           (kind . std/make)
                           (status . compiled)
                           (description . "runtime stage")
-                          (result . internal)
+                  (result . ,(make-adaptive-execution-window-result
+                              '(("fast-a.ss" "fast-b.ss")
+                                ("slow-a.ss" "slow-b.ss")
+                                ("middle.ss"))
+                              '(("fast-a.ss" "fast-b.ss")
+                                ("slow-a.ss" "slow-b.ss")
+                                ("middle.ss"))
+                              (list
+                               (make-execution-window-observation
+                                'fast 'completed 512 768 4096 3)
+                               (make-execution-window-observation
+                                'slow 'completed 512 2048 4096 12)
+                               (make-execution-window-observation
+                                'middle 'completed 512 1024 4096 7))
+                              (.o
+                               (kind 'gslph.execution-window-controller.v1)
+                               (worker-count 2)
+                               (hard-max-rss-bytes 4096))))
                           (elapsed-jiffies . 3400))))))))
              (json-string
               (poo-flow-project-compile-receipt->json-string receipt))
@@ -181,7 +202,27 @@
         (check
          (hash-get (hash-get object "build-summary") "stage-count")
          => 3)
-        (check
-         (parameterize ((write-json-sort-keys? #t))
+    (let* ((build-summary (hash-get object "build-summary"))
+           (runtime-stage (car (hash-get build-summary "active-stages")))
+           (adaptive-execution
+            (hash-get runtime-stage "adaptive-execution"))
+           (adaptive-diagnostics
+            (hash-get runtime-stage "adaptive-diagnostics"))
+           (slowest
+            (hash-get adaptive-diagnostics "slowest-windows")))
+      (check
+       (hash-get adaptive-execution "attempted-window-count")
+       => 3)
+      (check
+       (hash-get adaptive-diagnostics "selection-policy")
+       => "ceil-log2-window-count")
+      (check
+       (hash-get adaptive-diagnostics "selected-window-count")
+       => 2)
+      (check
+       (map (lambda (window) (hash-get window "elapsed-ms")) slowest)
+       => '(12 7)))
+    (check
+     (parameterize ((write-json-sort-keys? #t))
            (json-object->string object))
          => json-string)))))

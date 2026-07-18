@@ -17,6 +17,12 @@
         "../cli-support/project-build.ss"
         "./process-memory-guard.ss")
 
+(import (only-in :gslph/src/building/std-builder
+                 adaptive-execution-window-result?)
+        (only-in :gslph/src/building/observability
+                 build-adaptive-execution-windows->json-object
+                 build-adaptive-execution-window-diagnostics->json-object))
+
 (def +poo-flow-project-compile-guard-schema+
   'poo-flow.project-compile-guard.v1)
 
@@ -255,6 +261,18 @@
   (let (entry (assq key rows))
     (if entry (cdr entry) fallback)))
 
+(def (poo-flow-project-compile-stage-adaptive-execution->json-object stage)
+  (let (result (poo-flow-project-compile-alist-ref stage 'result #f))
+    (if (adaptive-execution-window-result? result)
+      (build-adaptive-execution-windows->json-object result)
+      #f)))
+
+(def (poo-flow-project-compile-stage-adaptive-diagnostics->json-object stage)
+  (let (result (poo-flow-project-compile-alist-ref stage 'result #f))
+    (if (adaptive-execution-window-result? result)
+      (build-adaptive-execution-window-diagnostics->json-object result)
+      #f)))
+
 (def (poo-flow-project-compile-stage-summary->json-object stage)
   (hash
    ("label"
@@ -268,7 +286,11 @@
    ("description"
     (poo-flow-project-compile-alist-ref stage 'description ""))
    ("elapsed-jiffies"
-    (poo-flow-project-compile-alist-ref stage 'elapsed-jiffies 0))))
+    (poo-flow-project-compile-alist-ref stage 'elapsed-jiffies 0))
+   ("adaptive-execution"
+    (poo-flow-project-compile-stage-adaptive-execution->json-object stage))
+   ("adaptive-diagnostics"
+    (poo-flow-project-compile-stage-adaptive-diagnostics->json-object stage))))
 
 (def (poo-flow-project-compile-build-summary->json-object summary)
   (hash

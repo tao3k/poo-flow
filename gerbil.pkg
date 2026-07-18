@@ -3,7 +3,7 @@
  depend:
  ("github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead"
   "github.com/mighty-gerbils/gerbil-utils@f45a4ef3bfecd2af39e114ed736ce9082cbb8244"
-    "github.com/tao3k/gerbil-scheme-language-project-harness@9a12985a970270f7cc0e97cb7917a5142ecdd399")
+  "github.com/tao3k/gerbil-scheme-language-project-harness@eb64f3720f4a7fedecdc932b276c5241d727fe2a")
  policy:
  ((macro-governance
    allow-generated:

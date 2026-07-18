@@ -1,6 +1,7 @@
 load(
     "//tools/bazel:gerbil_project.bzl",
     "gerbil_project_compile",
+    "gerbil_project_dev",
     "gerbil_project_projection",
     "gerbil_project_test",
 )
@@ -16,6 +17,27 @@ gerbil_project_compile(
     name = "compile",
     srcs = "//:scheme_build_sources",
     build_script = "//:build.ss",
+)
+
+gerbil_project_dev(
+    name = "dev_compile",
+    srcs = "//:scheme_build_sources",
+    build_script = "//:build.ss",
+    tags = [
+        "local",
+        "manual",
+    ],
+)
+
+gerbil_project_dev(
+    name = "dev_unit_tests",
+    srcs = "//:scheme_test_sources",
+    build_script = "//:build.ss",
+    tags = [
+        "local",
+        "manual",
+    ],
+    test_root = "//:t/unit-tests.ss",
 )
 
 filegroup(

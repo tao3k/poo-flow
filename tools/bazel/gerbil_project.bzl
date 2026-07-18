@@ -108,6 +108,143 @@ gerbil_project_compile = rule(
     toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )
 
+def _gerbil_project_dev_runfile(file):
+    return '"$runfiles_workspace/%s"' % file.short_path
+
+def _gerbil_project_dev_command(command, arguments, execute):
+    prefix = "exec " if execute else ""
+    if not arguments:
+        return [prefix + command]
+
+    lines = [prefix + command + " \\"]
+    for index, argument in enumerate(arguments):
+        continuation = " \\" if index < len(arguments) - 1 else ""
+        lines.append("  %s%s" % (argument, continuation))
+    return lines
+
+def _gerbil_project_dev_impl(ctx):
+    toolchain = resolved_gerbil_toolchain(ctx)
+    launcher = ctx.actions.declare_file(ctx.label.name + ".sh")
+    output_root = ctx.attr.output_root
+    if (not output_root or
+        output_root.startswith("/") or
+        output_root == ".." or
+        output_root.startswith("../") or
+        "/../" in output_root or
+        output_root.endswith("/..")):
+        fail("output_root must be a workspace-relative path without parent traversal")
+
+    compile_arguments = [
+        _gerbil_project_dev_runfile(toolchain.gxi.executable),
+        _gerbil_project_dev_runfile(toolchain.gxc.executable),
+        _gerbil_project_dev_runfile(toolchain.gxpkg.executable),
+        _gerbil_project_dev_runfile(toolchain.gerbil_cc),
+        _gerbil_project_dev_runfile(toolchain.gerbil_as),
+        _gerbil_project_dev_runfile(toolchain.gerbil_ld),
+        _gerbil_project_dev_runfile(toolchain.dependency_library_root),
+        _gerbil_project_dev_runfile(ctx.file.build_script),
+        '"$output_root"',
+        '"$receipt"',
+        '"$log"',
+    ] + [_shell_quote(argument) for argument in ctx.attr.compile_args]
+
+    lines = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        'runfiles_root="${RUNFILES_DIR:-${BASH_SOURCE[0]}.runfiles}"',
+        'runfiles_workspace="$runfiles_root/%s"' % ctx.workspace_name,
+        'workspace="${BUILD_WORKSPACE_DIRECTORY:?bazel run must provide BUILD_WORKSPACE_DIRECTORY}"',
+        'output_root="${POO_FLOW_BAZEL_DEV_ROOT:-$workspace/%s}"' % output_root,
+        'receipt="$output_root/compile.receipt.json"',
+        'log="$output_root/compile.log"',
+        'mkdir -p "$output_root"',
+        'cd "$workspace"',
+        "export POO_FLOW_GERBIL_NATIVE_ABI=%s" % _shell_quote(toolchain.native_abi_fingerprint),
+    ]
+
+    test_root = ctx.file.test_root
+    lines.extend(_gerbil_project_dev_command(
+        _gerbil_project_dev_runfile(ctx.executable._runner),
+        compile_arguments,
+        not test_root,
+    ))
+    if test_root:
+        lines.extend([
+            'export TEST_SRCDIR="$runfiles_root"',
+            "export TEST_WORKSPACE=%s" % _shell_quote(ctx.workspace_name),
+            'export TEST_TMPDIR="${TEST_TMPDIR:-$output_root/.test-tmp}"',
+            'mkdir -p "$TEST_TMPDIR"',
+        ])
+        lines.extend(_gerbil_project_dev_command(
+            _gerbil_project_dev_runfile(ctx.file._test_runner),
+            [
+                _gerbil_project_dev_runfile(toolchain.gxtest.executable),
+                _gerbil_project_dev_runfile(toolchain.gxi.executable),
+                _gerbil_project_dev_runfile(toolchain.gxc.executable),
+                _gerbil_project_dev_runfile(toolchain.gxpkg.executable),
+                _gerbil_project_dev_runfile(toolchain.gerbil_cc),
+                _gerbil_project_dev_runfile(toolchain.gerbil_as),
+                _gerbil_project_dev_runfile(toolchain.gerbil_ld),
+                _gerbil_project_dev_runfile(toolchain.dependency_library_root),
+                '"$output_root"',
+                _gerbil_project_dev_runfile(test_root),
+            ],
+            True,
+        ))
+
+    ctx.actions.write(
+        content = "\n".join(lines) + "\n",
+        is_executable = True,
+        output = launcher,
+    )
+
+    runfiles_files = [
+        ctx.file.build_script,
+        ctx.executable._runner,
+        ctx.file._test_runner,
+        toolchain.dependency_library_root,
+        toolchain.gerbil_as,
+        toolchain.gerbil_cc,
+        toolchain.gerbil_ld,
+        toolchain.native_abi_fingerprint_file,
+    ]
+    if test_root:
+        runfiles_files.append(test_root)
+
+    runfiles = ctx.runfiles(
+        files = runfiles_files,
+        transitive_files = depset(transitive = [
+            ctx.attr.srcs[DefaultInfo].files,
+            toolchain.dependency_libraries,
+        ]),
+    ).merge(toolchain.runfiles)
+    return [DefaultInfo(executable = launcher, runfiles = runfiles)]
+
+gerbil_project_dev = rule(
+    implementation = _gerbil_project_dev_impl,
+    attrs = {
+        "build_script": attr.label(
+            allow_single_file = [".ss"],
+            mandatory = True,
+        ),
+        "compile_args": attr.string_list(),
+        "output_root": attr.string(default = ".gerbil"),
+        "srcs": attr.label(mandatory = True),
+        "test_root": attr.label(allow_single_file = [".ss"]),
+        "_runner": attr.label(
+            cfg = "exec",
+            default = Label("//tools/bazel:run_scheme_project"),
+            executable = True,
+        ),
+        "_test_runner": attr.label(
+            allow_single_file = True,
+            default = Label("//tools/bazel:run_scheme_tests.sh"),
+        ),
+    },
+    executable = True,
+    toolchains = [GERBIL_TOOLCHAIN_TYPE],
+)
+
 def _gerbil_project_projection_impl(ctx):
     toolchain = resolved_gerbil_toolchain(ctx)
     project = ctx.attr.project[GerbilProjectInfo]

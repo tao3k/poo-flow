@@ -2,6 +2,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 bazel := env_var_or_default("BAZEL", "bazel")
 scheme_compile := "//scheme:compile"
+scheme_dev_compile := "//scheme:dev_compile"
+scheme_dev_unit_tests := "//scheme:dev_unit_tests"
 scheme_tests := "//scheme:tests"
 scheme_performance_tests := "//scheme:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
@@ -27,6 +29,11 @@ query:
 build:
     {{ bazel }} build {{ scheme_compile }}
 
+# Incrementally build the canonical Scheme project through a persistent Bazel development root.
+[group('build')]
+build-dev:
+    {{ bazel }} run {{ scheme_dev_compile }}
+
 # Build the runtime-C library target.
 [group('build')]
 build-runtime-c:
@@ -46,6 +53,11 @@ toolchain:
 [group('test')]
 test:
     {{ bazel }} test --test_output=errors {{ scheme_tests }}
+
+# Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
+[group('test')]
+test-dev:
+    {{ bazel }} run {{ scheme_dev_unit_tests }}
 
 # Run the ordinary runtime-C acceptance suite.
 [group('test')]

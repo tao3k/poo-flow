@@ -153,6 +153,36 @@ evidence fields, not permission to reuse a cache with a different revision.
    phase-level diagnosis.
 6. Performance comparisons are made per operating system and cache state; a
    warm run is never reported as a cold baseline.
+7. Development receipts identify the persistent output root and are compared
+   only with receipts from the same machine and cache state.  Their observed
+   latency is evidence, not a cross-machine fixed threshold.
+8. Adaptive slow-window diagnostics expose a logarithmic frontier for further
+   diagnosis.  A selected window is not reported as per-module timing or as
+   proof that the underlying compiler work is logarithmic.
+
+** Development incremental receipt: 2026-07-18
+
+On the current Darwin arm64 development machine, a force-rematerialized
+=bazel test //scheme:unit_tests= required 835.945 seconds in total.  Its compile
+action required approximately 704 seconds, the canonical compile receipt
+reported 671,839 milliseconds, and the test action required 122.5 seconds.
+This cold run remains a blocking regression under the 720-second invariant;
+the incremental development lane improves edit feedback but does not close that
+cold-build blocker.
+
+The new development lane then reused the existing =.gerbil= module products:
+
+- the first =bazel run //scheme:dev_compile= receipt reported 37,212
+  milliseconds;
+- the next zero-change compile receipt reported 747 milliseconds;
+- =bazel run //scheme:dev_unit_tests= compiled in 1,169 milliseconds and then
+  completed the full Scheme unit-test root successfully.
+
+The cold receipt's adaptive diagnostics selected three runtime windows from six
+attempted windows: 247,639 milliseconds for 192 specs, 133,466 milliseconds
+for 96 specs, and 121,516 milliseconds for 12 specs.  These windows identify
+the bounded frontier that needs finer future diagnosis; they do not assign the
+cost to individual modules.
 
 * Build ownership
 
@@ -163,6 +193,31 @@ persists capability-keyed caches.
 
 This separation prevents a CI-only shell recipe from becoming a second build
 system.
+
+** Hermetic CI and incremental development lanes
+
+The Bazel graph exposes two explicitly different execution lanes over the same
+canonical =build.ss= definition and the same registered Gerbil toolchain:
+
+- =//scheme:compile= and =//scheme:unit_tests= remain hermetic CI targets.  The
+  compile action owns a declared tree artifact, and no CI consumer may depend on
+  developer-local state.
+- =//scheme:dev_compile= and =//scheme:dev_unit_tests= are tagged =local= and
+  =manual=.  They are entered through =bazel run= and reuse the stable
+  workspace-local =.gerbil= root so Building Framework can preserve module
+  products across edits.  =POO_FLOW_BAZEL_DEV_ROOT= may select another
+  workspace-relative root when a developer needs isolation.
+
+The development launcher does not rediscover =gxi=, =gxc=, or =gxpkg= from the
+host =PATH=.  Bazel resolves those executable capabilities through the Gerbil
+toolchain and projects their runfile paths into the existing Scheme project
+runner.  =gxc= therefore remains the compiler used by =build.ss=; it is not an
+independent build-system entrypoint.
+
+The local output root is an acceleration surface only.  It is not a declared
+Bazel artifact, a CI cache contract, or a producer-consumer handoff.  The
+hermetic lane remains the only acceptance authority, while the development lane
+provides fast edit-compile-test feedback without duplicating build semantics.
 
 ** Python wheel canonical Scheme-action reuse
 
@@ -300,6 +355,22 @@ hold:
 - the Org document contains both Mermaid diagrams;
 - CI validates the Bazel graph, Scheme build, runtime-C tests, Python
   projection, and Lean proof bridge.
+
+** Incremental development lane gate
+
+- =//scheme:dev_compile= and =//scheme:dev_unit_tests= are =local= and =manual=
+  targets and are absent from the CI dependency graph.
+- Both targets resolve every Gerbil executable through the registered Bazel
+  toolchain and invoke the canonical =build.ss= runner.  Direct host-PATH
+  compiler discovery is forbidden.
+- The default persistent root is =.gerbil=; any override remains
+  workspace-relative and rejects parent traversal.
+- =dev_unit_tests= carries the complete Scheme test source runfiles and runs the
+  canonical =t/unit-tests.ss= root after incremental compilation.
+- Repeated runs clean temporary tool wrappers and leave the persistent compile
+  products reusable.
+- A development receipt cannot replace hermetic =//scheme:compile=,
+  =//scheme:unit_tests=, or a named CI producer artifact.
 
 ** Runtime-C producer-consumer gate
 
