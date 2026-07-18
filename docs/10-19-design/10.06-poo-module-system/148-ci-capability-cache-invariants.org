@@ -66,6 +66,11 @@ The default source URL is the v0.18.2 GitHub owner.  =GERBIL_SOURCE_URL= may
 select an equivalent mirror, but the receipt must record the selected URL and
 the exact revision.  A mirror does not change the package-provider identity.
 
+The source checkout presents its version as =Gerbil 07c8481=, while the
+qualified Homebrew formula presents =Gerbil v0.18.2=.  The Bazel toolchain
+accepts both strings because they are two presentations of the same pinned
+revision, not two interchangeable Gerbil revisions.
+
 The bootstrap selects available parallelism at runtime.  It must not encode a
 fixed logical CPU count.  =GERBIL_BUILD_CORES= is an explicit override only.
 

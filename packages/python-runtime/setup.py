@@ -29,13 +29,15 @@ def _runtime_library() -> Path:
 class BuildPyWithRuntime(build_py):
     def run(self) -> None:
         super().run()
-        extension = {"Darwin": "dylib", "Windows": "dll"}.get(
-            platform.system(), "so"
-        )
+        system = platform.system()
+        library_name = {
+            "Darwin": "libpoo_flow_runtime_v0.dylib",
+            "Windows": "poo_flow_runtime_v0.dll",
+        }.get(system, "libpoo_flow_runtime_v0.so")
         source = _runtime_library()
         target = Path(self.build_lib) / "poo_flow_runtime" / "_native" / "lib"
         target.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target / f"libpoo_flow_runtime_v0.{extension}")
+        shutil.copy2(source, target / library_name)
 
 
 setup(
