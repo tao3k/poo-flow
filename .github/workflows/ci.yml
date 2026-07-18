@@ -6,16 +6,6 @@ on:
       - main
   pull_request:
   workflow_dispatch:
-    inputs:
-      gerbil_source_bootstrap_cache_mode:
-        description: Select the Linux source-bootstrap cache evidence mode.
-        required: true
-        default: normal
-        type: choice
-        options:
-          - normal
-          - install-miss
-          - cold
 
 permissions:
   contents: read
@@ -83,30 +73,17 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: source-v0.18.2-07c84815
-            gerbil-ref: 07c8481588a8b07dbf05832687817cd398902ac0
-            gerbil-install: source
+            gerbil-label: prebuilt-v0.18.2-07c84815
+            gerbil-install: prebuilt
             gerbil-formula: ""
-            bootstrap-timeout-minutes: 12
             dependency-timeout-minutes: 15
-            job-timeout-minutes: 45
+            job-timeout-minutes: 20
           - os: macos-26
             gerbil-label: homebrew-tao3k-v0.18.2-07c84815
-            gerbil-ref: 07c8481588a8b07dbf05832687817cd398902ac0
             gerbil-install: homebrew
             gerbil-formula: tao3k/gerbil/gerbil-scheme
-            bootstrap-timeout-minutes: 12
             dependency-timeout-minutes: 15
             job-timeout-minutes: 30
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
-      CCACHE_MAXSIZE: 2G
-      GERBIL_ARCH_PROFILE: portable
-      GERBIL_BOOTSTRAP_CACHE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.gerbil_source_bootstrap_cache_mode || 'normal' }}
-      GERBIL_REQUIRE_CCACHE: 1
-      GERBIL_REF: ${{ matrix.gerbil-ref }}
-      GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/${{ matrix.gerbil-label }}
-      GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/${{ matrix.gerbil-label }}
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
@@ -118,7 +95,6 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             ca-certificates \
-            ccache \
             git \
             jq \
             libsqlite3-dev \
@@ -146,7 +122,7 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install ccache jq openssl pkg-config sqlite zlib
+          brew install jq openssl pkg-config sqlite zlib
 
       - name: Install macOS Gerbil bottle
         if: runner.os == 'macOS' && matrix.gerbil-install == 'homebrew'
@@ -224,49 +200,12 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Select macOS Gerbil compiler
-        if: runner.os == 'macOS' && matrix.gerbil-install == 'source'
-        run: |
-          gcc_prefix="$(brew --prefix gcc)"
-          gcc_bin="$(
-            find "$gcc_prefix/bin" -maxdepth 1 -type f -name 'gcc-[0-9]*' \
-              | awk -F- '{print $NF "\t" $0}' \
-              | sort -n \
-              | tail -n 1 \
-              | cut -f2-
-          )"
-          test -n "$gcc_bin"
-          test -x "$gcc_bin"
-          echo "GERBIL_GCC=$gcc_bin" >> "$GITHUB_ENV"
-          "$gcc_bin" --version
-
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6.1.0
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
-
-      - name: Resolve native Gerbil ABI capability
-        id: gerbil-native-abi
-        shell: bash
-        run: |
-          set -euo pipefail
-          native_abi="$(bash tools/bazel/native_abi_fingerprint.sh "${GERBIL_GCC:-}" "$GERBIL_ARCH_PROFILE")"
-          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
-          echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
-          echo "Gerbil native ABI: $native_abi"
-
-      - name: Restore Gerbil bootstrap ccache
-        if: matrix.gerbil-install != 'source' || env.GERBIL_BOOTSTRAP_CACHE_MODE != 'cold'
-        id: gerbil-ccache-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: .ci/ccache
-          key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-
-            ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-
 
       - name: Declare Bazel disk-cache generation
         shell: bash
@@ -289,103 +228,27 @@ jobs:
           # updated action cache is published instead of being trapped behind
           # GitHub's immutable exact key.  Forks remain restore-only.
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
-          disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
+          disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
 
-      - name: Restore Gerbil install cache
-        if: matrix.gerbil-install == 'source' && env.GERBIL_BOOTSTRAP_CACHE_MODE == 'normal'
-        id: gerbil-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
-
-      - name: Build Gerbil
-        id: gerbil-build
-        if: matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
-        timeout-minutes: ${{ matrix.bootstrap-timeout-minutes }}
-        run: |
-          if [ -n "${GERBIL_GCC:-}" ]; then
-            export CC="$GERBIL_GCC"
-          fi
-          bash tools/bazel/bootstrap_gerbil_toolchain.sh
-
-      - name: Finalize Gerbil bootstrap phase state
-        if: always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
-        env:
-          GERBIL_BOOTSTRAP_STATE: .ci/gerbil-src/${{ matrix.gerbil-label }}/.poo-flow-bootstrap-state.json
-          GERBIL_BOOTSTRAP_STEP_OUTCOME: ${{ steps.gerbil-build.outcome }}
-          GERBIL_BOOTSTRAP_TIMEOUT_MINUTES: ${{ matrix.bootstrap-timeout-minutes }}
-        run: bash tools/bazel/finalize_gerbil_bootstrap_state.sh
-
-      - name: Show Gerbil bootstrap ccache stats
-        if: ${{ always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true') }}
-        run: ccache --show-stats
-
-      - name: Save Gerbil bootstrap ccache
-        if: ${{ always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true') }}
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: .ci/ccache
-          key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Upload Gerbil bootstrap phase receipt
-        if: always() && matrix.gerbil-install == 'source' && (env.GERBIL_BOOTSTRAP_CACHE_MODE != 'normal' || steps.gerbil-cache.outputs.cache-hit != 'true')
-        uses: actions/upload-artifact@v4
-        with:
-          name: gerbil-bootstrap-receipt-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}
-          path: |
-            .ci/gerbil-src/${{ matrix.gerbil-label }}/.poo-flow-bootstrap-state.json
-            .ci/gerbil/${{ matrix.gerbil-label }}/bootstrap.receipt.json
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Save Gerbil install cache
-        if: matrix.gerbil-install == 'source' && env.GERBIL_BOOTSTRAP_CACHE_MODE == 'normal' && steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}
-
-      - name: Use Homebrew Gerbil
-        if: matrix.gerbil-install == 'homebrew'
+      - name: Resolve shared Gerbil capability
+        id: gerbil-native-abi
+        shell: bash
         run: |
           set -euo pipefail
-          formula="${{ matrix.gerbil-formula }}"
-          prefix="$(brew --prefix "$formula")"
-          gerbil_home="$prefix/current"
-          echo "GERBIL_PREFIX=$gerbil_home" >> "$GITHUB_ENV"
-          echo "GERBIL_HOME=$gerbil_home" >> "$GITHUB_ENV"
-          test -x "$gerbil_home/bin/gxi"
-          test -x "$gerbil_home/bin/gsc"
-          test -e "$gerbil_home/lib"
-          "$gerbil_home/bin/gxi" --version | tee /tmp/gerbil-version.txt
-          "$gerbil_home/bin/gsc" -v | tee /tmp/gambit-version.txt
-          grep -F "v0.18.2" /tmp/gerbil-version.txt
-          grep -F "v4.9.7" /tmp/gambit-version.txt
-          echo "$gerbil_home/bin" >> "$GITHUB_PATH"
+          bazel build @dependency_gerbil//:native_scheme_env
+          native_abi="$(
+            bazel run --ui_event_filters=-info --noshow_progress \
+              @dependency_gerbil//:native_scheme_env -- \
+              bash -c 'printf %s "$GERBIL_NATIVE_ABI"' 2>/dev/null
+          )"
+          test "${#native_abi}" -eq 40
+          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
+          echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
+          echo "Gerbil native ABI: $native_abi"
 
-      - name: Activate Gerbil
-        run: |
-          set -euo pipefail
-          echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          gsc_wrapper="$RUNNER_TEMP/gerbil-gsc"
-          {
-            printf '#!/bin/sh\n'
-            printf 'exec "%s" "-:~~=%s,~~bin=%s,~~include=%s,~~lib=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX" "$GERBIL_PREFIX/bin" "$GERBIL_PREFIX/include" "$GERBIL_PREFIX/lib"
-          } > "$gsc_wrapper"
-          chmod +x "$gsc_wrapper"
-          echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
-          "$GERBIL_PREFIX/bin/gxi" --version
-          "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
-          "$gsc_wrapper" -v
-          tmp_smoke="$(mktemp -d)"
-          printf '(display "ok")\n' > "$tmp_smoke/gsc-smoke.scm"
-          "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
-          test -f "$tmp_smoke/gsc-smoke.o1"
-          "$GERBIL_PREFIX/bin/gxi" -e '(displayln "gerbil-ready")'
-          "$GERBIL_PREFIX/bin/gxpkg" list
+      - name: Validate shared Gerbil provider
+        run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
 
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
@@ -394,27 +257,11 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: |
-          set -euo pipefail
-          package_cache_ready=false
-          if [ -d .gerbil/lib ]; then
-            if GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" \
-              gxi tools/ci/gerbil-deps-ready.ss; then
-              package_cache_ready=true
-            else
-              echo "Cached Gerbil packages are missing compiled dependency libraries; rebuilding"
-            fi
-          fi
-          if [ "$package_cache_ready" = "true" ]; then
-            echo "Using cached Gerbil package dependency build products"
-          else
-            bazel run //scheme:deps
-          fi
-          gxpkg list
+        run: bazel run //scheme:deps
 
       - name: Save Gerbil package dependency cache
         if: steps.gerbil-pkg-cache.outputs.cache-hit != 'true'
@@ -423,7 +270,7 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Validate Bazel target graph
         run: bazel query //...
@@ -601,8 +448,7 @@ jobs:
 
           targets=(
             //scheme:tests
-            //tools/bazel:bootstrap_gerbil_toolchain_test
-            //tools/bazel:finalize_gerbil_bootstrap_state_test
+            //tools/bazel:shared_gerbil_capability_test
             //bindings/runtime-c:runtime_c_tests
             //bindings/runtime-c/bundle-v1:bundle_v1_tests
           )

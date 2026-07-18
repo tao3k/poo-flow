@@ -10,7 +10,7 @@ package(default_visibility = ["//visibility:public"])
 
 alias(
     name = "deps",
-    actual = "@bootstrap_gerbil//:install_dependencies",
+    actual = "@dependency_gerbil//:install_dependencies",
 )
 
 gerbil_project_compile(

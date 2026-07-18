@@ -25,24 +25,29 @@ rules.  Neither downstream owns a second generic Gerbil repository or
 toolchain implementation.
 
 #+begin_src mermaid
-flowchart LR
-  GB["gerbil-bazel<br/>generic Gerbil capabilities"]
-  PF["poo-flow<br/>build.ss + POO/runtime-C rules"]
-  SR["gerbil-scheme-rust<br/>Rust/FFI + Cargo rules"]
-  HOST["Darwin / Linux host"]
-  DEPS["gxpkg dependency state"]
+flowchart TB
+  MODULE["Downstream MODULE.bazel"] --> AUTO["gerbil.auto<br/>platform-adaptive provider"]
+  AUTO -->|"Darwin"| HOST["Native Homebrew capability"]
+  AUTO -->|"Linux x86_64"| PREBUILT["Immutable prebuilt capability<br/>URL + SHA-256"]
+  HOST --> TC["Shared GerbilToolchainInfo"]
+  PREBUILT --> TC
 
-  HOST --> GB
-  GB --> PF
-  GB --> SR
-  GB --> DEPS
-  DEPS --> PF
-  DEPS --> SR
+  MODULE --> DEP["dependency_gerbil"]
+  DEP --> INSTALL["install_dependencies<br/>gxpkg deps --install + list"]
+  INSTALL --> LIB["Workspace .gerbil/lib"]
+
+  MODULE --> PROJECT["local_gerbil"]
+  LIB --> VIEW["project-library-view<br/>ready / missing receipt"]
+  PROJECT --> VIEW
+  VIEW --> TC
+
+  TC --> PF["poo-flow<br/>build.ss + POO/runtime-C rules"]
+  TC --> SR["gerbil-scheme-rust<br/>Rust/FFI + Cargo rules"]
 #+end_src
 
 * Public capability contract
 
-Every discovered host repository publishes:
+Every host or prebuilt provider repository publishes:
 
 - =registered_toolchain= and =toolchain_impl=;
 - =native_scheme_env= and the four normalized Gerbil tools;
@@ -75,17 +80,22 @@ project rules.
 
 ** Shared provider
 
-- =gerbil-bazel= commit: =75d123ed75fe095eb06645ae87715a0c60fa98eb=
-- local =just check=: query, build, four smoke tests, and prebuilt consumer
-  validation passed;
-- GitHub Actions run =29663075954=:
-  - macOS/Homebrew passed in 1 minute 22 seconds;
-  - Linux/source passed in 1 minute 54 seconds.
+- =gerbil-bazel= commit: =a9d7bf7dc145a47af6fb4311d1e02b0fb61e4dab=;
+- local =just check=: 10 query targets, build, and four of four smoke tests
+  passed;
+- platform-adaptive host consumer: passed in 46 seconds;
+- synthetic prebuilt consumer: passed in 49 seconds;
+- the prebuilt dependency install completed in 7 seconds, re-evaluated the
+  project view in 2 seconds, and emitted =dependencyTransition=true=.
 
 ** POO Flow consumer
 
 - =//scheme:deps= resolves to
-  =@bootstrap_gerbil//:install_dependencies=;
+  =@dependency_gerbil//:install_dependencies=;
+- =bootstrap_gerbil= is removed as a repository name; dependency installation
+  and project consumption are separate named capabilities;
+- both repositories use =gerbil.auto=: Darwin selects the native Homebrew
+  provider and Linux selects the immutable prebuilt provider;
 - the full Bazel target graph queries successfully after legacy deletion;
 - runtime-C resolves through
   =@gerbil_bazel//gerbil:toolchain_type=;

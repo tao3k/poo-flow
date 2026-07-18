@@ -19,10 +19,10 @@ sh_test(
     srcs = ["shared_gerbil_capability_test.sh"],
     args = [
         "$(rlocationpath @local_gerbil//:toolchain.receipt.json)",
-        "$(rlocationpath @bootstrap_gerbil//:install_dependencies)",
+        "$(rlocationpath @dependency_gerbil//:install_dependencies)",
     ],
     data = [
-        "@bootstrap_gerbil//:install_dependencies",
+        "@dependency_gerbil//:install_dependencies",
         "@local_gerbil//:toolchain.receipt.json",
     ],
 )

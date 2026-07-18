@@ -191,11 +191,11 @@
   "moduleExtensions": {
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "general": {
-        "bzlTransitiveDigest": "mqZ0OCt1XC/WqTWnueVn6sV3Zq7naUIVL6eee/IVC1c=",
-        "usagesDigest": "KowuJBiGAeoKuagAhPq7udMTRzVX1XTivs6WUOM/BnU=",
+        "bzlTransitiveDigest": "dEfe5OO8mkvarPJHl+sJrYj0N3R2vkC+EmPHybvr/qw=",
+        "usagesDigest": "vA5DIQCB7YxY4+Wh6ZErNTA7TMqpOG7q6KbWWEdvKl0=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
-          "bootstrap_gerbil": {
+          "dependency_gerbil": {
             "repoRuleId": "@@gerbil_bazel+//gerbil:repository.bzl%local_gerbil_repository",
             "attributes": {
               "darwin_homebrew_formulae": [

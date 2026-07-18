@@ -18,7 +18,11 @@ installer=$(resolve_runfile "${2:?dependency installer runfile key is required}"
 
 test -f "$receipt"
 test -x "$installer"
-grep -F '"schema": "gerbil-bazel.local-toolchain-receipt.v1"' "$receipt" >/dev/null
+if ! grep -F '"schema": "gerbil-bazel.local-toolchain-receipt.v1"' "$receipt" >/dev/null &&
+   ! grep -F '"schema": "gerbil-bazel.prebuilt-toolchain-receipt.v1"' "$receipt" >/dev/null; then
+  printf 'unsupported shared Gerbil receipt schema\n' >&2
+  exit 1
+fi
 grep -F '"dependencyPolicy": "project-library-view"' "$receipt" >/dev/null
 grep -F '"clan": "ready"' "$receipt" >/dev/null
 grep -F '"gslph": "ready"' "$receipt" >/dev/null
