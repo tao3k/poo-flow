@@ -142,7 +142,7 @@ found no graph ABI, =graph_abi=, =graph-abi=, compatibility wrapper, or
 
 * Toolchain receipt
 
-- Scheme gates used the repaired local Homebrew Gerbil 0.18.2 at
+- Scheme gates used the repaired local Homebrew Gerbil 0.18.2 prefix via
   =/opt/homebrew/bin/gxi=, never the Nix Gerbil.
 - The explicit CommandLineTools SDK and repository =GERBIL_LOADPATH= isolated
   the qualification from the host's Nix-selected SDK and stale package-tag

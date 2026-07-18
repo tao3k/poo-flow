@@ -8,9 +8,11 @@ performed by a downstream runtime such as Marlin or another language runtime.
 
 This boundary is a theorem-level contract:
 
-#+begin_src latex
-HandoffAccepted(h) \Rightarrow
-  RuntimeOwnerExternal(h) \land ExecutionDeferred(h)
+#+begin_src typst
+$
+"HandoffAccepted"(h) =>
+  "RuntimeOwnerExternal"(h) and "ExecutionDeferred"(h)
+$
 #+end_src
 
 * Handoff Facts
@@ -29,14 +31,16 @@ structure ControlPlaneHandoffFacts where
 
 The acceptance rule is:
 
-#+begin_src latex
-Accepted(h) \equiv
-  PolicyReady(h)
-  \land CompositionAccepted(h)
-  \land GraphContractOk(h)
-  \land RuntimeOwnerExternal(h)
-  \land ExecutionDeferred(h)
-  \land ArtifactsDeclared(h)
+#+begin_src typst
+$
+"Accepted"(h) equiv
+  "PolicyReady"(h)
+  and "CompositionAccepted"(h)
+  and "GraphContractOk"(h)
+  and "RuntimeOwnerExternal"(h)
+  and "ExecutionDeferred"(h)
+  and "ArtifactsDeclared"(h)
+$
 #+end_src
 
 * Why This Matters
@@ -55,14 +59,16 @@ expressiveness, not by embedding a runtime. A valid POO Flow scenario proves:
 
 The proof layer rejects a handoff when any required fact is false:
 
-#+begin_src latex
-\neg Accepted(h) \Leftarrow
-  \neg PolicyReady(h)
-  \lor \neg CompositionAccepted(h)
-  \lor \neg GraphContractOk(h)
-  \lor \neg RuntimeOwnerExternal(h)
-  \lor \neg ExecutionDeferred(h)
-  \lor \neg ArtifactsDeclared(h)
+#+begin_src typst
+$
+not "Accepted"(h) <=
+  not "PolicyReady"(h)
+  or not "CompositionAccepted"(h)
+  or not "GraphContractOk"(h)
+  or not "RuntimeOwnerExternal"(h)
+  or not "ExecutionDeferred"(h)
+  or not "ArtifactsDeclared"(h)
+$
 #+end_src
 
 The two highest-risk rejections are:
@@ -143,12 +149,14 @@ The next layer is =src/proof/proof-gate-bundle.ss=. It groups three proof wires:
 The bundle is accepted only when all three wires are accepted and the runtime
 boundary remains true:
 
-#+begin_src latex
-GateAccepted(g) \equiv
-  CompositionAccepted(g)
-  \land ScenarioAccepted(g)
-  \land HandoffAccepted(g)
-  \land RuntimeBoundaryOk(g)
+#+begin_src typst
+$
+"GateAccepted"(g) equiv
+  "CompositionAccepted"(g)
+  and "ScenarioAccepted"(g)
+  and "HandoffAccepted"(g)
+  and "RuntimeBoundaryOk"(g)
+$
 #+end_src
 
 For LangGraph-like scenarios, the current bundle tests cover:

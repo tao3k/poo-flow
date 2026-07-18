@@ -30,38 +30,36 @@ The handoff boundary is intentionally report-only:
 
 * 10.06.58.30 Lifecycle Model
 
-#+begin_src latex
-\[
-\begin{aligned}
-SessionValue(s) &\Rightarrow
-  Chunk(s) \land Lineage(s) \land PlacementResolved(s) \\
-SubagentRegistered(s) &\Rightarrow AgentRegistered(s) \\
-CanSend(s) &\Rightarrow
-  AgentRegistered(s)
-  \land SubagentRegistered(s)
-  \land ChannelAuthorized(s) \\
-HandoffReceipt(s) &\Rightarrow
-  RuntimeSummary(s)
-  \land RuntimeExecutedFalse(s)
-  \land HandoffRequiredTrue(s)
-  \land RuntimeOwnerMarlin(s)
-  \land RuntimeParsesSchemeSourceFalse(s)
-  \land SchemeManufacturesRuntimeHandlersFalse(s) \\
-HandoffSummary(s) &\Rightarrow
-  Chunk(s)
-  \land Lineage(s)
-  \land Placement(s)
-  \land PlacementResolved(s)
-  \land SessionValue(s)
-  \land AgentRegistered(s)
-  \land SubagentRegistered(s)
-  \land ChannelAuthorized(s)
-  \land MessageDispatched(s)
-  \land RuntimeSummary(s)
-  \land HandoffReceipt(s)
-  \land RuntimeHandoff(s)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"SessionValue"(s) & =>
+  "Chunk"(s) and "Lineage"(s) and "PlacementResolved"(s) \
+"SubagentRegistered"(s) & => "AgentRegistered"(s) \
+"CanSend"(s) & =>
+  "AgentRegistered"(s)
+  and "SubagentRegistered"(s)
+  and "ChannelAuthorized"(s) \
+"HandoffReceipt"(s) & =>
+  "RuntimeSummary"(s)
+  and "RuntimeExecutedFalse"(s)
+  and "HandoffRequiredTrue"(s)
+  and "RuntimeOwnerMarlin"(s)
+  and "RuntimeParsesSchemeSourceFalse"(s)
+  and "SchemeManufacturesRuntimeHandlersFalse"(s) \
+"HandoffSummary"(s) & =>
+  "Chunk"(s)
+  and "Lineage"(s)
+  and "Placement"(s)
+  and "PlacementResolved"(s)
+  and "SessionValue"(s)
+  and "AgentRegistered"(s)
+  and "SubagentRegistered"(s)
+  and "ChannelAuthorized"(s)
+  and "MessageDispatched"(s)
+  and "RuntimeSummary"(s)
+  and "HandoffReceipt"(s)
+  and "RuntimeHandoff"(s)
+$
 #+end_src
 
 #+begin_src mermaid
@@ -255,25 +253,21 @@ poo-flow-lean-fact-contract-complete?
 Each contract entry maps one emitted key to its Lean owner and constructor or
 failure theorem:
 
-#+begin_src latex
-\[
-\begin{aligned}
-Contract(k) =
-  \langle Key(k), Kind(k), LeanOwner(k), LeanName(k),
-          SourceSlot(k), Polarity(k) \rangle
-\end{aligned}
-\]
+#+begin_src typst
+$
+"Contract"(k) =
+  angle.l "Key"(k), "Kind"(k), "LeanOwner"(k), "LeanName"(k),
+          "SourceSlot"(k), "Polarity"(k) angle.r
+$
 #+end_src
 
 The projection smoke now checks both directions:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\forall c \in Contracts.\ Key(c) \in EmittedFacts \\
-\forall f \in EmittedFacts.\ \exists c \in Contracts.\ Key(c)=Key(f)
-\end{aligned}
-\]
+#+begin_src typst
+$
+forall c in "Contracts". "Key"(c) in "EmittedFacts" \
+forall f in "EmittedFacts". exists c in "Contracts". "Key"(c)="Key"(f)
+$
 #+end_src
 
 The helper projects a handoff receipt or POO handoff object into Lean-facing
@@ -325,14 +319,12 @@ authorization is stronger than receipt presence: every declared channel receipt
 must resolve its endpoints to either a graph agent or the =loop-engine= control
 owner, and at least one endpoint must be a graph agent.
 
-#+begin_src latex
-\[
-\begin{aligned}
-AgentIds(g) \ne \emptyset &\Longrightarrow AgentRegistered(g) \\
-LineageEdges(g) \ne \emptyset &\Longrightarrow SubagentRegistered(g) \\
-AuthorizedChannelReceipts(g) &\Longrightarrow ChannelAuthorized(g)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"AgentIds"(g) != emptyset & => "AgentRegistered"(g) \
+"LineageEdges"(g) != emptyset & => "SubagentRegistered"(g) \
+"AuthorizedChannelReceipts"(g) & => "ChannelAuthorized"(g)
+$
 #+end_src
 
 The Lean proof surface mirrors that projection:
@@ -347,21 +339,19 @@ scenarioBridgeFactsOfAgentGraphProjection
 #check generated_s11_graph_projection_start_dispatch_chain
 #+end_src
 
-#+begin_src latex
-\[
-\begin{aligned}
-GraphProjection(g) &=
-  \langle AgentIdsPresent(g),
-          LineageEdgesPresent(g),
-          ChannelReceiptsAuthorized(g) \rangle \\
-GraphProjection(g)
-  \land ChannelScope \le ActiveScope(s)
-  \land MessageScope \le ActiveScope(s)
-  \Longrightarrow&
-  CanStart(s, ChannelAuthorization) \\
-  &\land CanStart(s, MessageDispatch)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"GraphProjection"(g) & =
+  angle.l "AgentIdsPresent"(g),
+          "LineageEdgesPresent"(g),
+          "ChannelReceiptsAuthorized"(g) angle.r \
+"GraphProjection"(g)
+  and "ChannelScope" <= "ActiveScope"(s)
+  and "MessageScope" <= "ActiveScope"(s)
+  =>&
+  "CanStart"(s, "ChannelAuthorization") \
+  & and "CanStart"(s, "MessageDispatch")
+$
 #+end_src
 
 The combined proof packet is typed in Lean, not serialized as JSON:
@@ -372,26 +362,24 @@ ScenarioProjectionPacket
 #check scenario_projection_packet_missing_profile_blocks_resolution
 #+end_src
 
-#+begin_src latex
-\[
-\begin{aligned}
-Packet(s,g) &=
-  \langle GraphProjection(g),
-          BaseFacts(s),
-          ActiveScope(s),
-          ScopeAllows(s),
-          HandoffReceiptPresent(s) \rangle \\
-Packet(s,g)
-  \Longrightarrow&
-  CanStart(s, ChannelAuthorization)
-  \land CanStart(s, MessageDispatch) \\
-  &\land HandoffReceiptPresent(s) \\
-Packet(s,g)
-  \land PlacementMissingProfile(s)
-  \Longrightarrow&
-  \neg CanStart(s, PlacementResolution)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"Packet"(s,g) & =
+  angle.l "GraphProjection"(g),
+          "BaseFacts"(s),
+          "ActiveScope"(s),
+          "ScopeAllows"(s),
+          "HandoffReceiptPresent"(s) angle.r \
+"Packet"(s,g)
+  =>&
+  "CanStart"(s, "ChannelAuthorization")
+  and "CanStart"(s, "MessageDispatch") \
+  & and "HandoffReceiptPresent"(s) \
+"Packet"(s,g)
+  and "PlacementMissingProfile"(s)
+  =>&
+  not "CanStart"(s, "PlacementResolution")
+$
 #+end_src
 
 * 10.06.58.66 Lean Fact Environment
@@ -411,20 +399,18 @@ The bridge theorem is:
 #check projection_missing_profile_blocks_placement_resolution
 #+end_src
 
-#+begin_src latex
-\[
-\begin{aligned}
-Facts(s) &\vdash RuntimeSummaryPresent(s) \\
-Facts(s) &\vdash RuntimeExecutedFalse(s) \\
-Facts(s) &\vdash HandoffRequiredTrue(s) \\
-Facts(s) &\vdash RuntimeOwnerMarlin(s) \\
-Facts(s) &\vdash RuntimeParsesSchemeSourceFalse(s) \\
-Facts(s) &\vdash SchemeManufacturesRuntimeHandlersFalse(s) \\
-&\Longrightarrow CanStart(s, SessionHandoffReceipt) \\
-Facts(s) &\vdash PlacementMissingProfile(s)
-\Longrightarrow \neg CanStart(s, PlacementResolution)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"Facts"(s) & tack.r "RuntimeSummaryPresent"(s) \
+"Facts"(s) & tack.r "RuntimeExecutedFalse"(s) \
+"Facts"(s) & tack.r "HandoffRequiredTrue"(s) \
+"Facts"(s) & tack.r "RuntimeOwnerMarlin"(s) \
+"Facts"(s) & tack.r "RuntimeParsesSchemeSourceFalse"(s) \
+"Facts"(s) & tack.r "SchemeManufacturesRuntimeHandlersFalse"(s) \
+& => "CanStart"(s, "SessionHandoffReceipt") \
+"Facts"(s) & tack.r "PlacementMissingProfile"(s)
+=> not "CanStart"(s, "PlacementResolution")
+$
 #+end_src
 
 * 10.06.58.67 Topology And Authority
@@ -452,20 +438,18 @@ owned by =SessionLifecycle= because they destruct =AuthorizedMessageDispatch=
 directly. =ScenarioProof= may keep forwarding names while the migration is in
 progress, but endpoint authorization semantics live in the lifecycle module.
 
-#+begin_src latex
-\[
-\begin{aligned}
-AuthorizedDispatch(d) \Rightarrow&
-  Registered(source(d))
-  \land Registered(target(d))
-  \land ChannelAllowed(source(d), target(d)) \\
-  &\land ControlOwner(source(d))
-  \land ExecutionOwner(target(d))
-  \land LocalValidation(message(d)) \\
-  &\land PolicyAllows(message(d))
-  \land StrategyOwnsStep(source(d), message(d))
-\end{aligned}
-\]
+#+begin_src typst
+$
+"AuthorizedDispatch"(d) =>&
+  "Registered"("source"(d))
+  and "Registered"("target"(d))
+  and "ChannelAllowed"("source"(d), "target"(d)) \
+  & and "ControlOwner"("source"(d))
+  and "ExecutionOwner"("target"(d))
+  and "LocalValidation"("message"(d)) \
+  & and "PolicyAllows"("message"(d))
+  and "StrategyOwnsStep"("source"(d), "message"(d))
+$
 #+end_src
 
 * 10.06.58.68 Scenario Bridge
@@ -512,17 +496,15 @@ flowchart LR
 #check scenario_runtime_manifest_links_to_session_summary
 #+end_src
 
-#+begin_src latex
-\[
-\begin{aligned}
-BridgeFacts_{S11}(s)
-  \land ChannelScope \le ActiveScope(s)
-  \land MessageScope \le ActiveScope(s)
-  \Longrightarrow&
-  CanStart(s, ChannelAuthorization) \\
-  &\land CanStart(s, MessageDispatch)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"BridgeFacts"_("S11")(s)
+  and "ChannelScope" <= "ActiveScope"(s)
+  and "MessageScope" <= "ActiveScope"(s)
+  =>&
+  "CanStart"(s, "ChannelAuthorization") \
+  & and "CanStart"(s, "MessageDispatch")
+$
 #+end_src
 
 * 10.06.58.69 Proof Reflection And Failure Obligations
@@ -530,43 +512,37 @@ BridgeFacts_{S11}(s)
 The first proof pass was not strong enough to discover defects. It mostly
 translated already-aligned positive facts into Lean fields:
 
-#+begin_src latex
-\[
-\begin{aligned}
-GraphProjection(g)
-  = \langle AgentIdsPresent(g),
-           LineageEdgesPresent(g),
-           ChannelReceiptsAuthorized(g) \rangle
-\end{aligned}
-\]
+#+begin_src typst
+$
+"GraphProjection"(g)
+  = angle.l "AgentIdsPresent"(g),
+           "LineageEdgesPresent"(g),
+           "ChannelReceiptsAuthorized"(g) angle.r
+$
 #+end_src
 
 That shape is useful as a bridge check, but it cannot find an invalid channel
 receipt. The risk is hidden inside a caller-supplied proposition. The stricter
 model splits receipt presence from receipt authorization:
 
-#+begin_src latex
-\[
-\begin{aligned}
-Authorized(r) \equiv&
-  (SourceInGraph(r) \lor SourceIsLoopEngine(r)) \\
-  &\land (TargetInGraph(r) \lor TargetIsLoopEngine(r)) \\
-  &\land (SourceInGraph(r) \lor TargetInGraph(r)) \\
-AuthorizedReceipts(R) \equiv&
-  \forall r \in R.\ Authorized(r)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"Authorized"(r) equiv&
+  ("SourceInGraph"(r) or "SourceIsLoopEngine"(r)) \
+  & and ("TargetInGraph"(r) or "TargetIsLoopEngine"(r)) \
+  & and ("SourceInGraph"(r) or "TargetInGraph"(r)) \
+"AuthorizedReceipts"(R) equiv&
+  forall r in R. "Authorized"(r)
+$
 #+end_src
 
 This creates a real failure obligation:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\exists R.\ ReceiptsPresent(R)
-  \land \neg AuthorizedReceipts(R)
-\end{aligned}
-\]
+#+begin_src typst
+$
+exists R. "ReceiptsPresent"(R)
+  and not "AuthorizedReceipts"(R)
+$
 #+end_src
 
 The Lean checks are:
@@ -659,23 +635,21 @@ reflection pass:
 | missing strategy/policy model | policy, strategy ownership, and local validation denial block authorized dispatch witnesses |
 | missing branch/runtime blockers | sibling branch conflict blocks dual start; handoff receipt requires runtime summary, Marlin owner, and required handoff |
 
-#+begin_src latex
-\[
-\begin{aligned}
-\neg(ChannelScope \le ActiveScope(s))
-  &\Longrightarrow \neg CanStart(s, ChannelAuthorization) \\
-\neg(MessageScope \le ActiveScope(s))
-  &\Longrightarrow \neg CanStart(s, MessageDispatch) \\
-(\forall m.\neg PolicyAllows(m))
-  &\Longrightarrow \neg AuthorizedDispatch \\
-(\forall a,m.\neg StrategyOwnsStep(a,m))
-  &\Longrightarrow \neg AuthorizedDispatch \\
-BranchSibling(A,B) \land Exclusive(s)
-  &\Longrightarrow \neg(CanStart(s,A) \land CanStart(s,B)) \\
-\neg RuntimeSummary(s)
-  &\Longrightarrow \neg CanStart(s, HandoffReceipt)
-\end{aligned}
-\]
+#+begin_src typst
+$
+not ("ChannelScope" <= "ActiveScope"(s))
+  & => not "CanStart"(s, "ChannelAuthorization") \
+not ("MessageScope" <= "ActiveScope"(s))
+  & => not "CanStart"(s, "MessageDispatch") \
+(forall m.not "PolicyAllows"(m))
+  & => not "AuthorizedDispatch" \
+(forall a,m.not "StrategyOwnsStep"(a,m))
+  & => not "AuthorizedDispatch" \
+"BranchSibling"(A,B) and "Exclusive"(s)
+  & => not ("CanStart"(s,A) and "CanStart"(s,B)) \
+not "RuntimeSummary"(s)
+  & => not "CanStart"(s, "HandoffReceipt")
+$
 #+end_src
 
 The Scheme projection for this layer is:
@@ -720,27 +694,25 @@ and S18 from remaining informal labels around positive UI fields:
 | Marlin handoff | runtime manifest is required |
 | scenario benchmark | scenario matrix, L1 report, and performance fixture are required |
 
-#+begin_src latex
-\[
-\begin{aligned}
-\neg SelectorPolicy(s)
-  &\Longrightarrow \neg CanStart(s, StrategyPlan) \\
-\neg ResourcePolicy(s)
-  &\Longrightarrow \neg CanStart(s, StrategyPlan) \\
-\neg CapabilityPolicy(s)
-  &\Longrightarrow \neg CanStart(s, StrategyPlan) \\
-\neg StrategyPlan(s)
-  &\Longrightarrow \neg CanStart(s, LocalValidation) \\
-\neg MemoryPolicy(s)
-  &\Longrightarrow \neg CanStart(s, RuntimeManifest) \\
-\neg CompressionPolicy(s)
-  &\Longrightarrow \neg CanStart(s, RuntimeManifest) \\
-\neg RuntimeManifest(s)
-  &\Longrightarrow \neg CanStart(s, MarlinHandoff) \\
-\neg ScenarioMatrix(s)
-  &\Longrightarrow \neg CanStart(s, ScenarioBenchmark)
-\end{aligned}
-\]
+#+begin_src typst
+$
+not "SelectorPolicy"(s)
+  & => not "CanStart"(s, "StrategyPlan") \
+not "ResourcePolicy"(s)
+  & => not "CanStart"(s, "StrategyPlan") \
+not "CapabilityPolicy"(s)
+  & => not "CanStart"(s, "StrategyPlan") \
+not "StrategyPlan"(s)
+  & => not "CanStart"(s, "LocalValidation") \
+not "MemoryPolicy"(s)
+  & => not "CanStart"(s, "RuntimeManifest") \
+not "CompressionPolicy"(s)
+  & => not "CanStart"(s, "RuntimeManifest") \
+not "RuntimeManifest"(s)
+  & => not "CanStart"(s, "MarlinHandoff") \
+not "ScenarioMatrix"(s)
+  & => not "CanStart"(s, "ScenarioBenchmark")
+$
 #+end_src
 
 * 10.06.58.70 Validation

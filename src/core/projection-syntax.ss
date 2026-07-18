@@ -3,6 +3,8 @@
 ;;; Invariant: generated functions are final boundary projections only; public
 ;;; object construction remains ordinary core code.
 
+(import :poo-flow/src/projection-syntax-support)
+
 (export poo-flow-core-rows/tail
         poo-flow-core-field-rows
         poo-flow-core-field-rows/tail
@@ -85,6 +87,8 @@
   ((_ constructor (argument ...)
       (bindings ((binding-name binding-expr) ...))
       (fields ((field-key field-expr) ...)))
-   (def (constructor argument ...)
-     (let* ((binding-name binding-expr) ...)
-       (list (cons 'field-key field-expr) ...)))))
+   (defpoo-static-receipt-projection
+     constructor
+     (argument ...)
+     (bindings ((binding-name binding-expr) ...))
+     (fields (('field-key field-expr) ...)))))

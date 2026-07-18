@@ -1,8 +1,8 @@
 (package:
  poo-flow
  depend:
- ("github.com/mighty-gerbils/gerbil-poo@f4b322299830acbd1cd5b91984c4107ac56bdac3"
-  "git.cons.io/mighty-gerbils/gerbil-utils@f45a4ef3bfecd2af39e114ed736ce9082cbb8244"
+ ("github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead"
+  "github.com/mighty-gerbils/gerbil-utils@f45a4ef3bfecd2af39e114ed736ce9082cbb8244"
     "github.com/tao3k/gerbil-scheme-language-project-harness@9a12985a970270f7cc0e97cb7917a5142ecdd399")
  policy:
  ((macro-governance

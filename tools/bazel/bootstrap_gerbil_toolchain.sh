@@ -5,6 +5,8 @@ set -euo pipefail
 : "${GERBIL_SRC:?GERBIL_SRC is required}"
 : "${GERBIL_PREFIX:?GERBIL_PREFIX is required}"
 
+gerbil_source_url="${GERBIL_SOURCE_URL:-https://github.com/mighty-gerbils/gerbil.git}"
+
 architecture_profile="${GERBIL_ARCH_PROFILE:-native}"
 case "$architecture_profile" in
   native)
@@ -76,9 +78,9 @@ mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
 rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
 git init --quiet "$GERBIL_SRC"
 if git -C "$GERBIL_SRC" remote get-url origin >/dev/null 2>&1; then
-  git -C "$GERBIL_SRC" remote set-url origin https://git.cons.io/mighty-gerbils/gerbil
+  git -C "$GERBIL_SRC" remote set-url origin "$gerbil_source_url"
 else
-  git -C "$GERBIL_SRC" remote add origin https://git.cons.io/mighty-gerbils/gerbil
+  git -C "$GERBIL_SRC" remote add origin "$gerbil_source_url"
 fi
 git -C "$GERBIL_SRC" fetch --depth=1 origin "$GERBIL_REF"
 git -C "$GERBIL_SRC" checkout --quiet --detach FETCH_HEAD
@@ -103,6 +105,7 @@ write_bootstrap_state() {
     --arg status "$status" \
     --arg phase "$bootstrap_phase" \
     --arg ref "$GERBIL_REF" \
+    --arg sourceUrl "$gerbil_source_url" \
     --arg source "$GERBIL_SRC" \
     --arg prefix "$GERBIL_PREFIX" \
     --arg compiler "$compiler_command" \
@@ -117,6 +120,7 @@ write_bootstrap_state() {
       status: $status,
       phase: $phase,
       ref: $ref,
+      sourceUrl: $sourceUrl,
       source: $source,
       prefix: $prefix,
       compiler: $compiler,
@@ -192,6 +196,7 @@ jq -n \
   --arg ccache_executable "$ccache_executable" \
   --arg gerbil_version "$gerbil_version" \
   --arg prefix "$GERBIL_PREFIX" \
+  --arg source_url "$gerbil_source_url" \
   --arg source_ref "$GERBIL_REF" \
   --argjson build_cores "$build_cores" \
   --argjson ccache_activity "$ccache_activity" \
@@ -204,6 +209,7 @@ jq -n \
     outcome: "ready",
     architecture_profile: $architecture_profile,
     source_ref: $source_ref,
+    source_url: $source_url,
     gerbil_version: $gerbil_version,
     compiler: $compiler,
     compiler_command: $compiler_command,

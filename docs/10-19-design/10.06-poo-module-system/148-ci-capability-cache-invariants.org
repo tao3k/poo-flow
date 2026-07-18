@@ -1,194 +1,184 @@
-#+title: CI Capability Cache Invariants
-#+language: en
+#+TITLE: CI Capability and Cache Invariants
+#+SUBTITLE: Gerbil v0.18.2 provider identity, bootstrap ownership, and reproducible receipts
+#+LANGUAGE: en
+#+OPTIONS: toc:3 num:t
 
 * Status
 
-This document records the implemented CI cache boundary that follows the
-adaptive Scheme build guard.  It is normative for Bazel-owned Gerbil toolchain
-and dependency bootstrap behavior.
+This document is normative for the Gerbil v0.18.2 build lanes.
 
-* Metric boundaries
+- Source version: =v0.18.2=
+- Source revision: =07c8481588a8b07dbf05832687817cd398902ac0=
+- Source owner: =https://github.com/mighty-gerbils/gerbil.git=
+- macOS formula: =tao3k/gerbil/gerbil-scheme=
+- macOS runtime home: =$(brew --prefix tao3k/gerbil/gerbil-scheme)/current=
+- Scheme build truth: =build.ss=
+- Outer orchestration: Bazel and GitHub Actions
 
-The accepted POO Flow project cold-build reference is =161.694s=.  A first-use
-Gerbil toolchain bootstrap is a separate provisioning metric and MUST NOT be
-reported as project cold-build time.  A repeated CI run for the same source,
-compiler capability, architecture profile, and dependency inputs is expected
-to restore the toolchain cache and return to the project-level measurement.
+* Provider-era decision
 
-* Capability cache invariants
+Gerbil v0.18.2 belongs to the GitHub provider era.  The =git.cons=
+provider transition is a v0.19 migration concern and must not leak into the
+v0.18.2 dependency graph.
 
-1. Local and downstream builds default to the =native= architecture profile so
-   the compiler may select the highest-performance instructions available on
-   the current machine.
-2. Hosted CI uses the =portable= architecture profile so cache identity remains
-   reusable across compatible runners.
-3. The ABI fingerprint hashes compiler-selected diagnostics, compiler identity,
-   target tuple, and architecture profile.  Random =cc*.s= paths and probe file
-   locations are execution noise and MUST NOT enter the cache key.  A missing
-   compiler argument resolves through the host's =cc= capability, while a
-   command name such as =gcc= resolves through =PATH= before validation.
-4. The dependency installer derives its writable package root from
-   =GERBIL_PATH=, falling back to the Bazel run workspace's project-local
-   =.gerbil= root when =GERBIL_PATH= is absent.  The installer exports the
-   selected root before invoking =gxpkg=.  Bazel owns this invariant;
-   workflow-specific directory creation is not an acceptable substitute.
-5. CPU parallelism is discovered from the executing system.  No workflow,
-   test, or cache rule may encode a fixed logical CPU count.
-6. CI requires ccache as a bootstrap capability.  The Bazel-owned bootstrap
-   tool wraps the selected compiler, observes compiler activity, and records
-   the result in its receipt.  Restoring a ccache directory without proving
-   compiler activity is not accepted as cache integration.
+Therefore:
 
-* Declarative ownership
-
-#+begin_src mermaid
-flowchart TD
-    Host["Host capabilities"] --> Profile{"GERBIL_ARCH_PROFILE"}
-    Profile -->|native| Native["Compiler native instruction selection"]
-    Profile -->|portable| Portable["Compatible hosted-runner target"]
-    Native --> Probe["Deterministic ABI fingerprint"]
-    Portable --> Probe
-    Probe --> ToolchainKey["Gerbil toolchain cache key"]
-    ToolchainKey --> Restore{"Cache restore"}
-    Restore -->|hit| ProjectBuild["POO Flow project cold build"]
-    Restore -->|miss| CcacheRestore["Restore shared bootstrap ccache"]
-    CcacheRestore --> Bootstrap["Upstream parallel Gerbil bootstrap"]
-    Bootstrap --> CcacheGuard{"Observed ccache compiler activity"}
-    CcacheGuard -->|no| Block["Fail closed"]
-    CcacheGuard -->|yes| SaveCcache["Save shared bootstrap ccache"]
-    SaveCcache --> Save["Save capability-keyed toolchain"]
-    Save --> ProjectBuild
-    ProjectBuild --> Dependencies["Bazel dependency installer"]
-    GerbilPath["GERBIL_PATH or workspace .gerbil fallback"] --> Dependencies
-    Dependencies --> PackageRoot["Selected root/pkg exists"]
-#+end_src
-
-The Bazel repository rules and their generated tools own the arrows in this
-graph.  GitHub Actions selects the portable profile and supplies cache storage;
-it does not reimplement toolchain or package-root policy.
-
-* Failure-closed behavior
-
-- A missing or non-executable compiler terminates fingerprint generation.
-- An unknown architecture profile terminates fingerprint generation.
-- A host without SHA-256 tooling terminates fingerprint generation.
-- A dependency install cannot begin until the selected Gerbil package root
-  exists.
-- CI bootstrap terminates when ccache is absent or observes zero compiler
-  activity.
-- A non-deterministic fingerprint is a cache correctness failure, not an
-  acceptable cache miss.
-
-* Safe Gerbil bootstrap caches
-
-An interrupted in-tree Make build is not a valid cache unit.  Generated Gambit
-sources and target timestamps can diverge when a process is cancelled, causing
-a restored tree to report completed prerequisites while files such as
-=_gambit.c=, =gsi=, or =gsc= are absent.  Only ABI-bound ccache objects and a
-fully validated installation prefix may cross an interrupted bootstrap.  A
-source-cache save therefore requires successful completion; a failed source
-bootstrap starts again from a fresh checkout while retaining ccache.
-
-The Darwin PR lane resolves the platform capability from Homebrew Gerbil
-0.18.2.  Resolution is layout-independent: the workflow discovers candidates
-through both the Homebrew opt prefix and Cellar inventory, then accepts a root
-only when the =gxi=, =gsc=, and library capabilities are all present.  The
-matrix also declares the upstream versioned home name.  When a bottle flattens
-=bin= and =lib= into the keg root, CI creates a versioned directory containing
-relative links to the validated =bin=, =include=, =lib=, and =share=
-capabilities.  This lets =std/make= resolve the same =gsc= and library root
-without embedding a machine-specific path.  The pinned post-release source
-bootstrap remains available for Linux and explicit toolchain seeding, but it
-is not repeated for ordinary macOS project validation.
-
-Homebrew Gerbil 0.18.2 predates the upstream =git.cons.io= package-provider
-fix.  Darwin therefore builds only the upstream =gxpkg= module at the pinned
-=add922481cec81d05431db014bcb91b30485cf21= ref.  Its compiled module set and
-JSON receipt live in a separate native-ABI-keyed Actions cache; no generated
-binary is committed, and the compiler/runtime capability is not rebuilt.
-
-Provider-qualified package names are dependency identities, not interchangeable
-download mirrors.  The root manifest therefore uses the canonical
-=git.cons.io/mighty-gerbils/gerbil-utils= identity already declared by
-=gerbil-poo=.  Mixing that identity with the historical =github.com= mirror
-causes =gxpkg= to clone and compile the same package twice, defeating the
-package cache and the twelve-minute CI gate.
-
-The native CI lane performs one canonical project compilation: Bazel invokes
-=build.ss= and then runs the declared Scheme and runtime-C acceptance targets.
-The custom loop-engine capability root is a first-class Bazel test target.
-CI must not clean those outputs and repeat the same full project compilation
-through a second shell route; that duplicates work without adding coverage and
-can push macOS beyond the twelve-minute gate.
-
-Every expensive source phase atomically updates an English-keyed JSON state receipt.
-The workflows upload that receipt even after cancellation, making the active
-phase, selected compiler, architecture, available build cores, elapsed time,
-and exit status observable without scraping an unbounded console log.
-
-The installed Gerbil prefix remains the primary capability cache.  When that
-cache is absent, CI starts from a fresh upstream checkout and restores only the
-ccache directory keyed by runner OS, architecture, Gerbil source label, and the
-deterministic native compiler ABI fingerprint.  An interrupted Make tree is
-discarded; only compiler objects may survive the retry.  A completed build
-installs into a fresh prefix and must pass the existing activity and runtime
-guards before that prefix can become the primary cache.
-
-The source tree also carries a configure signature over the Gerbil ref,
-installation prefix, resolved compiler command, and architecture profile.  A
-matching signature reuses =config.status= and skips unconditional configure
-regeneration; a mismatch reruns configure and replaces the stamp.  Existing
-capability-keyed CI trees may adopt a completed =config.status= once when
-migrating from the pre-stamp cache format.
+1. The default v0.18.2 source remote is GitHub.
+2. v0.18.2 package identities use =github.com/...=.
+3. CI must not install a =git.cons= package directory for v0.18.2.
+4. CI must not manufacture provider aliases, filesystem overlays, or synthetic
+   package identities.
+5. A future v0.19 migration must be explicit and atomic: toolchain, dependency
+   identities, caches, receipts, and documentation move together.
 
 #+begin_src mermaid
 flowchart LR
-  Key["OS + architecture + Gerbil label + compiler ABI"]
-  Install{"Installed prefix cache"}
-  Source{"Fresh source checkout"}
-  Homebrew{"Darwin Homebrew versioned capability view"}
-  Provider["ABI-keyed gxpkg provider overlay"]
-  Objects["ccache object fallback"]
-  Bootstrap["Upstream parallel bootstrap"]
-  Phase["Atomic JSON phase receipt"]
-  Artifact["Always-uploaded receipt artifact"]
-  Validate["Validate installed Gerbil capability"]
-  SaveInstall["Save installed prefix"]
-  Project["Single canonical POO Flow build.ss through Bazel"]
+  Revision["Gerbil v0.18.2<br/>07c8481588a8b07dbf05832687817cd398902ac0"]
+  GitHub["GitHub source and package provider"]
+  Linux["Linux source bootstrap"]
+  Python["Python projection source bootstrap"]
+  Tap["tao3k/gerbil/gerbil-scheme"]
+  Current["Formula capability: current/"]
+  BuildFramework["Building Framework"]
+  BuildTruth["build.ss"]
 
-  Key --> Install
-  Install -->|hit| Project
-  Install -->|source miss| Source
-  Source --> Objects
-  Objects --> Bootstrap
-  Bootstrap -.-> Phase
-  Phase --> Artifact
-  Bootstrap --> Validate
-  Validate --> SaveInstall
-  SaveInstall --> Project
-  Key --> Homebrew
-  Homebrew -->|Darwin| Provider
-  Provider --> Project
+  Revision --> GitHub
+  GitHub --> Linux
+  GitHub --> Python
+  Revision --> Tap
+  Tap --> Current
+  Linux --> BuildFramework
+  Python --> BuildFramework
+  Current --> BuildFramework
+  BuildFramework --> BuildTruth
 #+end_src
 
-* Acceptance receipts
+* Capability model
 
-An interrupted source bootstrap is accepted only when its ccache is preserved,
-its raw source tree is rejected, and the uploaded
-=poo-flow.gerbil-bootstrap-state.v1= receipt identifies the last active phase.
-A successful bootstrap must produce the validated installed-prefix cache;
-subsequent source jobs must hit that cache and skip the bootstrap step entirely.
+The build consumes a Gerbil capability, not an assumed filesystem layout.
 
-The implementation is accepted only when all of the following hold:
+** Source capability
 
-- Bash 3.2 parses the fingerprint and dependency installer tools.
-- Repeated native fingerprints are identical on one unchanged host.
-- Repeated portable fingerprints are identical on one unchanged host.
-- Native and portable fingerprints are distinct.
-- =bazel build //scheme:deps= rematerializes the dependency installer.
-- Main CI and Python runtime CI use one OS/compiler/ref-keyed ccache namespace.
-- The bootstrap receipt reports ccache as required and enabled with non-zero
-  compiler activity.
-- The first portable CI run saves the toolchain cache.
-- A rerun of the same commit restores that cache and reports project cold-build
-  time independently from any first-use bootstrap time.
+=tools/bazel/bootstrap_gerbil_toolchain.sh= owns source acquisition,
+configuration, parallel build, installation, and the bootstrap receipt.
+
+The default source URL is the v0.18.2 GitHub owner.  =GERBIL_SOURCE_URL= may
+select an equivalent mirror, but the receipt must record the selected URL and
+the exact revision.  A mirror does not change the package-provider identity.
+
+The bootstrap selects available parallelism at runtime.  It must not encode a
+fixed logical CPU count.  =GERBIL_BUILD_CORES= is an explicit override only.
+
+** Homebrew capability
+
+The macOS lane installs the fully qualified formula
+=tao3k/gerbil/gerbil-scheme=.  It resolves the formula prefix declaratively and
+uses the formula's =current/= capability directory as both =GERBIL_PREFIX= and
+=GERBIL_HOME=.
+
+The workflow must validate at least:
+
+- =current/bin/gxi=
+- =current/bin/gsc=
+- =current/lib=
+- Gerbil reports =v0.18.2=
+- Gambit reports =v4.9.7=
+
+The workflow must not probe Cellar versions, create replacement symlinks, or
+derive a home from a Homebrew/core layout.
+
+** Dependency capability
+
+=gerbil.pkg= is the dependency identity owner.  Bazel may materialize and run
+the dependency installation, but it must not rewrite provider identities.
+
+For v0.18.2, =gerbil-poo= and =gerbil-utils= use GitHub identities.
+=gerbil-poo= is pinned to =1c3225637525400341a09e958296962c10184ead=,
+the direct parent of the provider-migration commit.  The migration commit
+=f4b322299830acbd1cd5b91984c4107ac56bdac3= is not a valid v0.18.2 pin because
+its manifest changes =gerbil-utils= to =git.cons=.  The dependency installer
+invokes native =gxpkg deps --install= without adding a =git.cons= directory and
+without an overlay.
+
+* Cache identity
+
+A cache is reusable only when every ABI-relevant capability matches.
+
+#+begin_src mermaid
+flowchart TD
+  Inputs["OS + architecture + Gerbil revision<br/>source owner + compiler + architecture profile"]
+  ABI["Native ABI fingerprint"]
+  Bootstrap["Gerbil install cache"]
+  CompilerCache["ccache"]
+  Packages["Gerbil package cache"]
+  Bazel["Bazel repository and disk cache"]
+  Acceptance["Build and acceptance suites"]
+
+  Inputs --> ABI
+  ABI --> Bootstrap
+  ABI --> CompilerCache
+  Bootstrap --> Packages
+  CompilerCache --> Bootstrap
+  Packages --> Bazel
+  Bazel --> Acceptance
+#+end_src
+
+The cache key must distinguish:
+
+- operating system and architecture;
+- exact Gerbil label and revision;
+- native ABI fingerprint;
+- architecture profile;
+- dependency manifest digest;
+- the capability generation when the source owner or formula layout changes.
+
+The source URL and resolved prefix are also written to receipts.  They are
+evidence fields, not permission to reuse a cache with a different revision.
+
+* Performance and observability invariants
+
+1. The source bootstrap uses all available build parallelism unless explicitly
+   overridden.
+2. Source lanes require =ccache= and record whether compiler activity occurred.
+3. The bootstrap writes a JSON state receipt during every phase and a final JSON
+   receipt after installation.
+4. Cache hits skip the source build.  Cache misses remain observable rather
+   than being hidden by retry loops.
+5. A cold build at or above 720 seconds is a blocking regression and requires
+   phase-level diagnosis.
+6. Performance comparisons are made per operating system and cache state; a
+   warm run is never reported as a cold baseline.
+
+* Build ownership
+
+=build.ss= remains the canonical Scheme project build definition.  Bazel owns
+toolchain discovery, dependency materialization, cache boundaries, runtime-C
+rules, and test orchestration.  GitHub Actions declares the machine matrix and
+persists capability-keyed caches.
+
+This separation prevents a CI-only shell recipe from becoming a second build
+system.
+
+* Acceptance gates
+
+A v0.18.2 provider-boundary change is complete only when all of the following
+hold:
+
+- no active workflow or Building Framework script contains =add922=;
+- no active v0.18.2 source or package path contains =git.cons.io=;
+- no gxpkg provider overlay target or script remains;
+- =gerbil-poo= is pinned before its provider-migration commit;
+- the Linux and Python lanes use revision =07c8481588a8b07dbf05832687817cd398902ac0=;
+- the macOS lane uses =tao3k/gerbil/gerbil-scheme= and =current/=;
+- workflow YAML parses successfully;
+- shell syntax checks pass;
+- the Org document contains both Mermaid diagrams;
+- CI validates the Bazel graph, Scheme build, runtime-C tests, Python
+  projection, and Lean proof bridge.
+
+* v0.19 migration boundary
+
+The future v0.19 change is a new capability generation, not a compatibility
+patch for v0.18.2.  Its RFC must update the source owner, package identities,
+cache namespace, toolchain acceptance predicate, and receipts in one change.
+Until that RFC lands, v0.18.2 remains GitHub-native.

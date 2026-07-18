@@ -1,0 +1,39 @@
+{
+  "name": "@poo-flow/runtime-ts",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/runtime.js",
+  "types": "./dist/runtime.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./batch": {
+      "types": "./dist/batch.d.ts",
+      "import": "./dist/batch.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js"
+    },
+    "./worker": "./dist/runtime.worker.js"
+  },
+  "scripts": {
+    "build:wasm": "npm --prefix ../runtime-wasm run build",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build:wasm && npm run typecheck && npm run build && tsx --test test/*.test.ts",
+    "prepack": "npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}

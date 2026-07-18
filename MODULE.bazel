@@ -12,19 +12,20 @@ http_archive = use_repo_rule(
     "http_archive",
 )
 
-http_archive(
+git_repository = use_repo_rule(
+    "@bazel_tools//tools/build_defs/repo:git.bzl",
+    "git_repository",
+)
+
+git_repository(
     name = "gerbil_poo_sources",
     build_file_content = """
 package(default_visibility = ["//visibility:public"])
 exports_files(["gerbil.pkg"])
 filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
 """,
-    sha256 = "673bd98e0731cec0fabdb3d46164d26b22a1fc96cbea74f4127237aa75c52f1b",
-    strip_prefix = "gerbil-poo-f4b322299830acbd1cd5b91984c4107ac56bdac3",
-    type = "tar.gz",
-    urls = [
-        "https://codeload.github.com/mighty-gerbils/gerbil-poo/tar.gz/f4b322299830acbd1cd5b91984c4107ac56bdac3",
-    ],
+    commit = "1c3225637525400341a09e958296962c10184ead",
+    remote = "https://github.com/mighty-gerbils/gerbil-poo.git",
 )
 
 http_archive(
@@ -50,7 +51,6 @@ local_gerbil_repository = use_repo_rule(
 local_gerbil_repository(
     name = "bootstrap_gerbil",
     expected_version_prefixes = [
-        "Gerbil add9224",
         "Gerbil v0.18.2",
     ],
     include_project_dependencies = False,
@@ -59,7 +59,6 @@ local_gerbil_repository(
 local_gerbil_repository(
     name = "local_gerbil",
     expected_version_prefixes = [
-        "Gerbil add9224",
         "Gerbil v0.18.2",
     ],
 )

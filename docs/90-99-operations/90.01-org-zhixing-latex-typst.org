@@ -1,0 +1,43 @@
+#+title: Org Zhixing LaTeX and Typst Rendering
+#+author: POO Flow
+
+* Purpose
+
+This document is a rendering smoke test for viewing the POO Flow documentation
+corpus with the Org Zhixing =documents= theme.
+
+* LaTeX mathematics
+
+Inline mathematics remains part of ordinary Org prose: \(E = mc^2\).
+
+\[
+  \mathcal{F}\{f\}(\xi) = \int_{-\infty}^{\infty}
+  f(x)e^{-2\pi i x\xi}\,dx
+\]
+
+#+begin_src typst
+$
+dif/dif x (integral_0^x f(t) dif t) = f(x)
+$
+#+end_src
+
+* Typst rendering
+
+#+begin_src typst
+#set page(width: 12cm, height: auto, margin: 1cm)
+#set text(size: 13pt)
+
+= POO Flow
+
+Composable control planes should remain readable as technical documents.
+
+$ integral_0^1 x^2 dif x = 1/3 $
+#+end_src
+
+* Preview command
+
+Run this from the Org Zhixing workspace:
+
+#+begin_src sh
+direnv exec . just documents-poo-flow 5198
+#+end_src

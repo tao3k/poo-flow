@@ -27,5 +27,6 @@
  (optimizationFocus . "POO-native session policy constructor family projection")
  (inputShape . "96 policy families covering isolation, sandbox, context, history, communication, session-sharing, resource, model, prompt, tool, hook, resource-sharing, and agent-execution policies")
  (expectedRepair . "keep public policy authoring as POO constructors, project bounded rows once, and leave effective safety decisions to policy-validation receipts")
+ (expectedOutcome . "one declarative session policy family emits ordinary POO-native constructors for fixed and caller-supplied scope refs without duplicate constructor expansion bodies")
  (measurementPhases policy-family-before projection-before policy-family-after projection-after assert-time-gate assert-memory-gate)
  (tags poo session policy family projection performance openrath))

@@ -464,6 +464,85 @@ must distinguish partial slot demand, repeated demand of the same slot, derived
 object reuse through shared fact objects, full materialization at a named
 boundary, and hygienic rejection of same-name dynamic slot/value forms.
 
+** 10.06.44.127 AI-Authored Static Declaration And Expander Boundary
+
+AI-assisted authoring has two different inputs and they MUST NOT share an
+execution path:
+
+1. AI-authored static Scheme declarations are source code.  They may enter a
+   named Gerbil macro only when the macro is a POO-native or functional
+   authoring surface and expands to ordinary project code.
+2. Runtime model output is untrusted data.  It enters a parser, a POO-owned
+   contract or validator, and a receipt boundary.  It MUST NOT enter =eval=,
+   =load!=, macro expansion, a syntax-local registry, or a generated module
+   import path.
+
+The static declaration path is:
+
+#+begin_src text
+AI-authored declaration
+  -> syntax parser and binding-aware grammar validation
+  -> bounded immutable compile-time plan
+  -> ordinary POO-native or functional expansion
+  -> constructor/contract/receipt validation
+  -> proof-fact or runtime-handoff projection
+#+end_src
+
+Use this path to remove repeated declaration structure, not to give generated
+code new authority.  The macro may generate a related constructor, predicate,
+accessor family, contract table, final projection, and focused test hook from
+one declaration.  The runtime POO object, named validator, policy combinator,
+and runtime adapter remain the semantic owners.
+
+AI-facing declaration macros MUST:
+
+- retain user forms as syntax objects until an intentional quoted payload
+  boundary;
+- compare grammar identifiers with binding-aware syntax operations;
+- preserve source locations in every generated form and expansion error;
+- reject duplicate declarations, unknown clauses, conflicting slot or
+  capability ownership, missing schema/owner facts, and hidden runtime effects
+  during expansion;
+- make =schema=, =producer=, =source=, =owner=, object kind, provenance,
+  runtime owner, and open proof obligations explicit when those facts cross a
+  project boundary;
+- generate proof-facing facts or obligations without claiming that generation
+  itself proves the policy;
+- keep parse and lower work, and generated form count, bounded by =O(n + m)=
+  for =n= declarations and =m= clauses.
+
+Compiled macro state follows the Gerbil module system.  Shared static facts use
+immutable =begin-syntax= records or classes plus module-owned
+=syntax-local-value= bindings.  Rely on single module instantiation and normal
+=for-syntax= imports; do not recreate the same registry per declaration, load
+syntax-support source manually, or keep mutable process-global expander state.
+
+Gerbil bracket-list syntax is an expander form, not quoted runtime data.  Do not
+embed bracket-list forms inside =quote= or =quasiquote= and later splice the
+result or pass it to =apply= as though it were already a flat option list: the
+captured datum can
+retain the internal =@list= marker and become an unintended positional
+argument.  Construct runtime option lists outside the quoted template with
+=list=, =cons=, or =append=, and test their exact datum shape before handing
+them to =std/make=, a runtime adapter, or an AI-generated declaration lowerer.
+
+A non-trivial declaration family uses four explicit owners:
+
+1. a =*-syntax-support.ss= module for grammar parsing and immutable expansion
+   plans;
+2. a thin =*-syntax.ss= module exporting only the public authoring macro;
+3. a runtime owner containing POO constructors, validators, policies, and final
+   projections;
+4. a stable facade exporting the public macro and selected runtime extension
+   helpers without wildcard-exporting syntax internals.
+
+Every AI-facing macro change needs focused evidence for valid expansion,
+source-located invalid syntax, duplicate/conflict rejection, generated POO
+shape, receipt/projection equality, and absence of runtime execution during
+expansion.  Shared declaration families also need AOT package compile and warm
+build receipts so compiled macros reduce runtime parsing without hiding
+compile-time growth.
+
 ** 10.06.44.130 Agent Checklist
 Before committing Scheme changes, check:
 
@@ -483,5 +562,11 @@ Before committing Scheme changes, check:
 - Is repeated dispatch represented through interfaces/generics/tables when the
   extension point is real?
 - Did focused tests or scenarios prove the behavior?
+- If AI authored the declaration, does the macro constrain structure without
+  granting runtime authority or hiding provenance?
+- Does runtime model output enter a parser, POO validator, and receipt instead
+  of =eval=, =load!=, or the macro expander?
+- Does shared compile-time metadata belong to one phase-correct module context
+  rather than a source collector or mutable global registry?
 
 If the answer is unclear, stop and write the owner boundary first.

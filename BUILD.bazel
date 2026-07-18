@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["tools/validate-runtime-v0-symbol-surface.ss"])
+exports_files([
+    "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
+    "tools/validate-runtime-v0-symbol-surface.ss",
+])
 
 filegroup(
     name = "runtime_v0_schema",

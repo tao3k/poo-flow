@@ -78,6 +78,11 @@ int main(void) {
   poo_flow_bundle_v1_edge_entry edges[2];
   poo_flow_bundle_v1_evidence_entry evidence[2];
   poo_flow_bundle_v1_descriptor descriptor;
+  uint8_t packed_descriptor[sizeof(poo_flow_bundle_v1_descriptor) +
+                            _Alignof(poo_flow_bundle_v1_descriptor)];
+  uint8_t *unaligned_descriptor = packed_descriptor;
+  uint8_t original_arena_byte = 0u;
+  uint32_t original_descriptor_flags = 0u;
   poo_flow_bundle_v1_arena *owned_arena = NULL;
   const poo_flow_bundle_v1_descriptor *owned_descriptor = NULL;
   const void *owned_data = NULL;
@@ -104,6 +109,11 @@ int main(void) {
   }
 
   descriptor = make_descriptor(components, 4u, &arena);
+  if (((uintptr_t)unaligned_descriptor %
+       _Alignof(poo_flow_bundle_v1_descriptor)) == 0u) {
+    unaligned_descriptor += 1u;
+  }
+  memcpy(unaligned_descriptor, &descriptor, sizeof(descriptor));
   expect_status("valid descriptor",
                 poo_flow_bundle_v1_validate(&descriptor, arena.bytes,
                                             sizeof(arena.bytes)),
@@ -122,12 +132,17 @@ int main(void) {
 
   expect_status("packed descriptor length rejected",
                 poo_flow_bundle_v1_arena_create_packed(
-                    &descriptor, sizeof(descriptor) - 1u, arena.bytes,
+                    unaligned_descriptor, sizeof(descriptor) - 1u, arena.bytes,
                     sizeof(arena.bytes), &owned_arena),
+                POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT);
+  expect_status("packed descriptor null output rejected",
+                poo_flow_bundle_v1_arena_create_packed(
+                    unaligned_descriptor, sizeof(descriptor), arena.bytes,
+                    sizeof(arena.bytes), NULL),
                 POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT);
   expect_status("owned arena created",
                 poo_flow_bundle_v1_arena_create_packed(
-                    &descriptor, sizeof(descriptor), arena.bytes,
+                    unaligned_descriptor, sizeof(descriptor), arena.bytes,
                     sizeof(arena.bytes), &owned_arena),
                 POO_FLOW_BUNDLE_V1_OK);
   expect_status("owned arena view",
@@ -141,6 +156,26 @@ int main(void) {
     fprintf(stderr, "owned arena view did not preserve aligned ownership\n");
     failures += 1;
   }
+  if (owned_descriptor != NULL && owned_data != NULL) {
+    if (memcmp(owned_descriptor, &descriptor, sizeof(descriptor)) != 0) {
+      fprintf(stderr, "owned descriptor did not preserve packed input\n");
+      failures += 1;
+    }
+    original_descriptor_flags = owned_descriptor->flags;
+    original_arena_byte = ((const uint8_t *)owned_data)[0];
+    unaligned_descriptor[4] ^= UINT8_C(0xff);
+    arena.bytes[0] ^= UINT8_C(0xff);
+    if (owned_descriptor->flags != original_descriptor_flags ||
+        ((const uint8_t *)owned_data)[0] != original_arena_byte) {
+      fprintf(stderr, "owned arena changed with producer buffers\n");
+      failures += 1;
+    }
+    arena.bytes[0] = original_arena_byte;
+  }
+  expect_status("owned arena incomplete view rejected",
+                poo_flow_bundle_v1_arena_view(
+                    owned_arena, NULL, &owned_data, &owned_bytes),
+                POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT);
   memset(&component_slice, 0, sizeof(component_slice));
   expect_status("owned component slice",
                 poo_flow_bundle_v1_arena_slice(
@@ -173,6 +208,10 @@ int main(void) {
   expect_status("owned arena retained",
                 poo_flow_bundle_v1_arena_retain(owned_arena),
                 POO_FLOW_BUNDLE_V1_OK);
+  expect_status("null arena retain rejected",
+                poo_flow_bundle_v1_arena_retain(NULL),
+                POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT);
+  poo_flow_bundle_v1_arena_release(NULL);
   poo_flow_bundle_v1_arena_release(owned_arena);
   poo_flow_bundle_v1_arena_release(owned_arena);
   owned_arena = NULL;

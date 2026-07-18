@@ -59,29 +59,31 @@ The public CrewAI docs describe the same high-level shape:
 
 * POO Flow Mapping
 
-#+begin_src latex
-\operatorname{CrewAIAgent}
-  \mapsto
-    \operatorname{Profile}(\texttt{agent})
-    \land \operatorname{ToolScopeContained}
+#+begin_src typst
+$
+op("CrewAIAgent")
+  arrow.r.bar
+    op("Profile")(upright("agent"))
+    and op("ToolScopeContained")
 
-\operatorname{CrewAITask}
-  \mapsto
-    \operatorname{Profile}(\texttt{task})
-    \land \operatorname{TaskDependenciesClosed}
+op("CrewAITask")
+  arrow.r.bar
+    op("Profile")(upright("task"))
+    and op("TaskDependenciesClosed")
 
-\operatorname{CrewAICrew}
-  \mapsto
-    \operatorname{Profile}(\texttt{crew})
-    \land \operatorname{CrewMembersDeclared}
+op("CrewAICrew")
+  arrow.r.bar
+    op("Profile")(upright("crew"))
+    and op("CrewMembersDeclared")
 
-\operatorname{CrewAIFlow}
-  \mapsto
-    \operatorname{Profile}(\texttt{flow-state})
-    \land \operatorname{Profile}(\texttt{flow-router})
-    \land \operatorname{Profile}(\texttt{flow-persist})
-    \land \operatorname{RouterTargetsDeclared}
-    \land \operatorname{CheckpointBeforeResume}
+op("CrewAIFlow")
+  arrow.r.bar
+    op("Profile")(upright("flow-state"))
+    and op("Profile")(upright("flow-router"))
+    and op("Profile")(upright("flow-persist"))
+    and op("RouterTargetsDeclared")
+    and op("CheckpointBeforeResume")
+$
 #+end_src
 
 CrewAI expresses those capabilities as Python agents/tasks/crews/flows. POO Flow expresses them as reusable POO profiles and a composition case. Runtime execution remains outside Scheme; the Scheme control plane produces policy facts and handoff receipts.
@@ -103,16 +105,16 @@ user-interface/cases/crewai-research-flow.ss
 
 This is also how Pi Agent core-style capabilities should be represented. POO Flow can describe session state, tool calling, agent loop progress, attachment/message state, and provider/tool bindings as policy/profile facts. Python then implements the runtime loop and returns receipts. The Scheme layer should prove that the selected plan is internally sound and that the returned runtime receipt matches the plan.
 
-#+begin_src latex
-\[
-\operatorname{CrewAIStyleComposition}(c)
-  \land
-\operatorname{RuntimeLanguage}(\texttt{python})
-  \land
-\operatorname{RuntimeAccepts}(\texttt{python}, c)
-  \Rightarrow
-\operatorname{LowCostRuntimeProjection}(c, \texttt{python})
-\]
+#+begin_src typst
+$
+op("CrewAIStyleComposition")(c)
+  and
+op("RuntimeLanguage")(upright("python"))
+  and
+op("RuntimeAccepts")(upright("python"), c)
+  =>
+op("LowCostRuntimeProjection")(c, upright("python"))
+$
 #+end_src
 
 The benchmark implication is direct: once the Python runtime can execute long graphs and graph receipts, implementing a CrewAI-style or Pi Agent core-style scenario should be a matter of composition lowering and proof/receipt alignment, not a new Scheme runtime clone.
@@ -125,47 +127,51 @@ The scenario intentionally uses =use-profile= instead of hardcoding module bindi
 - downstream users can override or extend the profiles through normal POO object extension;
 - a one-off local override should stay local to the composition until it becomes a stable public profile.
 
-#+begin_src latex
-\operatorname{ReusableCrewAIComposition}
+#+begin_src typst
+$
+op("ReusableCrewAIComposition")
   =
-  \operatorname{compose}(
-    \texttt{agent},
-    \texttt{task},
-    \texttt{crew},
-    \texttt{sequential-process},
-    \texttt{flow-state},
-    \texttt{flow-router},
-    \texttt{flow-persist},
-    \texttt{guardrail},
-    \texttt{human-input},
-    \texttt{observability},
-    \texttt{runtime-handoff})
+  op("compose")(
+    upright("agent"),
+    upright("task"),
+    upright("crew"),
+    upright("sequential-process"),
+    upright("flow-state"),
+    upright("flow-router"),
+    upright("flow-persist"),
+    upright("guardrail"),
+    upright("human-input"),
+    upright("observability"),
+    upright("runtime-handoff"))
+$
 #+end_src
 
 * Proof Obligations
 
 The CrewAI-style case adds proof obligations that line up with production agent flow risks:
 
-#+begin_src latex
-\operatorname{AgentToolScopeContained}(c)
-\land
-\operatorname{TaskDependenciesClosed}(c)
-\land
-\operatorname{CrewMembersDeclared}(c)
-\land
-\operatorname{TaskOrderRespectsDependencies}(c)
-\land
-\operatorname{RouterTargetsDeclared}(c)
-\land
-\operatorname{CheckpointBeforeResume}(c)
-\land
-\operatorname{GuardrailBeforeDownstreamTask}(c)
-\land
-\operatorname{HumanReviewBeforeFinalOutput}(c)
-\land
-\operatorname{TraceCoversAgentTaskFlow}(c)
-\land
-\operatorname{HandoffAfterProofGate}(c)
+#+begin_src typst
+$
+op("AgentToolScopeContained")(c)
+and
+op("TaskDependenciesClosed")(c)
+and
+op("CrewMembersDeclared")(c)
+and
+op("TaskOrderRespectsDependencies")(c)
+and
+op("RouterTargetsDeclared")(c)
+and
+op("CheckpointBeforeResume")(c)
+and
+op("GuardrailBeforeDownstreamTask")(c)
+and
+op("HumanReviewBeforeFinalOutput")(c)
+and
+op("TraceCoversAgentTaskFlow")(c)
+and
+op("HandoffAfterProofGate")(c)
+$
 #+end_src
 
 The important distinction is that POO Flow does not merely reproduce CrewAI's runtime surface. It makes the strategy composition explicit and proof-facing, so unsafe task dependencies, undeclared routers, unchecked guardrails, or missing human review can be rejected before a runtime language executes the flow.

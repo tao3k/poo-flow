@@ -8,8 +8,10 @@ execute the runtime.
 
 The runtime boundary is part of the proof:
 
-#+begin_src latex
-CompositionAccepted(c) \Rightarrow NoRuntimeExecution(c)
+#+begin_src typst
+$
+"CompositionAccepted"(c) => "NoRuntimeExecution"(c)
+$
 #+end_src
 
 * Receipt Facts
@@ -27,13 +29,15 @@ structure CompositionReceiptFacts where
 
 The acceptance rule is:
 
-#+begin_src latex
-Accepted(c) \equiv
-  ProfileRefsOk(c)
-  \land OverridesScopedOk(c)
-  \land ModulesOrderedOk(c)
-  \land ScenarioGateOk(c)
-  \land NoRuntimeExecution(c)
+#+begin_src typst
+$
+"Accepted"(c) equiv
+  "ProfileRefsOk"(c)
+  and "OverridesScopedOk"(c)
+  and "ModulesOrderedOk"(c)
+  and "ScenarioGateOk"(c)
+  and "NoRuntimeExecution"(c)
+$
 #+end_src
 
 * Why This Exists
@@ -47,13 +51,15 @@ and formal acceptance gates.
 
 Every failed receipt must have a proof-facing reason:
 
-#+begin_src latex
-\neg Accepted(c) \Leftarrow
-  \neg ProfileRefsOk(c)
-  \lor \neg OverridesScopedOk(c)
-  \lor \neg ModulesOrderedOk(c)
-  \lor \neg ScenarioGateOk(c)
-  \lor \neg NoRuntimeExecution(c)
+#+begin_src typst
+$
+not "Accepted"(c) <=
+  not "ProfileRefsOk"(c)
+  or not "OverridesScopedOk"(c)
+  or not "ModulesOrderedOk"(c)
+  or not "ScenarioGateOk"(c)
+  or not "NoRuntimeExecution"(c)
+$
 #+end_src
 
 The current Lean module defines one rejection theorem per failed contract bit.

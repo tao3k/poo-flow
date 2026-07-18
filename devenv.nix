@@ -5,7 +5,15 @@
   env.GREET = "devenv";
 
   # https://devenv.sh/packages/
-  packages = [ pkgs.git ];
+  packages = [
+    pkgs.git
+    pkgs.bazel_9
+    pkgs.emscripten
+    pkgs.lld
+    pkgs.binaryen
+    pkgs.bazel-buildtools
+    pkgs.nodejs_24
+  ];
 
   # https://devenv.sh/languages/
   # languages.rust.enable = true;

@@ -10,18 +10,20 @@ owned by POO Flow.
 * 10.06.60.20 Core Claim
 A small POO profile can express the core loop/graph structure.
 
-#+begin_src latex
-\operatorname{LangChainCore}(p)
-  \Rightarrow
-    \operatorname{LinearChain}(p)
-    \land \operatorname{StepDependenciesClosed}(p)
-    \land \operatorname{LaneContained}(p)
+#+begin_src typst
+$
+op("LangChainCore")(p)
+  =>
+    op("LinearChain")(p)
+    and op("StepDependenciesClosed")(p)
+    and op("LaneContained")(p)
 
-\operatorname{LangGraphCore}(p)
-  \Rightarrow
-    \operatorname{GuardedGraph}(p)
-    \land \operatorname{FinishReachable}(p)
-    \land \operatorname{LaneContained}(p)
+op("LangGraphCore")(p)
+  =>
+    op("GuardedGraph")(p)
+    and op("FinishReachable")(p)
+    and op("LaneContained")(p)
+$
 #+end_src
 
 This gives users a concrete learning path. They can start from a linear chain,
@@ -78,92 +80,104 @@ flowchart LR
 * 10.06.60.40 Proof Obligations
 The proof obligations are deliberately small and composable.
 
-#+begin_src latex
-\operatorname{DependsOn}(\operatorname{ToolStep}, \operatorname{EntryStep})
-  \Rightarrow
-    \operatorname{Before}(\operatorname{EntryStep}, \operatorname{ToolStep})
+#+begin_src typst
+$
+op("DependsOn")(op("ToolStep"), op("EntryStep"))
+  =>
+    op("Before")(op("EntryStep"), op("ToolStep"))
 
-\operatorname{DependsOn}(\operatorname{AnswerStep}, \operatorname{ToolStep})
-  \Rightarrow
-    \operatorname{Before}(\operatorname{ToolStep}, \operatorname{AnswerStep})
+op("DependsOn")(op("AnswerStep"), op("ToolStep"))
+  =>
+    op("Before")(op("ToolStep"), op("AnswerStep"))
+$
 #+end_src
 
 For the current user-interface LangChain case this specializes to:
 
-#+begin_src latex
-\operatorname{Before}(\operatorname{memory}, \operatorname{prompt})
-  \land
-\operatorname{Before}(\operatorname{prompt}, \operatorname{model})
-  \land
-\operatorname{Before}(\operatorname{model}, \operatorname{parser})
-  \land
-\operatorname{Before}(\operatorname{parser}, \operatorname{parsed\_output})
+#+begin_src typst
+$
+op("Before")(op("memory"), op("prompt"))
+  and
+op("Before")(op("prompt"), op("model"))
+  and
+op("Before")(op("model"), op("parser"))
+  and
+op("Before")(op("parser"), op("parsed_output"))
 
-\neg\operatorname{DependsOn}(\operatorname{parsed\_output}, \operatorname{model})
+not op("DependsOn")(op("parsed_output"), op("model"))
+$
 #+end_src
 
 For graph profiles:
 
-#+begin_src latex
-\operatorname{Edge}(a,b)
-  \Rightarrow
-    \operatorname{Guarded}(a,b)
+#+begin_src typst
+$
+op("Edge")(a,b)
+  =>
+    op("Guarded")(a,b)
 
-\operatorname{GraphProfile}(g)
-  \Rightarrow
-    \operatorname{Reachable}(\operatorname{Finish}(g))
+op("GraphProfile")(g)
+  =>
+    op("Reachable")(op("Finish")(g))
+$
 #+end_src
 
 For the current user-interface LangGraph case this specializes to:
 
-#+begin_src latex
-\operatorname{Entry} = \operatorname{session}
+#+begin_src typst
+$
+op("Entry") = op("session")
 
-\operatorname{Finish} = \operatorname{runtime\_handoff}
+op("Finish") = op("runtime_handoff")
 
-\operatorname{ConditionalTargets}
+op("ConditionalTargets")
   =
-\{\operatorname{agent\_node}, \operatorname{tool\_node}, \operatorname{terminal}\}
-  \subseteq
-\operatorname{Nodes}
+brace.l op("agent_node"), op("tool_node"), op("terminal") brace.r
+  subset.eq
+op("Nodes")
 
-\operatorname{LoopEdges}
+op("LoopEdges")
   =
-\{(\operatorname{agent\_node}, \operatorname{router}),
-  (\operatorname{tool\_node}, \operatorname{router})\}
+brace.l (op("agent_node"), op("router")),
+  (op("tool_node"), op("router")) brace.r
 
-\forall n \in \operatorname{Nodes},\,
-  \operatorname{CanReach}(n, \operatorname{runtime\_handoff})
+forall n in op("Nodes"),
+  op("CanReach")(n, op("runtime_handoff"))
+$
 #+end_src
 
 For production-like runtime receipts:
 
-#+begin_src latex
-\operatorname{ReusableProductionRuntime}(r)
-  \Leftrightarrow
-    \operatorname{Executed}(r)
-    \land \operatorname{Finished}(r)
-    \land \operatorname{LoopFuelContained}(r)
-    \land \operatorname{HandoffReached}(r)
-    \land \operatorname{SandboxScopeContained}(r)
-    \land \operatorname{ToolPermissionsContained}(r)
-    \land \operatorname{CheckpointPersisted}(r)
-    \land \operatorname{HumanApprovalSound}(r)
-    \land \operatorname{SubagentsParented}(r)
-    \land \operatorname{DiagnosticsEmpty}(r)
+#+begin_src typst
+$
+op("ReusableProductionRuntime")(r)
+  <=>
+    op("Executed")(r)
+    and op("Finished")(r)
+    and op("LoopFuelContained")(r)
+    and op("HandoffReached")(r)
+    and op("SandboxScopeContained")(r)
+    and op("ToolPermissionsContained")(r)
+    and op("CheckpointPersisted")(r)
+    and op("HumanApprovalSound")(r)
+    and op("SubagentsParented")(r)
+    and op("DiagnosticsEmpty")(r)
+$
 #+end_src
 
 For lane policy:
 
-#+begin_src latex
-\operatorname{RequestedTool}(l,t)
-  \Rightarrow
-    \operatorname{AllowedInLane}(l,t)
+#+begin_src typst
+$
+op("RequestedTool")(l,t)
+  =>
+    op("AllowedInLane")(l,t)
 
-\operatorname{ReusableLane}(l)
-  \Rightarrow
-    \operatorname{ScopeContained}(l)
-    \land \operatorname{ToolsContained}(l)
+op("ReusableLane")(l)
+  =>
+    op("ScopeContained")(l)
+    and op("ToolsContained")(l)
+$
 #+end_src
 * 10.06.60.50 Rejected Cases
 The scenario test rejects cases that look plausible but are unsafe:

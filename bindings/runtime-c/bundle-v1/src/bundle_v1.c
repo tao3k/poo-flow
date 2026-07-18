@@ -374,13 +374,16 @@ poo_flow_bundle_v1_status poo_flow_bundle_v1_arena_create(
     return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
   }
   *out_arena = NULL;
-  status = poo_flow_bundle_v1_validate(descriptor, arena, arena_bytes);
-  if (status != POO_FLOW_BUNDLE_V1_OK) {
-    return status;
+  if (descriptor == NULL || arena == NULL) {
+    return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
   }
   if (arena_bytes > (uint64_t)SIZE_MAX -
                         (POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT - 1u)) {
     return POO_FLOW_BUNDLE_V1_INVALID_ARGUMENT;
+  }
+  status = poo_flow_bundle_v1_validate(descriptor, arena, arena_bytes);
+  if (status != POO_FLOW_BUNDLE_V1_OK) {
+    return status;
   }
   allocation_bytes =
       (size_t)((arena_bytes +

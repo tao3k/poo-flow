@@ -1,6 +1,7 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("//bindings/runtime-c:runtime_checks.bzl", "runtime_gerbil_script_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -26,12 +27,13 @@ cc_library(
 
 cc_binary(
     name = "bundle_v1_shared",
-    deps = [":bundle_v1"],
     linkshared = True,
+    deps = [":bundle_v1"],
 )
 
 cc_test(
     name = "bundle_v1_harness",
+    size = "small",
     srcs = ["tests/bundle_v1_harness.c"],
     copts = [
         "-std=c11",
@@ -45,6 +47,7 @@ cc_test(
 
 cc_test(
     name = "bundle_v1_cpp_consumer",
+    size = "small",
     srcs = ["tests/bundle_v1_cpp_consumer.cc"],
     copts = [
         "-std=c++17",
@@ -57,7 +60,7 @@ cc_test(
 )
 
 cc_binary(
-    name = "bundle_v1_scheme_image_harness",
+    name = "bundle_v1_scheme_image_harness_bin",
     srcs = ["tests/bundle_v1_scheme_image_harness.c"],
     copts = [
         "-std=c11",
@@ -69,8 +72,26 @@ cc_binary(
     deps = [":bundle_v1"],
 )
 
+runtime_gerbil_script_test(
+    name = "bundle_v1_scheme_image_harness",
+    size = "small",
+    arguments = [
+        "//:t/feature-system-bundle-v1-foreign-arena-fixture.ss",
+        ":bundle_v1_scheme_image_harness_bin",
+        "@gerbil_poo_sources//:gerbil.pkg",
+        "@gerbil_utils_sources//:gerbil.pkg",
+    ],
+    data = [
+        "//:scheme_runtime_sources",
+        "@gerbil_poo_sources//:sources",
+        "@gerbil_utils_sources//:sources",
+    ],
+    script = "tests/bundle_v1_scheme_image_test.sh",
+)
+
 cc_test(
     name = "bundle_v1_harness_asan",
+    size = "small",
     srcs = [
         "src/bundle_v1.c",
         "tests/bundle_v1_harness.c",
@@ -90,6 +111,7 @@ cc_test(
 
 cc_test(
     name = "bundle_v1_harness_ubsan",
+    size = "small",
     srcs = [
         "src/bundle_v1.c",
         "tests/bundle_v1_harness.c",
@@ -128,5 +150,6 @@ test_suite(
         ":bundle_v1_harness",
         ":bundle_v1_harness_asan",
         ":bundle_v1_harness_ubsan",
+        ":bundle_v1_scheme_image_harness",
     ],
 )

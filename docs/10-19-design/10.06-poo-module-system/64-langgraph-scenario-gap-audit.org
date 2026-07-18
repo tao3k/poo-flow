@@ -23,26 +23,26 @@ rewritten as ordinary =user-interface= composition.
 
 The direction of dependency is:
 
-#+begin_src latex
-\[
-\operatorname{POOFlowSrc}
-  \Rightarrow
-  \operatorname{Composition}
-  \Rightarrow
-  \operatorname{Scenario}
-  \Rightarrow
-  \operatorname{RuntimeHandoff}
-\]
+#+begin_src typst
+$
+op("POOFlowSrc")
+  =>
+  op("Composition")
+  =>
+  op("Scenario")
+  =>
+  op("RuntimeHandoff")
+$
 #+end_src
 
 not:
 
-#+begin_src latex
-\[
-\operatorname{LangGraph}
-  \Rightarrow
-  \operatorname{POOFlowPolicy}
-\]
+#+begin_src typst
+$
+op("LangGraph")
+  =>
+  op("POOFlowPolicy")
+$
 #+end_src
 
 LangGraph-like behavior should be an instance of POO Flow's Graph, Loop,

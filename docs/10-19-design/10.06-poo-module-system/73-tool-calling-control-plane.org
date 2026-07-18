@@ -69,40 +69,40 @@ This is intentionally framework-neutral. LangChain-style tools, LangGraph tool n
 
 * Formal Obligations
 
-#+begin_src latex
-\[
-\operatorname{ToolCall}(a,t)
-  \Rightarrow
-  \operatorname{OwnerSession}(a)
-  \land
-  \operatorname{DeclaredTool}(t)
-  \land
-  \operatorname{AllowedTool}(a,t)
-  \land
-  \operatorname{SandboxScopeContains}(a,t)
-\]
+#+begin_src typst
+$
+op("ToolCall")(a,t)
+  =>
+  op("OwnerSession")(a)
+  and
+  op("DeclaredTool")(t)
+  and
+  op("AllowedTool")(a,t)
+  and
+  op("SandboxScopeContains")(a,t)
+$
 
-\[
-\operatorname{RuntimeToolCall}(r,t,args)
-  \Rightarrow
-  \operatorname{ArgumentsMatchSchema}(t,args)
-  \land
-  \operatorname{ValidateBeforeRuntime}(args)
-\]
+$
+op("RuntimeToolCall")(r,t,"args")
+  =>
+  op("ArgumentsMatchSchema")(t,"args")
+  and
+  op("ValidateBeforeRuntime")("args")
+$
 
-\[
-\operatorname{ToolOutput}(o)
-  \Rightarrow
-  \operatorname{Observation}(o)
-  \land
-  \neg \operatorname{AuthorizesPolicy}(o)
-\]
+$
+op("ToolOutput")(o)
+  =>
+  op("Observation")(o)
+  and
+  not op("AuthorizesPolicy")(o)
+$
 
-\[
-\operatorname{ReceiptMatchesToolPlan}(receipt, plan)
-  \Rightarrow
-  \operatorname{ToolPolicySoundRun}(receipt)
-\]
+$
+op("ReceiptMatchesToolPlan")("receipt", "plan")
+  =>
+  op("ToolPolicySoundRun")("receipt")
+$
 #+end_src
 
 The key security boundary is the untrusted observation rule. A tool result may inform the next step, but it cannot rewrite sandbox scope, grant permissions, or become an authorization fact unless a local owner module explicitly projects it into a typed trusted fact.

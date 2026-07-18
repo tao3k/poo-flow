@@ -22,7 +22,8 @@ static int read_file(const char *path, void **out_data, uint64_t *out_length) {
     return 0;
   }
   length = ftell(file);
-  if (length <= 0L || fseek(file, 0L, SEEK_SET) != 0) {
+  if (length <= 0L || (uintmax_t)length > (uintmax_t)SIZE_MAX ||
+      fseek(file, 0L, SEEK_SET) != 0) {
     fclose(file);
     return 0;
   }

@@ -202,6 +202,47 @@ There is no legacy graph ABI wrapper and no JSON compatibility path.
 
 * Verification
 
+** Phase 3K.1 hardening receipt
+
+The C boundary now verifies the descriptor/arena size before structural
+validation, accepts an intentionally unaligned packed descriptor, copies the
+descriptor and arena into 64-byte-aligned C-owned storage, and remains stable
+after the producer buffers are mutated.  Null retain, null output, incomplete
+view, invalid length, and overflow-bound inputs are rejected without exposing
+partially initialized ownership.
+
+The cross-language contract is generated for every test run rather than stored
+as binary repository state.  A Bazel =sh_test= writes the Scheme descriptor and
+arena into =TEST_TMPDIR= through the canonical Scheme foreign-arena writer, then
+passes those ephemeral paths to the compiled C harness.  The receipt verifies a
+256-byte descriptor, a 576-byte arena, native packed little-endian encoding, and
+no hot-path JSON.  Git therefore owns only the producer, consumer, and structural
+assertions; it owns no derived ABI image.
+
+The Bazel aggregate owns this Scheme-generation-to-C-consumption test as one
+isolated gate rather than leaving either generation or consumption manual.
+
+#+begin_example
+schema=poo-flow.bundle-v1.harness.1
+layout=typed-native-regions
+lookup=binary-search
+payload-zero-copy=true
+arena-lifetime=reference-counted
+slice-view=immutable
+packed-byte-order=little-endian
+json-in-hot-path=false
+
+schema=poo-flow.bundle-v1.scheme-c-bridge.1
+scheme-descriptor-accepted=true
+c-owned-alignment=64
+component-lookup=binary-search
+json-in-hot-path=false
+#+end_example
+
+The strict C11, UndefinedBehaviorSanitizer, C++17 consumer, and Scheme-to-C
+fixture gates all completed with exit code zero.  The Scheme foreign-arena
+suite completed 30 checks across accepted, empty, and fail-closed cases.
+
 The Phase 3K verification surface includes:
 
 - 30 Scheme checks for descriptor packing, component, edge, and evidence row

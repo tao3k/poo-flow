@@ -374,11 +374,11 @@ Scope dimensions:
 
 Core invariant:
 
-#+begin_src latex
-\[
-  ArtifactVisible(a, actor) \Rightarrow
-  Scope(actor) \subseteq Scope(a) \lor HasExplicitGrant(actor, a)
-\]
+#+begin_src typst
+$
+"ArtifactVisible"(a, "act" or) =>
+  "Scope"("act" or) subset.eq "Scope"(a) or "HasExplicitGrant"("act" or, a)
+$
 #+end_src
 
 This prevents the common failure mode where a tool-generated file, checkpoint,

@@ -29,17 +29,15 @@ The Scheme implementation owns several high-impact module families:
 
 The proof layer does not replace these Scheme modules. It gives their outputs a mathematical contract. Scheme can remain expressive, macro-driven, and POO-native, while Lean checks the claims that must not be left to convention.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{SchemeModule}(x)
-  &\Rightarrow \operatorname{EmitsFacts}(x) \\
-\operatorname{EmitsFacts}(x)
-  &\nRightarrow \operatorname{Safe}(x) \\
-\operatorname{EmitsFacts}(x) \land \operatorname{DischargedObligations}(x)
-  &\Rightarrow \operatorname{ProofBacked}(x)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("SchemeModule")(x)
+  & => op("EmitsFacts")(x) \
+op("EmitsFacts")(x)
+  & arrow.r.double.not op("Safe")(x) \
+op("EmitsFacts")(x) and op("DischargedObligations")(x)
+  & => op("ProofBacked")(x)
+$
 #+end_src
 
 This distinction is important for implementation work. A Scheme module can emit a fact, a receipt, or a runtime metadata field. That emission is only data. It becomes proof-backed only when the corresponding Lean obligation is discharged.
@@ -47,35 +45,31 @@ This distinction is important for implementation work. A Scheme module can emit 
 * 10.06.55.20 Core Thesis
 POO/C3 linearization decides local object precedence. It does not by itself prove safety.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{Lin}_{\mathrm{POO/C3}}(M) &\neq \operatorname{Safety}(M,\Sigma) \\
-\operatorname{Lin}_{\mathrm{POO/C3}}(M) &\Rightarrow \operatorname{ResolvedSlots}(M) \\
-\operatorname{Safety}(M,\Sigma)
-  &\Rightarrow
-    \operatorname{DepsCompleted}(M,\Sigma)
-    \land \operatorname{ScopeAllowed}(M,\Sigma)
-    \land \operatorname{PolicyHolds}(M,\Sigma)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("Lin")_(upright("POO/C3"))(M) & != op("Safety")(M,Sigma) \
+op("Lin")_(upright("POO/C3"))(M) & => op("ResolvedSlots")(M) \
+op("Safety")(M,Sigma)
+  & =>
+    op("DepsCompleted")(M,Sigma)
+    and op("ScopeAllowed")(M,Sigma)
+    and op("PolicyHolds")(M,Sigma)
+$
 #+end_src
 
 This distinction matters. POO/C3 linearization can tell us which object slot wins. It cannot automatically tell us whether the resulting flow is allowed to start, whether the selected strategy preserves parent policy, or whether a shared profile is valid for a session. The PooC3 proof layer reasons over the linearized POO/C3 result and asks whether that result is safe in the current state.
 
 The central contract is =CanStart=. A module can start only when dependency, scope, policy, precondition, and guard conditions all hold.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{CanStart}(s,m) \equiv\;&
-  \operatorname{DepsCompleted}(s,m) \\
-  &\land \operatorname{ScopeAllowed}(s,m) \\
-  &\land P_m(s) \\
-  &\land Q_m(s) \\
-  &\land G_m(s)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("CanStart")(s,m) equiv &
+  op("DepsCompleted")(s,m) \
+  & and op("ScopeAllowed")(s,m) \
+  & and P_m(s) \
+  & and Q_m(s) \
+  & and G_m(s)
+$
 #+end_src
 
 Here:
@@ -102,18 +96,16 @@ The proof layer uses a small vocabulary repeatedly. The names below are intentio
 
 The system should be read as a typed transition system:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\Sigma &= \text{typed state facts} \\
-M &= \text{modules, policies, strategy steps, lifecycle steps} \\
-E &= \text{runtime and control-plane events} \\
-\Sigma \xrightarrow{m} \Sigma'
-  &\Rightarrow \operatorname{CanStart}(\Sigma,m) \\
-\Sigma \xrightarrow{e} \Sigma'
-  &\Rightarrow \operatorname{AllowedEvent}(\Sigma,e)
-\end{aligned}
-\]
+#+begin_src typst
+$
+Sigma & = "typed state facts" \
+M & = "modules, policies, strategy steps, lifecycle steps" \
+E & = "runtime and control-plane events" \
+Sigma "overset"(m, arrow.r) Sigma'
+  & => op("CanStart")(Sigma,m) \
+Sigma "overset"(e, arrow.r) Sigma'
+  & => op("AllowedEvent")(Sigma,e)
+$
 #+end_src
 
 The design deliberately avoids a raw JSON proof manifest. JSON can carry data, but it cannot by itself express or check the dependent relationship between facts, predicates, traces, and proofs. Lean is used because its types and propositions can encode those relationships directly.
@@ -132,17 +124,15 @@ The proof layer gives agents a hard contract:
 
 For AI work, proof is not just a correctness luxury. It is a control mechanism for generated behavior.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{AgentGenerated}(c)
-  &\Rightarrow \operatorname{CandidateObligations}(c) \\
-\operatorname{AllDischarged}(c)
-  &\Rightarrow \operatorname{AcceptableProjection}(c) \\
-\exists o,\operatorname{Rejected}(o)
-  &\Rightarrow \neg \operatorname{AcceptableProjection}(c)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("AgentGenerated")(c)
+  & => op("CandidateObligations")(c) \
+op("AllDischarged")(c)
+  & => op("AcceptableProjection")(c) \
+exists o,op("Rejected")(o)
+  & => not op("AcceptableProjection")(c)
+$
 #+end_src
 
 This changes how agents should work. The agent should not only write Scheme configuration. It should also preserve the path from configuration to proof facts:
@@ -167,23 +157,25 @@ For POO Flow, that policy is not a free-form prompt. It is the composition of PO
 | Flow | Which module can start after which dependencies? | A successor cannot start until all declared prerequisites are satisfied. |
 | Profile | Which shared policy object wins when profiles compose? | POO/C3 order is deterministic and every override is accounted for. |
 
-#+begin_src latex
-\[
-\operatorname{AcceptAIAction}(a) \Rightarrow
-  E_{\mathrm{session}}(a) \land
-  E_{\mathrm{sandbox}}(a) \land
-  E_{\mathrm{loop}}(a)
-\]
-\[
-\operatorname{SubagentEdge}(p,c) \Rightarrow
-  \operatorname{child}(c,p) \land
-  \operatorname{Scope}(c) \subseteq \operatorname{Scope}(p) \land
-  \operatorname{Tools}(c) \subseteq \operatorname{Tools}(p)
-\]
-\[
-\operatorname{Start}(B) \Rightarrow
-  \bigwedge_{A \in \operatorname{Requires}(B)} \operatorname{Satisfied}(A)
-\]
+#+begin_src typst
+$
+op("AcceptAIAction")(a) =>
+  E_(upright("session"))(a) and
+  E_(upright("sandbox"))(a) and
+  E_(upright("loop"))(a)
+$
+
+$
+op("SubagentEdge")(p,c) =>
+  op("child")(c,p) and
+  op("Scope")(c) subset.eq op("Scope")(p) and
+  op("Tools")(c) subset.eq op("Tools")(p)
+$
+
+$
+op("Start")(B) =>
+  and.big_(A in op("Requires")(B)) op("Satisfied")(A)
+$
 #+end_src
 
 This is why the Scheme side must expose typed facts, not loose JSON manifests. The Lean side should check propositions about the same policy objects that the Scheme control plane will execute. The runtime can then reject an agent action because a proof obligation is absent, not because a human reviewer noticed the bug after execution.
@@ -247,16 +239,14 @@ flowchart TB
 
 The important boundary is that runtime evidence and production reference evidence are not automatically proof evidence. They become useful only after the proof layer can type them as owned facts, adopted facts, or rejected obligations.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{PooFlowOwnedFact}(C) &\Rightarrow C \\
-\operatorname{ReferenceObservation}(R,C) &\nRightarrow C \\
-\operatorname{VerifiedFromReference}(r)
-  &\Rightarrow \operatorname{AdoptionCertificate}(r) \\
-\operatorname{AdoptionCertificate}(r) &\Rightarrow C
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("PooFlowOwnedFact")(C) & => C \
+op("ReferenceObservation")(R,C) & arrow.r.double.not C \
+op("VerifiedFromReference")(r)
+  & => op("AdoptionCertificate")(r) \
+op("AdoptionCertificate")(r) & => C
+$
 #+end_src
 
 This is why OpenRATH can be a production reference but not a verification authority. It can suggest cases. It cannot close a POO flow proof unless the POO proof boundary adopts the observation through a certificate.
@@ -286,23 +276,21 @@ flowchart LR
 
 The chain can be summarized mathematically:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{Implement}_{Scheme}(m)
-  &\Rightarrow \operatorname{Facts}(m) \\
-\operatorname{Facts}(m)
-  &\Rightarrow \operatorname{Obligations}(m) \\
-\operatorname{Proof}(m)
-  &\equiv
-    \forall o \in \operatorname{Obligations}(m),\;
-      \operatorname{Discharged}(o) \lor \operatorname{Rejected}(o) \\
-\operatorname{Projectable}(m)
-  &\Rightarrow
-    \forall o \in \operatorname{RequiredObligations}(m),\;
-      \operatorname{Discharged}(o)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("Implement")_("Scheme")(m)
+  & => op("Facts")(m) \
+op("Facts")(m)
+  & => op("Obligations")(m) \
+op("Proof")(m)
+  & equiv
+    forall o in op("Obligations")(m),
+      op("Discharged")(o) or op("Rejected")(o) \
+op("Projectable")(m)
+  & =>
+    forall o in op("RequiredObligations")(m),
+      op("Discharged")(o)
+$
 #+end_src
 
 The chain is intentionally asymmetric. Scheme emits facts and candidate obligations. Lean checks whether those obligations can be discharged. Runtime projection should consume only the discharged part of the proof surface, while rejected obligations explain why a flow must not proceed.
@@ -320,18 +308,16 @@ This gives us a practical rule for code review:
 * 10.06.55.50 Policy And Strategy Semantics
 Policy and strategy are separate. A policy states what is allowed. A strategy chooses a next step. The proof layer checks that the selected step is allowed by the policy and that overrides do not broaden the parent contract.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{select}(S,\Sigma) = m
-  &\Rightarrow \operatorname{CanStart}(\Sigma,m) \\
-\operatorname{override}(child,parent)
-  &\Rightarrow child \sqsubseteq parent \\
-child \sqsubseteq parent
-  &\equiv
-    \forall x,\; child(x) \Rightarrow parent(x)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("select")(S,Sigma) = m
+  & => op("CanStart")(Sigma,m) \
+op("override")("child","parent")
+  & => "child" subset.eq "parent" \
+"child" subset.eq "parent"
+  & equiv
+    forall x,  "child"(x) => "parent"(x)
+$
 #+end_src
 
 The refinement relation is the key mathematical idea for reusable POO policy objects. Reuse is safe only when the child policy is a subset of the parent policy. If a shared profile is reused in a narrower context, the proof must show that every permission it grants is still allowed by the parent scope.
@@ -347,41 +333,37 @@ For agents, this means policy generation should produce proof obligations, not o
 * 10.06.55.60 Session And Subagent Semantics
 Session lifecycle proof is where the abstract policy model meets real agent behavior. A session must establish enough facts before it can dispatch work to agents or subagents.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{CanStart}(\Sigma,\operatorname{messageDispatch})
-  &\Rightarrow \operatorname{channelAuthorized}(\Sigma) \\
-\operatorname{channelAuthorized}(\Sigma)
-  &\Rightarrow
-    \operatorname{agentRegistered}(\Sigma)
-    \land \operatorname{subagentRegistered}(\Sigma)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("CanStart")(Sigma,op("messageDispatch"))
+  & => op("channelAuthorized")(Sigma) \
+op("channelAuthorized")(Sigma)
+  & =>
+    op("agentRegistered")(Sigma)
+    and op("subagentRegistered")(Sigma)
+$
 #+end_src
 
 The latest control-link proof also exposes a real gap in the base control-plane event model:
 
-#+begin_src latex
-\[
-\operatorname{BaseTrace}(\operatorname{sendToSubagent}(a))
-  \Leftarrow \top
-\]
+#+begin_src typst
+$
+op("BaseTrace")(op("sendToSubagent")(a))
+  <= top
+$
 #+end_src
 
 That formula says the base event alone is too weak: it can construct a send trace without lifecycle evidence. The strengthened lifecycle trace requires active subagent, channel authorization, and policy permission:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{LifecycleTrace}(\operatorname{sendToSubagent}(a))
-  &\Rightarrow \operatorname{activeSubagent}(a) \\
-\operatorname{LifecycleTrace}(\operatorname{sendToSubagent}(a))
-  &\Rightarrow \operatorname{channelAllowed}(a) \\
-\operatorname{LifecycleTrace}(\operatorname{sendToSubagent}(a))
-  &\Rightarrow \operatorname{policyAllowsSend}(a)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("LifecycleTrace")(op("sendToSubagent")(a))
+  & => op("activeSubagent")(a) \
+op("LifecycleTrace")(op("sendToSubagent")(a))
+  & => op("channelAllowed")(a) \
+op("LifecycleTrace")(op("sendToSubagent")(a))
+  & => op("policyAllowsSend")(a)
+$
 #+end_src
 
 This is exactly the kind of issue the Lean layer should reveal. The proof does not merely mirror the implementation. It identifies where the implementation surface is too permissive and defines the stronger contract that real flow execution should satisfy.
@@ -440,18 +422,16 @@ Agents should treat the proof layer as a contract, not a passive appendix. When 
 
 If the agent cannot supply this evidence, it should not silently emit a stronger claim. It should emit an obligation that remains open, or a rejection certificate when a policy, scope, or lifecycle fact is denied.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{GeneratedPolicy}(p)
-  &\Rightarrow
-    \exists o,\; \operatorname{CandidateObligation}(o) \\
-\operatorname{Discharged}(o)
-  &\Rightarrow \operatorname{ProofBacked}(p) \\
-\operatorname{Rejected}(o)
-  &\Rightarrow \neg \operatorname{ProofBacked}(p)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("GeneratedPolicy")(p)
+  & =>
+    exists o,  op("CandidateObligation")(o) \
+op("Discharged")(o)
+  & => op("ProofBacked")(p) \
+op("Rejected")(o)
+  & => not op("ProofBacked")(p)
+$
 #+end_src
 
 * 10.06.55.95 Problems Solved
@@ -468,16 +448,14 @@ The proof layer exists because the project is explicitly designed for high-compo
 
 This is the practical value in AI. The system does not need to trust the agent's explanation. It can require the agent to produce typed evidence. If the evidence is missing, the output remains an obligation rather than becoming a hidden assumption.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{LLMClaim}(C) &\nRightarrow C \\
-\operatorname{LLMClaim}(C) \land \operatorname{LeanEvidence}(C)
-  &\Rightarrow C \\
-\operatorname{LLMClaim}(C) \land \neg \operatorname{LeanEvidence}(C)
-  &\Rightarrow \operatorname{OpenObligation}(C)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("LLMClaim")(C) & arrow.r.double.not C \
+op("LLMClaim")(C) and op("LeanEvidence")(C)
+  & => C \
+op("LLMClaim")(C) and not op("LeanEvidence")(C)
+  & => op("OpenObligation")(C)
+$
 #+end_src
 
 * 10.06.55.100 Future Expectations
@@ -507,18 +485,16 @@ A flow is proof-backed only when the emitted strategy step carries Lean evidence
 
 Manifest completeness is only a bridge. It can tell us that data exists. It cannot prove that the data is safe. The proof-backed acceptance rule is:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{ProofBackedFlow}(F)
-  \equiv\;&
-    \operatorname{CanStartEvidence}(F) \\
-    &\land \operatorname{PolicyRefinementEvidence}(F) \\
-    &\land \operatorname{TraceEvidence}(F) \\
-    &\land \operatorname{LifecycleEvidence}(F) \\
-    &\land \operatorname{RuntimeBoundaryEvidence}(F)
-\end{aligned}
-\]
+#+begin_src typst
+$
+op("ProofBackedFlow")(F)
+  equiv &
+    op("CanStartEvidence")(F) \
+    & and op("PolicyRefinementEvidence")(F) \
+    & and op("TraceEvidence")(F) \
+    & and op("LifecycleEvidence")(F) \
+    & and op("RuntimeBoundaryEvidence")(F)
+$
 #+end_src
 
 That is the standard future implementation should target: not more prose claims, not raw JSON manifests, and not informal production analogies, but typed evidence that can be checked, rejected, and explained.

@@ -46,24 +46,24 @@ remain useful because they make failures auditable:
 
 * Decision Semantics
 
-#+begin_src latex
-\[
-  \mathrm{accept}(b) \iff
-    \mathrm{valid}(b) \land
-    \mathrm{accepted}_{composition}(b) \land
-    \mathrm{accepted}_{scenario}(b) \land
-    \mathrm{accepted}_{handoff}(b) \land
-    \mathrm{runtimeBoundaryOk}(b)
-\]
+#+begin_src typst
+$
+upright("accept")(b) <=>
+    upright("valid")(b) and
+    upright("accepted")_("composition")(b) and
+    upright("accepted")_("scenario")(b) and
+    upright("accepted")_("handoff")(b) and
+    upright("runtimeBoundaryOk")(b)
+$
 
-\[
-  \mathrm{reasons}(b) =
-    R_{bundle}(b) \cup
-    R_{composition}(b) \cup
-    R_{scenario}(b) \cup
-    R_{handoff}(b) \cup
-    R_{runtime}(b)
-\]
+$
+upright("reasons")(b) =
+    R_("bundle")(b) union
+    R_("composition")(b) union
+    R_("scenario")(b) union
+    R_("handoff")(b) union
+    R_("runtime")(b)
+$
 #+end_src
 
 This is intentionally small but strict. It lets the runtime owner reject a
@@ -93,22 +93,22 @@ Lean is the mathematical owner of the invariant vocabulary. Scheme owns the
 control-plane artifact. The bridge is correct only when the same facts appear on
 both sides:
 
-#+begin_src latex
-\[
-  \forall f \in \mathrm{facts}(receipt),
-  \mathrm{schema}(f) \in \Sigma
-  \land
-  \mathrm{requiredFields}(\mathrm{schema}(f)) \subseteq \mathrm{fields}(f)
-\]
+#+begin_src typst
+$
+forall f in upright("facts")("receipt"),
+  upright("schema")(f) in Sigma
+  and
+  upright("requiredFields")(upright("schema")(f)) subset.eq upright("fields")(f)
+$
 
-\[
-  \mathrm{bundleAccepted}(b) \Rightarrow
-  \mathrm{compositionConsistent}(b)
-  \land
-  \mathrm{scenarioGapClosed}(b)
-  \land
-  \mathrm{handoffContractClosed}(b)
-\]
+$
+upright("bundleAccepted")(b) =>
+  upright("compositionConsistent")(b)
+  and
+  upright("scenarioGapClosed")(b)
+  and
+  upright("handoffContractClosed")(b)
+$
 #+end_src
 
 Generated Lean modules are still hand-aligned in this stage. The next stronger

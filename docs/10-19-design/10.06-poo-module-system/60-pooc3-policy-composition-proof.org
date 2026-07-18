@@ -22,24 +22,22 @@ The proof carrier is Lean code. JSON is not used as the proof manifest here.
 
 * Core Model
 
-#+begin_src latex
-\[
-\begin{aligned}
-allows(allOf(p,q), c) &\Leftrightarrow allows(p,c) \land allows(q,c) \\
-allows(anyOf(p,q), c) &\Leftrightarrow allows(p,c) \lor allows(q,c) \\
-allows(override(parent,local,o), c)
-  &\Leftrightarrow (o(c)\land allows(local,c))
-      \lor (\neg o(c)\land allows(parent,c)) \\
-CanStart(withPolicyObject(spec,p), s, m)
-  &\Leftrightarrow StartFrame(spec,s,m)
-      \land allows(p, context(s,m)) \\
-StartFrame(spec,s,m)
-  &\Leftrightarrow deps(spec,s,m)
-      \land scope(spec,s,m)
-      \land precondition(spec,s,m)
-      \land guard(spec,s,m)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"allows"("allOf"(p,q), c) & <=> "allows"(p,c) and "allows"(q,c) \
+"allows"("anyOf"(p,q), c) & <=> "allows"(p,c) or "allows"(q,c) \
+"allows"("override"("parent","local",o), c)
+  & <=> (o(c) and "allows"("local",c))
+      or (not o(c) and "allows"("parent",c)) \
+"CanStart"("withPolicyObject"("spec",p), s, m)
+  & <=> "StartFrame"("spec",s,m)
+      and "allows"(p, "context"(s,m)) \
+"StartFrame"("spec",s,m)
+  & <=> "deps"("spec",s,m)
+      and "scope"("spec",s,m)
+      and "precondition"("spec",s,m)
+      and "guard"("spec",s,m)
+$
 #+end_src
 
 The key separation is that policy composition is POO-native, while
@@ -71,25 +69,23 @@ Single-object policy composition is not enough for POO. A realistic flow has a
 family of policy objects, indexed by facet, and each module declares which
 facets are required at startup.
 
-#+begin_src latex
-\[
-\begin{aligned}
-bundle &: Facet \to PolicyObject(Context) \\
-requiresAt(bundle, R, c)
-  &\Leftrightarrow
-    \forall f,\ R(c,f) \Rightarrow allows(bundle(f),c) \\
-allows(requirementsPolicy(bundle,R), c)
-  &\Leftrightarrow requiresAt(bundle,R,c) \\
-bundleAllOf(p,q)(f)
-  &= allOf(p(f),q(f)) \\
-overrideFacet(parent,local,t,o)(f)
-  &=
-    \begin{cases}
-      override(parent(t),local(t),o), & f=t \\
-      parent(f), & f\neq t
-    \end{cases}
-\end{aligned}
-\]
+#+begin_src typst
+$
+"bundle" & : "Facet" -> "PolicyObject"("Context") \
+"requiresAt"("bundle", R, c)
+  & <=>
+    forall f, R(c,f) => "allows"("bundle"(f),c) \
+"allows"("requirementsPolicy"("bundle",R), c)
+  & <=> "requiresAt"("bundle",R,c) \
+"bundleAllOf"(p,q)(f)
+  & = "allOf"(p(f),q(f)) \
+"overrideFacet"("parent","local",t,o)(f)
+  & =
+    cases(
+    "override"("parent"(t),"local"(t),o) & f=t,
+    "parent"(f) & f!= t
+  )
+$
 #+end_src
 
 #+begin_src lean
@@ -137,29 +133,27 @@ workflow. The next proof surface turns =CanStart= into a module-specific
 contract: dependency facts, the non-policy start frame, and required policy
 facets are all projected out of one startup proof.
 
-#+begin_src latex
-\[
-\begin{aligned}
-CanStart(uiBundleSpec(B), s, strategyPlan)
-  &\Rightarrow
-    StartFrame(uiSpec,s,strategyPlan) \\
-  &\quad \land completed(s,selectorPolicy)
-    \land completed(s,resourcePolicy)
-    \land completed(s,capabilityPolicy) \\
-  &\quad \land allows(B(selector), ctx_s)
-    \land allows(B(resource), ctx_s)
-    \land allows(B(capability), ctx_s) \\
-CanStart(uiBundleSpec(B), s, runtimeManifest)
-  &\Rightarrow
-    StartFrame(uiSpec,s,runtimeManifest) \\
-  &\quad \land completed(s,strategyPlan)
-    \land completed(s,localValidation) \\
-  &\quad \land completed(s,memoryPolicy)
-    \land completed(s,compressionPolicy) \\
-  &\quad \land allows(B(memory), ctx_r)
-    \land allows(B(compression), ctx_r)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"CanStart"("uiBundleSpec"(B), s, "strategyPlan")
+  & =>
+    "StartFrame"("uiSpec",s,"strategyPlan") \
+  & quad and "completed"(s,"selectorPolicy")
+    and "completed"(s,"resourcePolicy")
+    and "completed"(s,"capabilityPolicy") \
+  & quad and "allows"(B("select" or), "ctx"_s)
+    and "allows"(B("resource"), "ctx"_s)
+    and "allows"(B("capability"), "ctx"_s) \
+"CanStart"("uiBundleSpec"(B), s, "runtimeManifest")
+  & =>
+    "StartFrame"("uiSpec",s,"runtimeManifest") \
+  & quad and "completed"(s,"strategyPlan")
+    and "completed"(s,"localValidation") \
+  & quad and "completed"(s,"memoryPolicy")
+    and "completed"(s,"compressionPolicy") \
+  & quad and "allows"(B("memory"), "ctx"_r)
+    and "allows"(B("compression"), "ctx"_r)
+$
 #+end_src
 
 #+begin_src lean
@@ -180,19 +174,17 @@ Selector override must be local. It may replace selector policy for
 =strategyPlan=, but it must not rewrite resource, capability, memory, or
 compression requirements.
 
-#+begin_src latex
-\[
-\begin{aligned}
-CanStart(uiBundleSpec(overrideFacet(P,L,selector,o)),s,strategyPlan)
-  \land o(ctx_s)
-  &\Rightarrow allows(L(selector),ctx_s) \\
-  &\quad \land allows(P(resource),ctx_s) \\
-  &\quad \land allows(P(capability),ctx_s) \\
-CanStart(uiBundleSpec(overrideFacet(P,L,selector,o)),s,runtimeManifest)
-  &\Rightarrow allows(P(memory),ctx_r) \\
-  &\quad \land allows(P(compression),ctx_r)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"CanStart"("uiBundleSpec"("overrideFacet"(P,L,"select" or,o)),s,"strategyPlan")
+  and o("ctx"_s)
+  & => "allows"(L("select" or),"ctx"_s) \
+  & quad and "allows"(P("resource"),"ctx"_s) \
+  & quad and "allows"(P("capability"),"ctx"_s) \
+"CanStart"("uiBundleSpec"("overrideFacet"(P,L,"select" or,o)),s,"runtimeManifest")
+  & => "allows"(P("memory"),"ctx"_r) \
+  & quad and "allows"(P("compression"),"ctx"_r)
+$
 #+end_src
 
 #+begin_src lean
@@ -207,36 +199,32 @@ CanStart(uiBundleSpec(overrideFacet(P,L,selector,o)),s,runtimeManifest)
 Refinement is the proof layer that prevents a local policy or agent-authored
 override from silently broadening what may start.
 
-#+begin_src latex
-\[
-\begin{aligned}
-refines(p_s,p_b)
-  &\Leftrightarrow
-    \forall c,\ allows(p_s,c) \Rightarrow allows(p_b,c) \\
-refines(B_s,B_b)
-  &\Leftrightarrow
-    \forall f,c,\ allows(B_s(f),c) \Rightarrow allows(B_b(f),c) \\
-refines(B_s,B_b) \land CanStart(uiBundleSpec(B_s),s,m)
-  &\Rightarrow CanStart(uiBundleSpec(B_b),s,m)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"refines"(p_s,p_b)
+  & <=>
+    forall c, "allows"(p_s,c) => "allows"(p_b,c) \
+"refines"(B_s,B_b)
+  & <=>
+    forall f,c, "allows"(B_s(f),c) => "allows"(B_b(f),c) \
+"refines"(B_s,B_b) and "CanStart"("uiBundleSpec"(B_s),s,m)
+  & => "CanStart"("uiBundleSpec"(B_b),s,m)
+$
 #+end_src
 
 For a selector override, the safety condition is local-to-parent refinement on
 the selector facet. Under that condition, the override cannot enable any UI
 module that the parent bundle would reject.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\left(\forall c,\ allows(L(selector),c)
-  \Rightarrow allows(P(selector),c)\right)
-  &\Rightarrow
-    refines(overrideFacet(P,L,selector,o),P) \\
-CanStart(uiBundleSpec(overrideFacet(P,L,selector,o)),s,m)
-  &\Rightarrow CanStart(uiBundleSpec(P),s,m)
-\end{aligned}
-\]
+#+begin_src typst
+$
+(forall c, "allows"(L("select" or),c)
+  => "allows"(P("select" or),c))
+  & =>
+    "refines"("overrideFacet"(P,L,"select" or,o),P) \
+"CanStart"("uiBundleSpec"("overrideFacet"(P,L,"select" or,o)),s,m)
+  & => "CanStart"("uiBundleSpec"(P),s,m)
+$
 #+end_src
 
 #+begin_src lean
@@ -257,52 +245,46 @@ Startup proofs are static unless state evolution is modeled. =UiStateExtends=
 is the monotone lifecycle relation: active scope may grow, completed facts may
 be added, and existing facts cannot regress.
 
-#+begin_src latex
-\[
-\begin{aligned}
-extends(s_0,s_1)
-  &\Rightarrow activeScope(s_0) \le activeScope(s_1) \\
-extends(s_0,s_1)
-  &\Rightarrow completed(s_0,m) \Rightarrow completed(s_1,m) \\
-extends(s_0,s_1)
-  &\Rightarrow precondition(s_0,m) \Rightarrow precondition(s_1,m) \\
-extends(s_0,s_1)
-  &\Rightarrow guard(s_0,m) \Rightarrow guard(s_1,m)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"extends"(s_0,s_1)
+  & => "activeScope"(s_0) <= "activeScope"(s_1) \
+"extends"(s_0,s_1)
+  & => "completed"(s_0,m) => "completed"(s_1,m) \
+"extends"(s_0,s_1)
+  & => "precondition"(s_0,m) => "precondition"(s_1,m) \
+"extends"(s_0,s_1)
+  & => "guard"(s_0,m) => "guard"(s_1,m)
+$
 #+end_src
 
 Policy facets are intentionally not assumed monotone for free. The proof asks
 for a facet-stability witness at the module being preserved:
 
-#+begin_src latex
-\[
-\begin{aligned}
-stable(B,s_0,s_1,m)
-  &\Leftrightarrow
-    \forall f,\ required(m,f) \Rightarrow
-      allows(B(f),ctx(s_0,m)) \Rightarrow
-      allows(B(f),ctx(s_1,m)) \\
-extends(s_0,s_1) \land stable(B,s_0,s_1,m)
-  \land CanStart(uiBundleSpec(B),s_0,m)
-  &\Rightarrow CanStart(uiBundleSpec(B),s_1,m)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"stable"(B,s_0,s_1,m)
+  & <=>
+    forall f, "required"(m,f) =>
+      "allows"(B(f),"ctx"(s_0,m)) =>
+      "allows"(B(f),"ctx"(s_1,m)) \
+"extends"(s_0,s_1) and "stable"(B,s_0,s_1,m)
+  and "CanStart"("uiBundleSpec"(B),s_0,m)
+  & => "CanStart"("uiBundleSpec"(B),s_1,m)
+$
 #+end_src
 
 For safe selector overrides, progression and refinement compose: an override
 that was safe before the state extension remains reducible to the parent after
 the state extension.
 
-#+begin_src latex
-\[
-\begin{aligned}
-extends(s_0,s_1) \land stable(overrideFacet(P,L,selector,o),s_0,s_1,m)
-  &\land safeSelectorOverride(P,L) \\
-  &\land CanStart(uiBundleSpec(overrideFacet(P,L,selector,o)),s_0,m) \\
-  &\Rightarrow CanStart(uiBundleSpec(P),s_1,m)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"extends"(s_0,s_1) and "stable"("overrideFacet"(P,L,"select" or,o),s_0,s_1,m)
+  & and "safeSelectorOverride"(P,L) \
+  & and "CanStart"("uiBundleSpec"("overrideFacet"(P,L,"select" or,o)),s_0,m) \
+  & => "CanStart"("uiBundleSpec"(P),s_1,m)
+$
 #+end_src
 
 #+begin_src lean
@@ -326,21 +308,19 @@ State progression says facts do not regress. A completion trace step says why a
 new fact appears: a module was startable before the step, the state extended,
 and the module is completed after the step.
 
-#+begin_src latex
-\[
-\begin{aligned}
-CompletionStep(B,s_0,s_1,m)
-  &\Leftrightarrow
-    CanStart(uiBundleSpec(B),s_0,m)
-    \land extends(s_0,s_1)
-    \land completed(s_1,m) \\
-CompletionStep(B,s_0,s_1,m)
-  &\Rightarrow completed(s_1,m) \\
-CompletionStep(B,s_0,s_1,m)
-  \land completed(s_0,d)
-  &\Rightarrow completed(s_1,d)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"CompletionStep"(B,s_0,s_1,m)
+  & <=>
+    "CanStart"("uiBundleSpec"(B),s_0,m)
+    and "extends"(s_0,s_1)
+    and "completed"(s_1,m) \
+"CompletionStep"(B,s_0,s_1,m)
+  & => "completed"(s_1,m) \
+"CompletionStep"(B,s_0,s_1,m)
+  and "completed"(s_0,d)
+  & => "completed"(s_1,d)
+$
 #+end_src
 
 The trace layer can now distinguish real unlocks from false unlocks. Completing
@@ -349,21 +329,19 @@ runtime still needs validation, memory, compression, scope, and policy facets.
 Benchmark remains blocked without =scenarioMatrix= even after strategy
 completion.
 
-#+begin_src latex
-\[
-\begin{aligned}
-CompletionStep(B,s_0,s_1,strategyPlan)
-  \land validation(s_1)
-  \land memory(s_1)
-  \land compression(s_1)
-  \land runtimeScope(s_1)
-  \land runtimePolicy(B,s_1)
-  &\Rightarrow CanStart(uiBundleSpec(B),s_1,runtimeManifest) \\
-CompletionStep(B,s_0,s_1,strategyPlan)
-  \land \neg matrix(s_1)
-  &\Rightarrow \neg CanStart(uiBundleSpec(B),s_1,scenarioBenchmark)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"CompletionStep"(B,s_0,s_1,"strategyPlan")
+  and "validation"(s_1)
+  and "memory"(s_1)
+  and "compression"(s_1)
+  and "runtimeScope"(s_1)
+  and "runtimePolicy"(B,s_1)
+  & => "CanStart"("uiBundleSpec"(B),s_1,"runtimeManifest") \
+"CompletionStep"(B,s_0,s_1,"strategyPlan")
+  and not "matrix"(s_1)
+  & => not "CanStart"("uiBundleSpec"(B),s_1,"scenarioBenchmark")
+$
 #+end_src
 
 Safe selector override also lifts across completion steps: an override step can
@@ -388,23 +366,21 @@ The session lifecycle is where POO policy composition can hide real bugs. A
 session must not merely start; after startup, every tool call, file access, and
 subagent launch must remain bounded by the session sandbox.
 
-#+begin_src latex
-\[
-\begin{aligned}
-SessionProfile &= \{sandbox\} \\
-SandboxProfile &= \{toolAllowed,\ fileAllowed,\ capabilityAllowed\} \\
-Trace(session,useTool(t))
-  &\Rightarrow toolAllowed(session.sandbox,t) \\
-Trace(session,readFile(f))
-  &\Rightarrow fileAllowed(session.sandbox,f) \\
-Trace(session,writeFile(f))
-  &\Rightarrow fileAllowed(session.sandbox,f) \\
-Trace(session,startSubagent(a,child))
-  &\Rightarrow
-    \forall c,\ capabilityAllowed(child.sandbox,c)
-      \Rightarrow capabilityAllowed(session.sandbox,c)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"SessionProfile" & = brace.l "sandbox" brace.r \
+"SandboxProfile" & = brace.l "toolAllowed", "fileAllowed", "capabilityAllowed" brace.r \
+"Trace"("session","useTool"(t))
+  & => "toolAllowed"("session"."sandbox",t) \
+"Trace"("session","readFile"(f))
+  & => "fileAllowed"("session"."sandbox",f) \
+"Trace"("session","writeFile"(f))
+  & => "fileAllowed"("session"."sandbox",f) \
+"Trace"("session","startSubagent"(a,"child"))
+  & =>
+    forall c, "capabilityAllowed"("child"."sandbox",c)
+      => "capabilityAllowed"("session"."sandbox",c)
+$
 #+end_src
 
 The corresponding negative theorems are the important reflection surface:
@@ -441,34 +417,30 @@ External production systems are reference evidence, not verification evidence.
 =OpenRATH= can suggest missing control-plane cases, but it cannot prove a POO
 flow claim by itself.
 
-#+begin_src latex
-\[
-\begin{aligned}
-PooFlowOwnedFact(C) &\Rightarrow C \\
-ReferenceObservation(OpenRATH,C) &\nRightarrow C \\
-VerifiedFromReference(r) &\Rightarrow AdoptionCertificate(r) \\
-AdoptionCertificate(r) &\Rightarrow C
-\end{aligned}
-\]
+#+begin_src typst
+$
+"PooFlowOwnedFact"(C) & => C \
+"ReferenceObservation"("OpenRATH",C) & arrow.r.double.not C \
+"VerifiedFromReference"(r) & => "AdoptionCertificate"(r) \
+"AdoptionCertificate"(r) & => C
+$
 #+end_src
 
 For control-plane traces, this means a production reference trace must be
 adopted by the POO flow proof boundary before it can discharge tool, file, or
 subagent capability obligations.
 
-#+begin_src latex
-\[
-\begin{aligned}
-VerifiedFromReference(OpenRATHTrace(session,useTool(t)))
-  &\Rightarrow toolAllowed(session.sandbox,t) \\
-VerifiedFromReference(OpenRATHTrace(session,readFile(f)))
-  &\Rightarrow fileAllowed(session.sandbox,f) \\
-VerifiedFromReference(OpenRATHTrace(session,startSubagent(a,child)))
-  &\Rightarrow
-    \forall c,\ capabilityAllowed(child.sandbox,c)
-      \Rightarrow capabilityAllowed(session.sandbox,c)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"VerifiedFromReference"("OpenRATHTrace"("session","useTool"(t)))
+  & => "toolAllowed"("session"."sandbox",t) \
+"VerifiedFromReference"("OpenRATHTrace"("session","readFile"(f)))
+  & => "fileAllowed"("session"."sandbox",f) \
+"VerifiedFromReference"("OpenRATHTrace"("session","startSubagent"(a,"child")))
+  & =>
+    forall c, "capabilityAllowed"("child"."sandbox",c)
+      => "capabilityAllowed"("session"."sandbox",c)
+$
 #+end_src
 
 Negative reflection is explicit: if the POO flow sandbox denies the tool, file,
@@ -495,34 +467,30 @@ trace for that event.
 
 * Reference Audit
 Reference systems can create candidate obligations. They do not close the proof. The obligation must either be discharged by a POO-owned fact or by a verified adoption certificate; otherwise the proof surface records a rejection certificate.
-#+begin_src latex
-\[
-\begin{aligned}
-CandidateObligation(S,C) &= ReferenceObservation(S,C) \\
-ObligationDischarge(o) &::=
-  PooFlowOwnedFact(C)\ |\ VerifiedFromReference(o.reference) \\
-RejectionCertificate(o) &\Rightarrow \neg ObligationDischarge(o) \\
-AuditResult(o) &::= discharged(o)\ |\ rejected(o)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"CandidateObligation"(S,C) & = "ReferenceObservation"(S,C) \
+"ObligationDischarge"(o) & ::=
+  "PooFlowOwnedFact"(C) | "VerifiedFromReference"(o."reference") \
+"RejectionCertificate"(o) & => not "ObligationDischarge"(o) \
+"AuditResult"(o) & ::= "discharged"(o) | "rejected"(o)
+$
 #+end_src
 
 For control-plane reference traces, discharge is still checked against the POO sandbox and capability lattice.
-#+begin_src latex
-\[
-\begin{aligned}
-discharged(session,useTool(t)) &\Rightarrow toolAllowed(session.sandbox,t) \\
-discharged(session,readFile(f)) &\Rightarrow fileAllowed(session.sandbox,f) \\
-discharged(session,startSubagent(a,child))
-  &\Rightarrow
-    \forall c,\ capabilityAllowed(child.sandbox,c)
-      \Rightarrow capabilityAllowed(session.sandbox,c) \\
-\neg toolAllowed(session.sandbox,t)
-  &\Rightarrow RejectionCertificate(session,useTool(t)) \\
-\neg fileAllowed(session.sandbox,f)
-  &\Rightarrow RejectionCertificate(session,readFile(f))
-\end{aligned}
-\]
+#+begin_src typst
+$
+"discharged"("session","useTool"(t)) & => "toolAllowed"("session"."sandbox",t) \
+"discharged"("session","readFile"(f)) & => "fileAllowed"("session"."sandbox",f) \
+"discharged"("session","startSubagent"(a,"child"))
+  & =>
+    forall c, "capabilityAllowed"("child"."sandbox",c)
+      => "capabilityAllowed"("session"."sandbox",c) \
+not "toolAllowed"("session"."sandbox",t)
+  & => "RejectionCertificate"("session","useTool"(t)) \
+not "fileAllowed"("session"."sandbox",f)
+  & => "RejectionCertificate"("session","readFile"(f))
+$
 #+end_src
 
 #+begin_src mermaid
@@ -564,38 +532,34 @@ flowchart LR
 
 * Session Control Link
 The base control-plane event =sendToSubagent= is intentionally exposed as a gap: the current =eventAllowed= rule accepts it with =True=. That base trace is not enough to prove a lifecycle-safe message. The linked lifecycle model adds active-subagent, channel, and policy obligations.
-#+begin_src latex
-\[
-\begin{aligned}
-BaseTrace(sendToSubagent(a)) &\Leftarrow \top \\
-LifecycleTrace(sendToSubagent(a))
-  &\Rightarrow activeSubagent(a) \\
-LifecycleTrace(sendToSubagent(a))
-  &\Rightarrow channelAllowed(a) \\
-LifecycleTrace(sendToSubagent(a))
-  &\Rightarrow policyAllowsSend(a) \\
-\neg activeSubagent(a)
-  &\Rightarrow \neg LifecycleTrace(sendToSubagent(a)) \\
-\neg channelAllowed(a)
-  &\Rightarrow \neg LifecycleTrace(sendToSubagent(a))
-\end{aligned}
-\]
+#+begin_src typst
+$
+"BaseTrace"("sendToSubagent"(a)) & <= top \
+"LifecycleTrace"("sendToSubagent"(a))
+  & => "activeSubagent"(a) \
+"LifecycleTrace"("sendToSubagent"(a))
+  & => "channelAllowed"(a) \
+"LifecycleTrace"("sendToSubagent"(a))
+  & => "policyAllowsSend"(a) \
+not "activeSubagent"(a)
+  & => not "LifecycleTrace"("sendToSubagent"(a)) \
+not "channelAllowed"(a)
+  & => not "LifecycleTrace"("sendToSubagent"(a))
+$
 #+end_src
 
 Reference observations must discharge the stronger lifecycle obligation, not just the base control-plane trace.
-#+begin_src latex
-\[
-\begin{aligned}
-LifecycleTraceObligation(S,sendToSubagent(a))
-  &= CandidateObligation(S,LifecycleTrace(sendToSubagent(a))) \\
-discharged(o) &\Rightarrow activeSubagent(a) \\
-discharged(o) &\Rightarrow channelAllowed(a) \\
-\neg activeSubagent(a)
-  &\Rightarrow RejectionCertificate(o) \\
-\neg channelAllowed(a)
-  &\Rightarrow RejectionCertificate(o)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"LifecycleTraceObligation"(S,"sendToSubagent"(a))
+  & = "CandidateObligation"(S,"LifecycleTrace"("sendToSubagent"(a))) \
+"discharged"(o) & => "activeSubagent"(a) \
+"discharged"(o) & => "channelAllowed"(a) \
+not "activeSubagent"(a)
+  & => "RejectionCertificate"(o) \
+not "channelAllowed"(a)
+  & => "RejectionCertificate"(o)
+$
 #+end_src
 
 #+begin_src mermaid
@@ -659,17 +623,15 @@ the guard, and the UI benchmark case.
 
 The bundle layer adds these module-specific facet requirements:
 
-#+begin_src latex
-\[
-\begin{aligned}
-requires(strategyPlan)
-  &= \{selector, resource, capability\} \\
-requires(runtimeManifest)
-  &= \{memory, compression\} \\
-requires(scenarioBenchmark)
-  &= \{performanceFixture\}
-\end{aligned}
-\]
+#+begin_src typst
+$
+"requires"("strategyPlan")
+  & = brace.l "select" or, "resource", "capability" brace.r \
+"requires"("runtimeManifest")
+  & = brace.l "memory", "compression" brace.r \
+"requires"("scenarioBenchmark")
+  & = brace.l "performanceFixture" brace.r
+$
 #+end_src
 
 #+begin_src mermaid

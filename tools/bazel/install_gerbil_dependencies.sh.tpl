@@ -11,8 +11,6 @@ export GERBIL_PATH="$gerbil_root"
 mkdir -p "${gerbil_root%/}/pkg"
 
 %{GXPkg} env env "${native_environment[@]}" \
-  %{GXPkg} dir --add git.cons.io/mighty-gerbils/gerbil-directory
-%{GXPkg} env env "${native_environment[@]}" \
   %{GXPkg} deps --install
 %{GXPkg} env env "${native_environment[@]}" \
   %{GXPkg} list

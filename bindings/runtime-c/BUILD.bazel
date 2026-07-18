@@ -1,9 +1,9 @@
-load(":runtime_contract.bzl", "runtime_contract")
-load(":runtime_checks.bzl", "runtime_contract_parity_test", "runtime_gerbil_benchmark_test", "runtime_gerbil_script_test", "runtime_leak_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_static_library.bzl", "cc_static_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load(":runtime_checks.bzl", "runtime_contract_parity_test", "runtime_gerbil_benchmark_test", "runtime_gerbil_script_test", "runtime_leak_test")
+load(":runtime_contract.bzl", "runtime_contract")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -70,7 +70,6 @@ cc_library(
 
 cc_library(
     name = "runtime_c_library",
-    alwayslink = True,
     srcs = [
         "src/proof_case_v1.c",
         "src/runtime_v0.c",
@@ -86,6 +85,7 @@ cc_library(
         ":proof_case_v1_headers",
         ":runtime_v0_headers",
     ],
+    alwayslink = True,
 )
 
 cc_binary(
@@ -101,6 +101,7 @@ cc_static_library(
 
 cc_test(
     name = "runtime_v0_harness",
+    size = "small",
     srcs = ["tests/runtime_v0_harness.c"],
     deps = [":runtime_c_library"],
 )
@@ -117,12 +118,14 @@ runtime_gerbil_benchmark_test(
 
 cc_test(
     name = "runtime_v0_batch_harness",
+    size = "small",
     srcs = ["tests/runtime_v0_batch_harness.c"],
     deps = [":runtime_c_library"],
 )
 
 cc_test(
     name = "runtime_v0_vector_harness",
+    size = "small",
     srcs = ["tests/runtime_v0_vector_harness.c"],
     args = ["$(location :runtime_v0_event_vector)"],
     data = [":runtime_v0_event_vector"],
@@ -131,12 +134,14 @@ cc_test(
 
 cc_test(
     name = "runtime_v0_installed_consumer",
+    size = "small",
     srcs = ["tests/runtime_v0_installed_consumer.c"],
     deps = [":runtime_c_library"],
 )
 
 runtime_gerbil_script_test(
     name = "runtime_v0_symbol_surface_test",
+    size = "small",
     arguments = [
         "//:tools/validate-runtime-v0-symbol-surface.ss",
         ":runtime_c_shared",
@@ -159,12 +164,14 @@ filegroup(
 
 cc_test(
     name = "proof_case_v1_harness",
+    size = "small",
     srcs = ["tests/proof_case_v1_harness.c"],
     deps = [":runtime_c_library"],
 )
 
 cc_test(
     name = "proof_case_v1_installed_consumer",
+    size = "small",
     srcs = ["tests/proof_case_v1_installed_consumer.c"],
     deps = [":runtime_c_library"],
 )
@@ -256,11 +263,11 @@ cc_test(
 test_suite(
     name = "runtime_c_sanitizer_tests",
     tests = [
-        ":runtime_v0_contract_parity_test",
         ":proof_case_v1_harness_asan",
         ":proof_case_v1_harness_ubsan",
         ":runtime_v0_batch_harness_asan",
         ":runtime_v0_batch_harness_ubsan",
+        ":runtime_v0_contract_parity_test",
         ":runtime_v0_harness_asan",
         ":runtime_v0_harness_ubsan",
     ],
@@ -292,6 +299,7 @@ cc_binary(
 
 cc_test(
     name = "proof_case_v1_benchmark_smoke",
+    size = "small",
     srcs = ["benchmarks/proof_case_v1_benchmark.c"],
     args = ["5"],
     copts = ["-O3"],

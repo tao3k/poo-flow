@@ -1,0 +1,22 @@
+[
+  "_malloc",
+  "_free",
+  "_pfw_handle_capacity",
+  "_pfw_instance_create",
+  "_pfw_instance_release",
+  "_pfw_negotiate",
+  "_pfw_profile_release",
+  "_pfw_bundle_open",
+  "_pfw_bundle_release",
+  "_pfw_session_open",
+  "_pfw_session_cancel",
+  "_pfw_session_close",
+  "_pfw_session_release",
+  "_pfw_arena_register",
+  "_pfw_arena_recycle",
+  "_pfw_arena_release",
+  "_pfw_publish_batch",
+  "_pfw_poll_batch",
+  "_pfw_submit_batch",
+  "_pfw_batch_ack"
+]

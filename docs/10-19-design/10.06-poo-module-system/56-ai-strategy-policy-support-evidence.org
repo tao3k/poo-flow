@@ -11,17 +11,18 @@ obligations in this repository.
 
 The core claim is:
 
-#+begin_src latex
-\[
-\operatorname{AgentGeneratedPolicy}(p)
-  \not\Rightarrow \operatorname{SafePolicy}(p)
-\]
-\[
-\operatorname{AgentGeneratedPolicy}(p)
-  \land \operatorname{SchemeFacts}(p)
-  \land \operatorname{LeanDischarge}(p)
-  \Rightarrow \operatorname{ProofBackedPolicy}(p)
-\]
+#+begin_src typst
+$
+op("AgentGeneratedPolicy")(p)
+  arrow.r.double.not op("SafePolicy")(p)
+$
+
+$
+op("AgentGeneratedPolicy")(p)
+  and op("SchemeFacts")(p)
+  and op("LeanDischarge")(p)
+  => op("ProofBackedPolicy")(p)
+$
 #+end_src
 
 This distinction matters because POO Flow is designed for complex composition:
@@ -44,22 +45,24 @@ Flow truth.  We need a strict evidence ladder.
 | E4 | Lean discharge | POO Flow proof package | Yes, for the proven obligation |
 | E5 | Runtime gate | Runtime projection or Marlin handoff checker | Yes, if tied to E4 evidence |
 
-#+begin_src latex
-\[
-\operatorname{ExternalReference}(r)
-  \Rightarrow \operatorname{CandidateCase}(r)
-\]
-\[
-\operatorname{ExternalReference}(r)
-  \not\Rightarrow \operatorname{DischargedObligation}(r)
-\]
-\[
-\operatorname{AcceptAction}(a)
-  \Rightarrow
-    \exists o,\;
-      \operatorname{Required}(a,o)
-      \land \operatorname{Discharged}(o)
-\]
+#+begin_src typst
+$
+op("ExternalReference")(r)
+  => op("CandidateCase")(r)
+$
+
+$
+op("ExternalReference")(r)
+  arrow.r.double.not op("DischargedObligation")(r)
+$
+
+$
+op("AcceptAction")(a)
+  =>
+    exists o,
+      op("Required")(a,o)
+      and op("Discharged")(o)
+$
 #+end_src
 
 The practical rule is simple: OpenRATH, Flue, ReAct, Reflexion, ToolEmu,
@@ -85,15 +88,16 @@ The proof problem is therefore not "can an agent write code?"  The problem is
 "can a generated strategy be rejected before it violates the control-plane
 contract?"
 
-#+begin_src latex
-\[
-\operatorname{CanWrite}(agent,p)
-  \not\Rightarrow \operatorname{CanProve}(agent,p)
-\]
-\[
-\operatorname{CanRun}(harness,p)
-  \not\Rightarrow \operatorname{CanProveSafe}(p,\Sigma)
-\]
+#+begin_src typst
+$
+op("CanWrite")("agent",p)
+  arrow.r.double.not op("CanProve")("agent",p)
+$
+
+$
+op("CanRun")("harness",p)
+  arrow.r.double.not op("CanProveSafe")(p,Sigma)
+$
 #+end_src
 
 * 10.06.56.40 Research Evidence
@@ -114,15 +118,16 @@ proof.
 | External observations can update plans. | Runtime observations must become typed facts before they affect policy. |
 | Traces improve human interpretability. | Reviewability is useful, but Lean discharge is still required for critical obligations. |
 
-#+begin_src latex
-\[
-\operatorname{Trace}(a)
-  \Rightarrow \operatorname{Inspectable}(a)
-\]
-\[
-\operatorname{Trace}(a)
-  \not\Rightarrow \operatorname{Safe}(a)
-\]
+#+begin_src typst
+$
+op("Trace")(a)
+  => op("Inspectable")(a)
+$
+
+$
+op("Trace")(a)
+  arrow.r.double.not op("Safe")(a)
+$
 #+end_src
 
 ** 10.06.56.42 Reflexion
@@ -141,15 +146,16 @@ repair.  It is not evidence that a policy is correct.
 | Memory affects future attempts. | Reuse of memory must be scoped to session and sandbox policy. |
 | Learning happens without changing model weights. | The control plane can improve agent behavior without trusting the model more. |
 
-#+begin_src latex
-\[
-\operatorname{Rejected}(o) \land \operatorname{RepairHint}(o,h)
-  \Rightarrow \operatorname{CandidateRevision}(h)
-\]
-\[
-\operatorname{CandidateRevision}(h)
-  \not\Rightarrow \operatorname{Discharged}(o)
-\]
+#+begin_src typst
+$
+op("Rejected")(o) and op("RepairHint")(o,h)
+  => op("CandidateRevision")(h)
+$
+
+$
+op("CandidateRevision")(h)
+  arrow.r.double.not op("Discharged")(o)
+$
 #+end_src
 
 ** 10.06.56.43 ToolEmu
@@ -168,13 +174,13 @@ configuration field.  It is a proof-relevant capability.
 | Long-tail risky cases are hard to enumerate manually. | Scenario benchmarks should generate obligations, not only examples. |
 | Evaluation can discover failures after the fact. | Runtime gates should reject missing proof before the tool call. |
 
-#+begin_src latex
-\[
-\operatorname{ToolCall}(a,t)
-  \Rightarrow
-    \operatorname{AllowedTool}(\operatorname{sandbox}(a),t)
-    \land \operatorname{Discharged}(\operatorname{ToolObligation}(a,t))
-\]
+#+begin_src typst
+$
+op("ToolCall")(a,t)
+  =>
+    op("AllowedTool")(op("sandbox")(a),t)
+    and op("Discharged")(op("ToolObligation")(a,t))
+$
 #+end_src
 
 ** 10.06.56.44 AgentDojo
@@ -193,16 +199,17 @@ owner module projects it into a typed fact with an explicit trust boundary.
 | Realistic tasks expose failures even without attacks. | Proof should cover ordinary lifecycle and dependency mistakes, not only adversarial cases. |
 | Security tests are extensible and adaptive. | POO Flow scenario benchmarks should evolve into obligation generators. |
 
-#+begin_src latex
-\[
-\operatorname{UntrustedObservation}(x)
-  \not\Rightarrow \operatorname{PolicyInstruction}(x)
-\]
-\[
-\operatorname{PolicyInstruction}(x)
-  \Rightarrow \operatorname{OwnedByScheme}(x)
-       \land \operatorname{TrustBoundary}(x)
-\]
+#+begin_src typst
+$
+op("UntrustedObservation")(x)
+  arrow.r.double.not op("PolicyInstruction")(x)
+$
+
+$
+op("PolicyInstruction")(x)
+  => op("OwnedByScheme")(x)
+       and op("TrustBoundary")(x)
+$
 #+end_src
 
 ** 10.06.56.45 Proof-Carrying Code
@@ -215,13 +222,13 @@ POO Flow does not need to prove a full Scheme interpreter to use this idea.  We
 need policy-carrying strategy: the generated policy action carries facts and a
 proof certificate for the specific control-plane obligation being exercised.
 
-#+begin_src latex
-\[
-\operatorname{PolicyAction}(a)
-  \land \operatorname{CarriesProof}(a,\pi)
-  \land \operatorname{Check}(\pi,\operatorname{SafetyPolicy})
-  \Rightarrow \operatorname{AcceptableAction}(a)
-\]
+#+begin_src typst
+$
+op("PolicyAction")(a)
+  and op("CarriesProof")(a,pi)
+  and op("Check")(pi,op("SafetyPolicy"))
+  => op("AcceptableAction")(a)
+$
 #+end_src
 
 ** 10.06.56.46 Proof-Carrying Authentication
@@ -240,15 +247,16 @@ That maps directly to session, sandbox, and subagent actions:
 | Advance loop | request carries transition precondition and invariant preservation proof |
 | Runtime handoff | request carries boundary proof that Scheme emitted a descriptor, not a claim of execution |
 
-#+begin_src latex
-\[
-\operatorname{Requester}(r) \land \operatorname{Requests}(r,a)
-  \Rightarrow \operatorname{MustSupplyProof}(r,a)
-\]
-\[
-\operatorname{Receiver}(v) \land \operatorname{Receives}(v,a,\pi)
-  \Rightarrow \operatorname{CheckBeforeAuthorize}(v,a,\pi)
-\]
+#+begin_src typst
+$
+op("Requester")(r) and op("Requests")(r,a)
+  => op("MustSupplyProof")(r,a)
+$
+
+$
+op("Receiver")(v) and op("Receives")(v,a,pi)
+  => op("CheckBeforeAuthorize")(v,a,pi)
+$
 #+end_src
 
 * 10.06.56.50 Framework Evidence
@@ -274,15 +282,16 @@ This is strong reference evidence for POO Flow's proof axes:
 
 The boundary is equally important:
 
-#+begin_src latex
-\[
-\operatorname{OpenRATHObject}(x)
-  \Rightarrow \operatorname{ReferenceAxis}(x)
-\]
-\[
-\operatorname{OpenRATHObject}(x)
-  \not\Rightarrow \operatorname{POOFlowProofFact}(x)
-\]
+#+begin_src typst
+$
+op("OpenRATHObject")(x)
+  => op("ReferenceAxis")(x)
+$
+
+$
+op("OpenRATHObject")(x)
+  arrow.r.double.not op("POOFlowProofFact")(x)
+$
 #+end_src
 
 OpenRATH should influence scenario selection and vocabulary.  It should not be
@@ -307,19 +316,20 @@ This gives POO Flow a concrete checklist for runtime proof pressure:
 | Recovery | resumed loop state preserves invariant |
 | Deployment harness | runtime handoff does not claim local execution |
 
-#+begin_src latex
-\[
-\operatorname{Resume}(s)
-  \Rightarrow
-    \operatorname{SamePolicyVersion}(s)
-    \lor \operatorname{MigrationProof}(s)
-\]
-\[
-\operatorname{SkillEnabled}(s,k)
-  \Rightarrow
-    \operatorname{Capabilities}(k)
-      \subseteq \operatorname{SandboxScope}(s)
-\]
+#+begin_src typst
+$
+op("Resume")(s)
+  =>
+    op("SamePolicyVersion")(s)
+    or op("MigrationProof")(s)
+$
+
+$
+op("SkillEnabled")(s,k)
+  =>
+    op("Capabilities")(k)
+      subset.eq op("SandboxScope")(s)
+$
 #+end_src
 
 Again, the framework is not the proof.  It tells us which runtime failures are
@@ -376,17 +386,18 @@ Required fact families:
 | Runtime facts | handoff descriptor, receipt expectation, runtime owner | no false execution claim, durable boundary |
 | Evidence facts | source owner, observation class, adopted fact id | reference evidence cannot bypass local proof |
 
-#+begin_src latex
-\[
-\operatorname{Fact}(f) \Rightarrow
-  \operatorname{Owner}(f)
-  \land \operatorname{Kind}(f)
-  \land \operatorname{TargetObligation}(f)
-\]
-\[
-\operatorname{RawShape}(x)
-  \not\Rightarrow \operatorname{Fact}(x)
-\]
+#+begin_src typst
+$
+op("Fact")(f) =>
+  op("Owner")(f)
+  and op("Kind")(f)
+  and op("TargetObligation")(f)
+$
+
+$
+op("RawShape")(x)
+  arrow.r.double.not op("Fact")(x)
+$
 #+end_src
 
 This is why support evidence must eventually be reflected in Scheme object
@@ -476,15 +487,15 @@ proof status are known.
 | scenario | users and agents see a concrete instance | becomes a benchmark and proof test case |
 | POO extension | users refine without copying | tests contract preservation under extension |
 
-#+begin_src latex
-\[
-\operatorname{UserInterfaceContribution}(p)
-  \land \operatorname{PublicLibrarySurface}(p)
-  \Rightarrow
-    \operatorname{Tested}(p)
-    \land \operatorname{MappedToLeanObligations}(p)
-    \land \operatorname{ProofStatusKnown}(p)
-\]
+#+begin_src typst
+$
+op("UserInterfaceContribution")(p)
+  and op("PublicLibrarySurface")(p)
+  =>
+    op("Tested")(p)
+    and op("MappedToLeanObligations")(p)
+    and op("ProofStatusKnown")(p)
+$
 #+end_src
 
 See [[file:57-user-interface-profile-library.org][10.06.57 User Interface Profile Library]] for the full contribution model.
@@ -499,20 +510,21 @@ When a paper or framework exposes a useful idea, the implementation path is:
 4. Add or refine the Lean obligation.
 5. Gate runtime projection on the discharged obligation.
 
-#+begin_src latex
-\[
-\operatorname{UsefulReference}(r)
-  \Rightarrow
-    \operatorname{CandidateCase}(r)
-    \land \operatorname{NeedsSchemeOwner}(r)
-    \land \operatorname{NeedsLeanObligation}(r)
-\]
-\[
-\operatorname{AdoptedFact}(r,f)
-  \Rightarrow
-    \operatorname{OwnedByPOOFlow}(f)
-    \land \operatorname{MappedToObligation}(f)
-\]
+#+begin_src typst
+$
+op("UsefulReference")(r)
+  =>
+    op("CandidateCase")(r)
+    and op("NeedsSchemeOwner")(r)
+    and op("NeedsLeanObligation")(r)
+$
+
+$
+op("AdoptedFact")(r,f)
+  =>
+    op("OwnedByPOOFlow")(f)
+    and op("MappedToObligation")(f)
+$
 #+end_src
 
 This keeps the project honest.  We can learn from OpenRATH and Flue without
