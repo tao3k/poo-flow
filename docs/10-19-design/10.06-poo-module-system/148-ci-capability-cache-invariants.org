@@ -199,6 +199,44 @@ this controlled cold receipt is absent.  It is not an accepted performance
 budget.  After the cold run, the measured bootstrap phase receives its own
 timeout and the outer job timeout is reduced to the declared phase envelope.
 
+*** 2026-07-18 controlled cold receipt
+
+The first =cold= dispatch at commit =0aa3cc55d9092aeacb1553a4e76dad6661a3ed06=
+was run =29656465515=.  The Linux =Build Gerbil= step started at
+=2026-07-18T18:45:23Z=.  It was still compiling Gerbil runtime, expander,
+compiler, and standard-library Scheme units when cancellation was requested at
+=2026-07-18T19:01:55Z=; the step terminated at =2026-07-18T19:02:09Z=.  Its
+observed wall time was therefore 16 minutes 46 seconds.  This is a failed
+performance receipt, not a new accepted baseline.
+
+The cancellation log also disproves the assumption that C compiler caching can
+make a true source-cold bootstrap equivalent to the two-minute warm CI path.
+Only 351 of 1,994 compiler invocations were cacheable (17.60 percent); 1,642
+were uncacheable (82.35 percent), and one invocation was reported as an error.
+The in-run cache produced 127 hits and 224 misses while Gerbil's self-hosted
+Scheme compilation remained active.  Ccache therefore remains useful for
+=install-miss= recovery, but it is not the owner of the dominant source-cold
+work.
+
+The experiment exposed an observability defect as well: the state receipt is a
+hidden JSON file, while =actions/upload-artifact= excludes hidden files by
+default.  The upload step ran after cancellation but published no bootstrap
+artifact.  The workflow now includes hidden files and treats a missing receipt
+as an error.
+
+The resulting declared limits are:
+
+- =Build Gerbil= receives the matrix capability
+  =bootstrap-timeout-minutes: 12=.  A source bootstrap that crosses the former
+  9--12 minute performance boundary is stopped by its owning step.
+- The Linux outer job ceiling is reduced from 60 to 45 minutes.  It covers the
+  explicit 12-minute bootstrap, 15-minute dependency, 8-minute Scheme build,
+  2-minute Scheme projection, 2-minute runtime-C producer, and 3-minute
+  acceptance limits, plus three minutes of runner and cache-action overhead.
+- The normal install-cache-hit path continues to skip source bootstrap; its
+  confirmed receipt at the same commit is two minutes for Linux and 2 minutes
+  47 seconds for macOS.
+
 ** Development incremental receipt: 2026-07-18
 
 On the current Darwin arm64 development machine, a force-rematerialized
@@ -444,6 +482,12 @@ hold:
   handling.
 - No measured cold receipt may be converted into a new outer timeout until the
   bootstrap phase has its own explicit guard.
+- The source bootstrap step must fail at 12 minutes, independently of the outer
+  job ceiling.
+- The Linux outer job ceiling must remain 45 minutes or lower unless a newer
+  phase ledger justifies a different declared envelope.
+- A forced source bootstrap must upload its hidden state receipt even when the
+  build fails or times out; a missing receipt is itself an acceptance failure.
 
 ** Runtime-C producer-consumer gate
 
