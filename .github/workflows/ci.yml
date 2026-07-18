@@ -248,12 +248,26 @@ jobs:
             gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-
             ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ matrix.gerbil-ref }}-
 
+      - name: Declare Bazel disk-cache generation
+        shell: bash
+        env:
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/bazel-cache-generation
+          printf '# POO Flow CI cache generation: %s\n' \
+            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
+            > .ci/bazel-cache-generation/BUILD.bazel
+
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@0.19.0
         with:
           bazelisk-cache: true
-          # Same-repository PR caches are isolated by GitHub's ref scope and
-          # make subsequent commits incremental.  Forks remain restore-only.
+          # setup-bazel hashes BUILD files and restores the newest matching
+          # prefix when the exact generation is absent.  The ignored synthetic
+          # BUILD file above advances that generation on every commit, so an
+          # updated action cache is published instead of being trapped behind
+          # GitHub's immutable exact key.  Forks remain restore-only.
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
           repository-cache: true
