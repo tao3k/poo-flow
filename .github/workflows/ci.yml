@@ -449,6 +449,72 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Build Python wheel Scheme projection through Bazel
+        if: runner.os == 'Linux'
+        id: wheel-scheme-projection
+        timeout-minutes: 2
+        env:
+          PROJECTION_ARTIFACT: bazel-bin/scheme/wheel_smoke.ss.poo-flow-projection.sexp
+          PROJECTION_BUDGET_SECONDS: 120
+        shell: bash
+        run: |
+          set -euo pipefail
+          handoff_dir="$GITHUB_WORKSPACE/.ci/python-wheel-projection"
+          profile="$RUNNER_TEMP/python-wheel-scheme-projection-profile.gz"
+          receipt="$handoff_dir/producer-receipt.json"
+          start_seconds=$SECONDS
+          mkdir -p "$handoff_dir"
+
+          set +e
+          bazel build \
+            --profile="$profile" \
+            //scheme:wheel_smoke_projection_artifact
+          build_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          artifact_available=false
+          artifact_digest=""
+          if [[ -s "$PROJECTION_ARTIFACT" ]]; then
+            artifact_available=true
+            artifact_digest="$(sha256sum "$PROJECTION_ARTIFACT" | awk '{print $1}')"
+            cp "$PROJECTION_ARTIFACT" "$handoff_dir/"
+          fi
+          jq -n \
+            --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
+            --arg producerJob "native-linux" \
+            --arg action "//scheme:wheel_smoke_projection_artifact" \
+            --arg compileOwner "//scheme:compile" \
+            --arg artifactDigest "$artifact_digest" \
+            --argjson status "$build_status" \
+            --argjson elapsedSeconds "$elapsed_seconds" \
+            --argjson budgetSeconds "$PROJECTION_BUDGET_SECONDS" \
+            --argjson artifactAvailable "$artifact_available" \
+            '{schema: $schema, producerJob: $producerJob, action: $action,
+              compileOwner: $compileOwner, artifactDigest: $artifactDigest,
+              status: $status, elapsedSeconds: $elapsedSeconds,
+              budgetSeconds: $budgetSeconds,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              artifactAvailable: $artifactAvailable}' > "$receipt"
+
+          if (( build_status != 0 )); then
+            exit "$build_status"
+          fi
+          if (( elapsed_seconds > PROJECTION_BUDGET_SECONDS )); then
+            echo "Scheme projection exceeded ${PROJECTION_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+          test -s "$PROJECTION_ARTIFACT"
+
+      - name: Upload Python wheel Scheme projection handoff
+        if: ${{ always() && runner.os == 'Linux' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-scheme-projection-producer
+          path: .ci/python-wheel-projection
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Bazel acceptance suites
         id: bazel-acceptance
         timeout-minutes: 3

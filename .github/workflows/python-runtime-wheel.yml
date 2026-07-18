@@ -25,7 +25,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
       CCACHE_MAXSIZE: 2G
       GERBIL_REQUIRE_CCACHE: 1
-      PROJECTION_ARTIFACT: bazel-bin/scheme/wheel_smoke.ss.poo-flow-projection.sexp
+      PROJECTION_ARTIFACT: .ci/python-wheel-projection/wheel_smoke.ss.poo-flow-projection.sexp
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
@@ -125,12 +125,10 @@ jobs:
           "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
           test -f "$tmp_smoke/gsc-smoke.o1"
 
-      # setup-bazel restores the latest matching lineage when this BUILD hash
-      # misses, then saves the enriched projection cache under this generation.
-      - name: Fork Bazel disk-cache generation from native producer
+      - name: Select native producer Bazel cache generation
         shell: bash
         env:
-          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}-python-wheel
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
         run: |
           set -euo pipefail
           mkdir -p .ci/bazel-cache-generation
@@ -142,7 +140,7 @@ jobs:
         uses: bazel-contrib/setup-bazel@0.19.0
         with:
           bazelisk-cache: true
-          cache-save: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-save: false
           disk-cache: ci-${{ runner.os }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
           repository-cache: true
 
@@ -194,118 +192,41 @@ jobs:
           enable-cache: true
           cache-dependency-glob: packages/python-runtime/uv.lock
 
-      - name: Restore canonical Scheme action from native CI lineage
-        id: scheme-compile
-        timeout-minutes: 8
-        env:
-          CACHE_GENERATION: ${{ github.sha }}-python-wheel
-          CACHE_LINEAGE: ci-${{ runner.os }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
-          COMPILE_BUDGET_SECONDS: ${{ github.event_name == 'workflow_dispatch' && '480' || '30' }}
+      - name: Download packaged Scheme projection from native producer
+        uses: actions/download-artifact@v8
+        with:
+          name: python-wheel-scheme-projection-producer
+          path: .ci/python-wheel-projection
+
+      - name: Verify packaged Scheme projection handoff
+        id: scheme-projection-handoff
         shell: bash
         run: |
           set -euo pipefail
-          profile="$RUNNER_TEMP/python-wheel-scheme-compile-profile.gz"
-          log="$RUNNER_TEMP/python-wheel-scheme-compile.log"
-          receipt="$RUNNER_TEMP/python-wheel-scheme-compile-ci-receipt.json"
-          start_seconds=$SECONDS
-
-          set +e
-          timeout "${COMPILE_BUDGET_SECONDS}s" \
-            bazel build --profile="$profile" //scheme:compile 2>&1 | tee "$log"
-          build_status=${PIPESTATUS[0]}
-          set -e
-
-          elapsed_seconds=$((SECONDS - start_seconds))
-          disk_cache_hits=$(awk '
-            match($0, /([0-9]+) disk cache hit/, count) { hits += count[1] }
-            END { print hits + 0 }
-          ' "$log")
-          scheme_receipt="bazel-bin/scheme/compile.receipt.json"
-          jq -n \
-            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
-            --arg phase "python-wheel-scheme-compile-consumer" \
-            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
-            --arg generation "$CACHE_GENERATION" \
-            --arg generationRole "consumer-enriched" \
-            --arg cacheLineage "$CACHE_LINEAGE" \
-            --arg restoreMode "lineage-prefix" \
-            --argjson status "$build_status" \
-            --argjson elapsedSeconds "$elapsed_seconds" \
-            --argjson budgetSeconds "$COMPILE_BUDGET_SECONDS" \
-            --argjson diskCacheHits "$disk_cache_hits" \
-            --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
-            '{schema: $schema, phase: $phase, runner: $runner,
-            generation: $generation, generationRole: $generationRole,
-            cacheLineage: $cacheLineage, restoreMode: $restoreMode,
-              status: $status, elapsedSeconds: $elapsedSeconds,
-              budgetSeconds: $budgetSeconds,
-              withinBudget: ($elapsedSeconds <= $budgetSeconds),
-              diskCacheHits: $diskCacheHits,
-              schemeReceiptAvailable: $schemeReceiptAvailable}' > "$receipt"
-          {
-            echo "profile=$profile"
-            echo "log=$log"
-            echo "receipt=$receipt"
-          } >> "$GITHUB_OUTPUT"
-
-          if (( build_status != 0 )); then
-            exit "$build_status"
-          fi
-          if (( elapsed_seconds > COMPILE_BUDGET_SECONDS )); then
-            echo "Scheme action restore exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
-            exit 1
-          fi
-          if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch ]] && (( disk_cache_hits < 1 )); then
-            echo "Expected the prerequisite native CI lineage to contain the Scheme action" >&2
-            exit 1
-          fi
-
-      - name: Build packaged Scheme projection through Bazel
-        id: scheme-projection
-        timeout-minutes: 2
-        env:
-          PROJECTION_BUDGET_SECONDS: 120
-        shell: bash
-        run: |
-          set -euo pipefail
-          profile="$RUNNER_TEMP/python-wheel-scheme-projection-profile.gz"
-          receipt="$RUNNER_TEMP/python-wheel-scheme-projection-ci-receipt.json"
-          start_seconds=$SECONDS
-
-          set +e
-          bazel build \
-            --profile="$profile" \
-            //scheme:wheel_smoke_projection_artifact
-          build_status=$?
-          set -e
-
-          elapsed_seconds=$((SECONDS - start_seconds))
-          jq -n \
-            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
-            --arg phase "python-wheel-scheme-projection" \
-            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
-            --argjson status "$build_status" \
-            --argjson elapsedSeconds "$elapsed_seconds" \
-            --argjson budgetSeconds "$PROJECTION_BUDGET_SECONDS" \
-            --argjson artifactAvailable "$([[ -s "$PROJECTION_ARTIFACT" ]] && printf true || printf false)" \
-            '{schema: $schema, phase: $phase, runner: $runner,
-              status: $status, elapsedSeconds: $elapsedSeconds,
-              budgetSeconds: $budgetSeconds,
-              withinBudget: ($elapsedSeconds <= $budgetSeconds),
-              artifactAvailable: $artifactAvailable}' > "$receipt"
-          {
-            echo "profile=$profile"
-            echo "receipt=$receipt"
-          } >> "$GITHUB_OUTPUT"
-
-          if (( build_status != 0 )); then
-            exit "$build_status"
-          fi
-          if (( elapsed_seconds > PROJECTION_BUDGET_SECONDS )); then
-            echo "Scheme projection exceeded ${PROJECTION_BUDGET_SECONDS}s budget" >&2
-            exit 1
-          fi
+          producer_receipt=".ci/python-wheel-projection/producer-receipt.json"
+          consumer_receipt="$RUNNER_TEMP/python-wheel-scheme-projection-consumer-receipt.json"
           test -s "$PROJECTION_ARTIFACT"
+          test -s "$producer_receipt"
+          jq -e '
+            .schema == "poo-flow.ci.scheme-projection-handoff.v1" and
+            .producerJob == "native-linux" and
+            .compileOwner == "//scheme:compile" and
+            .status == 0 and
+            .withinBudget == true and
+            .artifactAvailable == true
+          ' "$producer_receipt" >/dev/null
+          artifact_digest="$(sha256sum "$PROJECTION_ARTIFACT" | awk '{print $1}')"
+          producer_digest="$(jq -r '.artifactDigest' "$producer_receipt")"
+          test "$artifact_digest" = "$producer_digest"
+          jq -n \
+            --arg schema "poo-flow.ci.scheme-projection-consumer.v1" \
+            --arg producerArtifact "python-wheel-scheme-projection-producer" \
+            --arg transport "github-actions-artifact" \
+            --arg artifactDigest "$artifact_digest" \
+            '{schema: $schema, producerArtifact: $producerArtifact,
+              transport: $transport, artifactDigest: $artifactDigest,
+              verified: true}' > "$consumer_receipt"
+          echo "receipt=$consumer_receipt" >> "$GITHUB_OUTPUT"
 
       - name: Upload Python wheel Scheme evidence
         if: always()
@@ -313,13 +234,8 @@ jobs:
         with:
           name: python-wheel-scheme-evidence-${{ runner.os }}-${{ runner.arch }}
           path: |
-            ${{ steps.scheme-compile.outputs.profile }}
-            ${{ steps.scheme-compile.outputs.log }}
-            ${{ steps.scheme-compile.outputs.receipt }}
-            ${{ steps.scheme-projection.outputs.profile }}
-            ${{ steps.scheme-projection.outputs.receipt }}
-            bazel-bin/scheme/compile.receipt.json
-            bazel-bin/scheme/compile.log
+            .ci/python-wheel-projection/producer-receipt.json
+            ${{ steps.scheme-projection-handoff.outputs.receipt }}
           if-no-files-found: warn
           retention-days: 7
 
