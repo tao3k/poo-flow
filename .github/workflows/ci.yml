@@ -240,7 +240,7 @@ jobs:
           native_abi="$(
             bazel run --ui_event_filters=-info --noshow_progress \
               @dependency_gerbil//:native_scheme_env -- \
-              bash -c 'printf %s "$GERBIL_NATIVE_ABI"' 2>/dev/null
+              bash -c "printf %s \"\$GERBIL_NATIVE_ABI\"" 2>/dev/null
           )"
           test "${#native_abi}" -eq 40
           echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
