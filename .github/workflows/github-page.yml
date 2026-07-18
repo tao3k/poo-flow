@@ -29,11 +29,13 @@ jobs:
     permissions:
       contents: read
     env:
-      ORG_ZHIXING_ROOT: ${{ runner.temp }}/org-zhixing
-      PAGES_OUTPUT: ${{ runner.temp }}/poo-flow-pages
+      ORG_ZHIXING_ROOT: ${{ github.workspace }}/.ci/org-zhixing
+      PAGES_OUTPUT: ${{ github.workspace }}/.ci/poo-flow-pages
     steps:
       - name: Checkout POO Flow content
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Fetch Org Zhixing site builder
         shell: bash
