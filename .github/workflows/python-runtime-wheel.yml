@@ -2,7 +2,6 @@ name: Python runtime wheel
 
 on:
   workflow_call:
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,174 +11,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  projection-artifact:
-    name: Generate Python runtime projection artifact
+  wheel:
+    name: Build Python runtime wheel
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     env:
-      GERBIL_ARCH_PROFILE: portable
-      GERBIL_LABEL: source-v0.18.2-07c84815
-      GERBIL_REF: 07c8481588a8b07dbf05832687817cd398902ac0
-      GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/source-v0.18.2-07c84815
-      GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/source-v0.18.2-07c84815
-      CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
-      CCACHE_MAXSIZE: 2G
-      GERBIL_REQUIRE_CCACHE: 1
+      POO_FLOW_RUNTIME_V0_LIBRARY: ${{ github.workspace }}/.ci/runtime-c/libpoo_flow_runtime_v0.so
+      PROJECTION_HANDOFF_DIR: .ci/python-wheel-projection
       PROJECTION_ARTIFACT: .ci/python-wheel-projection/wheel_smoke.ss.poo-flow-projection.sexp
+
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
-
-      - name: Install Linux system dependencies
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            ca-certificates \
-            ccache \
-            git \
-            jq \
-            libsqlite3-dev \
-            libssl-dev \
-            openssl \
-            pkg-config \
-            sqlite3 \
-            valgrind \
-            zlib1g-dev
-
-      - name: Resolve native Gerbil ABI capability
-        id: gerbil-native-abi
-        shell: bash
-        run: |
-          set -euo pipefail
-          native_abi="$(bash tools/bazel/native_abi_fingerprint.sh "${GERBIL_GCC:-}" "$GERBIL_ARCH_PROFILE")"
-          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
-          echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
-          echo "Gerbil native ABI: $native_abi"
-
-      - name: Restore Gerbil bootstrap ccache
-        id: gerbil-ccache-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: .ci/ccache
-          key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-
-            ccache-python-runtime-wheel-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-
-
-      - name: Restore Gerbil install cache
-        id: gerbil-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: .ci/gerbil/${{ env.GERBIL_LABEL }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}
-
-      - name: Build Gerbil
-        if: steps.gerbil-cache.outputs.cache-hit != 'true'
-        run: bash tools/bazel/bootstrap_gerbil_toolchain.sh
-
-      - name: Show Gerbil bootstrap ccache stats
-        if: ${{ always() && steps.gerbil-cache.outputs.cache-hit != 'true' }}
-        run: ccache --show-stats
-
-      - name: Save Gerbil bootstrap ccache
-        if: ${{ always() && steps.gerbil-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: .ci/ccache
-          key: gerbil-bootstrap-ccache-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Upload Gerbil bootstrap phase receipt
-        if: always() && steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: gerbil-bootstrap-receipt-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}
-          path: .ci/gerbil-src/${{ env.GERBIL_LABEL }}/.poo-flow-bootstrap-state.json
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Save Gerbil install cache
-        if: steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: .ci/gerbil/${{ env.GERBIL_LABEL }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}
-
-      - name: Activate Gerbil
-        run: |
-          set -euo pipefail
-          echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          gsc_wrapper="$RUNNER_TEMP/gerbil-gsc"
-          {
-            printf '#!/bin/sh\n'
-            printf 'exec "%s" "-:~~=%s,~~bin=%s,~~include=%s,~~lib=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX" "$GERBIL_PREFIX/bin" "$GERBIL_PREFIX/include" "$GERBIL_PREFIX/lib"
-          } > "$gsc_wrapper"
-          chmod +x "$gsc_wrapper"
-          echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
-          "$GERBIL_PREFIX/bin/gxi" --version
-          "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
-          "$gsc_wrapper" -v
-          tmp_smoke="$(mktemp -d)"
-          printf '(display "ok")\n' > "$tmp_smoke/gsc-smoke.scm"
-          "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
-          test -f "$tmp_smoke/gsc-smoke.o1"
-
-      - name: Select native producer Bazel cache generation
-        shell: bash
-        env:
-          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          mkdir -p .ci/bazel-cache-generation
-          printf '# POO Flow CI cache generation: %s\n' \
-            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
-            > .ci/bazel-cache-generation/BUILD.bazel
-
-      - name: Set up Bazel
-        uses: bazel-contrib/setup-bazel@0.19.0
-        with:
-          bazelisk-cache: true
-          cache-save: false
-          disk-cache: ci-${{ runner.os }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}
-          repository-cache: true
-
-      - name: Restore Gerbil package dependency cache
-        id: gerbil-pkg-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: |
-            ~/.gerbil/pkg
-            .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
-
-      - name: Install Gerbil package dependencies from gerbil.pkg
-        run: |
-          set -euo pipefail
-          package_cache_ready=false
-          if [ -d .gerbil/lib ]; then
-            if GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" \
-              gxi tools/ci/gerbil-deps-ready.ss; then
-              package_cache_ready=true
-            else
-              echo "Cached Gerbil packages are missing compiled dependency libraries; rebuilding"
-            fi
-          fi
-          if [ "$package_cache_ready" = "true" ]; then
-            echo "Using cached Gerbil package dependency build products"
-          else
-            bazel run //scheme:deps
-          fi
-          gxpkg list
-
-      - name: Save Gerbil package dependency cache
-        if: steps.gerbil-pkg-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: |
-            ~/.gerbil/pkg
-            .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ env.GERBIL_LABEL }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ env.GERBIL_REF }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Set up Python
         uses: actions/setup-python@v6.0.0
@@ -187,142 +30,117 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: packages/python-runtime/uv.lock
 
-      - name: Download packaged Scheme projection from native producer
+      - name: Download Scheme projection producer handoff
         uses: actions/download-artifact@v8
         with:
           name: python-wheel-scheme-projection-producer
           path: .ci/python-wheel-projection
 
-      - name: Verify packaged Scheme projection handoff
-        id: scheme-projection-handoff
-        shell: bash
-        run: |
-          set -euo pipefail
-          producer_receipt=".ci/python-wheel-projection/producer-receipt.json"
-          consumer_receipt="$RUNNER_TEMP/python-wheel-scheme-projection-consumer-receipt.json"
-          test -s "$PROJECTION_ARTIFACT"
-          test -s "$producer_receipt"
-          jq -e '
-            .schema == "poo-flow.ci.scheme-projection-handoff.v1" and
-            .producerJob == "native-linux" and
-            .compileOwner == "//scheme:compile" and
-            .status == 0 and
-            .withinBudget == true and
-            .artifactAvailable == true
-          ' "$producer_receipt" >/dev/null
-          artifact_digest="$(sha256sum "$PROJECTION_ARTIFACT" | awk '{print $1}')"
-          producer_digest="$(jq -r '.artifactDigest' "$producer_receipt")"
-          test "$artifact_digest" = "$producer_digest"
-          jq -n \
-            --arg schema "poo-flow.ci.scheme-projection-consumer.v1" \
-            --arg producerArtifact "python-wheel-scheme-projection-producer" \
-            --arg transport "github-actions-artifact" \
-            --arg artifactDigest "$artifact_digest" \
-            '{schema: $schema, producerArtifact: $producerArtifact,
-              transport: $transport, artifactDigest: $artifactDigest,
-              verified: true}' > "$consumer_receipt"
-          echo "receipt=$consumer_receipt" >> "$GITHUB_OUTPUT"
-
-      - name: Upload Python wheel Scheme evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: python-wheel-scheme-evidence-${{ runner.os }}-${{ runner.arch }}
-          path: |
-            .ci/python-wheel-projection/producer-receipt.json
-            ${{ steps.scheme-projection-handoff.outputs.receipt }}
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Build Bazel runtime library
-        run: |
-          set -euo pipefail
-          bazel build //bindings/runtime-c:runtime_c_shared
-          library="$GITHUB_WORKSPACE/bazel-bin/bindings/runtime-c/libruntime_c_shared.so"
-          test -f "$library"
-          mkdir -p .ci/runtime-c
-          cp "$library" .ci/runtime-c/libpoo_flow_runtime_v0.so
-          echo "POO_FLOW_RUNTIME_V0_LIBRARY=$GITHUB_WORKSPACE/.ci/runtime-c/libpoo_flow_runtime_v0.so" >> "$GITHUB_ENV"
-
-      - name: Run Bazel runtime acceptance matrix
-        run: |
-          set -euo pipefail
-          bazel build \
-            //bindings/runtime-c:runtime_c_static \
-            //bindings/runtime-c:runtime_c_shared
-          bazel test \
-            //bindings/runtime-c:runtime_c_tests \
-            //bindings/runtime-c:runtime_c_sanitizer_tests \
-            //bindings/runtime-c:runtime_c_leak_test \
-            //bindings/runtime-c:runtime_v0_batch_benchmark_smoke \
-            //bindings/runtime-c:runtime_v0_gerbil_ffi_benchmark
-
-      - name: Reject stale runtime-C Make routes
-        run: tools/ci/check-runtime-c-build-boundary
-
-      - name: Test Python native runtime against Bazel library
-        run: |
-          set -euo pipefail
-          uv run --project packages/python-runtime pytest \
-            packages/python-runtime/tests/unit/test_native_runtime_v0.py
-
-      - name: Upload projection artifact
-        uses: actions/upload-artifact@v6.0.0
-        with:
-          name: poo-flow-runtime-projection-artifacts
-          path: ${{ env.PROJECTION_ARTIFACT }}
-          if-no-files-found: error
-
-      - name: Upload Bazel runtime library
-        uses: actions/upload-artifact@v6.0.0
-        with:
-          name: poo-flow-runtime-native-library
-          path: .ci/runtime-c/libpoo_flow_runtime_v0.so
-          if-no-files-found: error
-
-  wheel:
-    name: Build Python runtime wheel
-    runs-on: ubuntu-latest
-    needs: projection-artifact
-    timeout-minutes: 15
-    env:
-      POO_FLOW_RUNTIME_V0_LIBRARY: ${{ github.workspace }}/.ci/runtime-c/libpoo_flow_runtime_v0.so
-    steps:
-      - name: Checkout poo-flow
-        uses: actions/checkout@v7.0.0
-
-      - name: Set up Python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: packages/python-runtime/uv.lock
-
-      - name: Download generated projection artifact
-        uses: actions/download-artifact@v6.0.0
-        with:
-          name: poo-flow-runtime-projection-artifacts
-          path: packages/python-runtime/src/poo_flow_runtime/projections
-
-      - name: Download Bazel runtime library
-        uses: actions/download-artifact@v6.0.0
+      - name: Download runtime-C producer handoff
+        uses: actions/download-artifact@v8
         with:
           name: poo-flow-runtime-native-library
           path: .ci/runtime-c
 
-      - name: Verify generated projection artifact
+      - name: Verify producer handoffs
+        id: producer-handoffs
+        shell: bash
         run: |
           set -euo pipefail
-          test -s packages/python-runtime/src/poo_flow_runtime/projections/wheel_smoke.ss.poo-flow-projection.sexp
+          projection_receipt="$PROJECTION_HANDOFF_DIR/producer-receipt.json"
+          runtime_receipt="$GITHUB_WORKSPACE/.ci/runtime-c/producer-receipt.json"
+          runtime_acceptance="$GITHUB_WORKSPACE/.ci/runtime-c/acceptance-receipt.json"
+          runtime_library="$POO_FLOW_RUNTIME_V0_LIBRARY"
+          consumer_receipt="$GITHUB_WORKSPACE/.ci/python-wheel-consumer-receipt.json"
+
+          test -s "$PROJECTION_ARTIFACT"
+          test -s "$projection_receipt"
+          test -s "$runtime_library"
+          test -s "$runtime_receipt"
+          test -s "$runtime_acceptance"
+
+          jq -e --arg head "$GITHUB_SHA" '
+            .schema == "poo-flow.ci.scheme-projection-handoff.v1" and
+            .producerJob == "native-linux" and
+            .compileOwner == "//scheme:compile" and
+            .currentHeadSha == $head and
+            .status == 0 and
+            .withinBudget == true and
+            .artifactAvailable == true
+          ' "$projection_receipt" >/dev/null
+          projection_digest="$(sha256sum "$PROJECTION_ARTIFACT" | awk '{print $1}')"
+          test "$projection_digest" = "$(jq -r '.artifactDigest' "$projection_receipt")"
+
+          jq -e --arg head "$GITHUB_SHA" '
+            .schema == "poo-flow.ci.runtime-c-handoff.v1" and
+            .producerJob == "native-linux" and
+            .producerTarget == "//bindings/runtime-c:runtime_c_shared" and
+            .currentHeadSha == $head and
+            .artifactAvailable == true and
+            .status == 0 and
+            .withinBudget == true
+          ' "$runtime_receipt" >/dev/null
+          jq -e '.status == 0 and .withinBudget == true' \
+            "$runtime_acceptance" >/dev/null
+
+          runtime_digest="$(sha256sum "$runtime_library" | awk '{print $1}')"
+          expected_runtime_digest="$(jq -r '.artifactDigest' "$runtime_receipt")"
+          acceptance_digest="$(sha256sum "$runtime_acceptance" | awk '{print $1}')"
+          symbols_digest="$(
+            nm -D --defined-only "$runtime_library" \
+              | awk '{print $3}' \
+              | sed '/^$/d' \
+              | LC_ALL=C sort -u \
+              | sha256sum \
+              | awk '{print $1}'
+          )"
+          test "$runtime_digest" = "$expected_runtime_digest"
+          test "$acceptance_digest" = "$(jq -r '.acceptanceReceiptDigest' "$runtime_receipt")"
+          test "$symbols_digest" = "$(jq -r '.exportedSymbolsDigest' "$runtime_receipt")"
+
+          package_projection_dir="packages/python-runtime/src/poo_flow_runtime/projections"
+          mkdir -p "$package_projection_dir"
+          cp "$PROJECTION_ARTIFACT" "$package_projection_dir/"
+
+          jq -n \
+            --arg schema "poo-flow.ci.python-wheel-handoff-consumer.v1" \
+            --arg projectionArtifact "python-wheel-scheme-projection-producer" \
+            --arg runtimeArtifact "poo-flow-runtime-native-library" \
+            --arg transport "github-actions-artifact" \
+            --arg projectionDigest "$projection_digest" \
+            --arg expectedDigest "$expected_runtime_digest" \
+            --arg actualDigest "$runtime_digest" \
+            '{schema: $schema, projectionArtifact: $projectionArtifact,
+              runtimeArtifact: $runtimeArtifact, transport: $transport,
+              projectionDigest: $projectionDigest,
+              expectedDigest: $expectedDigest, actualDigest: $actualDigest,
+              gerbilSetupAbsent: true, bazelInvocationAbsent: true,
+              verified: true}' > "$consumer_receipt"
+          echo "receipt=$consumer_receipt" >> "$GITHUB_OUTPUT"
+
+      - name: Upload producer handoff evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-handoff-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            .ci/python-wheel-projection/producer-receipt.json
+            .ci/runtime-c/producer-receipt.json
+            .ci/runtime-c/acceptance-receipt.json
+            ${{ steps.producer-handoffs.outputs.receipt }}
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Test Python native runtime against producer library
+        run: |
+          set -euo pipefail
+          uv run --project packages/python-runtime pytest \
+            packages/python-runtime/tests/unit/test_native_runtime_v0.py
 
       - name: Build wheel
         run: |
@@ -384,7 +202,7 @@ jobs:
           PY
 
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7
         with:
           name: poo-flow-runtime-wheel
           path: dist/python-runtime-wheel/*.whl

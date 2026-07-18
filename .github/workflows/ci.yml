@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -106,9 +107,10 @@ jobs:
             libsqlite3-dev \
             libssl-dev \
             openssl \
-            pkg-config \
-            sqlite3 \
-            zlib1g-dev
+          pkg-config \
+          sqlite3 \
+          valgrind \
+          zlib1g-dev
 
       - name: Restore Homebrew cache
         if: runner.os == 'macOS'
@@ -482,17 +484,19 @@ jobs:
           fi
           jq -n \
             --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
-            --arg producerJob "native-linux" \
-            --arg action "//scheme:wheel_smoke_projection_artifact" \
-            --arg compileOwner "//scheme:compile" \
-            --arg artifactDigest "$artifact_digest" \
+          --arg producerJob "native-linux" \
+          --arg action "//scheme:wheel_smoke_projection_artifact" \
+          --arg compileOwner "//scheme:compile" \
+          --arg currentHeadSha "$GITHUB_SHA" \
+          --arg artifactDigest "$artifact_digest" \
             --argjson status "$build_status" \
             --argjson elapsedSeconds "$elapsed_seconds" \
             --argjson budgetSeconds "$PROJECTION_BUDGET_SECONDS" \
             --argjson artifactAvailable "$artifact_available" \
-            '{schema: $schema, producerJob: $producerJob, action: $action,
-              compileOwner: $compileOwner, artifactDigest: $artifactDigest,
-              status: $status, elapsedSeconds: $elapsedSeconds,
+          '{schema: $schema, producerJob: $producerJob, action: $action,
+            compileOwner: $compileOwner, currentHeadSha: $currentHeadSha,
+            artifactDigest: $artifactDigest,
+            status: $status, elapsedSeconds: $elapsedSeconds,
               budgetSeconds: $budgetSeconds,
               withinBudget: ($elapsedSeconds <= $budgetSeconds),
               artifactAvailable: $artifactAvailable}' > "$receipt"
@@ -515,6 +519,42 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Build runtime-C producer artifacts through Bazel
+        if: runner.os == 'Linux'
+        id: runtime-c-producer
+        timeout-minutes: 2
+        env:
+          RUNTIME_C_BUILD_BUDGET_SECONDS: 90
+        shell: bash
+        run: |
+          set -euo pipefail
+          handoff_dir="$GITHUB_WORKSPACE/.ci/runtime-c"
+          profile="$RUNNER_TEMP/bazel-runtime-c-producer-profile.gz"
+          start_seconds=$SECONDS
+          mkdir -p "$handoff_dir"
+
+          set +e
+          bazel build --profile="$profile" \
+            //bindings/runtime-c:runtime_c_static \
+            //bindings/runtime-c:runtime_c_shared
+          build_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          echo "elapsed-seconds=$elapsed_seconds" >> "$GITHUB_OUTPUT"
+          echo "profile=$profile" >> "$GITHUB_OUTPUT"
+          if (( build_status != 0 )); then
+            exit "$build_status"
+          fi
+          if (( elapsed_seconds > RUNTIME_C_BUILD_BUDGET_SECONDS )); then
+            echo "runtime-C producer build exceeded ${RUNTIME_C_BUILD_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+
+          library="$GITHUB_WORKSPACE/bazel-bin/bindings/runtime-c/libruntime_c_shared.so"
+          test -s "$library"
+          cp "$library" "$handoff_dir/libpoo_flow_runtime_v0.so"
+
       - name: Run Bazel acceptance suites
         id: bazel-acceptance
         timeout-minutes: 3
@@ -527,11 +567,22 @@ jobs:
           receipt="$RUNNER_TEMP/bazel-acceptance-ci-receipt.json"
           start_seconds=$SECONDS
 
-          set +e
-          bazel test --profile="$profile" \
-            //scheme:tests \
-            //bindings/runtime-c:runtime_c_tests \
+          targets=(
+            //scheme:tests
+            //bindings/runtime-c:runtime_c_tests
             //bindings/runtime-c/bundle-v1:bundle_v1_tests
+          )
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            targets+=(
+              //bindings/runtime-c:runtime_c_sanitizer_tests
+              //bindings/runtime-c:runtime_c_leak_test
+              //bindings/runtime-c:runtime_v0_batch_benchmark_smoke
+              //bindings/runtime-c:runtime_v0_gerbil_ffi_benchmark
+            )
+          fi
+
+          set +e
+          bazel test --profile="$profile" "${targets[@]}"
           test_status=$?
           set -e
 
@@ -557,6 +608,74 @@ jobs:
             exit 1
           fi
 
+      - name: Reject stale runtime-C Make routes
+        if: runner.os == 'Linux'
+        run: tools/ci/check-runtime-c-build-boundary
+
+      - name: Finalize runtime-C producer handoff
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          handoff_dir="$GITHUB_WORKSPACE/.ci/runtime-c"
+          library="$handoff_dir/libpoo_flow_runtime_v0.so"
+          acceptance_receipt="${{ steps.bazel-acceptance.outputs.receipt }}"
+          producer_receipt="$handoff_dir/producer-receipt.json"
+          test -s "$library"
+          test -s "$acceptance_receipt"
+          jq -e '.status == 0 and .withinBudget == true' \
+            "$acceptance_receipt" >/dev/null
+          cp "$acceptance_receipt" "$handoff_dir/acceptance-receipt.json"
+
+          artifact_digest="$(sha256sum "$library" | awk '{print $1}')"
+          symbols_digest="$(
+            nm -D --defined-only "$library" \
+              | awk '{print $3}' \
+              | sed '/^$/d' \
+              | LC_ALL=C sort -u \
+              | sha256sum \
+              | awk '{print $1}'
+          )"
+          symbol_count="$(
+            nm -D --defined-only "$library" \
+              | awk '{print $3}' \
+              | sed '/^$/d' \
+              | LC_ALL=C sort -u \
+              | wc -l \
+              | tr -d ' '
+          )"
+          artifact_bytes="$(stat -c %s "$library")"
+          acceptance_digest="$(sha256sum "$acceptance_receipt" | awk '{print $1}')"
+
+          jq -n \
+            --arg schema "poo-flow.ci.runtime-c-handoff.v1" \
+            --arg producerJob "native-linux" \
+            --arg producerTarget "//bindings/runtime-c:runtime_c_shared" \
+            --arg platform "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --arg currentHeadSha "$GITHUB_SHA" \
+            --arg gerbilNativeAbi "$GERBIL_NATIVE_ABI" \
+            --arg artifactPath "libpoo_flow_runtime_v0.so" \
+            --arg artifactDigest "$artifact_digest" \
+            --arg exportedSymbolsDigest "$symbols_digest" \
+            --arg acceptanceReceiptDigest "$acceptance_digest" \
+            --argjson artifactBytes "$artifact_bytes" \
+            --argjson exportedSymbolCount "$symbol_count" \
+            --argjson elapsedSeconds "${{ steps.runtime-c-producer.outputs.elapsed-seconds }}" \
+            --argjson budgetSeconds 90 \
+            '{schema: $schema, producerJob: $producerJob,
+              producerTarget: $producerTarget,
+              platform: $platform, currentHeadSha: $currentHeadSha,
+              gerbilNativeAbi: $gerbilNativeAbi, artifactPath: $artifactPath,
+              artifactDigest: $artifactDigest,
+              exportedSymbolsDigest: $exportedSymbolsDigest,
+              exportedSymbolCount: $exportedSymbolCount,
+              artifactBytes: $artifactBytes,
+              acceptanceReceiptDigest: $acceptanceReceiptDigest,
+              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
+              artifactAvailable: true, status: 0,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds)}' \
+            > "$producer_receipt"
+
       - name: Upload Bazel acceptance evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -565,7 +684,18 @@ jobs:
           path: |
             ${{ steps.bazel-acceptance.outputs.receipt }}
             ${{ steps.bazel-acceptance.outputs.profile }}
+            ${{ steps.runtime-c-producer.outputs.profile }}
+            .ci/runtime-c/producer-receipt.json
           if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload runtime-C producer handoff
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: poo-flow-runtime-native-library
+          path: .ci/runtime-c
+          if-no-files-found: error
           retention-days: 7
 
   python-runtime-wheel:

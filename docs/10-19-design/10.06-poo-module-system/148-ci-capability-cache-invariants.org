@@ -191,6 +191,28 @@ digest, and fail-closed verification result.  The projection action must emit
 the declared wheel projection artifact within 120 seconds.  The Python wheel
 consumer must never invoke =//scheme:compile= or rebuild the projection.
 
+*** Runtime-C native producer handoff
+
+The Linux native matrix entry is the single CI producer for both the canonical
+Scheme projection and the runtime-C library consumed by the Python wheel.  It
+reuses the same Bazel server that owns =//scheme:compile=, builds the existing
+=runtime_c_static= and =runtime_c_shared= targets, and runs the complete Linux
+runtime-C acceptance matrix before publishing any runtime library.
+
+The named =poo-flow-runtime-native-library= artifact contains the staged shared
+library, its producer receipt, and the Bazel acceptance receipt.  The producer
+receipt is fail-closed and records the producer job and target, platform,
+current commit, Gerbil native-ABI capability, artifact path and byte count,
+SHA-256 digest, exported-symbol digest and count, acceptance-receipt digest,
+elapsed time, budget, status, and availability.
+
+The reusable Python workflow contains only the wheel consumer.  It downloads
+the Scheme projection and runtime-C handoffs, verifies their commit identities
+and digests, runs the Python native-runtime validation, and builds and installs
+the wheel.  It performs zero Gerbil setup and zero Bazel invocation.  Disk
+cache state is therefore an acceleration concern of the native producer, not a
+cross-job delivery protocol.
+
 *** CI receipt: run 29648488933
 
 The first declared-artifact handoff run completed successfully on 2026-07-18.
@@ -228,6 +250,30 @@ hold:
 - the Org document contains both Mermaid diagrams;
 - CI validates the Bazel graph, Scheme build, runtime-C tests, Python
   projection, and Lean proof bridge.
+
+** Runtime-C producer-consumer gate
+
+- Linux native must build =runtime_c_static= and =runtime_c_shared= and must run
+  =runtime_c_tests=, =runtime_c_sanitizer_tests=, =runtime_c_leak_test=,
+  =runtime_v0_batch_benchmark_smoke=, and
+  =runtime_v0_gerbil_ffi_benchmark= before uploading the runtime handoff.
+- The runtime producer receipt must report schema, producer identity and target,
+  platform and native ABI capability, artifact availability, expected artifact
+  path, SHA-256 and exported-symbol digests, elapsed time, budget, and status.
+- The Python consumer must verify both producer receipts, both artifact digests,
+  the runtime acceptance-receipt digest, and the runtime exported-symbol digest
+  before executing Python tests or building the wheel.
+- The consumer receipt must report the named producer artifacts, transport,
+  expected and actual runtime digests, verification status,
+  =gerbilSetupAbsent: true=, and =bazelInvocationAbsent: true=.
+- The reusable wheel workflow must contain exactly one job and must contain no
+  Gerbil activation, Gerbil package installation, setup-bazel action, or Bazel
+  command.  This structural zero-Gerbil/zero-Bazel property is an acceptance
+  invariant, not a timing inference.
+- The runtime-C producer build has a 90-second budget and the complete Bazel
+  acceptance phase retains its 150-second budget.  A topology change is not
+  accepted unless the complete workflow remains below the recorded pre-change
+  wall-clock baseline.
 
 * v0.19 migration boundary
 
