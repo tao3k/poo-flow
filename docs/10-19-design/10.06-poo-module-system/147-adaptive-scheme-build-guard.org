@@ -369,6 +369,21 @@ flowchart LR
   Gate -->|"no"| Block["Fail closed before gxi compilation"]
 #+end_src
 
+The first hosted CI source-cache population receipt is GitHub Actions run
+=29636418527=. Both platforms completed with admission =ready=, empty reasons
+and advisories, and a successful post-save. This accepts cache population only;
+warm-cache acceptance still requires a subsequent run that restores the same
+cache lineage and records the resulting Scheme action reuse.
+
+| Host  | Bazel wall | Scheme elapsed | Saved source cache | Workers | System memory | Admission | Post-save  |
+|-------+------------+----------------+--------------------+---------+---------------+-----------+------------|
+| macOS |   220.211s |       210453ms |     18433466 bytes |       3 |    7516192768 | ready     | successful |
+| Linux |   242.831s |       224292ms |     18024368 bytes |       4 |   16766423040 | ready     | successful |
+
+The follow-up warm-cache receipt must record the restoring run, cache-hit
+identity, Bazel and Scheme elapsed times, worker count, admission fields, and
+post-save outcome before warm-cache performance is accepted.
+
 ** Registered Gerbil toolchain convergence
 
 The Scheme Bazel surface now requests a Gerbil capability through Bazel's
