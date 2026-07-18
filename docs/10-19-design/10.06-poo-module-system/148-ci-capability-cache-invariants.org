@@ -258,7 +258,7 @@ transport.  Its expected and actual runtime digests were byte-for-byte equal,
 and the receipt reported =verified: true=, =gerbilSetupAbsent: true=, and
 =bazelInvocationAbsent: true=.
 
-All six pull-request checks passed.  Node.js 20 action-deprecation annotations
+All five pull-request checks passed.  Node.js 20 action-deprecation annotations
 were eliminated.  The macOS hosted runner still reports its unrelated ambient
 =aws/tap= trust warning; the workflow does not suppress Homebrew trust checks,
 and that runner-image hygiene remains outside this producer-handoff change.
