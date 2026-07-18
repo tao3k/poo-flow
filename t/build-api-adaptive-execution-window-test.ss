@@ -47,7 +47,7 @@
                => (* 4 +test-gibibyte+))
         (check (.ref shrunk 'window-index) => 1)))
 
-    (test-case "latest low-transient window recovers by one worker quantum"
+    (test-case "small low-transient window recovers by one worker quantum"
       (let* ((controller
               (make-poo-flow-adaptive-execution-window-controller
                4 +test-hard-max-rss-bytes+ +test-headroom-bytes+))
@@ -75,6 +75,60 @@
         (check (.ref recovered 'last-estimated-bytes-per-spec)
                => (* 100 +test-mebibyte+))
         (check (.ref recovered 'window-index) => 2)))
+
+    (test-case "safe large windows grow geometrically"
+      (let* ((controller
+              (make-poo-flow-adaptive-execution-window-controller
+               4 +test-hard-max-rss-bytes+ +test-headroom-bytes+))
+             (first-growth
+              (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
+               controller
+               (test-observation
+                'completed
+                +test-gibibyte+
+                (+ +test-gibibyte+ (* 4 +test-mebibyte+)))
+               4
+               +test-gibibyte+))
+             (second-growth
+              (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
+               first-growth
+               (test-observation
+                'completed
+                +test-gibibyte+
+                (+ +test-gibibyte+ (* 8 +test-mebibyte+)))
+               8
+               +test-gibibyte+)))
+        (check (execution-window-controller-window-size first-growth) => 8)
+        (check (execution-window-controller-window-size second-growth) => 16)
+        (check (.ref second-growth 'last-estimated-bytes-per-spec)
+               => +test-mebibyte+)
+        (check (.ref second-growth 'window-index) => 2)))
+
+    (test-case "safe 377-spec growth needs logarithmic decisions"
+      (let loop
+          ((controller
+            (make-poo-flow-adaptive-execution-window-controller
+             4 +test-hard-max-rss-bytes+ +test-headroom-bytes+))
+           (remaining 377)
+           (decision-count 0))
+        (if (= remaining 0)
+          (check decision-count => 7)
+          (let* ((window-size
+                  (min remaining
+                       (execution-window-controller-window-size controller)))
+                 (next-controller
+                  (poo-flow-adaptive-execution-window-controller-next-state/with-current-rss
+                   controller
+                   (test-observation
+                    'completed
+                    +test-gibibyte+
+                    (+ +test-gibibyte+
+                       (* window-size +test-mebibyte+)))
+                   window-size
+                   +test-gibibyte+)))
+            (loop next-controller
+                  (- remaining window-size)
+                  (+ decision-count 1))))))
 
     (test-case "constructor rejects cap below live baseline plus headroom"
       (let (blocked?

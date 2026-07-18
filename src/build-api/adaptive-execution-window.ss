@@ -51,6 +51,15 @@
           observed-growth
           spec-count))))
 
+(def (poo-flow-adaptive-geometric-growth-limit
+      current-window-size worker-count)
+  ;; Window size is the coordinator's dependency-aware queue horizon, not the
+  ;; native compiler concurrency.  std/make remains bounded by worker-count,
+  ;; while geometric growth avoids O(spec-count / worker-count) coordinator
+  ;; sessions after the Scheme RSS guard has measured safe capacity.
+  (max (+ current-window-size worker-count)
+       (* 2 current-window-size)))
+
 (def (poo-flow-adaptive-next-window-size
       controller estimated-bytes-per-spec current-rss-bytes)
   (let* ((hard-max-rss-bytes
@@ -68,7 +77,9 @@
                   headroom-bytes)))
          (capacity
           (max 1 (quotient available-bytes estimated-bytes-per-spec)))
-         (growth-limit (+ current-window-size worker-count)))
+         (growth-limit
+          (poo-flow-adaptive-geometric-growth-limit
+           current-window-size worker-count)))
     (max 1 (min capacity growth-limit))))
 
 (def (poo-flow-adaptive-execution-window-controller?

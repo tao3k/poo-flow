@@ -30,12 +30,15 @@ for an adaptive full cold run.
 4. No spec is reordered, dropped, or duplicated.
 5. There is no fixed global spec or chunk cap.
 6. Window changes are derived from named POO observations.
-7. Any invalid observation, non-completed outcome, cap mismatch, or cap breach
+7. Safe growth is geometric and capacity-capped, so coordinator-session count
+   is logarithmic in the remaining spec count; native concurrency remains
+   bounded independently by the detected worker count.
+8. Any invalid observation, non-completed outcome, cap mismatch, or cap breach
    fails closed.
-8. One spec that cannot fit the hard cap fails closed rather than being retried
+9. One spec that cannot fit the hard cap fails closed rather than being retried
    without a bound.
-9. Clean never receives an adaptive plan.
-10. Portable receipts are canonical JSON, not text logs or printed alists.
+10. Clean never receives an adaptive plan.
+11. Portable receipts are canonical JSON, not text logs or printed alists.
 
 * Measured bounded A/B evidence
 
@@ -210,6 +213,36 @@ workspace had hidden: =build.ss= imported its own installed package for the
 observability helper, and the source declaration omitted tracked =.ssi=,
 =.scm=, and =.inc= inputs.  The accepted action removes the self-import cycle
 and declares those inputs.  It cannot read =.gerbil/lib/poo-flow=.
+
+** Hosted three-core adaptive feedback receipt
+
+The published Homebrew bottle removed toolchain bootstrap from the macOS CI
+critical path and exposed the project scheduler directly.  Run
+=29633364512= used the declared =macos-26= ARM64 runner, the registered Gerbil
+toolchain, one Bazel Scheme action, and the canonical Scheme-owned receipts.
+
+| Metric | Receipt |
+|--------+---------|
+| Logical CPUs / workers | =3 / 3=, detected at runtime |
+| System / available memory | =7,516,192,768 / 6,088,116,142 B= |
+| Hard RSS cap / reserved headroom | =3,758,096,384 / 805,306,368 B= |
+| Scheme guard elapsed / peak RSS | =247,955 ms / 2,731,835,392 B= |
+| Runtime stage | =377= modules; =241,733,737= elapsed jiffies |
+| FFI / UI stages | =608,748 / 5,044,027= elapsed jiffies |
+| Bazel Scheme phase | =261 s= against a =480 s= hard budget |
+| Combined acceptance | =68 s= against a =150 s= hard budget |
+| Complete macOS job | =6 min 32 s= against a =12 min= hard timeout |
+| Cache publication | Bazelisk, disk-action, and repository caches saved |
+| Outcome | all six pull-request checks passed |
+
+The pre-geometric compile log contains sixteen guarded runtime windows and two
+guarded UI windows.  Their completed process-tree receipts remain below the
+hard cap, but the runtime windows account for approximately 97.6% of the inner
+build duration.  The old =window + worker-count= rule therefore makes the
+number of coordinator sessions linear in =spec-count / worker-count= even
+after the host has demonstrated safe spare capacity.  This receipt authorizes
+capacity-capped geometric growth; it does not authorize removing the guard or
+running concurrent coordinators.
 
 ** Registered Gerbil toolchain convergence
 
@@ -685,15 +718,21 @@ measured-capacity =
   max(1, floor(max(0, available-bytes) / estimated-bytes-per-spec))
 
 next-window-size =
-  max(1, min(measured-capacity, current-window-size + worker-count))
+  max(1,
+      min(measured-capacity,
+          max(current-window-size + worker-count,
+              2 * current-window-size)))
 #+end_example
 
-Growth is therefore limited to one worker-count quantum per successful
-window.  Shrinkage is immediate.  The next decision deliberately uses the
-latest completed window's observed bytes per spec rather than a monotonic
-maximum.  This avoids treating one-time compiler residency from an earlier
-window as permanent marginal per-spec cost, while the hard cap remains the
-safety authority.  The immutable next state retains
+Small windows therefore recover by at least one worker-count quantum, while
+larger safe windows grow geometrically.  The measured capacity can shrink the
+next window immediately.  Geometric window growth changes only the ordered
+queue horizon visible to the single =std/make= coordinator; actual native
+compiler concurrency remains bounded by =worker-count=.  The next decision
+deliberately uses the latest completed window's observed bytes per spec rather
+than a monotonic maximum.  This avoids treating one-time compiler residency
+from an earlier window as permanent marginal per-spec cost, while the hard cap
+remains the safety authority.  The immutable next state retains
 =last-estimated-bytes-per-spec= as receipt evidence and history only; it is not
 an input that can pin later windows to an older estimate.  Every window still
 passes through the same pre-launch guard, and any missing, malformed,
@@ -732,7 +771,7 @@ flowchart TD
   P -->|"no"| TP["Building Framework topology policy"]
   TP --> F["Flatten dependency groups into one ordered window"]
   P -->|"yes"| AP["POO immutable adaptive controller"]
-  AP --> W["Next contiguous dependency-ordered window"]
+  AP --> W["Capacity-capped geometric dependency-ordered window"]
   F --> M["One std/make coordinator session"]
   W --> M
   M --> I["Coordinator expands modules and serializes imports"]
@@ -814,7 +853,8 @@ gate.
 | Harness execution-window runtime | Imported =:gslph/t/std-builder-execution-window-test= and ran =main= under =timeout 90s gxpkg env gxi=; exit 0; seven cases; =All tests OK= |
 | Harness observability runtime | Imported =:gslph/t/building-observability-test= under =timeout 90s gxpkg env gxi=; exit 0; adaptive canonical JSON assertions completed |
 | POO Flow targeted compile | Compiled =process-memory-guard.ss=, =adaptive-execution-window.ss=, =project-build.ss=, and =build-api-adaptive-execution-window-test.ss= from the non-Nix harness environment with the refreshed harness load path; exit 0; 6.87 s |
-| POO Flow focused runtime | Imported =:poo-flow/t/build-api-adaptive-execution-window-test= under a 90-second timeout; exit 0; seven cases; =All tests OK=; canonical guard JSON emitted |
+| POO Flow focused runtime | =timeout 90s tools/run-native-scheme-env gxi t/build-api-adaptive-execution-window-test.ss=; exit 0; nine cases; =All tests OK=; canonical guard JSON emitted; safe growth proved =4 -> 8 -> 16= and a 377-spec projection completed in seven decisions |
+| POO Flow focused AOT compile | =timeout 90s tools/run-native-scheme-env gxc -d <isolated-output> src/build-api/adaptive-execution-window.ss t/build-api-adaptive-execution-window-test.ss=; exit 0; no project output mutated |
 | Project compile receipt runtime | Ran =build-api-project-compile-guard-test= through the consistent Building Framework overlay under a 40-second timeout; exit 0; five cases; =All tests OK=; canonical project JSON parsed and round-tripped |
 | Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
 | Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
@@ -832,9 +872,12 @@ gate.
 | Diff hygiene | =rtk git diff --check= in both repositories; exit 0 |
 
 The POO Flow focused suite covers immutable growth, immediate startup shrink,
-and later recovery from =3= to =7= after a lower-cost completed window.  The
-recovery replaces the earlier one-gibibyte-per-spec history with the latest
-100-mebibyte-per-spec observation and grows by exactly one four-worker quantum.
+later recovery from =3= to =7= after a lower-cost completed window, safe
+geometric growth from =4= to =8= to =16=, and a 377-spec projection that needs
+seven decisions.  The small-window recovery replaces
+the earlier one-gibibyte-per-spec history with the latest
+100-mebibyte-per-spec observation and grows by exactly one four-worker quantum;
+the large-window case proves that growth is no longer linear in worker-count.
 It also covers constructor rejection when the cap cannot cover the live
 baseline plus headroom, non-completed hard-cap failure, canonical guard JSON
 parsing and round trip, explicit versus default stage batching, and environment
@@ -896,7 +939,9 @@ The following continuing rules remain normative:
 1. default builds use Building Framework topology and one upstream
    =std/make= session when the caller declares no tight memory cap;
 2. a positive =POO_FLOW_BUILD_MAX_RSS_BYTES= activates adaptive windows, and
-   every completed window must retain canonical JSON evidence;
+   every completed window must retain canonical JSON evidence; safe growth is
+   capacity-capped and geometric, while native concurrency remains bounded by
+   the detected worker count;
 3. any invalid receipt, cap breach, timeout, or non-completed outcome fails
    closed before the next adaptive window;
 4. =571.71= seconds remains the historical regression ceiling, =202.87= seconds
