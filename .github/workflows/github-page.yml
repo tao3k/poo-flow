@@ -53,14 +53,14 @@ jobs:
           node-version: 24
 
       - name: Install Org Zhixing
-        working-directory: ${{ runner.temp }}/org-zhixing
+        working-directory: ${{ env.ORG_ZHIXING_ROOT }}
         run: npm ci
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
       - name: Build documents site
-        working-directory: ${{ runner.temp }}/org-zhixing
+        working-directory: ${{ env.ORG_ZHIXING_ROOT }}
         run: |
           npm run pages:build -- \
             --config "$GITHUB_WORKSPACE/org-zhixing.toml" \
