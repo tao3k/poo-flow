@@ -10,7 +10,7 @@ bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
 git_override(
     module_name = "gerbil_bazel",
-    commit = "24ecba2e7d585f0146c7ffa363bf5e052f247f79",
+    commit = "7b224ef3aab31ee9e473d2e1f15a3b8b07b197f7",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 
