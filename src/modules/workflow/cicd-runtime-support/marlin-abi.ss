@@ -4,7 +4,7 @@
 (import :poo-flow/src/modules/workflow/cicd-core
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
-        :poo-flow/src/modules/workflow/cicd-runtime/checks)
+        :poo-flow/src/modules/workflow/cicd-runtime-support/checks)
 
 (export poo-flow-cicd-runtime-command-manifest-policy-ref
         poo-flow-cicd-runtime-command-manifest->marlin-handoff-entry

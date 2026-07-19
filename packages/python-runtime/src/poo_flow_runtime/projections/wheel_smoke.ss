@@ -2,7 +2,7 @@
 ;;; Boundary: packaged Python runtime projection smoke flow.
 
 (use-composition wheel-smoke
-  (use-module funflow #:as ff
+  (use-module funflow as ff
     (profiles github-ci python-anyio))
 
   (compose

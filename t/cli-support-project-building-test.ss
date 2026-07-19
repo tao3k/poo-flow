@@ -1,4 +1,11 @@
 (import :std/test
+        (only-in :gerbil/gambit
+                 call-with-output-file
+                 create-directory
+                 delete-directory
+                 file-exists?)
+        (only-in :std/misc/path path-expand)
+        (only-in :std/os/temporaries make-temporary-file-name)
         :std/srfi/1
         :std/srfi/13
         :gslph/src/building/facade
@@ -13,23 +20,23 @@
     (test-case "declares package compilation as upstream BuildRequests"
       (poo-flow-project-configure-build-root! ".")
       (let (requests (poo-flow-project-build-requests []))
-        (check-equal? (length requests) 2)
+        (check-equal? (length requests) 3)
         (check-equal? (andmap build-request? requests) #t)
         (check-equal? (map build-request-label requests)
-                      '("runtime" "user-interface"))))
+                      '("nono-c-ffi" "runtime" "user-interface"))))
     (test-case "keeps tests outside the package compile request"
       (poo-flow-project-configure-build-root! ".")
       (let (spec (poo-flow-project-build-spec []))
-        (check-equal? (length spec) 2)
-        (check-equal? (member "cli-support-tests.ss" (car (car spec))) #f)
+        (check-equal? (length spec) 3)
+        (check-equal? (member "cli-support-tests.ss" (car (cadr spec))) #f)
         (check-equal?
          (and (member '(ssi: "src/module-system/init-syntax.ss")
-                      (car (car spec)))
+                      (car (cadr spec)))
               #t)
          #t)))
     (test-case "declares only composition-owning user interface modules"
       (poo-flow-project-configure-build-root! ".")
-      (let (interface-modules (car (cadr (poo-flow-project-build-spec []))))
+      (let (interface-modules (car (caddr (poo-flow-project-build-spec []))))
         (check-equal? (length interface-modules) 8)
         (check-equal? (and (member "user-interface/init.ss"
                                    interface-modules)
@@ -38,6 +45,31 @@
     (test-case "keeps root entrypoints on current project-build exports"
       (check-equal? (procedure? poo-flow-project-build-spec) #t)
       (check-equal? (procedure? poo-flow-project-compile!) #t))
+    (test-case "emits flat std/make options for enabled build flags"
+      (check-equal?
+       (poo-flow-project-build-options #t #t #t #t)
+       [build-release: #t
+        build-optimized: #t
+        debug: #t
+        verbose: 1]))
+    (test-case "cleans the complete package artifact root"
+      (let* ((gerbil-path (make-temporary-file-name "poo-flow-clean"))
+             (library-root (path-expand "lib" gerbil-path))
+             (package-root (path-expand "poo-flow" library-root))
+             (source-root (path-expand "src" package-root))
+             (artifact (path-expand "stale.ssi" source-root)))
+        (create-directory gerbil-path)
+        (create-directory library-root)
+        (create-directory package-root)
+        (create-directory source-root)
+        (call-with-output-file artifact
+          (lambda (port) (display "stale" port)))
+        (check-equal? (file-exists? artifact) #t)
+        (poo-flow-project-clean-package-outputs! gerbil-path)
+        (check-equal? (file-exists? package-root) #f)
+        (check-equal? (file-exists? gerbil-path) #t)
+        (delete-directory library-root)
+        (delete-directory gerbil-path)))
     (test-case "pins one-file batches and exactly runnable scenario suites"
       (let* ((project (poo-flow-testing-project "." "."))
              (scenario-suites

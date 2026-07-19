@@ -2,29 +2,42 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import platform
 import shutil
-import subprocess
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
 
-ROOT = Path(__file__).resolve().parents[2]
-RUNTIME_C = ROOT / "bindings" / "runtime-c"
+RUNTIME_LIBRARY_ENV = "POO_FLOW_RUNTIME_V0_LIBRARY"
+
+
+def _runtime_library() -> Path:
+    configured = os.environ.get(RUNTIME_LIBRARY_ENV)
+    if not configured:
+        raise RuntimeError(
+            f"{RUNTIME_LIBRARY_ENV} must name the Bazel-built runtime-v0 "
+            "shared library"
+        )
+    library = Path(configured).expanduser().resolve()
+    if not library.is_file():
+        raise RuntimeError(f"Bazel runtime-v0 shared library is absent: {library}")
+    return library
 
 
 class BuildPyWithRuntime(build_py):
     def run(self) -> None:
-        subprocess.run(["make", "-C", str(RUNTIME_C), "all"], check=True)
         super().run()
-        extension = {"Darwin": "dylib", "Windows": "dll"}.get(
-            platform.system(), "so"
-        )
-        source = RUNTIME_C / "build" / f"libpoo_flow_runtime_v0.{extension}"
+        system = platform.system()
+        library_name = {
+            "Darwin": "libpoo_flow_runtime_v0.dylib",
+            "Windows": "poo_flow_runtime_v0.dll",
+        }.get(system, "libpoo_flow_runtime_v0.so")
+        source = _runtime_library()
         target = Path(self.build_lib) / "poo_flow_runtime" / "_native" / "lib"
         target.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target / source.name)
+        shutil.copy2(source, target / library_name)
 
 
 setup(

@@ -10,7 +10,7 @@
         :poo-flow/src/modules/workflow/cicd-core
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
-        :poo-flow/src/modules/workflow/cicd-runtime/graph)
+        :poo-flow/src/modules/workflow/cicd-runtime-support/graph)
 
 (export poo-flow-cicd-check-artifact-provenance
         poo-flow-cicd-check-durable-fields

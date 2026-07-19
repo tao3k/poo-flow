@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source_root="$(dirname "$workspace")"
+build_library="$workspace/.gerbil/lib"
+local_loadpath="$build_library:$source_root"
+
+if [[ "${1:-}" == "--source-first" ]]; then
+  local_loadpath="$source_root:$build_library"
+  shift
+fi
+
+if [[ -n "${GERBIL_LOADPATH:-}" ]]; then
+  local_loadpath="$local_loadpath:$GERBIL_LOADPATH"
+fi
+
+resolve_darwin_environment() {
+  developer_dir="${DEVELOPER_DIR:-}"
+  sdkroot="${SDKROOT:-}"
+  resolve_sdkroot=false
+
+  if [[ -z "$developer_dir" || "$developer_dir" == /nix/store/* || ! -d "$developer_dir" ]]; then
+    developer_dir="$(env -u DEVELOPER_DIR -u SDKROOT \
+      /usr/bin/xcode-select --print-path)"
+    resolve_sdkroot=true
+  fi
+  if [[ "$resolve_sdkroot" == true || -z "$sdkroot" || "$sdkroot" == /nix/store/* || ! -d "$sdkroot" ]]; then
+    sdkroot="$(env -u SDKROOT DEVELOPER_DIR="$developer_dir" \
+      /usr/bin/xcrun --sdk macosx --show-sdk-path)"
+  fi
+
+  NATIVE_ENVIRONMENT=(
+    "DEVELOPER_DIR=$developer_dir"
+    "SDKROOT=$sdkroot"
+  )
+}
+
+NATIVE_ENVIRONMENT=()
+host_system="$(uname -s)"
+case "$host_system" in
+  Darwin)
+    resolve_darwin_environment
+    ;;
+  Linux)
+    ;;
+  *)
+    printf 'unsupported Gerbil host system: %s (expected Darwin or Linux)\n' "$host_system" >&2
+    exit 64
+    ;;
+esac
+
+exec gxpkg env env "${NATIVE_ENVIRONMENT[@]}" \
+  "GERBIL_LOADPATH=$local_loadpath" \
+  "$@"

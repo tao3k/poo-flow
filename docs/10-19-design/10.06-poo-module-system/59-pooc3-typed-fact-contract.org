@@ -8,13 +8,13 @@ typed Lean boundary.  Scheme still owns external key spelling, but Lean owns
 the proof target, target kind, polarity, and well-typedness check.
 
 * 10.06.59.20 Contract Equation
-#+begin_src latex
-\[
-  keys(C_{Lean}) = K_{Scheme}
-  \quad\land\quad
-  \forall c \in C_{Lean}.\;
-    target(c) = expectedTarget(key(c))
-\]
+#+begin_src typst
+$
+"keys"(C_("Lean")) = K_("Scheme")
+  "quadandquad"
+  forall c in C_("Lean").
+    "target"(c) = "expectedTarget"("key"(c))
+$
 #+end_src
 
 This is implemented by exact key-list theorems plus exact target theorems.
@@ -129,11 +129,11 @@ theorem still exists with the expected type.
 * 10.06.59.45 Failure Reflection
 UI failure theorem values now expose their reflection data directly:
 
-#+begin_src latex
-\[
-  Failure(t) =
-    \langle contractKey(t), missingFact(t), blockedModule(t) \rangle
-\]
+#+begin_src typst
+$
+"Failure"(t) =
+    angle.l "contractKey"(t), "missingFact"(t), "blockedModule"(t) angle.r
+$
 #+end_src
 
 The statement is generated from that triple, not repeated by hand for each
@@ -176,17 +176,18 @@ dependency graph.  A failure cannot pick an arbitrary missing fact: it must be
 either a completed module that =blockedModule= depends on, or the benchmark
 fixture guard.
 
-#+begin_src latex
-\[
-  missingModule(t) = Some(m)
-  \Rightarrow UiDependsOn(blockedModule(t), m)
-\]
-\[
-  missingModule(t) = None
-  \Rightarrow
-    blockedModule(t) = ScenarioBenchmark
-    \land missingFact(t) = PerformanceFixtureBound
-\]
+#+begin_src typst
+$
+"missingModule"(t) = "Some"(m)
+  => "UiDependsOn"("blockedModule"(t), m)
+$
+
+$
+"missingModule"(t) = "None"
+  =>
+    "blockedModule"(t) = "ScenarioBenchmark"
+    and "missingFact"(t) = "PerformanceFixtureBound"
+$
 #+end_src
 
 #+begin_src lean
@@ -212,15 +213,16 @@ theorem UiFailureTheorem.benchmark_fixture_guard_reflects_missing_fact
 
 The blocker proof is now derived from the positive =CanStart= requirement:
 
-#+begin_src latex
-\[
-  CanStart(s, blockedModule(t))
-  \Rightarrow missingFact(t)
-\]
-\[
-  \neg missingFact(t) \Rightarrow
-  \neg CanStart(s, blockedModule(t))
-\]
+#+begin_src typst
+$
+"CanStart"(s, "blockedModule"(t))
+  => "missingFact"(t)
+$
+
+$
+not "missingFact"(t) =>
+  not "CanStart"(s, "blockedModule"(t))
+$
 #+end_src
 
 This avoids a name-only forwarding table.  The theorem

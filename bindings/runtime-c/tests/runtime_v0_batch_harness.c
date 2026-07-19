@@ -4,6 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void *runtime_aligned_alloc(size_t alignment, size_t size) {
+#if defined(__APPLE__)
+  void *memory = NULL;
+  return posix_memalign(&memory, alignment, size) == 0 ? memory : NULL;
+#else
+  return aligned_alloc(alignment, size);
+#endif
+}
+
 static poo_flow_runtime_v0_bytes_view view(const char *text) {
   poo_flow_runtime_v0_bytes_view value = {
       (const uint8_t *)text, (uint64_t)strlen(text)};
@@ -156,7 +165,7 @@ int main(void) {
   assert(poo_flow_runtime_v0_session_open(instance, bundle, &session_desc,
                                           &session) == POO_FLOW_RUNTIME_V0_OK);
 
-  uint8_t *memory = aligned_alloc(16, 4096);
+  uint8_t *memory = runtime_aligned_alloc(16, 4096);
   assert(memory != NULL);
   memset(memory, 0x5a, 4096);
   poo_flow_runtime_v0_arena_descriptor arena_desc = {0};
@@ -458,7 +467,7 @@ int main(void) {
   assert(poo_flow_runtime_v0_session_open(instance, bundle, &session_desc,
                                           &batched_session) ==
          POO_FLOW_RUNTIME_V0_OK);
-  uint8_t *batched_memory = aligned_alloc(16, 4096);
+  uint8_t *batched_memory = runtime_aligned_alloc(16, 4096);
   assert(batched_memory != NULL);
   poo_flow_runtime_v0_arena_descriptor batched_arena_desc = {0};
   batched_arena_desc.struct_size = sizeof(batched_arena_desc);

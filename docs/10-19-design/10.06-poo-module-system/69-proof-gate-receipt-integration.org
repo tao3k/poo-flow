@@ -56,8 +56,10 @@ facts, wrapped by =poo-flow-proof-facts->ffi-wire=, and then grouped by
 
 This keeps the bridge contract stable:
 
-#+begin_src latex
-Receipt \to ProofFacts \to FFIWire \to GateBundle
+#+begin_src typst
+$
+"Receipt" -> "ProofFacts" -> "FFIWire" -> "GateBundle"
+$
 #+end_src
 
 * P0 External Blocker

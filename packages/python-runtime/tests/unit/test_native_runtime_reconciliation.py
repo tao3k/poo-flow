@@ -10,14 +10,12 @@ from poo_flow_runtime import (
 )
 from poo_flow_runtime._native.arena import NativeEvent, NativeMediation
 from poo_flow_runtime._native.errors import NativeRuntimeError
+from poo_flow_runtime._native.loader import native_library_path
 from poo_flow_runtime._native.session import NativeBundleDescriptor, NativeRuntimeSession
 
 
 def _repo_library() -> Path:
-    return (
-        Path(__file__).resolve().parents[4]
-        / "bindings" / "runtime-c" / "build" / "libpoo_flow_runtime_v0.dylib"
-    )
+    return native_library_path()
 
 
 def _sink(store, root: bytes, row: str):

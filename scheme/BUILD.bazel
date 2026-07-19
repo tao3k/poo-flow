@@ -1,0 +1,112 @@
+load(
+    "@gerbil_bazel//gerbil:defs.bzl",
+    "gerbil_project_compile",
+    "gerbil_project_dev",
+    "gerbil_project_test",
+)
+load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
+
+package(default_visibility = ["//visibility:public"])
+
+alias(
+    name = "deps",
+    actual = "@dependency_gerbil//:install_dependencies",
+)
+
+gerbil_project_compile(
+    name = "compile",
+    args = ["compile"],
+    build_script = "//:build.ss",
+    receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
+    srcs = ["//:scheme_build_sources"],
+)
+
+gerbil_project_dev(
+    name = "dev_compile",
+    args = ["compile"],
+    build_script = "//:build.ss",
+    tags = [
+        "local",
+        "manual",
+    ],
+)
+
+gerbil_project_dev(
+    name = "dev_unit_tests",
+    args = ["compile"],
+    build_script = "//:build.ss",
+    tags = [
+        "local",
+        "manual",
+    ],
+    tests = ["//:t/unit-tests.ss"],
+)
+
+filegroup(
+    name = "project_root",
+    srcs = [":compile"],
+    output_group = "project_root",
+)
+
+filegroup(
+    name = "compile_log",
+    srcs = [":compile"],
+    output_group = "log",
+)
+
+filegroup(
+    name = "compile_receipt",
+    srcs = [":compile"],
+    output_group = "receipt",
+)
+
+gerbil_project_projection(
+    name = "wheel_smoke_projection_artifact",
+    output_name = "wheel_smoke.ss.poo-flow-projection.sexp",
+    project = ":compile",
+    projection_source = "//:runtime_load_projection_source",
+    source = "//packages/python-runtime/src/poo_flow_runtime:wheel_smoke_projection_source",
+)
+
+[
+    gerbil_project_test(
+        name = name,
+        project = ":compile",
+        source_root_marker = "//:scheme_source_root_marker",
+        size = size,
+        srcs = "//:scheme_test_sources",
+        tags = ["exclusive"],
+        tests = [test_root],
+    )
+    for name, size, test_root in [
+        ("unit_tests", "medium", "//:t/unit-tests.ss"),
+        ("contract_tests", "small", "//:t/contract-tests.ss"),
+        ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
+        ("integration_tests", "small", "//:t/integration-tests.ss"),
+        ("performance_tests", "large", "//:t/performance-tests.ss"),
+        (
+            "user_interface_custom_loop_engine_capability_test",
+            "large",
+            "//:t/user-interface-custom-loop-engine-capability-test.ss",
+        ),
+    ]
+]
+
+test_suite(
+    name = "tests",
+    tests = [
+        ":cli_support_tests",
+        ":contract_tests",
+        ":integration_tests",
+        ":unit_tests",
+        ":user_interface_custom_loop_engine_capability_test",
+    ],
+)
+
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":performance_tests",
+        ":tests",
+    ],
+)

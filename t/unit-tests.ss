@@ -18,6 +18,7 @@
         :poo-flow/t/descriptor-registry-test
         :poo-flow/t/docker-descriptor-test
         :poo-flow/t/failure-test
+        :poo-flow/t/feature-system-bundle-v1-foreign-arena-test
         :poo-flow/t/flow-descriptor-test
         :poo-flow/t/functional-flow-kernel-test
         :poo-flow/t/functional-flow-kleisli-test
@@ -34,6 +35,7 @@
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
         :poo-flow/t/nono-sandbox-native-ffi-test
+        :poo-flow/t/projection-syntax-support-test
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-agent-param-contract-test
         :poo-flow/t/session-agent-tool-policy-test
@@ -65,3 +67,5 @@
         :poo-flow/t/user-interface-custom-session-selector-test
         :poo-flow/t/user-interface-custom-session-transform-test
         :poo-flow/t/user-interface-custom-tool-core-test)
+
+(export projection-syntax-support-test)

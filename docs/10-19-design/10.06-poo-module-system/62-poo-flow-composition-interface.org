@@ -166,10 +166,12 @@ This mode is appropriate when the override is not yet a real profile contract.
 The proof projection should still record it, but its provenance is local to the
 composition.
 
-#+begin_src latex
-LocalOverride \subset Composition
+#+begin_src typst
+$
+"LocalOverride" subset "Composition"
 
-provenance(LocalOverride) = local-composition-profile
+"provenance"("LocalOverride") = "local"-"composition"-"profile"
+$
 #+end_src
 
 ** Reusable Profile And Reusable Composition
@@ -221,13 +223,15 @@ one downstream user. It turns the User Interface into a contribution library:
 users contribute stable profiles, and other users compose, override, and extend
 them without duplicating policy objects.
 
-#+begin_src latex
-ReusableProfile \in UserModule
+#+begin_src typst
+$
+"ReusableProfile" in "UserModule"
 
-ReusableComposition =
-  compose(ReusableProfile_1, \ldots, ReusableProfile_n)
+"ReusableComposition" =
+  compose("ReusableProfile"_1, dots.h, "ReusableProfile"_n)
 
-provenance(ReusableProfile) = user-module-profile
+"provenance"("ReusableProfile") = "user"-"module"-"profile"
+$
 #+end_src
 
 The practical rule is:
@@ -281,27 +285,31 @@ The rule is empirical: graph proof code may be split only when the measured
 
 LangChain-like workflows should prove as total linear control graphs:
 
-#+begin_src latex
-Entry = \{memory\}
+#+begin_src typst
+$
+"Entry" = brace.l "memory" brace.r
 
-Finish = \{parsed\_output\}
+"Finish" = brace.l "parsed"_"output" brace.r
 
-Reachable(Entry) \subseteq CanReach(Finish)
+"Reachable"("Entry") subset.eq "CanReach"("Finish")
 
-CyclePath = \varnothing
+"CyclePath" = emptyset
+$
 #+end_src
 
 LangGraph-like workflows may contain explicit loop edges, but the loop must be
 declared as part of the control graph rather than discovered accidentally:
 
-#+begin_src latex
-LoopEdges \neq \varnothing
+#+begin_src typst
+$
+"LoopEdges" != emptyset
 
-ConditionalTargets \subseteq Nodes
+"ConditionalTargets" subset.eq "Nodes"
 
-Reachable(Entry) \subseteq CanReach(Finish)
+"Reachable"("Entry") subset.eq "CanReach"("Finish")
 
-DeadEnd(Reachable(Entry) - Finish) = \varnothing
+"DeadEnd"("Reachable"("Entry") - "Finish") = emptyset
+$
 #+end_src
 
 The Scheme implementation follows the current programming style by keeping the
@@ -343,13 +351,15 @@ The composition object keeps module bindings and stages. A stage keeps clauses
 such as `compose`, `graph`, `loop`, `prove`, and `handoff`. The `compose`
 clause stores actual profile objects, not profile names.
 
-#+begin_src latex
-Module = \{ profile_i : PooProfile \}
+#+begin_src typst
+$
+"Module" = brace.l  "profile"_i : "PooProfile"  brace.r
 
-ProfileRef(module, slot) = module.slot
+"ProfileRef"("module", "slot") = "module"."slot"
 
-CompositionStage =
-Profiles \times Graph \times LoopPolicy \times ProofObligations
+"CompositionStage" =
+"Profiles" times "Graph" times "LoopPolicy" times "ProofObligations"
+$
 #+end_src
 
 * Precision Rule
@@ -373,10 +383,12 @@ That keeps selection precise when several modules expose the same profile name.
 Stage names are open symbols. The common names are `develop`, `staging`, and
 `production`, but the strategy engine does not become an SDLC engine.
 
-#+begin_src latex
-StageName \in Symbol
+#+begin_src typst
+$
+"StageName" in "Symbol"
 
-develop, staging, production \in StageName
+"develop", "staging", "production" in "StageName"
+$
 #+end_src
 
 A stage is only a context for selecting profile slots and proof obligations.
@@ -386,11 +398,13 @@ The loop engine and graph engine remain the core semantics.
 
 The Lean proof surface should reason about POO Flow facts after projection:
 
-#+begin_src latex
-ProfileObjects \to ProofFacts
+#+begin_src typst
+$
+"ProfileObjects" -> "ProofFacts"
 
-ProofFacts \vdash
-ScopeContained \land DependencyReady \land GraphReachable \land LoopProgress
+"ProofFacts" tack.r
+"ScopeContained" and "DependencyReady" and "GraphReachable" and "LoopProgress"
+$
 #+end_src
 
 LangChain-like and LangGraph-like workflows are examples of composition:

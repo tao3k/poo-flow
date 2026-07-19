@@ -64,63 +64,6 @@
         (import: :poo-flow/src/module-system/durable-artifact-policy)
         (import: :poo-flow/src/modules/sandbox-core/profile-interface))
 
-;;; The completed group copies only its own list spine; `tail` remains shared,
-;;; so composition never builds a reverse/append chain across session groups.
-;; poo-flow-session-case-rows/tail
-;;   : (forall (k v) (-> [(Pair k v)] [(Pair k v)] [(Pair k v)]))
-;; : (-> [Alist] [Alist] [Alist])
-;;   | contract: Preserve the ordered POO session-case row boundary.
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-session-case-rows/tail '(base) '(extension))
-;;       ;; => (base extension)
-;;       ```
-;;     %
-(def (poo-flow-session-case-rows/tail rows tail)
-  (append rows tail))
-
-;;; The recursive branch advances one reusable group at a time. Each row spine
-;;; is copied once, while the already-built tail is shared by the next group.
-;; poo-flow-session-case-row-groups/tail
-;;   : (forall (k v) (-> [[(Pair k v)]] [(Pair k v)] [(Pair k v)]))
-;; : (-> [[Alist]] [Alist] [Alist])
-;;   | contract: Flatten reusable POO row groups without changing their order.
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-session-case-row-groups/tail '((a) (b)) '(tail))
-;;       ;; => (a b tail)
-;;       ```
-;;     %
-(def (poo-flow-session-case-row-groups/tail row-groups tail)
-  (if (null? row-groups)
-    tail
-    (poo-flow-session-case-rows/tail
-     (car row-groups)
-     (poo-flow-session-case-row-groups/tail (cdr row-groups) tail))))
-
-;;; Direct rows are copied once before the grouped tail is attached, keeping
-;;; session-case expansion linear in declared rows without intermediate lists.
-;; poo-flow-session-case-row-groups->rows
-;;   : (forall (k v) (-> [(Pair k v)] [[(Pair k v)]] [(Pair k v)]))
-;; : (-> [Alist] [[Alist]] [Alist])
-;;   | contract: Compose direct rows with reusable POO row-group extensions.
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (poo-flow-session-case-row-groups->rows '(base) '((policy) (runtime)))
-;;       ;; => (base policy runtime)
-;;       ```
-;;     %
-(def (poo-flow-session-case-row-groups->rows rows row-groups)
-  (poo-flow-session-case-rows/tail
-   rows
-   (poo-flow-session-case-row-groups/tail row-groups '())))
-
 ;;; Concrete module loading is the primary user-facing surface. The macro stays
 ;;; thin: it only quotes the module name and payload, while group routing lives
 ;;; in `poo-flow-modules-system-use-module` upstream data helpers.
@@ -349,9 +292,9 @@
                 (object<-alist
                  (list
                   (cons 'rows
-                        (poo-flow-session-case-row-groups->rows
-                         (list row-expr ...)
-                         (list row-group-expr ...)))
+                        (append (list row-expr ...)
+                                row-group-expr ...
+                                '()))
                   (cons 'metadata '(metadata-entry ...)))
                  supers: session-config)))
              ...)

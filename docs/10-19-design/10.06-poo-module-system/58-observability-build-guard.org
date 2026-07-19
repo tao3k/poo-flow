@@ -19,13 +19,15 @@ The concrete symptoms were:
   slow single target into a warning or failure;
 - runtime-oriented observability did not observe build-stage budget violations.
 
-#+begin_src latex
-\operatorname{Observation}(e) \nRightarrow \operatorname{Prevention}(e)
+#+begin_src typst
+$
+op("Observation")(e) arrow.r.double.not op("Prevention")(e)
 
-\operatorname{Prevention}(e)
-  \equiv \operatorname{Observation}(e)
-       \land \operatorname{Budget}(e)
-       \land \operatorname{Gate}(e)
+op("Prevention")(e)
+  equiv op("Observation")(e)
+       and op("Budget")(e)
+       and op("Gate")(e)
+$
 #+end_src
 
 The failure was not caused by build parallelism. The mistake was a wrong owner
@@ -116,10 +118,77 @@ current build process with status 124. This is the minimal prevention layer that
 was missing in the earlier failure: an abnormal single-target compile no longer
 requires a human to notice and manually kill Gerbil.
 
-This is still not a full live RSS watchdog. A future deeper guard should run
-Gerbil compile targets under a supervised subprocess or expose compiler process
-identity so RSS and artifact growth can be sampled while the target is still
-running.
+** 10.06.58.42 P0 Building Framework Process-Tree Containment
+The live single-target watchdog above was not sufficient for a full
+=build.ss compile=.  The final correction is not a second compiler scheduler.
+POO Flow now submits one standard Gerbil make project to Building Framework and
+places a Scheme-owned process-tree monitor around that single execution.
+
+#+begin_src mermaid
+flowchart TB
+  BuildAPI["build.ss compile\ncanonical Scheme API"]
+  Guard["one Scheme process-tree guard\nRSS + optional deadline"]
+  Project["project-build.ss\nthree package source stages"]
+  Framework["Building Framework\ncurrentness + DAG + parallelize"]
+  Make["standard Gerbil make requests"]
+  Artifact["package artifacts"]
+  Receipt["Building Framework summary\n+ POO guard receipt"]
+
+  BuildAPI --> Guard
+  Guard --> Project
+  Project --> Framework
+  Framework --> Make
+  Make --> Artifact
+  Artifact --> Receipt
+  Guard --> Receipt
+#+end_src
+
+The implementation invariants are:
+- =build.ss compile= enters the guarded API and invokes
+  =poo-flow-project-compile!= exactly once;
+- Building Framework exclusively owns currentness, topology, source order,
+  parallel compilation, stage execution, and build receipts;
+- the guard does not construct spec chunks, topology layers, retry queues, or
+  per-subset =gxi= processes;
+- Scheme samples the full process tree rooted at the current =gxi=;
+- the default RSS limit is half of detected physical memory with a 768 MiB
+  minimum, while =POO_FLOW_BUILD_MAX_RSS_BYTES= remains an explicit override;
+- there is no fixed machine-independent timeout; an unset or zero
+  =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS= means no deadline;
+- native commands resolve from the configured project environment and must not
+  silently select a Nix- or Cellar-internal Gerbil toolchain.
+
+#+begin_src typst
+$
+op("Compile")(P)
+  = op("Guard")(op("BuildingFramework")(op("StandardMakeProject")(P)))
+$
+#+end_src
+
+** 10.06.58.43 P0 Validation Receipt (2026-07-15)
+The earlier per-unit isolation experiment proved that compiler memory required
+enforcement, but its duplicate scheduler produced a 2,919,108 ms build and is
+now rejected evidence.  The standard Building Framework project returned
+status 0 after =build.ss clean= with:
+
+- external cold wall time: =571.71 s=;
+- Scheme guard elapsed: =567,319 ms=;
+- process-tree peak RSS: =2,617,507,840 bytes=;
+- adaptive RSS ceiling: =17,179,869,184 bytes= on a 32 GiB host;
+- timeout: =#f=;
+- build owner: =gslph-building-framework=;
+- build mode: =standard-gerbil-make-project=.
+
+The immediate no-op rerun returned status 0 with:
+
+- external warm wall time: =5.97 s=;
+- Scheme guard elapsed: =495 ms=;
+- process-tree peak RSS: =232,456,192 bytes=;
+- timeout: =#f=.
+
+These receipts are the P0 acceptance shape: cold compilation crosses the real
+standard DAG under Scheme observability, while a warm build proves current
+artifacts are skipped without replaying a second project scheduler.
 
 ** 10.06.58.45 Scenario Test Placement Rule
 The profile library gate exposed a second build-shape issue. A scenario test placed directly under =t/= became part of the package =tests= compile stage, even though it was meant to run through the gxtest scenario harness. On a cold compile this single target took more than a minute and emitted:
@@ -134,12 +203,14 @@ The fix was not to change build parallelism. The fix was to restore the owner bo
 - user-interface proof gates should run through scenario receipts, not through package compile side effects.
 
 The practical rule is:
-#+begin_src latex
-\operatorname{ScenarioTest}(t)
-  \Rightarrow
-    t \in \texttt{t/scenarios}
-    \land \operatorname{HarnessReceipt}(t)
-    \land \neg \operatorname{PackageCompileTarget}(t)
+#+begin_src typst
+$
+op("ScenarioTest")(t)
+  =>
+    t in upright("t/scenarios")
+    and op("HarnessReceipt")(t)
+    and not op("PackageCompileTarget")(t)
+$
 #+end_src
 This keeps proof and benchmark coverage visible without turning every new user-interface scenario into a package build hotspot.
 
@@ -166,12 +237,14 @@ The corrected shape is:
   discovery uses source-vs-stamp checks plus lightweight output-presence checks
   instead of full output mtime scans for every target.
 
-#+begin_src latex
-\operatorname{SingleStale}(s)
-  \Rightarrow
-    \operatorname{ProfiledSpec}(s)
-    \land \operatorname{BudgetOwner}(s) = \texttt{package-stage-spec}
-    \land \operatorname{Refresh}(Stage) = \operatorname{RetouchStamp}
+#+begin_src typst
+$
+op("SingleStale")(s)
+  =>
+    op("ProfiledSpec")(s)
+    and op("BudgetOwner")(s) = upright("package-stage-spec")
+    and op("Refresh")("Stage") = op("RetouchStamp")
+$
 #+end_src
 
 This preserves the useful warning for genuinely slow source owners while

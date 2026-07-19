@@ -1,0 +1,17 @@
+{
+  "name": "@poo-flow/runtime-wasm",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./wasm": "./dist/poo_flow_runtime.wasm"
+  },
+  "files": [
+    "dist",
+    "include"
+  ],
+  "scripts": {
+    "build": "mkdir -p dist && emcc -O2 -std=c11 -I../runtime-c/include -I../runtime-c/bundle-v1/include -Iinclude src/runtime_wasm_shim.c ../runtime-c/src/runtime_v0.c ../runtime-c/bundle-v1/src/bundle_v1.c -o dist/poo_flow_runtime.wasm -sSTANDALONE_WASM=1 -Wl,--no-entry -sERROR_ON_UNDEFINED_SYMBOLS=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=@exports.json",
+    "test": "npm run build && wasm-opt -O --enable-bulk-memory-opt dist/poo_flow_runtime.wasm -o /dev/null && node --test test/runtime-wasm.test.mjs",
+    "prepack": "npm test"
+  }
+}

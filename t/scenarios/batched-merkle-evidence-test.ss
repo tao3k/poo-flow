@@ -30,6 +30,20 @@
            (check (poo-flow-batched-merkle-proof-verify?
                    (list-ref leaves index) proof) => #t)))
        '(0 1 2 3 4)))
+    (test-case "same leaf produces the same inclusion receipt"
+      (let ((left (poo-flow-batched-merkle-proof leaves 2))
+            (right (poo-flow-batched-merkle-proof leaves 2)))
+        (check (.ref left 'root-digest) => (.ref right 'root-digest))
+        (check (.ref left 'leaf-count) => (.ref right 'leaf-count))
+        (check (map (lambda (step)
+                      (list (.ref step 'direction)
+                            (.ref step 'sibling-digest)))
+                    (.ref left 'steps))
+               =>
+               (map (lambda (step)
+                      (list (.ref step 'direction)
+                            (.ref step 'sibling-digest)))
+                    (.ref right 'steps)))))
     (test-case "reorder omission and substitution change or reject proof"
       (let* ((canonical (poo-flow-batched-merkle-root leaves))
              (reordered (poo-flow-batched-merkle-root

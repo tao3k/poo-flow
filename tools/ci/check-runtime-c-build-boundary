@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+runtime_c="runtime-c"
+make_route="make -C bindings/$runtime_c"
+legacy_library_route="bindings/$runtime_c/build/libpoo_flow_runtime_v0"
+python_make_route='subprocess\.run\(\["'"make"'"'
+forbidden_routes="$make_route|$legacy_library_route|$python_make_route"
+
+if git grep -n -E "$forbidden_routes" \
+  -- . \
+  ':!docs/10-19-design/10.06-poo-module-system/119-agentic-control-plane-ac06-qualification-receipt.org' \
+  ':!docs/10-19-design/10.06-poo-module-system/128-bazel-runtime-c-external-build-design.org'; then
+  echo "stale runtime-C Make route remains" >&2
+  exit 1
+fi

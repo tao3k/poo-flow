@@ -3,6 +3,3 @@ hooks = true
 unified_exec = true
 
 plugins = true
-
-[plugins."asp-codex-plugin@asp-project"]
-enabled = true

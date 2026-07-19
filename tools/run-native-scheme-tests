@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+scheme_env="$workspace/tools/run-native-scheme-env"
+
+"$scheme_env" gxtest t/unit-tests.ss
+"$scheme_env" gxtest t/contract-tests.ss
+"$scheme_env" gxc t/fixtures/object-load-valid/objects.ss
+"$scheme_env" gxtest t/integration-tests.ss
+
+# Keep runtime benchmarks in a fresh Gerbil process. Linux Gambit can terminate
+# a long-lived aggregate gxtest process while this repeated POO projection is
+# running, which also makes process-wide benchmark measurements misleading.
+"$scheme_env" gxtest t/user-interface-custom-loop-engine-capability-test.ss

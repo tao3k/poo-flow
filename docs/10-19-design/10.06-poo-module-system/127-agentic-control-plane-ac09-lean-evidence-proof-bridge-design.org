@@ -1,10 +1,12 @@
 #+title: AC-09 Lean / Evidence Proof Bridge Design
 #+date: 2026-07-12
-#+status: approved-design
+#+status: qualified
 
 * Status
 
-Approved design. Implementation has not started.
+Qualified implementation.  S1 through S7 are complete and the measured
+qualification receipt is recorded in
+=129-agentic-control-plane-ac09-qualification-receipt.org=.
 
 This RFC is the formal AC-09 owner for the Agentic Control Plane roadmap. It
 specializes the earlier research in =54-lean-c-ffi-proof-bridge-rfc.org= for
@@ -91,6 +93,20 @@ reserved space. A single canonical manifest generates:
 
 Generated artifacts have a freshness gate. Hand-edited language projections
 are invalid.
+
+** Digest identity derivation
+Proof identity v1 uses =sha256= with two distinct, manifest-owned domains:
+- =poo-flow.proof-case-vector.v1= hashes the domain, one zero separator byte,
+  and the exact canonical 424-byte native vector;
+- =poo-flow.authorized-effect-theorem-set.v1= hashes the domain, one zero
+  separator byte, and the ordered newline-separated theorem names.
+
+The digest algorithm, domains, and ordered theorem set are part of the
+canonical manifest and generated into C, Lean, and Python projections. Lean
+models SHA-256 as a trusted primitive, but =verifiedProofReceipt= applies that
+primitive internally. Callers cannot supply =vectorDigest= or
+=theoremSetDigest=. Executable runtimes discharge the trusted primitive
+through native SHA-256 and cross-runtime differential gates.
 
 ** Rejected representations
 
@@ -209,11 +225,25 @@ Decode the canonical vector, implement the AuthorizedEffectToken theorem set,
 and emit a ProofReceipt bound to the vector and theorem set.
 
 ** S5 Python CFFI differential
+Qualification includes a non-editable installed wheel consumer. Importing the
+checkout source or relying on development =PYTHONPATH= fails the gate.
+The executable gate launches the Scheme encoder, compares its complete native
+vector and SHA-256 with the manifest/Lean fixture, and then sends those same
+bytes through the CFFI C ABI. A mismatch reports the two owners, first field,
+and byte offset.
+Use the Scheme caller-owned native encoder as the upstream vector owner, then
+compare the C round trip, Python layout/status projection, and Lean canonical
+fixture without introducing a JSON representation.
 
 Consume the same bulk ABI from the production-capable Python runtime and compare
 Scheme/kernel vectors at byte, field, and semantic levels.
 
 ** S6 Negative, property, and performance gates
+The table-driven mutation gate separates structural rejection from semantic
+identity. Unknown tags, unsupported masks, reserved bytes, malformed sizing,
+and borrowed-buffer TOCTOU fail at the C/Python boundary. Root and binding
+substitutions remain structurally valid but must change the vector digest and
+identify the first divergent field.
 
 Qualify replay, substitution, TOCTOU, omitted receipts, malformed vectors,
 missing obligations, root mismatch, determinism, algorithmic complexity, and
@@ -263,12 +293,33 @@ are not committed merely because they were edited together.
   substitution, mutable-buffer TOCTOU, and receipt omission fail closed.
 
 ** Determinism
+Qualification repeats Strict mediation from the same immutable state, repeats
+Batched Merkle root and inclusion-receipt construction, and launches the
+Scheme vector encoder in separate processes. Canonical bytes, roots, proof
+steps, and digests must match exactly. Organization bundle normalization keeps
+construction-order invariance as the semantic-root upstream gate.
 
 - Construction order does not change the semantic root.
 - The same mediation sequence produces the same execution root and vector bytes.
 - Batch inclusion and proof receipts are reproducible.
 
 ** Performance
+The production Python wheel caches layout/fingerprint negotiation after one
+measurement and reuses thread-local CFFI scratch plus caller-owned output.
+Steady-state processing uses three crossings per item instead of four and has
+zero caller-output allocations per item. The installed-wheel benchmark runs
+Strict and Batched separately; its first receipt is baseline-only because host
+scheduling produces large p99 outliers at higher batches.
+The proof-case benchmark measures the real caller-owned C path for Strict and
+Batched profiles at batch sizes 1, 8, 32, 128, and 1024. Storage is allocated
+before timing; each item performs one whole-vector init, write, and release,
+with no per-field crossing and no timed allocation. The fixed 424-byte item
+path is =O(1)= and the k-item loop is =O(k)=.
+
+Root-history lookup is owned by =runtime_v0.c:pending_lower_bound=, a binary
+search followed by a linear k-item window, establishing =O(log n + k)=. The
+first receipt is baseline-only; no millisecond threshold is frozen from one
+host run.
 
 - Per-item vector construction remains O(1).
 - A k-item batch remains O(k).

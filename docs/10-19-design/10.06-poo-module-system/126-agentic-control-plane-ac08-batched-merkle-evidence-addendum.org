@@ -32,7 +32,7 @@ sequenceDiagram
     A-->>K: "input digest plus observation or unknown"
     K->>E: "stage leaf binding input and observation digests"
     E-->>K: "leaf digest and durable leaf index"
-    K-->>S: "Buffered receipt; root unchanged"
+    K-->>S: "Buffered receipt, root unchanged"
     S->>K: "flush batch(expected previous root)"
     K->>E: "commit Merkle root and inclusion proofs"
     E-->>K: "durable batch receipt"

@@ -1,0 +1,52 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
+    "tools/validate-runtime-v0-symbol-surface.ss",
+])
+
+filegroup(
+    name = "runtime_v0_schema",
+    srcs = ["src/contract/runtime-v0-abi-schema.ss"],
+)
+
+filegroup(
+    name = "scheme_runtime_sources",
+    srcs = glob([
+        "gerbil.pkg",
+        "src/**/*.inc",
+        "src/**/*.scm",
+        "src/**/*.ss",
+        "src/**/*.ssi",
+    ]),
+)
+
+filegroup(
+    name = "scheme_source_root_marker",
+    srcs = ["gerbil.pkg"],
+)
+
+filegroup(
+    name = "scheme_build_sources",
+    srcs = [
+        "build.ss",
+        ":scheme_runtime_sources",
+    ] + glob([
+        "bindings/nono-c/**/*.h",
+        "user-interface/**/*.ss",
+    ]),
+)
+
+filegroup(
+    name = "runtime_load_projection_source",
+    srcs = ["src/module-system/runtime-load-projection.ss"],
+)
+
+filegroup(
+    name = "scheme_test_sources",
+    srcs = [":scheme_build_sources"] + glob([
+        "README.org",
+        "docs/**/*.org",
+        "t/**",
+    ]),
+)

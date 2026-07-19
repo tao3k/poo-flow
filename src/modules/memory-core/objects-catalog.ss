@@ -77,5 +77,19 @@
 (def (poo-flow-memory-catalog-find catalog store-ref)
   (poo-flow-memory-store-spec-find (.ref catalog 'stores) store-ref))
 ;; : (-> PooMemoryCatalog Alist)
-(def (poo-flow-memory-catalog->alist catalog)
-  (poo-flow-memory-catalog-summary (.ref catalog 'stores)))
+(defpoo-module-final-projection
+  poo-flow-memory-catalog->alist (catalog)
+  (bindings ((checked-catalog
+              (poo-flow-session-require
+               "memory catalog projection requires a memory catalog"
+               (poo-flow-memory-catalog? catalog)
+               catalog))))
+  (fields ((kind (.ref checked-catalog 'kind))
+           (schema (.ref checked-catalog 'schema))
+           (catalog-ref (.ref checked-catalog 'catalog-ref))
+           (stores (.ref checked-catalog 'stores))
+           (store-refs (.ref checked-catalog 'store-refs))
+           (store-count (.ref checked-catalog 'store-count))
+           (runtime-owner (.ref checked-catalog 'runtime-owner))
+           (runtime-executed (.ref checked-catalog 'runtime-executed))
+           (metadata (.ref checked-catalog 'metadata)))))

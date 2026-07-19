@@ -2,10 +2,17 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lean-proof:
@@ -60,23 +67,23 @@ jobs:
   native:
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 240
+    timeout-minutes: ${{ matrix.job-timeout-minutes }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: source-v0.18.2-4-gadd92248
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
-            gerbil-install: source
-          - os: macos-latest
-            gerbil-label: source-v0.18.2-4-gadd92248
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
-            gerbil-install: source
-    env:
-      GERBIL_REF: ${{ matrix.gerbil-ref }}
-      GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/${{ matrix.gerbil-label }}
-      GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/${{ matrix.gerbil-label }}
+            gerbil-label: prebuilt-v0.18.2-07c84815
+            gerbil-install: prebuilt
+            gerbil-formula: ""
+            dependency-timeout-minutes: 15
+            job-timeout-minutes: 20
+          - os: macos-26
+            gerbil-label: homebrew-tao3k-v0.18.2-07c84815
+            gerbil-install: homebrew
+            gerbil-formula: tao3k/gerbil/gerbil-scheme
+            dependency-timeout-minutes: 15
+            job-timeout-minutes: 30
     steps:
       - name: Checkout poo-flow
         uses: actions/checkout@v7.0.0
@@ -93,9 +100,10 @@ jobs:
             libsqlite3-dev \
             libssl-dev \
             openssl \
-            pkg-config \
-            sqlite3 \
-            zlib1g-dev
+          pkg-config \
+          sqlite3 \
+          valgrind \
+          zlib1g-dev
 
       - name: Restore Homebrew cache
         if: runner.os == 'macOS'
@@ -114,24 +122,83 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install gerbil-scheme jq openssl pkg-config sqlite zlib
-          brew link --overwrite gerbil-scheme
+          brew install jq openssl pkg-config sqlite zlib
 
-      - name: Select macOS Gerbil compiler
-        if: runner.os == 'macOS' && matrix.gerbil-install == 'source'
+      - name: Install macOS Gerbil bottle
+        if: runner.os == 'macOS' && matrix.gerbil-install == 'homebrew'
+        id: homebrew-gerbil-install
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_BOTTLE_SOURCE_FALLBACK: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          INSTALL_BUDGET_SECONDS: 120
+        shell: bash
         run: |
-          gcc_prefix="$(brew --prefix gcc)"
-          gcc_bin="$(
-            find "$gcc_prefix/bin" -maxdepth 1 -type f -name 'gcc-[0-9]*' \
-              | awk -F- '{print $NF "\t" $0}' \
-              | sort -n \
-              | tail -n 1 \
-              | cut -f2-
-          )"
-          test -n "$gcc_bin"
-          test -x "$gcc_bin"
-          echo "GERBIL_GCC=$gcc_bin" >> "$GITHUB_ENV"
-          "$gcc_bin" --version
+          set -euo pipefail
+          formula="${{ matrix.gerbil-formula }}"
+          started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          start_seconds=$SECONDS
+
+          set +e
+          brew install --force-bottle "$formula"
+          install_status=$?
+          set -e
+
+          install_seconds=$((SECONDS - start_seconds))
+          info_status=1
+          poured_from_bottle=false
+          if (( install_status == 0 )); then
+            set +e
+            formula_info="$(brew info --json=v2 "$formula" 2>/dev/null)"
+            info_status=$?
+            set -e
+            if (( info_status == 0 )); then
+              poured_from_bottle="$(jq -r '.formulae[0].installed[-1].poured_from_bottle // false' <<< "$formula_info")"
+            fi
+          fi
+
+          completed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          receipt="$RUNNER_TEMP/poo-flow-homebrew-gerbil-receipt.json"
+          jq -n \
+            --arg schema "poo-flow.ci.homebrew-gerbil-receipt.v1" \
+            --arg formula "$formula" \
+            --arg currentHeadSha "$GITHUB_SHA" \
+            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --arg startedAt "$started_at" \
+            --arg completedAt "$completed_at" \
+            --argjson pouredFromBottle "$poured_from_bottle" \
+            --argjson installSeconds "$install_seconds" \
+            --argjson installBudgetSeconds "$INSTALL_BUDGET_SECONDS" \
+            --argjson installStatus "$install_status" \
+            --argjson infoStatus "$info_status" \
+            '{schema: $schema, formula: $formula, currentHeadSha: $currentHeadSha,
+              runner: $runner, pouredFromBottle: $pouredFromBottle,
+              startedAt: $startedAt, completedAt: $completedAt,
+              installSeconds: $installSeconds,
+              installBudgetSeconds: $installBudgetSeconds,
+              installStatus: $installStatus, infoStatus: $infoStatus}' > "$receipt"
+          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+
+          if (( install_status != 0 )); then
+            exit "$install_status"
+          fi
+          if (( install_seconds > INSTALL_BUDGET_SECONDS )); then
+            echo "Gerbil bottle install exceeded ${INSTALL_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+          if (( info_status != 0 )) || [[ "$poured_from_bottle" != "true" ]]; then
+            echo "Gerbil formula did not consume a published bottle" >&2
+            exit 1
+          fi
+
+      - name: Upload macOS Gerbil install receipt
+        if: always() && runner.os == 'macOS' && matrix.gerbil-install == 'homebrew'
+        uses: actions/upload-artifact@v7
+        with:
+          name: homebrew-gerbil-install-receipt-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ steps.homebrew-gerbil-install.outputs.receipt }}
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
@@ -140,73 +207,45 @@ jobs:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
 
-      - name: Restore Gerbil install cache
-        if: matrix.gerbil-install == 'source'
-        id: gerbil-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
-          restore-keys: |
-            gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
-
-      - name: Build Gerbil
-        if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
-          rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
-          git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
-          cd "$GERBIL_SRC"
-          git checkout "$GERBIL_REF"
-          if [ -n "${GERBIL_GCC:-}" ]; then
-            export CC="$GERBIL_GCC"
-          fi
-          ./configure --prefix="$GERBIL_PREFIX"
-          echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
-          . ./build-env.sh
-          for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
-            ./src/build.sh "$target"
-          done
-          ./install.sh
-
-      - name: Save Gerbil install cache
-        if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: gerbil-install-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
-
-      - name: Use Homebrew Gerbil
-        if: matrix.gerbil-install == 'homebrew'
+      - name: Declare Bazel disk-cache generation
+        shell: bash
+        env:
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
         run: |
           set -euo pipefail
-          prefix="$(brew --prefix gerbil-scheme)"
-          echo "GERBIL_PREFIX=$prefix" >> "$GITHUB_ENV"
-          "$prefix/bin/gxi" --version | tee /tmp/gerbil-version.txt
-          "$prefix/bin/gsc" -v | tee /tmp/gambit-version.txt
-          grep -F "v0.18.2" /tmp/gerbil-version.txt
-          grep -F "v4.9.7" /tmp/gambit-version.txt
+          mkdir -p .ci/bazel-cache-generation
+          printf '# POO Flow CI cache generation: %s\n' \
+            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
+            > .ci/bazel-cache-generation/BUILD.bazel
 
-      - name: Activate Gerbil
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          # setup-bazel hashes BUILD files and restores the newest matching
+          # prefix when the exact generation is absent.  The ignored synthetic
+          # BUILD file above advances that generation on every commit, so an
+          # updated action cache is published instead of being trapped behind
+          # GitHub's immutable exact key.  Forks remain restore-only.
+          cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
+          repository-cache: true
+
+      - name: Resolve shared Gerbil capability
+        id: gerbil-native-abi
+        shell: bash
         run: |
           set -euo pipefail
-          echo "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
-          gsc_wrapper="$RUNNER_TEMP/gerbil-gsc"
-          {
-            printf '#!/bin/sh\n'
-            printf 'exec "%s" "-:~~=%s,~~bin=%s,~~include=%s,~~lib=%s" "$@"\n' "$GERBIL_PREFIX/bin/gsc" "$GERBIL_PREFIX" "$GERBIL_PREFIX/bin" "$GERBIL_PREFIX/include" "$GERBIL_PREFIX/lib"
-          } > "$gsc_wrapper"
-          chmod +x "$gsc_wrapper"
-          echo "GERBIL_GSC=$gsc_wrapper" >> "$GITHUB_ENV"
-          "$GERBIL_PREFIX/bin/gxi" --version
-          "$GERBIL_PREFIX/bin/gxpkg" help >/dev/null
-          "$gsc_wrapper" -v
-          tmp_smoke="$(mktemp -d)"
-          printf '(display "ok")\n' > "$tmp_smoke/gsc-smoke.scm"
-          "$gsc_wrapper" -target C "$tmp_smoke/gsc-smoke.scm"
-          test -f "$tmp_smoke/gsc-smoke.o1"
-          "$GERBIL_PREFIX/bin/gxi" -e '(displayln "gerbil-ready")'
-          "$GERBIL_PREFIX/bin/gxpkg" list
+          bazel build @dependency_gerbil//:native_scheme_env
+          native_abi="$(
+            bazel run --ui_event_filters=-info --noshow_progress \
+              @dependency_gerbil//:native_scheme_env -- \
+              bash -c "printf %s \"\$GERBIL_NATIVE_ABI\"" 2>/dev/null
+          )"
+          test "${#native_abi}" -eq 40
+          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
+          echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
+          echo "Gerbil native ABI: $native_abi"
 
       - name: Restore Gerbil package dependency cache
         id: gerbil-pkg-cache
@@ -215,27 +254,14 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Install Gerbil package dependencies from gerbil.pkg
-        run: |
-          set -euo pipefail
-          mkdir -p "$HOME/.gerbil/pkg"
-          gxpkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
-          package_cache_ready=false
-          if [ -d .gerbil/lib ]; then
-            if gxi -e '(begin (import :clan/base :clan/poo/object) (displayln "gerbil-package-cache-ready"))'; then
-              package_cache_ready=true
-            else
-              echo "Cached Gerbil packages are missing compiled dependency libraries; rebuilding"
-            fi
-          fi
-          if [ "$package_cache_ready" = "true" ]; then
-            echo "Using cached Gerbil package dependency build products"
-          else
-            gxpkg deps --install
-          fi
-          gxpkg list
+        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
+        run: bazel run //scheme:deps
+
+      - name: Validate shared Gerbil provider
+        run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
 
       - name: Save Gerbil package dependency cache
         if: steps.gerbil-pkg-cache.outputs.cache-hit != 'true'
@@ -244,28 +270,315 @@ jobs:
           path: |
             ~/.gerbil/pkg
             .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
+          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
-      - name: Clean package outputs
-        run: gxpkg env ./build.ss clean
+      - name: Validate Bazel target graph
+        run: bazel query //...
 
-      - name: Build package
-        run: gxpkg build
-
-      - name: Build poo-flow CLI binary
+      - name: Build Scheme package through Bazel
+        id: scheme-compile
+        timeout-minutes: 8
+        env:
+          COMPILE_BUDGET_SECONDS: 480
         shell: bash
         run: |
           set -euo pipefail
-          gxpkg env ./build.ss compile --release --optimized
-          test -x .gerbil/bin/poo-flow
-          .gerbil/bin/poo-flow --help >/tmp/poo-flow-help.txt
-          test -s /tmp/poo-flow-help.txt
+          profile="$RUNNER_TEMP/bazel-scheme-compile-profile.gz"
+          ci_receipt="$RUNNER_TEMP/bazel-scheme-compile-ci-receipt.json"
+          start_seconds=$SECONDS
 
-      - name: Run package test roots through gxtest
+          set +e
+          bazel build --profile="$profile" //scheme:compile
+          build_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          scheme_receipt="bazel-bin/scheme/compile.receipt.json"
+          jq -n \
+            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg phase "scheme-compile" \
+            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --argjson status "$build_status" \
+            --argjson elapsedSeconds "$elapsed_seconds" \
+            --argjson budgetSeconds "$COMPILE_BUDGET_SECONDS" \
+            --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
+            '{schema: $schema, phase: $phase, runner: $runner, status: $status,
+              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              schemeReceiptAvailable: $schemeReceiptAvailable}' > "$ci_receipt"
+          echo "profile=$profile" >> "$GITHUB_OUTPUT"
+          echo "ci-receipt=$ci_receipt" >> "$GITHUB_OUTPUT"
+
+          if (( build_status != 0 )); then
+            exit "$build_status"
+          fi
+          if (( elapsed_seconds > COMPILE_BUDGET_SECONDS )); then
+            echo "Scheme compile exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+
+      - name: Upload Scheme compile evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-scheme-compile-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ steps.scheme-compile.outputs.ci-receipt }}
+            ${{ steps.scheme-compile.outputs.profile }}
+            bazel-bin/scheme/compile.receipt.json
+            bazel-bin/scheme/compile.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Build Python wheel Scheme projection through Bazel
+        if: runner.os == 'Linux'
+        id: wheel-scheme-projection
+        timeout-minutes: 2
+        env:
+          PROJECTION_ARTIFACT: bazel-bin/scheme/wheel_smoke.ss.poo-flow-projection.sexp
+          PROJECTION_BUDGET_SECONDS: 120
         shell: bash
         run: |
           set -euo pipefail
-          gxpkg env gxtest t/unit-tests.ss
-          gxpkg env gxtest t/contract-tests.ss
-          gxpkg env gxc t/fixtures/object-load-valid/objects.ss
-          gxpkg env gxtest t/integration-tests.ss
+          handoff_dir="$GITHUB_WORKSPACE/.ci/python-wheel-projection"
+          profile="$RUNNER_TEMP/python-wheel-scheme-projection-profile.gz"
+          receipt="$handoff_dir/producer-receipt.json"
+          start_seconds=$SECONDS
+          mkdir -p "$handoff_dir"
+
+          set +e
+          bazel build \
+            --profile="$profile" \
+            //scheme:wheel_smoke_projection_artifact
+          build_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          artifact_available=false
+          artifact_digest=""
+          if [[ -s "$PROJECTION_ARTIFACT" ]]; then
+            artifact_available=true
+            artifact_digest="$(sha256sum "$PROJECTION_ARTIFACT" | awk '{print $1}')"
+            cp "$PROJECTION_ARTIFACT" "$handoff_dir/"
+          fi
+          jq -n \
+            --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
+          --arg producerJob "native-linux" \
+          --arg action "//scheme:wheel_smoke_projection_artifact" \
+          --arg compileOwner "//scheme:compile" \
+          --arg currentHeadSha "$GITHUB_SHA" \
+          --arg artifactDigest "$artifact_digest" \
+            --argjson status "$build_status" \
+            --argjson elapsedSeconds "$elapsed_seconds" \
+            --argjson budgetSeconds "$PROJECTION_BUDGET_SECONDS" \
+            --argjson artifactAvailable "$artifact_available" \
+          '{schema: $schema, producerJob: $producerJob, action: $action,
+            compileOwner: $compileOwner, currentHeadSha: $currentHeadSha,
+            artifactDigest: $artifactDigest,
+            status: $status, elapsedSeconds: $elapsedSeconds,
+              budgetSeconds: $budgetSeconds,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              artifactAvailable: $artifactAvailable}' > "$receipt"
+
+          if (( build_status != 0 )); then
+            exit "$build_status"
+          fi
+          if (( elapsed_seconds > PROJECTION_BUDGET_SECONDS )); then
+            echo "Scheme projection exceeded ${PROJECTION_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+          test -s "$PROJECTION_ARTIFACT"
+
+      - name: Upload Python wheel Scheme projection handoff
+        if: ${{ always() && runner.os == 'Linux' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-scheme-projection-producer
+          path: .ci/python-wheel-projection
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Build runtime-C producer artifacts through Bazel
+        if: runner.os == 'Linux'
+        id: runtime-c-producer
+        timeout-minutes: 2
+        env:
+          RUNTIME_C_BUILD_BUDGET_SECONDS: 90
+        shell: bash
+        run: |
+          set -euo pipefail
+          handoff_dir="$GITHUB_WORKSPACE/.ci/runtime-c"
+          profile="$RUNNER_TEMP/bazel-runtime-c-producer-profile.gz"
+          start_seconds=$SECONDS
+          mkdir -p "$handoff_dir"
+
+          set +e
+          bazel build --profile="$profile" \
+            //bindings/runtime-c:runtime_c_static \
+            //bindings/runtime-c:runtime_c_shared
+          build_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          echo "elapsed-seconds=$elapsed_seconds" >> "$GITHUB_OUTPUT"
+          echo "profile=$profile" >> "$GITHUB_OUTPUT"
+          if (( build_status != 0 )); then
+            exit "$build_status"
+          fi
+          if (( elapsed_seconds > RUNTIME_C_BUILD_BUDGET_SECONDS )); then
+            echo "runtime-C producer build exceeded ${RUNTIME_C_BUILD_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+
+          library="$GITHUB_WORKSPACE/bazel-bin/bindings/runtime-c/libruntime_c_shared.so"
+          test -s "$library"
+          cp "$library" "$handoff_dir/libpoo_flow_runtime_v0.so"
+
+      - name: Run Bazel acceptance suites
+        id: bazel-acceptance
+        timeout-minutes: 3
+        env:
+          ACCEPTANCE_BUDGET_SECONDS: 150
+        shell: bash
+        run: |
+          set -euo pipefail
+          profile="$RUNNER_TEMP/bazel-acceptance-profile.gz"
+          receipt="$RUNNER_TEMP/bazel-acceptance-ci-receipt.json"
+          start_seconds=$SECONDS
+
+          targets=(
+            //scheme:tests
+            //tools/bazel:shared_gerbil_capability_test
+            //bindings/runtime-c:runtime_c_tests
+            //bindings/runtime-c/bundle-v1:bundle_v1_tests
+          )
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            targets+=(
+              //bindings/runtime-c:runtime_c_sanitizer_tests
+              //bindings/runtime-c:runtime_c_leak_test
+              //bindings/runtime-c:runtime_v0_batch_benchmark_smoke
+              //bindings/runtime-c:runtime_v0_gerbil_ffi_benchmark
+            )
+          fi
+
+          set +e
+          bazel test --profile="$profile" "${targets[@]}"
+          test_status=$?
+          set -e
+
+          elapsed_seconds=$((SECONDS - start_seconds))
+          jq -n \
+            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg phase "acceptance" \
+            --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --argjson status "$test_status" \
+            --argjson elapsedSeconds "$elapsed_seconds" \
+            --argjson budgetSeconds "$ACCEPTANCE_BUDGET_SECONDS" \
+            '{schema: $schema, phase: $phase, runner: $runner, status: $status,
+              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds)}' > "$receipt"
+          echo "profile=$profile" >> "$GITHUB_OUTPUT"
+          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+
+          if (( test_status != 0 )); then
+            exit "$test_status"
+          fi
+          if (( elapsed_seconds > ACCEPTANCE_BUDGET_SECONDS )); then
+            echo "Bazel acceptance exceeded ${ACCEPTANCE_BUDGET_SECONDS}s budget" >&2
+            exit 1
+          fi
+
+      - name: Reject stale runtime-C Make routes
+        if: runner.os == 'Linux'
+        run: tools/ci/check-runtime-c-build-boundary
+
+      - name: Finalize runtime-C producer handoff
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          handoff_dir="$GITHUB_WORKSPACE/.ci/runtime-c"
+          library="$handoff_dir/libpoo_flow_runtime_v0.so"
+          acceptance_receipt="${{ steps.bazel-acceptance.outputs.receipt }}"
+          producer_receipt="$handoff_dir/producer-receipt.json"
+          test -s "$library"
+          test -s "$acceptance_receipt"
+          jq -e '.status == 0 and .withinBudget == true' \
+            "$acceptance_receipt" >/dev/null
+          cp "$acceptance_receipt" "$handoff_dir/acceptance-receipt.json"
+
+          artifact_digest="$(sha256sum "$library" | awk '{print $1}')"
+          symbols_digest="$(
+            nm -D --defined-only "$library" \
+              | awk '{print $3}' \
+              | sed '/^$/d' \
+              | LC_ALL=C sort -u \
+              | sha256sum \
+              | awk '{print $1}'
+          )"
+          symbol_count="$(
+            nm -D --defined-only "$library" \
+              | awk '{print $3}' \
+              | sed '/^$/d' \
+              | LC_ALL=C sort -u \
+              | wc -l \
+              | tr -d ' '
+          )"
+          artifact_bytes="$(stat -c %s "$library")"
+          acceptance_digest="$(sha256sum "$acceptance_receipt" | awk '{print $1}')"
+
+          jq -n \
+            --arg schema "poo-flow.ci.runtime-c-handoff.v1" \
+            --arg producerJob "native-linux" \
+            --arg producerTarget "//bindings/runtime-c:runtime_c_shared" \
+            --arg platform "${RUNNER_OS}-${RUNNER_ARCH}" \
+            --arg currentHeadSha "$GITHUB_SHA" \
+            --arg gerbilNativeAbi "$GERBIL_NATIVE_ABI" \
+            --arg artifactPath "libpoo_flow_runtime_v0.so" \
+            --arg artifactDigest "$artifact_digest" \
+            --arg exportedSymbolsDigest "$symbols_digest" \
+            --arg acceptanceReceiptDigest "$acceptance_digest" \
+            --argjson artifactBytes "$artifact_bytes" \
+            --argjson exportedSymbolCount "$symbol_count" \
+            --argjson elapsedSeconds "${{ steps.runtime-c-producer.outputs.elapsed-seconds }}" \
+            --argjson budgetSeconds 90 \
+            '{schema: $schema, producerJob: $producerJob,
+              producerTarget: $producerTarget,
+              platform: $platform, currentHeadSha: $currentHeadSha,
+              gerbilNativeAbi: $gerbilNativeAbi, artifactPath: $artifactPath,
+              artifactDigest: $artifactDigest,
+              exportedSymbolsDigest: $exportedSymbolsDigest,
+              exportedSymbolCount: $exportedSymbolCount,
+              artifactBytes: $artifactBytes,
+              acceptanceReceiptDigest: $acceptanceReceiptDigest,
+              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
+              artifactAvailable: true, status: 0,
+              withinBudget: ($elapsedSeconds <= $budgetSeconds)}' \
+            > "$producer_receipt"
+
+      - name: Upload Bazel acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-acceptance-evidence-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ steps.bazel-acceptance.outputs.receipt }}
+            ${{ steps.bazel-acceptance.outputs.profile }}
+            ${{ steps.runtime-c-producer.outputs.profile }}
+            .ci/runtime-c/producer-receipt.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload runtime-C producer handoff
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: poo-flow-runtime-native-library
+          path: .ci/runtime-c
+          if-no-files-found: error
+          retention-days: 7
+
+  python-runtime-wheel:
+    name: Python runtime wheel
+    needs: native
+    uses: ./.github/workflows/python-runtime-wheel.yml

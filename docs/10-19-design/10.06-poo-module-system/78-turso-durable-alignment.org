@@ -84,10 +84,10 @@ Python parses these into the manifest =backend= requirement map. A Turso store o
 
 Core invariant:
 
-#+begin_src latex
-\[
-  \forall r \in Requirements(P),\quad Capability(TursoRuntime) \models r
-\]
+#+begin_src typst
+$
+forall r in "Requirements"(P),quad "Capability"("TursoRuntime") models r
+$
 #+end_src
 
 Operationally:
@@ -132,29 +132,29 @@ The adapter receipt includes the capability fields listed above. This receipt is
 * Next Proof Work
 The next Lean/Scheme proof layer should prove that:
 
-#+begin_src latex
-\[
-  PolicyRequires(P, c) \land RuntimeReceipt(R, c)
-  \Rightarrow DurableBackendSound(P, R)
-\]
+#+begin_src typst
+$
+"PolicyRequires"(P, c) and "RuntimeReceipt"(R, c)
+  => "DurableBackendSound"(P, R)
+$
 #+end_src
 
 For AI workflows this should specialize into:
 
-#+begin_src latex
-\[
-  RequiresVectorMemory(P) \Rightarrow
-  ReceiptField(R, ai\_vector\_search, true)
-\]
+#+begin_src typst
+$
+"RequiresVectorMemory"(P) =>
+  "ReceiptField"(R, "ai"_"vector"_"search", "true")
+$
 #+end_src
 
 and:
 
-#+begin_src latex
-\[
-  RequiresConcurrentCheckpoint(P) \Rightarrow
-  ReceiptField(R, concurrent\_writes, true)
-\]
+#+begin_src typst
+$
+"RequiresConcurrentCheckpoint"(P) =>
+  "ReceiptField"(R, "concurrent"_"writes", "true")
+$
 #+end_src
 
 This keeps the formal model small: Lean does not need to prove Turso's database engine. Lean only proves that our Scheme policy cannot be handed to a runtime backend whose declared receipt contradicts the required durable capability.

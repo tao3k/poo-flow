@@ -30,20 +30,22 @@ The highest-value contribution unit is not a full application.  It is a reusable
 profile that captures a policy or strategy slice clearly enough for another
 project to import, inspect, extend, and prove.
 
-#+begin_src latex
-\operatorname{Contribution}(c)
-  \Rightarrow
-    \operatorname{Profile}(c)
-    \lor \operatorname{Strategy}(c)
-    \lor \operatorname{Policy}(c)
-    \lor \operatorname{Scenario}(c)
+#+begin_src typst
+$
+op("Contribution")(c)
+  =>
+    op("Profile")(c)
+    or op("Strategy")(c)
+    or op("Policy")(c)
+    or op("Scenario")(c)
 
-\operatorname{Reusable}(c)
-  \Rightarrow
-    \operatorname{Named}(c)
-    \land \operatorname{Composable}(c)
-    \land \operatorname{Documented}(c)
-    \land \operatorname{ProofAddressable}(c)
+op("Reusable")(c)
+  =>
+    op("Named")(c)
+    and op("Composable")(c)
+    and op("Documented")(c)
+    and op("ProofAddressable")(c)
+$
 #+end_src
 
 The library should push contributors toward small, well-scoped objects that can
@@ -134,21 +136,23 @@ Downstream users should be able to consume a contributed profile in three ways:
 
 The important invariant is that extension must preserve the parent contract.
 
-#+begin_src latex
-\operatorname{Uses}(d,p)
-  \Rightarrow
-    \operatorname{Profile}(p)
-    \land \operatorname{Compatible}(d,p)
+#+begin_src typst
+$
+op("Uses")(d,p)
+  =>
+    op("Profile")(p)
+    and op("Compatible")(d,p)
 
-\operatorname{Extends}(q,p)
-  \Rightarrow
-    \operatorname{Lin}_{\mathrm{POO/C3}}(q,p)
-    \land \operatorname{PreservesContract}(q,p)
+op("Extends")(q,p)
+  =>
+    op("Lin")_(upright("POO/C3"))(q,p)
+    and op("PreservesContract")(q,p)
 
-\operatorname{PreservesContract}(q,p)
-  \Rightarrow
-    \operatorname{Scope}(q) \subseteq \operatorname{Scope}(p)
-    \lor \operatorname{HasRefinementProof}(q,p)
+op("PreservesContract")(q,p)
+  =>
+    op("Scope")(q) subset.eq op("Scope")(p)
+    or op("HasRefinementProof")(q,p)
+$
 #+end_src
 
 This is the reason =user-interface/= matters for the proof architecture.  The
@@ -198,18 +202,20 @@ treated as public reusable library surface.
 | Regression test | changes keep existing scenarios and profile reuse behavior stable |
 | Documentation | contribution documents reuse intent, extension points, and proof/test status |
 
-#+begin_src latex
-\operatorname{PublicUserInterfaceProfile}(p)
-  \Rightarrow
-    \operatorname{Tested}(p)
-    \land \operatorname{HasFactProjection}(p)
-    \land \operatorname{MappedToLeanObligations}(p)
-    \land \operatorname{ProofStatusKnown}(p)
+#+begin_src typst
+$
+op("PublicUserInterfaceProfile")(p)
+  =>
+    op("Tested")(p)
+    and op("HasFactProjection")(p)
+    and op("MappedToLeanObligations")(p)
+    and op("ProofStatusKnown")(p)
 
-\operatorname{ReusableLibrarySurface}(p)
-  \Rightarrow
-    \operatorname{PublicUserInterfaceProfile}(p)
-    \land \operatorname{DischargedRequiredObligations}(p)
+op("ReusableLibrarySurface")(p)
+  =>
+    op("PublicUserInterfaceProfile")(p)
+    and op("DischargedRequiredObligations")(p)
+$
 #+end_src
 
 Experimental profiles may exist only when their status is explicit. They should
@@ -233,13 +239,15 @@ obligation work before it is promoted as public library surface.
 | scenario | gives a concrete validation case |
 | extension example | tests contract preservation under POO extension |
 
-#+begin_src latex
-\operatorname{PublicProfile}(p)
-  \Rightarrow
-    \operatorname{HasScenario}(p)
-    \land \operatorname{HasFactProjection}(p)
-    \land \operatorname{HasProofObligations}(p)
-    \land \operatorname{HasTestReceipt}(p)
+#+begin_src typst
+$
+op("PublicProfile")(p)
+  =>
+    op("HasScenario")(p)
+    and op("HasFactProjection")(p)
+    and op("HasProofObligations")(p)
+    and op("HasTestReceipt")(p)
+$
 #+end_src
 
 The goal is not to make every contribution heavyweight.  The goal is to prevent
@@ -250,27 +258,29 @@ case, or proof-backed reusable profile.
 
 * 10.06.57.85 Receipt-Backed Gate Semantics
 The implementation gate is intentionally POO-native. A public reusable profile is not accepted by writing a JSON manifest or hand-authored fact table. The authoring object is a profile gate, and the acceptance evidence is a profile gate receipt.
-#+begin_src latex
-\operatorname{AcceptedGate}(p)
-  \Rightarrow
-    \operatorname{PublicProfile}(p)
-    \land \operatorname{InProfileSet}(p)
-    \land \operatorname{Tested}(p)
-    \land \operatorname{HasScenario}(p)
-    \land \operatorname{HasBenchmark}(p)
+#+begin_src typst
+$
+op("AcceptedGate")(p)
+  =>
+    op("PublicProfile")(p)
+    and op("InProfileSet")(p)
+    and op("Tested")(p)
+    and op("HasScenario")(p)
+    and op("HasBenchmark")(p)
 
-\operatorname{AcceptedGate}(p)
-  \Rightarrow
-    \operatorname{MappedToLeanObligations}(p)
-    \land \operatorname{HasProofReceipt}(p)
-    \land \operatorname{ProofDischarged}(p)
+op("AcceptedGate")(p)
+  =>
+    op("MappedToLeanObligations")(p)
+    and op("HasProofReceipt")(p)
+    and op("ProofDischarged")(p)
 
-\operatorname{ReusableLibrarySurface}(p)
-  \Rightarrow
-    \operatorname{DependencyClosed}(p)
-    \land \operatorname{ScopeContained}(p)
-    \land \operatorname{ObservabilityClean}(p)
-    \land \operatorname{CounterexampleRejected}(p)
+op("ReusableLibrarySurface")(p)
+  =>
+    op("DependencyClosed")(p)
+    and op("ScopeContained")(p)
+    and op("ObservabilityClean")(p)
+    and op("CounterexampleRejected")(p)
+$
 #+end_src
 The receipt object records scenario benchmark, proof receipt, observability receipt, dependency closure, scope containment, and counterexample rejection. Scheme projects still consume POO objects and functional composition. The alist appears only as the final Scheme-to-Lean fact projection boundary.
 

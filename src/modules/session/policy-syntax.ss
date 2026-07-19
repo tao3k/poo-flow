@@ -26,7 +26,8 @@
 ;;   ;; => policy constructor definitions
 ;;   ```
 (defrules defpoo-session-policy-family
-  (kind schema default-action scope-ref parameters slots validate)
+  (kind schema default-action scope-ref parameters slots validate
+        emit scope-ref-value)
   ((_ constructor policy-object
       (kind kind-expr)
       (schema schema-expr)
@@ -35,6 +36,40 @@
       (parameters (policy-name arg ... . maybe-metadata))
       (slots ((slot-key slot-value) ...))
       (validate validation ...))
+   (defpoo-session-policy-family
+    (emit constructor policy-object
+      (kind kind-expr)
+      (schema schema-expr)
+      (default-action default-action-expr)
+      (parameters (policy-name arg ... . maybe-metadata))
+      (scope-ref-value scope-ref-expr)
+      (slots ((slot-key slot-value) ...))
+      (validate validation ...))))
+  ((_ constructor policy-object
+      (kind kind-expr)
+      (schema schema-expr)
+      (default-action default-action-expr)
+      (parameters (policy-name scope-ref-param arg ... . maybe-metadata))
+      (slots ((slot-key slot-value) ...))
+      (validate validation ...))
+   (defpoo-session-policy-family
+    (emit constructor policy-object
+      (kind kind-expr)
+      (schema schema-expr)
+      (default-action default-action-expr)
+      (parameters
+       (policy-name scope-ref-param arg ... . maybe-metadata))
+      (scope-ref-value scope-ref-param)
+      (slots ((slot-key slot-value) ...))
+      (validate validation ...))))
+  ((_ (emit constructor policy-object
+       (kind kind-expr)
+       (schema schema-expr)
+       (default-action default-action-expr)
+       (parameters (policy-name arg ... . maybe-metadata))
+       (scope-ref-value scope-ref-expr)
+       (slots ((slot-key slot-value) ...))
+       (validate validation ...)))
    ;; Engineering note: policy-sensitive helpers in this owner keep explicit
    ;; contracts adjacent to definitions so downstream reports stay actionable.
    ;; : (-> Any Any)
@@ -45,24 +80,6 @@
             schema-expr
             policy-name
             scope-ref-expr
-            default-action-expr
-            (list (cons slot-key slot-value) ...)
-            maybe-metadata)))
-  ((_ constructor policy-object
-      (kind kind-expr)
-      (schema schema-expr)
-      (default-action default-action-expr)
-      (parameters (policy-name scope-ref-param arg ... . maybe-metadata))
-      (slots ((slot-key slot-value) ...))
-      (validate validation ...))
-   ;; : (-> Any Any)
-   (def (constructor policy-name scope-ref-param arg ... . maybe-metadata)
-     validation ...
-     (apply policy-object
-            kind-expr
-            schema-expr
-            policy-name
-            scope-ref-param
             default-action-expr
             (list (cons slot-key slot-value) ...)
             maybe-metadata))))

@@ -276,10 +276,10 @@ gantt
 
 A generated UI case cannot reach runtime handoff unless Lean proves:
 
-#+begin_src latex
-\[
-  \text{Step}(s,s',m) \Rightarrow \text{CanStart}(s,m)
-\]
+#+begin_src typst
+$
+"Step"(s,s',m) => "CanStart"(s,m)
+$
 #+end_src
 
 The =CanStart= evidence must include dependency completion, scope containment,

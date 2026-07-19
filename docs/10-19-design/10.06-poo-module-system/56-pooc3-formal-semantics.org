@@ -3,77 +3,73 @@
 
 * 10.06.56.10 Core Mathematical Model
 
-#+begin_src latex
-\[
-\begin{aligned}
-  &M = \text{modules},\quad S = \text{scopes},\quad \Sigma = \text{states} \\
-  &\sigma_M : M \rightarrow S,\quad \sigma_\Sigma : \Sigma \rightarrow S \\
-  &(S,\le) \text{ is a partial order} \\
-  &\quad \forall a.\ a \le a \\
-  &\quad a \le b \land b \le c \Rightarrow a \le c \\
-  &\quad a \le b \land b \le a \Rightarrow a = b \\
-  &D \subseteq M \times M,\quad D(m,d) = \text{module } m \text{ depends on } d \\
-  &B \subseteq M \times M,\quad B(a,b) = \text{branch siblings} \\
-  &P_m : \Sigma \rightarrow \text{Prop},\quad Q_m : \Sigma \rightarrow \text{Prop},\quad
-    G_m : \Sigma \rightarrow \text{Prop} \\
-  &\text{DepsCompleted}(s,m) \equiv
-    \forall d.\ D(m,d) \Rightarrow \text{Completed}(s,d) \\
-  &\text{ScopeAllowed}(s,m) \equiv \sigma_M(m) \le \sigma_\Sigma(s) \\
-  &\text{BranchExclusive}(s) \equiv
-    \forall a,b.\ B(a,b) \Rightarrow \neg(G_a(s) \land G_b(s)) \\
-  &\text{CanStart}(s,m) \equiv
-    \text{DepsCompleted}(s,m)
-    \land \text{ScopeAllowed}(s,m)
-    \land P_m(s)
-    \land Q_m(s)
-    \land G_m(s) \\
-  &\text{StepSound} \equiv
-    \forall s,s',m.\ \text{Step}(s,s',m) \Rightarrow \text{CanStart}(s,m) \\
-  &\text{DependencySound} \equiv
-    \text{CanStart}(s,m) \land D(m,d) \Rightarrow \text{Completed}(s,d) \\
-  &\text{ScopeTransitive} \equiv
-    \text{CanStart}(s,m) \land \sigma_\Sigma(s) \le p
-    \Rightarrow \sigma_M(m) \le p \\
-  &\text{BranchSound} \equiv
-    B(a,b) \land \text{CanStart}(s,a) \land \text{CanStart}(s,b)
-    \Rightarrow \bot \\
-  &r : M \rightarrow \mathbb{N},\quad
-    D(m,d) \Rightarrow r(d) < r(m) \\
-  &\text{RankedDeps}(D,r) \Rightarrow
-    \neg D(m,m)
-    \land
-    \neg(D(a,b) \land D(b,a)) \\
-  &\text{Trace}(s_0,s_n) =
-    \text{Step}(s_0,s_1,m_0);\ldots;\text{Step}(s_{n-1},s_n,m_{n-1}) \\
-  &\text{Preserves}(I) \equiv
-    \forall s,s',m.\ I(s) \land \text{Step}(s,s',m) \Rightarrow I(s') \\
-  &\text{TracePreserves}(I) \equiv
-    I(s_0) \land \text{Trace}(s_0,s_n) \Rightarrow I(s_n)
-\end{aligned}
-\]
+#+begin_src typst
+$
+& M = "modules",quad S = "scopes",quad Sigma = "states" \
+  & sigma_M : M -> S,quad sigma_Sigma : Sigma -> S \
+  & (S,<=) " is a partial or der" \
+  & quad forall a. a <= a \
+  & quad a <= b and b <= c => a <= c \
+  & quad a <= b and b <= a => a = b \
+  & D subset.eq M times M,quad D(m,d) = "module " m " depends on " d \
+  & B subset.eq M times M,quad B(a,b) = "branch siblings" \
+  & P_m : Sigma -> "Prop",quad Q_m : Sigma -> "Prop",quad
+    G_m : Sigma -> "Prop" \
+  & "DepsCompleted"(s,m) equiv
+    forall d. D(m,d) => "Completed"(s,d) \
+  & "ScopeAllowed"(s,m) equiv sigma_M(m) <= sigma_Sigma(s) \
+  & "BranchExclusive"(s) equiv
+    forall a,b. B(a,b) => not (G_a(s) and G_b(s)) \
+  & "CanStart"(s,m) equiv
+    "DepsCompleted"(s,m)
+    and "ScopeAllowed"(s,m)
+    and P_m(s)
+    and Q_m(s)
+    and G_m(s) \
+  & "StepSound" equiv
+    forall s,s',m. "Step"(s,s',m) => "CanStart"(s,m) \
+  & "DependencySound" equiv
+    "CanStart"(s,m) and D(m,d) => "Completed"(s,d) \
+  & "ScopeTransitive" equiv
+    "CanStart"(s,m) and sigma_Sigma(s) <= p
+    => sigma_M(m) <= p \
+  & "BranchSound" equiv
+    B(a,b) and "CanStart"(s,a) and "CanStart"(s,b)
+    => bot \
+  & r : M -> NN,quad
+    D(m,d) => r(d) < r(m) \
+  & "RankedDeps"(D,r) =>
+    not D(m,m)
+    and
+    not (D(a,b) and D(b,a)) \
+  & "Trace"(s_0,s_n) =
+    "Step"(s_0,s_1,m_0);dots.h;"Step"(s_(n-1),s_n,m_(n-1)) \
+  & "Preserves"(I) equiv
+    forall s,s',m. I(s) and "Step"(s,s',m) => I(s') \
+  & "TracePreserves"(I) equiv
+    I(s_0) and "Trace"(s_0,s_n) => I(s_n)
+$
 #+end_src
 
 * 10.06.56.15 Required Condition Intersection
 
-#+begin_src latex
-\[
-\begin{aligned}
-Deps(s,m) &\equiv \forall d \in M,\; D(m,d) \Rightarrow Done(s,d) \\
-CanStart(s,m) &\Longleftrightarrow
-  Deps(s,m)
-  \land Scope(m) \sqsubseteq Active(s)
-  \land Policy(s,m)
-  \land Pre(s,m)
-  \land Guard(s,m) \\
-CanStart(s,runtimeHandoff) &\Rightarrow
-  profileDone(s)
-  \land policyDone(s)
-  \land strategyDone(s)
-  \land workflowDone(s)
-  \land sandboxDone(s) \\
-CanStart(s,cacheHit) \land CanStart(s,cacheMiss) &\Rightarrow \bot
-\end{aligned}
-\]
+#+begin_src typst
+$
+"Deps"(s,m) & equiv forall d in M,  D(m,d) => "Done"(s,d) \
+"CanStart"(s,m) & <=>
+  "Deps"(s,m)
+  and "Scope"(m) subset.eq "Active"(s)
+  and "Policy"(s,m)
+  and "Pre"(s,m)
+  and "Guard"(s,m) \
+"CanStart"(s,"runtimeHandoff") & =>
+  "profileDone"(s)
+  and "policyDone"(s)
+  and "strategyDone"(s)
+  and "workflowDone"(s)
+  and "sandboxDone"(s) \
+"CanStart"(s,"cacheHit") and "CanStart"(s,"cacheMiss") & => bot
+$
 #+end_src
 
 #+begin_src mermaid
@@ -87,20 +83,18 @@ flowchart LR
 
 * 10.06.56.18 User Interface Projection
 
-#+begin_src latex
-\[
-\begin{aligned}
-StrategyPlan(s) &\Rightarrow
-  SelectorPolicy(s) \land ResourcePolicy(s) \land CapabilityPolicy(s) \\
-RuntimeManifest(s) &\Rightarrow
-  StrategyPlan(s) \land LocalValidation(s)
-  \land MemoryPolicy(s) \land CompressionPolicy(s) \\
-MarlinHandoff(s) &\Rightarrow RuntimeManifest(s) \\
-L1Report(s) &\Rightarrow MarlinHandoff(s) \\
-ScenarioBenchmark(s) &\Rightarrow
-  ScenarioMatrix(s) \land L1Report(s) \land PerformanceFixtureBound(s)
-\end{aligned}
-\]
+#+begin_src typst
+$
+"StrategyPlan"(s) & =>
+  "SelectorPolicy"(s) and "ResourcePolicy"(s) and "CapabilityPolicy"(s) \
+"RuntimeManifest"(s) & =>
+  "StrategyPlan"(s) and "LocalValidation"(s)
+  and "MemoryPolicy"(s) and "CompressionPolicy"(s) \
+"MarlinHandoff"(s) & => "RuntimeManifest"(s) \
+"L1Report"(s) & => "MarlinHandoff"(s) \
+"ScenarioBenchmark"(s) & =>
+  "ScenarioMatrix"(s) and "L1Report"(s) and "PerformanceFixtureBound"(s)
+$
 #+end_src
 
 #+begin_src mermaid

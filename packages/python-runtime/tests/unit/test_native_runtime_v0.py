@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 from typing import NoReturn
 
 import pytest
 
 from poo_flow_runtime._native.errors import NativeRuntimeError, NativeRuntimeLoadError
 from poo_flow_runtime._native.evidence import NativeEvidenceSink
-from poo_flow_runtime._native.loader import probe_native_runtime
+from poo_flow_runtime._native.loader import RUNTIME_LIBRARY_ENV, probe_native_runtime
 from poo_flow_runtime._native.session import (
     NativeBundleDescriptor,
     NativeRuntimeSession,
@@ -23,13 +24,10 @@ from poo_flow_runtime import (
 
 
 def _repo_library() -> Path:
-    return (
-        Path(__file__).resolve().parents[4]
-        / "bindings"
-        / "runtime-c"
-        / "build"
-        / "libpoo_flow_runtime_v0.dylib"
-    )
+    configured = os.environ.get(RUNTIME_LIBRARY_ENV)
+    if not configured:
+        pytest.skip(f"{RUNTIME_LIBRARY_ENV} does not name a Bazel runtime artifact")
+    return Path(configured).expanduser().resolve()
 
 
 def _failing_evidence_sink(_invocation: object) -> NoReturn:

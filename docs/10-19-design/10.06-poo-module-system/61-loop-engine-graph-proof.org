@@ -16,16 +16,18 @@ The start contract is not a JSON manifest. It is a typed relation between
 profile scope, session scope, sandbox scope, tool scope, dependency readiness,
 and loop exit definition.
 
-#+begin_src latex
-ScopeSubset(A, B) = \forall x,\; x \in A \Rightarrow x \in B
+#+begin_src typst
+$
+"ScopeSubset"(A, B) = forall x,  x in A => x in B
 
-Tool \subseteq Sandbox \land Sandbox \subseteq Session
-\Rightarrow Tool \subseteq Session
+"Tool" subset.eq "Sandbox" and "Sandbox" subset.eq "Session"
+=> "Tool" subset.eq "Session"
 
-StartSound =
-DepsReady \land ExitDefined
-\land Profile \subseteq Session
-\land Tool \subseteq Session
+"StartSound" =
+"DepsReady" and "ExitDefined"
+and "Profile" subset.eq "Session"
+and "Tool" subset.eq "Session"
+$
 #+end_src
 
 In Lean this appears as `LoopStartContract`: it carries the scope subset proofs
@@ -38,11 +40,13 @@ The graph proof is not a framework proof for LangGraph. It is the POO Flow
 invariant that a runnable edge must be guarded and must advance in the ranked
 control graph.
 
-#+begin_src latex
-GuardedRankProgress(e) =
-Guard(e) \land rank(from(e)) < rank(to(e))
+#+begin_src typst
+$
+"GuardedRankProgress"(e) =
+"Guard"(e) and "rank"("from"(e)) < "rank"("to"(e))
 
-GuardedRankProgress(e) \Rightarrow from(e) \ne to(e)
+"GuardedRankProgress"(e) => "from"(e) != "to"(e)
+$
 #+end_src
 
 This is intentionally conservative. Real loop graphs can contain repeated
@@ -74,11 +78,13 @@ flowchart LR
 Runtime loops need a separate progress argument. A transition is valid progress
 only when its guard is satisfied and its fuel decreases.
 
-#+begin_src latex
-LoopFuelProgress(t) =
-GuardSatisfied(t) \land fuelAfter(t) < fuelBefore(t)
+#+begin_src typst
+$
+"LoopFuelProgress"(t) =
+"GuardSatisfied"(t) and "fuelAfter"(t) < "fuelBefore"(t)
 
-\neg LoopFuelProgress(fuelBefore = 0)
+not "LoopFuelProgress"("fuelBefore" = 0)
+$
 #+end_src
 
 This proof surface is the bridge between Scheme policy objects and Lean: Scheme

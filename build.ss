@@ -11,7 +11,8 @@
         (only-in :gslph/src/build-api/source-coverage
                  gslph-source-coverage)
         :gslph/src/build-api/framework
-        :poo-flow/src/cli-support/project-build
+        "./src/cli-support/project-build.ss"
+        "./src/build-api/project-compile-guard.ss"
         (only-in :gerbil/gambit
                  exit
                  pretty-print))
@@ -60,11 +61,32 @@
                              verbose: (verbose #f))
   (help: "Compile the package"
    getopt: +poo-flow-build-getopt+)
-  (poo-flow-project-compile!
-   (poo-flow-project-options release optimized debug verbose)))
+   (poo-flow-project-compile-guarded!
+    (poo-flow-project-options release optimized debug verbose))
+   (exit 0))
 
 (define-entry-point (clean)
   (help: "Clean package build artifacts"
    getopt: [])
   (poo-flow-project-clean!)
   (exit 0))
+(import :gslph/src/building/observability)
+(export poo-flow-project-observe!
+        poo-flow-project-observe/guard!)
+
+(def (poo-flow-project-observe! root worker-count)
+  (poo-flow-project-configure-build-root! root)
+  ;; Keep worker-count explicit at this boundary so callers can apply the
+  ;; machine-specific policy before the canonical requests are built.
+  (package-source-stages-observe!
+   (poo-flow-project-source-stages worker-count)
+   (poo-flow-project-build-requests worker-count)))
+
+(def (poo-flow-project-observe/guard!
+      root worker-count guard on-observation)
+  (poo-flow-project-configure-build-root! root)
+  (package-source-stages-observe/guard!
+   (poo-flow-project-source-stages worker-count)
+   (poo-flow-project-build-requests worker-count)
+   guard
+   on-observation))

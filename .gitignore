@@ -5,6 +5,7 @@ devenv.local.yaml
 
 # direnv
 .direnv
+.ci/
 
 # pre-commit
 .pre-commit-config.yaml
@@ -14,3 +15,9 @@ devenv.local.yaml
 .gerbil
 manifest.ss
 version.ss
+
+# Bazel convenience symlinks and output trees.
+/bazel-bin
+/bazel-out
+/bazel-poo-flow
+/bazel-testlogs

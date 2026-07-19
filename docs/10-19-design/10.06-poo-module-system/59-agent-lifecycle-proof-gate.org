@@ -35,29 +35,31 @@ flowchart LR
 * 10.06.59.30 Mathematical Contract
 The gate is intentionally stronger than a successful happy-path scenario. A
 policy can only enter the reusable public surface when all lifecycle facts hold.
-#+begin_src latex
-\operatorname{AcceptedLifecycle}(a)
-  \Rightarrow
-    \operatorname{SessionCreated}(a)
-    \land \operatorname{ParentSessionBound}(a)
-    \land \operatorname{SandboxAttached}(a)
+#+begin_src typst
+$
+op("AcceptedLifecycle")(a)
+  =>
+    op("SessionCreated")(a)
+    and op("ParentSessionBound")(a)
+    and op("SandboxAttached")(a)
 
-\operatorname{AcceptedLifecycle}(a)
-  \Rightarrow
-    \operatorname{SandboxScopeContained}(a)
-    \land \operatorname{ToolPermissionsContained}(a)
+op("AcceptedLifecycle")(a)
+  =>
+    op("SandboxScopeContained")(a)
+    and op("ToolPermissionsContained")(a)
 
-\operatorname{AcceptedLifecycle}(a)
-  \Rightarrow
-    \operatorname{LoopStartGuarded}(a)
-    \land \operatorname{LoopExitDefined}(a)
-    \land \operatorname{LoopHandoffGuarded}(a)
+op("AcceptedLifecycle")(a)
+  =>
+    op("LoopStartGuarded")(a)
+    and op("LoopExitDefined")(a)
+    and op("LoopHandoffGuarded")(a)
 
-\operatorname{AcceptedLifecycle}(a)
-  \Rightarrow
-    \operatorname{SubagentsParented}(a)
-    \land \operatorname{DependencyClosed}(a)
-    \land \operatorname{CounterexampleRejected}(a)
+op("AcceptedLifecycle")(a)
+  =>
+    op("SubagentsParented")(a)
+    and op("DependencyClosed")(a)
+    and op("CounterexampleRejected")(a)
+$
 #+end_src
 
 This is the policy-level version of the profile library gate. Profile proof
@@ -67,22 +69,24 @@ subagent topology.
 * 10.06.59.40 Rejected Cases
 The proof layer should discover missing evidence by proving contradictions for
 accepted gates with unsafe facts.
-#+begin_src latex
-\operatorname{AcceptedLifecycle}(a)
-  \land \neg \operatorname{SubagentsParented}(a)
-  \Rightarrow \bot
+#+begin_src typst
+$
+op("AcceptedLifecycle")(a)
+  and not op("SubagentsParented")(a)
+  => bot
 
-\operatorname{AcceptedLifecycle}(a)
-  \land \neg \operatorname{SandboxScopeContained}(a)
-  \Rightarrow \bot
+op("AcceptedLifecycle")(a)
+  and not op("SandboxScopeContained")(a)
+  => bot
 
-\operatorname{AcceptedLifecycle}(a)
-  \land \neg \operatorname{ToolPermissionsContained}(a)
-  \Rightarrow \bot
+op("AcceptedLifecycle")(a)
+  and not op("ToolPermissionsContained")(a)
+  => bot
 
-\operatorname{AcceptedLifecycle}(a)
-  \land \neg \operatorname{LoopExitDefined}(a)
-  \Rightarrow \bot
+op("AcceptedLifecycle")(a)
+  and not op("LoopExitDefined")(a)
+  => bot
+$
 #+end_src
 
 The Scheme scenario tests mirror these bad cases. A public policy with proof
@@ -94,36 +98,44 @@ topology proof layer gives that evidence mathematical structure.
 
 Scope containment is not a string comparison. It is a preorder over scope
 objects.
-#+begin_src latex
-\operatorname{ScopeOrder} = (S,\leq)
+#+begin_src typst
+$
+op("ScopeOrder") = (S,<=)
 
-\forall s \in S,\; s \leq s
+forall s in S,  s <= s
 
-a \leq b \land b \leq c \Rightarrow a \leq c
+a <= b and b <= c => a <= c
+$
 #+end_src
 
 Tool permission is scoped by that order. A requested tool is valid only when it
 is allowed in the child scope admitted by the lifecycle.
-#+begin_src latex
-\operatorname{RequestedTool}(a,t)
-  \Rightarrow
-    \operatorname{AllowedInScope}(t,\operatorname{ChildScope}(a))
+#+begin_src typst
+$
+op("RequestedTool")(a,t)
+  =>
+    op("AllowedInScope")(t,op("ChildScope")(a))
+$
 #+end_src
 
 Loop policy is a transition obligation. A start edge must imply both an exit
 edge and a handoff edge.
-#+begin_src latex
-\operatorname{LoopStart}(a,l)
-  \Rightarrow
-    \operatorname{LoopExit}(a,l)
-    \land \operatorname{LoopHandoff}(a,l)
+#+begin_src typst
+$
+op("LoopStart")(a,l)
+  =>
+    op("LoopExit")(a,l)
+    and op("LoopHandoff")(a,l)
+$
 #+end_src
 
 Subagent topology is a session relation, not just a list of names.
-#+begin_src latex
-\operatorname{SubagentOf}(a,c)
-  \Rightarrow
-    \operatorname{Session}(c) = \operatorname{Session}(a)
+#+begin_src typst
+$
+op("SubagentOf")(a,c)
+  =>
+    op("Session")(c) = op("Session")(a)
+$
 #+end_src
 
 The Lean module =PooFlowProof.PooC3.AgentLifecycleTopology= owns these

@@ -1,0 +1,24 @@
+schema=poo-flow.proof-case-cffi.benchmark-receipt.1
+path=installed-wheel-caller-owned
+package=poo-flow-proof-0.1.0-py3-none-any.whl
+python=3.13.11
+system=Darwin
+machine=arm64
+iterations=100
+layout-measurements=1
+crossings-per-item-steady=3
+caller-output-allocations-per-item=0
+threshold-status=baseline-only
+abi-v1-frozen=false
+
+# profile,batch,p50-ns,p99-ns
+strict,1,2583,4375
+strict,8,19167,29709
+strict,32,75500,367042
+strict,128,301916,32440208
+strict,1024,2340625,106312375
+batched,1,1167,10542
+batched,8,8750,9167
+batched,32,35167,2000417
+batched,128,194125,2828750
+batched,1024,2208917,153938625

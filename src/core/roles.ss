@@ -27,19 +27,30 @@
 ;;; Boundary: compose is the only higher-order role operation in this module.
 ;;; Invariant: derived roles share one mixing path with leftmost POO precedence.
 ;; : (forall (a) (-> [a] [a] [a]))
+(import (only-in :clan/poo/object
+                 object<-fun .all-slots object-slots object-supers
+                 $constant-slot-spec?))
+(export role-instance-overlay-compatible? role-instance-overlay)
+
 (def (role-values/tail values tail)
   (append values tail))
 
 ;; : (-> Unit Role)
 (def control-plane-role
-  (.o (name 'control-plane)
-      (kind 'system)
-      (responsibility 'conceptual-model)
-      (runtime-owner 'gerbil)
-      (control-plane-capability 'conceptual-model)
-      (compose (lambda roles
-                 (apply .mix
-                        (role-values/tail roles (list control-plane-role)))))))
+  (.mix
+   slots:
+   (list
+    (cons 'name ($constant-slot-spec 'control-plane))
+    (cons 'kind ($constant-slot-spec 'system))
+    (cons 'responsibility ($constant-slot-spec 'conceptual-model))
+    (cons 'runtime-owner ($constant-slot-spec 'gerbil))
+    (cons 'control-plane-capability
+          ($constant-slot-spec 'conceptual-model))
+    (cons 'compose
+          ($constant-slot-spec
+           (lambda roles
+             (apply .mix
+                    (role-values/tail roles (list control-plane-role)))))))))
 
 ;; : (-> Unit Role)
 (def flow-role
@@ -146,6 +157,74 @@
 ;; : (-> [Role] Role)
 (def (role-compose . roles)
   (apply (.@ control-plane-role compose) roles))
+
+;;; Instance-overlay fast lane.
+;;; Invariant: delegation is semantics-preserving only for constant slot specs;
+;;; self/computed/super specs remain on role-compose/.mix.
+(def (role-constant-slot-specs? slots)
+  (or (null? slots)
+      (and ($constant-slot-spec? (cdar slots))
+           (role-constant-slot-specs? (cdr slots)))))
+
+(def (role-instance-overlay-compatible?/seen role path)
+  (and (role-object? role)
+       (not (memq role path))
+       (role-constant-slot-specs? (object-slots role))
+       (role-instance-overlay-compatible-list?
+        (object-supers role) (cons role path))))
+
+(def (role-instance-overlay-compatible-list? roles path)
+  (or (null? roles)
+      (and (role-instance-overlay-compatible?/seen (car roles) path)
+           (role-instance-overlay-compatible-list? (cdr roles) path))))
+
+(def (role-instance-overlay-compatible? role)
+  (role-instance-overlay-compatible?/seen role '()))
+
+(def (role-instance-overlay-owner-index/one keys source roles owners)
+  (if (null? keys)
+      (role-instance-overlay-owner-index roles owners)
+      (let (key (car keys))
+        (if (hash-key? owners key)
+            (role-instance-overlay-owner-index/one
+             (cdr keys) source roles owners)
+            (begin
+              (hash-put! owners key source)
+              (role-instance-overlay-owner-index/one
+               (cdr keys) source roles owners))))))
+
+(def (role-instance-overlay-owner-index roles owners)
+  (if (or (null? roles) (null? (cdr roles)))
+      owners
+      (let (source (car roles))
+        (role-instance-overlay-owner-index/one
+         (.all-slots source) source (cdr roles) owners))))
+
+(def (role-instance-overlay-last roles)
+  (if (null? (cdr roles))
+      (car roles)
+      (role-instance-overlay-last (cdr roles))))
+
+(def (role-instance-overlay-keys roles)
+  (apply append (map .all-slots roles)))
+
+(def (role-instance-overlay-resolve owners fallback slot)
+  (.ref (if (hash-key? owners slot)
+            (hash-ref owners slot)
+            fallback)
+        slot))
+
+(def (role-instance-overlay . roles)
+  (unless (and (pair? roles)
+               (role-instance-overlay-compatible-list? roles '()))
+    (error "role instance overlay requires constant-slot POO roles" roles))
+  (let* ((owners
+          (role-instance-overlay-owner-index roles (make-hash-table)))
+         (fallback (role-instance-overlay-last roles)))
+    (object<-fun
+     (lambda (slot)
+       (role-instance-overlay-resolve owners fallback slot))
+     keys: (role-instance-overlay-keys roles))))
 
 ;; : (-> Role Boolean)
 (def (role-object? role)

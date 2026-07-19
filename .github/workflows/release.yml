@@ -26,18 +26,24 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            gerbil-label: source-v0.18.2-4-gadd92248
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
+            gerbil-label: source-v0.18.2-07c84815
+            gerbil-ref: 07c8481588a8b07dbf05832687817cd398902ac0
             gerbil-install: source
+            gerbil-formula: ""
           - os: macos-latest
-            gerbil-label: homebrew-v0.18.2
-            gerbil-ref: add922481cec81d05431db014bcb91b30485cf21
+            gerbil-label: homebrew-tao3k-v0.18.2-07c84815
+            gerbil-ref: 07c8481588a8b07dbf05832687817cd398902ac0
             gerbil-install: homebrew
+            gerbil-formula: tao3k/gerbil/gerbil-scheme
     env:
       BINARY: poo-flow
+      CCACHE_DIR: ${{ github.workspace }}/.ci/ccache
+      CCACHE_MAXSIZE: 2G
+      GERBIL_ARCH_PROFILE: portable
       GERBIL_LABEL: ${{ matrix.gerbil-label }}
       GERBIL_REF: ${{ matrix.gerbil-ref }}
       GERBIL_PREFIX: ${{ github.workspace }}/.ci/gerbil/${{ matrix.gerbil-label }}
+      GERBIL_REQUIRE_CCACHE: 1
       GERBIL_SRC: ${{ github.workspace }}/.ci/gerbil-src/${{ matrix.gerbil-label }}
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
@@ -67,6 +73,7 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             ca-certificates \
+            ccache \
             git \
             jq \
             libsqlite3-dev \
@@ -93,8 +100,7 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
         run: |
           brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
-          brew install gerbil-scheme jq openssl pkg-config sqlite zlib
-          brew link --overwrite gerbil-scheme
+          brew install jq openssl pkg-config sqlite zlib "${{ matrix.gerbil-formula }}"
 
       - name: Select macOS Gerbil compiler
         if: runner.os == 'macOS' && matrix.gerbil-install == 'source'
@@ -131,22 +137,7 @@ jobs:
 
       - name: Build Gerbil
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p "$(dirname "$GERBIL_SRC")" "$(dirname "$GERBIL_PREFIX")"
-          rm -rf "$GERBIL_SRC" "$GERBIL_PREFIX"
-          git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
-          cd "$GERBIL_SRC"
-          git checkout "$GERBIL_REF"
-          if [ -n "${GERBIL_GCC:-}" ]; then
-            export CC="$GERBIL_GCC"
-          fi
-          ./configure --prefix="$GERBIL_PREFIX"
-          echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
-          . ./build-env.sh
-          for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
-            ./src/build.sh "$target"
-          done
-          ./install.sh
+        run: bash tools/bazel/bootstrap_gerbil_toolchain.sh
 
       - name: Save Gerbil install cache
         if: matrix.gerbil-install == 'source' && steps.gerbil-cache.outputs.cache-hit != 'true'
@@ -159,10 +150,16 @@ jobs:
         if: matrix.gerbil-install == 'homebrew'
         run: |
           set -euo pipefail
-          prefix="$(brew --prefix gerbil-scheme)"
-          echo "GERBIL_PREFIX=$prefix" >> "$GITHUB_ENV"
-          "$prefix/bin/gxi" --version | tee /tmp/gerbil-version.txt
-          "$prefix/bin/gsc" -v | tee /tmp/gambit-version.txt
+          formula="${{ matrix.gerbil-formula }}"
+          prefix="$(brew --prefix "$formula")"
+          gerbil_home="$prefix/current"
+          echo "GERBIL_PREFIX=$gerbil_home" >> "$GITHUB_ENV"
+          echo "GERBIL_HOME=$gerbil_home" >> "$GITHUB_ENV"
+          test -x "$gerbil_home/bin/gxi"
+          test -x "$gerbil_home/bin/gsc"
+          test -e "$gerbil_home/lib"
+          "$gerbil_home/bin/gxi" --version | tee /tmp/gerbil-version.txt
+          "$gerbil_home/bin/gsc" -v | tee /tmp/gambit-version.txt
           grep -F "v0.18.2" /tmp/gerbil-version.txt
           grep -F "v4.9.7" /tmp/gambit-version.txt
 
@@ -203,22 +200,13 @@ jobs:
         run: |
           set -euo pipefail
           reset_stale_package_cache() {
-            gxpkg uninstall -f \
-              github.com/tao3k/gerbil-scheme-language-project-harness \
-              git.cons.io/mighty-gerbils/gerbil-poo \
-              github.com/mighty-gerbils/gerbil-poo \
-              git.cons.io/mighty-gerbils/gerbil-utils \
-              github.com/mighty-gerbils/gerbil-utils >/dev/null 2>&1 || true
+            :
             rm -rf \
               "$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness" \
-              "$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo" \
               "$HOME/.gerbil/pkg/github.com/mighty-gerbils/gerbil-poo" \
-              "$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils" \
               "$HOME/.gerbil/pkg/github.com/mighty-gerbils/gerbil-utils" \
               ".gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness" \
-              ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo" \
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-poo" \
-              ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils" \
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils" \
               ".gerbil/src/github.com/tao3k/gerbil-scheme-language-project-harness" \
               ".gerbil/src/github.com/mighty-gerbils/gerbil-poo" \
@@ -226,15 +214,11 @@ jobs:
             rm -f \
               "$HOME/.gerbil/pkg/manifest.ss" \
               "$HOME/.gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness.manifest" \
-              "$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo.manifest" \
               "$HOME/.gerbil/pkg/github.com/mighty-gerbils/gerbil-poo.manifest" \
-              "$HOME/.gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils.manifest" \
               "$HOME/.gerbil/pkg/github.com/mighty-gerbils/gerbil-utils.manifest" \
               ".gerbil/pkg/manifest.ss" \
               ".gerbil/pkg/github.com/tao3k/gerbil-scheme-language-project-harness.manifest" \
-              ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-poo.manifest" \
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-poo.manifest" \
-              ".gerbil/pkg/git.cons.io/mighty-gerbils/gerbil-utils.manifest" \
               ".gerbil/pkg/github.com/mighty-gerbils/gerbil-utils.manifest"
             gxpkg retag >/dev/null 2>&1 || true
           }
@@ -256,15 +240,13 @@ jobs:
           install_gerbil_package_dependencies() {
             link_package \
               github.com/mighty-gerbils/gerbil-utils \
-              https://github.com/mighty-gerbils/gerbil-utils.git
-            gxpkg link \
-              git.cons.io/mighty-gerbils/gerbil-utils \
-              ".gerbil/src/github.com/mighty-gerbils/gerbil-utils"
-            build_package git.cons.io/mighty-gerbils/gerbil-utils
+              https://github.com/mighty-gerbils/gerbil-utils.git \
+              f45a4ef3bfecd2af39e114ed736ce9082cbb8244
+            build_package github.com/mighty-gerbils/gerbil-utils
             link_package \
               github.com/mighty-gerbils/gerbil-poo \
               https://github.com/mighty-gerbils/gerbil-poo.git \
-              f4b322299830acbd1cd5b91984c4107ac56bdac3
+              1c3225637525400341a09e958296962c10184ead
             build_package github.com/mighty-gerbils/gerbil-poo
             link_package \
               github.com/tao3k/gerbil-scheme-language-project-harness \

@@ -1,0 +1,101 @@
+#+title: Browser Workflow Lab
+#+subtitle: Poo Flow runtime projection, graph, and LaTeX integration
+#+author: Poo Flow
+#+filetags: :workflow:wasm:documents:
+
+* Browser Workflow Lab
+:PROPERTIES:
+:ID:       poo-flow-browser-workflow-lab
+:END:
+
+This document is an executable presentation surface for the Poo Flow browser
+runtime.  The Scheme source remains the canonical workflow definition; the web
+view projects runtime events into an interactive graph without embedding a
+Scheme compiler in the WASM runtime.
+
+** Contribution policy
+
+The workflow chooses a profile, strategy, policy, and scenario before producing
+a reusable, composable, documented, and proof-addressable contribution.
+
+#+begin_src typst
+$
+op("Contribution")(c)
+=>
+op("Profile")(c)
+or op("Strategy")(c)
+or op("Policy")(c)
+or op("Scenario")(c)
+$
+#+end_src
+
+#+begin_src typst
+$
+op("Reusable")(c)
+=>
+op("Named")(c)
+and op("Composable")(c)
+and op("Documented")(c)
+and op("ProofAddressable")(c)
+$
+#+end_src
+
+** Executable workflow
+
+The browser adapter consumes the runtime event projection of this workflow.
+The source is kept visible so the graph never becomes an opaque replacement for
+the actual Scheme program.
+
+#+name: browser-contribution
+#+attr_html: :data-poo-flow true
+#+begin_src scheme
+(workflow browser-contribution
+  (step receive-request
+    (emit 'request-received))
+  (step select-profile
+    (requires receive-request)
+    (emit 'profile-selected))
+  (step compose-policy
+    (requires select-profile)
+    (emit 'policy-composed))
+  (step execute-scenario
+    (requires compose-policy)
+    (emit 'scenario-executed))
+  (step verify-proof
+    (requires execute-scenario)
+    (emit 'proof-verified))
+  (step publish-contribution
+    (requires verify-proof)
+    (emit 'contribution-published)))
+#+end_src
+
+#+begin_export html
+<script type="application/vnd.poo-flow.projection+json">
+{
+  "events": [
+    { "id": "receive-request", "label": "Receive request", "kind": "request-received", "state": "completed" },
+    { "id": "select-profile", "label": "Select profile", "kind": "profile-selected", "state": "completed" },
+    { "id": "compose-policy", "label": "Compose policy", "kind": "policy-composed", "state": "completed" },
+    { "id": "execute-scenario", "label": "Execute scenario", "kind": "scenario-executed", "state": "completed" },
+    { "id": "verify-proof", "label": "Verify proof", "kind": "proof-verified", "state": "completed" },
+    { "id": "publish-contribution", "label": "Publish contribution", "kind": "contribution-published", "state": "completed" }
+  ],
+  "edges": [
+    { "source": "receive-request", "target": "select-profile" },
+    { "source": "select-profile", "target": "compose-policy" },
+    { "source": "compose-policy", "target": "execute-scenario" },
+    { "source": "execute-scenario", "target": "verify-proof" },
+    { "source": "verify-proof", "target": "publish-contribution" }
+  ]
+}
+</script>
+#+end_export
+
+** Acceptance checklist
+
+- The workflow block retains readable Scheme source.
+- Running the projection opens an interactive, fitted graph.
+- Runtime errors remain local to the workflow figure.
+- LaTeX follows the active Documents palette; the neighboring rendering lab
+  remains the dedicated Typst qualification surface.
+- Leaving the page releases observers, workers, and React roots.

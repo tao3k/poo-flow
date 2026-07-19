@@ -419,7 +419,9 @@
       (cons 'memory-policy
             (poo-flow-user-loop-engine-intent-ref intent 'memory-policy '()))
       (cons 'memory-policies memory-policies)
+      (cons 'policies memory-policies)
       (cons 'selected-use-case selected-use-case)
+      (cons 'use-case selected-use-case)
       (cons 'policy-count (length memory-policies))
       (cons 'available-use-cases available-use-cases)
       (cons 'selected-policy-found? (not (null? selected-policy)))
@@ -464,6 +466,16 @@
             (poo-flow-user-loop-engine-intent-ref
              compression-policy
              'strategy
+             #f))
+      (cons 'trigger
+            (poo-flow-user-loop-engine-intent-ref
+             compression-policy
+             'trigger
+             #f))
+      (cons 'summary-format
+            (poo-flow-user-loop-engine-intent-ref
+             compression-policy
+             'summary-format
              #f))
       (cons 'lineage-kind
             (poo-flow-user-loop-engine-intent-ref
@@ -761,7 +773,9 @@
                 (cons 'sandbox-handoff-agreement sandbox-agreement)
                 (cons 'runtime-executed #f))))
     (list
-     (cons 'kind 'loop-engine-runtime-snapshot)
+     (cons 'kind 'runtime-snapshot)
+     (cons 'subject-kind 'loop-engine)
+     (cons 'subject-id use-case-name)
      (cons 'engine 'loop-engine)
      (cons 'use-case-name use-case-name)
      (cons 'status (poo-flow-user-loop-engine-intent-status intent))
@@ -769,8 +783,11 @@
      (cons 'handoff-summary handoff-summary)
      (cons 'error #f)
      (cons 'metadata
-           '((stage . user-config-loop-engine-runtime-snapshot)
-             (runtime-executed . #f)))
+           (list
+            (cons 'stage 'user-config-loop-engine-runtime-snapshot)
+            (cons 'workflow-agreement workflow-agreement)
+            (cons 'handoff-ready? handoff-ready?)
+            (cons 'runtime-executed #f)))
      (cons 'details
            (append
             handoff-summary

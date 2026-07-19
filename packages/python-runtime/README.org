@@ -2,10 +2,11 @@
 
 This package is the Python runtime consumer for POO Flow runtime bindings.
 
-It does not own the ABI. The stable C surface lives under
-=bindings/runtime-c=. Python tests compile and load that binding through
-=ctypes= so the package validates the same runtime handoff contract that Rust,
-Marlin, or other runtime languages should consume.
+It does not own the ABI. The C surface lives under =bindings/runtime-c=.
+Production code compiles and loads that binding through out-of-line CFFI API
+mode so the package validates the same runtime handoff contract that Rust,
+Marlin, or other runtime languages should consume.  The current installed
+surface is ABI v0.1 and is not an ABI v1 freeze claim.
 
 The package is managed by =uv=. It provides a Python API and a command-line
 probe for the current C ABI. Future ALALEX validation runtime code should plug
@@ -145,8 +146,15 @@ Build the Python runtime wheel without requiring Gerbil after the generated
 artifact has been placed next to its Scheme source:
 
 #+begin_src sh
-uv build --project packages/python-runtime --wheel --out-dir dist/python-runtime-wheel
+bazel build //bindings/runtime-c:runtime_c_shared
+POO_FLOW_RUNTIME_V0_LIBRARY="$PWD/bazel-bin/bindings/runtime-c/libruntime_c_shared.dylib" \
+  uv build --project packages/python-runtime --wheel \
+    --out-dir dist/python-runtime-wheel
 #+end_src
+
+On Linux, use the corresponding =libruntime_c_shared.so= output.  The wheel
+builder consumes this explicitly declared Bazel product; it never invokes Make
+or discovers a source-tree =bindings/runtime-c/build= directory.
 
 Install and smoke test the built wheel in a clean environment:
 

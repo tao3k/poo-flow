@@ -1,0 +1,1159 @@
+#+title: RFC 0147 - Adaptive Scheme Build Guard and Execution Windows
+#+author: POO Flow
+#+status: Accepted, Implemented, and Full-Cold Validated
+#+language: en
+
+* Decision
+
+POO Flow keeps =std/make= as the only Scheme build executor and extends the
+Building Framework with an optional POO-native adaptive execution-window
+controller.  The controller does not create another scheduler.  It submits one
+contiguous, dependency-order-preserving window to one =std/make= coordinator,
+observes a Scheme-owned process-tree memory receipt, derives an immutable next
+controller, and then submits the next window.
+
+The existing topology projection remains the default.  When no adaptive
+controller is supplied and =POO_FLOW_BUILD_MAX_RSS_BYTES= is not a positive
+integer, the runtime and user-interface stages retain the established one-window
+topology behavior.  Adaptive execution is activated only by an explicit POO
+controller or by a positive =POO_FLOW_BUILD_MAX_RSS_BYTES= value.
+
+The adaptive cold gate requires an explicit hard RSS cap.  A machine-derived
+outer project-guard fallback is useful protection, but it is not authorization
+for an adaptive full cold run.
+
+* Invariants
+
+1. =std/make= remains the only native executor.
+2. At most one =std/make= coordinator session is active at a time.
+3. Windows are contiguous prefixes of the remaining topology-ordered specs.
+4. No spec is reordered, dropped, or duplicated.
+5. There is no fixed global spec or chunk cap.
+6. Window changes are derived from named POO observations.
+7. Safe growth is geometric and capacity-capped, so coordinator-session count
+   is logarithmic in the remaining spec count; native concurrency remains
+   bounded independently by the detected worker count.
+8. Any invalid observation, non-completed outcome, cap mismatch, or cap breach
+   fails closed.
+9. One spec that cannot fit the hard cap fails closed rather than being retried
+   without a bound.
+10. Clean never receives an adaptive plan.
+11. Portable receipts are canonical JSON, not text logs or printed alists.
+12. Runnable-process saturation is observable advisory evidence; only a memory
+    safety-floor failure blocks admission before the guarded build starts.
+
+* Measured bounded A/B evidence
+
+The bounded comparisons use the same owners, source sets, and host.  The
+optimized lane merges unnecessary Building Framework barriers while retaining
+the single upstream executor.
+
+** User-interface batch
+
+| Metric                    | Baseline       | Optimized      | Delta    |
+|---------------------------+----------------+----------------+----------|
+| Specs                     | 8              | 8              | 0        |
+| Outer wall time           | 12.06 s        | 11.58 s        | -3.980%  |
+| Control-plane wall time   | 10.587950 s    | 9.996911 s     | -5.582%  |
+| Control-plane allocation  | 11.317668112 GB| 8.700916696 GB | -23.121% |
+
+The UI result establishes a real but secondary barrier-merging gain.  It does
+not establish that one unbounded session is safe for a full cold project.
+
+** Runtime target-cold 16-spec batch
+
+| Metric                    | Baseline       | Optimized      | Delta    |
+|---------------------------+----------------+----------------+----------|
+| Specs                     | 16             | 16             | 0        |
+| Outer wall time           | 18.48 s        | 16.39 s        | -11.310% |
+| Control-plane wall time   | 17.009764 s    | 14.741602 s    | -13.334% |
+| Control-plane allocation  | 3.761618040 GB | 4.880065216 GB | +29.733% |
+| Peak process-tree RSS     | 713572352 B    | 757792768 B    | +6.197%  |
+| Average active cores      | 1.733          | 1.989          | +0.256   |
+
+The runtime result improves wall time and average core use, but allocation and
+RSS increase.  This is the evidence that makes an always-one-window cold policy
+unsafe: the wall-time win cannot be generalized without a hard memory bound.
+
+** Pre-acceptance runtime target-cold 48-spec calibration
+
+The runtime-only calibration used one isolated output root, the installed
+Gerbil libraries through =GERBIL_LOADPATH=, 12 workers, a
+=2,147,483,648=-byte hard RSS cap, and =268,435,456= bytes of reserved
+headroom. FFI and UI stages were excluded. The current empty-root topology
+contains 39 dependency-closed groups and 377 specs; its group widths are:
+
+#+begin_example
+(58 38 35 30 16 15 13 19 14 11 5 4 9 5 4 5 8 8 4 5 5 4 2 17 14 5 4 3 1 1 2 1 2 1 1 2 1 3 2)
+#+end_example
+
+Two guarded tranches compiled the first 48 stale runtime specs on the same
+output root. Every window completed, preserved dependency order, and stayed
+below the hard cap.
+
+| Tranche | Windows | Process-tree RSS peaks (bytes) | Wall time | Outer max RSS (bytes) | Outcome |
+|---------+---------+--------------------------------+-----------+-----------------------+---------|
+|       1 | 12 + 12 | 1,396,244,480; 1,083,031,552  |   60.55 s |           871,923,712 | complete |
+|       2 | 12 + 12 |   499,597,312;   724,107,264  |   38.40 s |           572,571,648 | complete |
+
+#+begin_src mermaid
+flowchart LR
+  T["377-spec cold runtime topology"] --> A["Tranche 1: 12 + 12 specs"]
+  A --> R1["Peak: 1,396,244,480 bytes"]
+  R1 --> B["Tranche 2: 12 + 12 specs"]
+  B --> R2["Peak: 724,107,264 bytes"]
+  R2 --> G["48 specs covered; pre-acceptance gate remained closed"]
+#+end_src
+
+The maximum observed process-tree RSS was =1,396,244,480= bytes, about 65%
+of the hard cap. The first window paid the largest cold compiler cost; the
+latest two transient estimates converged to approximately 26 MiB per spec.
+Because 12 is also the configured worker ceiling, retaining =12 + 12= is the
+expected adaptive decision rather than evidence of a fixed-width scheduler.
+
+This historical run covers 48 of 377 runtime specs (12.7%) and 48 of the widest
+group's 58 specs.  It authorized the bounded adaptive path at that stage.  The
+later strict A/B and full-cold receipts below supersede its then-blocked
+acceptance state without changing the receipt.
+
+** Strict same-Framework topology versus adaptive A/B
+
+The decisive comparison does not compare Building Framework against a raw
+=std/make= script.  Both lanes use the same Building Framework declaration,
+the same upstream =std/make= executor, the same non-Nix Gerbil installation,
+fresh output roots, 12 workers, and a 2,147,483,648-byte hard cap.  Only the
+Building Framework execution policy changes:
+
+- =topology= flattens every dependency-ordered topology group into one ordered
+  upstream =std/make= session;
+- =adaptive= divides that same ordered spec stream into guarded sessions when
+  the caller supplies an explicit memory budget.
+
+| Cold slice | Policy | Windows or sessions | Guard elapsed | Process-tree peak RSS | Outer wall time |
+|------------+--------+---------------------+---------------+-----------------------+-----------------|
+| 24 specs | adaptive | =12 + 12= | 29,792 ms | 1,420,820,480 B | 32.72 s |
+| 24 specs | topology | one session | 24,059 ms | 1,665,728,512 B | 26.44 s |
+| 58 specs | adaptive | =12 + 13 + 25 + 8= | 48,341 ms | 1,411,432,448 B | 51.34 s |
+| 58 specs | topology | one session | 41,159 ms | 1,885,782,016 B | 43.65 s |
+
+For 24 specs, topology is approximately 19.2% faster and uses approximately
+17.2% more process-tree peak RSS.  For 58 specs, topology is approximately
+14.9% faster and adds 474,349,568 bytes of peak RSS.  The 58-spec topology run
+is below the hard cap but exceeds the cap minus the reserved 256-MiB headroom
+by approximately 6.7 MiB.  This confirms the existing policy boundary:
+topology is the performance default when the caller does not declare a tight
+cap, while adaptive windows are the safety path under an explicit cap and
+headroom contract.
+
+A bounded continuation compiled the next topology groups of 38, 35, and 30
+specs in 23,058 ms, 24,144 ms, and 19,161 ms.  Together with the first
+58-spec group, the first 161 specs completed in approximately 107.5 seconds
+without a superlinear topology anomaly.
+
+An experimental pending-native-queue flusher reduced the 58-spec guard time
+from 41,159 ms to 39,822 ms, only 3.25%, while retaining essentially the same
+memory peak.  It is not productized: a polling wrapper around an upstream
+queue is not a sufficient gain and would duplicate coordinator policy.
+
+* Cold-build truth and accepted full-cold receipt
+
+An empty output root produces 39 dependency-closed runtime topology groups
+containing 377 specs, followed by the declarative user-interface stage.  After
+the bounded A/B established both the memory geometry and the performance
+default, the canonical =build.ss compile= entrypoint completed against a fresh
+output root.
+
+| Metric | Accepted receipt |
+|--------+------------------|
+| Building owner | =gslph-building-framework= |
+| Build mode | =standard-gerbil-make-project= |
+| Execution policy | default one-session topology |
+| Workers | 12 |
+| Inner Scheme-guard elapsed | 199,289 ms |
+| Inner process-tree peak RSS | 2,460,680,192 B |
+| Outer Scheme-guard elapsed | 202,061 ms |
+| Outer process-tree peak RSS | 2,693,447,680 B |
+| =/usr/bin/time= wall time | 202.87 s, approximately 3.38 minutes |
+| Completion | exit 0; all guard outcomes =completed= |
+
+Against the previous accepted 571.71-second host baseline, the new full-cold
+wall time is 368.84 seconds lower, a reduction of approximately 64.5%.  It is
+also far below the interrupted twelve-minute regression boundary.  The inner
+Scheme process-tree peak is approximately 6.0% below the historical
+2,617,507,840-byte receipt.
+
+** Bazel-declared isolated cold receipt
+
+The Bazel outer layer now declares the complete Scheme action without replacing
+=build.ss= or Building Framework.  The action receives only declared project
+sources, compiled =clan= and =gslph= dependencies, host Gerbil tools, and the
+host-system receipt.  It produces an isolated tree artifact, a complete build
+log, and the Scheme-owned canonical JSON receipt.
+
+| Metric | Accepted Bazel cold receipt |
+|--------+-----------------------------|
+| Target | =//scheme:compile= |
+| Bazel execution | Darwin sandbox; exit 0 |
+| Bazel wall time | 161.694 s, approximately 2.69 minutes |
+| Scheme guard elapsed | 155,837 ms |
+| Scheme process-tree peak RSS | 3,359,752,192 B |
+| Detected physical memory | 34,359,738,368 B |
+| Scheme-derived maximum RSS | 17,179,869,184 B |
+| Build stages | 3 of 3 compiled |
+| Output tree | 73 MiB; no temporary tool symlinks |
+| Receipt | =poo-flow.project-compile-guard.v1=; =completed= |
+
+The Bazel wall time is 41.176 seconds below the previous 202.87-second accepted
+reference, an improvement of approximately 20.3%, and 410.016 seconds below
+the historical 571.71-second ceiling, an improvement of approximately 71.7%.
+The result is not a second build implementation: Bazel owns declared inputs,
+host-tool projection, sandboxing, caching, and outputs; =build.ss= and Building
+Framework still own topology, scheduling, compilation, guards, and receipts.
+
+The first isolated attempt also exposed two bootstrap defects that a populated
+workspace had hidden: =build.ss= imported its own installed package for the
+observability helper, and the source declaration omitted tracked =.ssi=,
+=.scm=, and =.inc= inputs.  The accepted action removes the self-import cycle
+and declares those inputs.  It cannot read =.gerbil/lib/poo-flow=.
+
+** Hosted three-core adaptive feedback receipt
+
+The published Homebrew bottle removed toolchain bootstrap from the macOS CI
+critical path and exposed the project scheduler directly.  Run
+=29633364512= used the declared =macos-26= ARM64 runner, the registered Gerbil
+toolchain, one Bazel Scheme action, and the canonical Scheme-owned receipts.
+
+| Metric | Receipt |
+|--------+---------|
+| Logical CPUs / workers | =3 / 3=, detected at runtime |
+| System / available memory | =7,516,192,768 / 6,088,116,142 B= |
+| Hard RSS cap / reserved headroom | =3,758,096,384 / 805,306,368 B= |
+| Scheme guard elapsed / peak RSS | =247,955 ms / 2,731,835,392 B= |
+| Runtime stage | =377= modules; =241,733,737= elapsed jiffies |
+| FFI / UI stages | =608,748 / 5,044,027= elapsed jiffies |
+| Bazel Scheme phase | =261 s= against a =480 s= hard budget |
+| Combined acceptance | =68 s= against a =150 s= hard budget |
+| Complete macOS job | =6 min 32 s= against a =12 min= hard timeout |
+| Cache publication | Bazelisk, disk-action, and repository caches saved |
+| Outcome | all six pull-request checks passed |
+
+The pre-geometric compile log contains sixteen guarded runtime windows and two
+guarded UI windows.  Their completed process-tree receipts remain below the
+hard cap, but the runtime windows account for approximately 97.6% of the inner
+build duration.  The old =window + worker-count= rule therefore makes the
+number of coordinator sessions linear in =spec-count / worker-count= even
+after the host has demonstrated safe spare capacity.  This receipt authorizes
+capacity-capped geometric growth; it does not authorize removing the guard or
+running concurrent coordinators.
+
+** Hosted geometric-growth acceptance receipt
+
+Run =29633871888= changed only the POO adaptive growth law and its tests.  It
+used the same three-core =macos-26= capability, Gerbil bottle, Bazel action,
+377-module runtime source set, memory derivation, hard cap, and acceptance
+targets as the preceding hosted receipt.
+
+| Metric | Linear growth | Geometric growth | Delta |
+|--------+---------------+------------------+-------|
+| Guarded runtime windows | 16 | 8 | -50.0% |
+| Guarded UI windows | 2 | 2 | 0 |
+| Total guarded windows | 18 | 10 | -44.4% |
+| Runtime stage | 241,733,737 jiffies | 215,989,309 jiffies | -10.7% |
+| Scheme guard elapsed | 247,955 ms | 220,490 ms | -11.1% |
+| Bazel Scheme phase | 261 s | 230 s | -11.9% |
+| Scheme process-tree peak RSS | 2,731,835,392 B | 2,947,956,736 B | +7.9% |
+| Maximum adaptive-window peak RSS | 2,763,718,656 B | 3,044,966,400 B | +10.2% |
+| Combined acceptance | 68 s | 53 s | -22.1% |
+| Complete macOS job | 6 min 32 s | 5 min 41 s | -13.0% |
+| Complete Linux job | 5 min 38 s | 4 min 24 s | -21.9% |
+| Outcome | completed | completed | all six PR checks passed |
+
+The largest adaptive-window peak remains 713,129,984 bytes below the
+=3,758,096,384=-byte hard limit.  Worker count remains exactly three.  The
+receipt therefore accepts geometric growth: it removes coordinator barriers
+without adding compiler concurrency, a second executor, a fixed machine value,
+or an unguarded memory path.  Relative to the earlier 9-minute-05-second hosted
+macOS baseline, the accepted 5-minute-41-second job is 37.4% faster; relative
+to the historical 52-minute-28-second job, it is approximately 89.2% lower.
+
+** CI cache generations and pressure admission
+
+GitHub's cache store is immutable, while =setup-bazel= derives its disk-cache
+key from BUILD-file content.  A Scheme source change can therefore create a new
+Bazel action result without changing the surrounding GitHub cache key.  An
+exact restore then suppresses the post-job save and strands that new action
+result on the ephemeral runner.
+
+CI now materializes the pull-request merge commit as an ignored synthetic
+=.ci/bazel-cache-generation/BUILD.bazel= before =setup-bazel=.  Each commit gets
+a new exact generation, but the stable runner/toolchain prefix restores the
+latest preceding disk cache.  Bazel reuses every valid CAS/action entry, runs
+only actual misses, and the post step publishes the merged cache under the new
+generation.  Reruns of the same commit remain exact hits.  This is a GitHub
+cache-store adapter only; it does not enter =build.ss= or Building Framework.
+
+CPU and memory pressure have different safety semantics.  The Scheme guard
+records an instantaneous runnable-process saturation observation as an
+=admission-advisories= value, but it does not treat that noisy system-wide
+sample as a hard failure or override the detected/configured worker capability.
+Exact physical memory is observed by Scheme only when the action executes; it
+does not enter the Bazel action key because it changes scheduling and guard
+limits, not the semantic compiled tree.  The process-tree RSS cap remains active
+throughout compilation.  Admission still fails closed when available memory
+cannot cover caller headroom plus the minimum guarded RSS floor.  A cached
+Scheme receipt describes the producer execution of that cached artifact, while
+the CI phase receipt describes the current cache consumer.
+
+*** Controlled cache-population receipt
+
+Run =29634116940= restored the old exact 7.36-MB disk cache, but a documentation
+commit still entered =GerbilProjectCompile= for more than two minutes.  The run
+was cancelled instead of completing another redundant build.  The preceding
+Scheme-source run had changed the Bazel action key while =setup-bazel= retained
+the same BUILD-derived GitHub key; because that restore was exact, its post step
+did not publish the new action result.
+
+Run =29634518224= proved the generation transition itself: =setup-bazel=
+reported a restore-prefix hit rather than an exact hit and subsequently saved a
+new generation.  Scheme then rejected the otherwise memory-safe host because
+one instantaneous sample reported 15 runnable processes on three logical CPUs.
+The run ended in 16 seconds with =runnable-saturation= and no compiler work;
+this receipt exposed and authorized the advisory-versus-blocking split above.
+
+Run =29634881564= populated the corrected generation through one intentional
+source action miss:
+
+| Metric | macOS ARM64 | Linux X64 |
+|--------+-------------+-----------|
+| Logical CPUs / workers | =3 / 3= | =4 / 4= |
+| Admission outcome / advisories | =ready / ()= | =ready / ()= |
+| Scheme guard elapsed | =225,064 ms= | =243,569 ms= |
+| Process-tree peak RSS | =2,983,493,632 B= | =2,984,734,720 B= |
+| Bazel Scheme phase | =236 s= | =278 s= |
+| Combined acceptance | =57 s= | =28 s= |
+| Complete job | =6 min 01 s= | =5 min 55 s= |
+| Outcome | completed | completed |
+
+All six pull-request checks passed, and the macOS post step published a
+=13,270,713=-byte compressed disk-cache generation.  The Linux runtime and UI
+stages were uniformly about 28.0% and 27.5% slower than run =29633871888= while
+retaining the same four workers, topology, memory cap, and lower peak RSS.  That
+uniform whole-run variation is recorded but does not replace the accepted
+=190,275=-ms Linux Scheme reference with a slower baseline.  The next gate is a
+documentation-only commit that must restore the populated generation and report
+a disk-cache hit instead of executing Scheme compilation.
+
+The first documentation-only gate, run =29635233346=, completed the macOS
+Scheme phase in eight seconds from the populated disk cache.  Linux restored the
+complete =12,847,340=-byte preceding generation but still started
+=GerbilProjectCompile=; the run was cancelled after 100 action seconds.  The
+Linux action had the same 3,236 configured targets and dependency cache as its
+producer.  The remaining key difference was the exact host physical-memory
+string injected into the action environment.  Because physical memory affects
+only Scheme scheduling and RSS admission, not compiled output semantics, the
+compile rule no longer injects that value.  Scheme performs the live probe only
+when an actual action miss executes.
+
+#+begin_src mermaid
+flowchart LR
+  Commit["Pull-request merge commit"] --> Generation["Ignored synthetic BUILD cache generation"]
+  Generation --> Restore{"Exact cache generation?"}
+  Restore -->|"yes"| Exact["Reuse exact Bazel disk cache"]
+  Restore -->|"no"| Prefix["Restore newest runner/toolchain prefix"]
+  Prefix --> Bazel["Bazel validates action inputs and executes only misses"]
+  Bazel --> Save["Publish merged immutable generation"]
+  CPU["Detected CPU capability"] --> Workers["Configured worker ceiling"]
+  Runnable["Runnable-process saturation"] --> Advisory["Receipt advisory only"]
+  Memory["Available memory and RSS headroom"] --> Gate{"Memory safety floor admitted?"}
+  Gate -->|"yes"| Bazel
+  Gate -->|"no"| Block["Fail closed before gxi compilation"]
+#+end_src
+
+The first hosted CI source-cache population receipt is GitHub Actions run
+=29636418527=. Both platforms completed with admission =ready=, empty reasons
+and advisories, and a successful post-save. This accepts cache population only;
+warm-cache acceptance still requires a subsequent run that restores the same
+cache lineage and records the resulting Scheme action reuse.
+
+| Host  | Bazel wall | Scheme elapsed | Saved source cache | Workers | System memory | Admission | Post-save  |
+|-------+------------+----------------+--------------------+---------+---------------+-----------+------------|
+| macOS |   220.211s |       210453ms |     18433466 bytes |       3 |    7516192768 | ready     | successful |
+| Linux |   242.831s |       224292ms |     18024368 bytes |       4 |   16766423040 | ready     | successful |
+
+The required warm-cache acceptance is GitHub Actions run =29641556197=. Both
+jobs restored the source-population lineage ending in =71f8a21e8d66=, Bazel
+reported one disk-cache hit, and the current consumer receipts completed inside
+the 30-second stop line. The cached Scheme receipt remains producer provenance
+from run =29636418527=; its worker and admission fields must not be interpreted
+as a fresh host probe on the consuming runner.
+
+| Host  | Restored cache | Bazel wall | Consumer receipt | Disk hits | Source-to-warm speedup | Wall reduction | Post-save  |
+|-------+----------------+------------+------------------+-----------+------------------------+----------------+------------|
+| macOS | 18433466 bytes |     9.799s |              10s |         1 |                 22.47x |         95.55% | successful |
+| Linux | 18024368 bytes |    27.184s |              28s |         1 |                  8.93x |         88.81% | successful |
+
+This accepts the dual-platform warm-cache gate. Source changes still require a
+real Scheme action execution with a live host probe; documentation-only changes
+may reuse the compiled action while advancing the immutable CI cache generation.
+
+** Registered Gerbil toolchain convergence
+
+The Scheme Bazel surface now requests a Gerbil capability through Bazel's
+native toolchain resolution instead of binding project rules to labels inside
+=@local_gerbil=.  =MODULE.bazel= registers one host-derived toolchain;
+=local_gerbil_repository= emits a private implementation plus a public
+=registered_toolchain= target constrained to the detected Darwin or Linux
+execution platform; and both project compile and project test rules consume the
+resolved =ToolchainInfo= through =ctx.toolchains=.
+
+This separation makes the BUILD surface declarative: =scheme/BUILD.bazel=
+declares source sets, output projections, and test roots, while the selected
+execution platform supplies =gxi=, =gxc=, =gxpkg=, =gxtest=, native tools,
+compiled external dependencies, physical memory, runfiles, and the canonical
+host receipt.  No Scheme project rule names =@local_gerbil= or depends on its
+internal target layout.
+
+The current registered toolchain remains intentionally host-derived and local.
+It normalizes an installed Gerbil and the canonical compiled dependency view;
+it does not claim remote-execution hermeticity.  A future Nix or archive-backed
+repository may register another implementation of the same toolchain type
+without changing project BUILD declarations.  It must not replace =build.ss=:
+the native Scheme project and Building Framework remain the only owners of
+topology, scheduling, compilation policy, guards, and receipts.
+
+** Runtime-C Gerbil capability convergence
+
+*** Native ABI identity owns native cache compatibility
+
+**** Bootstrap-safe dependency view
+
+The registered Gerbil toolchain must remain analyzable before project
+dependencies exist.  Otherwise toolchain resolution can block the
+=//scheme:deps= target that is responsible for creating those dependencies.
+The local repository therefore observes the =.gerbil/lib/clan= and
+=.gerbil/lib/gslph= paths as Bazel repository inputs.  A missing path produces
+an explicit empty dependency view instead of an analysis failure.  When the
+dependency installer creates or changes either tree, Bazel invalidates and
+re-evaluates the repository, then projects the compiled libraries into the
+registered toolchain.
+
+#+begin_src mermaid
+flowchart LR
+  Resolve["Resolve registered Gerbil toolchain"] --> Observe["Observe project dependency paths"]
+  Observe -->|"missing"| Empty["Bootstrap-safe empty dependency view"]
+  Empty --> Install["Run //scheme:deps"]
+  Install --> Change["Dependency tree changes"]
+  Change --> Refresh["Invalidate and re-evaluate local repository"]
+  Observe -->|"ready"| Ready["Registered toolchain with compiled dependencies"]
+  Refresh --> Ready
+#+end_src
+
+This is a dependency-state transition, not a compatibility fallback.  Scheme
+compile and test actions still receive the complete dependency files as direct
+Bazel inputs, and the toolchain receipt records the state of every projected
+dependency.
+
+**** Upstream-parallel toolchain bootstrap
+
+The Gerbil source bootstrap must use the upstream build scheduler.  CI must not
+reproduce the upstream dependency graph as a shell loop over individual
+=build.sh= stages.  The Bazel-owned bootstrap capability invokes =make= with
+the host's available online processor count and exports the same value through
+=GERBIL_BUILD_CORES=.  Both the main acceptance workflow and the Python runtime
+workflow consume this capability before the registered Gerbil toolchain exists.
+
+#+begin_src mermaid
+flowchart LR
+  Host["Host online processor capability"] --> Cores["GERBIL_BUILD_CORES"]
+  Source["Pinned Gerbil source ref"] --> Bootstrap["Bazel-owned bootstrap capability"]
+  Cores --> Bootstrap
+  Bootstrap --> Make["Upstream make -jN scheduler"]
+  Make --> Install["Native Gerbil toolchain install"]
+  Install --> Receipt["JSON bootstrap receipt"]
+  Install --> Cache["ABI-keyed toolchain cache"]
+#+end_src
+
+The bootstrap does not overwrite the upstream-generated Gerbil version module.
+The registered toolchain accepts both the release identity and the short
+identity generated by the pinned source commit.  The JSON bootstrap receipt
+records that observed Gerbil version together with the pinned source identity,
+compiler, available build parallelism, elapsed time, installation prefix, and outcome.
+This metric is separate from the POO Flow project cold-build baseline: a slow
+toolchain bootstrap cannot be reported as a regression in the project compile,
+and it cannot be hidden by that project's faster result.
+
+**** Architecture profiles preserve performance and cache locality
+
+The Gerbil toolchain declares an architecture profile instead of assuming that
+every execution surface has the same cache-locality requirements.  The default
+=native= profile retains the upstream highest-performance behavior and keys
+artifacts by the compiler-selected CPU target.  The =portable= profile uses the
+upstream-supported empty =--enable-march== value and keys artifacts by the host
+OS, architecture, compiler, and profile without binding them to one transient
+runner CPU model.
+
+#+begin_src mermaid
+flowchart LR
+  Local["Local or production build"] --> Native["native profile and exact CPU ABI"]
+  CI["CI validation build"] --> Portable["portable profile and stable runner ABI"]
+  Native --> Toolchain["Registered Bazel Gerbil toolchain"]
+  Portable --> Toolchain
+  Toolchain --> Receipt["Profile-aware JSON receipts"]
+  Toolchain --> Cache["Profile-aware native caches"]
+#+end_src
+
+CI selects =portable= because its install cache must be reusable across
+heterogeneous hosted runners.  Local and downstream production builds remain
+=native= unless they explicitly request another profile.  Both choices flow
+through the same Bazel-owned capability probe, repository receipt, and compile
+action identity.
+
+Gerbil and Gambit are configured with =--enable-march=native=.  A cache key
+containing only the operating system, architecture, and Gerbil revision is
+therefore unsound: two hosted runners can share those labels while selecting
+different native instruction sets.  Reusing that installation or any compiled
+Gerbil dependency can terminate a later code path with =SIGILL= (exit 132).
+
+The native ABI identity is a Bazel toolchain capability, not a CI policy.  The
+single probe at =tools/bazel/native_abi_fingerprint.sh= hashes the host system,
+architecture, compiler version, and the compiler-selected =-march=native=
+target.  =host_system.bzl= resolves or validates that identity and the local
+Gerbil repository projects it into =native_abi.txt=, the toolchain receipt, and
+every normalized Gerbil tool runfiles closure.  Consequently the fingerprint
+participates in Bazel action identity even when a consumer only requests =gxi=,
+=gxc=, =gxpkg=, or =gxtest=.
+
+GitHub Actions remains a bootstrap consumer because its Gerbil installation
+cache is restored before the Gerbil Bazel toolchain exists.  CI invokes the
+same probe once, exports the result as =GERBIL_NATIVE_ABI=, and includes it in
+the Gerbil installation, compiled dependency, Bazel disk, and ccache keys.  A
+broad restore prefix must never cross a native ABI boundary.
+
+#+begin_src mermaid
+flowchart LR
+  Probe["Bazel-owned host capability probe"] --> ABI["Native ABI fingerprint"]
+  ABI --> Install["CI Gerbil install cache key"]
+  ABI --> Dependencies["CI compiled dependency and ccache keys"]
+  ABI --> Toolchain["Bazel Gerbil toolchain identity"]
+  Toolchain --> Scheme["Scheme compile and test actions"]
+  Toolchain --> RuntimeC["Runtime-C contract and library actions"]
+#+end_src
+
+Validation receipts on the Darwin development host:
+
+- ABI-invalidated =//scheme:compile=: =175.997 s=.
+- Immediate same-ABI rebuild: =0.825 s= with zero critical-path work.
+- Final Bazel acceptance: =17/17= Scheme, Runtime-C, and Bundle-v1 tests pass.
+
+This preserves the highest compiler-selected performance for each machine
+without allowing native artifacts to escape the capability domain that created
+them.
+
+Runtime-C rules now consume the same registered Gerbil capability as the
+canonical Scheme project.  The public helper
+=resolved_gerbil_toolchain(ctx)= is the single Starlark resolution path for the
+current execution platform.  Runtime-C BUILD declarations no longer name
+=@local_gerbil= targets or expose =gxi=, =gxc=, compiler, assembler, or linker
+attributes.
+
+The migrated consumers are deliberately capability-oriented:
+
+- =runtime_contract= resolves =gxi= for the Scheme-owned runtime-v0 contract
+  generation action;
+- =runtime_gerbil_benchmark_test= resolves =gxc=, =gxi=, the native compiler,
+  assembler, linker, and the exact wrapper runfiles for those two Gerbil tools;
+- =runtime_gerbil_script_test= is one reusable Scheme-backed test rule that
+  injects resolved =gxi= ahead of declared business arguments; and
+- the runtime symbol-surface test declares only its script, domain inputs,
+  source runfiles, and native library.
+
+There are no per-tool proxy aliases and no compatibility wrapper around the old
+BUILD API.  The rule implementations request =GERBIL_TOOLCHAIN_TYPE= directly,
+so another registered implementation can satisfy runtime-C without changing
+its BUILD declarations.  The provider exposes precise per-tool runfiles as well
+as the full Scheme-project closure: runtime-C script tests merge only =gxi=,
+and the benchmark merges only =gxi=, =gxc=, and its three declared native tool
+files.  Compiled project dependency libraries are not copied into those test
+runfile trees.
+
+** Declarative Just command surface
+
+The repository maintains one root =justfile= as the human and CI command
+catalog above Bazel.  It is intentionally a thin declarative layer: variables
+name stable Bazel targets, recipe groups expose discovery, build, test, and
+check intents, and recipe dependencies compose those intents.  The Just layer
+does not inspect the host OS, rewrite SDK variables, locate Gerbil binaries,
+construct runfiles, invoke =gxi= or =gxc=, parse receipts, or reproduce any
+=build.ss= or Building Framework policy.
+
+The maintained surface is:
+
+- =just query= for the complete Bazel target graph;
+- =just build= for =//scheme:compile=;
+- =just build-runtime-c= and =just build-bundle-v1= for their declared C
+  library targets;
+- =just toolchain= for explicit registered-toolchain resolution evidence;
+- =just test= for the ordinary =//scheme:tests= acceptance suite;
+- =just test-runtime-c= and =just test-bundle-v1= for their ordinary suites;
+- =just test-runtime-c-sanitizers= and =just test-runtime-c-leaks= for explicit
+  native diagnostic gates;
+- =just test-performance= for the separately visible performance gate; and
+- =just check= as the dependency composition =query -> build -> test=.
+
+=BAZEL= may select the Bazel executable without changing recipe semantics.
+Every target, platform decision, cache key, sandbox, and output remains
+Bazel-owned.  Every Scheme topology, scheduling, compilation, guard, and
+receipt decision remains =build.ss= and Building Framework-owned.  A recipe is
+therefore a maintained command alias and dependency edge, never a third build
+implementation.
+
+** Historical standardized baseline and regression interrupt
+
+The adaptive work does not erase the earlier build-system evidence.  The
+discarded per-subset child-=gxi= scheduler completed in 2,919,108 ms, about
+48.7 minutes.  That design duplicated Building Framework planning and paid
+process startup repeatedly, so it remains rejected evidence rather than a
+performance baseline.
+
+After the project was converted to one canonical Building Framework Gerbil
+make project, the same host completed a cold build in 571.71 seconds, about
+9.53 minutes, with a 2,617,507,840-byte peak process-tree RSS receipt.  A later
+cold attempt crossed twelve minutes while still compiling and was interrupted;
+its temporary progress stream contained 237 compile entries, but it produced
+no accepted final timing receipt.  The twelve-minute observation is therefore
+a regression stop, not a replacement baseline.
+
+These historical receipts define the continuing regression rule: cold builds
+must use the canonical =build.ss= / Building Framework path, retain
+Scheme-owned JSON guard receipts, and must not silently accept a result slower
+than the 571.71-second historical baseline.  The new 202.87-second receipt is
+the current host reference, while the old baseline remains the fail-closed
+upper regression boundary until a separately approved policy changes it.
+
+The evidence supports two separate conclusions:
+
+- Barrier merging is real and useful, but it is a secondary gain.
+- The dominant cost remains expansion and import serialization followed by a
+  delayed flush of native compilation jobs.
+
+The observed core increase from 1.733 to 1.989 is too small to indicate broad
+phase overlap.  Merging barriers shortens coordinator overhead, while the main
+pipeline still defers most native work until expansion has populated the
+pending queue.  The 3.25% streaming experiment confirms that ad hoc polling is
+not the missing order-of-magnitude optimization.  A single large session also
+raises memory pressure.  The local controller therefore bounds memory and
+preserves order; it does not claim to solve upstream phase serialization.
+
+** 2026-07-16 host-pressure root cause and calibrated receipt
+
+The 583-second interrupted run was not an acceptable cold-build result.  The
+host had thirteen orphaned =devenv direnv-export= processes, a load average
+above 160, 78 runnable processes, and no idle CPU.  The build guard still
+started because its computed RSS ceiling was not connected to the default
+adaptive execution-window controller and it had no host-pressure admission
+decision.
+
+The repaired Scheme control plane now makes admission and execution one
+policy:
+
+- logical CPU count and instantaneous runnable-process count determine the
+  execution window;
+- runnable count at or below logical CPU capacity preserves the configured
+  full-speed worker count;
+- pressure between one and two runnable processes per logical CPU shrinks the
+  worker count by the excess over logical capacity;
+- pressure above twice logical CPU capacity fails fast instead of converting
+  host contention into a misleading build regression;
+- physical memory, currently available memory, and an adaptive RSS headroom
+  determine the effective RSS ceiling;
+- insufficient memory headroom fails fast before =gxi= starts;
+- the derived worker and RSS values are installed only across the explicit
+  Building Framework handoff with =dynamic-wind= and are restored afterward;
+- the native Scheme JSON receipt records every admission input and decision.
+
+#+begin_src mermaid
+flowchart TD
+  A["Bazel GerbilProjectCompile action"] --> B["Scheme host snapshot"]
+  B --> C{"Runnable processes > 2 x logical CPUs?"}
+  C -- "yes" --> D["Emit blocked-host-pressure receipt and fail fast"]
+  C -- "no" --> E{"Available memory covers headroom and compile floor?"}
+  E -- "no" --> D
+  E -- "yes" --> F["Derive full-speed or pressure-reduced worker window"]
+  F --> G["Derive effective RSS ceiling"]
+  G --> H["Activate adaptive environment with dynamic-wind"]
+  H --> I["Building Framework std/make stages"]
+  I --> J["Adaptive execution-window observations"]
+  J --> K["Process-tree RSS guard"]
+  K --> L["Canonical project-build JSON receipt"]
+#+end_src
+
+The first calibrated canonical build after the repair completed successfully:
+
+| Metric | Receipt value |
+|--------------------------------+-----------------------------|
+| Bazel wall time | 133.416 seconds |
+| Scheme guarded elapsed time | 127.975 seconds |
+| Compiled stages | 3 of 3 |
+| Runtime modules | 377 |
+| Execution policy | =adaptive= |
+| Logical CPUs / selected workers | 12 / 12 |
+| Runnable processes at admission | 4 |
+| Available memory | 23,364,622,090 bytes |
+| Effective max RSS | 17,179,869,184 bytes |
+| Peak process-tree RSS | 3,101,261,824 bytes |
+| Admission outcome | =ready= |
+| Timeout | none; capacity guard remains authoritative |
+
+This run is materially faster than both the prior 229--251 second tranche and
+the older 571.71-second standardized baseline.  It does not yet redefine the
+portable cold-build SLO: that requires repeated clean-host samples on Linux
+and Darwin.  It does prove that the 583-second observation was host pollution,
+that catastrophic pressure is now rejected before compilation, and that a
+healthy host retains maximum parallelism.
+
+* Landed architecture
+
+** Building Framework owner
+
+The harness implementation is owned by these files:
+
+- =src/building/std-builder.ss= defines the POO controller and observation
+  contracts, adaptive plan and result objects, sequential window runner, and
+  package-stage integration.
+- =src/building/observability.ss= owns topology and adaptive canonical JSON.
+- =t/std-builder-execution-window-test.ss= validates fake =make-proc=
+  execution, order, observations, empty plans, and one-spec cap failure.
+- =t/building-observability-test.ss= validates canonical adaptive JSON.
+
+The principal public APIs are:
+
+- =execution-window-controller?=
+- =execution-window-controller-observe-run!=
+- =execution-window-controller-next-state=
+- =make-execution-window-observation=
+- =make-adaptive-execution-window-plan=
+- =std-builder-run-adaptive-plan!=
+- =adaptive-execution-window-result-execution-windows=
+- =adaptive-execution-window-result-window-observations=
+- =build-adaptive-execution-windows->json-object=
+- =build-adaptive-execution-windows->json-string=
+
+The observation is a POO object with named slots for =result=, =outcome=,
+=baseline-rss-bytes=, =peak-rss-bytes=, =max-rss-bytes=, and =elapsed-ms=.
+=.next-state= receives the complete observation object and the actual spec
+count.  Loose multiple values are not the protocol.
+
+** POO Flow adapter and project activation
+
+The downstream implementation is owned by these files:
+
+- =src/build-api/process-memory-guard.ss= samples current-process-tree RSS,
+  creates POO guard receipts, and emits canonical JSON.
+- =src/build-api/adaptive-execution-window.ss= owns the immutable POO Flow
+  controller constructor, live guard adapter, and pure sizing transition.
+- =src/cli-support/project-build.ss= resolves optional caller or environment
+  activation for build truth while preserving non-adaptive clean behavior.  It
+  also projects the configured root through =POO_FLOW_PROJECT_BUILD_ROOT= so
+  source and compiled Gerbil module instances share one explicit process-wide
+  build-root contract.
+- =src/build-api/project-compile-guard.ss= owns the outer project receipt and
+  emits it as canonical native Scheme JSON.
+- =tools/bazel/host_system.bzl= declares the finite host-system model.  Bazel
+  OS names map explicitly to =darwin= or =linux=; every other system fails
+  closed.  The Darwin resolver rejects missing, invalid, or Nix-store Apple SDK
+  selectors and preserves valid custom Xcode selectors.  The Linux resolver
+  preserves the host environment without projecting Apple variables.  Both
+  resolvers also declare physical memory from their native host interfaces so
+  sandboxed Scheme guards do not fall back to a machine-independent guess.
+- =tools/bazel/gerbil_repository.bzl= declares tool candidates, version gates,
+  templates, and the canonical JSON receipt.  It delegates platform policy to
+  =host_system.bzl=, exports normalized =gxi=, =gxc=, =gxpkg=, and =gxtest=
+  wrappers, and exposes only compiled external dependency libraries.
+- =tools/bazel/gerbil_toolchain.bzl= projects those host resources through one
+  explicit =GerbilToolchainInfo= provider and a native =ToolchainInfo= wrapper,
+  including physical memory, compiler, assembler, linker, dependency root,
+  runfiles, and receipt.  Its public type constant and resolution helper are
+  shared by Scheme and runtime-C rules.  =MODULE.bazel= registers the
+  OS-constrained toolchain target; its implementation target is not a consumer
+  API.
+- =tools/bazel/gerbil_project.bzl= declares the canonical project compile action
+  and an isolated custom gxtest rule.  Both resolve the registered capability
+  through =ctx.toolchains= and contain no =@local_gerbil= labels.
+  =tools/bazel/run_scheme_project.sh= invokes =build.ss compile= once, removes
+  temporary tool links, and extracts the native Scheme JSON receipt.
+  =tools/bazel/run_scheme_tests.sh= composes the compiled tree, declared source
+  runfiles, and external dependency root.
+- =scheme/BUILD.bazel= exposes =//scheme:compile=, receipt and log output groups,
+  four ordinary gxtest roots, the separate performance root, =//scheme:tests=,
+  and =//scheme:all_tests=.  Scheme tests are exclusive so multiple =gxtest=
+  processes cannot multiply host RSS accidentally.
+- =bindings/runtime-c/runtime_contract.bzl= resolves the registered =gxi= for
+  runtime-v0 contract generation instead of accepting a tool label.
+- =bindings/runtime-c/runtime_checks.bzl= owns the toolchain-aware Gerbil
+  benchmark and generic Scheme-backed script-test rules.  The root runtime-C
+  BUILD file provides domain arguments and data only.
+- =justfile= is the declarative developer command catalog.  It names stable
+  Bazel targets and composes =check= from =query=, =build=, and =test= without
+  owning tools, platform policy, Scheme build semantics, or output paths.
+- =tools/run-native-scheme-env= is the direct non-Bazel fallback.  It applies
+  the same explicit Darwin-or-Linux boundary.  Darwin injects resolved Xcode
+  values after =gxpkg env=, Linux preserves the environment, and unsupported
+  systems fail closed.
+- =t/build-api-adaptive-execution-window-test.ss= validates immutable sizing,
+  fail-closed outcomes, guard JSON, stage activation, zero headroom, and the
+  cross-module-instance build-root contract.
+- =t/build-api-project-compile-guard-test.ss= validates the project guard
+  policy and canonical project receipt JSON.
+
+The principal POO Flow APIs are:
+
+- =make-poo-flow-adaptive-execution-window-controller=
+- =poo-flow-adaptive-execution-window-controller?=
+- =poo-flow-adaptive-execution-window-controller-next-state/with-current-rss=
+- =poo-flow-process-memory-guard-receipt->json-object=
+- =poo-flow-process-memory-guard-receipt->json-string=
+- =poo-flow-project-compile-receipt->json-object=
+- =poo-flow-project-compile-receipt->json-string=
+- =poo-flow-project-adaptive-cold-gate-available?=
+- the optional controller arguments on =poo-flow-project-source-stages=,
+  =poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
+  =poo-flow-project-compile!=.
+
+=poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
+=poo-flow-project-compile!= resolve the same caller or environment controller,
+so inspection and execution report the same build truth.  In contrast,
+=poo-flow-project-clean!= calls =poo-flow-project-source-stages= with no
+controller.  Clean therefore retains plain topology specs even when an RSS
+environment variable exists in the caller.
+
+* Adaptive sizing policy
+
+The POO controller stores:
+
+- worker count;
+- hard maximum RSS bytes;
+- caller headroom bytes;
+- current window size;
+- baseline RSS bytes;
+- last estimated bytes per spec;
+- window index;
+- named =.observe-run!= and =.next-state= methods.
+
+The initial window size is the worker count.  The caller supplies the hard RSS
+cap.  =POO_FLOW_BUILD_RSS_HEADROOM_BYTES= is optional and nonnegative; its
+default is exactly 0.  There is no percentage-derived default and no fixed
+global spec cap.
+
+The constructor fails early unless:
+
+#+begin_example
+hard-max-rss-bytes > baseline-rss-bytes + headroom-bytes
+#+end_example
+
+Each observation wraps the upstream thunk with the current-process Scheme
+guard under =dynamic-wind=.  RSS is the complete process tree rooted at the
+current =gxi=, including native compiler descendants.
+
+After a completed receipt, the controller computes:
+
+#+begin_example
+observed-bytes-per-spec =
+  max(1, ceil(max(0, peak-rss - start-baseline-rss) / actual-spec-count))
+
+estimated-bytes-per-spec =
+  observed-bytes-per-spec
+
+available-bytes =
+  hard-cap - current-process-tree-rss - caller-headroom
+
+measured-capacity =
+  max(1, floor(max(0, available-bytes) / estimated-bytes-per-spec))
+
+next-window-size =
+  max(1,
+      min(measured-capacity,
+          max(current-window-size + worker-count,
+              2 * current-window-size)))
+#+end_example
+
+Small windows therefore recover by at least one worker-count quantum, while
+larger safe windows grow geometrically.  The measured capacity can shrink the
+next window immediately.  Geometric window growth changes only the ordered
+queue horizon visible to the single =std/make= coordinator; actual native
+compiler concurrency remains bounded by =worker-count=.  The next decision
+deliberately uses the latest completed window's observed bytes per spec rather
+than a monotonic maximum.  This avoids treating one-time compiler residency
+from an earlier window as permanent marginal per-spec cost, while the hard cap
+remains the safety authority.  The immutable next state retains
+=last-estimated-bytes-per-spec= as receipt evidence and history only; it is not
+an input that can pin later windows to an older estimate.  Every window still
+passes through the same pre-launch guard, and any missing, malformed,
+non-completed, or cap-breaching receipt fails closed.
+
+Only =completed= and =ok= outcomes are accepted.  Invalid receipt shape,
+non-integer measurements, hard-cap mismatch, guard failure, or peak RSS above
+the controller cap raises an error before another window is attempted.
+
+* Single-executor control flow and toolchain gate
+
+#+begin_src mermaid
+flowchart TD
+  E["Caller"] --> J{"Maintained just recipe?"}
+  J -->|"yes"| JR["Resolve a stable Bazel target alias"]
+  JR --> B{"Bazel-owned launch?"}
+  J -->|"no"| B
+  B -->|"yes"| BT["host_system.bzl maps Bazel host OS"]
+  B -->|"no"| ST["Direct wrapper resolves Darwin or Linux policy"]
+  BT --> S{"Declared system"}
+  S -->|"darwin"| H["Resolve active Xcode, native tools, and hw.memsize"]
+  S -->|"linux"| LH["Preserve host environment and derive memory from getconf"]
+  S -->|"unsupported"| U["Fail closed before Gerbil execution"]
+  ST -->|"unsupported"| U
+  H --> GT["Private ToolchainInfo and canonical host JSON receipt"]
+  LH --> GT
+  GT --> RT["registered_toolchain constrained to the host OS"]
+  MR["MODULE.bazel register_toolchains"] --> RT
+  RT --> TR["Compile and test rules resolve ctx.toolchains"]
+  TR --> BC["//scheme:compile declares sources and three outputs"]
+  TR --> RC["Runtime-C contract, benchmark, and script-test rules"]
+  RC --> RR["Generated C contract and native test receipts"]
+  BC --> X["Normalized gxpkg env runs build.ss compile once"]
+  ST -->|"supported"| X
+  X --> P{"Explicit tight RSS cap?"}
+  P -->|"no"| TP["Building Framework topology policy"]
+  TP --> F["Flatten dependency groups into one ordered window"]
+  P -->|"yes"| AP["POO immutable adaptive controller"]
+  AP --> W["Capacity-capped geometric dependency-ordered window"]
+  F --> M["One std/make coordinator session"]
+  W --> M
+  M --> I["Coordinator expands modules and serializes imports"]
+  I --> Q["Native compile jobs enter upstream pending queue"]
+  Q --> D["std/make drains and joins native jobs"]
+  D --> G["Scheme process-tree guard emits canonical JSON"]
+  G --> C{"Adaptive specs remain?"}
+  C -->|"yes"| N["Derive immutable next controller"]
+  N --> W
+  C -->|"no"| R["Canonical project JSON receipt"]
+  R --> O["Tree artifact, JSON receipt, and complete log"]
+  O --> T["Exclusive custom test rules use gxtest with declared runfiles"]
+  Z["No second executor and no concurrent coordinator"] -. invariant .-> M
+#+end_src
+
+The loop is a Building Framework extension around its existing effect
+boundary.  It does not call =gsc= directly, create a per-spec =gxi= scheduler,
+or overlap multiple =std/make= coordinators.  The toolchain gate does not pin a
+machine-specific Xcode path and does not delete SDK selectors on every OS.  On
+Darwin it preserves an existing non-Nix directory or resolves the active paths
+through =xcode-select= and =xcrun=.  Linux preserves the host environment.
+Every other host system is rejected instead of inheriting Linux behavior by
+accident.
+
+* Canonical receipt contracts
+
+The established topology schema remains unchanged:
+
+- =gslph.build-topology-execution-windows.v1=
+
+It describes the default topology projection, including group count, upstream
+session count, eliminated barriers, spec count, and dependency-order
+preservation.
+
+Adaptive execution uses a distinct schema:
+
+- =gslph.build-adaptive-execution-windows.v1=
+
+It projects only windows that were actually attempted and completed into the
+result.  It records actual window specs and per-window spec counts, dependency
+order preservation, worker count, hard RSS cap, and each observation's outcome,
+baseline RSS, peak RSS, maximum RSS, and elapsed milliseconds.
+
+The Scheme guard uses:
+
+- =poo-flow.process-memory-guard.v1=
+
+Its public JSON contains stable =kind= and =schema= strings, numeric =version:
+1=, outcome, exit fields, process-tree peak and maximum RSS, elapsed
+milliseconds, optional timeout, and a JSON-safe label.
+
+The canonical project compile receipt uses:
+
+- =poo-flow.project-compile-guard.v1=
+
+It records stable =kind=, =schema=, and =version= fields, the Building Framework
+owner and build mode, the selected =topology= or =adaptive= execution policy,
+request labels, admission outcome, non-blocking pressure advisories, blocking
+reasons, detected system memory, maximum and peak RSS, elapsed milliseconds,
+optional timeout, final outcome, and a JSON-safe Building Framework stage
+summary.  The stage summary retains counts, active-stage
+labels, kinds, statuses, descriptions, and elapsed jiffies while excluding
+arbitrary in-process Scheme results.  The public
+=POO_FLOW_PROJECT_BUILD_RECEIPT= line is JSON; its earlier printed alist form is
+no longer emitted.
+
+All four contracts use Gerbil's native JSON support with sorted keys for the
+canonical string.  A =.txt= progress stream is diagnostic only and is not a
+receipt.  Printed alists remain internal or compatibility projections and are
+not the public record format.
+
+* Focused implementation receipts
+
+The focused commands remained bounded independently of the accepted full-cold
+gate.
+
+| Check | Exact focused receipt |
+|-------+-----------------------|
+| Harness dynamic compile | =timeout 90s gxpkg env gxc src/building/model.ss src/building/native-toolchain.ss src/building/std-builder.ss src/building/observability.ss t/std-builder-execution-window-test.ss t/building-observability-test.ss=; exit 0; 13.25 s |
+| Harness execution-window runtime | Imported =:gslph/t/std-builder-execution-window-test= and ran =main= under =timeout 90s gxpkg env gxi=; exit 0; seven cases; =All tests OK= |
+| Harness observability runtime | Imported =:gslph/t/building-observability-test= under =timeout 90s gxpkg env gxi=; exit 0; adaptive canonical JSON assertions completed |
+| POO Flow targeted compile | Compiled =process-memory-guard.ss=, =adaptive-execution-window.ss=, =project-build.ss=, and =build-api-adaptive-execution-window-test.ss= from the non-Nix harness environment with the refreshed harness load path; exit 0; 6.87 s |
+| POO Flow focused runtime | =timeout 90s tools/run-native-scheme-env gxi t/build-api-adaptive-execution-window-test.ss=; exit 0; nine cases; =All tests OK=; canonical guard JSON emitted; safe growth proved =4 -> 8 -> 16= and a 377-spec projection completed in seven decisions |
+| POO Flow focused AOT compile | =timeout 90s tools/run-native-scheme-env gxc -d <isolated-output> src/build-api/adaptive-execution-window.ss t/build-api-adaptive-execution-window-test.ss=; exit 0; no project output mutated |
+| Project compile receipt runtime | Ran =build-api-project-compile-guard-test= through the consistent Building Framework overlay under a 40-second timeout; exit 0; five cases; =All tests OK=; canonical project JSON parsed and round-tripped |
+| Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
+| Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
+| Bazel registered toolchain analysis | =bazel build --toolchain_resolution_debug=//tools/bazel:gerbil_toolchain_type //scheme:compile= selected =@local_gerbil//:toolchain_impl= through =@local_gerbil//:registered_toolchain= on =@platforms//host:host=; exit 0; the compile action remained an action-cache hit; Scheme compile and test rule implementations contain no =@local_gerbil= labels |
+| Runtime-C registered toolchain consumers | Toolchain-resolution debug selected the registered host implementation for runtime contract, benchmark, and symbol-surface targets; final contract parity passed in 0.4 s, the Gerbil FFI benchmark in 7.9 s, and symbol-surface validation in 4.7 s; action-graph audits found zero compiled =clan/gslph= dependency artifacts in both runtime-C test closures; =just test-runtime-c= retained eight of eight passing tests; Scheme compile remained an action-cache hit and four of four Scheme tests passed after the shared-helper refactor |
+| Declarative Just surface | =just 1.56.0= parsed and formatted the root =justfile=; =just --list= exposed four recipe groups and twelve explicit commands plus =default=; =just check= queried 62 targets, reused =//scheme:compile= in 0.433 s, and passed four of four ordinary Scheme tests in 37.809 s; =just build-runtime-c= completed in 8.944 s and =just test-runtime-c= passed eight of eight tests in 2.739 s; =just toolchain= selected the registered host implementation with exit 0 |
+| Bazel linker smoke | The Bazel-generated runner resolved =xcrun -f ld= to =XcodeDefault.xctoolchain/usr/bin/ld= and executed =Gerbil v0.18.2=; exit 0 |
+| Bazel workspace boundary | =bazel query //...= completed after =.bazelignore= excluded =.data=, =.devenv=, =.direnv=, and =.gerbil= foreign workspaces |
+| Bazel isolated Scheme cold | =bazel build //scheme:compile=; Darwin sandbox; exit 0; 161.694 s wall; Scheme receipt =completed= in 155,837 ms with 3,359,752,192 B peak RSS; three of three stages compiled |
+| Bazel ordinary Scheme tests | Final =bazel test //scheme:tests= resolved the registered toolchain for four exclusive custom gxtest rules; unit 9.6 s, contract 6.5 s, CLI support 4.3 s, and integration 10.1 s all passed; total Bazel wall time 37.013 s |
+| Performance drift audit | =//scheme:performance_tests= and the direct native =gxtest t/performance-tests.ss= reproduce the same pre-existing fixture drift: 30 fixtures versus 29, three build requests versus two, and old benchmark rows missing =expectedOutcome=; this remains a distinct red performance gate rather than a Bazel runner failure |
+| Canonical full cold | =build.ss compile= against a fresh output root; exit 0; inner 199,289 ms; outer 202,061 ms; =/usr/bin/time= 202.87 s; all Scheme guard outcomes =completed= |
+| Public incremental receipt | =build.ss compile= against the accepted output root; exit 0; 3,214 ms; canonical JSON recorded =execution-policy=topology= and two active Building Framework stages |
+| POO macro expansion guard | A same-name =.o= slot/value binding reached 6,124,306,432 B RSS in 9.32 seconds and was interrupted; the explicit =execution-policy-value= projection reduced the equivalent import probe to 1.99 seconds and 176,226,304 B |
+| Diff hygiene | =rtk git diff --check= in both repositories; exit 0 |
+
+The POO Flow focused suite covers immutable growth, immediate startup shrink,
+later recovery from =3= to =7= after a lower-cost completed window, safe
+geometric growth from =4= to =8= to =16=, and a 377-spec projection that needs
+seven decisions.  The small-window recovery replaces
+the earlier one-gibibyte-per-spec history with the latest
+100-mebibyte-per-spec observation and grows by exactly one four-worker quantum;
+the large-window case proves that growth is no longer linear in worker-count.
+It also covers constructor rejection when the cap cannot cover the live
+baseline plus headroom, non-completed hard-cap failure, canonical guard JSON
+parsing and round trip, explicit versus default stage batching, and environment
+activation with headroom 0.
+
+The latest non-Nix estimator-tuning pass compiled the adaptive module and its
+focused test with exit 0 in 4.07 seconds.  The focused runtime then exited 0
+with =All tests OK= in 3.72 seconds.
+
+** Bounded real UI controller integration
+
+A bounded controller A/B used the same eight topology-ordered UI specs with
+=workers=2=, a 2,147,483,648-byte hard cap, 268,435,456 bytes of caller
+headroom, fresh isolated output roots, and a 90-second outer timeout.  This was
+a controller safety and integration receipt, not a full cold build.
+
+| Measure | Initial monotonic estimator | Tuned latest-window estimator | Change |
+|---------+-----------------------------+-------------------------------+--------|
+| Specs per upstream session | =(2 1 1 1 1 1 1)= | =(2 1 3 2)= | recovery after startup shrink |
+| Upstream sessions | 7 | 4 | 42.857% fewer |
+| Outer wall time | 30.29 s | 27.75 s | 8.386% improvement |
+| Process-tree maximum | 1,481,261,056 B | 1,479,344,128 B | both below the hard cap |
+| Outer maximum RSS | 1,291,386,880 B | 1,289,961,472 B | bounded |
+| Completion | all receipts completed | all receipts completed | no fail-close outcome |
+
+The tuned run dispatched =init= with =profiles/all=, then
+=loop-engine-owner=, then =cicd-owner= with =session-owner= and
+=runtime-owner=, and finally =durable-owner= with =config=.  It preserved the
+exact topology order and multiplicity: no spec was omitted or duplicated.
+Both runs completed without a lingering =gxi= or =gsc= process.
+
+This historical bounded A/B is explicitly not comparable to the later
+12-worker strict A/B.  The worker count, controller geometry, cap, and
+output-root conditions differ, so the 27.75-second result remains evidence for
+safe controller recovery rather than a replacement performance number.
+
+The original toolchain failure was not a Scheme algorithm result.  =gxpkg env=
+injected a Nix =DEVELOPER_DIR= into a Homebrew Gerbil/Gambit compiler configured
+with GCC.  GCC's =collect2= delegated to =xcrun=; the Nix =xcrun ld= wrapper then
+recursively invoked an equivalent =xcrun ld= process.  That process chain
+explains the earlier extreme latency and memory growth.  The Bazel repository
+rule now delegates the finite =darwin | linux= choice to =host_system.bzl= and
+emits a canonical JSON receipt.  On Darwin it replaces only absent, invalid, or
+Nix-store Apple SDK paths and resolves =xcrun= through the active host developer
+tools without hard-coding one machine's path.  Linux preserves its host
+environment.  The direct wrapper mirrors this policy for invocations that
+intentionally do not enter through Bazel.
+
+* Acceptance outcome and continuing gates
+
+The bounded implementation phase and the full-cold gate are complete.  The
+accepted 161.694-second Bazel receipt establishes that the canonical Building
+Framework topology policy is healthy inside a declared Darwin sandbox after
+the toolchain and source-bootstrap boundaries are corrected.  The earlier
+202.87-second direct receipt remains the previous accepted reference.
+
+The following continuing rules remain normative:
+
+1. default builds use Building Framework topology and one upstream
+   =std/make= session when the caller declares no tight memory cap;
+2. a positive =POO_FLOW_BUILD_MAX_RSS_BYTES= activates adaptive windows, and
+   every completed window must retain canonical JSON evidence; safe growth is
+   capacity-capped and geometric, while native concurrency remains bounded by
+   the detected worker count;
+3. any invalid receipt, cap breach, timeout, or non-completed outcome fails
+   closed before the next adaptive window;
+4. =571.71= seconds remains the historical regression ceiling, =202.87= seconds
+   is the previous direct reference, =161.694= seconds is the accepted local
+   Bazel host reference, and run =29633871888= is the accepted constrained
+   hosted reference at =230= seconds for the Scheme phase and =5 min 41 s= for
+   the complete macOS job;
+5. the Bazel host-toolchain rule must classify the host explicitly as =darwin=
+   or =linux=, reject every unsupported system, preserve valid custom selectors,
+   never project a Nix Apple SDK into a Homebrew Gerbil compile, register an
+   execution-platform-constrained implementation, and keep consumer rules on
+   native toolchain resolution rather than repository-internal labels; and
+6. no accepted path may introduce a second executor or concurrent
+   =std/make= coordinators;
+7. =//scheme:tests= is the ordinary serial acceptance suite, while
+   =//scheme:performance_tests= remains an explicit separate gate until its
+   native fixture-contract drift is repaired; and
+8. =build.ss= must cold-start without importing =:poo-flow= from an installed
+   output tree, and Bazel actions must declare every =.ss=, =.ssi=, =.scm=,
+   =.inc=, user-interface, and native-header input they consume; and
+9. the root =justfile= must remain a declarative catalog of Bazel targets and
+   recipe dependencies; it must not acquire platform detection, native tool
+   discovery, direct Scheme execution, receipt parsing, or output ownership;
+   and
+10. Scheme and runtime-C Starlark consumers must resolve
+    =GERBIL_TOOLCHAIN_TYPE= through the shared capability helper; runtime-C
+    BUILD declarations must not name =@local_gerbil= or expose individual
+    Gerbil/native tool attributes.
+
+Phase-level overlap remains an upstream proposal.  The next performance path
+is to change the upstream expansion/import and native-job flush behavior so
+native compilation can overlap earlier with Scheme expansion.  That work must
+remain inside the canonical =std/make= coordinator; it must not introduce a
+second executor in POO Flow.
+
+* Rejected alternatives
+
+** Always one unbounded session
+
+Rejected for adaptive cold execution.  It improves bounded wall time but the
+runtime A/B increases allocation by 29.733% and RSS by 6.197%.
+
+** Fixed chunk sizes or a global spec ceiling
+
+Rejected.  They encode one host's behavior and cannot explain changes from
+receipts.
+
+** Concurrent std/make coordinators
+
+Rejected.  They duplicate scheduling ownership and make the hard RSS cap more
+difficult to enforce.
+
+** Per-spec child gxi scheduling
+
+Rejected.  Prior process multiplicity imposed dominant startup overhead and
+duplicated Building Framework currentness, topology, and receipt ownership.
+
+** Python-owned build policy
+
+Rejected.  The Scheme build and its safety policy are Gerbil-owned.  Python may
+remain a validation runtime below other interfaces, but it is not the owner of
+this build controller.

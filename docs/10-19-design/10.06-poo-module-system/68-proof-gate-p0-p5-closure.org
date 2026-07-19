@@ -9,9 +9,11 @@ composition scenarios. Runtime execution remains outside POO Flow.
 
 Runtime ownership is represented as proof data, not implementation code:
 
-#+begin_src latex
-RuntimeBoundaryOk(g) \equiv
-  RuntimeOwnerExternal(g) \land ExecutionDeferred(g)
+#+begin_src typst
+$
+"RuntimeBoundaryOk"(g) equiv
+  "RuntimeOwnerExternal"(g) and "ExecutionDeferred"(g)
+$
 #+end_src
 
 The gate rejects a scenario when runtime ownership is local, even when
@@ -52,12 +54,14 @@ unknown schemas and facts missing required fields before they cross the bridge.
 
 =PooFlowProof.PooC3.ProofGateBundle= defines the Lean-side acceptance rule:
 
-#+begin_src latex
-GateAccepted(g) \equiv
-  CompositionAccepted(g)
-  \land ScenarioAccepted(g)
-  \land HandoffAccepted(g)
-  \land RuntimeBoundaryOk(g)
+#+begin_src typst
+$
+"GateAccepted"(g) equiv
+  "CompositionAccepted"(g)
+  and "ScenarioAccepted"(g)
+  and "HandoffAccepted"(g)
+  and "RuntimeBoundaryOk"(g)
+$
 #+end_src
 
 Generated examples cover accepted LangGraph-like gates, runtime-boundary

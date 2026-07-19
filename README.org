@@ -45,10 +45,8 @@ This is why =poo-flow= is stronger than a generic worker runner. It does not onl
 
 The important boundary is:
 
-#+begin_src latex
-\[
-\operatorname{Lin}_{\mathrm{POO/C3}}(M) \neq \operatorname{Safety}(M,\Sigma)
-\]
+#+begin_src typst
+$ upright("Lin")_(upright("POO/C3"))(M) != upright("Safety")(M, Sigma) $
 #+end_src
 
 POO/C3 linearization decides precedence. It does not prove that the resulting flow is safe to start, safe to project, or safe to run. Safety is checked by validation and proof obligations over the linearized object graph.
@@ -71,17 +69,13 @@ The proof layer is not trying to prove a complete Scheme interpreter. It proves 
 
 The central start contract is:
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{CanStart}(s,m) \equiv\;&
-  \operatorname{DepsCompleted}(s,m) \\
-  &\land \operatorname{ScopeAllowed}(s,m) \\
-  &\land P_m(s) \\
-  &\land Q_m(s) \\
-  &\land G_m(s)
-\end{aligned}
-\]
+#+begin_src typst
+$ upright("CanStart")(s, m) equiv
+  upright("DepsCompleted")(s, m)
+  and upright("ScopeAllowed")(s, m)
+  and P_(m)(s)
+  and Q_(m)(s)
+  and G_(m)(s) $
 #+end_src
 
 Here =P_m= is the policy predicate, =Q_m= is the structural precondition, and =G_m= is the guard that blocks unsafe starts. A strategy step is proof-backed only when it carries evidence for the relevant start, policy, scope, trace, lifecycle, and runtime-boundary claims.
@@ -104,16 +98,11 @@ The current Lean proof package lives under =packages/proof/lean=. The active Poo
 * Reference Evidence Boundary
 Production systems such as OpenRATH are useful references, but they are not proof authorities for =poo-flow=. They can suggest real control-plane cases, lifecycle shapes, and missing checks. They cannot by themselves prove a POO flow claim.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{PooFlowOwnedFact}(C) &\Rightarrow C \\
-\operatorname{ReferenceObservation}(R,C) &\nRightarrow C \\
-\operatorname{VerifiedFromReference}(r)
-  &\Rightarrow \operatorname{AdoptionCertificate}(r) \\
-\operatorname{AdoptionCertificate}(r) &\Rightarrow C
-\end{aligned}
-\]
+#+begin_src typst
+$ upright("PooFlowOwnedFact")(C) => C
+  upright("ReferenceObservation")(R, C) =>.not C
+  upright("VerifiedFromReference")(r) => upright("AdoptionCertificate")(r)
+  upright("AdoptionCertificate")(r) => C $
 #+end_src
 
 Reference observations become candidate obligations. They must be discharged by POO-owned evidence or adopted through an explicit certificate. Otherwise they remain rejected or open.
@@ -121,17 +110,9 @@ Reference observations become candidate obligations. They must be discharged by 
 * Session And Subagent Safety
 Session lifecycle is one of the main reasons for the Lean layer. A session must establish enough facts before work can be dispatched to agents or subagents.
 
-#+begin_src latex
-\[
-\begin{aligned}
-\operatorname{CanStart}(\Sigma,\operatorname{messageDispatch})
-  &\Rightarrow \operatorname{channelAuthorized}(\Sigma) \\
-\operatorname{channelAuthorized}(\Sigma)
-  &\Rightarrow
-    \operatorname{agentRegistered}(\Sigma)
-    \land \operatorname{subagentRegistered}(\Sigma)
-\end{aligned}
-\]
+#+begin_src typst
+$ upright("CanStart")(Sigma, upright("messageDispatch")) => upright("channelAuthorized")(Sigma)
+  upright("channelAuthorized")(Sigma) => upright("agentRegistered")(Sigma) and upright("subagentRegistered")(Sigma) $
 #+end_src
 
 The proof layer also exposes gaps. For example, the base control-plane event model can construct a =sendToSubagent= trace without lifecycle facts. The stronger lifecycle model requires:
