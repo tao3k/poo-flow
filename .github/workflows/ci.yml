@@ -76,13 +76,13 @@ jobs:
             gerbil-label: prebuilt-v0.18.2-07c84815
             gerbil-install: prebuilt
             gerbil-formula: ""
-            dependency-timeout-minutes: 15
+            dependency-timeout-minutes: 12
             job-timeout-minutes: 20
           - os: macos-26
             gerbil-label: homebrew-tao3k-v0.18.2-07c84815
             gerbil-install: homebrew
             gerbil-formula: tao3k/gerbil/gerbil-scheme
-            dependency-timeout-minutes: 15
+            dependency-timeout-minutes: 12
             job-timeout-minutes: 30
     steps:
       - name: Checkout poo-flow
@@ -236,41 +236,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bazel build @dependency_gerbil//:native_scheme_env
           native_abi="$(
             bazel run --ui_event_filters=-info --noshow_progress \
-              @dependency_gerbil//:native_scheme_env -- \
-              bash -c "printf %s \"\$GERBIL_NATIVE_ABI\"" 2>/dev/null
+              @gerbil_bazel//gerbil:native_abi_fingerprint 2>/dev/null
           )"
           test "${#native_abi}" -eq 40
           echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Restore Gerbil package dependency cache
-        id: gerbil-pkg-cache
-        uses: actions/cache/restore@v6.1.0
-        with:
-          path: |
-            ~/.gerbil/pkg
-            .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
-
-      - name: Install Gerbil package dependencies from gerbil.pkg
+      - name: Build atomic Gerbil package graph
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel run //scheme:deps
+        run: bazel build //scheme:dependency_packages
 
       - name: Validate shared Gerbil provider
         run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
-
-      - name: Save Gerbil package dependency cache
-        if: steps.gerbil-pkg-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
-        with:
-          path: |
-            ~/.gerbil/pkg
-            .gerbil
-          key: gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ steps.gerbil-native-abi.outputs.fingerprint }}-${{ hashFiles('gerbil.pkg', 'manifest.ss') }}
 
       - name: Validate Bazel target graph
         run: bazel query //...
