@@ -31,7 +31,7 @@ gerbil_package_compile(
     srcs = ["@gslph_sources//:poo_flow_component_sources"],
     build_script = "@gslph_sources//:build.ss",
     package = "github.com/tao3k/gerbil-scheme-language-project-harness",
-    revision = "32d948d4264af445e27696470ae4c49daa44e458",
+    revision = "49a4cac696855fb129fba321813996ba840abb98",
     deps = [":gerbil_poo_package"],
 )
 
