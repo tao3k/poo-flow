@@ -1211,6 +1211,98 @@ Rejected.  The Scheme build and its safety policy are Gerbil-owned.  Python may
 remain a validation runtime below other interfaces, but it is not the owner of
 this build controller.
 
+* Stable Gerbil project receipt v1 boundary
+
+POO Flow pins gerbil-bazel revision
+=ee0486d7f0845632967e31230c434ac6f68cac24=.  That revision defines
+=gerbil-bazel.project-receipt.v1= as the stable outer envelope for every
+=gerbil_project_compile= action.  Prefix-derived producer evidence does not
+replace the envelope; POO Flow's =poo-flow.project-compile-guard.v1= receipt is
+nested under =buildReceipt=.  Optional Gerbil-Bazel process-guard evidence is
+nested independently under =resourceGuard=.
+
+The same revision removes the former Bazel-owned package identity/revision
+graph.  =gerbil.pkg= owns package metadata, =gxpkg= owns package lifecycle, and
+=build.ss= with =std/make= owns compile membership, ordering, and Scheme-level
+incrementality.  Bazel owns repository pins, declared inputs, dependency tree
+artifacts, sandboxing, adaptive host capabilities, caching, guards, and
+receipts.  The developer-only dependency target invokes one standard
+=gxpkg deps --install= command; it is not build truth inside a compile action.
+
+On Darwin, the registered toolchain leaves the installed =gambuild-C=
+immutable.  =GERBIL_GSC= uses Gambit's public =-cc= and =-ld-options=
+interfaces: native objects use the installed runtime's producer compiler,
+dynamic modules receive the Darwin unresolved-symbol option, and =-exe= uses
+the Xcode Clang driver through Gerbil's public =GERBIL_GCC= boundary.  Linux
+retains the upstream host compiler and linker path without Darwin policy.
+
+#+begin_src mermaid
+flowchart LR
+  Pin["Immutable gerbil-bazel Git pin"] --> Bazel["Bazel declared action"]
+  Sources["Declared sources + dependency trees"] --> Bazel
+  Package["gerbil.pkg metadata"] --> Gxpkg["gxpkg lifecycle"]
+  Gxpkg -. "developer-only install" .-> Sources
+  Bazel --> Build["build.ss"]
+  Build --> Make["std/build-script + std/make"]
+  GSC["GERBIL_GSC: public -cc / -ld-options"] --> Make
+  GCC["GERBIL_GCC: final executable linker"] --> Make
+  Make --> Tree["Atomic project tree"]
+  Make --> Receipt["gerbil-bazel.project-receipt.v1"]
+#+end_src
+
+No =project-receipt.v2= is introduced.  A future additive requirement must
+first demonstrate that it cannot be represented by the two explicitly reserved
+v1 extension fields.  A breaking v2 proposal requires its own migration RFC,
+producer and consumer vectors, and dual-version transition evidence; it cannot
+be created as a convenience rename.
+
+The Bazel target =//scheme:compile_receipt_v1_test= is the executable contract
+gate.  It resolves =gxi= through the registered Gerbil toolchain, applies the
+upstream Scheme validator to the formal v1 schema and the actual
+=//scheme:compile= receipt, and then applies a POO Flow Scheme validator to the
+nested build receipt.  CI executes the target immediately after the Scheme
+compile and before publishing the artifact evidence.
+
+#+begin_src mermaid
+flowchart LR
+  Compile["//scheme:compile"] --> Outer["gerbil-bazel.project-receipt.v1"]
+  Outer --> Core["Stable required v1 fields"]
+  Outer --> Guard["Optional resourceGuard"]
+  Outer --> Build["buildReceipt: poo-flow.project-compile-guard.v1"]
+  Outer --> Generic["Upstream Scheme v1 validator"]
+  Build --> Consumer["POO Flow Scheme consumer validator"]
+  Generic --> Gate{"Both validators pass?"}
+  Consumer --> Gate
+  Gate -->|"yes"| Publish["Publish receipt evidence"]
+  Gate -->|"no"| Block["Fail Bazel and CI"]
+#+end_src
+
+** Immutable Git-pin local acceptance receipt (2026-07-19)
+
+The first validation after replacing the development =local_path_override=
+with the immutable gerbil-bazel Git pin had to materialize a new external-
+repository identity.  Bazel therefore executed the four Scheme project actions
+rather than reusing the earlier local-override action keys.
+
+| Measurement | Receipt |
+|-------------+---------|
+| Target | =//scheme:compile_receipt_v1_test= |
+| First Git-pin materialization | =629.465 s= elapsed; =619.15 s= critical path |
+| Gerbil Utils project | approximately =42 s= |
+| Gerbil POO project | approximately =42 s= |
+| GSLPH project | approximately =283-300 s= |
+| POO Flow project | approximately =162-192 s= |
+| Receipt validation test | =1.9 s=; passed |
+| Immediate identical rerun | =0.150 s= elapsed; zero executed tests; one action-cache hit |
+
+The =629.465=-second value is a first Git-repository materialization receipt,
+not a compiler-toolchain cold build and not a steady incremental time.  It
+confirms correct package-level artifact reuse on the immediate rerun, but it
+also establishes that a fully missed four-project Scheme action chain remains
+approximately 10.49 minutes on this host.  Future performance work must reduce
+that critical path without moving package lifecycle into Bazel or replacing
+=build.ss= and =std/make=.
+
 * Authoritative CI acceptance receipt (2026-07-19)
 
 GitHub Actions run =29685015556= at POO Flow revision

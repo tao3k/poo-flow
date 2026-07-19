@@ -245,7 +245,7 @@ jobs:
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Build atomic Gerbil package graph
+      - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         run: bazel build //scheme:dependency_packages
 
@@ -296,6 +296,10 @@ jobs:
             echo "Scheme compile exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
             exit 1
           fi
+
+      - name: Validate stable Scheme project receipt v1
+        timeout-minutes: 2
+        run: bazel test --test_output=errors //scheme:compile_receipt_v1_test
 
       - name: Upload Scheme compile evidence
         if: always()

@@ -6,6 +6,7 @@ scheme_dev_compile := "//scheme:dev_compile"
 scheme_dev_unit_tests := "//scheme:dev_unit_tests"
 scheme_tests := "//scheme:tests"
 gerbil_capability_tests := "//tools/bazel:shared_gerbil_capability_test"
+scheme_receipt_tests := "//scheme:compile_receipt_v1_test"
 scheme_performance_tests := "//scheme:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
 runtime_c_tests := "//bindings/runtime-c:runtime_c_tests"
@@ -60,6 +61,11 @@ test:
 test-gerbil-capability:
     {{ bazel }} test --test_output=errors {{ gerbil_capability_tests }}
 
+# Validate the stable Gerbil project receipt v1 and the nested POO Flow receipt.
+[group('test')]
+test-scheme-receipt:
+    {{ bazel }} test --test_output=errors {{ scheme_receipt_tests }}
+
 # Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
 [group('test')]
 test-dev:
@@ -92,4 +98,4 @@ test-performance:
 
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
-check: query build test test-gerbil-capability
+check: query build test test-gerbil-capability test-scheme-receipt

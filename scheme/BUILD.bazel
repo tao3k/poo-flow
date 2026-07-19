@@ -1,37 +1,37 @@
 load(
     "@gerbil_bazel//gerbil:defs.bzl",
-    "gerbil_package_compile",
     "gerbil_project_compile",
     "gerbil_project_dev",
     "gerbil_project_test",
 )
 load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
+load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 
 package(default_visibility = ["//visibility:public"])
 
-gerbil_package_compile(
+gerbil_project_compile(
     name = "gerbil_utils_package",
     srcs = ["@gerbil_utils_sources//:sources"],
     build_script = "@gerbil_utils_sources//:build.ss",
-    package = "github.com/mighty-gerbils/gerbil-utils",
-    revision = "f45a4ef3bfecd2af39e114ed736ce9082cbb8244",
+    process_guard = True,
+    require_library_output = True,
 )
 
-gerbil_package_compile(
+gerbil_project_compile(
     name = "gerbil_poo_package",
     srcs = ["@gerbil_poo_sources//:sources"],
     build_script = "@gerbil_poo_sources//:build.ss",
-    package = "github.com/mighty-gerbils/gerbil-poo",
-    revision = "1c3225637525400341a09e958296962c10184ead",
+    process_guard = True,
+    require_library_output = True,
     deps = [":gerbil_utils_package"],
 )
 
-gerbil_package_compile(
+gerbil_project_compile(
     name = "gslph_package",
-    srcs = ["@gslph_sources//:poo_flow_component_sources"],
+    srcs = ["@gslph_sources//:sources"],
     build_script = "@gslph_sources//:build.ss",
-    package = "github.com/tao3k/gerbil-scheme-language-project-harness",
-    revision = "dd4b1aa6c0c379435af69ed8bf9d0d848383c9c0",
+    process_guard = True,
+    require_library_output = True,
     deps = [":gerbil_poo_package"],
 )
 
@@ -104,6 +104,12 @@ filegroup(
     name = "compile_receipt",
     srcs = [":compile"],
     output_group = "receipt",
+)
+
+gerbil_project_receipt_v1_test(
+    name = "compile_receipt_v1_test",
+    consumer_validator = ":validate_compile_receipt_v1.ss",
+    receipt = ":compile_receipt",
 )
 
 gerbil_project_projection(

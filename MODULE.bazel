@@ -10,7 +10,7 @@ bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
 git_override(
     module_name = "gerbil_bazel",
-    commit = "c27b453db41faa9da0ef38a80743a9b51f2b0776",
+    commit = "ee0486d7f0845632967e31230c434ac6f68cac24",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 
@@ -56,7 +56,15 @@ filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
 
 git_repository(
     name = "gslph_sources",
-    commit = "dd4b1aa6c0c379435af69ed8bf9d0d848383c9c0",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+exports_files(["build.ss", "gerbil.pkg"])
+filegroup(
+    name = "sources",
+    srcs = glob(["src/**/*.ss"]) + ["gerbil.pkg"],
+)
+""",
+    commit = "eb64f3720f4a7fedecdc932b276c5241d727fe2a",
     remote = "https://github.com/tao3k/gerbil-scheme-language-project-harness.git",
 )
 
