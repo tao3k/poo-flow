@@ -10,7 +10,7 @@ bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
 git_override(
     module_name = "gerbil_bazel",
-    commit = "74fa82bc21f30df743f907ae0598f40811796504",
+    commit = "c27b453db41faa9da0ef38a80743a9b51f2b0776",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 
@@ -32,7 +32,7 @@ git_repository(
     name = "gerbil_poo_sources",
     build_file_content = """
 package(default_visibility = ["//visibility:public"])
-exports_files(["gerbil.pkg"])
+exports_files(["build.ss", "gerbil.pkg"])
 filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
 """,
     commit = "1c3225637525400341a09e958296962c10184ead",
@@ -43,7 +43,7 @@ http_archive(
     name = "gerbil_utils_sources",
     build_file_content = """
 package(default_visibility = ["//visibility:public"])
-exports_files(["gerbil.pkg"])
+exports_files(["build.ss", "gerbil.pkg"])
 filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
 """,
     sha256 = "e7777c505e71de490dc05f8e3ff4473dddbc998a99899c085d31750add551296",
@@ -54,19 +54,13 @@ filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
     ],
 )
 
-gerbil = use_extension("@gerbil_bazel//gerbil:extensions.bzl", "gerbil")
-gerbil.auto(
-    name = "dependency_gerbil",
-    expected_version_prefixes = [
-        "Gerbil 07c8481",
-        "Gerbil v0.18.2",
-    ],
-    linux_prebuilt_arch = "x86_64",
-    linux_prebuilt_sha256 = "958d5a2197ca10182eb5bac4cb351d3228c48f9a34a246007cd22fc89f93c197",
-    linux_prebuilt_urls = [
-        "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64/gerbil-v0.18.2-07c84815-linux-x86_64.tar.gz",
-    ],
+git_repository(
+    name = "gslph_sources",
+    commit = "32d948d4264af445e27696470ae4c49daa44e458",
+    remote = "https://github.com/tao3k/gerbil-scheme-language-project-harness.git",
 )
+
+gerbil = use_extension("@gerbil_bazel//gerbil:extensions.bzl", "gerbil")
 gerbil.auto(
     name = "local_gerbil",
     expected_version_prefixes = [
@@ -78,12 +72,7 @@ gerbil.auto(
     linux_prebuilt_urls = [
         "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64/gerbil-v0.18.2-07c84815-linux-x86_64.tar.gz",
     ],
-    project_dependency_packages = [
-        "clan",
-        "gslph",
-    ],
-    project_root_marker = "//:gerbil.pkg",
 )
-use_repo(gerbil, "dependency_gerbil", "local_gerbil")
+use_repo(gerbil, "local_gerbil")
 
 register_toolchains("@local_gerbil//:registered_toolchain")

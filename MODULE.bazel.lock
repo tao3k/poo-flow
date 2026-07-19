@@ -191,11 +191,11 @@
   "moduleExtensions": {
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "lQXKKAVpv9uqLOyTGVEpKuC738Y7P5HR+Cy1tfyGFQY=",
-        "usagesDigest": "vA5DIQCB7YxY4+Wh6ZErNTA7TMqpOG7q6KbWWEdvKl0=",
+        "bzlTransitiveDigest": "e2jMuirmuufo7zLpFU/CQdPBExtVxLCDQbKDMallV24=",
+        "usagesDigest": "YlcKoFGH+UVASl1p2EA5GaFaLQkGEVtEmVxaoyxziDs=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
-          "dependency_gerbil": {
+          "local_gerbil": {
             "repoRuleId": "@@gerbil_bazel+//gerbil:repository.bzl%local_gerbil_repository",
             "attributes": {
               "darwin_homebrew_formulae": [
@@ -211,29 +211,6 @@
               ],
               "project_dependency_packages": [],
               "project_library_relative_path": ".gerbil/lib",
-              "tool_paths": {}
-            }
-          },
-          "local_gerbil": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:repository.bzl%local_gerbil_repository",
-            "attributes": {
-              "darwin_homebrew_formulae": [
-                "openssl@3",
-                "sqlite",
-                "zlib"
-              ],
-              "dependency_roots": [],
-              "environment": {},
-              "expected_version_prefixes": [
-                "Gerbil 07c8481",
-                "Gerbil v0.18.2"
-              ],
-              "project_dependency_packages": [
-                "clan",
-                "gslph"
-              ],
-              "project_library_relative_path": ".gerbil/lib",
-              "project_root_marker": "@@//:gerbil.pkg",
               "tool_paths": {}
             }
           }

@@ -421,6 +421,45 @@ without changing project BUILD declarations.  It must not replace =build.ss=:
 the native Scheme project and Building Framework remain the only owners of
 topology, scheduling, compilation policy, guards, and receipts.
 
+*** Checked GSLPH component closure
+
+POO Flow must not stage the entire GSLPH repository when its build-time
+integration uses only a checked subset.  GSLPH now owns a deterministic
+import/include closure for the =poo-flow= component and publishes that closure
+as both the JSON receipt =components/poo-flow.json= and the Bazel target
+=@gslph_sources//:poo_flow_component_sources=.  POO Flow consumes the named
+target directly; it does not duplicate the list or replace the upstream
+repository's =BUILD.bazel=.
+
+The accepted source receipt contains 106 Scheme files out of the 227-file
+clean GSLPH checkout, plus =gerbil.pkg= as the package descriptor.  The first
+successful component action at revision
+=32d948d4264af445e27696470ae4c49daa44e458= recorded
+=durationSeconds=152= with a Bazel critical path of 172.27 seconds and an
+elapsed build time of 194.733 seconds.  The preceding full-source GSLPH action
+receipt was approximately 326 seconds, so the directly comparable package
+action decreased by 174 seconds, or 53.4 percent.
+
+#+begin_src mermaid
+flowchart LR
+  Roots["POO Flow GSLPH entry roots"] --> Closure["Checked import/include closure O(V + E)"]
+  Closure --> Manifest["JSON manifest: 106 of 227 Scheme files"]
+  Manifest --> Filegroup["Upstream Bazel filegroup: 107 direct inputs"]
+  Filegroup --> Stage["Sandbox-staged component source tree"]
+  Stage --> Build["build.ss and std/build-script"]
+  Build --> Library["GSLPH library output and project receipt"]
+#+end_src
+
+This receipt proves the component action improvement only.  Its dependency
+actions were cache hits, so 194.733 seconds is not a new full-cold baseline.
+The earlier 721-second dependency-chain receipt must remain the accepted
+full-cold reference until the 106-file component graph succeeds in a fresh
+output root under the same host-pressure gate.  A failed 278-second trial that
+exposed a missing relative import is diagnostic evidence, not a performance
+baseline; GSLPH now treats =../building/facade= and wrapped relative imports as
+parser-owned module facts, and the checked manifest includes the resulting
+=building/facade=, =building/model=, and =building/native-toolchain= closure.
+
 ** Runtime-C Gerbil capability convergence
 
 *** Native ABI identity owns native cache compatibility

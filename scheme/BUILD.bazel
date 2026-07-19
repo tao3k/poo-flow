@@ -1,5 +1,6 @@
 load(
     "@gerbil_bazel//gerbil:defs.bzl",
+    "gerbil_package_compile",
     "gerbil_project_compile",
     "gerbil_project_dev",
     "gerbil_project_test",
@@ -8,17 +9,52 @@ load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
 
 package(default_visibility = ["//visibility:public"])
 
-alias(
-    name = "deps",
-    actual = "@dependency_gerbil//:install_dependencies",
+gerbil_package_compile(
+    name = "gerbil_utils_package",
+    srcs = ["@gerbil_utils_sources//:sources"],
+    build_script = "@gerbil_utils_sources//:build.ss",
+    package = "github.com/mighty-gerbils/gerbil-utils",
+    revision = "f45a4ef3bfecd2af39e114ed736ce9082cbb8244",
+)
+
+gerbil_package_compile(
+    name = "gerbil_poo_package",
+    srcs = ["@gerbil_poo_sources//:sources"],
+    build_script = "@gerbil_poo_sources//:build.ss",
+    package = "github.com/mighty-gerbils/gerbil-poo",
+    revision = "1c3225637525400341a09e958296962c10184ead",
+    deps = [":gerbil_utils_package"],
+)
+
+gerbil_package_compile(
+    name = "gslph_package",
+    srcs = ["@gslph_sources//:poo_flow_component_sources"],
+    build_script = "@gslph_sources//:build.ss",
+    package = "github.com/tao3k/gerbil-scheme-language-project-harness",
+    revision = "32d948d4264af445e27696470ae4c49daa44e458",
+    deps = [":gerbil_poo_package"],
+)
+
+filegroup(
+    name = "dependency_packages",
+    srcs = [
+        ":gerbil_poo_package",
+        ":gerbil_utils_package",
+        ":gslph_package",
+    ],
 )
 
 gerbil_project_compile(
     name = "compile",
+    srcs = ["//:scheme_build_sources"],
     args = ["compile"],
     build_script = "//:build.ss",
     receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
-    srcs = ["//:scheme_build_sources"],
+    deps = [
+        ":gerbil_poo_package",
+        ":gerbil_utils_package",
+        ":gslph_package",
+    ],
 )
 
 gerbil_project_dev(
@@ -28,6 +64,11 @@ gerbil_project_dev(
     tags = [
         "local",
         "manual",
+    ],
+    deps = [
+        ":gerbil_poo_package",
+        ":gerbil_utils_package",
+        ":gslph_package",
     ],
 )
 
@@ -40,6 +81,11 @@ gerbil_project_dev(
         "manual",
     ],
     tests = ["//:t/unit-tests.ss"],
+    deps = [
+        ":gerbil_poo_package",
+        ":gerbil_utils_package",
+        ":gslph_package",
+    ],
 )
 
 filegroup(
@@ -71,10 +117,10 @@ gerbil_project_projection(
 [
     gerbil_project_test(
         name = name,
-        project = ":compile",
-        source_root_marker = "//:scheme_source_root_marker",
         size = size,
         srcs = "//:scheme_test_sources",
+        project = ":compile",
+        source_root_marker = "//:scheme_source_root_marker",
         tags = ["exclusive"],
         tests = [test_root],
     )
