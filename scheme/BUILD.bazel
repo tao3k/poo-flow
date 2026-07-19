@@ -72,6 +72,7 @@ gerbil_project_projection(
     gerbil_project_test(
         name = name,
         project = ":compile",
+        source_root_marker = "//:scheme_source_root_marker",
         size = size,
         srcs = "//:scheme_test_sources",
         tags = ["exclusive"],

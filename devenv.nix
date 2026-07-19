@@ -7,7 +7,7 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
-    pkgs.bazel_9
+    pkgs.bazelisk
     pkgs.emscripten
     pkgs.lld
     pkgs.binaryen

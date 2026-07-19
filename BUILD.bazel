@@ -22,6 +22,11 @@ filegroup(
 )
 
 filegroup(
+    name = "scheme_source_root_marker",
+    srcs = ["gerbil.pkg"],
+)
+
+filegroup(
     name = "scheme_build_sources",
     srcs = [
         "build.ss",

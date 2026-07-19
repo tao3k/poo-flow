@@ -1,6 +1,6 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-bazel := env_var_or_default("BAZEL", "bazel")
+bazel := "bazelisk"
 scheme_compile := "//scheme:compile"
 scheme_dev_compile := "//scheme:dev_compile"
 scheme_dev_unit_tests := "//scheme:dev_unit_tests"

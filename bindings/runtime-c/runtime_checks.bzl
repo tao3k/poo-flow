@@ -147,6 +147,9 @@ runtime_gerbil_script_test = rule(
     toolchains = [GERBIL_TOOLCHAIN_TYPE],
 )
 
+def _shell_quote(value):
+    return "'{}'".format(value.replace("'", "'\"'\"'"))
+
 def _runtime_gerbil_benchmark_test_impl(ctx):
     toolchain = resolved_gerbil_toolchain(ctx)
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
@@ -163,9 +166,16 @@ library="$runfiles/%s"
 library_dir="$(dirname "$library")"
 gxc="$runfiles/%s"
 gxi="$runfiles/%s"
+native_env="$runfiles/%s"
+gerbil_cc=%s
+gerbil_as=%s
+gerbil_ld=%s
 output_root="$TEST_TMPDIR/gerbil"
 mkdir -p "$output_root/lib"
-env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
+"$native_env" env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
+  GERBIL_CC="$gerbil_cc" \
+  GERBIL_AS="$gerbil_as" \
+  GERBIL_LD="$gerbil_ld" \
   "$gxc" -O -d "$output_root/lib" \
   -cc-options "-I$(dirname "$(dirname "$header")") -I$(dirname "$(dirname "$contract_header")")" \
   -ld-options "-L$library_dir -lruntime_c_shared -Wl,-rpath,$library_dir" \
@@ -182,6 +192,10 @@ env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
             library.short_path,
             toolchain.gxc.executable.short_path,
             toolchain.gxi.executable.short_path,
+            toolchain.native_scheme_env.executable.short_path,
+            _shell_quote(toolchain.gerbil_cc),
+            _shell_quote(toolchain.gerbil_as),
+            _shell_quote(toolchain.gerbil_ld),
         ),
         is_executable = True,
     )

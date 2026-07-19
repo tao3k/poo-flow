@@ -48,8 +48,10 @@ flowchart TB
   BUILDSS["Downstream build.ss"] --> ACTION["Shared gerbil_project_compile"]
   TC --> ACTION
   STAGE --> ACTION
-  ACTION --> INFO["GerbilProjectInfo<br/>project tree + log + JSON receipt"]
-  INFO --> TEST["Shared gerbil_project_test matrix<br/>one compile, many tests"]
+  ACTION --> JSONVAL["Scheme exact-one JSON validation"]
+  JSONVAL --> INFO["GerbilProjectInfo<br/>project tree + log + JSON receipt"]
+  INFO -->|"compiled project first"| TEST["Shared gerbil_project_test matrix<br/>one compile, many tests"]
+  TESTROOT["Declared test source-root marker"] -->|"source-only fallback"| TEST
   INFO --> PF["poo-flow<br/>projection + POO/runtime-C rules"]
   INFO --> SR["gerbil-scheme-rust<br/>Rust/FFI + Cargo rules"]
 #+end_src
@@ -84,6 +86,10 @@ The POO Flow consumer no longer carries compatibility implementations for:
 - bootstrap/finalize shell targets and their tests;
 - local Scheme project compile/test rules and shell runners.
 
+The shared test API also has no implicit private-compile compatibility path:
+every =gerbil_project_test= declaration names one explicit
+=GerbilProjectInfo= producer.
+
 Runtime-C contract and test rules consume the same public
 =GERBIL_TOOLCHAIN_TYPE= and unified toolchain =runfiles= depset as the Scheme
 project rules.  The only remaining local Scheme Bazel rule is the POO-specific
@@ -93,14 +99,19 @@ projection from shared =GerbilProjectInfo=.
 
 ** Shared provider
 
-- =gerbil-bazel= commit: =76edcbf2f3e331774bc6162126328cb729df2ff5=;
-- local =just check=: 18 query targets, build, and eight of eight project,
-  receipt, and provider tests
-  passed;
-- platform-adaptive host consumer: passed in 50 seconds;
-- synthetic prebuilt consumer: passed in 56 seconds;
-- the prebuilt dependency install completed in 9 seconds, re-evaluated the
-  project view in 3 seconds, and emitted =dependencyTransition=true=.
+- =gerbil-bazel= main commit: =5b15eea2699aff2c208fa58fe78d0e49bb2040ea=;
+- upstream GitHub CI: Linux source and macOS Homebrew-provider jobs passed,
+  including ten of ten project, receipt, provider, and declared source-root
+  tests;
+- platform-adaptive host consumer: passed in 43 seconds;
+- synthetic prebuilt consumer: passed in 53 seconds;
+- the prebuilt dependency install completed in 3 seconds, re-evaluated the
+  project view in 4 seconds, and emitted =dependencyTransition=true=;
+- both provider gates resolved the command-name override =GERBIL_CC=cc= before
+  toolchain registration and compiled a minimal Gerbil module through the
+  selected =gxc -> gsc= chain;
+- generic and prefixed receipts are declared action outputs and are validated
+  by Gerbil's native JSON reader as exactly one JSON value.
 
 ** POO Flow consumer
 
@@ -119,7 +130,10 @@ projection from shared =GerbilProjectInfo=.
 - the full Bazel target graph queries successfully after legacy deletion;
 - runtime-C resolves through
   =@gerbil_bazel//gerbil:toolchain_type=;
-- =//tools/bazel:shared_gerbil_capability_test= passed in 0.6 seconds;
+- all six shared Scheme test targets declare =gerbil.pkg= as their source-root
+  marker while keeping the compiled project library first on
+  =GERBIL_LOADPATH=;
+- =//tools/bazel:shared_gerbil_capability_test= passed in 0.4 seconds;
 - =//bindings/runtime-c:runtime_v0_symbol_surface_test= passed in 10.5
   seconds.
 
@@ -131,19 +145,22 @@ projection from shared =GerbilProjectInfo=.
   deleted;
 - all Scheme tests point at one =//scheme:compile= provider instead of
   declaring a compile action per test;
+- test-only Scheme modules are declared runfiles and resolve through the
+  shared source-root fallback without shadowing the compiled project under
+  test;
 - the only remaining local Scheme Bazel rule is the POO-specific projection
   from shared =GerbilProjectInfo=.
 
 The local clean POO Flow compile entered the shared Darwin sandbox action but
 was correctly stopped by the Scheme admission guard before compilation because
-the host reported 127 runnable processes on 12 logical CPUs.  This receipt is
+the host reported 92 runnable processes on 12 logical CPUs.  This receipt is
 guard evidence, not a cold-time result.  The macOS and Linux GitHub runners own
 the unsaturated staged-project acceptance receipt.
 
 * Performance gate
 
 Cold timing is invalid under runnable saturation.  The latest observed host had
-12 logical CPUs and 127 runnable processes.  The Scheme guard uses the
+12 logical CPUs and 92 runnable processes.  The Scheme guard uses the
 machine-adaptive threshold =logical-cpu-count * 2=, emitted
 =blocked-host-pressure= with =runnable-saturation=, and reported
 =compiled-stage-count=0=.  No downstream migration may bypass that guard or
