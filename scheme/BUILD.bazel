@@ -75,7 +75,7 @@ gerbil_project_projection(
         size = size,
         srcs = "//:scheme_test_sources",
         tags = ["exclusive"],
-        test_files = [test_root],
+        tests = [test_root],
     )
     for name, size, test_root in [
         ("unit_tests", "medium", "//:t/unit-tests.ss"),

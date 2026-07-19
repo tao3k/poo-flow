@@ -93,12 +93,13 @@ projection from shared =GerbilProjectInfo=.
 
 ** Shared provider
 
-- =gerbil-bazel= commit: =70b5f2038eba2cd15439509ea1ef7487a934e3bc=;
-- local =just check=: 10 query targets, build, and four of four smoke tests
+- =gerbil-bazel= commit: =76edcbf2f3e331774bc6162126328cb729df2ff5=;
+- local =just check=: 18 query targets, build, and eight of eight project,
+  receipt, and provider tests
   passed;
-- platform-adaptive host consumer: passed in 52 seconds;
-- synthetic prebuilt consumer: passed in 53 seconds;
-- the prebuilt dependency install completed in 7 seconds, re-evaluated the
+- platform-adaptive host consumer: passed in 50 seconds;
+- synthetic prebuilt consumer: passed in 56 seconds;
+- the prebuilt dependency install completed in 9 seconds, re-evaluated the
   project view in 3 seconds, and emitted =dependencyTransition=true=.
 
 ** POO Flow consumer
