@@ -18,6 +18,7 @@ GerbilProjectionInfo = provider(
 def _gerbil_project_projection_impl(ctx):
     toolchain = resolved_gerbil_toolchain(ctx)
     project = ctx.attr.project[GerbilProjectInfo]
+    project_dependency_roots = project.dependency_roots.to_list()
     artifact = ctx.actions.declare_file(ctx.attr.output_name)
 
     arguments = ctx.actions.args()
@@ -27,6 +28,9 @@ def _gerbil_project_projection_impl(ctx):
     arguments.add(project.project_root.path + "/.gerbil")
     arguments.add("--dependency-root-marker")
     arguments.add(toolchain.dependency_library_root.path)
+    for dependency_root in project_dependency_roots:
+        arguments.add("--project-dependency-root")
+        arguments.add(dependency_root.path)
     arguments.add("--projection-source")
     arguments.add(ctx.file.projection_source.path)
     arguments.add("--source")
@@ -51,7 +55,7 @@ def _gerbil_project_projection_impl(ctx):
                 toolchain.dependency_library_root,
                 toolchain.native_abi_fingerprint_file,
             ],
-            transitive = [toolchain.dependency_libraries],
+            transitive = [project.dependency_roots, toolchain.dependency_libraries],
         ),
         mnemonic = "GerbilProjectProjection",
         outputs = [artifact],

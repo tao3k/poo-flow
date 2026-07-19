@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,6 +18,8 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             projection = root / "runtime-load-projection.ss"
             compiled_root = root / "compiled"
             dependency_marker = root / "dependencies" / ".root"
+            project_dependency_root = root / "package"
+            loadpath_capture = root / "loadpath.txt"
             output = root / "flow.ss.poo-flow-projection.sexp"
             fake_gxi = root / "gxi"
 
@@ -25,8 +28,10 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
             (compiled_root / "lib" / "poo-flow").mkdir(parents=True)
             dependency_marker.parent.mkdir(parents=True)
             dependency_marker.write_text("dependencies\n", encoding="utf-8")
+            (project_dependency_root / ".gerbil" / "lib").mkdir(parents=True)
             fake_gxi.write_text(
                 "#!/bin/sh\n"
+                f"printf '%s' \"$GERBIL_LOADPATH\" >'{loadpath_capture}'\n"
                 "printf '%s\\n' '((\"schema\" \"projection.v1\") "
                 "(\"name\" \"smoke\"))'\n",
                 encoding="utf-8",
@@ -41,6 +46,8 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
                     str(compiled_root),
                     "--dependency-root-marker",
                     str(dependency_marker),
+                    "--project-dependency-root",
+                    str(project_dependency_root),
                     "--projection-source",
                     str(projection),
                     "--source",
@@ -61,6 +68,16 @@ class SchemeProjectionArtifactToolTest(unittest.TestCase):
                 ),
             )
             self.assertEqual(status, 0)
+            self.assertEqual(
+                loadpath_capture.read_text(encoding="utf-8"),
+                os.pathsep.join(
+                    (
+                        str((compiled_root / "lib").resolve()),
+                        str((project_dependency_root / ".gerbil" / "lib").resolve()),
+                        str(dependency_marker.parent.resolve()),
+                    )
+                ),
+            )
             self.assertEqual(
                 output.read_text(encoding="utf-8"),
                 write_scheme_datum(expected) + "\n",

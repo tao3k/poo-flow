@@ -22,6 +22,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     projection = Path(args.projection_source).resolve()
     compiled_root = Path(args.compiled_root).resolve()
     dependency_root = Path(args.dependency_root_marker).resolve().parent
+    project_dependency_roots = tuple(
+        Path(root).resolve() for root in args.project_dependency_root
+    )
     output = Path(args.output).resolve()
 
     rows = _load_projection_rows(
@@ -30,6 +33,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         projection=projection,
         compiled_root=compiled_root,
         dependency_root=dependency_root,
+        project_dependency_roots=project_dependency_roots,
     )
     _write_projection_artifact(
         output=output,
@@ -62,6 +66,7 @@ def _argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--gxi", required=True)
     parser.add_argument("--compiled-root", required=True)
     parser.add_argument("--dependency-root-marker", required=True)
+    parser.add_argument("--project-dependency-root", action="append", default=[])
     parser.add_argument("--projection-source", required=True)
     parser.add_argument("--source", required=True)
     parser.add_argument("--output", required=True)
@@ -75,6 +80,7 @@ def _load_projection_rows(
     projection: Path,
     compiled_root: Path,
     dependency_root: Path,
+    project_dependency_roots: tuple[Path, ...],
 ) -> tuple[object, ...]:
     runner_source = (
         "(import :poo-flow/src/module-system/init-syntax\n"
@@ -92,7 +98,11 @@ def _load_projection_rows(
     env = dict(os.environ)
     env["GERBIL_PATH"] = str(compiled_root)
     env["GERBIL_LOADPATH"] = os.pathsep.join(
-        (str(compiled_root / "lib"), str(dependency_root))
+        (
+            str(compiled_root / "lib"),
+            *(str(root / ".gerbil" / "lib") for root in project_dependency_roots),
+            str(dependency_root),
+        )
     )
     try:
         result = subprocess.run(
