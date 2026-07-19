@@ -431,29 +431,35 @@ as both the JSON receipt =components/poo-flow.json= and the Bazel target
 target directly; it does not duplicate the list or replace the upstream
 repository's =BUILD.bazel=.
 
-The accepted source receipt contains 118 Scheme files out of the 227-file
-clean GSLPH checkout, plus =gerbil.pkg= as the package descriptor.  The first
-successful component action at revision
+The accepted source receipt contains 120 Scheme files out of the 227-file
+clean GSLPH checkout, plus =gerbil.pkg= as the package descriptor.  Revision
+=dd4b1aa6c0c379435af69ed8bf9d0d848383c9c0= completed with
+=durationSeconds=289=, a Bazel critical path of 320.76 seconds, and an elapsed
+build time of 397.372 seconds.  This is functional closure evidence, not a
+performance baseline: an adjacent root compile guard measured 129 runnable
+processes, while the GSLPH package receipt exposes no admission-pressure
+fields.  The preceding lower-pressure 118-file action at revision
 =49a4cac696855fb129fba321813996ba840abb98= recorded
-=durationSeconds=194= with a Bazel critical path of 215.49 seconds and an
-elapsed build time of 253.119 seconds.  The preceding full-source GSLPH action
-receipt was approximately 326 seconds, so the directly comparable package
-action decreased by 132 seconds, or 40.5 percent.
+=durationSeconds=194=.  Against the approximately 326-second full-source
+GSLPH action, that directly comparable action decreased by 132 seconds, or
+40.5 percent.
 
 #+begin_src mermaid
 flowchart LR
   Roots["POO Flow GSLPH entry roots"] --> Closure["Checked import/include closure O(V + E)"]
-  Closure --> Manifest["JSON manifest: 118 of 227 Scheme files"]
-  Manifest --> Filegroup["Upstream Bazel filegroup: 119 direct inputs"]
+  Closure --> Manifest["JSON manifest: 120 of 227 Scheme files"]
+  Manifest --> Filegroup["Upstream Bazel filegroup: 121 direct inputs"]
   Filegroup --> Stage["Sandbox-staged component source tree"]
   Stage --> Build["build.ss and std/build-script"]
   Build --> Library["GSLPH library output and project receipt"]
 #+end_src
 
-This receipt proves the component action improvement only.  Its dependency
-actions were cache hits, so 253.119 seconds is not a new full-cold baseline.
+The 194-second receipt proves the component action improvement only.  Its
+dependency actions were cache hits, so it is not a new full-cold baseline.
+The 289-second current-revision receipt is retained as load-contaminated
+functional evidence and is not substituted into the performance comparison.
 The earlier 721-second dependency-chain receipt must remain the accepted
-full-cold reference until the 118-file component graph succeeds in a fresh
+full-cold reference until the 120-file component graph succeeds in a fresh
 output root under the same host-pressure gate.  A failed 278-second trial that
 exposed a missing relative import is diagnostic evidence, not a performance
 baseline; GSLPH now treats =../building/facade= and wrapped relative imports as
@@ -463,6 +469,10 @@ Revision =49a4cac696855fb129fba321813996ba840abb98= additionally declares
 =src/testing/build.ss= as an external-facing component root, so POO Flow's
 =src/testing/project.ss= resolves the complete GSLPH testing/build closure
 without staging the unrelated remainder of the upstream repository.
+Revision =dd4b1aa6c0c379435af69ed8bf9d0d848383c9c0= also declares
+=src/extensions/poo-object-validation.ss= as an external-facing root, bringing
+its =poo-source-ref-validation= dependency into the checked closure for the
+sandbox resource-contract compiler path.
 
 ** Runtime-C Gerbil capability convergence
 

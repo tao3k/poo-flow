@@ -56,7 +56,7 @@ filegroup(name = "sources", srcs = glob(["**/*.ss", "gerbil.pkg"]))
 
 git_repository(
     name = "gslph_sources",
-    commit = "49a4cac696855fb129fba321813996ba840abb98",
+    commit = "dd4b1aa6c0c379435af69ed8bf9d0d848383c9c0",
     remote = "https://github.com/tao3k/gerbil-scheme-language-project-harness.git",
 )
 
