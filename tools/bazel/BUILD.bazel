@@ -1,18 +1,10 @@
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@rules_python//python:py_test.bzl", "py_test")
-load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 exports_files([
-    "gerbil_project.bzl",
-    "run_scheme_project.sh",
-    "run_scheme_tests.sh",
+    "gerbil_projection.bzl",
 ])
-
-sh_binary(
-    name = "run_scheme_project",
-    srcs = ["run_scheme_project.sh"],
-)
 
 sh_test(
     name = "shared_gerbil_capability_test",

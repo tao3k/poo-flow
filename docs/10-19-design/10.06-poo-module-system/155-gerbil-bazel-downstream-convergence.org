@@ -16,13 +16,16 @@ limit.
 - toolchain and native ABI providers;
 - normalized =gxi=, =gxc=, =gxpkg=, and =gxtest= executables;
 - project-declared Gerbil library views;
+- writable staged project actions driven by the consumer =build.ss=;
+- reusable =GerbilProjectInfo=, complete logs, and JSON receipts;
 - the workspace-aware =install_dependencies= capability.
 
 Downstream repositories retain only domain rules and build truth.  POO Flow
-retains =build.ss=, Scheme project projection, runtime-C rules, receipts, and
-POO-specific policy.  =gerbil-scheme-rust= retains Rust/FFI and Cargo domain
-rules.  Neither downstream owns a second generic Gerbil repository or
-toolchain implementation.
+retains =build.ss=, its Scheme-owned semantic receipt, Scheme project
+projection, runtime-C rules, and POO-specific policy.  =gerbil-scheme-rust=
+retains Rust/FFI and Cargo domain rules.  Neither downstream owns a second
+generic Gerbil repository, toolchain, project compile, project test, or
+project-development implementation.
 
 #+begin_src mermaid
 flowchart TB
@@ -41,8 +44,14 @@ flowchart TB
   PROJECT --> VIEW
   VIEW --> TC
 
-  TC --> PF["poo-flow<br/>build.ss + POO/runtime-C rules"]
-  TC --> SR["gerbil-scheme-rust<br/>Rust/FFI + Cargo rules"]
+  SOURCE["Declared downstream sources"] --> STAGE["Writable staged project tree"]
+  BUILDSS["Downstream build.ss"] --> ACTION["Shared gerbil_project_compile"]
+  TC --> ACTION
+  STAGE --> ACTION
+  ACTION --> INFO["GerbilProjectInfo<br/>project tree + log + JSON receipt"]
+  INFO --> TEST["Shared gerbil_project_test matrix<br/>one compile, many tests"]
+  INFO --> PF["poo-flow<br/>projection + POO/runtime-C rules"]
+  INFO --> SR["gerbil-scheme-rust<br/>Rust/FFI + Cargo rules"]
 #+end_src
 
 * Public capability contract
@@ -53,6 +62,8 @@ Every host or prebuilt provider repository publishes:
 - =native_scheme_env= and the four normalized Gerbil tools;
 - =dependency_libraries= and =dependency_library_root=;
 - =toolchain.receipt.json=;
+- =gerbil_project_compile=, =gerbil_project_dev=,
+  =gerbil_project_test=, and =GerbilProjectInfo=;
 - =install_dependencies=.
 
 The dependency installer enters =BUILD_WORKSPACE_DIRECTORY=, defaults
@@ -70,23 +81,25 @@ The POO Flow consumer no longer carries compatibility implementations for:
 - native ABI fingerprinting;
 - native tool and environment templates;
 - dependency-install templates;
-- bootstrap/finalize shell targets and their tests.
+- bootstrap/finalize shell targets and their tests;
+- local Scheme project compile/test rules and shell runners.
 
 Runtime-C contract and test rules consume the same public
 =GERBIL_TOOLCHAIN_TYPE= and unified toolchain =runfiles= depset as the Scheme
-project rules.
+project rules.  The only remaining local Scheme Bazel rule is the POO-specific
+projection from shared =GerbilProjectInfo=.
 
 * Acceptance receipts
 
 ** Shared provider
 
-- =gerbil-bazel= commit: =c3f9ef9eed755095630e32185822984f2139a683=;
+- =gerbil-bazel= commit: =70b5f2038eba2cd15439509ea1ef7487a934e3bc=;
 - local =just check=: 10 query targets, build, and four of four smoke tests
   passed;
-- platform-adaptive host consumer: passed in 46 seconds;
-- synthetic prebuilt consumer: passed in 49 seconds;
+- platform-adaptive host consumer: passed in 52 seconds;
+- synthetic prebuilt consumer: passed in 53 seconds;
 - the prebuilt dependency install completed in 7 seconds, re-evaluated the
-  project view in 2 seconds, and emitted =dependencyTransition=true=.
+  project view in 3 seconds, and emitted =dependencyTransition=true=.
 
 ** POO Flow consumer
 
@@ -98,6 +111,10 @@ project rules.
   provider and Linux selects the immutable prebuilt provider;
 - the module extension is =os_dependent=True=, preventing a checked-in
   Darwin evaluation from being replayed as a host provider on Linux;
+- the downstream Bazel version is declared as =9.2.0=, matching the shared
+  library validation surface;
+- the prebuilt installer injects the selected provider environment before the
+  first raw =gxpkg= process, so relocated =:gerbil/core= resolution is valid;
 - the full Bazel target graph queries successfully after legacy deletion;
 - runtime-C resolves through
   =@gerbil_bazel//gerbil:toolchain_type=;
@@ -105,10 +122,27 @@ project rules.
 - =//bindings/runtime-c:runtime_v0_symbol_surface_test= passed in 10.5
   seconds.
 
+*** Shared project action convergence
+
+- =//scheme:compile=, the development launchers, and the Scheme test matrix
+  load only =@gerbil_bazel//gerbil:defs.bzl=;
+- the local generic project rule and both local Scheme shell runners are
+  deleted;
+- all Scheme tests point at one =//scheme:compile= provider instead of
+  declaring a compile action per test;
+- the only remaining local Scheme Bazel rule is the POO-specific projection
+  from shared =GerbilProjectInfo=.
+
+The local clean POO Flow compile entered the shared Darwin sandbox action but
+was correctly stopped by the Scheme admission guard before compilation because
+the host reported 127 runnable processes on 12 logical CPUs.  This receipt is
+guard evidence, not a cold-time result.  The macOS and Linux GitHub runners own
+the unsaturated staged-project acceptance receipt.
+
 * Performance gate
 
-Cold timing is invalid under runnable saturation.  The observed host had 12
-logical CPUs and up to 95 runnable processes.  The Scheme guard uses the
+Cold timing is invalid under runnable saturation.  The latest observed host had
+12 logical CPUs and 127 runnable processes.  The Scheme guard uses the
 machine-adaptive threshold =logical-cpu-count * 2=, emitted
 =blocked-host-pressure= with =runnable-saturation=, and reported
 =compiled-stage-count=0=.  No downstream migration may bypass that guard or

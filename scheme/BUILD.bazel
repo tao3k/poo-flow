@@ -1,10 +1,10 @@
 load(
-    "//tools/bazel:gerbil_project.bzl",
+    "@gerbil_bazel//gerbil:defs.bzl",
     "gerbil_project_compile",
     "gerbil_project_dev",
-    "gerbil_project_projection",
     "gerbil_project_test",
 )
+load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -15,13 +15,15 @@ alias(
 
 gerbil_project_compile(
     name = "compile",
-    srcs = "//:scheme_build_sources",
+    args = ["compile"],
     build_script = "//:build.ss",
+    receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
+    srcs = ["//:scheme_build_sources"],
 )
 
 gerbil_project_dev(
     name = "dev_compile",
-    srcs = "//:scheme_build_sources",
+    args = ["compile"],
     build_script = "//:build.ss",
     tags = [
         "local",
@@ -31,19 +33,19 @@ gerbil_project_dev(
 
 gerbil_project_dev(
     name = "dev_unit_tests",
-    srcs = "//:scheme_test_sources",
+    args = ["compile"],
     build_script = "//:build.ss",
     tags = [
         "local",
         "manual",
     ],
-    test_root = "//:t/unit-tests.ss",
+    tests = ["//:t/unit-tests.ss"],
 )
 
 filegroup(
-    name = "compiled_root",
+    name = "project_root",
     srcs = [":compile"],
-    output_group = "compiled_root",
+    output_group = "project_root",
 )
 
 filegroup(
@@ -66,40 +68,28 @@ gerbil_project_projection(
     source = "//packages/python-runtime/src/poo_flow_runtime:wheel_smoke_projection_source",
 )
 
-gerbil_project_test(
-    name = "unit_tests",
-    test_root = "//:t/unit-tests.ss",
-)
-
-gerbil_project_test(
-    name = "contract_tests",
-    size = "small",
-    test_root = "//:t/contract-tests.ss",
-)
-
-gerbil_project_test(
-    name = "cli_support_tests",
-    size = "small",
-    test_root = "//:t/cli-support-tests.ss",
-)
-
-gerbil_project_test(
-    name = "integration_tests",
-    size = "small",
-    test_root = "//:t/integration-tests.ss",
-)
-
-gerbil_project_test(
-    name = "performance_tests",
-    size = "large",
-    test_root = "//:t/performance-tests.ss",
-)
-
-gerbil_project_test(
-    name = "user_interface_custom_loop_engine_capability_test",
-    size = "large",
-    test_root = "//:t/user-interface-custom-loop-engine-capability-test.ss",
-)
+[
+    gerbil_project_test(
+        name = name,
+        project = ":compile",
+        size = size,
+        srcs = "//:scheme_test_sources",
+        tags = ["exclusive"],
+        test_files = [test_root],
+    )
+    for name, size, test_root in [
+        ("unit_tests", "medium", "//:t/unit-tests.ss"),
+        ("contract_tests", "small", "//:t/contract-tests.ss"),
+        ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
+        ("integration_tests", "small", "//:t/integration-tests.ss"),
+        ("performance_tests", "large", "//:t/performance-tests.ss"),
+        (
+            "user_interface_custom_loop_engine_capability_test",
+            "large",
+            "//:t/user-interface-custom-loop-engine-capability-test.ss",
+        ),
+    ]
+]
 
 test_suite(
     name = "tests",
