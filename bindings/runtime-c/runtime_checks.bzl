@@ -163,18 +163,9 @@ library="$runfiles/%s"
 library_dir="$(dirname "$library")"
 gxc="$runfiles/%s"
 gxi="$runfiles/%s"
-gerbil_cc="$runfiles/%s"
-gerbil_as="$runfiles/%s"
-gerbil_ld="$runfiles/%s"
 output_root="$TEST_TMPDIR/gerbil"
 mkdir -p "$output_root/lib"
-compiler_dir="$TEST_TMPDIR/compiler-bin"
-mkdir -p "$compiler_dir"
-ln -s "$gerbil_cc" "$compiler_dir/gcc-16"
-ln -s "$gerbil_as" "$compiler_dir/as"
-ln -s "$gerbil_ld" "$compiler_dir/ld"
 env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
-  PATH="$compiler_dir:$PATH" \
   "$gxc" -O -d "$output_root/lib" \
   -cc-options "-I$(dirname "$(dirname "$header")") -I$(dirname "$(dirname "$contract_header")")" \
   -ld-options "-L$library_dir -lruntime_c_shared -Wl,-rpath,$library_dir" \
@@ -191,9 +182,6 @@ env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
             library.short_path,
             toolchain.gxc.executable.short_path,
             toolchain.gxi.executable.short_path,
-            toolchain.gerbil_cc.short_path,
-            toolchain.gerbil_as.short_path,
-            toolchain.gerbil_ld.short_path,
         ),
         is_executable = True,
     )
@@ -203,11 +191,8 @@ env -u CPATH -u C_INCLUDE_PATH -u LIBRARY_PATH \
         ctx.file.package_file,
         ctx.file.source,
         library,
-        toolchain.gerbil_as,
-        toolchain.gerbil_cc,
-        toolchain.gerbil_ld,
     ])
-    runfiles = runfiles.merge(toolchain.runfiles)
+    runfiles = runfiles.merge(ctx.runfiles(transitive_files = toolchain.runfiles))
     return [DefaultInfo(executable = executable, runfiles = runfiles)]
 
 runtime_gerbil_benchmark_test = rule(
