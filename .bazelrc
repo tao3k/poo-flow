@@ -1,4 +1,6 @@
 common --enable_platform_specific_config
+common --lockfile_mode=error
+common:lock_update --lockfile_mode=update
 build --enable_bzlmod
 build --incompatible_strict_action_env
 test --test_output=errors

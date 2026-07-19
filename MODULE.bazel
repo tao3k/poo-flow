@@ -8,9 +8,18 @@ bazel_dep(name = "rules_python", version = "1.7.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
+
+GERBIL_LINUX_INSTALL_DIGEST = "ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208"
+
+GERBIL_LINUX_SHA256 = "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978f9d5fe7"
+
+GERBIL_LINUX_URLS = [
+    "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208.tar.gz",
+]
+
 git_override(
     module_name = "gerbil_bazel",
-    commit = "895db1fcf1858438ffc2a4a4c079c45ec5dad610",
+    commit = "7c5f595ccc4c18dba93ebffa7d5c57d233638ea4",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 
@@ -72,14 +81,13 @@ gerbil = use_extension("@gerbil_bazel//gerbil:extensions.bzl", "gerbil")
 gerbil.auto(
     name = "local_gerbil",
     expected_version_prefixes = [
-        "Gerbil 07c8481",
         "Gerbil v0.18.2",
+        "Gerbil 07c8481",
     ],
     linux_prebuilt_arch = "x86_64",
-    linux_prebuilt_sha256 = "958d5a2197ca10182eb5bac4cb351d3228c48f9a34a246007cd22fc89f93c197",
-    linux_prebuilt_urls = [
-        "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64/gerbil-v0.18.2-07c84815-linux-x86_64.tar.gz",
-    ],
+    linux_prebuilt_install_digest = GERBIL_LINUX_INSTALL_DIGEST,
+    linux_prebuilt_sha256 = GERBIL_LINUX_SHA256,
+    linux_prebuilt_urls = GERBIL_LINUX_URLS,
 )
 use_repo(gerbil, "local_gerbil")
 

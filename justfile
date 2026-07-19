@@ -99,3 +99,18 @@ test-performance:
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
 check: query build test test-gerbil-capability test-scheme-receipt
+
+# Verify that dependency resolution is represented by the tracked lock.
+[group('dependency')]
+lock-check:
+    {{ bazel }} mod deps --lockfile_mode=error
+
+# Explicitly refresh the host-platform module-extension evaluation.
+[group('dependency')]
+lock-update:
+    {{ bazel }} mod deps --config=lock_update
+
+# Normalize MODULE.bazel declarations while explicitly updating the lock.
+[group('dependency')]
+mod-tidy:
+    {{ bazel }} mod tidy --config=lock_update
