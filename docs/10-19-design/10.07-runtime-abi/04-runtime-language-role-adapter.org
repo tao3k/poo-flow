@@ -166,9 +166,35 @@ When adding a new runtime language, follow this checklist:
    - events
    - debug
 6. Add durable checkpoint and replay only after the stream contract is stable.
-7. Add async/cancellation/backpressure only as runtime substrate behavior.
+7. [X] Add async/cancellation/backpressure only as runtime substrate behavior.
 8. Add backend-specific performance gates.
 9. Document every backend as substrate-only, never as strategy authority.
+
+** 2026-07-20 Async Substrate Qualification Receipt
+
+The qualification owner is
+=packages/python-runtime/tests/unit/test_anyio_runtime.py=.  It proves the
+bounded Python runtime substrate behavior required by checklist item 7:
+
+- =max_concurrency=2= limits concurrent work while preserving ordered results;
+  a third-worker probe plus scheduler checkpoints before release proves that no
+  excess worker starts.
+- Task-group cancellation cleans up both active actions.
+- =astream= consumption of one chunk does not prefetch the second node.
+- Both synchronized scenarios use =anyio.fail_after(2)= so concurrency or
+  cancellation regressions fail closed instead of hanging.
+
+The focused qualification completed with =8 passed in 1.97s=.  The unaffected
+runtime selection completed with =189 passed, 8 skipped, 6 deselected in
+3.53s=.
+
+The full suite is not repository-wide green: it completed with =190 passed, 7
+skipped, 6 failed=.  All six failures are caused by the current dirty
+module-system state, where =gxi= cannot load
+=:poo-flow/src/module-system/init-syntax= or the durable modules.  This receipt
+therefore qualifies the Python async/cancellation/backpressure substrate only;
+it does not introduce a second runtime, change C ABI semantics, or claim full
+repository acceptance.
 
 * Anti-Goals
 
