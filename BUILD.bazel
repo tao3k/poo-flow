@@ -22,6 +22,36 @@ filegroup(
 )
 
 filegroup(
+    name = "runtime_wasm_generator_build_script",
+    srcs = ["runtime-wasm-generator-build.ss"],
+)
+
+filegroup(
+    name = "runtime_wasm_generator_scheme_sources",
+    srcs = [
+        "gerbil.pkg",
+        "src/projection-syntax-support.ss",
+        "src/core/failure.ss",
+        "src/core/flow-declarations.ss",
+        "src/core/flow-strand.ss",
+        "src/core/flow.ss",
+        "src/core/object-syntax.ss",
+        "src/core/plan.ss",
+        "src/core/projection-syntax.ss",
+        "src/core/roles.ss",
+        "src/core/task.ss",
+        "src/core/typescript-plan.ss",
+        "src/module-system/composition-typescript.ss",
+        "src/module-system/profile-composition-accessors.ss",
+        "src/module-system/profile-composition-builders.ss",
+        "src/module-system/profile-composition-inline-runtime.ss",
+        "src/module-system/profile-composition-syntax-plan.ss",
+        "src/module-system/profile-composition-use-syntax.ss",
+        "src/module-system/profile-composition.ss",
+    ],
+)
+
+filegroup(
     name = "scheme_source_root_marker",
     srcs = ["gerbil.pkg"],
 )

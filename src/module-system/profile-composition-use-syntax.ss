@@ -139,9 +139,19 @@
               (syntax->list #'(form ...))
               stx))
             (alias (composition-syntax-plan-alias plan))
+            (profile-refs (composition-syntax-plan-compose plan))
             (compose-expressions
-             (poo-flow-composition-lower-profile-refs
-              (composition-syntax-plan-compose plan)))
+             (poo-flow-composition-lower-profile-refs profile-refs))
+            (profile-binding-expressions
+             (map
+              (lambda (profile-ref)
+                (with-syntax
+                    ((module
+                      (composition-profile-ref-syntax-module profile-ref))
+                     (slot
+                      (composition-profile-ref-syntax-slot profile-ref)))
+                  #'(poo-flow-composition-profile-binding 'module 'slot)))
+              profile-refs))
             (stage-expressions
              (poo-flow-composition-lower-stages
               (composition-syntax-plan-stages plan))))
@@ -154,15 +164,18 @@
               ((profile-name ...) profile-names)
               ((profile-expression ...) profile-expressions)
               ((compose-expression ...) compose-expressions)
+              ((profile-binding-expression ...)
+               profile-binding-expressions)
               ((stage-expression ...) stage-expressions))
            (syntax/loc stx
              (let ((alias
                     (poo-flow-composition-inline-module
                      '(profile-name ...)
                      (list profile-expression ...))))
-               (poo-flow-composition-object/profiles
+               (poo-flow-composition-object/profile-bindings
                 'composition-name
                 (list
                  (poo-flow-composition-module-binding 'alias alias))
                 (list compose-expression ...)
-                (list stage-expression ...))))))))))
+                (list stage-expression ...)
+                (list profile-binding-expression ...))))))))))
