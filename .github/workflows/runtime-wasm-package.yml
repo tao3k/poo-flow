@@ -156,4 +156,4 @@ jobs:
             echo "$name@$version is already published"
             exit 0
           fi
-          npm publish --access public --provenance
+          npm publish --access public --provenance --ignore-scripts
