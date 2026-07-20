@@ -172,9 +172,9 @@ When adding a new runtime language, follow this checklist:
 
 ** 2026-07-20 AnyIO Performance Qualification Receipt
 
-The prior six-sample receipt and its 83.08-second serial-sleeper reference are
-rejected.  The replacement uses 10,000 observations per side and the
-same-semantics native reference documented in
+The prior 83.08-second serial-sleeper reference remains rejected.  The current
+10,000-observation same-semantics receipt and its immediately preceding failing
+baseline are documented in
 [[file:14-runtime-benchmark-surface.org::*AnyIO micro qualification][RFC14 AnyIO and burst benchmark evidence]].
 
 #+begin_src sh
@@ -183,25 +183,28 @@ same-semantics native reference documented in
 
 | Phase | Candidate median (ns/item) | Native reference median (ns/item) | Ratio | Threshold | Result |
 |-
-| Cold | 1474987.875 | 119718.750 | 12.320442 | report-only | report-only |
-| Warm | 355732.646 | 177420.146 | 2.005030 | 1.498493 | fail |
-| Reused input | 370962.688 | 182045.125 | 2.037751 | 1.515655 | fail |
+| Cold | 754894.083 | 204175.333 | 3.697283 | report-only | report-only |
+| Warm | 230581.604 | 167241.333 | 1.378736 | 1.545946 | pass |
+| Reused input | 242577.250 | 182040.812 | 1.332543 | 1.613416 | pass |
 
 The run used a 10,000-observation steady-state target, 418 timing pairs, 24
-items per pair, and 10,032 actual observations per side.  It exited 1 after
-=real 17.64=, =user 3.54=, and =sys 0.72=.  The same-semantics reference cut
-wall time by 78.8 percent while exposing approximately 2x candidate
-graph/runtime overhead in both qualified steady-state modes.
+items per pair, and 10,032 actual observations per side.  It exited 0 after
+=real 13.34=, =user 1.68=, and =sys 0.18=.  The previous same-semantics run
+took 17.64 seconds and failed with warm and reused-input ratios of 2.005030 and
+2.037751.  The current implementation validates and prepares one executor per
+public =abatch= call, reuses it only within that batch, and refreshes it for the
+next batch; it introduces no permanent program cache.
 
-The action-internal burst suite selected capacity 1,000 on a 12-CPU host.
-Throughput was 2087.287, 1913.619, and 1768.417 cases/s for populations 1,000,
-10,000, and 100,000 respectively; the 100,000-case population completed in
-56547.755 ms with peak live tasks 80 and zero failures.  This improves over
-the capacity-12 baseline but does not establish a graph-native parallelism
-claim or a root fix.  The 13,574,584-byte peak-memory result belongs to a
-separate traced 10,000-item profile and is not a no-trace baseline.
+The action-internal burst suite selected capacity 48 from candidates 12, 24,
+48, 96, 192, 384, 768, and 1,000.  The 100,000-case population completed in
+29499.281 ms at 3389.913 cases/s with peak live cases 48 and zero failures.
+Against the preceding capacity-1,000 receipt, makespan fell about 47.8 percent,
+throughput rose about 91.7 percent, and startup p99 fell about 48.0 percent.
+The separate traced 10,000-case capacity-48 profile recorded 5,701,328 bytes;
+it is neither a no-trace throughput baseline nor a strict like-for-like ratio
+against the earlier 13,574,584-byte capacity-1,000 profile.
 
-This focused Python runtime receipt is failing and does not claim a
+This focused Python runtime performance receipt passes but does not claim a
 repository-wide green state.  Existing module-system and other full-suite
 blockers remain independent; no Rust, TypeScript, C ABI, Gerbil, or Bazel
 semantic change is introduced here.

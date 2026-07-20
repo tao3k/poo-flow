@@ -24,7 +24,7 @@ uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks c
   --iterations 10 --fanout 8
 /usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
 /usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
-/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 1000 --trace-memory
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 48 --trace-memory
 #+end_src
 
 * Composition suite
@@ -41,6 +41,12 @@ The C ABI scenarios intentionally separate the loaded binding hot path from the 
 
 * AnyIO micro qualification
 
+The current candidate validates and prepares one executor at each public
+=abatch= boundary, reuses that prepared executor only within the batch, and
+refreshes preparation for the next batch.  There is no permanent program
+cache.  The immediately preceding same-semantics failing receipt is retained
+below as the before baseline.
+
 The canonical micro receipt uses schema
 =poo-flow.anyio-runtime-benchmark.v1= and a native AnyIO bounded-concurrent
 reference with the same capacity and action as the
@@ -54,16 +60,41 @@ most of its wall time in synthetic sleep.
 
 | Process metric | Value | Unit |
 |-
-| real | 17.64 | s |
-| user | 3.54 | s |
-| sys | 0.72 | s |
-| exit status | 1 | process status |
+| real | 13.34 | s |
+| user | 1.68 | s |
+| sys | 0.18 | s |
+| exit status | 0 | process status |
 
 The automatic host run observed 12 available CPUs, an AnyIO default limiter
 capacity of 40, and a selected capacity of 12.  Each steady-state timing pair
 processed 24 items.  The target was 10000 observations per side; 418 balanced
 timing pairs produced 10032 actual observations per side per phase.  All
 candidate and reference timing columns below use =ns/item=.
+
+** Current micro prepared-batch receipt
+
+| Phase | Candidate median (ns/item) | Candidate p95 (ns/item) | Native reference median (ns/item) | Native reference p95 (ns/item) | Ratio | Threshold | Gate result |
+|-
+| Cold | 754894.083 | 754894.083 | 204175.333 | 204175.333 | 3.697283 | report-only | report-only |
+| Warm | 230581.604 | 658842.000 | 167241.333 | 641243.042 | 1.378736 | 1.545946 | pass |
+| Reused input | 242577.250 | 902618.042 | 182040.812 | 696223.958 | 1.332543 | 1.613416 | pass |
+
+Cold startup is report-only.  Both steady-state phases pass with 10,032
+observations per side, and the process exits 0.  The remaining
+candidate/reference gap is reportable runtime graph overhead rather than a
+failed qualification.
+
+** Before baseline
+
+The immediately preceding same-semantics run remains the before baseline; it
+is not replaced by the current pass.
+
+| Before process metric | Value | Unit |
+|-
+| real | 17.64 | s |
+| user | 3.54 | s |
+| sys | 0.72 | s |
+| exit status | 1 | process status |
 
 | Phase | Candidate median (ns/item) | Candidate p95 (ns/item) | Native reference median (ns/item) | Native reference p95 (ns/item) | Ratio | Threshold | Gate result |
 |-
@@ -78,6 +109,79 @@ graph/runtime overhead in both gated steady-state phases.  The nonzero exit is
 therefore expected and is qualification evidence, not a harness failure.
 
 * Burst lifecycle qualification
+
+** Current prepared-batch receipt
+
+The production-shaped burst suite keeps the case mix explicit: case IDs rotate
+through serial-only, parallel-only, and hybrid shapes.  Parallel fanout remains
+action-internal; this is not a graph-native parallel-node claim.  Public
+=abatch= validates and prepares one executor, bounded workers reuse it within
+that batch, and the next public batch refreshes preparation without a permanent
+cache.  Live worker tasks remain =O(capacity)=, while inputs and ordered results
+remain =O(N)=.
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
+#+end_src
+
+| Process metric | Value | Unit |
+|-
+| real | 37.43 | s |
+| user | 11.57 | s |
+| sys | 0.36 | s |
+| exit status | 0 | process status |
+
+The 12-CPU host calibrated capacities 12, 24, 48, 96, 192, 384, 768, and
+1,000, then selected capacity 48 by measured throughput.  Every population
+completed with zero failures.
+
+| Population (cases) | Capacity (live tasks) | Makespan (ms) | Throughput (cases/s) | Peak in-flight (cases) | Completed (cases) | Failed (cases) |
+|-
+| 1,000 | 48 | 392.405 | 2548.388 | 48 | 1,000 | 0 |
+| 10,000 | 48 | 3058.842 | 3269.211 | 48 | 10,000 | 0 |
+| 100,000 | 48 | 29499.281 | 3389.913 | 48 | 100,000 | 0 |
+
+| Population (cases) | Startup p50 (ms) | Startup p95 (ms) | Startup p99 (ms) | Service p50 (ms) | Service p95 (ms) | Service p99 (ms) | Completion p50 (ms) | Completion p95 (ms) | Completion p99 (ms) |
+|-
+| 1,000 | 55.488 | 380.465 | 385.445 | 5.815 | 99.688 | 237.952 | 64.729 | 386.140 | 389.890 |
+| 10,000 | 1306.962 | 2963.545 | 3035.187 | 6.382 | 73.098 | 140.241 | 1315.206 | 2973.042 | 3043.719 |
+| 100,000 | 14366.590 | 27887.121 | 29232.194 | 6.069 | 62.919 | 136.473 | 14369.997 | 27893.184 | 29239.931 |
+
+Against the preceding automatic capacity-1,000 100,000-case receipt, makespan
+fell from 56547.755 ms to 29499.281 ms, about 47.8 percent; throughput rose
+from 1768.417 to 3389.913 cases/s, about 91.7 percent; startup p99 fell from
+56200.305 ms to 29232.194 ms, about 48.0 percent.  Process real time fell from
+68.65 seconds to 37.43 seconds.
+
+Memory tracing remains a separate profile:
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 48 --trace-memory
+#+end_src
+
+| Population (cases) | Capacity (live tasks) | Python traced peak (bytes) | Makespan (ms) | Throughput (cases/s) | real (s) | user (s) | sys (s) |
+|-
+| 10,000 | 48 | 5701328 | 8781.861 | 1138.711 | 10.69 | 3.61 | 0.11 |
+
+The earlier traced profile recorded 13,574,584 bytes at capacity 1,000.  Code
+and capacity both changed, so the two memory values do not form a strict
+same-configuration ratio.  Traced-memory makespan and throughput also remain
+incomparable with the no-trace throughput receipt.
+
+#+begin_src mermaid
+flowchart TD
+  B["Public abatch"] --> P["Validate plan + prepare executor once"]
+  P --> W["Bounded workers<br/>live tasks O(capacity)"]
+  W --> M["Serial-only / parallel-only / hybrid cases"]
+  M --> N["No-trace throughput<br/>1k / 10k / 100k"]
+  M --> T["Separate traced-memory profile"]
+  P --> R["Next public abatch<br/>refresh preparation"]
+  R --> X["No permanent program cache"]
+  N --> E["Lifecycle + process receipts"]
+  T --> E
+#+end_src
+
+** Before baselines
 
 The production-shaped owner uses schema
 =poo-flow.burst-lifecycle-benchmark.v1=.  Its case mix supports serial-only,

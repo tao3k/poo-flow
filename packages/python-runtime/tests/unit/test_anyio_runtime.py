@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import anyio
+import pytest
 
 from poo_flow_runtime.program import RuntimeGraphProgram, RuntimeGraphRegistries
 from poo_flow_runtime.runtime_graph import (
@@ -9,15 +10,14 @@ from poo_flow_runtime.runtime_graph import (
     RuntimeGraphConditionalEdge,
     RuntimeGraphEdge,
     RuntimeGraphExecutor,
+    RuntimeGraphInterrupt,
+    RuntimeGraphInterrupted,
     RuntimeGraphPlan,
     linear_plan,
 )
-
-
 def test_runtime_graph_executor_anyio_invocation() -> None:
     executor = RuntimeGraphExecutor(
-        linear_plan("load"),
-        {"load": lambda state: {"value": state["value"] + 1}},
+        linear_plan("load"), {"load": lambda state: {"value": state["value"] + 1}}
     )
 
     async def scenario() -> None:
@@ -35,11 +35,11 @@ def test_runtime_graph_executor_anyio_invocation() -> None:
 
 
 def test_runtime_graph_program_anyio_invocation() -> None:
+    registries = RuntimeGraphRegistries(
+        actions={"load": lambda state: {"value": state["value"] + 1}}
+    )
     program = RuntimeGraphProgram.reference(
-        plan=linear_plan("load"),
-        registries=RuntimeGraphRegistries(
-            actions={"load": lambda state: {"value": state["value"] + 1}},
-        ),
+        plan=linear_plan("load"), registries=registries
     )
 
     async def scenario() -> None:
@@ -55,6 +55,77 @@ def test_runtime_graph_program_anyio_invocation() -> None:
     anyio.run(scenario)
 
 
+def test_runtime_graph_program_abatch_prepares_once_per_call_and_refreshes_registries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    actions = {"load": lambda state: {"value": state["value"] + 1}}
+    program = RuntimeGraphProgram.reference(
+        plan=linear_plan("load"),
+        registries=RuntimeGraphRegistries(actions=actions),
+    )
+    preparation_counts = [0, 0]
+    validated_plan = program._validated_plan
+    make_executor = program._executor
+
+    def counted_validated_plan():
+        preparation_counts[0] += 1
+        return validated_plan()
+
+    def counted_executor():
+        preparation_counts[1] += 1
+        return make_executor()
+
+    monkeypatch.setattr(program, "_validated_plan", counted_validated_plan)
+    monkeypatch.setattr(program, "_executor", counted_executor)
+    inputs = [{"value": 1}, {"value": 4}]
+
+    async def scenario():
+        first = await program.abatch(inputs, max_concurrency=2)
+        actions["load"] = lambda state: {"value": state["value"] + 10}
+        second = await program.abatch(inputs, max_concurrency=2)
+        actions["load"] = lambda state: RuntimeGraphInterrupt(state["value"])
+        with pytest.raises(ExceptionGroup) as raised:
+            await program.abatch([{"value": 7}], max_concurrency=1)
+        return first, second, raised.value
+
+    first, second, raised = anyio.run(scenario)
+    assert preparation_counts == [3, 3]
+    assert first == [{"value": 2}, {"value": 5}]
+    assert second == [{"value": 11}, {"value": 14}]
+    assert inputs == [{"value": 1}, {"value": 4}]
+    first[0]["value"] = 99
+    assert inputs[0] == {"value": 1} and first[1] == {"value": 5}
+    interrupted = next(
+        exc for exc in raised.exceptions if isinstance(exc, RuntimeGraphInterrupted)
+    )
+    assert interrupted.state == {"value": 7}
+    assert interrupted.validation_receipt == program.describe()
+    assert interrupted.plan_digest == program.describe_receipt().plan_digest
+
+
+def test_runtime_graph_program_empty_abatch_skips_preparation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    program = RuntimeGraphProgram.reference(
+        plan=linear_plan("missing"),
+        registries=RuntimeGraphRegistries(),
+    )
+    preparation_calls: list[str] = []
+    monkeypatch.setattr(
+        program, "_validated_plan", lambda: preparation_calls.append("validation")
+    )
+    monkeypatch.setattr(
+        program, "_executor", lambda: preparation_calls.append("executor")
+    )
+
+    async def scenario() -> list[dict[str, object]]:
+        result = await program.abatch(iter(()))
+        with pytest.raises(ValueError, match="max_concurrency must be positive"):
+            await program.abatch(iter(()), max_concurrency=0)
+        return result
+
+    assert anyio.run(scenario) == []
+    assert preparation_calls == []
 def test_runtime_graph_executor_awaits_async_action_and_router() -> None:
     async def load(state):
         await anyio.sleep(0)
@@ -99,10 +170,8 @@ def test_runtime_graph_program_awaits_async_action() -> None:
         await anyio.sleep(0)
         return {"value": state["value"] + 1}
 
-    program = RuntimeGraphProgram.reference(
-        plan=linear_plan("load"),
-        registries=RuntimeGraphRegistries(actions={"load": load}),
-    )
+    registries = RuntimeGraphRegistries(actions={"load": load})
+    program = RuntimeGraphProgram.reference(plan=linear_plan("load"), registries=registries)
 
     async def scenario() -> None:
         assert await program.ainvoke({"value": 1}) == {"value": 2}
