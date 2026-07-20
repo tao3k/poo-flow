@@ -1,17 +1,47 @@
 {
   "name": "@poo-flow/runtime-wasm",
   "version": "0.1.0",
+  "description": "Browser WebAssembly runtime and generated workflow plans for POO Flow",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tao3k/poo-flow.git",
+    "directory": "bindings/runtime-wasm"
+  },
+  "homepage": "https://github.com/tao3k/poo-flow/tree/main/bindings/runtime-wasm#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "type": "module",
+  "types": "./dist/index.d.ts",
   "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./workflows/browser-contribution": "./generated/browser-contribution.generated.ts",
+    "./workflows/browser-profile-composition": "./generated/browser-profile-composition.generated.ts",
+    "./workflows/subagent-workflow": "./generated/subagent-workflow.generated.ts",
+    "./workflows/funflow": "./generated/funflow.generated.ts",
     "./wasm": "./dist/poo_flow_runtime.wasm"
   },
   "files": [
     "dist",
-    "include"
+    "generated",
+    "include",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "mkdir -p dist && emcc -O2 -std=c11 -I../runtime-c/include -I../runtime-c/bundle-v1/include -Iinclude src/runtime_wasm_shim.c ../runtime-c/src/runtime_v0.c ../runtime-c/bundle-v1/src/bundle_v1.c -o dist/poo_flow_runtime.wasm -sSTANDALONE_WASM=1 -Wl,--no-entry -sERROR_ON_UNDEFINED_SYMBOLS=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=@exports.json",
-    "test": "npm run build && wasm-opt -O --enable-bulk-memory-opt dist/poo_flow_runtime.wasm -o /dev/null && node --test test/runtime-wasm.test.mjs",
+    "generate": "mkdir -p generated && env GERBIL_PATH=../../.gerbil gxi examples/browser-contribution.ss && env GERBIL_PATH=../../.gerbil gxi examples/browser-profile-composition.ss && env GERBIL_PATH=../../.gerbil gxi examples/scenario-workflows.ss",
+    "build:wasm": "mkdir -p dist && emcc -O2 -std=c11 -I../runtime-c/include -I../runtime-c/bundle-v1/include -Iinclude src/runtime_wasm_shim.c src/workflow_cursor.c ../runtime-c/src/runtime_v0.c ../runtime-c/bundle-v1/src/bundle_v1.c -o dist/poo_flow_runtime.wasm -sSTANDALONE_WASM=1 -Wl,--no-entry -sERROR_ON_UNDEFINED_SYMBOLS=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=@exports.json && cp src/index.mjs dist/index.mjs && cp src/index.d.ts dist/index.d.ts",
+    "build": "npm run generate && npm run build:wasm",
+    "test:generate-determinism": "node test/generator-determinism.mjs",
+    "test": "npm run build && npm run test:generate-determinism && wasm-opt -O --enable-bulk-memory-opt dist/poo_flow_runtime.wasm -o /dev/null && node --test test/*.test.mjs",
     "prepack": "npm test"
   }
 }

@@ -1,0 +1,159 @@
+name: Runtime WASM package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - bindings/runtime-wasm/**
+      - src/core/typescript-plan.ss
+      - src/module-system/composition-typescript.ss
+      - src/module-system/profile-composition-builders.ss
+      - src/module-system/profile-composition-use-syntax.ss
+      - t/composition-typescript-test.ss
+      - t/profile-composition-test.ss
+      - .github/workflows/runtime-wasm-package.yml
+  pull_request:
+    paths:
+      - bindings/runtime-wasm/**
+      - src/core/typescript-plan.ss
+      - src/module-system/composition-typescript.ss
+      - src/module-system/profile-composition-builders.ss
+      - src/module-system/profile-composition-use-syntax.ss
+      - t/composition-typescript-test.ss
+      - t/profile-composition-test.ss
+      - .github/workflows/runtime-wasm-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-wasm-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source-build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install Gerbil and WebAssembly toolchain
+        shell: bash
+        run: |
+          brew list --formula ghostscript >/dev/null 2>&1 && brew unlink ghostscript || true
+          brew install jq openssl pkg-config sqlite zlib emscripten binaryen bazelisk
+          formula="tao3k/gerbil/gerbil-scheme"
+          brew install --force-bottle "$formula"
+          formula_info="$(brew info --json=v2 "$formula" 2>/dev/null)"
+          poured_from_bottle="$(jq -r '.formulae[0].installed[-1].poured_from_bottle // false' <<< "$formula_info")"
+          test "$poured_from_bottle" = true
+
+      - name: Materialize POO Flow Gerbil project
+        shell: bash
+        run: |
+          bazelisk build //scheme:runtime_wasm_generator_compile
+          bazelisk test //scheme:runtime_wasm_generator_compile_receipt_v1_test
+          test -z "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:gslph_package)')"
+          test -n "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:gerbil_poo_package)')"
+          bazelisk run //scheme:runtime_wasm_generator_materialize
+          test -f .gerbil/lib/clan/poo/object.ssi
+          test -f .gerbil/lib/clan/base.ssi
+          test -f .gerbil/lib/poo-flow/src/core/flow.ssi
+
+      - name: Build, test, and pack the package
+        shell: bash
+        run: |
+          cp LICENSE bindings/runtime-wasm/LICENSE
+          npm pack ./bindings/runtime-wasm --dry-run
+          cp -R bindings/runtime-wasm/generated "$RUNNER_TEMP/generated-first"
+          npm --prefix bindings/runtime-wasm run generate
+          diff -ru "$RUNNER_TEMP/generated-first" bindings/runtime-wasm/generated
+          archive_json="$(npm pack ./bindings/runtime-wasm --ignore-scripts --json --pack-destination "$RUNNER_TEMP")"
+          archive="$(jq -r '.[0].filename' <<< "$archive_json")"
+          payload="$RUNNER_TEMP/poo-flow-runtime-wasm-package"
+          mkdir -p "$payload"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$payload" --strip-components=1
+          printf '%s\n' "$GITHUB_SHA" > "$payload/.poo-flow-source-rev"
+
+      - name: Upload verified package payload
+        uses: actions/upload-artifact@v7
+        with:
+          name: poo-flow-runtime-wasm-package-payload
+          path: ${{ runner.temp }}/poo-flow-runtime-wasm-package
+          include-hidden-files: true
+          if-no-files-found: error
+
+  publish-package:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: source-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified package payload
+        uses: actions/download-artifact@v8
+        with:
+          name: poo-flow-runtime-wasm-package-payload
+          path: ${{ runner.temp }}/package-payload
+
+      - name: Materialize independent package branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch_dir="$RUNNER_TEMP/npm-package-branch"
+          git clone --filter=blob:none --no-checkout "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$branch_dir"
+          git -C "$branch_dir" checkout --orphan npm-package-next
+          cp -R "$RUNNER_TEMP/package-payload/." "$branch_dir/"
+          git -C "$branch_dir" add -A
+          git -C "$branch_dir" -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com commit -m "package: $GITHUB_SHA"
+          git -C "$branch_dir" push origin HEAD:refs/heads/npm-package --force
+
+  publish-npm:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [source-build, publish-package]
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download verified package payload
+        uses: actions/download-artifact@v8
+        with:
+          name: poo-flow-runtime-wasm-package-payload
+          path: package-payload
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Verify package provenance receipt
+        env:
+          EXPECTED_SOURCE_REV: ${{ github.sha }}
+        run: |
+          test "$(cat package-payload/.poo-flow-source-rev)" = "$EXPECTED_SOURCE_REV"
+          npm pack --dry-run --ignore-scripts ./package-payload
+
+      - name: Publish an unpublished version
+        shell: bash
+        working-directory: package-payload
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already published"
+            exit 0
+          fi
+          npm publish --access public --provenance

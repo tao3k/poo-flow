@@ -6,6 +6,12 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+    inputs:
+      refresh_lock:
+        description: Generate and verify the cross-platform Bazel module lock
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -16,16 +22,17 @@ concurrency:
 
 jobs:
   lean-proof:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Lean proof bridge
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout poo-flow
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Restore Lean cache
         id: lean-cache
-        uses: actions/cache/restore@v6.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.elan
@@ -57,7 +64,7 @@ jobs:
 
       - name: Save Lean cache
         if: steps.lean-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.elan
@@ -65,6 +72,7 @@ jobs:
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
   native:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ matrix.job-timeout-minutes }}
@@ -86,7 +94,7 @@ jobs:
             job-timeout-minutes: 30
     steps:
       - name: Checkout poo-flow
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -108,7 +116,7 @@ jobs:
       - name: Restore Homebrew cache
         if: runner.os == 'macOS'
         id: homebrew-cache
-        uses: actions/cache/restore@v6.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
@@ -193,7 +201,7 @@ jobs:
 
       - name: Upload macOS Gerbil install receipt
         if: always() && runner.os == 'macOS' && matrix.gerbil-install == 'homebrew'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: homebrew-gerbil-install-receipt-${{ runner.os }}-${{ runner.arch }}
           path: ${{ steps.homebrew-gerbil-install.outputs.receipt }}
@@ -202,7 +210,7 @@ jobs:
 
       - name: Save Homebrew cache
         if: runner.os == 'macOS' && steps.homebrew-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6.1.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-v3
@@ -219,7 +227,7 @@ jobs:
             > .ci/bazel-cache-generation/BUILD.bazel
 
       - name: Set up Bazel
-        uses: bazel-contrib/setup-bazel@0.19.0
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
         with:
           bazelisk-cache: true
           # setup-bazel hashes BUILD files and restores the newest matching
@@ -303,7 +311,7 @@ jobs:
 
       - name: Upload Scheme compile evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bazel-scheme-compile-evidence-${{ runner.os }}-${{ runner.arch }}
           path: |
@@ -375,7 +383,7 @@ jobs:
 
       - name: Upload Python wheel Scheme projection handoff
         if: ${{ always() && runner.os == 'Linux' }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: python-wheel-scheme-projection-producer
           path: .ci/python-wheel-projection
@@ -542,7 +550,7 @@ jobs:
 
       - name: Upload Bazel acceptance evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bazel-acceptance-evidence-${{ runner.os }}-${{ runner.arch }}
           path: |
@@ -555,7 +563,7 @@ jobs:
 
       - name: Upload runtime-C producer handoff
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: poo-flow-runtime-native-library
           path: .ci/runtime-c
@@ -563,6 +571,103 @@ jobs:
           retention-days: 7
 
   python-runtime-wheel:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Python runtime wheel
     needs: native
     uses: ./.github/workflows/python-runtime-wheel.yml
+
+  lock-linux-seed:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.refresh_lock }}
+    name: Lock refresh (linux-amd64 seed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          repository-cache: true
+          disk-cache: poo-flow-lock-Linux-X64
+
+      - name: Generate the Linux module-extension evaluation
+        run: |
+          bazelisk mod deps --config=lock_update
+          bazelisk mod deps --lockfile_mode=error
+
+      - name: Upload the Linux lock seed
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: poo-flow-module-lock-linux-${{ github.run_id }}
+          path: MODULE.bazel.lock
+          if-no-files-found: error
+
+  lock-darwin-merge:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.refresh_lock }}
+    name: Lock refresh (darwin-arm64 merge)
+    needs: lock-linux-seed
+    runs-on: macos-26
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Download the Linux lock seed
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: poo-flow-module-lock-linux-${{ github.run_id }}
+          path: .ci/lock-linux
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          repository-cache: true
+          disk-cache: poo-flow-lock-macOS-ARM64
+
+      - name: Merge the Darwin module-extension evaluation
+        run: |
+          cp .ci/lock-linux/MODULE.bazel.lock MODULE.bazel.lock
+          bazelisk mod deps --config=lock_update
+          bazelisk mod deps --lockfile_mode=error
+
+      - name: Upload the merged cross-platform lock
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: poo-flow-module-lock-${{ github.run_id }}
+          path: MODULE.bazel.lock
+          if-no-files-found: error
+
+  lock-linux-verify:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.refresh_lock }}
+    name: Lock verify (linux-amd64 merged)
+    needs: lock-darwin-merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Download the merged cross-platform lock
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: poo-flow-module-lock-${{ github.run_id }}
+          path: .ci/lock-merged
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: false
+          repository-cache: true
+          disk-cache: poo-flow-lock-Linux-X64
+
+      - name: Verify the merged lock on Linux
+        run: |
+          cp .ci/lock-merged/MODULE.bazel.lock MODULE.bazel.lock
+          bazelisk mod deps --lockfile_mode=error

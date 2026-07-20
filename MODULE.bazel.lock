@@ -190,9 +190,40 @@
   "selectedYankedVersions": {},
   "moduleExtensions": {
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
+      "os:linux,arch:amd64": {
+        "bzlTransitiveDigest": "zuatQdpsf258c/326KhFnYtO6gKY3bLE/09KvU7TlUo=",
+        "usagesDigest": "4rrisYKYBj6OeqHntWnE1MWo71bU+we9Jt8+rlCSnCQ=",
+        "recordedInputs": [],
+        "generatedRepoSpecs": {
+          "local_gerbil": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:prebuilt_repository.bzl%prebuilt_gerbil_repository",
+            "attributes": {
+              "darwin_homebrew_formulae": [
+                "openssl@3",
+                "sqlite",
+                "zlib"
+              ],
+              "environment": {},
+              "expected_version_prefixes": [
+                "Gerbil v0.18.2",
+                "Gerbil 07c8481"
+              ],
+              "install_digest": "ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208",
+              "manifest_path": "gerbil-bazel-capability.json",
+              "project_dependency_packages": [],
+              "project_library_relative_path": ".gerbil/lib",
+              "sha256": "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978f9d5fe7",
+              "strip_prefix": "",
+              "urls": [
+                "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208.tar.gz"
+              ]
+            }
+          }
+        }
+      },
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "UqO1RbuGLVgNqfJhfdJtl/q6V1AfTb5il6TuJfBVbcM=",
-        "usagesDigest": "YlcKoFGH+UVASl1p2EA5GaFaLQkGEVtEmVxaoyxziDs=",
+        "bzlTransitiveDigest": "zuatQdpsf258c/326KhFnYtO6gKY3bLE/09KvU7TlUo=",
+        "usagesDigest": "4rrisYKYBj6OeqHntWnE1MWo71bU+we9Jt8+rlCSnCQ=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -206,8 +237,8 @@
               "dependency_roots": [],
               "environment": {},
               "expected_version_prefixes": [
-                "Gerbil 07c8481",
-                "Gerbil v0.18.2"
+                "Gerbil v0.18.2",
+                "Gerbil 07c8481"
               ],
               "project_dependency_packages": [],
               "project_library_relative_path": ".gerbil/lib",
