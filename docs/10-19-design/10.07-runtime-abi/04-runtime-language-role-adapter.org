@@ -167,8 +167,44 @@ When adding a new runtime language, follow this checklist:
    - debug
 6. Add durable checkpoint and replay only after the stream contract is stable.
 7. [X] Add async/cancellation/backpressure only as runtime substrate behavior.
-8. Add backend-specific performance gates.
+8. [X] Add backend-specific performance gates.
 9. Document every backend as substrate-only, never as strategy authority.
+
+** 2026-07-20 AnyIO Performance Qualification Receipt
+
+The prior six-sample receipt and its 83.08-second serial-sleeper reference are
+rejected.  The replacement uses 10,000 observations per side and the
+same-semantics native reference documented in
+[[file:14-runtime-benchmark-surface.org::*AnyIO micro qualification][RFC14 AnyIO and burst benchmark evidence]].
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
+#+end_src
+
+| Phase | Candidate median (ns/item) | Native reference median (ns/item) | Ratio | Threshold | Result |
+|-
+| Cold | 1474987.875 | 119718.750 | 12.320442 | report-only | report-only |
+| Warm | 355732.646 | 177420.146 | 2.005030 | 1.498493 | fail |
+| Reused input | 370962.688 | 182045.125 | 2.037751 | 1.515655 | fail |
+
+The run used a 10,000-observation steady-state target, 418 timing pairs, 24
+items per pair, and 10,032 actual observations per side.  It exited 1 after
+=real 17.64=, =user 3.54=, and =sys 0.72=.  The same-semantics reference cut
+wall time by 78.8 percent while exposing approximately 2x candidate
+graph/runtime overhead in both qualified steady-state modes.
+
+The action-internal burst suite selected capacity 1,000 on a 12-CPU host.
+Throughput was 2087.287, 1913.619, and 1768.417 cases/s for populations 1,000,
+10,000, and 100,000 respectively; the 100,000-case population completed in
+56547.755 ms with peak live tasks 80 and zero failures.  This improves over
+the capacity-12 baseline but does not establish a graph-native parallelism
+claim or a root fix.  The 13,574,584-byte peak-memory result belongs to a
+separate traced 10,000-item profile and is not a no-trace baseline.
+
+This focused Python runtime receipt is failing and does not claim a
+repository-wide green state.  Existing module-system and other full-suite
+blockers remain independent; no Rust, TypeScript, C ABI, Gerbil, or Bazel
+semantic change is introduced here.
 
 ** 2026-07-20 Async Substrate Qualification Receipt
 

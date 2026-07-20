@@ -22,6 +22,9 @@ uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks l
 
 uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks composition \
   --iterations 10 --fanout 8
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 1000 --trace-memory
 #+end_src
 
 * Composition suite
@@ -35,3 +38,119 @@ The composition suite currently emits line-oriented receipts for:
 - validation-workflow-round-trip
 
 The C ABI scenarios intentionally separate the loaded binding hot path from the full validation workflow.  The hot path measures the low-level ABI call after the dylib is loaded.  The workflow path measures manifest validation and graph handoff as a higher-level runtime operation.
+
+* AnyIO micro qualification
+
+The canonical micro receipt uses schema
+=poo-flow.anyio-runtime-benchmark.v1= and a native AnyIO bounded-concurrent
+reference with the same capacity and action as the
+=RuntimeGraphProgram.abatch= candidate.  The earlier 83.08-second serial-sleeper
+receipt is rejected because it compared unequal execution semantics and spent
+most of its wall time in synthetic sleep.
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
+#+end_src
+
+| Process metric | Value | Unit |
+|-
+| real | 17.64 | s |
+| user | 3.54 | s |
+| sys | 0.72 | s |
+| exit status | 1 | process status |
+
+The automatic host run observed 12 available CPUs, an AnyIO default limiter
+capacity of 40, and a selected capacity of 12.  Each steady-state timing pair
+processed 24 items.  The target was 10000 observations per side; 418 balanced
+timing pairs produced 10032 actual observations per side per phase.  All
+candidate and reference timing columns below use =ns/item=.
+
+| Phase | Candidate median (ns/item) | Candidate p95 (ns/item) | Native reference median (ns/item) | Native reference p95 (ns/item) | Ratio | Threshold | Gate result |
+|-
+| cold | 1474987.875 | n/a | 119718.750 | n/a | 12.320442 | n/a | report-only |
+| warm | 355732.646 | 1679864.583 | 177420.146 | 706593.750 | 2.005030 | 1.498493 | fail |
+| reused-input | 370962.688 | 1740753.500 | 182045.125 | 595954.875 | 2.037751 | 1.515655 | fail |
+
+Cold startup is not blended into either steady-state gate.  Replacing the
+serial sleeper with a same-semantics native reference reduced wall time by
+78.8 percent, from 83.08 seconds to 17.64 seconds, while exposing roughly 2x
+graph/runtime overhead in both gated steady-state phases.  The nonzero exit is
+therefore expected and is qualification evidence, not a harness failure.
+
+* Burst lifecycle qualification
+
+The production-shaped owner uses schema
+=poo-flow.burst-lifecycle-benchmark.v1=.  Its case mix supports serial-only,
+parallel-only, and hybrid cases.  Parallel work is action-internal fanout/join;
+this receipt does not claim graph-native parallel fanout.  The measured arrival
+profile is instant submission.
+
+With an explicit capacity, the shared ordered worker pool keeps live tasks at
+=O(capacity)= while input and ordered-result storage remain =O(N)=.  The worker
+pool preserves input order and retains legitimate =None= results through a
+private sentinel.
+
+** Automatic throughput run
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
+#+end_src
+
+| Process metric | Value | Unit |
+|-
+| real | 68.65 | s |
+| user | 24.76 | s |
+| sys | 3.07 | s |
+
+The auto-throughput run observed 12 CPUs, calibrated capacities
+=12,24,48,96,192,384,768,1000=, and selected the calibration ceiling of 1000.
+Every population completed with no failures.
+
+| Population (cases) | Capacity (live tasks) | Makespan (ms) | Throughput (cases/s) | Peak in-flight (cases) | Completed (cases) | Failed (cases) |
+|-
+| 1000 | 1000 | 479.091 | 2087.287 | 67 | 1000 | 0 |
+| 10000 | 1000 | 5225.700 | 1913.619 | 79 | 10000 | 0 |
+| 100000 | 1000 | 56547.755 | 1768.417 | 80 | 100000 | 0 |
+
+| Population (cases) | Startup p50 (ms) | Startup p95 (ms) | Startup p99 (ms) | Service p50 (ms) | Service p95 (ms) | Service p99 (ms) | Completion p50 (ms) | Completion p95 (ms) | Completion p99 (ms) |
+|-
+| 1000 | 354.590 | 467.709 | 475.781 | 8.567 | 61.770 | 115.968 | 358.151 | 475.532 | 477.486 |
+| 10000 | 2620.953 | 4975.291 | 5153.412 | 12.770 | 91.706 | 139.945 | 2629.788 | 4985.855 | 5202.451 |
+| 100000 | 28715.413 | 54328.022 | 56200.305 | 12.886 | 108.399 | 186.223 | 28726.518 | 54339.712 | 56233.293 |
+
+The earlier fixed-capacity-12 100000-case baseline recorded a 63781.264 ms
+makespan, 1567.859 cases/s, 63275.908 ms startup p99, and peak in-flight 12.
+Capacity calibration improved all four observations, but it is not a root-cause
+closure: the best result landed at the search ceiling of 1000, so the optimum
+remains bounded by the calibration range.
+
+** Separate memory profile
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 1000 --trace-memory
+#+end_src
+
+| Population (cases) | Capacity (live tasks) | Python traced peak (bytes) | Makespan (ms) | Throughput (cases/s) | real (s) | user (s) | sys (s) |
+|-
+| 10000 | 1000 | 13574584 | 20196.802 | 495.128 | 21.83 | 7.52 | 0.44 |
+
+The traced-memory run is a separate profile.  Tracing changes timing materially,
+so its makespan and throughput must not be used as the no-trace throughput
+baseline.
+
+#+begin_src mermaid
+flowchart TD
+  MC["Micro candidate<br/>RuntimeGraphProgram.abatch"] --> MR["Same-semantics native AnyIO reference"]
+  MR --> MG["Median/p95 ratio gate<br/>ns/item"]
+  BC["Burst cases<br/>1k / 10k / 100k"] --> BA["Bounded admission<br/>live tasks O(capacity)"]
+  BA --> MX["Serial-only / parallel-only / hybrid<br/>parallel is action-internal"]
+  MX --> TP["No-trace throughput profile<br/>makespan and lifecycle percentiles"]
+  MX --> MP["Separate traced-memory profile<br/>peak bytes"]
+  MG --> R["Line receipts and exit status"]
+  TP --> R
+  MP --> R
+#+end_src
+
+These receipts qualify scoped Python runtime behavior only.  They do not claim
+a globally green repository; Scheme and module-system blockers remain separate
+acceptance work.
