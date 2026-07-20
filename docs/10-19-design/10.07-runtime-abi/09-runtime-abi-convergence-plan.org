@@ -2,9 +2,6 @@
 
 * Status
 
-Superseded by RFC 92 and AC-05 runtime v0.1.  Legacy graph ABI routes described
-below are historical and are not compatibility requirements.
-
 * Objective
 
 POO Flow Scheme owns policy semantics, durable policy families, and functional
