@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from functools import partial
 import tracemalloc
-from types import SimpleNamespace
 
-import anyio
 import pytest
 
 from poo_flow_runtime.benchmarks import __main__ as benchmark_cli
@@ -25,7 +22,10 @@ def test_burst_lifecycle_measures_mixed_case_startup_and_drain() -> None:
 
     assert receipt.population == 12
     assert receipt.capacity_source == "manual"
+    assert receipt.capacity_policy == "manual-override-v1"
     assert receipt.selected_capacity == 4
+    assert receipt.calibration_population == 0
+    assert receipt.calibration_capacities == ()
     assert receipt.completed == 12
     assert receipt.failed == 0
     assert receipt.peak_active_cases <= 4
@@ -51,6 +51,9 @@ def test_burst_lifecycle_receipt_names_units_and_parallel_boundary() -> None:
     assert 'time-unit: "ms"' in receipt
     assert 'throughput-unit: "cases/s"' in receipt
     assert 'memory-unit: "bytes"' in receipt
+    assert 'capacity-policy: "manual-override-v1"' in receipt
+    assert "calibration-population: 0" in receipt
+    assert 'calibration-capacities: ""' in receipt
     assert "memory-profile: #f" in receipt
     assert "python-traced-peak-bytes: #f" in receipt
     assert "population: 9" in receipt
@@ -97,67 +100,10 @@ def test_burst_memory_profile_stops_after_setup_failure(monkeypatch) -> None:
     assert not tracemalloc.is_tracing()
 
 
-def test_burst_capacity_candidates_start_from_host_and_grow_to_population() -> None:
-    assert benchmark.capacity_candidates(
-        available_cpus=12, calibration_population=1_000
-    ) == (12, 24, 48, 96, 192, 384, 768, 1_000)
-    assert benchmark.capacity_candidates(
-        available_cpus=12, calibration_population=8
-    ) == (8,)
-
-
-def test_burst_autotune_selects_measured_winner(monkeypatch) -> None:
-    throughput = {12: 100.0, 24: 300.0, 48: 200.0}
-
-    async def measure(**kwargs: object) -> SimpleNamespace:
-        capacity = int(kwargs["capacity"])
-        return SimpleNamespace(
-            selected_capacity=capacity,
-            throughput_cases_per_second=throughput[capacity],
-        )
-
-    monkeypatch.setattr(runner, "_measure_population", measure)
-    selected = anyio.run(
-        partial(
-            runner._select_capacity,
-            available_cpus=12,
-            calibration_population=48,
-            requested=None,
-            serial_steps=3,
-            parallel_fanout=4,
-            parallel_steps=1,
-            serial_interval_us=0,
-        )
-    )
-
-    assert selected == (24, "auto-throughput", (12, 24, 48))
-
-
-def test_burst_manual_capacity_bypasses_calibration(monkeypatch) -> None:
-    async def unexpected_measure(**kwargs: object) -> None:
-        raise AssertionError(f"unexpected calibration: {kwargs}")
-
-    monkeypatch.setattr(runner, "_measure_population", unexpected_measure)
-    selected = anyio.run(
-        partial(
-            runner._select_capacity,
-            available_cpus=12,
-            calibration_population=1_000,
-            requested=77,
-            serial_steps=3,
-            parallel_fanout=4,
-            parallel_steps=1,
-            serial_interval_us=0,
-        )
-    )
-
-    assert selected == (77, "manual", (77,))
-
-
 def test_burst_lifecycle_cli_accepts_multiple_populations(monkeypatch, capsys) -> None:
     captured: dict[str, object] = {}
 
-    def run(**kwargs):
+    def run(**kwargs: object) -> list[object]:
         captured.update(kwargs)
         return []
 
@@ -180,4 +126,12 @@ def test_burst_lifecycle_cli_accepts_multiple_populations(monkeypatch, capsys) -
         == 0
     )
     assert captured["populations"] == (1_000, 10_000)
+    assert not any(key.startswith("calibration") for key in captured)
     assert capsys.readouterr().out == "\n"
+
+
+def test_burst_lifecycle_dispatcher_rejects_calibration_flags() -> None:
+    with pytest.raises(SystemExit):
+        benchmark_cli.parse_args(
+            ["burst-lifecycle", "--calibration-samples", "3"]
+        )

@@ -1,16 +1,19 @@
-"""Validate, calibrate, and dispatch burst lifecycle measurements."""
+"""Validate, select capacity, and dispatch burst lifecycle measurements."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 from functools import partial
+import os
 import sys
 
 import anyio
 
-from ._anyio_runtime_runner import _available_cpu_count
 from ._burst_lifecycle_measurement import _measure_population
-from .burst_lifecycle import BurstLifecycleBenchmark, capacity_candidates
+from .burst_lifecycle import BurstLifecycleBenchmark
+
+SYSTEM_AVAILABLE_CPU_POLICY = "system-available-cpu-v1"
+MANUAL_CAPACITY_POLICY = "manual-override-v1"
 
 
 def run_burst_lifecycle_benchmarks(
@@ -77,15 +80,10 @@ async def _run_benchmarks(
     stream_progress: bool,
 ) -> list[BurstLifecycleBenchmark]:
     available_cpus = _available_cpu_count()
-    calibration_population = min(min(populations), 1_000)
-    capacity, source, candidates = await _select_capacity(
+    capacity, source, policy = _select_capacity(
         available_cpus=available_cpus,
-        calibration_population=calibration_population,
+        population_cap=min(populations),
         requested=max_concurrency,
-        serial_steps=serial_steps,
-        parallel_fanout=parallel_fanout,
-        parallel_steps=parallel_steps,
-        serial_interval_us=serial_interval_us,
     )
     receipts: list[BurstLifecycleBenchmark] = []
     for population in populations:
@@ -94,8 +92,9 @@ async def _run_benchmarks(
             available_cpus=available_cpus,
             capacity=capacity,
             capacity_source=source,
-            calibration_population=calibration_population,
-            calibration_capacities=candidates,
+            capacity_policy=policy,
+            calibration_population=0,
+            calibration_capacities=(),
             serial_steps=serial_steps,
             parallel_fanout=parallel_fanout,
             parallel_steps=parallel_steps,
@@ -109,39 +108,21 @@ async def _run_benchmarks(
     return receipts
 
 
-async def _select_capacity(
+def _available_cpu_count() -> int:
+    cpu_count = getattr(os, "process_cpu_count", os.cpu_count)
+    return max(cpu_count() or 1, 1)
+
+
+def _select_capacity(
     *,
     available_cpus: int,
-    calibration_population: int,
+    population_cap: int,
     requested: int | None,
-    serial_steps: int,
-    parallel_fanout: int,
-    parallel_steps: int,
-    serial_interval_us: int,
-) -> tuple[int, str, tuple[int, ...]]:
+) -> tuple[int, str, str]:
     if requested is not None:
-        return requested, "manual", (requested,)
-    candidates = capacity_candidates(
-        available_cpus=available_cpus,
-        calibration_population=calibration_population,
+        return requested, "manual", MANUAL_CAPACITY_POLICY
+    return (
+        min(population_cap, available_cpus),
+        "system-available-cpu",
+        SYSTEM_AVAILABLE_CPU_POLICY,
     )
-    receipts = [
-        await _measure_population(
-            population=calibration_population,
-            available_cpus=available_cpus,
-            capacity=candidate,
-            capacity_source="calibration",
-            calibration_population=calibration_population,
-            calibration_capacities=candidates,
-            serial_steps=serial_steps,
-            parallel_fanout=parallel_fanout,
-            parallel_steps=parallel_steps,
-            serial_interval_us=serial_interval_us,
-            trace_memory=False,
-        )
-        for candidate in candidates
-    ]
-    selected = max(
-        receipts, key=lambda receipt: receipt.throughput_cases_per_second
-    ).selected_capacity
-    return selected, "auto-throughput", candidates

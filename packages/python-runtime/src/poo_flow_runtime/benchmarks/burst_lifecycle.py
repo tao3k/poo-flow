@@ -20,6 +20,7 @@ class BurstLifecycleBenchmark:
     available_cpus: int
     selected_capacity: int
     capacity_source: str
+    capacity_policy: str
     calibration_population: int
     calibration_capacities: tuple[int, ...]
     serial_steps: int
@@ -65,6 +66,7 @@ class BurstLifecycleBenchmark:
             f"available-cpus: {self.available_cpus} "
             f"selected-capacity: {self.selected_capacity} "
             f"capacity-source: \"{self.capacity_source}\" "
+            f"capacity-policy: \"{self.capacity_policy}\" "
             f"calibration-population: {self.calibration_population} "
             "calibration-capacities: \""
             f"{','.join(str(value) for value in self.calibration_capacities)}\" "
@@ -126,22 +128,6 @@ def performance_gate_passed(
     benchmarks: Iterable[BurstLifecycleBenchmark],
 ) -> bool:
     return all(benchmark.passed for benchmark in benchmarks)
-
-
-def capacity_candidates(
-    *, available_cpus: int, calibration_population: int
-) -> tuple[int, ...]:
-    """Grow from host CPU availability to the calibration population."""
-
-    if available_cpus < 1 or calibration_population < 1:
-        raise ValueError("capacity planning inputs must be positive")
-    current = min(available_cpus, calibration_population)
-    candidates: list[int] = []
-    while True:
-        candidates.append(current)
-        if current == calibration_population:
-            return tuple(candidates)
-        current = min(current * 2, calibration_population)
 
 
 def _parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:

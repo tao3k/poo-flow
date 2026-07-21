@@ -21,6 +21,10 @@ POO Flow keeps semantic authority in the upstream control plane:
 - Runtime languages own execution, FFI performance, async scheduling, durable
   storage, replay, and platform integration.
 
+Workload-derived benchmark capacity is a qualification boundary documented in
+[[file:14-runtime-benchmark-surface.org][14 Runtime Benchmark Surface]]; its
+selection policy is not part of the stable runtime ABI.
+
 A runtime adapter must not introduce a second policy DSL, validation model, or
 schema owner. Libraries such as Pydantic are therefore not part of the runtime
 role. They can validate Python object shapes, but they cannot improve the

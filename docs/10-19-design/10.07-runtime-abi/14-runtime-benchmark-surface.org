@@ -350,7 +350,96 @@ Each pair creates =2 * I= input root dictionaries. Each root contains =F + 2= re
 - This suite does not measure the pre-action optimization surface. It qualifies only the named Program-to-executor ownership-transfer boundary under the steady fresh-state workload.
 - Results apply to these commands, runtime, host, and process conditions. They do not establish cross-runtime, cross-host, C ABI, serialization, or end-to-end application performance.
 
-* Open issue: burst auto-capacity calibration observability
+* Resolved: deterministic burst capacity policy
+
+** Production policy
+
+Automatic selection uses policy =system-available-cpu-v1=:
+
+- Read the process-available CPU count with
+  =getattr(os, "process_cpu_count", os.cpu_count)= and clamp a missing or zero
+  result to one.
+- Select =min(min(populations), available_process_cpus)= once for the request.
+- Record =capacity-source=system-available-cpu= and
+  =capacity-policy=system-available-cpu-v1=.
+- Preserve the legacy receipt fields as =calibration-population=0= and
+  =calibration-capacities=()=.
+
+An explicit =max_concurrency= remains authoritative. It records
+=capacity-source=manual= and =capacity-policy=manual-override-v1= while keeping
+the same zero/empty legacy calibration fields.
+
+Selection is =O(1)= with respect to workload size and candidate count. It does
+not execute probes, throughput calibration, warmups, or hidden workload
+measurements. The benchmark performs exactly one workload measurement for each
+requested population after capacity selection.
+
+** Selection flow
+
+#+begin_src mermaid
+flowchart LR
+    request["Benchmark request"] --> manual{"Manual max concurrency?"}
+    manual -->|"Yes"| manual_capacity["Use manual capacity"]
+    manual -->|"No"| cpu["Read process_cpu_count with cpu_count fallback"]
+    cpu --> population["Take minimum requested population"]
+    population --> capacity["Select minimum of population and available CPUs"]
+    manual_capacity --> workload["Run one workload per population"]
+    capacity --> workload
+    workload --> receipt["Emit benchmark receipt"]
+#+end_src
+
+** 2026-07-20 acceptance receipts
+
+Five independent fresh processes ran the public 1,000-case benchmark. Each
+process observed 12 available CPUs, selected 12, emitted the same policy and
+legacy calibration fields, and passed.
+
+| Fresh process | Available CPUs | Selected capacity | Capacity source | Capacity policy | Calibration population | Calibration capacities | Passed |
+|---------------+----------------+-------------------+-----------------+-----------------+------------------------+--------------------------+--------|
+|             1 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             2 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             3 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             4 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             5 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+
+The final canonical full run used the same automatic selection for all three
+populations. Values below are copied directly from its JSON lines.
+
+| Population | Available CPUs | Selected capacity | Throughput (cases/s) | Startup p99 (ms) | Peak active cases | Calibration population | Calibration capacities | Passed |
+|------------+----------------+-------------------+----------------------+------------------+-------------------+------------------------+--------------------------+--------|
+|      1,000 |             12 |                12 | 1667.0129191417468   |       592.918292 |                12 |                      0 |                       () | yes    |
+|     10,000 |             12 |                12 | 8217.24843587244     |      1210.035417 |                12 |                      0 |                       () | yes    |
+|    100,000 |             12 |                12 | 7191.581908180543    |       13761.96775 |                12 |                      0 |                       () | yes    |
+
+| Process metric | Value | Unit    |
+|----------------+-------+---------|
+| real           | 17.17 | seconds |
+| user           |  6.94 | seconds |
+| sys            |  0.38 | seconds |
+
+** Limitations and manual profiling route
+
+This policy is deterministic and system-adaptive, not workload-optimal. CPU
+availability does not model scheduler contention, workload service time, I/O
+latency, memory pressure, or topology-specific scaling. Receipt throughput and
+latency remain observations of the selected capacity, not proof that another
+capacity would be slower.
+
+Capacity studies must use the explicit =--max-concurrency= route and retain
+their wall-time, process-time, workload, topology, and repeated or paired-run
+receipts. Such profiling is report-only evidence; it must not silently alter
+automatic selection or the runtime ABI.
+
+** Superseded non-causal evidence
+
+The capacity-768 full run and capacity-48 minimal run are historical,
+non-causal observations. They do not establish either capacity as an optimum.
+A separate, uncommitted investigation repeated wall-time, process-time, and
+paired-run experiments; measured outcomes had an empirical span of up to 64x.
+Those experiments were diagnostic only. No throughput-calibration
+implementation, module, or CLI option was retained. The original issue
+statement and its proposed calibration follow-up are retained below only as
+provenance; that follow-up is superseded by the production policy above.
 This issue is independent of the large-state owned-transfer qualification. It is not an owned-state optimization result and must not be used as evidence for that optimization.
 
 Two auto-capacity runs exposed different selections with the same visible calibration inputs: 12 available CPUs, a calibration population of 1,000, candidates 12, 24, 48, 96, 192, 384, 768, and 1,000, and topology =serial_steps=3, =parallel_fanout=4, =parallel_steps=1, =interval=0. The full auto owned-state run selected capacity 768; the subsequent minimal =--population 1000= auto run selected 48.
