@@ -4,6 +4,7 @@ import pytest
 
 from poo_flow_runtime.benchmarks import _swarm_lifecycle_runner as runner
 from poo_flow_runtime.benchmarks.swarm_lifecycle import (
+    ArrivalSchedule,
     SWARM_LIFECYCLE_SCHEMA,
     run_single_swarm_benchmarks,
 )
@@ -56,6 +57,36 @@ def test_result_order_matches_requested_population_order(
     assert all(result.completed_agents == result.total_agents for result in results)
     assert all(result.final_active_agents == 0 for result in results)
     assert all(result.aggregate_created_after_barrier for result in results)
+
+
+def test_ramp_waits_for_eligibility_without_holding_capacity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(runner, "available_cpu_count", lambda: 2)
+    schedule = ArrivalSchedule(
+        mode="ramp",
+        initial_wave_size=2,
+        wave_size=1,
+        wave_interval_ms=20,
+        simulation_time_scale=10,
+    )
+
+    result = run_single_swarm_benchmarks(
+        (5,), service_time_ms=1.0, arrival=schedule
+    )[0]
+    receipt = result.receipt()
+
+    assert receipt["arrival"] == {
+        "mode": "ramp",
+        "initial_wave_size": 2,
+        "wave_size": 1,
+        "wave_interval_ms": 20,
+        "simulation_time_scale": 10,
+    }
+    assert result.peak_active_agents <= 2
+    assert result.wall_time_ms >= 5.0
+    assert result.completed_agents == 5
+    assert result.correctness_passed
 
 
 @pytest.mark.parametrize(

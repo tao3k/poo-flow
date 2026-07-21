@@ -10,6 +10,7 @@ from ._benchmark_capacity import available_cpu_count, select_benchmark_capacity
 from ._swarm_lifecycle_measurement import measure_single_swarm
 from ._swarm_lifecycle_planner import plan_swarm_workload
 from ._swarm_lifecycle_receipt import SwarmLifecycleBenchmark
+from ._swarm_lifecycle_workload import ArrivalSchedule
 
 DEFAULT_SINGLE_SWARM_POPULATIONS = (2, 4, 8, 16, 32, 64, 100, 128)
 
@@ -19,12 +20,14 @@ def run_single_swarm_benchmarks(
     *,
     service_time_ms: float = 1.0,
     max_concurrency: int | None = None,
+    arrival: ArrivalSchedule | None = None,
 ) -> list[SwarmLifecycleBenchmark]:
     """Run the normative single-swarm instant-arrival population matrix."""
 
     requested_populations = tuple(populations)
     _validate_inputs(requested_populations, service_time_ms, max_concurrency)
     available_cpus = available_cpu_count()
+    schedule = arrival or ArrivalSchedule(mode="instant")
 
     async def run_all() -> list[SwarmLifecycleBenchmark]:
         results: list[SwarmLifecycleBenchmark] = []
@@ -38,6 +41,7 @@ def run_single_swarm_benchmarks(
                 population,
                 tenant_count=1,
                 agents_per_swarm=population,
+                arrival=schedule,
             )
             results.append(
                 await measure_single_swarm(

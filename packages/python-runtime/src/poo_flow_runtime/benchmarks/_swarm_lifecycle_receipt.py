@@ -30,6 +30,11 @@ class SwarmLifecycleBenchmark:
     capacity_source: str
     capacity_policy: str
     service_time_ms: float
+    arrival_mode: str
+    initial_wave_size: int
+    wave_size: int
+    wave_interval_ms: int
+    simulation_time_scale: float
     wall_time_ms: float
     process_time_ms: float
     startup_latency: SwarmLatencySummary
@@ -75,11 +80,11 @@ class SwarmLifecycleBenchmark:
                 "realized_agents": self.total_agents,
             },
             "arrival": {
-                "mode": "instant",
-                "initial_wave_size": self.total_agents,
-                "wave_size": self.total_agents,
-                "wave_interval_ms": 0,
-                "simulation_time_scale": 1.0,
+                "mode": self.arrival_mode,
+                "initial_wave_size": self.initial_wave_size,
+                "wave_size": self.wave_size,
+                "wave_interval_ms": self.wave_interval_ms,
+                "simulation_time_scale": self.simulation_time_scale,
             },
             "capacity": {
                 "available_cpus": self.available_cpus,

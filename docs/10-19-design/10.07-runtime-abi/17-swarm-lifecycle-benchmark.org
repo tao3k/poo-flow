@@ -263,8 +263,10 @@ The Python validation runtime SHOULD keep the feature modular:
 - =benchmarks/swarm_lifecycle.py=: public benchmark entry point;
 - =benchmarks/_swarm_lifecycle_workload.py=: immutable workload value types;
 - =benchmarks/_swarm_lifecycle_planner.py=: pure planning and grouping;
-- =benchmarks/_swarm_lifecycle_runner.py=: arrival, capacity, and execution;
-- =benchmarks/_swarm_lifecycle_measurement.py=: clocks and observers;
+- =benchmarks/_swarm_lifecycle_arrival.py=: eligibility and global capacity;
+- =benchmarks/_swarm_lifecycle_runner.py=: validated suite execution;
+- =benchmarks/_swarm_lifecycle_measurement.py=: clocks and lifecycle observers;
+- =benchmarks/_swarm_lifecycle_projection.py=: latency and receipt projection;
 - =benchmarks/_swarm_lifecycle_receipt.py=: schema construction and validation;
   and
 - =benchmarks/__main__.py=: command dispatch only.
@@ -321,7 +323,8 @@ with the runner and measurement stages.
 * Initial single-swarm execution evidence
 
 The second implementation stage executes the full =2..128= single-swarm matrix
-through =RuntimeGraphProgram.abatch=.  It uses instant arrival, one millisecond
+through the validate-once, prepared-executor path owned by
+=RuntimeGraphProgram.abatch=.  It uses instant arrival, one millisecond
 of requested service work per agent, =system-available-cpu-v1=, and the same
 12-CPU =darwin-arm64= host.  The capacity implementation is now a shared
 benchmark owner used by both burst and swarm lifecycle runners; neither runner
@@ -354,6 +357,42 @@ reported =Error=0=, =Warning=0=, and =Info=0= across the capacity, runner,
 measurement, receipt, public surface, and tests.  This stage still makes no
 claim about ramp arrival, failures, timeouts, cancellation, multi-tenant
 fairness, or the 5,000--100,000 execution matrix.
+
+* Initial ramp-arrival execution evidence
+
+The third implementation stage adds an arrival-aware scheduler.  Eligibility
+waits occur before the global capacity limiter, and one validated plan plus one
+runtime executor are reused across all members.  An earlier prototype called
+=RuntimeGraphProgram.ainvoke= independently for every member; synchronous plan
+preparation blocked the event loop, made overdue waves catch up together, and
+produced peak active =8= for an eight-agent reference case whose initial wave
+was five.  That prototype was rejected and was not committed.
+
+The corrected reference preset uses an initial wave of five, then one agent per
+700 logical milliseconds, compressed by =simulation-time-scale= 100 to seven
+effective milliseconds.  Requested service work is one millisecond.  Two fresh
+processes produced the following evidence; all runs used
+=system-available-cpu-v1= with 12 available CPUs.
+
+| Agents | Effective last eligibility (ms) | Wall range (ms) | Process range (ms) | Startup p99 range (ms) | Peak active range | Passed |
+|--------+---------------------------------+-----------------+--------------------+------------------------+-------------------+--------|
+|      8 |                              21 |  22.948--37.054 |       1.710--1.894 |          0.887--15.661 |                 5 | yes    |
+|     16 |                              77 |  78.937--83.133 |       2.150--3.616 |          0.805--13.612 |                 5 | yes    |
+|     32 |                             189 | 197.774--215.998 |       6.998--7.681 |         15.205--25.687 |                 5 | yes    |
+|     64 |                             413 | 415.412--418.294 |     16.575--17.003 |         17.375--18.762 |                 6 | yes    |
+|    100 |                             665 | 667.442--671.425 |     20.883--23.595 |          9.012--19.442 |                 5 | yes    |
+|    128 |                             861 | 864.634--868.614 |     28.279--33.904 |         22.329--31.880 |              5--6 | yes    |
+
+Peak activity no longer collapses to the configured capacity of 12.  A peak of
+six is still possible when host lateness leaves an earlier member running as a
+new wave becomes eligible.  The startup p99 field exposes that lateness and
+capacity queueing; the scheduler does not rewrite the logical schedule or hide
+an overdue wave.
+
+The related gate reported =43 passed=.  The parser-backed full check covered all
+eight arrival, execution, projection, receipt, API, and test owners with
+=Error=0=, =Warning=0=, and =Info=0=.  Failure, timeout, cancellation, and
+multi-tenant execution remain outside this stage.
 
 * Version 1 delivery order
 

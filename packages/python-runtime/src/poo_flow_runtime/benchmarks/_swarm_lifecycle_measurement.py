@@ -1,4 +1,4 @@
-"""Instant-arrival measurement for one bounded swarm."""
+"""Execute one bounded swarm and capture raw lifecycle timing evidence."""
 
 from __future__ import annotations
 
@@ -10,11 +10,13 @@ import anyio
 
 from ..program import RuntimeGraphProgram, RuntimeGraphRegistries
 from ..runtime_graph import linear_plan
-from ._swarm_lifecycle_receipt import (
-    SwarmLatencySummary,
-    SwarmLifecycleBenchmark,
+from ._swarm_lifecycle_arrival import prepare_runtime_program, run_arrival_batch
+from ._swarm_lifecycle_projection import (
+    SwarmTimingEvidence,
+    project_swarm_benchmark,
 )
-from ._swarm_lifecycle_workload import SwarmWorkload
+from ._swarm_lifecycle_receipt import SwarmLifecycleBenchmark
+from ._swarm_lifecycle_workload import PlannedSwarmAgent, SwarmWorkload
 
 AgentAction = Callable[[Mapping[str, Any]], Awaitable[dict[str, Any]]]
 
@@ -35,6 +37,23 @@ class _SwarmObserver:
         self.finished_at_ns[agent_id] = perf_counter_ns()
         self.active -= 1
 
+    def evidence(self) -> SwarmTimingEvidence:
+        return SwarmTimingEvidence(
+            started_at_ns=dict(self.started_at_ns),
+            finished_at_ns=dict(self.finished_at_ns),
+            peak_active=self.peak_active,
+            final_active=self.active,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _ExecutionSample:
+    outputs: list[dict[str, Any]]
+    wall_start_ns: int
+    barrier_open_ns: int
+    aggregate_created_ns: int
+    process_elapsed_ns: int
+
 
 async def measure_single_swarm(
     *,
@@ -45,36 +64,63 @@ async def measure_single_swarm(
     capacity_policy: str,
     service_time_ms: float,
 ) -> SwarmLifecycleBenchmark:
-    """Execute one instant-arrival swarm and open one terminal barrier."""
+    """Execute one swarm and project its terminal barrier evidence."""
 
     _validate_single_swarm(workload)
     observer = _SwarmObserver()
-    program = _program(observer, service_time_ms)
-    inputs = tuple(_agent_input(agent) for agent in workload.agents)
-    wall_start_ns = perf_counter_ns()
-    process_start_ns = process_time_ns()
-    outputs = await program.abatch(inputs, max_concurrency=selected_capacity)
-    barrier_open_ns = perf_counter_ns()
+    sample = await _execute_inputs(
+        program=_program(observer, service_time_ms),
+        inputs=tuple(_agent_input(agent) for agent in workload.agents),
+        workload=workload,
+        selected_capacity=selected_capacity,
+    )
     completed_ids = tuple(
         output["agent_id"]
-        for output in outputs
+        for output in sample.outputs
         if output.get("lifecycle_state") == "completed"
     )
-    aggregate_created_ns = perf_counter_ns()
-    process_finish_ns = process_time_ns()
-    return _project_benchmark(
+    return project_swarm_benchmark(
         workload=workload,
-        observer=observer,
+        timings=observer.evidence(),
+        outputs=sample.outputs,
         completed_ids=completed_ids,
-        wall_start_ns=wall_start_ns,
-        barrier_open_ns=barrier_open_ns,
-        aggregate_created_ns=aggregate_created_ns,
-        process_elapsed_ns=process_finish_ns - process_start_ns,
+        wall_start_ns=sample.wall_start_ns,
+        barrier_open_ns=sample.barrier_open_ns,
+        aggregate_created_ns=sample.aggregate_created_ns,
+        process_elapsed_ns=sample.process_elapsed_ns,
         selected_capacity=selected_capacity,
         available_cpus=available_cpus,
         capacity_source=capacity_source,
         capacity_policy=capacity_policy,
         service_time_ms=service_time_ms,
+    )
+
+
+async def _execute_inputs(
+    *,
+    program: RuntimeGraphProgram,
+    inputs: tuple[dict[str, Any], ...],
+    workload: SwarmWorkload,
+    selected_capacity: int,
+) -> _ExecutionSample:
+    prepared = prepare_runtime_program(program)
+    wall_start_ns = perf_counter_ns()
+    process_start_ns = process_time_ns()
+    outputs = await run_arrival_batch(
+        prepared,
+        inputs,
+        schedule=workload.arrival,
+        max_concurrency=selected_capacity,
+        wall_start_ns=wall_start_ns,
+    )
+    barrier_open_ns = perf_counter_ns()
+    aggregate_created_ns = perf_counter_ns()
+    return _ExecutionSample(
+        outputs=outputs,
+        wall_start_ns=wall_start_ns,
+        barrier_open_ns=barrier_open_ns,
+        aggregate_created_ns=aggregate_created_ns,
+        process_elapsed_ns=process_time_ns() - process_start_ns,
     )
 
 
@@ -100,7 +146,7 @@ def _agent_action(observer: _SwarmObserver, service_time_ms: float) -> AgentActi
     return execute
 
 
-def _agent_input(agent: Any) -> dict[str, Any]:
+def _agent_input(agent: PlannedSwarmAgent) -> dict[str, Any]:
     return {
         "tenant_id": agent.tenant_id,
         "swarm_id": agent.swarm_id,
@@ -111,88 +157,6 @@ def _agent_input(agent: Any) -> dict[str, Any]:
         "capability_set_id": agent.capability_set_id,
         "lifecycle_state": "queued",
     }
-
-
-def _project_benchmark(
-    *,
-    workload: SwarmWorkload,
-    observer: _SwarmObserver,
-    completed_ids: tuple[str, ...],
-    wall_start_ns: int,
-    barrier_open_ns: int,
-    aggregate_created_ns: int,
-    process_elapsed_ns: int,
-    selected_capacity: int,
-    available_cpus: int,
-    capacity_source: str,
-    capacity_policy: str,
-    service_time_ms: float,
-) -> SwarmLifecycleBenchmark:
-    expected_ids = {agent.agent_id for agent in workload.agents}
-    completed_id_set = set(completed_ids)
-    starts = tuple(observer.started_at_ns[agent_id] for agent_id in completed_ids)
-    finishes = tuple(observer.finished_at_ns[agent_id] for agent_id in completed_ids)
-    wall_elapsed_ns = aggregate_created_ns - wall_start_ns
-    return SwarmLifecycleBenchmark(
-        total_agents=workload.realized_total_agents,
-        selected_capacity=selected_capacity,
-        available_cpus=available_cpus,
-        capacity_source=capacity_source,
-        capacity_policy=capacity_policy,
-        service_time_ms=service_time_ms,
-        wall_time_ms=_ms(wall_elapsed_ns),
-        process_time_ms=_ms(process_elapsed_ns),
-        startup_latency=_latencies(start - wall_start_ns for start in starts),
-        service_latency=_latencies(
-            finish - start for start, finish in zip(starts, finishes, strict=True)
-        ),
-        settlement_latency=_latencies(
-            aggregate_created_ns - finish for finish in finishes
-        ),
-        barrier_wait=_latencies(barrier_open_ns - finish for finish in finishes),
-        aggregation_latency_ms=_ms(aggregate_created_ns - barrier_open_ns),
-        throughput_agents_per_second=(
-            len(completed_ids) / (wall_elapsed_ns / 1_000_000_000)
-        ),
-        peak_active_agents=observer.peak_active,
-        completed_agents=len(completed_ids),
-        failed_agents=0,
-        timed_out_agents=0,
-        cancelled_agents=0,
-        duplicate_completion_count=len(completed_ids) - len(completed_id_set),
-        lost_completion_count=len(expected_ids - completed_id_set),
-        final_active_agents=observer.active,
-        total_logical_steps=workload.realized_total_agents,
-        critical_steps=1,
-        barrier_opened_after_all_terminal=(
-            len(observer.finished_at_ns) == workload.realized_total_agents
-            and all(finish <= barrier_open_ns for finish in finishes)
-        ),
-        aggregate_created_after_barrier=aggregate_created_ns >= barrier_open_ns,
-    )
-
-
-def _latencies(values: Any) -> SwarmLatencySummary:
-    ordered = sorted(values)
-    return SwarmLatencySummary(
-        p50_ms=_ms(_percentile(ordered, 0.50)),
-        p95_ms=_ms(_percentile(ordered, 0.95)),
-        p99_ms=_ms(_percentile(ordered, 0.99)),
-    )
-
-
-def _percentile(ordered: list[int], fraction: float) -> float:
-    if not ordered:
-        return 0.0
-    position = (len(ordered) - 1) * fraction
-    lower = int(position)
-    upper = min(lower + 1, len(ordered) - 1)
-    weight = position - lower
-    return ordered[lower] * (1 - weight) + ordered[upper] * weight
-
-
-def _ms(nanoseconds: int | float) -> float:
-    return nanoseconds / 1_000_000
 
 
 def _validate_single_swarm(workload: SwarmWorkload) -> None:
