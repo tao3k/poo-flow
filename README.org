@@ -41,6 +41,14 @@ In this repository, =agent-core= should be read through three control-plane axes
 This is why =poo-flow= is stronger than a generic worker runner. It does not only start work. It builds and checks the strategy/policy contract that says whether the work should be allowed to exist.
 
 * POO/C3 Linearization
+
+C3/C4 linearization prepares composed POO facts and deterministic definition
+precedence.  It is not a private graph or loop-engine algorithm layer.  Loop
+and dependency-graph validation is consumed through the public =src/graph=
+POO API, especially =poo-flow-graph-loop-analysis= receipts for cycle,
+strong-component, condensation, topological-order, and diagnostic questions.
+Downstream workflow and loop modules project their facts into that API instead
+of maintaining separate graph semantics.
 =poo-flow= relies on Gerbil POO and C3-style deterministic linearization for descriptor inheritance and role precedence. This matters when several independently-authored policy fragments apply to the same object and the system must know which inherited slot wins.
 
 The important boundary is:

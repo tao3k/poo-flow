@@ -10,51 +10,11 @@ load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 package(default_visibility = ["//visibility:public"])
 
 gerbil_project_compile(
-    name = "gerbil_utils_package",
-    srcs = ["@gerbil_utils_sources//:sources"],
-    build_script = "@gerbil_utils_sources//:build.ss",
-    process_guard = True,
-    require_library_output = True,
-)
-
-gerbil_project_compile(
-    name = "gerbil_poo_package",
-    srcs = ["@gerbil_poo_sources//:sources"],
-    build_script = "@gerbil_poo_sources//:build.ss",
-    process_guard = True,
-    require_library_output = True,
-    deps = [":gerbil_utils_package"],
-)
-
-gerbil_project_compile(
-    name = "gslph_package",
-    srcs = ["@gslph_sources//:sources"],
-    build_script = "@gslph_sources//:build.ss",
-    process_guard = True,
-    require_library_output = True,
-    deps = [":gerbil_poo_package"],
-)
-
-filegroup(
-    name = "dependency_packages",
-    srcs = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
-    ],
-)
-
-gerbil_project_compile(
     name = "compile",
     srcs = ["//:scheme_build_sources"],
     args = ["compile"],
     build_script = "//:build.ss",
     receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
-    deps = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
-    ],
 )
 
 gerbil_project_dev(
@@ -64,11 +24,6 @@ gerbil_project_dev(
     tags = [
         "local",
         "manual",
-    ],
-    deps = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
     ],
 )
 
@@ -81,11 +36,6 @@ gerbil_project_dev(
         "manual",
     ],
     tests = ["//:t/unit-tests.ss"],
-    deps = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
-    ],
 )
 
 filegroup(

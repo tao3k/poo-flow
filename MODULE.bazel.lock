@@ -222,8 +222,8 @@
         }
       },
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "zuatQdpsf258c/326KhFnYtO6gKY3bLE/09KvU7TlUo=",
-        "usagesDigest": "4rrisYKYBj6OeqHntWnE1MWo71bU+we9Jt8+rlCSnCQ=",
+        "bzlTransitiveDigest": "4WPINlhyz3BNcQnUx24MhTUKVg5IWBfVGeMUu5kV3FA=",
+        "usagesDigest": "yVqFzpqQmND5gr+45/0IKGS3iJ9od5MV7edNK0N0D8E=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -242,6 +242,7 @@
               ],
               "project_dependency_packages": [],
               "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg",
               "tool_paths": {}
             }
           }
