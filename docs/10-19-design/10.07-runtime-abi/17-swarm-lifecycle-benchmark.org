@@ -261,7 +261,8 @@ separate.
 The Python validation runtime SHOULD keep the feature modular:
 
 - =benchmarks/swarm_lifecycle.py=: public benchmark entry point;
-- =benchmarks/_swarm_lifecycle_workload.py=: immutable planning and grouping;
+- =benchmarks/_swarm_lifecycle_workload.py=: immutable workload value types;
+- =benchmarks/_swarm_lifecycle_planner.py=: pure planning and grouping;
 - =benchmarks/_swarm_lifecycle_runner.py=: arrival, capacity, and execution;
 - =benchmarks/_swarm_lifecycle_measurement.py=: clocks and observers;
 - =benchmarks/_swarm_lifecycle_receipt.py=: schema construction and validation;
@@ -294,6 +295,28 @@ Kimi-style agent swarms:
 These sources justify configurable populations, budgets, ramp schedules,
 barriers, aggregation, timeouts, and critical-path metrics.  They do not justify
 copying a current product limit into the POO Flow runtime ABI.
+
+* Initial planner evidence
+
+The first implementation stage landed the immutable workload values and the
+pure round-robin planner.  On 2026-07-20, two fresh CPython 3.13.11 processes on
+=darwin-arm64= with 12 process-available CPUs constructed every agent object and
+verified every realized population.  Both runs used =agents-per-swarm= 128 and
+enabled =tracemalloc=.  The ranges below retain host scheduling variability
+instead of selecting the faster observation.
+
+| Total agents | Tenants | Realized agents | Swarms | Wall time range (ms) | Process time range (ms) | Python allocation peak range (bytes) |
+|--------------+---------+-----------------+--------+----------------------+-------------------------+--------------------------------------|
+|        5,000 |      50 |           5,000 |     50 |       58.794--474.698 |          58.684--59.219 |                 1,468,082--1,480,990 |
+|       10,000 |     100 |          10,000 |    100 |      136.149--275.139 |        106.877--130.579 |                 2,957,128--2,982,636 |
+|      100,000 |   1,000 |         100,000 |  1,000 |    2,810.374--4,861.911 |      1,164.675--1,481.023 |               29,716,400--29,968,832 |
+
+The post-split related gate reported =32 passed=.  The 100,000-agent test checks
+all unique agent identifiers, every swarm membership count, the requested versus
+realized population, and the per-swarm bound.  The planner therefore has
+correctness and allocation evidence, but no claim about runtime execution,
+startup latency, barrier cost, or terminal throughput.  Those claims begin only
+with the runner and measurement stages.
 
 * Version 1 delivery order
 
