@@ -1,0 +1,309 @@
+#+title: POO Flow Swarm Lifecycle Benchmark
+
+* Status
+
+This document is the normative version 1 design baseline for the POO Flow
+swarm lifecycle benchmark.  It defines a workload and evidence model for
+dynamic groups of short-lived agents.  It does not add a new runtime ABI and
+does not model language-model inference quality.
+
+* Decision
+
+POO Flow SHALL add a dedicated swarm lifecycle benchmark rather than stretch
+the burst lifecycle benchmark into a product-specific swarm simulator.
+
+The benchmark has two explicit scales:
+
+1. one swarm containing a bounded number of cooperating agents; and
+2. many tenants launching many bounded swarms, with total agent populations of
+   5,000, 10,000, and 100,000.
+
+A population of 100,000 therefore means 100,000 total agent lifecycles grouped
+into explicit tenant and swarm boundaries.  It never means one unbounded swarm,
+and it never implicitly means 100,000 swarms multiplied by a hidden per-swarm
+population.
+
+The default execution capacity SHALL reuse
+=system-available-cpu-v1= from [[file:14-runtime-benchmark-surface.org][the runtime benchmark surface]].
+An explicit manual capacity remains authoritative.  The benchmark SHALL NOT
+perform hidden throughput calibration.
+
+* Ownership boundary
+
+RFC14 owns generic benchmark clocks, burst capacity policy, and process-level
+measurement conventions.  This RFC owns swarm grouping, roles, policies,
+capabilities, arrival schedules, barriers, aggregation, critical-path evidence,
+and swarm-specific correctness rules.
+
+The runtime ABI remains responsible only for executable graph descriptors and
+runtime operations.  Swarm presets, scale profiles, and benchmark receipts are
+benchmark-layer values.  They do not become C ABI fields or cross-language
+protocol requirements.
+
+The Scheme control plane SHOULD expose workload construction through POO-native
+objects and functional combinators.  Python is the production-grade validation
+runtime for this benchmark.  Downstream Rust, TypeScript, or other runtimes MAY
+consume the same lowered workload semantics through their own adapters.
+
+* Workload model
+
+Every planned agent lifecycle has the following explicit identity and behavior
+dimensions:
+
+- =tenant-id=: isolation and fairness owner;
+- =swarm-id=: barrier and aggregation owner;
+- =agent-id=: unique lifecycle identity within the run;
+- =parent-agent-id=: optional main-agent or subagent relationship;
+- =role-id=: domain responsibility such as research, planning, or verification;
+- =policy-id=: scheduling, failure, timeout, and cancellation policy identity;
+- =capability-set-id=: immutable reference to the permitted capability set;
+- =step-budget=: maximum logical agent steps;
+- =tool-call-budget=: maximum logical tool invocations; and
+- =service-time=: simulated or real benchmark work duration.
+
+Role, policy, and capability are independent dimensions.  Composition binds
+them into a workload case; none inherits from another.  Reusable cases SHOULD
+be constructed from immutable POO prototypes and pure functional composition,
+then lowered into ordinary runtime values.
+
+#+begin_src mermaid
+flowchart LR
+    T["Tenant"] --> S1["Bounded swarm"]
+    T --> S2["Bounded swarm"]
+    S1 --> A1["Agent identity"]
+    S1 --> A2["Agent identity"]
+    R["Role prototype"] --> C["Composed agent case"]
+    P["Policy prototype"] --> C
+    K["Capability-set prototype"] --> C
+    C --> A1
+    C --> A2
+    A1 --> B["Per-swarm terminal barrier"]
+    A2 --> B
+    B --> G["Aggregated swarm report"]
+#+end_src
+
+* Lifecycle semantics
+
+Each agent moves through one monotonic lifecycle:
+
+#+begin_src mermaid
+stateDiagram-v2
+    [*] --> Planned
+    Planned --> Queued
+    Queued --> Starting
+    Starting --> Running
+    Running --> Completed
+    Running --> Failed
+    Running --> TimedOut
+    Queued --> Cancelled
+    Starting --> Cancelled
+    Running --> Cancelled
+    Completed --> Settled
+    Failed --> Settled
+    TimedOut --> Settled
+    Cancelled --> Settled
+    Settled --> [*]
+#+end_src
+
+A swarm barrier opens only after every planned member has reached exactly one
+terminal state.  Aggregation begins after the barrier opens and produces one
+swarm report.  A partial-failure policy may choose a successful, degraded, or
+failed aggregate outcome, but it may not erase failed, timed-out, or cancelled
+members from the receipt.
+
+The benchmark SHALL reject duplicate agent identifiers, duplicate terminal
+transitions, aggregation before barrier completion, lost members, and a final
+active count other than zero.
+
+* Arrival schedules
+
+Version 1 supports two schedules:
+
+- =instant=: all planned agents become eligible at logical time zero; and
+- =ramp=: an initial wave becomes eligible, followed by fixed-size waves at a
+  configured logical interval.
+
+The ramp fields are =initial-wave-size=, =wave-size=, and
+=wave-interval-ms=.  A =simulation-time-scale= MAY compress logical intervals
+for fast, deterministic benchmark execution.  Receipts SHALL contain both the
+logical schedule and the effective wall-time scale so that a compressed run is
+never mistaken for a real-time launch trace.
+
+Reference presets MAY reproduce documented external systems, for example an
+initial wave of five agents followed by one new agent every 700 milliseconds.
+Such values are named presets, not defaults and not ABI constants.
+
+* Scale profiles
+
+** Single-swarm qualification
+
+The normative single-swarm matrix is =2, 4, 8, 16, 32, 64, 100, 128= agents.
+Additional populations MAY be requested explicitly.  The receipt always records
+the requested and realized member counts.
+
+** Multi-tenant saturation
+
+The normative total-agent matrix is =5,000, 10,000, 100,000=.  Each case also
+declares =tenant-count= and =agents-per-swarm=.  The planner derives
+=swarm-count= and the final partial swarm deterministically.  It SHALL NOT hide
+rounding or silently add agents.
+
+Tenant assignment uses a deterministic round-robin mapping unless another
+named mapping policy is selected.  A run is invalid if the sum of realized
+swarm memberships differs from the requested total population.
+
+* Capacity and scheduling
+
+When capacity is automatic, the selected capacity is:
+
+#+begin_example
+min(requested total agents, process-available CPUs)
+#+end_example
+
+with a minimum of one.  The receipt emits:
+
+- =capacity-source= as =system-available-cpu=;
+- =capacity-policy= as =system-available-cpu-v1=;
+- the observed process-available CPU count;
+- the selected capacity; and
+- zero calibration population and an empty calibration-capacity list.
+
+An explicit capacity uses =manual-override-v1=.  Capacity limits running work;
+it does not change logical arrival eligibility, swarm membership, or the
+terminal barrier.
+
+The scheduler SHOULD be work-conserving while preserving per-tenant fairness.
+Version 1 measures fairness but does not make a particular scheduler part of
+the public runtime ABI.
+
+* Measurement model
+
+Every run records both wall and process clocks.  Required metrics are:
+
+- agent startup, service, and settlement latency at p50, p95, and p99;
+- swarm makespan and run makespan;
+- barrier wait and aggregation latency;
+- peak active agents and peak eligible queue depth;
+- completed, failed, timed-out, and cancelled counts;
+- duplicate and lost completion counts;
+- total logical steps and tool calls;
+- total work, work amplification, and critical-path length;
+- critical steps on the longest dependency path;
+- throughput in terminal agents per second; and
+- per-tenant throughput plus a named fairness statistic.
+
+Wall-clock reduction alone is insufficient evidence.  A run that launches more
+agents while increasing the critical path or work amplification may be worse.
+Critical steps and terminal correctness are therefore primary acceptance
+dimensions alongside makespan.
+
+Memory evidence SHOULD include process peak resident memory when the host
+supports it and SHALL identify the measurement source.  A missing platform
+metric is reported as unavailable rather than fabricated as zero.
+
+* Receipt schema
+
+The schema identifier is =poo-flow.swarm-lifecycle-benchmark.v1=.  The version 1
+receipt contains these top-level groups:
+
+- =run=: schema, implementation, clock, and host identity;
+- =topology=: total agents, tenants, swarms, and membership accounting;
+- =workload=: roles, policies, capabilities, budgets, and service distribution;
+- =arrival=: schedule, waves, logical intervals, and simulation scale;
+- =capacity=: source, policy, available CPUs, selected capacity, and manual
+  override state;
+- =agent-metrics=: lifecycle counts and latency distributions;
+- =swarm-metrics=: barriers, aggregation, critical path, and outcomes;
+- =tenant-metrics=: per-tenant throughput and fairness;
+- =resource-metrics=: wall, process, queue, concurrency, and memory evidence;
+  and
+- =correctness=: named invariant checks and the final pass or fail result.
+
+All counts are integers and all duration fields carry an explicit unit in their
+field name.  The JSON receipt is the canonical machine-readable artifact.  A
+human table is a projection of that receipt, never an independent source of
+truth.
+
+* Acceptance gates
+
+** Deterministic correctness gate
+
+Small synthetic cases SHALL prove identity uniqueness, membership accounting,
+arrival ordering, capacity accounting, terminal monotonicity, barrier ordering,
+aggregation ordering, partial failure, timeout, cancellation, and zero final
+activity.  These tests use controlled service functions and do not assert host
+performance.
+
+** Single-swarm performance gate
+
+Run the normative =2..128= matrix for both instant and ramp arrival.  Report all
+units, capacity policy, critical steps, and work amplification.  Performance
+thresholds are host-profiled evidence and SHALL NOT be embedded as universal
+CPU constants.
+
+** Multi-tenant saturation gate
+
+Run =5,000= first, then =10,000=, then =100,000=.  A larger case starts only
+after the previous case passes correctness and resource guards.  The guard must
+stop before host exhaustion on excessive resident memory, queue growth, lost
+completion, or non-zero terminal activity.  Stopping is an explicit failed or
+guarded receipt, not a missing result.
+
+** Repeatability gate
+
+Selection policy must be identical across fresh processes on an unchanged host.
+Timing variability is reported as a distribution.  A stable selected capacity
+does not imply stable wall time, and the receipt SHALL keep those claims
+separate.
+
+* Implementation frontier
+
+The Python validation runtime SHOULD keep the feature modular:
+
+- =benchmarks/swarm_lifecycle.py=: public benchmark entry point;
+- =benchmarks/_swarm_lifecycle_workload.py=: immutable planning and grouping;
+- =benchmarks/_swarm_lifecycle_runner.py=: arrival, capacity, and execution;
+- =benchmarks/_swarm_lifecycle_measurement.py=: clocks and observers;
+- =benchmarks/_swarm_lifecycle_receipt.py=: schema construction and validation;
+  and
+- =benchmarks/__main__.py=: command dispatch only.
+
+The implementation SHOULD reuse =RuntimeGraphProgram.abatch=,
+=RuntimeGraphExecutor.abatch=, burst observer patterns, and the established
+capacity receipt.  It SHALL add explicit swarm primitives instead of encoding
+barriers or aggregation as accidental list positions.
+
+* External reference mapping
+
+This design is product-neutral, but its parameters cover the public behavior of
+Kimi-style agent swarms:
+
+- Kimi K2.5 describes dynamically created domain-specific agents, bounded
+  subagent steps, and workload-dependent agent counts:
+  [[https://github.com/MoonshotAI/Kimi-K2.5][official Kimi K2.5 repository]].
+- The K2.5 report describes up to 100 subagents, 1,500 tool calls, and reduced
+  wall time while emphasizing critical steps:
+  [[https://www.kimi.com/blog/kimi-k2-5][official Kimi K2.5 report]].
+- Current Kimi Code documentation describes an =AgentSwarm= tool with a bounded
+  total population, all-member aggregation, and a ramped launch schedule:
+  [[https://moonshotai.github.io/kimi-code/en/reference/tools.html][official Kimi Code tool reference]].
+- Timeout and subagent lifecycle events are separately documented:
+  [[https://moonshotai.github.io/kimi-code/en/configuration/config-files.html][configuration reference]] and
+  [[https://moonshotai.github.io/kimi-cli/en/customization/hooks.html][hook reference]].
+
+These sources justify configurable populations, budgets, ramp schedules,
+barriers, aggregation, timeouts, and critical-path metrics.  They do not justify
+copying a current product limit into the POO Flow runtime ABI.
+
+* Version 1 delivery order
+
+1. Land workload planning and receipt validation with deterministic unit tests.
+2. Land single-swarm instant and ramp execution for the =2..128= matrix.
+3. Land multi-tenant grouping and fairness evidence at =5,000=.
+4. Qualify =10,000= and then =100,000= under memory and lifecycle guards.
+5. Publish benchmark receipts and update this Org document with exact units and
+   host identity.
+
+Adaptive schedulers, distributed execution, real model inference, and product
+specific orchestration remain future extensions.  They require new evidence;
+they do not silently extend version 1.
