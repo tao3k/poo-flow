@@ -18,11 +18,12 @@ class GraphRunContext:
         state: Mapping[str, Any],
         pending: Sequence[Any],
         *,
+        state_is_owned: bool = False,
         trace: Sequence[str] = (),
         events: Sequence[RuntimeGraphEvent] = (),
         step: int = 0,
     ) -> None:
-        self.state = dict(state)
+        self.state = state if state_is_owned else dict(state)
         self.pending = deque(pending)
         self.trace = list(trace)
         self.events = list(events)
@@ -33,6 +34,17 @@ class GraphRunContext:
         from ._runtime_graph_types import START
 
         return cls(initial_state, executor._edges[START])
+
+    @classmethod
+    def from_owned(cls, executor, initial_state: RuntimeState) -> "GraphRunContext":
+        """Take single-use ownership of a fresh state without copying it.
+
+        The caller must relinquish the dictionary and must not observe or reuse it
+        after this call. Shared or caller-visible state must use ``from_initial``.
+        """
+        from ._runtime_graph_types import START
+
+        return cls(initial_state, executor._edges[START], state_is_owned=True)
 
     @classmethod
     def from_interrupted(cls, interrupted: RuntimeGraphInterrupted) -> "GraphRunContext":

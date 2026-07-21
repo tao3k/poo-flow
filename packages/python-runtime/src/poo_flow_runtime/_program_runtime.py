@@ -154,7 +154,7 @@ class RuntimeGraphProgram:
         trace_key: str | None = None,
     ) -> RuntimeGraphExecution:
         try:
-            state, trace, events = await executor.ainvoke_with_events(
+            state, trace, events = await executor._ainvoke_owned_with_events(
                 self._internal_state(initial_state), trace_key=trace_key
             )
         except RuntimeGraphInterrupted as exc:

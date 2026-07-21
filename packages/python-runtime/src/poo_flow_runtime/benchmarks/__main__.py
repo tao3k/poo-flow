@@ -8,6 +8,7 @@ import sys
 from . import anyio_runtime
 from . import burst_lifecycle
 from . import composition
+from . import large_state_copy
 from . import langgraph_alignment
 from . import scheme_load_aot
 
@@ -21,6 +22,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         choices=(
             "anyio-runtime",
             "burst-lifecycle",
+            "large-state-copy",
             "langgraph-alignment",
             "composition",
             "scheme-load-aot",
@@ -39,6 +41,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--max-concurrency", type=int)
     parser.add_argument("--relative-tolerance", type=float, default=0.25)
     parser.add_argument("--latency-us", type=int, default=1_000)
+    parser.add_argument(
+        "--payload-field-count",
+        type=int,
+        default=large_state_copy.LARGE_STATE_COPY_DEFAULT_PAYLOAD_FIELD_COUNT,
+    )
+    parser.add_argument(
+        "--payload-field-bytes",
+        type=int,
+        default=large_state_copy.LARGE_STATE_COPY_DEFAULT_PAYLOAD_FIELD_BYTES,
+    )
     parser.add_argument("--serial-steps", type=int, default=3)
     parser.add_argument("--parallel-fanout", type=int, default=4)
     parser.add_argument("--parallel-steps", type=int, default=1)
@@ -66,6 +78,15 @@ def main(argv: list[str] | None = None) -> int:
             max_concurrency=args.max_concurrency,
             relative_tolerance=args.relative_tolerance,
             latency_us=args.latency_us,
+        )
+    elif args.suite == "large-state-copy":
+        benchmarks = large_state_copy.run_large_state_copy_benchmarks(
+            target_observations_per_side=args.observations_per_side,
+            items_per_pair=args.items_per_pair,
+            max_concurrency=args.max_concurrency,
+            payload_field_count=args.payload_field_count,
+            payload_field_bytes=args.payload_field_bytes,
+            relative_tolerance=args.relative_tolerance,
         )
     elif args.suite == "burst-lifecycle":
         benchmarks = burst_lifecycle.run_burst_lifecycle_benchmarks(
@@ -107,6 +128,8 @@ def main(argv: list[str] | None = None) -> int:
     sys.stdout.write("\n")
     if args.suite == "anyio-runtime":
         return 0 if anyio_runtime.performance_gate_passed(benchmarks) else 1
+    if args.suite == "large-state-copy":
+        return 0 if large_state_copy.performance_gate_passed(benchmarks) else 1
     if args.suite == "burst-lifecycle":
         return 0 if burst_lifecycle.performance_gate_passed(benchmarks) else 1
     return 0

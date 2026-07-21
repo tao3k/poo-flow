@@ -2,6 +2,7 @@ import asyncio
 
 import pytest
 
+from poo_flow_runtime._runtime_graph_context import GraphRunContext
 from poo_flow_runtime import (
     MemoryRuntimeGraphCheckpointer,
     MemoryRuntimeGraphStore,
@@ -180,6 +181,87 @@ def test_conditional_router_can_return_direct_send_fanout() -> None:
         "items": ["a", "b"],
         "results": ["a", "b"],
     }
+
+
+def test_public_executor_async_action_state_is_isolated() -> None:
+    retained: list[dict] = []
+    caller_state = {"value": 1}
+
+    async def mutate(state: dict) -> dict:
+        retained.append(state)
+        state["value"] += 1
+        return state
+
+    executor = (
+        RuntimeGraphBuilder()
+        .add_node("mutate", mutate)
+        .set_entry_point("mutate")
+        .set_finish_point("mutate")
+        .compile()
+    )
+
+    async def run() -> None:
+        state, _trace, events = await executor.ainvoke_with_events(
+            caller_state, trace_key="trace"
+        )
+        assert caller_state == {"value": 1}
+        assert state == {"value": 2, "trace": ["mutate"]}
+        retained[0]["late"] = True
+        assert "late" not in state
+        assert "late" not in events[-1].detail["state"]
+
+    asyncio.run(run())
+
+
+def test_program_async_transfers_owned_state_and_matches_public_executor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def route(state: dict) -> list[RuntimeGraphSend]:
+        await asyncio.sleep(0)
+        return [RuntimeGraphSend("worker", {"item": item}) for item in state["items"]]
+
+    graph = RuntimeGraphBuilder()
+    graph.add_node("fanout", lambda state: {"started": True})
+    graph.add_node("worker", lambda state: {"results": [state["item"]]})
+    graph.add_reducer("results", lambda left, right: left + right)
+    graph.set_entry_point("fanout")
+    graph.add_conditional_edges("fanout", route)
+    graph.set_finish_point("worker")
+    program = graph.compile_reference_program()
+    initial_state = {"items": ["a", "b"], "results": []}
+    created: list[dict] = []
+    transferred: list[tuple[dict, dict]] = []
+    make_internal_state = program._internal_state
+    make_owned_context = GraphRunContext.from_owned.__func__
+
+    def capture_internal_state(state: dict) -> dict:
+        internal_state = make_internal_state(state)
+        created.append(internal_state)
+        return internal_state
+
+    def capture_owned_context(
+        cls: type[GraphRunContext], executor: object, state: dict
+    ) -> GraphRunContext:
+        context = make_owned_context(cls, executor, state)
+        transferred.append((state, context.state))
+        return context
+
+    monkeypatch.setattr(program, "_internal_state", capture_internal_state)
+    monkeypatch.setattr(
+        GraphRunContext, "from_owned", classmethod(capture_owned_context)
+    )
+
+    async def run() -> None:
+        state, trace, events = await program._executor().ainvoke_with_events(
+            make_internal_state(initial_state)
+        )
+        execution = await program.ainvoke_with_trace(initial_state)
+        assert execution.state == program._public_state(state)
+        assert execution.trace == tuple(trace)
+        assert execution.events == tuple(events)
+
+    asyncio.run(run())
+    assert created[0] is transferred[0][0] is transferred[0][1]
 
 
 def test_conditional_router_can_return_direct_target_list() -> None:

@@ -114,6 +114,21 @@ class RuntimeGraphExecutor:
         context = GraphRunContext.from_initial(self, initial_state)
         return await self._arun_context(context, trace_key=trace_key)
 
+    async def _ainvoke_owned_with_events(
+        self,
+        initial_state: RuntimeState,
+        *,
+        trace_key: str | None = None,
+    ) -> tuple[RuntimeState, list[str], list[RuntimeGraphEvent]]:
+        """Consume a fresh state through the single-use ownership path.
+
+        The caller transfers ownership and must not observe or reuse
+        ``initial_state`` after this call. Public callers must use
+        ``ainvoke_with_events`` so their input remains defensively isolated.
+        """
+        context = GraphRunContext.from_owned(self, initial_state)
+        return await self._arun_context(context, trace_key=trace_key)
+
     def resume_interrupted(
         self,
         interrupted: RuntimeGraphInterrupted,
@@ -421,7 +436,7 @@ class RuntimeGraphExecutor:
                 "trace": tuple(context.trace),
             },
         )
-        result = self.actions[node](dict(action_state))
+        result = self.actions[node](action_state)
         if inspect.isawaitable(result):
             result = await result
         outcome = normalize_action_result(result)

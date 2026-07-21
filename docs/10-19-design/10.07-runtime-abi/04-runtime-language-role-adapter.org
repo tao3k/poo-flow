@@ -209,6 +209,14 @@ repository-wide green state.  Existing module-system and other full-suite
 blockers remain independent; no Rust, TypeScript, C ABI, Gerbil, or Bazel
 semantic change is introduced here.
 
+*** Large-state Program-to-executor copy boundary
+The canonical Python runtime qualification command is:
+#+begin_src sh
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 1024 --payload-field-bytes 16
+#+end_src
+
+This qualifies the Python runtime's async Program-to-executor ownership-transfer boundary. It is not a C ABI benchmark, does not define a JSON handoff protocol, and does not make JSON part of the ABI. The complete matrix, canonical receipts, memory model, and interpretation are owned by =14-runtime-benchmark-surface.org= under =Large-state Program-to-executor copy qualification=.
+
 ** 2026-07-20 Async Substrate Qualification Receipt
 
 The qualification owner is

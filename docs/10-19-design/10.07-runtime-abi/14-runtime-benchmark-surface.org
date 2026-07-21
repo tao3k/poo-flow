@@ -255,6 +255,117 @@ flowchart TD
   MP --> R
 #+end_src
 
+* Large-state Program-to-executor copy qualification
+** Scope and invariants
+This qualification isolates the Python runtime's shallow root-dictionary copy at the async Program-to-executor boundary. It is not a C ABI qualification, does not define a JSON ABI or JSON handoff protocol, and does not make the line-oriented benchmark receipt part of any runtime ABI.
+
+Each timing pair starts from equivalent fresh user states. The candidate transfers its already-owned internal state dictionary to the executor, while the reference uses the public defensive-copy route. Both sides use the same executor, compiled plan, and action, and their public state projection, trace, and events must be equal. The suite reports =copy-boundary: program-executor=, =copy-kind: shallow-root-dict=, =phase: steady-fresh-state=, and =semantics-verified: true= when these invariants hold.
+
+#+begin_src mermaid
+flowchart LR
+    U["Equivalent fresh user states"] --> IA["Program internal state A"]
+    U --> IB["Program internal state B"]
+    IA --> C["Candidate: owned transfer"]
+    IB --> R["Reference: defensive root copy"]
+    C --> E["Same executor, plan, and action"]
+    R --> E
+    E --> P["Same public projection"]
+    P --> S["State, trace, and event equality"]
+    S --> Q["Qualification receipt"]
+#+end_src
+
+** Canonical matrix commands
+The canonical matrix fixes 5,000 target observations per side, capacity 12, and 16 logical bytes per payload field. Each command produces 5,040 actual observations per side because it completes whole 24-item timing pairs.
+
+#+begin_src sh
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 64 --payload-field-bytes 16
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 256 --payload-field-bytes 16
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 1024 --payload-field-bytes 16
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 4096 --payload-field-bytes 16
+#+end_src
+
+** Final canonical JSON receipts
+*** 64 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":1595.479,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":42837.688,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":204701.375,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":3168,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":64,"payload-logical-bytes-per-state":1024,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.964093,"reference-median-ns-per-item":44433.167,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":273262.167,"root-field-count":66,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":1024,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":2.010295,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 2.29
+user 0.50
+sys 0.06
+#+end_example
+
+*** 256 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":6022.562,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":46780.375,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":266366.333,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":12384,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":256,"payload-logical-bytes-per-state":4096,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.885943,"reference-median-ns-per-item":52802.938,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":436541.667,"root-field-count":258,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":4096,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":2.029576,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 2.59
+user 0.66
+sys 0.05
+#+end_example
+
+*** 1,024 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":7857.646,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":73619.792,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":674574.667,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":49248,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":1024,"payload-logical-bytes-per-state":16384,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.90356,"reference-median-ns-per-item":81477.438,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":1155276.042,"root-field-count":1026,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":16384,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":1.976466,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 4.96
+user 1.60
+sys 0.07
+#+end_example
+
+*** 4,096 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":42346.354,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":177712.667,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":1737168.375,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":196704,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":4096,"payload-logical-bytes-per-state":65536,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.807568,"reference-median-ns-per-item":220059.021,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":1540557.292,"root-field-count":4098,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":65536,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":2.469326,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 13.04
+user 4.57
+sys 0.10
+#+end_example
+
+** Derived matrix
+All latency columns are nanoseconds per item. =Saved= is =reference median - candidate median=, and =Ratio= is =candidate median / reference median=. Wall, user, and system time are seconds from =/usr/bin/time -p=.
+
+| Payload fields | Candidate median | Reference median |      Saved |    Ratio | Candidate p95 | Reference p95 | Wall | User |  Sys |
+|----------------+------------------+------------------+------------+----------+---------------+---------------+------+------+------|
+|             64 |       42,837.688 |       44,433.167 |  1,595.479 | 0.964093 |   204,701.375 |   273,262.167 | 2.29 | 0.50 | 0.06 |
+|            256 |       46,780.375 |       52,802.938 |  6,022.562 | 0.885943 |   266,366.333 |   436,541.667 | 2.59 | 0.66 | 0.05 |
+|          1,024 |       73,619.792 |       81,477.438 |  7,857.646 | 0.903560 |   674,574.667 | 1,155,276.042 | 4.96 | 1.60 | 0.07 |
+|          4,096 |      177,712.667 |      220,059.021 | 42,346.354 | 0.807568 | 1,737,168.375 | 1,540,557.292 | 13.04 | 4.57 | 0.10 |
+
+** Memory model
+Let =F= be the payload-field count, =B= the logical bytes per payload field, and =I= the items per timing pair. The template's payload byte contents estimate is =F * B= and excludes Python object, dictionary, key, and reference overhead. A shallow =dict= copy duplicates root references; it does not copy the =F * B= retained payload byte contents.
+
+Each pair creates =2 * I= input root dictionaries. Each root contains =F + 2= references, so the input-root reference count is =2 * I * (F + 2)=. In the canonical runs, =I= is 24, which yields 48 input roots and the receipt counts 3,168, 12,384, 49,248, and 196,704. Additional runtime, result, and event roots are a constant-factor =O(I * F)=. The resident-memory model is per timing pair, not =O(total observations * F)=, because completed pairs do not retain every observation's state.
+
+** Interpretation and limits
+- =passed: true= is a same-run no-regression result under =gate-purpose: same-run-no-regression= and the receipt's threshold ratio. It is not itself a speedup claim.
+- =candidate-faster: true= and each positive =absolute-saved-ns-per-item= report that the candidate median was lower in these four runs.
+- Tail latency is not uniformly better. At 4,096 fields, candidate p95 is 1,737,168.375 ns/item and reference p95 is 1,540,557.292 ns/item.
+- The saved median is not cleanly linear at every point. From 1,024 to 4,096 fields it increases by about 5.39 times for a four-times field increase. The signal generally grows with field count, but the matrix is noisy and does not establish a universal scaling coefficient.
+- The measured root copy is =O(F)= in field count, while the full timed path includes shared graph, action, projection, trace, and event costs.
+- =payload-field-bytes= describes logical retained payload shape only. Python's shallow dictionary copy copies references rather than the referenced byte contents.
+- This suite does not measure the pre-action optimization surface. It qualifies only the named Program-to-executor ownership-transfer boundary under the steady fresh-state workload.
+- Results apply to these commands, runtime, host, and process conditions. They do not establish cross-runtime, cross-host, C ABI, serialization, or end-to-end application performance.
+
+* Open issue: burst auto-capacity calibration observability
+This issue is independent of the large-state owned-transfer qualification. It is not an owned-state optimization result and must not be used as evidence for that optimization.
+
+Two auto-capacity runs exposed different selections with the same visible calibration inputs: 12 available CPUs, a calibration population of 1,000, candidates 12, 24, 48, 96, 192, 384, 768, and 1,000, and topology =serial_steps=3, =parallel_fanout=4, =parallel_steps=1, =interval=0. The full auto owned-state run selected capacity 768; the subsequent minimal =--population 1000= auto run selected 48.
+
+The canonical receipt does not report per-candidate calibration throughput. The selection gap is therefore unobservable and cannot be attributed to system load, the owned-state change, or any other cause from these receipts.
+
+Repeated fixed-capacity 100,000-item runs at capacity 48 also show material run-to-run jitter:
+
+| Run | Makespan (ms) | Throughput (/s) | Startup p99 (ms) | Wall (s) | User (s) | Sys (s) | Change from historical baseline |
+|-----+---------------+-----------------+------------------+----------+----------+---------+---------------------------------|
+| First current run | 34,871.279 | 2,867.690 | 34,494.595 | 39.66 | 9.79 | 0.34 | makespan +18.211%; throughput -15.405%; startup p99 +18.002% |
+| Repeat | 29,870.077 | 3,347.832 | 29,485.455 | 34.44 | 9.75 | 0.33 | makespan +1.257%; throughput -1.241%; startup p99 +0.866% |
+
+No causal attribution is supported. The next step is observable, robust calibration: emit per-candidate throughput receipts, repeat candidate measurements, and select from a documented robust statistic before treating automatic capacity selection as trustworthy.
+
 These receipts qualify scoped Python runtime behavior only.  They do not claim
 a globally green repository; Scheme and module-system blockers remain separate
 acceptance work.
