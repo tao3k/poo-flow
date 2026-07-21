@@ -318,6 +318,43 @@ correctness and allocation evidence, but no claim about runtime execution,
 startup latency, barrier cost, or terminal throughput.  Those claims begin only
 with the runner and measurement stages.
 
+* Initial single-swarm execution evidence
+
+The second implementation stage executes the full =2..128= single-swarm matrix
+through =RuntimeGraphProgram.abatch=.  It uses instant arrival, one millisecond
+of requested service work per agent, =system-available-cpu-v1=, and the same
+12-CPU =darwin-arm64= host.  The capacity implementation is now a shared
+benchmark owner used by both burst and swarm lifecycle runners; neither runner
+performs throughput calibration.
+
+Three fresh processes produced the ranges below.  The p99 columns come from the
+latest complete receipt and are not presented as ranges.  Every observation had
+zero lost or duplicate completions, zero final active agents, and opened the
+aggregate only after the terminal barrier.
+
+| Agents | Capacity | Wall range (ms) | Process range (ms) | Throughput range (agents/s) | Startup p99 (ms) | Service p99 (ms) | Settlement p99 (ms) | Peak active | Passed |
+|--------+----------+-----------------+--------------------+-----------------------------+------------------+------------------+---------------------+-------------+--------|
+|      2 |        2 |   7.479--23.985 |       0.894--1.410 |              83.387--267.411 |            4.372 |            2.416 |               0.827 |           2 | yes    |
+|      4 |        4 |   3.334--15.169 |       0.792--0.890 |           263.697--1,199.910 |            1.527 |            1.315 |               0.590 |           4 | yes    |
+|      8 |        8 |    5.669--8.080 |       0.575--0.870 |         990.058--1,411.163 |            2.384 |            4.449 |               0.971 |           8 | yes    |
+|     16 |       12 |    5.238--9.056 |       1.061--1.261 |       1,766.833--3,054.431 |            4.401 |            2.264 |               2.486 |          12 | yes    |
+|     32 |       12 |   6.127--17.527 |       1.297--1.674 |       1,825.781--5,222.927 |            6.901 |            2.817 |               6.206 |          12 | yes    |
+|     64 |       12 |  11.441--71.414 |       2.786--3.932 |         896.183--5,593.876 |            9.658 |            1.847 |               7.988 |          12 | yes    |
+|    100 |       12 |  16.097--57.682 |       3.333--4.574 |       1,733.637--6,212.322 |           14.138 |            2.462 |              13.190 |          12 | yes    |
+|    128 |       12 |  18.595--48.253 |       4.363--5.377 |       2,652.689--6,883.679 |           17.586 |            2.578 |              16.535 |          12 | yes    |
+
+The wide wall-time ranges, especially at 64 agents, are evidence of host
+scheduling variability.  They do not invalidate the deterministic capacity or
+terminal accounting receipts, but they prevent a stable throughput claim from
+three observations.  Process time, wall time, and throughput therefore remain
+separate fields.
+
+The related focused gate reported =40 passed=, and the parser-backed full check
+reported =Error=0=, =Warning=0=, and =Info=0= across the capacity, runner,
+measurement, receipt, public surface, and tests.  This stage still makes no
+claim about ramp arrival, failures, timeouts, cancellation, multi-tenant
+fairness, or the 5,000--100,000 execution matrix.
+
 * Version 1 delivery order
 
 1. Land workload planning and receipt validation with deterministic unit tests.

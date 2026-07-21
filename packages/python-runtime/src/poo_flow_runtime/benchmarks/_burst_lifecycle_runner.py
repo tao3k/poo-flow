@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from functools import partial
-import os
 import sys
+
+from ._benchmark_capacity import (
+    MANUAL_CAPACITY_POLICY,
+    SYSTEM_AVAILABLE_CPU_POLICY,
+    available_cpu_count,
+    select_benchmark_capacity,
+)
 
 import anyio
 
 from ._burst_lifecycle_measurement import _measure_population
 from .burst_lifecycle import BurstLifecycleBenchmark
-
-SYSTEM_AVAILABLE_CPU_POLICY = "system-available-cpu-v1"
-MANUAL_CAPACITY_POLICY = "manual-override-v1"
-
 
 def run_burst_lifecycle_benchmarks(
     *,
@@ -109,8 +111,7 @@ async def _run_benchmarks(
 
 
 def _available_cpu_count() -> int:
-    cpu_count = getattr(os, "process_cpu_count", os.cpu_count)
-    return max(cpu_count() or 1, 1)
+    return available_cpu_count()
 
 
 def _select_capacity(
@@ -119,10 +120,8 @@ def _select_capacity(
     population_cap: int,
     requested: int | None,
 ) -> tuple[int, str, str]:
-    if requested is not None:
-        return requested, "manual", MANUAL_CAPACITY_POLICY
-    return (
-        min(population_cap, available_cpus),
-        "system-available-cpu",
-        SYSTEM_AVAILABLE_CPU_POLICY,
+    return select_benchmark_capacity(
+        available_cpus=available_cpus,
+        population_cap=population_cap,
+        requested=requested,
     )
