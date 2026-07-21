@@ -112,8 +112,15 @@ jobs:
           branch_dir="$RUNNER_TEMP/npm-package-branch"
           git clone --filter=blob:none --no-checkout "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$branch_dir"
           git -C "$branch_dir" checkout --orphan npm-package-next
+          git -C "$branch_dir" rm -rf .
           cp -R "$RUNNER_TEMP/package-payload/." "$branch_dir/"
           git -C "$branch_dir" add -A
+          (
+            cd "$RUNNER_TEMP/package-payload"
+            find . -type f -print | sed 's#^./##' | LC_ALL=C sort
+          ) > "$RUNNER_TEMP/expected-package-files"
+          git -C "$branch_dir" ls-files | LC_ALL=C sort > "$RUNNER_TEMP/actual-package-files"
+          diff -u "$RUNNER_TEMP/expected-package-files" "$RUNNER_TEMP/actual-package-files"
           git -C "$branch_dir" -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com commit -m "package: $GITHUB_SHA"
           git -C "$branch_dir" push origin HEAD:refs/heads/npm-package --force
 
