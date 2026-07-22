@@ -99,12 +99,14 @@ gerbil_project_compile(
     args = ["compile"],
     build_script = "//:build.ss",
     receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
+    deps = [":gslph_package"],
 )
 
 gerbil_project_dev(
     name = "dev_compile",
     args = ["compile"],
     build_script = "//:build.ss",
+    deps = [":gslph_package"],
     tags = [
         "local",
         "manual",
@@ -115,6 +117,7 @@ gerbil_project_dev(
     name = "dev_unit_tests",
     args = ["compile"],
     build_script = "//:build.ss",
+    deps = [":gslph_package"],
     tags = [
         "local",
         "manual",
