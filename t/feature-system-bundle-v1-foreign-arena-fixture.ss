@@ -19,9 +19,12 @@
       (close-output-port port))))
 
 (def (fixture-lowering-plan)
-  (feature-bundle-v1-lowering
+  (feature-bundle-v1-lowering/with-symbols
    'bundle-v1-scheme-c-fixture
    73
+   (list
+    (feature-bundle-v1-symbol 'component 'component-b "Component B" 1)
+    (feature-bundle-v1-symbol 'component 'component-a "Component A" 1))
    (list
     (feature-bundle-v1-component
      'case-a 'component-b 'object-b 'type-a 'contract-a 'role-b

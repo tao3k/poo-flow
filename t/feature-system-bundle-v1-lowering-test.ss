@@ -12,6 +12,9 @@
    'bounded-policy 'retry-strategy 'python-adapter 'runtime-projection
    composition-order))
 
+(def (sample-symbol component-id label)
+  (feature-bundle-v1-symbol 'component component-id label 1))
+
 (def feature-system-bundle-v1-lowering-test-suite
   (test-suite
    "feature-system Bundle v1 lowering"
@@ -52,12 +55,18 @@
             (feature-bundle-v1-evidence
              'case-a 'proof-a 'agent-contract 'signed-receipt 'lean 0))
            (plan
-            (feature-bundle-v1-lowering
-             'bundle-a 7 input-components (list edge) (list evidence)))
+            (feature-bundle-v1-lowering/with-symbols
+             'bundle-a 7
+             (list (sample-symbol 'agent-b "Agent B")
+                   (sample-symbol 'agent-a "Agent A"))
+             input-components (list edge) (list evidence)))
            (descriptor (.ref plan 'descriptor))
+           (symbols (.ref descriptor 'symbols))
            (components (.ref descriptor 'components))
            (edges (.ref descriptor 'edges))
            (obligations (.ref descriptor 'evidence-obligations))
+           (metadata (.ref descriptor 'metadata-bytes))
+           (symbol-rows (.ref descriptor 'symbol-rows))
            (rows (.ref descriptor 'component-rows))
            (native-edges (.ref descriptor 'edge-rows))
            (native-evidence (.ref descriptor 'evidence-rows)))
@@ -73,15 +82,25 @@
       (check (.ref descriptor 'reserved0) => 0)
       (check (.ref descriptor 'bundle-epoch) => 7)
       (check (.ref descriptor 'reserved) => '(0 0 0 0 0 0 0))
-      (check (.ref descriptor 'arena-bytes) => 576)
-      (check (.ref components 'offset) => 0)
+      (check (.ref descriptor 'arena-bytes) => 704)
+      (check (.ref symbols 'offset) => 0)
+      (check (.ref symbols 'length) => 64)
+      (check (.ref symbols 'count) => 2)
+      (check (.ref symbols 'stride) => 32)
+      (check (.ref components 'offset) => 64)
       (check (.ref components 'length) => 400)
       (check (.ref components 'stride) => 200)
-      (check (.ref edges 'offset) => 400)
+      (check (.ref edges 'offset) => 464)
       (check (.ref edges 'length) => 80)
-      (check (.ref obligations 'offset) => 480)
+      (check (.ref obligations 'offset) => 544)
       (check (.ref obligations 'length) => 96)
+      (check (.ref metadata 'offset) => 640)
+      (check (.ref metadata 'length) => 14)
+      (check (u8vector-length (.ref descriptor 'metadata-image)) => 14)
       (check (u8vector-length (.ref descriptor 'digest)) => 32)
+      (check (length symbol-rows) => 2)
+      (check (feature-bundle-v1-native-symbol? (car symbol-rows)) => #t)
+      (check (.ref (car symbol-rows) 'flags) => 0)
       (check (feature-bundle-v1-native-component? (car rows)) => #t)
       (check (.ref (car rows) 'flags) => 1)
       (check (.ref (car rows) 'reserved0) => 0)
@@ -97,26 +116,49 @@
       (check (eq? (car input-components) component-b) => #t)))
 
    (test-case
-    "equivalent input produces an identical digest"
-    (let* ((first
-            (feature-bundle-v1-lowering
-             'bundle-a 0
+   "equivalent input produces an identical digest"
+    (let* ((symbols
+            (list (sample-symbol 'agent-b "Agent B")
+                  (sample-symbol 'agent-a "Agent A")))
+           (first
+            (feature-bundle-v1-lowering/with-symbols
+             'bundle-a 0 symbols
              (list (sample-component 'agent-b 1)
                    (sample-component 'agent-a 0))
              '() '()))
            (second
-            (feature-bundle-v1-lowering
+            (feature-bundle-v1-lowering/with-symbols
+             'bundle-a 0 (reverse symbols)
+             (list (sample-component 'agent-a 0)
+                   (sample-component 'agent-b 1))
+             '() '()))
+           (renamed
+            (feature-bundle-v1-lowering/with-symbols
              'bundle-a 0
+             (list (sample-symbol 'agent-b "Renamed B")
+                   (sample-symbol 'agent-a "Agent A"))
              (list (sample-component 'agent-a 0)
                    (sample-component 'agent-b 1))
              '() '())))
       (check (equal? (.ref (.ref first 'descriptor) 'digest)
                      (.ref (.ref second 'descriptor) 'digest))
-             => #t)))
+             => #t)
+      (check (equal? (.ref (.ref first 'descriptor) 'digest)
+                     (.ref (.ref renamed 'descriptor) 'digest))
+             => #f)))
 
    (test-case
-    "duplicate and non-POO component surfaces fail closed"
+   "duplicate and non-POO Bundle surfaces fail closed"
     (let* ((component (sample-component 'agent-a 0))
+           (duplicate-symbol
+            (feature-bundle-v1-lowering/with-symbols
+             'bundle-a 0
+             (list (sample-symbol 'agent-a "Agent A")
+                   (sample-symbol 'agent-a "Agent A again"))
+             (list component) '() '()))
+           (invalid-symbol
+            (feature-bundle-v1-lowering/with-symbols
+             'bundle-a 0 '(not-a-symbol-row) (list component) '() '()))
            (duplicate
             (feature-bundle-v1-lowering
              'bundle-a 0 (list component component) '() '()))
@@ -129,6 +171,12 @@
            (invalid-epoch
             (feature-bundle-v1-lowering
              'bundle-a -1 (list component) '() '())))
+      (check (.ref duplicate-symbol 'accepted?) => #f)
+      (check (.ref (car (.ref duplicate-symbol 'diagnostics)) 'code)
+             => 'duplicate-symbol-key)
+      (check (.ref invalid-symbol 'accepted?) => #f)
+      (check (.ref (car (.ref invalid-symbol 'diagnostics)) 'code)
+             => 'invalid-symbol)
       (check (.ref duplicate 'accepted?) => #f)
       (check (.ref (car (.ref duplicate 'diagnostics)) 'code)
              => 'duplicate-component-key)
@@ -152,3 +200,5 @@
       (check (.ref (.ref descriptor 'components) 'count) => 0)
       (check (.ref (.ref descriptor 'edges) 'count) => 0)
       (check (.ref (.ref descriptor 'evidence-obligations) 'count) => 0)))))
+
+(run-tests! feature-system-bundle-v1-lowering-test-suite)
