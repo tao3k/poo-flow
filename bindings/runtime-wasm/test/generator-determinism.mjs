@@ -17,8 +17,10 @@ function materializeInFreshProcess() {
       env: {
         ...process.env,
         GERBIL_PATH: "../../.gerbil",
-        POO_FLOW_HUMAN_CAPABILITY_DESCRIPTOR_OUT: descriptorPath,
-        POO_FLOW_HUMAN_CAPABILITY_ARENA_OUT: arenaPath,
+        POO_FLOW_BUNDLE_V1_ID: "human-capability",
+        POO_FLOW_BUNDLE_V1_EPOCH: "1",
+        POO_FLOW_BUNDLE_V1_DESCRIPTOR_OUT: descriptorPath,
+        POO_FLOW_BUNDLE_V1_ARENA_OUT: arenaPath,
       },
       stdio: "pipe",
     });

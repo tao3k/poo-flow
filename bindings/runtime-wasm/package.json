@@ -35,7 +35,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "generate": "mkdir -p workflows && env POO_FLOW_HUMAN_CAPABILITY_DESCRIPTOR_OUT=workflows/human-capability.descriptor.bin POO_FLOW_HUMAN_CAPABILITY_ARENA_OUT=workflows/human-capability.arena.bin GERBIL_PATH=../../.gerbil gxi examples/human-capability.ss",
+    "generate": "mkdir -p workflows && env POO_FLOW_BUNDLE_V1_ID=human-capability POO_FLOW_BUNDLE_V1_EPOCH=1 POO_FLOW_BUNDLE_V1_DESCRIPTOR_OUT=workflows/human-capability.descriptor.bin POO_FLOW_BUNDLE_V1_ARENA_OUT=workflows/human-capability.arena.bin GERBIL_PATH=../../.gerbil gxi examples/human-capability.ss",
     "build:wasm": "mkdir -p dist && emcc -O2 -std=c11 -I../runtime-c/include -I../runtime-c/bundle-v1/include -Iinclude src/runtime_wasm_shim.c src/workflow_cursor.c ../runtime-c/src/runtime_v0.c ../runtime-c/bundle-v1/src/bundle_v1.c -o dist/poo_flow_runtime.wasm -sSTANDALONE_WASM=1 -Wl,--no-entry -sERROR_ON_UNDEFINED_SYMBOLS=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=@exports.json && cp src/index.mjs dist/index.mjs && cp src/index.d.ts dist/index.d.ts",
     "build": "npm run generate && npm run build:wasm",
     "test:generate-determinism": "node test/generator-determinism.mjs",
