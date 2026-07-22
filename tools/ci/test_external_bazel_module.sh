@@ -16,7 +16,8 @@ trap cleanup EXIT
 
 exported_module="$test_root/poo-flow"
 consumer="$test_root/consumer"
-mkdir -p "$exported_module" "$consumer"
+bazel_tmp="$test_root/tmp"
+mkdir -p "$exported_module" "$consumer" "$bazel_tmp"
 (
   cd "$repo_root"
   git ls-files -z | tar --null -T - -cf -
@@ -50,6 +51,7 @@ EOF
 
 (
   cd "$consumer"
+  export TMPDIR="$bazel_tmp"
   "$bazel_bin" --output_user_root="$test_root/bazel" query \
     --lockfile_mode=off @poo_flow//scheme:compile
   "$bazel_bin" --output_user_root="$test_root/bazel" build \
