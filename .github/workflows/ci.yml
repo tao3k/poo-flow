@@ -244,13 +244,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          set +e
           native_abi_output="$(
             bazel run --ui_event_filters=-info --noshow_progress \
               @gerbil_bazel//gerbil:native_abi_fingerprint 2>&1
           )"
+          native_abi_status=$?
+          set -e
+          if (( native_abi_status != 0 )); then
+            printf '%s\n' "$native_abi_output" >&2
+            exit "$native_abi_status"
+          fi
           native_abi="$(
             printf '%s\n' "$native_abi_output" \
-              | awk '/^[0-9a-f]{40}$/ { value = $0 } END { if (value != "") print value; else exit 1 }'
+              | awk '/^[0-9a-f]{40}$/ { value = $0 } END { if (value != "") print value }'
           )"
           if [[ "${#native_abi}" -ne 40 ]]; then
             printf '%s\n' "$native_abi_output" >&2
