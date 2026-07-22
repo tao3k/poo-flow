@@ -15,22 +15,27 @@
         +poo-flow-graph-edge-prototype-kind+
         +poo-flow-graph-prototype-kind+
         +poo-flow-graph-analysis-prototype-kind+
+        +poo-flow-graph-loop-analysis-prototype-kind+
         graph-node
         graph-edge
         graph
         graph-analysis
+        graph-loop-analysis
         +poo-flow-graph-node-slot-contracts+
         +poo-flow-graph-edge-slot-contracts+
         +poo-flow-graph-slot-contracts+
         +poo-flow-graph-analysis-slot-contracts+
+        +poo-flow-graph-loop-analysis-slot-contracts+
         +poo-flow-graph-node-type-contract+
         +poo-flow-graph-edge-type-contract+
         +poo-flow-graph-type-contract+
         +poo-flow-graph-analysis-type-contract+
+        +poo-flow-graph-loop-analysis-type-contract+
         poo-flow-graph-node-type-contract->alist
         poo-flow-graph-edge-type-contract->alist
         poo-flow-graph-type-contract->alist
         poo-flow-graph-analysis-type-contract->alist
+        poo-flow-graph-loop-analysis-type-contract->alist
         poo-flow-graph-id?
         poo-flow-graph-require
         poo-flow-graph-every?
@@ -56,7 +61,10 @@
         poo-flow-graph->alist
         poo-flow-graph-analysis
         poo-flow-graph-analysis?
-        poo-flow-graph-analysis->alist)
+        poo-flow-graph-analysis->alist
+        poo-flow-graph-loop-analysis
+        poo-flow-graph-loop-analysis?
+        poo-flow-graph-loop-analysis->alist)
 
 ;; : Symbol
 (def +poo-flow-graph-node-prototype-kind+
@@ -73,6 +81,10 @@
 ;; : Symbol
 (def +poo-flow-graph-analysis-prototype-kind+
   'poo-flow.graph.analysis.prototype)
+
+;; : Symbol
+(def +poo-flow-graph-loop-analysis-prototype-kind+
+  'poo-flow.graph.loop-analysis.prototype)
 
 ;; : PooFlowGraphNodePrototype
 (def graph-node
@@ -125,6 +137,22 @@
     (cons 'topological-order #f)
     (cons 'cycle-path #f)
     (cons 'acyclic? #t)
+    (cons 'diagnostics '())
+    (cons 'metadata '())
+    (cons 'runtime-executed #f))))
+
+;; : PooFlowGraphLoopAnalysisPrototype
+(def graph-loop-analysis
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-graph-loop-analysis-prototype-kind+)
+    (cons 'schema 'poo-flow.graph.loop-analysis.v1)
+    (cons 'graph-id #f)
+    (cons 'component-count 0)
+    (cons 'cyclic-component-count 0)
+    (cons 'components '())
+    (cons 'cyclic-components '())
+    (cons 'condensation-edges '())
     (cons 'diagnostics '())
     (cons 'metadata '())
     (cons 'runtime-executed #f))))
@@ -403,6 +431,71 @@
        (.slot? value 'kind)
        (eq? (.ref value 'kind)
             +poo-flow-graph-analysis-prototype-kind+)))
+
+;; : (-> Object [[Object]] [[Object]] [[Number Number]] [Alist]
+;;       [Alist] PooFlowGraphLoopAnalysis)
+(def (poo-flow-graph-loop-analysis
+      graph-id components cyclic-components condensation-edges diagnostics
+      . maybe-metadata)
+  (poo-flow-graph-require
+   "graph loop analysis id must be a stable id"
+   (poo-flow-graph-id? graph-id)
+   graph-id)
+  (poo-flow-graph-require
+   "graph loop analysis components must be a list"
+   (list? components)
+   components)
+  (poo-flow-graph-require
+   "graph loop analysis cyclic components must be a list"
+   (list? cyclic-components)
+   cyclic-components)
+  (poo-flow-graph-require
+   "graph loop analysis condensation edges must be a list"
+   (list? condensation-edges)
+   condensation-edges)
+  (object<-alist
+   (list
+    (cons 'kind +poo-flow-graph-loop-analysis-prototype-kind+)
+    (cons 'schema 'poo-flow.graph.loop-analysis.v1)
+    (cons 'graph-id graph-id)
+    (cons 'component-count (length components))
+    (cons 'cyclic-component-count (length cyclic-components))
+    (cons 'components components)
+    (cons 'cyclic-components cyclic-components)
+    (cons 'condensation-edges condensation-edges)
+    (cons 'diagnostics diagnostics)
+    (cons 'metadata (if (null? maybe-metadata) '() (car maybe-metadata)))
+    (cons 'runtime-executed #f))))
+
+;; : (-> Object Boolean)
+(def (poo-flow-graph-loop-analysis? value)
+  (and (object? value)
+       (.slot? value 'kind)
+       (eq? (.ref value 'kind)
+            +poo-flow-graph-loop-analysis-prototype-kind+)))
+
+;; : (-> PooFlowGraphLoopAnalysis Alist)
+(defpoo-module-final-projection poo-flow-graph-loop-analysis->alist
+  (analysis)
+  (bindings
+   ((checked-analysis
+     (poo-flow-graph-require
+      "graph loop analysis projection requires graph loop analysis"
+      (poo-flow-graph-loop-analysis? analysis)
+      analysis))))
+  (fields
+   ((kind (.ref checked-analysis 'kind))
+    (schema (.ref checked-analysis 'schema))
+    (graph-id (.ref checked-analysis 'graph-id))
+    (component-count (.ref checked-analysis 'component-count))
+    (cyclic-component-count
+     (.ref checked-analysis 'cyclic-component-count))
+    (components (.ref checked-analysis 'components))
+    (cyclic-components (.ref checked-analysis 'cyclic-components))
+    (condensation-edges (.ref checked-analysis 'condensation-edges))
+    (diagnostics (.ref checked-analysis 'diagnostics))
+    (metadata (.ref checked-analysis 'metadata))
+    (runtime-executed (.ref checked-analysis 'runtime-executed)))))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-graph-analysis-id-list? value)
@@ -705,3 +798,90 @@
 (def (poo-flow-graph-analysis-type-contract->alist)
   (poo-flow-object-type-contract->alist
    +poo-flow-graph-analysis-type-contract+))
+
+;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
+;;   | doc m%
+;;       Declare loop analysis contracts for SCC and condensation receipts.
+;;
+;;       # Examples
+;;       ```scheme
+;;       +poo-flow-graph-loop-analysis-slot-contracts+
+;;       ;; => graph-loop-analysis-slot-contract-list
+;;       ```
+;;     %
+(defcontract-family
+  +poo-flow-graph-loop-analysis-slot-contracts+
+  +poo-flow-graph-loop-analysis-type-contract+
+  'graph/loop-analysis
+  'graph
+  'PooFlowGraphLoopAnalysis
+  '((scope . graph) (projection . graph-loop-analysis))
+  ((+poo-flow-graph-loop-analysis-graph-id-slot-contract+
+    'graph.loop-analysis/graph-id
+    'graph-id
+    'PooFlowGraphId
+    'poo-flow-graph-id?
+    poo-flow-graph-id?
+    #t
+    '((scope . graph) (slot . graph-id)))
+   (+poo-flow-graph-loop-analysis-component-count-slot-contract+
+    'graph.loop-analysis/component-count
+    'component-count
+    'Number
+    'number?
+    number?
+    #t
+    '((scope . graph) (slot . component-count)))
+   (+poo-flow-graph-loop-analysis-cyclic-component-count-slot-contract+
+    'graph.loop-analysis/cyclic-component-count
+    'cyclic-component-count
+    'Number
+    'number?
+    number?
+    #t
+    '((scope . graph) (slot . cyclic-component-count)))
+   (+poo-flow-graph-loop-analysis-components-slot-contract+
+    'graph.loop-analysis/components
+    'components
+    '[[PooFlowGraphId]]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . components)))
+   (+poo-flow-graph-loop-analysis-cyclic-components-slot-contract+
+    'graph.loop-analysis/cyclic-components
+    'cyclic-components
+    '[[PooFlowGraphId]]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . cyclic-components)))
+   (+poo-flow-graph-loop-analysis-condensation-edges-slot-contract+
+    'graph.loop-analysis/condensation-edges
+    'condensation-edges
+    '[[Number Number]]
+    'list?
+    list?
+    #t
+    '((scope . graph) (slot . condensation-edges)))
+   (+poo-flow-graph-loop-analysis-diagnostics-slot-contract+
+    'graph.loop-analysis/diagnostics
+    'diagnostics
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . diagnostics)))
+   (+poo-flow-graph-loop-analysis-metadata-slot-contract+
+    'graph.loop-analysis/metadata
+    'metadata
+    'Alist
+    'poo-flow-graph-metadata?
+    poo-flow-graph-metadata?
+    #t
+    '((scope . graph) (slot . metadata)))))
+
+;; : (-> Alist)
+(def (poo-flow-graph-loop-analysis-type-contract->alist)
+  (poo-flow-object-type-contract->alist
+   +poo-flow-graph-loop-analysis-type-contract+))

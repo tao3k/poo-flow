@@ -1,11 +1,10 @@
-load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-
 load(
     "@gerbil_bazel//gerbil:defs.bzl",
     "gerbil_project_compile",
     "gerbil_project_dev",
     "gerbil_project_test",
 )
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
 load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 
@@ -14,7 +13,7 @@ package(default_visibility = ["//visibility:public"])
 gerbil_project_compile(
     name = "gerbil_utils_package",
     srcs = ["@gerbil_utils_sources//:sources"],
-    build_script = "@gerbil_utils_sources//:build.ss",
+    build_script = "@gerbil_utils_sources//:build_script",
     process_guard = True,
     require_library_output = True,
 )
@@ -22,7 +21,7 @@ gerbil_project_compile(
 gerbil_project_compile(
     name = "gerbil_poo_package",
     srcs = ["@gerbil_poo_sources//:sources"],
-    build_script = "@gerbil_poo_sources//:build.ss",
+    build_script = "@gerbil_poo_sources//:build_script",
     process_guard = True,
     require_library_output = True,
     deps = [":gerbil_utils_package"],
@@ -31,7 +30,7 @@ gerbil_project_compile(
 gerbil_project_compile(
     name = "gslph_package",
     srcs = ["@gslph_sources//:sources"],
-    build_script = "@gslph_sources//:build.ss",
+    build_script = "@gslph_sources//:build_script",
     process_guard = True,
     require_library_output = True,
     deps = [":gerbil_poo_package"],
@@ -100,25 +99,17 @@ gerbil_project_compile(
     args = ["compile"],
     build_script = "//:build.ss",
     receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
-    deps = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
-    ],
+    deps = [":gslph_package"],
 )
 
 gerbil_project_dev(
     name = "dev_compile",
     args = ["compile"],
     build_script = "//:build.ss",
+    deps = [":gslph_package"],
     tags = [
         "local",
         "manual",
-    ],
-    deps = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
     ],
 )
 
@@ -126,16 +117,12 @@ gerbil_project_dev(
     name = "dev_unit_tests",
     args = ["compile"],
     build_script = "//:build.ss",
+    deps = [":gslph_package"],
     tags = [
         "local",
         "manual",
     ],
     tests = ["//:t/unit-tests.ss"],
-    deps = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":gslph_package",
-    ],
 )
 
 filegroup(

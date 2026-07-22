@@ -103,10 +103,30 @@ class RuntimeGraphProgram:
         *,
         max_concurrency: int | None = None,
     ) -> list[dict[str, Any]]:
-        from ._anyio_runtime import map_ordered_async
+        from ._anyio_runtime import map_ordered_async, run_blocking
+
+        values = list(inputs)
+        if not values:
+            return await map_ordered_async(
+                self.ainvoke, values, max_concurrency=max_concurrency
+            )
+
+        validation_receipt, plan_digest = await run_blocking(self._validated_plan)
+        executor = self._executor()
+
+        async def invoke_prepared(
+            initial_state: Mapping[str, Any],
+        ) -> dict[str, Any]:
+            execution = await self._ainvoke_prepared(
+                initial_state,
+                validation_receipt=validation_receipt,
+                plan_digest=plan_digest,
+                executor=executor,
+            )
+            return execution.state
 
         return await map_ordered_async(
-            self.ainvoke, inputs, max_concurrency=max_concurrency
+            invoke_prepared, values, max_concurrency=max_concurrency
         )
 
     async def ainvoke_with_trace(
@@ -116,8 +136,25 @@ class RuntimeGraphProgram:
 
         validation_receipt, plan_digest = await run_blocking(self._validated_plan)
         executor = self._executor()
+        return await self._ainvoke_prepared(
+            initial_state,
+            validation_receipt=validation_receipt,
+            plan_digest=plan_digest,
+            executor=executor,
+            trace_key=trace_key,
+        )
+
+    async def _ainvoke_prepared(
+        self,
+        initial_state: Mapping[str, Any],
+        *,
+        validation_receipt: bytes,
+        plan_digest: str | None,
+        executor: RuntimeGraphExecutor,
+        trace_key: str | None = None,
+    ) -> RuntimeGraphExecution:
         try:
-            state, trace, events = await executor.ainvoke_with_events(
+            state, trace, events = await executor._ainvoke_owned_with_events(
                 self._internal_state(initial_state), trace_key=trace_key
             )
         except RuntimeGraphInterrupted as exc:

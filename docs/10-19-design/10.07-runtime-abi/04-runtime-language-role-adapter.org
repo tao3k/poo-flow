@@ -21,6 +21,10 @@ POO Flow keeps semantic authority in the upstream control plane:
 - Runtime languages own execution, FFI performance, async scheduling, durable
   storage, replay, and platform integration.
 
+Workload-derived benchmark capacity is a qualification boundary documented in
+[[file:14-runtime-benchmark-surface.org][14 Runtime Benchmark Surface]]; its
+selection policy is not part of the stable runtime ABI.
+
 A runtime adapter must not introduce a second policy DSL, validation model, or
 schema owner. Libraries such as Pydantic are therefore not part of the runtime
 role. They can validate Python object shapes, but they cannot improve the
@@ -166,9 +170,82 @@ When adding a new runtime language, follow this checklist:
    - events
    - debug
 6. Add durable checkpoint and replay only after the stream contract is stable.
-7. Add async/cancellation/backpressure only as runtime substrate behavior.
-8. Add backend-specific performance gates.
+7. [X] Add async/cancellation/backpressure only as runtime substrate behavior.
+8. [X] Add backend-specific performance gates.
 9. Document every backend as substrate-only, never as strategy authority.
+
+** 2026-07-20 AnyIO Performance Qualification Receipt
+
+The prior 83.08-second serial-sleeper reference remains rejected.  The current
+10,000-observation same-semantics receipt and its immediately preceding failing
+baseline are documented in
+[[file:14-runtime-benchmark-surface.org::*AnyIO micro qualification][RFC14 AnyIO and burst benchmark evidence]].
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
+#+end_src
+
+| Phase | Candidate median (ns/item) | Native reference median (ns/item) | Ratio | Threshold | Result |
+|-
+| Cold | 754894.083 | 204175.333 | 3.697283 | report-only | report-only |
+| Warm | 230581.604 | 167241.333 | 1.378736 | 1.545946 | pass |
+| Reused input | 242577.250 | 182040.812 | 1.332543 | 1.613416 | pass |
+
+The run used a 10,000-observation steady-state target, 418 timing pairs, 24
+items per pair, and 10,032 actual observations per side.  It exited 0 after
+=real 13.34=, =user 1.68=, and =sys 0.18=.  The previous same-semantics run
+took 17.64 seconds and failed with warm and reused-input ratios of 2.005030 and
+2.037751.  The current implementation validates and prepares one executor per
+public =abatch= call, reuses it only within that batch, and refreshes it for the
+next batch; it introduces no permanent program cache.
+
+The action-internal burst suite selected capacity 48 from candidates 12, 24,
+48, 96, 192, 384, 768, and 1,000.  The 100,000-case population completed in
+29499.281 ms at 3389.913 cases/s with peak live cases 48 and zero failures.
+Against the preceding capacity-1,000 receipt, makespan fell about 47.8 percent,
+throughput rose about 91.7 percent, and startup p99 fell about 48.0 percent.
+The separate traced 10,000-case capacity-48 profile recorded 5,701,328 bytes;
+it is neither a no-trace throughput baseline nor a strict like-for-like ratio
+against the earlier 13,574,584-byte capacity-1,000 profile.
+
+This focused Python runtime performance receipt passes but does not claim a
+repository-wide green state.  Existing module-system and other full-suite
+blockers remain independent; no Rust, TypeScript, C ABI, Gerbil, or Bazel
+semantic change is introduced here.
+
+*** Large-state Program-to-executor copy boundary
+The canonical Python runtime qualification command is:
+#+begin_src sh
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 1024 --payload-field-bytes 16
+#+end_src
+
+This qualifies the Python runtime's async Program-to-executor ownership-transfer boundary. It is not a C ABI benchmark, does not define a JSON handoff protocol, and does not make JSON part of the ABI. The complete matrix, canonical receipts, memory model, and interpretation are owned by =14-runtime-benchmark-surface.org= under =Large-state Program-to-executor copy qualification=.
+
+** 2026-07-20 Async Substrate Qualification Receipt
+
+The qualification owner is
+=packages/python-runtime/tests/unit/test_anyio_runtime.py=.  It proves the
+bounded Python runtime substrate behavior required by checklist item 7:
+
+- =max_concurrency=2= limits concurrent work while preserving ordered results;
+  a third-worker probe plus scheduler checkpoints before release proves that no
+  excess worker starts.
+- Task-group cancellation cleans up both active actions.
+- =astream= consumption of one chunk does not prefetch the second node.
+- Both synchronized scenarios use =anyio.fail_after(2)= so concurrency or
+  cancellation regressions fail closed instead of hanging.
+
+The focused qualification completed with =8 passed in 1.97s=.  The unaffected
+runtime selection completed with =189 passed, 8 skipped, 6 deselected in
+3.53s=.
+
+The full suite is not repository-wide green: it completed with =190 passed, 7
+skipped, 6 failed=.  All six failures are caused by the current dirty
+module-system state, where =gxi= cannot load
+=:poo-flow/src/module-system/init-syntax= or the durable modules.  This receipt
+therefore qualifies the Python async/cancellation/backpressure substrate only;
+it does not introduce a second runtime, change C ABI semantics, or claim full
+repository acceptance.
 
 * Anti-Goals
 

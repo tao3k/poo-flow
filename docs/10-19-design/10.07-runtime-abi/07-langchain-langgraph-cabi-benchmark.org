@@ -3,12 +3,6 @@
 
 * Status
 
-Active semantic runtime benchmark.  Legacy graph-specific C ABI rows are
-retired and are not compatibility-wrapped.  This report compares framework
-orchestration with current POO Flow Python executor semantics; runtime-v0 C ABI
-performance remains owned by the separate ABI benchmark and cannot be inferred
-from this report.
-
 * Canonical Report
 
 The runnable benchmark and latest generated Org report live under the Python runtime benchmark directory:
@@ -39,7 +33,6 @@ The suite covers:
 - POO Flow executor-only graph routing, handoff/reducer, and interrupt/resume.
 - POO Flow executor-only 32-node long graph and event stream consumption.
 - POO Flow executor-only CrewAI-style sequential composition.
-- No legacy graph C ABI case or gate.
 
 #+begin_src mermaid
 flowchart LR
@@ -81,7 +74,6 @@ Key result from the current run:
   handoff/reducer, interrupt/resume, long-graph, and stream/event cases.
 - POO Flow is =691.65x= faster for the deterministic CrewAI sequential case.
 - All current cases completed; the failure table is empty.
-- No legacy graph C ABI row or validation gate was executed.
 - The benchmark now includes long graph and stream/event consumption, so the honest comparison point is no longer a toy lambda or string append.
 - The honest comparison point for handoff/checkpoint production semantics remains LangGraph native vs the corresponding POO executor shapes; real runtime IO is intentionally outside this project.
 

@@ -4,6 +4,14 @@
 
 * 10.06.33 POO C3 Graph Algorithm Layer
 ** 10.06.33.10 Decision
+
+Current implementation note: the reusable graph layer is now represented by
+the public =src/graph= POO graph and loop-analysis receipts.  C3/C4
+linearization prepares composed POO facts; public graph analysis consumes
+those facts for cycle, strongly connected component, condensation,
+topological-order, and diagnostic questions.  Downstream loop or workflow
+modules should project into this API instead of owning private graph algorithm
+semantics.
 =poo-flow= should implement a graph algorithm layer, but it must be placed at
 the right boundary.
 
@@ -24,6 +32,13 @@ sandbox capability reasoning, human-audit placement, and agent-engine
 diagnostics.
 
 ** 10.06.33.20 Why This Fits POO Better Than A Raw DSL
+
+The ordering boundary is explicit: C3 happens before graph analysis.  C3
+resolves inherited POO definitions and slot precedence; the graph-loop layer
+analyzes the final validated facts through public =poo-flow-graph= and
+=poo-flow-graph-loop-analysis= receipts.  This keeps graph algorithms reusable
+and prevents each downstream DSL or loop profile from manufacturing its own
+cycle/SCC interpretation.
 Gerbil POO gives us an object graph naturally:
 
 - module objects expose categories, features, profiles, cases, validators, and
@@ -45,6 +60,12 @@ slots are C3-linearized. The graph algorithm should analyze the final validated
 facts, not pre-composition source fragments.
 
 ** 10.06.33.30 Boundary Rule
+
+C3 does not schedule work, choose loop wakeups, or hide semantic conflicts.
+The public loop-analysis receipt answers validation questions only: whether
+the projected graph is acyclic, which components are cyclic, what the
+condensation edges are, which topological order is valid for an acyclic
+projection, and which diagnostics must be surfaced.
 Do not weaken the existing C3 boundary.
 
 Existing C3 notes correctly say that C3 does not decide which task is ready to
@@ -68,6 +89,12 @@ result later, but Scheme should still emit receipts and manifests with
 =runtime-executed = #f=.
 
 ** 10.06.33.35 Graph Role In Loop Engineering
+
+Graph-loop semantics are an application of =poo-flow-graph-loop-analysis=.
+Loop engines, workflow profiles, and C3/C4 projections supply POO-native graph
+facts; they do not define a second private Tarjan/SCC/condensation algorithm.
+The reusable graph API owns those receipts so loop engineering can focus on
+policy, scheduling, evidence, and runtime handoff.
 The three-loop and Human Audit runtime plan is tracked in
 [[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]].
 The graph layer supports that plan by making policy and feedback paths
@@ -88,6 +115,12 @@ This graph is cyclic at the explanation level, not at finite workflow execution
 level. Human Audit can add evidence and require revised spec or policy
 proposals, but finite workflow DAGs still reject dependency cycles.
 ** 10.06.33.40 Module Ownership
+
+Module ownership is split deliberately.  =loop-engine= owns use-case and
+profile projection facts.  Public =src/graph= owns reusable graph structures,
+cycle detection, loop-analysis receipts, condensation edges, topological
+analysis, and diagnostics.  A downstream module may add domain slots around
+the receipt, but it should not fork the algorithm semantics.
 The graph layer is a first-class internal directory:
 
 #+begin_src text
@@ -121,6 +154,12 @@ Graph analysis is a projection from module-owned objects into the shared
 =src/graph/= substrate.
 
 ** 10.06.33.50 First Algorithm Set
+
+The first algorithm set includes public POO receipts for loop analysis:
+component enumeration, cyclic component selection, condensation-edge
+projection, acyclic/topological checks, cycle-path diagnostics, and stable
+receipt serialization.  C3/C4 consumers should call these receipts rather than
+embedding algorithm-local graph walkers.
 The first implementation is pure, small, and reusable.
 
 Core representation:

@@ -22,6 +22,9 @@ uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks l
 
 uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks composition \
   --iterations 10 --fanout 8
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 48 --trace-memory
 #+end_src
 
 * Composition suite
@@ -35,3 +38,423 @@ The composition suite currently emits line-oriented receipts for:
 - validation-workflow-round-trip
 
 The C ABI scenarios intentionally separate the loaded binding hot path from the full validation workflow.  The hot path measures the low-level ABI call after the dylib is loaded.  The workflow path measures manifest validation and graph handoff as a higher-level runtime operation.
+
+* AnyIO micro qualification
+
+The current candidate validates and prepares one executor at each public
+=abatch= boundary, reuses that prepared executor only within the batch, and
+refreshes preparation for the next batch.  There is no permanent program
+cache.  The immediately preceding same-semantics failing receipt is retained
+below as the before baseline.
+
+The canonical micro receipt uses schema
+=poo-flow.anyio-runtime-benchmark.v1= and a native AnyIO bounded-concurrent
+reference with the same capacity and action as the
+=RuntimeGraphProgram.abatch= candidate.  The earlier 83.08-second serial-sleeper
+receipt is rejected because it compared unequal execution semantics and spent
+most of its wall time in synthetic sleep.
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks anyio-runtime --observations-per-side 10000
+#+end_src
+
+| Process metric | Value | Unit |
+|-
+| real | 13.34 | s |
+| user | 1.68 | s |
+| sys | 0.18 | s |
+| exit status | 0 | process status |
+
+The automatic host run observed 12 available CPUs, an AnyIO default limiter
+capacity of 40, and a selected capacity of 12.  Each steady-state timing pair
+processed 24 items.  The target was 10000 observations per side; 418 balanced
+timing pairs produced 10032 actual observations per side per phase.  All
+candidate and reference timing columns below use =ns/item=.
+
+** Current micro prepared-batch receipt
+
+| Phase | Candidate median (ns/item) | Candidate p95 (ns/item) | Native reference median (ns/item) | Native reference p95 (ns/item) | Ratio | Threshold | Gate result |
+|-
+| Cold | 754894.083 | 754894.083 | 204175.333 | 204175.333 | 3.697283 | report-only | report-only |
+| Warm | 230581.604 | 658842.000 | 167241.333 | 641243.042 | 1.378736 | 1.545946 | pass |
+| Reused input | 242577.250 | 902618.042 | 182040.812 | 696223.958 | 1.332543 | 1.613416 | pass |
+
+Cold startup is report-only.  Both steady-state phases pass with 10,032
+observations per side, and the process exits 0.  The remaining
+candidate/reference gap is reportable runtime graph overhead rather than a
+failed qualification.
+
+** Before baseline
+
+The immediately preceding same-semantics run remains the before baseline; it
+is not replaced by the current pass.
+
+| Before process metric | Value | Unit |
+|-
+| real | 17.64 | s |
+| user | 3.54 | s |
+| sys | 0.72 | s |
+| exit status | 1 | process status |
+
+| Phase | Candidate median (ns/item) | Candidate p95 (ns/item) | Native reference median (ns/item) | Native reference p95 (ns/item) | Ratio | Threshold | Gate result |
+|-
+| cold | 1474987.875 | n/a | 119718.750 | n/a | 12.320442 | n/a | report-only |
+| warm | 355732.646 | 1679864.583 | 177420.146 | 706593.750 | 2.005030 | 1.498493 | fail |
+| reused-input | 370962.688 | 1740753.500 | 182045.125 | 595954.875 | 2.037751 | 1.515655 | fail |
+
+Cold startup is not blended into either steady-state gate.  Replacing the
+serial sleeper with a same-semantics native reference reduced wall time by
+78.8 percent, from 83.08 seconds to 17.64 seconds, while exposing roughly 2x
+graph/runtime overhead in both gated steady-state phases.  The nonzero exit is
+therefore expected and is qualification evidence, not a harness failure.
+
+* Burst lifecycle qualification
+
+** Current prepared-batch receipt
+
+The production-shaped burst suite keeps the case mix explicit: case IDs rotate
+through serial-only, parallel-only, and hybrid shapes.  Parallel fanout remains
+action-internal; this is not a graph-native parallel-node claim.  Public
+=abatch= validates and prepares one executor, bounded workers reuse it within
+that batch, and the next public batch refreshes preparation without a permanent
+cache.  Live worker tasks remain =O(capacity)=, while inputs and ordered results
+remain =O(N)=.
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
+#+end_src
+
+| Process metric | Value | Unit |
+|-
+| real | 37.43 | s |
+| user | 11.57 | s |
+| sys | 0.36 | s |
+| exit status | 0 | process status |
+
+The 12-CPU host calibrated capacities 12, 24, 48, 96, 192, 384, 768, and
+1,000, then selected capacity 48 by measured throughput.  Every population
+completed with zero failures.
+
+| Population (cases) | Capacity (live tasks) | Makespan (ms) | Throughput (cases/s) | Peak in-flight (cases) | Completed (cases) | Failed (cases) |
+|-
+| 1,000 | 48 | 392.405 | 2548.388 | 48 | 1,000 | 0 |
+| 10,000 | 48 | 3058.842 | 3269.211 | 48 | 10,000 | 0 |
+| 100,000 | 48 | 29499.281 | 3389.913 | 48 | 100,000 | 0 |
+
+| Population (cases) | Startup p50 (ms) | Startup p95 (ms) | Startup p99 (ms) | Service p50 (ms) | Service p95 (ms) | Service p99 (ms) | Completion p50 (ms) | Completion p95 (ms) | Completion p99 (ms) |
+|-
+| 1,000 | 55.488 | 380.465 | 385.445 | 5.815 | 99.688 | 237.952 | 64.729 | 386.140 | 389.890 |
+| 10,000 | 1306.962 | 2963.545 | 3035.187 | 6.382 | 73.098 | 140.241 | 1315.206 | 2973.042 | 3043.719 |
+| 100,000 | 14366.590 | 27887.121 | 29232.194 | 6.069 | 62.919 | 136.473 | 14369.997 | 27893.184 | 29239.931 |
+
+Against the preceding automatic capacity-1,000 100,000-case receipt, makespan
+fell from 56547.755 ms to 29499.281 ms, about 47.8 percent; throughput rose
+from 1768.417 to 3389.913 cases/s, about 91.7 percent; startup p99 fell from
+56200.305 ms to 29232.194 ms, about 48.0 percent.  Process real time fell from
+68.65 seconds to 37.43 seconds.
+
+Memory tracing remains a separate profile:
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 48 --trace-memory
+#+end_src
+
+| Population (cases) | Capacity (live tasks) | Python traced peak (bytes) | Makespan (ms) | Throughput (cases/s) | real (s) | user (s) | sys (s) |
+|-
+| 10,000 | 48 | 5701328 | 8781.861 | 1138.711 | 10.69 | 3.61 | 0.11 |
+
+The earlier traced profile recorded 13,574,584 bytes at capacity 1,000.  Code
+and capacity both changed, so the two memory values do not form a strict
+same-configuration ratio.  Traced-memory makespan and throughput also remain
+incomparable with the no-trace throughput receipt.
+
+#+begin_src mermaid
+flowchart TD
+  B["Public abatch"] --> P["Validate plan + prepare executor once"]
+  P --> W["Bounded workers<br/>live tasks O(capacity)"]
+  W --> M["Serial-only / parallel-only / hybrid cases"]
+  M --> N["No-trace throughput<br/>1k / 10k / 100k"]
+  M --> T["Separate traced-memory profile"]
+  P --> R["Next public abatch<br/>refresh preparation"]
+  R --> X["No permanent program cache"]
+  N --> E["Lifecycle + process receipts"]
+  T --> E
+#+end_src
+
+** Before baselines
+
+The production-shaped owner uses schema
+=poo-flow.burst-lifecycle-benchmark.v1=.  Its case mix supports serial-only,
+parallel-only, and hybrid cases.  Parallel work is action-internal fanout/join;
+this receipt does not claim graph-native parallel fanout.  The measured arrival
+profile is instant submission.
+
+With an explicit capacity, the shared ordered worker pool keeps live tasks at
+=O(capacity)= while input and ordered-result storage remain =O(N)=.  The worker
+pool preserves input order and retains legitimate =None= results through a
+private sentinel.
+
+** Automatic throughput run
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle
+#+end_src
+
+| Process metric | Value | Unit |
+|-
+| real | 68.65 | s |
+| user | 24.76 | s |
+| sys | 3.07 | s |
+
+The auto-throughput run observed 12 CPUs, calibrated capacities
+=12,24,48,96,192,384,768,1000=, and selected the calibration ceiling of 1000.
+Every population completed with no failures.
+
+| Population (cases) | Capacity (live tasks) | Makespan (ms) | Throughput (cases/s) | Peak in-flight (cases) | Completed (cases) | Failed (cases) |
+|-
+| 1000 | 1000 | 479.091 | 2087.287 | 67 | 1000 | 0 |
+| 10000 | 1000 | 5225.700 | 1913.619 | 79 | 10000 | 0 |
+| 100000 | 1000 | 56547.755 | 1768.417 | 80 | 100000 | 0 |
+
+| Population (cases) | Startup p50 (ms) | Startup p95 (ms) | Startup p99 (ms) | Service p50 (ms) | Service p95 (ms) | Service p99 (ms) | Completion p50 (ms) | Completion p95 (ms) | Completion p99 (ms) |
+|-
+| 1000 | 354.590 | 467.709 | 475.781 | 8.567 | 61.770 | 115.968 | 358.151 | 475.532 | 477.486 |
+| 10000 | 2620.953 | 4975.291 | 5153.412 | 12.770 | 91.706 | 139.945 | 2629.788 | 4985.855 | 5202.451 |
+| 100000 | 28715.413 | 54328.022 | 56200.305 | 12.886 | 108.399 | 186.223 | 28726.518 | 54339.712 | 56233.293 |
+
+The earlier fixed-capacity-12 100000-case baseline recorded a 63781.264 ms
+makespan, 1567.859 cases/s, 63275.908 ms startup p99, and peak in-flight 12.
+Capacity calibration improved all four observations, but it is not a root-cause
+closure: the best result landed at the search ceiling of 1000, so the optimum
+remains bounded by the calibration range.
+
+** Separate memory profile
+
+#+begin_src sh
+/usr/bin/time -p uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks burst-lifecycle --population 10000 --max-concurrency 1000 --trace-memory
+#+end_src
+
+| Population (cases) | Capacity (live tasks) | Python traced peak (bytes) | Makespan (ms) | Throughput (cases/s) | real (s) | user (s) | sys (s) |
+|-
+| 10000 | 1000 | 13574584 | 20196.802 | 495.128 | 21.83 | 7.52 | 0.44 |
+
+The traced-memory run is a separate profile.  Tracing changes timing materially,
+so its makespan and throughput must not be used as the no-trace throughput
+baseline.
+
+#+begin_src mermaid
+flowchart TD
+  MC["Micro candidate<br/>RuntimeGraphProgram.abatch"] --> MR["Same-semantics native AnyIO reference"]
+  MR --> MG["Median/p95 ratio gate<br/>ns/item"]
+  BC["Burst cases<br/>1k / 10k / 100k"] --> BA["Bounded admission<br/>live tasks O(capacity)"]
+  BA --> MX["Serial-only / parallel-only / hybrid<br/>parallel is action-internal"]
+  MX --> TP["No-trace throughput profile<br/>makespan and lifecycle percentiles"]
+  MX --> MP["Separate traced-memory profile<br/>peak bytes"]
+  MG --> R["Line receipts and exit status"]
+  TP --> R
+  MP --> R
+#+end_src
+
+* Large-state Program-to-executor copy qualification
+** Scope and invariants
+This qualification isolates the Python runtime's shallow root-dictionary copy at the async Program-to-executor boundary. It is not a C ABI qualification, does not define a JSON ABI or JSON handoff protocol, and does not make the line-oriented benchmark receipt part of any runtime ABI.
+
+Each timing pair starts from equivalent fresh user states. The candidate transfers its already-owned internal state dictionary to the executor, while the reference uses the public defensive-copy route. Both sides use the same executor, compiled plan, and action, and their public state projection, trace, and events must be equal. The suite reports =copy-boundary: program-executor=, =copy-kind: shallow-root-dict=, =phase: steady-fresh-state=, and =semantics-verified: true= when these invariants hold.
+
+#+begin_src mermaid
+flowchart LR
+    U["Equivalent fresh user states"] --> IA["Program internal state A"]
+    U --> IB["Program internal state B"]
+    IA --> C["Candidate: owned transfer"]
+    IB --> R["Reference: defensive root copy"]
+    C --> E["Same executor, plan, and action"]
+    R --> E
+    E --> P["Same public projection"]
+    P --> S["State, trace, and event equality"]
+    S --> Q["Qualification receipt"]
+#+end_src
+
+** Canonical matrix commands
+The canonical matrix fixes 5,000 target observations per side, capacity 12, and 16 logical bytes per payload field. Each command produces 5,040 actual observations per side because it completes whole 24-item timing pairs.
+
+#+begin_src sh
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 64 --payload-field-bytes 16
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 256 --payload-field-bytes 16
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 1024 --payload-field-bytes 16
+/usr/bin/time -p direnv exec . uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks large-state-copy --observations-per-side 5000 --max-concurrency 12 --payload-field-count 4096 --payload-field-bytes 16
+#+end_src
+
+** Final canonical JSON receipts
+*** 64 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":1595.479,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":42837.688,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":204701.375,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":3168,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":64,"payload-logical-bytes-per-state":1024,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.964093,"reference-median-ns-per-item":44433.167,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":273262.167,"root-field-count":66,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":1024,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":2.010295,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 2.29
+user 0.50
+sys 0.06
+#+end_example
+
+*** 256 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":6022.562,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":46780.375,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":266366.333,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":12384,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":256,"payload-logical-bytes-per-state":4096,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.885943,"reference-median-ns-per-item":52802.938,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":436541.667,"root-field-count":258,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":4096,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":2.029576,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 2.59
+user 0.66
+sys 0.05
+#+end_example
+
+*** 1,024 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":7857.646,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":73619.792,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":674574.667,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":49248,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":1024,"payload-logical-bytes-per-state":16384,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.90356,"reference-median-ns-per-item":81477.438,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":1155276.042,"root-field-count":1026,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":16384,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":1.976466,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 4.96
+user 1.60
+sys 0.07
+#+end_example
+
+*** 4,096 payload fields
+#+begin_src json
+{"absolute-saved-ns-per-item":42346.354,"actual-observations-per-side":5040,"anyio-limiter-capacity":40,"available-cpus":12,"candidate-faster":true,"candidate-median-ns-per-item":177712.667,"candidate-mode":"owned-transfer","candidate-p95-ns-per-item":1737168.375,"capacity-source":"fixed","copy-boundary":"program-executor","copy-kind":"shallow-root-dict","detail":"payload bytes are logical retained payload only; the measured shallow root copy scales with field count","gate-purpose":"same-run-no-regression","gated":true,"input-root-dictionaries-per-pair":48,"input-root-references-per-pair":196704,"items-per-pair":24,"passed":true,"payload-field-bytes":16,"payload-field-count":4096,"payload-logical-bytes-per-state":65536,"phase":"steady-fresh-state","qualification-volume-met":true,"ratio":0.807568,"reference-median-ns-per-item":220059.021,"reference-mode":"public-defensive-copy","reference-p95-ns-per-item":1540557.292,"root-field-count":4098,"schema":"poo-flow.large-state-copy-benchmark.v1","selected-capacity":12,"semantics-verified":true,"target-observations-per-side":5000,"template-physical-bytes-estimate":65536,"template-physical-bytes-estimate-excludes-object-overhead":true,"threshold-ratio":2.469326,"time-unit":"ns/item","timing-pairs":210}
+#+end_src
+#+begin_example
+real 13.04
+user 4.57
+sys 0.10
+#+end_example
+
+** Derived matrix
+All latency columns are nanoseconds per item. =Saved= is =reference median - candidate median=, and =Ratio= is =candidate median / reference median=. Wall, user, and system time are seconds from =/usr/bin/time -p=.
+
+| Payload fields | Candidate median | Reference median |      Saved |    Ratio | Candidate p95 | Reference p95 | Wall | User |  Sys |
+|----------------+------------------+------------------+------------+----------+---------------+---------------+------+------+------|
+|             64 |       42,837.688 |       44,433.167 |  1,595.479 | 0.964093 |   204,701.375 |   273,262.167 | 2.29 | 0.50 | 0.06 |
+|            256 |       46,780.375 |       52,802.938 |  6,022.562 | 0.885943 |   266,366.333 |   436,541.667 | 2.59 | 0.66 | 0.05 |
+|          1,024 |       73,619.792 |       81,477.438 |  7,857.646 | 0.903560 |   674,574.667 | 1,155,276.042 | 4.96 | 1.60 | 0.07 |
+|          4,096 |      177,712.667 |      220,059.021 | 42,346.354 | 0.807568 | 1,737,168.375 | 1,540,557.292 | 13.04 | 4.57 | 0.10 |
+
+** Memory model
+Let =F= be the payload-field count, =B= the logical bytes per payload field, and =I= the items per timing pair. The template's payload byte contents estimate is =F * B= and excludes Python object, dictionary, key, and reference overhead. A shallow =dict= copy duplicates root references; it does not copy the =F * B= retained payload byte contents.
+
+Each pair creates =2 * I= input root dictionaries. Each root contains =F + 2= references, so the input-root reference count is =2 * I * (F + 2)=. In the canonical runs, =I= is 24, which yields 48 input roots and the receipt counts 3,168, 12,384, 49,248, and 196,704. Additional runtime, result, and event roots are a constant-factor =O(I * F)=. The resident-memory model is per timing pair, not =O(total observations * F)=, because completed pairs do not retain every observation's state.
+
+** Interpretation and limits
+- =passed: true= is a same-run no-regression result under =gate-purpose: same-run-no-regression= and the receipt's threshold ratio. It is not itself a speedup claim.
+- =candidate-faster: true= and each positive =absolute-saved-ns-per-item= report that the candidate median was lower in these four runs.
+- Tail latency is not uniformly better. At 4,096 fields, candidate p95 is 1,737,168.375 ns/item and reference p95 is 1,540,557.292 ns/item.
+- The saved median is not cleanly linear at every point. From 1,024 to 4,096 fields it increases by about 5.39 times for a four-times field increase. The signal generally grows with field count, but the matrix is noisy and does not establish a universal scaling coefficient.
+- The measured root copy is =O(F)= in field count, while the full timed path includes shared graph, action, projection, trace, and event costs.
+- =payload-field-bytes= describes logical retained payload shape only. Python's shallow dictionary copy copies references rather than the referenced byte contents.
+- This suite does not measure the pre-action optimization surface. It qualifies only the named Program-to-executor ownership-transfer boundary under the steady fresh-state workload.
+- Results apply to these commands, runtime, host, and process conditions. They do not establish cross-runtime, cross-host, C ABI, serialization, or end-to-end application performance.
+
+* Resolved: deterministic burst capacity policy
+
+** Production policy
+
+Automatic selection uses policy =system-available-cpu-v1=:
+
+- Read the process-available CPU count with
+  =getattr(os, "process_cpu_count", os.cpu_count)= and clamp a missing or zero
+  result to one.
+- Select =min(min(populations), available_process_cpus)= once for the request.
+- Record =capacity-source=system-available-cpu= and
+  =capacity-policy=system-available-cpu-v1=.
+- Preserve the legacy receipt fields as =calibration-population=0= and
+  =calibration-capacities=()=.
+
+An explicit =max_concurrency= remains authoritative. It records
+=capacity-source=manual= and =capacity-policy=manual-override-v1= while keeping
+the same zero/empty legacy calibration fields.
+
+Selection is =O(1)= with respect to workload size and candidate count. It does
+not execute probes, throughput calibration, warmups, or hidden workload
+measurements. The benchmark performs exactly one workload measurement for each
+requested population after capacity selection.
+
+** Selection flow
+
+#+begin_src mermaid
+flowchart LR
+    request["Benchmark request"] --> manual{"Manual max concurrency?"}
+    manual -->|"Yes"| manual_capacity["Use manual capacity"]
+    manual -->|"No"| cpu["Read process_cpu_count with cpu_count fallback"]
+    cpu --> population["Take minimum requested population"]
+    population --> capacity["Select minimum of population and available CPUs"]
+    manual_capacity --> workload["Run one workload per population"]
+    capacity --> workload
+    workload --> receipt["Emit benchmark receipt"]
+#+end_src
+
+** 2026-07-20 acceptance receipts
+
+Five independent fresh processes ran the public 1,000-case benchmark. Each
+process observed 12 available CPUs, selected 12, emitted the same policy and
+legacy calibration fields, and passed.
+
+| Fresh process | Available CPUs | Selected capacity | Capacity source | Capacity policy | Calibration population | Calibration capacities | Passed |
+|---------------+----------------+-------------------+-----------------+-----------------+------------------------+--------------------------+--------|
+|             1 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             2 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             3 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             4 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+|             5 |             12 |                12 | system-available-cpu | system-available-cpu-v1 |                      0 |                       () | yes    |
+
+The final canonical full run used the same automatic selection for all three
+populations. Values below are copied directly from its JSON lines.
+
+| Population | Available CPUs | Selected capacity | Throughput (cases/s) | Startup p99 (ms) | Peak active cases | Calibration population | Calibration capacities | Passed |
+|------------+----------------+-------------------+----------------------+------------------+-------------------+------------------------+--------------------------+--------|
+|      1,000 |             12 |                12 | 1667.0129191417468   |       592.918292 |                12 |                      0 |                       () | yes    |
+|     10,000 |             12 |                12 | 8217.24843587244     |      1210.035417 |                12 |                      0 |                       () | yes    |
+|    100,000 |             12 |                12 | 7191.581908180543    |       13761.96775 |                12 |                      0 |                       () | yes    |
+
+| Process metric | Value | Unit    |
+|----------------+-------+---------|
+| real           | 17.17 | seconds |
+| user           |  6.94 | seconds |
+| sys            |  0.38 | seconds |
+
+** Limitations and manual profiling route
+
+This policy is deterministic and system-adaptive, not workload-optimal. CPU
+availability does not model scheduler contention, workload service time, I/O
+latency, memory pressure, or topology-specific scaling. Receipt throughput and
+latency remain observations of the selected capacity, not proof that another
+capacity would be slower.
+
+Capacity studies must use the explicit =--max-concurrency= route and retain
+their wall-time, process-time, workload, topology, and repeated or paired-run
+receipts. Such profiling is report-only evidence; it must not silently alter
+automatic selection or the runtime ABI.
+
+** Superseded non-causal evidence
+
+The capacity-768 full run and capacity-48 minimal run are historical,
+non-causal observations. They do not establish either capacity as an optimum.
+A separate, uncommitted investigation repeated wall-time, process-time, and
+paired-run experiments; measured outcomes had an empirical span of up to 64x.
+Those experiments were diagnostic only. No throughput-calibration
+implementation, module, or CLI option was retained. The original issue
+statement and its proposed calibration follow-up are retained below only as
+provenance; that follow-up is superseded by the production policy above.
+This issue is independent of the large-state owned-transfer qualification. It is not an owned-state optimization result and must not be used as evidence for that optimization.
+
+Two auto-capacity runs exposed different selections with the same visible calibration inputs: 12 available CPUs, a calibration population of 1,000, candidates 12, 24, 48, 96, 192, 384, 768, and 1,000, and topology =serial_steps=3, =parallel_fanout=4, =parallel_steps=1, =interval=0. The full auto owned-state run selected capacity 768; the subsequent minimal =--population 1000= auto run selected 48.
+
+The canonical receipt does not report per-candidate calibration throughput. The selection gap is therefore unobservable and cannot be attributed to system load, the owned-state change, or any other cause from these receipts.
+
+Repeated fixed-capacity 100,000-item runs at capacity 48 also show material run-to-run jitter:
+
+| Run | Makespan (ms) | Throughput (/s) | Startup p99 (ms) | Wall (s) | User (s) | Sys (s) | Change from historical baseline |
+|-----+---------------+-----------------+------------------+----------+----------+---------+---------------------------------|
+| First current run | 34,871.279 | 2,867.690 | 34,494.595 | 39.66 | 9.79 | 0.34 | makespan +18.211%; throughput -15.405%; startup p99 +18.002% |
+| Repeat | 29,870.077 | 3,347.832 | 29,485.455 | 34.44 | 9.75 | 0.33 | makespan +1.257%; throughput -1.241%; startup p99 +0.866% |
+
+No causal attribution is supported. The next step is observable, robust calibration: emit per-candidate throughput receipts, repeat candidate measurements, and select from a documented robust statistic before treating automatic capacity selection as trustworthy.
+
+These receipts qualify scoped Python runtime behavior only.  They do not claim
+a globally green repository; Scheme and module-system blockers remain separate
+acceptance work.

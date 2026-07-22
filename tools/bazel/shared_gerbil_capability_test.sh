@@ -40,14 +40,25 @@ receipt_mismatch() {
   exit 1
 }
 
+require_project_package_manifest() {
+  [[ "$dependency_policy" == "project-package-manifest" ]] ||
+    receipt_mismatch dependencyPolicy project-package-manifest "$dependency_policy"
+
+  if ! jq -e '
+    .dependencyState
+    | type == "object" and length > 0
+      and all(.[]; . == "ready")
+  ' "$receipt" >/dev/null; then
+    receipt_mismatch dependencyState ready-package-state-map "$dependency_state"
+  fi
+}
+
 case "$schema" in
   gerbil-bazel.local-toolchain-receipt.v1)
-    [[ "$dependency_policy" == "host-only" ]] ||
-      receipt_mismatch dependencyPolicy host-only "$dependency_policy"
+    require_project_package_manifest
     ;;
   gerbil-bazel.prebuilt-toolchain-receipt.v1)
-    [[ "$dependency_policy" == "declared-roots" ]] ||
-      receipt_mismatch dependencyPolicy declared-roots "$dependency_policy"
+    require_project_package_manifest
     if ! jq -e '
       .dependencyRoots
       | type == "array" and length > 0
@@ -60,9 +71,3 @@ case "$schema" in
     receipt_mismatch schema supported-toolchain-receipt "$schema"
     ;;
 esac
-
-if ! jq -e '
-  .dependencyState | type == "object" and length == 0
-' "$receipt" >/dev/null; then
-  receipt_mismatch dependencyState empty-object "$dependency_state"
-fi

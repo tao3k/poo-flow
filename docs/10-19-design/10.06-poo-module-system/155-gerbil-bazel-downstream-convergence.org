@@ -15,7 +15,7 @@ limit.
 - host discovery and Darwin/Linux normalization;
 - toolchain and native ABI providers;
 - normalized =gxi=, =gxc=, =gxpkg=, and =gxtest= executables;
-- project-declared Gerbil library views;
+- =gerbil.pkg=-declared Gerbil package manifest views;
 - writable staged project actions driven by the consumer =build.ss=;
 - reusable =GerbilProjectInfo=, complete logs, and JSON receipts;
 - the workspace-aware =install_dependencies= capability.
@@ -36,11 +36,12 @@ flowchart TB
   PREBUILT --> TC
 
   MODULE --> DEP["dependency_gerbil"]
-  DEP --> INSTALL["install_dependencies<br/>gxpkg deps --install + list"]
+  DEP --> INSTALL["install_dependencies<br/>gxpkg deps --install"]
   INSTALL --> LIB["Workspace .gerbil/lib"]
 
   MODULE --> PROJECT["local_gerbil"]
-  LIB --> VIEW["project-library-view<br/>ready / missing receipt"]
+  PKG["gerbil.pkg depend:<br/>single package lock"] --> VIEW["project-package-manifest<br/>ready / missing receipt"]
+  LIB --> VIEW
   PROJECT --> VIEW
   VIEW --> TC
 
@@ -71,7 +72,11 @@ Every host or prebuilt provider repository publishes:
 The dependency installer enters =BUILD_WORKSPACE_DIRECTORY=, defaults
 =GERBIL_PATH= to the workspace-local =.gerbil= tree, invokes the standard
 =gxpkg deps --install= path through the normalized native environment, and
-finishes with =gxpkg list=.
+does not duplicate package-manager verification with a second =gxpkg list=
+lifecycle.  The provider reads the consumer =gerbil.pkg= =depend:= block as
+the package manifest, strips revisions only to locate =.gerbil/lib= package
+directories, and records =dependencyPolicy=project-package-manifest= with
+per-package =ready= or =missing= state.
 
 * Removed POO Flow legacy surface
 

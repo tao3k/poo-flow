@@ -36,6 +36,15 @@
          (poo-flow-graph-edge 'b 'c)
          (poo-flow-graph-edge 'c 'a))))
 
+;; : PooFlowGraph
+(def graph-algorithm-self-loop-sample
+  (poo-flow-graph
+   'self-loop-sample
+   (list (poo-flow-graph-node 'a)
+         (poo-flow-graph-node 'b))
+   (list (poo-flow-graph-edge 'a 'a)
+         (poo-flow-graph-edge 'a 'b))))
+
 ;; : TestSuite
 (def graph-algorithm-test
   (test-suite "poo-flow graph algorithms"
@@ -102,6 +111,42 @@
         (check-equal? (.ref analysis 'cycle-path) '(a b c a))
         (check-equal? (.ref analysis 'acyclic?) #f)
         (check-equal? (.ref analysis 'diagnostics)
-                      '((cycle-path a b c a)))))))
+                      '((cycle-path a b c a)))))
+    (test-case "keeps indexed cycle traversal state local and deterministic"
+      (check-equal? (poo-flow-graph-cycle-path
+                     graph-algorithm-cycle-sample)
+                    '(a b c a))
+      (check-equal? (poo-flow-graph-cycle-path
+                     graph-algorithm-sample)
+                    #f)
+      (check-equal? (poo-flow-graph-cycle-path
+                     graph-algorithm-cycle-sample)
+                    '(a b c a)))
+    (test-case "emits POO loop analysis receipts for DAGs"
+      (let ((analysis (poo-flow-graph-loop-analysis-receipt
+                       graph-algorithm-sample)))
+        (check-equal? (poo-flow-graph-loop-analysis? analysis) #t)
+        (check-equal? (.ref analysis 'components)
+                      '((build) (test) (package) (docs)))
+        (check-equal? (.ref analysis 'cyclic-components) '())
+        (check-equal? (.ref analysis 'condensation-edges)
+                      '((0 1) (1 2) (0 3)))
+        (check-equal? (.ref analysis 'diagnostics) '())))
+    (test-case "emits cyclic components before condensation"
+      (let ((analysis (poo-flow-graph-loop-analysis-receipt
+                       graph-algorithm-cycle-sample)))
+        (check-equal? (.ref analysis 'component-count) 1)
+        (check-equal? (.ref analysis 'cyclic-component-count) 1)
+        (check-equal? (.ref analysis 'components) '((a b c)))
+        (check-equal? (.ref analysis 'cyclic-components) '((a b c)))
+        (check-equal? (.ref analysis 'condensation-edges) '())
+        (check-equal? (.ref analysis 'diagnostics)
+                      '((cyclic-components (a b c))))))
+    (test-case "treats self loops as cyclic singleton components"
+      (let ((analysis (poo-flow-graph-loop-analysis-receipt
+                       graph-algorithm-self-loop-sample)))
+        (check-equal? (.ref analysis 'components) '((a) (b)))
+        (check-equal? (.ref analysis 'cyclic-components) '((a)))
+        (check-equal? (.ref analysis 'condensation-edges) '((0 1)))))))
 
 (run-tests! graph-algorithm-test)
