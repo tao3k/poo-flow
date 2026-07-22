@@ -5,17 +5,25 @@ on:
     branches: [main]
     paths:
       - bindings/runtime-wasm/**
-      - src/module-system/profile-composition-inline-runtime.ss
-      - src/module-system/profile-composition-builders.ss
-      - src/module-system/profile-composition-use-syntax.ss
+      - bindings/runtime-c/bundle-v1/**
+      - BUILD.bazel
+      - runtime-wasm-generator-build.ss
+      - src/core/plan.ss
+      - src/feature-system/bundle-v1-*.ss
+      - src/module-system/profile-composition.ss
+      - src/module-system/profile-composition-*.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
   pull_request:
     paths:
       - bindings/runtime-wasm/**
-      - src/module-system/profile-composition-inline-runtime.ss
-      - src/module-system/profile-composition-builders.ss
-      - src/module-system/profile-composition-use-syntax.ss
+      - bindings/runtime-c/bundle-v1/**
+      - BUILD.bazel
+      - runtime-wasm-generator-build.ss
+      - src/core/plan.ss
+      - src/feature-system/bundle-v1-*.ss
+      - src/module-system/profile-composition.ss
+      - src/module-system/profile-composition-*.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
   workflow_dispatch:
@@ -119,44 +127,3 @@ jobs:
           diff -u "$RUNNER_TEMP/expected-package-files" "$RUNNER_TEMP/actual-package-files"
           git -C "$branch_dir" -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com commit -m "package: $GITHUB_SHA"
           git -C "$branch_dir" push origin HEAD:refs/heads/npm-package --force
-
-  publish-npm:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [source-build, publish-package]
-    runs-on: ubuntu-latest
-    environment: npm
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Download verified package payload
-        uses: actions/download-artifact@v8
-        with:
-          name: poo-flow-runtime-wasm-package-payload
-          path: package-payload
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-          package-manager-cache: false
-
-      - name: Verify package provenance receipt
-        env:
-          EXPECTED_SOURCE_REV: ${{ github.sha }}
-        run: |
-          test "$(cat package-payload/.poo-flow-source-rev)" = "$EXPECTED_SOURCE_REV"
-          npm pack --dry-run --ignore-scripts ./package-payload
-
-      - name: Publish an unpublished version
-        shell: bash
-        working-directory: package-payload
-        run: |
-          name="$(node -p "require('./package.json').name")"
-          version="$(node -p "require('./package.json').version")"
-          if npm view "$name@$version" version >/dev/null 2>&1; then
-            echo "$name@$version is already published"
-            exit 0
-          fi
-          npm publish --access public --provenance --ignore-scripts
