@@ -8,7 +8,9 @@ extern "C" {
 #endif
 
 uint32_t pfw_workflow_cursor_capacity(void);
-uint32_t pfw_workflow_cursor_open(uint32_t step_count, uint32_t *out_cursor_handle);
+uint32_t pfw_workflow_cursor_open(
+    uint32_t topology_handle,
+    uint32_t *out_cursor_handle);
 uint32_t pfw_workflow_cursor_position(
     uint32_t cursor_handle,
     uint32_t *out_completed_steps,

@@ -15,7 +15,8 @@
                  poo-flow-composition-inline-profile-normalize
                  poo-flow-composition-inline-apply-hooks
                  poo-flow-composition-inline-module
-                 poo-flow-composition-inline-profile)
+                 poo-flow-composition-inline-profile
+                 poo-flow-composition->execution-plan)
         (only-in :poo-flow/src/module-system/profile-composition-accessors
                  poo-flow-composition?
                  poo-flow-composition-name
@@ -37,6 +38,7 @@
         poo-flow-composition-inline-apply-hooks
         poo-flow-composition-inline-module
         poo-flow-composition-inline-profile
+        poo-flow-composition->execution-plan
         poo-flow-composition?
         poo-flow-composition-name
         poo-flow-composition-modules

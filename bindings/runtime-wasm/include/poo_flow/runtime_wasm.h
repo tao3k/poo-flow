@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "poo_flow/runtime_v0.h"
+#include "poo_flow/bundle_v1.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +75,40 @@ uint32_t pfw_batch_ack(
     uint32_t instance_slot,
     uint32_t session_slot,
     uint32_t lease_slot);
+
+uint32_t pfw_topology_open_packed(
+    const void *descriptor_bytes,
+    uint32_t descriptor_length,
+    const void *arena_bytes,
+    uint32_t arena_length,
+    uint32_t *topology_slot_out);
+uint32_t pfw_topology_component_count(
+    uint32_t topology_slot,
+    uint32_t *count_out);
+uint32_t pfw_topology_edge_count(
+    uint32_t topology_slot,
+    uint32_t *count_out);
+uint32_t pfw_topology_symbol_count(
+    uint32_t topology_slot,
+    uint32_t *count_out);
+uint32_t pfw_topology_component_at(
+    uint32_t topology_slot,
+    uint32_t index,
+    poo_flow_bundle_v1_component_entry *entry_out);
+uint32_t pfw_topology_edge_at(
+    uint32_t topology_slot,
+    uint32_t index,
+    poo_flow_bundle_v1_edge_entry *entry_out);
+uint32_t pfw_topology_symbol_at(
+    uint32_t topology_slot,
+    uint32_t index,
+    poo_flow_bundle_v1_symbol_entry *entry_out);
+uint32_t pfw_topology_metadata_copy(
+    uint32_t topology_slot,
+    uint32_t offset,
+    uint32_t length,
+    void *bytes_out);
+uint32_t pfw_topology_release(uint32_t topology_slot);
 
 #ifdef __cplusplus
 }

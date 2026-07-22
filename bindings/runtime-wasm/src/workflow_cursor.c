@@ -28,10 +28,21 @@ uint32_t pfw_workflow_cursor_capacity(void) {
   return PFW_WORKFLOW_CURSOR_SLOT_COUNT - 1u;
 }
 
-uint32_t pfw_workflow_cursor_open(uint32_t step_count, uint32_t *out_cursor_handle) {
+uint32_t pfw_workflow_cursor_open(
+    uint32_t topology_handle,
+    uint32_t *out_cursor_handle) {
   uint32_t cursor_handle;
+  uint32_t step_count = 0u;
+  uint32_t status;
 
-  if (step_count == 0u || out_cursor_handle == NULL) {
+  if (out_cursor_handle == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  status = pfw_topology_component_count(topology_handle, &step_count);
+  if (status != 0u) {
+    return status;
+  }
+  if (step_count == 0u) {
     return PFW_WASM_STATUS_INVALID_ARGUMENT;
   }
 
