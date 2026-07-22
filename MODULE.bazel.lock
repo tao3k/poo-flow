@@ -191,8 +191,8 @@
   "moduleExtensions": {
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
-        "bzlTransitiveDigest": "zuatQdpsf258c/326KhFnYtO6gKY3bLE/09KvU7TlUo=",
-        "usagesDigest": "4rrisYKYBj6OeqHntWnE1MWo71bU+we9Jt8+rlCSnCQ=",
+        "bzlTransitiveDigest": "Gest7GkeYOJ0K3u0Xnu6+Nf6JdnAVfcsnNwGOB3qzWE=",
+        "usagesDigest": "k03YfeJUkrWrmA2f3/5PYaCmH3ZMw+6iXAti0M+TN3c=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -212,11 +212,36 @@
               "manifest_path": "gerbil-bazel-capability.json",
               "project_dependency_packages": [],
               "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg",
               "sha256": "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978f9d5fe7",
               "strip_prefix": "",
               "urls": [
                 "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208.tar.gz"
               ]
+            }
+          },
+          "gerbil_utils_sources": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "attributes": {
+              "package": "gerbil-utils",
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg"
+            }
+          },
+          "gerbil_poo_sources": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "attributes": {
+              "package": "gerbil-poo",
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg"
+            }
+          },
+          "gslph_sources": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "attributes": {
+              "package": "gslph",
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg"
             }
           }
         }
