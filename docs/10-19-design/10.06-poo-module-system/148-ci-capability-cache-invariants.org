@@ -476,6 +476,53 @@ The workflow-lint run =29648488847= also completed successfully.
 - consumer verification: =verified=true= with an identical digest;
 - Python wheel consumer Scheme build invocations: zero.
 
+*** Linux producer critical-path isolation
+
+GitHub Actions =needs= addresses a job identifier, not one expansion of a
+matrix job.  A consumer that needs a two-platform =native= matrix therefore
+waits for both Linux and macOS even when every consumed artifact is produced
+only by Linux.  POO Flow makes that dependency explicit with two one-entry
+jobs, =native-linux= and =native-macos=.  Both jobs consume the same anchored
+step sequence; the split changes scheduling ownership, not build semantics.
+
+#+begin_src mermaid
+flowchart LR
+  STEPS["&native-steps<br/>single declarative step sequence"]
+  LINUX["native-linux<br/>Linux producer"]
+  MACOS["native-macos<br/>macOS acceptance"]
+  PROJECTION["Scheme projection handoff"]
+  RUNTIMEC["runtime-C native handoff"]
+  WHEEL["Python runtime wheel<br/>clean consumer"]
+  COMPLETE["Complete cross-platform CI"]
+
+  STEPS --> LINUX
+  STEPS --> MACOS
+  LINUX --> PROJECTION
+  LINUX --> RUNTIMEC
+  PROJECTION --> WHEEL
+  RUNTIMEC --> WHEEL
+  LINUX --> COMPLETE
+  MACOS --> COMPLETE
+  WHEEL --> COMPLETE
+#+end_src
+
+The scheduling invariants are:
+
+- Linux producer work executes exactly once.
+- =python-runtime-wheel= needs =native-linux= directly and does not need the
+  unrelated macOS acceptance job.
+- The producer artifact names and JSON receipt schemas remain unchanged.
+- =native-linux= and =native-macos= share the same YAML step alias, preventing
+  platform job bodies from drifting into separate build systems.
+- Overall CI completion still requires macOS; only Linux-artifact feedback is
+  removed from the macOS critical path.
+
+Run =29956993962= is the before-refactor receipt.  Linux completed in =746 s=,
+macOS completed in =1385 s=, and the =22 s= wheel job started =642 s= after the
+Linux producer had finished.  The acceptance gate for the split topology is:
+the wheel job starts no more than =60 s= after =native-linux= completes,
+regardless of whether =native-macos= is still running.
+
 * Acceptance gates
 
 A v0.18.2 provider-boundary change is complete only when all of the following
