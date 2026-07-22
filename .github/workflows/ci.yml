@@ -244,14 +244,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          native_abi="$(
+          native_abi_output="$(
             bazel run --ui_event_filters=-info --noshow_progress \
-              @gerbil_bazel//gerbil:native_abi_fingerprint 2>/dev/null
+              @gerbil_bazel//gerbil:native_abi_fingerprint 2>&1
           )"
-          test "${#native_abi}" -eq 40
+          native_abi="$(
+            printf '%s\n' "$native_abi_output" \
+              | awk '/^[0-9a-f]{40}$/ { value = $0 } END { if (value != "") print value; else exit 1 }'
+          )"
+          if [[ "${#native_abi}" -ne 40 ]]; then
+            printf '%s\n' "$native_abi_output" >&2
+            exit 1
+          fi
           echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
+
+      - name: Install Gerbil project dependencies
+        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
+        run: bazel run @local_gerbil//:install_dependencies
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
