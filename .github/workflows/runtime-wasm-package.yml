@@ -60,6 +60,25 @@ jobs:
           poured_from_bottle="$(jq -r '.formulae[0].installed[-1].poured_from_bottle // false' <<< "$formula_info")"
           test "$poured_from_bottle" = true
 
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: false
+          disk-cache: runtime-wasm-${{ runner.os }}
+          repository-cache: true
+
+      - name: Resolve shared Gerbil capability
+        shell: bash
+        run: |
+          set -euo pipefail
+          native_abi="$(
+            bazelisk run --ui_event_filters=-info --noshow_progress \
+              @gerbil_bazel//gerbil:native_abi_fingerprint 2>/dev/null
+          )"
+          test "${#native_abi}" -eq 40
+          echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
+
       - name: Materialize POO Flow Gerbil project
         shell: bash
         run: |
