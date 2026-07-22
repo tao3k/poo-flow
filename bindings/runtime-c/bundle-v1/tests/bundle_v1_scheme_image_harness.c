@@ -52,7 +52,10 @@ int main(int argc, char **argv) {
   const poo_flow_bundle_v1_descriptor *descriptor = NULL;
   const void *data = NULL;
   uint64_t data_length = 0u;
+  poo_flow_bundle_v1_slice symbols = {0};
+  poo_flow_bundle_v1_slice metadata = {0};
   poo_flow_bundle_v1_slice components = {0};
+  const poo_flow_bundle_v1_symbol_entry *first_symbol = NULL;
   const poo_flow_bundle_v1_component_entry *first = NULL;
   const poo_flow_bundle_v1_component_entry *found = NULL;
   poo_flow_bundle_v1_status status = POO_FLOW_BUNDLE_V1_OK;
@@ -83,6 +86,29 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
   status = poo_flow_bundle_v1_arena_slice(
+      arena, POO_FLOW_BUNDLE_V1_REGION_SYMBOLS, &symbols);
+  if (status != POO_FLOW_BUNDLE_V1_OK ||
+      symbols.length != 2u * sizeof(poo_flow_bundle_v1_symbol_entry) ||
+      symbols.stride != sizeof(poo_flow_bundle_v1_symbol_entry)) {
+    fprintf(stderr, "Scheme symbol slice is invalid\n");
+    goto cleanup;
+  }
+  status = poo_flow_bundle_v1_arena_slice(
+      arena, POO_FLOW_BUNDLE_V1_REGION_METADATA_BYTES, &metadata);
+  if (status != POO_FLOW_BUNDLE_V1_OK || metadata.length != 22u ||
+      metadata.stride != 1u) {
+    fprintf(stderr, "Scheme metadata slice is invalid\n");
+    goto cleanup;
+  }
+  first_symbol = (const poo_flow_bundle_v1_symbol_entry *)symbols.data;
+  if (first_symbol->byte_length != 11u || first_symbol->symbol_kind != 1u ||
+      first_symbol->flags != 0u ||
+      ((const unsigned char *)metadata.data)[first_symbol->byte_offset] !=
+          (unsigned char)'C') {
+    fprintf(stderr, "Scheme symbol metadata is invalid\n");
+    goto cleanup;
+  }
+  status = poo_flow_bundle_v1_arena_slice(
       arena, POO_FLOW_BUNDLE_V1_REGION_COMPONENTS, &components);
   if (status != POO_FLOW_BUNDLE_V1_OK || components.length == 0u ||
       components.stride != sizeof(poo_flow_bundle_v1_component_entry)) {
@@ -102,6 +128,7 @@ int main(int argc, char **argv) {
   printf("c-owned-alignment=%u\n",
          POO_FLOW_BUNDLE_V1_RECOMMENDED_ARENA_ALIGNMENT);
   printf("component-lookup=binary-search\n");
+  printf("symbol-metadata=utf8\n");
   printf("json-in-hot-path=false\n");
   result = 0;
 

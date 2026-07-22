@@ -99,6 +99,16 @@
         (plan-node-ordinal node))))
    (execution-plan-nodes plan)))
 
+(def (plan-symbols plan)
+  (map
+   (lambda (node)
+     (feature-bundle-v1-symbol
+      'component
+      (plan-node-semantic-id node)
+      (symbol->string (plan-node-name node))
+      1))
+   (execution-plan-nodes plan)))
+
 (def (plan-edges plan)
   (let loop
       ((rest (execution-plan-dependency-edges plan))
@@ -127,9 +137,10 @@
          (plan (poo-flow-composition->execution-plan human-capability))
          (lowering
           (require-feature-bundle-v1-lowering-plan
-           (feature-bundle-v1-lowering
+           (feature-bundle-v1-lowering/with-symbols
             'human-capability
             1
+            (plan-symbols plan)
             (plan-components plan)
             (plan-edges plan)
             '())))
@@ -144,6 +155,8 @@
     (display (length (execution-plan-nodes plan)))
     (display " edges=")
     (display (length (execution-plan-dependency-edges plan)))
+    (display " symbols=")
+    (display (length (execution-plan-nodes plan)))
     (newline)))
 
 (write-human-capability-bundle!)

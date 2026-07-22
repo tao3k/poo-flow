@@ -63,6 +63,8 @@ test("workflow cursor advances, saturates, resets, and releases", async () => {
     assert.equal(new Uint32Array(exports.memory.buffer, pointer, 1)[0], 11);
     assert.equal(exports.pfw_topology_edge_count(topologyHandle, pointer), 0);
     assert.equal(new Uint32Array(exports.memory.buffer, pointer, 1)[0], 15);
+    assert.equal(exports.pfw_topology_symbol_count(topologyHandle, pointer), 0);
+    assert.equal(new Uint32Array(exports.memory.buffer, pointer, 1)[0], 11);
 
     assert.equal(exports.pfw_workflow_cursor_capacity(), 1023);
     assert.equal(exports.pfw_workflow_cursor_open(topologyHandle, pointer), 0);
@@ -110,8 +112,25 @@ test("ESM runtime exposes Bundle v1 topology and its cursor", async () => {
 
   assert.equal(topology.componentCount, 11);
   assert.equal(topology.edgeCount, 15);
+  assert.equal(topology.symbolCount, 11);
   assert.equal(topology.components().length, 11);
   assert.equal(topology.edges().length, 15);
+  assert.deepEqual(
+    new Set(topology.symbols().map(({ value }) => value)),
+    new Set([
+      "human-capability",
+      "human-capability-cycle",
+      "knowledge",
+      "access",
+      "understand",
+      "compose",
+      "governed-action",
+      "qualify",
+      "act",
+      "evidence-return",
+      "learn",
+    ]),
+  );
   assert.deepEqual(session.position(), { completedSteps: 0, stepCount: 11 });
   assert.deepEqual(session.step(), { completedSteps: 1, stepCount: 11 });
   assert.deepEqual(session.reset(), { completedSteps: 0, stepCount: 11 });

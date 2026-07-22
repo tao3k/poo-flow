@@ -5,8 +5,13 @@ export const PFW_WASM_STATUS_SLOT_EXHAUSTED = 0xffff0003;
 const COMPONENT_ROW_BYTES = 200;
 const EDGE_ROW_BYTES = 80;
 const SYMBOL_ROW_BYTES = 32;
-const defaultWasmUrl = new URL("./poo_flow_runtime.wasm", import.meta.url);
 const utf8 = new TextDecoder();
+
+const resolveDefaultWasmUrl = () => {
+  const url = new URL(import.meta.url);
+  url.pathname = url.pathname.replace(/[^/]*$/, "poo_flow_runtime.wasm");
+  return url;
+};
 
 const toBytes = (value) => {
   if (ArrayBuffer.isView(value)) {
@@ -15,14 +20,14 @@ const toBytes = (value) => {
   return new Uint8Array(value);
 };
 
-const instantiate = async ({ bytes, fetch: fetchImplementation, url = defaultWasmUrl } = {}) => {
+const instantiate = async ({ bytes, fetch: fetchImplementation, url } = {}) => {
   const imports = { env: { emscripten_notify_memory_growth() {} } };
   if (bytes != null) return WebAssembly.instantiate(bytes, imports);
   const fetchWasm = fetchImplementation ?? globalThis.fetch;
   if (typeof fetchWasm !== "function") {
     throw new Error("PFW-WASM-E001 fetch is unavailable; provide bytes or fetch");
   }
-  const response = await fetchWasm(url);
+  const response = await fetchWasm(url ?? resolveDefaultWasmUrl());
   if (!response.ok) {
     throw new Error(`PFW-WASM-E002 failed to load runtime: ${response.status}`);
   }

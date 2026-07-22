@@ -18,6 +18,7 @@
         :poo-flow/t/descriptor-registry-test
         :poo-flow/t/docker-descriptor-test
         :poo-flow/t/failure-test
+        :poo-flow/t/feature-system-bundle-v1-lowering-test
         :poo-flow/t/feature-system-bundle-v1-foreign-arena-test
         :poo-flow/t/flow-descriptor-test
         :poo-flow/t/functional-flow-kernel-test

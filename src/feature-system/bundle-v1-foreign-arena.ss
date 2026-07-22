@@ -17,6 +17,7 @@
 
 (def +bundle-v1-descriptor-size+ 256)
 (def +bundle-v1-arena-alignment+ 64)
+(def +bundle-v1-symbol-row-size+ 32)
 (def +bundle-v1-component-row-size+ 200)
 (def +bundle-v1-edge-row-size+ 80)
 (def +bundle-v1-evidence-row-size+ 96)
@@ -175,6 +176,14 @@
     (write-u64! target (+ cursor 16) (.ref row 'reserved1)))
   target)
 
+(def (write-symbol-row! target offset row)
+  (write-compact-id! target offset (.ref row 'id))
+  (write-u64! target (+ offset 16) (.ref row 'byte-offset))
+  (write-u32! target (+ offset 24) (.ref row 'byte-length))
+  (write-u16! target (+ offset 28) (.ref row 'symbol-kind))
+  (write-u16! target (+ offset 30) (.ref row 'flags))
+  target)
+
 (def (write-edge-row! target offset row)
   (let ((cursor
          (write-compact-ids!
@@ -213,6 +222,25 @@
      (+ index 1))
    0
    rows)
+  target)
+
+(def (write-metadata! target region metadata-image)
+  (unless (and (u8vector? metadata-image)
+               (= (.ref region 'stride) 1)
+               (= (.ref region 'alignment) 1)
+               (= (.ref region 'count) (u8vector-length metadata-image))
+               (= (.ref region 'length) (u8vector-length metadata-image))
+               (<= (.ref region 'offset) (u8vector-length target))
+               (<= (.ref region 'length)
+                   (- (u8vector-length target) (.ref region 'offset))))
+    (error "Bundle v1 metadata region does not match its byte image"
+           region metadata-image))
+  (let loop ((index 0))
+    (when (< index (u8vector-length metadata-image))
+      (u8vector-set! target
+                     (+ (.ref region 'offset) index)
+                     (u8vector-ref metadata-image index))
+      (loop (+ index 1))))
   target)
 
 (def (write-reserved! target offset values)
@@ -255,6 +283,8 @@
 (def (write-arena! target descriptor)
   (let ((symbols (.ref descriptor 'symbols))
         (metadata (.ref descriptor 'metadata-bytes))
+        (symbol-rows (.ref descriptor 'symbol-rows))
+        (metadata-image (.ref descriptor 'metadata-image))
         (component-rows (.ref descriptor 'component-rows))
         (edge-rows (.ref descriptor 'edge-rows))
         (evidence-rows (.ref descriptor 'evidence-rows)))
@@ -263,8 +293,9 @@
                             +bundle-v1-arena-alignment+)
                     0))
       (error "Bundle v1 arena image shape is invalid" descriptor))
-    (checked-region! symbols (u8vector-length target) 32 8 '())
-    (checked-region! metadata (u8vector-length target) 1 1 '())
+    (write-row-table! target symbols symbol-rows
+                      +bundle-v1-symbol-row-size+ 8 write-symbol-row!)
+    (write-metadata! target metadata metadata-image)
     (write-row-table! target (.ref descriptor 'components)
                       component-rows +bundle-v1-component-row-size+ 8
                       write-component-row!)
