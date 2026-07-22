@@ -82,6 +82,42 @@ flowchart LR
     B --> G["Aggregated swarm report"]
 #+end_src
 
+** Generic composition multiplicity and swarm preset projection
+
+The core model is not a swarm object.  A =poo-flow.composition= already is the
+POO-native combination of profiles, policies, roles, and stages.  Multiplicity
+associates a positive cardinality with that reusable composition.  A workload
+folds distinct multiplicities into an immutable vector of half-open launch
+ranges; it does not allocate one object per requested instance.
+
+For =k= distinct compositions and =n= total requested instances, construction
+uses =O(k)= range storage and ordinal resolution uses =O(log k)= binary lookup.
+The returned instance reference contains the selected composition, its compact
+launch range, the global ordinal, and the range-local ordinal.  Consequently a
+5,000, 40,000, or 100,000 instance scenario changes cardinality without
+changing the number of stored composition objects.
+
+#+begin_src mermaid
+flowchart LR
+    Composition["POO composition<br/>profiles + policies + roles + stages"]
+    Multiplicity["Multiplicity<br/>composition + positive count"]
+    Workload["Composition workload"]
+    Fold["Functional fold<br/>O(k) construction"]
+    Ranges["Compact LaunchRange vector<br/>k entries, half-open intervals"]
+    Lookup["Ordinal lookup<br/>O(log k)"]
+    Instance["POO instance reference<br/>composition + global/local ordinal"]
+    Swarm["Swarm benchmark preset"]
+    Runner["Lifecycle runner"]
+
+    Composition --> Multiplicity --> Workload --> Fold --> Ranges --> Lookup --> Instance
+    Swarm -. "projects arrival and lifecycle parameters" .-> Workload
+    Instance --> Runner
+#+end_src
+
+The word =swarm= therefore remains a benchmark/preset projection for arrival,
+capacity, lifecycle, and receipt settings.  It is not a core domain type and
+must not duplicate composition, contract, profile, or policy ownership.
+
 * Lifecycle semantics
 
 Each agent moves through one monotonic lifecycle:
