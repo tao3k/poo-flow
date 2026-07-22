@@ -222,8 +222,8 @@
         }
       },
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "4WPINlhyz3BNcQnUx24MhTUKVg5IWBfVGeMUu5kV3FA=",
-        "usagesDigest": "yVqFzpqQmND5gr+45/0IKGS3iJ9od5MV7edNK0N0D8E=",
+        "bzlTransitiveDigest": "Gest7GkeYOJ0K3u0Xnu6+Nf6JdnAVfcsnNwGOB3qzWE=",
+        "usagesDigest": "k03YfeJUkrWrmA2f3/5PYaCmH3ZMw+6iXAti0M+TN3c=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -244,6 +244,30 @@
               "project_library_relative_path": ".gerbil/lib",
               "project_root_marker": "@@//:gerbil.pkg",
               "tool_paths": {}
+            }
+          },
+          "gerbil_utils_sources": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "attributes": {
+              "package": "gerbil-utils",
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg"
+            }
+          },
+          "gerbil_poo_sources": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "attributes": {
+              "package": "gerbil-poo",
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg"
+            }
+          },
+          "gslph_sources": {
+            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "attributes": {
+              "package": "gslph",
+              "project_library_relative_path": ".gerbil/lib",
+              "project_root_marker": "@@//:gerbil.pkg"
             }
           }
         }

@@ -19,7 +19,7 @@ GERBIL_LINUX_URLS = [
 
 git_override(
     module_name = "gerbil_bazel",
-    commit = "afed1c72e0c302cf18f32a2e5c34162b20f5deb5",
+    commit = "bdaefd80a958ecf05150a5efa6d8bc339e0801c7",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 
@@ -39,7 +39,18 @@ gerbil.auto(
     linux_prebuilt_sha256 = GERBIL_LINUX_SHA256,
     linux_prebuilt_urls = GERBIL_LINUX_URLS,
     project_root_marker = "//:gerbil.pkg",
+    project_dependency_source_packages = [
+        "gerbil-utils",
+        "gerbil-poo",
+        "gslph",
+    ],
 )
-use_repo(gerbil, "local_gerbil")
+use_repo(
+    gerbil,
+    "local_gerbil",
+    "gerbil_utils_sources",
+    "gerbil_poo_sources",
+    "gslph_sources",
+)
 
 register_toolchains("@local_gerbil//:registered_toolchain")

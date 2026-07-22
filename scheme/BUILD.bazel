@@ -4,10 +4,94 @@ load(
     "gerbil_project_dev",
     "gerbil_project_test",
 )
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
 load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 
 package(default_visibility = ["//visibility:public"])
+
+gerbil_project_compile(
+    name = "gerbil_utils_package",
+    srcs = ["@gerbil_utils_sources//:sources"],
+    build_script = "@gerbil_utils_sources//:build_script",
+    process_guard = True,
+    require_library_output = True,
+)
+
+gerbil_project_compile(
+    name = "gerbil_poo_package",
+    srcs = ["@gerbil_poo_sources//:sources"],
+    build_script = "@gerbil_poo_sources//:build_script",
+    process_guard = True,
+    require_library_output = True,
+    deps = [":gerbil_utils_package"],
+)
+
+gerbil_project_compile(
+    name = "gslph_package",
+    srcs = ["@gslph_sources//:sources"],
+    build_script = "@gslph_sources//:build_script",
+    process_guard = True,
+    require_library_output = True,
+    deps = [":gerbil_poo_package"],
+)
+
+filegroup(
+    name = "dependency_packages",
+    srcs = [
+        ":gerbil_poo_package",
+        ":gerbil_utils_package",
+        ":gslph_package",
+    ],
+)
+
+gerbil_project_compile(
+    name = "runtime_wasm_generator_compile",
+    srcs = ["//:runtime_wasm_generator_scheme_sources"],
+    args = ["compile"],
+    build_script = "//:runtime_wasm_generator_build_script",
+    process_guard = True,
+    require_library_output = True,
+    receipt_line_prefix = "POO_FLOW_RUNTIME_WASM_GENERATOR_BUILD_RECEIPT ",
+    deps = [":gerbil_poo_package"],
+)
+
+filegroup(
+    name = "runtime_wasm_generator_compile_receipt",
+    srcs = [":runtime_wasm_generator_compile"],
+    output_group = "receipt",
+)
+
+gerbil_project_receipt_v1_test(
+    name = "runtime_wasm_generator_compile_receipt_v1_test",
+    receipt = ":runtime_wasm_generator_compile_receipt",
+    size = "small",
+)
+
+gerbil_project_dev(
+    name = "runtime_wasm_generator_dev_compile",
+    args = ["compile"],
+    build_script = "//:runtime_wasm_generator_build_script",
+    deps = [":runtime_wasm_generator_compile"],
+    tags = ["local", "manual"],
+)
+
+sh_binary(
+    name = "runtime_wasm_generator_materialize",
+    srcs = ["materialize_gerbil_projects.sh"],
+    args = [
+        "$(locations :gerbil_utils_package)",
+        "$(locations :gerbil_poo_package)",
+        "$(locations :runtime_wasm_generator_compile)",
+    ],
+    data = [
+        ":gerbil_utils_package",
+        ":gerbil_poo_package",
+        ":runtime_wasm_generator_compile",
+        "@bazel_tools//tools/bash/runfiles",
+    ],
+    tags = ["local", "manual"],
+)
 
 gerbil_project_compile(
     name = "compile",

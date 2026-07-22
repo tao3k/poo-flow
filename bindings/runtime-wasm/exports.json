@@ -18,5 +18,11 @@
   "_pfw_publish_batch",
   "_pfw_poll_batch",
   "_pfw_submit_batch",
-  "_pfw_batch_ack"
+  "_pfw_batch_ack",
+  "_pfw_workflow_cursor_capacity",
+  "_pfw_workflow_cursor_open",
+  "_pfw_workflow_cursor_position",
+  "_pfw_workflow_cursor_step",
+  "_pfw_workflow_cursor_reset",
+  "_pfw_workflow_cursor_release"
 ]

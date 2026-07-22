@@ -78,6 +78,8 @@
    (test-case
     "canonical grammar lowers to reusable POO objects"
     (let* ((profiles (.ref canonical-composition 'profiles))
+           (profile-bindings
+            (.ref canonical-composition 'profile-bindings))
            (stages (.ref canonical-composition 'stages))
            (stage (car stages))
            (audited (list-ref profiles 2)))
@@ -87,6 +89,10 @@
                     'canonical-composition)
       (check-equal? (length (.ref canonical-composition 'modules)) 1)
       (check-equal? (length profiles) 3)
+      (check-equal? (length profile-bindings) 3)
+      (check-equal? (.ref (car profile-bindings) 'alias) 'artifact)
+      (check-equal? (.ref (car profile-bindings) 'slot)
+                    'imported-report)
       (check-equal? (.ref (car profiles) 'kind)
                     'poo-flow.composition.imported-profile)
       (check-equal? (.ref (car profiles) 'module) 'artifact-catalog)
