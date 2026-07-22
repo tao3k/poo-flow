@@ -1,7 +1,8 @@
-"""Deterministic workload planning for the swarm lifecycle benchmark."""
+"""Deterministic workload planning for the composition lifecycle benchmark."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -47,9 +48,9 @@ class ArrivalSchedule:
 
 
 @dataclass(frozen=True, slots=True)
-class PlannedSwarmAgent:
+class PlannedAgent:
     tenant_id: str
-    swarm_id: str
+    group_id: str
     agent_id: str
     parent_agent_id: str | None
     role_id: str
@@ -61,9 +62,9 @@ class PlannedSwarmAgent:
 
 
 @dataclass(frozen=True, slots=True)
-class PlannedSwarm:
+class PlannedExecutionGroup:
     tenant_id: str
-    swarm_id: str
+    group_id: str
     main_agent_id: str
     member_count: int
 
@@ -72,17 +73,17 @@ class PlannedSwarm:
 class PlannedTenant:
     tenant_id: str
     agent_count: int
-    swarm_count: int
+    group_count: int
 
 
 @dataclass(frozen=True, slots=True)
-class SwarmWorkload:
+class CompositionWorkload:
     requested_total_agents: int
     tenant_count: int
-    agents_per_swarm: int
+    agents_per_group: int
     arrival: ArrivalSchedule
-    agents: tuple[PlannedSwarmAgent, ...]
-    swarms: tuple[PlannedSwarm, ...]
+    agents: Sequence[PlannedAgent]
+    groups: tuple[PlannedExecutionGroup, ...]
     tenants: tuple[PlannedTenant, ...]
 
     @property
@@ -90,5 +91,5 @@ class SwarmWorkload:
         return len(self.agents)
 
     @property
-    def swarm_count(self) -> int:
-        return len(self.swarms)
+    def group_count(self) -> int:
+        return len(self.groups)

@@ -1,26 +1,26 @@
-#+title: POO Flow Swarm Lifecycle Benchmark
+#+title: POO Flow Composition Lifecycle Benchmark
 
 * Status
 
 This document is the normative version 1 design baseline for the POO Flow
-swarm lifecycle benchmark.  It defines a workload and evidence model for
+execution group lifecycle benchmark.  It defines a workload and evidence model for
 dynamic groups of short-lived agents.  It does not add a new runtime ABI and
 does not model language-model inference quality.
 
 * Decision
 
-POO Flow SHALL add a dedicated swarm lifecycle benchmark rather than stretch
-the burst lifecycle benchmark into a product-specific swarm simulator.
+POO Flow SHALL add a dedicated execution group lifecycle benchmark rather than stretch
+the burst lifecycle benchmark into a product-specific collective-agent simulator.
 
 The benchmark has two explicit scales:
 
-1. one swarm containing a bounded number of cooperating agents; and
-2. many tenants launching many bounded swarms, with total agent populations of
+1. one execution group containing a bounded number of cooperating agents; and
+2. many tenants launching many bounded execution groups, with total agent populations of
    5,000, 10,000, and 100,000.
 
 A population of 100,000 therefore means 100,000 total agent lifecycles grouped
-into explicit tenant and swarm boundaries.  It never means one unbounded swarm,
-and it never implicitly means 100,000 swarms multiplied by a hidden per-swarm
+into explicit tenant and execution-group boundaries.  It never means one unbounded execution group,
+and it never implicitly means 100,000 execution groups multiplied by a hidden per-group
 population.
 
 The default execution capacity SHALL reuse
@@ -31,12 +31,12 @@ perform hidden throughput calibration.
 * Ownership boundary
 
 RFC14 owns generic benchmark clocks, burst capacity policy, and process-level
-measurement conventions.  This RFC owns swarm grouping, roles, policies,
+measurement conventions.  This RFC owns execution-group topology, roles, policies,
 capabilities, arrival schedules, barriers, aggregation, critical-path evidence,
-and swarm-specific correctness rules.
+and composition-specific correctness rules.
 
 The runtime ABI remains responsible only for executable graph descriptors and
-runtime operations.  Swarm presets, scale profiles, and benchmark receipts are
+runtime operations.  Composition lifecycle presets, scale profiles, and benchmark receipts are
 benchmark-layer values.  They do not become C ABI fields or cross-language
 protocol requirements.
 
@@ -51,7 +51,7 @@ Every planned agent lifecycle has the following explicit identity and behavior
 dimensions:
 
 - =tenant-id=: isolation and fairness owner;
-- =swarm-id=: barrier and aggregation owner;
+- =group-id=: barrier and aggregation owner;
 - =agent-id=: unique lifecycle identity within the run;
 - =parent-agent-id=: optional main-agent or subagent relationship;
 - =role-id=: domain responsibility such as research, planning, or verification;
@@ -68,8 +68,8 @@ then lowered into ordinary runtime values.
 
 #+begin_src mermaid
 flowchart LR
-    T["Tenant"] --> S1["Bounded swarm"]
-    T --> S2["Bounded swarm"]
+    T["Tenant"] --> S1["Bounded execution group"]
+    T --> S2["Bounded execution group"]
     S1 --> A1["Agent identity"]
     S1 --> A2["Agent identity"]
     R["Role prototype"] --> C["Composed agent case"]
@@ -77,14 +77,14 @@ flowchart LR
     K["Capability-set prototype"] --> C
     C --> A1
     C --> A2
-    A1 --> B["Per-swarm terminal barrier"]
+    A1 --> B["Per-execution group terminal barrier"]
     A2 --> B
-    B --> G["Aggregated swarm report"]
+    B --> G["Aggregated execution group report"]
 #+end_src
 
-** Generic composition multiplicity and swarm preset projection
+** Generic composition multiplicity and benchmark projection
 
-The core model is not a swarm object.  A =poo-flow.composition= already is the
+The core model is not an execution-group object.  A =poo-flow.composition= already is the
 POO-native combination of profiles, policies, roles, and stages.  Multiplicity
 associates a positive cardinality with that reusable composition.  A workload
 folds distinct multiplicities into an immutable vector of half-open launch
@@ -106,17 +106,67 @@ flowchart LR
     Ranges["Compact LaunchRange vector<br/>k entries, half-open intervals"]
     Lookup["Ordinal lookup<br/>O(log k)"]
     Instance["POO instance reference<br/>composition + global/local ordinal"]
-    Swarm["Swarm benchmark preset"]
+    Preset["Composition benchmark preset"]
     Runner["Lifecycle runner"]
 
     Composition --> Multiplicity --> Workload --> Fold --> Ranges --> Lookup --> Instance
-    Swarm -. "projects arrival and lifecycle parameters" .-> Workload
+    Preset -. "projects arrival and lifecycle parameters" .-> Workload
     Instance --> Runner
 #+end_src
 
-The word =swarm= therefore remains a benchmark/preset projection for arrival,
+The word =execution group= therefore remains a benchmark/preset projection for arrival,
 capacity, lifecycle, and receipt settings.  It is not a core domain type and
 must not duplicate composition, contract, profile, or policy ownership.
+
+** Python validation runtime lazy multiplicity view
+
+The Python validation runtime must validate the lowering contract without
+becoming a second semantic owner.  POO Flow Scheme continues to own profile
+composition, multiplicity, launch-range lowering, and the runtime ABI.  The
+Python planner consumes the same compact shape and projects benchmark-specific
+=PlannedAgent= values only when a runner asks for them.
+
+=CompositionWorkload.agents= is therefore a =Sequence[PlannedAgent]= rather than
+a concrete tuple.  Its field name and position, the =PlannedAgent= value shape,
+the planner arguments, and the runner/measurement/receipt boundaries do not
+change.  Consumers that used the tuple through its sequence behavior remain
+compatible; code that requires concrete tuple identity must materialize that
+choice explicitly at its own boundary.
+
+The private validation representation can store one =_ProfileCombination= per
+distinct profile and one half-open =_LaunchRange= per multiplicity interval.  A
+private =_PlannedAgentSequence= keeps the range end ordinals and locates an
+indexed agent with =bisect_right=.  The current public
+=plan_composition_workload= input lowers its existing role, policy, and
+capability cycles to exactly one combination and one range; this stage
+deliberately adds no second public composition language.  The private view
+invariant is nevertheless defined for =k= contiguous ranges so that a later
+canonical Bundle adapter can populate that representation.  It would require
+=O(k)= range storage and =O(log k)= range selection; projecting the selected
+agent is =O(1)=.  Iteration projects one value at a time, while slicing
+materializes only the requested slice.  The execution-group and tenant summaries
+remain explicit because their cardinality and receipt role are independent of
+agent-object materialization.
+
+#+begin_src mermaid
+flowchart LR
+    A["Scheme POO profile compositions"] --> B["Compact launch ranges (start, count, profile)"]
+    B --> C["Python validation runtime range view"]
+    C --> D{"Consumer access"}
+    D -->|"index"| E["bisect_right range lookup O(log k)"]
+    D -->|"iterate"| F["Project one PlannedAgent O(1)"]
+    D -->|"slice"| G["Materialize only the requested slice"]
+    E --> H["Existing runner, measurement, and receipt"]
+    F --> H
+    G --> H
+#+end_src
+
+The 100,000-agent regression verifies every ordinal and execution-group
+membership in a streaming pass.  It retains only =O(number of groups)= counters,
+then separately checks boundary, negative-index, slice, and deterministic
+sampled profile projection behavior.  Comparing 1,000-agent and 100,000-agent
+plans also proves that the agent view keeps one range rather than storing one
+object per agent.
 
 * Lifecycle semantics
 
@@ -141,9 +191,9 @@ stateDiagram-v2
     Settled --> [*]
 #+end_src
 
-A swarm barrier opens only after every planned member has reached exactly one
+An execution-group barrier opens only after every planned member has reached exactly one
 terminal state.  Aggregation begins after the barrier opens and produces one
-swarm report.  A partial-failure policy may choose a successful, degraded, or
+execution group report.  A partial-failure policy may choose a successful, degraded, or
 failed aggregate outcome, but it may not erase failed, timed-out, or cancelled
 members from the receipt.
 
@@ -171,22 +221,22 @@ Such values are named presets, not defaults and not ABI constants.
 
 * Scale profiles
 
-** Single-swarm qualification
+** Single-execution group qualification
 
-The normative single-swarm matrix is =2, 4, 8, 16, 32, 64, 100, 128= agents.
+The normative single-group matrix is =2, 4, 8, 16, 32, 64, 100, 128= agents.
 Additional populations MAY be requested explicitly.  The receipt always records
 the requested and realized member counts.
 
 ** Multi-tenant saturation
 
 The normative total-agent matrix is =5,000, 10,000, 100,000=.  Each case also
-declares =tenant-count= and =agents-per-swarm=.  The planner derives
-=swarm-count= and the final partial swarm deterministically.  It SHALL NOT hide
+declares =tenant-count= and =agents-per-group=.  The planner derives
+=group-count= and the final partial execution group deterministically.  It SHALL NOT hide
 rounding or silently add agents.
 
 Tenant assignment uses a deterministic round-robin mapping unless another
 named mapping policy is selected.  A run is invalid if the sum of realized
-swarm memberships differs from the requested total population.
+execution group memberships differs from the requested total population.
 
 * Capacity and scheduling
 
@@ -205,7 +255,7 @@ with a minimum of one.  The receipt emits:
 - zero calibration population and an empty calibration-capacity list.
 
 An explicit capacity uses =manual-override-v1=.  Capacity limits running work;
-it does not change logical arrival eligibility, swarm membership, or the
+it does not change logical arrival eligibility, execution group membership, or the
 terminal barrier.
 
 The scheduler SHOULD be work-conserving while preserving per-tenant fairness.
@@ -217,7 +267,7 @@ the public runtime ABI.
 Every run records both wall and process clocks.  Required metrics are:
 
 - agent startup, service, and settlement latency at p50, p95, and p99;
-- swarm makespan and run makespan;
+- execution group makespan and run makespan;
 - barrier wait and aggregation latency;
 - peak active agents and peak eligible queue depth;
 - completed, failed, timed-out, and cancelled counts;
@@ -239,17 +289,17 @@ metric is reported as unavailable rather than fabricated as zero.
 
 * Receipt schema
 
-The schema identifier is =poo-flow.swarm-lifecycle-benchmark.v1=.  The version 1
+The schema identifier is =poo-flow.composition-lifecycle-benchmark.v1=.  The version 1
 receipt contains these top-level groups:
 
 - =run=: schema, implementation, clock, and host identity;
-- =topology=: total agents, tenants, swarms, and membership accounting;
+- =topology=: total agents, tenants, execution groups, and membership accounting;
 - =workload=: roles, policies, capabilities, budgets, and service distribution;
 - =arrival=: schedule, waves, logical intervals, and simulation scale;
 - =capacity=: source, policy, available CPUs, selected capacity, and manual
   override state;
 - =agent-metrics=: lifecycle counts and latency distributions;
-- =swarm-metrics=: barriers, aggregation, critical path, and outcomes;
+- =group-metrics=: barriers, aggregation, critical path, and outcomes;
 - =tenant-metrics=: per-tenant throughput and fairness;
 - =resource-metrics=: wall, process, queue, concurrency, and memory evidence;
   and
@@ -270,7 +320,7 @@ aggregation ordering, partial failure, timeout, cancellation, and zero final
 activity.  These tests use controlled service functions and do not assert host
 performance.
 
-** Single-swarm performance gate
+** Single-execution group performance gate
 
 Run the normative =2..128= matrix for both instant and ramp arrival.  Report all
 units, capacity policy, critical steps, and work amplification.  Performance
@@ -296,23 +346,27 @@ separate.
 
 The Python validation runtime SHOULD keep the feature modular:
 
-- =benchmarks/swarm_lifecycle.py=: public benchmark entry point;
-- =benchmarks/_swarm_lifecycle_workload.py=: immutable workload value types;
-- =benchmarks/_swarm_lifecycle_planner.py=: pure planning and grouping;
-- =benchmarks/_swarm_lifecycle_arrival.py=: eligibility and global capacity;
-- =benchmarks/_swarm_lifecycle_runner.py=: validated suite execution;
-- =benchmarks/_swarm_lifecycle_measurement.py=: clocks and lifecycle observers;
-- =benchmarks/_swarm_lifecycle_projection.py=: latency and receipt projection;
-- =benchmarks/_swarm_lifecycle_receipt.py=: schema construction and validation;
+- =benchmarks/composition_lifecycle.py=: public benchmark entry point;
+- =benchmarks/_composition_lifecycle_workload.py=: immutable workload value types;
+- =benchmarks/_composition_lifecycle_planner.py=: pure planning and grouping;
+- =benchmarks/_composition_lifecycle_arrival.py=: eligibility and global capacity;
+- =benchmarks/_composition_lifecycle_runner.py=: validated suite execution;
+- =benchmarks/_composition_lifecycle_measurement.py=: clocks and lifecycle observers;
+- =benchmarks/_composition_lifecycle_projection.py=: latency and receipt projection;
+- =benchmarks/_composition_lifecycle_receipt.py=: schema construction and validation;
   and
 - =benchmarks/__main__.py=: command dispatch only.
 
 The implementation SHOULD reuse =RuntimeGraphProgram.abatch=,
 =RuntimeGraphExecutor.abatch=, burst observer patterns, and the established
-capacity receipt.  It SHALL add explicit swarm primitives instead of encoding
+capacity receipt.  It SHALL add explicit execution group primitives instead of encoding
 barriers or aggregation as accidental list positions.
 
 * External reference mapping
+
+The names =Kimi-style agent swarms= and =AgentSwarm= below are external
+reference vocabulary only.  POO Flow's normative model remains composition
+lifecycle plus explicit execution groups.
 
 This design is product-neutral, but its parameters cover the public behavior of
 Kimi-style agent swarms:
@@ -334,36 +388,38 @@ These sources justify configurable populations, budgets, ramp schedules,
 barriers, aggregation, timeouts, and critical-path metrics.  They do not justify
 copying a current product limit into the POO Flow runtime ABI.
 
-* Initial planner evidence
+* Historical eager-planner evidence
 
 The first implementation stage landed the immutable workload values and the
-pure round-robin planner.  On 2026-07-20, two fresh CPython 3.13.11 processes on
+pure round-robin planner before the compact lazy view.  On 2026-07-20, two fresh CPython 3.13.11 processes on
 =darwin-arm64= with 12 process-available CPUs constructed every agent object and
-verified every realized population.  Both runs used =agents-per-swarm= 128 and
+verified every realized population.  Both runs used =agents-per-group= 128 and
 enabled =tracemalloc=.  The ranges below retain host scheduling variability
-instead of selecting the faster observation.
+instead of selecting the faster observation.  This table is a historical eager
+materialization baseline; it does not describe the current lazy planner's
+allocation behavior.
 
-| Total agents | Tenants | Realized agents | Swarms | Wall time range (ms) | Process time range (ms) | Python allocation peak range (bytes) |
+| Total agents | Tenants | Realized agents | Execution groups | Wall time range (ms) | Process time range (ms) | Python allocation peak range (bytes) |
 |--------------+---------+-----------------+--------+----------------------+-------------------------+--------------------------------------|
 |        5,000 |      50 |           5,000 |     50 |       58.794--474.698 |          58.684--59.219 |                 1,468,082--1,480,990 |
 |       10,000 |     100 |          10,000 |    100 |      136.149--275.139 |        106.877--130.579 |                 2,957,128--2,982,636 |
 |      100,000 |   1,000 |         100,000 |  1,000 |    2,810.374--4,861.911 |      1,164.675--1,481.023 |               29,716,400--29,968,832 |
 
 The post-split related gate reported =32 passed=.  The 100,000-agent test checks
-all unique agent identifiers, every swarm membership count, the requested versus
-realized population, and the per-swarm bound.  The planner therefore has
+all unique agent identifiers, every execution group membership count, the requested versus
+realized population, and the per-group bound.  The planner therefore has
 correctness and allocation evidence, but no claim about runtime execution,
 startup latency, barrier cost, or terminal throughput.  Those claims begin only
 with the runner and measurement stages.
 
-* Initial single-swarm execution evidence
+* Initial single-group execution evidence
 
-The second implementation stage executes the full =2..128= single-swarm matrix
+The second implementation stage executes the full =2..128= single-group matrix
 through the validate-once, prepared-executor path owned by
 =RuntimeGraphProgram.abatch=.  It uses instant arrival, one millisecond
 of requested service work per agent, =system-available-cpu-v1=, and the same
 12-CPU =darwin-arm64= host.  The capacity implementation is now a shared
-benchmark owner used by both burst and swarm lifecycle runners; neither runner
+benchmark owner used by both burst and execution group lifecycle runners; neither runner
 performs throughput calibration.
 
 Three fresh processes produced the ranges below.  The p99 columns come from the
@@ -433,7 +489,7 @@ multi-tenant execution remain outside this stage.
 * Version 1 delivery order
 
 1. Land workload planning and receipt validation with deterministic unit tests.
-2. Land single-swarm instant and ramp execution for the =2..128= matrix.
+2. Land single-group instant and ramp execution for the =2..128= matrix.
 3. Land multi-tenant grouping and fairness evidence at =5,000=.
 4. Qualify =10,000= and then =100,000= under memory and lifecycle guards.
 5. Publish benchmark receipts and update this Org document with exact units and

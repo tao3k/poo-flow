@@ -1,4 +1,4 @@
-"""Arrival-aware globally bounded scheduler for ramped swarm workloads."""
+"""Arrival-aware globally bounded scheduler for ramped composition workloads."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any, Protocol, cast
 import anyio
 
 from ..program import RuntimeGraphProgram
-from ._swarm_lifecycle_workload import ArrivalSchedule
+from ._composition_lifecycle_workload import ArrivalSchedule
 
 BENCHMARK_ELIGIBLE_AT_NS = "benchmark_eligible_at_ns"
 

@@ -1,4 +1,4 @@
-"""Project raw swarm execution timings into a versioned benchmark receipt."""
+"""Project raw composition execution timings into a versioned benchmark receipt."""
 
 from __future__ import annotations
 
@@ -6,26 +6,26 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from ._swarm_lifecycle_arrival import BENCHMARK_ELIGIBLE_AT_NS
-from ._swarm_lifecycle_receipt import (
-    SwarmLatencySummary,
-    SwarmLifecycleBenchmark,
+from ._composition_lifecycle_arrival import BENCHMARK_ELIGIBLE_AT_NS
+from ._composition_lifecycle_receipt import (
+    CompositionLatencySummary,
+    CompositionLifecycleBenchmark,
 )
-from ._swarm_lifecycle_workload import SwarmWorkload
+from ._composition_lifecycle_workload import CompositionWorkload
 
 
 @dataclass(frozen=True, slots=True)
-class SwarmTimingEvidence:
+class CompositionTimingEvidence:
     started_at_ns: Mapping[str, int]
     finished_at_ns: Mapping[str, int]
     peak_active: int
     final_active: int
 
 
-def project_swarm_benchmark(
+def project_composition_benchmark(
     *,
-    workload: SwarmWorkload,
-    timings: SwarmTimingEvidence,
+    workload: CompositionWorkload,
+    timings: CompositionTimingEvidence,
     outputs: list[dict[str, Any]],
     completed_ids: tuple[str, ...],
     wall_start_ns: int,
@@ -37,7 +37,7 @@ def project_swarm_benchmark(
     capacity_source: str,
     capacity_policy: str,
     service_time_ms: float,
-) -> SwarmLifecycleBenchmark:
+) -> CompositionLifecycleBenchmark:
     expected_ids = {agent.agent_id for agent in workload.agents}
     completed_id_set = set(completed_ids)
     starts = tuple(timings.started_at_ns[agent_id] for agent_id in completed_ids)
@@ -47,7 +47,7 @@ def project_swarm_benchmark(
         for output in outputs
     }
     wall_elapsed_ns = aggregate_created_ns - wall_start_ns
-    return SwarmLifecycleBenchmark(
+    return CompositionLifecycleBenchmark(
         total_agents=workload.realized_total_agents,
         selected_capacity=selected_capacity,
         available_cpus=available_cpus,
@@ -102,9 +102,9 @@ def project_swarm_benchmark(
     )
 
 
-def _latencies(values: Iterable[int | float]) -> SwarmLatencySummary:
+def _latencies(values: Iterable[int | float]) -> CompositionLatencySummary:
     ordered = sorted(values)
-    return SwarmLatencySummary(
+    return CompositionLatencySummary(
         p50_ms=_ms(_percentile(ordered, 0.50)),
         p95_ms=_ms(_percentile(ordered, 0.95)),
         p99_ms=_ms(_percentile(ordered, 0.99)),
