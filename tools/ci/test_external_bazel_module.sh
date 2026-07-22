@@ -2,6 +2,14 @@
 set -euo pipefail
 
 bazel_bin="${BAZEL:-bazelisk}"
+external_test_mode="${POO_FLOW_EXTERNAL_TEST_MODE:-full}"
+case "$external_test_mode" in
+  analysis | full) ;;
+  *)
+    printf 'unsupported external-module test mode: %s\n' "$external_test_mode" >&2
+    exit 2
+    ;;
+esac
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 test_root="$(cd "$(mktemp -d)" && pwd -P)"
 cleanup() {
@@ -54,11 +62,24 @@ EOF
   export TMPDIR="$bazel_tmp"
   "$bazel_bin" --output_user_root="$test_root/bazel" query \
     --lockfile_mode=off @poo_flow//scheme:compile
-  "$bazel_bin" --output_user_root="$test_root/bazel" build \
-    --lockfile_mode=off //:poo_flow_compile
-  "$bazel_bin" --output_user_root="$test_root/bazel" test \
-    --lockfile_mode=off --test_output=errors \
-    @poo_flow//scheme:compile_receipt_v1_test
+  if [[ "$external_test_mode" == analysis ]]; then
+    "$bazel_bin" --output_user_root="$test_root/bazel" build \
+      --nobuild --lockfile_mode=off //:poo_flow_compile
+  else
+    "$bazel_bin" --output_user_root="$test_root/bazel" build \
+      --lockfile_mode=off //:poo_flow_compile
+    "$bazel_bin" --output_user_root="$test_root/bazel" test \
+      --lockfile_mode=off --test_output=errors \
+      @poo_flow//scheme:compile_receipt_v1_test
+  fi
 )
 
-printf '{"schema":"poo-flow.external-bazel-module.v1","ambientGerbil":false,"targets":2}\n'
+if [[ "$external_test_mode" == full ]]; then
+  compiled=true
+  receipt_validated=true
+else
+  compiled=false
+  receipt_validated=false
+fi
+printf '{"schema":"poo-flow.external-bazel-module.v1","mode":"%s","ambientGerbil":false,"configured":true,"compiled":%s,"receiptValidated":%s}\n' \
+  "$external_test_mode" "$compiled" "$receipt_validated"

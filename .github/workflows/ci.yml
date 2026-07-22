@@ -85,6 +85,7 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
+            external-module-mode: full
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow
@@ -235,6 +236,8 @@ jobs:
 
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
+        env:
+          POO_FLOW_EXTERNAL_TEST_MODE: ${{ matrix.external-module-mode }}
         run: tools/ci/test_external_bazel_module.sh
 
       - name: Resolve shared Gerbil capability
@@ -600,6 +603,7 @@ jobs:
             gerbil-install: homebrew
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
+            external-module-mode: analysis
             job-timeout-minutes: 30
     steps: *native-steps
 
