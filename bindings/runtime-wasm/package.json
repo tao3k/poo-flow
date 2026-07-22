@@ -1,7 +1,7 @@
 {
   "name": "@poo-flow/runtime-wasm",
   "version": "0.1.0",
-  "description": "Browser WebAssembly runtime and generated workflow plans for POO Flow",
+  "description": "Browser WebAssembly runtime for canonical POO Flow Bundle v1 topologies",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -23,21 +23,19 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
     },
-    "./workflows/browser-contribution": "./generated/browser-contribution.generated.ts",
-    "./workflows/browser-profile-composition": "./generated/browser-profile-composition.generated.ts",
-    "./workflows/subagent-workflow": "./generated/subagent-workflow.generated.ts",
-    "./workflows/funflow": "./generated/funflow.generated.ts",
+    "./workflows/human-capability/descriptor": "./workflows/human-capability.descriptor.bin",
+    "./workflows/human-capability/arena": "./workflows/human-capability.arena.bin",
     "./wasm": "./dist/poo_flow_runtime.wasm"
   },
   "files": [
     "dist",
-    "generated",
+    "workflows",
     "include",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "generate": "mkdir -p generated && env GERBIL_PATH=../../.gerbil gxi examples/browser-contribution.ss && env GERBIL_PATH=../../.gerbil gxi examples/browser-profile-composition.ss && env GERBIL_PATH=../../.gerbil gxi examples/scenario-workflows.ss",
+    "generate": "mkdir -p workflows && env POO_FLOW_HUMAN_CAPABILITY_DESCRIPTOR_OUT=workflows/human-capability.descriptor.bin POO_FLOW_HUMAN_CAPABILITY_ARENA_OUT=workflows/human-capability.arena.bin GERBIL_PATH=../../.gerbil gxi examples/human-capability.ss",
     "build:wasm": "mkdir -p dist && emcc -O2 -std=c11 -I../runtime-c/include -I../runtime-c/bundle-v1/include -Iinclude src/runtime_wasm_shim.c src/workflow_cursor.c ../runtime-c/src/runtime_v0.c ../runtime-c/bundle-v1/src/bundle_v1.c -o dist/poo_flow_runtime.wasm -sSTANDALONE_WASM=1 -Wl,--no-entry -sERROR_ON_UNDEFINED_SYMBOLS=1 -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=@exports.json && cp src/index.mjs dist/index.mjs && cp src/index.d.ts dist/index.d.ts",
     "build": "npm run generate && npm run build:wasm",
     "test:generate-determinism": "node test/generator-determinism.mjs",

@@ -1,7 +1,6 @@
 #!/usr/bin/env gxi
 
-(import :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/composition-typescript)
+(import :poo-flow/src/module-system/profile-composition)
 
 (export browser-profile-composition)
 
@@ -35,7 +34,3 @@
       (step research-case)
       (step qualification-case)
       (handoff runtime))))
-
-(composition->typescript-file!
- browser-profile-composition
- "generated/browser-profile-composition.generated.ts")

@@ -11,6 +11,7 @@ typedef struct {
 } pfw_handle_slot;
 
 static pfw_handle_slot pfw_handles[PFW_HANDLE_CAPACITY];
+static poo_flow_bundle_v1_arena *pfw_topologies[PFW_HANDLE_CAPACITY];
 
 static poo_flow_runtime_v0_handle *pfw_handle_get(uint32_t slot) {
   if (slot == 0 || slot >= PFW_HANDLE_CAPACITY || !pfw_handles[slot].occupied) {
@@ -313,4 +314,195 @@ uint32_t pfw_batch_ack(
     pfw_handle_clear(lease_slot);
   }
   return status;
+}
+
+static poo_flow_bundle_v1_arena *pfw_topology_get(uint32_t slot) {
+  if (slot == 0u || slot >= PFW_HANDLE_CAPACITY) {
+    return NULL;
+  }
+  return pfw_topologies[slot];
+}
+
+static uint32_t pfw_topology_store(
+    poo_flow_bundle_v1_arena *arena,
+    uint32_t *slot_out) {
+  uint32_t slot;
+  if (arena == NULL || slot_out == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  for (slot = 1u; slot < PFW_HANDLE_CAPACITY; slot += 1u) {
+    if (pfw_topologies[slot] == NULL) {
+      pfw_topologies[slot] = arena;
+      *slot_out = slot;
+      return 0u;
+    }
+  }
+  return PFW_WASM_STATUS_SLOT_EXHAUSTED;
+}
+
+static uint32_t pfw_topology_slice(
+    uint32_t topology_slot,
+    uint32_t region_kind,
+    poo_flow_bundle_v1_slice *slice_out) {
+  poo_flow_bundle_v1_arena *arena = pfw_topology_get(topology_slot);
+  if (arena == NULL) {
+    return PFW_WASM_STATUS_INVALID_SLOT;
+  }
+  if (slice_out == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  return poo_flow_bundle_v1_arena_slice(arena, region_kind, slice_out);
+}
+
+static uint32_t pfw_topology_count(
+    uint32_t topology_slot,
+    uint32_t region_kind,
+    uint32_t *count_out) {
+  poo_flow_bundle_v1_slice slice;
+  uint32_t status;
+  if (count_out == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  status = pfw_topology_slice(topology_slot, region_kind, &slice);
+  if (status != 0u) {
+    return status;
+  }
+  if (slice.stride == 0u || slice.length % slice.stride != 0u ||
+      slice.length / slice.stride > UINT32_MAX) {
+    return POO_FLOW_BUNDLE_V1_REGION_LAYOUT;
+  }
+  *count_out = (uint32_t)(slice.length / slice.stride);
+  return 0u;
+}
+
+static uint32_t pfw_topology_row_at(
+    uint32_t topology_slot,
+    uint32_t region_kind,
+    uint32_t index,
+    uint32_t expected_stride,
+    void *entry_out) {
+  poo_flow_bundle_v1_slice slice;
+  uint64_t offset;
+  uint32_t status;
+  if (entry_out == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  status = pfw_topology_slice(topology_slot, region_kind, &slice);
+  if (status != 0u) {
+    return status;
+  }
+  if (slice.stride != expected_stride) {
+    return POO_FLOW_BUNDLE_V1_REGION_LAYOUT;
+  }
+  offset = (uint64_t)index * slice.stride;
+  if (offset > slice.length || slice.length - offset < slice.stride) {
+    return POO_FLOW_BUNDLE_V1_NOT_FOUND;
+  }
+  memcpy(entry_out, (const uint8_t *)slice.data + offset, slice.stride);
+  return 0u;
+}
+
+uint32_t pfw_topology_open_packed(
+    const void *descriptor_bytes,
+    uint32_t descriptor_length,
+    const void *arena_bytes,
+    uint32_t arena_length,
+    uint32_t *topology_slot_out) {
+  poo_flow_bundle_v1_arena *arena = NULL;
+  uint32_t status;
+  if (descriptor_bytes == NULL || arena_bytes == NULL ||
+      topology_slot_out == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  status = poo_flow_bundle_v1_arena_create_packed(
+      descriptor_bytes, descriptor_length, arena_bytes, arena_length, &arena);
+  if (status != 0u) {
+    return status;
+  }
+  status = pfw_topology_store(arena, topology_slot_out);
+  if (status != 0u) {
+    poo_flow_bundle_v1_arena_release(arena);
+  }
+  return status;
+}
+
+uint32_t pfw_topology_component_count(
+    uint32_t topology_slot,
+    uint32_t *count_out) {
+  return pfw_topology_count(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_COMPONENTS, count_out);
+}
+
+uint32_t pfw_topology_edge_count(
+    uint32_t topology_slot,
+    uint32_t *count_out) {
+  return pfw_topology_count(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_EDGES, count_out);
+}
+
+uint32_t pfw_topology_symbol_count(
+    uint32_t topology_slot,
+    uint32_t *count_out) {
+  return pfw_topology_count(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_SYMBOLS, count_out);
+}
+
+uint32_t pfw_topology_component_at(
+    uint32_t topology_slot,
+    uint32_t index,
+    poo_flow_bundle_v1_component_entry *entry_out) {
+  return pfw_topology_row_at(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_COMPONENTS, index,
+      sizeof(*entry_out), entry_out);
+}
+
+uint32_t pfw_topology_edge_at(
+    uint32_t topology_slot,
+    uint32_t index,
+    poo_flow_bundle_v1_edge_entry *entry_out) {
+  return pfw_topology_row_at(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_EDGES, index,
+      sizeof(*entry_out), entry_out);
+}
+
+uint32_t pfw_topology_symbol_at(
+    uint32_t topology_slot,
+    uint32_t index,
+    poo_flow_bundle_v1_symbol_entry *entry_out) {
+  return pfw_topology_row_at(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_SYMBOLS, index,
+      sizeof(*entry_out), entry_out);
+}
+
+uint32_t pfw_topology_metadata_copy(
+    uint32_t topology_slot,
+    uint32_t offset,
+    uint32_t length,
+    void *bytes_out) {
+  poo_flow_bundle_v1_slice slice;
+  uint32_t status;
+  if (bytes_out == NULL) {
+    return PFW_WASM_STATUS_INVALID_ARGUMENT;
+  }
+  status = pfw_topology_slice(
+      topology_slot, POO_FLOW_BUNDLE_V1_REGION_METADATA_BYTES, &slice);
+  if (status != 0u) {
+    return status;
+  }
+  if ((uint64_t)offset > slice.length ||
+      slice.length - (uint64_t)offset < (uint64_t)length) {
+    return POO_FLOW_BUNDLE_V1_REGION_BOUNDS;
+  }
+  memcpy(bytes_out, (const uint8_t *)slice.data + offset, length);
+  return 0u;
+}
+
+uint32_t pfw_topology_release(uint32_t topology_slot) {
+  poo_flow_bundle_v1_arena *arena = pfw_topology_get(topology_slot);
+  if (arena == NULL) {
+    return PFW_WASM_STATUS_INVALID_SLOT;
+  }
+  poo_flow_bundle_v1_arena_release(arena);
+  pfw_topologies[topology_slot] = NULL;
+  return 0u;
 }

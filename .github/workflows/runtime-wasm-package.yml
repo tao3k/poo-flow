@@ -5,21 +5,17 @@ on:
     branches: [main]
     paths:
       - bindings/runtime-wasm/**
-      - src/core/typescript-plan.ss
-      - src/module-system/composition-typescript.ss
+      - src/module-system/profile-composition-inline-runtime.ss
       - src/module-system/profile-composition-builders.ss
       - src/module-system/profile-composition-use-syntax.ss
-      - t/composition-typescript-test.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
   pull_request:
     paths:
       - bindings/runtime-wasm/**
-      - src/core/typescript-plan.ss
-      - src/module-system/composition-typescript.ss
+      - src/module-system/profile-composition-inline-runtime.ss
       - src/module-system/profile-composition-builders.ss
       - src/module-system/profile-composition-use-syntax.ss
-      - t/composition-typescript-test.ss
       - t/profile-composition-test.ss
       - .github/workflows/runtime-wasm-package.yml
   workflow_dispatch:
@@ -73,9 +69,9 @@ jobs:
         run: |
           cp LICENSE bindings/runtime-wasm/LICENSE
           npm pack ./bindings/runtime-wasm --dry-run
-          cp -R bindings/runtime-wasm/generated "$RUNNER_TEMP/generated-first"
+          cp -R bindings/runtime-wasm/workflows "$RUNNER_TEMP/workflows-first"
           npm --prefix bindings/runtime-wasm run generate
-          diff -ru "$RUNNER_TEMP/generated-first" bindings/runtime-wasm/generated
+          diff -ru "$RUNNER_TEMP/workflows-first" bindings/runtime-wasm/workflows
           archive_json="$(npm pack ./bindings/runtime-wasm --ignore-scripts --json --pack-destination "$RUNNER_TEMP")"
           archive="$(jq -r '.[0].filename' <<< "$archive_json")"
           payload="$RUNNER_TEMP/poo-flow-runtime-wasm-package"

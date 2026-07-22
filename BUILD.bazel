@@ -40,14 +40,15 @@ filegroup(
         "src/core/projection-syntax.ss",
         "src/core/roles.ss",
         "src/core/task.ss",
-        "src/core/typescript-plan.ss",
-        "src/module-system/composition-typescript.ss",
+        "src/feature-system/bundle-v1-foreign-arena.ss",
+        "src/feature-system/bundle-v1-lowering.ss",
         "src/module-system/profile-composition-accessors.ss",
         "src/module-system/profile-composition-builders.ss",
         "src/module-system/profile-composition-inline-runtime.ss",
         "src/module-system/profile-composition-syntax-plan.ss",
         "src/module-system/profile-composition-use-syntax.ss",
         "src/module-system/profile-composition.ss",
+        "src/utilities/functional.ss",
     ],
 )
 

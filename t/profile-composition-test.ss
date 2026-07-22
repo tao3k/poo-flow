@@ -5,6 +5,7 @@
         (only-in :clan/poo/object .o .ref)
         :gerbil/gambit
         (only-in :gerbil/expander datum->syntax)
+        :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition
         (only-in :poo-flow/src/module-system/profile-composition-syntax-plan
                  parse-poo-flow-composition-syntax-plan))
@@ -58,6 +59,21 @@
           :scope (session)))
       (compose (profile artifact local-report)))))
 
+(def plan-composition
+  (use-composition plan-composition
+    (use-module research as research
+      (profile researcher :kind agent :scope research)
+      (profile verifier :kind authority :scope evidence))
+    (compose
+      (profile research researcher)
+      (profile research verifier))
+    (stage collect
+      (step researcher)
+      (handoff verifier)
+      (edges (researcher verifier)))
+    (stage scenario
+      (step collect))))
+
 (def (composition-syntax-error-message module-datum)
   (let (module-form (datum->syntax #f module-datum))
     (with-exception-catcher
@@ -109,6 +125,22 @@
     (let (profile (car (.ref hygiene-composition 'profiles)))
       (check-equal? (.ref profile 'kind) 'hygienic-profile)
       (check-equal? (.ref profile 'scope) '(session))))
+   (test-case
+    "composition lowers to the canonical execution plan and dependency DAG"
+    (let* ((plan (poo-flow-composition->execution-plan plan-composition))
+           (nodes (execution-plan-nodes plan))
+           (dependency-edges (execution-plan-dependency-edges plan))
+           (researcher (list-ref nodes 3))
+           (verifier (list-ref nodes 4)))
+      (check-equal? (execution-plan? plan) #t)
+      (check-equal? (length nodes) 5)
+      (check-equal?
+       (if (member (list (plan-node-id researcher)
+                         (plan-node-id verifier))
+                   dependency-edges)
+           #t
+           #f)
+       #t)))
    (test-case
     "non-canonical module grammar reports the single canonical diagnostic"
     (check-equal?
