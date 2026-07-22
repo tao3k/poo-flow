@@ -247,7 +247,7 @@
         }
       },
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "Gest7GkeYOJ0K3u0Xnu6+Nf6JdnAVfcsnNwGOB3qzWE=",
+        "bzlTransitiveDigest": "t00g9vybVCH1XofVvFa6AKBBpa1JgYX0fkbjYIU27QU=",
         "usagesDigest": "k03YfeJUkrWrmA2f3/5PYaCmH3ZMw+6iXAti0M+TN3c=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
