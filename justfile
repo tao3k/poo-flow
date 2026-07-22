@@ -16,6 +16,7 @@ bundle_v1_library := "//bindings/runtime-c/bundle-v1:bundle_v1"
 bundle_v1_tests := "//bindings/runtime-c/bundle-v1:bundle_v1_tests"
 gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 python_runtime_dir := "packages/python-runtime"
+python_runtime_test_environment := "//scheme:python_runtime_test_environment"
 composition_lifecycle_tests := "tests/unit/test_composition_lifecycle_arrival.py tests/unit/test_composition_lifecycle_benchmark.py tests/unit/test_composition_lifecycle_workload.py"
 
 # Show the maintained developer entrypoints.
@@ -87,6 +88,11 @@ test-bundle-v1:
 [group('test')]
 test-python-composition-lifecycle:
     cd {{ python_runtime_dir }} && uv run --group dev pytest -q {{ composition_lifecycle_tests }}
+
+# Run the complete Python suite in the Bazel-declared Gerbil project environment.
+[group('test')]
+test-python:
+    {{ bazel }} run {{ python_runtime_test_environment }} -- uv run --group dev pytest -q
 
 # Run the explicit runtime-C sanitizer gate.
 [group('test')]

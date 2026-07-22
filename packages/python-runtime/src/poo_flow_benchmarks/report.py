@@ -59,7 +59,7 @@ def render_org(report: Report) -> str:
     lines.append('  --with-editable ../../.data/langgraph/libs/langgraph \\')
     lines.append('  --with-editable ../../.data/langchain/libs/core \\')
     lines.append('  --with-editable ../../.data/crewai/lib/crewai \\')
-    lines.append('  python benchmarks/bench_frameworks.py \\')
+    lines.append('  python -m poo_flow_benchmarks \\')
     lines.append('  --iterations 2000 \\')
     lines.append('  --warmup 200 \\')
     lines.append('  --progress \\')

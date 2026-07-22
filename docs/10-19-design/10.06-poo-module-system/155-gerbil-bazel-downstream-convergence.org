@@ -144,6 +144,64 @@ projection from shared =GerbilProjectInfo=.
 
 *** Shared project action convergence
 
+**** Python runtime test environment
+
+The complete Python suite MUST consume a Bazel-declared Gerbil project
+environment.  A caller-owned =gxpkg env= invocation is not a maintained
+precondition and MUST remain only a runtime fallback for installations that do
+not provide the declared environment.
+
+=//scheme:python_runtime_test_environment= consumes =GerbilProjectInfo= from
+=//scheme:compile= and the registered Gerbil toolchain.  The launcher resolves
+the compiled project root, transitive project dependency roots, the toolchain
+library root, =gxi=, and =native_scheme_env= through runfiles.  It therefore
+uses the same Darwin and Linux capability selection as the canonical build.
+
+#+begin_src mermaid
+flowchart LR
+  JUST["just test-python"] --> BAZEL["Bazel project environment target"]
+  BAZEL --> PROJECT["//scheme:compile GerbilProjectInfo"]
+  BAZEL --> TOOLCHAIN["Registered Gerbil toolchain"]
+  PROJECT --> LOADPATH["GERBIL_PATH and ordered GERBIL_LOADPATH"]
+  TOOLCHAIN --> LOADPATH
+  TOOLCHAIN --> NATIVE["native_scheme_env and toolchain gxi"]
+  LOADPATH --> PYTEST["uv pytest complete Python suite"]
+  NATIVE --> PYTEST
+  PYTEST --> LOADER["Python Scheme loader direct gxi lane"]
+  LOADER -. "installation fallback only" .-> GXPKG["gxpkg env gxi"]
+#+end_src
+
+The ordered load path is part of the contract:
+
+1. the compiled POO Flow project =.gerbil/lib=;
+2. each transitive project dependency =.gerbil/lib=;
+3. the toolchain dependency-library root.
+
+The target emits
+=poo-flow.gerbil-project-environment-declaration.v1= as a JSON Bazel output.
+At execution time it also exports a
+=poo-flow.gerbil-project-environment-runtime.v1= JSON receipt together with
+the canonical Gerbil project receipt path.  The Python loader consumes the
+inherited =GERBIL_PATH=, =GERBIL_LOADPATH=, and toolchain-selected =gxi= path;
+it does not reconstruct Bazel output paths.
+
+**** Acceptance receipt (2026-07-22)
+
+- =//tools/bazel:gerbil_project_environment_tool_test=: passed.
+- =//tools/bazel:scheme_projection_artifact_tool_test=: passed after sharing
+  the same environment composition function.
+- Focused Scheme-loader and Funflow projection gate: =6 passed=.
+- Maintained =just test-python= gate: =277 passed, 9 skipped, 0 failed= in
+  =5.72 s= after the declared project action was cached; Bazel completed the
+  cached target action in =0.332 s=.
+- An isolated CPython 3.13 environment installed the built wheel and ran
+  =python -m poo_flow_benchmarks --list= outside the source tree. The wheel
+  contained all =13= benchmark package modules and the module entry point
+  listed all =14= registered benchmark cases.
+- A clean local target build produced both the executable launcher and
+  =python_runtime_test_environment.receipt.json=; the observed full cold target
+  build was =328.523 s= and the cached Bazel analysis was =0.187 s=.
+
 - =//scheme:compile=, the development launchers, and the Scheme test matrix
   load only =@gerbil_bazel//gerbil:defs.bzl=;
 - the local generic project rule and both local Scheme shell runners are
