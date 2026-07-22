@@ -233,6 +233,10 @@ jobs:
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
 
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
+        run: tools/ci/test_external_bazel_module.sh
+
       - name: Resolve shared Gerbil capability
         id: gerbil-native-abi
         shell: bash
@@ -620,7 +624,6 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: poo-flow-lock-Linux-X64
 
       - name: Generate the Linux module-extension evaluation
         run: |
@@ -656,7 +659,6 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: poo-flow-lock-macOS-ARM64
 
       - name: Merge the Darwin module-extension evaluation
         run: |
@@ -694,7 +696,6 @@ jobs:
           bazelisk-cache: true
           cache-save: false
           repository-cache: true
-          disk-cache: poo-flow-lock-Linux-X64
 
       - name: Verify the merged lock on Linux
         run: |

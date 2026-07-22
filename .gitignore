@@ -17,7 +17,4 @@ manifest.ss
 version.ss
 
 # Bazel convenience symlinks and output trees.
-/bazel-bin
-/bazel-out
-/bazel-poo-flow
-/bazel-testlogs
+/bazel-*

@@ -69,6 +69,11 @@ test-gerbil-capability:
 test-scheme-receipt:
     {{ bazel }} test --test_output=errors {{ scheme_receipt_tests }}
 
+# Validate POO Flow as a clean external Bzlmod dependency.
+[group('test')]
+test-external-bazel-module:
+    tools/ci/test_external_bazel_module.sh
+
 # Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
 [group('test')]
 test-dev:
@@ -111,7 +116,7 @@ test-performance:
 
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
-check: query build test test-gerbil-capability test-scheme-receipt
+check: query build test test-gerbil-capability test-scheme-receipt test-external-bazel-module
 
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]
