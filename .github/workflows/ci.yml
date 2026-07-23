@@ -234,6 +234,9 @@ jobs:
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
 
+      - name: Verify Bazel module lock
+        run: bazel mod deps --lockfile_mode=error
+
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         env:

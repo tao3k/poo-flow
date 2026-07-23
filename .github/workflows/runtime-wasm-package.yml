@@ -68,6 +68,9 @@ jobs:
           disk-cache: runtime-wasm-${{ runner.os }}
           repository-cache: true
 
+      - name: Verify Bazel module lock
+        run: bazelisk mod deps --lockfile_mode=error
+
       - name: Resolve shared Gerbil capability
         shell: bash
         run: |

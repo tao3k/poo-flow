@@ -232,7 +232,7 @@ with retained evidence, incomplete-baseline rejection, Bazel generation, and
 independent byte determinism.
 
 | Gate | Result | Wall time |
-|-
+|------+--------+-----------|
 | Publication lock and timeout | pass | 0.5524 s |
 | Durable publication transaction faults | pass | 0.6077 s |
 | External-module analysis with missing-root negative control | pass; 86 packages, 2,751 targets, 0 actions | 25.0621 s |
@@ -240,7 +240,7 @@ independent byte determinism.
 | Independent Bundle determinism | pass; 1 action | 4.2426 s |
 
 | Public artifact | Bytes | SHA-256 | Bazel comparison |
-|-
+|-----------------+-------+---------+------------------|
 | Descriptor | 256 | =308fe381969af6820ce5867bf63382a578d5ac48f7730bd8526a3008f0287049= | equal |
 | Arena | 3,904 | =5cf93db1e02860ed14bfd98e5addb501f25b9048c1395147aae90df10a9eb4bb= | equal |
 

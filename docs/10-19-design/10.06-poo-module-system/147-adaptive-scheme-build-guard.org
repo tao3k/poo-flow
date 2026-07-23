@@ -1297,6 +1297,43 @@ flowchart LR
   Gate -->|"no"| Block["Fail Bazel and CI"]
 #+end_src
 
+** Cross-platform module-lock convergence and fail-fast CI receipt (2026-07-23)
+
+Manual cross-platform lock run =30022907845= completed all three ordered
+stages successfully: Linux seed, Darwin ARM64 merge, and Linux merged-lock
+verification.  The verified =MODULE.bazel.lock= artifact is 57,190 bytes with
+SHA-256
+=d22b922f5640d5fc56942ee06114b4cc23dde9ff0200d5e5e5809a8c554e04ff=.
+The committed lock is byte-identical to that artifact and contains both
+=os:linux,arch:amd64= and =os:osx,arch:aarch64= evaluations.
+
+| Stage | Result | Elapsed |
+|-------+---------+---------|
+| Linux AMD64 seed | success | 25 s |
+| Darwin ARM64 merge | success | 39 s |
+| Linux AMD64 merged-lock verification | success | 17 s |
+| Local =mod deps --lockfile_mode=error= | success | 1.0017 s |
+
+A stale-lock Linux run exposed the failure only after the external-module
+compile and receipt gate had already completed successfully in =469.304 s=.
+Regular CI and =runtime-wasm-package= therefore run
+=mod deps --lockfile_mode=error= immediately after Bazel setup and before
+their heavyweight external-module or dependency-build steps.  This preserves
+fail-closed lock ownership while moving the stale-lock decision to the front
+of both pipelines.  It does not mask artifact transport failures or relax any
+later build and receipt gate.
+
+#+begin_src mermaid
+flowchart LR
+  Seed["Linux seed"] --> Darwin["Darwin ARM64 merge"]
+  Darwin --> Verify["Linux merged-lock verify"]
+  Verify --> Artifact["Verified lock artifact<br/>57,190 bytes<br/>SHA-256 d22b922f..."]
+  Stale["Stale committed lock"] --> Late["Detected after 469.304 s external success"]
+  Late --> Gate["Early mod deps<br/>--lockfile_mode=error"]
+  Gate --> CI["Regular CI"]
+  Gate --> Wasm["runtime-wasm-package"]
+#+end_src
+
 ** Adaptive dependency-install resource receipt (2026-07-22)
 
 POO Flow consumes the pinned gerbil-bazel =install_dependencies= capability. Native =gxpkg deps --install= remains the package-lifecycle owner; gerbil-bazel only projects the validated =GERBIL_BUILD_CORES= budget, applies the memory cap, runs the child beneath the Scheme resource guard, and records the JSON receipt.
