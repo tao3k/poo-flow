@@ -1336,14 +1336,30 @@ with its own 15-minute budget and cache namespace.  Native Linux retains a
 acceptance gates.  There is exactly one full external-module owner, but it runs
 in parallel instead of consuming the native job's serial critical path.
 
-| Run =30024963904= evidence | Elapsed | Result |
-|----------------------------+---------+--------|
+| Split-path evidence | Elapsed | Result |
+|---------------------+---------+--------|
 | Linux native total | 1,215 s | cancelled by 20-minute job budget |
 | Linux external full | 534 s | success |
 | Linux dependency install and build | 434 s | success |
 | Linux Scheme build before cancellation | 206 s | cancelled |
 | macOS complete native lane | 1,595 s | success |
 | Projected Linux native lane after split | about 1,002 s | 198 s timeout headroom |
+| Actual Linux native lane after split, run =30029517325= | 833 s (=13m53s=) | success; 367 s timeout headroom |
+
+Run =30029517325= closed the split-path acceptance.  The Linux native lane
+completed in =833 s= (=13m53s=), leaving =367 s= under its 20-minute budget.
+It finished at least =382 s= earlier than the prior =1,215 s= cancellation
+boundary while also completing the downstream receipt, acceptance, and handoff
+gates that the cancelled run never reached.
+
+The dedicated Linux external-full check succeeded in =547 s= (=9m7s=).  Its
+job log records approximately =543.2 s= for the job and =508.0 s= for
+validation; those lower-level observations do not replace the check-duration
+acceptance value.  The same run completed the macOS lane in =1,500 s=
+(=25m0s=), the Python lane in =37 s=, and the Lean lane in =26 s=.
+Runtime-WASM run =30029517048= completed =source-build= in =1,654 s=
+(=27m34s=), leaving =146 s= under its 30-minute job budget.  Actionlint run
+=30029517046= passed in =8 s=.
 
 #+begin_src mermaid
 flowchart LR
