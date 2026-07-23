@@ -24,6 +24,11 @@
         +feature-bundle-v1-descriptor-kind+
         +feature-bundle-v1-diagnostic-kind+
         +feature-bundle-v1-lowering-plan-kind+
+        +feature-bundle-v1-no-capability-id+
+        +feature-bundle-v1-no-policy-id+
+        +feature-bundle-v1-no-strategy-id+
+        +feature-bundle-v1-no-adapter-id+
+        +feature-bundle-v1-no-projection-id+
         feature-bundle-v1-compact-id?
         feature-bundle-v1-symbol
         feature-bundle-v1-symbol?
@@ -68,6 +73,17 @@
 (def +feature-bundle-v1-component-enabled-flag+ 1)
 (def +feature-bundle-v1-uint16-modulus+ 65536)
 (def +feature-bundle-v1-uint64-modulus+ 18446744073709551616)
+
+(def +feature-bundle-v1-no-capability-id+
+  'poo-flow.bundle-v1.no-capability)
+(def +feature-bundle-v1-no-policy-id+
+  'poo-flow.bundle-v1.no-policy)
+(def +feature-bundle-v1-no-strategy-id+
+  'poo-flow.bundle-v1.no-strategy)
+(def +feature-bundle-v1-no-adapter-id+
+  'poo-flow.bundle-v1.no-adapter)
+(def +feature-bundle-v1-no-projection-id+
+  'poo-flow.bundle-v1.no-projection)
 
 (def +feature-bundle-v1-compact-id-kind+
   'poo-flow.feature-bundle-v1-compact-id.v1)

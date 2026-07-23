@@ -11,6 +11,7 @@
         :poo-flow/t/agent-sandbox-marlin-interface-test
         :poo-flow/t/agent-harness-object-test
         :poo-flow/t/agent-sandbox-profile-test
+        :poo-flow/t/build-api-project-compile-guard-test
         :poo-flow/t/cli-test
         :poo-flow/t/config-test
         :poo-flow/t/control-plane-role-test
@@ -20,6 +21,7 @@
         :poo-flow/t/failure-test
         :poo-flow/t/feature-system-bundle-v1-lowering-test
         :poo-flow/t/feature-system-bundle-v1-foreign-arena-test
+        :poo-flow/t/feature-system-bundle-v1-composition-writer-test
         :poo-flow/t/flow-descriptor-test
         :poo-flow/t/functional-flow-kernel-test
         :poo-flow/t/functional-flow-kleisli-test
@@ -69,4 +71,6 @@
         :poo-flow/t/user-interface-custom-session-transform-test
         :poo-flow/t/user-interface-custom-tool-core-test)
 
-(export projection-syntax-support-test)
+(export projection-syntax-support-test
+        build-api-project-compile-guard-test
+        feature-system-bundle-v1-composition-writer-test)

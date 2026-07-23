@@ -71,6 +71,61 @@ jobs:
             packages/proof/lean/.lake
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
+  external-module-linux-full:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: POO Flow external Bazel module (linux-amd64, full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ca-certificates \
+            git \
+            libsqlite3-dev \
+            libssl-dev \
+            pkg-config \
+            zlib1g-dev
+
+      - name: Declare Bazel disk-cache generation
+        shell: bash
+        env:
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/bazel-cache-generation
+          printf '# POO Flow external-module cache generation: %s\n' \
+            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
+            > .ci/bazel-cache-generation/BUILD.bazel
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
+          disk-cache: ci-${{ runner.os }}-external-module-full-v1
+          repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazel mod deps --lockfile_mode=error
+
+      - name: Validate external Bazel startup arguments
+        timeout-minutes: 2
+        run: bash tools/ci/test_external_bazel_module_args_test.sh
+
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: 12
+        env:
+          POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE: ${{ runner.temp }}/poo-flow-external-bazel-output-base-v1
+          POO_FLOW_EXTERNAL_TEST_MODE: full
+        run: tools/ci/test_external_bazel_module.sh
+
   native-linux:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
@@ -85,6 +140,7 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
+            external-module-mode: analysis
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow
@@ -230,8 +286,18 @@ jobs:
           # updated action cache is published instead of being trapped behind
           # GitHub's immutable exact key.  Forks remain restore-only.
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazel mod deps --lockfile_mode=error
+
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
+        env:
+          POO_FLOW_EXTERNAL_TEST_MODE: ${{ matrix.external-module-mode }}
+        run: tools/ci/test_external_bazel_module.sh
 
       - name: Resolve shared Gerbil capability
         id: gerbil-native-abi
@@ -596,6 +662,7 @@ jobs:
             gerbil-install: homebrew
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
+            external-module-mode: analysis
             job-timeout-minutes: 30
     steps: *native-steps
 
@@ -620,7 +687,6 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: poo-flow-lock-Linux-X64
 
       - name: Generate the Linux module-extension evaluation
         run: |
@@ -630,7 +696,7 @@ jobs:
       - name: Upload the Linux lock seed
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: poo-flow-module-lock-linux-${{ github.run_id }}
+          name: poo-flow-module-lock-linux-${{ github.run_id }}-${{ github.run_attempt }}
           path: MODULE.bazel.lock
           if-no-files-found: error
 
@@ -648,7 +714,7 @@ jobs:
       - name: Download the Linux lock seed
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: poo-flow-module-lock-linux-${{ github.run_id }}
+          name: poo-flow-module-lock-linux-${{ github.run_id }}-${{ github.run_attempt }}
           path: .ci/lock-linux
 
       - name: Set up Bazel
@@ -656,7 +722,6 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: poo-flow-lock-macOS-ARM64
 
       - name: Merge the Darwin module-extension evaluation
         run: |
@@ -667,7 +732,7 @@ jobs:
       - name: Upload the merged cross-platform lock
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: poo-flow-module-lock-${{ github.run_id }}
+          name: poo-flow-module-lock-${{ github.run_id }}-${{ github.run_attempt }}
           path: MODULE.bazel.lock
           if-no-files-found: error
 
@@ -685,7 +750,7 @@ jobs:
       - name: Download the merged cross-platform lock
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: poo-flow-module-lock-${{ github.run_id }}
+          name: poo-flow-module-lock-${{ github.run_id }}-${{ github.run_attempt }}
           path: .ci/lock-merged
 
       - name: Set up Bazel
@@ -694,7 +759,6 @@ jobs:
           bazelisk-cache: true
           cache-save: false
           repository-cache: true
-          disk-cache: poo-flow-lock-Linux-X64
 
       - name: Verify the merged lock on Linux
         run: |
