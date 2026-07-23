@@ -8,8 +8,13 @@
                  poo-flow-composition-module-binding
                  poo-flow-composition-clause
                  poo-flow-composition-stage
-                 poo-flow-composition-object
-                 poo-flow-composition-object/profiles)
+           poo-flow-composition-object
+           poo-flow-composition-object/profiles
+           poo-flow-composition-multiplicity
+           poo-flow-composition-launch-range
+           poo-flow-composition-multiplicities->launch-ranges
+           poo-flow-composition-workload
+           poo-flow-composition-workload/ref)
         (only-in :poo-flow/src/module-system/profile-composition-inline-runtime
                  poo-flow-composition-inline-profile-ref/default
                  poo-flow-composition-inline-profile-normalize
@@ -31,8 +36,13 @@
         poo-flow-composition-module-binding
         poo-flow-composition-clause
         poo-flow-composition-stage
-        poo-flow-composition-object
-        poo-flow-composition-object/profiles
+  poo-flow-composition-object
+  poo-flow-composition-object/profiles
+  poo-flow-composition-multiplicity
+  poo-flow-composition-launch-range
+  poo-flow-composition-multiplicities->launch-ranges
+  poo-flow-composition-workload
+  poo-flow-composition-workload/ref
         poo-flow-composition-inline-profile-ref/default
         poo-flow-composition-inline-profile-normalize
         poo-flow-composition-inline-apply-hooks

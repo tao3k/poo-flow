@@ -2,16 +2,11 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from pathlib import Path
 
-
-BENCHMARK_DIR = Path(__file__).parents[2] / "benchmarks"
-sys.path.insert(0, str(BENCHMARK_DIR))
-
-from frameworks.comparison import COMPARISONS  # noqa: E402
-from frameworks.common import Report  # noqa: E402
-from frameworks.report import render_text  # noqa: E402
-from frameworks.registry import all_cases, select_cases  # noqa: E402
+from poo_flow_benchmarks.comparison import COMPARISONS
+from poo_flow_benchmarks.common import Report
+from poo_flow_benchmarks.report import render_text
+from poo_flow_benchmarks.registry import all_cases, select_cases
 
 
 def test_registry_exposes_unique_framework_case_ids() -> None:
@@ -48,7 +43,7 @@ def test_comparisons_reference_registered_cases() -> None:
 
 def test_modular_cli_lists_every_registered_case() -> None:
     completed = subprocess.run(
-        [sys.executable, str(BENCHMARK_DIR / "bench_frameworks.py"), "--list"],
+        [sys.executable, "-m", "poo_flow_benchmarks", "--list"],
         check=True,
         capture_output=True,
         text=True,

@@ -5,6 +5,7 @@ load(
     "gerbil_project_test",
 )
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("//tools/bazel:gerbil_project_environment.bzl", "gerbil_project_environment")
 load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
 load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 
@@ -100,6 +101,12 @@ gerbil_project_compile(
     build_script = "//:build.ss",
     receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
     deps = [":gslph_package"],
+)
+
+gerbil_project_environment(
+    name = "python_runtime_test_environment",
+    project = ":compile",
+    working_directory = "packages/python-runtime",
 )
 
 gerbil_project_dev(

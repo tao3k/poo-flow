@@ -125,12 +125,28 @@ def _scheme_loader_commands(
 
 
 def _direct_scheme_loader_env(workdir: Path) -> dict[str, str] | None:
-    gerbil_path = workdir / ".gerbil"
-    if not (gerbil_path / "lib" / "poo-flow").exists():
+    inherited_gerbil_path = os.environ.get("GERBIL_PATH")
+    inherited_candidate = (
+        Path(inherited_gerbil_path) if inherited_gerbil_path else None
+    )
+    workspace_candidate = workdir / ".gerbil"
+    gerbil_path = next(
+        (
+            candidate
+            for candidate in (inherited_candidate, workspace_candidate)
+            if candidate is not None
+            and (candidate / "lib" / "poo-flow").exists()
+        ),
+        None,
+    )
+    if gerbil_path is None:
         return None
     env = dict(os.environ)
     env["GERBIL_PATH"] = str(gerbil_path)
-    env["PATH"] = f"{gerbil_path / 'bin'}:{env.get('PATH', '')}"
+    if gerbil_path == workspace_candidate:
+        env["PATH"] = os.pathsep.join(
+            (str(gerbil_path / "bin"), env.get("PATH", ""))
+        )
     return env
 
 

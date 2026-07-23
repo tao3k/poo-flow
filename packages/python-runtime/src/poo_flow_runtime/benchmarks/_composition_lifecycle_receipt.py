@@ -1,15 +1,15 @@
-"""Versioned receipt values for swarm lifecycle benchmark evidence."""
+"""Versioned receipt values for composition lifecycle benchmark evidence."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
 
-SWARM_LIFECYCLE_SCHEMA = "poo-flow.swarm-lifecycle-benchmark.v1"
+COMPOSITION_LIFECYCLE_SCHEMA = "poo-flow.composition-lifecycle-benchmark.v1"
 
 
 @dataclass(frozen=True, slots=True)
-class SwarmLatencySummary:
+class CompositionLatencySummary:
     p50_ms: float
     p95_ms: float
     p99_ms: float
@@ -23,7 +23,7 @@ class SwarmLatencySummary:
 
 
 @dataclass(frozen=True, slots=True)
-class SwarmLifecycleBenchmark:
+class CompositionLifecycleBenchmark:
     total_agents: int
     selected_capacity: int
     available_cpus: int
@@ -37,10 +37,10 @@ class SwarmLifecycleBenchmark:
     simulation_time_scale: float
     wall_time_ms: float
     process_time_ms: float
-    startup_latency: SwarmLatencySummary
-    service_latency: SwarmLatencySummary
-    settlement_latency: SwarmLatencySummary
-    barrier_wait: SwarmLatencySummary
+    startup_latency: CompositionLatencySummary
+    service_latency: CompositionLatencySummary
+    settlement_latency: CompositionLatencySummary
+    barrier_wait: CompositionLatencySummary
     aggregation_latency_ms: float
     throughput_agents_per_second: float
     peak_active_agents: int
@@ -72,11 +72,11 @@ class SwarmLifecycleBenchmark:
 
     def receipt(self) -> dict[str, Any]:
         return {
-            "schema": SWARM_LIFECYCLE_SCHEMA,
+            "schema": COMPOSITION_LIFECYCLE_SCHEMA,
             "topology": {
                 "total_agents": self.total_agents,
                 "tenant_count": 1,
-                "swarm_count": 1,
+                "group_count": 1,
                 "realized_agents": self.total_agents,
             },
             "arrival": {
@@ -108,7 +108,7 @@ class SwarmLifecycleBenchmark:
                 "timed_out_agents": self.timed_out_agents,
                 "cancelled_agents": self.cancelled_agents,
             },
-            "swarm_metrics": {
+            "group_metrics": {
                 "barrier_wait": self.barrier_wait.receipt(),
                 "aggregation_latency_ms": self.aggregation_latency_ms,
                 "barrier_opened_after_all_terminal": (

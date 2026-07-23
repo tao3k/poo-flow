@@ -55,7 +55,7 @@ uv run \
   --with-editable ../../.data/langgraph/libs/langgraph \
   --with-editable ../../.data/langchain/libs/core \
   --with-editable ../../.data/crewai/lib/crewai \
-  python benchmarks/bench_frameworks.py \
+  python -m poo_flow_benchmarks \
   --iterations 2000 \
   --warmup 200 \
   --progress \

@@ -158,6 +158,8 @@ jobs:
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m pip install \
             dist/python-runtime-wheel/*.whl
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m \
+            poo_flow_benchmarks --list
+          "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m \
             poo_flow_runtime.scheme_projection_artifact --help
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" -m \
             poo_flow_runtime.benchmarks scheme-load-aot --help

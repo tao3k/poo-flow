@@ -1,4 +1,4 @@
-"""Validated runner for instant-arrival single-swarm benchmarks."""
+"""Validated runner for composition lifecycle benchmarks."""
 
 from __future__ import annotations
 
@@ -7,44 +7,44 @@ from collections.abc import Sequence
 import anyio
 
 from ._benchmark_capacity import available_cpu_count, select_benchmark_capacity
-from ._swarm_lifecycle_measurement import measure_single_swarm
-from ._swarm_lifecycle_planner import plan_swarm_workload
-from ._swarm_lifecycle_receipt import SwarmLifecycleBenchmark
-from ._swarm_lifecycle_workload import ArrivalSchedule
+from ._composition_lifecycle_measurement import measure_composition
+from ._composition_lifecycle_planner import plan_composition_workload
+from ._composition_lifecycle_receipt import CompositionLifecycleBenchmark
+from ._composition_lifecycle_workload import ArrivalSchedule
 
-DEFAULT_SINGLE_SWARM_POPULATIONS = (2, 4, 8, 16, 32, 64, 100, 128)
+DEFAULT_COMPOSITION_POPULATIONS = (2, 4, 8, 16, 32, 64, 100, 128)
 
 
-def run_single_swarm_benchmarks(
-    populations: Sequence[int] = DEFAULT_SINGLE_SWARM_POPULATIONS,
+def run_composition_benchmarks(
+    populations: Sequence[int] = DEFAULT_COMPOSITION_POPULATIONS,
     *,
     service_time_ms: float = 1.0,
     max_concurrency: int | None = None,
     arrival: ArrivalSchedule | None = None,
-) -> list[SwarmLifecycleBenchmark]:
-    """Run the normative single-swarm instant-arrival population matrix."""
+) -> list[CompositionLifecycleBenchmark]:
+    """Run the normative single-group composition population matrix."""
 
     requested_populations = tuple(populations)
     _validate_inputs(requested_populations, service_time_ms, max_concurrency)
     available_cpus = available_cpu_count()
     schedule = arrival or ArrivalSchedule(mode="instant")
 
-    async def run_all() -> list[SwarmLifecycleBenchmark]:
-        results: list[SwarmLifecycleBenchmark] = []
+    async def run_all() -> list[CompositionLifecycleBenchmark]:
+        results: list[CompositionLifecycleBenchmark] = []
         for population in requested_populations:
             selected, source, policy = select_benchmark_capacity(
                 available_cpus=available_cpus,
                 population_cap=population,
                 requested=max_concurrency,
             )
-            workload = plan_swarm_workload(
+            workload = plan_composition_workload(
                 population,
                 tenant_count=1,
-                agents_per_swarm=population,
+                agents_per_group=population,
                 arrival=schedule,
             )
             results.append(
-                await measure_single_swarm(
+                await measure_composition(
                     workload=workload,
                     selected_capacity=selected,
                     available_cpus=available_cpus,

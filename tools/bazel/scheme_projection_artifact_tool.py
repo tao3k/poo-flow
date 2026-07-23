@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import os
 import subprocess
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 
 from _scheme_datum import parse_scheme_datum, write_scheme_datum
+from tools.bazel.gerbil_environment import build_gerbil_environment
 
 
 SCHEMA = "poo-flow.scheme-load-projection-artifact.v1"
@@ -95,14 +95,11 @@ def _load_projection_rows(
         runner.write(runner_source)
         runner_path = Path(runner.name)
 
-    env = dict(os.environ)
-    env["GERBIL_PATH"] = str(compiled_root)
-    env["GERBIL_LOADPATH"] = os.pathsep.join(
-        (
-            str(compiled_root / "lib"),
-            *(str(root / ".gerbil" / "lib") for root in project_dependency_roots),
-            str(dependency_root),
-        )
+    env = build_gerbil_environment(
+        gerbil_path=compiled_root,
+        dependency_root=dependency_root,
+        project_dependency_roots=project_dependency_roots,
+        gxi=gxi,
     )
     try:
         result = subprocess.run(

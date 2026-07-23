@@ -121,6 +121,86 @@
       (check-equal? (.ref stage 'name) 'production)
       (check-equal? (length (.ref stage 'clauses)) 4)))
    (test-case
+    "composition multiplicity uses compact launch ranges"
+    (let* ((alpha
+            (poo-flow-composition-object/profiles
+             'alpha
+             '()
+             '()
+             '()))
+           (beta
+            (poo-flow-composition-object/profiles
+             'beta
+             '()
+             '()
+             '()))
+           (gamma
+            (poo-flow-composition-object/profiles
+             'gamma
+             '()
+             '()
+             '()))
+           (workload
+            (poo-flow-composition-workload
+             (list (poo-flow-composition-multiplicity alpha 5000)
+                   (poo-flow-composition-multiplicity beta 10000)
+                   (poo-flow-composition-multiplicity gamma 25000))))
+           (launch-ranges (.ref workload 'launch-ranges))
+           (alpha-tail
+            (poo-flow-composition-workload/ref workload 4999))
+           (beta-head
+            (poo-flow-composition-workload/ref workload 5000))
+           (beta-tail
+            (poo-flow-composition-workload/ref workload 14999))
+           (gamma-head
+            (poo-flow-composition-workload/ref workload 15000))
+           (gamma-tail
+            (poo-flow-composition-workload/ref workload 39999)))
+      (check-equal? (.ref workload 'kind)
+                    'poo-flow.composition.workload)
+      (check-equal? (.ref workload 'total-count) 40000)
+      (check-equal? (vector-length launch-ranges) 3)
+      (check-equal? (.ref (vector-ref launch-ranges 0) 'start) 0)
+      (check-equal? (.ref (vector-ref launch-ranges 0) 'end) 5000)
+      (check-equal? (.ref (vector-ref launch-ranges 1) 'start) 5000)
+      (check-equal? (.ref (vector-ref launch-ranges 1) 'end) 15000)
+      (check-equal? (.ref (vector-ref launch-ranges 2) 'start) 15000)
+      (check-equal? (.ref (vector-ref launch-ranges 2) 'end) 40000)
+      (check-equal? (.ref alpha-tail 'local-ordinal) 4999)
+      (check-equal? (.ref beta-head 'local-ordinal) 0)
+      (check-equal? (.ref beta-tail 'local-ordinal) 9999)
+      (check-equal? (.ref gamma-head 'local-ordinal) 0)
+      (check-equal? (.ref gamma-tail 'local-ordinal) 24999)
+      (check-equal? (.ref (.ref alpha-tail 'composition) 'name) 'alpha)
+      (check-equal? (.ref (.ref beta-head 'composition) 'name) 'beta)
+      (check-equal? (.ref (.ref gamma-head 'composition) 'name) 'gamma)))
+   (test-case
+    "composition multiplicity rejects invalid counts ranges and ordinals"
+    (let ((composition
+           (poo-flow-composition-object/profiles
+            'bounded
+            '()
+            '()
+            '())))
+      (check-exception
+       (poo-flow-composition-multiplicity composition 0)
+       true)
+      (check-exception
+       (poo-flow-composition-launch-range composition -1 1)
+       true)
+      (check-exception
+       (poo-flow-composition-workload '())
+       true)
+      (let ((workload
+             (poo-flow-composition-workload
+              (list (poo-flow-composition-multiplicity composition 1)))))
+        (check-exception
+         (poo-flow-composition-workload/ref workload -1)
+         true)
+        (check-exception
+         (poo-flow-composition-workload/ref workload 1)
+         true))))
+   (test-case
     "generated alias binding does not capture the surrounding binding"
     (let (profile (car (.ref hygiene-composition 'profiles)))
       (check-equal? (.ref profile 'kind) 'hygienic-profile)

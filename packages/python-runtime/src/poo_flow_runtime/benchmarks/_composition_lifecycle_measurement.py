@@ -1,4 +1,4 @@
-"""Execute one bounded swarm and capture raw lifecycle timing evidence."""
+"""Execute one bounded composition group and capture lifecycle timing evidence."""
 
 from __future__ import annotations
 
@@ -10,19 +10,19 @@ import anyio
 
 from ..program import RuntimeGraphProgram, RuntimeGraphRegistries
 from ..runtime_graph import linear_plan
-from ._swarm_lifecycle_arrival import prepare_runtime_program, run_arrival_batch
-from ._swarm_lifecycle_projection import (
-    SwarmTimingEvidence,
-    project_swarm_benchmark,
+from ._composition_lifecycle_arrival import prepare_runtime_program, run_arrival_batch
+from ._composition_lifecycle_projection import (
+    CompositionTimingEvidence,
+    project_composition_benchmark,
 )
-from ._swarm_lifecycle_receipt import SwarmLifecycleBenchmark
-from ._swarm_lifecycle_workload import PlannedSwarmAgent, SwarmWorkload
+from ._composition_lifecycle_receipt import CompositionLifecycleBenchmark
+from ._composition_lifecycle_workload import CompositionWorkload, PlannedAgent
 
 AgentAction = Callable[[Mapping[str, Any]], Awaitable[dict[str, Any]]]
 
 
 @dataclass(slots=True)
-class _SwarmObserver:
+class _CompositionObserver:
     started_at_ns: dict[str, int] = field(default_factory=dict)
     finished_at_ns: dict[str, int] = field(default_factory=dict)
     active: int = 0
@@ -37,8 +37,8 @@ class _SwarmObserver:
         self.finished_at_ns[agent_id] = perf_counter_ns()
         self.active -= 1
 
-    def evidence(self) -> SwarmTimingEvidence:
-        return SwarmTimingEvidence(
+    def evidence(self) -> CompositionTimingEvidence:
+        return CompositionTimingEvidence(
             started_at_ns=dict(self.started_at_ns),
             finished_at_ns=dict(self.finished_at_ns),
             peak_active=self.peak_active,
@@ -55,19 +55,19 @@ class _ExecutionSample:
     process_elapsed_ns: int
 
 
-async def measure_single_swarm(
+async def measure_composition(
     *,
-    workload: SwarmWorkload,
+    workload: CompositionWorkload,
     selected_capacity: int,
     available_cpus: int,
     capacity_source: str,
     capacity_policy: str,
     service_time_ms: float,
-) -> SwarmLifecycleBenchmark:
-    """Execute one swarm and project its terminal barrier evidence."""
+) -> CompositionLifecycleBenchmark:
+    """Execute one composition group and project its terminal barrier evidence."""
 
-    _validate_single_swarm(workload)
-    observer = _SwarmObserver()
+    _validate_single_group(workload)
+    observer = _CompositionObserver()
     sample = await _execute_inputs(
         program=_program(observer, service_time_ms),
         inputs=tuple(_agent_input(agent) for agent in workload.agents),
@@ -79,7 +79,7 @@ async def measure_single_swarm(
         for output in sample.outputs
         if output.get("lifecycle_state") == "completed"
     )
-    return project_swarm_benchmark(
+    return project_composition_benchmark(
         workload=workload,
         timings=observer.evidence(),
         outputs=sample.outputs,
@@ -100,7 +100,7 @@ async def _execute_inputs(
     *,
     program: RuntimeGraphProgram,
     inputs: tuple[dict[str, Any], ...],
-    workload: SwarmWorkload,
+    workload: CompositionWorkload,
     selected_capacity: int,
 ) -> _ExecutionSample:
     prepared = prepare_runtime_program(program)
@@ -124,7 +124,9 @@ async def _execute_inputs(
     )
 
 
-def _program(observer: _SwarmObserver, service_time_ms: float) -> RuntimeGraphProgram:
+def _program(
+    observer: _CompositionObserver, service_time_ms: float
+) -> RuntimeGraphProgram:
     return RuntimeGraphProgram.reference(
         plan=linear_plan("agent"),
         registries=RuntimeGraphRegistries(
@@ -133,7 +135,7 @@ def _program(observer: _SwarmObserver, service_time_ms: float) -> RuntimeGraphPr
     )
 
 
-def _agent_action(observer: _SwarmObserver, service_time_ms: float) -> AgentAction:
+def _agent_action(observer: _CompositionObserver, service_time_ms: float) -> AgentAction:
     async def execute(state: Mapping[str, Any]) -> dict[str, Any]:
         agent_id = str(state["agent_id"])
         observer.start(agent_id)
@@ -146,10 +148,10 @@ def _agent_action(observer: _SwarmObserver, service_time_ms: float) -> AgentActi
     return execute
 
 
-def _agent_input(agent: PlannedSwarmAgent) -> dict[str, Any]:
+def _agent_input(agent: PlannedAgent) -> dict[str, Any]:
     return {
         "tenant_id": agent.tenant_id,
-        "swarm_id": agent.swarm_id,
+        "group_id": agent.group_id,
         "agent_id": agent.agent_id,
         "parent_agent_id": agent.parent_agent_id,
         "role_id": agent.role_id,
@@ -159,6 +161,6 @@ def _agent_input(agent: PlannedSwarmAgent) -> dict[str, Any]:
     }
 
 
-def _validate_single_swarm(workload: SwarmWorkload) -> None:
-    if workload.tenant_count != 1 or workload.swarm_count != 1:
-        raise ValueError("phase-2 measurement requires exactly one swarm")
+def _validate_single_group(workload: CompositionWorkload) -> None:
+    if workload.tenant_count != 1 or workload.group_count != 1:
+        raise ValueError("composition measurement requires exactly one group")

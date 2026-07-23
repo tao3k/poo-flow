@@ -1214,7 +1214,7 @@ this build controller.
 * Stable Gerbil project receipt v1 boundary
 
 POO Flow pins gerbil-bazel revision
-=7c5f595ccc4c18dba93ebffa7d5c57d233638ea4=.  That revision preserves
+=39e903a60e41e12186d929aaef64ea59a95daf88=.  That revision preserves
 =gerbil-bazel.project-receipt.v1= as the stable outer envelope for every
 =gerbil_project_compile= action.  Prefix-derived producer evidence does not
 replace the envelope; POO Flow's =poo-flow.project-compile-guard.v1= receipt is
@@ -1297,9 +1297,36 @@ flowchart LR
   Gate -->|"no"| Block["Fail Bazel and CI"]
 #+end_src
 
+** Adaptive dependency-install resource receipt (2026-07-22)
+
+POO Flow consumes the pinned gerbil-bazel =install_dependencies= capability. Native =gxpkg deps --install= remains the package-lifecycle owner; gerbil-bazel only projects the validated =GERBIL_BUILD_CORES= budget, applies the memory cap, runs the child beneath the Scheme resource guard, and records the JSON receipt.
+
+This receipt was captured after changing the pinned revision, so native dependency work was observed. It is a revision-change install receipt, not a claim that a no-op warm install or a clean-machine cold install has the same duration.
+
+| Evidence                         | Receipt                                                   |
+|----------------------------------+-----------------------------------------------------------|
+| Gerbil-Bazel revision            | =39e903a60e41e12186d929aaef64ea59a95daf88=                |
+| Capability                       | =@local_gerbil//:install_dependencies=                    |
+| Resource decision                | =adaptive-configured=                                     |
+| Selected/configured/CPU cores    | =12 / 12 / 12=                                            |
+| Available memory                 | =34359738368 bytes=                                       |
+| Memory per core                  | =2147483648 bytes=                                        |
+| Guard schema                     | =gerbil-bazel.resource-guard-receipt.v1=                  |
+| Admission / outcome              | =ready / completed=                                       |
+| Guard / child exit               | =0 / 0=                                                   |
+| Guarded elapsed time             | =116989 ms= (=116.989 s=)                                 |
+| Peak process-tree RSS            | =3550707712 bytes=                                        |
+| Process-tree RSS observable      | =true=                                                    |
+| Dependency readiness             | =ready=                                                   |
+| Receipt path                     | =.gerbil/pkg/install-resource-guard.receipt.json=         |
+
+The focused downstream capability gate also passed =1/1= tests after the revision and lock refresh. The elapsed value is reported with units and remains a scenario receipt; cross-machine cold-build comparisons require the same runner class and cache state.
+
+The subsequent full downstream convergence gate also passed: query =85= targets, =//scheme:compile= =1/1= in =434.651 s=, Scheme tests =5/5= in =116.275 s=, the shared capability test =1/1= from cache in =0.181 s=, and the compile-receipt test =1/1= in =3.167 s=. All =7/7= tests passed; the reported Bazel subgate elapsed total was =554.274 s=. This is likewise a revision-change convergence receipt rather than a steady-state incremental baseline.
+
 ** gerbil-bazel tuple and lock convergence receipt (2026-07-20)
 
-The current pin is the squash merge of gerbil-bazel PR 11.  Its Linux
+This historical 2026-07-20 receipt captured the then-current squash merge of gerbil-bazel PR 11. Its Linux
 prebuilt provider is one immutable identity tuple: install digest
 =ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208=,
 archive SHA-256
@@ -1318,7 +1345,7 @@ and never enter the refresh chain.
 
 #+begin_src mermaid
 flowchart LR
-  Merge["gerbil-bazel squash merge 7c5f595"] --> Tuple["Install digest + archive SHA-256 + immutable URL"]
+  Merge["Historical gerbil-bazel squash merge 7c5f595"] --> Tuple["Install digest + archive SHA-256 + immutable URL"]
   Tuple --> Module["POO Flow MODULE.bazel"]
   Module --> Seed["Manual Linux lock seed"]
   Seed --> Darwin["Darwin evaluation merge"]

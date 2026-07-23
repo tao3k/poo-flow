@@ -19,6 +19,14 @@
 ;;       (poo-flow-profile-ref session 'hardened)
 ;;   | result: selected profile object stored on the module slot
 ;; : (-> PooModule Symbol PooProfile)
+(import :poo-flow/src/utilities/functional)
+
+(export poo-flow-composition-multiplicity
+        poo-flow-composition-launch-range
+        poo-flow-composition-multiplicities->launch-ranges
+        poo-flow-composition-workload
+        poo-flow-composition-workload/ref)
+
 (def (poo-flow-profile-ref module slot)
   (.ref module slot))
 
@@ -92,6 +100,99 @@
         (profiles profiles-value)
         (stages stages-value)
         (profile-bindings profile-bindings-value))))
+
+(def (poo-flow-composition-multiplicity composition count)
+  (unless (and (integer? count) (> count 0))
+    (error "POO Flow composition multiplicity must be a positive integer"
+           count))
+  (let ((composition-value composition)
+        (count-value count))
+    (.o (kind 'poo-flow.composition.multiplicity)
+        (composition composition-value)
+        (count count-value))))
+
+(def (poo-flow-composition-launch-range composition start count)
+  (unless (and (integer? start) (>= start 0))
+    (error "POO Flow composition launch range start must be a non-negative integer"
+           start))
+  (unless (and (integer? count) (> count 0))
+    (error "POO Flow composition launch range count must be a positive integer"
+           count))
+  (let ((composition-value composition)
+        (start-value start)
+        (count-value count))
+    (.o (kind 'poo-flow.composition.launch-range)
+        (composition composition-value)
+        (start start-value)
+        (count count-value)
+        (end (+ start-value count-value)))))
+
+(def (poo-flow-composition-multiplicities->launch-ranges multiplicities)
+  (unless (and (list? multiplicities) (pair? multiplicities))
+    (error "POO Flow composition workload requires at least one multiplicity"))
+  (let* ((state
+          (poo-flow-fold-left
+           (lambda (multiplicity state)
+             (unless (eq? (.ref multiplicity 'kind)
+                          'poo-flow.composition.multiplicity)
+               (error "POO Flow composition workload requires multiplicity objects"
+                      multiplicity))
+             (let* ((start (car state))
+                    (ranges (cdr state))
+                    (count (.ref multiplicity 'count))
+                    (launch-range
+                     (poo-flow-composition-launch-range
+                      (.ref multiplicity 'composition)
+                      start
+                      count)))
+               (cons (+ start count)
+                     (cons launch-range ranges))))
+           (cons 0 '())
+           multiplicities))
+         (ranges (cdr state)))
+    (list->vector (reverse ranges))))
+
+(def (poo-flow-composition-workload multiplicities)
+  (let* ((launch-ranges-value
+          (poo-flow-composition-multiplicities->launch-ranges multiplicities))
+         (last-range
+          (vector-ref launch-ranges-value
+                      (- (vector-length launch-ranges-value) 1)))
+         (total-count-value (.ref last-range 'end)))
+    (.o (kind 'poo-flow.composition.workload)
+        (launch-ranges launch-ranges-value)
+        (total-count total-count-value))))
+
+(def (poo-flow-composition-workload/ref workload ordinal)
+  (let ((total-count (.ref workload 'total-count))
+        (launch-ranges (.ref workload 'launch-ranges)))
+    (unless (and (integer? ordinal)
+                 (>= ordinal 0)
+                 (< ordinal total-count))
+      (error "POO Flow composition workload ordinal is out of range"
+             ordinal
+             total-count))
+    (let loop ((low 0)
+               (high (- (vector-length launch-ranges) 1)))
+      (let* ((middle (quotient (+ low high) 2))
+             (launch-range (vector-ref launch-ranges middle))
+             (start (.ref launch-range 'start))
+             (end (.ref launch-range 'end)))
+        (cond
+         ((< ordinal start)
+          (loop low (- middle 1)))
+         ((>= ordinal end)
+          (loop (+ middle 1) high))
+         (else
+          (let ((composition-value (.ref launch-range 'composition))
+                (launch-range-value launch-range)
+                (ordinal-value ordinal)
+                (local-ordinal-value (- ordinal start)))
+            (.o (kind 'poo-flow.composition.instance-ref)
+                (composition composition-value)
+                (launch-range launch-range-value)
+                (ordinal ordinal-value)
+                (local-ordinal local-ordinal-value)))))))))
 
 (def (poo-flow-composition-object/profiles name module-bindings profiles stages)
   (poo-flow-composition-object/profile-bindings

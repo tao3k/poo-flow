@@ -1,4 +1,4 @@
-"""Arrival-aware globally bounded scheduler for ramped swarm workloads."""
+"""Arrival-aware globally bounded scheduler for ramped composition workloads."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any, Protocol, cast
 import anyio
 
 from ..program import RuntimeGraphProgram
-from ._swarm_lifecycle_workload import ArrivalSchedule
+from ._composition_lifecycle_workload import ArrivalSchedule
 
 BENCHMARK_ELIGIBLE_AT_NS = "benchmark_eligible_at_ns"
 
@@ -21,29 +21,17 @@ class AsyncRuntimeProgram(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class _PreparedRuntimeProgram:
-    program: RuntimeGraphProgram
-    validation_receipt: bytes
-    plan_digest: str | None
     executor: Any
 
     async def ainvoke(self, initial_state: Mapping[str, Any]) -> dict[str, Any]:
-        execution = await self.program._ainvoke_prepared(
-            initial_state,
-            validation_receipt=self.validation_receipt,
-            plan_digest=self.plan_digest,
-            executor=self.executor,
-        )
-        return execution.state
+        return dict(await self.executor.ainvoke(initial_state))
 
 
 def prepare_runtime_program(program: RuntimeGraphProgram) -> AsyncRuntimeProgram:
     """Validate once and reuse one executor across scheduled agent calls."""
 
-    validation_receipt, plan_digest = program._validated_plan()
+    program._validated_plan()
     return _PreparedRuntimeProgram(
-        program=program,
-        validation_receipt=validation_receipt,
-        plan_digest=plan_digest,
         executor=program._executor(),
     )
 

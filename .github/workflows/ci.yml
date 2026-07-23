@@ -71,7 +71,7 @@ jobs:
             packages/proof/lean/.lake
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
-  native:
+  native-linux:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
@@ -86,13 +86,7 @@ jobs:
             gerbil-formula: ""
             dependency-timeout-minutes: 12
             job-timeout-minutes: 20
-          - os: macos-26
-            gerbil-label: homebrew-tao3k-v0.18.2-07c84815
-            gerbil-install: homebrew
-            gerbil-formula: tao3k/gerbil/gerbil-scheme
-            dependency-timeout-minutes: 12
-            job-timeout-minutes: 30
-    steps:
+    steps: &native-steps
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -588,10 +582,27 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  native-macos:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.job-timeout-minutes }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-26
+            gerbil-label: homebrew-tao3k-v0.18.2-07c84815
+            gerbil-install: homebrew
+            gerbil-formula: tao3k/gerbil/gerbil-scheme
+            dependency-timeout-minutes: 12
+            job-timeout-minutes: 30
+    steps: *native-steps
+
   python-runtime-wheel:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Python runtime wheel
-    needs: native
+    needs: native-linux
     uses: ./.github/workflows/python-runtime-wheel.yml
 
   lock-linux-seed:
