@@ -24,16 +24,6 @@
 (def +feature-bundle-v1-domain-case-diagnostic-kind+
   'poo-flow.feature-bundle-v1-domain-case-diagnostic.v1)
 
-(def +feature-bundle-v1-no-capability-id+
-  'poo-flow.bundle-v1.no-capability)
-(def +feature-bundle-v1-no-policy-id+
-  'poo-flow.bundle-v1.no-policy)
-(def +feature-bundle-v1-no-strategy-id+
-  'poo-flow.bundle-v1.no-strategy)
-(def +feature-bundle-v1-no-adapter-id+
-  'poo-flow.bundle-v1.no-adapter)
-(def +feature-bundle-v1-no-projection-id+
-  'poo-flow.bundle-v1.no-projection)
 (def +feature-bundle-v1-parent-relation-id+
   'poo-flow.bundle-v1.component-parent)
 

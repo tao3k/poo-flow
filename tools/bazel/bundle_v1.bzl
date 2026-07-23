@@ -33,6 +33,10 @@ def _poo_flow_bundle_v1_impl(ctx):
         ctx.file.src.dirname,
         toolchain.dependency_library_root.dirname,
     ])
+    load_path.extend([
+        source.dirname
+        for source in ctx.files.srcs
+    ])
 
     arguments = ctx.actions.args()
     arguments.add("env")
@@ -57,6 +61,7 @@ def _poo_flow_bundle_v1_impl(ctx):
         inputs = depset(
             direct = [
                 ctx.file.src,
+            ] + ctx.files.srcs + [
                 project.project_root,
                 project.receipt,
                 toolchain.dependency_library_root,
@@ -102,6 +107,9 @@ poo_flow_bundle_v1 = rule(
         "src": attr.label(
             allow_single_file = [".ss"],
             mandatory = True,
+        ),
+        "srcs": attr.label_list(
+            allow_files = [".ss", ".scm", ".ssi", ".inc"],
         ),
     },
     toolchains = [GERBIL_TOOLCHAIN_TYPE],

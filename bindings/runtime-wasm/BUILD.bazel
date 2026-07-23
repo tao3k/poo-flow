@@ -10,3 +10,12 @@ poo_flow_bundle_v1(
     bundle_id = "human-capability",
     descriptor_out = "human-capability.descriptor.bin",
 )
+
+poo_flow_bundle_v1(
+    name = "human_capability_bundle_determinism",
+    src = "examples/human-capability.ss",
+    arena_out = "human-capability.determinism.arena.bin",
+    bundle_epoch = 1,
+    bundle_id = "human-capability",
+    descriptor_out = "human-capability.determinism.descriptor.bin",
+)

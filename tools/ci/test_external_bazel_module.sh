@@ -36,18 +36,47 @@ if [[ -e "$exported_module/.gerbil" ]]; then
   exit 1
 fi
 
-cat >"$consumer/MODULE.bazel" <<EOF
+write_consumer_module() {
+  local include_gerbil_bazel_override="$1"
+  cat >"$consumer/MODULE.bazel" <<EOF
 module(name = "poo_flow_external_consumer", version = "0.0.0")
 
 bazel_dep(name = "poo_flow", version = "0.1.0")
 local_path_override(module_name = "poo_flow", path = "$exported_module")
+EOF
 
+  if [[ "$include_gerbil_bazel_override" == 1 ]]; then
+    cat >>"$consumer/MODULE.bazel" <<EOF
 git_override(
     module_name = "gerbil_bazel",
-    commit = "faa83024b7fa6f681bf3bd0da57376e05fb9a2f7",
+    commit = "0d5ef5362674d788e0fc9e146b8e9e1daf78f137",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 EOF
+  fi
+}
+
+expect_missing_root_override_failure() {
+  local log="$test_root/no-root-gerbil-bazel-override.log"
+  write_consumer_module 0
+  set +e
+  (
+    cd "$consumer"
+    export TMPDIR="$bazel_tmp"
+    "$bazel_bin" --output_user_root="$test_root/bazel-no-root-override" query \
+      --lockfile_mode=off @poo_flow//scheme:compile
+  ) >"$log" 2>&1
+  local status=$?
+  set -e
+  if [[ "$status" == 0 ]]; then
+    printf 'external POO Flow consumer unexpectedly succeeded without a root gerbil_bazel override\n' >&2
+    exit 1
+  fi
+  printf 'external module requires root gerbil_bazel override until the source-package API is released\n' >&2
+}
+
+expect_missing_root_override_failure
+write_consumer_module 1
 
 cat >"$consumer/BUILD.bazel" <<'EOF'
 alias(
@@ -81,5 +110,5 @@ else
   compiled=false
   receipt_validated=false
 fi
-printf '{"schema":"poo-flow.external-bazel-module.v1","mode":"%s","ambientGerbil":false,"configured":true,"compiled":%s,"receiptValidated":%s}\n' \
+printf '{"schema":"poo-flow.external-bazel-module.v1","mode":"%s","ambientGerbil":false,"configured":true,"requiresRootGerbilBazelOverride":true,"compiled":%s,"receiptValidated":%s}\n' \
   "$external_test_mode" "$compiled" "$receipt_validated"

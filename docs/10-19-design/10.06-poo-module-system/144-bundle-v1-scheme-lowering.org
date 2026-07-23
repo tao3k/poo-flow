@@ -155,6 +155,98 @@ Phase 3I does not materialize symbol metadata, so the symbols and metadata
 regions are valid empty regions. Every execution-time identity has already
 been lowered into a compact ID.
 
+* Runtime-WASM Bundle materialization and public exports
+
+The runtime-WASM package does not invoke a host =gxi= directly.  Bazel owns
+the Scheme generator, its Gerbil load path, and both declared Bundle outputs.
+The Node materializer selects an explicit =BAZEL= executable when configured;
+otherwise it tries =bazelisk= and then =bazel=.  Selection is fail-closed and
+is tested through an injected executor rather than platform-specific shell
+fixtures.
+
+The descriptor and arena are staged under process-unique names in the
+destination directory.  Publication is serialized by an operating-system
+loopback TCP advisory lock whose port is derived from the package-root
+identity.  The kernel releases the lock when a process exits, so no stale
+lockfile recovery protocol is required.
+
+The publication itself is a durable two-file transaction.  Before either
+public path changes, the materializer writes and fsyncs a same-directory
+journal, copies and fsyncs the complete prior pair, and advances the journal
+to =prepared=.  Each rename has an explicit journal transition.  The pair is
+authoritative only after the =committed= transition is durable; backups are
+never removed before that point.  A later writer recovers any journal before
+it establishes a new baseline.  =committed= and =rolled-back= journals finish
+cleanup.  =preparing= cleans partial backups because no public member has
+changed; every state at or after =prepared= restores every member from
+preserved backups.  Restoration attempts are aggregated, so one failure does
+not skip the other member.  Incomplete recovery fails closed and retains the
+journal and backups as evidence.  A public state containing only one member
+also fails closed instead of becoming a new baseline.
+
+Temporary files, transaction journals, and backups are ignored.  Generated
+binary vectors are never Git candidates.
+
+#+begin_src mermaid
+flowchart LR
+  Source["POO Domain Case source"] --> Primary["Bazel primary Bundle lowering action"]
+  Source --> Independent["Bazel independent determinism action"]
+  Primary --> Compare{"Descriptor and arena bytes equal?"}
+  Independent --> Compare
+  Compare -->|"no"| Reject["Fail package test"]
+  Compare -->|"yes"| Stage["Process-unique same-directory staging"]
+  Stage --> Lock["OS loopback TCP publication lock"]
+  Lock --> Recover["Recover existing journal before baseline"]
+  Recover --> Complete{"Public pair complete or absent?"}
+  Complete -->|"no"| Reject
+  Complete -->|"yes"| Preparing["Durable preparing journal"]
+  Preparing --> Backup["Copy and fsync prior public pair"]
+  Backup --> Prepared["Durable prepared journal"]
+  Prepared --> DescriptorRename["Rename descriptor; member-1-published"]
+  DescriptorRename --> ArenaRename["Rename arena; pair-published"]
+  ArenaRename --> Commit["Durable committed journal"]
+  Commit --> Cleanup["Remove backups and journal"]
+  Cleanup --> Exports["Stable npm raw-byte exports"]
+  Prepared -->|"failure before committed"| Restore["Restore every prior member; aggregate errors"]
+  DescriptorRename -->|"failure before committed"| Restore
+  ArenaRename -->|"failure before committed"| Restore
+  Restore --> RolledBack["Durable rolled-back journal; fail operation"]
+  Exports --> Descriptor["./workflows/human-capability/descriptor"]
+  Exports --> Arena["./workflows/human-capability/arena"]
+#+end_src
+
+The two stable npm subpaths remain raw-byte exports.  Two distinct filesystem
+paths cannot provide a single atomic switch to lock-free readers.  This
+version therefore guarantees writer serialization, durable crash recovery,
+and fail-closed baseline selection, not reader-side pair atomicity.  A future
+additive manifest export may point to an immutable generation; it must not
+silently change the byte semantics of the existing descriptor and arena
+subpaths.
+
+** Local publication receipt
+
+The final local gate exercises lock contention and timeout, successful
+publication, a failure on the second rename, restart recovery from each
+non-terminal published state, committed-state cleanup, aggregated restoration
+with retained evidence, incomplete-baseline rejection, Bazel generation, and
+independent byte determinism.
+
+| Gate | Result | Wall time |
+|-
+| Publication lock and timeout | pass | 0.5524 s |
+| Durable publication transaction faults | pass | 0.6077 s |
+| External-module analysis with missing-root negative control | pass; 86 packages, 2,751 targets, 0 actions | 25.0621 s |
+| Warm Bazel-backed materialization | pass; 1 action | 3.8758 s |
+| Independent Bundle determinism | pass; 1 action | 4.2426 s |
+
+| Public artifact | Bytes | SHA-256 | Bazel comparison |
+|-
+| Descriptor | 256 | =308fe381969af6820ce5867bf63382a578d5ac48f7730bd8526a3008f0287049= | equal |
+| Arena | 3,904 | =5cf93db1e02860ed14bfd98e5addb501f25b9048c1395147aae90df10a9eb4bb= | equal |
+
+The completed workflow directory contains only the two public files.  No
+temporary file, backup, transaction journal, or lock artifact remains.
+
 * Fail-closed rules
 
 The following inputs produce a POO plan with =status=rejected=:

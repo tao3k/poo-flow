@@ -247,8 +247,8 @@
         }
       },
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "S4I3nb9YJ46vaNqaNcXTjeGxV+wURsNt4ulOG884rM0=",
-        "usagesDigest": "k03YfeJUkrWrmA2f3/5PYaCmH3ZMw+6iXAti0M+TN3c=",
+        "bzlTransitiveDigest": "UyFrJE/5MJRazN5I0zqIJGdI223k1CeJ2m6OMtq6j4o=",
+        "usagesDigest": "c7Jg1z2TXk5fgWXQ2BlvHHH7hEXEx2FhahtcDhMHUkY=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -272,27 +272,39 @@
             }
           },
           "gerbil_utils_sources": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
+              "build_script": "build.ss",
               "package": "gerbil-utils",
-              "project_library_relative_path": ".gerbil/lib",
-              "project_root_marker": "@@//:gerbil.pkg"
+              "sha256": "e7777c505e71de490dc05f8e3ff4473dddbc998a99899c085d31750add551296",
+              "strip_prefix": "gerbil-utils-f45a4ef3bfecd2af39e114ed736ce9082cbb8244",
+              "urls": [
+                "https://github.com/mighty-gerbils/gerbil-utils/archive/f45a4ef3bfecd2af39e114ed736ce9082cbb8244.tar.gz"
+              ]
             }
           },
           "gerbil_poo_sources": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
+              "build_script": "build.ss",
               "package": "gerbil-poo",
-              "project_library_relative_path": ".gerbil/lib",
-              "project_root_marker": "@@//:gerbil.pkg"
+              "sha256": "9425b2baff5ee87c046d43dac0b11ed6b174f4e4c12c01c747c066383517964e",
+              "strip_prefix": "gerbil-poo-1c3225637525400341a09e958296962c10184ead",
+              "urls": [
+                "https://github.com/mighty-gerbils/gerbil-poo/archive/1c3225637525400341a09e958296962c10184ead.tar.gz"
+              ]
             }
           },
           "gslph_sources": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
+            "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
+              "build_script": "build.ss",
               "package": "gslph",
-              "project_library_relative_path": ".gerbil/lib",
-              "project_root_marker": "@@//:gerbil.pkg"
+              "sha256": "6b52760c63368027d24c43c0e01fffa54a915207fd236a45ca878dc7391d0307",
+              "strip_prefix": "gerbil-scheme-language-project-harness-8eb8604e1907c294c60d8c6a7084c0ab50a80557",
+              "urls": [
+                "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/8eb8604e1907c294c60d8c6a7084c0ab50a80557.tar.gz"
+              ]
             }
           }
         }

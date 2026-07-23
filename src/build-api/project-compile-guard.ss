@@ -138,14 +138,19 @@
     '()))
 
 (def (poo-flow-project-compile-admission-reasons
-      logical-cpu-count runnable-process-count
-      available-memory-bytes rss-headroom-bytes)
-  (append (poo-flow-project-compile-admission-advisories logical-cpu-count runnable-process-count)
-          (if (< available-memory-bytes
-         (+ rss-headroom-bytes
-            +poo-flow-project-compile-minimum-max-rss-bytes+))
-    '(insufficient-memory-headroom)
-    '())))
+      available-memory-bytes rss-headroom-bytes
+      baseline-rss-bytes requested-max-rss-bytes)
+  (append
+   (if (< available-memory-bytes
+          (+ rss-headroom-bytes
+             +poo-flow-project-compile-minimum-max-rss-bytes+))
+     '(insufficient-memory-headroom)
+     '())
+   (if (<= requested-max-rss-bytes
+           (+ baseline-rss-bytes
+              +poo-flow-project-compile-minimum-max-rss-bytes+))
+     '(insufficient-requested-rss-cap)
+     '())))
 
 (def (poo-flow-project-compile-system-memory-bytes)
   (or (poo-flow-project-compile-positive-integer-from-env
@@ -182,15 +187,27 @@
            "POO_FLOW_BUILD_RSS_HEADROOM_BYTES"
            (poo-flow-project-compile-default-rss-headroom-bytes
             system-memory-bytes)))
+         (baseline-rss-bytes
+          (poo-flow-project-compile-positive-integer-from-env
+           "POO_FLOW_BUILD_BASELINE_RSS_BYTES"
+           (max 1 (poo-flow-current-process-memory-bytes))))
+         (allocatable-memory-bytes
+          (max 1 (- available-memory-bytes
+                    rss-headroom-bytes)))
          (requested-max-rss-bytes
           (poo-flow-project-compile-positive-integer-from-env
            "POO_FLOW_BUILD_MAX_RSS_BYTES"
            (poo-flow-project-compile-adaptive-max-rss-bytes
             system-memory-bytes)))
+         (requested-allocatable-memory-bytes
+          (max 0 (- requested-max-rss-bytes
+                    baseline-rss-bytes)))
+         (admitted-memory-bytes
+          (min allocatable-memory-bytes
+               requested-allocatable-memory-bytes))
          (max-rss-bytes
-          (min requested-max-rss-bytes
-               (max 1 (- available-memory-bytes
-                         rss-headroom-bytes))))
+          (+ baseline-rss-bytes
+             admitted-memory-bytes))
          (timeout-seconds
           (poo-flow-project-compile-optional-timeout-from-env
            "POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS"))
@@ -201,17 +218,28 @@
          (configured-worker-count
           (poo-flow-project-compile-configured-worker-count
            logical-cpu-count))
-         (worker-count configured-worker-count)
+         (memory-worker-capacity
+          (max 1
+               (quotient admitted-memory-bytes
+                         +poo-flow-project-compile-minimum-max-rss-bytes+)))
+         (runnable-worker-capacity
+          (max 1
+               (- (* logical-cpu-count 2)
+                  runnable-process-count)))
+         (worker-count
+          (min configured-worker-count
+               memory-worker-capacity
+               runnable-worker-capacity))
          (admission-advisories
           (poo-flow-project-compile-admission-advisories
            logical-cpu-count
            runnable-process-count))
          (admission-reasons
           (poo-flow-project-compile-admission-reasons
-           logical-cpu-count
-           runnable-process-count
            available-memory-bytes
-           rss-headroom-bytes))
+           rss-headroom-bytes
+           baseline-rss-bytes
+           requested-max-rss-bytes))
          (admission-outcome
           (if (null? admission-reasons)
             'ready
@@ -224,6 +252,13 @@
           (runnable-process-count-value runnable-process-count)
           (available-memory-bytes-value available-memory-bytes)
           (rss-headroom-bytes-value rss-headroom-bytes)
+          (baseline-rss-bytes-value baseline-rss-bytes)
+          (allocatable-memory-bytes-value allocatable-memory-bytes)
+          (requested-max-rss-bytes-value requested-max-rss-bytes)
+          (admitted-memory-bytes-value admitted-memory-bytes)
+          (configured-worker-count-value configured-worker-count)
+          (memory-worker-capacity-value memory-worker-capacity)
+          (runnable-worker-capacity-value runnable-worker-capacity)
           (worker-count-value worker-count)
           (admission-outcome-value admission-outcome)
           (admission-advisories-value admission-advisories)
@@ -241,6 +276,13 @@
           (runnable-process-count runnable-process-count-value)
           (available-memory-bytes available-memory-bytes-value)
           (rss-headroom-bytes rss-headroom-bytes-value)
+          (baseline-rss-bytes baseline-rss-bytes-value)
+          (allocatable-memory-bytes allocatable-memory-bytes-value)
+          (requested-max-rss-bytes requested-max-rss-bytes-value)
+          (admitted-memory-bytes admitted-memory-bytes-value)
+          (configured-worker-count configured-worker-count-value)
+          (memory-worker-capacity memory-worker-capacity-value)
+          (runnable-worker-capacity runnable-worker-capacity-value)
           (worker-count worker-count-value)
           (admission-outcome admission-outcome-value)
           (admission-advisories admission-advisories-value)
@@ -257,7 +299,10 @@
                 admission-outcome admission-advisories admission-reasons
                 logical-cpu-count
                 runnable-process-count available-memory-bytes
-                rss-headroom-bytes worker-count
+                rss-headroom-bytes baseline-rss-bytes
+                allocatable-memory-bytes requested-max-rss-bytes
+                admitted-memory-bytes configured-worker-count
+                memory-worker-capacity runnable-worker-capacity worker-count
                 system-memory-bytes max-rss-bytes peak-rss-bytes
                 elapsed-ms timeout-ms)))
 
@@ -343,6 +388,13 @@
    ("runnable-process-count" (.ref receipt 'runnable-process-count))
    ("available-memory-bytes" (.ref receipt 'available-memory-bytes))
    ("rss-headroom-bytes" (.ref receipt 'rss-headroom-bytes))
+   ("baseline-rss-bytes" (.ref receipt 'baseline-rss-bytes))
+   ("allocatable-memory-bytes" (.ref receipt 'allocatable-memory-bytes))
+   ("requested-max-rss-bytes" (.ref receipt 'requested-max-rss-bytes))
+   ("admitted-memory-bytes" (.ref receipt 'admitted-memory-bytes))
+   ("configured-worker-count" (.ref receipt 'configured-worker-count))
+   ("memory-worker-capacity" (.ref receipt 'memory-worker-capacity))
+   ("runnable-worker-capacity" (.ref receipt 'runnable-worker-capacity))
    ("worker-count" (.ref receipt 'worker-count))
    ("system-memory-bytes" (.ref receipt 'system-memory-bytes))
    ("max-rss-bytes" (.ref receipt 'max-rss-bytes))
@@ -380,6 +432,13 @@
       (runnable-process-count (.ref config 'runnable-process-count))
       (available-memory-bytes (.ref config 'available-memory-bytes))
       (rss-headroom-bytes (.ref config 'rss-headroom-bytes))
+      (baseline-rss-bytes (.ref config 'baseline-rss-bytes))
+      (allocatable-memory-bytes (.ref config 'allocatable-memory-bytes))
+      (requested-max-rss-bytes (.ref config 'requested-max-rss-bytes))
+      (admitted-memory-bytes (.ref config 'admitted-memory-bytes))
+      (configured-worker-count (.ref config 'configured-worker-count))
+      (memory-worker-capacity (.ref config 'memory-worker-capacity))
+      (runnable-worker-capacity (.ref config 'runnable-worker-capacity))
       (worker-count (.ref config 'worker-count))
       (system-memory-bytes (.ref config 'system-memory-bytes))
       (max-rss-bytes (.ref config 'max-rss-bytes))
@@ -460,6 +519,20 @@
                        (.ref config 'available-memory-bytes))
                       (rss-headroom-bytes
                        (.ref config 'rss-headroom-bytes))
+                      (baseline-rss-bytes
+                       (.ref config 'baseline-rss-bytes))
+                      (allocatable-memory-bytes
+                       (.ref config 'allocatable-memory-bytes))
+                      (requested-max-rss-bytes
+                       (.ref config 'requested-max-rss-bytes))
+                      (admitted-memory-bytes
+                       (.ref config 'admitted-memory-bytes))
+                      (configured-worker-count
+                       (.ref config 'configured-worker-count))
+                      (memory-worker-capacity
+                       (.ref config 'memory-worker-capacity))
+                      (runnable-worker-capacity
+                       (.ref config 'runnable-worker-capacity))
                       (worker-count (.ref config 'worker-count))
                       (system-memory-bytes
                        (.ref config 'system-memory-bytes))

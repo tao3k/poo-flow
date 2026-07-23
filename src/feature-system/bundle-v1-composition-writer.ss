@@ -26,8 +26,8 @@
         (plan-node-name node)
         'poo-flow.policy.none
         'poo-flow.strategy.none
-        'poo-flow.adapter.wasm
-        'poo-flow.projection.react-flow
+        +feature-bundle-v1-no-adapter-id+
+        +feature-bundle-v1-no-projection-id+
         (plan-node-ordinal node))))
    (execution-plan-nodes plan)))
 

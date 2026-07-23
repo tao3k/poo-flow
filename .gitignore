@@ -18,3 +18,9 @@ version.ss
 
 # Bazel convenience symlinks and output trees.
 /bazel-*
+
+# Generated runtime-WASM bundle artifacts are build outputs, not sources.
+/bindings/runtime-wasm/workflows/*.bin
+/bindings/runtime-wasm/workflows/.human-capability.*.tmp
+/bindings/runtime-wasm/workflows/*.backup
+/bindings/runtime-wasm/workflows/.human-capability.publication.json*
