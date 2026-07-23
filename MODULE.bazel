@@ -19,7 +19,7 @@ GERBIL_LINUX_URLS = [
 
 git_override(
     module_name = "gerbil_bazel",
-    commit = "8cde3a26383d2a5602b6e0408ea4d15ecbd21dc3",
+    commit = "39e903a60e41e12186d929aaef64ea59a95daf88",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 

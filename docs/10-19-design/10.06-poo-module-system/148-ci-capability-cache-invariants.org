@@ -523,6 +523,24 @@ Linux producer had finished.  The acceptance gate for the split topology is:
 the wheel job starts no more than =60 s= after =native-linux= completes,
 regardless of whether =native-macos= is still running.
 
+**** After receipt: run 29960600457
+
+[[https://github.com/tao3k/poo-flow/actions/runs/29960600457][CI run 29960600457]] is the after-refactor receipt.
+
+| Metric                           | Receipt    |
+|----------------------------------+------------|
+| Linux producer completed         | =22:10:16= |
+| Python wheel consumer started    | =22:10:20= |
+| Producer-to-consumer start lag   | =4 s=      |
+| Before-refactor start lag        | =642 s=    |
+| Start-lag improvement            | =638 s=    |
+| Wheel lead over macOS completion | =6m 53s=   |
+| Overall workflow outcome         | all green  |
+
+The wheel consumer completed while =native-macos= was still running, finishing 6 minutes 53 seconds before macOS completed. The 4-second start lag satisfies the 60-second acceptance gate and proves that Linux-produced artifacts are no longer blocked on unrelated macOS acceptance. All jobs completed successfully.
+
+Dependency-install resource governance and its runtime receipt remain owned by [[file:147-adaptive-scheme-build-guard.org][Adaptive Scheme Build Guard]]; this document owns CI topology, capability, and cache evidence only.
+
 * Acceptance gates
 
 A v0.18.2 provider-boundary change is complete only when all of the following
