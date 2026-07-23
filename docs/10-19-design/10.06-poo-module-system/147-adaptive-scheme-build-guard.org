@@ -1323,6 +1323,28 @@ fail-closed lock ownership while moving the stale-lock decision to the front
 of both pipelines.  It does not mask artifact transport failures or relax any
 later build and receipt gate.
 
+Run =30024963904= then exposed an independent orchestration bottleneck.  The
+Linux native job completed the full external-module build in 534 s and its
+dependency install/build gates in 434 s, but the 20-minute job budget cancelled
+the Scheme build after another 206 s.  No step failed, no exit 137 occurred,
+and acceptance tests had not started.  The macOS native lane, which used the
+analysis-only external gate, completed every gate successfully in 1,595 s.
+
+The full Linux external-consumer scenario is therefore an independent peer job
+with its own 15-minute budget and cache namespace.  Native Linux retains a
+36-second analysis-only external check and all root build, receipt, and
+acceptance gates.  There is exactly one full external-module owner, but it runs
+in parallel instead of consuming the native job's serial critical path.
+
+| Run =30024963904= evidence | Elapsed | Result |
+|----------------------------+---------+--------|
+| Linux native total | 1,215 s | cancelled by 20-minute job budget |
+| Linux external full | 534 s | success |
+| Linux dependency install and build | 434 s | success |
+| Linux Scheme build before cancellation | 206 s | cancelled |
+| macOS complete native lane | 1,595 s | success |
+| Projected Linux native lane after split | about 1,002 s | 198 s timeout headroom |
+
 #+begin_src mermaid
 flowchart LR
   Seed["Linux seed"] --> Darwin["Darwin ARM64 merge"]
@@ -1330,7 +1352,8 @@ flowchart LR
   Verify --> Artifact["Verified lock artifact<br/>57,190 bytes<br/>SHA-256 d22b922f..."]
   Stale["Stale committed lock"] --> Late["Detected after 469.304 s external success"]
   Late --> Gate["Early mod deps<br/>--lockfile_mode=error"]
-  Gate --> CI["Regular CI"]
+  Gate --> Native["Native Linux and macOS<br/>external analysis plus root gates"]
+  Gate --> External["Parallel Linux external full<br/>sole full owner"]
   Gate --> Wasm["runtime-wasm-package"]
 #+end_src
 

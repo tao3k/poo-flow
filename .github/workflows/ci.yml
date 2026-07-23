@@ -71,6 +71,55 @@ jobs:
             packages/proof/lean/.lake
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
+  external-module-linux-full:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: POO Flow external Bazel module (linux-amd64, full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ca-certificates \
+            git \
+            libsqlite3-dev \
+            libssl-dev \
+            pkg-config \
+            zlib1g-dev
+
+      - name: Declare Bazel disk-cache generation
+        shell: bash
+        env:
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/bazel-cache-generation
+          printf '# POO Flow external-module cache generation: %s\n' \
+            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
+            > .ci/bazel-cache-generation/BUILD.bazel
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          disk-cache: ci-${{ runner.os }}-external-module-full-v1
+          repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazel mod deps --lockfile_mode=error
+
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: 12
+        env:
+          POO_FLOW_EXTERNAL_TEST_MODE: full
+        run: tools/ci/test_external_bazel_module.sh
+
   native-linux:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
@@ -85,7 +134,7 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
-            external-module-mode: full
+            external-module-mode: analysis
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow
