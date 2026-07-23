@@ -22,6 +22,20 @@ cleanup() {
 }
 trap cleanup EXIT
 
+bazel_output_args=(--output_user_root="$test_root/bazel")
+if [[ -n "${POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE:-}" ]]; then
+  case "$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE" in
+    /*) ;;
+    *)
+      printf 'POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE must be an absolute path: %s\n' \
+        "$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE" >&2
+      exit 2
+      ;;
+  esac
+  mkdir -p "$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE"
+  bazel_output_args=(--output_base="$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE")
+fi
+
 exported_module="$test_root/poo-flow"
 consumer="$test_root/consumer"
 bazel_tmp="$test_root/tmp"
@@ -89,15 +103,15 @@ EOF
 (
   cd "$consumer"
   export TMPDIR="$bazel_tmp"
-  "$bazel_bin" --output_user_root="$test_root/bazel" query \
+  "$bazel_bin" "${bazel_output_args[@]}" query \
     --lockfile_mode=off @poo_flow//scheme:compile
   if [[ "$external_test_mode" == analysis ]]; then
-    "$bazel_bin" --output_user_root="$test_root/bazel" build \
+    "$bazel_bin" "${bazel_output_args[@]}" build \
       --nobuild --lockfile_mode=off //:poo_flow_compile
   else
-    "$bazel_bin" --output_user_root="$test_root/bazel" build \
+    "$bazel_bin" "${bazel_output_args[@]}" build \
       --lockfile_mode=off //:poo_flow_compile
-    "$bazel_bin" --output_user_root="$test_root/bazel" test \
+    "$bazel_bin" "${bazel_output_args[@]}" test \
       --lockfile_mode=off --test_output=errors \
       @poo_flow//scheme:compile_receipt_v1_test
   fi

@@ -108,15 +108,21 @@ jobs:
         with:
           bazelisk-cache: true
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
           disk-cache: ci-${{ runner.os }}-external-module-full-v1
           repository-cache: true
 
       - name: Verify Bazel module lock
         run: bazel mod deps --lockfile_mode=error
 
+      - name: Validate external Bazel startup arguments
+        timeout-minutes: 2
+        run: bash tools/ci/test_external_bazel_module_args_test.sh
+
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: 12
         env:
+          POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE: ${{ runner.temp }}/poo-flow-external-bazel-output-base-v1
           POO_FLOW_EXTERNAL_TEST_MODE: full
         run: tools/ci/test_external_bazel_module.sh
 
@@ -280,6 +286,7 @@ jobs:
           # updated action cache is published instead of being trapped behind
           # GitHub's immutable exact key.  Forks remain restore-only.
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
 

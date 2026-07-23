@@ -296,13 +296,17 @@ CPU and memory pressure have different safety semantics.  The Scheme guard
 records an instantaneous runnable-process saturation observation as an
 =admission-advisories= value, but it does not treat that noisy system-wide
 sample as a hard failure or override the detected/configured worker capability.
-Exact physical memory is observed by Scheme only when the action executes; it
-does not enter the Bazel action key because it changes scheduling and guard
-limits, not the semantic compiled tree.  The process-tree RSS cap remains active
-throughout compilation.  Admission still fails closed when available memory
-cannot cover caller headroom plus the minimum guarded RSS floor.  A cached
-Scheme receipt describes the producer execution of that cached artifact, while
-the CI phase receipt describes the current cache consumer.
+Exact physical memory is not a semantic compiled-tree input.  The POO Flow
+guard probes it only when an action executes.  The pinned external
+=gerbil-bazel= toolchain, however, still copies
+=GERBIL_BAZEL_MEMORY_BYTES=, =GERBIL_BAZEL_CPU_COUNT=, and
+=GERBIL_BUILD_CORES= into the =GerbilProjectCompile= action environment.
+Those nonsemantic host-capacity values remain an upstream action-key defect.
+The process-tree RSS cap remains active throughout compilation.  Admission
+still fails closed when available memory cannot cover caller headroom plus the
+minimum guarded RSS floor.  A cached Scheme receipt describes the producer
+execution of that cached artifact, while the CI phase receipt describes the
+current cache consumer.
 
 *** Controlled cache-population receipt
 
@@ -351,8 +355,10 @@ Linux action had the same 3,236 configured targets and dependency cache as its
 producer.  The remaining key difference was the exact host physical-memory
 string injected into the action environment.  Because physical memory affects
 only Scheme scheduling and RSS admission, not compiled output semantics, the
-compile rule no longer injects that value.  Scheme performs the live probe only
-when an actual action miss executes.
+POO Flow-owned compile path no longer injects that value.  Scheme performs the
+live probe only when an actual action miss executes.  The separate
+host-capacity fields in the pinned external toolchain environment remain
+subject to the upstream correction described below.
 
 #+begin_src mermaid
 flowchart LR
@@ -360,8 +366,17 @@ flowchart LR
   Generation --> Restore{"Exact cache generation?"}
   Restore -->|"yes"| Exact["Reuse exact Bazel disk cache"]
   Restore -->|"no"| Prefix["Restore newest runner/toolchain prefix"]
-  Prefix --> Bazel["Bazel validates action inputs and executes only misses"]
+  Exact --> Archive["Restored Bazel disk archive"]
+  Prefix --> Archive
+  Archive --> StableBase["Stable external output_base"]
+  StableBase --> ActionKey["Stable action key"]
+  ActionKey --> Bazel["Bazel validates action inputs and executes only misses"]
   Bazel --> Save["Publish merged immutable generation"]
+  Archive -. "old harness" .-> RandomRoot["Fresh external output_user_root"]
+  RandomRoot --> AbsoluteEnv["Absolute GERBIL_GCC / GERBIL_GSC action environment"]
+  AbsoluteEnv --> Misses["Four GerbilProjectCompile misses"]
+  Runtime["Runtime-WASM cache namespace"] --> ForkSafe["Fork-safe cache saver"]
+  ForkSafe --> Save
   CPU["Detected CPU capability"] --> Workers["Configured worker ceiling"]
   Runnable["Runnable-process saturation"] --> Advisory["Receipt advisory only"]
   Memory["Available memory and RSS headroom"] --> Gate{"Memory safety floor admitted?"}
@@ -395,6 +410,45 @@ as a fresh host probe on the consuming runner.
 This accepts the dual-platform warm-cache gate. Source changes still require a
 real Scheme action execution with a live host probe; documentation-only changes
 may reuse the compiled action while advancing the immutable CI cache generation.
+
+*** Dedicated external-module action-key audit
+
+Run =30034465973= job =89298795259= successfully restored the preceding
+=setup-bazel= disk archive through prefix fallback.  The archive layer
+therefore supplied its prior entries.  The subsequent =370.618 s= build still
+ran all four =GerbilProjectCompile= actions in =processwrapper-sandbox=; only
+the receipt-validation test later reported one disk-cache hit.  This is a
+Bazel action-key miss, not a GitHub archive-restore miss.
+
+The external fixture had created a fresh =--output_user_root= below =mktemp=
+for every invocation.  The pinned =gerbil-bazel= prebuilt toolchain
+materializes absolute paths derived from that root as =GERBIL_GCC=,
+=GERBIL_GSC=, and related generated-wrapper and toolchain-environment values.
+=GerbilProjectCompile= copies those values into its action environment, so the
+changing absolute paths changed the action key for all four compile actions.
+
+POO Flow now accepts an optional, validated absolute
+=POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE=.  The dedicated full external-module job
+binds it to a stable =runner.temp= path; the missing-root-override probe and the
+native analysis lanes retain their isolated random user roots.  This is a
+fixture-level cache mitigation, not the durable rule fix.  The upstream
+=gerbil-bazel= follow-up must make tool and wrapper locations
+execroot/runfiles-relative and remove nonsemantic host-capacity values from the
+compile action environment.
+
+The Runtime-WASM namespace now advances the same ignored BUILD generation,
+declares =cache-version: 1= explicitly, and enables the same fork-safe saver.
+Pushes and same-repository pull requests may publish the new generation; fork
+pull requests remain restore-only.
+
+No warm compile hit is accepted for the stable-output-base mitigation yet.
+The first post-change job may need to populate stable-path action keys because
+the restored archive contains keys derived from earlier random roots.  The
+required acceptance is therefore a completed population job with a successful
+post-save followed by a same-input or documentation-only job that restores
+that generation, serves all four =GerbilProjectCompile= actions from the disk
+cache without =processwrapper-sandbox= execution, validates the external
+receipt, and records the warm wall time.
 
 ** Registered Gerbil toolchain convergence
 
