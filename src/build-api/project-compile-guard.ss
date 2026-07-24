@@ -90,7 +90,6 @@
        (poo-flow-project-compile-positive-integer-from-env
         "NUM_JOBS" #f)
        logical-cpu-count)))
-
 (def (poo-flow-project-compile-runnable-process-count)
   (or (poo-flow-project-compile-positive-integer-from-env
        "POO_FLOW_BUILD_RUNNABLE_PROCESSES" #f)
@@ -222,14 +221,9 @@
           (max 1
                (quotient admitted-memory-bytes
                          +poo-flow-project-compile-minimum-max-rss-bytes+)))
-         (runnable-worker-capacity
-          (max 1
-               (- (* logical-cpu-count 2)
-                  runnable-process-count)))
          (worker-count
           (min configured-worker-count
-               memory-worker-capacity
-               runnable-worker-capacity))
+               memory-worker-capacity))
          (admission-advisories
           (poo-flow-project-compile-admission-advisories
            logical-cpu-count
@@ -244,7 +238,8 @@
           (if (null? admission-reasons)
             'ready
             'blocked-host-pressure))
-         (execution-policy 'adaptive)
+         (execution-policy
+          (poo-flow-project-build-execution-policy))
          (request-labels (poo-flow-project-build-stage-labels)))
     (let ((request-labels-value request-labels)
           (execution-policy-value execution-policy)
@@ -258,7 +253,6 @@
           (admitted-memory-bytes-value admitted-memory-bytes)
           (configured-worker-count-value configured-worker-count)
           (memory-worker-capacity-value memory-worker-capacity)
-          (runnable-worker-capacity-value runnable-worker-capacity)
           (worker-count-value worker-count)
           (admission-outcome-value admission-outcome)
           (admission-advisories-value admission-advisories)
@@ -282,7 +276,6 @@
           (admitted-memory-bytes admitted-memory-bytes-value)
           (configured-worker-count configured-worker-count-value)
           (memory-worker-capacity memory-worker-capacity-value)
-          (runnable-worker-capacity runnable-worker-capacity-value)
           (worker-count worker-count-value)
           (admission-outcome admission-outcome-value)
           (admission-advisories admission-advisories-value)
@@ -296,13 +289,15 @@
 (def (poo-flow-project-compile-receipt->alist receipt)
   (map (lambda (slot) (cons slot (.ref receipt slot)))
        '(schema outcome build-owner build-mode execution-policy request-labels
+                source-identity
+                source-identity-materialization-elapsed-ms
                 admission-outcome admission-advisories admission-reasons
                 logical-cpu-count
                 runnable-process-count available-memory-bytes
                 rss-headroom-bytes baseline-rss-bytes
                 allocatable-memory-bytes requested-max-rss-bytes
                 admitted-memory-bytes configured-worker-count
-                memory-worker-capacity runnable-worker-capacity worker-count
+                memory-worker-capacity worker-count
                 system-memory-bytes max-rss-bytes peak-rss-bytes
                 elapsed-ms timeout-ms)))
 
@@ -358,6 +353,29 @@
          (poo-flow-project-compile-alist-ref
           summary 'active-stages '())))))
 
+(def (poo-flow-project-compile-source-identity->json-object identity)
+  (and
+   identity
+   (hash
+    ("kind" "poo-flow.project-build-source-identity.v1")
+    ("schema"
+     (poo-flow-process-memory-guard-json-value
+      (.ref identity 'schema)))
+    ("version" 1)
+    ("algorithm"
+     (poo-flow-process-memory-guard-json-value
+      (.ref identity 'algorithm)))
+    ("digest" (.ref identity 'digest))
+    ("stage-count" (.ref identity 'stage-count))
+    ("spec-count" (.ref identity 'spec-count))
+    ("stages"
+     (map
+      (lambda (stage)
+        (hash
+         ("label" (.ref stage 'label))
+         ("spec-count" (.ref stage 'spec-count))))
+      (.ref identity 'stages))))))
+
 (def (poo-flow-project-compile-receipt->json-object receipt)
   (hash
    ("kind" "poo-flow.project-compile-guard.v1")
@@ -375,6 +393,11 @@
      (.ref receipt 'execution-policy)))
    ("request-labels"
     (poo-flow-process-memory-guard-json-value (.ref receipt 'request-labels)))
+   ("source-identity"
+    (poo-flow-project-compile-source-identity->json-object
+     (.ref receipt 'source-identity)))
+   ("source-identity-materialization-elapsed-ms"
+    (.ref receipt 'source-identity-materialization-elapsed-ms))
    ("admission-outcome"
     (poo-flow-process-memory-guard-json-value
      (.ref receipt 'admission-outcome)))
@@ -394,7 +417,6 @@
    ("admitted-memory-bytes" (.ref receipt 'admitted-memory-bytes))
    ("configured-worker-count" (.ref receipt 'configured-worker-count))
    ("memory-worker-capacity" (.ref receipt 'memory-worker-capacity))
-   ("runnable-worker-capacity" (.ref receipt 'runnable-worker-capacity))
    ("worker-count" (.ref receipt 'worker-count))
    ("system-memory-bytes" (.ref receipt 'system-memory-bytes))
    ("max-rss-bytes" (.ref receipt 'max-rss-bytes))
@@ -425,6 +447,8 @@
       (build-mode (.ref config 'build-mode))
       (execution-policy (.ref config 'execution-policy))
       (request-labels (.ref config 'request-labels))
+      (source-identity #f)
+      (source-identity-materialization-elapsed-ms 0)
       (admission-outcome (.ref config 'admission-outcome))
       (admission-advisories (.ref config 'admission-advisories))
       (admission-reasons (.ref config 'admission-reasons))
@@ -447,11 +471,13 @@
       (timeout-ms #f)
       (build '())))
 
-(def (poo-flow-project-compile-with-adaptive-environment options config)
+(def (poo-flow-project-compile-with-guard-environment options config)
   (let* ((bindings
           (list
            (cons "GERBIL_BUILD_CORES"
                  (number->string (.ref config 'worker-count)))
+           (cons "POO_FLOW_BUILD_EXECUTION_POLICY"
+                 (symbol->string (.ref config 'execution-policy)))
            (cons "POO_FLOW_BUILD_MAX_RSS_BYTES"
                  (number->string (.ref config 'max-rss-bytes)))
            (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "0")))
@@ -464,7 +490,8 @@
         (for-each
          (lambda (entry) (setenv (car entry) (cdr entry)))
          bindings))
-      (lambda () (poo-flow-project-compile! options))
+      (lambda ()
+        (poo-flow-project-compile-with-source-identity! options))
       (lambda ()
         (for-each
          (lambda (entry)
@@ -496,9 +523,16 @@
       (dynamic-wind
         (lambda () #!void)
         (lambda ()
-          (let* ((build-receipt
-                  (poo-flow-project-compile-with-adaptive-environment
+          (let* ((project-compile-result
+                  (poo-flow-project-compile-with-guard-environment
                    options config))
+                 (build-receipt
+                  (.ref project-compile-result 'build))
+                 (identity-value
+                  (.ref project-compile-result 'source-identity))
+                 (identity-materialization-duration-ms
+                  (.ref project-compile-result
+                        'source-identity-materialization-elapsed-ms))
                  (completed-guard-receipt (stop!)))
             (let (receipt
                   (.o (schema +poo-flow-project-compile-guard-schema+)
@@ -508,6 +542,9 @@
                       (build-mode (.ref config 'build-mode))
                       (execution-policy (.ref config 'execution-policy))
                       (request-labels (.ref config 'request-labels))
+                      (source-identity identity-value)
+                      (source-identity-materialization-elapsed-ms
+                       identity-materialization-duration-ms)
                       (admission-outcome (.ref config 'admission-outcome))
                       (admission-advisories
                        (.ref config 'admission-advisories))

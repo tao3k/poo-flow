@@ -21,6 +21,12 @@ def _gerbil_project_receipt_v1_test_impl(ctx):
     schema = ctx.file._schema
     validator = ctx.file._validator
     consumer_validator = ctx.file.consumer_validator
+    consumer_inputs = [
+        _single_file(target, "consumer_inputs")
+        for target in ctx.attr.consumer_inputs
+    ]
+    if consumer_inputs and not consumer_validator:
+        fail("consumer_inputs require consumer_validator")
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
 
     commands = [
@@ -32,9 +38,13 @@ def _gerbil_project_receipt_v1_test_impl(ctx):
     ]
     if consumer_validator:
         commands.append(
-            "\"$gxi\" \"$runfiles/%s\" \"$runfiles/%s\"" % (
+            "\"$gxi\" \"$runfiles/%s\" \"$runfiles/%s\"%s" % (
                 consumer_validator.short_path,
                 receipt.short_path,
+                "".join([
+                    " \"$runfiles/%s\"" % input_file.short_path
+                    for input_file in consumer_inputs
+                ]),
             ),
         )
 
@@ -55,6 +65,7 @@ gxi="$runfiles/%s"
     files = [receipt, schema, validator]
     if consumer_validator:
         files.append(consumer_validator)
+    files.extend(consumer_inputs)
     runfiles = ctx.runfiles(
         files = files,
         transitive_files = toolchain.runfiles,
@@ -69,6 +80,9 @@ gxi="$runfiles/%s"
         runfiles = runfiles.merge(
             ctx.attr.consumer_validator[DefaultInfo].data_runfiles,
         )
+    for target in ctx.attr.consumer_inputs:
+        runfiles = runfiles.merge(target[DefaultInfo].default_runfiles)
+        runfiles = runfiles.merge(target[DefaultInfo].data_runfiles)
 
     return [DefaultInfo(executable = executable, runfiles = runfiles)]
 
@@ -76,6 +90,7 @@ gerbil_project_receipt_v1_test = rule(
     implementation = _gerbil_project_receipt_v1_test_impl,
     test = True,
     attrs = {
+        "consumer_inputs": attr.label_list(allow_files = True),
         "consumer_validator": attr.label(allow_single_file = [".ss"]),
         "receipt": attr.label(allow_single_file = True, mandatory = True),
         "_schema": attr.label(
