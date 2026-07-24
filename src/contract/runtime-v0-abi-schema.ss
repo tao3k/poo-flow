@@ -9,9 +9,21 @@
 (def +poo-flow-runtime-v0-abi-schema+
   (.o (kind 'poo-flow.runtime-v0.abi-schema.1)
       (abi-major 0)
-      (abi-minor 1)
+      (abi-minor 3)
       (bundle-schema "poo-flow.organization-bundle.draft.3")
       (control-packet-schema "poo-flow.runtime-v0.control-packet.1")
+      (promotion-request-schema
+       "poo-flow.runtime-language.promotion-request.1")
+      (promotion-receipt-schema
+       "poo-flow.runtime-language.promotion-receipt.1")
+      (promotion-idempotency-key-schema
+       "poo-flow.runtime-language.promotion-idempotency-key.1")
+      (source-query-receipt-schema
+       "poo-flow.runtime-language.source-query-receipt.1")
+      (runtime-admission-receipt-schema
+       "poo-flow.runtime-language.admission-receipt.1")
+      (contract-artifact-projection-receipt-schema
+       "poo-flow.contract.artifact-projection-receipt.1")
       (abi-v1-frozen? #f)
       (hot-layout-version 1)
       (event-header-bytes 96)
@@ -23,7 +35,15 @@
              (runtime-v0-capability "BULK_BUFFER" 3)
              (runtime-v0-capability "CALLER_ARENA" 4)
              (runtime-v0-capability "PARTIAL_ACCEPTANCE" 5)
-             (runtime-v0-capability "BATCHED_EVIDENCE" 6)))))
+             (runtime-v0-capability "BATCHED_EVIDENCE" 6)
+             (runtime-v0-capability "PROMOTION_MATERIALIZE" 7)
+             (runtime-v0-capability "INJECTION_RECEIPT" 8)
+             (runtime-v0-capability "ROLLBACK" 9)
+             (runtime-v0-capability "EXACTLY_ONCE" 10)
+             (runtime-v0-capability "LANGUAGE_QUALIFICATION" 11)
+             (runtime-v0-capability "SOURCE_QUERY_DATA" 12)
+             (runtime-v0-capability "CONTRACT_ADMISSION_RECEIPT" 13)
+             (runtime-v0-capability "CONTRACT_ARTIFACT_PROJECTION" 14)))))
 
 (def (emit-line port . values)
   (for-each (lambda (value) (display value port)) values)
@@ -44,6 +64,18 @@
                (.ref schema 'bundle-schema) "\"")
     (emit-line port "#define POO_FLOW_RUNTIME_V0_CONTROL_PACKET_SCHEMA \""
                (.ref schema 'control-packet-schema) "\"")
+    (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_REQUEST_SCHEMA \""
+               (.ref schema 'promotion-request-schema) "\"")
+    (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_RECEIPT_SCHEMA \""
+               (.ref schema 'promotion-receipt-schema) "\"")
+    (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_PROMOTION_IDEMPOTENCY_KEY_SCHEMA \""
+               (.ref schema 'promotion-idempotency-key-schema) "\"")
+    (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_SOURCE_QUERY_RECEIPT_SCHEMA \""
+               (.ref schema 'source-query-receipt-schema) "\"")
+    (emit-line port "#define POO_FLOW_RUNTIME_LANGUAGE_ADMISSION_RECEIPT_SCHEMA \""
+               (.ref schema 'runtime-admission-receipt-schema) "\"")
+    (emit-line port "#define POO_FLOW_CONTRACT_ARTIFACT_PROJECTION_RECEIPT_SCHEMA \""
+               (.ref schema 'contract-artifact-projection-receipt-schema) "\"")
     (emit-line port "#define POO_FLOW_RUNTIME_V0_LAYOUT_VERSION "
                (.ref schema 'hot-layout-version) "u")
     (emit-line port "#define POO_FLOW_RUNTIME_V0_EVENT_HEADER_BYTES "
@@ -68,6 +100,18 @@
     (emit-line port "bundle-schema=" (.ref schema 'bundle-schema))
     (emit-line port "control-packet-schema="
                (.ref schema 'control-packet-schema))
+    (emit-line port "promotion-request-schema="
+               (.ref schema 'promotion-request-schema))
+    (emit-line port "promotion-receipt-schema="
+               (.ref schema 'promotion-receipt-schema))
+    (emit-line port "promotion-idempotency-key-schema="
+               (.ref schema 'promotion-idempotency-key-schema))
+    (emit-line port "source-query-receipt-schema="
+               (.ref schema 'source-query-receipt-schema))
+    (emit-line port "runtime-admission-receipt-schema="
+               (.ref schema 'runtime-admission-receipt-schema))
+    (emit-line port "contract-artifact-projection-receipt-schema="
+               (.ref schema 'contract-artifact-projection-receipt-schema))
     (emit-line port "abi-v1-frozen="
                (if (.ref schema 'abi-v1-frozen?) "true" "false"))
     (emit-line port "hot-layout-version=" (.ref schema 'hot-layout-version))

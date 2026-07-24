@@ -1,4 +1,5 @@
-(import :std/test
+(import (only-in :gslph/src/building/facade make-package-source-stage)
+        :std/test
         :clan/poo/object
         (only-in :gerbil/gambit getenv setenv)
         (only-in :std/text/json
@@ -29,12 +30,32 @@
       (check (.ref config 'build-mode)
              => 'standard-gerbil-make-project)
       (check (.ref config 'execution-policy)
-             => 'adaptive)
+             => 'topology)
       (check (>= (.ref config 'worker-count) 1) => #t)
       (check (> (.ref config 'system-memory-bytes) 0) => #t)
       (check (> (.ref config 'available-memory-bytes) 0) => #t)
       (check (.ref config 'request-labels)
              => '("nono-c-ffi" "runtime" "user-interface")))
+    (test-case "source identity is deterministic for one materialized build graph"
+      (let* ((stages
+              (list
+               (make-package-source-stage
+                "source-identity-fixture"
+                (current-directory)
+                "poo-flow"
+                '("src/cli-support/project-build.ss"
+                  "src/build-api/project-compile-guard.ss")
+                'topology)))
+             (left
+              (poo-flow/src/cli-support/project-build#poo-flow-project-build-source-identity
+               stages))
+             (right
+              (poo-flow/src/cli-support/project-build#poo-flow-project-build-source-identity
+               stages)))
+        (check (.ref left 'digest) => (.ref right 'digest))
+        (check (.ref left 'stage-count) => 1)
+        (check (.ref left 'spec-count) => 2)
+        (check (.ref left 'spec-count) => (.ref right 'spec-count))))
     (test-case "derives the RSS ceiling from machine capacity"
       (check
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-adaptive-max-rss-bytes
@@ -45,19 +66,52 @@
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-optional-timeout-from-env
        "POO_FLOW_TEST_UNSET_BUILD_TIMEOUT")
        => #f))
-    (test-case "uses adaptive policy without requiring an explicit RSS cap"
-      (let (previous (getenv "POO_FLOW_BUILD_MAX_RSS_BYTES" #f))
+    (test-case "RSS guard does not implicitly rewrite the compile graph"
+      (let ((previous-cap
+             (getenv "POO_FLOW_BUILD_MAX_RSS_BYTES" #f))
+            (previous-policy
+             (getenv "POO_FLOW_BUILD_EXECUTION_POLICY" #f)))
         (dynamic-wind
           (lambda ()
-            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" ""))
+            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" "4294967296")
+            (setenv "POO_FLOW_BUILD_EXECUTION_POLICY" ""))
           (lambda ()
             (check
              (.ref (poo-flow-project-compile-guard-config '())
                    'execution-policy)
-             => 'adaptive))
+             => 'topology)
+            (check
+             (poo-flow/src/cli-support/project-build#poo-flow-project-adaptive-controller-from-env)
+             => #f))
           (lambda ()
-            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" (or previous ""))))))
-    (test-case "blocks runnable saturation with an observable receipt"
+            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES"
+                    (or previous-cap ""))
+            (setenv "POO_FLOW_BUILD_EXECUTION_POLICY"
+                    (or previous-policy ""))))))
+    (test-case "adaptive windows require an explicit policy"
+      (let ((previous-cap
+             (getenv "POO_FLOW_BUILD_MAX_RSS_BYTES" #f))
+            (previous-policy
+             (getenv "POO_FLOW_BUILD_EXECUTION_POLICY" #f)))
+        (dynamic-wind
+          (lambda ()
+            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" "4294967296")
+            (setenv "POO_FLOW_BUILD_EXECUTION_POLICY"
+                    "adaptive-window"))
+          (lambda ()
+            (check
+             (.ref (poo-flow-project-compile-guard-config '())
+                   'execution-policy)
+             => 'adaptive-window)
+            (check
+             (poo-flow/src/cli-support/project-build#poo-flow-project-build-execution-policy)
+             => 'adaptive-window))
+          (lambda ()
+            (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES"
+                    (or previous-cap ""))
+            (setenv "POO_FLOW_BUILD_EXECUTION_POLICY"
+                    (or previous-policy ""))))))
+    (test-case "keeps runnable saturation advisory without rewriting worker count"
       (let* ((available-cpu-count
               (build-api-project-compile-guard-available-cpu-count))
              (saturated-runnable-count
@@ -84,10 +138,12 @@
              overrides))
           (lambda ()
             (let (config (poo-flow-project-compile-guard-config '()))
-              (check (.ref config 'admission-outcome) => 'blocked-host-pressure)
+              (check (.ref config 'admission-outcome) => 'ready)
               (check (.ref config 'admission-advisories)
                      => '(runnable-saturation))
-              (check (.ref config 'admission-reasons) => '(runnable-saturation))
+              (check (.ref config 'admission-reasons) => '())
+              (check (.ref config 'configured-worker-count)
+                     => available-cpu-count)
               (check (.ref config 'worker-count)
                      => available-cpu-count)))
           (lambda ()
@@ -142,6 +198,19 @@
                   (build-mode 'standard-gerbil-make-project)
                   (execution-policy 'topology)
                   (request-labels '("runtime" "user-interface"))
+                  (source-identity
+                   (.o
+                    (schema 'poo-flow.project-build-source-identity.v1)
+                    (algorithm 'sha256)
+                    (digest
+                     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+                    (stage-count 2)
+                    (spec-count 387)
+                    (stages
+                     (list
+                      (.o (label "runtime") (spec-count 379))
+                      (.o (label "user-interface") (spec-count 8))))))
+                  (source-identity-materialization-elapsed-ms 7)
                   (admission-outcome 'ready)
                   (admission-advisories '())
                   (admission-reasons '())
@@ -195,6 +264,12 @@
         (check (hash-get object "version") => 1)
         (check (hash-get object "elapsed-ms") => 199289)
         (check (hash-get object "execution-policy") => "topology")
+        (let (source-identity (hash-get object "source-identity"))
+          (check (hash-get source-identity "algorithm") => "sha256")
+          (check (hash-get source-identity "spec-count") => 387))
+        (check
+         (hash-get object "source-identity-materialization-elapsed-ms")
+         => 7)
         (check (hash-get object "admission-outcome") => "ready")
         (check (hash-get object "admission-advisories") => '())
         (check (hash-get object "worker-count")

@@ -41,7 +41,7 @@
      (let* ((state (validated-state))
             (packet (poo-flow-runtime-v0-control-packet state)))
        (check-equal? (.ref packet 'abi-major) 0)
-       (check-equal? (.ref packet 'abi-minor) 1)
+       (check-equal? (.ref packet 'abi-minor) 3)
        (check-equal? (.ref packet 'bundle-schema)
                      'poo-flow.organization-bundle.draft.3)
        (check-equal? (.ref packet 'bundle-epoch) 12)

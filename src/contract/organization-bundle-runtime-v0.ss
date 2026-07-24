@@ -16,7 +16,7 @@
         (bundle (.ref state 'bundle)))
     (.o (kind +poo-flow-runtime-v0-control-packet-schema+)
         (abi-major 0)
-        (abi-minor 1)
+      (abi-minor 3)
         (bundle-schema +poo-flow-organization-bundle-schema+)
         (digest-algorithm (.ref identity 'algorithm))
         (bundle-digest (.ref identity 'digest))

@@ -5,7 +5,12 @@ load(
     "gerbil_project_test",
 )
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load(
+    "//tools/bazel:gerbil_projection.bzl",
+    "gerbil_project_contract_projection",
+    "gerbil_project_projection",
+)
 load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -16,6 +21,9 @@ gerbil_project_compile(
     build_script = "@gerbil_utils_sources//:build_script",
     process_guard = True,
     require_library_output = True,
+    source_resolution_receipts = [
+        "@gerbil_utils_sources//:source_resolution_receipt",
+    ],
 )
 
 gerbil_project_compile(
@@ -24,6 +32,9 @@ gerbil_project_compile(
     build_script = "@gerbil_poo_sources//:build_script",
     process_guard = True,
     require_library_output = True,
+    source_resolution_receipts = [
+        "@gerbil_poo_sources//:source_resolution_receipt",
+    ],
     deps = [":gerbil_utils_package"],
 )
 
@@ -33,6 +44,9 @@ gerbil_project_compile(
     build_script = "@gslph_sources//:build_script",
     process_guard = True,
     require_library_output = True,
+    source_resolution_receipts = [
+        "@gslph_sources//:source_resolution_receipt",
+    ],
     deps = [":gerbil_poo_package"],
 )
 
@@ -43,6 +57,32 @@ filegroup(
         ":gerbil_utils_package",
         ":gslph_package",
     ],
+)
+
+gerbil_project_compile(
+    name = "dependency_source_contract_compile",
+    srcs = ["//:dependency_source_contract_sources"],
+    build_script = "//:dependency_source_contract_build_script",
+    process_guard = True,
+    receipt_line_prefix = "POO_FLOW_DEPENDENCY_SOURCE_CONTRACT_BUILD_RECEIPT ",
+    require_library_output = True,
+    deps = [":gerbil_poo_package"],
+)
+
+gerbil_project_contract_projection(
+    name = "dependency_source_contract_projection",
+    output_name = "poo-flow-dependency-source-contract.json",
+    project = ":dependency_source_contract_compile",
+    projector = ":write_dependency_source_contract_projection.ss",
+)
+
+gerbil_project_test(
+    name = "dependency_source_contract_test",
+    size = "small",
+    srcs = "//:dependency_source_contract_test_sources",
+    project = ":dependency_source_contract_compile",
+    source_root_marker = "//:scheme_source_root_marker",
+    tests = ["//:t/dependency-source-identity-test.ss"],
 )
 
 gerbil_project_compile(
@@ -145,8 +185,26 @@ filegroup(
 
 gerbil_project_receipt_v1_test(
     name = "compile_receipt_v1_test",
+    consumer_inputs = [":dependency_source_contract_projection"],
     consumer_validator = ":validate_compile_receipt_v1.ss",
     receipt = ":compile_receipt",
+)
+
+sh_test(
+    name = "compile_receipt_contract_mismatch_test",
+    srcs = ["validate_compile_receipt_v1_negative_test.sh"],
+    args = [
+        "$(rlocationpath @local_gerbil//:gxi)",
+        "$(rlocationpath :validate_compile_receipt_v1.ss)",
+        "$(rlocationpath :compile_receipt)",
+        "$(rlocationpath :dependency_source_contract_projection)",
+    ],
+    data = [
+        ":compile_receipt",
+        ":dependency_source_contract_projection",
+        ":validate_compile_receipt_v1.ss",
+        "@local_gerbil//:gxi",
+    ],
 )
 
 gerbil_project_projection(
@@ -169,6 +227,16 @@ gerbil_project_projection(
     )
     for name, size, test_root in [
         ("unit_tests", "medium", "//:t/unit-tests.ss"),
+        (
+            "protocol_person_promotion_test",
+            "small",
+            "//:t/protocol-person-promotion-test.ss",
+        ),
+        (
+            "protocol_person_runtime_abi_test",
+            "small",
+            "//:t/protocol-person-runtime-abi-test.ss",
+        ),
         ("contract_tests", "small", "//:t/contract-tests.ss"),
         ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
         ("integration_tests", "small", "//:t/integration-tests.ss"),
@@ -187,6 +255,8 @@ test_suite(
         ":cli_support_tests",
         ":contract_tests",
         ":integration_tests",
+        ":protocol_person_promotion_test",
+        ":protocol_person_runtime_abi_test",
         ":unit_tests",
         ":user_interface_custom_loop_engine_capability_test",
     ],

@@ -22,6 +22,9 @@ import PooFlowProof.Generated.CompositionReceipt
 import PooFlowProof.PooC3.AuthorizedEffectEvidence
 import PooFlowProof.Generated.AuthorizedEffectEvidence
 import PooFlowProof.PooC3.AuthorizedEffectProofCase
+import PooFlowProof.PooC3.ProtocolPersonPromotion
+import PooFlowProof.PooC3.RuntimeLanguageAbiPromotion
+import PooFlowProof.PooC3.DependencySourceIdentity
 import PooFlowProof.Generated.AuthorizedEffectProofCase
 import PooFlowProof.PooC3.ControlPlaneHandoff
 import PooFlowProof.Generated.ControlPlaneHandoff

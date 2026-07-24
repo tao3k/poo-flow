@@ -1,6 +1,6 @@
 #+title: RFC 0147 - Adaptive Scheme Build Guard and Execution Windows
 #+author: POO Flow
-#+status: Accepted, Implemented, and Full-Cold Validated
+#+status: Accepted, Implemented, Full-Cold Validated, and Performance-Amended
 #+language: en
 
 * Decision
@@ -13,10 +13,13 @@ observes a Scheme-owned process-tree memory receipt, derives an immutable next
 controller, and then submits the next window.
 
 The existing topology projection remains the default.  When no adaptive
-controller is supplied and =POO_FLOW_BUILD_MAX_RSS_BYTES= is not a positive
-integer, the runtime and user-interface stages retain the established one-window
-topology behavior.  Adaptive execution is activated only by an explicit POO
-controller or by a positive =POO_FLOW_BUILD_MAX_RSS_BYTES= value.
+controller is supplied, the runtime and user-interface stages retain the
+established one-window topology behavior.  A positive
+=POO_FLOW_BUILD_MAX_RSS_BYTES= value authorizes observation and enforcement of
+the process-tree RSS boundary; it does not authorize rewriting the compile
+graph.  Adaptive execution is activated only by an explicit POO controller or
+by =POO_FLOW_BUILD_EXECUTION_POLICY=adaptive-window= together with a positive
+RSS cap.
 
 The adaptive cold gate requires an explicit hard RSS cap.  A machine-derived
 outer project-guard fallback is useful protection, but it is not authorization
@@ -41,6 +44,87 @@ for an adaptive full cold run.
 11. Portable receipts are canonical JSON, not text logs or printed alists.
 12. Runnable-process saturation is observable advisory evidence; only a memory
     safety-floor failure blocks admission before the guarded build starts.
+13. Resource observation and compile-graph policy are independent contracts.
+    An RSS limit cannot implicitly turn one topology session into multiple
+    coordinator sessions.
+
+* 2026-07-23 performance amendment
+
+The accepted cold receipts already establish the performance boundary:
+
+- canonical guarded cold build: =202.87 s= wall time;
+- Bazel-declared isolated cold build: =161.694 s= wall time.
+
+The dependency-source integration later observed =549.087 s= wall time with a
+=534.76 s= critical path, followed by a =1154.91 s= compile critical path on a
+host whose total wall time was contaminated by executable-startup stalls.  The
+first approximately nine-minute observation is itself a regression; it is not
+a new baseline.
+
+The root policy defect was that the outer project guard always materialized a
+positive =POO_FLOW_BUILD_MAX_RSS_BYTES= value, while the build planner treated
+the mere presence of that observation limit as permission to activate adaptive
+execution windows.  That coupling converted the established single upstream
+=std/make= topology session into repeated sequential coordinator sessions.
+
+This amendment restores the semantic split:
+
+1. topology is the default compile-graph policy;
+2. the process-tree RSS guard remains active and produces its own receipt;
+3. =adaptive-window= is an explicit policy requiring an explicit positive cap;
+4. a point-in-time runnable-process count is advisory evidence and cannot
+   silently reduce the configured native worker count;
+5. future adaptive concurrency work must tune native worker admission or use
+   historical calibration receipts; it must not infer graph-rewrite authority
+   from an observation value.
+
+The performance acceptance target remains the pre-regression known-good
+envelope, not the =534.76 s= comparison point.  POO Flow issue =#13= owns the
+healthy-host reproduction and CI regression budget.
+
+** Versioned build-source identity and comparable performance receipts
+
+POO Contract remains the unique canonical owner.  The build-source identity is
+not another owner, contract store, or memory layer.  It is a derived runtime
+receipt over the exact source graph that one compile invocation observed.
+
+The compile boundary materializes the Building Framework stage graph exactly
+once.  That same in-memory value is first projected to
+=poo-flow.project-build-source-identity.v1= and then passed to
+=package-source-stages-run!=.  Configuration inspection does not discover or
+hash the graph, and receipt projection does not rediscover it.
+
+The =sha256= input is an ordered byte stream.  It starts with the identity
+schema token and then, for every stage and spec in compile order, includes the
+stage label, spec kind, module path, source byte length, and exact source bytes.
+Every textual token is UTF-8 encoded and byte-length framed.  The receipt also
+records stage and spec counts plus per-stage counts.  The digest identifies the
+observed build inputs; it does not replace POO Contract ownership.
+
+Performance receipts are comparable only when source digest, Gerbil and GSLPH
+toolchain/dependency identities, execution policy, worker count, cache state,
+and coldness class agree.  A historical duration without those coordinates is
+evidence that a run happened, but it is not an attribution proof.
+
+The first timed canonical receipt after this amendment reported:
+
+- =execution-policy=topology= and =worker-count=12=;
+- =spec-count=389= across =3= stages;
+- source digest
+  =2962ac051b1750d6c0453e308b868c49d27c3853734c0a4c5c51f5300b53f4d9=;
+- =source-identity-materialization-elapsed-ms=96=;
+- guard =elapsed-ms=194746= and peak RSS =4,909,645,824= bytes;
+- Bazel elapsed =226.145= seconds with a =225.76=-second critical path;
+- an immediate no-op receipt of =0.296= seconds with a =0.01=-second critical
+  path and one action-cache hit.
+
+The 96-ms measurement rejects source hashing as the cause of the earlier
+multi-minute regression.  The current =194746=-ms guard duration is 511 ms
+below the preceding =195257=-ms topology receipt, but the two receipts do not
+share a source digest and therefore must not be presented as a controlled A/B.
+The isolated historical =155837=-ms duration likewise remains a target to
+reproduce under one identical identity tuple, not a baseline from which to
+infer a scheduler defect.
 
 * Measured bounded A/B evidence
 
@@ -1486,3 +1570,56 @@ cold receipts, because the CI jobs restored the Gerbil installation and package
 dependency caches and therefore did not rebuild the compiler toolchain.  The
 older 721-second full-workflow cold observation remains a separate baseline
 until a deliberately cache-free toolchain run replaces it.
+
+* 2026-07-24 real downstream acceptance
+
+The gerbil-bazel v1 adaptation was tested through a POO Flow command-line module
+override in a fresh Bazel output root.  This acceptance exercises the complete
+declared dependency chain rather than a synthetic Gerbil package.
+
+#+begin_src mermaid
+flowchart LR
+  Pin["gerbil-bazel v1 candidate"] --> Utils["gerbil_utils_package"]
+  Utils --> POO["gerbil_poo_package"]
+  POO --> GSLPH["gslph_package"]
+  GSLPH --> Root["POO Flow scheme compile"]
+  CPU["logical CPU count"] --> Guard["Scheme resource guard"]
+  Memory["available memory minus RSS headroom"] --> Guard
+  Request["preserved Bazel worker request"] --> Guard
+  Runnable["runnable-process count"] -->|"advisory only"| Guard
+  Guard -->|"GERBIL_BUILD_CORES"| Utils
+  Guard -->|"GERBIL_BUILD_CORES"| POO
+  Guard -->|"GERBIL_BUILD_CORES"| GSLPH
+  Root --> Receipt["project build receipt"]
+#+end_src
+
+The fresh-root build succeeded with Bazel elapsed =600.187 s= and critical path
+=570.29 s=.  Every time value below includes an explicit unit:
+
+| Action | Guard elapsed | Peak RSS | Max RSS |
+|--------+---------------+----------+---------|
+| =gerbil_utils_package= | =51,801 ms= | =1,748,025,344 bytes= | =15,032,385,536 bytes= |
+| =gerbil_poo_package= | =90,359 ms= | =3,555,540,992 bytes= | =14,001,593,384 bytes= |
+| =gslph_package= | =89,560 ms= | =2,647,064,576 bytes= | =13,657,996,001 bytes= |
+| root POO compile | =218,861 ms= | =4,428,283,904 bytes= | =14,688,788,152 bytes= |
+
+The =gslph_package= action is =20,044 ms=, or =18.3%=, below the previously
+recorded macOS package hotspot of =109,604 ms=.  This is a package-action
+improvement, not an end-to-end two-minute result.  The four Gerbil project
+actions remain dependency-ordered, and the root runtime stage alone consumed
+=213,495,326 elapsed jiffies= for 379 modules.  The root receipt already reports
+=worker-count=12= on a 12-logical-CPU host, so increasing the worker count is not
+the next root-cause fix.
+
+The next performance owner is the downstream compile/AOT graph and its cache
+partitioning.  Gerbil-Bazel must continue to expose one declared project action,
+one Scheme guard, and one upstream =build.ss=/=std/make= executor; it must not
+introduce a second scheduler to hide downstream graph cost.
+
+The first normal-pin replay later observed host contention and one transient
+child exit 10 while reporting only =678,264,832 bytes= peak RSS against a
+=13,657,996,001 bytes= cap.  A focused retry of the identical pinned
+=gerbil_utils_package= succeeded in =63.959 s=.  Therefore neither run is mixed
+into the fresh-root performance comparison.  The normal pin remains a
+correctness/reproducibility gate, while performance comparisons require the
+identity and coldness tuple defined above.

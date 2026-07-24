@@ -27,6 +27,13 @@ In Rust/Marlin, durable becomes append-only facts, checkpoint materialization, l
 This means =durable-policy= is shared by =session= and =memory= instead of being owned by one module.
 Recovery is a runtime procedure derived from durable policy plus stored facts.
 
+This agenda uses =memory= only as a derived temporal role.  The canonical object
+is the Organization fact/evidence/policy graph with identity, version, lineage,
+authority, and time.  "Memory" is the projection selected for one actor, task,
+model, repository, toolchain, policy epoch, and point in time.  Durable storage
+keeps the history; it does not make every historical item active, applicable, or
+authorized.
+
 ** 10.06.45.30 Evidence Matrix
 *** 10.06.45.30.10 Codex Evidence From =.data/codex=
 The local Codex checkout is at =.data/codex=, revision =cfead68e5d= when this audit was written.
@@ -214,6 +221,78 @@ It is a policy-governed pipeline:
 
 This matches Codex's local memory job pipeline and should become explicit in =poo-flow= as =memory-policy= inheriting or referencing =durable-policy=.
 
+*** 10.06.45.30.80 Self-Improving Harness And Temporal Validity Evidence
+
+"Self-improving harness" already includes self-evolution.  The useful question is
+not whether this is a new name, nor whether the system remains model- and
+harness-centred.  The unresolved question is who may promote a model-produced
+candidate into future steering authority, under which evaluator and world state,
+and how that authority is invalidated.
+
+[[https://lilianweng.github.io/posts/2026-07-04-harness/][Harness Engineering for Self-Improvement]] correctly places permission control,
+evaluation, persistent state, and workflow around the model.  It also names weak
+evaluators, context and memory lifecycle, negative-result preservation, diversity
+collapse, reward hacking, long-term repository health, and the role of humans as
+open challenges.  Its strongest boundary is that the evaluator and permission
+control should sit outside the harness-evolution loop.  This agenda sharpens that
+boundary into a typed promotion transaction instead of treating it as a general
+recommendation for "human review".
+
+The April--June 2026 literature is a rapid and important research wave, but its
+best results remain bounded:
+
+| Work | What it demonstrates | Boundary that remains open |
+|-
+| [[https://arxiv.org/abs/2604.25850][Agentic Harness Engineering (AHE)]] | File-level, reversible harness edits, layered trajectory evidence, and falsifiable next-round predictions improve a fixed coding benchmark. | The verifier, model configuration, editable surface, and benchmark remain externally fixed; the paper does not define temporal applicability or promotion authority for evaluator changes. |
+| [[https://arxiv.org/abs/2603.28052][Meta-Harness]] | A coding agent can search executable harness code while preserving scores, traces, and candidate history in files. | Complete history is queryable, but history items do not carry a validity domain, invalidation rule, or active/history role transition. |
+| [[https://arxiv.org/abs/2605.09998][Continual Harness]] | Reset-free adaptation can create, update, and delete prompts, subagents, skills, and memory artifacts in a fixed game world. | The same model remains the refiner; there is no independent authorization or proof owner for promotion. |
+| [[https://arxiv.org/abs/2605.24539][DemoEvolve]] | Human demonstrations stabilize credit assignment when long-horizon reward is sparse and high-variance. | The result shows why self-rollout selection is not a sufficient audit mechanism; it does not solve open-world validity. |
+| [[https://arxiv.org/abs/2605.30621][Harness Updating Is Not Harness Benefit]] | Producing a plausible harness update and actually using it correctly are different capabilities. | An append-only memory artifact can be correct yet unused, misloaded, or ignored; no expiry/invalidation protocol is evaluated. |
+| [[https://arxiv.org/abs/2606.09498][Self-Harness]] | A propose/evaluate/accept loop with held-in and held-out regression gates can improve a bounded harness. | The held-out split is repeatedly used as a promotion gate inside a fixed task distribution; it is not a permanent external constitutional authority. |
+| [[https://arxiv.org/abs/2605.06527][STALE]] | Later evidence can implicitly invalidate earlier memory; retrieval of the update does not guarantee downstream policy adaptation. | TTL and explicit overwrite are insufficient because invalidation may propagate across related attributes and actions. |
+| [[https://arxiv.org/abs/2606.27472][Supersede]] | Frontier-model performance falls when bounded self-maintained memory must preserve the current value; more memory capacity does not repair the gap. | The bottleneck is the maintenance and supersession policy, not only storage size or model strength. |
+| [[https://arxiv.org/abs/2605.06125][TEBench]] | Passing tests can be stale, and reactive execute-fail-fix agents structurally miss stale and missing tests. | A green evaluator result can itself be expired evidence; evaluator identity and applicability must therefore be versioned and promoted. |
+| [[https://arxiv.org/abs/2606.26511][Temporal Validity / MemStrata]] | A bi-temporal ledger and explicit supersession can prevent stale answers in structured fact replacement. | Structured single-fact replacement does not settle implicit conflicts, evaluator drift, organizational authority, or policy promotion. |
+
+The defensible conclusion is narrower than open-world self-evolution:
+
+#+begin_src text
+bounded mutation
++ fixed evaluator
++ replayable environment
++ reversible acceptance
+=> useful autonomous search inside one validity envelope
+
+It does not imply that the system may rewrite the validity envelope and approve
+that rewrite with the new envelope.
+#+end_src
+
+Human audit therefore is not a percentage of turns.  Operational work can be
+autonomous; adaptation can propose and sandbox candidates; constitutional changes
+to objectives, evaluators, authority, or promotion rules require a separate
+authority path.  Human judgment supplies organizational legitimacy and value
+choice, not infallible factual truth.
+
+*** 10.06.45.30.90 GitHub User-Reported Failure Signals
+
+The following are user reports, not established product-wide root causes.  They
+are useful because they expose concrete failure surfaces that a self-evolution
+loop would amplify:
+
+| Report | Reported symptom | Required control-plane invariant |
+|-
+| [[https://github.com/openai/codex/issues/21269][Codex #21269]] | Active startup/context packets reportedly remain in compacted history and are injected again beside the current active copies. | Content identity, active/history role separation, semantic deduplication, and an exactly-once injection receipt. |
+| [[https://github.com/openai/codex/issues/14589][Codex #14589]] | A reporter's code audit and simulation found tool outputs, patches, and test evidence lost across repeated compaction summaries. | Evidence provenance and role-preserving compaction; a narrative summary cannot replace exact execution evidence. |
+| [[https://github.com/openai/codex/issues/18343][Codex #18343]] | Global memory may influence unrelated repositories and workflows. | Explicit organization/project/worktree/thread scope and an applicability projection, not one undifferentiated memory pool. |
+| [[https://github.com/openai/codex/issues/16900][Codex #16900]] | A quiet but healthy child can be mistaken for a stalled child, causing duplicate execution. | Liveness, terminal-state, claim, and exactly-once dispatch receipts. |
+| [[https://github.com/anthropics/claude-code/issues/41666][Claude Code #41666]] | A reporter combined auto-memory with SessionStart/PostCompact hooks and observed up to three injections of the same content. | Injection-source identity, causal/semantic deduplication, and receipt-visible composition across product and user hooks. |
+| [[https://github.com/anthropics/claude-code/issues/27755][Claude Code #27755]] | A reporter found missing or incomplete subagent lifecycle hook events, leaving stale active sentinels and partial traces. | Lifecycle events must be durable transaction boundaries before their traces can authorize promotion, cleanup, or proof claims. |
+
+These reports show why self-evolution cannot begin at "reflection writes a better
+memory file".  Without lifecycle identity, current-state projection, evidence
+preservation, and exactly-once effects, an ordinary runtime defect becomes a
+persistent and self-reinforcing steering bias.
+
 ** 10.06.45.40 Design Approaches
 *** 10.06.45.40.10 Approach A: Git/Checkpoint Wrapper Only
 This copies the visible Claude Code checkpoint affordance.
@@ -353,6 +432,214 @@ The durable runtime should separate these categories.
 
 8. Sandbox ledger:
    placement, handle id, shared/clone/isolate mode, active resources, close/reopen facts.
+
+** 10.06.45.75 Semantic Role Promotion And Temporal Applicability
+
+The primary operation is not a memory write.  It is a semantic privilege
+transition:
+
+#+begin_src text
+Trace/Event
+  -> Evidence
+  -> Claim
+  -> Candidate Policy/Skill/Evaluator
+  -> Active Harness Projection
+#+end_src
+
+Each arrow grants additional influence over future action.  Model output begins
+as an observation or candidate.  It must not acquire policy authority merely
+because it was written to Markdown, JSON, a vector index, or an Org document.
+Org structure and contracts give the transition a canonical representation;
+Authority and proof determine whether the transition is allowed.
+
+Expiry is role-specific:
+
+| Role | Temporal rule |
+|-
+| Event or trace | Remains a historical fact; its occurrence does not expire. |
+| Evidence | Its weight, scope, verifier, or applicability can expire. |
+| Claim | May be superseded or become inapplicable without deleting its history. |
+| Policy or skill | May be revoked, attenuated, or excluded from the active projection. |
+| Evaluator or test | May still execute and pass while no longer validating current semantics. |
+| Authority | Delegation, lease, quorum, or policy epoch can expire independently of content. |
+
+Applicability needs at least four coordinates:
+
+1. valid time: when the claim is true in the represented world;
+2. record/admission time: when the Organization accepted the item;
+3. authority epoch: which delegation and policy constitution authorized it;
+4. world fingerprint: the relevant organization, model, harness, repository,
+   tool/API, evaluator, and runtime versions.
+
+The active harness is therefore a projection, not a memory directory:
+
+#+begin_src text
+H(t) = project(
+  CanonicalOrganizationBundle,
+  actor, task, model, harness, repository, toolchain,
+  evaluator epoch, authority epoch, world fingerprint, t)
+#+end_src
+
+Content identity and version, provenance, active/history roles, exactly-once
+materialization, semantic/causal deduplication, invalidation propagation, and
+injection receipts are consequences of making this role transition transactional.
+They are not the definition of memory.
+
+Three critical limits remain:
+
+- exactly-once can install the wrong policy exactly once;
+- a receipt proves that a named transition occurred, not that its semantic claim
+  or evaluator was correct;
+- deduplication by object identity does not prevent equivalent content under new
+  identities from being counted repeatedly and overweighting future steering.
+
+The canonical Bundle must therefore preserve counter-evidence, dissent, rejected
+candidates, and invalidation causes.  Canonicalization must not collapse history
+into one self-reinforcing active story.
+
+** 10.06.45.77 POO Flow + Cedar + Lean Dual-Engine Promotion Approval
+
+The normative implementation boundary is specified in
+[[file:149-protocol-person-promotion-rfc.org][149 Protocol Person Promotion And Constitutional Boundary RFC]].
+
+The privilege-promotion core is driven by =poo-flow= plus the Cedar and Lean dual
+engine.  It is not "POO Flow decides, while Cedar and Lean provide optional
+support".  =poo-flow= owns the canonical semantic transaction; Cedar decides
+whether the actor is authorized to request that transition; Lean verifies the
+declared invariants required by that transition.  Neither engine can substitute
+for the other.
+
+This split reduces error classes; it does not create truth.  Cedar can correctly
+evaluate a stale or badly governed policy, and Lean can correctly prove a theorem
+about an obsolete or inadequate specification.  Current policy/spec epochs,
+external evidence, amendment governance, and post-deployment observation remain
+part of the acceptance argument.
+
+The existing owners establish a real substrate:
+
+- [[file:107-agentic-control-plane-ac03-five-facets-design.org][107 AC-03 Five Facets]] binds Organization, Authority, Context, Protocol, and
+  Evidence to one identity universe, schema, epoch, lineage, digest, and
+  validation result.
+- [[file:123-agentic-control-plane-ac08-cedar-token-evidence-roots-design.org][123 AC-08 Cedar Token And Evidence Roots]] defines Cedar decision projection,
+  one-shot =AuthorizedEffectToken= values, semantic/execution roots, atomic
+  mediation, replay protection, and fail-closed indeterminate outcomes.
+- [[file:127-agentic-control-plane-ac09-lean-evidence-proof-bridge-design.org][127 AC-09 Lean/Evidence Proof Bridge]] defines the typed proof case and the Lean
+  obligations for the authorization/effect chain.
+- [[file:129-agentic-control-plane-ac09-qualification-receipt.org][129 AC-09 Qualification Receipt]] records the implemented cross-language
+  qualification of that effect-authorization proof chain.
+
+That substrate is necessary but not sufficient.  AC-08/09 qualify authorization
+and proof of an effect token; they do not, by themselves, prove that an evaluator,
+skill, memory-derived claim, Cedar policy, Lean specification, or complete harness
+may be promoted into the next active Organization epoch.  The promotion protocol
+below remains a separate research and implementation boundary.
+
+| Owner | Promotion responsibility | Must not do |
+|-
+| POO Flow Scheme/POO control plane | Canonicalize the =PromotionIntent= and Bundle delta; resolve identity, role, scope, epochs, evidence, invalidators, rollback, and required obligations; join the two engine decisions. | It must not manufacture Cedar permission or Lean proof success. |
+| Cedar authorization engine | Evaluate =principal/action/resource/context= against the current Authority facet and policy epoch: who may promote this candidate to this role and scope? | It cannot prove semantic correctness, non-regression, or scientific truth. |
+| Lean proof engine | Verify the required proof object against the current specification/kernel epoch: does the transition satisfy the declared invariants? | It cannot grant organizational authority or choose human values. |
+| Human Audit / organizational quorum | Supply legitimacy for constitutional changes through a named principal, quorum, signature, or approval evidence referenced by Cedar. | It is not an ad hoc prompt and not an infallible factual oracle. |
+| Marlin/runtime kernel | Atomically materialize an already-approved transition, emit execution and injection receipts, and preserve rollback/indeterminate state. | It must not reinterpret Organization semantics or promote a failed/unknown decision. |
+
+#+begin_src mermaid
+flowchart TD
+  Candidate["Candidate plus evidence"] --> POO["POO Flow compiles PromotionIntent and Bundle delta"]
+  POO --> Cedar["Cedar: authorized under current Authority epoch?"]
+  POO --> Lean["Lean: proof obligations verified under current spec epoch?"]
+  Cedar --> Join["Fail-closed promotion join"]
+  Lean --> Join
+  Join -->|"both current and complete"| Marlin["Marlin atomically materializes once"]
+  Join -->|"deny, refuted, unknown, stale, or incomplete"| History["Retain candidate/history; do not activate"]
+  Marlin --> Receipt["Promotion, materialization, and injection receipts"]
+  Receipt --> Active["Next active Organization projection"]
+#+end_src
+
+The acceptance rule is conjunctive:
+
+#+begin_src text
+Promote(candidate) =
+  Cedar.PERMIT
+  AND Lean.VERIFIED
+  AND BundleEpochMatches
+  AND AuthorityEpochMatches
+  AND ProofSpecEpochMatches
+  AND EvaluatorApplicabilityMatches
+  AND EvidenceComplete
+  AND MaterializationReceiptReady
+#+end_src
+
+=Deny=, =Refuted=, =Unknown=, missing evidence, stale epochs, incomplete
+receipts, or an indeterminate runtime effect all mean "not promoted".  A proof
+generator may be automated, but the small Lean kernel verifies its result.  A
+Cedar adapter may be automated, but only the canonical Organization Bundle may
+define its principal, resource, action, context, policy identity, and epoch.
+
+The =PromotionIntent= and final receipt must bind at least:
+
+- promotion identity, candidate content digest, schema, and version;
+- provenance and causal evidence references;
+- source role, target role, scope, and active/history projection;
+- Bundle, Cedar policy/entity/decision, Lean theorem/spec/kernel, evaluator, model,
+  repository, toolchain, and runtime identities and epochs;
+- semantic and causal deduplication keys;
+- invalidation triggers, expiry/lease, rollback target, and postconditions;
+- exactly-once claim/materialization identity;
+- injection target, projection digest, source list, and injection receipt.
+
+Constitutional self-amendment requires a cross-epoch rule:
+
+- a new Cedar policy cannot authorize its own installation; the old/current
+  policy epoch plus its required human/quorum path authorizes the transition;
+- a new Lean specification cannot establish its own admissibility only under the
+  new specification; the old trusted kernel/specification verifies the declared
+  translation, compatibility, or amendment obligations;
+- POO Flow binds the old and new Bundle, policy, proof, and evaluator identities
+  into one transition receipt before Marlin can materialize the new epoch.
+
+This places Human Audit at semantic privilege transitions, especially changes to
+objectives, evaluators, authority, proof obligations, and promotion rules.  It
+does not require human approval for every operational step or every candidate
+experiment.  [[file:52-three-loop-human-audit-runtime-plan.org][52 Three Loop Human Audit Runtime Plan]] owns the broader loop boundary;
+this section supplies its dual-engine promotion semantics.
+
+** 10.06.45.78 Falsifiable Self-Evolution Research Program
+
+The architecture should be compared against simpler alternatives rather than
+assumed correct.  Run the same evolving-agent workload under four policies:
+
+1. append-only Markdown memory;
+2. TTL-based memory;
+3. bi-temporal fact supersession;
+4. Org-contract semantic role promotion with the POO Flow + Cedar + Lean gate.
+
+Inject controlled faults:
+
+- explicit fact replacement and implicit cross-attribute invalidation;
+- a passing but stale evaluator/test;
+- model, repository, tool/API, runtime, Cedar policy, Lean specification, and
+  authority-epoch changes;
+- duplicate semantic content under the same and different identities;
+- duplicate or missing injection/materialization receipts;
+- an indeterminate external effect;
+- a quiet child that tempts duplicate dispatch;
+- an attempted self-approval of a new evaluator, Cedar policy, or Lean spec.
+
+Measure:
+
+- stale-action rate and stale-evaluator detection rate;
+- false-promotion and false-rejection rates;
+- invalidation-propagation completeness;
+- duplicate steering weight and exactly-once materialization violations;
+- rollback recovery latency and indeterminate-outcome containment;
+- human audit minutes per accepted semantic privilege transition;
+- long-term regret after the environment or evaluator changes.
+
+The decisive claim is not that the fourth policy stores better memories.  It is
+that it reduces unauthorized or stale promotion without making legitimate
+adaptation prohibitively expensive.  If it cannot beat the simpler baselines on
+that trade-off, the additional Organization, Cedar, Lean, and receipt machinery
+has not justified itself.
 
 ** 10.06.45.80 Milestone Ladder
 *** 10.06.45.80.10 P0: Evidence And Contract Closure
