@@ -63,7 +63,7 @@ EOF
     cat >>"$consumer/MODULE.bazel" <<EOF
 git_override(
     module_name = "gerbil_bazel",
-    commit = "0d5ef5362674d788e0fc9e146b8e9e1daf78f137",
+    commit = "eacdb759f89f7493cf60ab7680256ec5920b44af",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )
 EOF
