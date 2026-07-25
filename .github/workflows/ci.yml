@@ -341,11 +341,57 @@ jobs:
       - name: Validate Bazel target graph
         run: bazel query //...
 
+      - name: Validate Scheme compile action-input isolation
+        id: scheme-input-isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          root_aquery="$RUNNER_TEMP/poo-flow-root-compile-contract-inputs.json"
+          contract_aquery="$RUNNER_TEMP/poo-flow-contract-compile-contract-inputs.json"
+          receipt="$RUNNER_TEMP/poo-flow-scheme-input-isolation-receipt.json"
+          source_pattern='.*src/contract/dependency-source-identity[.]ss'
+
+          bazel aquery --output=jsonproto \
+            "inputs(\"$source_pattern\", //scheme:compile)" \
+            > "$root_aquery"
+          bazel aquery --output=jsonproto \
+            "inputs(\"$source_pattern\", //scheme:dependency_source_contract_compile)" \
+            > "$contract_aquery"
+
+          root_action_count="$(jq '(.actions // []) | length' "$root_aquery")"
+          contract_action_count="$(jq '(.actions // []) | length' "$contract_aquery")"
+          isolated=false
+          if (( root_action_count == 0 && contract_action_count > 0 )); then
+            isolated=true
+          fi
+
+          jq -n \
+            --arg schema "poo-flow.ci.scheme-compile-input-isolation-receipt.v1" \
+            --arg source "src/contract/dependency-source-identity.ss" \
+            --arg rootTarget "//scheme:compile" \
+            --arg contractTarget "//scheme:dependency_source_contract_compile" \
+            --argjson rootActionCount "$root_action_count" \
+            --argjson contractActionCount "$contract_action_count" \
+            --argjson isolated "$isolated" \
+            '{schema: $schema, source: $source, rootTarget: $rootTarget,
+              contractTarget: $contractTarget,
+              rootActionCount: $rootActionCount,
+              contractActionCount: $contractActionCount,
+              isolated: $isolated}' > "$receipt"
+          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
+          echo "root-aquery=$root_aquery" >> "$GITHUB_OUTPUT"
+          echo "contract-aquery=$contract_aquery" >> "$GITHUB_OUTPUT"
+
+          if [[ "$isolated" != "true" ]]; then
+            echo "Scheme contract-only source crossed its declared action boundary" >&2
+            exit 1
+          fi
+
       - name: Build Scheme package through Bazel
         id: scheme-compile
         timeout-minutes: 8
         env:
-          COMPILE_BUDGET_SECONDS: 480
+          COMPILE_RUNAWAY_TIMEOUT_SECONDS: 480
         shell: bash
         run: |
           set -euo pipefail
@@ -361,26 +407,22 @@ jobs:
           elapsed_seconds=$((SECONDS - start_seconds))
           scheme_receipt="bazel-bin/scheme/compile.receipt.json"
           jq -n \
-            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg schema "poo-flow.ci.bazel-phase-observation.v1" \
             --arg phase "scheme-compile" \
             --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
             --argjson status "$build_status" \
             --argjson elapsedSeconds "$elapsed_seconds" \
-            --argjson budgetSeconds "$COMPILE_BUDGET_SECONDS" \
+            --argjson runawayTimeoutSeconds "$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
             --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
             '{schema: $schema, phase: $phase, runner: $runner, status: $status,
-              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
-              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              elapsedSeconds: $elapsedSeconds,
+              runawayTimeoutSeconds: $runawayTimeoutSeconds,
               schemeReceiptAvailable: $schemeReceiptAvailable}' > "$ci_receipt"
           echo "profile=$profile" >> "$GITHUB_OUTPUT"
           echo "ci-receipt=$ci_receipt" >> "$GITHUB_OUTPUT"
 
           if (( build_status != 0 )); then
             exit "$build_status"
-          fi
-          if (( elapsed_seconds > COMPILE_BUDGET_SECONDS )); then
-            echo "Scheme compile exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
-            exit 1
           fi
 
       - name: Validate stable Scheme project receipt v1
@@ -395,6 +437,9 @@ jobs:
           path: |
             ${{ steps.scheme-compile.outputs.ci-receipt }}
             ${{ steps.scheme-compile.outputs.profile }}
+            ${{ steps.scheme-input-isolation.outputs.receipt }}
+            ${{ steps.scheme-input-isolation.outputs.root-aquery }}
+            ${{ steps.scheme-input-isolation.outputs.contract-aquery }}
             bazel-bin/scheme/compile.receipt.json
             bazel-bin/scheme/compile.log
           if-no-files-found: warn
