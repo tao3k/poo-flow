@@ -34,13 +34,12 @@
     execution-policy
     logical-cpu-count
     worker-count
-    spec-count
     coldness-class
     dependency-cache-state))
 
 (def +poo-flow-scheme-compile-sample-set-identity-fields+
   (append +poo-flow-scheme-compile-comparable-identity-fields+
-          '(revision source-digest)))
+          '(revision source-digest spec-count)))
 
 ;; : (-> String Boolean Object Void)
 (def (poo-flow-scheme-compile-performance-require message condition value)
@@ -295,6 +294,10 @@
            (.ref baseline-first 'source-digest))
           (candidate-source-digest-value
            (.ref candidate-first 'source-digest))
+          (baseline-spec-count-value
+           (.ref baseline-first 'spec-count))
+          (candidate-spec-count-value
+           (.ref candidate-first 'spec-count))
           (sample-count-value (length baseline-observations))
           (comparison-identity-value
            (poo-flow-scheme-compile-observation-identity
@@ -315,6 +318,8 @@
           (regression-basis-points regression-basis-points-value)
           (baseline-source-digest baseline-source-digest-value)
           (candidate-source-digest candidate-source-digest-value)
+          (baseline-spec-count baseline-spec-count-value)
+          (candidate-spec-count candidate-spec-count-value)
           (comparison-identity comparison-identity-value)
           (runtime-owner 'poo-flow-scheme-control-plane)
           (runtime-executed #f)))))
@@ -343,6 +348,8 @@
      regression-basis-points
      baseline-source-digest
      candidate-source-digest
+     baseline-spec-count
+     candidate-spec-count
      comparison-identity
      runtime-owner
      runtime-executed)))
@@ -389,6 +396,8 @@
      ("regressionBasisPoints" (.ref receipt 'regression-basis-points))
      ("baselineSourceDigest" (.ref receipt 'baseline-source-digest))
      ("candidateSourceDigest" (.ref receipt 'candidate-source-digest))
+     ("baselineSpecCount" (.ref receipt 'baseline-spec-count))
+     ("candidateSpecCount" (.ref receipt 'candidate-spec-count))
      ("comparisonIdentity"
       (hash
        ("runner"
@@ -414,10 +423,6 @@
         (poo-flow-scheme-compile-performance-alist-ref
          identity
          'worker-count))
-       ("specCount"
-        (poo-flow-scheme-compile-performance-alist-ref
-         identity
-         'spec-count))
        ("coldnessClass"
         (symbol->string
          (poo-flow-scheme-compile-performance-alist-ref

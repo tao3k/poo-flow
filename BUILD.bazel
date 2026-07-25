@@ -46,6 +46,28 @@ filegroup(
 )
 
 filegroup(
+    name = "compile_performance_budget_build_script",
+    srcs = ["compile-performance-budget-build.ss"],
+)
+
+filegroup(
+    name = "compile_performance_budget_sources",
+    srcs = [
+        "gerbil.pkg",
+        "src/build-api/project-compile-performance-budget.ss",
+        "src/utilities/functional.ss",
+    ],
+)
+
+filegroup(
+    name = "compile_performance_budget_test_sources",
+    srcs = [
+        ":compile_performance_budget_sources",
+        "t/build-api-project-compile-performance-budget-test.ss",
+    ],
+)
+
+filegroup(
     name = "runtime_wasm_generator_build_script",
     srcs = ["runtime-wasm-generator-build.ss"],
 )

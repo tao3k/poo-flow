@@ -1,0 +1,92 @@
+{
+  "schema": "poo-flow.ci.scheme-compile-performance-comparison-input.v1",
+  "maximumRegressionBasisPoints": 500,
+  "baselineObservations": [
+    {
+      "revision": "base",
+      "runner": "Linux-X64",
+      "hostSessionId": "host-session/1",
+      "toolchainIdentity": "gerbil-0.18.2+gslph-revision",
+      "sourceDigest": "sha256:base",
+      "executionPolicy": "topology",
+      "logicalCpuCount": 12,
+      "workerCount": 12,
+      "specCount": 389,
+      "coldnessClass": "isolated-runtime-action-cold",
+      "dependencyCacheState": "dependency-actions-seeded",
+      "elapsedMs": 120
+    },
+    {
+      "revision": "base",
+      "runner": "Linux-X64",
+      "hostSessionId": "host-session/1",
+      "toolchainIdentity": "gerbil-0.18.2+gslph-revision",
+      "sourceDigest": "sha256:base",
+      "executionPolicy": "topology",
+      "logicalCpuCount": 12,
+      "workerCount": 12,
+      "specCount": 389,
+      "coldnessClass": "isolated-runtime-action-cold",
+      "dependencyCacheState": "dependency-actions-seeded",
+      "elapsedMs": 100
+    },
+    {
+      "revision": "base",
+      "runner": "Linux-X64",
+      "hostSessionId": "host-session/1",
+      "toolchainIdentity": "gerbil-0.18.2+gslph-revision",
+      "sourceDigest": "sha256:base",
+      "executionPolicy": "topology",
+      "logicalCpuCount": 12,
+      "workerCount": 12,
+      "specCount": 389,
+      "coldnessClass": "isolated-runtime-action-cold",
+      "dependencyCacheState": "dependency-actions-seeded",
+      "elapsedMs": 110
+    }
+  ],
+  "candidateObservations": [
+    {
+      "revision": "head",
+      "runner": "Linux-X64",
+      "hostSessionId": "host-session/1",
+      "toolchainIdentity": "gerbil-0.18.2+gslph-revision",
+      "sourceDigest": "sha256:head",
+      "executionPolicy": "topology",
+      "logicalCpuCount": 12,
+      "workerCount": 12,
+      "specCount": 391,
+      "coldnessClass": "isolated-runtime-action-cold",
+      "dependencyCacheState": "dependency-actions-seeded",
+      "elapsedMs": 119
+    },
+    {
+      "revision": "head",
+      "runner": "Linux-X64",
+      "hostSessionId": "host-session/1",
+      "toolchainIdentity": "gerbil-0.18.2+gslph-revision",
+      "sourceDigest": "sha256:head",
+      "executionPolicy": "topology",
+      "logicalCpuCount": 12,
+      "workerCount": 12,
+      "specCount": 391,
+      "coldnessClass": "isolated-runtime-action-cold",
+      "dependencyCacheState": "dependency-actions-seeded",
+      "elapsedMs": 111
+    },
+    {
+      "revision": "head",
+      "runner": "Linux-X64",
+      "hostSessionId": "host-session/1",
+      "toolchainIdentity": "gerbil-0.18.2+gslph-revision",
+      "sourceDigest": "sha256:head",
+      "executionPolicy": "topology",
+      "logicalCpuCount": 12,
+      "workerCount": 12,
+      "specCount": 391,
+      "coldnessClass": "isolated-runtime-action-cold",
+      "dependencyCacheState": "dependency-actions-seeded",
+      "elapsedMs": 115
+    }
+  ]
+}

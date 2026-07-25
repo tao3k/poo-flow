@@ -13,7 +13,9 @@
 
 (def (make-observation revision source-digest elapsed-ms
                        host-session-id:
-                       (host-session-id "host-session/1"))
+                       (host-session-id "host-session/1")
+                       spec-count:
+                       (spec-count 389))
   (poo-flow-scheme-compile-performance-observation
    revision
    "Linux-X64"
@@ -23,21 +25,24 @@
    'topology
    12
    12
-   389
+   spec-count
    'isolated-runtime-action-cold
    'dependency-actions-seeded
    elapsed-ms))
 
 (def (make-observations revision source-digest elapsed-values
                         host-session-id:
-                        (host-session-id "host-session/1"))
+                        (host-session-id "host-session/1")
+                        spec-count:
+                        (spec-count 389))
   (map
    (lambda (elapsed-ms)
      (make-observation
       revision
       source-digest
       elapsed-ms
-      host-session-id: host-session-id))
+      host-session-id: host-session-id
+      spec-count: spec-count))
    elapsed-values))
 
 (def build-api-project-compile-performance-budget-test
@@ -46,7 +51,11 @@
       (let (receipt
             (poo-flow-scheme-compile-performance-budget-receipt
              (make-observations "base" "sha256:base" '(120 100 110))
-             (make-observations "head" "sha256:head" '(119 111 115))
+             (make-observations
+              "head"
+              "sha256:head"
+              '(119 111 115)
+              spec-count: 391)
              500))
         (check-equal?
          (poo-flow-scheme-compile-performance-budget-receipt-accepted?
@@ -57,6 +66,8 @@
         (check-equal? (.ref receipt 'relative-ceiling-ms) 116)
         (check-equal? (.ref receipt 'outcome) 'accepted)
         (check-equal? (.ref receipt 'sample-count) 3)
+        (check-equal? (.ref receipt 'baseline-spec-count) 389)
+        (check-equal? (.ref receipt 'candidate-spec-count) 391)
         (check-equal? (.ref receipt 'runtime-executed) #f)
         (check-equal?
          (hash-ref

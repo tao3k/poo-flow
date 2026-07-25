@@ -84,6 +84,41 @@ healthy-host reproduction and CI regression budget.
 
 ** Versioned build-source identity and comparable performance receipts
 
+The comparison identity and the workload descriptor are intentionally
+different.  Cross-revision comparison requires the same runner, host session,
+toolchain identity, execution policy, logical CPU count, worker count,
+coldness class, and dependency-cache state.  =specCount= is instead a
+side-local workload descriptor: every sample within one revision must agree,
+while the baseline and candidate may legitimately contain different numbers
+of source specifications.  Both counts remain explicit in the comparison
+receipt so a reviewer can distinguish code growth from a runtime regression.
+
+The JSON boundary is implemented by a small Gerbil adapter over the POO-native
+budget objects.  Its Bazel package contains only
+=src/utilities/functional.ss= and
+=src/build-api/project-compile-performance-budget.ss=, plus the upstream-style
+=:clan/building= entry point.  The validator therefore cannot pull the root
+=//scheme:compile= action into an otherwise lightweight policy check.
+
+#+begin_src mermaid
+flowchart LR
+    B["Baseline samples<br/>one revision and one specCount"] --> P["POO-native performance budget"]
+    C["Candidate samples<br/>one revision and one specCount"] --> P
+    I["Cross-side identity<br/>same host, toolchain, policy, CPU, workers, cache, coldness"] --> P
+    P --> R["Comparison receipt<br/>baselineSpecCount + candidateSpecCount"]
+    R --> A{"Median within<br/>relative ceiling?"}
+    A -->|yes| OK["accepted"]
+    A -->|no| BAD["regressed + nonzero validator exit"]
+#+end_src
+
+The focused Bazel gates are
+=//scheme:compile_performance_budget_unit_test= and
+=//scheme:compile_performance_budget_validator_test=.  Both must remain
+dependency-disconnected from =//scheme:compile=.  A manual same-host 3+3 cold
+sampler and a warm/no-op replay are the next evidence gate; they are not part
+of ordinary pull-request CI because they deliberately execute multiple cold
+root actions.
+
 POO Contract remains the unique canonical owner.  The build-source identity is
 not another owner, contract store, or memory layer.  It is a derived runtime
 receipt over the exact source graph that one compile invocation observed.

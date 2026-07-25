@@ -60,6 +60,19 @@ filegroup(
     ],
 )
 
+[
+    filegroup(
+        name = name,
+        srcs = [project],
+        output_group = "project_root",
+    )
+    for name, project in [
+        ("gerbil_utils_package_project_root", ":gerbil_utils_package"),
+        ("gerbil_poo_package_project_root", ":gerbil_poo_package"),
+        ("gslph_package_project_root", ":gslph_package"),
+    ]
+]
+
 gerbil_project_compile(
     name = "dependency_source_contract_compile",
     srcs = ["//:dependency_source_contract_sources"],
@@ -95,6 +108,31 @@ gerbil_project_compile(
     require_library_output = True,
     receipt_line_prefix = "POO_FLOW_RUNTIME_WASM_GENERATOR_BUILD_RECEIPT ",
     deps = [":gerbil_poo_package"],
+)
+
+gerbil_project_compile(
+    name = "compile_performance_budget_package",
+    srcs = ["//:compile_performance_budget_sources"],
+    args = ["compile"],
+    build_script = "//:compile_performance_budget_build_script",
+    process_guard = True,
+    require_library_output = True,
+    deps = [":gerbil_poo_package"],
+)
+
+filegroup(
+    name = "compile_performance_budget_package_project_root",
+    srcs = [":compile_performance_budget_package"],
+    output_group = "project_root",
+)
+
+gerbil_project_test(
+    name = "compile_performance_budget_unit_test",
+    size = "small",
+    srcs = "//:compile_performance_budget_test_sources",
+    project = ":compile_performance_budget_package",
+    source_root_marker = "//:scheme_source_root_marker",
+    tests = ["//:t/build-api-project-compile-performance-budget-test.ss"],
 )
 
 filegroup(
@@ -214,6 +252,30 @@ sh_test(
     ],
 )
 
+sh_test(
+    name = "compile_performance_budget_validator_test",
+    size = "small",
+    srcs = ["validate_compile_performance_budget_v1_test.sh"],
+    args = [
+        "$(rlocationpath @local_gerbil//:gxi)",
+        "$(rlocationpath :validate_compile_performance_budget_v1.ss)",
+        "$(rlocationpath :compile_performance_budget_package_project_root)",
+        "$(rlocationpath :gerbil_poo_package_project_root)",
+        "$(rlocationpath :gerbil_utils_package_project_root)",
+        "$(rlocationpath :compile_performance_budget_accepted.json)",
+        "$(rlocationpath :compile_performance_budget_regressed.json)",
+    ],
+    data = [
+        ":compile_performance_budget_package_project_root",
+        ":compile_performance_budget_accepted.json",
+        ":compile_performance_budget_regressed.json",
+        ":gerbil_poo_package_project_root",
+        ":gerbil_utils_package_project_root",
+        ":validate_compile_performance_budget_v1.ss",
+        "@local_gerbil//:gxi",
+    ],
+)
+
 gerbil_project_projection(
     name = "wheel_smoke_projection_artifact",
     output_name = "wheel_smoke.ss.poo-flow-projection.sexp",
@@ -260,6 +322,8 @@ test_suite(
     name = "tests",
     tests = [
         ":cli_support_tests",
+        ":compile_performance_budget_unit_test",
+        ":compile_performance_budget_validator_test",
         ":contract_tests",
         ":integration_tests",
         ":protocol_person_promotion_test",
