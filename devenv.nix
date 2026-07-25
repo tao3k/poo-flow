@@ -7,6 +7,7 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
+    pkgs.actionlint
     pkgs.bazelisk
     pkgs.emscripten
     pkgs.lld

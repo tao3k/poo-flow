@@ -114,6 +114,12 @@ test-runtime-c-leaks:
 test-performance:
     {{ bazel }} test --test_output=errors {{ scheme_performance_tests }}
 
+# Run an identity-scoped same-host cold-compile audit against an existing baseline checkout.
+[group('performance')]
+audit-scheme-compile baseline_workspace baseline_revision candidate_revision host_session_id runner_identity output_directory sample_count="3" maximum_regression_basis_points="500":
+    {{ bazel }} run //scheme:compile_performance_audit -- "{{ bazel }}" "{{ baseline_workspace }}" "{{ justfile_directory() }}" "{{ baseline_revision }}" "{{ candidate_revision }}" "{{ host_session_id }}" "{{ runner_identity }}" "{{ output_directory }}" "{{ sample_count }}" "{{ maximum_regression_basis_points }}"
+    {{ bazel }} run //scheme:validate_compile_performance_budget -- "{{ output_directory }}/comparison-input.json" "{{ output_directory }}/comparison-receipt.json"
+
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
 check: query build test test-gerbil-capability test-scheme-receipt test-external-bazel-module

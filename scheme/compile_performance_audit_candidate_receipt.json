@@ -1,0 +1,18 @@
+{
+  "buildReceipt": {
+    "elapsed-ms": 104,
+    "execution-policy": "topology",
+    "logical-cpu-count": 4,
+    "source-identity": {
+      "digest": "sha256:candidate",
+      "spec-count": 391
+    },
+    "worker-count": 4
+  },
+  "dependencySourceResolutions": [
+    {
+      "logicalPackage": "fixture",
+      "observedRevision": "same-revision"
+    }
+  ]
+}

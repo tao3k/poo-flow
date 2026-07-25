@@ -276,6 +276,66 @@ sh_test(
     ],
 )
 
+sh_binary(
+    name = "compile_performance_audit",
+    srcs = ["run_compile_performance_audit_v1.sh"],
+    args = [
+        "$(rlocationpath @local_gerbil//:gxi)",
+        "$(rlocationpath :run_compile_performance_audit_v1.ss)",
+    ],
+    data = [
+        ":run_compile_performance_audit_v1.ss",
+        "@local_gerbil//:gxi",
+    ],
+)
+
+sh_test(
+    name = "compile_performance_audit_test",
+    size = "small",
+    srcs = ["run_compile_performance_audit_v1_test.sh"],
+    args = [
+        "$(rlocationpath @local_gerbil//:gxi)",
+        "$(rlocationpath :run_compile_performance_audit_v1.ss)",
+        "$(rlocationpath :fake_bazel_compile_performance_audit.sh)",
+        "$(rlocationpath :compile_performance_audit_baseline_receipt.json)",
+        "$(rlocationpath :compile_performance_audit_candidate_receipt.json)",
+        "$(rlocationpath :validate_compile_performance_budget_v1.ss)",
+        "$(rlocationpath :compile_performance_budget_package_project_root)",
+        "$(rlocationpath :gerbil_poo_package_project_root)",
+        "$(rlocationpath :gerbil_utils_package_project_root)",
+    ],
+    data = [
+        ":compile_performance_audit_baseline_receipt.json",
+        ":compile_performance_audit_candidate_receipt.json",
+        ":compile_performance_budget_package_project_root",
+        ":fake_bazel_compile_performance_audit.sh",
+        ":gerbil_poo_package_project_root",
+        ":gerbil_utils_package_project_root",
+        ":run_compile_performance_audit_v1.ss",
+        ":validate_compile_performance_budget_v1.ss",
+        "@local_gerbil//:gxi",
+    ],
+)
+
+sh_binary(
+    name = "validate_compile_performance_budget",
+    srcs = ["validate_compile_performance_budget_v1.sh"],
+    args = [
+        "$(rlocationpath @local_gerbil//:gxi)",
+        "$(rlocationpath :validate_compile_performance_budget_v1.ss)",
+        "$(rlocationpath :compile_performance_budget_package_project_root)",
+        "$(rlocationpath :gerbil_poo_package_project_root)",
+        "$(rlocationpath :gerbil_utils_package_project_root)",
+    ],
+    data = [
+        ":compile_performance_budget_package_project_root",
+        ":gerbil_poo_package_project_root",
+        ":gerbil_utils_package_project_root",
+        ":validate_compile_performance_budget_v1.ss",
+        "@local_gerbil//:gxi",
+    ],
+)
+
 gerbil_project_projection(
     name = "wheel_smoke_projection_artifact",
     output_name = "wheel_smoke.ss.poo-flow-projection.sexp",
@@ -322,6 +382,7 @@ test_suite(
     name = "tests",
     tests = [
         ":cli_support_tests",
+        ":compile_performance_audit_test",
         ":compile_performance_budget_unit_test",
         ":compile_performance_budget_validator_test",
         ":contract_tests",
