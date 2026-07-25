@@ -378,9 +378,11 @@ jobs:
               rootActionCount: $rootActionCount,
               contractActionCount: $contractActionCount,
               isolated: $isolated}' > "$receipt"
-          echo "receipt=$receipt" >> "$GITHUB_OUTPUT"
-          echo "root-aquery=$root_aquery" >> "$GITHUB_OUTPUT"
-          echo "contract-aquery=$contract_aquery" >> "$GITHUB_OUTPUT"
+          {
+            echo "receipt=$receipt"
+            echo "root-aquery=$root_aquery"
+            echo "contract-aquery=$contract_aquery"
+          } >> "$GITHUB_OUTPUT"
 
           if [[ "$isolated" != "true" ]]; then
             echo "Scheme contract-only source crossed its declared action boundary" >&2
