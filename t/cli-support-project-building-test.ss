@@ -34,6 +34,17 @@
                       (car (cadr spec)))
               #t)
          #t)))
+    (test-case "keeps separately owned packages outside the runtime spec"
+      (poo-flow-project-configure-build-root! ".")
+      (let (runtime-modules
+            (car (cadr (poo-flow-project-build-spec (@list)))))
+        (check-equal?
+         (member "contract/dependency-source-identity.ss" runtime-modules)
+         #f)
+        (check-equal?
+         (member "modules/nono-sandbox/_nono.ss" runtime-modules)
+         #f)))
+
     (test-case "declares only composition-owning user interface modules"
       (poo-flow-project-configure-build-root! ".")
       (let (interface-modules (car (caddr (poo-flow-project-build-spec []))))

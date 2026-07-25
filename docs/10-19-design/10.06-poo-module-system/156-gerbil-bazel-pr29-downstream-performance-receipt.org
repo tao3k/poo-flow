@@ -1,0 +1,315 @@
+#+title: Gerbil-Bazel PR 29 Downstream Performance Receipt
+#+author: POO Flow maintainers
+#+date: 2026-07-25
+#+startup: overview
+
+* Status
+
+Blocked by measured downstream regression.
+
+This receipt extends the convergence boundary in
+=155-gerbil-bazel-downstream-convergence.org=.  It records the first POO Flow
+external-module build pinned to gerbil-bazel commit
+=aa370bb60076745835cf81e8d1e6a48a95006913= from draft PR 29.
+
+* Validation identity
+
+| Field | Value |
+|-------+-------|
+| POO Flow entrypoint | =just test-external-bazel-module= |
+| gerbil-bazel revision | =aa370bb60076745835cf81e8d1e6a48a95006913= |
+| Gerbil version | =0.18.2= |
+| Gerbil revision | =07c84815= |
+| Platform | =darwin-arm64= |
+| Logical and requested cores | 12 |
+| External test root | =/private/var/folders/pj/n33bqzy94yn9wxggj3rny0d00000gn/T/tmp.M6I0fEws5V= |
+| Bazel output identity | =9f2e128949159c5c207071eaa228cb97= |
+| Final command outcome | interrupted after the POO package crossed its performance gate |
+
+No =local_path_override= participated in this validation.  The test consumed a
+remote, commit-addressed =git_override=.
+
+* Package receipts
+
+** gerbil-utils
+
+| Field | Value |
+|-------+-------|
+| Project duration | 57 seconds |
+| Guard elapsed | 54,995 ms |
+| Accepted baseline | 42,364 ms |
+| Regression | 29.8 percent |
+| Effective cores | 12 |
+| Peak RSS | 1,964,687,360 bytes |
+| Runnable core limit applied | false |
+| Outcome | completed, but performance gate failed |
+
+The accepted maximum regression is five percent.  This action therefore fails
+the convergence gate even though its functional build succeeded.
+
+** gerbil-poo
+
+| Field | Value |
+|-------+-------|
+| Project duration | 101 seconds |
+| Guard elapsed | 98,108 ms |
+| Performance gate | 90,000 ms |
+| Gate excess | 9.0 percent |
+| Effective cores | 12 |
+| Peak RSS | 4,551,016,448 bytes |
+| Runnable core limit applied | false |
+| Outcome | completed, but performance gate failed |
+
+The complete external consumer was intentionally interrupted before the next
+package could hide or amortize this regression.
+
+* Root-cause boundary
+
+The gerbil-bazel RFC 0008 audit rejected two speculative library changes:
+
+1. Apple Clang was approximately 95.7 percent slower than the producer
+   compatible GCC 16 compiler for the same generated object input.
+2. Twelve concurrent GCC object jobs completed in 11,466 ms with a peak RSS of
+   4,614,832,128 bytes, so a smaller fixed macOS core cap is not justified.
+
+A native =gxc= probe over the same sixteen Gerbil modules crossed the
+90-second guard without Bazel staging or =build.ss= orchestration.  The
+remaining owner is the gerbil-poo frontend workload: module dependency depth,
+macro expansion, and cross-module optimization.
+
+#+begin_src mermaid
+flowchart TD
+  Pin["POO Flow pins gerbil-bazel aa370bb"] --> Utils["gerbil-utils action"]
+  Utils --> UtilsGate{"at most 44,482 ms"}
+  UtilsGate -->|"54,995 ms: fail"| Stop1["Regression recorded"]
+  Utils --> Poo["gerbil-poo action"]
+  Poo --> PooGate{"at most 90,000 ms"}
+  PooGate -->|"98,108 ms: fail"| Stop2["External build interrupted"]
+
+  Stop1 --> Library["gerbil-bazel scheduling hypotheses rejected"]
+  Stop2 --> Owner["gerbil-poo module and macro graph is next owner"]
+#+end_src
+
+* Promotion decision
+
+gerbil-bazel PR 29 must remain draft.  The POO Flow pin must not be described
+as a performance improvement or promoted as a stable downstream convergence
+revision while the optimized gerbil-poo package gate and the full POO Flow
+compile gate fail.
+
+The adaptive resource guard itself remains valid:
+
+- it used Gerbil =__available-cores= as the CPU-capacity source;
+- it admitted twelve cores within the observed memory budget;
+- it did not apply the runnable-pressure diagnostic as a hard cap;
+- it emitted complete typed receipts for both packages.
+
+The next implementation phase belongs to the POO Flow and GSLPH Scheme build
+owners.  gerbil-bazel must remain the reusable toolchain and project-action
+library.  It must not compensate by parsing =build.ss=, inventing a second
+package manager, or deriving a private POO-specific module graph.
+
+* Rejected optimization experiments
+
+** Production/test spec split
+
+A clean hermetic gerbil-poo archive was rebuilt after removing
+=t/table-testing= from the production =build.ss= spec.  The resulting native
+spec contained fifteen library modules and contained neither
+=t/table-testing= nor the ignored generated =version.ss=.
+
+The guarded build completed, but it did not improve the gate:
+
+| Candidate | Guard elapsed | Peak RSS | Outcome |
+|-----------+---------------+----------+---------|
+| optimized baseline | 98,108 ms | 4,551,016,448 bytes | over 90-second gate |
+| production/test split | 104,755 ms | 4,658,020,352 bytes | slower; rejected |
+
+The gerbil-poo source edit was reverted.  No binary or generated vector was
+added to Git.
+
+** Unoptimized development dependency
+
+The existing declarative =args= interface was used to form the native command
+=gxi build.ss compile --no-optimize=.  The real Bazel package action completed
+in 79,769 ms with a peak RSS of 3,793,813,504 bytes.  That is 18,339 ms
+(18.7 percent) faster than the optimized 98,108 ms package baseline and passes
+the package time gate.
+
+This result is not promotable.  The formal =//scheme:unit_tests= gate ended in
+a segmentation fault after 39.1 seconds.  Disabling optimization therefore
+cannot be the default development or release contract until the ABI failure is
+root-caused independently.  The POO Flow =args= edit was reverted.
+
+* Full POO Flow critical-path receipt
+
+The formal test run materialized a complete project compile receipt before the
+test process failed.  The compile action completed in 301,093 ms with twelve
+workers and a peak RSS of 4,505,632,768 bytes.
+
+| Stage | Spec count | Elapsed |
+|-------+------------+---------|
+| nono-c-ffi | 2 | 1,100,477 jiffies |
+| runtime | 381 | 294,239,987 jiffies |
+| user-interface | 8 | 5,391,686 jiffies |
+
+The runtime stage accounts for approximately 97.7 percent of the guarded
+compile duration.  Optimizing only gerbil-utils or gerbil-poo cannot solve this
+end-to-end critical path.
+
+#+begin_src mermaid
+flowchart LR
+  Spec["POO Flow build spec (391 specs)"]
+  FFI["nono-c-ffi (2 specs)"]
+  Runtime["runtime stage (381 specs)"]
+  UI["user-interface (8 specs)"]
+  Layers["GSLPH topology layers"]
+  Process["one gxi process"]
+  Optimizer["Gerbil optimize! under global driver mutex"]
+  Backend["pending Gambit/C jobs"]
+  Receipt["301,093 ms compile receipt"]
+
+  Spec --> FFI
+  Spec --> Runtime
+  Spec --> UI
+  Runtime --> Layers
+  Layers --> Process
+  Process --> Optimizer
+  Process --> Backend
+  Optimizer --> Receipt
+  Backend --> Receipt
+#+end_src
+
+* Upstream-compatible ownership boundary
+
+Gerbil upstream already provides parallel workers in =std/make=.  Its compiler
+driver also deliberately protects =optimize!= with a process-global driver
+mutex, and =std/make= executes pending Gambit/C jobs after the module build
+barrier.  The observed frontend serialization is therefore an upstream
+execution property, not evidence that Bazel failed to pass the host CPU count.
+
+GSLPH currently computes dependency topology layers, but
+=build-requests-run!= executes package stages sequentially and each POO runtime
+layer remains inside the same gxi process.  The next design must preserve the
+upstream compiler and move parallelism to explicit project-owned component
+boundaries:
+
+#+begin_src mermaid
+flowchart LR
+  Manifest["POO/GSLPH declarative component manifest"]
+  DAG["Component dependency DAG"]
+  A["Component action A: native std/make"]
+  B["Component action B: native std/make"]
+  C["Component action C: native std/make"]
+  Guard["Scheme process-tree resource guard"]
+  Artifacts["Atomic component artifacts and receipts"]
+  Consumer["POO runtime/test consumers"]
+
+  Manifest --> DAG
+  DAG --> A
+  DAG --> B
+  DAG --> C
+  A --> Guard
+  B --> Guard
+  C --> Guard
+  Guard --> Artifacts
+  Artifacts --> Consumer
+#+end_src
+
+The project or GSLPH must declare the component graph.  gerbil-bazel may
+execute those declared Gerbil projects and cache their outputs, but it must not
+parse Scheme source or infer POO domain ownership.  Release builds must keep
+Gerbil optimization enabled, all worker limits must remain host-derived, and
+promotion requires both green unit tests and end-to-end performance receipts.
+
+* Source-ownership parity correction
+
+The local dynamic source scan initially reported 382 runtime specs while the
+hermetic Bazel receipt reported 381.  This was not a missing Bazel source.  The
+module =src/contract/dependency-source-identity.ss= is intentionally owned by
+the independent =dependency_source_contract_sources= package and excluded from
+=scheme_runtime_sources=.  The local Scheme predicate did not express that
+ownership boundary and therefore pulled the module back into the monolithic
+runtime spec.
+
+=+poo-flow-project-runtime-module-owners+= now declares both separately owned
+modules as a pure module-to-owner manifest.  The runtime predicate projects
+from that manifest instead of maintaining an unrelated negative list:
+
+- =contract/dependency-source-identity.ss=, compiled by the dependency-source
+  contract package;
+- =modules/nono-sandbox/_nono.ss=, compiled by the C FFI stage.
+
+The focused =cli-support-project-building-test.ss= gate passed with all checks.
+The native topology projection now agrees with the hermetic receipt at exactly
+381 runtime specs.
+
+* Runtime topology feasibility projection
+
+The corrected graph has 39 dependency layers.  Its maximum layer width is 57;
+16 layers contain at least six modules and 12 layers contain at least twelve
+modules.  Six layers are singletons.
+
+| Property | Value |
+|----------+-------|
+| runtime specs | 381 |
+| dependency layers | 39 |
+| maximum layer width | 57 |
+| layers at least 6 wide | 16 |
+| layers at least 12 wide | 12 |
+| singleton layers | 6 |
+
+This proves that process-level optimized compilation has useful parallel width.
+The implementation still needs dependency-preserving execution windows and
+must not flatten all 39 layers into one unordered pool.
+
+* Persistent optimized worker model
+
+Starting one gxi process per module is rejected.  A representative import of
+the GSLPH building surface costs approximately 3,715 ms before useful module
+work begins.  Repeating that startup for hundreds of modules would dominate
+the compile.
+
+The required execution model is a fixed, host-derived pool of long-lived gxi
+workers:
+
+#+begin_src mermaid
+flowchart LR
+  Plan["POO/GSLPH topology plan (39 layers)"]
+  Parent["Scheme parent scheduler and RSS guard"]
+  Queue["Current-layer module queue"]
+  W1["gxi worker 1 with independent optimizer"]
+  W2["gxi worker 2 with independent optimizer"]
+  WN["gxi worker N with independent optimizer"]
+  Barrier["Layer artifact and ssxi barrier"]
+  Receipt["Per-layer and per-worker JSON receipts"]
+
+  Plan --> Parent
+  Parent --> Queue
+  Queue --> W1
+  Queue --> W2
+  Queue --> WN
+  W1 --> Barrier
+  W2 --> Barrier
+  WN --> Barrier
+  Barrier -->|"next layer"| Queue
+  Parent --> Receipt
+  W1 --> Receipt
+  W2 --> Receipt
+  WN --> Receipt
+#+end_src
+
+Each worker owns a separate Gerbil compiler process and therefore a separate
+driver mutex.  Modules in one dependency layer may run concurrently, while the
+next layer cannot start until the current layer has materialized its library
+and =ssxi= artifacts.  The parent Scheme guard must monitor the complete worker
+process tree and may reduce active workers from current host observations; the
+worker count must never be hard-coded.
+
+For the observed 381-module graph and twelve available workers, the 39 layers
+reduce to 57 ideal equal-cost worker waves.  Using the observed runtime-stage
+average of 772.3 ms per module gives a theoretical, startup-free lower bound of
+approximately 44,020 ms, or 6.68 times faster than the 294,240 ms runtime
+stage.  This is a feasibility bound, not a performance claim: real promotion
+requires measured receipts that include skew, worker startup, artifact
+barriers, RSS, and failure cancellation.

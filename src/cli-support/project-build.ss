@@ -156,8 +156,17 @@
       (lambda () (current-directory previous-directory)))))
 
 ;; : (-> ModulePath Boolean)
+(def +poo-flow-project-runtime-module-owners+
+  '(("contract/dependency-source-identity.ss" . dependency-source-contract)
+    ("modules/nono-sandbox/_nono.ss" . nono-c-ffi)))
+
+(def (poo-flow-project-runtime-module-owner module)
+  (cond
+   ((assoc module +poo-flow-project-runtime-module-owners+) => cdr)
+   (else 'runtime)))
+
 (def (poo-flow-project-runtime-module? module)
-  (not (equal? module "modules/nono-sandbox/_nono.ss")))
+  (eq? (poo-flow-project-runtime-module-owner module) 'runtime))
 
 ;; : (-> ModulePath BuildSpec)
 (def (poo-flow-project-runtime-spec module)
