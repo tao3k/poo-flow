@@ -272,9 +272,13 @@
             (thread-sleep! sample-seconds)
             (loop))))))
     (thread-join! waiter)
-    (let* ((child-exit (vector-ref state 1))
-           (final-outcome (if (eq? outcome 'running) 'completed outcome))
-           (final-exit (if (eq? outcome 'running) child-exit guard-exit))
+      (let* ((child-exit (vector-ref state 1))
+             (final-outcome
+              (cond
+               ((not (eq? outcome 'running)) outcome)
+               ((zero? child-exit) 'completed)
+               (else 'child-failed)))
+             (final-exit (if (eq? outcome 'running) child-exit guard-exit))
            (elapsed-ms
             (inexact->exact
              (round (* 1000 (- (guard-now-seconds) started))))))

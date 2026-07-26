@@ -14,6 +14,7 @@
         "./src/cli-support/project-build.ss"
         "./src/build-api/project-compile-guard.ss"
         (only-in :gerbil/gambit
+                 command-line
                  exit
                  pretty-print))
 
@@ -31,6 +32,19 @@
          help: "Include debug information")
    (flag 'verbose "-V" "--verbose"
          help: "Enable verbose build output")])
+
+(def (poo-flow-project-compile-worker-command
+      release optimized debug verbose)
+  (let (argv (command-line))
+    (unless (and (pair? argv) (pair? (cdr argv)))
+      (error "POO Flow compile supervisor requires gxi and build script argv"
+             argv))
+    (append
+     (list (car argv) (cadr argv) "compile-worker")
+     (if release '("--release") '())
+     (if optimized '("--optimized") '())
+     (if debug '("--debug") '())
+     (if verbose '("--verbose") '()))))
 
 (define-multicall-main)
 
@@ -61,9 +75,21 @@
                              verbose: (verbose #f))
   (help: "Compile the package"
    getopt: +poo-flow-build-getopt+)
-   (poo-flow-project-compile-guarded!
-    (poo-flow-project-options release optimized debug verbose))
-   (exit 0))
+  (poo-flow-project-compile-supervised!
+   (poo-flow-project-options release optimized debug verbose)
+   (poo-flow-project-compile-worker-command
+    release optimized debug verbose))
+  (exit 0))
+
+(define-entry-point (compile-worker release: (release #f)
+                                    optimized: (optimized #f)
+                                    debug: (debug #f)
+                                    verbose: (verbose #f))
+  (help: "Internal supervised project compile worker"
+   getopt: +poo-flow-build-getopt+)
+  (poo-flow-project-compile-guarded!
+   (poo-flow-project-options release optimized debug verbose))
+  (exit 0))
 
 (define-entry-point (clean)
   (help: "Clean package build artifacts"

@@ -400,3 +400,64 @@ the guard must emit a terminal failed-build receipt containing the stopped
 process-tree guard observation, elapsed time, peak RSS, admission snapshot,
 sample identity, and failure classification.  A retry without that evidence
 would be an unqualified repetition rather than a new performance result.
+
+* Scheme supervisor boundary for fatal child termination
+
+The observability gap is now closed at the process boundary rather than with
+an exception handler inside the compiling =gxi=.  An in-process handler cannot
+emit a receipt after =SIGBUS= terminates its process.  The public =compile=
+entry therefore remains in a parent Scheme process, starts the existing
+Scheme process-tree memory guard, and launches an internal =compile-worker=
+entry as a child =gxi=.  The worker name is not advertised as a public build
+entry.
+
+The parent classifies a zero child exit as =completed= and every non-zero exit
+as =child-failed=.  Because the parent survives a fatal child signal, it can
+emit a terminal =poo-flow.project-compile-guard.v1= receipt before raising the
+build failure.  The failed receipt carries =failure-kind=,
+=failure-exit-code=, peak RSS, elapsed milliseconds, timeout state, and the
+original host-admission snapshot.
+
+All project-compile receipts now share one stable POO object shape.
+=completed= and =blocked-host-pressure= receipts contain
+=failure-kind=#f= and =failure-exit-code=#f=; =failed-build= replaces those
+values with the process-guard classification.  JSON projection uses ordinary
+POO slot access for this declared schema.  It no longer misuses =.has?=,
+which does not report dynamic =.o= slots and previously erased the failure
+classification.
+
+#+begin_src mermaid
+flowchart TD
+  Bazel["Bazel Gerbil project action"]
+  Parent["Parent Scheme compile supervisor"]
+  Admit{"Host admission ready?"}
+  Blocked["Emit blocked-host-pressure receipt"]
+  Guard["Start Scheme process-tree memory guard"]
+  Worker["Child gxi: internal compile-worker"]
+  Upstream["Building Framework and upstream std/make"]
+  Exit{"Child exit code"}
+  Success["Child completed receipt"]
+  Failure["Parent emits failed-build receipt"]
+  Raise["Raise build failure to Bazel"]
+
+  Bazel --> Parent
+  Parent --> Admit
+  Admit -- "No" --> Blocked
+  Admit -- "Yes" --> Guard
+  Guard --> Worker
+  Worker --> Upstream
+  Upstream --> Exit
+  Exit -- "0" --> Success
+  Exit -- "non-zero or fatal signal" --> Failure
+  Failure --> Raise
+#+end_src
+
+The real Bazel gate exercised this parent-to-child lifecycle while rebuilding
+the changed Scheme project.  =bazelisk test //scheme:unit_tests= completed
+successfully with one of one test targets passing.  Bazel reported 558.546
+seconds total elapsed time, a roughly 402-second root compile action, a
+119.6-second test action, 32 action-cache hits, and no dependency-package
+rebuild.  This is correctness and observability evidence, not a replacement
+for the blocked three-sample cold-performance median gate.  The formal
+baseline-versus-candidate audit must still be repeated before the GSLPH
+dependency pin can be promoted.

@@ -282,8 +282,10 @@
       (let* ((available-cpu-count
               (build-api-project-compile-guard-available-cpu-count))
              (receipt
-              (.o (schema 'poo-flow.project-compile-guard.v1)
+             (.o (schema 'poo-flow.project-compile-guard.v1)
                   (outcome 'completed)
+                  (failure-kind #f)
+                  (failure-exit-code #f)
                   (build-owner 'gslph-building-framework)
                   (build-mode 'standard-gerbil-make-project)
                   (execution-policy 'topology)
@@ -358,6 +360,8 @@
         (check (hash-get object "version") => 1)
         (check (hash-get object "elapsed-ms") => 199289)
         (check (hash-get object "execution-policy") => "topology")
+        (check (hash-get object "failure-kind") => #f)
+        (check (hash-get object "failure-exit-code") => #f)
         (let (source-identity (hash-get object "source-identity"))
           (check (hash-get source-identity "algorithm") => "sha256")
           (check (hash-get source-identity "spec-count") => 387))
@@ -399,4 +403,57 @@
     (check
      (parameterize ((write-json-sort-keys? #t))
            (json-object->string object))
-         => json-string)))))
+         => json-string)))
+
+    (test-case "failed build preserves the stopped Scheme guard receipt"
+      (let* ((config (poo-flow-project-compile-guard-config '()))
+             (guard-receipt
+              (.o (outcome 'child-failed)
+                  (child-exit-code 138)
+                  (peak-rss-bytes 4831838208)
+                  (elapsed-ms 108226)
+                  (timeout-ms #f)))
+             (receipt
+              (poo-flow-project-compile-failed-receipt
+               config guard-receipt))
+             (object
+              (string->json-object
+               (poo-flow-project-compile-receipt->json-string receipt))))
+        (check (hash-get object "outcome") => "failed-build")
+        (check (hash-get object "failure-kind") => "child-failed")
+        (check (hash-get object "failure-exit-code") => 138)
+        (check (hash-get object "source-identity") => #f)
+        (check (hash-get object "peak-rss-bytes") => 4831838208)
+        (check (hash-get object "elapsed-ms") => 108226)
+        (check (hash-get object "timeout-ms") => #f)
+        (check
+         (hash-get (hash-get object "build-summary") "stage-count")
+         => 0)))
+
+    (test-case "failure boundary stops emits and rethrows exactly once"
+      (let ((config (poo-flow-project-compile-guard-config '()))
+            (stop-count 0)
+            (emitted '())
+            (caught #f))
+        (set! caught
+              (with-catch
+                (lambda (exception) exception)
+                (lambda ()
+                  (poo-flow-project-compile-call-with-failure-receipt
+                   config
+                   (lambda ()
+                     (set! stop-count (+ stop-count 1))
+                     (.o (outcome 'child-failed)
+                         (child-exit-code 138)
+                         (peak-rss-bytes 4831838208)
+                         (elapsed-ms 108226)
+                         (timeout-ms #f)))
+                   (lambda () (error "fixture build failure"))
+                   (lambda (receipt)
+                     (set! emitted (cons receipt emitted))))
+                  #f)))
+        (check (and caught #t) => #t)
+        (check stop-count => 1)
+        (check (length emitted) => 1)
+        (check (.ref (car emitted) 'outcome) => 'failed-build)
+        (check (.ref (car emitted) 'peak-rss-bytes) => 4831838208)))))

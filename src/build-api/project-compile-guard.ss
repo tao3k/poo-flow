@@ -3,6 +3,9 @@
 
 (export poo-flow-project-compile-guard-config
         poo-flow-project-compile-guarded!
+        poo-flow-project-compile-call-with-failure-receipt
+        poo-flow-project-compile-failed-receipt
+        poo-flow-project-compile-supervised!
         poo-flow-project-compile-receipt->alist
         poo-flow-project-compile-receipt->json-object
         poo-flow-project-compile-receipt->json-string)
@@ -384,6 +387,10 @@
    ("version" 1)
    ("outcome"
     (poo-flow-process-memory-guard-json-value (.ref receipt 'outcome)))
+    ("failure-kind"
+     (poo-flow-process-memory-guard-json-value
+      (.ref receipt 'failure-kind)))
+    ("failure-exit-code" (.ref receipt 'failure-exit-code))
    ("build-owner"
     (poo-flow-process-memory-guard-json-value (.ref receipt 'build-owner)))
    ("build-mode"
@@ -443,6 +450,8 @@
   (.o (schema +poo-flow-project-compile-guard-schema+)
       (kind 'project-compile-receipt)
       (outcome 'blocked-host-pressure)
+      (failure-kind #f)
+      (failure-exit-code #f)
       (build-owner (.ref config 'build-owner))
       (build-mode (.ref config 'build-mode))
       (execution-policy (.ref config 'execution-policy))
@@ -471,6 +480,50 @@
       (timeout-ms #f)
       (build '())))
 
+(def (poo-flow-project-compile-failed-receipt config guard-receipt)
+  (.o (schema +poo-flow-project-compile-guard-schema+)
+      (kind 'project-compile-receipt)
+      (outcome 'failed-build)
+      (failure-kind (.ref guard-receipt 'outcome))
+      (failure-exit-code (.ref guard-receipt 'child-exit-code))
+      (build-owner (.ref config 'build-owner))
+      (build-mode (.ref config 'build-mode))
+      (execution-policy (.ref config 'execution-policy))
+      (request-labels (.ref config 'request-labels))
+      (source-identity #f)
+      (source-identity-materialization-elapsed-ms 0)
+      (admission-outcome (.ref config 'admission-outcome))
+      (admission-advisories (.ref config 'admission-advisories))
+      (admission-reasons (.ref config 'admission-reasons))
+      (logical-cpu-count (.ref config 'logical-cpu-count))
+      (runnable-process-count (.ref config 'runnable-process-count))
+      (available-memory-bytes (.ref config 'available-memory-bytes))
+      (rss-headroom-bytes (.ref config 'rss-headroom-bytes))
+      (baseline-rss-bytes (.ref config 'baseline-rss-bytes))
+      (allocatable-memory-bytes (.ref config 'allocatable-memory-bytes))
+      (requested-max-rss-bytes (.ref config 'requested-max-rss-bytes))
+      (admitted-memory-bytes (.ref config 'admitted-memory-bytes))
+      (configured-worker-count (.ref config 'configured-worker-count))
+      (memory-worker-capacity (.ref config 'memory-worker-capacity))
+      (runnable-worker-capacity (.ref config 'runnable-worker-capacity))
+      (worker-count (.ref config 'worker-count))
+      (system-memory-bytes (.ref config 'system-memory-bytes))
+      (max-rss-bytes (.ref config 'max-rss-bytes))
+      (peak-rss-bytes (.ref guard-receipt 'peak-rss-bytes))
+      (elapsed-ms (.ref guard-receipt 'elapsed-ms))
+      (timeout-ms (.ref guard-receipt 'timeout-ms))
+      (build '())
+      (guard guard-receipt)))
+
+(def (poo-flow-project-compile-call-with-failure-receipt
+      config stop! thunk emit!)
+  (with-catch
+    (lambda (exception)
+      (emit!
+       (poo-flow-project-compile-failed-receipt config (stop!)))
+      (raise exception))
+    thunk))
+
 (def (poo-flow-project-compile-with-guard-environment options config)
   (let* ((bindings
           (list
@@ -498,6 +551,31 @@
            (setenv (car entry) (or (cdr entry) "")))
          previous)))))
 
+(def (poo-flow-project-compile-supervised! options child-argv)
+  (let (config (poo-flow-project-compile-guard-config options))
+    (unless (eq? (.ref config 'admission-outcome) 'ready)
+      (let (receipt (poo-flow-project-compile-blocked-receipt config))
+        (poo-flow-project-compile-receipt-emit! receipt)
+        (error "POO Flow project compile blocked by host pressure"
+               (.ref config 'admission-reasons))))
+    (let* ((guard-receipt
+            (poo-flow-process-memory-guard-run
+             '(compile building-framework-project-child)
+             (.ref config 'max-rss-bytes)
+             (.ref config 'timeout-seconds)
+             child-argv
+             (.ref config 'sample-seconds)))
+           (child-exit-code (.ref guard-receipt 'child-exit-code)))
+      (if (zero? child-exit-code)
+        guard-receipt
+        (let (receipt
+              (poo-flow-project-compile-failed-receipt
+               config guard-receipt))
+          (poo-flow-project-compile-receipt-emit! receipt)
+          (error "POO Flow supervised project compile failed"
+                 (.ref guard-receipt 'outcome)
+                 child-exit-code))))))
+
 (def (poo-flow-project-compile-guarded! options)
   (let (config (poo-flow-project-compile-guard-config options))
     (unless (eq? (.ref config 'admission-outcome) 'ready)
@@ -523,64 +601,75 @@
       (dynamic-wind
         (lambda () #!void)
         (lambda ()
-          (let* ((project-compile-result
-                  (poo-flow-project-compile-with-guard-environment
-                   options config))
-                 (build-receipt
-                  (.ref project-compile-result 'build))
-                 (identity-value
-                  (.ref project-compile-result 'source-identity))
-                 (identity-materialization-duration-ms
-                  (.ref project-compile-result
-                        'source-identity-materialization-elapsed-ms))
-                 (completed-guard-receipt (stop!)))
-            (let (receipt
-                  (.o (schema +poo-flow-project-compile-guard-schema+)
-                      (kind 'project-compile-receipt)
-                      (outcome 'completed)
-                      (build-owner (.ref config 'build-owner))
-                      (build-mode (.ref config 'build-mode))
-                      (execution-policy (.ref config 'execution-policy))
-                      (request-labels (.ref config 'request-labels))
-                      (source-identity identity-value)
-                      (source-identity-materialization-elapsed-ms
-                       identity-materialization-duration-ms)
-                      (admission-outcome (.ref config 'admission-outcome))
-                      (admission-advisories
-                       (.ref config 'admission-advisories))
-                      (admission-reasons (.ref config 'admission-reasons))
-                      (logical-cpu-count (.ref config 'logical-cpu-count))
-                      (runnable-process-count
-                       (.ref config 'runnable-process-count))
-                      (available-memory-bytes
-                       (.ref config 'available-memory-bytes))
-                      (rss-headroom-bytes
-                       (.ref config 'rss-headroom-bytes))
-                      (baseline-rss-bytes
-                       (.ref config 'baseline-rss-bytes))
-                      (allocatable-memory-bytes
-                       (.ref config 'allocatable-memory-bytes))
-                      (requested-max-rss-bytes
-                       (.ref config 'requested-max-rss-bytes))
-                      (admitted-memory-bytes
-                       (.ref config 'admitted-memory-bytes))
-                      (configured-worker-count
-                       (.ref config 'configured-worker-count))
-                      (memory-worker-capacity
-                       (.ref config 'memory-worker-capacity))
-                      (runnable-worker-capacity
-                       (.ref config 'runnable-worker-capacity))
-                      (worker-count (.ref config 'worker-count))
-                      (system-memory-bytes
-                       (.ref config 'system-memory-bytes))
-                      (max-rss-bytes (.ref config 'max-rss-bytes))
-                      (peak-rss-bytes
-                       (.ref completed-guard-receipt 'peak-rss-bytes))
-                      (elapsed-ms
-                       (.ref completed-guard-receipt 'elapsed-ms))
-                      (timeout-ms (.ref completed-guard-receipt 'timeout-ms))
-                      (build build-receipt)
-                      (guard completed-guard-receipt)))
-              (poo-flow-project-compile-receipt-emit! receipt)
-              receipt)))
+          (poo-flow-project-compile-call-with-failure-receipt
+            config
+            stop!
+            (lambda ()
+              (let* ((project-compile-result
+                      (poo-flow-project-compile-with-guard-environment
+                       options config))
+                     (build-receipt
+                      (.ref project-compile-result 'build))
+                     (identity-value
+                      (.ref project-compile-result 'source-identity))
+                     (identity-materialization-duration-ms
+                      (.ref project-compile-result
+                            'source-identity-materialization-elapsed-ms))
+                     (completed-guard-receipt (stop!)))
+                (let (receipt
+                      (.o (schema +poo-flow-project-compile-guard-schema+)
+                          (kind 'project-compile-receipt)
+                    (outcome 'completed)
+                    (failure-kind #f)
+                    (failure-exit-code #f)
+                          (build-owner (.ref config 'build-owner))
+                          (build-mode (.ref config 'build-mode))
+                          (execution-policy (.ref config 'execution-policy))
+                          (request-labels (.ref config 'request-labels))
+                          (source-identity identity-value)
+                          (source-identity-materialization-elapsed-ms
+                           identity-materialization-duration-ms)
+                          (admission-outcome
+                           (.ref config 'admission-outcome))
+                          (admission-advisories
+                           (.ref config 'admission-advisories))
+                          (admission-reasons
+                           (.ref config 'admission-reasons))
+                          (logical-cpu-count
+                           (.ref config 'logical-cpu-count))
+                          (runnable-process-count
+                           (.ref config 'runnable-process-count))
+                          (available-memory-bytes
+                           (.ref config 'available-memory-bytes))
+                          (rss-headroom-bytes
+                           (.ref config 'rss-headroom-bytes))
+                          (baseline-rss-bytes
+                           (.ref config 'baseline-rss-bytes))
+                          (allocatable-memory-bytes
+                           (.ref config 'allocatable-memory-bytes))
+                          (requested-max-rss-bytes
+                           (.ref config 'requested-max-rss-bytes))
+                          (admitted-memory-bytes
+                           (.ref config 'admitted-memory-bytes))
+                          (configured-worker-count
+                           (.ref config 'configured-worker-count))
+                          (memory-worker-capacity
+                           (.ref config 'memory-worker-capacity))
+                          (runnable-worker-capacity
+                           (.ref config 'runnable-worker-capacity))
+                          (worker-count (.ref config 'worker-count))
+                          (system-memory-bytes
+                           (.ref config 'system-memory-bytes))
+                          (max-rss-bytes (.ref config 'max-rss-bytes))
+                          (peak-rss-bytes
+                           (.ref completed-guard-receipt 'peak-rss-bytes))
+                          (elapsed-ms
+                           (.ref completed-guard-receipt 'elapsed-ms))
+                          (timeout-ms
+                           (.ref completed-guard-receipt 'timeout-ms))
+                          (build build-receipt)
+                          (guard completed-guard-receipt)))
+                  (poo-flow-project-compile-receipt-emit! receipt)
+                  receipt)))
+            poo-flow-project-compile-receipt-emit!))
         (lambda () (stop!)))))))

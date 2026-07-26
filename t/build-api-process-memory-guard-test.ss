@@ -28,6 +28,12 @@
         (check (.ref receipt 'timeout-ms) => #f)
         (check (exact-integer? (.ref receipt 'peak-rss-bytes)) => #t)
         (check (>= (.ref receipt 'peak-rss-bytes) 0) => #t)))
+
+    (test-case "classifies a nonzero child exit without killing the supervisor"
+      (let (receipt (run-guard 'child-failure 256 #f "missing-mode"))
+        (check (.ref receipt 'outcome) => 'child-failed)
+        (check (.ref receipt 'exit-code) => 64)
+        (check (.ref receipt 'child-exit-code) => 64)))
     (test-case "macro lowers guard policy to Building Framework stage"
       (let* ((stage-receipt (build-stage-run! guarded-complete-stage #f))
              (guard-receipt (build-stage-receipt-result stage-receipt)))
