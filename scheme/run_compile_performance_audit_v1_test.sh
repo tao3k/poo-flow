@@ -23,9 +23,12 @@ utils_root=$(resolve_runfile "${9:?Gerbil Utils root is required}")
 root="${TEST_TMPDIR:?TEST_TMPDIR is required}/audit"
 baseline_workspace="$root/baseline"
 candidate_workspace="$root/candidate"
-output_directory="$root/output"
+output_storage="$root/output-storage"
+output_directory="$root/output-alias"
 
-mkdir -p "$baseline_workspace" "$candidate_workspace"
+mkdir -p "$baseline_workspace" "$candidate_workspace" "$output_storage"
+ln -s "$output_storage" "$output_directory"
+canonical_output_directory=$(cd "$output_directory" && pwd -P)
 cp "$baseline_receipt" "$baseline_workspace/compile.receipt.json"
 cp "$candidate_receipt" "$candidate_workspace/compile.receipt.json"
 
@@ -66,3 +69,5 @@ grep -F '"candidateSpecCount":391' \
   "$output_directory/comparison-receipt.json" >/dev/null
 grep -F '"actionCount":0' \
   "$output_directory/warm-noop-receipt.json" >/dev/null
+grep -F "\"outputDirectory\":\"$canonical_output_directory\"" \
+  "$output_directory/audit-receipt.json" >/dev/null

@@ -2,11 +2,15 @@
 set -euo pipefail
 
 output_base=
+max_idle_seconds=
 lockfile_mode=
 for argument in "$@"; do
   case "$argument" in
     --output_base=*)
       output_base=${argument#--output_base=}
+      ;;
+    --max_idle_secs=*)
+      max_idle_seconds=${argument#--max_idle_secs=}
       ;;
     --lockfile_mode=*)
       lockfile_mode=${argument#--lockfile_mode=}
@@ -24,8 +28,31 @@ if [[ "$lockfile_mode" != off ]]; then
   exit 2
 fi
 
-command=${2:?Bazel command is required}
-shift 2
+if [[ "$max_idle_seconds" != 30 ]]; then
+  printf 'performance audit requires --max_idle_secs=30\n' >&2
+  exit 2
+fi
+
+command=
+startup_argument_count=0
+for argument in "$@"; do
+  case "$argument" in
+    --*)
+      startup_argument_count=$((startup_argument_count + 1))
+      ;;
+    *)
+      command=$argument
+      break
+      ;;
+  esac
+done
+
+if [[ -z "$command" ]]; then
+  printf 'Bazel command is required\n' >&2
+  exit 2
+fi
+
+shift $((startup_argument_count + 1))
 
 case "$command" in
   clean)

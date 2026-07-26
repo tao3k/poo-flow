@@ -88,8 +88,20 @@
 (def (ensure-directory! path)
   (run-command! "/" (list "mkdir" "-p" path)))
 
+(def (canonical-directory! path)
+  (ensure-directory! path)
+  (let (canonical
+        (parameterize ((current-directory path))
+          (current-directory)))
+    (if (and (> (string-length canonical) 1)
+             (string-suffix? "/" canonical))
+      (substring canonical 0 (- (string-length canonical) 1))
+      canonical)))
+
 (def (bazel-startup-arguments bazel output-base)
-  (list bazel (string-append "--output_base=" output-base)))
+  (list bazel
+        (string-append "--output_base=" output-base)
+        "--max_idle_secs=30"))
 
 (def (bazel-command bazel output-base command arguments)
   (append (bazel-startup-arguments bazel output-base)
@@ -317,6 +329,8 @@
          (maximum-regression-basis-points
           (nonnegative-basis-points
            maximum-regression-basis-points-text))
+         (output-directory
+          (canonical-directory! output-directory))
          (dependency-cache
           (path-join output-directory "dependency-cache")))
     (ensure-directory! output-directory)
@@ -358,9 +372,10 @@
              (cons "schema" +audit-receipt-schema+)
              (cons "baselineRevision" baseline-revision)
              (cons "candidateRevision" candidate-revision)
-             (cons "hostSessionId" host-session-id)
-             (cons "runner" runner)
-             (cons "sampleCount" sample-count)
+                         (cons "hostSessionId" host-session-id)
+                         (cons "runner" runner)
+                         (cons "outputDirectory" output-directory)
+                         (cons "sampleCount" sample-count)
              (cons "comparisonInput" comparison-input-path)
              (cons "warmNoopReceipt" warm-receipt-path)
              (cons "outcome" "observed"))))

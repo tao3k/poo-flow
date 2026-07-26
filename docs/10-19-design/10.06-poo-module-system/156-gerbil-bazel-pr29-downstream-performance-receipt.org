@@ -461,3 +461,71 @@ rebuild.  This is correctness and observability evidence, not a replacement
 for the blocked three-sample cold-performance median gate.  The formal
 baseline-versus-candidate audit must still be repeated before the GSLPH
 dependency pin can be promoted.
+
+* Audit-server lifecycle and canonical output-root correction
+
+The first supervised formal rerun was deliberately stopped before any cold
+sample receipt was accepted.  Its audit driver target finished analysis in
+320.721 seconds with four action-cache hits, then the baseline output-base
+server remained unavailable for more than 80 seconds.  The audit tree
+contained a server PID and output-base state but no immutable sample receipt.
+That interval is infrastructure startup noise and must not be counted as a
+Gerbil cold compile.
+
+A host-process audit found multiple Bazel JVMs left by earlier probe, baseline,
+and candidate output bases.  Their configured idle lifetime was 10,800
+seconds.  Even read-only =gxi= and filesystem probes then required 60-155
+seconds, demonstrating that a benchmark retry on that host state would be
+invalid.  The obsolete servers were shut down through Bazel's native
+=shutdown= command; only an unready server from an interrupted focused test
+required a targeted =TERM= after the client could not connect.
+
+The Scheme audit runner now owns two additional invariants:
+
+1. It creates the requested output directory and resolves its physical path
+   through Gerbil/Gambit's parameterized =current-directory=, which delegates
+   to the operating system's =chdir/getcwd= behavior.  On Darwin this
+   canonicalizes =/tmp= to =/private/tmp= without a shell parser.
+2. Every audit-specific Bazel server receives =--max_idle_secs=30=.  Baseline
+   and candidate samples still reuse one stable output base per side during
+   the audit, but an interrupted or completed audit no longer retains its JVM
+   for three hours.
+
+The canonical physical output directory is recorded in
+=gerbil-bazel.compile-performance-audit.v1= as =outputDirectory=.  The focused
+fixture passes a symlink alias, requires the receipt to contain =pwd -P='s
+physical directory, and requires the fake Bazel argv parser to accept and
+validate the additional startup option.
+
+#+begin_src mermaid
+flowchart TD
+  Input["Requested audit output path"]
+  Canonical["Scheme canonical-directory via chdir/getcwd"]
+  Physical["One physical output root"]
+  Baseline["Baseline stable output base"]
+  Candidate["Candidate stable output base"]
+  Idle["Bazel max_idle_secs = 30"]
+  Samples["Three cold samples per side"]
+  Receipt["Immutable sample and audit receipts"]
+  Exit["Completed or interrupted audit"]
+  Reclaim["Audit JVM auto-reclaimed after 30 idle seconds"]
+
+  Input --> Canonical
+  Canonical --> Physical
+  Physical --> Baseline
+  Physical --> Candidate
+  Baseline --> Samples
+  Candidate --> Samples
+  Idle --> Baseline
+  Idle --> Candidate
+  Samples --> Receipt
+  Receipt --> Exit
+  Exit --> Reclaim
+#+end_src
+
+After host recovery, the focused Bazel gate
+=//scheme:compile_performance_audit_test= passed one of one targets.  Bazel
+reported 20.983 seconds total elapsed time, a 5.4-second test action, and 34
+action-cache hits.  This qualifies the runner-lifecycle correction only.  It
+does not qualify the GSLPH candidate: the fresh three-sample formal
+baseline-versus-candidate audit remains the next required gate.
