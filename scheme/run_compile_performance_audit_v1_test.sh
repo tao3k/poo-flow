@@ -12,13 +12,17 @@ resolve_runfile() {
 
 gxi=$(resolve_runfile "${1:?gxi path is required}")
 runner=$(resolve_runfile "${2:?audit runner path is required}")
-fake_bazel=$(resolve_runfile "${3:?fake Bazel path is required}")
-baseline_receipt=$(resolve_runfile "${4:?baseline receipt is required}")
-candidate_receipt=$(resolve_runfile "${5:?candidate receipt is required}")
-validator=$(resolve_runfile "${6:?validator path is required}")
-budget_root=$(resolve_runfile "${7:?performance budget project root is required}")
-poo_root=$(resolve_runfile "${8:?Gerbil POO root is required}")
-utils_root=$(resolve_runfile "${9:?Gerbil Utils root is required}")
+resource_guard=$(resolve_runfile "${3:?resource guard path is required}")
+fake_bazel=$(resolve_runfile "${4:?fake Bazel path is required}")
+baseline_receipt=$(resolve_runfile "${5:?baseline receipt is required}")
+candidate_receipt=$(resolve_runfile "${6:?candidate receipt is required}")
+validator=$(resolve_runfile "${7:?validator path is required}")
+budget_root=$(resolve_runfile "${8:?performance budget project root is required}")
+poo_root=$(resolve_runfile "${9:?Gerbil POO root is required}")
+utils_root=$(resolve_runfile "${10:?Gerbil Utils root is required}")
+
+export GERBIL_BAZEL_GUARD_RUNNABLE_PROCESSES=1
+export GERBIL_BAZEL_GUARD_PROCESS_TABLE_SNAPSHOT='1 0 1'
 
 root="${TEST_TMPDIR:?TEST_TMPDIR is required}/audit"
 baseline_workspace="$root/baseline"
@@ -33,6 +37,8 @@ cp "$baseline_receipt" "$baseline_workspace/compile.receipt.json"
 cp "$candidate_receipt" "$candidate_workspace/compile.receipt.json"
 
 "$gxi" "$runner" \
+  "$gxi" \
+  "$resource_guard" \
   "$fake_bazel" \
   "$baseline_workspace" \
   "$candidate_workspace" \
@@ -51,6 +57,8 @@ for side in baseline candidate; do
     [[ -d "$output_directory/${side}-${sample_index}/root-cache" ]]
     [[ ! -e "$output_directory/${side}-${sample_index}/output-base" ]]
     [[ -f "$output_directory/${side}-${sample_index}/compile.receipt.json" ]]
+    grep -F '"outcome":"ready"' \
+      "$output_directory/${side}-${sample_index}/host-admission.json" >/dev/null
   done
 done
 grep -F '"strategy":"explicit-shutdown"' \
@@ -67,6 +75,8 @@ ln -s "$failure_output_storage" "$failure_output_directory"
 
 if FAKE_BAZEL_FAIL_SYMLINK_FRAGMENT="candidate-1/bazel-" \
   "$gxi" "$runner" \
+    "$gxi" \
+    "$resource_guard" \
     "$fake_bazel" \
     "$baseline_workspace" \
     "$candidate_workspace" \
@@ -98,6 +108,47 @@ grep -F '"state":"armed"' \
   "$failure_output_directory/server-lifecycle.json" >/dev/null
 grep -F '"cleanupTrigger":"dynamic-wind"' \
   "$failure_output_directory/server-lifecycle.json" >/dev/null
+
+pressure_output_storage="$root/pressure-output-storage"
+pressure_output_directory="$root/pressure-output-alias"
+mkdir -p "$pressure_output_storage"
+ln -s "$pressure_output_storage" "$pressure_output_directory"
+
+host_cpu_count=$(
+  POO_FLOW_TEST_HOST_RECEIPT="$output_directory/baseline-1/resource-guard.receipt.json" \
+    "$gxi" -e \
+    '(begin (import :std/text/json) (display (hash-ref (call-with-input-file (getenv "POO_FLOW_TEST_HOST_RECEIPT") read-json) "logicalCpuCount")))'
+)
+pressure_runnable_count=$((host_cpu_count + 1))
+
+if GERBIL_BAZEL_GUARD_RUNNABLE_PROCESSES="$pressure_runnable_count" \
+  "$gxi" "$runner" \
+    "$gxi" \
+    "$resource_guard" \
+    "$fake_bazel" \
+    "$baseline_workspace" \
+    "$candidate_workspace" \
+    baseline-revision \
+    candidate-revision \
+    host-session/fixture \
+    Linux-X64 \
+    "$pressure_output_directory" \
+    3 \
+    500
+then
+  printf 'expected host admission failure\n' >&2
+  exit 1
+fi
+
+grep -F '"outcome":"blocked-host-pressure"' \
+  "$pressure_output_directory/baseline-1/host-admission.json" >/dev/null
+grep -F '"runnable-pressure-exceeds-logical-capacity"' \
+  "$pressure_output_directory/baseline-1/host-admission.json" >/dev/null
+grep -F '"phase":"host-admission"' \
+  "$pressure_output_directory/baseline-1/failure.context.json" >/dev/null
+[[ ! -e "$pressure_output_directory/baseline-1/build.log" ]]
+[[ -f "$pressure_output_directory/baseline-output-base/.shutdown" ]]
+[[ -f "$pressure_output_directory/candidate-output-base/.shutdown" ]]
 
 export GERBIL_LOADPATH="$budget_root/.gerbil/lib:$poo_root/.gerbil/lib:$utils_root/.gerbil/lib"
 

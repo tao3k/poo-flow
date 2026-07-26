@@ -16,6 +16,9 @@
 (def +warm-receipt-schema+
   "poo-flow.ci.scheme-compile-warm-noop.v1")
 
+(def +host-admission-schema+
+  "poo-flow.ci.scheme-compile-performance-host-admission.v1")
+
 (def (json-object entries)
   (let (object (make-hash-table))
     (for-each
@@ -68,6 +71,91 @@
    (lambda (exit-status _settings)
      (unless (zero? exit-status)
        (error "command failed" exit-status argv)))))
+
+(def (sample-host-admission!
+      gxi
+      resource-guard
+      directory
+      side
+      sample-index
+      revision
+      runner
+      host-session-id
+      failure-context-path)
+  (let* ((guard-receipt-path
+          (path-join directory "resource-guard.receipt.json"))
+         (admission-receipt-path
+          (path-join directory "host-admission.json"))
+         (label
+          (string-append
+           "compile-performance/"
+           side
+           "-"
+           (number->string sample-index))))
+    (run-command!
+     directory
+     (list gxi resource-guard guard-receipt-path label "0" "true"))
+    (let* ((guard-receipt (read-json-file guard-receipt-path))
+           (logical-cpu-count
+            (required-key guard-receipt "logicalCpuCount"))
+           (runnable-process-count
+            (required-key guard-receipt "runnableProcessCount"))
+           (guard-admission-outcome
+            (required-key guard-receipt "admissionOutcome"))
+           (reasons
+            (append
+             (if (string=? guard-admission-outcome "ready")
+               '()
+               '("resource-guard-blocked"))
+             (if (> runnable-process-count logical-cpu-count)
+               '("runnable-pressure-exceeds-logical-capacity")
+               '())))
+           (outcome
+            (if (null? reasons) "ready" "blocked-host-pressure"))
+           (admission-receipt
+            (json-object
+             (list
+              (cons "schema" +host-admission-schema+)
+              (cons "side" side)
+              (cons "sampleIndex" sample-index)
+              (cons "revision" revision)
+              (cons "runner" runner)
+              (cons "hostSessionId" host-session-id)
+              (cons "outcome" outcome)
+              (cons "policy"
+                    "runnable-at-or-below-logical-cpu-capacity")
+              (cons "logicalCpuCount" logical-cpu-count)
+              (cons "runnableProcessCount" runnable-process-count)
+              (cons "guardAdmissionOutcome" guard-admission-outcome)
+              (cons "guardAdmissionAdvisories"
+                    (required-key
+                     guard-receipt
+                     "admissionAdvisories"))
+              (cons "guardAdmissionReasons"
+                    (required-key guard-receipt "admissionReasons"))
+              (cons "reasons" reasons)
+              (cons "resourceGuardReceipt" guard-receipt-path)))))
+      (write-json-file! admission-receipt-path admission-receipt)
+      (unless (string=? outcome "ready")
+        (write-json-file!
+         failure-context-path
+         (json-object
+          (list
+           (cons "schema"
+                 "gerbil-bazel.compile-performance-sample-failure.v1")
+           (cons "phase" "host-admission")
+           (cons "side" side)
+           (cons "sampleIndex" sample-index)
+           (cons "revision" revision)
+           (cons "runner" runner)
+           (cons "hostSessionId" host-session-id)
+           (cons "terminalReceiptObserved" #f)
+           (cons "hostAdmission" admission-receipt-path)
+           (cons "reasons" reasons))))
+        (error
+         "cold compile sample blocked by host pressure"
+         failure-context-path))
+      admission-receipt)))
 
 (def (run-command/capture! directory argv output-path)
   (let (output
@@ -284,6 +372,8 @@
       (cons "elapsedMs" (required-key build-receipt "elapsed-ms"))))))
 
 (def (run-cold-sample!
+      gxi
+      resource-guard
       bazel
       workspace
       revision
@@ -309,6 +399,16 @@
     (ensure-directory! directory)
     (ensure-directory! output-base)
     (ensure-directory! root-cache)
+    (sample-host-admission!
+     gxi
+     resource-guard
+     directory
+     side
+     sample-index
+     revision
+     runner
+     host-session-id
+     failure-context-path)
     (clean-sample-output! bazel workspace output-base)
     (seed-dependencies!
      bazel workspace output-base dependency-cache symlink-prefix)
@@ -430,6 +530,8 @@
     basis-points))
 
 (def (main
+      gxi
+      resource-guard
       bazel
       baseline-workspace
       candidate-workspace
@@ -505,6 +607,8 @@
         (let-values
             (((baseline-observation _baseline-context)
               (run-cold-sample!
+               gxi
+               resource-guard
                bazel
                baseline-workspace
                baseline-revision
@@ -516,6 +620,8 @@
                sample-index))
              ((candidate-observation candidate-context)
               (run-cold-sample!
+               gxi
+               resource-guard
                bazel
                candidate-workspace
                candidate-revision

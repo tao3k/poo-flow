@@ -14,6 +14,7 @@ resolve_runfile() {
 
 gxi=$(resolve_runfile "${1:?gxi path is required}")
 runner=$(resolve_runfile "${2:?audit runner path is required}")
-shift 2
+resource_guard=$(resolve_runfile "${3:?resource guard path is required}")
+shift 3
 
-exec "$gxi" "$runner" "$@"
+exec "$gxi" "$runner" "$gxi" "$resource_guard" "$@"

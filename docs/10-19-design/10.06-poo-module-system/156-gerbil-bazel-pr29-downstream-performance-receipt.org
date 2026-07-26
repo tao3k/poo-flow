@@ -647,3 +647,82 @@ removed.  The next formal run will keep both stable side servers alive for the
 entire alternating sequence and reclaim them explicitly through
 =dynamic-wind=, eliminating avoidable per-sample server restart and analysis
 overhead without retaining JVMs after the audit.
+
+* Per-sample host admission
+
+The incomplete formal observations also prove that a single audit-start
+preflight is insufficient.  Runnable pressure changed from 16 to 59 while the
+alternating sequence was active.  A comparison runner must therefore prove
+host admissibility immediately before every baseline and candidate cold
+sample, before dependency seeding or compilation consumes several minutes.
+
+The runner now consumes the resource guard owned by gerbil-bazel through the
+declared Bazel runfile =@gerbil_bazel//gerbil:resource_guard.ss=.  POO Flow
+does not duplicate operating-system probes, CPU discovery, memory discovery,
+or process-tree supervision.  The Bazel-resolved guard imports Gerbil
+=__available-cores= and emits its normal immutable resource-guard receipt.
+The audit projects that receipt into
+=poo-flow.ci.scheme-compile-performance-host-admission.v1=.
+
+The comparison-only admission rule is stricter than the normal build rule:
+
+- the upstream resource guard must report =admissionOutcome= equal to
+  =ready=;
+- =runnableProcessCount= must be at or below the observed
+  =logicalCpuCount=.
+
+The second condition is machine-adaptive.  It contains no fixed core count,
+fixed wait interval, or operating-system-specific shell probe.  Normal project
+compilation still treats runnable saturation as advisory and may adapt its
+worker plan.  Only the formal comparison runner rejects a sample whose timing
+would not be attributable to the revision under test.
+
+Each sample directory now owns:
+
+- =resource-guard.receipt.json=, the upstream capability receipt;
+- =host-admission.json=, the comparison-specific decision and provenance;
+- =failure.context.json= with =phase= equal to =host-admission= when the
+  sample is rejected.
+
+A rejected sample never starts dependency seeding, native ABI discovery, or
+the cold compile action.  The enclosing =dynamic-wind= still shuts down both
+owned Bazel servers.
+
+#+begin_src mermaid
+flowchart TD
+  Sample["Next baseline or candidate sample"]
+  Guard["Run declared gerbil-bazel resource guard"]
+  NativeReceipt["Persist resource-guard.receipt.json"]
+  Ready{"Guard admission ready?"}
+  Capacity{"Runnable count <= observed logical CPU count?"}
+  Admission["Persist ready host-admission.json"]
+  Cold["Seed dependencies and run cold compile"]
+  Blocked["Persist blocked host-admission.json"]
+  Context["Persist failure.context.json with host-admission phase"]
+  Unwind["Unwind audit"]
+  Shutdown["Native shutdown of both owned Bazel servers"]
+
+  Sample --> Guard
+  Guard --> NativeReceipt
+  NativeReceipt --> Ready
+  Ready -- "yes" --> Capacity
+  Ready -- "no" --> Blocked
+  Capacity -- "yes" --> Admission
+  Capacity -- "no" --> Blocked
+  Admission --> Cold
+  Blocked --> Context
+  Context --> Unwind
+  Unwind --> Shutdown
+#+end_src
+
+The focused Bazel gate =//scheme:compile_performance_audit_test= passed one of
+one targets in 26.4 seconds, within its unchanged 60-second test timeout.  Its
+pressure fixture reads the real =logicalCpuCount= from the first Scheme JSON
+resource receipt and derives the rejected runnable count as
+=logicalCpuCount + 1=.  It therefore validates the boundary against the
+resolved machine capability rather than asserting a fixed 12-core host.
+
+This qualifies the per-sample admission mechanism.  It does not promote the
+candidate GSLPH revision.  A fresh three-by-three formal comparison remains
+required and must begin from the current POO Flow commit with a new output
+directory.

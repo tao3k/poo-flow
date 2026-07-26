@@ -282,9 +282,11 @@ sh_binary(
     args = [
         "$(rlocationpath @local_gerbil//:gxi)",
         "$(rlocationpath :run_compile_performance_audit_v1.ss)",
+        "$(rlocationpath @gerbil_bazel//gerbil:resource_guard.ss)",
     ],
     data = [
         ":run_compile_performance_audit_v1.ss",
+        "@gerbil_bazel//gerbil:resource_guard.ss",
         "@local_gerbil//:gxi",
     ],
 )
@@ -296,6 +298,7 @@ sh_test(
     args = [
         "$(rlocationpath @local_gerbil//:gxi)",
         "$(rlocationpath :run_compile_performance_audit_v1.ss)",
+        "$(rlocationpath @gerbil_bazel//gerbil:resource_guard.ss)",
         "$(rlocationpath :fake_bazel_compile_performance_audit.sh)",
         "$(rlocationpath :compile_performance_audit_baseline_receipt.json)",
         "$(rlocationpath :compile_performance_audit_candidate_receipt.json)",
@@ -313,6 +316,7 @@ sh_test(
         ":gerbil_utils_package_project_root",
         ":run_compile_performance_audit_v1.ss",
         ":validate_compile_performance_budget_v1.ss",
+        "@gerbil_bazel//gerbil:resource_guard.ss",
         "@local_gerbil//:gxi",
     ],
 )
