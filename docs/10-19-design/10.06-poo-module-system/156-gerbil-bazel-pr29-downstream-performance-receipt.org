@@ -668,6 +668,7 @@ The comparison-only admission rule is stricter than the normal build rule:
 
 - the upstream resource guard must report =admissionOutcome= equal to
   =ready=;
+- =runnableProcessCountAvailable= must be true;
 - =runnableProcessCount= must be at or below the observed
   =logicalCpuCount=.
 
@@ -694,6 +695,7 @@ flowchart TD
   Guard["Run declared gerbil-bazel resource guard"]
   NativeReceipt["Persist resource-guard.receipt.json"]
   Ready{"Guard admission ready?"}
+  Available{"Runnable observation available?"}
   Capacity{"Runnable count <= observed logical CPU count?"}
   Admission["Persist ready host-admission.json"]
   Cold["Seed dependencies and run cold compile"]
@@ -705,8 +707,10 @@ flowchart TD
   Sample --> Guard
   Guard --> NativeReceipt
   NativeReceipt --> Ready
-  Ready -- "yes" --> Capacity
+  Ready -- "yes" --> Available
   Ready -- "no" --> Blocked
+  Available -- "yes" --> Capacity
+  Available -- "no" --> Blocked
   Capacity -- "yes" --> Admission
   Capacity -- "no" --> Blocked
   Admission --> Cold
@@ -716,13 +720,29 @@ flowchart TD
 #+end_src
 
 The focused Bazel gate =//scheme:compile_performance_audit_test= passed one of
-one targets in 26.4 seconds, within its unchanged 60-second test timeout.  Its
+one targets in 29.1 seconds, within its unchanged 60-second test timeout.  Its
 pressure fixture reads the real =logicalCpuCount= from the first Scheme JSON
 resource receipt and derives the rejected runnable count as
 =logicalCpuCount + 1=.  It therefore validates the boundary against the
-resolved machine capability rather than asserting a fixed 12-core host.
+resolved machine capability rather than asserting a fixed 12-core host.  A
+separate fixture proves that an unavailable runnable observation is rejected
+before the first dependency or compile action.
 
 This qualifies the per-sample admission mechanism.  It does not promote the
 candidate GSLPH revision.  A fresh three-by-three formal comparison remains
 required and must begin from the current POO Flow commit with a new output
 directory.
+
+The first fresh formal attempt then exposed an additional upstream capability
+boundary before its first cold compile.  The resolved resource guard reported
+=runnableProcessCountAvailable=false= and used zero only as its absence
+sentinel.  Treating that sentinel as an observed quiet host would make the
+comparison unverifiable.  The formal run was interrupted during dependency
+seeding after 33.4 seconds, and the comparison gate now rejects an unavailable
+runnable observation explicitly.  A focused fixture covers this state
+independently from the over-capacity state.
+
+The formal audit must not restart until gerbil-bazel supplies a fresh
+Scheme-native runnable observation to each resource-guard invocation.  A
+single caller-provided value at audit start is insufficient because runnable
+pressure can change between alternating samples.

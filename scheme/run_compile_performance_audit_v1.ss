@@ -100,6 +100,10 @@
             (required-key guard-receipt "logicalCpuCount"))
            (runnable-process-count
             (required-key guard-receipt "runnableProcessCount"))
+           (runnable-process-count-available
+            (required-key
+             guard-receipt
+             "runnableProcessCountAvailable"))
            (guard-admission-outcome
             (required-key guard-receipt "admissionOutcome"))
            (reasons
@@ -107,7 +111,11 @@
              (if (string=? guard-admission-outcome "ready")
                '()
                '("resource-guard-blocked"))
-             (if (> runnable-process-count logical-cpu-count)
+             (if runnable-process-count-available
+               '()
+               '("runnable-process-observation-unavailable"))
+             (if (and runnable-process-count-available
+                      (> runnable-process-count logical-cpu-count))
                '("runnable-pressure-exceeds-logical-capacity")
                '())))
            (outcome
@@ -126,6 +134,8 @@
                     "runnable-at-or-below-logical-cpu-capacity")
               (cons "logicalCpuCount" logical-cpu-count)
               (cons "runnableProcessCount" runnable-process-count)
+              (cons "runnableProcessCountAvailable"
+                    runnable-process-count-available)
               (cons "guardAdmissionOutcome" guard-admission-outcome)
               (cons "guardAdmissionAdvisories"
                     (required-key

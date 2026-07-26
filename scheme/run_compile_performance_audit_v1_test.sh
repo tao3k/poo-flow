@@ -150,6 +150,40 @@ grep -F '"phase":"host-admission"' \
 [[ -f "$pressure_output_directory/baseline-output-base/.shutdown" ]]
 [[ -f "$pressure_output_directory/candidate-output-base/.shutdown" ]]
 
+unavailable_output_storage="$root/unavailable-output-storage"
+unavailable_output_directory="$root/unavailable-output-alias"
+mkdir -p "$unavailable_output_storage"
+ln -s "$unavailable_output_storage" "$unavailable_output_directory"
+
+if GERBIL_BAZEL_GUARD_RUNNABLE_PROCESSES=0 \
+  "$gxi" "$runner" \
+    "$gxi" \
+    "$resource_guard" \
+    "$fake_bazel" \
+    "$baseline_workspace" \
+    "$candidate_workspace" \
+    baseline-revision \
+    candidate-revision \
+    host-session/fixture \
+    Linux-X64 \
+    "$unavailable_output_directory" \
+    3 \
+    500
+then
+  printf 'expected unavailable runnable observation failure\n' >&2
+  exit 1
+fi
+
+grep -F '"runnableProcessCountAvailable":false' \
+  "$unavailable_output_directory/baseline-1/host-admission.json" >/dev/null
+grep -F '"runnable-process-observation-unavailable"' \
+  "$unavailable_output_directory/baseline-1/host-admission.json" >/dev/null
+grep -F '"phase":"host-admission"' \
+  "$unavailable_output_directory/baseline-1/failure.context.json" >/dev/null
+[[ ! -e "$unavailable_output_directory/baseline-1/build.log" ]]
+[[ -f "$unavailable_output_directory/baseline-output-base/.shutdown" ]]
+[[ -f "$unavailable_output_directory/candidate-output-base/.shutdown" ]]
+
 export GERBIL_LOADPATH="$budget_root/.gerbil/lib:$poo_root/.gerbil/lib:$utils_root/.gerbil/lib"
 
 "$gxi" "$validator" \
