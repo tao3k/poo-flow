@@ -692,7 +692,7 @@ owned Bazel servers.
 #+begin_src mermaid
 flowchart TD
   Sample["Next baseline or candidate sample"]
-  Guard["Run declared gerbil-bazel resource guard"]
+  Guard["Run declared gerbil-bazel Scheme guard with fresh ps state"]
   NativeReceipt["Persist resource-guard.receipt.json"]
   Ready{"Guard admission ready?"}
   Available{"Runnable observation available?"}
@@ -738,11 +738,40 @@ boundary before its first cold compile.  The resolved resource guard reported
 =runnableProcessCountAvailable=false= and used zero only as its absence
 sentinel.  Treating that sentinel as an observed quiet host would make the
 comparison unverifiable.  The formal run was interrupted during dependency
-seeding after 33.4 seconds, and the comparison gate now rejects an unavailable
-runnable observation explicitly.  A focused fixture covers this state
-independently from the over-capacity state.
+seeding after 33.4 seconds, and the comparison gate rejects an unavailable
+runnable observation explicitly.
 
-The formal audit must not restart until gerbil-bazel supplies a fresh
-Scheme-native runnable observation to each resource-guard invocation.  A
-single caller-provided value at audit start is insufficient because runnable
-pressure can change between alternating samples.
+gerbil-bazel PR 29 commit
+=4176db5700e80e450f7c475dab3e2c20bd7bb30c= closes that upstream boundary.
+The Scheme guard invokes =ps -axo state== directly for each admission, parses
+the state column in Scheme, and represents observation availability separately
+from the runnable count.  A successful zero-runnable observation is therefore
+available, while deterministic failure injection remains unavailable even
+when a CI count is also present.  Gerbil =__available-cores= remains the sole
+CPU-capacity source.
+
+POO Flow now pins that exact commit.  Its unavailable fixture uses the explicit
+=GERBIL_BAZEL_GUARD_FORCE_RUNNABLE_UNAVAILABLE=1= contract instead of overloading
+zero as a sentinel.  The downstream
+=//scheme:compile_performance_audit_test= replay passed one of one targets in
+30.1 seconds.  Bazel reported 170.893 seconds overall because changing the
+external repository commit invalidated and rebuilt three dependent Gerbil
+package actions before the test; the test critical path itself remained
+bounded by the unchanged 60-second timeout.
+
+The fresh-observation prerequisite is now qualified, so a new three-by-three
+formal comparison may start.  This focused replay does not itself promote the
+candidate GSLPH revision or supply a formal performance result.
+
+The new =r3= formal comparison then exercised that boundary successfully.  Its
+first baseline admission observed 51 runnable processes against 12 logical
+CPUs, wrote =runnableProcessCountAvailable=true=, and stopped after the
+413-millisecond resource-guard action with
+=runnable-pressure-exceeds-logical-capacity=.  It produced
+=host-admission.json= and =failure.context.json= before dependency seeding or
+cold compilation began.  A CPU-sorted process snapshot confirmed material
+concurrent work, including an active Rust compiler, multiple ASP processes,
+multiple devenv processes, and Nix garbage collection.  This is a qualified
+host-pressure rejection, not a baseline or candidate performance sample.
+Repeating the formal comparison while that pressure remains would invalidate
+the attribution policy.

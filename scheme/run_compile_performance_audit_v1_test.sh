@@ -155,7 +155,7 @@ unavailable_output_directory="$root/unavailable-output-alias"
 mkdir -p "$unavailable_output_storage"
 ln -s "$unavailable_output_storage" "$unavailable_output_directory"
 
-if GERBIL_BAZEL_GUARD_RUNNABLE_PROCESSES=0 \
+if GERBIL_BAZEL_GUARD_FORCE_RUNNABLE_UNAVAILABLE=1 \
   "$gxi" "$runner" \
     "$gxi" \
     "$resource_guard" \
