@@ -313,3 +313,90 @@ approximately 44,020 ms, or 6.68 times faster than the 294,240 ms runtime
 stage.  This is a feasibility bound, not a performance claim: real promotion
 requires measured receipts that include skew, worker startup, artifact
 barriers, RSS, and failure cancellation.
+
+* Topology-batching correction and repeatable cold-audit receipt
+
+The first persistent-worker candidate did not preserve the existing topology
+policy boundary.  The POO Flow guard selected =topology=, not
+=adaptive-window=, but =package-source-stage-request-specs/default= returned
+each topology group as a separate upstream request.  The 381-module runtime
+stage was therefore materialized as 40 runtime =std/make= stages, with three
+additional FFI and user-interface stages.  The failure was not caused by the
+persistent worker pool: every affected receipt reported
+=adaptive-execution=false=.
+
+GSLPH revision =a0ba60a15dd05d95ea89c0506f530f426d3dca1e= restores
+=package-source-stage-topology-request-specs= as the =topology= batching
+boundary.  Its hermetic GitHub archive digest is
+=sha256:de202ddb3b204f4faa461f44df0cfeaa3bea5d77b047e46babc9a1fa51b84838=.
+The focused GSLPH suite passed 11 test cases and 30 checks, including a
+two-layer public-API fixture that requires one upstream package stage.
+
+The same-host downstream diagnostic produced the following complete receipts:
+
+| Revision | Stages | Internal elapsed | Peak RSS | Outcome |
+|----------+--------+------------------+----------+---------|
+| =9ca9b7a168cf1b3e19622b539a19acbf38263567= | 43 | 358,753 ms | 3,663,937,536 bytes | rejected |
+| =a0ba60a15dd05d95ea89c0506f530f426d3dca1e= | 3 | 265,809 ms | 3,299,360,768 bytes | diagnostic accepted |
+
+The corrected diagnostic is 25.9 percent faster than the rejected candidate,
+while reducing peak RSS by 9.9 percent.  Relative to the earlier 3-stage
+single-sample reference of 333,763 ms and 4,262,494,208 bytes, it is 20.4
+percent faster and uses 22.6 percent less peak RSS.  These figures are
+single-sample diagnostics; promotion still requires the formal odd-sample
+median gate.
+
+The cold-audit runner previously created a distinct Bazel output base for
+every sample.  Gerbil package action keys contain stabilized paths derived
+from that output base, so the supposedly shared dependency disk cache could
+not match the next sample.  The corrected runner owns one stable output base
+per comparison side, invokes Bazel-native =clean= before each sample, restores
+the three dependency packages from one shared dependency cache, and gives
+only the root compile action a sample-local disk cache.  It also persists the
+parsed receipt immediately as =SIDE-N/compile.receipt.json= before the next
+clean, rather than retaining a symlink into mutable Bazel output state.
+
+#+begin_src mermaid
+flowchart LR
+  Side["One stable output base per side"]
+  Clean["Bazel-native clean before each sample"]
+  Seed["dependency_packages with shared disk cache"]
+  Hits["Three package cache hits in 3.714-6.101 s"]
+  Cold["compile_receipt with sample-local root cache"]
+  Immutable["Immutable SIDE-N/compile.receipt.json"]
+  Compare["Odd-sample median budget gate"]
+  Crash["Candidate sample 3: gxi SIGBUS, exit 138"]
+  Blocked["Promotion blocked; no comparison acceptance"]
+  Guard["Required next gate: failed-build guard receipt"]
+
+  Side --> Clean
+  Clean --> Seed
+  Seed --> Hits
+  Hits --> Cold
+  Cold --> Immutable
+  Immutable --> Compare
+  Cold --> Crash
+  Crash --> Blocked
+  Blocked --> Guard
+#+end_src
+
+The real audit confirmed that repeated dependency seeding fell from 336.871
+seconds for the first baseline side and 342.421 seconds for the first
+candidate side to 4.019, 6.101, 3.714, and 5.603 seconds for subsequent
+samples.  Each subsequent seed reported three disk-cache hits, a 98.2-98.9
+percent reduction in repeated seed wall time.
+
+The formal three-sample promotion gate remains blocked.  All three baseline
+cold actions completed in 288.523, 313.690, and 320.398 seconds of Bazel wall
+time.  Candidate samples 1 and 2 completed in 303.224 and 314.752 seconds.
+Candidate sample 3 terminated after 108.226 seconds with macOS
+=Bus error: 10= from =gxi=, producing exit 138.  No median comparison receipt
+was emitted, so the dependency pin is not promoted by this record.
+
+This failure also exposes an observability gap: the Scheme compile guard emits
+receipts for pre-admission rejection and successful completion, but not for an
+exception raised by the guarded build.  Before the formal audit is repeated,
+the guard must emit a terminal failed-build receipt containing the stopped
+process-tree guard observation, elapsed time, peak RSS, admission snapshot,
+sample identity, and failure classification.  A retry without that evidence
+would be an unqualified repetition rather than a new performance result.

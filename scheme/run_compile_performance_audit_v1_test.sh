@@ -41,6 +41,15 @@ cp "$candidate_receipt" "$candidate_workspace/compile.receipt.json"
   3 \
   500
 
+for side in baseline candidate; do
+  [[ -d "$output_directory/${side}-output-base" ]]
+  for sample_index in 1 2 3; do
+    [[ -d "$output_directory/${side}-${sample_index}/root-cache" ]]
+    [[ ! -e "$output_directory/${side}-${sample_index}/output-base" ]]
+    [[ -f "$output_directory/${side}-${sample_index}/compile.receipt.json" ]]
+  done
+done
+
 export GERBIL_LOADPATH="$budget_root/.gerbil/lib:$poo_root/.gerbil/lib:$utils_root/.gerbil/lib"
 
 "$gxi" "$validator" \

@@ -28,6 +28,10 @@ command=${2:?Bazel command is required}
 shift 2
 
 case "$command" in
+  clean)
+    mkdir -p "$output_base"
+    : >"$output_base/.compile-sample-cleaned"
+    ;;
   build)
     symlink_prefix=
     bep_path=
@@ -62,6 +66,11 @@ case "$command" in
         fi
         ;;
       //scheme:dependency_packages)
+        if [[ ! -f "$output_base/.compile-sample-cleaned" ]]; then
+          printf 'dependency seed requires a preceding Bazel clean\n' >&2
+          exit 2
+        fi
+        rm "$output_base/.compile-sample-cleaned"
         ;;
       *)
         printf 'unexpected fake Bazel build target: %s\n' "$target" >&2

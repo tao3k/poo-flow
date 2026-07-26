@@ -109,6 +109,11 @@
      (string-append "--symlink_prefix=" symlink-prefix)
      "//scheme:dependency_packages"))))
 
+(def (clean-sample-output! bazel workspace output-base)
+  (run-command!
+   workspace
+   (bazel-command bazel output-base "clean" '())))
+
 (def (build-native-abi!
       bazel workspace output-base dependency-cache symlink-prefix)
   (run-command!
@@ -198,7 +203,8 @@
       side
       sample-index)
   (let* ((directory (sample-root output-directory side sample-index))
-         (output-base (path-join directory "output-base"))
+         (output-base
+          (path-join output-directory (string-append side "-output-base")))
          (root-cache (path-join directory "root-cache"))
          (symlink-prefix (path-join directory "bazel-"))
          (receipt-path
@@ -206,6 +212,7 @@
     (ensure-directory! directory)
     (ensure-directory! output-base)
     (ensure-directory! root-cache)
+    (clean-sample-output! bazel workspace output-base)
     (seed-dependencies!
      bazel workspace output-base dependency-cache symlink-prefix)
     (build-native-abi!
@@ -214,20 +221,24 @@
           (read-native-abi bazel workspace output-base directory))
       (build-cold-receipt!
        bazel workspace output-base root-cache symlink-prefix)
-      (values
-       (receipt->observation
-        (read-json-file receipt-path)
-        revision
-        runner
-        host-session-id
-        native-abi)
-       (json-object
-        (list
-         (cons "workspace" workspace)
-         (cons "outputBase" output-base)
-         (cons "rootCache" root-cache)
-         (cons "symlinkPrefix" symlink-prefix)
-         (cons "receiptPath" receipt-path)))))))
+      (let* ((receipt (read-json-file receipt-path))
+             (observed-receipt-path
+              (path-join directory "compile.receipt.json")))
+        (write-json-file! observed-receipt-path receipt)
+        (values
+         (receipt->observation
+          receipt
+          revision
+          runner
+          host-session-id
+          native-abi)
+         (json-object
+          (list
+           (cons "workspace" workspace)
+           (cons "outputBase" output-base)
+           (cons "rootCache" root-cache)
+           (cons "symlinkPrefix" symlink-prefix)
+           (cons "receiptPath" observed-receipt-path))))))))
 
 (def (warm-action-count path)
   (call-with-input-file
