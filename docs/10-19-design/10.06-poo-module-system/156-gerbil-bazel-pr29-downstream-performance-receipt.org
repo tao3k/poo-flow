@@ -486,16 +486,19 @@ The Scheme audit runner now owns two additional invariants:
    through Gerbil/Gambit's parameterized =current-directory=, which delegates
    to the operating system's =chdir/getcwd= behavior.  On Darwin this
    canonicalizes =/tmp= to =/private/tmp= without a shell parser.
-2. Every audit-specific Bazel server receives =--max_idle_secs=30=.  Baseline
-   and candidate samples still reuse one stable output base per side during
-   the audit, but an interrupted or completed audit no longer retains its JVM
-   for three hours.
+2. The audit explicitly owns one stable Bazel server per side for the whole
+   alternating sample sequence.  A pre-armed lifecycle receipt declares a
+   =dynamic-wind= cleanup boundary, and both success and failure unwind paths
+   issue Bazel's native =shutdown=.  No machine-independent idle timeout is
+   hard-coded, so the opposite side's multi-minute sample cannot evict a
+   server that the current audit still owns.
 
 The canonical physical output directory is recorded in
 =gerbil-bazel.compile-performance-audit.v1= as =outputDirectory=.  The focused
-fixture passes a symlink alias, requires the receipt to contain =pwd -P='s
-physical directory, and requires the fake Bazel argv parser to accept and
-validate the additional startup option.
+fixture passes a symlink alias and requires the receipt to contain =pwd -P='s
+physical directory.  It also requires both side output bases to receive a
+native shutdown on the successful audit path and on a synthetic fatal sample
+path.
 
 #+begin_src mermaid
 flowchart TD
@@ -504,30 +507,32 @@ flowchart TD
   Physical["One physical output root"]
   Baseline["Baseline stable output base"]
   Candidate["Candidate stable output base"]
-  Idle["Bazel max_idle_secs = 30"]
+  Armed["Pre-armed server-lifecycle receipt"]
   Samples["Three cold samples per side"]
   Receipt["Immutable sample and audit receipts"]
   Exit["Completed or interrupted audit"]
-  Reclaim["Audit JVM auto-reclaimed after 30 idle seconds"]
+  Cleanup["Scheme dynamic-wind cleanup"]
+  Reclaim["Native Bazel shutdown for both side servers"]
 
   Input --> Canonical
   Canonical --> Physical
   Physical --> Baseline
   Physical --> Candidate
+  Physical --> Armed
   Baseline --> Samples
   Candidate --> Samples
-  Idle --> Baseline
-  Idle --> Candidate
+  Armed --> Samples
   Samples --> Receipt
   Receipt --> Exit
-  Exit --> Reclaim
+  Exit --> Cleanup
+  Cleanup --> Reclaim
 #+end_src
 
 After host recovery, the focused Bazel gate
-=//scheme:compile_performance_audit_test= passed one of one targets.  Bazel
-reported 20.983 seconds total elapsed time, a 5.4-second test action, and 34
-action-cache hits.  This qualifies the runner-lifecycle correction only.  It
-does not qualify the GSLPH candidate: the fresh three-sample formal
+=//scheme:compile_performance_audit_test= passed one of one targets.  The
+final explicit-lifecycle run completed in 7.4 seconds and covered successful
+and failed unwind paths.  This qualifies the runner-lifecycle correction only.
+It does not qualify the GSLPH candidate: the fresh three-sample formal
 baseline-versus-candidate audit remains the next required gate.
 
 * Supervised formal rerun: terminal failure receipt and remaining blocker
@@ -621,3 +626,24 @@ No GSLPH dependency promotion is authorized by this receipt.  The next run
 must start from a host admission state without runnable saturation, preserve
 the new failure artifacts if any sample terminates, and produce all six cold
 observations before the relative median gate is evaluated.
+
+The native Scheme receipts distinguish compile time from Bazel wall time:
+
+| Side/sample | Scheme elapsed | Bazel wall | Bazel overhead | Peak RSS | Runnable snapshot |
+|-------------+----------------+------------+----------------+----------+-------------------|
+| baseline-1 | 364,168 ms | 449,925 ms | 85,757 ms | 5,769,314,304 bytes | 32, saturated |
+| candidate-1 | 245,911 ms | 301,404 ms | 55,493 ms | 4,988,354,560 bytes | 59, saturated |
+| baseline-2 | 352,891 ms | 401,600 ms | 48,709 ms | 4,816,371,712 bytes | 16, admitted |
+
+The incomplete observations therefore support two separate statements.  The
+candidate's only completed Scheme compile was 32.5 percent faster than
+baseline-1 and 30.3 percent faster than baseline-2.  The formal gate still
+cannot accept a one-sample candidate, while the 48.709-85.757 second Bazel
+overhead must not be attributed to Scheme compilation.
+
+The fixed 30-second server timeout used during this interrupted run caused a
+side server to expire while the opposite side compiled.  That design has been
+removed.  The next formal run will keep both stable side servers alive for the
+entire alternating sequence and reclaim them explicitly through
+=dynamic-wind=, eliminating avoidable per-sample server restart and analysis
+overhead without retaining JVMs after the audit.

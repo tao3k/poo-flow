@@ -2,15 +2,11 @@
 set -euo pipefail
 
 output_base=
-max_idle_seconds=
 lockfile_mode=
 for argument in "$@"; do
   case "$argument" in
     --output_base=*)
       output_base=${argument#--output_base=}
-      ;;
-    --max_idle_secs=*)
-      max_idle_seconds=${argument#--max_idle_secs=}
       ;;
     --lockfile_mode=*)
       lockfile_mode=${argument#--lockfile_mode=}
@@ -20,16 +16,6 @@ done
 
 if [[ -z "$output_base" ]]; then
   printf 'fake Bazel requires --output_base\n' >&2
-  exit 2
-fi
-
-if [[ "$lockfile_mode" != off ]]; then
-  printf 'performance audit requires --lockfile_mode=off\n' >&2
-  exit 2
-fi
-
-if [[ "$max_idle_seconds" != 30 ]]; then
-  printf 'performance audit requires --max_idle_secs=30\n' >&2
   exit 2
 fi
 
@@ -52,9 +38,18 @@ if [[ -z "$command" ]]; then
   exit 2
 fi
 
+if [[ "$command" != shutdown ]] && [[ "$lockfile_mode" != off ]]; then
+  printf 'performance audit requires --lockfile_mode=off\n' >&2
+  exit 2
+fi
+
 shift $((startup_argument_count + 1))
 
 case "$command" in
+  shutdown)
+    mkdir -p "$output_base"
+    : >"$output_base/.shutdown"
+    ;;
   clean)
     mkdir -p "$output_base"
     : >"$output_base/.compile-sample-cleaned"

@@ -140,13 +140,51 @@
 
 (def (bazel-startup-arguments bazel output-base)
   (list bazel
-        (string-append "--output_base=" output-base)
-        "--max_idle_secs=30"))
+        (string-append "--output_base=" output-base)))
 
 (def (bazel-command bazel output-base command arguments)
   (append (bazel-startup-arguments bazel output-base)
           (list command "--lockfile_mode=off")
           arguments))
+
+(def (shutdown-audit-server! bazel workspace output-base)
+  (with-catch
+   (lambda (_exception) #f)
+   (lambda ()
+     (run-command!
+      workspace
+      (append
+       (bazel-startup-arguments bazel output-base)
+       (list "shutdown")))
+     #t)))
+
+(def (call-with-audit-servers
+      bazel baseline-workspace candidate-workspace output-directory thunk)
+  (let ((baseline-output-base
+         (path-join output-directory "baseline-output-base"))
+        (candidate-output-base
+         (path-join output-directory "candidate-output-base"))
+        (lifecycle-receipt-path
+         (path-join output-directory "server-lifecycle.json")))
+    (write-json-file!
+     lifecycle-receipt-path
+     (json-object
+      (list
+       (cons "schema"
+             "gerbil-bazel.audit-server-lifecycle.v1")
+       (cons "strategy" "explicit-shutdown")
+       (cons "state" "armed")
+       (cons "cleanupTrigger" "dynamic-wind")
+       (cons "baselineOutputBase" baseline-output-base)
+       (cons "candidateOutputBase" candidate-output-base))))
+    (dynamic-wind
+      (lambda () #!void)
+      thunk
+      (lambda ()
+        (shutdown-audit-server!
+         bazel baseline-workspace baseline-output-base)
+        (shutdown-audit-server!
+         bazel candidate-workspace candidate-output-base)))))
 
 (def (seed-dependencies!
       bazel workspace output-base dependency-cache symlink-prefix)
@@ -412,10 +450,16 @@
           (path-join output-directory "dependency-cache")))
     (ensure-directory! output-directory)
     (ensure-directory! dependency-cache)
-    (let loop ((sample-index 1)
-               (baseline-observations [])
-               (candidate-observations [])
-               (last-candidate-context #f))
+    (call-with-audit-servers
+     bazel
+     baseline-workspace
+     candidate-workspace
+     output-directory
+     (lambda ()
+      (let loop ((sample-index 1)
+                 (baseline-observations [])
+                 (candidate-observations [])
+                 (last-candidate-context #f))
       (if (> sample-index sample-count)
         (let* ((ordered-baseline (reverse baseline-observations))
                (ordered-candidate (reverse candidate-observations))
@@ -485,4 +529,4 @@
            (+ sample-index 1)
            (cons baseline-observation baseline-observations)
            (cons candidate-observation candidate-observations)
-           candidate-context))))))
+           candidate-context))))))))

@@ -46,12 +46,19 @@ cp "$candidate_receipt" "$candidate_workspace/compile.receipt.json"
 
 for side in baseline candidate; do
   [[ -d "$output_directory/${side}-output-base" ]]
+  [[ -f "$output_directory/${side}-output-base/.shutdown" ]]
   for sample_index in 1 2 3; do
     [[ -d "$output_directory/${side}-${sample_index}/root-cache" ]]
     [[ ! -e "$output_directory/${side}-${sample_index}/output-base" ]]
     [[ -f "$output_directory/${side}-${sample_index}/compile.receipt.json" ]]
   done
 done
+grep -F '"strategy":"explicit-shutdown"' \
+  "$output_directory/server-lifecycle.json" >/dev/null
+grep -F '"state":"armed"' \
+  "$output_directory/server-lifecycle.json" >/dev/null
+grep -F '"cleanupTrigger":"dynamic-wind"' \
+  "$output_directory/server-lifecycle.json" >/dev/null
 
 failure_output_storage="$root/failure-output-storage"
 failure_output_directory="$root/failure-output-alias"
@@ -85,6 +92,12 @@ grep -F '"terminalReceiptObserved":true' \
   "$failure_output_directory/candidate-1/failure.context.json" >/dev/null
 grep -F 'POO_FLOW_PROJECT_BUILD_RECEIPT' \
   "$failure_output_directory/candidate-1/build.log" >/dev/null
+[[ -f "$failure_output_directory/baseline-output-base/.shutdown" ]]
+[[ -f "$failure_output_directory/candidate-output-base/.shutdown" ]]
+grep -F '"state":"armed"' \
+  "$failure_output_directory/server-lifecycle.json" >/dev/null
+grep -F '"cleanupTrigger":"dynamic-wind"' \
+  "$failure_output_directory/server-lifecycle.json" >/dev/null
 
 export GERBIL_LOADPATH="$budget_root/.gerbil/lib:$poo_root/.gerbil/lib:$utils_root/.gerbil/lib"
 
