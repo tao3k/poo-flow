@@ -529,3 +529,95 @@ reported 20.983 seconds total elapsed time, a 5.4-second test action, and 34
 action-cache hits.  This qualifies the runner-lifecycle correction only.  It
 does not qualify the GSLPH candidate: the fresh three-sample formal
 baseline-versus-candidate audit remains the next required gate.
+
+* Supervised formal rerun: terminal failure receipt and remaining blocker
+
+The next formal rerun used physical output root
+=/private/tmp/poo-flow-gslph-a0ba60a-formal-20260726= and host session
+=host-session/2026-07-26-darwin-arm64=.  Both sides were pinned to POO Flow
+commit =4fff1e74=, their three shared gerbil-bazel configuration files were
+byte-identical, and the only intended variable was the GSLPH revision.
+
+The completed partial observations were:
+
+| Side | Sample | Dependency seed | Root cold action | Outcome |
+|------+--------+-----------------+------------------+---------|
+| baseline | 1 | 313.578 s | 449.925 s | completed |
+| candidate | 1 | 350.786 s | 301.404 s | completed |
+| baseline | 2 | 4.112 s | 401.600 s | completed |
+| candidate | 2 | 7.008 s | 85.741 s internal; 139.262 s Bazel | failed-build |
+
+The second seed on each side reported three disk-cache hits.  Cross-workspace
+seed reuse is still incomplete: the first candidate seed rebuilt the package
+actions instead of reusing the first baseline seed.  This is a cache-key
+optimization target, not part of the GSLPH root-compile comparison.
+
+Candidate sample 2 terminated its child =gxi= with signal/exit value 10.
+Unlike the earlier SIGBUS run, the parent Scheme supervisor survived and
+emitted a complete terminal project receipt:
+
+| Field | Observed value |
+|-------+----------------|
+| outcome | =failed-build= |
+| failure-kind | =child-failed= |
+| failure-exit-code | 10 |
+| elapsed-ms | 85,741 ms |
+| peak-rss-bytes | 3,079,274,496 bytes |
+| runnable-process-count | 44 |
+| admission-advisory | =runnable-saturation= |
+| worker-count | 12 |
+
+This proves the supervisor boundary, but the audit runner still aborted before
+copying the terminal line from Bazel output into the sample directory.  The
+runner now captures merged Bazel stdout/stderr and persists three immutable
+failure artifacts before raising:
+
+- =SIDE-N/compile.receipt.json= contains the native Scheme supervisor receipt;
+- =SIDE-N/failure.context.json= contains side, sample index, revision, host
+  session, runner, raw process status, receipt path, and log path;
+- =SIDE-N/build.log= contains the complete Bazel output used to extract the
+  receipt.
+
+#+begin_src mermaid
+flowchart TD
+  Child["Child gxi terminates with signal 10"]
+  Parent["Parent Scheme supervisor survives"]
+  ProjectReceipt["Emit POO_FLOW_PROJECT_BUILD_RECEIPT"]
+  Bazel["Bazel returns non-zero"]
+  Capture["Audit runner captures stdout and stderr"]
+  Native["Immutable compile.receipt.json"]
+  Context["Immutable failure.context.json"]
+  Log["Immutable build.log"]
+  Abort["Raise sample failure and block comparison"]
+  Promote["GSLPH pin promotion"]
+
+  Child --> Parent
+  Parent --> ProjectReceipt
+  ProjectReceipt --> Bazel
+  Bazel --> Capture
+  Capture --> Native
+  Capture --> Context
+  Capture --> Log
+  Native --> Abort
+  Context --> Abort
+  Log --> Abort
+  Abort -. "blocked" .-> Promote
+#+end_src
+
+The focused synthetic-failure gate
+=//scheme:compile_performance_audit_test= passed one of one targets in 8.8
+seconds.  It requires the three failure artifacts and verifies the preserved
+native fields =failure-exit-code= with value 10 and =outcome= with value
+=failed-build=.
+
+The formal promotion gate remains blocked for two independent reasons:
+
+1. candidate sample 2 failed, so no three-sample median exists;
+2. both completed baseline cold actions, 449.925 and 401.600 seconds, exceed
+   the previous baseline median of 313.690 seconds by approximately 43.4 and
+   28.0 percent respectively.
+
+No GSLPH dependency promotion is authorized by this receipt.  The next run
+must start from a host admission state without runnable saturation, preserve
+the new failure artifacts if any sample terminates, and produce all six cold
+observations before the relative median gate is evaluated.

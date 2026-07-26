@@ -85,6 +85,46 @@
        (display output port)))
     (read-first-line output-path)))
 
+(def (run-command/capture-status! directory argv output-path)
+  (let (exit-status #f)
+    (let (output
+          (run-process
+           argv
+           directory: directory
+           stdout-redirection: #t
+           stderr-redirection: #t
+           check-status:
+           (lambda (status _settings)
+             (set! exit-status status))))
+      (display output)
+      (call-with-output-file
+       output-path
+       (lambda (port)
+         (display output port)))
+      (values exit-status output))))
+
+(def +project-build-receipt-prefix+
+  "POO_FLOW_PROJECT_BUILD_RECEIPT ")
+
+(def (prefixed-output-line output prefix)
+  (let loop ((lines (string-split output #\newline)))
+    (cond
+     ((null? lines) #f)
+     ((string-prefix? prefix (car lines)) (car lines))
+     (else (loop (cdr lines))))))
+
+(def (project-build-receipt-from-output output)
+  (let (line
+        (prefixed-output-line
+         output
+         +project-build-receipt-prefix+))
+    (and line
+         (string->json-object
+          (substring
+           line
+           (string-length +project-build-receipt-prefix+)
+           (string-length line))))))
+
 (def (ensure-directory! path)
   (run-command! "/" (list "mkdir" "-p" path)))
 
@@ -160,8 +200,8 @@
     (read-first-line (path-join execution-root relative-path))))
 
 (def (build-cold-receipt!
-      bazel workspace output-base root-cache symlink-prefix)
-  (run-command!
+      bazel workspace output-base root-cache symlink-prefix build-log-path)
+  (run-command/capture-status!
    workspace
    (bazel-command
     bazel
@@ -170,7 +210,8 @@
     (list
      (string-append "--disk_cache=" root-cache)
      (string-append "--symlink_prefix=" symlink-prefix)
-     "//scheme:compile_receipt"))))
+     "//scheme:compile_receipt"))
+   build-log-path))
 
 (def (toolchain-identity native-abi dependency-resolutions)
   (parameterize ((write-json-sort-keys? #t))
@@ -220,7 +261,13 @@
          (root-cache (path-join directory "root-cache"))
          (symlink-prefix (path-join directory "bazel-"))
          (receipt-path
-          (path-join directory "bazel-bin/scheme/compile.receipt.json")))
+          (path-join directory "bazel-bin/scheme/compile.receipt.json"))
+         (observed-receipt-path
+          (path-join directory "compile.receipt.json"))
+         (build-log-path
+          (path-join directory "build.log"))
+         (failure-context-path
+          (path-join directory "failure.context.json")))
     (ensure-directory! directory)
     (ensure-directory! output-base)
     (ensure-directory! root-cache)
@@ -231,26 +278,56 @@
      bazel workspace output-base dependency-cache symlink-prefix)
     (let (native-abi
           (read-native-abi bazel workspace output-base directory))
-      (build-cold-receipt!
-       bazel workspace output-base root-cache symlink-prefix)
-      (let* ((receipt (read-json-file receipt-path))
-             (observed-receipt-path
-              (path-join directory "compile.receipt.json")))
-        (write-json-file! observed-receipt-path receipt)
-        (values
-         (receipt->observation
-          receipt
-          revision
-          runner
-          host-session-id
-          native-abi)
-         (json-object
-          (list
-           (cons "workspace" workspace)
-           (cons "outputBase" output-base)
-           (cons "rootCache" root-cache)
-           (cons "symlinkPrefix" symlink-prefix)
-           (cons "receiptPath" observed-receipt-path))))))))
+      (let-values
+          (((command-status command-output)
+            (build-cold-receipt!
+             bazel
+             workspace
+             output-base
+             root-cache
+             symlink-prefix
+             build-log-path)))
+        (unless (zero? command-status)
+          (let (failed-receipt
+                (project-build-receipt-from-output command-output))
+            (when failed-receipt
+              (write-json-file! observed-receipt-path failed-receipt))
+            (write-json-file!
+             failure-context-path
+             (json-object
+              (list
+               (cons "schema"
+                     "gerbil-bazel.compile-performance-sample-failure.v1")
+               (cons "side" side)
+               (cons "sampleIndex" sample-index)
+               (cons "revision" revision)
+               (cons "runner" runner)
+               (cons "hostSessionId" host-session-id)
+               (cons "rawProcessStatus" command-status)
+               (cons "terminalReceiptObserved"
+                     (and failed-receipt #t))
+               (cons "receiptPath" observed-receipt-path)
+               (cons "buildLog" build-log-path))))
+            (error
+             "cold compile sample failed"
+             command-status
+             failure-context-path)))
+        (let (receipt (read-json-file receipt-path))
+          (write-json-file! observed-receipt-path receipt)
+          (values
+           (receipt->observation
+            receipt
+            revision
+            runner
+            host-session-id
+            native-abi)
+           (json-object
+            (list
+             (cons "workspace" workspace)
+             (cons "outputBase" output-base)
+             (cons "rootCache" root-cache)
+             (cons "symlinkPrefix" symlink-prefix)
+             (cons "receiptPath" observed-receipt-path)))))))))
 
 (def (warm-action-count path)
   (call-with-input-file

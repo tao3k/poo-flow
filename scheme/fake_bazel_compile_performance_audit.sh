@@ -84,6 +84,14 @@ case "$command" in
           >"$output_base/execroot/external/fake/native_abi.txt"
         ;;
       //scheme:compile_receipt)
+        if [[ -n "${FAKE_BAZEL_FAIL_SYMLINK_FRAGMENT:-}" ]] \
+          && [[ "$symlink_prefix" == *"$FAKE_BAZEL_FAIL_SYMLINK_FRAGMENT"* ]]
+        then
+          printf '%s\n' \
+            'POO_FLOW_PROJECT_BUILD_RECEIPT {"failure-exit-code":10,"failure-kind":"child-failed","outcome":"failed-build","peak-rss-bytes":3079274496,"schema":"poo-flow.project-compile-guard.v1"}' \
+            >&2
+          exit 1
+        fi
         if [[ -n "$bep_path" ]]; then
           : >"$bep_path"
         else

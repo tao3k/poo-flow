@@ -53,6 +53,39 @@ for side in baseline candidate; do
   done
 done
 
+failure_output_storage="$root/failure-output-storage"
+failure_output_directory="$root/failure-output-alias"
+mkdir -p "$failure_output_storage"
+ln -s "$failure_output_storage" "$failure_output_directory"
+
+if FAKE_BAZEL_FAIL_SYMLINK_FRAGMENT="candidate-1/bazel-" \
+  "$gxi" "$runner" \
+    "$fake_bazel" \
+    "$baseline_workspace" \
+    "$candidate_workspace" \
+    baseline-revision \
+    candidate-revision \
+    host-session/fixture \
+    Linux-X64 \
+    "$failure_output_directory" \
+    3 \
+    500
+then
+  printf 'expected candidate cold sample failure\n' >&2
+  exit 1
+fi
+
+grep -F '"outcome":"failed-build"' \
+  "$failure_output_directory/candidate-1/compile.receipt.json" >/dev/null
+grep -F '"failure-exit-code":10' \
+  "$failure_output_directory/candidate-1/compile.receipt.json" >/dev/null
+grep -F '"rawProcessStatus":256' \
+  "$failure_output_directory/candidate-1/failure.context.json" >/dev/null
+grep -F '"terminalReceiptObserved":true' \
+  "$failure_output_directory/candidate-1/failure.context.json" >/dev/null
+grep -F 'POO_FLOW_PROJECT_BUILD_RECEIPT' \
+  "$failure_output_directory/candidate-1/build.log" >/dev/null
+
 export GERBIL_LOADPATH="$budget_root/.gerbil/lib:$poo_root/.gerbil/lib:$utils_root/.gerbil/lib"
 
 "$gxi" "$validator" \
