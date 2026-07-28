@@ -74,10 +74,11 @@
         (check (.ref left 'stage-count) => 1)
         (check (.ref left 'spec-count) => 2)
         (check (.ref left 'spec-count) => (.ref right 'spec-count))))
-    (test-case "derives the RSS ceiling from machine capacity"
+    (test-case "derives the RSS ceiling from live allocatable memory"
       (check
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-adaptive-max-rss-bytes
-        (* 8 1024 1024 1024))
+        (* 1 1024 1024 1024)
+        (* 3 1024 1024 1024))
        => (* 4 1024 1024 1024)))
     (test-case "translates host allocation into an absolute RSS cap"
       (let* ((overrides
@@ -103,7 +104,7 @@
               (check (.ref config 'admission-outcome) => 'ready)
               (check (.ref config 'baseline-rss-bytes) => 1073741824)
               (check (.ref config 'allocatable-memory-bytes) => 1610612736)
-              (check (.ref config 'requested-max-rss-bytes) => 4294967296)
+              (check (.ref config 'requested-max-rss-bytes) => 2684354560)
               (check (.ref config 'admitted-memory-bytes) => 1610612736)
               (check (.ref config 'max-rss-bytes) => 2684354560)
               (check (.ref config 'configured-worker-count) => 12)
@@ -119,7 +120,7 @@
       (let* ((overrides
               (list
                (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "17179869184")
-               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "15032385536")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "3758096384")
                (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "1073741824")
                (cons "POO_FLOW_BUILD_BASELINE_RSS_BYTES" "805306368")
                (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT" "4")
@@ -137,7 +138,7 @@
           (lambda ()
             (let (config (poo-flow-project-compile-guard-config '()))
               (check (.ref config 'configured-worker-count) => 4)
-              (check (.ref config 'memory-per-worker-bytes) => 2147483648)
+              (check (.ref config 'memory-per-worker-bytes) => 805306368)
               (check (.ref config 'memory-worker-capacity) => 3)
               (check (.ref config 'worker-count) => 3)))
           (lambda ()
@@ -152,7 +153,7 @@
                (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "6442450944")
                (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "2147483648")
                (cons "POO_FLOW_BUILD_BASELINE_RSS_BYTES" "1073741824")
-               (cons "POO_FLOW_BUILD_MAX_RSS_BYTES" "1879048192")
+               (cons "POO_FLOW_BUILD_MAX_RSS_BYTES" "1879048191")
                (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT" "12")
                (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "1")
                (cons "GERBIL_BUILD_CORES" "12")))
@@ -171,9 +172,9 @@
                      => 'blocked-host-pressure)
               (check (.ref config 'admission-reasons)
                      => '(insufficient-requested-rss-cap))
-              (check (.ref config 'requested-max-rss-bytes) => 1879048192)
-              (check (.ref config 'admitted-memory-bytes) => 805306368)
-              (check (.ref config 'max-rss-bytes) => 1879048192)
+              (check (.ref config 'requested-max-rss-bytes) => 1879048191)
+              (check (.ref config 'admitted-memory-bytes) => 805306367)
+              (check (.ref config 'max-rss-bytes) => 1879048191)
               (check (.ref config 'memory-worker-capacity) => 1)
               (check (.ref config 'worker-count) => 1)))
           (lambda ()

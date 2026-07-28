@@ -32,7 +32,6 @@
 (def +poo-flow-project-compile-minimum-max-rss-bytes+
   (* 768 1024 1024))
 
-(def +poo-flow-project-compile-default-memory-share-denominator+ 2)
 (def +poo-flow-project-compile-default-sample-seconds+ 0.25)
 
 (def (poo-flow-project-compile-positive-integer-from-env name fallback)
@@ -148,9 +147,9 @@
              +poo-flow-project-compile-minimum-max-rss-bytes+))
      '(insufficient-memory-headroom)
      '())
-   (if (<= requested-max-rss-bytes
-           (+ baseline-rss-bytes
-              +poo-flow-project-compile-minimum-max-rss-bytes+))
+   (if (< requested-max-rss-bytes
+          (+ baseline-rss-bytes
+             +poo-flow-project-compile-minimum-max-rss-bytes+))
      '(insufficient-requested-rss-cap)
      '())))
 
@@ -168,21 +167,16 @@
         (and pages page-size (* pages page-size)))
       (* 8 +poo-flow-project-compile-minimum-max-rss-bytes+)))
 
-(def (poo-flow-project-compile-adaptive-max-rss-bytes system-memory-bytes)
-  (max +poo-flow-project-compile-minimum-max-rss-bytes+
-       (quotient
-        system-memory-bytes
-        +poo-flow-project-compile-default-memory-share-denominator+)))
+(def (poo-flow-project-compile-adaptive-max-rss-bytes
+      baseline-rss-bytes allocatable-memory-bytes)
+  (+ baseline-rss-bytes
+     (max +poo-flow-project-compile-minimum-max-rss-bytes+
+          allocatable-memory-bytes)))
 
-(def (poo-flow-project-compile-memory-per-worker-bytes
-      requested-max-rss-bytes configured-worker-count)
+(def (poo-flow-project-compile-memory-per-worker-bytes)
   (poo-flow-project-compile-positive-integer-from-env
    "POO_FLOW_BUILD_MEMORY_PER_WORKER_BYTES"
-   (max
-    +poo-flow-project-compile-minimum-max-rss-bytes+
-    (quotient
-     (+ requested-max-rss-bytes configured-worker-count -1)
-     configured-worker-count))))
+   +poo-flow-project-compile-minimum-max-rss-bytes+))
 
 (def (poo-flow-project-compile-guard-config _options)
   (let* ((system-memory-bytes
@@ -210,7 +204,8 @@
           (poo-flow-project-compile-positive-integer-from-env
            "POO_FLOW_BUILD_MAX_RSS_BYTES"
            (poo-flow-project-compile-adaptive-max-rss-bytes
-            system-memory-bytes)))
+            baseline-rss-bytes
+            allocatable-memory-bytes)))
          (requested-allocatable-memory-bytes
           (max 0 (- requested-max-rss-bytes
                     baseline-rss-bytes)))
@@ -231,9 +226,7 @@
           (poo-flow-project-compile-configured-worker-count
            logical-cpu-count))
          (memory-per-worker-bytes
-          (poo-flow-project-compile-memory-per-worker-bytes
-           requested-max-rss-bytes
-           configured-worker-count))
+          (poo-flow-project-compile-memory-per-worker-bytes))
          (memory-worker-capacity
           (max 1
                (quotient admitted-memory-bytes

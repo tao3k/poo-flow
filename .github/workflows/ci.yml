@@ -162,7 +162,7 @@ jobs:
             dependency-timeout-minutes: 12
             external-module-mode: analysis
             compile-timeout-minutes: 8
-            compile-runaway-timeout-seconds: 480
+            compile-runaway-timeout-seconds: 420
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow
@@ -376,7 +376,10 @@ jobs:
           start_seconds=$SECONDS
 
           set +e
-          bazel build --profile="$profile" //scheme:compile
+          bazel build \
+            --action_env=POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS="$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
+            --profile="$profile" \
+            //scheme:compile
           build_status=$?
           set -e
 
@@ -678,7 +681,7 @@ jobs:
             dependency-timeout-minutes: 12
             external-module-mode: analysis
             compile-timeout-minutes: 15
-            compile-runaway-timeout-seconds: 900
+            compile-runaway-timeout-seconds: 840
             job-timeout-minutes: 45
     steps: *native-steps
 

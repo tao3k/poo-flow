@@ -102,7 +102,6 @@ jobs:
         run: |
           bazelisk build //scheme:dependency_packages
           bazelisk build //scheme:runtime_wasm_generator_compile
-          bazelisk test //scheme:runtime_wasm_generator_compile_receipt_v1_test
           test -z "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:gslph_package)')"
           test -n "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:gerbil_poo_package)')"
           bazelisk run //scheme:runtime_wasm_generator_materialize

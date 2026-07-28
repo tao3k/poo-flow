@@ -797,3 +797,81 @@ multiple devenv processes, and Nix garbage collection.  This is a qualified
 host-pressure rejection, not a baseline or candidate performance sample.
 Repeating the formal comparison while that pressure remains would invalidate
 the attribution policy.
+
+* POO Flow root-compile regression correction
+
+The merged gerbil-bazel PR 29 remains the owner of fresh host observation,
+package-action execution, toolchain capability, and publish-pin replay.  It
+does not choose the worker count inside POO Flow's own =build.ss= supervisor.
+The two boundaries must therefore be measured separately.
+
+The last green =main= run on the same GitHub =macos-26= lane completed
+=//scheme:compile= in 356 seconds.  PR 12 reached the outer 900-second timeout
+in the same action.  Its newly introduced default divided the absolute RSS cap
+by the configured worker count.  Because that absolute cap includes the
+supervisor baseline RSS, the formula systematically reduced an admitted
+=N=-worker host to at most =N - 1= workers.  That local POO Flow admission
+policy, rather than the merged gerbil-bazel package-action implementation,
+owned the regression.
+
+The corrected policy combines two independent machine-derived limits:
+
+- the absolute process cap is =baseline RSS + live allocatable memory=;
+- the default per-worker reservation is the existing 768 MiB safety floor,
+  with =POO_FLOW_BUILD_MEMORY_PER_WORKER_BYTES= retained as the explicit
+  machine-calibration override.
+
+The total cap continues to fail closed on measured host memory.  The worker
+floor reduces parallelism only when the live allocatable envelope cannot admit
+all configured workers.  An explicit RSS cap below =baseline + safety floor=
+remains blocked, while exact coverage is admitted.
+
+#+begin_src mermaid
+flowchart LR
+  GB["gerbil-bazel PR 29"]
+  Package["Package actions and fresh host observation"]
+  Root["POO Flow build.ss supervisor"]
+  Live["Live available memory minus headroom"]
+  Floor["768 MiB per-worker reservation"]
+  Workers["Admitted worker count"]
+  Compile["POO Flow root compile"]
+
+  GB --> Package
+  Package --> Root
+  Live --> Root
+  Floor --> Root
+  Root --> Workers
+  Workers --> Compile
+#+end_src
+
+The focused native Scheme guard suite completed with =All tests OK=.  The
+declarative =//scheme:compile_performance_audit_test= passed one of one targets
+in 51.5 seconds, and the runtime-WASM producer target completed successfully in
+37.235 seconds.
+
+A real local =//scheme:compile= then completed successfully in 528.264 seconds
+of Bazel elapsed time with a 510.24-second critical path.  Its native Scheme
+receipt reported:
+
+#+begin_example
+configured-worker-count = 12
+worker-count = 12
+memory-per-worker-bytes = 805306368
+memory-worker-capacity = 21
+peak-rss-bytes = 4259545088
+max-rss-bytes = 18226571509
+elapsed-ms = 425634
+#+end_example
+
+The runtime stage compiled 381 modules and consumed 415.104 seconds, so it is
+the remaining local hotspot.  This local receipt proves restored full-machine
+admission and completion below the previous 15-minute failure boundary.  It is
+not a same-runner promotion receipt: PR 12 must still pass the =macos-26= and
+Linux GitHub lanes before the regression is closed.
+
+The GitHub outer timeouts now pass a shorter timeout into the Scheme supervisor
+through =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=.  Linux uses 420 seconds inside
+an 8-minute step, and macOS uses 840 seconds inside a 15-minute step.  This
+leaves 60 seconds for the Scheme failure receipt, Bazel profile, and artifact
+upload instead of allowing the GitHub runner to terminate the action without
+evidence.
