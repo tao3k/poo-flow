@@ -60,13 +60,7 @@ local_path_override(module_name = "poo_flow", path = "$exported_module")
 EOF
 
   if [[ "$include_gerbil_bazel_override" == 1 ]]; then
-    cat >>"$consumer/MODULE.bazel" <<EOF
-git_override(
-    module_name = "gerbil_bazel",
-    commit = "eacdb759f89f7493cf60ab7680256ec5920b44af",
-    remote = "https://github.com/tao3k/gerbil-bazel.git",
-)
-EOF
+    cat "$exported_module/gerbil-bazel.MODULE.bazel" >>"$consumer/MODULE.bazel"
   fi
 }
 

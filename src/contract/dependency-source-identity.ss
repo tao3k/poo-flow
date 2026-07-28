@@ -47,9 +47,9 @@
          "gslph"
          "gslph_sources"
          "https://github.com/tao3k/gerbil-scheme-language-project-harness"
-         "8eb8604e1907c294c60d8c6a7084c0ab50a80557"
-         "6b52760c63368027d24c43c0e01fffa54a915207fd236a45ca878dc7391d0307"
-         "gerbil-scheme-language-project-harness-8eb8604e1907c294c60d8c6a7084c0ab50a80557")))))
+         "a0ba60a15dd05d95ea89c0506f530f426d3dca1e"
+         "de202ddb3b204f4faa461f44df0cfeaa3bea5d77b047e46babc9a1fa51b84838"
+         "gerbil-scheme-language-project-harness-a0ba60a15dd05d95ea89c0506f530f426d3dca1e")))))
 
 (def (emit-line port . values)
   (for-each (lambda (value) (display value port)) values)

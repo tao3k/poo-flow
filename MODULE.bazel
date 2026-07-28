@@ -9,6 +9,8 @@ bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
 
+include("//:gerbil-bazel.MODULE.bazel")
+
 GERBIL_LINUX_INSTALL_DIGEST = "ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208"
 
 GERBIL_LINUX_SHA256 = "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978f9d5fe7"
@@ -16,12 +18,6 @@ GERBIL_LINUX_SHA256 = "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978
 GERBIL_LINUX_URLS = [
     "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208.tar.gz",
 ]
-
-git_override(
-    module_name = "gerbil_bazel",
-    commit = "4a5d5fbff632b459f587d4d3c14fbc2d775d9467",
-    remote = "https://github.com/tao3k/gerbil-bazel.git",
-)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.defaults(python_version = "3.12")

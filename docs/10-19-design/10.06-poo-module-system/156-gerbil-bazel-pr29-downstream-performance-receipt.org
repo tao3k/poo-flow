@@ -741,8 +741,9 @@ comparison unverifiable.  The formal run was interrupted during dependency
 seeding after 33.4 seconds, and the comparison gate rejects an unavailable
 runnable observation explicitly.
 
-gerbil-bazel PR 29 commit
-=4176db5700e80e450f7c475dab3e2c20bd7bb30c= closes that upstream boundary.
+gerbil-bazel PR 29 was squash-merged to =main= as
+=ee8e621fb266019ef8d65422abf0dc8c5ddea422=.  That published commit closes
+the upstream boundary.
 The Scheme guard invokes =ps -axo state== directly for each admission, parses
 the state column in Scheme, and represents observation availability separately
 from the runnable count.  A successful zero-runnable observation is therefore
@@ -750,14 +751,23 @@ available, while deterministic failure injection remains unavailable even
 when a CI count is also present.  Gerbil =__available-cores= remains the sole
 CPU-capacity source.
 
-POO Flow now pins that exact commit.  Its unavailable fixture uses the explicit
-=GERBIL_BAZEL_GUARD_FORCE_RUNNABLE_UNAVAILABLE=1= contract instead of overloading
-zero as a sentinel.  The downstream
+POO Flow now pins that exact merged commit.  Its unavailable fixture uses the
+explicit =GERBIL_BAZEL_GUARD_FORCE_RUNNABLE_UNAVAILABLE=1= contract instead of
+overloading zero as a sentinel.  The downstream
 =//scheme:compile_performance_audit_test= replay passed one of one targets in
 30.1 seconds.  Bazel reported 170.893 seconds overall because changing the
 external repository commit invalidated and rebuilt three dependent Gerbil
 package actions before the test; the test critical path itself remained
 bounded by the unchanged 60-second timeout.
+
+After the squash merge, Bazel resolved the merged =main= commit and reused 38
+content-identical action-cache entries.  The cached target remained green, but
+an explicit =--nocache_test_results= replay reached the fixed 60-second timeout
+before the synthetic suite completed.  A simultaneous process snapshot showed
+multiple active Rust compiler processes and many concurrent ASP processes.
+This is a host-contended validation attempt, not a qualified merged-pin replay.
+The timeout must not be raised; an uncached pass under an admitted host remains
+required before the merged pin is promoted.
 
 The fresh-observation prerequisite is now qualified, so a new three-by-three
 formal comparison may start.  This focused replay does not itself promote the

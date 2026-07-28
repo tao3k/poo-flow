@@ -1,0 +1,1126 @@
+#+title: Mix/Profile RFC — User Composition And Mix Module Interface
+#+status: draft
+#+parent: 45-mix-profile-recursive-composition-and-recoverable-control.org
+#+depends_on: 45-05-lineage-and-cycle-detection.org 45-06-gerbil-poo-api-alignment.org
+
+* Normative responsibility
+
+This module exclusively owns the public composition shape and the internal
+higher-order Mix module POO shape.
+
+* Approved public composition surface
+
+The canonical user surface is:
+
+#+begin_src scheme
+(user-composition my-system
+  (compose profiles
+    (wendao-episteme +research +observability)
+    production))
+#+end_src
+
+=user-composition= names the final user composition.  =compose= is the
+composition declaration, and =profiles= is a hygienic syntax marker selecting
+the profile composition algebra.  No nested user-composition form, extra
+use-composition wrapper, =initial= form, public =mix= tag, or explicit
+=base-profile= belongs to this surface.
+
+Every operand denotes a POO profile object expression.  A higher-order Mix may
+participate directly because it is profile-compatible; its =identity=,
+=imports=, and =capabilities= slots remain internal POO slots and MUST NOT leak
+into ordinary author grammar.
+
+A profile case such as:
+
+#+begin_src scheme
+(wendao-episteme +research +observability)
+#+end_src
+
+does not call another composition operation.  It contributes the base
+prototype and the selected refinement prototypes to the enclosing composition
+boundary.  The expander flattens those contributions with the remaining
+operands into one ordered lineage.
+
+The public form requires at least one profile operand.  The internal law that
+a receiver with no refinements is observationally equivalent to the receiver
+does not justify a public empty composition or a visible base profile.
+
+** Gerbil expander responsibilities
+
+Gerbil metaprogramming is used as a staged compiler for the POO author surface,
+not merely as a hygienic textual rewrite:
+
+#+begin_export mermaid
+flowchart LR
+    A["Profile declaration"] --> B["Compile-time semantic projection"]
+    A --> C["Runtime POO prototype"]
+    B --> D["Lexical binding and case validation"]
+    D --> E["Flat ordered lineage plan"]
+    E --> F["One POO prototype composition"]
+    C --> F
+#+end_export
+
+- =defrules= handles direct constructor families and simple syntax-to-POO
+  lowering.
+- =defsyntax= with =syntax-case= performs shape validation, case selection,
+  source-aware errors, and alternate expansion paths.
+- =with-syntax= creates hygienic temporaries so each runtime operand is
+  evaluated at most once.
+- =begin-syntax= holds bounded, declaration-owned static facts.
+- =syntax-local-value= resolves profile and refinement declarations by lexical
+  binding rather than strings or a global symbol registry.
+- =for-syntax= makes phase dependencies explicit.
+- macro objects are reserved for declarations that genuinely require explicit
+  expander state.
+
+The compile-time projection owns syntax, lexical binding, static shape, source
+locations, and flat-lineage planning.  The runtime projection owns POO slots,
+prototype resolution, laziness, fixed points, and recoverable control.  Macro
+expansion MUST produce ordinary POO-native and functional code and MUST NOT
+execute the runtime model during expansion.
+
+* User-composition result contract
+
+=user-composition= directly establishes a =clan/poo= prototype binding.
+It does not bind a configuration AST, composition builder, realization handle,
+module-registry entry, or intermediate value that requires a later
+initialization step.
+
+#+begin_src scheme
+(user-composition my-system
+  (compose profiles
+    (wendao-episteme +research)
+    production))
+#+end_src
+
+#+begin_export mermaid
+flowchart LR
+    A["user-composition declaration"] --> B["Compile-time profile descriptor"]
+    A --> C["Runtime clan/poo prototype binding"]
+    B --> D["Case validation and flat contribution plan"]
+    D --> C
+    C --> E["Normal Gerbil import and export"]
+    C --> F["POO extension and composition"]
+    C --> G["Lazy slot demand"]
+#+end_export
+
+** One name with two phase projections
+
+The declaration has a compile-time projection containing the profile role,
+case declarations, source locations, and flat-contribution plan, and a runtime
+projection containing the resulting =clan/poo= prototype.  Hygienic expansion
+keeps generated bindings private; the author manages only the declared name.
+
+The concrete Gerbil transformer technique remains subject to exact
+=symbol-located= evidence.  The public contract does not depend on a generated
+identifier or private expander representation.
+
+** Normal Gerbil module integration
+
+Downstream modules obtain the declared prototype through normal Gerbil lexical
+import and export.  They may read its POO slots, extend it through public
+=gerbil-poo= operations, use it as another profile-composition operand, place
+it in a higher-order Mix or Submodule, or demand a lazy slot.
+
+=user-composition= does not replace the Gerbil module system and does not
+introduce a package loader, registry, or initialization protocol.  There is no
+public:
+
+#+begin_src scheme
+(initial my-system)
+(realize-composition my-system)
+#+end_src
+
+The declaration establishes the prototype lineage.  Realization occurs through
+the =gerbil-poo= slot-demand lifecycle rather than a second authoring phase.
+
+** Composition closure
+
+The declared result remains profile-compatible and may participate in another
+composition:
+
+#+begin_src scheme
+(user-composition production-research
+  (compose profiles
+    my-system
+    hardened-production))
+#+end_src
+
+This operation extends a POO prototype lineage; it does not compose a serialized
+configuration result.  The expander validates the compile-time profile
+projection and lowers runtime behavior to the pinned =clan/poo= API.
+
+* Static declarations and first-class POO operands
+
+Profile is a contextual role, not a macro-created nominal type or runtime
+marker.  Any valid =clan/poo= prototype may act as an operand in a
+=compose profiles= context.  A compile-time descriptor provides earlier case
+validation when a declaration is lexically known, but it does not grant a
+runtime Profile identity.
+
+#+begin_export mermaid
+flowchart TD
+    A["compose profiles operand"] --> B{"Lexically known declaration?"}
+    B -->|yes| C["Read compile-time descriptor"]
+    C --> D["Validate cases and contribute a flat prototype plan"]
+    B -->|no| E["Evaluate expression once"]
+    E --> F{"Valid clan/poo prototype?"}
+    D --> G["One ordered clan/poo composition"]
+    F -->|yes| G
+    F -->|no| H["Structured operand condition"]
+#+end_export
+
+** Static profile operands
+
+A lexically known profile or user composition exposes a compile-time
+projection.  The expander may resolve it through =syntax-local-value=, validate
+case syntax such as =+research=, preserve source locations, and contribute the
+declared refinement prototypes to the flat lineage plan.
+
+#+begin_src scheme
+(wendao-episteme +research +observability)
+#+end_src
+
+Case flags belong to the declaration syntax.  They are not runtime keyword
+arguments.
+
+** Dynamic profile operands
+
+A first-class Scheme expression may produce a profile-compatible POO object:
+
+#+begin_src scheme
+(user-composition selected-system
+  (compose profiles
+    (select-profile environment)
+    production))
+#+end_src
+
+The dynamic expression is evaluated exactly once and is not executed by the
+expander.  Its only base operand check is that the result is a valid
+=clan/poo= prototype; this check does not force lazy slots.  The resulting
+prototype joins the same single ordered =clan/poo= composition.
+
+The macro MUST NOT guess a case owner for:
+
+#+begin_src scheme
+((select-profile environment) +research)
+#+end_src
+
+A dynamic selector that needs a case returns the already refined POO prototype
+as its ordinary value.
+
+** Descriptor boundary
+
+The compile-time descriptor may contain case grammar, source provenance,
+static contribution shape, and the identity of the corresponding runtime
+binding.  It MUST NOT contain a Profile type tag or copy slot values, imports,
+capability realizations, fixed-point state, or a realized runtime lineage.
+
+Static unknown profiles or cases fail during expansion at the declaration
+site.  A dynamic value that is not a valid =clan/poo= prototype raises a
+structured operand condition.  The condition may participate in the approved
+recovery model.
+
+** Contextual Profile role and optional Mix structure
+
+=profiles= selects the authoring and diagnostic context.  It does not add a
+=profile?= predicate, =profile-role-tag=, hidden class, or compatibility marker
+to the runtime object.
+
+#+begin_export mermaid
+flowchart LR
+    A["clan/poo prototype"] --> B["Contextually used as Profile"]
+    A --> C{"Exposes Mix structural capability?"}
+    C -->|yes| D["Also acts as higher-order Mix"]
+    C -->|no| E["Ordinary Profile prototype"]
+#+end_export
+
+An ordinary Profile does not require Mix slots.  Only an object that also
+assumes the higher-order Mix role is checked for the internal =identity=,
+=imports=, and =capabilities= structure and invariants.  Capability and
+Submodule roles are likewise checked only when those structural roles are
+actually used.
+
+The =profiles= marker may validate static case syntax, collect prototype
+contributions, preserve order, and produce profile-specific diagnostics.  It
+MUST NOT redefine prototype linearization, slot resolution, =super=,
+fixed-point behavior, or runtime object identity; those remain =gerbil-poo=
+semantics.
+
+* Profile case semantics
+
+A Profile case is a statically named POO refinement, not a function keyword,
+boolean feature flag, configuration option, or runtime registry entry.
+
+#+begin_src scheme
+(wendao-episteme +research +observability)
+#+end_src
+
+The declaration contributes the base prototype followed by the selected case
+refinement prototypes in source order.
+
+#+begin_export mermaid
+flowchart LR
+    A["wendao-episteme declaration"] --> B["+research case"]
+    A --> C["+observability case"]
+    B --> D["Ordered POO refinement contributions"]
+    C --> D
+    D --> E["Flat lineage plan"]
+#+end_export
+
+** Lexical case ownership
+
+A case identifier is owned by its Profile declaration descriptor.  The
+expander first resolves the head declaration and then interprets its following
+case identifiers.  The same spelling, such as =+observability=, may denote
+different refinements for different Profile declarations without a global
+feature registry or qualified string namespace.
+
+** Order and duplication
+
+Case order is semantically significant and MUST be preserved.  The expander
+does not sort, canonicalize, or treat cases as a set.  Slot interaction follows
+the resulting =gerbil-poo= lineage and =super= semantics.
+
+A case repeated in the same static application is an expansion-time error:
+
+#+begin_src scheme
+(wendao-episteme +research +research)
+#+end_src
+
+The expander MUST NOT silently deduplicate it, apply it twice, or choose the
+last occurrence.  A repeatable operation requires a separately declared
+semantic case rather than an implicit token count.
+
+** Contributions to multiple boundaries
+
+One case may contribute ordered refinements to several structural boundaries
+while preserving the identity scope of each boundary.
+
+#+begin_export mermaid
+flowchart TD
+    A["+observability case"] --> B["Current Mix refinement"]
+    A --> C["Nested observability Submodule refinement"]
+    A --> D["Capability refinement"]
+    A --> E["Policy refinement"]
+    B --> F["Mix boundary"]
+    C --> G["Submodule boundary"]
+    D --> H["Capability boundary"]
+    E --> I["Policy boundary"]
+#+end_export
+
+The descriptor records the case identifier, allowed occurrence count, ordered
+contribution description, target structural boundaries, source provenance, and
+static shape constraints.  It MUST NOT contain realized objects, forced
+imports, runtime lineage results, or fixed-point state.
+
+** Dynamic parameters remain Scheme values
+
+Ordinary cases are parameterless.  A requirement with dynamic parameters is
+expressed as a Scheme function that returns a POO prototype and is then used as
+a dynamic operand:
+
+#+begin_src scheme
+(research-profile-for dataset)
+#+end_src
+
+The case surface MUST NOT expand into an arbitrary nested configuration DSL
+with timeout, retry, dataset, or other runtime arguments.
+
+* Profile author declaration
+
+The normative Profile author macro is =defprofile=.  It declares one root POO
+expression followed by zero or more statically named case clauses:
+
+Detailed semantics are modular and remain outside this public-interface RFC:
+
+- [[file:45-17-profile-expansion-reflection-and-identity.org][Profile expansion, phase reflection, and identity]]
+- [[file:45-18-higher-order-profile-fixed-point-and-submodule-visibility.org][Higher-order Profile fixed point and submodule visibility]]
+- [[file:45-19-capability-ambiguity-resolution-overlay-and-replay.org][Capability ambiguity, resolution overlay, and replay]]
+- [[file:45-20-fixed-point-convergence-observation-budget.org][Fixed-point convergence and observation budget]]
+
+#+begin_src mermaid
+flowchart LR
+    U["45-07 public user composition"]
+    P["45-17 macro phase and identity"]
+    F["45-18 fixed point and submodules"]
+    R["45-19 ambiguity and recovery"]
+    C["45-20 convergence and budget"]
+
+    U -->|"expansion contract"| P
+    U -->|"composition semantics"| F
+    U -->|"continuable resolution"| R
+    U -->|"observability policy"| C
+#+end_src
+
+#+begin_src scheme
+(defprofile wendao-episteme
+  <root-poo-expression>
+
+  (+research
+    <poo-refinement-expression> ...)
+
+  (+observability
+    <poo-refinement-expression> ...))
+#+end_src
+
+The first body form is naturally the root prototype expression, and subsequent
+=+identifier= forms are case clauses.  The grammar MUST NOT add redundant
+=base= or =cases= wrappers.
+
+** POO-native case bodies
+
+The root and every case contribution are ordinary POO expressions.  Existing
+POO-native operators may be used directly:
+
+#+begin_src scheme
+(defprofile wendao-episteme
+  (.o
+    <root-slot-definition> ...)
+
+  (+research
+    (==> <research-prototype>
+         <slot-transform> ...))
+
+  (+observability
+    (==>.+= <observability-prototype>
+            <slot-transform> ...)))
+#+end_src
+
+=defprofile= does not redefine the POO-native operators shown above and does
+not introduce a row, record, patch, or configuration DSL around them.
+
+** Hygienic dual projection
+
+#+begin_export mermaid
+flowchart LR
+    A["defprofile declaration"] --> B["Hidden runtime root prototype"]
+    A --> C["Hidden runtime refinement prototypes"]
+    A --> D["Compile-time case descriptor"]
+    D --> E["Public lexical binding: wendao-episteme"]
+    B --> E
+    C --> D
+    E --> F["wendao-episteme with selected cases"]
+#+end_export
+
+The macro creates hygienic hidden runtime bindings for the root and refinement
+prototypes, plus a compile-time descriptor that maps case identifiers to
+ordered structural contributions.  Expansion preserves source provenance and
+does not evaluate POO expressions at compile time or copy runtime slot and
+fixed-point state.
+
+** Multiple structural contributions
+
+One case clause may contribute several already constructed POO refinements:
+
+#+begin_src scheme
+(+observability
+  observability-mix-refinement
+  telemetry-capability-refinement
+  recovery-policy-refinement)
+#+end_src
+
+Each contribution carries its own structural boundary.  The author does not
+declare string targets or write a public path-refinement DSL.
+
+Case declaration order provides deterministic descriptor output but does not
+define application precedence.  The order written at the use site determines
+the ordered refinement lineage.
+
+** One exported identifier
+
+A downstream module imports only the declared name, such as
+=wendao-episteme=.  Hidden prototype bindings, case tables, descriptors, and
+syntax support remain implementation details.  =defprofile= is a structural
+macro that declares a POO prototype and its static case projection; it does not
+create a Profile class or another object system.
+
+* Profile identifier expansion contract
+
+One exported Profile identifier has three context-sensitive uses while
+preserving one runtime prototype identity.
+
+#+begin_export mermaid
+flowchart TD
+    A["wendao-episteme occurrence"] --> B{"Syntax position"}
+    B -->|"bare expression"| C["Expand to hidden root prototype binding"]
+    B -->|"case application"| D{"Inside compose profiles?"}
+    D -->|yes| E["Contribute root and cases to enclosing flat plan"]
+    D -->|no| F["Perform one local gerbil-poo composition"]
+    B -->|"other application"| G["Expansion-time syntax error"]
+#+end_export
+
+** Bare identifier expression
+
+A bare Profile identifier expands to the hygienic hidden root
+=clan/poo= prototype binding and therefore remains a first-class Scheme value:
+
+#+begin_src scheme
+(define selected wendao-episteme)
+(list wendao-episteme production)
+#+end_src
+
+There is no public value or prototype accessor and no explicit unwrap step.
+
+** Standalone case expression
+
+A case application outside an enclosing =compose profiles= form performs one
+local =gerbil-poo= composition and returns the refined prototype:
+
+#+begin_src scheme
+(define research-system
+  (wendao-episteme +research))
+#+end_src
+
+** Case expression inside composition
+
+When the same case application is an operand of =compose profiles=, the outer
+expander reads its descriptor directly and contributes the root and selected
+case refinements to the enclosing flat plan.  It MUST NOT first construct an
+intermediate refined prototype and then compose that value again.
+
+Thus a standalone case expression has one local composition boundary, while
+an enclosed case expression joins the one enclosing boundary.  Neither path
+emits nested prototype-composition calls.
+
+** Invalid application and dynamic parameters
+
+A Profile identifier in operator position accepts only its declared static
+case identifiers.  Another argument shape, such as:
+
+#+begin_src scheme
+(wendao-episteme dataset)
+#+end_src
+
+is an expansion-time syntax error rather than a guessed function call.  A
+dynamic parameter is handled by an ordinary Scheme function that returns a POO
+prototype.
+
+** Lexical transformer export
+
+=defprofile= exports one lexical transformer.  In identifier position it
+projects the hidden runtime root; in application position it resolves static
+cases; and when inspected by =compose profiles= it provides the compile-time
+descriptor.
+
+Generated runtime references retain the defining module's lexical context.
+Downstream modules import only the declared Profile name and do not import root,
+case-table, descriptor, or syntax-support identifiers separately.  The exact
+Gerbil transformer mechanism remains =symbol-located= work; this contract fixes
+only its public observable behavior.
+
+* Boundary-local ordering and contribution projection
+
+A user composition does not create one global lineage spanning the Profile
+root, every Mix root, and every nested Capability or Submodule.  Source
+operands and cases are projected into the ordered contribution sequence of
+each structural boundary.
+
+#+begin_export mermaid
+flowchart TD
+    A["State 1: lexical operand stream"]
+    A -->|"project ordinary Profile contributions"| B["State 2P: Profile-boundary plan"]
+    A -->|"detect Mix role and scoped identity"| C["State 2M: wendao Mix-boundary plan"]
+    A -->|"route case contribution to capability scope"| D["State 2C: observability capability plan"]
+    B -->|"append source item 1"| B1["base"]
+    B1 -->|"same boundary: precedes"| B2["wendao Profile projection"]
+    B2 -->|"same boundary: precedes"| B3["production"]
+    B3 -->|"normalize once"| BP["State 3P: ordered Profile lineage"]
+    C -->|"append root"| C1["wendao root"]
+    C1 -->|"case order: research first"| C2["+research Mix refinement"]
+    C2 -->|"case order: observability second"| C3["+observability Mix refinement"]
+    C3 -->|"normalize once"| CP["State 3M: ordered wendao Mix lineage"]
+    D -->|"append scoped refinement"| D1["+observability capability refinement"]
+    D1 -->|"normalize once"| DP["State 3C: ordered capability lineage"]
+#+end_export
+
+** Boundary-local order preservation
+
+For any two contributions that enter the same structural boundary, their
+relative order follows the source operand order and then the case and case-body
+order.  The expander MUST NOT sort, group by spelling, or treat contributions
+as an unordered set.
+
+If a later Profile operand contributes another refinement to an existing Mix
+or Capability root, that contribution follows earlier contributions in that
+same boundary.
+
+** No cross-boundary precedence
+
+Different boundaries do not override one another.  Source order may be
+retained as provenance for conditions and receipts, but it creates no
+cross-boundary slot precedence or =super= relationship.
+
+=super= resolves only within one lineage root.  Sibling Mix roots do not inherit
+from one another.  Capability, Mix, and Submodule relationships use
+containment or explicit POO references, while =imports= establishes dependency
+edges rather than inheritance.
+
+** Bounded compile-time contribution forest
+
+#+begin_export mermaid
+flowchart LR
+    A["State 1: lexical operands and cases"]
+    A -->|"resolve descriptors without runtime evaluation"| B["State 2: bounded contribution forest"]
+    B -->|"select Profile boundary identity"| C["State 3P: ordered Profile sequence"]
+    B -->|"select each Mix boundary identity"| D["State 3M: ordered Mix sequences"]
+    B -->|"select each Capability or Submodule identity"| E["State 3S: ordered nested sequences"]
+    C -->|"after symbol-located and behavior-proven: invoke once"| CP["State 4P: gerbil-poo Profile prototype"]
+    D -->|"for each Mix boundary: invoke once"| DP["State 4M: sibling gerbil-poo Mix prototypes"]
+    E -->|"for each nested boundary: invoke once"| EP["State 4S: sibling nested prototypes"]
+    CP -. "no cross-boundary precedence" .-> DP
+    DP -. "containment or explicit references only" .-> EP
+#+end_export
+
+The contribution forest maps structural boundary identities to ordered
+contribution syntax.  It is a bounded compile-time lowering plan, not a runtime
+configuration AST, object system, registry, or merge engine.
+
+Every boundary is lowered to one =gerbil-poo= composition operation whose exact
+public symbol and behavior must reach =behavior-proven=.  The POO Flow expander
+does not resolve slots or implement prototype linearization.
+
+If one case contributes several refinements to the same boundary, their case
+body order is preserved.  Contributions to different boundaries enter their
+respective local sequences without acquiring a false global evaluation order.
+
+** Lazy and concurrent realization
+
+Source order constrains prototype semantics only within one lineage.  Sibling
+boundaries without dependency edges may be demanded lazily or evaluated
+concurrently by the =gerbil-poo= lifecycle.  A single user composition MUST NOT
+force unrelated Submodules into source-order serial execution.
+
+* User-composition identity separation
+
+=user-composition= MUST keep three identities distinct:
+
+1. the lexical Gerbil binding name;
+2. the runtime lineage-root identity owned by =gerbil-poo=;
+3. the provenance/content identity carried by qualification evidence.
+
+These identities answer different questions and MUST NOT be collapsed into one
+user-supplied string.
+
+#+begin_src mermaid
+flowchart LR
+  D["State: user-composition declaration"] -->|"Gerbil binding projection"| L["State: lexical binding name"]
+  D -->|"gerbil-poo prototype construction"| R["State: fresh runtime lineage root"]
+  D -->|"source + descriptor + dependency revision + lowering evidence"| P["State: provenance receipt"]
+  P -->|"canonical evidence projection"| C["State: content identity"]
+  L -->|"import rename changes spelling only"| L2["State: renamed lexical binding"]
+  R -->|"same object is imported or re-exported"| R2["State: preserved runtime lineage root"]
+  P -.->|"diagnostic attribution; no precedence or runtime identity authority"| L2
+  R -->|"derived composition constructs a new root"| DR["State: derived runtime lineage root"]
+  P -->|"records parent root, refinements, source, dependency revision, and lowering evidence"| DP["State: derived provenance receipt"]
+  DR -->|"qualified by"| DP
+#+end_src
+
+** Lexical binding identity
+
+In
+
+#+begin_src scheme
+(user-composition my-system
+  (compose profiles
+    (wendao-episteme +research +observability)
+    production))
+#+end_src
+
+=my-system= is a Gerbil binding name.  It participates in lexical scope,
+import, rename, and re-export.  It is useful for diagnostics, but it MUST NOT
+be a runtime lineage identity, memoization key, or cross-context cache key.
+
+The public form MUST NOT add a =#:identity= string parameter.  The hygienic
+macro already has the lexical binding identity, while =gerbil-poo= owns the
+runtime object identity.
+
+** Runtime lineage-root identity
+
+Each independently evaluated =user-composition= declaration constructs a
+fresh =gerbil-poo= lineage root.  Two declarations with identical source text
+therefore do not denote the same runtime root.
+
+Import rename and re-export preserve the imported POO object and its runtime
+lineage-root identity.  Changing the lexical spelling MUST NOT reconstruct the
+object or mint a replacement root.
+
+A derived composition constructs a new lineage root.  It MUST NOT overwrite,
+borrow, or impersonate a parent root merely because it contains the same
+refinements.
+
+** Provenance and content identity
+
+Qualification receipts describe how a composition was produced.  A derived
+composition receipt MUST link at least:
+
+- the parent lineage-root evidence;
+- the ordered refinements and boundary-local order;
+- the source/descriptor evidence;
+- the exact dependency revision evidence;
+- the macro-lowering evidence state.
+
+Provenance/content identity supports evidence comparison across contexts and
+processes.  A successful comparison may authorize evidence-linked reuse, but
+it MUST NOT claim that two independently constructed runtime roots are the
+same POO object.
+
+** Identity behavior under module operations
+
+| Operation | Lexical binding | Runtime lineage root | Provenance/content |
+|---+---+---+---|
+| local declaration | creates the declared name | creates a fresh root | creates declaration evidence |
+| import rename | changes local spelling | preserves the imported root | preserves and may extend import attribution |
+| re-export | exposes another binding path | preserves the exported root | preserves and may extend export attribution |
+| independent identical declaration | may reuse the same spelling in another scope | creates a distinct root | may have equal content evidence |
+| derived composition | creates the derived binding | creates a new derived root | links parents, refinements, dependencies, and lowering |
+
+* Provider-resolution reference
+
+Boundary-scoped provider capability resolution is specified by
+[[file:45-10-provider-runtime-search-closure.org][Provider Runtime Search Closure]].  This module owns Profile, Mix, and capability
+composition; it does not define runtime search order or execute a provider.
+
+* Historical implementation surface (non-normative)
+
+This section records the pre-RFC implementation evidence only.  Its
+=use-composition= spelling and module/alias wrapper MUST NOT be implemented by
+the new architecture, exported as compatibility syntax, or treated as a
+deprecation path.  The sole normative public grammar is the approved
+=user-composition= and =compose profiles= surface above.
+
+The canonical module clause remains:
+
+#+begin_src gerbil
+(use-module MODULE as ALIAS)
+#+end_src
+
+It appears directly inside the enclosing =compose profiles= declaration and
+is followed by ordinary Profile operands.
+
+#+begin_src gerbil
+(user-composition governance-workspace
+  (compose profiles
+    (use-module wendao-episteme as episteme)
+    (profiles
+      (compose episteme-profile local-governance-profile))))
+#+end_src
+
+The Profile names are illustrative.  The public grammar is not extended with
+=identity=, =imports=, =capabilities=, =initial=, or =resolve= clauses.
+
+The existing parser owner remains
+=profile-composition-syntax-plan.ss=.  This RFC owns the semantic expansion
+contract, not another parser.
+
+* Mix identity scope and Profile projection
+
+A Mix is an independent higher-order POO composition boundary.  Its internal
+=identity=, =imports=, and =capabilities= slots MUST NOT be flattened into the
+ordinary slot namespace of the final Profile root, where unrelated Mix
+identities would overwrite one another.
+
+#+begin_export mermaid
+flowchart TD
+    A["Final Profile prototype"] --> B["Ordinary Profile lineage"]
+    A --> C["Internal Mix-space POO prototype"]
+    C --> D["Mix identity A"]
+    C --> E["Mix identity B"]
+    D --> F["A imports and capabilities"]
+    E --> G["B imports and capabilities"]
+#+end_export
+
+=Mix space= is a conceptual name for this internal POO composition boundary.
+It is not public grammar, a raw map, a registry, or a second object system.
+Its implementation consists only of =gerbil-poo= objects and public prototype
+operations.
+
+** Mix operand projection
+
+The public composition remains:
+
+#+begin_src scheme
+(user-composition my-system
+  (compose profiles
+    wendao-episteme
+    another-mix
+    production))
+#+end_src
+
+The POO Flow role combinator distinguishes an ordinary Profile contribution
+from a higher-order Mix contribution without adding a Profile runtime tag.
+Ordinary contributions join the Profile lineage.  A Mix contribution enters
+the internal Mix space under its identity boundary.
+
+#+begin_export mermaid
+flowchart LR
+    A["Profile operand"] --> B{"Exposes Mix structure?"}
+    B -->|no| C["Ordinary Profile lineage contribution"]
+    B -->|yes| D["Contribute Mix root by identity"]
+    D --> E["Internal Mix-space prototype"]
+    C --> F["Final Profile prototype"]
+    E --> F
+#+end_export
+
+Within one Mix space, different identities establish sibling Mix roots.
+Contributions with the same identity refine one another only when they share
+the same lineage root.  Independent roots that claim the same identity raise
+an identity-collision condition.  A Profile refinement cannot change an
+existing Mix root identity.
+
+** Imports boundary
+
+A Mix =imports= slot denotes lazy POO dependencies in the Mix semantic model.
+It is not a Gerbil module =import=, a =gerbil.pkg= dependency, or a Bazel or Nix
+build dependency.  Shape validation MUST NOT force it.  Demand, recursion,
+cycle behavior, and fixed-point evaluation remain =gerbil-poo= semantics.
+
+** Capability space
+
+The =capabilities= slot is itself an internal POO prototype space.  Each
+capability is a POO prototype whose identity establishes its refinement
+boundary.  Different capability identities form sibling roots; contributions
+to the same identity use the normal =gerbil-poo= lineage when they share a
+root.  Capability removal or narrowing requires an explicit refinement rather
+than an absent key or =#f= overwrite.
+
+The same scoped structure may recur inside a Mix Submodule, allowing arbitrary
+to-B and to-C nesting without introducing another module language.
+
+* Recursive scoped identity and dependency topology
+
+A Mix identity is unique only among sibling roots in its enclosing Mix space.
+It is not a global system name.  The same local identity may legally occur
+under different parent Mix roots.
+
+#+begin_export mermaid
+flowchart TD
+    A["Root Profile"] --> B["Root Mix space"]
+    B --> C["wendao-episteme"]
+    B --> D["production-services"]
+    C --> E["observability"]
+    C --> F["research"]
+    D --> G["observability"]
+#+end_export
+
+The two =observability= roots above do not collide because their enclosing Mix
+spaces differ.  Their readable structural addresses are derived from POO
+containment lineage; they are not global string registry keys.
+
+** Recursive local flatness
+
+Each POO composition boundary owns one flat, ordered refinement lineage.  A
+recursive Submodule hierarchy is therefore a hierarchy of locally flat
+lineages, not one global flattened list and not a runtime tree of nested
+=compose= calls.
+
+The root Profile, its Mix space, every Mix root, and every nested Capability or
+Submodule boundary each normalize their own contributions once.  Composition
+does not cross or erase these identity scopes.
+
+** Containment and import edges
+
+#+begin_export mermaid
+flowchart LR
+    A["wendao-episteme"] -->|"contains"| B["research"]
+    A -->|"contains"| C["observability"]
+    B -. "lazy import" .-> C
+    C -. "lazy import" .-> D["shared telemetry capability"]
+#+end_export
+
+Containment establishes ownership and identity scope.  A Mix =imports= edge
+establishes a lazy demand dependency and does not change the imported object's
+parent.  Import cycles use =gerbil-poo= recursive-object, fixed-point, and cycle
+semantics.
+
+An internal import should hold a lexically resolved POO prototype reference or
+a structural reference carrying the parent-scope identity.  It MUST NOT depend
+on a mutable global registry or a global string path.  Human-readable paths in
+conditions and receipts are observation projections derived from containment
+lineage rather than the source of object identity.
+
+** Cross-boundary case refinements
+
+A statically declared Profile case may contribute a refinement to a nested
+boundary.  The declaration descriptor records the target structural boundary
+and hygienically contributes the nested prototype while the public form
+remains:
+
+#+begin_src scheme
+(wendao-episteme +observability)
+#+end_src
+
+The author does not write a public path-refinement DSL.  A dynamic operand that
+needs the same behavior returns an already constructed nested POO prototype.
+
+** Scoped collision condition
+
+An identity collision requires all three facts:
+
+#+begin_example
+same enclosing Mix space
+  + same local identity
+  + distinct lineage roots
+#+end_example
+
+Equal local identities under different parents are valid siblings in different
+scopes.  Contributions sharing the same root form an ordinary refinement
+lineage.
+
+* Higher-order Mix module
+
+#+begin_src text
+MixModuleObject
+  identity
+  imports
+  capabilities
+#+end_src
+
+All three are POO slots:
+
+- =identity= is immutable semantic module identity.
+- =imports= is a POO object of lazy capability computations.
+- =capabilities= is a POO object of composable values.
+
+The local alias is presentation identity only.  It does not enter module
+identity, G0 canonical values, package identity, or receipts.
+
+Profiles remain separate POO composition objects.  There is no required fourth
+=profiles= semantic slot on =MixModuleObject=.
+
+The slots have distinct extension rules:
+
+| Slot | Rule |
+|-
+| =identity= | established by the module object and preserved unchanged by Profile composition |
+| =imports= | POO object that Profiles may extend with lazy module-capability demands |
+| =capabilities= | POO object that Profiles may extend/override through normal self/super composition |
+
+A Profile cannot change module identity by overriding a slot.  The expansion
+validates that final identity equals the base module identity before publishing
+the object.
+
+* Internal POO shapes
+
+The three semantic projections use named internal predicates:
+
+#+begin_src text
+mix-module-object?
+mix-module-identity?
+mix-module-imports?
+mix-module-capabilities?
+module-capability-demand?
+#+end_src
+
+The minimum shape is:
+
+#+begin_src text
+mix-module-object?(x):
+  object?(x)
+  and x has slots identity, imports, capabilities
+  and mix-module-identity?(x.identity)
+  and mix-module-imports?(x.imports)
+  and mix-module-capabilities?(x.capabilities)
+#+end_src
+
+=mix-module-identity?= accepts the immutable POO identity value emitted by the
+module declaration/expansion.  It does not accept a local alias, filesystem
+path, gitlink, =gerbil.pkg= record, build target, or runtime-context identity.
+
+=mix-module-imports?= validates a POO container of declared
+=ModuleCapabilityDemand= objects.  A demand has internal POO slots:
+
+#+begin_src text
+moduleIdentity
+capabilityIdentity
+computation
+#+end_src
+
+=computation= must be a procedure and is invoked only through
+=resolve-module-capability=.  Users never construct or call a demand directly.
+
+=mix-module-capabilities?= validates a POO capability container.  Each declared
+capability owns a named shape predicate.  The container predicate validates
+slot declarations without forcing every capability value; the capability value
+predicate runs when that capability is demanded.
+
+Shape validation MUST NOT call =force-object=, traverse arbitrary nested POO
+objects, or eagerly invoke import computations.  Validation itself must not
+turn lazy composition into eager global evaluation.
+
+#+begin_mermaid
+flowchart TD
+    Module["Candidate MixModuleObject"] --> Slots["Check identity/imports/capabilities slots"]
+    Slots --> Identity["Validate immutable identity"]
+    Slots --> Imports["Validate import demand declarations<br/>without invoking them"]
+    Slots --> Capabilities["Validate capability declarations<br/>without forcing values"]
+    Imports --> Runtime["Demand-time resolve-module-capability"]
+    Capabilities --> Runtime
+#+end_mermaid
+
+* Parser and macro phases
+
+The phase boundary is:
+
+#+begin_mermaid
+flowchart LR
+    Source["Canonical user syntax"] --> Parse["Existing canonical parser"]
+    Parse --> Plan["Hygienic composition plan"]
+    Plan --> Emit["Emit ordinary POO-native Gerbil code"]
+    Emit --> Runtime["Runtime context + G0 gate"]
+    Runtime --> Resolve["Capability resolution"]
+    Resolve --> Result["Composed user object"]
+#+end_mermaid
+
+Compile time performs only:
+
+- exact grammar validation;
+- hygienic identifier and alias binding;
+- bounded Profile/module declaration normalization;
+- generation of named POO predicates and prototype compositions;
+- generation of ordinary calls to the pinned API.
+
+Compile time does not:
+
+- run G0;
+- inspect the active runtime context;
+- import-probe a dependency;
+- resolve a capability;
+- emit a DecisionReceipt;
+- consult GSLPH, Gerbil-Bazel, or =gerbil.pkg= runtime state.
+
+The macro expansion follows this semantic sequence:
+
+#+begin_src text
+canonical use-composition syntax
+  -> parser-owned composition plan
+  -> hygienic module alias bindings
+  -> internal MixModuleObject prototypes
+  -> ordered selected Profile prototypes
+  -> compose-proto*
+  -> instantiate-proto with explicit base
+  -> mix-module-object? validation
+  -> runtime publication
+#+end_src
+
+The expansion may generate raw self/super procedures because they are ordinary
+internal POO implementation code.  It may not expose those procedures as
+Profile-author syntax or accept raw user compute hooks.
+
+This phase structure follows
+[[file:88-phase-aware-composition-macro-architecture.org][88]] and the bounded
+macro style in
+[[file:44-current-project-programming-style.org][44]].
+
+* Author surface
+
+Profile authors continue to use:
+
+#+begin_src text
+.def
+.mix
+@
+super
+slot:=
+~=>
+~=>.+
+#+end_src
+
+Raw self/super lambdas may be generated by hygienic macros but are not ordinary
+user syntax.
+
+* Recursive modules
+
+#+begin_mermaid
+flowchart LR
+    A["A Profile"] -->|"A.imports.b"| B["MixModuleObject B"]
+    B -->|"B.imports.c"| C["MixModuleObject C"]
+    C --> Cap["Capability"]
+    Cap --> User["Composed user object"]
+#+end_mermaid
+
+All descendants share the active runtime context and do not repeat parent G0.
+
+* Alias hygiene
+
+=use-module MODULE as ALIAS= creates a hygienic composition-local binding.
+The alias:
+
+- must be an identifier accepted by the canonical parser;
+- must be unique within that composition scope;
+- does not mutate =MixModuleObject.identity=;
+- is not converted through string/symbol =eval=;
+- cannot access =resolve-module-capability=;
+- does not enter Requirement, Observation, Policy, DecisionReceipt, package
+  identity, or runtime-context identity.
+
+Generated internal identifiers are hygienic and cannot be captured by Profile
+slot names.  Runtime capability resolution uses the alias-bound module object,
+then the module's semantic identity and capability identity.
+
+* Invalid module objects
+
+Syntax that lacks canonical =use-module MODULE as ALIAS= fails through the
+existing =composition-invalid-module-form= parser contract.
+
+A resolved binding that is not a valid =MixModuleObject= raises
+=InvalidMixModuleObjectCondition= under the 45-03
+=CompositionEvaluationCondition= family.  Its bounded reasons are:
+
+#+begin_src text
+missing-identity-slot
+invalid-identity
+missing-imports-slot
+invalid-imports
+missing-capabilities-slot
+invalid-capabilities
+capability-shape-mismatch
+identity-overridden
+#+end_src
+
+This is a runtime composition condition, not a G0 semantic rejection.  It
+creates no DecisionReceipt.  45-04 owns its detached diagnostic presentation.
+
+* Visibility table
+
+| Surface | Visibility |
+|-
+| =user-composition=, =use-composition=, =profiles=, =compose= | public |
+| =use-module MODULE as ALIAS= | public canonical clause |
+| direct POO Profile syntax | public author surface |
+| =MixModuleObject= semantic slots | internal |
+| =resolve-module-capability= | private |
+
+#+begin_src text
+PUBLIC_NEW_CONFIGURATION_FORMS=0
+CANONICAL_PARSER_OWNER=profile-composition-syntax-plan.ss
+MIX_MODULE_REQUIRED_SLOTS=identity+imports+capabilities
+PROFILE_MAY_OVERRIDE_IDENTITY=false
+IMPORT_CONTAINER_FORCE_POLICY=declaration-only
+CAPABILITY_CONTAINER_FORCE_POLICY=demand-time
+COMPILE_TIME_G0=forbidden
+COMPILE_TIME_CAPABILITY_RESOLUTION=forbidden
+RAW_SELF_SUPER_LAMBDA_USER_INTERFACE=forbidden
+ALIAS_IN_SEMANTIC_IDENTITY=false
+#+end_src
+
+* Checklist
+
+- [X] Preserve current public grammar.
+- [X] Keep the existing canonical parser as sole parser owner.
+- [X] Keep Profile authoring directly POO-native.
+- [X] Keep module-object slots internal.
+- [X] Define named POO predicates for all internal projections.
+- [X] Validate container declarations without eager forcing.
+- [X] Preserve module identity across Profile composition.
+- [X] Define compile-time versus runtime responsibilities.
+- [X] Map expansion to =compose-proto*= and explicit-base
+  =instantiate-proto=.
+- [X] Keep aliases non-semantic.
+- [X] Make alias binding hygienic and composition-local.
+- [X] Support arbitrary nested module objects.
+- [X] Keep G0 and capability resolution out of compile time.
+- [X] Define bounded invalid-module-object reasons.
+- [ ] Select concrete Gerbil macro definitions and generated identifiers.
+- [ ] Select concrete POO identity and demand prototypes.
+- [ ] Test parser, alias, composition, and nested-module cases.

@@ -266,7 +266,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "NpLQrEMl3JJmQfmun+2znNbrMxffrVt95hJPTGAI8PQ=",
-        "usagesDigest": "0jnTB9DhZL/PdUw2XNhhgSZRlgtQd7MTq7mFVl1Be0I=",
+        "usagesDigest": "pZCPT9fat68nARSK89qAt5sGw8OUMXH9tbwTMb3Mqm0=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -323,11 +323,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/gerbil-scheme-language-project-harness",
               "package": "gslph",
-              "revision": "8eb8604e1907c294c60d8c6a7084c0ab50a80557",
-              "sha256": "6b52760c63368027d24c43c0e01fffa54a915207fd236a45ca878dc7391d0307",
-              "strip_prefix": "gerbil-scheme-language-project-harness-8eb8604e1907c294c60d8c6a7084c0ab50a80557",
+              "revision": "a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
+              "sha256": "de202ddb3b204f4faa461f44df0cfeaa3bea5d77b047e46babc9a1fa51b84838",
+              "strip_prefix": "gerbil-scheme-language-project-harness-a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
               "urls": [
-                "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/8eb8604e1907c294c60d8c6a7084c0ab50a80557.tar.gz"
+                "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/a0ba60a15dd05d95ea89c0506f530f426d3dca1e.tar.gz"
               ]
             }
           }

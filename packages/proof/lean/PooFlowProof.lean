@@ -18,8 +18,12 @@ import PooFlowProof.PooC3.ScenarioGap
 import PooFlowProof.Generated.ScenarioGapRuntimeRow
 import PooFlowProof.Generated.ScenarioGapRuntimeRowRejections
 import PooFlowProof.PooC3.CompositionReceipt
+import PooFlowProof.PooC3.CompositionIdentity
 import PooFlowProof.Generated.CompositionReceipt
 import PooFlowProof.PooC3.AuthorizedEffectEvidence
+import PooFlowProof.PooC3.RealizationAdmission
+import PooFlowProof.PooC3.EffectBoundary
+import PooFlowProof.PooC3.RecoveryPolicyAuthorization
 import PooFlowProof.Generated.AuthorizedEffectEvidence
 import PooFlowProof.PooC3.AuthorizedEffectProofCase
 import PooFlowProof.PooC3.ProtocolPersonPromotion
