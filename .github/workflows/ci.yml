@@ -142,7 +142,6 @@ jobs:
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: 12
         env:
-          GERBIL_BUILD_CORES: 3
           POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE: ${{ runner.temp }}/poo-flow-external-bazel-output-base-v1
           POO_FLOW_EXTERNAL_TEST_MODE: full
         run: tools/ci/test_external_bazel_module.sh
@@ -369,7 +368,6 @@ jobs:
         timeout-minutes: ${{ matrix.compile-timeout-minutes }}
         env:
           COMPILE_RUNAWAY_TIMEOUT_SECONDS: ${{ matrix.compile-runaway-timeout-seconds }}
-          GERBIL_BUILD_CORES: 3
         shell: bash
         run: |
           set -euo pipefail

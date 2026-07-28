@@ -174,6 +174,16 @@
         system-memory-bytes
         +poo-flow-project-compile-default-memory-share-denominator+)))
 
+(def (poo-flow-project-compile-memory-per-worker-bytes
+      requested-max-rss-bytes configured-worker-count)
+  (poo-flow-project-compile-positive-integer-from-env
+   "POO_FLOW_BUILD_MEMORY_PER_WORKER_BYTES"
+   (max
+    +poo-flow-project-compile-minimum-max-rss-bytes+
+    (quotient
+     (+ requested-max-rss-bytes configured-worker-count -1)
+     configured-worker-count))))
+
 (def (poo-flow-project-compile-guard-config _options)
   (let* ((system-memory-bytes
           (poo-flow-project-compile-system-memory-bytes))
@@ -220,10 +230,14 @@
          (configured-worker-count
           (poo-flow-project-compile-configured-worker-count
            logical-cpu-count))
+         (memory-per-worker-bytes
+          (poo-flow-project-compile-memory-per-worker-bytes
+           requested-max-rss-bytes
+           configured-worker-count))
          (memory-worker-capacity
           (max 1
                (quotient admitted-memory-bytes
-                         +poo-flow-project-compile-minimum-max-rss-bytes+)))
+                         memory-per-worker-bytes)))
          (worker-count
           (min configured-worker-count
                memory-worker-capacity))
@@ -255,6 +269,7 @@
           (requested-max-rss-bytes-value requested-max-rss-bytes)
           (admitted-memory-bytes-value admitted-memory-bytes)
           (configured-worker-count-value configured-worker-count)
+          (memory-per-worker-bytes-value memory-per-worker-bytes)
           (memory-worker-capacity-value memory-worker-capacity)
           (worker-count-value worker-count)
           (admission-outcome-value admission-outcome)
@@ -278,6 +293,7 @@
           (requested-max-rss-bytes requested-max-rss-bytes-value)
           (admitted-memory-bytes admitted-memory-bytes-value)
           (configured-worker-count configured-worker-count-value)
+          (memory-per-worker-bytes memory-per-worker-bytes-value)
           (memory-worker-capacity memory-worker-capacity-value)
           (worker-count worker-count-value)
           (admission-outcome admission-outcome-value)
@@ -300,7 +316,7 @@
                 rss-headroom-bytes baseline-rss-bytes
                 allocatable-memory-bytes requested-max-rss-bytes
                 admitted-memory-bytes configured-worker-count
-                memory-worker-capacity worker-count
+                memory-per-worker-bytes memory-worker-capacity worker-count
                 system-memory-bytes max-rss-bytes peak-rss-bytes
                 elapsed-ms timeout-ms)))
 
@@ -423,6 +439,7 @@
    ("requested-max-rss-bytes" (.ref receipt 'requested-max-rss-bytes))
    ("admitted-memory-bytes" (.ref receipt 'admitted-memory-bytes))
    ("configured-worker-count" (.ref receipt 'configured-worker-count))
+   ("memory-per-worker-bytes" (.ref receipt 'memory-per-worker-bytes))
    ("memory-worker-capacity" (.ref receipt 'memory-worker-capacity))
    ("worker-count" (.ref receipt 'worker-count))
    ("system-memory-bytes" (.ref receipt 'system-memory-bytes))
@@ -470,6 +487,7 @@
       (requested-max-rss-bytes (.ref config 'requested-max-rss-bytes))
       (admitted-memory-bytes (.ref config 'admitted-memory-bytes))
       (configured-worker-count (.ref config 'configured-worker-count))
+      (memory-per-worker-bytes (.ref config 'memory-per-worker-bytes))
       (memory-worker-capacity (.ref config 'memory-worker-capacity))
       (runnable-worker-capacity (.ref config 'runnable-worker-capacity))
       (worker-count (.ref config 'worker-count))
@@ -504,6 +522,7 @@
       (requested-max-rss-bytes (.ref config 'requested-max-rss-bytes))
       (admitted-memory-bytes (.ref config 'admitted-memory-bytes))
       (configured-worker-count (.ref config 'configured-worker-count))
+      (memory-per-worker-bytes (.ref config 'memory-per-worker-bytes))
       (memory-worker-capacity (.ref config 'memory-worker-capacity))
       (runnable-worker-capacity (.ref config 'runnable-worker-capacity))
       (worker-count (.ref config 'worker-count))
@@ -653,6 +672,8 @@
                            (.ref config 'admitted-memory-bytes))
                           (configured-worker-count
                            (.ref config 'configured-worker-count))
+                          (memory-per-worker-bytes
+                           (.ref config 'memory-per-worker-bytes))
                           (memory-worker-capacity
                            (.ref config 'memory-worker-capacity))
                           (runnable-worker-capacity

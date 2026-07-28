@@ -107,8 +107,39 @@
               (check (.ref config 'admitted-memory-bytes) => 1610612736)
               (check (.ref config 'max-rss-bytes) => 2684354560)
               (check (.ref config 'configured-worker-count) => 12)
+              (check (.ref config 'memory-per-worker-bytes) => 805306368)
               (check (.ref config 'memory-worker-capacity) => 2)
               (check (.ref config 'worker-count) => 2)))
+          (lambda ()
+            (for-each
+             (lambda (entry)
+               (setenv (car entry) (or (cdr entry) "")))
+             previous)))))
+    (test-case "reduces workers from the observed machine memory envelope"
+      (let* ((overrides
+              (list
+               (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "17179869184")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "15032385536")
+               (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "1073741824")
+               (cons "POO_FLOW_BUILD_BASELINE_RSS_BYTES" "805306368")
+               (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT" "4")
+               (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "1")
+               (cons "GERBIL_BUILD_CORES" "4")))
+             (previous
+              (map (lambda (entry)
+                     (cons (car entry) (getenv (car entry) #f)))
+                   overrides)))
+        (dynamic-wind
+          (lambda ()
+            (for-each
+             (lambda (entry) (setenv (car entry) (cdr entry)))
+             overrides))
+          (lambda ()
+            (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'configured-worker-count) => 4)
+              (check (.ref config 'memory-per-worker-bytes) => 2147483648)
+              (check (.ref config 'memory-worker-capacity) => 3)
+              (check (.ref config 'worker-count) => 3)))
           (lambda ()
             (for-each
              (lambda (entry)
@@ -315,6 +346,7 @@
                   (requested-max-rss-bytes 17179869184)
                   (admitted-memory-bytes 16642998272)
                   (configured-worker-count available-cpu-count)
+                  (memory-per-worker-bytes 805306368)
                   (memory-worker-capacity 20)
                   (runnable-worker-capacity available-cpu-count)
                   (worker-count available-cpu-count)
@@ -374,6 +406,7 @@
         (check (hash-get object "allocatable-memory-bytes") => 23622320128)
         (check (hash-get object "requested-max-rss-bytes") => 17179869184)
         (check (hash-get object "admitted-memory-bytes") => 16642998272)
+        (check (hash-get object "memory-per-worker-bytes") => 805306368)
         (check (hash-get object "memory-worker-capacity") => 20)
         (check (hash-get object "worker-count")
                => available-cpu-count)
