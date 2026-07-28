@@ -275,14 +275,28 @@
        (cons "cleanupTrigger" "dynamic-wind")
        (cons "baselineOutputBase" baseline-output-base)
        (cons "candidateOutputBase" candidate-output-base))))
-    (dynamic-wind
-      (lambda () #!void)
-      thunk
-      (lambda ()
-        (shutdown-audit-server!
-         bazel baseline-workspace baseline-output-base)
-        (shutdown-audit-server!
-         bazel candidate-workspace candidate-output-base)))))
+    (let ((failure #f)
+          (result #f))
+      ;; Catch inside the dynamic extent so an uncaught top-level exception
+      ;; cannot terminate the runtime before the after thunk closes both
+      ;; Bazel servers. Re-raise only after cleanup has completed.
+      (set! result
+        (dynamic-wind
+          (lambda () #!void)
+          (lambda ()
+            (with-catch
+             (lambda (exception)
+               (set! failure exception)
+               #f)
+             thunk))
+          (lambda ()
+            (shutdown-audit-server!
+             bazel baseline-workspace baseline-output-base)
+            (shutdown-audit-server!
+             bazel candidate-workspace candidate-output-base))))
+      (if failure
+        (raise failure)
+        result))))
 
 (def (seed-dependencies!
       bazel workspace output-base dependency-cache symlink-prefix)

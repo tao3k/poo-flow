@@ -24,6 +24,28 @@ utils_root=$(resolve_runfile "${10:?Gerbil Utils root is required}")
 export GERBIL_BAZEL_GUARD_RUNNABLE_PROCESSES=1
 export GERBIL_BAZEL_GUARD_PROCESS_TABLE_SNAPSHOT='1 0 1'
 
+assert_file_contains() {
+  local pattern=$1
+  local path=$2
+  if ! grep -F "$pattern" "$path" >/dev/null; then
+    printf 'expected %q in %s\n' "$pattern" "$path" >&2
+    if [[ -f "$path" ]]; then
+      sed -n '1,80p' "$path" >&2
+    else
+      printf 'file is missing\n' >&2
+    fi
+    exit 1
+  fi
+}
+
+assert_file_exists() {
+  local path=$1
+  if [[ ! -f "$path" ]]; then
+    printf 'expected file: %s\n' "$path" >&2
+    exit 1
+  fi
+}
+
 root="${TEST_TMPDIR:?TEST_TMPDIR is required}/audit"
 baseline_workspace="$root/baseline"
 candidate_workspace="$root/candidate"
@@ -92,22 +114,29 @@ then
   exit 1
 fi
 
-grep -F '"outcome":"failed-build"' \
-  "$failure_output_directory/candidate-1/compile.receipt.json" >/dev/null
-grep -F '"failure-exit-code":10' \
-  "$failure_output_directory/candidate-1/compile.receipt.json" >/dev/null
-grep -F '"rawProcessStatus":256' \
-  "$failure_output_directory/candidate-1/failure.context.json" >/dev/null
-grep -F '"terminalReceiptObserved":true' \
-  "$failure_output_directory/candidate-1/failure.context.json" >/dev/null
-grep -F 'POO_FLOW_PROJECT_BUILD_RECEIPT' \
-  "$failure_output_directory/candidate-1/build.log" >/dev/null
-[[ -f "$failure_output_directory/baseline-output-base/.shutdown" ]]
-[[ -f "$failure_output_directory/candidate-output-base/.shutdown" ]]
-grep -F '"state":"armed"' \
-  "$failure_output_directory/server-lifecycle.json" >/dev/null
-grep -F '"cleanupTrigger":"dynamic-wind"' \
-  "$failure_output_directory/server-lifecycle.json" >/dev/null
+assert_file_contains \
+  '"outcome":"failed-build"' \
+  "$failure_output_directory/candidate-1/compile.receipt.json"
+assert_file_contains \
+  '"failure-exit-code":10' \
+  "$failure_output_directory/candidate-1/compile.receipt.json"
+assert_file_contains \
+  '"rawProcessStatus":256' \
+  "$failure_output_directory/candidate-1/failure.context.json"
+assert_file_contains \
+  '"terminalReceiptObserved":true' \
+  "$failure_output_directory/candidate-1/failure.context.json"
+assert_file_contains \
+  'POO_FLOW_PROJECT_BUILD_RECEIPT' \
+  "$failure_output_directory/candidate-1/build.log"
+assert_file_exists "$failure_output_directory/baseline-output-base/.shutdown"
+assert_file_exists "$failure_output_directory/candidate-output-base/.shutdown"
+assert_file_contains \
+  '"state":"armed"' \
+  "$failure_output_directory/server-lifecycle.json"
+assert_file_contains \
+  '"cleanupTrigger":"dynamic-wind"' \
+  "$failure_output_directory/server-lifecycle.json"
 
 pressure_output_storage="$root/pressure-output-storage"
 pressure_output_directory="$root/pressure-output-alias"
