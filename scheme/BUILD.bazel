@@ -9,10 +9,8 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//tools/bazel:gerbil_project_environment.bzl", "gerbil_project_environment")
 load(
     "//tools/bazel:gerbil_projection.bzl",
-    "gerbil_project_contract_projection",
     "gerbil_project_projection",
 )
-load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -74,32 +72,6 @@ filegroup(
 ]
 
 gerbil_project_compile(
-    name = "dependency_source_contract_compile",
-    srcs = ["//:dependency_source_contract_sources"],
-    build_script = "//:dependency_source_contract_build_script",
-    process_guard = True,
-    receipt_line_prefix = "POO_FLOW_DEPENDENCY_SOURCE_CONTRACT_BUILD_RECEIPT ",
-    require_library_output = True,
-    deps = [":gerbil_poo_package"],
-)
-
-gerbil_project_contract_projection(
-    name = "dependency_source_contract_projection",
-    output_name = "poo-flow-dependency-source-contract.json",
-    project = ":dependency_source_contract_compile",
-    projector = ":write_dependency_source_contract_projection.ss",
-)
-
-gerbil_project_test(
-    name = "dependency_source_contract_test",
-    size = "small",
-    srcs = "//:dependency_source_contract_test_sources",
-    project = ":dependency_source_contract_compile",
-    source_root_marker = "//:scheme_source_root_marker",
-    tests = ["//:t/dependency-source-identity-test.ss"],
-)
-
-gerbil_project_compile(
     name = "runtime_wasm_generator_compile",
     srcs = ["//:runtime_wasm_generator_scheme_sources"],
     args = ["compile"],
@@ -133,18 +105,6 @@ gerbil_project_test(
     project = ":compile_performance_budget_package",
     source_root_marker = "//:scheme_source_root_marker",
     tests = ["//:t/build-api-project-compile-performance-budget-test.ss"],
-)
-
-filegroup(
-    name = "runtime_wasm_generator_compile_receipt",
-    srcs = [":runtime_wasm_generator_compile"],
-    output_group = "receipt",
-)
-
-gerbil_project_receipt_v1_test(
-    name = "runtime_wasm_generator_compile_receipt_v1_test",
-    receipt = ":runtime_wasm_generator_compile_receipt",
-    size = "small",
 )
 
 gerbil_project_dev(
@@ -220,36 +180,6 @@ filegroup(
     name = "compile_log",
     srcs = [":compile"],
     output_group = "log",
-)
-
-filegroup(
-    name = "compile_receipt",
-    srcs = [":compile"],
-    output_group = "receipt",
-)
-
-gerbil_project_receipt_v1_test(
-    name = "compile_receipt_v1_test",
-    consumer_inputs = [":dependency_source_contract_projection"],
-    consumer_validator = ":validate_compile_receipt_v1.ss",
-    receipt = ":compile_receipt",
-)
-
-sh_test(
-    name = "compile_receipt_contract_mismatch_test",
-    srcs = ["validate_compile_receipt_v1_negative_test.sh"],
-    args = [
-        "$(rlocationpath @local_gerbil//:gxi)",
-        "$(rlocationpath :validate_compile_receipt_v1.ss)",
-        "$(rlocationpath :compile_receipt)",
-        "$(rlocationpath :dependency_source_contract_projection)",
-    ],
-    data = [
-        ":compile_receipt",
-        ":dependency_source_contract_projection",
-        ":validate_compile_receipt_v1.ss",
-        "@local_gerbil//:gxi",
-    ],
 )
 
 sh_test(

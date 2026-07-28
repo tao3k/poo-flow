@@ -1,7 +1,19 @@
 #+title: RFC 152 - Dependency Materialization Receipt Bridge
 #+status: implementation-validated-owner-publication-pending
 
-* Decision
+* Decision (corrected 2026-07-27)
+
+The root =gerbil.pkg= is the sole POO Flow declaration owner for Gerbil
+package dependencies. There is no POO-owned dependency source contract.
+
+Gerbil-Bazel records and validates resolver observations while materializing
+the project action. POO Flow calls =gerbil_project_compile= directly. It MUST
+NOT inject a JSON dependency manifest, compiled Scheme catalog, local
+Starlark wrapper, or local generic receipt validator.
+
+Org authoring and governance remain outside this build-input boundary.
+
+* Historical decision (superseded 2026-07-27)
 
 The identified and versioned POO dependency source contract is the sole
 canonical owner of dependency identity.
@@ -71,7 +83,7 @@ It does not claim that two different repository receipts with contradictory
 contents are equivalent.  POO consumer validation rejects duplicate logical
 packages and any mismatch against the canonical contract.
 
-* Contract artifact projection
+* Rejected contract artifact projection (removed 2026-07-27)
 
 The canonical Scheme object now has an explicit =version= slot.  A dedicated
 Gerbil project action loads the already compiled contract and writes:
@@ -101,7 +113,23 @@ dependency entry and fails closed on:
 - non-positive source file count;
 - an outcome other than =resolved=.
 
-* Validated receipt
+* Gerbil-Bazel library validation
+
+The Gerbil-Bazel-owned project-receipt validator fails closed on:
+
+- an absent or empty resolution array;
+- duplicate or empty logical package identities;
+- invalid canonical URI, expected revision, or observed revision field types;
+- a malformed source snapshot digest;
+- an unsupported resolution mode;
+- invalid worktree state;
+- non-positive source file count;
+- an outcome other than =resolved=.
+
+POO Flow deliberately does not own the validator, expected package list,
+revision, archive digest, URI, archive URL, or strip prefix.
+
+* Historical validated receipt
 
 The validated root receipt contained exactly three observations:
 
@@ -121,7 +149,7 @@ The inner POO build receipt retained:
 - 389 specs;
 - 112 ms source-identity materialization time.
 
-* Validation receipts
+* Historical validation receipts (superseded)
 
 Gerbil-Bazel owner regression:
 
@@ -167,7 +195,7 @@ The implementation is not closed until all of the following hold:
 Until then, the local override is evidence for the design and implementation,
 not a distributable dependency closure.
 
-* 2026-07-24 published candidate and downstream replay
+* Historical 2026-07-24 published candidate and downstream replay
 
 The bridge owner is now materialized by gerbil-bazel pull request 26 at commit
 =eacdb759f89f7493cf60ab7680256ec5920b44af=.  POO Flow pins that exact commit;

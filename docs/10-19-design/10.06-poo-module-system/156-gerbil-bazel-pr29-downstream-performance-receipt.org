@@ -222,7 +222,19 @@ parse Scheme source or infer POO domain ownership.  Release builds must keep
 Gerbil optimization enabled, all worker limits must remain host-derived, and
 promotion requires both green unit tests and end-to-end performance receipts.
 
-* Source-ownership parity correction
+* Current dependency ownership correction (2026-07-27)
+
+The former independent =dependency_source_contract_sources= package and
+=src/contract/dependency-source-identity.ss= module were removed. They
+duplicated Gerbil package declarations and the Gerbil-Bazel hermetic build
+lock; they are not a current POO Flow source-ownership boundary.
+
+=gerbil.pkg= owns package declarations. Gerbil-Bazel owns hermetic
+materialization, source-resolution receipts, and their generic validation.
+POO Flow uses =gerbil_project_compile= directly without maintaining a second
+dependency catalog or receipt validator.
+
+* Historical source-ownership parity correction (superseded 2026-07-27)
 
 The local dynamic source scan initially reported 382 runtime specs while the
 hermetic Bazel receipt reported 381.  This was not a missing Bazel source.  The

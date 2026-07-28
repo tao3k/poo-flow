@@ -19,30 +19,7 @@ filegroup(
         "src/**/*.scm",
         "src/**/*.ss",
         "src/**/*.ssi",
-    ], exclude = [
-        "src/contract/dependency-source-identity.ss",
     ]),
-)
-
-filegroup(
-    name = "dependency_source_contract_build_script",
-    srcs = ["dependency-source-contract-build.ss"],
-)
-
-filegroup(
-    name = "dependency_source_contract_sources",
-    srcs = [
-        "gerbil.pkg",
-        "src/contract/dependency-source-identity.ss",
-    ],
-)
-
-filegroup(
-    name = "dependency_source_contract_test_sources",
-    srcs = [
-        ":dependency_source_contract_sources",
-        "t/dependency-source-identity-test.ss",
-    ],
 )
 
 filegroup(

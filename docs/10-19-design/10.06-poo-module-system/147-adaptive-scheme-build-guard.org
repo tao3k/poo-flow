@@ -82,6 +82,18 @@ The performance acceptance target remains the pre-regression known-good
 envelope, not the =534.76 s= comparison point.  POO Flow issue =#13= owns the
 healthy-host reproduction and CI regression budget.
 
+** 2026-07-27 dependency ownership correction
+
+The former independent
+=//scheme:dependency_source_contract_compile= action compiled a second
+package/source declaration catalog inside POO Flow. It duplicated
+=gerbil.pkg= and the Gerbil-Bazel build lock and was removed.
+
+The current POO Flow Bazel graph calls Gerbil-Bazel
+=gerbil_project_compile= directly. Gerbil-Bazel owns project-receipt
+construction and validation, including =dependencySourceResolutions=. POO
+Flow has no local generic receipt validator or wrapper rule.
+
 ** Versioned build-source identity and comparable performance receipts
 
 Cross-revision performance measurement is a separate, non-mutating consumer of
@@ -314,15 +326,20 @@ same repository.
 
 #+begin_src mermaid
 flowchart LR
-  ContractSource["src/contract/dependency-source-identity.ss"] --> ContractAction["dependency_source_contract_compile"]
-  ContractAction --> ContractReceipt["contract projection and receipt"]
-  RuntimeSources["scheme_build_sources"] --> RuntimeAction["compile"]
-  ContractSource -. "must not be an action input" .-> RuntimeAction
-  AQuery["Bazel action-query evidence"] --> Positive["contract action count > 0"]
-  AQuery --> Negative["root action count = 0"]
-  Positive --> Isolation["input-isolation receipt: isolated"]
-  Negative --> Isolation
+  Build["POO Flow //scheme:compile"]
+  API["Gerbil-Bazel gerbil_project_compile"]
+  Package["gerbil.pkg"]
+  Receipt["Gerbil-Bazel project receipt"]
+
+  Build -->|"single build API"| API
+  Package -->|"package declarations"| API
+  API -->|"library-owned output"| Receipt
+  Build -.->|"no local wrapper or generic validator"| Receipt
 #+end_src
+
+The dependency-contract action described immediately above is historical and
+was removed on 2026-07-27. The diagram shows the current single-library-API
+boundary.
 
 *** 2026-07-24 implementation receipt
 
@@ -1572,7 +1589,14 @@ Rejected.  The Scheme build and its safety policy are Gerbil-owned.  Python may
 remain a validation runtime below other interfaces, but it is not the owner of
 this build controller.
 
-* Stable Gerbil project receipt v1 boundary
+* Current Gerbil project receipt boundary (corrected 2026-07-27)
+
+POO Flow uses the public Gerbil-Bazel =gerbil_project_compile= rule directly.
+The project receipt is a Gerbil-Bazel-owned output. Its generic schema,
+dependency-resolution semantics, validator, and owner regression tests remain
+in Gerbil-Bazel; POO Flow has no local receipt wrapper or generic validator.
+
+* Historical stable Gerbil project receipt v1 boundary
 
 POO Flow pins gerbil-bazel revision
 =0d5ef5362674d788e0fc9e146b8e9e1daf78f137=.  That revision preserves
