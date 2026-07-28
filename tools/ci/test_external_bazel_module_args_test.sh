@@ -83,15 +83,19 @@ assert_count 1 "^--output_user_root=.*/bazel${tab}build${tab}"
 assert_count 0 '^--output_base='
 
 stable_output_base="$test_root/stable output base"
+stable_stdout="$test_root/stable.stdout"
 : >"$args_log"
 POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE="$stable_output_base" \
   POO_FLOW_EXTERNAL_TEST_MODE=full \
-  bash "$subject" >/dev/null 2>&1
+  bash "$subject" >"$stable_stdout" 2>/dev/null
 test -d "$stable_output_base"
 assert_count 1 "^--output_user_root=.*/bazel-no-root-override${tab}query${tab}"
 assert_count 1 "^--output_base=${stable_output_base}${tab}query${tab}"
 assert_count 1 "^--output_base=${stable_output_base}${tab}build${tab}"
-assert_count 1 "^--output_base=${stable_output_base}${tab}test${tab}"
+assert_count 0 "^--output_base=${stable_output_base}${tab}test${tab}"
 assert_count 1 '^--output_user_root='
+grep -F \
+  '"receiptOwner":"gerbil-bazel","pooFlowReceiptValidator":false' \
+  "$stable_stdout" >/dev/null
 
 printf 'external Bazel startup argument tests passed\n'
