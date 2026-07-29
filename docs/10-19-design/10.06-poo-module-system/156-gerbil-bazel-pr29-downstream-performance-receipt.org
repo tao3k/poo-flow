@@ -814,17 +814,21 @@ supervisor baseline RSS, the formula systematically reduced an admitted
 policy, rather than the merged gerbil-bazel package-action implementation,
 owned the regression.
 
-The corrected policy combines two independent machine-derived limits:
+The corrected policy combines a project safety ceiling with two
+machine-derived limits:
 
-- the absolute process cap is =baseline RSS + live allocatable memory=;
+- the absolute process cap is the smaller of
+  =baseline RSS + live allocatable memory= and 5 GiB;
 - the default per-worker reservation is the existing 768 MiB safety floor,
   with =POO_FLOW_BUILD_MEMORY_PER_WORKER_BYTES= retained as the explicit
   machine-calibration override.
 
-The total cap continues to fail closed on measured host memory.  The worker
-floor reduces parallelism only when the live allocatable envelope cannot admit
-all configured workers.  An explicit RSS cap below =baseline + safety floor=
-remains blocked, while exact coverage is admitted.
+The 5 GiB ceiling is a project safety invariant, not a machine-capacity
+estimate.  Live memory may lower it but cannot raise it, and an explicit
+=POO_FLOW_BUILD_MAX_RSS_BYTES= value cannot bypass it.  The worker floor reduces
+parallelism only when the resulting envelope cannot admit all configured
+workers.  An explicit RSS cap below =baseline + safety floor= remains blocked,
+while exact coverage is admitted.
 
 #+begin_src mermaid
 flowchart LR
@@ -832,6 +836,7 @@ flowchart LR
   Package["Package actions and fresh host observation"]
   Root["POO Flow build.ss supervisor"]
   Live["Live available memory minus headroom"]
+  Ceiling["5 GiB project RSS ceiling"]
   Floor["768 MiB per-worker reservation"]
   Workers["Admitted worker count"]
   Compile["POO Flow root compile"]
@@ -839,6 +844,7 @@ flowchart LR
   GB --> Package
   Package --> Root
   Live --> Root
+  Ceiling --> Root
   Floor --> Root
   Root --> Workers
   Workers --> Compile
@@ -849,9 +855,9 @@ declarative =//scheme:compile_performance_audit_test= passed one of one targets
 in 51.5 seconds, and the runtime-WASM producer target completed successfully in
 37.235 seconds.
 
-A real local =//scheme:compile= then completed successfully in 528.264 seconds
-of Bazel elapsed time with a 510.24-second critical path.  Its native Scheme
-receipt reported:
+An intermediate local =//scheme:compile= completed in 528.264 seconds of Bazel
+elapsed time with a 510.24-second critical path.  Its native Scheme receipt
+reported:
 
 #+begin_example
 configured-worker-count = 12
@@ -863,11 +869,11 @@ max-rss-bytes = 18226571509
 elapsed-ms = 425634
 #+end_example
 
-The runtime stage compiled 381 modules and consumed 415.104 seconds, so it is
-the remaining local hotspot.  This local receipt proves restored full-machine
-admission and completion below the previous 15-minute failure boundary.  It is
-not a same-runner promotion receipt: PR 12 must still pass the =macos-26= and
-Linux GitHub lanes before the regression is closed.
+The runtime stage compiled 381 modules and consumed 415.104 seconds.  This
+receipt proved restored worker admission, but its 18.23 GB effective cap was
+rejected because host availability had been mistaken for the project safety
+limit.  It is not promotion evidence.  A replacement run must report
+=max-rss-bytes <= 5368709120= before PR 12 can close the regression.
 
 The GitHub outer timeouts now pass a shorter timeout into the Scheme supervisor
 through =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=.  Linux uses 420 seconds inside

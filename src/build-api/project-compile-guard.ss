@@ -32,6 +32,9 @@
 (def +poo-flow-project-compile-minimum-max-rss-bytes+
   (* 768 1024 1024))
 
+(def +poo-flow-project-compile-hard-max-rss-bytes+
+  (* 5 1024 1024 1024))
+
 (def +poo-flow-project-compile-default-sample-seconds+ 0.25)
 
 (def (poo-flow-project-compile-positive-integer-from-env name fallback)
@@ -169,9 +172,11 @@
 
 (def (poo-flow-project-compile-adaptive-max-rss-bytes
       baseline-rss-bytes allocatable-memory-bytes)
-  (+ baseline-rss-bytes
-     (max +poo-flow-project-compile-minimum-max-rss-bytes+
-          allocatable-memory-bytes)))
+  (min
+   +poo-flow-project-compile-hard-max-rss-bytes+
+   (+ baseline-rss-bytes
+      (max +poo-flow-project-compile-minimum-max-rss-bytes+
+           allocatable-memory-bytes))))
 
 (def (poo-flow-project-compile-memory-per-worker-bytes)
   (poo-flow-project-compile-positive-integer-from-env
@@ -201,11 +206,13 @@
           (max 1 (- available-memory-bytes
                     rss-headroom-bytes)))
          (requested-max-rss-bytes
-          (poo-flow-project-compile-positive-integer-from-env
-           "POO_FLOW_BUILD_MAX_RSS_BYTES"
-           (poo-flow-project-compile-adaptive-max-rss-bytes
-            baseline-rss-bytes
-            allocatable-memory-bytes)))
+          (min
+           +poo-flow-project-compile-hard-max-rss-bytes+
+           (poo-flow-project-compile-positive-integer-from-env
+            "POO_FLOW_BUILD_MAX_RSS_BYTES"
+            (poo-flow-project-compile-adaptive-max-rss-bytes
+             baseline-rss-bytes
+             allocatable-memory-bytes))))
          (requested-allocatable-memory-bytes
           (max 0 (- requested-max-rss-bytes
                     baseline-rss-bytes)))

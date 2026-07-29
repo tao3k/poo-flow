@@ -79,7 +79,44 @@
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-adaptive-max-rss-bytes
         (* 1 1024 1024 1024)
         (* 3 1024 1024 1024))
-       => (* 4 1024 1024 1024)))
+       => (* 4 1024 1024 1024))
+      (check
+       (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-adaptive-max-rss-bytes
+        (* 1 1024 1024 1024)
+        (* 10 1024 1024 1024))
+       => (* 5 1024 1024 1024)))
+    (test-case "does not let an explicit request exceed the project RSS ceiling"
+      (let* ((overrides
+              (list
+               (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "17179869184")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "12884901888")
+               (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "1073741824")
+               (cons "POO_FLOW_BUILD_BASELINE_RSS_BYTES" "1073741824")
+               (cons "POO_FLOW_BUILD_MAX_RSS_BYTES" "12884901888")
+               (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT" "4")
+               (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "1")
+               (cons "GERBIL_BUILD_CORES" "4")))
+             (previous
+              (map (lambda (entry)
+                     (cons (car entry) (getenv (car entry) #f)))
+                   overrides)))
+        (dynamic-wind
+          (lambda ()
+            (for-each
+             (lambda (entry) (setenv (car entry) (cdr entry)))
+             overrides))
+          (lambda ()
+            (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'admission-outcome) => 'ready)
+              (check (.ref config 'requested-max-rss-bytes) => 5368709120)
+              (check (.ref config 'max-rss-bytes) => 5368709120)
+              (check (.ref config 'configured-worker-count) => 4)
+              (check (.ref config 'worker-count) => 4)))
+          (lambda ()
+            (for-each
+             (lambda (entry)
+               (setenv (car entry) (or (cdr entry) "")))
+             previous)))))
     (test-case "translates host allocation into an absolute RSS cap"
       (let* ((overrides
               (list
@@ -344,15 +381,15 @@
                   (rss-headroom-bytes 2147483648)
                   (baseline-rss-bytes 536870912)
                   (allocatable-memory-bytes 23622320128)
-                  (requested-max-rss-bytes 17179869184)
-                  (admitted-memory-bytes 16642998272)
+                  (requested-max-rss-bytes 5368709120)
+                  (admitted-memory-bytes 4831838208)
                   (configured-worker-count available-cpu-count)
                   (memory-per-worker-bytes 805306368)
-                  (memory-worker-capacity 20)
+                  (memory-worker-capacity 6)
                   (runnable-worker-capacity available-cpu-count)
-                  (worker-count available-cpu-count)
+                  (worker-count (min available-cpu-count 6))
                   (system-memory-bytes 34359738368)
-                  (max-rss-bytes 17179869184)
+                  (max-rss-bytes 5368709120)
                   (peak-rss-bytes 2460680192)
                   (elapsed-ms 199289)
                   (timeout-ms 540000)
@@ -405,12 +442,12 @@
         (check (hash-get object "admission-advisories") => '())
         (check (hash-get object "baseline-rss-bytes") => 536870912)
         (check (hash-get object "allocatable-memory-bytes") => 23622320128)
-        (check (hash-get object "requested-max-rss-bytes") => 17179869184)
-        (check (hash-get object "admitted-memory-bytes") => 16642998272)
+        (check (hash-get object "requested-max-rss-bytes") => 5368709120)
+        (check (hash-get object "admitted-memory-bytes") => 4831838208)
         (check (hash-get object "memory-per-worker-bytes") => 805306368)
-        (check (hash-get object "memory-worker-capacity") => 20)
+        (check (hash-get object "memory-worker-capacity") => 6)
         (check (hash-get object "worker-count")
-               => available-cpu-count)
+               => (min available-cpu-count 6))
         (check
          (hash-get (hash-get object "build-summary") "stage-count")
          => 3)

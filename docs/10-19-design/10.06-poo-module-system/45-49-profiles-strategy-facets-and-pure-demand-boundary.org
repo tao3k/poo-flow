@@ -21,6 +21,70 @@ The facets are semantic projections of one object. They are not three registries
 
 Concrete slots and native operators must be selected only after verification against the real =gerbil-poo= interface.
 
+* Typst formalization: pure construction and external live context
+
+The mathematical boundary is structural.  A pure composition contains only the
+three strategy projections and its operands.  A live context is paired with the
+composition only when a demand is formed.
+
+#+begin_src typst
+$
+  "PureStrategyProjection" &=
+    "ConstructionFacet"
+    times "DemandResolutionFacet"
+    times "EvidenceFacet" \
+  "PureComposition" &=
+    "CompositionId"
+    times "PureStrategyProjection"
+    times "List"( "CompositionOperand" ) \
+  "construct" &: "CompositionId"
+    times "PureStrategyProjection"
+    times "List"( "CompositionOperand" )
+    -> "PureComposition" \
+  "LiveEvaluationContext" &=
+    "CapabilityToken"
+    times "CacheSnapshot"
+    times "ClockEpoch"
+    times "WorkerIdentity"
+    times "RuntimeGeneration" \
+  "DemandRequest" &=
+    "PureComposition"
+    times "SemanticSlotId"
+    times "LiveEvaluationContext" \
+  forall c_1, c_2 in "LiveEvaluationContext", quad
+    "construct"(i, s, o) &= "construct"(i, s, o) \
+  pi_"composition"("demand"(p, q, c)) &= p
+$
+#+end_src
+
+The first theorem is context-parametric: =construct= has no live-context
+argument, so changing capability, cache, clock, worker, or runtime generation
+cannot change the resulting pure composition.  The second theorem states that
+forming a live demand preserves the pure composition unchanged.
+
+#+begin_src mermaid
+flowchart LR
+  S["PureStrategyProjection"] -->|"pure facet input"| C["PureComposition"]
+  O["Composition operands"] -->|"pure operand input"| C
+  C -->|"preserved as value"| D["DemandRequest"]
+  Q["Semantic slot"] -->|"requested slot"| D
+  L["LiveEvaluationContext"] -->|"external at demand time"| D
+  L -.->|"excluded from construction"| C
+#+end_src
+
+* Lean correspondence checklist
+
+- [X] =PureComposition= retains the construction, demand-resolution, and
+  evidence projections as one pure strategy value.
+- [X] Construction is invariant under every change of
+  =LiveEvaluationContext=.
+- [X] A live demand preserves the original pure composition and carries the
+  live context externally.
+- [X] Lean witness:
+  =PooFlowProof.PooC3.StrategyFacetPurity=.
+- [ ] A later implementation-refinement proof must show that the selected
+  native =gerbil-poo= slots project to these abstract fields.
+
 * Construction facet
 
 The construction facet defines:
@@ -148,16 +212,16 @@ This correction narrows the phrase "demand interface" used in the composition-bo
 
 * Pure slot demand
 
-A pure slot demand identifies:
+A pure slot demand is one POO object with independent identity projections for:
 
-- semantic generation;
-- semantic slot reference;
-- demand root;
-- pure evaluation-policy identity;
+- semantic slot target;
+- causal demand path and root;
 - requested evidence projection;
-- declared budget-policy identity.
+- execution-policy projection.
 
-It excludes:
+Only the semantic slot target participates in business-result identity. The causal, evidence, and execution-policy projections use their own evidence and operational namespaces.
+
+The pure object excludes:
 
 - remaining live budget counters;
 - wall-clock deadline;
@@ -243,8 +307,7 @@ flowchart LR
 Semantic result caching uses:
 
 #+begin_src text
-SemanticGenerationIdentity
-+ PureSlotDemand semantic identity
+SemanticSlotTargetIdentity
 + semantic evaluator protocol identity
 #+end_src
 
@@ -315,6 +378,8 @@ Strategy-facet evidence records:
 - [ ] Define pure evidence projection and explanation requirements.
 - [ ] Remove any live evaluator handle from pure composition-value design.
 - [ ] Define pure =SlotDemand= identity and projection.
+- [ ] Separate semantic-target, causal, evidence-request, and execution-policy identities within =SlotDemand=.
+- [ ] Keep demand root, evidence projection, and budget policy out of business-result cache keys.
 - [ ] Supply live evaluation context only at the explicit evaluator boundary.
 - [ ] Separate strategy semantic, evidence, and implementation identities.
 - [ ] Key business results independently from evidence presentation and runtime implementation.
