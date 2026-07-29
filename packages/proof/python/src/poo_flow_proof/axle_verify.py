@@ -112,10 +112,82 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Verify Lean declarations through the UV-managed AXLE client."
     )
-    parser.add_argument("paths", nargs="+", type=Path)
+    parser.add_argument("paths", nargs="*", type=Path)
     parser.add_argument("--environment", default="lean-4.31.0")
     parser.add_argument("--preserve-imports", action="store_true")
-    raise SystemExit(asyncio.run(run(parser.parse_args())))
+    parser.add_argument("--lean-root", type=Path)
+    parser.add_argument("--root-module")
+    parser.add_argument(
+        "--root-declaration",
+        action="append",
+        dest="root_declarations",
+    )
+    parser.add_argument(
+        "--base-import",
+        action="append",
+        dest="base_imports",
+        default=[],
+    )
+    parser.add_argument("--closure-output", type=Path)
+    parser.add_argument(
+        "--axle-operation-timeout-seconds",
+        type=float,
+        default=30.0,
+        help="AXLE server operation timeout; default: 30 seconds",
+    )
+    parser.add_argument(
+        "--axle-base-timeout-seconds",
+        type=float,
+        default=10.0,
+        help="AXLE transport/queue allowance; default: 10 seconds",
+    )
+    args = parser.parse_args()
+    closure_mode = any(
+        (
+            args.lean_root is not None,
+            args.root_module is not None,
+            bool(args.root_declarations),
+            bool(args.base_imports),
+            args.closure_output is not None,
+        )
+    )
+    if closure_mode:
+        if (
+            args.lean_root is None
+            or args.root_module is None
+            or not args.root_declarations
+        ):
+            parser.error(
+                "closure mode requires --lean-root, --root-module, "
+                "and --root-declaration"
+            )
+        from poo_flow_proof.axle_closure_verify import run as run_closure
+        from poo_flow_proof.lean_declaration_closure import LeanClosureError
+
+        try:
+            raise SystemExit(run_closure(args))
+        except LeanClosureError as error:
+            import json
+            import sys
+
+            print(
+                json.dumps(
+                    {
+                        "code": error.code,
+                        "detail": error.detail,
+                        "schema_id": "poo-flow.axle-closure-preflight.v1",
+                        "status": "rejected",
+                    },
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ),
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from error
+    if not args.paths:
+        parser.error("paths are required outside closure mode")
+    raise SystemExit(asyncio.run(run(args)))
 
 
 if __name__ == "__main__":

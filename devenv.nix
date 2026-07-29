@@ -6,6 +6,7 @@
 
   # https://devenv.sh/packages/
   packages = [
+    pkgs.typst
     pkgs.git
     pkgs.actionlint
     pkgs.bazelisk

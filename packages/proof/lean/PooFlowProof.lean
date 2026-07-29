@@ -52,7 +52,7 @@ import PooFlowProof.PooC3.UseCompositionMacroContract
 import PooFlowProof.PooC3.ModuleProfileBundleImports
 import PooFlowProof.PooC3.ScaleParametricModuleGraph
 import PooFlowProof.PooC3.ContributorRepositoryQualification
-import PooFlowProof.PooC3.Enterprise
+import PooFlowProof.Enterprise
 import PooFlowProof.PooC3.GerbilPooPhysicalRefinement
 import PooFlowProof.PooC3.ProfileBundleStableIdentity
 import PooFlowProof.PooC3.CedarDualEngineArbitration

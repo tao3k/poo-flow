@@ -1,0 +1,442 @@
+#+title: RFC 149-06 — Use-Composition Transitive Effect-Universe Refinement
+#+language: en
+
+* Status
+
+This is a Lean-proven refinement of RFC 149-05 and the POO module-system
+programming-style contract.
+
+RFC 149-05 proves that an observed effect domain must cover the
+materialization plan's effect universe.  It leaves
+=EffectCoverageWitnessValid= responsible for deriving that universe.
+A root-only or one-level projection is unsound for first-class profiles,
+submodules, workflows, and delegated providers.
+
+This refinement defines the transitive compositional obligation without
+adding a public Scheme DSL or macro.  It does not claim that the
+profile-composition runtime already emits the required registry,
+fixed-point, contract, or trace receipts.
+
+RFC 149-07 refines the previously open fixed-point obligation with
+Lean-proven root inclusion, link closure, minimality, finite discovery
+capacity, separated budget owners, and cycle-observation boundaries.
+
+* Public interface remains shallow
+
+The accepted user surface remains:
+
+#+begin_src scheme
+(use-composition
+  base-profile
+  wendao-episteme-mix
+  production-profile)
+#+end_src
+
+=compose= remains pure selection and composition.  =profiles= remain
+first-class POO values.  =use-composition= selects the roots and projects
+the final value.
+
+Effect-universe derivation is internal evidence owned by the
+profile-composition and runtime boundary.  Users do not write a second
+effect graph, repeat =use-composition= inside another wrapper, or provide
+raw effect alists.
+
+* Discovered logical defects
+
+** Root-profile effects omit nested and delegated effects
+
+The concrete Lean countermodel contains:
+
+- =base-profile= with a local runtime effect;
+- =wendao-episteme-mix= with a knowledge submodule;
+- =production-profile= with a notification workflow;
+- the workflow delegating to =message-provider=;
+- the provider producing =external-message=.
+
+The root-only summary omits =external-message= while the transitive
+composition reaches it.
+
+Lean proves:
+
+#+begin_src text
+rootOnlySummaryMissesNestedDelegatedEffect
+populatedRootOnlyWitnessDoesNotCoverComposition
+#+end_src
+
+The effect universe must close over every supported composition link,
+not only the selected profile objects.
+
+** Profile and effect lists do not identify the registry snapshot
+
+Two witnesses can contain the same profile roots and the same effect
+list while naming different composition-registry digests.
+
+Lean proves:
+
+#+begin_src text
+profilesAndEffectListDoNotIdentifyRegistrySnapshot
+#+end_src
+
+The registry digest is part of the semantic subject.  It cannot be
+reconstructed from the visible profile names.
+
+** Adding a profile can add transitive effects
+
+Effect summaries are monotone under root-profile addition:
+
+#+begin_src text
+reachableEffectsMonotoneUnderProfileAddition
+#+end_src
+
+A wider =use-composition= cannot reuse a narrower witness merely because
+the previous roots are still present.  The composition must recompute or
+validate the transitive closure for the new root set.
+
+** Cycles require least reachability, not recursive evaluation
+
+A delegated provider can link back to an already reachable profile.
+Naive recursive traversal can diverge.
+
+Lean proves finite membership through the inductive least-reachability
+relation:
+
+#+begin_src text
+cyclicCompositionHasFiniteReachabilityProofs
+#+end_src
+
+This semantic proof does not authorize an unbounded runtime traversal.
+The executable profile engine must use a finite worklist or POO
+fixed-point implementation and emit a stable closure receipt.
+
+** Dynamic runtime effects must refine declared reachable contracts
+
+A runtime event can name a reachable provider but an effect that the
+provider did not declare.
+
+Lean proves:
+
+#+begin_src text
+undeclaredDynamicEffectIsRejected
+#+end_src
+
+Reachability of the owner does not make every effect from that owner
+valid.  The event must refine the owner object's local effect contract.
+
+** Matching trace fields do not prove trace authority
+
+The initial model used a raw event list.  Lean exposed that such a list
+could be replayed across a transaction, recovery fence, or registry
+snapshot.
+
+The corrected model uses =EffectExecutionTraceReceipt= and Lean proves:
+
+#+begin_src text
+matchingTraceFieldsDoNotProveTraceAuthority
+#+end_src
+
+The trace receipt binds transaction ID, active fence, registry digest,
+and events, while =ExecutionTraceOwnerValid= remains an independent
+runtime-owner relation.
+
+** Matching witness fields do not prove composition closure
+
+Lean proves:
+
+#+begin_src text
+matchingCompositionalFieldsDoNotProveWitnessValidity
+#+end_src
+
+The closure retains independent registry, witness, per-object contract,
+and trace validity relations.
+
+* Lean countermodels and positive theorems
+
+- =rootOnlySummaryMissesNestedDelegatedEffect= distinguishes root-local
+  and transitive effects.
+- =populatedRootOnlyWitnessDoesNotCoverComposition= rejects the narrow
+  universe.
+- =profilesAndEffectListDoNotIdentifyRegistrySnapshot= proves registry
+  identity is independent.
+- =reachableMonotone= proves node reachability is monotone under root
+  addition.
+- =reachableEffectsMonotoneUnderProfileAddition= lifts monotonicity to
+  effects.
+- =cyclicCompositionHasFiniteReachabilityProofs= represents a cycle
+  without recursive nontermination.
+- =undeclaredDynamicEffectIsRejected= rejects an undeclared runtime
+  event.
+- =completeCompositionalEffectClosure= constructs one valid
+  =use-composition= closure.
+- =closedCompositionCoversEveryRuntimeEvent= proves every accepted event
+  belongs to the witness effect universe.
+
+The proof owner is:
+
+#+begin_src text
+packages/proof/lean/PooFlowProof/Enterprise/
+  CompositionalEffectUniverse.lean
+#+end_src
+
+The top-level =PooFlowProof.Enterprise= namespace owns enterprise
+semantics.  It may import generic =PooFlowProof.PooC3= theorems without
+making the enterprise model a child of =PooC3=.
+
+* Mathematical model
+
+The durable mathematical surface is Typst:
+
+#+begin_src typst
+$ M =
+  (i, k, I, C, P, S, W, D, E_"local") $
+
+$ "Link"(x, y, G) =
+  exists M in G:
+  (M_"identity" = x)
+  and (y in M_"imports"
+    or y in M_"profiles"
+    or y in M_"submodules"
+    or y in M_"workflows"
+    or y in M_"delegations") $
+
+$ "Reach"(R, G) =
+  "the least Link-closed set containing every root in R" $
+
+$ E_"root"(R, G) =
+  {e | exists M in G:
+    M_"identity" in R and e in M_"local-effects"} $
+
+$ E_"transitive"(R, G) =
+  {e | exists M in G:
+    M_"identity" in "Reach"(R, G)
+    and e in M_"local-effects"} $
+
+$ exists e:
+  not (e in E_"root"(R, G))
+  and e in E_"transitive"(R, G) $
+
+$ (forall r in R_1: r in R_2)
+  => (forall e in E_"transitive"(R_1, G):
+    e in E_"transitive"(R_2, G)) $
+
+$ "TraceRespects"(T, R, G) =
+  forall v in T_"events":
+  (v_"owner" in "Reach"(R, G))
+  and (exists M in G:
+    M_"identity" = v_"owner"
+    and v_"effect" in M_"local-effects") $
+
+$ "CompositionClosed"(Q, f, G, H, T) =
+  "RegistryValid"(H_"registry-digest", G)
+  and "WitnessValid"(H)
+  and (H_"plan" = Q_"materialization-plan")
+  and (H_"roots" = R)
+  and (forall M in G:
+    M_"identity" in "Reach"(R, G)
+    => "NodeEffectContractValid"(M))
+  and (E_"transitive"(R, G) subset.eq H_"effect-universe")
+  and (T_"transaction" = Q_"transaction")
+  and (T_"fence" = f)
+  and (T_"registry-digest" = H_"registry-digest")
+  and "TraceOwnerValid"(T)
+  and "TraceRespects"(T, R, G) $
+
+$ "CompositionClosed"(Q, f, G, H, T)
+  => (forall v in T_"events":
+    v_"effect" in H_"effect-universe") $
+#+end_src
+
+The fields of =M= correspond to the higher-order POO module object:
+
+- identity;
+- node kind;
+- imports;
+- capabilities;
+- profiles;
+- submodules;
+- workflows;
+- delegations;
+- local effects.
+
+The model is relational.  It describes the least semantic closure even
+when the graph contains a cycle.
+
+* Composition node kinds
+
+The proof model admits:
+
+- module assets;
+- profile assets;
+- workflow assets;
+- knowledge assets;
+- policy assets;
+- authentication assets;
+- evidence assets;
+- provider assets.
+
+This list is not a new public asset DSL.  It is the Lean-side
+classification needed to prove that enterprise policy, auth, evidence,
+knowledge, workflow, and provider effects cannot disappear behind a
+generic module label.
+
+* Transitive composition links
+
+A reachable object may introduce another object through:
+
+- =imports=;
+- first-class =profiles=;
+- =submodules=;
+- workflow children;
+- runtime delegation.
+
+The transitive effect universe is the conservative union of the local
+effect contracts of every reachable object.
+
+An override may add a more specific implementation, but it cannot
+subtract an effect from the conservative universe without a separately
+validated elimination proof.  Over-approximation is safe; silent
+under-approximation is not.
+
+* Registry and contract identity
+
+=CompositionalEffectWitness= binds:
+
+- witness ID;
+- exact materialization-plan digest;
+- composition-registry digest;
+- exact =use-composition= roots;
+- transitive effect universe.
+
+=CompositionRegistryValid= binds the digest to the concrete registry
+snapshot.  =NodeEffectContractValid= receives the complete POO object,
+not merely its string identity, so a contract cannot replay across a
+different object body with the same name.
+
+* Cycle-safe fixed point
+
+=Reachable= is the least inductive relation containing the roots and
+closed under composition links.  It gives finite membership proofs in a
+cyclic graph.
+
+The executable owner must additionally provide a fixed-point closure
+receipt that binds:
+
+- registry digest;
+- root set;
+- visited object identities and content identities;
+- iteration or worklist evidence;
+- stable transitive effect universe;
+- cycle observations and termination reason.
+
+A =stable=true= field without owner validity is not such a receipt.
+
+RFC 149-07 proves the abstract receipt closure:
+
+- every root is visited;
+- every composition link from a visited node remains inside the visited
+  set;
+- every visited node is reachable, excluding nonminimal supersets;
+- semantic discovery is bounded by an owner-valid finite registry
+  witness;
+- cycle observations remain evidence and do not grant retry authority.
+
+The runtime emission of this receipt remains pending.
+
+* Runtime trace refinement
+
+=EffectExecutionTraceReceipt= contains:
+
+- receipt ID;
+- transaction ID;
+- active recovery fence;
+- composition-registry digest;
+- runtime effect events.
+
+Every event binds an owner object and effect ID.  Closure requires:
+
+- the owner object is transitively reachable;
+- the effect is in that exact object's local effect contract;
+- the event is covered by the transitive witness universe;
+- the runtime owner validates the trace receipt.
+
+A dynamically selected branch or delegated provider may choose among
+declared effects.  It may not create an undeclared effect.
+
+* Composition state machine
+
+#+begin_src mermaid
+stateDiagram-v2
+  [*] --> RootsSelected: "state=roots-selected / shallow use-composition profiles"
+  RootsSelected --> RegistryBound: "state=registry-bound / exact registry digest owner-valid"
+  RegistryBound --> Expanding: "state=expanding / imports + profiles + submodules + workflows + delegation"
+  Expanding --> Expanding: "edge=cycle-or-new-node / visited identity prevents recursive divergence"
+  Expanding --> ClosureStable: "state=stable / least reachable object set proven"
+  ClosureStable --> ContractsChecked: "state=contracts-checked / every reachable POO object owner-valid"
+  ContractsChecked --> UniverseClosed: "state=universe-closed / conservative union of local effects"
+  UniverseClosed --> TraceRunning: "state=runtime / transaction + fence + registry bound"
+  TraceRunning --> TraceRejected: "event=undeclared-or-unreachable / fail closed"
+  TraceRunning --> TraceAccepted: "event=declared + reachable + universe-covered"
+  TraceAccepted --> TraceRunning: "event=next / same receipt subject"
+  TraceRunning --> [*]: "terminal trace receipt owner-valid"
+  TraceRejected --> [*]: "terminal evidence names offending owner/effect"
+#+end_src
+
+The public macro does not expose these states.  They are evidence states
+inside the profile-composition/runtime handoff.
+
+* Owner boundaries
+
+- Gerbil POO and the Scheme control plane own pure profile selection,
+  module identity, imports, capabilities, profile lineage, and the
+  shallow =use-composition= syntax.
+- The profile-composition owner derives the transitive registry closure
+  and effect witness.
+- Each module, workflow, policy, auth, evidence, knowledge, and provider
+  owner validates its local effect contract.
+- The runtime validates transaction- and fence-bound trace receipts.
+- Lean owns the countermodels and abstract closure.
+- POO Flow composes these first-class evidence objects without
+  duplicating the runtime implementation.
+
+* Implementation checklist
+
+- [X] Preserve the shallow =use-composition= public surface.
+- [X] Model higher-order POO objects with identity, imports,
+  capabilities, and profiles.
+- [X] Include submodule, workflow, and delegation links.
+- [X] Prove root-only effect summaries are incomplete.
+- [X] Bind the effect witness to the exact registry snapshot.
+- [X] Prove profile addition is effect-monotone.
+- [X] Model cyclic graphs with least inductive reachability.
+- [X] Reject undeclared dynamic runtime effects.
+- [X] Bind runtime trace receipts to transaction, fence, and registry.
+- [X] Prove every accepted runtime event belongs to the transitive
+  universe.
+- [X] Add Typst mathematics.
+- [X] Add the state-labeled Mermaid composition diagram.
+- [X] Prove the abstract least-fixed-point closure and cycle-observation
+  boundary in RFC 149-07.
+- [ ] Implement profile-composition fixed-point closure receipts.
+- [ ] Bind each reachable POO object to its source/content identity.
+- [ ] Project local effect contracts from module/profile/workflow
+  owners.
+- [ ] Connect runtime trace receipts to RFC 149-04 fencing and RFC
+  149-05 effect-domain coverage.
+- [ ] Stress-test hundreds and thousands of profiles, nested modules,
+  workflows, cycles, and delegated providers.
+
+* Verification receipt
+
+The proof is admitted only when both commands succeed without Lean
+warnings:
+
+#+begin_src text
+lake env lean \
+  PooFlowProof/Enterprise/CompositionalEffectUniverse.lean
+
+lake build \
+  PooFlowProof.Enterprise.CompositionalEffectUniverse
+#+end_src
+
+The Typst block must compile through the project =devenv.nix= toolchain.
+Org parsing, Python/AXLE regression, Ruff, and =git diff --check= remain
+independent gates.

@@ -1,0 +1,248 @@
+#+title: Fixed-Point Cycle, Progress, Budget, and Watchdog Observation
+#+author: POO Flow
+#+language: en
+
+* Status
+
+Accepted.
+
+* Context
+
+A recursive dependency is not automatically an error.  A cyclic Module graph
+may converge productively, stabilize immediately, stall with unresolved
+obligations, oscillate among values, grow without a proof of convergence,
+re-enter through a continuation, or repeatedly invalidate a cache without
+semantic progress.
+
+Waiting for stack overflow, wall-clock timeout, or process-memory exhaustion
+loses the first causal point at which the evaluator knew that a dependency path
+had closed.
+
+POO Flow needs immediate structural evidence and domain-specific progress
+proofs without reimplementing the upstream =gerbil-poo= fixed-point algebra.
+
+* Decision
+
+Cycle detection, progress proof, deterministic structural budget, and runtime
+watchdog evidence are four separate responsibilities.
+
+- Cycle detection records the first dependency edge that closes a path.
+- A POO-native =ProgressContract= classifies semantic change.
+- Deterministic structural budgets define reproducible evaluation limits.
+- Runtime watchdogs report machine-dependent time, CPU, allocation, and
+  retention evidence.
+
+A cycle observation is a structural fact.  It is not itself a failure.
+
+* Evaluation relationship
+
+#+begin_src mermaid
+flowchart TD
+  Edge["New dependency edge"]
+  Cycle["CycleDetectedObservation"]
+  SCC["Canonical SCC identity and causal path"]
+  Progress["POO-native ProgressContract"]
+  Advancing["FixedPointProgressObservation"]
+  Converged["FixedPointConvergedObservation"]
+  Stalled["FixedPointStalledObservation"]
+  Oscillating["FixedPointOscillationObservation"]
+  Exhausted["FixedPointBudgetExhaustedObservation"]
+  Reentry["ContinuationReentryObservation"]
+  Thrashing["CacheThrashObservation"]
+
+  Edge -->|"closes a path and records evidence before another evaluation step"| Cycle
+  Cycle -->|"canonicalizes members, edges, generation, and source evidence"| SCC
+  SCC -->|"asks each value-domain prototype how progress is evidenced"| Progress
+
+  Progress -->|"proves monotone improvement under the domain Contract"| Advancing
+  Progress -->|"proves semantic equivalence with the previous generation"| Converged
+  Progress -->|"finds no improvement while obligations remain"| Stalled
+  Progress -->|"detects a repeated non-equivalent fingerprint sequence"| Oscillating
+  Progress -->|"cannot establish convergence before a typed structural limit"| Exhausted
+
+  Cycle -.->|"detects invocation of a continuation already active in the causal path"| Reentry
+  Cycle -.->|"detects repeated invalidation without semantic progress"| Thrashing
+#+end_src
+
+* Upstream fixed-point boundary
+
+The upstream =gerbil-poo= package owns the POO object, dispatch, type, Contract,
+debug, and fixed-point foundations.
+
+POO Flow owns evaluation evidence around that algebra:
+
+- dependency discovery;
+- canonical dependency edge identity;
+- evaluation generation;
+- SCC evidence;
+- progress evidence;
+- typed budgets;
+- cache generation and invalidation evidence;
+- structured diagnostics and recovery options.
+
+POO Flow MUST NOT create a competing generic fixed-point implementation.
+
+* First cycle evidence
+
+When a new dependency edge closes an active path, the evaluator MUST emit a
+=CycleDetectedObservation= before beginning another step in that cycle.
+
+The observation MUST identify:
+
+- the active evaluation generation;
+- the closing edge;
+- the canonical SCC members and edges known at that point;
+- the causal evaluation path;
+- source, slot, and provider provenance;
+- the structural budget already consumed;
+- any active continuation option identity involved in re-entry.
+
+This observation does not stop evaluation unless policy, authority, or budget
+requires it.
+
+* Progress Contract
+
+A value-domain prototype participating in recursive evaluation supplies a pure
+=ProgressContract=.
+
+The Contract MUST provide evidence for:
+
+- semantic equivalence;
+- monotone improvement or refinement;
+- canonical progress fingerprint;
+- remaining obligations;
+- an optional domain-specific bound.
+
+The Contract MUST NOT:
+
+- force additional lazy slots merely to classify progress;
+- execute runtime effects;
+- capture or invoke a continuation;
+- re-enter the SCC under inspection;
+- infer equality from pointer identity or printed representation;
+- use machine-dependent elapsed time as semantic progress.
+
+* Observation refinements
+
+** Fixed-point progress
+
+=FixedPointProgressObservation= proves that at least one governed value made
+monotone semantic progress and no governed value violated its progress
+Contract.
+
+** Fixed-point convergence
+
+=FixedPointConvergedObservation= proves semantic equivalence with the prior
+generation and completion of the governed obligations.
+
+It is success evidence, not an anomaly.
+
+** Fixed-point stall
+
+=FixedPointStalledObservation= proves that governed obligations remain while no
+semantic improvement occurred.
+
+** Fixed-point oscillation
+
+=FixedPointOscillationObservation= proves a repeated sequence of canonical,
+non-equivalent progress fingerprints.
+
+** Fixed-point budget exhaustion
+
+=FixedPointBudgetExhaustedObservation= records that the evaluator could not
+prove convergence or terminal failure within an authorized deterministic
+structural budget.
+
+Budget exhaustion is not proof that the semantic fixed point does not exist.
+
+** Continuation re-entry
+
+=ContinuationReentryObservation= records that an admitted continuation
+invocation re-entered an evaluation path still active in its causal ancestry.
+
+** Cache thrashing
+
+=CacheThrashObservation= records repeated cache invalidation or recomputation
+without governed semantic progress.
+
+* Deterministic structural budgets
+
+Structural budgets use deterministic units, including:
+
+- dependency edges;
+- SCC iterations;
+- slot evaluations;
+- cache invalidations;
+- continuation captures;
+- continuation invocations.
+
+These budgets define reproducible semantic stopping points and produce
+canonical consumption evidence.
+
+Closure-evaluation budgets remain distinct from recovery-action budgets.
+
+* Runtime watchdog evidence
+
+Runtime watchdogs may observe:
+
+- elapsed time;
+- CPU consumption;
+- allocation growth;
+- retained continuation handles;
+- conservative retained-size estimates;
+- runtime queue or process pressure.
+
+These values depend on machine, runtime, and scheduling conditions.  They may
+trigger a continuable diagnostic boundary, but they MUST NOT be the sole input
+to canonical semantic identity or convergence proof.
+
+Watchdog facts become authoritative only through a provider or runtime receipt
+that identifies the measurement conditions.  Telemetry receives a redacted
+projection of that evidence.
+
+* Recovery boundary
+
+An anomaly observation may expose bounded =ResumptionOption= values through the
+exception bridge.  The observation itself does not choose or execute recovery.
+
+Policies dispatch over the observation prototype.  Capabilities bound the
+available response.  The coordinator validates and executes an admitted
+=RecoveryDecision=.
+
+* Conformance checklist
+
+- [X] A cycle is recorded at the first closing dependency edge.
+- [X] Cycle evidence is not automatically classified as failure.
+- [X] Progress classification comes from a pure POO-native Contract.
+- [X] Convergence, stall, oscillation, budget exhaustion, continuation re-entry,
+  and cache thrashing remain distinct observations.
+- [X] Structural budgets use deterministic semantic units.
+- [X] Runtime watchdog evidence remains separate from semantic progress.
+- [X] Closure-evaluation and recovery-action budgets remain distinct.
+- [X] POO Flow observes rather than replaces upstream fixed-point algebra.
+- [X] Recovery remains policy-selected, capability-bounded, and
+  coordinator-executed.
+- [ ] Concrete evaluator and progress-evidence source owners have been resolved
+  through parser-owned owner discovery.
+- [ ] Implementation has been admitted after owner resolution.
+
+* Non-goals
+
+- Treating every recursive dependency as an error.
+- Reimplementing the upstream =gerbil-poo= fixed-point foundation.
+- Using wall-clock timeout as a convergence proof.
+- Guessing progress from printed values or pointer identity.
+- Combining all anomalies into a generic recursion error.
+- Defining an implementation schedule.
+
+* References
+
+- =45-120-03-module-debug-observability-recovery-and-telemetry-plane-governance.org=
+- =45-120-06-recursive-capability-delegation-and-budget-closure.org=
+- =45-120-07-semantic-cache-scc-evidence-generation-invalidation-and-fail-closed-convergence.org=
+- =45-120-08-structured-diagnostic-evidence-and-exception-bridge.org=
+- =45-120-10-authoritative-evidence-cache-telemetry-handle-registry-and-pure-replay.org=
+- =45-120-17-observation-event-prototype-family-and-poo-dispatch.org=
+- =45-120-18-recovery-decision-prototype-family-and-coordinator-boundary.org=
+- =45-120-20-continuable-exception-resumption-option-and-handle-lifecycle.org=
+- =45-120-22-merge-precedence-progress-dispatch-scheduling-and-budget-separation.org=

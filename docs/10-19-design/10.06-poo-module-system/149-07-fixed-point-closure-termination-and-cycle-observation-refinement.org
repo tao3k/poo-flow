@@ -1,0 +1,350 @@
+#+title: RFC 149-07 — Fixed-Point Closure, Termination, and Cycle-Observation Refinement
+#+language: en
+
+* Status
+
+This is a Lean-proven refinement of RFC 149-06.  It reuses the
+cycle/progress/budget/watchdog semantics of RFC 45-120-21, the relation
+separation of RFC 45-120-22, and the profile-only interface boundary of
+RFC 45-120-23.
+
+The proof owner is the top-level enterprise scope:
+
+#+begin_src text
+packages/proof/lean/PooFlowProof/Enterprise/
+  CompositionalFixedPointClosure.lean
+#+end_src
+
+=Enterprise= is not a child of =PooC3=.  Enterprise proofs may import
+generic POO-C3 composition, policy, and authorization theorems, but the
+enterprise model is owned by =PooFlowProof.Enterprise=.
+
+This refinement defines evidence obligations.  It does not introduce a
+second fixed-point runtime beside =gerbil-poo=, and it does not claim
+that the current profile-composition runtime already emits these
+receipts.
+
+* Public interface remains unchanged
+
+The user still writes:
+
+#+begin_src scheme
+(use-composition
+  base-profile
+  wendao-episteme-mix
+  production-profile)
+#+end_src
+
+No fixed-point macro, worklist DSL, recovery form, or raw receipt alist
+is added to the public Scheme surface.  =compose= remains pure;
+=profiles= remain first-class POO values; =use-composition= remains the
+shallow root-selection interface.
+
+A profile may select an owner-valid progress policy and may limit
+semantic, scheduling, or watchdog budgets.  It cannot grant retry
+authority, own a continuation, or convert an observation into a
+resumption command.
+
+* Discovered logical defects
+
+** A stable flag and empty pending list do not prove closure
+
+The countermodel =fakeStableRootReceipt= contains all visible
+=use-composition= roots, reports =stable=true=, and has no pending work.
+It omits the nested notification workflow.
+
+Lean proves:
+
+#+begin_src text
+stableFlagAndEmptyPendingDoNotProveLinkClosure
+#+end_src
+
+A closure receipt must independently prove that every link leaving a
+visited object ends at another visited object.
+
+** A link-closed candidate need not be the least fixed point
+
+The set containing every possible node is closed under every link.  It
+can nevertheless contain an unreachable orphan.
+
+Lean proves:
+
+#+begin_src text
+closedCandidateNeedNotBeLeast
+#+end_src
+
+Therefore a receipt needs both directions:
+
+- every reachable node is visited;
+- every visited node is reachable.
+
+Root inclusion plus link closure proves the first direction.  A separate
+minimality witness proves the second.
+
+** Finite discovery and scheduling are different obligations
+
+A fresh semantic discovery adds one previously unseen registered node.
+When the resulting visited list is a sub-permutation of the finite
+registry, its length is bounded by the registry length.
+
+Lean proves:
+
+#+begin_src text
+freshDiscoveryConsumesFiniteRegistryCapacity
+#+end_src
+
+This bounds semantic discovery.  It does not bound repeated dequeue,
+dispatch, retry, or watchdog activity.  Those actions consume distinct
+scheduling or runtime budgets.
+
+** One scalar budget cannot identify the exhausted owner
+
+Two observations can both report zero remaining units while one belongs
+to semantic discovery and the other to scheduling dispatch.
+
+Lean proves:
+
+#+begin_src text
+oneScalarBudgetCannotIdentifyExhaustionOwner
+#+end_src
+
+Semantic, scheduling, and runtime-watchdog budgets must have independent
+owners and receipts.  Merge precedence is not a progress measure and
+cannot settle any of these budgets.
+
+** A cycle observation is evidence, not retry authority
+
+=CycleDetectedObservation= binds:
+
+- registry digest;
+- generation;
+- strongly connected component members;
+- causal path;
+- provenance digest;
+- consumed semantic and scheduling budgets;
+- continuation identity.
+
+Lean proves:
+
+#+begin_src text
+cycleObservationDoesNotAuthorizeRetry
+#+end_src
+
+The continuation identity makes the suspension observable.  It does not
+make the observation executable.  Retry still requires the existing
+runtime-local, single-use =RetryCapability= and its owner-valid
+admission.  A profile and a cycle receipt cannot mint that capability.
+
+** Matching fields do not prove owner validity
+
+Lean proves:
+
+#+begin_src text
+matchingFixedPointFieldsDoNotProveOwnerValidity
+#+end_src
+
+Digest, generation, stable state, and empty pending work remain data.
+=FixedPointClosureReceiptValid=, =ProgressReceiptValid=, and
+=CycleDetectedObservationValid= are independent owner relations.
+
+* Corrected closure
+
+The proof transport for this refinement stabilizes
+=poo-flow.lean-declaration-closure.v1=.  Source ranges, generated-declaration
+normalization, phase timing, and bounded root sharding are v1 implementation
+refinements only.  This RFC does not authorize a v2 declaration-closure
+schema, a second closure identity, or a competing proof path.
+
+=FixedPointEvidenceClosed= requires:
+
+- the effect witness plan and roots match the promotion request;
+- the composition registry and effect witness are owner-valid;
+- the fixed-point receipt is owner-valid;
+- receipt registry, roots, and effect universe match the witness;
+- the receipt is stable and has no pending work;
+- every root is visited;
+- the visited set is closed under composition links;
+- every visited node is reachable from the roots;
+- the progress receipt is owner-valid and binds the same registry and
+  generation;
+- every cycle observation is owner-valid, binds the same registry, and
+  does not name a future generation.
+
+Lean then proves:
+
+#+begin_src text
+closedReceiptContainsEveryReachableNode
+closedReceiptIsLeastFixedPoint
+completeFixedPointEvidenceCloses
+#+end_src
+
+The least-fixed-point theorem is the correction to the weaker
+=stable=true= design.
+
+* Mathematical model
+
+The durable mathematical surface is Typst:
+
+#+begin_src typst
+$ N(G) = {M_"identity" | M in G} $
+
+$ "LinkClosed"(V, G) =
+  forall x in V:
+  forall y:
+  "Link"(x, y, G) => y in V $
+
+$ "RootsIncluded"(R, V) =
+  forall r in R: r in V $
+
+$ "Minimal"(V, R, G) =
+  forall x in V: x in "Reach"(R, G) $
+
+$ "FixedPoint"(V, R, G) =
+  "RootsIncluded"(R, V)
+  and "LinkClosed"(V, G)
+  and "Minimal"(V, R, G) $
+
+$ "FixedPoint"(V, R, G)
+  => (forall x: x in V => x in "Reach"(R, G)) $
+
+$ "FixedPoint"(V, R, G)
+  => (forall x: x in "Reach"(R, G) => x in V) $
+
+$ "Fresh"(x, V, V', G) =
+  x in N(G)
+  and not (x in V)
+  and V' = (x,) + V
+  and "Subperm"(V', N(G)) $
+
+$ "Fresh"(x, V, V', G)
+  => "size"(V) < "size"(V')
+  and "size"(V') <= "size"(N(G)) $
+
+$ B =
+  (B_"semantic", B_"scheduling", B_"watchdog") $
+
+$ B_"semantic" != B_"scheduling"
+  and B_"scheduling" != B_"watchdog" $
+
+$ C =
+  (d_G, g, "scc", "path", d_P,
+    b_"semantic-used", b_"scheduling-used", k_"continuation") $
+
+$ "CycleValid"(C)
+  and C_"registry" = F_"registry"
+  and C_"generation" <= F_"generation"
+  => "CycleObserved"(C) $
+
+$ "CycleObserved"(C)
+  => not "RetryAuthorizedByObservation"(C) $
+
+$ "Closed"(Q, G, H, F, P, C^*) =
+  "RegistryValid"(H_"registry", G)
+  and "WitnessValid"(H)
+  and "FixedPointReceiptValid"(F)
+  and "ProgressReceiptValid"(P)
+  and (forall C in C^*: "CycleValid"(C))
+  and F_"registry" = H_"registry"
+  and F_"roots" = H_"roots"
+  and F_"effects" = H_"effects"
+  and F_"stable" = "True"
+  and F_"pending" = ()
+  and "FixedPoint"(F_"visited", F_"roots", G) $
+#+end_src
+
+The finite-capacity statement is conditional on an owner-valid
+sub-permutation witness.  A raw list with duplicate identities does not
+establish termination.
+
+* Evidence state machine
+
+#+begin_src mermaid
+stateDiagram-v2
+  [*] --> RootsSelected: "state=roots-selected / shallow use-composition"
+  RootsSelected --> RegistryBound: "evidence=registry-valid / digest + finite identities"
+  RegistryBound --> WorklistActive: "state=worklist-active / roots enqueued"
+  WorklistActive --> SemanticProgress: "edge=fresh-registered-node / semantic budget consumed"
+  SemanticProgress --> WorklistActive: "evidence=node-added / visited remains registry-subperm"
+  WorklistActive --> CycleObserved: "edge=visited-node / emit before another scheduling step"
+  CycleObserved --> WorklistActive: "state=continue / observation only, no retry authority"
+  WorklistActive --> StableCandidate: "state=pending-empty / candidate stable"
+  StableCandidate --> ClosureRejected: "check=root-or-link-missing / forged stable"
+  StableCandidate --> ClosureRejected: "check=nonminimal / unreachable node included"
+  StableCandidate --> ClosureAccepted: "check=roots + link-closed + minimal + owner-valid"
+  WorklistActive --> ProgressStalled: "class=stalled|oscillating|regressing"
+  WorklistActive --> BudgetExhausted: "owner=semantic|scheduling / separate receipt"
+  WorklistActive --> WatchdogObserved: "owner=runtime / wall-clock or runtime anomaly"
+  ProgressStalled --> RecoveryEvidence: "evidence=progress receipt + continuation identity"
+  BudgetExhausted --> RecoveryEvidence: "evidence=budget-owner receipt"
+  WatchdogObserved --> RecoveryEvidence: "evidence=watchdog observation"
+  RecoveryEvidence --> RetryBoundary: "authority=runtime-local RetryCapability required"
+  RetryBoundary --> WorklistActive: "admission=single-use capability consumed"
+  RetryBoundary --> ClosureRejected: "admission=missing|stale|replayed capability"
+  ClosureAccepted --> [*]: "terminal=least fixed-point receipt"
+  ClosureRejected --> [*]: "terminal=actionable rejection receipt"
+#+end_src
+
+The observation is emitted before the next scheduling step so the
+offending SCC, causal path, budgets, and continuation identity remain
+available even if later recovery fails.
+
+* Owner boundaries
+
+- =gerbil-poo= remains the unique Scheme POO implementation and the
+  implementation substrate for pure objects and prototype composition.
+- POO Flow defines the mix-module evidence contract and composes
+  owner-valid objects; it does not reimplement a generic fixed-point
+  library.
+- The composition owner binds the finite registry, worklist state, and
+  least-closure receipt.
+- The progress owner classifies convergence, advance, stall,
+  incomparability, regression, oscillation, and budget exhaustion.
+- The scheduling owner settles dequeue and dispatch work.
+- The runtime watchdog owns time and runtime-anomaly observations.
+- The recovery coordinator consumes evidence but cannot resume without
+  the runtime-local =RetryCapability=.
+- Lean owns countermodels and abstract implications, not runtime
+  authenticity.
+
+* Implementation checklist
+
+- [X] Move enterprise proofs to the top-level
+  =PooFlowProof.Enterprise= namespace.
+- [X] Prove =stable=true= plus empty pending work is insufficient.
+- [X] Prove a link-closed superset need not be least.
+- [X] Prove fresh discovery consumes finite registry capacity.
+- [X] Separate semantic, scheduling, and watchdog budget owners.
+- [X] Model the accepted progress classifications.
+- [X] Bind SCC, path, provenance, budgets, and continuation identity in
+  cycle observations.
+- [X] Prove cycle observation does not authorize retry.
+- [X] Prove root inclusion plus link closure contains every reachable
+  node.
+- [X] Add minimality and prove exact least-fixed-point equivalence.
+- [X] Preserve owner validity as an independent relation.
+- [X] Add Typst mathematics.
+- [X] Add a state- and edge-labeled Mermaid diagram.
+- [ ] Implement the owner-valid fixed-point closure receipt in the
+  profile-composition/runtime handoff.
+- [ ] Bind every visited identity to source/content identity.
+- [ ] Emit the cycle observation before another scheduling step.
+- [ ] Settle semantic, scheduling, and watchdog budgets independently.
+- [ ] Connect stalled/budget/watchdog evidence to the existing
+  single-use =RetryCapability= admission.
+- [ ] Stress-test hundreds and thousands of profiles, nested modules,
+  workflows, cycles, and delegated providers.
+
+* Verification receipt
+
+The proof is admitted only when these project-toolchain commands pass:
+
+#+begin_src text
+lake build \
+  PooFlowProof.Enterprise.CompositionalFixedPointClosure
+
+lake build
+#+end_src
+
+The Typst block must compile with the =typst= package supplied by
+=devenv.nix=.  Org parsing, Python/AXLE regression, Ruff, and
+=git diff --check= are independent gates.

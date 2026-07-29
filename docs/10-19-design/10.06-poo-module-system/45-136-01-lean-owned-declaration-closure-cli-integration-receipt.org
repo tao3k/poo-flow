@@ -1,0 +1,329 @@
+#+title: Lean-owned declaration closure and AXLE CLI integration receipt
+#+startup: overview
+
+* Status
+
+Implemented and verified on 2026-07-29.
+
+This receipt refines the implementation slice accepted by:
+
+- =45-135-axle-independent-declaration-bundle-and-environment-refinement.org=
+- =45-136-independent-declaration-bundle-manifest-implementation-receipt.org=
+
+It records implementation evidence. It is not a migration plan and does not
+introduce another package entry point.
+
+* User interface
+
+The package keeps one verification entry point:
+
+#+begin_src text
+poo-flow-axle-verify = poo_flow_proof.axle_verify:main
+#+end_src
+
+The existing binary selects Lean-owned closure verification through flags:
+
+#+begin_src sh
+uv run --project packages/proof/python \
+  poo-flow-axle-verify \
+  --environment lean-4.31.0 \
+  --lean-root packages/proof/lean \
+  --root-module PooFlowProof.PooC3.Enterprise.Core \
+  --root-declaration \
+    PooFlowProof.PooC3.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence \
+  --closure-output /private/tmp/poo-flow-enterprise-core-exact-closure.json
+#+end_src
+
+There is no second console script and no =scripts/= compatibility route.
+Python modules below the command are library implementation units only.
+
+* Ownership boundary
+
+- Lake resolves and builds the requested Lean module.
+- The Lean exporter imports the built environment and owns constant identity,
+  reachability, dependency order, and owner-module projection.
+- AXLE collapses generated constants to parsed source declarations and supplies
+  source dependency evidence.
+- The local projector owns the exact, namespace-preserving canonical source.
+- AXLE performs round-trip extraction, =theorem2sorry=, and strict
+  =verify_proof= over that exact source.
+- Python does not parse Lean imports or invent a dependency-source package
+  manager.
+
+* Exact source-level fixed point
+
+Let =C= be the dependency-first Lean constant closure, =D= the declarations
+parsed by AXLE from the owner sources, and =pi: C -> D= the longest
+source-owner projection. Generated constants such as structure constructors,
+projections, and recursors therefore map to their source declaration.
+
+#+begin_src typst
+$ S_0 = pi(C) $
+
+$ F(S) = S union
+  { d in D | exists s in S, d in "deps"_D(s) } $
+
+$ S^star = mu S. F(S) $
+
+$ forall s in S^star:
+  "deps"_D(s) subset.eq S^star $
+
+$ "ExactSource" = "open-direct-dependency-namespaces"(
+  "restore-original-namespaces"(
+    "toposort"(S^star)
+  )
+) $
+
+$ "BundleIdentity" = H(
+  "roots",
+  "toolchain",
+  "environment",
+  "resolved-sources",
+  "declaration-identities",
+  "canonical-source-digest"
+) $
+
+$ "AXLE-runtime-receipt" notin "BundleIdentity" $
+#+end_src
+
+The projector fails closed when:
+
+- a Lean constant has no AXLE source declaration owner;
+- a local AXLE dependency has no source declaration owner;
+- the source-declaration graph contains a cycle;
+- round-trip extraction emits a declaration set different from =S-star=;
+- =theorem2sorry= or strict proof verification emits Lean or tool errors;
+- strict verification is not =okay= or reports failed declarations.
+
+** v1 stabilization rule
+
+The declaration-closure contract remains
+=poo-flow.lean-declaration-closure.v1=.  =source_range=, phase timing,
+generated-declaration normalization, and root sharding are optional,
+backward-compatible refinements of v1.  They MUST NOT introduce a v2 schema,
+a second closure identity, or a parallel verification path.
+
+Older v1 receipts without =source_range= remain readable.  Exact-source AXLE
+verification fails closed with an actionable receipt when a required range is
+absent; it MUST NOT silently return to whole-file projection.
+
+Generated Lean declarations that share a selected source range MUST be
+normalized to that source declaration before exact round-trip comparison.
+This normalization changes neither the Lean-owned declaration graph nor the
+v1 closure digest semantics.
+
+Root sharding, when required for bounded AXLE latency, is execution planning
+over the same v1 root declarations.  Each shard MUST retain the v1 closure
+identity and the aggregate receipt MUST expose every shard result.
+
+** v1 stabilization evidence
+
+- [X] Preserve =poo-flow.lean-declaration-closure.v1=.
+- [X] Preserve readability of older v1 receipts without =source_range=.
+- [X] Normalize Lean-generated declarations to their source declaration in
+  exact round-trip and independent-bundle dependency projection.
+- [X] Verify
+  =cycleObservationDoesNotAuthorizeRetry= through Lean export, AXLE owner
+  extraction, canonical round-trip, =theorem2sorry=, and proof verification.
+- [ ] Extend the v1 source-dependency fixed point to preserve reducible aliases
+  erased from the environment-level constant dependency graph.
+- [ ] Topologically order source declarations across owner modules before
+  attempting larger roots.
+- [ ] Admit root sharding only after every individual root closes under those
+  two v1 source semantics.
+
+The green single-root receipt contains nine Lean declarations and seven
+source-level declarations.  Its owner-source payload is 1692 bytes; the
+observed owner extraction, canonical round-trip, =theorem2sorry=, and cached
+proof-verification phases completed in 234 ms, 59 ms, 161 ms, and 49 ms
+respectively.  AXLE returned =verification.okay=true= with no Lean errors,
+warnings, or failed declarations.
+
+The larger-root probes exposed two v1 implementation gaps rather than a need
+for a new schema:
+
+1. Environment constant dependencies can erase reducible source aliases that
+   exact-source replay still needs.
+2. Grouping selected ranges by owner module can place an =open= or a consuming
+   declaration before the source declaration that establishes its namespace
+   or type.
+
+Until both gaps close, a larger-root failure MUST be reported as
+=axle-projection-failed=.  It MUST NOT be disguised by whole-file fallback,
+larger timeouts, root sharding, or a v2 receipt.
+
+** Typst model of the v1 source quotient
+
+#+begin_src typst
+$ pi: D arrow S $
+
+$ C_S = { pi(d) | d in C_D } $
+
+$ E_S = { pi(d) | d in E_D } $
+
+$ "exact-roundtrip-v1" "iff" E_S = C_S $
+
+$ s_i prec_s s_j "implies" i < j $
+
+$ "source-closed-v1"(C_S)
+  "iff" forall s_j in C_S, s_i prec_s s_j "implies" s_i in C_S $
+#+end_src
+
+Here, =D= is the Lean environment declaration universe, =S= is the source
+declaration universe, and =pi= maps constructors, fields, and generated
+instances to their owning source declaration.  =C_D= is the Lean-owned v1
+closure and =E_D= is the AXLE extraction result.  The relation =prec_s=
+contains source-level dependencies, including reducible aliases that can
+disappear from environment constant dependencies.
+
+The equality is therefore checked in the source quotient.  The ordering
+obligation is separate: every emitted source declaration must occur after all
+of its =prec_s= predecessors.  Neither rule changes the v1 receipt identity.
+
+* Namespace preservation
+
+AXLE =merge= is not the canonicalization authority for a multi-namespace exact
+closure. The implementation probes established two concrete failure modes:
+
+1. merging naked declarations removed namespace context and left qualified
+   dependency references unresolved;
+2. merging self-contained documents attempted a cross-namespace rename, which
+   AXLE correctly rejected.
+
+The exact projector therefore preserves each original declaration namespace.
+For a declaration it opens only the namespaces of its direct, already emitted
+AXLE dependencies. Opening every prior namespace was also rejected because it
+made names such as =CapabilityConstraint= ambiguous.
+
+This is a refinement of the broad =merge= wording in RFC 45-135: AXLE remains
+the semantic parser and verifier, while exact cross-namespace composition is a
+namespace-preserving local projection.
+
+* Evidence flow
+
+#+begin_src mermaid
+flowchart LR
+    CLI["poo-flow-axle-verify flags"]
+    LAKE["Lake build and module import"]
+    LEAN["Lean declaration closure exporter"]
+    AXLE_PARSE["AXLE extract_decls"]
+    FIX["Source declaration least fixed point"]
+    SOURCE["Namespace-preserving exact source"]
+    ROUND["AXLE round-trip extract"]
+    SORRY["AXLE theorem2sorry"]
+    VERIFY["AXLE verify_proof"]
+    BUNDLE["IndependentDeclarationBundle"]
+    RECEIPT["Content-addressed closure receipt"]
+
+    CLI -->|"root module + root declarations"| LAKE
+    LAKE -->|"built environment"| LEAN
+    LEAN -->|"22 constants; dependency-first"| AXLE_PARSE
+    AXLE_PARSE -->|"parsed documents + local deps"| FIX
+    FIX -->|"10 declarations; closed + topological"| SOURCE
+    SOURCE -->|"exact declaration set"| ROUND
+    ROUND -->|"set equality accepted"| SORRY
+    SORRY -->|"formal statement"| VERIFY
+    SOURCE -->|"candidate proof content"| VERIFY
+    VERIFY -->|"okay=true; failed=[]"| BUNDLE
+    FIX -->|"owner paths + source digests"| BUNDLE
+    LAKE -->|"manifest digest + root package identity"| BUNDLE
+    BUNDLE -->|"deterministic bundle digest"| RECEIPT
+    LEAN -->|"closure digest"| RECEIPT
+    SOURCE -->|"canonical source digest"| RECEIPT
+#+end_src
+
+* Implementation checklist
+
+- [X] Keep =poo-flow-axle-verify= as the only AXLE verification console script.
+- [X] Add closure flags directly to =axle_verify:main=.
+- [X] Build the requested Lean module before exporting declarations.
+- [X] Export a dependency-first, cycle-safe Lean constant closure.
+- [X] Resolve owner source files through Lake's effective =LEAN_PATH=.
+- [X] Collapse generated constants to AXLE source declarations.
+- [X] Close over AXLE local type, value, and syntactic dependencies.
+- [X] Preserve original namespaces in the exact canonical source.
+- [X] Open only direct dependency namespaces.
+- [X] Fail closed on round-trip declaration-set mismatch.
+- [X] Run =theorem2sorry= and strict =verify_proof= in one AXLE event loop.
+- [X] Write the exact bundle and digests through =--closure-output=.
+- [X] Project the verified closure into =IndependentDeclarationBundle=.
+- [X] Derive root resolved-source identity from the Lake manifest and owner
+  source tree, without introducing another package resolver.
+- [X] Exclude AXLE request ids and timings from bundle identity.
+- [X] Preserve the original positional-path CLI mode.
+
+* Files
+
+- =packages/proof/lean/PooFlowProof/Export/DeclarationClosure.lean=
+- =packages/proof/python/src/poo_flow_proof/lean_declaration_closure.py=
+- =packages/proof/python/src/poo_flow_proof/axle_exact_closure.py=
+- =packages/proof/python/src/poo_flow_proof/axle_closure_verify.py=
+- =packages/proof/python/src/poo_flow_proof/independent_bundle_projection.py=
+- =packages/proof/python/src/poo_flow_proof/axle_verify.py=
+- =packages/proof/python/tests/test_lean_declaration_closure.py=
+- =packages/proof/python/tests/test_axle_exact_closure.py=
+- =packages/proof/python/tests/test_axle_closure_verify.py=
+- =packages/proof/python/tests/test_independent_bundle_projection.py=
+
+* Verification receipt
+
+** Real enterprise multi-module closure
+
+#+begin_src text
+root-module:
+  PooFlowProof.PooC3.Enterprise.Core
+root-declaration:
+  PooFlowProof.PooC3.Enterprise.Core.baseAdmissionRequiresAuthorityEvidence
+owner-modules:
+  PooFlowProof.PooC3.ScaleParametricModuleGraph
+  PooFlowProof.PooC3.ContributorRepositoryQualification
+  PooFlowProof.PooC3.Enterprise.Core
+lean-constant-count: 22
+axle-source-declaration-count: 10
+lean-closure-digest:
+  sha256:a9b1b3d45ecb49367662127afe72c147b39a7588573febcc8913901baead8d2e
+canonical-source-digest:
+  sha256:0870de9feb41baf9861d6ed4fda82cfb1d6b6d25dce0f52e21839b7a7872ff51
+exact-bundle-digest:
+  sha256:baa6bf0bc6d62ac77716dc1d59f1712efb87abfca0d94e0bf23c6e905e0ed921
+independent-declaration-bundle-digest:
+  sha256:ea761ac793ab268890feb3179354c3391c5b80fc64d1747ccfc41f8f46feaa7c
+resolved-source:
+  package-id: poo-flow-proof
+  revision:
+    workspace:9a0e976ecc09ba080e0ac9f546caa72c56f4046a3ecc98fe560ab67d76f66bdc
+  source-tree-digest:
+    sha256:9a0e976ecc09ba080e0ac9f546caa72c56f4046a3ecc98fe560ab67d76f66bdc
+  lake-manifest-digest:
+    sha256:ecd0f58db0afb9e44d3d5f42cc32e5a595eb075cf1e4832d62d5410dab3a3ed7
+verification-okay: true
+failed-declarations: []
+exit-code: 0
+determinism:
+  two independent successful runs emitted identical closure, source, and bundle
+  digests
+#+end_src
+
+** Local gates
+
+#+begin_src text
+uv run --project packages/proof/python pytest -q packages/proof/python/tests
+72 passed
+
+uv run --project packages/proof/python ruff check packages/proof/python
+All checks passed!
+
+uv run --project packages/proof/python poo-flow-axle-verify --help
+exit-code: 0
+
+cd packages/proof/lean
+lake env lean PooFlowProof/Export/DeclarationClosure.lean
+exit-code: 0
+#+end_src
+
+* Known external blocker
+
+The ASP Python source projection remains independently blocked by a stale
+resident endpoint receipt that lacks =transportContractDigest=. This did not
+authorize raw source fallback and is not reported as part of the Lean or AXLE
+proof result.

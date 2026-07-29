@@ -2,6 +2,33 @@
 
 * Status
 
+The proof-driven normative refinements are:
+
+- =149-01=: complete Cedar/Lean authorization-subject binding and
+  independent dual-engine validity;
+- =149-02=: Human Audit delegation, revocation, responsibility, and
+  separation-of-duties closure;
+- =149-03=: admission-to-materialization snapshot binding, atomic
+  compare-and-swap, rollback, recovery, and commit-receipt closure;
+- =149-04=: canonical transaction identity, authentic duplicate witness,
+  complete effect rollback, durable intent, and fenced crash recovery;
+- =149-05=: plan-bound effect-domain coverage, complete effect worlds,
+  reversibility obligations, and compensation evidence;
+- =149-06=: transitive =use-composition= effect closure across profiles,
+  submodules, workflows, cycles, and delegated providers;
+- =149-07=: least-fixed-point closure, finite discovery capacity,
+  separated progress budgets, and non-authorizing cycle observations.
+
+The first two refinements establish admission.  They do not by
+themselves authorize a later Marlin effect after governance or runtime
+state changes.  RFC 149-03 is the normative transaction boundary for
+that handoff.  RFC 149-04 is the normative exactly-once and recovery
+boundary after that handoff.  RFC 149-05 proves which effects that
+boundary must observe before it may claim rollback.  RFC 149-06 proves
+how the POO composition graph derives that effect universe.  RFC 149-07
+proves when the derived graph is exactly the least fixed point and keeps
+cycle evidence separate from retry authority.
+
 ** 2026-07-22 implementation receipt
 
 The Scheme/POO promotion slice is accepted at its current owner boundary.  This
