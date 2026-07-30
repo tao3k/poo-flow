@@ -22,6 +22,11 @@ structure RangedDeclaration where
   declaration : Declaration
   sourceRange : DeclarationRange
 
+structure NamedRange where
+  name : Name
+  ownerModule : Name
+  sourceRange : DeclarationRange
+
 structure ClosureState where
   visiting : Std.HashSet Name := {}
   emitted : Std.HashSet Name := {}
@@ -162,15 +167,25 @@ private def collectDeclarationRanges
     (declarations : Array Declaration) :
     IO (Except String (Array RangedDeclaration)) := do
   let action : Core.CoreM (Except String (Array RangedDeclaration)) := do
-    let mut result := #[]
+    let mut result : Array RangedDeclaration := #[]
     for declaration in declarations do
-      let some ranges ← findDeclarationRanges? declaration.name
-        | return .error s!"declaration-source-range-missing: {declaration.name}"
-      result := result.push {
-        declaration
-        sourceRange := ranges.range
+      if let some ranges ← findDeclarationRanges? declaration.name then
+        result := result.push {
+          declaration
+          sourceRange := ranges.range
+        }
+    let rangedNames :=
+      result.foldl
+        (init := ({} : Std.HashSet Name))
+        fun names ranged => names.insert ranged.declaration.name
+    return .ok (result.map fun ranged => {
+      ranged with
+      declaration := {
+        ranged.declaration with
+        localDependencies :=
+          ranged.declaration.localDependencies.filter rangedNames.contains
       }
-    return .ok result
+    })
   let context : Core.Context := {
     fileName := "<declaration-closure-export>"
     fileMap := FileMap.ofString ""
@@ -181,6 +196,95 @@ private def collectDeclarationRanges
       return .error "declaration-source-range-failed"
   | .ok (result, _) =>
       return result
+
+private def positionLe (left right : Position) : Bool :=
+  decide (
+    left.line < right.line ∨
+      (left.line = right.line ∧ left.column ≤ right.column)
+  )
+
+private def rangeContains
+    (outer inner : DeclarationRange) :
+    Bool :=
+  positionLe outer.pos inner.pos &&
+    positionLe inner.endPos outer.endPos
+
+private def collectSourceFamilyNames
+    (env : Environment)
+    (declarations : Array Declaration) :
+    IO (Except String (Array Name)) := do
+  let action : Core.CoreM (Except String (Array Name)) := do
+    let selectedNames :=
+      declarations.foldl
+        (init := ({} : Std.HashSet Name))
+        fun names declaration => names.insert declaration.name
+    let selectedModules :=
+      declarations.foldl
+        (init := ({} : Std.HashSet Name))
+        fun modules declaration => modules.insert declaration.ownerModule
+    let mut candidates : Array NamedRange := #[]
+    for (name, _) in env.constants.toList do
+      match ownerModule env name with
+      | .error _ =>
+          pure ()
+      | .ok moduleName =>
+          if selectedModules.contains moduleName then
+            if let some ranges ← findDeclarationRanges? name then
+              candidates := candidates.push {
+                name
+                ownerModule := moduleName
+                sourceRange := ranges.range
+              }
+    let selectedRanges := candidates.filter fun candidate =>
+      selectedNames.contains candidate.name
+    let mut familyNames : Std.HashSet Name := {}
+    for selected in selectedRanges do
+      let mut outer := selected.sourceRange
+      for candidate in candidates do
+        if candidate.ownerModule = selected.ownerModule &&
+            rangeContains candidate.sourceRange outer then
+          outer := candidate.sourceRange
+      for candidate in candidates do
+        let isSourceDependencyCarrier :=
+          selectedNames.contains candidate.name ||
+            match env.find? candidate.name with
+            | some (.inductInfo _) => true
+            | some (.ctorInfo _) => true
+            | _ => false
+        if isSourceDependencyCarrier &&
+            candidate.ownerModule = selected.ownerModule &&
+            rangeContains outer candidate.sourceRange then
+          familyNames := familyNames.insert candidate.name
+    return .ok (uniqueSortedNames familyNames.toArray)
+  let context : Core.Context := {
+    fileName := "<declaration-source-family-export>"
+    fileMap := FileMap.ofString ""
+  }
+  let state : Core.State := { env }
+  match ← EIO.toIO' ((action.run context) state) with
+  | .error _ =>
+      return .error "declaration-source-family-failed"
+  | .ok (result, _) =>
+      return result
+
+private partial def closeSourceFamilies
+    (baseEnv fullEnv : Environment)
+    (state : ClosureState) :
+    IO (Except String ClosureState) := do
+  match ← collectSourceFamilyNames fullEnv state.declarations with
+  | .error error =>
+      return .error error
+  | .ok familyNames =>
+      let previousSize := state.declarations.size
+      let mut nextState := state
+      for name in familyNames do
+        nextState ←
+          match visitDeclaration baseEnv fullEnv name nextState with
+          | .ok visited => pure visited
+          | .error error => return .error error
+      if nextState.declarations.size = previousSize then
+        return .ok nextState
+      closeSourceFamilies baseEnv fullEnv nextState
 
 private def receiptJson
     (config : Config)
@@ -210,10 +314,23 @@ private def run (config : Config) : IO (Except String Json) := do
         match visitDeclaration baseEnv fullEnv rootDeclaration state with
         | .ok nextState => pure nextState
         | .error error => return .error error
+    state ←
+      match ← closeSourceFamilies baseEnv fullEnv state with
+      | .ok nextState => pure nextState
+      | .error error => return .error error
     match ← collectDeclarationRanges fullEnv state.declarations with
     | .error error => return .error error
     | .ok declarations =>
-        return .ok (receiptJson config declarations)
+        let rangedNames :=
+          declarations.foldl
+            (init := ({} : Std.HashSet Name))
+            fun names ranged => names.insert ranged.declaration.name
+        match config.rootDeclarations.find? fun root =>
+          !rangedNames.contains root with
+        | some root =>
+            return .error s!"root-source-range-missing: {root}"
+        | none =>
+            return .ok (receiptJson config declarations)
   catch error =>
     return .error s!"lean-environment-import-failed: {error}"
 

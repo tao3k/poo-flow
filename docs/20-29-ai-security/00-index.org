@@ -1,0 +1,67 @@
+#+title: 20-29 AI Security
+#+author: POO Flow
+#+startup: overview
+
+* Purpose
+
+This Org-first family owns AI-security research, architecture semantics, and
+enterprise security architecture packages built with the POO Flow engine.
+
+POO Flow itself remains the general POO-native architecture-semantics
+composition engine.  Documents in this family describe security architectures
+that the engine may compose; they do not redefine the engine or widen its
+public API.
+
+* Ownership boundary
+
+This family owns:
+
+- external AI-security architecture observations and crosswalks;
+- semantic catalogs derived from papers, standards, incidents, blogs, and
+  GitHub issues;
+- composable enterprise AI-security architecture packages and profiles;
+- cross-architecture mapping, conflict, refinement, and unknown semantics;
+- security-specific proof and runtime projection requirements.
+
+This family does not own:
+
+- POO module-system implementation;
+- public =compose=, =profiles=, =use-module=, or =use-composition= APIs;
+- policy composition proofs;
+- Lean proof infrastructure;
+- runtime coordinator effects;
+- vendor data, model, IAM, SOC, or governance products.
+
+Those remain with their existing owners and are referenced through explicit
+projection contracts.
+
+* Documents
+
+** 20.01 AI Enterprise Security Architecture Semantics Catalog
+
+File:
+=20.01-ai-enterprise-security-architecture-semantics-catalog.org=
+
+Non-normative catalog of external architecture coordinate systems, reusable
+semantic objects and relations, mapping status, and evidence admission.
+
+** 20.02 Composable AI Security Architecture Package
+
+File:
+=20.02-composable-ai-security-architecture-package.org=
+
+Normative RFC for representing security architecture semantics as POO-native
+values composed by the existing engine without adding a new public DSL.
+
+* Planned frontier
+
+- architecture observation provenance;
+- data/knowledge security semantic packages;
+- model/intelligence security semantic packages;
+- cross-architecture mapping proofs;
+- enterprise-specialized profiles;
+- POL, runtime admission, observation, recovery, and independent replay
+  projections.
+
+Implementation proceeds only after focused owner admission in the actual POO
+module/profile and Lean proof owners.

@@ -55,6 +55,13 @@ def test_generated_lean_constants_collapse_to_source_declaration() -> None:
     assert result == ("Example.Policy", "Example.admit")
 
 
+def test_inaccessible_generated_instance_normalizes_to_source_owner() -> None:
+    assert axle_exact_closure._normalized_source_declaration_name(
+        "«_Example.instDecidableEqThing»",
+        {"Example.Thing": "Example.Thing"},
+    ) == "Example.Thing"
+
+
 def test_source_range_aliases_collapse_generated_document_cycle() -> None:
     result = source_declaration_closure(
         lean_declarations=("Example.Policy", "Example.Policy.mk"),

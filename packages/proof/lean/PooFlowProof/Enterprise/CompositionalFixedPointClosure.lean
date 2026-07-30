@@ -133,6 +133,52 @@ def registeredNodeIds
     List CompositionNodeId :=
   registry.map CompositionObject.identity
 
+def visitedRegistered
+    (registry : CompositionRegistry)
+    (receipt : FixedPointClosureReceipt) : Prop :=
+  ∀ nodeId,
+    nodeId ∈ receipt.visited →
+      nodeId ∈ registeredNodeIds registry
+
+def unregisteredRootReceipt : FixedPointClosureReceipt where
+  receiptId := "unregistered-root"
+  registryDigest := "sha256:empty-registry"
+  roots := ["ghost-profile"]
+  visited := ["ghost-profile"]
+  pending := []
+  effectUniverse := []
+  generation := 1
+  iterationCount := 1
+  stable := true
+
+theorem rootLinkMinimalityDoNotProveVisitedRegistration :
+    rootsVisited ["ghost-profile"] unregisteredRootReceipt ∧
+      visitedLinkClosed [] unregisteredRootReceipt ∧
+      visitedIsMinimal
+        []
+        ["ghost-profile"]
+        unregisteredRootReceipt ∧
+      ¬ visitedRegistered [] unregisteredRootReceipt := by
+  constructor
+  · intro root rootInRoots
+    simpa [unregisteredRootReceipt] using rootInRoots
+  · constructor
+    · intro source sourceVisited target link
+      rcases link with
+        ⟨object, objectInRegistry, objectIdentity, targetInLinks⟩
+      simp at objectInRegistry
+    · constructor
+      · intro nodeId nodeVisited
+        have nodeIsGhost : nodeId = "ghost-profile" := by
+          simpa [unregisteredRootReceipt] using nodeVisited
+        subst nodeId
+        exact .root (by simp)
+      · intro registered
+        have ghostRegistered :=
+          registered "ghost-profile" (by
+            simp [unregisteredRootReceipt])
+        simp [registeredNodeIds] at ghostRegistered
+
 structure FiniteWorklistState where
   visited : List CompositionNodeId
   pending : List CompositionNodeId
@@ -297,6 +343,7 @@ structure FixedPointEvidenceClosed
   receiptContainsRoots : rootsVisited roots receipt
   receiptLinkClosed : visitedLinkClosed registry receipt
   receiptMinimal : visitedIsMinimal registry roots receipt
+  receiptVisitedRegistered : visitedRegistered registry receipt
   progressValidates : progressValid progress
   progressRegistryMatches :
     progress.registryDigest = receipt.registryDigest
@@ -524,6 +571,19 @@ theorem completeFixedPointEvidenceCloses :
     · exact knowledgeModuleReachable
     · exact notificationWorkflowReachable
     · exact messageProviderReachable
+  · intro nodeId nodeVisited
+    simpa [
+      completeFixedPointReceipt,
+      completeVisited,
+      registeredNodeIds,
+      compositionRegistry,
+      baseProfile,
+      wendaoEpistemeMix,
+      productionProfile,
+      knowledgeModule,
+      notificationWorkflow,
+      messageProvider
+    ] using nodeVisited
   · trivial
   · rfl
   · rfl

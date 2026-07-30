@@ -23,6 +23,11 @@ proofs without reimplementing the upstream =gerbil-poo= fixed-point algebra.
 
 * Decision
 
+This RFC stabilizes =poo-flow.lean-declaration-closure.v1= only.
+Runtime-watchdog binding, memory attribution, phase timing, and bounded proof-root
+selection are backward-compatible v1 refinements.  They do not authorize a v2
+schema, a second closure identity, or a competing proof-transport path.
+
 Cycle detection, progress proof, deterministic structural budget, and runtime
 watchdog evidence are four separate responsibilities.
 
@@ -33,6 +38,101 @@ watchdog evidence are four separate responsibilities.
   retention evidence.
 
 A cycle observation is a structural fact.  It is not itself a failure.
+
+* Oscillation is a structural v1 progress claim
+
+An =oscillating= classification MUST NOT be justified only by the domain
+=semanticOscillation= hook.  POO Flow first requires a canonical fingerprint
+history that returns to the same fingerprint after at least one intervening
+different fingerprint.  The domain hook then confirms the industry- or
+workflow-specific meaning of that structural return.
+
+#+begin_src typst
+$ "Osc"(H) equiv exists B, M, S, f:
+  H = B ++ [f] ++ M ++ [f] ++ S
+  and exists g in M: g != f $
+#+end_src
+
+#+begin_src mermaid
+stateDiagram-v2
+  [*] --> HistoryObserved: append canonical fingerprint
+  HistoryObserved --> ReturnCandidate: fingerprint repeats
+  ReturnCandidate --> StructurallyOscillating: an intervening fingerprint differs
+  ReturnCandidate --> NotOscillation: no intervening change
+  StructurallyOscillating --> DomainConfirmed: domain hook accepts
+  StructurallyOscillating --> FailClosed: domain hook rejects
+  DomainConfirmed --> OscillatingReceipt: declaration-closure v1
+#+end_src
+
+The Lean owner is
+=PooFlowProof.Enterprise.SourceBoundProgressEvidenceClosure=.  Its
+=fingerprintHistoryHasCanonicalOscillation= predicate owns the structural
+witness; =semanticOscillation= remains an additional contract constraint.
+
+The two AXLE + Lean declaration-closure v1 roots are
+=arbitraryOscillationPredicateDoesNotProveCanonicalHistory= and
+=oscillatingClassificationCarriesCanonicalHistory=.  Their v1 receipts close
+3/3 and 44/19 preflight/exact declarations respectively, with
+=verification.okay=true= and no failed declarations.  They use the top-level
+=PooFlowProof.Enterprise= owner path; =PooFlowProof.PooC3.Enterprise= is not an
+authorized alias.
+
+* Deterministic budget closure
+
+The source-bound budget plan, conservation equations, typed exhaustion witness,
+runtime-watchdog separation, and Lean proof map are specified independently in
+[[file:45-120-22-source-bound-deterministic-budget-closure.org][45-120-22 source-bound deterministic budget closure]].
+
+This split is normative: progress, deterministic budget, runtime watchdog, and
+recovery authority remain separate evidence owners.  The refinement remains on
+=poo-flow.lean-declaration-closure.v1=.
+
+* Progress classification coherence
+
+Subject-level relation coherence, heterogeneous-SCC candidate aggregation,
+explicit classification ranks, maximal selection, and Lean uniqueness proofs
+are specified independently in
+[[file:45-120-23-source-bound-progress-classification-coherence.org][45-120-23 source-bound progress classification coherence]].
+
+The progress enum is not itself evidence of deterministic classification.
+
+* Source-bound fingerprint history
+
+Checkpoint identity, subject/registry coordinates, sequence/generation order,
+exact fingerprint projection, transition endpoints, provenance, and exact
+subject coverage are specified independently in
+[[file:45-120-24-source-bound-fingerprint-history-closure.org][45-120-24 source-bound fingerprint history closure]].
+
+The raw fingerprint list is a receipt projection, not a history evidence owner.
+
+* Source-bound fingerprint content-address closure
+
+Logical checkpoint-content binding, predecessor binding, canonical history-root
+binding, and provider-owned digest validity are specified independently in
+[[file:45-120-25-source-bound-fingerprint-content-address-closure.org][45-120-25 source-bound fingerprint content-address closure]].
+
+This is a stable v1 refinement.  It reuses the complete existing checkpoint and
+history structures; it does not introduce a v2 declaration closure or a second
+history schema.
+
+* Latest-checkpoint restore authorization
+
+Content-address integrity, current runtime epoch, latest-checkpoint target, and
+the exact Cedadr authorization receipt are composed in
+[[file:45-120-26-source-bound-checkpoint-restore-authorization-closure.org][45-120-26 source-bound checkpoint restore authorization closure]].
+
+Ordinary resume is latest-only.  Rollback remains a separate explicit authority
+and cannot be accepted through the ordinary resume request.
+
+* Effect replay idempotency and retry authority
+
+Replay-window ordering, exact ledger coverage, idempotency identity,
+execute-versus-suppress planning, and exact Cedadr retry authority are composed
+in
+[[file:45-120-27-source-bound-effect-replay-idempotency-closure.org][45-120-27 source-bound effect replay idempotency closure]].
+
+Restore authorization does not imply replay safety, and a raw effect trace
+cannot synthesize ledger coverage or an idempotency identity.
 
 * Evaluation relationship
 
@@ -52,7 +152,7 @@ flowchart TD
 
   Edge -->|"closes a path and records evidence before another evaluation step"| Cycle
   Cycle -->|"canonicalizes members, edges, generation, and source evidence"| SCC
-  SCC -->|"asks each value-domain prototype how progress is evidenced"| Progress
+  SCC -->|"binds exact Nodup complete subjects before classification"| Progress
 
   Progress -->|"proves monotone improvement under the domain Contract"| Advancing
   Progress -->|"proves semantic equivalence with the previous generation"| Converged
@@ -100,6 +200,27 @@ The observation MUST identify:
 This observation does not stop evaluation unless policy, authority, or budget
 requires it.
 
+** Source-bound structural refinement
+
+RFC 149-07 makes the previously informal terms “canonical SCC identity,”
+“causal path,” and “closing edge” precise.
+
+- Every node is a complete object subject: package, revision, source-tree
+  digest, object-content digest, and effect-contract digest.
+- The closing edge is explicit and exists in the exact composition registry.
+- Every SCC member and causal-path node belongs to the fixed-point visited set.
+- Every adjacent causal-path pair is a real source-bound composition link.
+- The causal path is closed and its final pair is the named closing edge.
+- Every pair of SCC members is mutually reachable through links whose
+  intermediate subjects remain inside that SCC.
+- Canonical SCC members are duplicate-free.
+
+A registry digest and generation alone do not establish these properties.
+Lean countermodels in
+=PooFlowProof.Enterprise.SourceBoundCycleObservationClosure= preserve the
+same-name revision and ghost-cycle failures.  This refinement adds evidence
+semantics only; it does not introduce a second fixed-point runtime.
+
 * Progress Contract
 
 A value-domain prototype participating in recursive evaluation supplies a pure
@@ -121,6 +242,86 @@ The Contract MUST NOT:
 - re-enter the SCC under inspection;
 - infer equality from pointer identity or printed representation;
 - use machine-dependent elapsed time as semantic progress.
+
+** Source-bound progress evidence refinement
+
+RFC 149-07 also makes the Progress Contract input precise.  Registry digest
+and generation are coordinates, not the semantic owner of a classification.
+The progress receipt MUST bind the exact cycle-observation identity and cover
+its canonical SCC with one =SubjectProgressEvidence= per complete subject.
+
+Each entry records:
+
+- package, revision, source-tree digest, object-content digest, and
+  effect-contract digest through the complete subject;
+- previous and current semantic fingerprints;
+- canonical fingerprint history needed by oscillation evidence;
+- previous and current remaining-obligation digests.
+
+The subject projection MUST equal the canonical SCC member sequence and MUST
+be duplicate-free.  A pure, owner-valid =SourceBoundProgressContract= then
+supplies the relations for semantic equivalence, monotone improvement,
+regression, incomparability, oscillation, and obligation completion or
+remainder.
+
+A =ProgressClass= value without those relations is only an assertion.
+=converged= requires equivalence plus completed obligations for every governed
+subject.  =advancing= requires no governed violation and at least one
+monotone improvement.  =stalled= requires equivalence while obligations
+remain.  The remaining classifications likewise require their distinct
+contract evidence or an exhausted deterministic structural budget.
+
+Lean owners:
+
+#+begin_src text
+PooFlowProof.Enterprise.SourceBoundProgressEvidenceClosure
+progressCoordinatesCannotBindCompleteCycleSubject
+identicalProgressPayloadCanCarryContradictoryClassifications
+completeSourceBoundProgressEvidenceCloses
+#+end_src
+
+** Source-bound runtime watchdog refinement
+
+An optional =watchdogObservationId= is a reference, not evidence.  When the
+reference is present, RFC 149-07 requires an independently owner-valid
+=SourceBoundRuntimeWatchdogObservation= with:
+
+- the same registry and generation as the progress receipt;
+- the exact cycle-observation identity and continuation identity;
+- runtime owner and evaluation-phase identities;
+- a typed metric and compatible unit;
+- observed and threshold values with a strict exceedance relation;
+- metric-specific attribution and a provenance digest.
+
+For process-tree RSS, one scalar is insufficient.  Shared pages can be counted
+multiple times and the sum does not identify the implementation phase or
+largest process.  The memory attribution therefore records tree RSS, largest
+process identity and RSS, and at least one proportional-set-size or
+platform-footprint value.
+
+Progress semantics and runtime watchdog binding have different owners:
+
+- =SourceBoundProgressEvidenceClosed= proves semantic classification under a
+  pure domain Contract;
+- =SourceBoundRuntimeWatchdogBindingClosed= proves the runtime observation
+  reference, coordinates, threshold, and attribution;
+- =SourceBoundRuntimeWatchdogEvidenceClosed= composes those independently
+  verified relations in Lean.
+
+A watchdog observation does not prove convergence, regression, or absence of
+a fixed point.  It also cannot mint or consume retry authority.
+
+Lean owners:
+
+#+begin_src text
+PooFlowProof.Enterprise.SourceBoundRuntimeWatchdogClosure
+watchdogObservationIdDoesNotProveObservationExists
+matchingWatchdogIdDoesNotProveCoordinateBinding
+scalarTreeRssExceedanceDoesNotProveMemoryAttribution
+completeSourceBoundRuntimeWatchdogBindingCloses
+independentlyClosedProgressAndWatchdogEvidenceCompose
+runtimeWatchdogObservationDoesNotAuthorizeRetry
+#+end_src
 
 * Observation refinements
 
@@ -218,6 +419,9 @@ available response.  The coordinator validates and executes an admitted
   and cache thrashing remain distinct observations.
 - [X] Structural budgets use deterministic semantic units.
 - [X] Runtime watchdog evidence remains separate from semantic progress.
+- [X] Define canonical SCC/path identity as complete source-bound subjects.
+- [X] Require visited membership, linked path closure, and an explicit closing
+  edge in the Lean refinement.
 - [X] Closure-evaluation and recovery-action budgets remain distinct.
 - [X] POO Flow observes rather than replaces upstream fixed-point algebra.
 - [X] Recovery remains policy-selected, capability-bounded, and

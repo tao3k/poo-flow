@@ -187,7 +187,32 @@ def main() -> None:
             raise SystemExit(2) from error
     if not args.paths:
         parser.error("paths are required outside closure mode")
-    raise SystemExit(asyncio.run(run(args)))
+    import json as json_module
+    import sys as sys_module
+
+    deadline_seconds = (
+        args.axle_operation_timeout_seconds + args.axle_base_timeout_seconds
+    )
+    try:
+        result = asyncio.run(asyncio.wait_for(run(args), timeout=deadline_seconds))
+    except TimeoutError:
+        print(
+            json_module.dumps(
+                {
+                    "base_timeout_seconds": args.axle_base_timeout_seconds,
+                    "code": "axle-operation-deadline-exceeded",
+                    "operation_timeout_seconds": args.axle_operation_timeout_seconds,
+                    "schema_id": "poo-flow.axle-verification.v1",
+                    "status": "rejected",
+                },
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            ),
+            file=sys_module.stderr,
+        )
+        raise SystemExit(1) from None
+    raise SystemExit(result)
 
 
 if __name__ == "__main__":

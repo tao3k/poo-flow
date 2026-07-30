@@ -80,6 +80,49 @@ profilesAndEffectListDoNotIdentifyRegistrySnapshot
 The registry digest is part of the semantic subject.  It cannot be
 reconstructed from the visible profile names.
 
+** String identity permits same-name object-body substitution
+
+The first refinement still represented a reachable object and a runtime
+event owner by =CompositionNodeId= alone.  That is weaker than the RFC's
+source/content-identity requirement.  A registry can contain two objects
+with the same string identity but different revisions and local effect
+contracts.  The identity-only relation can then accept an effect from the
+second body while the event appears to name the first.
+
+Lean proves:
+
+#+begin_src text
+identityOnlyTraceCanSwitchObjectBody
+#+end_src
+
+The corrected internal subject is:
+
+#+begin_src text
+CompositionObjectSubject
+  identity
+  packageId
+  revision
+  sourceTreeDigest
+  objectContentDigest
+  effectContractDigest
+#+end_src
+
+Composition links, roots, reachability, runtime event owners, and local
+effect lookup use this complete subject.  Lean proves:
+
+#+begin_src text
+exactSourceBindingRejectsSameNameRevisionSwitch
+#+end_src
+
+Populating those fields is still only a claim.  The corrected closure
+therefore retains an independent whole-object binding-valid relation and
+an owner-valid package-resolution receipt for every reachable object.
+Lean preserves that distinction with:
+
+#+begin_src text
+populatedSourceFieldsDoNotProveObjectBinding
+#+end_src
+
 ** Adding a profile can add transitive effects
 
 Effect summaries are monotone under root-profile addition:
@@ -157,6 +200,13 @@ and trace validity relations.
   universe.
 - =profilesAndEffectListDoNotIdentifyRegistrySnapshot= proves registry
   identity is independent.
+- =identityOnlyTraceCanSwitchObjectBody= proves a string owner identity
+  can select the local effect contract of a different object revision.
+- =exactSourceBindingRejectsSameNameRevisionSwitch= rejects that replay
+  when roots, links, reachability, and event owners use the complete
+  source-bound object subject.
+- =populatedSourceFieldsDoNotProveObjectBinding= keeps whole-object owner
+  validity independent from populated digest fields.
 - =reachableMonotone= proves node reachability is monotone under root
   addition.
 - =reachableEffectsMonotoneUnderProfileAddition= lifts monotonicity to
@@ -169,12 +219,27 @@ and trace validity relations.
   =use-composition= closure.
 - =closedCompositionCoversEveryRuntimeEvent= proves every accepted event
   belongs to the witness effect universe.
+- =sourceBoundEffectCoverageIsScaleParametric= proves the core
+  consequence for an arbitrary-size registry while preserving exact
+  source, object-content, and effect-contract identity.
+- =closedSourceBoundCompositionCoversEveryRuntimeEvent= lifts that core
+  theorem through the transaction-, fence-, resolution-, and
+  owner-valid complete closure.
+- =sourceBoundCompositionRequestProjectionPreservesSubject= proves the
+  narrow effect-closure request projection preserves the promotion
+  transaction ID and materialization-plan digest without importing the
+  unrelated Cedar authorization payload into every effect theorem.
+- =completeSourceBoundCompositionalEffectClosure= constructs a positive
+  closure with a matching =gerbil.pkg= source-resolution receipt under
+  explicitly supplied owner-validity relations.  The resolver ID string
+  is not itself authority.
 
 The proof owner is:
 
 #+begin_src text
 packages/proof/lean/PooFlowProof/Enterprise/
   CompositionalEffectUniverse.lean
+  SourceBoundCompositionalEffectClosure.lean
 #+end_src
 
 The top-level =PooFlowProof.Enterprise= namespace owns enterprise
@@ -186,12 +251,18 @@ making the enterprise model a child of =PooC3=.
 The durable mathematical surface is Typst:
 
 #+begin_src typst
+$ sigma(M) =
+  (M_"package", M_"revision", M_"source-tree",
+   M_"content", M_"effect-contract") $
+
+$ "Subject"(M) = (M_"identity", sigma(M)) $
+
 $ M =
-  (i, k, I, C, P, S, W, D, E_"local") $
+  ("Subject"(M), k, I, C, P, S, W, D, E_"local") $
 
 $ "Link"(x, y, G) =
   exists M in G:
-  (M_"identity" = x)
+  ("Subject"(M) = x)
   and (y in M_"imports"
     or y in M_"profiles"
     or y in M_"submodules"
@@ -203,11 +274,11 @@ $ "Reach"(R, G) =
 
 $ E_"root"(R, G) =
   {e | exists M in G:
-    M_"identity" in R and e in M_"local-effects"} $
+    "Subject"(M) in R and e in M_"local-effects"} $
 
 $ E_"transitive"(R, G) =
   {e | exists M in G:
-    M_"identity" in "Reach"(R, G)
+    "Subject"(M) in "Reach"(R, G)
     and e in M_"local-effects"} $
 
 $ exists e:
@@ -222,17 +293,19 @@ $ "TraceRespects"(T, R, G) =
   forall v in T_"events":
   (v_"owner" in "Reach"(R, G))
   and (exists M in G:
-    M_"identity" = v_"owner"
+    "Subject"(M) = v_"owner"
     and v_"effect" in M_"local-effects") $
 
 $ "CompositionClosed"(Q, f, G, H, T) =
   "RegistryValid"(H_"registry-digest", G)
   and "WitnessValid"(H)
+  and "UniqueSubject"(G)
   and (H_"plan" = Q_"materialization-plan")
   and (H_"roots" = R)
   and (forall M in G:
-    M_"identity" in "Reach"(R, G)
-    => "NodeEffectContractValid"(M))
+    "Subject"(M) in "Reach"(R, G)
+    => ("ObjectBindingValid"(M)
+      and "SourceResolutionReceiptValid"(sigma(M))))
   and (E_"transitive"(R, G) subset.eq H_"effect-universe")
   and (T_"transaction" = Q_"transaction")
   and (T_"fence" = f)
@@ -243,11 +316,25 @@ $ "CompositionClosed"(Q, f, G, H, T) =
 $ "CompositionClosed"(Q, f, G, H, T)
   => (forall v in T_"events":
     v_"effect" in H_"effect-universe") $
+
+$ exists M_a, M_b:
+  M_a_"identity" = M_b_"identity"
+  and sigma(M_a) != sigma(M_b)
+  and E_"local"(M_a) != E_"local"(M_b) $
+
+$ "IdentityOnlyReachable"(M_a_"identity")
+  "does not imply"
+  "SubjectReachable"("Subject"(M_a)) $
 #+end_src
 
-The fields of =M= correspond to the higher-order POO module object:
+The fields of =M= correspond to the higher-order POO module object and
+its internal evidence subject:
 
 - identity;
+- package identity and exact revision;
+- source-tree digest;
+- object-content digest;
+- local effect-contract digest;
 - node kind;
 - imports;
 - capabilities;
@@ -257,8 +344,11 @@ The fields of =M= correspond to the higher-order POO module object:
 - delegations;
 - local effects.
 
-The model is relational.  It describes the least semantic closure even
-when the graph contains a cycle.
+The final two formulas preserve the counterexample: equal string
+identities do not imply equal source-bound subjects.  The model is
+relational and scale-parametric.  It describes the least semantic
+closure for any finite registry size, even when the graph contains a
+cycle; it does not claim an executable performance bound.
 
 * Composition node kinds
 
@@ -306,10 +396,29 @@ under-approximation is not.
 - exact =use-composition= roots;
 - transitive effect universe.
 
+=SourceBoundCompositionRequestSubject= is the narrow bridge from the
+promotion request into this proof domain.  It contains only transaction
+ID and materialization-plan digest.  The complete promotion request,
+including its Cedar authorization subject, remains owned by the
+promotion proof.  Lean proves that the projection preserves both fields;
+this avoids making an effect-coverage theorem depend on unrelated
+authorization syntax or source closure.
+
 =CompositionRegistryValid= binds the digest to the concrete registry
-snapshot.  =NodeEffectContractValid= receives the complete POO object,
-not merely its string identity, so a contract cannot replay across a
-different object body with the same name.
+snapshot.  Receiving the complete POO object in
+=NodeEffectContractValid= is necessary but was not sufficient while
+reachability and runtime events still named only a string identity.  The
+corrected closure binds every link, root, reachable node, event owner,
+and local contract lookup to =CompositionObjectSubject=.  It also
+requires:
+
+- uniqueness of the complete subject inside the registry;
+- whole-object =SourceBoundObjectBindingValid= owner evidence;
+- a matching, owner-valid package-resolution receipt for the subject's
+  package, revision, and source-tree digest.
+
+The object-content and effect-contract digests are therefore not
+self-authenticating fields.
 
 * Cycle-safe fixed point
 
@@ -322,7 +431,8 @@ receipt that binds:
 
 - registry digest;
 - root set;
-- visited object identities and content identities;
+- visited complete object subjects, including source, content, and
+  contract identities;
 - iteration or worklist evidence;
 - stable transitive effect universe;
 - cycle observations and termination reason.
@@ -367,16 +477,19 @@ declared effects.  It may not create an undeclared effect.
 stateDiagram-v2
   [*] --> RootsSelected: "state=roots-selected / shallow use-composition profiles"
   RootsSelected --> RegistryBound: "state=registry-bound / exact registry digest owner-valid"
-  RegistryBound --> Expanding: "state=expanding / imports + profiles + submodules + workflows + delegation"
-  Expanding --> Expanding: "edge=cycle-or-new-node / visited identity prevents recursive divergence"
+  RegistryBound --> SubjectsPinned: "state=subjects-pinned / package + revision + source + object + contract digests"
+  SubjectsPinned --> SubjectRejected: "state=subject-rejected / duplicate subject or owner-invalid binding"
+  SubjectsPinned --> Expanding: "state=expanding / exact-subject imports + profiles + submodules + workflows + delegation"
+  Expanding --> Expanding: "edge=cycle-or-new-node / visited complete subject prevents recursive divergence"
   Expanding --> ClosureStable: "state=stable / least reachable object set proven"
-  ClosureStable --> ContractsChecked: "state=contracts-checked / every reachable POO object owner-valid"
+  ClosureStable --> ContractsChecked: "state=contracts-checked / every reachable source receipt and object binding owner-valid"
   ContractsChecked --> UniverseClosed: "state=universe-closed / conservative union of local effects"
   UniverseClosed --> TraceRunning: "state=runtime / transaction + fence + registry bound"
   TraceRunning --> TraceRejected: "event=undeclared-or-unreachable / fail closed"
   TraceRunning --> TraceAccepted: "event=declared + reachable + universe-covered"
   TraceAccepted --> TraceRunning: "event=next / same receipt subject"
   TraceRunning --> [*]: "terminal trace receipt owner-valid"
+  SubjectRejected --> [*]: "terminal evidence names conflicting or unbound subject"
   TraceRejected --> [*]: "terminal evidence names offending owner/effect"
 #+end_src
 
@@ -405,6 +518,17 @@ inside the profile-composition/runtime handoff.
 - [X] Include submodule, workflow, and delegation links.
 - [X] Prove root-only effect summaries are incomplete.
 - [X] Bind the effect witness to the exact registry snapshot.
+- [X] Prove string identity alone permits same-name object-body
+  substitution.
+- [X] Model the internal object subject with package, revision,
+  source-tree, object-content, and effect-contract identities.
+- [X] Prove exact source binding rejects same-name revision switching.
+- [X] Keep whole-object binding validity and package-resolution receipt
+  validity independent from populated digest fields.
+- [X] Prove source-bound event coverage parametrically for arbitrary
+  registry size.
+- [X] Project only transaction ID and materialization-plan digest from
+  the promotion request, with a Lean preservation theorem.
 - [X] Prove profile addition is effect-monotone.
 - [X] Model cyclic graphs with least inductive reachability.
 - [X] Reject undeclared dynamic runtime effects.
@@ -416,7 +540,8 @@ inside the profile-composition/runtime handoff.
 - [X] Prove the abstract least-fixed-point closure and cycle-observation
   boundary in RFC 149-07.
 - [ ] Implement profile-composition fixed-point closure receipts.
-- [ ] Bind each reachable POO object to its source/content identity.
+- [ ] Bind each reachable runtime POO object and fixed-point visited
+  entry to its complete source/content/contract subject.
 - [ ] Project local effect contracts from module/profile/workflow
   owners.
 - [ ] Connect runtime trace receipts to RFC 149-04 fencing and RFC
@@ -435,7 +560,37 @@ lake env lean \
 
 lake build \
   PooFlowProof.Enterprise.CompositionalEffectUniverse
+
+lake env lean \
+  PooFlowProof/Enterprise/SourceBoundCompositionalEffectClosure.lean
+
+lake build \
+  PooFlowProof.Enterprise.SourceBoundCompositionalEffectClosure
 #+end_src
+
+The final Lean-owned and AXLE v1 receipts are:
+
+| Root theorem | Lean closure declarations | Exact source declarations | Canonical bytes | Owner extract | AXLE proof verify |
+|--------------+---------------------------+---------------------------+-----------------+---------------+-------------------|
+| =identityOnlyTraceCanSwitchObjectBody= | 40 | 17 | 4501 | 316 ms | 62 ms, cached |
+| =exactSourceBindingRejectsSameNameRevisionSwitch= | 52 | 26 | 6597 | 329 ms | 64 ms, cached |
+| =sourceBoundEffectCoverageIsScaleParametric= | 50 | 26 | 6662 | 394 ms | 109 ms, cached |
+| =sourceBoundCompositionRequestProjectionPreservesSubject= | 28 | 19 | 3807 | 3563 ms | 10222 ms |
+| =closedSourceBoundCompositionCoversEveryRuntimeEvent= | 93 | 44 | 12535 | 13550 ms | 16383 ms |
+| =completeSourceBoundCompositionalEffectClosure= | 119 | 66 | 16562 | 25679 ms | 23347 ms |
+
+Every AXLE receipt reports =verification.okay=true=, an empty
+=failed_declarations= array, and empty Lean error and warning arrays.
+The two largest roots remain below the unchanged 30-second v1
+per-operation budget.  No schema change, timeout inflation, whole-file
+fallback, or theorem sharding was used.  AXLE's separate tool-level
+default-Mathlib recommendations remain visible and do not replace the
+exact =Init= plus =Batteries.Data.List.Perm= proof environment.
+
+The focused module build completed 115 jobs and the full Lean build
+completed 264 jobs.  The Typst block compiled through the project
+=devenv.nix= toolchain, and the live Org parser recognized both the
+Typst and state-labeled Mermaid source blocks.
 
 The Typst block must compile through the project =devenv.nix= toolchain.
 Org parsing, Python/AXLE regression, Ruff, and =git diff --check= remain

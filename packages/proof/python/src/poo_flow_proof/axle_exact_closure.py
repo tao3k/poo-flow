@@ -194,6 +194,18 @@ def _normalized_source_declaration_name(
     if candidates:
         return declaration_aliases[max(candidates, key=len)]
 
+    if name.startswith("«_") and "»" in name:
+        internal_owner = name[2:].split("»", maxsplit=1)[0]
+        normalized_internal_owner = _normalized_source_declaration_name(
+            internal_owner,
+            declaration_aliases,
+        )
+        if (
+            normalized_internal_owner != internal_owner
+            or internal_owner in declaration_aliases.values()
+        ):
+            return normalized_internal_owner
+
     generated_instance_anchors = []
     for anchor in set(declaration_aliases.values()):
         anchor_namespace, _, anchor_base_name = anchor.rpartition(".")
@@ -569,7 +581,15 @@ def _compose_owner_sources(
     imports = "\n".join(
         f"import {base_import}" for base_import in closure.base_imports
     )
-    return f"{imports}\n\n" + "\n\n".join(bodies) + "\n"
+    namespace_prelude = "\n".join(
+        f"namespace {module}\nend {module}"
+        for module in sorted(selected_modules)
+    )
+    return (
+        f"{imports}\n\n{namespace_prelude}\n\n"
+        + "\n\n".join(bodies)
+        + "\n"
+    )
 
 
 def _compose_source_declarations(
@@ -655,12 +675,7 @@ async def build_exact_axle_closure(
             documents=extracted.documents,
             declaration_aliases=declaration_aliases,
         )
-        by_name = {document.name: document for document in extracted.documents.values()}
-        canonical_source = _compose_source_declarations(
-            source_names,
-            by_name,
-            closure.base_imports,
-        )
+        canonical_source = combined_source
         canonical_roots = tuple(
             _covering_document(root, source_names)
             or _raise_root_without_source(root)

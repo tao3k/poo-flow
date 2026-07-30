@@ -125,39 +125,65 @@ identity and the aggregate receipt MUST expose every shard result.
 - [X] Verify
   =cycleObservationDoesNotAuthorizeRetry= through Lean export, AXLE owner
   extraction, canonical round-trip, =theorem2sorry=, and proof verification.
-- [ ] Extend the v1 source-dependency fixed point to preserve reducible aliases
-  erased from the environment-level constant dependency graph.
-- [ ] Topologically order source declarations across owner modules before
-  attempting larger roots.
-- [ ] Admit root sharding only after every individual root closes under those
-  two v1 source semantics.
+- [X] Extend the v1 source-dependency fixed point through source declaration
+  families so constructor-carried aliases survive environment erasure.
+- [X] Separate environment traversal nodes without source ranges from the
+  source-bearing declaration receipt.
+- [X] Establish every selected owner namespace before replaying qualified
+  =open= commands while preserving each owner file's declaration order.
+- [X] Keep canonical source ownership with Lean source ranges and source
+  digests; AXLE reserialization is verification evidence, not canonical input.
+- [X] Measure root sharding admission only after every individual root closes.
+  The four current roots close below the 30-second operation budget, so no
+  sharding is admitted.
 
-The green single-root receipt contains nine Lean declarations and seven
-source-level declarations.  Its owner-source payload is 1692 bytes; the
-observed owner extraction, canonical round-trip, =theorem2sorry=, and cached
-proof-verification phases completed in 234 ms, 59 ms, 161 ms, and 49 ms
-respectively.  AXLE returned =verification.okay=true= with no Lean errors,
-warnings, or failed declarations.
+The final v1 receipts are:
 
-The larger-root probes exposed two v1 implementation gaps rather than a need
-for a new schema:
+| Root theorem | Lean declarations | Source declarations | Canonical bytes | Owner extract | Round-trip | theorem2sorry | Proof verify |
+|--------------+-------------------+---------------------+-----------------+---------------+------------+---------------+--------------|
+| =cycleObservationDoesNotAuthorizeRetry= | 9 | 7 | 1935 | 196 ms | 201 ms | 51 ms | 58 ms |
+| =freshDiscoveryConsumesFiniteRegistryCapacity= | 23 | 11 | 3020 | 252 ms | 58 ms | 143 ms | 48 ms |
+| =closedReceiptIsLeastFixedPoint= | 101 | 48 | 12129 | 18133 ms | 370 ms | 1888 ms | 19033 ms |
+| =completeFixedPointEvidenceCloses= | 117 | 68 | 17324 | 24979 ms | 106 ms | 2202 ms | 19363 ms |
 
-1. Environment constant dependencies can erase reducible source aliases that
-   exact-source replay still needs.
-2. Grouping selected ranges by owner module can place an =open= or a consuming
-   declaration before the source declaration that establishes its namespace
-   or type.
+Every receipt reports =verification.okay=true=, an empty
+=failed_declarations= array, and no Lean errors or Lean warnings.  AXLE still
+emits tool-level recommendations about its default Mathlib header; the v1
+verifier intentionally retains the exact =Init= plus
+=Batteries.Data.List.Perm= base imports instead of silently strengthening the
+proof environment.
 
-Until both gaps close, a larger-root failure MUST be reported as
-=axle-projection-failed=.  It MUST NOT be disguised by whole-file fallback,
-larger timeouts, root sharding, or a v2 receipt.
+The final two rows include the added visited-registry-membership
+obligation from RFC 149-07.  The smaller roots used cached AXLE
+responses in this run; the two closure roots were uncached.  All listed
+phase times are observed v1 phase receipts, not schema-level performance
+guarantees.
+
+The implementation and proof owners are:
+
+- =PooFlowProof/Export/DeclarationClosure.lean=: Lean-owned environment and
+  source-family fixed point.
+- =PooFlowProof/Export/DeclarationClosureModel.lean=: counterexample and
+  sufficiency theorems.
+- =poo_flow_proof/axle_exact_closure.py=: source quotient, namespace prelude,
+  bounded AXLE phases, and exact round-trip.
+
+The larger-root failures were therefore v1 model defects, not evidence for a
+new schema.  Whole-file fallback, timeout inflation, premature sharding, and a
+v2 receipt remain forbidden.
 
 ** Typst model of the v1 source quotient
 
 #+begin_src typst
 $ pi: D arrow S $
 
-$ C_S = { pi(d) | d in C_D } $
+$ F(C) = C union
+  { f | exists d in C, exists s,
+    pi(d) = s and f in "Family"(s) and "Carrier"(f) } $
+
+$ C^* = mu X. "EnvClose"(F(X)) $
+
+$ C_S = { s | exists d in C^*, pi(d) = s } $
 
 $ E_S = { pi(d) | d in E_D } $
 
@@ -165,20 +191,59 @@ $ "exact-roundtrip-v1" "iff" E_S = C_S $
 
 $ s_i prec_s s_j "implies" i < j $
 
-$ "source-closed-v1"(C_S)
-  "iff" forall s_j in C_S, s_i prec_s s_j "implies" s_i in C_S $
+$ "FamilyClosed"(C^*) "and"
+  "EnvironmentClosed"(C^*) "and"
+  "DependencyWitnessed"(prec_s)
+  "implies" "ReplayClosed"(C_S) $
+
+$ "EnvClose"({T}) = {T}, quad pi(T) = s $
+
+$ K in "Family"(s), quad "EnvDeps"(K) = {A}, quad pi(A) = a $
+
+$ s prec_s a, quad a "not in" pi({T}) $
 #+end_src
 
 Here, =D= is the Lean environment declaration universe, =S= is the source
 declaration universe, and =pi= maps constructors, fields, and generated
-instances to their owning source declaration.  =C_D= is the Lean-owned v1
-closure and =E_D= is the AXLE extraction result.  The relation =prec_s=
-contains source-level dependencies, including reducible aliases that can
-disappear from environment constant dependencies.
+instances to their owning source declaration; it is absent for traversal-only
+nodes without a source range.  =F= adds the inductive or structure anchor and
+constructor dependency carriers from every selected source family.  =C^*= is
+the least fixed point obtained by alternating that family expansion with the
+ordinary environment dependency closure.  =E_D= is the AXLE extraction
+result.  The relation =prec_s= contains source-level dependencies, including
+reducible aliases that can disappear from environment constant dependencies.
 
-The equality is therefore checked in the source quotient.  The ordering
-obligation is separate: every emitted source declaration must occur after all
-of its =prec_s= predecessors.  Neither rule changes the v1 receipt identity.
+The final three equations encode the counterexample found by the real
+=structure= replay: the type declaration =T= has no environment edge to alias
+=A=, but its constructor =K= in the same source family carries that dependency.
+Thus environment closure of ={T}= is insufficient.  The Lean theorem
+=sourceFamilyAndEnvironmentClosureImplyReplayClosure= proves the repaired
+sufficiency condition, while
+=environmentClosureAloneDoesNotImplySourceReplayClosure= preserves the
+counterexample.
+
+The equality is checked in the source quotient.  Lean-owned ranges and source
+digests define the canonical source; AXLE extraction confirms the quotient but
+does not replace canonical source with a larger reserialization.  Neither rule
+changes the v1 receipt identity.
+
+** v1 evidence state machine
+
+#+begin_src mermaid
+flowchart LR
+  E["Environment closure"] -->|"constant dependencies"| F["Source-family fixed point"]
+  F -->|"anchors + constructor carriers"| Q["Source quotient pi"]
+  Q -->|"Lean ranges + source digests"| C["Canonical v1 source"]
+  C -->|"kernel-clean extraction"| A["AXLE owner extract"]
+  A -->|"normalized names equal"| R["AXLE round-trip"]
+  R -->|"root statement"| T["theorem2sorry"]
+  T -->|"candidate + exact declarations"| V["AXLE proof verify"]
+  V -->|"okay=true; phase < 30s"| G["Green v1 receipt"]
+  E -.->|"counterexample: constructor hides alias edge"| X["Environment-only replay rejected"]
+  X -.->|"repair"| F
+  R -.->|"timeout or mismatch"| B["Fail-closed receipt"]
+  V -.->|"timeout or Lean error"| B
+#+end_src
 
 * Namespace preservation
 
