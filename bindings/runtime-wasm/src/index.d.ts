@@ -68,6 +68,7 @@ export declare class PooFlowTopology {
   components(): readonly PooFlowTopologyComponent[];
   edges(): readonly PooFlowTopologyEdge[];
   symbols(): readonly PooFlowTopologySymbol[];
+  policyForComponent(component: PooFlowTopologyComponent): PooFlowTopologySymbol | null;
   openCursor(): WorkflowCursorSession;
   release(): void;
 }
@@ -81,6 +82,9 @@ export declare class PooFlowWasmRuntime {
     readonly arena: BufferSource;
   }): PooFlowTopology;
 }
+
+export declare const PFW_BUNDLE_SYMBOL_KIND_COMPONENT = 1;
+export declare const PFW_BUNDLE_SYMBOL_KIND_POLICY = 2;
 
 export declare const PFW_WASM_STATUS_INVALID_ARGUMENT = 0xffff0001;
 export declare const PFW_WASM_STATUS_INVALID_SLOT = 0xffff0002;

@@ -85,6 +85,7 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
+            external-module-mode: full
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow
@@ -232,6 +233,12 @@ jobs:
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
+
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
+        env:
+          POO_FLOW_EXTERNAL_TEST_MODE: ${{ matrix.external-module-mode }}
+        run: tools/ci/test_external_bazel_module.sh
 
       - name: Resolve shared Gerbil capability
         id: gerbil-native-abi
@@ -596,6 +603,7 @@ jobs:
             gerbil-install: homebrew
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
+            external-module-mode: analysis
             job-timeout-minutes: 30
     steps: *native-steps
 
@@ -620,7 +628,6 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: poo-flow-lock-Linux-X64
 
       - name: Generate the Linux module-extension evaluation
         run: |
@@ -630,7 +637,7 @@ jobs:
       - name: Upload the Linux lock seed
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: poo-flow-module-lock-linux-${{ github.run_id }}
+          name: poo-flow-module-lock-linux-${{ github.run_id }}-${{ github.run_attempt }}
           path: MODULE.bazel.lock
           if-no-files-found: error
 
@@ -648,7 +655,7 @@ jobs:
       - name: Download the Linux lock seed
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: poo-flow-module-lock-linux-${{ github.run_id }}
+          name: poo-flow-module-lock-linux-${{ github.run_id }}-${{ github.run_attempt }}
           path: .ci/lock-linux
 
       - name: Set up Bazel
@@ -656,7 +663,6 @@ jobs:
         with:
           bazelisk-cache: true
           repository-cache: true
-          disk-cache: poo-flow-lock-macOS-ARM64
 
       - name: Merge the Darwin module-extension evaluation
         run: |
@@ -667,7 +673,7 @@ jobs:
       - name: Upload the merged cross-platform lock
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: poo-flow-module-lock-${{ github.run_id }}
+          name: poo-flow-module-lock-${{ github.run_id }}-${{ github.run_attempt }}
           path: MODULE.bazel.lock
           if-no-files-found: error
 
@@ -685,7 +691,7 @@ jobs:
       - name: Download the merged cross-platform lock
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: poo-flow-module-lock-${{ github.run_id }}
+          name: poo-flow-module-lock-${{ github.run_id }}-${{ github.run_attempt }}
           path: .ci/lock-merged
 
       - name: Set up Bazel
@@ -694,7 +700,6 @@ jobs:
           bazelisk-cache: true
           cache-save: false
           repository-cache: true
-          disk-cache: poo-flow-lock-Linux-X64
 
       - name: Verify the merged lock on Linux
         run: |

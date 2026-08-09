@@ -3,6 +3,7 @@ load("@rules_python//python:py_test.bzl", "py_test")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 exports_files([
+    "bundle_v1.bzl",
     "gerbil_project_environment.bzl",
     "gerbil_projection.bzl",
     "gerbil_receipt.bzl",

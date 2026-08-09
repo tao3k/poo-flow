@@ -18,6 +18,7 @@
     "src/utilities/functional"
     "src/feature-system/bundle-v1-lowering"
     "src/feature-system/bundle-v1-foreign-arena"
+    "src/feature-system/bundle-v1-composition-writer"
     "src/module-system/profile-composition-builders"
     "src/module-system/profile-composition-inline-runtime"
     "src/module-system/profile-composition-accessors"

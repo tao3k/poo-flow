@@ -16,6 +16,24 @@
 (def (build-api-project-compile-guard-available-cpu-count)
   (max 1 (##cpu-count)))
 
+(def (make-project-compile-guard-test-controller)
+  (letrec
+      ((controller
+        (object<-alist
+         `((kind . gslph.execution-window-controller.v1)
+           (worker-count . 2)
+           (hard-max-rss-bytes . 4096)
+           (headroom-bytes . 0)
+           (window-size . 2)
+           (.observe-run! .
+            ,(lambda (_label thunk)
+               (make-execution-window-observation
+                (thunk) 'completed 0 0 4096 0)))
+           (.next-state .
+            ,(lambda (_observation _spec-count)
+               controller))))))
+    controller))
+
 (def build-api-project-compile-guard-test
   (test-suite "POO project compile guard"
     (test-case "delegates one standard project to Building Framework"
@@ -40,6 +58,79 @@
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-adaptive-max-rss-bytes
         (* 8 1024 1024 1024))
        => (* 4 1024 1024 1024)))
+    (test-case "translates host allocation into an absolute RSS cap"
+      (let* ((overrides
+              (list
+               (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "8589934592")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "3758096384")
+               (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_BASELINE_RSS_BYTES" "1073741824")
+               (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT" "12")
+               (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "1")
+               (cons "GERBIL_BUILD_CORES" "12")))
+             (previous
+              (map (lambda (entry)
+                     (cons (car entry) (getenv (car entry) #f)))
+                   overrides)))
+        (dynamic-wind
+          (lambda ()
+            (for-each
+             (lambda (entry) (setenv (car entry) (cdr entry)))
+             overrides))
+          (lambda ()
+            (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'admission-outcome) => 'ready)
+              (check (.ref config 'baseline-rss-bytes) => 1073741824)
+              (check (.ref config 'allocatable-memory-bytes) => 1610612736)
+              (check (.ref config 'requested-max-rss-bytes) => 4294967296)
+              (check (.ref config 'admitted-memory-bytes) => 1610612736)
+              (check (.ref config 'max-rss-bytes) => 2684354560)
+              (check (.ref config 'configured-worker-count) => 12)
+              (check (.ref config 'memory-worker-capacity) => 2)
+              (check (.ref config 'runnable-worker-capacity) => 23)
+              (check (.ref config 'worker-count) => 2)))
+          (lambda ()
+            (for-each
+             (lambda (entry)
+               (setenv (car entry) (or (cdr entry) "")))
+             previous)))))
+    (test-case "blocks a requested RSS cap that cannot cover baseline plus floor"
+      (let* ((overrides
+              (list
+               (cons "POO_FLOW_BUILD_SYSTEM_MEMORY_BYTES" "8589934592")
+               (cons "POO_FLOW_BUILD_AVAILABLE_MEMORY_BYTES" "6442450944")
+               (cons "POO_FLOW_BUILD_RSS_HEADROOM_BYTES" "2147483648")
+               (cons "POO_FLOW_BUILD_BASELINE_RSS_BYTES" "1073741824")
+               (cons "POO_FLOW_BUILD_MAX_RSS_BYTES" "1879048192")
+               (cons "POO_FLOW_BUILD_LOGICAL_CPU_COUNT" "12")
+               (cons "POO_FLOW_BUILD_RUNNABLE_PROCESSES" "1")
+               (cons "GERBIL_BUILD_CORES" "12")))
+             (previous
+              (map (lambda (entry)
+                     (cons (car entry) (getenv (car entry) #f)))
+                   overrides)))
+        (dynamic-wind
+          (lambda ()
+            (for-each
+             (lambda (entry) (setenv (car entry) (cdr entry)))
+             overrides))
+          (lambda ()
+            (let (config (poo-flow-project-compile-guard-config '()))
+              (check (.ref config 'admission-outcome)
+                     => 'blocked-host-pressure)
+              (check (.ref config 'admission-reasons)
+                     => '(insufficient-requested-rss-cap))
+              (check (.ref config 'requested-max-rss-bytes) => 1879048192)
+              (check (.ref config 'admitted-memory-bytes) => 805306368)
+              (check (.ref config 'max-rss-bytes) => 1879048192)
+              (check (.ref config 'memory-worker-capacity) => 1)
+              (check (.ref config 'runnable-worker-capacity) => 23)
+              (check (.ref config 'worker-count) => 1)))
+          (lambda ()
+            (for-each
+             (lambda (entry)
+               (setenv (car entry) (or (cdr entry) "")))
+             previous)))))
     (test-case "does not impose a machine-independent timeout"
       (check
        (poo-flow/src/build-api/project-compile-guard#poo-flow-project-compile-optional-timeout-from-env
@@ -57,7 +148,7 @@
              => 'adaptive))
           (lambda ()
             (setenv "POO_FLOW_BUILD_MAX_RSS_BYTES" (or previous ""))))))
-    (test-case "blocks runnable saturation with an observable receipt"
+    (test-case "downshifts runnable saturation with an observable receipt"
       (let* ((available-cpu-count
               (build-api-project-compile-guard-available-cpu-count))
              (saturated-runnable-count
@@ -84,12 +175,12 @@
              overrides))
           (lambda ()
             (let (config (poo-flow-project-compile-guard-config '()))
-              (check (.ref config 'admission-outcome) => 'blocked-host-pressure)
+              (check (.ref config 'admission-outcome) => 'ready)
               (check (.ref config 'admission-advisories)
                      => '(runnable-saturation))
-              (check (.ref config 'admission-reasons) => '(runnable-saturation))
-              (check (.ref config 'worker-count)
-                     => available-cpu-count)))
+              (check (.ref config 'admission-reasons) => '())
+              (check (.ref config 'runnable-worker-capacity) => 1)
+              (check (.ref config 'worker-count) => 1)))
           (lambda ()
             (for-each
              (lambda (entry)
@@ -126,7 +217,7 @@
               (check (.ref config 'admission-reasons)
                      => '(insufficient-memory-headroom))
               (check (.ref config 'worker-count)
-                     => available-cpu-count)))
+                     => 1)))
           (lambda ()
             (for-each
              (lambda (entry)
@@ -149,6 +240,13 @@
                   (runnable-process-count 4)
                   (available-memory-bytes 25769803776)
                   (rss-headroom-bytes 2147483648)
+                  (baseline-rss-bytes 536870912)
+                  (allocatable-memory-bytes 23622320128)
+                  (requested-max-rss-bytes 17179869184)
+                  (admitted-memory-bytes 16642998272)
+                  (configured-worker-count available-cpu-count)
+                  (memory-worker-capacity 20)
+                  (runnable-worker-capacity available-cpu-count)
                   (worker-count available-cpu-count)
                   (system-memory-bytes 34359738368)
                   (max-rss-bytes 17179869184)
@@ -156,7 +254,7 @@
                   (elapsed-ms 199289)
                   (timeout-ms 540000)
                   (build
-                   '((version . 1)
+                   `((version . 1)
                      (stage-count . 3)
                      (compiled . 1)
                      (skipped . 2)
@@ -180,10 +278,7 @@
                                 'slow 'completed 512 2048 4096 12)
                                (make-execution-window-observation
                                 'middle 'completed 512 1024 4096 7))
-                              (.o
-                               (kind 'gslph.execution-window-controller.v1)
-                               (worker-count 2)
-                               (hard-max-rss-bytes 4096))))
+                              (make-project-compile-guard-test-controller)))
                           (elapsed-jiffies . 3400))))))))
              (json-string
               (poo-flow-project-compile-receipt->json-string receipt))
@@ -197,6 +292,13 @@
         (check (hash-get object "execution-policy") => "topology")
         (check (hash-get object "admission-outcome") => "ready")
         (check (hash-get object "admission-advisories") => '())
+        (check (hash-get object "baseline-rss-bytes") => 536870912)
+        (check (hash-get object "allocatable-memory-bytes") => 23622320128)
+        (check (hash-get object "requested-max-rss-bytes") => 17179869184)
+        (check (hash-get object "admitted-memory-bytes") => 16642998272)
+        (check (hash-get object "memory-worker-capacity") => 20)
+        (check (hash-get object "runnable-worker-capacity")
+               => available-cpu-count)
         (check (hash-get object "worker-count")
                => available-cpu-count)
         (check
