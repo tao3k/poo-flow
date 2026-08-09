@@ -40,15 +40,16 @@
      (else (loop (cdr clauses))))))
 
 (def (profile-guard composition profile-name)
-  (let loop ((profiles (.ref composition 'profiles)))
+  (let loop ((profiles (.ref composition 'profiles))
+             (bindings (.ref composition 'profile-bindings)))
     (cond
-     ((null? profiles) #f)
-     ((eq? (.ref (car profiles) 'name) profile-name)
+     ((or (null? profiles) (null? bindings)) #f)
+     ((eq? (.ref (car bindings) 'slot) profile-name)
       (let ((profile (car profiles)))
         (if (and (.slot? profile 'guard) (.ref profile 'guard))
           (guard->string (.ref profile 'guard))
           #f)))
-     (else (loop (cdr profiles))))))
+     (else (loop (cdr profiles) (cdr bindings))))))
 
 (def (plan-node-guard composition node)
   (case (plan-node-kind node)
@@ -64,7 +65,9 @@
    (lambda (node)
      (let* ((semantic-id (plan-node-semantic-id node))
             (guard (plan-node-guard composition node))
-            (policy-id (if guard (plan-node-policy-id node) 'poo-flow.policy.none)))
+            (policy-id (if guard
+                         (plan-node-policy-id node)
+                         +feature-bundle-v1-no-policy-id+)))
        (feature-bundle-v1-component
         (execution-plan-flow-name plan)
         semantic-id
