@@ -64,7 +64,7 @@ test("workflow cursor advances, saturates, resets, and releases", async () => {
     assert.equal(exports.pfw_topology_edge_count(topologyHandle, pointer), 0);
     assert.equal(new Uint32Array(exports.memory.buffer, pointer, 1)[0], 15);
     assert.equal(exports.pfw_topology_symbol_count(topologyHandle, pointer), 0);
-    assert.equal(new Uint32Array(exports.memory.buffer, pointer, 1)[0], 11);
+    assert.equal(new Uint32Array(exports.memory.buffer, pointer, 1)[0], 21);
 
     assert.equal(exports.pfw_workflow_cursor_capacity(), 1023);
     assert.equal(exports.pfw_workflow_cursor_open(topologyHandle, pointer), 0);
@@ -94,7 +94,7 @@ test("workflow cursor advances, saturates, resets, and releases", async () => {
 });
 
 test("ESM runtime exposes Bundle v1 topology and its cursor", async () => {
-  const [{ loadPooFlowWasmRuntime }, bytes, fixture] = await Promise.all([
+  const [{ loadPooFlowWasmRuntime, PFW_BUNDLE_SYMBOL_KIND_POLICY }, bytes, fixture] = await Promise.all([
     import("../dist/index.mjs"),
     readFile(new URL("../dist/poo_flow_runtime.wasm", import.meta.url)),
     loadTopologyFixture(),
@@ -112,25 +112,29 @@ test("ESM runtime exposes Bundle v1 topology and its cursor", async () => {
 
   assert.equal(topology.componentCount, 11);
   assert.equal(topology.edgeCount, 15);
-  assert.equal(topology.symbolCount, 11);
+  assert.equal(topology.symbolCount, 21);
   assert.equal(topology.components().length, 11);
   assert.equal(topology.edges().length, 15);
-  assert.deepEqual(
-    new Set(topology.symbols().map(({ value }) => value)),
-    new Set([
-      "human-capability",
-      "human-capability-cycle",
-      "knowledge",
-      "access",
-      "understand",
-      "compose",
-      "governed-action",
-      "qualify",
-      "act",
-      "evidence-return",
-      "learn",
-    ]),
-  );
+  const symbolValues = new Set(topology.symbols().map(({ value }) => value));
+  for (const componentName of [
+    "human-capability",
+    "human-capability-cycle",
+    "knowledge",
+    "access",
+    "understand",
+    "compose",
+    "governed-action",
+    "qualify",
+    "act",
+    "evidence-return",
+    "learn",
+  ]) {
+    assert.ok(symbolValues.has(componentName));
+  }
+  assert.ok(symbolValues.has("(all (qualification admitted) (authority human))"));
+  const policies = topology.components().map((component) => topology.policyForComponent(component));
+  assert.equal(policies.filter(Boolean).length, 10);
+  assert.ok(policies.some(({ value }) => value === "(all (qualification admitted) (authority human))"));
   assert.deepEqual(session.position(), { completedSteps: 0, stepCount: 11 });
   assert.deepEqual(session.step(), { completedSteps: 1, stepCount: 11 });
   assert.deepEqual(session.reset(), { completedSteps: 0, stepCount: 11 });

@@ -28,6 +28,7 @@
     ((:publish publish) 'publish)
     ((:retention retention) 'retention)
     ((:capabilities capabilities) 'capabilities)
+    ((:guard guard) 'guard)
     ((:with with) 'hooks)
     (else key)))
 
@@ -116,6 +117,11 @@
              profile profile-slots 'capabilities
              (poo-flow-composition-inline-profile-ref/default*
               base base-slots 'capabilities '())))
+      (cons 'guard
+            (poo-flow-composition-inline-profile-ref/default*
+             profile profile-slots 'guard
+             (poo-flow-composition-inline-profile-ref/default*
+              base base-slots 'guard #f)))
       (cons 'hooks
             (poo-flow-composition-inline-profile-ref/default*
              profile profile-slots 'hooks
@@ -147,6 +153,7 @@
       (name profile-name)
       (module module-name)
       (profile profile-name)
+      (guard #f)
       (source (list 'use-module module-name))
       (runtime-executed #f)))
 
@@ -201,6 +208,9 @@
               (cons 'capabilities
                     (poo-flow-composition-inline-profile-field
                      sections base 'capabilities '()))
+              (cons 'guard
+                    (poo-flow-composition-inline-profile-field
+                     sections base 'guard #f))
               (cons 'hooks hooks)
               (cons 'runtime-executed #f)
               (cons 'source 'poo-flow.composition.inline-profile)))
@@ -229,6 +239,9 @@
               (cons 'capabilities
                     (poo-flow-composition-inline-alist-ref
                      sections 'capabilities '()))
+              (cons 'guard
+                    (poo-flow-composition-inline-alist-ref
+                     sections 'guard #f))
               (cons 'hooks hooks)
               (cons 'runtime-executed #f)
               (cons 'source 'poo-flow.composition.inline-profile))))))
