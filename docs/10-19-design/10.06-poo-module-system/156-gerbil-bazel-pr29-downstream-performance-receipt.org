@@ -998,3 +998,35 @@ flowchart LR
   Dependencies --> Supervised["Supervised //scheme:compile"]
   Supervised --> MemoryReceipt["Linux PSS and diagnostic RSS receipt"]
 #+end_src
+
+* Runtime-WASM package workflow correction
+
+The first merged Runtime-WASM workflow attempted to copy the generated
+=bindings/runtime-wasm/workflows= directory before invoking the npm test
+contract that creates it.  A clean checkout therefore failed immediately with
+=No such file or directory= even though the Bazel Gerbil materialization had
+completed successfully.
+
+The npm =test= script already owns generation, the second deterministic
+generation, the WASM build, and the Node tests.  The workflow now invokes that
+single package contract and then packages the verified tree with
+=npm pack --ignore-scripts=.  It no longer implements a second filesystem
+determinism protocol around npm.
+
+#+begin_src mermaid
+flowchart LR
+  Bazel["Bazel materializes Gerbil generator closure"]
+  NpmTest["npm test"]
+  Generate["Generate workflow sources"]
+  Determinism["Repeat generation and verify determinism"]
+  Wasm["Build and test WASM package"]
+  Pack["npm pack --ignore-scripts"]
+  Payload["Upload verified source-revision payload"]
+
+  Bazel --> NpmTest
+  NpmTest --> Generate
+  Generate --> Determinism
+  Determinism --> Wasm
+  Wasm --> Pack
+  Pack --> Payload
+#+end_src

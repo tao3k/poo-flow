@@ -113,9 +113,7 @@ jobs:
         shell: bash
         run: |
           cp LICENSE bindings/runtime-wasm/LICENSE
-          cp -R bindings/runtime-wasm/workflows "$RUNNER_TEMP/workflows-first"
           npm --prefix bindings/runtime-wasm test
-          diff -ru "$RUNNER_TEMP/workflows-first" bindings/runtime-wasm/workflows
           archive_json="$(npm pack ./bindings/runtime-wasm --ignore-scripts --json --pack-destination "$RUNNER_TEMP")"
           archive="$(jq -r '.[0].filename' <<< "$archive_json")"
           payload="$RUNNER_TEMP/poo-flow-runtime-wasm-package"
