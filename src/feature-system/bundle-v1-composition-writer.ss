@@ -12,10 +12,62 @@
 (def (plan-node-semantic-id node)
   (format "~s" (plan-node-id node)))
 
-(def (plan-components plan)
+;;; Guard declarations are data. POO Flow compiles them into Bundle v1
+;;; policy metadata; an admitted receipt is supplied by the execution runtime.
+(def +poo-flow-bundle-v1-guard-symbol-kind+ 2)
+
+(def (guard->string guard)
+  (if (string? guard)
+    guard
+    (call-with-output-string (lambda (port) (write guard port)))))
+
+(def (guard-unbox value)
+  (if (and (pair? value) (null? (cdr value)) (pair? (car value)))
+    (guard-unbox (car value))
+    value))
+
+(def (guard-payload->string payload)
+  (unless (and (pair? payload) (null? (cdr payload)))
+    (error "POO-FLOW-GUARD-E001 guard expects exactly one declaration" payload))
+  (guard->string (guard-unbox (car payload))))
+
+(def (stage-guard stage)
+  (let loop ((clauses (.ref stage 'clauses)))
+    (cond
+     ((null? clauses) #f)
+     ((eq? (.ref (car clauses) 'clause-kind) 'guard)
+      (guard-payload->string (.ref (car clauses) 'payload)))
+     (else (loop (cdr clauses))))))
+
+(def (profile-guard composition profile-name)
+  (let loop ((profiles (.ref composition 'profiles))
+             (bindings (.ref composition 'profile-bindings)))
+    (cond
+     ((or (null? profiles) (null? bindings)) #f)
+     ((eq? (.ref (car bindings) 'slot) profile-name)
+      (let ((profile (car profiles)))
+        (if (and (.slot? profile 'guard) (.ref profile 'guard))
+          (guard->string (.ref profile 'guard))
+          #f)))
+     (else (loop (cdr profiles) (cdr bindings))))))
+
+(def (plan-node-guard composition node)
+  (case (plan-node-kind node)
+    ((case) (stage-guard (plan-node-step node)))
+    ((profile-instance) (profile-guard composition (plan-node-name node)))
+    (else #f)))
+
+(def (plan-node-policy-id node)
+  (string-append (plan-node-semantic-id node) ".guard"))
+
+(def (plan-components plan composition)
   (map
    (lambda (node)
-     (let (semantic-id (plan-node-semantic-id node))
+     (let* ((semantic-id (plan-node-semantic-id node))
+            (guard (plan-node-guard composition node))
+            (policy-id (if guard
+                         (plan-node-policy-id node)
+                         +feature-bundle-v1-no-policy-id+)))
        (feature-bundle-v1-component
         (execution-plan-flow-name plan)
         semantic-id
@@ -24,22 +76,39 @@
         'poo-flow.contract.none
         (plan-node-kind node)
         (plan-node-name node)
-        'poo-flow.policy.none
+        policy-id
         'poo-flow.strategy.none
         +feature-bundle-v1-no-adapter-id+
         +feature-bundle-v1-no-projection-id+
         (plan-node-ordinal node))))
    (execution-plan-nodes plan)))
 
-(def (plan-symbols plan)
-  (map
-   (lambda (node)
-     (feature-bundle-v1-symbol
-      'component
-      (plan-node-semantic-id node)
-      (symbol->string (plan-node-name node))
-      1))
-   (execution-plan-nodes plan)))
+(def (plan-symbols plan composition)
+  (append
+   (map
+    (lambda (node)
+      (feature-bundle-v1-symbol
+       'component
+       (plan-node-semantic-id node)
+       (symbol->string (plan-node-name node))
+       1))
+    (execution-plan-nodes plan))
+   (let loop ((nodes (execution-plan-nodes plan)) (out '()))
+     (if (null? nodes)
+       (reverse out)
+       (let* ((node (car nodes))
+              (guard (plan-node-guard composition node)))
+         (loop
+          (cdr nodes)
+          (if guard
+            (cons
+             (feature-bundle-v1-symbol
+              'policy
+              (plan-node-policy-id node)
+              guard
+              +poo-flow-bundle-v1-guard-symbol-kind+)
+             out)
+            out)))))))
 
 (def (plan-edges plan)
   (let loop
@@ -68,8 +137,8 @@
            (feature-bundle-v1-lowering/with-symbols
             bundle-id
             bundle-epoch
-            (plan-symbols plan)
-            (plan-components plan)
+            (plan-symbols plan composition)
+            (plan-components plan composition)
             (plan-edges plan)
             '())))
          (image
@@ -128,6 +197,6 @@
       (display " edges=")
       (display (length (execution-plan-dependency-edges plan)))
       (display " symbols=")
-      (display (length (execution-plan-nodes plan)))
+      (display (length (plan-symbols plan composition)))
       (newline)
       plan)))

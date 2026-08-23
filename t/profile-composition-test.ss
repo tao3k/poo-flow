@@ -16,7 +16,8 @@
       (storage '(object))
       (analysis '(checksum))
       (publish '(proof-gated))
-      (retention '(session))))
+      (retention '(session))
+      (guard '(provenance sealed))))
 
 (def existing-native-profile
   (.o (kind 'native-profile)
@@ -117,6 +118,8 @@
       (check-equal? (.ref audited 'scope) '(session human-handoff))
       (check-equal? (.ref audited 'retention)
                     '(project-retained audit-log))
+      (check-equal? (.ref audited 'guard)
+                    '(provenance sealed))
       (check-equal? (length stages) 1)
       (check-equal? (.ref stage 'name) 'production)
       (check-equal? (length (.ref stage 'clauses)) 4)))

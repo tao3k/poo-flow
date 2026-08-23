@@ -40,3 +40,24 @@ The Scheme entrypoint calls
 `poo-flow-write-composition-bundle-v1/from-environment!` with its composed POO
 value. Bazel supplies the bundle identity and declared output paths. No Scheme
 compiler or lowering implementation is added to the browser WASM surface.
+
+
+## Guard metadata
+
+A profile `:guard` or a stage `(guard …)` is compiled into a Bundle policy
+symbol. `component.policyId` identifies that immutable symbol;
+`topology.policyForComponent(component)` resolves it without reconstructing the
+Scheme composition in JavaScript. A policy symbol describes an admission
+condition only. Browser WASM does not evaluate arbitrary Scheme or issue an
+admission receipt; Marlin/qualify remains the execution and evidence owner.
+
+```ts
+const component = topology.componentAt(4);
+const policy = topology.policyForComponent(component);
+if (policy?.kind === PFW_BUNDLE_SYMBOL_KIND_POLICY) {
+  renderGuard(policy.value); // canonical Scheme condition text
+}
+```
+
+`PFW_BUNDLE_SYMBOL_KIND_COMPONENT` and `PFW_BUNDLE_SYMBOL_KIND_POLICY` are the
+public symbol-kind constants; consumers should not depend on numeric literals.

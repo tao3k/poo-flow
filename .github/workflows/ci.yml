@@ -160,9 +160,9 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
-            external-module-mode: analysis
             compile-timeout-minutes: 8
             compile-runaway-timeout-seconds: 420
+            external-module-mode: full
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow

@@ -881,3 +881,42 @@ an 8-minute step, and macOS uses 840 seconds inside a 15-minute step.  This
 leaves 60 seconds for the Scheme failure receipt, Bazel profile, and artifact
 upload instead of allowing the GitHub runner to terminate the action without
 evidence.
+
+* PR 12 conflict closure receipt
+
+The PR 12 merge candidate resolved all twelve Git conflicts and produced a
+clean staged index.  The following validation receipts are recorded as
+intermediate closure evidence:
+
+- Bazel lock verification: PASS.
+- Scheme unit test receipt: PASS, 1/1, elapsed 677.366 seconds.
+- Scheme compile receipt: elapsed 389814 milliseconds, peak process-tree RSS
+  4075716608 bytes, worker count 5 of 12, effective cap 5368709120 bytes.
+- External Bazel full validation: PASS, elapsed 1116.100 seconds; the external
+  root compile consumed approximately 668 seconds.
+
+The reported peak RSS is still a process-tree RSS sum.  It is an operational
+observation, not a proof of physical memory consumption, and its proximity to
+the project anomaly threshold requires continued Scheme-side observability.
+The guard must expose per-process attribution, sample timeline, process count,
+and a non-double-counting memory metric before this concern can be closed.
+
+The external cold path remains a regression.  Full external validation passed,
+but its approximately 668-second root compile does not establish that the
+cold-build performance regression has been resolved.  This receipt therefore
+does not close the performance issue.
+
+#+begin_src mermaid
+flowchart LR
+  C["PR 12 conflict resolution"] --> L["Bazel lock verification: PASS"]
+  L --> U["Scheme unit test: PASS 1/1"]
+  U --> R["Compile receipt: peak tree RSS 4.076 GB"]
+  R --> G{"RSS near anomaly threshold?"}
+  G -->|"yes"| O["Continue Scheme observability"]
+  O --> A["Attribute process and sample timeline"]
+  A --> M["Add PSS or platform footprint metric"]
+  G -->|"no"| E["External full validation"]
+  E --> X["PASS: 1116.100 s"]
+  X --> P["Root compile about 668 s"]
+  P --> Q["Cold-path regression remains open"]
+#+end_src

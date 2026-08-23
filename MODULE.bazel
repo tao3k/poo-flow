@@ -38,6 +38,9 @@ gerbil.auto(
 )
 use_repo(
     gerbil,
+)
+use_repo(
+    gerbil,
     "local_gerbil",
 )
 

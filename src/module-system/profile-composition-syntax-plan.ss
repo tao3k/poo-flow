@@ -80,11 +80,12 @@
    ((composition-literal=? key #':publish) 'publish)
    ((composition-literal=? key #':retention) 'retention)
    ((composition-literal=? key #':capabilities) 'capabilities)
+   ((composition-literal=? key #':guard) 'guard)
    ((composition-literal=? key #':with) 'hooks)
    (else
     (composition-raise-syntax-error
      'composition-unknown-profile-section
-     "expected one of :extends, :with, :kind, :scope, :capabilities, :storage, :analysis, :publish, or :retention"
+     "expected one of :extends, :with, :kind, :scope, :capabilities, :guard, :storage, :analysis, :publish, or :retention"
      key))))
 
 ;; : (-> [Syntax] [CompositionProfileSectionSyntax])
@@ -322,7 +323,7 @@
         (composition-syntax-list
          clause
          'composition-invalid-stage-clause
-         "stage expects graph, loop, prove, handoff, step, edges, or route clauses"))
+         "stage expects graph, loop, prove, handoff, step, guard, edges, or route clauses"))
     (match items
       ([head . payload]
        (let (kind
@@ -332,12 +333,13 @@
               ((composition-literal=? head #'prove) 'prove)
               ((composition-literal=? head #'handoff) 'handoff)
               ((composition-literal=? head #'step) 'step)
+              ((composition-literal=? head #'guard) 'guard)
               ((composition-literal=? head #'edges) 'edges)
               ((composition-literal=? head #'route) 'route)
               (else
                (composition-raise-syntax-error
                 'composition-invalid-stage-clause
-                "unknown stage clause; expected graph, loop, prove, handoff, step, edges, or route"
+                "unknown stage clause; expected graph, loop, prove, handoff, step, guard, edges, or route"
                 head))))
          (composition-clause-syntax
           kind: kind
