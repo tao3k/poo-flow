@@ -920,3 +920,51 @@ flowchart LR
   X --> P["Root compile about 668 s"]
   P --> Q["Cold-path regression remains open"]
 #+end_src
+
+* Linux proportional-memory enforcement correction
+
+The first Linux CI run after the PR 12 conflict merge exposed a measurement
+error in the Scheme process supervisor.  The child compiler was terminated
+with exit code 70 after the guard summed 7,207,804,928 bytes of process-tree
+RSS against the unchanged 5 GiB project ceiling.  Summing RSS across a process
+tree counts shared pages once per process and is not a valid enforcement
+metric for physical memory pressure.
+
+The guard now reads =/proc/PID/smaps_rollup= directly in Scheme and sums PSS
+for live members of the supervised process tree on Linux.  A process that
+exits between the =ps= snapshot and the =/proc= read is ignored.  If a live
+process has an unreadable rollup, its RSS is used conservatively for that
+sample.  Other platforms retain process-tree RSS enforcement until they gain
+an equivalent native proportional or footprint metric.
+
+The 5 GiB safety ceiling is unchanged.  The receipt separates enforcement
+from diagnostics through =memory-metric=, =peak-memory-bytes=, and
+=max-memory-bytes=.  It retains =peak-rss-bytes= and =max-rss-bytes= for
+schema compatibility, and adds largest-process RSS/PSS, peak process count,
+and sample count for attribution.  Project receipts propagate the same fields
+for blocked, failed, and completed outcomes.
+
+#+begin_src mermaid
+flowchart TD
+  Tree["Supervised compiler process tree"] --> Snapshot["Scheme ps snapshot"]
+  Snapshot --> Linux{"Linux smaps_rollup available?"}
+  Linux -->|"yes"| PSS["Sum live-process PSS"]
+  Linux -->|"no"| RSSFallback["Sum process-tree RSS fallback"]
+  PSS --> Limit{"Guarded memory exceeds 5 GiB?"}
+  RSSFallback --> Limit
+  Snapshot --> Diagnostic["Retain tree RSS and largest-process attribution"]
+  Limit -->|"yes"| Stop["Terminate child and emit terminal receipt"]
+  Limit -->|"no"| Continue["Continue supervised build"]
+  Diagnostic --> Receipt["Project and process guard JSON receipts"]
+  Stop --> Receipt
+  Continue --> Receipt
+#+end_src
+
+The isolated Darwin cold validation was stopped when the root
+=//scheme:compile= action crossed twelve minutes.  Bazel reported 1,221.082
+seconds total elapsed time, a 1,206.96-second critical path, and zero executed
+tests.  This is a failed cold-performance gate, not functional evidence
+against the Linux PSS correction.  Promotion requires a green Linux receipt
+showing =memory-metric= equal to =linux-pss= and a guarded peak below the
+unchanged 5 GiB ceiling; the diagnostic RSS sum may exceed that value without
+causing a false termination.

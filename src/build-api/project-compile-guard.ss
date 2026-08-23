@@ -444,7 +444,17 @@
    ("worker-count" (.ref receipt 'worker-count))
    ("system-memory-bytes" (.ref receipt 'system-memory-bytes))
    ("max-rss-bytes" (.ref receipt 'max-rss-bytes))
+   ("memory-metric"
+    (poo-flow-process-memory-guard-json-value (.ref receipt 'memory-metric)))
+   ("max-memory-bytes" (.ref receipt 'max-memory-bytes))
+   ("peak-memory-bytes" (.ref receipt 'peak-memory-bytes))
    ("peak-rss-bytes" (.ref receipt 'peak-rss-bytes))
+   ("peak-largest-process-rss-bytes"
+    (.ref receipt 'peak-largest-process-rss-bytes))
+   ("peak-largest-process-pss-bytes"
+    (.ref receipt 'peak-largest-process-pss-bytes))
+   ("peak-process-count" (.ref receipt 'peak-process-count))
+   ("sample-count" (.ref receipt 'sample-count))
    ("elapsed-ms" (.ref receipt 'elapsed-ms))
    ("timeout-ms" (.ref receipt 'timeout-ms))
    ("build-summary"
@@ -493,7 +503,14 @@
       (worker-count (.ref config 'worker-count))
       (system-memory-bytes (.ref config 'system-memory-bytes))
       (max-rss-bytes (.ref config 'max-rss-bytes))
+      (memory-metric 'not-sampled)
+      (max-memory-bytes (.ref config 'max-rss-bytes))
+      (peak-memory-bytes 0)
       (peak-rss-bytes 0)
+      (peak-largest-process-rss-bytes 0)
+      (peak-largest-process-pss-bytes 0)
+      (peak-process-count 0)
+      (sample-count 0)
       (elapsed-ms 0)
       (timeout-ms #f)
       (build '())))
@@ -528,7 +545,16 @@
       (worker-count (.ref config 'worker-count))
       (system-memory-bytes (.ref config 'system-memory-bytes))
       (max-rss-bytes (.ref config 'max-rss-bytes))
+      (memory-metric (.ref guard-receipt 'memory-metric))
+      (max-memory-bytes (.ref guard-receipt 'max-memory-bytes))
+      (peak-memory-bytes (.ref guard-receipt 'peak-memory-bytes))
       (peak-rss-bytes (.ref guard-receipt 'peak-rss-bytes))
+      (peak-largest-process-rss-bytes
+       (.ref guard-receipt 'peak-largest-process-rss-bytes))
+      (peak-largest-process-pss-bytes
+       (.ref guard-receipt 'peak-largest-process-pss-bytes))
+      (peak-process-count (.ref guard-receipt 'peak-process-count))
+      (sample-count (.ref guard-receipt 'sample-count))
       (elapsed-ms (.ref guard-receipt 'elapsed-ms))
       (timeout-ms (.ref guard-receipt 'timeout-ms))
       (build '())
@@ -679,11 +705,29 @@
                           (runnable-worker-capacity
                            (.ref config 'runnable-worker-capacity))
                           (worker-count (.ref config 'worker-count))
-                          (system-memory-bytes
-                           (.ref config 'system-memory-bytes))
-                          (max-rss-bytes (.ref config 'max-rss-bytes))
-                          (peak-rss-bytes
-                           (.ref completed-guard-receipt 'peak-rss-bytes))
+                           (system-memory-bytes
+                            (.ref config 'system-memory-bytes))
+                           (max-rss-bytes (.ref config 'max-rss-bytes))
+                           (memory-metric
+                            (.ref completed-guard-receipt 'memory-metric))
+                           (max-memory-bytes
+                            (.ref completed-guard-receipt 'max-memory-bytes))
+                           (peak-memory-bytes
+                            (.ref completed-guard-receipt
+                                  'peak-memory-bytes))
+                           (peak-rss-bytes
+                            (.ref completed-guard-receipt 'peak-rss-bytes))
+                           (peak-largest-process-rss-bytes
+                            (.ref completed-guard-receipt
+                                  'peak-largest-process-rss-bytes))
+                           (peak-largest-process-pss-bytes
+                            (.ref completed-guard-receipt
+                                  'peak-largest-process-pss-bytes))
+                           (peak-process-count
+                            (.ref completed-guard-receipt
+                                  'peak-process-count))
+                           (sample-count
+                            (.ref completed-guard-receipt 'sample-count))
                           (elapsed-ms
                            (.ref completed-guard-receipt 'elapsed-ms))
                           (timeout-ms

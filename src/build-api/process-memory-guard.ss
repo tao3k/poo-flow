@@ -77,6 +77,77 @@
                 (+ total (caddr row))
                 total)))))))
 
+(def (guard-smaps-rollup-pss-line-bytes line)
+  (let (tokens (string-tokenize line))
+    (and (pair? tokens)
+         (string=? (car tokens) "Pss:")
+         (pair? (cdr tokens))
+         (let (kib (string->number (cadr tokens)))
+           (and kib (* kib 1024))))))
+
+(def (guard-linux-process-pss-bytes pid)
+  (let (path
+        (string-append "/proc/" (number->string pid) "/smaps_rollup"))
+    (and (file-exists? path)
+         (with-catch
+          (lambda (_) #f)
+          (lambda ()
+            (let (port (open-input-file path))
+              (unwind-protect
+                (let loop ((line (read-line port)))
+                  (if (eof-object? line)
+                    #f
+                    (or (guard-smaps-rollup-pss-line-bytes line)
+                        (loop (read-line port)))))
+                (close-input-port port))))))))
+
+(def (guard-linux-process-present? pid)
+  (file-exists? (string-append "/proc/" (number->string pid))))
+
+(def (guard-process-memory-observation/from pid rows linux-pss?
+                                            process-present? process-pss-bytes)
+  (let (tree-pids (guard-process-tree-pids pid rows))
+    (let lp ((rest rows)
+             (memory 0)
+             (rss 0)
+             (largest-rss 0)
+             (largest-pss 0)
+             (process-count 0))
+      (if (null? rest)
+        (.o (memory-metric (if linux-pss? 'linux-pss 'rss-tree-fallback))
+            (memory-bytes memory)
+            (rss-bytes rss)
+            (largest-process-rss-bytes largest-rss)
+            (largest-process-pss-bytes largest-pss)
+            (process-count process-count))
+        (let* ((row (car rest))
+               (row-pid (car row))
+               (in-tree? (member row-pid tree-pids))
+               (present? (or (not linux-pss?)
+                             (process-present? row-pid))))
+          (if (and in-tree? present?)
+            (let* ((row-rss (caddr row))
+                   (row-pss (and linux-pss? (process-pss-bytes row-pid)))
+                   (row-memory (if linux-pss?
+                                 (or row-pss row-rss)
+                                 row-rss)))
+              (lp (cdr rest)
+                  (+ memory row-memory)
+                  (+ rss row-rss)
+                  (max largest-rss row-rss)
+                  (max largest-pss (or row-pss 0))
+                  (+ process-count 1)))
+            (lp (cdr rest) memory rss largest-rss largest-pss
+                process-count)))))))
+
+(def (guard-process-memory-observation pid)
+  (guard-process-memory-observation/from
+   pid
+   (guard-process-table)
+   (file-exists? "/proc/self/smaps_rollup")
+   guard-linux-process-present?
+   guard-linux-process-pss-bytes))
+
 (def (guard-terminate! pid)
   (let (tree-pids
         (guard-process-tree-pids pid (guard-process-table)))
@@ -92,8 +163,10 @@
         (list "kill" "-KILL" (number->string tree-pid))))
      tree-pids)))
 
-(def (guard-receipt label outcome exit-code child-exit peak-rss max-rss
-                    elapsed-ms timeout-ms)
+(def (guard-receipt label outcome exit-code child-exit memory-metric
+                    peak-memory peak-rss peak-largest-process-rss
+                    peak-largest-process-pss peak-process-count sample-count
+                    max-memory elapsed-ms timeout-ms)
   (object<-alist
    (list (cons 'kind +poo-flow-process-memory-guard-schema+)
          (cons 'schema +poo-flow-process-memory-guard-schema+)
@@ -101,8 +174,15 @@
          (cons 'outcome outcome)
          (cons 'exit-code exit-code)
          (cons 'child-exit-code child-exit)
+         (cons 'memory-metric memory-metric)
+         (cons 'peak-memory-bytes peak-memory)
          (cons 'peak-rss-bytes peak-rss)
-         (cons 'max-rss-bytes max-rss)
+         (cons 'peak-largest-process-rss-bytes peak-largest-process-rss)
+         (cons 'peak-largest-process-pss-bytes peak-largest-process-pss)
+         (cons 'peak-process-count peak-process-count)
+         (cons 'sample-count sample-count)
+         (cons 'max-memory-bytes max-memory)
+         (cons 'max-rss-bytes max-memory)
          (cons 'elapsed-ms elapsed-ms)
          (cons 'timeout-ms timeout-ms))))
 
@@ -132,7 +212,18 @@
     (poo-flow-process-memory-guard-json-value (.ref receipt 'outcome)))
    ("exit-code" (.ref receipt 'exit-code))
    ("child-exit-code" (.ref receipt 'child-exit-code))
+   ("memory-metric"
+    (poo-flow-process-memory-guard-json-value
+     (.ref receipt 'memory-metric)))
+   ("peak-memory-bytes" (.ref receipt 'peak-memory-bytes))
    ("peak-rss-bytes" (.ref receipt 'peak-rss-bytes))
+   ("peak-largest-process-rss-bytes"
+    (.ref receipt 'peak-largest-process-rss-bytes))
+   ("peak-largest-process-pss-bytes"
+    (.ref receipt 'peak-largest-process-pss-bytes))
+   ("peak-process-count" (.ref receipt 'peak-process-count))
+   ("sample-count" (.ref receipt 'sample-count))
+   ("max-memory-bytes" (.ref receipt 'max-memory-bytes))
    ("max-rss-bytes" (.ref receipt 'max-rss-bytes))
    ("elapsed-ms" (.ref receipt 'elapsed-ms))
    ("timeout-ms" (.ref receipt 'timeout-ms))))
@@ -251,16 +342,35 @@
              (vector-set! state 1
                           (guard-exit-code (process-status child)))
              (vector-set! state 0 #t))))
+         (memory-metric 'rss-tree-fallback)
+         (peak-memory 0)
          (peak-rss 0)
+         (peak-largest-process-rss 0)
+         (peak-largest-process-pss 0)
+         (peak-process-count 0)
+         (sample-count 0)
          (outcome 'running)
          (guard-exit 0))
     (let loop ()
       (unless (vector-ref state 0)
-        (let* ((rss (guard-process-rss-bytes pid))
+        (let* ((observation (guard-process-memory-observation pid))
+               (memory (.ref observation 'memory-bytes))
+               (rss (.ref observation 'rss-bytes))
                (elapsed (- (guard-now-seconds) started)))
+          (set! memory-metric (.ref observation 'memory-metric))
+          (set! peak-memory (max peak-memory memory))
           (set! peak-rss (max peak-rss rss))
+          (set! peak-largest-process-rss
+                (max peak-largest-process-rss
+                     (.ref observation 'largest-process-rss-bytes)))
+          (set! peak-largest-process-pss
+                (max peak-largest-process-pss
+                     (.ref observation 'largest-process-pss-bytes)))
+          (set! peak-process-count
+                (max peak-process-count (.ref observation 'process-count)))
+          (set! sample-count (+ sample-count 1))
           (cond
-           ((> peak-rss max-rss-bytes)
+           ((> peak-memory max-rss-bytes)
             (set! outcome 'rss-limit-exceeded)
             (set! guard-exit 70)
             (guard-terminate! pid))
@@ -282,7 +392,9 @@
            (elapsed-ms
             (inexact->exact
              (round (* 1000 (- (guard-now-seconds) started))))))
-      (guard-receipt label final-outcome final-exit child-exit peak-rss
+      (guard-receipt label final-outcome final-exit child-exit memory-metric
+                     peak-memory peak-rss peak-largest-process-rss
+                     peak-largest-process-pss peak-process-count sample-count
                      max-rss-bytes elapsed-ms
                      (and timeout-seconds
                           (inexact->exact

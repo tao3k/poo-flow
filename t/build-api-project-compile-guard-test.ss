@@ -6,7 +6,8 @@
                  json-object->string
                  string->json-object
                  write-json-sort-keys?)
-        "../src/build-api/project-compile-guard.ss")
+        "../src/build-api/project-compile-guard.ss"
+        "../src/build-api/process-memory-guard.ss")
 
 (import (only-in :gslph/src/building/std-builder
                  make-adaptive-execution-window-result
@@ -476,14 +477,38 @@
            (json-object->string object))
          => json-string)))
 
+    (test-case "Linux smaps rollup PSS is parsed in bytes"
+      (check (guard-smaps-rollup-pss-line-bytes "Pss: 1234 kB")
+             => 1263616)
+      (check (guard-smaps-rollup-pss-line-bytes "Rss: 1234 kB") => #f)
+      (check (guard-smaps-rollup-pss-line-bytes "Pss: unavailable kB")
+             => #f))
+
+    (test-case "Linux process-tree enforcement does not sum shared RSS"
+      (let (observation
+            (guard-process-memory-observation/from
+             100
+             '((100 1 4294967296) (101 100 3221225472))
+             #t
+             (lambda (_) #t)
+             (lambda (pid)
+               (if (= pid 100) 2147483648 1073741824))))
+        (check (.ref observation 'memory-metric) => 'linux-pss)
+        (check (.ref observation 'memory-bytes) => 3221225472)
+        (check (.ref observation 'rss-bytes) => 7516192768)
+        (check (.ref observation 'largest-process-rss-bytes)
+               => 4294967296)
+        (check (.ref observation 'largest-process-pss-bytes)
+               => 2147483648)
+        (check (.ref observation 'process-count) => 2)))
+
     (test-case "failed build preserves the stopped Scheme guard receipt"
       (let* ((config (poo-flow-project-compile-guard-config '()))
              (guard-receipt
-              (.o (outcome 'child-failed)
-                  (child-exit-code 138)
-                  (peak-rss-bytes 4831838208)
-                  (elapsed-ms 108226)
-                  (timeout-ms #f)))
+              (guard-receipt '(test compile) 'child-failed 70 138
+                             'linux-pss 3079274496 4831838208
+                             2147483648 1610612736 5 8
+                             5368709120 108226 #f))
              (receipt
               (poo-flow-project-compile-failed-receipt
                config guard-receipt))
@@ -494,7 +519,15 @@
         (check (hash-get object "failure-kind") => "child-failed")
         (check (hash-get object "failure-exit-code") => 138)
         (check (hash-get object "source-identity") => #f)
+        (check (hash-get object "memory-metric") => "linux-pss")
+        (check (hash-get object "peak-memory-bytes") => 3079274496)
         (check (hash-get object "peak-rss-bytes") => 4831838208)
+        (check (hash-get object "peak-largest-process-rss-bytes")
+               => 2147483648)
+        (check (hash-get object "peak-largest-process-pss-bytes")
+               => 1610612736)
+        (check (hash-get object "peak-process-count") => 5)
+        (check (hash-get object "sample-count") => 8)
         (check (hash-get object "elapsed-ms") => 108226)
         (check (hash-get object "timeout-ms") => #f)
         (check
@@ -514,11 +547,10 @@
                    config
                    (lambda ()
                      (set! stop-count (+ stop-count 1))
-                     (.o (outcome 'child-failed)
-                         (child-exit-code 138)
-                         (peak-rss-bytes 4831838208)
-                         (elapsed-ms 108226)
-                         (timeout-ms #f)))
+                     (guard-receipt '(test compile) 'child-failed 70 138
+                                    'linux-pss 3079274496 4831838208
+                                    2147483648 1610612736 5 8
+                                    5368709120 108226 #f))
                    (lambda () (error "fixture build failure"))
                    (lambda (receipt)
                      (set! emitted (cons receipt emitted))))
