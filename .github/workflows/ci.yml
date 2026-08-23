@@ -162,7 +162,7 @@ jobs:
             dependency-timeout-minutes: 12
             compile-timeout-minutes: 8
             compile-runaway-timeout-seconds: 420
-            external-module-mode: full
+            external-module-mode: analysis
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow

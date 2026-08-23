@@ -968,3 +968,33 @@ against the Linux PSS correction.  Promotion requires a green Linux receipt
 showing =memory-metric= equal to =linux-pss= and a guarded peak below the
 unchanged 5 GiB ceiling; the diagnostic RSS sum may exceed that value without
 causing a false termination.
+
+* CI ownership correction for external validation
+
+The first PSS-enabled CI attempt exposed duplicate ownership rather than a
+second memory result.  The dedicated Linux external-module job and the native
+Linux package job both executed the same =full= external consumer build before
+the native job could reach its receipt-producing project compile.  Two
+independent hosted runners received external shutdown signals during that
+duplicated root action, so neither produced a Scheme terminal receipt.  The
+logs contained no guard termination, compiler diagnostic, or memory-limit
+receipt and therefore do not qualify as a PSS failure.
+
+The dedicated external-module job remains the sole owner of the full consumer
+compile.  Native Linux now performs only Bazel analysis of the external
+consumer before proceeding to dependency validation and the supervised
+=//scheme:compile= action.  This removes redundant work without weakening
+coverage and ensures that the native job reaches the evidence-producing phase
+within its existing budgets.
+
+#+begin_src mermaid
+flowchart LR
+  Change["PR source change"] --> External["Dedicated Linux external job"]
+  Change --> Native["Native Linux package job"]
+  External --> Full["Full external consumer compile"]
+  Full --> ConsumerReceipt["External compatibility receipt"]
+  Native --> Analysis["External module analysis only"]
+  Analysis --> Dependencies["Declared dependency packages"]
+  Dependencies --> Supervised["Supervised //scheme:compile"]
+  Supervised --> MemoryReceipt["Linux PSS and diagnostic RSS receipt"]
+#+end_src
