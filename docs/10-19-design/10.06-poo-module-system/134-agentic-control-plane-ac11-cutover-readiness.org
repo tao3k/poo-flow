@@ -2,7 +2,7 @@
 #+subtitle: Revision-bound evidence aggregation without release authorization
 #+author: POO Flow Contributors
 #+date: 2026-07-12
-#+status: Focused verifier and guarded collector implemented; release decision pending
+#+status: Pure verifier implemented; build evidence is upstream-owned; release decision pending
 #+options: toc:3 num:t
 
 * Purpose
@@ -65,22 +65,21 @@ The focused qualification rejects:
 
 * Status
 
-Focused Scheme tests close the pure verifier contract.  The guarded collector
-=tools/run-ac11-cutover-readiness.ss= consumes actual symbol evidence, invokes
-the Python no-=ctypes= gate through the Scheme process-memory guard, binds the
-AC-10 identity and authoring-audit artifact, and emits one deterministic JSON
-=poo-flow.cutover-readiness.v1= artifact.
+Focused Scheme tests close the pure verifier contract.  Bazel owns execution of
+the runtime-C symbol-surface test and Python no-=ctypes= test, including resource
+guards and JSON action receipts.  A release-evidence producer binds those
+artifacts to the AC-10 identity and authoring-audit artifact before calling the
+pure verifier; no Scheme CLI launches Bazel, Python, or a second GXI.
 
-#+begin_src sh
-gxi tools/run-ac11-cutover-readiness.ss \
-  SOURCE_REVISION AC10_SOURCE_REVISION AC10_MANIFEST_DIGEST \
-  bindings/runtime-c/tests/runtime_v0_exported_symbols.json \
-  ACTUAL_SYMBOLS.txt ledger-133-owner-audit
+#+begin_src mermaid
+flowchart LR
+    C["Bazel runtime-C symbol action"] --> E["Typed action evidence"]
+    P["Bazel Python no-ctypes action"] --> E
+    A["AC-10 identity + authoring audit"] --> I["Readiness input"]
+    E --> I --> V["Pure cutover verifier"] --> R["poo-flow.cutover-readiness.v1"]
 #+end_src
 
-The actual-symbol stream is produced by the same bounded =nm= adapter used by
-the runtime C symbol-surface test.  The resulting artifact remains preflight
-evidence, not the P6 release decision.
+The resulting artifact remains preflight evidence, not the P6 release decision.
 
 * References
 

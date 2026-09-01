@@ -1,4 +1,14 @@
-* Focused implementation receipts
+* Historical focused implementation receipts
+
+These measurements describe the superseded downstream adaptive-build
+prototype.  They are retained only as performance evidence and MUST NOT be used
+as current API or build instructions.
+
+#+begin_src mermaid
+flowchart LR
+    H["Historical POO Flow build guards"] -->|"superseded"| U["ASP PR #3 Build API"]
+    U --> S["Gerbil std/make"] --> B["gerbil-bazel guarded actions"]
+#+end_src
 
 The focused commands remained bounded independently of the accepted full-cold
 gate.
@@ -8,10 +18,7 @@ gate.
 | Harness dynamic compile | =timeout 90s gxpkg env gxc src/building/model.ss src/building/native-toolchain.ss src/building/std-builder.ss src/building/observability.ss t/std-builder-execution-window-test.ss t/building-observability-test.ss=; exit 0; 13.25 s |
 | Harness execution-window runtime | Imported =:gslph/t/std-builder-execution-window-test= and ran =main= under =timeout 90s gxpkg env gxi=; exit 0; seven cases; =All tests OK= |
 | Harness observability runtime | Imported =:gslph/t/building-observability-test= under =timeout 90s gxpkg env gxi=; exit 0; adaptive canonical JSON assertions completed |
-| POO Flow targeted compile | Compiled =process-memory-guard.ss=, =adaptive-execution-window.ss=, =project-build.ss=, and =build-api-adaptive-execution-window-test.ss= from the non-Nix harness environment with the refreshed harness load path; exit 0; 6.87 s |
-| POO Flow focused runtime | =timeout 90s tools/run-native-scheme-env gxi t/build-api-adaptive-execution-window-test.ss=; exit 0; nine cases; =All tests OK=; canonical guard JSON emitted; safe growth proved =4 -> 8 -> 16= and a 377-spec projection completed in seven decisions |
-| POO Flow focused AOT compile | =timeout 90s tools/run-native-scheme-env gxc -d <isolated-output> src/build-api/adaptive-execution-window.ss t/build-api-adaptive-execution-window-test.ss=; exit 0; no project output mutated |
-| Project compile receipt runtime | Ran =build-api-project-compile-guard-test= through the consistent Building Framework overlay under a 40-second timeout; exit 0; five cases; =All tests OK=; canonical project JSON parsed and round-tripped |
+| Superseded POO Flow guard prototype | The former local process guard, adaptive window, project-build CLI, and project compile receipt compiled in 6.87 s.  Those interfaces have been removed; current builds use ASP PR #3 and gerbil-bazel. |
 | Direct native environment projection | =tools/run-native-scheme-env= replaced Nix Apple-SDK inputs with =/Applications/Xcode.app/Contents/Developer= and the active macOS SDK; it did not emit an unconditional =env -u= policy |
 | Bazel native environment projection | =bazel run //tools/bazel:native_scheme_env= completed through =rules_shell=; =toolchain.receipt.json= recorded =host_os: mac os x=, =system: darwin=, =environment_policy: active-xcode=, Homebrew =gxi/gxc/gxpkg=, and active Xcode paths |
 | Bazel registered toolchain analysis | =bazel build --toolchain_resolution_debug=//tools/bazel:gerbil_toolchain_type //scheme:compile= selected =@local_gerbil//:toolchain_impl= through =@local_gerbil//:registered_toolchain= on =@platforms//host:host=; exit 0; the compile action remained an action-cache hit; Scheme compile and test rule implementations contain no =@local_gerbil= labels |
@@ -27,19 +34,19 @@ gate.
 | POO macro expansion guard | A same-name =.o= slot/value binding reached 6,124,306,432 B RSS in 9.32 seconds and was interrupted; the explicit =execution-policy-value= projection reduced the equivalent import probe to 1.99 seconds and 176,226,304 B |
 | Diff hygiene | =rtk git diff --check= in both repositories; exit 0 |
 
-The POO Flow focused suite covers immutable growth, immediate startup shrink,
+The removed prototype suite covered immutable growth, immediate startup shrink,
 later recovery from =3= to =7= after a lower-cost completed window, safe
 geometric growth from =4= to =8= to =16=, and a 377-spec projection that needs
 seven decisions.  The small-window recovery replaces
 the earlier one-gibibyte-per-spec history with the latest
 100-mebibyte-per-spec observation and grows by exactly one four-worker quantum;
 the large-window case proves that growth is no longer linear in worker-count.
-It also covers constructor rejection when the cap cannot cover the live
+It also covered constructor rejection when the cap could not cover the live
 baseline plus headroom, non-completed hard-cap failure, canonical guard JSON
 parsing and round trip, explicit versus default stage batching, and environment
 activation with headroom 0.
 
-The latest non-Nix estimator-tuning pass compiled the adaptive module and its
+The final historical non-Nix estimator-tuning pass compiled the adaptive module and its
 focused test with exit 0 in 4.07 seconds.  The focused runtime then exited 0
 with =All tests OK= in 3.72 seconds.
 

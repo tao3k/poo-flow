@@ -1,46 +1,34 @@
 * Canonical receipt contracts
 
-The established topology schema remains unchanged:
+Build and resource receipts are upstream-owned.  POO Flow does not define a
+parallel process-memory or project-compile receipt schema.
 
-- =gslph.build-topology-execution-windows.v1=
+#+begin_src mermaid
+flowchart LR
+    A["gerbil-bazel action"] --> R["gerbil-bazel typed receipt"]
+    R --> B["Bazel output group / CI artifact"]
+    B --> Q["poo-flow.qualification-gate-receipt.v1"]
+    Q --> V["Pure revision and declaration verification"]
+#+end_src
 
-It describes the default topology projection, including group count, upstream
-session count, eliminated barriers, spec count, and dependency-order
-preservation.
+The accepted upstream resource schema is:
 
-Adaptive execution uses a distinct schema:
+- =gerbil-bazel.resource-guard-receipt.v1=
 
-- =gslph.build-adaptive-execution-windows.v1=
+It owns admission outcome, available resources, effective build core count,
+elapsed milliseconds, process-tree peak memory, child exit code, termination
+outcome, and hard-limit enforcement.
 
-It projects only windows that were actually attempted and completed into the
-result.  It records actual window specs and per-window spec counts, dependency
-order preservation, worker count, hard RSS cap, and each observation's outcome,
-baseline RSS, peak RSS, maximum RSS, and elapsed milliseconds.
+POO Flow projects that evidence without copying its process-control semantics:
 
-The Scheme guard uses:
+- =poo-flow.qualification-gate-receipt.v1= binds an opaque evidence value to a
+  gate id, owner, source revision, declaration digest, artifact identity,
+  installed-consumer claim, and acceptance decision.
+- =poo-flow.qualification-run-receipt.v1= aggregates gate receipts for one
+  source revision and mode.
+- =poo-flow.qualification-verification-receipt.v1= records the pure completeness
+  and freshness verdict.
 
-- =poo-flow.process-memory-guard.v1=
-
-Its public JSON contains stable =kind= and =schema= strings, numeric =version:
-1=, outcome, exit fields, process-tree peak and maximum RSS, elapsed
-milliseconds, optional timeout, and a JSON-safe label.
-
-The canonical project compile receipt uses:
-
-- =poo-flow.project-compile-guard.v1=
-
-It records stable =kind=, =schema=, and =version= fields, the Building Framework
-owner and build mode, the selected =topology= or =adaptive= execution policy,
-request labels, admission outcome, non-blocking pressure advisories, blocking
-reasons, detected system memory, maximum and peak RSS, elapsed milliseconds,
-optional timeout, final outcome, and a JSON-safe Building Framework stage
-summary.  The stage summary retains counts, active-stage
-labels, kinds, statuses, descriptions, and elapsed jiffies while excluding
-arbitrary in-process Scheme results.  The public
-=POO_FLOW_PROJECT_BUILD_RECEIPT= line is JSON; its earlier printed alist form is
-no longer emitted.
-
-All four contracts use Gerbil's native JSON support with sorted keys for the
-canonical string.  A =.txt= progress stream is diagnostic only and is not a
-receipt.  Printed alists remain internal or compatibility projections and are
-not the public record format.
+JSON is produced by the action owner.  POO Flow Scheme verification keeps the
+evidence value opaque and never turns a diagnostic text stream, printed alist,
+or locally sampled process table into a competing build receipt.

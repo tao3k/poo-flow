@@ -1,114 +1,59 @@
 * Landed architecture
 
-** Building Framework owner
+POO Flow is a downstream Gerbil project.  It does not own a second build
+scheduler, process supervisor, RSS sampler, package resolver, or static-link
+driver.
 
-The harness implementation is owned by these files:
+#+begin_src mermaid
+flowchart LR
+    P["gerbil.pkg\npackage identity and exact revisions"]
+    B["build.ss\nPOO package declaration"]
+    A["ASP PR #3 Build API\npackage-spec and native-spec"]
+    S["Gerbil std/build-script + std/make\ncompile graph and scheduling"]
+    G["gerbil-bazel\ntoolchain, sandbox, cache, resource guard"]
+    E["Typed action receipts"]
+    Q["POO Flow qualification\npure evidence verification"]
 
-- =src/building/std-builder.ss= defines the POO controller and observation
-  contracts, adaptive plan and result objects, sequential window runner, and
-  package-stage integration.
-- =src/building/observability.ss= owns topology and adaptive canonical JSON.
-- =t/std-builder-execution-window-test.ss= validates fake =make-proc=
-  execution, order, observations, empty plans, and one-spec cap failure.
-- =t/building-observability-test.ss= validates canonical adaptive JSON.
+    P --> B --> A --> S --> G --> E --> Q
+#+end_src
 
-The principal public APIs are:
+** Owner boundaries
 
-- =execution-window-controller?=
-- =execution-window-controller-observe-run!=
-- =execution-window-controller-next-state=
-- =make-execution-window-observation=
-- =make-adaptive-execution-window-plan=
-- =std-builder-run-adaptive-plan!=
-- =adaptive-execution-window-result-execution-windows=
-- =adaptive-execution-window-result-window-observations=
-- =build-adaptive-execution-windows->json-object=
-- =build-adaptive-execution-windows->json-string=
+- =gerbil.pkg= is the only POO Flow package/dependency declaration.  The ASP
+  dependency is fixed to PR #3 revision
+  =e8d00f54294ead9fead051ef1f618a53dd177640=.
+- The top-level =build.ss= is the only native package build declaration.  It
+  consumes =asp-gerbil-scheme-package-spec!=,
+  =asp-gerbil-scheme-package-native-spec=, =defbuild-script=, and
+  =framework-build-bindir= from ASP PR #3.
+- Gerbil =std/build-script= and =std/make= retain compiler graph and scheduling
+  authority.  POO Flow does not start another =gxi= or =gxc= to supervise a
+  build.
+- =gerbil-bazel= owns toolchain selection, Darwin/Linux environment projection,
+  sandboxing, cache keys, adaptive resource admission, process-tree
+  observation, termination, and canonical build receipts.
+- =scheme/BUILD.bazel= is a downstream declaration of source sets, package
+  dependencies, compile targets, and test roots.  It must use the public
+  =@gerbil_bazel//gerbil:defs.bzl= rules without copying their implementation.
+- =justfile= is a declarative catalog of stable Bazel targets.  It does not
+  configure compilers, cores, SDKs, package installation, or resource limits.
+- =src/qualification/runner.ss= is now pure: it binds externally produced
+  action evidence to gate declaration digests and source revisions, then
+  verifies completeness.  It never executes a command.
 
-The observation is a POO object with named slots for =result=, =outcome=,
-=baseline-rss-bytes=, =peak-rss-bytes=, =max-rss-bytes=, and =elapsed-ms=.
-=.next-state= receives the complete observation object and the actual spec
-count.  Loose multiple values are not the protocol.
+** Removed downstream owners
 
-** POO Flow adapter and project activation
+The following designs are intentionally absent and have no compatibility
+surface:
 
-The downstream implementation is owned by these files:
+- POO Flow build-stage macros and project-build CLI commands;
+- local =ps= or =/proc= process-tree sampling;
+- nested GXI memory-guard launchers;
+- local adaptive compile windows or worker-count policy;
+- POO Flow project compile guard receipts;
+- Scheme tools that execute Bazel, Python, Lean, or C qualification commands.
 
-- =src/build-api/process-memory-guard.ss= samples current-process-tree RSS,
-  creates POO guard receipts, and emits canonical JSON.
-- =src/build-api/adaptive-execution-window.ss= owns the immutable POO Flow
-  controller constructor, live guard adapter, and pure sizing transition.
-- =src/cli-support/project-build.ss= resolves optional caller or environment
-  activation for build truth while preserving non-adaptive clean behavior.  It
-  also projects the configured root through =POO_FLOW_PROJECT_BUILD_ROOT= so
-  source and compiled Gerbil module instances share one explicit process-wide
-  build-root contract.
-- =src/build-api/project-compile-guard.ss= owns the outer project receipt and
-  emits it as canonical native Scheme JSON.
-- =tools/bazel/host_system.bzl= declares the finite host-system model.  Bazel
-  OS names map explicitly to =darwin= or =linux=; every other system fails
-  closed.  The Darwin resolver rejects missing, invalid, or Nix-store Apple SDK
-  selectors and preserves valid custom Xcode selectors.  The Linux resolver
-  preserves the host environment without projecting Apple variables.  Both
-  resolvers also declare physical memory from their native host interfaces so
-  sandboxed Scheme guards do not fall back to a machine-independent guess.
-- =tools/bazel/gerbil_repository.bzl= declares tool candidates, version gates,
-  templates, and the canonical JSON receipt.  It delegates platform policy to
-  =host_system.bzl=, exports normalized =gxi=, =gxc=, =gxpkg=, and =gxtest=
-  wrappers, and exposes only compiled external dependency libraries.
-- =tools/bazel/gerbil_toolchain.bzl= projects those host resources through one
-  explicit =GerbilToolchainInfo= provider and a native =ToolchainInfo= wrapper,
-  including physical memory, compiler, assembler, linker, dependency root,
-  runfiles, and receipt.  Its public type constant and resolution helper are
-  shared by Scheme and runtime-C rules.  =MODULE.bazel= registers the
-  OS-constrained toolchain target; its implementation target is not a consumer
-  API.
-- =tools/bazel/gerbil_project.bzl= declares the canonical project compile action
-  and an isolated custom gxtest rule.  Both resolve the registered capability
-  through =ctx.toolchains= and contain no =@local_gerbil= labels.
-  =tools/bazel/run_scheme_project.sh= invokes =build.ss compile= once, removes
-  temporary tool links, and extracts the native Scheme JSON receipt.
-  =tools/bazel/run_scheme_tests.sh= composes the compiled tree, declared source
-  runfiles, and external dependency root.
-- =scheme/BUILD.bazel= exposes =//scheme:compile=, receipt and log output groups,
-  four ordinary gxtest roots, the separate performance root, =//scheme:tests=,
-  and =//scheme:all_tests=.  Scheme tests are exclusive so multiple =gxtest=
-  processes cannot multiply host RSS accidentally.
-- =bindings/runtime-c/runtime_contract.bzl= resolves the registered =gxi= for
-  runtime-v0 contract generation instead of accepting a tool label.
-- =bindings/runtime-c/runtime_checks.bzl= owns the toolchain-aware Gerbil
-  benchmark and generic Scheme-backed script-test rules.  The root runtime-C
-  BUILD file provides domain arguments and data only.
-- =justfile= is the declarative developer command catalog.  It names stable
-  Bazel targets and composes =check= from =query=, =build=, and =test= without
-  owning tools, platform policy, Scheme build semantics, or output paths.
-- =tools/run-native-scheme-env= is the direct non-Bazel fallback.  It applies
-  the same explicit Darwin-or-Linux boundary.  Darwin injects resolved Xcode
-  values after =gxpkg env=, Linux preserves the environment, and unsupported
-  systems fail closed.
-- =t/build-api-adaptive-execution-window-test.ss= validates immutable sizing,
-  fail-closed outcomes, guard JSON, stage activation, zero headroom, and the
-  cross-module-instance build-root contract.
-- =t/build-api-project-compile-guard-test.ss= validates the project guard
-  policy and canonical project receipt JSON.
-
-The principal POO Flow APIs are:
-
-- =make-poo-flow-adaptive-execution-window-controller=
-- =poo-flow-adaptive-execution-window-controller?=
-- =poo-flow-adaptive-execution-window-controller-next-state/with-current-rss=
-- =poo-flow-process-memory-guard-receipt->json-object=
-- =poo-flow-process-memory-guard-receipt->json-string=
-- =poo-flow-project-compile-receipt->json-object=
-- =poo-flow-project-compile-receipt->json-string=
-- =poo-flow-project-adaptive-cold-gate-available?=
-- the optional controller arguments on =poo-flow-project-source-stages=,
-  =poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
-  =poo-flow-project-compile!=.
-
-=poo-flow-project-build-requests=, =poo-flow-project-build-spec=, and
-=poo-flow-project-compile!= resolve the same caller or environment controller,
-so inspection and execution report the same build truth.  In contrast,
-=poo-flow-project-clean!= calls =poo-flow-project-source-stages= with no
-controller.  Clean therefore retains plain topology specs even when an RSS
-environment variable exists in the caller.
+Any future static-build or feature-selection declaration must first exist as a
+reviewed ASP PR #3 Build API.  POO Flow may consume that API by changing its
+package declaration and pinned revision; it must not predict or reimplement the
+interface locally.

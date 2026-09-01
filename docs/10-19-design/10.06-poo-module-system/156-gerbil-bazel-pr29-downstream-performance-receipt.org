@@ -5,7 +5,31 @@
 
 * Status
 
-Blocked by measured downstream regression.
+Historical receipt; its measurements remain evidence, but its former audit
+entrypoints are not current interfaces.
+
+Performance policy is independent of Bazel.  Current cold/warm measurements
+come from the native =gxpkg= and Building Framework lifecycle; the pure POO
+Flow comparison consumes those immutable observations.  Bazel remains a
+hermetic integration gate.  POO Flow does not wrap, recursively launch, clean,
+or shut down Bazel in a performance-audit runner.
+
+#+begin_src mermaid
+flowchart LR
+  Native["Native gxpkg cold and warm builds"] --> Receipt["Building Framework observation"]
+  Receipt --> Policy["Bazel-independent POO performance policy"]
+  Bazel["Bazel integration tests"] -. "tests policy and build graph" .-> Policy
+  Policy --> Decision{"Comparable and within budget?"}
+  Decision -->|yes| Accept["Accept evidence"]
+  Decision -->|no| Reject["Regression or incomparable"]
+#+end_src
+
+All later references in this file to
+=//scheme:compile_performance_audit_test= or
+=poo-flow.project-compile-guard.v1= describe historical executions only.  They
+must not be restored as compatibility targets or current receipt ownership.
+
+At the time of this measurement the downstream build was blocked by regression.
 
 This receipt extends the convergence boundary in
 =155-gerbil-bazel-downstream-convergence.org=.  It records the first POO Flow

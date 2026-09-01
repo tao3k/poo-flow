@@ -2,9 +2,9 @@
 
 The Bazel outer layer now declares the complete Scheme action without replacing
 =build.ss= or Building Framework.  The action receives only declared project
-sources, compiled =clan= and =gslph= dependencies, host Gerbil tools, and the
-host-system receipt.  It produces an isolated tree artifact, a complete build
-log, and the Scheme-owned canonical JSON receipt.
+sources, compiled Gerbil dependencies, host Gerbil tools, and the host-system
+receipt.  It produces an isolated tree artifact, a complete build log, and the
+gerbil-bazel-owned canonical JSON receipt.
 
 | Metric | Accepted Bazel cold receipt |
 |--------+-----------------------------|
@@ -17,14 +17,15 @@ log, and the Scheme-owned canonical JSON receipt.
 | Scheme-derived maximum RSS | 17,179,869,184 B |
 | Build stages | 3 of 3 compiled |
 | Output tree | 73 MiB; no temporary tool symlinks |
-| Receipt | =poo-flow.project-compile-guard.v1=; =completed= |
+| Receipt | =gerbil-bazel.project-receipt.v1= with nested =gerbil-bazel.resource-guard-receipt.v1=; =completed= |
 
 The Bazel wall time is 41.176 seconds below the previous 202.87-second accepted
 reference, an improvement of approximately 20.3%, and 410.016 seconds below
 the historical 571.71-second ceiling, an improvement of approximately 71.7%.
 The result is not a second build implementation: Bazel owns declared inputs,
-host-tool projection, sandboxing, caching, and outputs; =build.ss= and Building
-Framework still own topology, scheduling, compilation, guards, and receipts.
+host-tool projection, sandboxing, caching, resource guards, and receipts;
+=build.ss= declares the package while Gerbil =std/make= owns compilation and
+scheduling.
 
 The first isolated attempt also exposed two bootstrap defects that a populated
 workspace had hidden: =build.ss= imported its own installed package for the

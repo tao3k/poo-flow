@@ -12,26 +12,6 @@ on:
         required: false
         default: false
         type: boolean
-      run_scheme_compile_audit:
-        description: Run the identity-scoped same-host Scheme compile audit
-        required: false
-        default: false
-        type: boolean
-      scheme_compile_baseline_ref:
-        description: Canonical baseline revision for the Scheme compile audit
-        required: false
-        default: 945a96445c445bb5542732d90f9f0d483dc18ece
-        type: string
-      scheme_compile_sample_count:
-        description: Odd cold-sample count per revision
-        required: false
-        default: "3"
-        type: string
-      scheme_compile_maximum_regression_basis_points:
-        description: Maximum accepted candidate median regression
-        required: false
-        default: "500"
-        type: string
 
 permissions:
   contents: read
@@ -42,7 +22,7 @@ concurrency:
 
 jobs:
   lean-proof:
-    if: ${{ github.event_name != 'workflow_dispatch' || (!inputs.refresh_lock && !inputs.run_scheme_compile_audit) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Lean proof bridge
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -92,7 +72,7 @@ jobs:
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
   external-module-linux-full:
-    if: ${{ github.event_name != 'workflow_dispatch' || (!inputs.refresh_lock && !inputs.run_scheme_compile_audit) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow external Bazel module (linux-amd64, full)
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -147,7 +127,7 @@ jobs:
         run: tools/ci/test_external_bazel_module.sh
 
   native-linux:
-    if: ${{ github.event_name != 'workflow_dispatch' || (!inputs.refresh_lock && !inputs.run_scheme_compile_audit) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ matrix.job-timeout-minutes }}
@@ -666,7 +646,7 @@ jobs:
           retention-days: 7
 
   native-macos:
-    if: ${{ github.event_name != 'workflow_dispatch' || (!inputs.refresh_lock && !inputs.run_scheme_compile_audit) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ matrix.job-timeout-minutes }}
@@ -686,7 +666,7 @@ jobs:
     steps: *native-steps
 
   python-runtime-wheel:
-    if: ${{ github.event_name != 'workflow_dispatch' || (!inputs.refresh_lock && !inputs.run_scheme_compile_audit) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: Python runtime wheel
     needs: native-linux
     uses: ./.github/workflows/python-runtime-wheel.yml
@@ -783,11 +763,3 @@ jobs:
         run: |
           cp .ci/lock-merged/MODULE.bazel.lock MODULE.bazel.lock
           bazelisk mod deps --lockfile_mode=error
-
-  scheme-compile-performance-audit:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_scheme_compile_audit }}
-    uses: ./.github/workflows/scheme-compile-performance-audit.yml
-    with:
-      baseline_ref: ${{ inputs.scheme_compile_baseline_ref }}
-      sample_count: ${{ inputs.scheme_compile_sample_count }}
-      maximum_regression_basis_points: ${{ inputs.scheme_compile_maximum_regression_basis_points }}
