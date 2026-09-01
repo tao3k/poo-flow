@@ -56,10 +56,13 @@ def test_generated_lean_constants_collapse_to_source_declaration() -> None:
 
 
 def test_inaccessible_generated_instance_normalizes_to_source_owner() -> None:
-    assert axle_exact_closure._normalized_source_declaration_name(
-        "«_Example.instDecidableEqThing»",
-        {"Example.Thing": "Example.Thing"},
-    ) == "Example.Thing"
+    assert (
+        axle_exact_closure._normalized_source_declaration_name(
+            "«_Example.instDecidableEqThing»",
+            {"Example.Thing": "Example.Thing"},
+        )
+        == "Example.Thing"
+    )
 
 
 def test_source_range_aliases_collapse_generated_document_cycle() -> None:
@@ -73,9 +76,7 @@ def test_source_range_aliases_collapse_generated_document_cycle() -> None:
                     "Example.Policy.mk",
                     "Example.instReprPolicy",
                 ],
-                local_syntactic_dependencies=[
-                    "Example.Policy.unlistedGeneratedField"
-                ],
+                local_syntactic_dependencies=["Example.Policy.unlistedGeneratedField"],
             ),
             FakeDocument(
                 "Example.Policy.mk",
@@ -181,13 +182,184 @@ def test_bundle_identity_excludes_runtime_verification_receipts() -> None:
     assert first.canonical_manifest() != second.canonical_manifest()
 
 
-def test_exact_closure_parallelizes_independent_axle_phases_and_emits_receipts(
+def test_non_theorem_root_uses_exact_roundtrip_without_theorem_pipeline(
+    tmp_path: Path,
+) -> None:
+    import asyncio
+    from types import SimpleNamespace
+
+    from poo_flow_proof.axle_exact_closure import (
+        _digest,
+        build_exact_axle_closure,
+    )
+    from poo_flow_proof.lean_declaration_closure import (
+        LeanDeclaration,
+        LeanDeclarationClosure,
+        LeanOwnerSource,
+        LeanProofBaseInterfaceDeclaration,
+        LeanSourceRange,
+    )
+
+    source = """namespace Example
+
+structure Evidence where
+  value : Nat
+
+end Example
+"""
+    source_path = tmp_path / "Example.lean"
+    source_path.write_text(source)
+    messages = SimpleNamespace(errors=())
+    document = SimpleNamespace(
+        name="Example.Evidence",
+        kind="structure",
+        declaration="structure Example.Evidence where\n  value : Nat",
+        local_type_dependencies=(
+            "ProofBase.Type",
+            "ProofBase.instReprType",
+        ),
+        local_value_dependencies=(),
+        local_syntactic_dependencies=(),
+    )
+    extraction = SimpleNamespace(
+        documents={
+            "Example.Evidence": document,
+            "ProofBase.Type": SimpleNamespace(
+                name="ProofBase.Type",
+                kind="axiom",
+                declaration="axiom ProofBase.Type : Type",
+                local_type_dependencies=(),
+                local_value_dependencies=(),
+                local_syntactic_dependencies=(),
+            ),
+            "ProofBase.instReprType": SimpleNamespace(
+                name="ProofBase.instReprType",
+                kind="axiom",
+                declaration="axiom ProofBase.instReprType : Repr ProofBase.Type",
+                local_type_dependencies=(),
+                local_value_dependencies=(),
+                local_syntactic_dependencies=(),
+            ),
+        },
+        lean_messages=messages,
+        tool_messages=messages,
+    )
+
+    class FakeAxleClient:
+        def __init__(self) -> None:
+            self.extract_calls = 0
+            self.theorem_calls = 0
+            self.verify_calls = 0
+
+        async def extract_decls(
+            self,
+            content: str,
+            environment: str,
+            *,
+            ignore_imports: bool,
+            timeout_seconds: float,
+        ) -> SimpleNamespace:
+            self.extract_calls += 1
+            return extraction
+
+        async def theorem2sorry(self, *args: object, **kwargs: object) -> None:
+            self.theorem_calls += 1
+            raise AssertionError("non-theorem roots must not enter theorem2sorry")
+
+        async def verify_proof(self, *args: object, **kwargs: object) -> None:
+            self.verify_calls += 1
+            raise AssertionError("non-theorem roots must not enter proof verification")
+
+    closure = LeanDeclarationClosure(
+        lean_version="v4.24.0",
+        root_module="Example",
+        root_declarations=("Example.Evidence",),
+        base_imports=("Init",),
+        proof_base_imports=("ProofBase",),
+        proof_base_interface=(
+            LeanProofBaseInterfaceDeclaration(
+                name="ProofBase.Type",
+                declaration_role="axiom",
+                level_params=(),
+                type_source="Type",
+                value_source=None,
+            ),
+            LeanProofBaseInterfaceDeclaration(
+                name="ProofBase.instReprType",
+                declaration_role="instance",
+                level_params=(),
+                type_source="Repr ProofBase.Type",
+                value_source=None,
+            ),
+        ),
+        owner_modules=("Example",),
+        declarations=(
+            LeanDeclaration(
+                name="Example.Evidence",
+                kind="structure",
+                owner_module="Example",
+                local_dependencies=(),
+                source_range=LeanSourceRange(
+                    start_line=3,
+                    start_column=0,
+                    start_char_utf16=0,
+                    end_line=5,
+                    end_column=0,
+                    end_char_utf16=0,
+                ),
+            ),
+        ),
+    )
+    sources = (
+        LeanOwnerSource(
+            module="Example",
+            path=source_path,
+            owner_path="Example.lean",
+            source_digest=_digest(source.encode()),
+        ),
+    )
+    fake_client = FakeAxleClient()
+
+    exact = asyncio.run(
+        build_exact_axle_closure(
+            closure=closure,
+            sources=sources,
+            environment="lean-4.24.0",
+            client=fake_client,
+            operation_timeout_seconds=7,
+            base_timeout_seconds=3,
+        )
+    )
+
+    assert fake_client.extract_calls == 2
+    assert fake_client.theorem_calls == 0
+    assert fake_client.verify_calls == 0
+    assert exact.theorem2sorry == {
+        "schema_id": "poo-flow.axle-root-theorem-obligation.v1",
+        "status": "not-applicable",
+        "root_declarations": (),
+        "root_declaration_kinds": {"Example.Evidence": "structure"},
+    }
+    assert exact.verification["status"] == "accepted"
+    assert exact.verification["roundtrip"] == "accepted"
+    assert exact.verification["theorem_proof"] == "not-applicable"
+    assert exact.verification["okay"] is True
+    assert {declaration.name for declaration in exact.declarations} == {
+        "Example.Evidence",
+        "ProofBase.Type",
+        "ProofBase.instReprType",
+    }
+
+
+def test_exact_closure_classifies_roots_before_theorem_phases_and_emits_receipts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     closure = LeanDeclarationClosure.from_mapping(
         {
             "base_imports": ["Init"],
+            "proof_base_imports": [],
+            "proof_base_interface": [],
             "declarations": [
                 {
                     "kind": "theorem",
@@ -255,8 +427,6 @@ def test_exact_closure_parallelizes_independent_axle_phases_and_emits_receipts(
             self.extract_calls += 1
             if self.extract_calls == 1:
                 return extraction
-            self.roundtrip_started.set()
-            await asyncio.wait_for(self.theorem_started.wait(), timeout=0.25)
             return extraction
 
         async def theorem2sorry(
@@ -271,8 +441,6 @@ def test_exact_closure_parallelizes_independent_axle_phases_and_emits_receipts(
             assert names == ["Example.safe"]
             assert ignore_imports is False
             self.timeouts.append(timeout_seconds)
-            self.theorem_started.set()
-            await asyncio.wait_for(self.roundtrip_started.wait(), timeout=0.25)
             return SimpleNamespace(
                 content="theorem Example.safe : True := by sorry",
                 info={"operation": "theorem2sorry"},
@@ -310,9 +478,7 @@ def test_exact_closure_parallelizes_independent_axle_phases_and_emits_receipts(
     monkeypatch.setattr(
         axle_exact_closure,
         "_compose_source_declarations",
-        lambda _names, _documents, _base_imports: (
-            "theorem Example.safe : True := by trivial\n"
-        ),
+        lambda _names, _documents, _base_imports: ("theorem Example.safe : True := by trivial\n"),
     )
 
     exact = asyncio.run(
@@ -330,11 +496,7 @@ def test_exact_closure_parallelizes_independent_axle_phases_and_emits_receipts(
     assert exact.verification["okay"] is True
     assert fake_client.timeouts == [7, 7, 7, 7]
     states_by_phase = {
-        phase: [
-            receipt["state"]
-            for receipt in receipts
-            if receipt["phase"] == phase
-        ]
+        phase: [receipt["state"] for receipt in receipts if receipt["phase"] == phase]
         for phase in {
             "owner-source-extract",
             "canonical-roundtrip-extract",
@@ -359,6 +521,8 @@ def test_owner_source_envelope_uses_declared_base_imports(
     closure = LeanDeclarationClosure.from_mapping(
         {
             "base_imports": ["Init", "Batteries.Data.List.Perm"],
+            "proof_base_imports": [],
+            "proof_base_interface": [],
             "declarations": [
                 {
                     "kind": "theorem",
@@ -391,8 +555,88 @@ def test_owner_source_envelope_uses_declared_base_imports(
 
     envelope = axle_exact_closure._compose_owner_sources(closure, (source,))
 
-    assert envelope.startswith(
-        "import Init\nimport Batteries.Data.List.Perm\n\n"
-    )
+    assert envelope.startswith("import Init\nimport Batteries.Data.List.Perm\n\n")
     assert "import Mathlib" not in envelope
     assert "theorem Example.safe : True := by trivial" in envelope
+
+
+def test_owner_source_envelope_preserves_typed_proof_base_roles(
+    tmp_path: Path,
+) -> None:
+    source_path = tmp_path / "Example" / "Root.lean"
+    source_path.parent.mkdir()
+    source_path.write_text("theorem Example.safe : True := by trivial\n")
+    closure = LeanDeclarationClosure.from_mapping(
+        {
+            "base_imports": ["Init"],
+            "proof_base_imports": ["ProofBase"],
+            "proof_base_interface": [
+                {
+                    "declaration_role": "axiom",
+                    "level_params": ["proof_u"],
+                    "name": "ProofBase.Type",
+                    "type_source": "Type proof_u",
+                    "value_source": None,
+                },
+                {
+                    "declaration_role": "abbrev",
+                    "level_params": [],
+                    "name": "ProofBase.Alias",
+                    "type_source": "Type",
+                    "value_source": "String",
+                },
+                {
+                    "declaration_role": "definition",
+                    "level_params": [],
+                    "name": "ProofBase.Defined",
+                    "type_source": "Type",
+                    "value_source": "Nat",
+                },
+                {
+                    "declaration_role": "instance",
+                    "level_params": [],
+                    "name": "ProofBase.instReprType",
+                    "type_source": "Repr ProofBase.Type",
+                    "value_source": None,
+                },
+            ],
+            "declarations": [
+                {
+                    "kind": "theorem",
+                    "local_dependencies": [],
+                    "name": "Example.safe",
+                    "owner_module": "Example.Root",
+                    "source_range": {
+                        "start_line": 1,
+                        "start_column": 0,
+                        "start_char_utf16": 0,
+                        "end_line": 1,
+                        "end_column": 42,
+                        "end_char_utf16": 42,
+                    },
+                }
+            ],
+            "lean_version": "4.31.0",
+            "owner_modules": ["Example.Root"],
+            "root_declarations": ["Example.safe"],
+            "root_module": "Example.Root",
+            "schema_id": "poo-flow.lean-declaration-closure.v1",
+        }
+    )
+    source = LeanOwnerSource(
+        module="Example.Root",
+        path=source_path,
+        owner_path="Example/Root.lean",
+        source_digest="sha256:" + "a" * 64,
+    )
+
+    envelope = axle_exact_closure._compose_owner_sources(closure, (source,))
+
+    assert "universe proof_u" in envelope
+    assert "ProofBase.Type.{proof_u}" not in envelope
+    assert "axiom ProofBase.Type : Type proof_u" in envelope
+    assert "abbrev ProofBase.Alias : Type := String" in envelope
+    assert "def ProofBase.Defined : Type := Nat" in envelope
+    assert "axiom ProofBase.instReprType : Repr ProofBase.Type" in envelope
+    assert "attribute [local instance] ProofBase.instReprType" in envelope
+    assert "noncomputable section" in envelope

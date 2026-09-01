@@ -53,6 +53,12 @@ def bundle() -> IndependentDeclarationBundle:
         lean_toolchain="leanprover/lean4:v4.31.0",
         axle_environment=environment(),
         resolved_sources=(source(),),
+        proof_base_imports=(),
+        proof_base_interface_digest=(
+            "sha256:"
+            "430d7aa9516de4639b168ff4eed0cfead7af8113a89f7c738872242fbc067237"
+        ),
+        proof_base_declarations=(),
         declarations=(
             declaration("Enterprise.Test.base"),
             declaration(
@@ -67,6 +73,80 @@ def bundle() -> IndependentDeclarationBundle:
             "Enterprise.Test.base = 1 := rfl\n"
         ),
     )
+
+
+def test_proof_base_interface_is_disjoint_and_dependency_complete() -> None:
+    from dataclasses import replace
+
+    from poo_flow_proof.independent_bundle import (
+        ProofBaseInterfaceDeclarationIdentity,
+        canonical_proof_base_interface_digest,
+    )
+
+    proof_base_declarations = (
+        ProofBaseInterfaceDeclarationIdentity(
+            name="ProofBase.Interface",
+            kind="axiom",
+            level_params=(),
+            type_source="Type",
+            value_source=None,
+        ),
+    )
+    value = replace(
+        bundle(),
+        proof_base_imports=("PooFlowProof.ProofBase",),
+        proof_base_interface_digest=canonical_proof_base_interface_digest(
+            ("PooFlowProof.ProofBase",),
+            proof_base_declarations,
+        ),
+        proof_base_declarations=proof_base_declarations,
+        declarations=(
+            declaration(
+                "Enterprise.Test.base",
+                ("ProofBase.Interface",),
+            ),
+            declaration(
+                "Enterprise.Test.safe",
+                ("Enterprise.Test.base",),
+            ),
+        ),
+    )
+
+    manifest = value.canonical_manifest()
+    assert manifest["proof_base_imports"] == ["PooFlowProof.ProofBase"]
+    assert manifest["proof_base_interface_digest"] == (
+        canonical_proof_base_interface_digest(
+            ("PooFlowProof.ProofBase",),
+            proof_base_declarations,
+        )
+    )
+    assert manifest["proof_base_declarations"] == [
+        {
+            "kind": "axiom",
+            "level_params": [],
+            "local_dependencies": [],
+            "name": "ProofBase.Interface",
+            "type_source": "Type",
+            "value_source": None,
+        }
+    ]
+    assert {
+        declaration_record["name"]
+        for declaration_record in manifest["declarations"]
+    } == {"Enterprise.Test.base", "Enterprise.Test.safe"}
+
+
+def test_proof_base_interface_digest_mismatch_fails_closed() -> None:
+    from dataclasses import replace
+
+    with pytest.raises(
+        BundleValidationError,
+        match="proof-base-interface-digest-mismatch",
+    ):
+        replace(
+            bundle(),
+            proof_base_interface_digest=f"sha256:{'f' * 64}",
+        )
 
 
 def test_bundle_digest_is_deterministic_for_canonical_identity() -> None:
@@ -202,4 +282,3 @@ def test_invalid_digest_fails_closed() -> None:
             source_tree_digest="latest",
             lake_manifest_digest=DIGEST_B,
         )
-

@@ -1,0 +1,416 @@
+#+title: Four-Authority-Layer Scientific Assurance Cycle
+
+* Status
+
+- Status: normative RFC and Lean closure model implemented
+- Owner: =poo-flow=
+- Scope: assurance lifecycle for composable architecture-semantics packages
+- Engine boundary: this RFC governs evidence and authority; it does not impose
+  a fixed security-layer ontology on POO Flow
+
+* Decision
+
+POO Flow assurance uses four correctness-authoritative layers:
+
+1. *Normative layer* -- Org RFCs state the claim, assumptions, failure
+   semantics, owner, and observable acceptance criteria.
+2. *Formal layer* -- Lean states whether that claim follows from explicit
+   assumptions, preserves counterexamples, and rejects an inconsistent model.
+3. *Executable refinement layer* -- the POO-native Scheme reference transition
+   and the Rust/Python SDK or runtime emit traces that refine the formal
+   transition relation.
+4. *Empirical qualification layer* -- red-team counterexamples, property and
+   fuzz tests, differential runs, independent replay, fault injection, workload
+   experiments, and operational observations qualify the executable claim in a
+   declared environment.
+
+The presentation layer is derived:
+
+- Mermaid projects relationships and flows;
+- Typst projects durable human-readable mathematics and reports.
+
+Neither presentation form is a correctness authority. A diagram or rendered
+formula cannot create a normative commitment, discharge a Lean theorem, prove
+trace refinement, or qualify runtime behavior.
+
+* Authority and feedback direction
+
+The forward qualification path is:
+
+#+begin_src text
+Org claim -> Lean declaration -> Scheme/Rust/Python trace -> empirical receipt
+#+end_src
+
+The learning path runs in the opposite direction. An empirical counterexample
+is retained as evidence and MUST reopen the affected executable, formal, and
+normative claims until one of these explicit outcomes is published:
+
+- the implementation is repaired while the claim and theorem remain valid;
+- the formal assumptions or transition relation are refined;
+- the RFC commitment is narrowed or replaced;
+- the sample is shown inapplicable by independently replayable evidence.
+
+An LLM detection hint, Mermaid revision, or Typst edit is not a valid closure
+action.
+
+* Cross-layer identity envelope
+
+Every closure candidate MUST bind these identities in one evidence root:
+
+- =rfcClaimId= and =rfcRevision=;
+- =leanDeclarationSetId= and compiled theorem-set digest;
+- =referenceTransitionId= for the POO-native Scheme semantics;
+- =implementationArtifactId= for each Rust/Python implementation under test;
+- =traceSchemaId= and =traceRoot=;
+- =empiricalRunId=, environment identity, sample-set identity, and receipt root;
+- presentation artifact identities, when present, as non-authoritative
+  projections.
+
+The normalized agent action/evidence envelope remains the observation boundary.
+Provider-specific Cursor, Claude, Codex, or tool logs are adapters into that
+envelope; Lean does not parse their native log formats.
+
+* Closure states
+
+Closure is reported per claim, never inferred from repository-wide success:
+
+- =normative-only=: an RFC claim exists;
+- =formally-closed=: the bound Lean declarations compile without prohibited
+  proof fallback;
+- =refinement-qualified=: bound executable traces satisfy the declared formal
+  transition/refinement relation;
+- =empirically-qualified=: the declared empirical campaign completed and its
+  receipts replay independently;
+- =four-layer-closed=: all four bindings hold and no applicable counterexample
+  remains open;
+- =unknown=: required evidence is missing or cannot be replayed;
+- =reopened=: a new applicable counterexample invalidates a previous closure.
+
+Passing Lean alone MUST NOT be reported as four-layer closure. Passing unit tests
+alone MUST NOT be reported as executable refinement or empirical qualification.
+
+* Executable refinement obligations
+
+The executable layer is not ordinary implementation parity. For each accepted
+transition, its trace MUST establish at least:
+
+- pre-state and post-state identities;
+- action, capability, tool, policy, and evidence-root bindings;
+- formal transition or refinement-rule identity;
+- contained effects and observed effect-domain coverage;
+- deterministic normalization sufficient for independent replay;
+- explicit unknown or fail-closed disposition when a required binding is absent.
+
+The public construction surface remains POO-native and functional. Scheme owns
+the reference semantic object/combinator surface; Rust and Python may implement
+runtime and SDK refinements. Raw JSON is an evidence encoding, not the ordinary
+module API.
+
+* Empirical qualification obligations
+
+The empirical layer answers questions that deductive proof alone does not:
+
+- whether deployed adapters actually emit the assumed evidence;
+- whether implementation traces conform under adversarial and malformed input;
+- whether recovery, timeout, partial failure, concurrency, and replay behave as
+  modeled;
+- whether real workload distributions expose unknown regions or operational
+  limits;
+- whether a historical decision can be reproduced from its bundle without live
+  provider state.
+
+Every campaign declares its population or corpus, environment, configuration,
+artifact digests, oracle, seeds where applicable, and known exclusions. Results
+without those bindings are observations, not qualification receipts.
+
+* Typed refinement and empirical admission contract
+
+The formal executable-refinement boundary is not a loose collection of booleans.
+For each candidate trace it binds:
+
+- RFC claim and Lean declaration-set identities;
+- formal transition identity;
+- pre-state and post-state roots;
+- normalized action, capability, and tool identities;
+- policy and effect-domain roots;
+- an evidence root whenever the formal transition requires evidence.
+
+Any mismatch is an admission failure. Missing required evidence is =unknown= and
+fails closed; it is not treated as a negative empirical sample or a successful
+formal trace.
+
+An empirical qualification receipt separately binds the executable trace root,
+implementation artifact, environment, sample set, oracle, and run identity. It
+is admitted only when independent replay succeeds and no applicable
+counterexample remains open.
+
+* Required metrics
+
+Each claim family reports at least:
+
+- =proofCoverage=: executions inside the formally modeled and proven region;
+- =unknownEscalationRate=: executions that fail closed or require escalation
+  because evidence or modeled coverage is insufficient;
+- =replaySuccess=: historical decisions independently reproduced from bound
+  bundles;
+- =refinementCoverage=: executable transition kinds with verified formal-trace
+  refinement;
+- =counterexampleStatus=: open, repaired, excluded with evidence, or promoted to
+  a versioned regression;
+- empirical workload, latency, failure, and resource metrics relevant to the
+  declared campaign.
+
+Precision and recall may be reported for a detector, but cannot replace these
+assurance metrics.
+
+* Red-team-to-proof regression compilation
+
+A high-value Explorer, ADR-Bench, or production counterexample SHOULD produce:
+
+1. a minimized and versioned counterexample;
+2. an affected RFC claim and assumption analysis;
+3. a policy or semantic refinement when the old claim was incomplete;
+4. a Lean theorem, countermodel, or property change;
+5. a Scheme/Rust/Python executable regression trace;
+6. an empirical replay bundle and versioned receipt.
+
+The regression is closed only at the highest layer whose bound receipt exists.
+
+* Presentation projection contract
+
+Mermaid and Typst artifacts MUST reference stable claim, theorem, trace, and run
+identities when depicting them. Generators SHOULD derive presentation artifacts
+from authoritative metadata. A stale or divergent presentation is a reporting
+defect; it does not mutate the underlying correctness state.
+
+* Current application to AI security
+
+The embodied-AI binding of this cycle is owned by
+[[file:20.07-embodied-ai-security-system-engineering-design-proposition.org][20.07 Embodied AI Security System Engineering Design Proposition]].  =20.07=
+uses the four authority layers to keep normative claims, Lean closure,
+executable refinement, and empirical qualification distinct; it also requires
+system change to invalidate stale conclusions and regenerate affected
+obligations.  AI-generated analysis remains provider-attributed candidate input
+and MUST NOT serve as effect authorization, verification discharge, or
+residual-risk acceptance authority.
+
+For the data and knowledge guarantee package in RFC 20.05:
+
+- normative: RFC commitments exist;
+- formal: the initial thirteen Lean invariants compile in the focused module;
+- executable refinement: Scheme/Rust/Python transition-trace qualification is
+  not yet reported;
+- empirical: adversarial, replay, and workload qualification receipts are not
+  yet reported.
+
+Therefore the current package is formally closed for the stated model, but is
+not four-layer closed.
+
+* 20.07 cross-layer claim binding
+
+The normative owner is
+[[file:20.07-embodied-ai-security-system-engineering-design-proposition.org][20.07 Embodied AI Security System Engineering Design Proposition]].  Each claim
+below begins in =normative-only= state.  A later owner MUST bind the exact Lean
+declaration set, reference transition, implementation artifact, trace root, and
+empirical run identities before advancing that claim to =formally-closed=,
+=refinement-qualified=, or =four-layer-closed=.
+
+The absence of one of those identities is an open obligation, not permission to
+reuse another claim's proof or receipt.
+
+** Shared formal framework binding
+
+- Lean module identity ::
+  =PooFlowProof.Enterprise.AISecurityFourAuthorityLayerClosure=
+- Verified command ::
+  =lake env lean PooFlowProof/Enterprise/AISecurityFourAuthorityLayerClosure.lean=
+- Current receipt :: exit =0= in =5.2303s= with no warnings or errors.
+- Declaration scope :: =AuthorityChain=, =FourLayerClosed=, authority-layer
+  necessity theorems, open-counterexample reopening, and presentation
+  non-substitution theorems.
+- Binding role :: shared formal framework for reporting and reopening claim-level
+  closure; it is not the claim-specific Lean declaration set of any =EASE= claim.
+
+A compiler-owned declaration inspection found no =EASE-001= through =EASE-005=
+identifiers in this module.  Consequently, the successful module check does not
+advance any claim beyond =normative-only=.  Each claim still requires a distinct
+declaration-set identity that instantiates the shared framework with its own
+effect, authority, relation, change, or provider-non-authority semantics.
+
+** EASE-001 — constrained system effect
+- Formal identity ::
+  =PooFlowProof.Enterprise.AISecurityEmbodiedConstrainedSystemEffectClosure.ease001FormalBound=
+- Countermodel identity :: =authorizedEffectAloneDoesNotClose=
+- Reference transition identity ::
+  =python://src/poo_flow_proof/embodied_ai_constrained_effect.py#item/function/evaluate_constrained_effect=
+- Implementation artifact identity ::
+  =src/poo_flow_proof/embodied_ai_constrained_effect.py= at
+  =sha256:34a7088bce66839fdd7c0f8abbde5143bf07c9a6dea8252606aad138653ae0d8=
+- Trace schema/root :: =poo-flow.ai-security.ease001-replay-receipt.v1= /
+  =sha256:d519efdc9cd22e189ce990bb329c14f3f26f38b7cb93c948dbafc7440753ef63=
+- Reused owners :: =PooFlowProof.PooC3.authorizedEffectL1=,
+  =PromotionTransactionRecovery.closedDuplicateRequiresPriorCommit=,
+  =PromotionTransactionRecovery.closedRollbackRestoresCompleteEffectObservation=,
+  and =EffectDomainCoverage.coveredRollbackAgreesOnEveryPlanEffect=
+
+- Normative identity :: =20.07/the-security-subject-is-the-constrained-system-effect=
+- Formal obligation :: prove that admitted effects preserve declared authority,
+  preconditions, prohibited-outcome constraints, and recovery invariants.
+- Executable obligation :: bind an effect transition and receipt checker that
+  distinguishes completion, safe non-completion, compensation, and fenced replay.
+- Empirical obligation :: qualify the transition against a named controller,
+  actuator path, operating scenario, fault or attack injection, and run identity.
+- Current state :: =refinement-qualified=; empirical-run identity remains
+  unbound.
+
+** EASE-002 — authority-bearing declaration
+
+- Normative identity :: =20.07/a-security-conclusion-is-an-authority-bearing-declaration=
+- Formal identity ::
+  =PooFlowProof.Enterprise.AISecurityEmbodiedAuthorityBearingDeclarationClosure.ease002FormalBound=
+- Countermodel identity ::
+  =roleOnlyAdmissionAcceptsForgedProvider= and
+  =roleDeclarationDoesNotImplyAuthority=
+- Reference transition identity ::
+  =python://src/poo_flow_proof/embodied_ai_authority_declaration.py#item/function/evaluate_authority_declaration_admission=
+- Implementation artifact identity ::
+  =src/poo_flow_proof/embodied_ai_authority_declaration.py= at
+  =sha256:91383a6a4ba629eda32e53094a4da6a4532e29f1735bcae26090f7bb49834891=
+- Trace schema/root :: =poo-flow.ai-security.ease002-replay-receipt.v1= /
+  =sha256:33924ee01743bebeae0ed9c350e4d245b8d906dc2284277722e488c8d90ab905=
+- Reused authority owners ::
+  =CedarDualEngineAuthorization.closedDualDecisionProvidesSubjectEquality=,
+  =CedarDualEngineAuthorization.closedDualDecisionProvidesDistinctEngines=, and
+  =HumanAuthorityAccountability.humanPromotionClosureProvidesBoundAuthority=
+- Formal boundary :: role/declaration/provider identity does not confer
+  execution authorization, verification discharge, or residual-risk acceptance;
+  closure additionally requires independent authority identity, exact subject
+  binding, receipt validation, and current context.
+- Formal obligation :: prove that declaration, execution, evidence, verification,
+  acceptance, and recovery authorities cannot be silently substituted.
+- Executable obligation :: bind authority issuance, handoff, revocation, freshness,
+  fencing, and receipt-validation transitions.
+- Empirical obligation :: retain the accountable human or organizational authority
+  and demonstrate a real handoff or emergency-intervention scenario.
+- Current state :: =refinement-qualified=; empirical-run identity remains
+  unbound.
+
+** EASE-003 — computable typed security relation graph
+- Formal identity ::
+  =PooFlowProof.Enterprise.AISecurityEmbodiedTypedRelationGraphClosure.ease003FormalBound=
+- Countermodel identity :: =labelOnlyAdmissionAcceptsIllTypedRelation= and
+  =typedGraphRejectsIllTypedRelation=
+- Reference transition identity ::
+  =poo_flow_proof.embodied_ai_security_relation_graph.validate_typed_relation_graph=
+- Implementation artifact identity ::
+  =src/poo_flow_proof/embodied_ai_security_relation_graph.py= at
+  =sha256:05516fac56efd141a444e38cf36db2e87bc89f6c13dcad5f7c5393367dc0c05b=
+
+- Normative identity :: =20.07/the-security-digital-thread-is-a-computable-typed-relation-graph=
+- Formal obligation :: prove typed derivation, dependency, mitigation,
+  verification, contradiction, supersession, acceptance, and invalidation rules.
+- Executable obligation :: bind a graph projection that detects missing guarantees,
+  incompatible assumptions, withdrawn contributions, and evidence gaps.
+- Empirical obligation :: replay at least one cross-layer attack or failure path
+  from initiating condition to physical or business consequence and residual risk.
+- Current state :: =refinement-qualified=; empirical-run identity remains
+  unbound.
+
+** EASE-004 — change-driven assurance reopening
+- Reference transition identity ::
+  =poo_flow_proof.embodied_ai_security_relation_graph.project_change_impact=
+- Implementation artifact identity ::
+  =src/poo_flow_proof/embodied_ai_security_relation_graph.py= at
+  =sha256:05516fac56efd141a444e38cf36db2e87bc89f6c13dcad5f7c5393367dc0c05b=
+- Trace schema/root :: =poo-flow.ai-security.change-impact-receipt.v1= /
+  =sha256:314f2a57fe86d21c2bdd77d7ebd0cf271679a92b25a585ac30e85ef0b0de5da5=
+
+- Normative identity :: =20.07/system-change-drives-invalidation-and-obligation-regeneration=
+- Lean declaration set ::
+  =PooFlowProof.Enterprise.AISecurityEmbodiedChangeDrivenAssuranceReopeningClosure=
+- Formal verification receipt ::
+  =lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedChangeDrivenAssuranceReopeningClosure.lean=
+  completed with exit =0= in approximately =8.1s= and no warnings or errors;
+  =lake build PooFlowProof.Enterprise= completed =477= jobs with exit =0=.
+- Formal obligation :: prove that affected claims cannot remain closed when their
+  assumptions, authority context, publication head, or evidence envelope changes.
+- Executable obligation :: bind change-impact projection, stale-evidence rejection,
+  and deterministic verification-obligation regeneration.
+- Empirical obligation :: change a named system element and retain the before/after
+  trace roots, regenerated obligations, rerun evidence, and renewed risk decision.
+- Formal counterexample :: =accumulationOnlyCounterexample= demonstrates that all
+  four evidence-layer flags can remain true after the architecture revision changes.
+- Formal closure :: =ease004FormalBound= proves that any bound/current context
+  mismatch prevents =contextBoundClosed= regardless of accumulated evidence.
+- Current state :: =refinement-qualified=; empirical-run identity remains
+  unbound.
+
+** EASE-005 — AI provider non-authority
+
+- Normative identity :: =20.07/ai-is-an-analysis-provider-not-a-risk-acceptance-authority=
+- Lean declaration set ::
+  =PooFlowProof.Enterprise.AISecurityEmbodiedAIProviderNonAuthorityClosure=
+- Formal verification receipt ::
+  =lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedAIProviderNonAuthorityClosure.lean=
+  completed with exit =0= in =5.1985s= and no warnings or errors.
+- Formal obligation :: prove that provider output cannot authorize an effect,
+  discharge verification, attest implementation, or accept residual risk.
+- Executable obligation :: bind provider provenance and candidate-review flow to an
+  independently identified execution, verification, or acceptance authority.
+- Reference transition identity ::
+  =python://src/poo_flow_proof/embodied_ai_provider_non_authority.py#item/function/evaluate_provider_admission=
+- Implementation artifact ::
+  =src/poo_flow_proof/embodied_ai_provider_non_authority.py= with digest
+  =sha256:b31cbf63be0c7fd0c4acf9ea001449f9f61bc67d8ac8a265305cb3d70bceda0b=.
+- Replay artifact ::
+  =src/poo_flow_proof/embodied_ai_provider_non_authority_replay.py=
+- Independent replay action ::
+  =uv run python -m poo_flow_proof.embodied_ai_provider_non_authority_replay=
+- Trace root ::
+  =sha256:83bc876033e40ab5bac81326b12bf9185bfe7a53d78bd7157fb63ce442b93cd0=
+- Executable verification receipt :: two independent process runs produced
+  byte-identical canonical JSON; =8= focused tests passed in =0.07s=; focused
+  Ruff and diff checks passed.  The trace retains three rejected provider cases
+  and one admitted independent-human verification case.
+- Tooling evidence gap :: the ASP exact callable-skeleton projection for the
+  reference-transition selector failed with =Operation not permitted (os error 1)=.
+  The executable receipt is therefore bound by its exact replay action, artifact
+  digest, and trace root, not by a successful ASP selector-projection receipt.
+- Empirical obligation :: retain provider, model, input context, generation version,
+  human decision, and resulting run or rejection receipt.
+- Formal counterexample :: =roleOnlyAdmissionAcceptsForgedProvider= demonstrates
+  that checking a role grant without checking issuer kind admits a forged AI
+  provider envelope.
+- Formal closure :: =ease005FormalBound= proves issuer-aware rejection for effect
+  authorization, verification discharge, and residual-risk acceptance.
+- Current state :: =refinement-qualified=; the empirical-run identity remains
+  unbound, and the ASP selector-projection receipt remains an explicit tooling gap.
+
+** Admission rule
+
+Closure MUST be reported per =EASE-001= through =EASE-005=.  A bundle-level label
+MUST NOT exceed the weakest claim state.  Empirical counterexamples reopen the
+affected claim and every dependent claim; they MUST NOT be recorded only as a
+provider log, presentation note, or detached issue.
+
+* Lean closure
+
+The authority rules are modeled by:
+
+- =PooFlowProof.Enterprise.AISecurityFourAuthorityLayerClosure=
+- =PooFlowProof.Enterprise.AISecurityExecutableRefinementContractClosure=
+
+The proof establishes that:
+
+- full closure requires every authoritative layer;
+- presentation evidence cannot substitute for any authoritative layer;
+- an open applicable counterexample prevents full closure;
+- four bound layers with no open counterexample are sufficient for the abstract
+  closure predicate.
+
+This is a proof about the closure criterion. It is not evidence that the pending
+executable or empirical receipts already exist.
+
+The typed refinement closure additionally proves that every cross-layer identity
+mismatch and missing required evidence fails closed, and that replay failure or
+an open applicable counterexample prevents empirical qualification.

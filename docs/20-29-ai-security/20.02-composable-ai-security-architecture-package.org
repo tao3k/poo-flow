@@ -364,6 +364,69 @@ The initial Lean/property frontier SHOULD cover:
 These obligations specialize existing proof owners where possible.  They do
 not justify a monolithic new proof owner.
 
+* Current implementation receipt
+
+The first admitted implementation is an isolated Lean model:
+
+- owner:
+  =PooFlowProof.Enterprise.AISecurityArchitectureCompositionClosure=;
+- engine impact: none;
+- public API impact: none;
+- Scheme runtime impact: none;
+- mapping statuses:
+  exact, refinement, projection, partial, conflicting, and unknown;
+- pure composition properties:
+  deterministic value construction, left/right semantic preservation,
+  capability non-amplification, omitted-claim rejection, conflict rejection,
+  and proof-required unknown rejection;
+- runtime projection properties:
+  bound bundle evidence, authorized-effect L1 evidence, and mismatch rejection.
+
+Verification:
+
+- focused Lean: 43 jobs passed;
+- Enterprise aggregate: 223 jobs passed;
+- full Lean: 295 jobs passed;
+
+The parser-owned recovery path remains blocked before an owner-side source
+projection can be trusted. Owner-workspace health confirms that the installed
+binary receipt is current at digest
+=664942dfd309d1ff34c6c76ea0a86daf5f46d4241de890ba26a25c685b11df6b=,
+and =asp hook doctor= confirms that the =poo-flow= hook contract and binary
+fingerprint match. The remaining failure is resident-control state:
+=asp healthcheck= reports a global transport-contract mismatch, and after the
+old global daemon and unreachable =poo-flow= resident were terminated with
+=TERM=, a new workspace resident was started but exact query still reported
+that its elected-owner endpoint was not reachable. Until the resident
+control-plane owner reconciles this endpoint state, this package must not infer
+an owner-side Lean or Gerbil change from failed exact-selector projection.
+
+Direct provider evidence narrows the remaining AXLE recovery defect further.
+The activated =py-harness= can project the exact
+=build_exact_axle_closure= selector and exposes the bounded pipeline
+=_compose_owner_sources -> owner-source-extract -> _require_clean ->
+_source_declaration_aliases -> source_declaration_closure=. The generic
+=asp query= dispatcher incorrectly routes that Python selector to the Gerbil
+=gslph= launcher, which then attempts to resolve a nonexistent =./python=
+source path. The Python =search pipe= route independently fails project
+resolution against a nonexistent =project-resolution-stdin= root. These are
+versioned provider-dispatch and project-resolution regression inputs; they do
+not authorize weakening the Lean runtime closure or duplicating its evidence
+predicates inside this package.
+- pure architecture AXLE:
+  53 preflight declarations across 2 owner sources, 22 exact declarations,
+  =verification.okay=true=;
+- pure AXLE closure digest:
+  =sha256:854ab9335194f1f8aebabe073b52cd0df9a691c7a6662d2da4e46fb0672983b7=;
+- pure independent bundle digest:
+  =sha256:cbfafb308e1b9aa6f37a7e1f60796bf4ae7479b02339b3774de6c6be92c79bab=.
+
+The runtime-projection AXLE root remains fail closed.  Preflight found
+85 declarations across 5 owner sources, but composed-owner extraction rejected
+the =AuthorizedEffectEvidenceFacts= and =authorizedEffectL1= references as
+unknown identifiers.  The Lean project build is green; no fallback, timeout
+increase, or duplicate local evidence predicate is admitted.
+
 * Implementation stages
 
 ** Stage 0 — catalog and RFC
@@ -382,9 +445,9 @@ not justify a monolithic new proof owner.
 
 ** Stage 2 — proof model
 
-- [ ] Add mapping/composition Lean model.
-- [ ] Prove identity, owner, capability, conflict, and unknown invariants.
-- [ ] Add positive and negative property fixtures.
+- [X] Add mapping/composition Lean model.
+- [X] Prove identity, owner, capability, conflict, and unknown invariants.
+- [X] Add positive and negative property fixtures.
 
 ** Stage 3 — architecture packages
 
@@ -420,11 +483,19 @@ not justify a monolithic new proof owner.
   distinct.
 - [ ] Internal semantic implementation exists.
 - [ ] Focused composition/property tests pass.
-- [ ] Lean mapping obligations pass.
+- [X] Lean mapping obligations pass.
 - [ ] At least three differently shaped external architectures compose.
 - [ ] Enterprise acceptance receipt independently replays.
 
 * Next owner
+
+The embodied-AI system-engineering interpretation of these architecture
+semantics is owned by [[file:20.07-embodied-ai-security-system-engineering-design-proposition.org][20.07 Embodied AI Security System Engineering Design Proposition]].
+This document remains the owner of architecture-package identity, relation,
+mapping, conflict, and projection semantics.  =20.07= normatively projects those
+semantics onto authority-governed system effects, typed assurance relations, and
+change-driven evidence invalidation without moving effect execution or runtime
+coordination into the architecture package itself.
 
 Implementation admission requires a focused audit of the existing POO
 module/profile composition implementation.  The next change should be an

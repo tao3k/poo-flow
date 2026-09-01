@@ -1,0 +1,53 @@
+* Single-executor control flow and toolchain gate
+
+#+begin_src mermaid
+flowchart TD
+  E["Caller"] --> J{"Maintained just recipe?"}
+  J -->|"yes"| JR["Resolve a stable Bazel target alias"]
+  JR --> B{"Bazel-owned launch?"}
+  J -->|"no"| B
+  B -->|"yes"| BT["host_system.bzl maps Bazel host OS"]
+  B -->|"no"| ST["Direct wrapper resolves Darwin or Linux policy"]
+  BT --> S{"Declared system"}
+  S -->|"darwin"| H["Resolve active Xcode, native tools, and hw.memsize"]
+  S -->|"linux"| LH["Preserve host environment and derive memory from getconf"]
+  S -->|"unsupported"| U["Fail closed before Gerbil execution"]
+  ST -->|"unsupported"| U
+  H --> GT["Private ToolchainInfo and canonical host JSON receipt"]
+  LH --> GT
+  GT --> RT["registered_toolchain constrained to the host OS"]
+  MR["MODULE.bazel register_toolchains"] --> RT
+  RT --> TR["Compile and test rules resolve ctx.toolchains"]
+  TR --> BC["//scheme:compile declares sources and three outputs"]
+  TR --> RC["Runtime-C contract, benchmark, and script-test rules"]
+  RC --> RR["Generated C contract and native test receipts"]
+  BC --> X["Normalized gxpkg env runs build.ss compile once"]
+  ST -->|"supported"| X
+  X --> P{"Explicit tight RSS cap?"}
+  P -->|"no"| TP["Building Framework topology policy"]
+  TP --> F["Flatten dependency groups into one ordered window"]
+  P -->|"yes"| AP["POO immutable adaptive controller"]
+  AP --> W["Capacity-capped geometric dependency-ordered window"]
+  F --> M["One std/make coordinator session"]
+  W --> M
+  M --> I["Coordinator expands modules and serializes imports"]
+  I --> Q["Native compile jobs enter upstream pending queue"]
+  Q --> D["std/make drains and joins native jobs"]
+  D --> G["Scheme process-tree guard emits canonical JSON"]
+  G --> C{"Adaptive specs remain?"}
+  C -->|"yes"| N["Derive immutable next controller"]
+  N --> W
+  C -->|"no"| R["Canonical project JSON receipt"]
+  R --> O["Tree artifact, JSON receipt, and complete log"]
+  O --> T["Exclusive custom test rules use gxtest with declared runfiles"]
+  Z["No second executor and no concurrent coordinator"] -. invariant .-> M
+#+end_src
+
+The loop is a Building Framework extension around its existing effect
+boundary.  It does not call =gsc= directly, create a per-spec =gxi= scheduler,
+or overlap multiple =std/make= coordinators.  The toolchain gate does not pin a
+machine-specific Xcode path and does not delete SDK selectors on every OS.  On
+Darwin it preserves an existing non-Nix directory or resolves the active paths
+through =xcode-select= and =xcrun=.  Linux preserves the host environment.
+Every other host system is rejected instead of inheriting Linux behavior by
+accident.

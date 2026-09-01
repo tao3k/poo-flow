@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 exports_files([
     "gerbil-dependencies.MODULE.bazel",
+    "owner-map-build.ss",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
     "tools/validate-runtime-v0-symbol-surface.ss",
 ])

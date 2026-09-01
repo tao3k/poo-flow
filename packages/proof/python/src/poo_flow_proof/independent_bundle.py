@@ -171,12 +171,106 @@ class DeclarationIdentity:
 
 
 @dataclass(frozen=True)
+class ProofBaseInterfaceDeclarationIdentity:
+    name: str
+    kind: str
+    level_params: tuple[str, ...]
+    type_source: str
+    value_source: str | None
+    local_dependencies: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        _require_text(self.name, "proof_base_declaration.name")
+        _require_text(
+            self.kind,
+            f"proof_base_declaration[{self.name}].kind",
+        )
+        _require_text(
+            self.type_source,
+            f"proof_base_declaration[{self.name}].type_source",
+        )
+        if self.value_source is not None:
+            _require_text(
+                self.value_source,
+                f"proof_base_declaration[{self.name}].value_source",
+            )
+        if len(set(self.level_params)) != len(self.level_params):
+            raise BundleValidationError(
+                "proof-base-duplicate-level-parameter",
+                self.name,
+            )
+        for level_param in self.level_params:
+            _require_text(
+                level_param,
+                f"proof_base_declaration[{self.name}].level_params",
+            )
+        if self.name in self.local_dependencies:
+            raise BundleValidationError(
+                "proof-base-self-dependency",
+                self.name,
+            )
+        if len(set(self.local_dependencies)) != len(self.local_dependencies):
+            raise BundleValidationError(
+                "proof-base-duplicate-dependency",
+                self.name,
+            )
+        for dependency in self.local_dependencies:
+            _require_text(
+                dependency,
+                f"proof_base_declaration[{self.name}].local_dependencies",
+            )
+
+    def canonical_record(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind,
+            "level_params": list(self.level_params),
+            "local_dependencies": sorted(self.local_dependencies),
+            "name": self.name,
+            "type_source": self.type_source,
+            "value_source": self.value_source,
+        }
+
+    def canonical_interface_record(self) -> dict[str, Any]:
+        return {
+            "level_params": list(self.level_params),
+            "name": self.name,
+            "type_source": self.type_source,
+            "value_source": self.value_source,
+        }
+
+
+def canonical_proof_base_interface_digest(
+    proof_base_imports: tuple[str, ...],
+    proof_base_declarations: tuple[
+        ProofBaseInterfaceDeclarationIdentity, ...
+    ],
+) -> str:
+    payload = json.dumps(
+        {
+            "declarations": [
+                declaration.canonical_interface_record()
+                for declaration in proof_base_declarations
+            ],
+            "imports": list(proof_base_imports),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return _sha256(payload)
+
+
+@dataclass(frozen=True)
 class IndependentDeclarationBundle:
     root_module: str
     root_declarations: tuple[str, ...]
     lean_toolchain: str
     axle_environment: AxleEnvironmentIdentity
     resolved_sources: tuple[ResolvedSourceIdentity, ...]
+    proof_base_imports: tuple[str, ...]
+    proof_base_interface_digest: str
+    proof_base_declarations: tuple[
+        ProofBaseInterfaceDeclarationIdentity, ...
+    ]
     declarations: tuple[DeclarationIdentity, ...]
     canonical_source: str
     schema_id: str = SCHEMA_ID
@@ -215,20 +309,67 @@ class IndependentDeclarationBundle:
                 "ambiguous-resolved-source",
                 self.root_module,
             )
+        if len(set(self.proof_base_imports)) != len(self.proof_base_imports):
+            raise BundleValidationError(
+                "duplicate-proof-base-import",
+                self.root_module,
+            )
+        for proof_base_import in self.proof_base_imports:
+            _require_text(proof_base_import, "proof_base_imports")
+        _require_sha256(
+            self.proof_base_interface_digest,
+            "proof_base_interface_digest",
+        )
+        if bool(self.proof_base_imports) != bool(self.proof_base_declarations):
+            raise BundleValidationError(
+                "proof-base-interface-mismatch",
+                self.root_module,
+            )
+        computed_proof_base_interface_digest = (
+            canonical_proof_base_interface_digest(
+                self.proof_base_imports,
+                self.proof_base_declarations,
+            )
+        )
+        if (
+            self.proof_base_interface_digest
+            != computed_proof_base_interface_digest
+        ):
+            raise BundleValidationError(
+                "proof-base-interface-digest-mismatch",
+                self.root_module,
+            )
         if not self.declarations:
             raise BundleValidationError(
                 "missing-declaration-closure",
                 self.root_module,
             )
+        proof_base_declaration_names = [
+            declaration.name for declaration in self.proof_base_declarations
+        ]
         declaration_names = [
             declaration.name for declaration in self.declarations
         ]
+        if len(set(proof_base_declaration_names)) != len(
+            proof_base_declaration_names
+        ):
+            raise BundleValidationError(
+                "duplicate-proof-base-declaration",
+                self.root_module,
+            )
         if len(set(declaration_names)) != len(declaration_names):
             raise BundleValidationError(
                 "duplicate-declaration",
                 self.root_module,
             )
+        proof_base_declaration_set = set(proof_base_declaration_names)
         declaration_set = set(declaration_names)
+        if proof_base_declaration_set & declaration_set:
+            raise BundleValidationError(
+                "proof-base-source-declaration-overlap",
+                self.root_module,
+            )
+        complete_declaration_set = proof_base_declaration_set | declaration_set
         for root in self.root_declarations:
             if root not in declaration_set:
                 raise BundleValidationError(
@@ -236,9 +377,13 @@ class IndependentDeclarationBundle:
                     root,
                 )
         already_emitted: set[str] = set()
-        for declaration in self.declarations:
+        ordered_declarations = (
+            *self.proof_base_declarations,
+            *self.declarations,
+        )
+        for declaration in ordered_declarations:
             for dependency in declaration.local_dependencies:
-                if dependency not in declaration_set:
+                if dependency not in complete_declaration_set:
                     raise BundleValidationError(
                         "missing-local-dependency",
                         f"{declaration.name} -> {dependency}",
@@ -264,6 +409,12 @@ class IndependentDeclarationBundle:
                 for declaration in self.declarations
             ],
             "lean_toolchain": self.lean_toolchain,
+            "proof_base_declarations": [
+                declaration.canonical_record()
+                for declaration in self.proof_base_declarations
+            ],
+            "proof_base_imports": sorted(self.proof_base_imports),
+            "proof_base_interface_digest": self.proof_base_interface_digest,
             "resolved_sources": [
                 source.canonical_record()
                 for source in sorted(
@@ -281,4 +432,3 @@ class IndependentDeclarationBundle:
         manifest = _canonical_json(self.canonical_manifest())
         source = self.canonical_source.encode("utf-8")
         return _sha256(manifest + b"\0" + source)
-

@@ -72,6 +72,76 @@ This is a semantic contract, not a request to introduce a separate type DSL.
 
 These responsibilities are POO strategy semantics. They are not branches embedded in =compose=.
 
+** Contextual priority clause
+
+The shallow profile interface may project control priority through one
+hygienic contextual clause:
+
+#+begin_src scheme
+(profile production
+  (priority 10)
+  profile-clause ...)
+#+end_src
+
+=priority= is recognized only by the =profile= parser.  It is not exported as
+a global macro, function, or independently meaningful clause.  An omitted
+priority denotes numeric =0=.  The contextual clause lowers to the ordinary
+priority slot of the resulting profile POO object; no syntax object or
+priority-specific wrapper survives expansion.
+
+The clause admits numeric priority values and the named POO semantic endpoint
+values =profile-priority/default= and =profile-priority/force=.  These
+endpoints are ordinary values, not new public macros.  Numeric ordering,
+equal-priority composition, authority-first admission, and separation from
+native prototype precedence are owned by
+[[file:45-101-typed-module-relation-contribution-composition-conflict-and-withdrawal-algebra.org][Typed
+Module Relation Contribution and Conflict Algebra]].  The admitted value
+family and Contract are owned by
+[[file:45-120-48-profile-priority-value-and-contract-refinement.org][ProfilePriority
+Value and Contract Refinement]].
+
+The macro validates clause shape and rejects duplicate priority clauses during
+expansion.  A literal outside the admitted priority domain also fails during
+expansion.  A non-literal POO value is validated by the profile contract when
+the pure profile object is admitted; the macro does not evaluate it or embed
+runtime policy.
+
+Advanced profile construction and refinement use the native =gerbil-poo=
+object/prototype interface directly.  Both surfaces write the same semantic
+priority slot and therefore produce the same normalized refinement identity
+defined by
+[[file:45-122-poo-dispatch-semantic-plane-candidate-resolution-inherited-continuation-and-observability-contract.org][POO
+Dispatch Semantic Plane and Observability Contract]].
+
+#+begin_src mermaid
+flowchart LR
+  Form["profile form"] -->|"recognizes priority only in profile context"| Parser["Hygienic profile parser"]
+  Parser -->|"omitted clause projects numeric zero"| Default["Profile POO priority slot"]
+  Parser -->|"explicit value projects one admitted semantic priority"| Explicit["Profile POO priority slot"]
+  Parser -.->|"duplicate or invalid literal fails during expansion"| Diagnostic["Actionable syntax diagnostic"]
+  Advanced["Native POO profile refinement"] -->|"writes the same semantic slot"| Explicit
+  Default -->|"enters authority-first priority algebra"| Algebra["POO control-priority merge"]
+  Explicit -->|"enters authority-first priority algebra"| Algebra
+  Algebra -->|"normalizes semantic value rather than syntax"| Key["Profile refinement identity"]
+#+end_src
+
+*** Contextual priority implementation checklist
+
+- [ ] Extend the existing =profile= clause parser instead of exporting
+      =priority=.
+- [ ] Lower an omitted clause to numeric priority =0=.
+- [ ] Lower numeric and admitted semantic endpoint values to the ordinary
+      profile POO priority slot.
+- [ ] Keep =profile-priority/default= and =profile-priority/force= as values,
+      not macros.
+- [ ] Reject duplicate priority clauses during expansion.
+- [ ] Reject an invalid literal with an actionable contextual diagnostic.
+- [ ] Validate non-literal POO priority values through the profile contract
+      without evaluating policy in the macro.
+- [ ] Prove the shallow macro and native POO refinement produce the same
+      normalized profile identity.
+- [ ] Prove =priority= has no standalone public binding.
+
 * Responsibilities of the POO Flow evaluator
 
 The evaluator receives an already constructed composition value and performs:

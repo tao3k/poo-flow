@@ -818,34 +818,150 @@ The corrected policy combines a project safety ceiling with two
 machine-derived limits:
 
 - the absolute process cap is the smaller of
-  =baseline RSS + live allocatable memory= and 5 GiB;
-- the default per-worker reservation is the existing 768 MiB safety floor,
-  with =POO_FLOW_BUILD_MEMORY_PER_WORKER_BYTES= retained as the explicit
-  machine-calibration override.
+  =baseline RSS + live allocatable memory= and the physical-memory-bounded
+  machine cap;
+- the 768 MiB minimum viable project RSS is distinct from the default 2 GiB
+  per-worker reservation, with =POO_FLOW_BUILD_MEMORY_PER_WORKER_BYTES=
+  retained only as an upward machine-calibration override.
 
-The 5 GiB ceiling is a project safety invariant, not a machine-capacity
-estimate.  Live memory may lower it but cannot raise it, and an explicit
-=POO_FLOW_BUILD_MAX_RSS_BYTES= value cannot bypass it.  The worker floor reduces
-parallelism only when the resulting envelope cannot admit all configured
-workers.  An explicit RSS cap below =baseline + safety floor= remains blocked,
-while exact coverage is admitted.
+The former fixed 5632 MiB ceiling was not a valid machine-independent safety
+invariant.  On the current 32 GiB host it rejected the same whole-project
+compile at both three workers and two workers, even though more than 20 GiB was
+available and the separate system headroom remained intact.  Reducing workers
+again would trade away throughput without proving that shared compile memory
+fits the fixed ceiling.
+
+The project cap is now machine-adaptive but still bounded.  Its raw project
+ceiling is the greater of the 5632 MiB project minimum and one quarter of
+physical memory, but the effective machine ceiling is also capped by physical
+memory itself.  This matters on hosts smaller than the project minimum: the
+guard must reject insufficient capacity, not advertise memory that the host
+does not possess.  Live allocatable memory and baseline RSS can only lower the
+admitted cap.  The 768 MiB value remains the minimum viable project RSS, while
+a distinct 2 GiB per-worker reservation controls concurrency.  An environment
+request may raise that reservation but cannot lower the safe default.  Worker
+count remains derived from configured CPU count, admitted memory, reservation,
+and the hard worker ceiling; no fixed =GERBIL_BUILD_CORES= value is introduced.
+
+Memory observations are one evidence envelope, not independent trusted knobs.
+An available-memory observation or override greater than physical memory, or a
+baseline RSS greater than physical memory, is contradictory evidence and MUST
+fail closed with a typed admission reason.  The guard MUST NOT silently clamp
+such evidence and then publish =ready=.
+
+#+begin_src typst :file ../../../.data/156-project-compile-machine-admission.svg
+#set page(width: auto, height: auto, margin: 8pt)
+#table(
+  columns: (auto, auto),
+  inset: 6pt,
+  align: (left, left),
+  [Quantity], [Definition],
+  [Raw project ceiling], [$C_r = max(5632 "MiB", M / 4)$],
+  [Machine ceiling], [$C_m = min(M, C_r)$],
+  [Evidence consistency], [$E = (A_v <= M) and (B <= M)$],
+  [Adaptive RSS cap], [$C = min(C_m, B + max(768 "MiB", A))$],
+  [Effective worker reservation], [$R = max(2048 "MiB", R_r)$],
+  [Admitted workers], [$W = min(W_c, floor(A_a / R), 3)$],
+  [Ready premise], [$"Ready" => E and C <= M$],
+  [Safety premise], [$P_w <= R => W P_w <= A_a$],
+)
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+  SM["Physical system memory"] -->|"one-quarter machine share"| Q["Physical memory / 4"]
+  PM["5632 MiB project minimum"] -->|"lower bound"| RC["Raw project ceiling"]
+  Q -->|"scaling candidate"| RC
+  SM -->|"hard physical upper bound"| MC["Machine RSS ceiling"]
+  RC -->|"min with physical memory"| MC
+  AV["Live available memory"] -->|"subtract system headroom"| AL["Allocatable memory"]
+  BR["Baseline project RSS"] --> AC["Adaptive project cap"]
+  AV -->|"available <= physical"| EC["Evidence consistency gate"]
+  BR -->|"baseline <= physical"| EC
+  SM --> EC
+  AL -->|"live upper bound"| AC
+  MC -->|"machine upper bound"| AC
+  EC -->|"consistent"| AC
+  EC -.->|"contradictory"| BAD["typed blocked-host-pressure"]
+  RR["Requested worker reservation"] -->|"cannot lower 2048 MiB"| ER["Effective reservation"]
+  AC -->|"admitted memory"| WC["Derived worker capacity"]
+  ER -->|"floor admitted / reservation"| WC
+  FC["Fixed 5632 MiB cap"] -.->|"counterexample: safe host compile rejected"| REJ["rss-limit-exceeded"]
+  WC -->|"bounded by CPU and hard worker ceiling"| RUN["Building Framework compile"]
+#+end_src
+
+- [X] Minimum viable project RSS and per-worker peak reservation are distinct
+  quantities.
+- [X] A low environment override cannot weaken the safe worker reservation.
+- [X] The machine ceiling scales to 8192 MiB on a 32 GiB host and remains 5632
+  MiB on an 8 GiB host.
+- [X] The effective machine ceiling never exceeds physical memory; a 1 GiB
+  host cannot advertise the 5632 MiB project minimum.
+- [X] Available-memory or baseline-RSS evidence above physical memory fails
+  closed with a typed reason instead of producing =ready=.
+- [X] Live allocatable memory and baseline RSS remain admission bounds.
+- [X] Worker count remains resource-derived rather than fixed by CI policy.
+
+=ProjectCompileWorkerAdmissionSafetyModel= records the missing proof premises.
+Reservation arithmetic alone does not imply peak safety when actual
+per-worker peak exceeds the declared reservation; the concrete countermodel
+admits three 768 MiB reservations while exceeding the same envelope at a 1700
+MiB peak.  =reservationUpperBoundsPeak= proves the corrected implication when
+the effective reservation is a real peak upper bound.  A second concrete
+countermodel shows that the legacy guard admitted contradictory observations
+(1 GiB physical, 4 GiB available, 2 GiB baseline) and published a 5632 MiB
+envelope.  =machineHardRssCapNeverExceedsPhysical= and
+=guardEnvelopeNeverExceedsPhysical= prove the corrected bound, while explicit
+evidence-consistency reasons reject the contradictory observation before
+execution.  =contradictoryOverrideEvidenceHasExactTypedReasons= fixes the
+reason identity and order, and =admittedMemoryEvidenceIsConsistent= proves that
+an empty evidence-reason list implies both observation bounds.  The model also
+proves that a low environment request cannot lower the safe default and that
+the bounded cap maps 8 GiB to 5632 MiB and 32 GiB to 8192 MiB.
+
+- Worker-admission Model AXLE: status =accepted=; 14 roots; 36 declarations; 0
+  failed declarations; closure digest
+  =sha256:11f0a1da908ea6a319442c8eae1c43885893e7b21297471b5b9b0c04d3176f8a=;
+  source digest
+  =sha256:5b41bb662670fdfaf3c5808bc4d9cbcd920a1075fc5560289d76b5f2ecdcd100=;
+  exact bundle digest
+  =sha256:9c6c146c23d79c125a44e1313451d21600008a33f5f00be19347d479da9645d5=;
+  canonical source digest
+  =sha256:043ee5f20414277a5cb57830540bde819fe7a2d3a37a10a4b27875e496ca2e93=;
+  independent bundle digest
+  =sha256:5055b1b99fc11e492f141fee5477a2b1ba156e4f02e74348056a6a77514bcb90=;
+  source declarations =26=; proof-base imports/declarations =0/0=; roundtrip
+  and theorem proof status =accepted=.
+- Focused Lean: 2 jobs completed with no Lean warnings or errors.
+- Focused Scheme guard target =//scheme:build_api_project_compile_guard_test=:
+  1 Bazel test, 16 cases, 101 checks, all successful.
+- Focused Recipe target completed the whole project compile under the adaptive
+  cap and then passed 1 Bazel test, 9 cases, and 38 checks.
 
 #+begin_src mermaid
 flowchart LR
   GB["gerbil-bazel PR 29"]
   Package["Package actions and fresh host observation"]
   Root["POO Flow build.ss supervisor"]
-  Live["Live available memory minus headroom"]
-  Ceiling["5 GiB project RSS ceiling"]
-  Floor["768 MiB per-worker reservation"]
+  Physical["Physical memory"]
+  Quarter["Physical memory / 4"]
+  Floor["5632 MiB project minimum"]
+  Ceiling["Machine ceiling = max(Floor, Quarter)"]
+  Live["Baseline RSS + live allocatable memory"]
+  Cap["Admitted RSS cap = min(Ceiling, Live)"]
+  Reservation["Worker reservation = max(2 GiB, requested)"]
   Workers["Admitted worker count"]
   Compile["POO Flow root compile"]
 
   GB --> Package
   Package --> Root
-  Live --> Root
-  Ceiling --> Root
-  Floor --> Root
+  Physical --> Quarter
+  Quarter --> Ceiling
+  Floor --> Ceiling
+  Ceiling --> Cap
+  Live --> Cap
+  Cap --> Root
+  Reservation --> Workers
   Root --> Workers
   Workers --> Compile
 #+end_src
@@ -872,8 +988,44 @@ elapsed-ms = 425634
 The runtime stage compiled 381 modules and consumed 415.104 seconds.  This
 receipt proved restored worker admission, but its 18.23 GB effective cap was
 rejected because host availability had been mistaken for the project safety
-limit.  It is not promotion evidence.  A replacement run must report
-=max-rss-bytes <= 5368709120= before PR 12 can close the regression.
+limit.  It is not promotion evidence.  The later fixed-5632-MiB criterion was
+also refuted: it killed the current compile at both three and two workers while
+system headroom remained available.  Replacement evidence must instead bind
+the machine-derived ceiling, live allocatable memory, baseline RSS, effective
+worker reservation, derived worker count, observed peak, and terminal outcome.
+
+The replacement focused compile completed under the machine-adaptive guard and
+published the following native =POO_FLOW_PROJECT_BUILD_RECEIPT=.  For this
+32-GiB host, the versioned formula derives an 8-GiB ceiling; the observed peak
+remained below that ceiling and the action reached =completed=.
+
+#+begin_example
+{
+  "admission-outcome": "ready",
+  "admitted-memory-bytes": 7767228416,
+  "allocatable-memory-bytes": 19499151523,
+  "available-memory-bytes": 21646635171,
+  "baseline-rss-bytes": 822706176,
+  "configured-worker-count": 12,
+  "elapsed-ms": 315441,
+  "max-rss-bytes": 8589934592,
+  "memory-per-worker-bytes": 2147483648,
+  "memory-worker-capacity": 3,
+  "outcome": "completed",
+  "peak-rss-bytes": 6030950400,
+  "requested-max-rss-bytes": 8589934592,
+  "rss-headroom-bytes": 2147483648,
+  "source-identity": {
+    "algorithm": "sha256",
+    "digest": "c849f0e308c4480fb3d0f00f4b31e1ae80eb47df65ae892382e4145ce39b7bc9",
+    "spec-count": 398,
+    "stage-count": 3
+  },
+  "source-identity-materialization-elapsed-ms": 107,
+  "system-memory-bytes": 34359738368,
+  "worker-count": 3
+}
+#+end_example
 
 The GitHub outer timeouts now pass a shorter timeout into the Scheme supervisor
 through =POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS=.  Linux uses 420 seconds inside

@@ -191,8 +191,8 @@
   "moduleExtensions": {
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
-        "bzlTransitiveDigest": "NpLQrEMl3JJmQfmun+2znNbrMxffrVt95hJPTGAI8PQ=",
-        "usagesDigest": "pZCPT9fat68nARSK89qAt5sGw8OUMXH9tbwTMb3Mqm0=",
+        "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
+        "usagesDigest": "ENIcQNDKBiTWWGB7kc+UWXA2As3pQK6+mJ413JYFt7g=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -248,25 +248,25 @@
               ]
             }
           },
-          "gslph_sources": {
+          "asp_gerbil_scheme_sources": {
             "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
               "build_script": "build.ss",
-              "canonical_uri": "https://github.com/tao3k/gerbil-scheme-language-project-harness",
-              "package": "gslph",
-              "revision": "a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
-              "sha256": "de202ddb3b204f4faa461f44df0cfeaa3bea5d77b047e46babc9a1fa51b84838",
-              "strip_prefix": "gerbil-scheme-language-project-harness-a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
+              "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
+              "package": "asp-gerbil-scheme",
+              "revision": "e8d00f54294ead9fead051ef1f618a53dd177640",
+              "sha256": "ca5c73bba8439a2db3a95f6ccb3997bf5b40bad812054dcffaaf542afd3161d4",
+              "strip_prefix": "asp-gerbil-scheme-e8d00f54294ead9fead051ef1f618a53dd177640",
               "urls": [
-                "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/a0ba60a15dd05d95ea89c0506f530f426d3dca1e.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/e8d00f54294ead9fead051ef1f618a53dd177640.tar.gz"
               ]
             }
           }
         }
       },
       "os:osx,arch:aarch64": {
-        "bzlTransitiveDigest": "NpLQrEMl3JJmQfmun+2znNbrMxffrVt95hJPTGAI8PQ=",
-        "usagesDigest": "pZCPT9fat68nARSK89qAt5sGw8OUMXH9tbwTMb3Mqm0=",
+        "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
+        "usagesDigest": "ENIcQNDKBiTWWGB7kc+UWXA2As3pQK6+mJ413JYFt7g=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -317,53 +317,18 @@
               ]
             }
           },
-          "gslph_sources": {
+          "asp_gerbil_scheme_sources": {
             "repoRuleId": "@@gerbil_bazel+//gerbil:source_package_repository.bzl%source_package_repository",
             "attributes": {
               "build_script": "build.ss",
-              "canonical_uri": "https://github.com/tao3k/gerbil-scheme-language-project-harness",
-              "package": "gslph",
-              "revision": "a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
-              "sha256": "de202ddb3b204f4faa461f44df0cfeaa3bea5d77b047e46babc9a1fa51b84838",
-              "strip_prefix": "gerbil-scheme-language-project-harness-a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
+              "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
+              "package": "asp-gerbil-scheme",
+              "revision": "e8d00f54294ead9fead051ef1f618a53dd177640",
+              "sha256": "ca5c73bba8439a2db3a95f6ccb3997bf5b40bad812054dcffaaf542afd3161d4",
+              "strip_prefix": "asp-gerbil-scheme-e8d00f54294ead9fead051ef1f618a53dd177640",
               "urls": [
-                "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/a0ba60a15dd05d95ea89c0506f530f426d3dca1e.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/e8d00f54294ead9fead051ef1f618a53dd177640.tar.gz"
               ]
-            }
-          }
-        }
-      }
-    },
-    "@@gerbil_bazel+//tests/smoke:source_resolution_replay_extension.bzl%source_resolution_replay": {
-      "general": {
-        "bzlTransitiveDigest": "vCK6zEjK2aEQgq5vfiTjAY9qkPIFOMj2/h+HHke0ZOM=",
-        "usagesDigest": "AeWAx7IciPoMdqjgnnmfTLRfva0CUEekjyhAkHKCACo=",
-        "recordedInputs": [],
-        "generatedRepoSpecs": {
-          "source_resolution_replay_fixture": {
-            "repoRuleId": "@@gerbil_bazel+//tests/smoke:source_resolution_replay_extension.bzl%source_resolution_fixture_repository",
-            "attributes": {}
-          },
-          "source_resolution_replay_a": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
-            "attributes": {
-              "package": "gerbil-bazel-self",
-              "project_root_marker": "@@+source_resolution_replay+source_resolution_replay_fixture//:project-root.marker",
-              "project_library_relative_path": "project-library",
-              "canonical_package_path": ".gerbil/pkg/clan",
-              "canonical_uri": "https://example.invalid/gerbil-bazel-source-resolution-fixture",
-              "expected_revision": "eaf43dc92bfeeb9abeb348137a7cca449843936f"
-            }
-          },
-          "source_resolution_replay_b": {
-            "repoRuleId": "@@gerbil_bazel+//gerbil:project_dependency_sources_repository.bzl%project_dependency_sources_repository",
-            "attributes": {
-              "package": "gerbil-bazel-self",
-              "project_root_marker": "@@+source_resolution_replay+source_resolution_replay_fixture//:project-root.marker",
-              "project_library_relative_path": "project-library",
-              "canonical_package_path": ".gerbil/pkg/clan",
-              "canonical_uri": "https://example.invalid/gerbil-bazel-source-resolution-fixture",
-              "expected_revision": "eaf43dc92bfeeb9abeb348137a7cca449843936f"
             }
           }
         }

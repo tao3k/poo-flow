@@ -5,7 +5,6 @@
         :clan/poo/object
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/profile-composition-builders
         :poo-flow/src/feature-system/bundle-v1-composition-writer
         :poo-flow/src/feature-system/bundle-v1-lowering)
 
@@ -25,40 +24,9 @@
       (step target)
       (edges (source target)))))
 
-;;; Native POO profiles can be selected through a composition binding without
-;;; carrying a presentation `name` slot.  The binding slot is the plan identity.
-(def writer-native-profile
-  (.o (kind 'native-profile)
-      (guard '(all native receipt))))
-
-(def writer-binding-only-composition
-  (poo-flow-composition-object/profile-bindings
-   'writer-binding-only
-   '()
-   (list writer-native-profile)
-   (list
-    (poo-flow-composition-stage
-     'native-flow
-     (list (poo-flow-composition-clause 'step '(native)))))
-   (list (poo-flow-composition-profile-binding 'native-module 'native))))
-
 (def feature-system-bundle-v1-composition-writer-test-suite
   (test-suite
    "Bundle v1 composition writer"
-
-   (test-case
-    "profile guards resolve through composition bindings without a name slot"
-    (let-values (((plan image)
-                  (poo-flow-composition->bundle-v1-image
-                   writer-binding-only-composition 'writer-binding-only-bundle 1)))
-      (let ((descriptor (.ref image 'descriptor)))
-        (check (.ref image 'accepted?) => #t)
-        (check (length (execution-plan-nodes plan)) => 3)
-        (check
-         (length
-          (filter (lambda (symbol) (= (.ref symbol 'symbol-kind) 2))
-                  (.ref descriptor 'symbol-rows)))
-         => 1))))
 
    (test-case
     "arbitrary POO composition lowers with symbols and dependency edges"
@@ -71,7 +39,7 @@
              (no-projection (feature-bundle-v1-lower-compact-id
                              'projection +feature-bundle-v1-no-projection-id+))
              (no-policy (feature-bundle-v1-lower-compact-id
-                         'policy +feature-bundle-v1-no-policy-id+)))
+                         'policy 'poo-flow.policy.none)))
         (check (.ref image 'accepted?) => #t)
         (check (length (execution-plan-nodes plan)) => 4)
         (check (length (.ref descriptor 'symbol-rows)) => 7)

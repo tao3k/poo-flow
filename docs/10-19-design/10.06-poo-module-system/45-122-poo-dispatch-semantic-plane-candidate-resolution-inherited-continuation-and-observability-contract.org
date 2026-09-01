@@ -257,6 +257,134 @@ accepted conditions.
 
 * Cache identity
 
+** Module-demand cache identity
+
+A module demand uses two semantic memoization layers inside one realization
+context.  Neither layer is an implicit process-global cache.
+
+The base-prototype resolution key includes:
+
+- stable module identity;
+- prototype generation or immutable prototype-graph identity;
+- realization-context cache namespace and fixed-point epoch;
+- the admitted semantic evaluation-context projection.
+
+The refined-demand key includes:
+
+- the base-prototype resolution key or its semantic receipt;
+- the ordered, normalized profile-prototype identities;
+- every profile contribution priority participating in normalization;
+- the capability, redaction, recovery-policy, and dependency-closure identities
+  that can change the semantic result.
+
+*** Canonical profile-refinement key
+
+Profile-key normalization consumes semantic POO values, not the original Scheme
+syntax.  Each admitted contribution projects:
+
+- stable profile semantic identity;
+- prototype generation or immutable graph identity;
+- qualified authority and conflict domain;
+- normalized control-priority value;
+- capability and redaction projection relevant to the result.
+
+Unannotated priority normalizes to numeric =0=.  Larger numbers are stronger;
+the semantic default and forced elements remain below and above all numeric
+values respectively.  Authority intersection and domain qualification precede
+priority comparison.  Equal-priority values recursively compose through the
+POO algebra, and an incompatible equality produces a structured conflict rather
+than an arbitrary winner.
+
+The exact-real numeric domain, endpoint values, total order, and
+=profile-priority.v1= canonical identity are owned by
+[[file:45-120-48-profile-priority-value-and-contract-refinement.org][ProfilePriority
+Value and Contract Refinement]].
+
+Source position, alias, parser order, and module loading order are excluded from
+the semantic key.  They remain available only as diagnostic attribution.
+Higher-order POO profile extension changes the profile or prototype semantic
+identity and therefore changes the key.  A raw conditional syntax tree is
+never a profile identity.
+
+Normalization does not sort or rewrite native prototype ancestry.  The key
+records the resulting immutable prototype-graph identity and precedence
+generation separately from numeric control priority.  Two demands share a
+refinement key only when both their normalized contribution semantics and
+their native prototype-graph identity are equal.
+
+Priority ownership remains with
+[[file:45-101-typed-module-relation-contribution-composition-conflict-and-withdrawal-algebra.org][Typed
+Module Relation Contribution and Conflict Algebra]].  Native prototype and C3
+precedence ownership remains with
+[[file:45-102-native-prototype-precedence-and-typed-relation-conflict-resolution-bridge.org][Native
+Prototype Precedence and Typed Relation Conflict Resolution Bridge]].
+
+The composition-local alias is excluded from both keys.  It is diagnostic and
+lexical attribution, not module identity.  Runtime handles, process identity,
+wall-clock time, and other ambient effect state remain excluded from pure
+module-demand keys.
+
+The base layer may reuse one resolved =ModuleType= prototype for several
+profile projections in the same fixed-point epoch.  The refinement layer may
+reuse only a result whose complete normalized refinement key matches.  A cache
+entry contains the semantic outcome, explanation, and dependency receipt; a
+bare value without equivalent evidence is not a valid hit.
+
+Cross-context or cross-epoch reuse is forbidden by default.  It requires the
+explicit snapshot or receipt admission defined by
+[[file:45-03-runtime-context-and-recovery.org][Runtime Context and Recovery]],
+including matching lineage, cache namespace, recovery policy, capability
+projection, and dependency evidence.
+
+*** Active-demand and cycle boundary
+
+Re-entering the same refined-demand key while that key is active produces a
+cycle observation immediately.  It must not recursively invoke the evaluator,
+block on its own unfinished cache entry, or expose a partially computed value
+as a valid hit.
+
+The existing fixed-point recovery plane decides whether the dependency is
+productive, suspended, recoverable, denied, or failed.  A continuation or
+replacement value becomes reusable only after its recovery decision and
+explanation are part of the semantic outcome.  Cycle and recovery ownership
+remains with [[file:45-10-provider-runtime-search-closure.org][Provider Runtime
+Search Closure]].
+
+#+begin_src mermaid
+flowchart LR
+  Profiles["Profile POO contributions"] -->|"intersect authority and qualify conflict domains"| Normalized["Canonical refinement descriptor"]
+  Normalized -->|"resolve priority without changing prototype ancestry"| Demand["Module identity and normalized profile refinements"]
+  Demand -->|"looks up the current realization namespace"| BaseLookup["Base-prototype cache"]
+  BaseLookup -->|"miss resolves stable identity once per epoch"| Prototype["ModuleType prototype"]
+  BaseLookup -->|"hit reuses the prototype receipt"| Prototype
+  Prototype -->|"combine graph identity with the normalized descriptor"| RefinedLookup["Refined-demand cache"]
+  RefinedLookup -->|"miss applies ordered profile priorities"| Outcome["Semantic outcome and explanation"]
+  RefinedLookup -->|"matching key and evidence produce a valid hit"| Outcome
+  Outcome -->|"records dependency receipt in the same epoch"| Resolved["Resolved refined ModuleType"]
+  RefinedLookup -.->|"same active key re-enters before completion"| Cycle["Cycle observation"]
+  Cycle -->|"explicit recovery decision resumes or substitutes"| Outcome
+  Cycle -->|"denial or exhausted budget preserves evidence"| Failed["Denied, suspended, or failed outcome"]
+#+end_src
+
+*** Module-demand cache checklist
+
+- [ ] Keep base-prototype and refined-demand memoization as separate layers.
+- [ ] Exclude composition-local aliases from semantic cache identity.
+- [ ] Include normalized profile identities and contribution priorities in the
+      refined-demand key.
+- [ ] Scope both layers to a realization-context namespace and fixed-point
+      epoch by default.
+- [ ] Store semantic outcomes together with explanations and dependency
+      receipts.
+- [ ] Detect active-key re-entry before waiting on or recursively evaluating an
+      unfinished entry.
+- [ ] Route productive cycles, suspension, denial, and recovery through the
+      existing fixed-point observation and recovery plane.
+- [ ] Prove that different aliases share results while different profile
+      priorities do not collide.
+- [ ] Prove that cross-context reuse fails closed without an explicitly
+      admitted compatible snapshot or receipt.
+
 A dispatch cache key includes:
 
 - receiver semantic identity;

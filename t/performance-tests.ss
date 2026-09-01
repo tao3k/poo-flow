@@ -81,9 +81,6 @@
         (rename-in :poo-flow/t/type-contract-performance-test
                    (type-contract-performance-test
                     type-contract-performance-suite))
-        (rename-in "./build-cache-performance-test.ss"
-                   (build-cache-performance-test
-                    build-cache-performance-suite))
         (rename-in "./user-interface-sandbox-config-performance-test.ss"
                    (user-interface-sandbox-config-performance-test
                     user-interface-sandbox-config-performance-suite))
@@ -120,7 +117,6 @@
 (run-tests! session-transform-performance-suite)
 (run-tests! tool-core-performance-suite)
 (run-tests! type-contract-performance-suite)
-(run-tests! build-cache-performance-suite)
 (run-tests! user-interface-sandbox-config-performance-suite)
 (run-tests! user-interface-custom-scenario-batch-performance-suite)
 (run-tests! user-interface-presentation-performance-suite)

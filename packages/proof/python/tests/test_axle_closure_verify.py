@@ -18,6 +18,8 @@ def closure() -> LeanDeclarationClosure:
     return LeanDeclarationClosure.from_mapping(
         {
             "base_imports": ["Init"],
+            "proof_base_imports": [],
+            "proof_base_interface": [],
             "declarations": [
                 {
                     "kind": "theorem",
@@ -51,12 +53,16 @@ def namespace(
     closure_output: Path | None = None,
 ) -> argparse.Namespace:
     return argparse.Namespace(
+        axle_base_timeout_seconds=10.0,
+        axle_operation_timeout_seconds=30.0,
         base_imports=[],
         closure_output=closure_output,
         environment=environment,
+        lean_export_timeout_seconds=60.0,
         lean_root=tmp_path,
         paths=[] if paths is None else paths,
         preserve_imports=False,
+        proof_base_imports=[],
         root_declarations=["Example.safe"],
         root_module="Example.Root",
     )
@@ -218,8 +224,8 @@ def test_existing_main_routes_closure_flags(
 
     assert exited.value.code == 0
     assert received[0].root_module == "Example.Root"
-    assert received[0].axle_operation_timeout_seconds == 30.0
-    assert received[0].axle_base_timeout_seconds == 10.0
+    assert received[0].axle_operation_timeout_seconds == 10.0
+    assert received[0].axle_base_timeout_seconds == 2.0
 
 
 def test_existing_main_preserves_path_mode(

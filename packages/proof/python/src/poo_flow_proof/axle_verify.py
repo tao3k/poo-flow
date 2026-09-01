@@ -130,16 +130,35 @@ def main() -> None:
     )
     parser.add_argument("--closure-output", type=Path)
     parser.add_argument(
-        "--axle-operation-timeout-seconds",
+        "--proof-base-import",
+        action="append",
+        default=[],
+        dest="proof_base_imports",
+        help=(
+            "independently verified local Lean module projected as a "
+            "typed proof-base interface; repeatable"
+        ),
+    )
+    parser.add_argument(
+        "--lean-export-timeout-seconds",
         type=float,
         default=30.0,
-        help="AXLE server operation timeout; default: 30 seconds",
+        help=(
+            "complete Lean declaration-closure build/export deadline; "
+            "default: 30 seconds"
+        ),
+    )
+    parser.add_argument(
+        "--axle-operation-timeout-seconds",
+        type=float,
+        default=10.0,
+        help="AXLE server operation timeout; default: 10 seconds",
     )
     parser.add_argument(
         "--axle-base-timeout-seconds",
         type=float,
-        default=10.0,
-        help="AXLE transport/queue allowance; default: 10 seconds",
+        default=2.0,
+        help="AXLE transport/queue allowance; default: 2 seconds",
     )
     args = parser.parse_args()
     closure_mode = any(

@@ -451,8 +451,161 @@ functions.
 - [ ] Budget is preserved across result, condition, suspend, deny, and cancel.
 - [ ] Cleanup runs through continuation-safe dynamic boundaries.
 - [ ] Cache publication is impossible without qualification evidence.
-- [ ] Resume creates a new execution identity and fresh admission receipt.
-- [ ] Mermaid diagrams and Org structure remain synchronized with the contract.
+- [ ] Runtime resume creates a new execution identity and fresh admission
+  receipt.  The formal admission contract is proved below; executable runtime
+  evidence remains a separate owner obligation.
+- [X] Mermaid diagrams and Org structure remain synchronized with the contract.
+
+* Successor authority and coordinator admission closure
+
+** Requirement
+
+A context transition is not sufficient evidence for resumption.  The
+successor evaluation MUST bind the following facts in one closure:
+
+- authority identity is preserved and authority generation strictly advances;
+- successor capabilities are a subset of predecessor capabilities;
+- the coordinator admission identifies the exact predecessor and successor
+  contexts;
+- predecessor and successor execution identities are distinct;
+- the admission epoch strictly advances beyond the previously consumed
+  admission epoch;
+- the admission is issued by the expected coordinator;
+- the verifier-owned checkpoint watermark names the same publication domain
+  and authority and does not exceed the successor generation.
+
+The successor context may refresh policy, authorization, and revocation
+snapshots, but freshness of those identities does not authorize capability
+widening and does not make a reused coordinator admission fresh.
+
+** Observation and countermodels
+
+The existing context freshness, monotonicity, and checkpoint theorems are
+individually sound but do not establish the combined resumption boundary.
+Two countermodels remain possible if they are consumed independently:
+
+1. authority identity is unchanged and generation increases, while the
+   successor capability set gains a new capability;
+2. context transition and capability narrowing are valid, while the
+   coordinator admission reuses the previously consumed epoch.
+
+Therefore a fresh-looking successor context is not itself an admission
+receipt.  Local success in each evidence plane does not imply cross-plane
+binding.
+
+** Mathematical contract
+
+#+begin_src typst :file ../../../.data/45-107-successor-admission-binding.svg
+$ "ContextTransition"(b, a) :=
+    b."authority" = a."authority" and b."generation" < a."generation" $
+
+$ "NoWiden"(b, a) := "Capabilities"(a) subset.eq "Capabilities"(b) $
+
+$ "ExactAdmission"(r, b, a) :=
+    r."before" = b and r."after" = a $
+
+$ "FreshAdmission"(e, r) := e < r."epoch" $
+
+$ "NewExecution"(r) :=
+    r."predecessor-execution" != r."successor-execution" $
+
+$ "CheckpointBound"(w, r, a) :=
+    w."domain" = r."domain" and
+    w."authority" = a."authority" and
+    w."minimum-generation" <= a."generation" $
+
+$ "SuccessorClosed"(b, a, e, r, w) :=
+    "ContextTransition"(b, a) and
+    "NoWiden"(b, a) and
+    "ExactAdmission"(r, b, a) and
+    "FreshAdmission"(e, r) and
+    "NewExecution"(r) and
+    "CheckpointBound"(w, r, a) $
+
+$ "ContextTransition"(b, a) not=> "NoWiden"(b, a) $
+
+$ "ContextTransition"(b, a) and "NoWiden"(b, a)
+    not=> "FreshAdmission"(e, r) $
+#+end_src
+
+** Evidence flow
+
+#+begin_export mermaid
+flowchart LR
+    A["Predecessor authority context"] -->|"strict generation advance"| B["Successor authority context"]
+    A -->|"capability upper bound"| C{"No authority widening?"}
+    B --> C
+    D["Previously consumed admission epoch"] -->|"must be lower"| E{"Fresh coordinator admission?"}
+    F["Coordinator admission"] -->|"exact contexts + new execution identity"| E
+    G["Verifier checkpoint watermark"] -->|"domain + authority + minimum generation"| H{"Checkpoint bound?"}
+    B --> H
+    C -->|"accepted"| I["Successor admission closure"]
+    E -->|"accepted"| I
+    H -->|"accepted"| I
+    C -->|"rejected: widened capability"| J["Typed successor-authority failure"]
+    E -->|"rejected: stale/replayed epoch"| K["Typed coordinator-admission failure"]
+    H -->|"rejected: foreign or future checkpoint"| L["Typed checkpoint-binding failure"]
+#+end_export
+
+** Decision
+
+- =ReceiptValidationContext= remains the identity/snapshot context; capability
+  authority is modeled by an explicit authority envelope rather than silently
+  added to receipt identity.
+- Coordinator admission is a first-class receipt with coordinator identity,
+  monotonically advancing admission epoch, distinct predecessor/successor
+  execution identities, exact predecessor/successor contexts, and
+  publication-domain identity.
+- =ReceiptContextSuccessorAdmissionBindingClosure= is the bridge owner.  It
+  consumes the existing freshness, monotonicity, and checkpoint owners and
+  does not redefine them.
+- Resumption is admitted only by the combined closure.  No individual
+  freshness, generation, capability, or checkpoint proof may substitute for
+  it.
+
+** Lean proof receipt
+
+- [X] Countermodel: context monotonicity alone permits authority widening.
+- [X] Countermodel: exact context binding and capability narrowing still
+  permit stale coordinator admission.
+- [X] Closure theorem: every successor capability existed in the predecessor.
+- [X] Closure theorem: admission epoch strictly advances.
+- [X] Closure theorem: admission creates a distinct successor execution
+  identity.
+- [X] Closure theorem: admission targets the exact predecessor/successor pair.
+- [X] Closure theorem: admission uses the expected coordinator.
+- [X] Closure theorem: verifier checkpoint authority and minimum generation
+  admit the successor.
+- [X] Focused Lean, AXLE declaration closure, Enterprise/full aggregate, and
+  Orgize receipts recorded from the current worktree.
+
+*** Verification receipt
+
+All paths are repository-relative; no host installation or temporary output
+path is part of this receipt.
+
+- Focused Lean:
+  =cd packages/proof/lean && direnv exec . lake env lean PooFlowProof/Enterprise/ReceiptContextSuccessorAdmissionBindingClosure.lean=
+  returned exit =0= with no Lean diagnostic.
+- AXLE exact declaration closure:
+  =cd packages/proof/python && uv run --extra axle poo-flow-axle-verify=
+  in closure mode verified six root declarations and returned exit =0=,
+  =status: accepted=, and zero failed declarations.
+- AXLE closure declarations: =54=; source declarations: =28=; environment
+  declarations: =28=.
+- AXLE closure digest:
+  =sha256:e8c98e38f82ee1ddca2d32b3fdbf8030f0b3fe094f8ef23e1caeac9a5869b147=.
+- AXLE exact bundle digest:
+  =sha256:2d8d22a003c478cd77b795f3e07808c29c4bd4d47c28842ccc4d106224d62d50=.
+- AXLE canonical source digest:
+  =sha256:982ba017949ff03896e8b6fd8964ecf1c00532d4d93ce1126de2bfb2d17df977=.
+- Enterprise aggregate: =lake build PooFlowProof.Enterprise= returned exit =0=
+  for =484= jobs.
+- Full aggregate: =lake build= returned exit =0= for =556= jobs.
+- Both aggregates reported only the pre-existing =unnecessarySimpa= warning
+  owned by =AgentRedTeamProofRegressionClosure.lean=; the new module emitted
+  no warning.
+- Orgize Org/Typst/Mermaid lint returned exit =0=.
 
 * Successor contract
 

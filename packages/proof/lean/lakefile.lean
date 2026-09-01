@@ -27,3 +27,6 @@ extern_lib proof_native (pkg : NPackage __name__) := do
 
 lean_exe ffiSmoke where
   root := `PooFlowProof.FFISmoke
+
+lean_exe pooFlowDeclarationClosure where
+  root := `PooFlowProof.Export.DeclarationClosure

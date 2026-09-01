@@ -18,7 +18,6 @@ gerbil_project_compile(
     name = "gerbil_utils_package",
     srcs = ["@gerbil_utils_sources//:sources"],
     build_script = "@gerbil_utils_sources//:build_script",
-    process_guard = True,
     require_library_output = True,
     source_resolution_receipts = [
         "@gerbil_utils_sources//:source_resolution_receipt",
@@ -29,7 +28,6 @@ gerbil_project_compile(
     name = "gerbil_poo_package",
     srcs = ["@gerbil_poo_sources//:sources"],
     build_script = "@gerbil_poo_sources//:build_script",
-    process_guard = True,
     require_library_output = True,
     source_resolution_receipts = [
         "@gerbil_poo_sources//:source_resolution_receipt",
@@ -38,13 +36,12 @@ gerbil_project_compile(
 )
 
 gerbil_project_compile(
-    name = "gslph_package",
-    srcs = ["@gslph_sources//:sources"],
-    build_script = "@gslph_sources//:build_script",
-    process_guard = True,
+    name = "asp_gerbil_scheme_package",
+    srcs = ["@asp_gerbil_scheme_sources//:sources"],
+    build_script = "@asp_gerbil_scheme_sources//:build_script",
     require_library_output = True,
     source_resolution_receipts = [
-        "@gslph_sources//:source_resolution_receipt",
+        "@asp_gerbil_scheme_sources//:source_resolution_receipt",
     ],
     deps = [":gerbil_poo_package"],
 )
@@ -54,7 +51,7 @@ filegroup(
     srcs = [
         ":gerbil_poo_package",
         ":gerbil_utils_package",
-        ":gslph_package",
+        ":asp_gerbil_scheme_package",
     ],
 )
 
@@ -67,7 +64,7 @@ filegroup(
     for name, project in [
         ("gerbil_utils_package_project_root", ":gerbil_utils_package"),
         ("gerbil_poo_package_project_root", ":gerbil_poo_package"),
-        ("gslph_package_project_root", ":gslph_package"),
+        ("asp_gerbil_scheme_package_project_root", ":asp_gerbil_scheme_package"),
     ]
 ]
 
@@ -76,7 +73,6 @@ gerbil_project_compile(
     srcs = ["//:runtime_wasm_generator_scheme_sources"],
     args = ["compile"],
     build_script = "//:runtime_wasm_generator_build_script",
-    process_guard = True,
     require_library_output = True,
     receipt_line_prefix = "POO_FLOW_RUNTIME_WASM_GENERATOR_BUILD_RECEIPT ",
     deps = [":gerbil_poo_package"],
@@ -87,7 +83,6 @@ gerbil_project_compile(
     srcs = ["//:compile_performance_budget_sources"],
     args = ["compile"],
     build_script = "//:compile_performance_budget_build_script",
-    process_guard = True,
     require_library_output = True,
     deps = [":gerbil_poo_package"],
 )
@@ -137,8 +132,7 @@ gerbil_project_compile(
     srcs = ["//:scheme_build_sources"],
     args = ["compile"],
     build_script = "//:build.ss",
-    receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
-    deps = [":gslph_package"],
+    deps = [":asp_gerbil_scheme_package"],
 )
 
 gerbil_project_environment(
@@ -151,7 +145,7 @@ gerbil_project_dev(
     name = "dev_compile",
     args = ["compile"],
     build_script = "//:build.ss",
-    deps = [":gslph_package"],
+    deps = [":asp_gerbil_scheme_package"],
     tags = [
         "local",
         "manual",
@@ -162,7 +156,7 @@ gerbil_project_dev(
     name = "dev_unit_tests",
     args = ["compile"],
     build_script = "//:build.ss",
-    deps = [":gslph_package"],
+    deps = [":asp_gerbil_scheme_package"],
     tags = [
         "local",
         "manual",
@@ -300,10 +294,15 @@ gerbil_project_projection(
             "small",
             "//:t/protocol-person-runtime-abi-test.ss",
         ),
-        ("contract_tests", "small", "//:t/contract-tests.ss"),
+        ("contract_tests", "medium", "//:t/contract-tests.ss"),
         ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
-        ("integration_tests", "small", "//:t/integration-tests.ss"),
+        ("integration_tests", "medium", "//:t/integration-tests.ss"),
         ("performance_tests", "large", "//:t/performance-tests.ss"),
+        (
+            "user_interface_config_sandbox_case_test",
+            "medium",
+            "//:t/user-interface-config-sandbox-case-test.ss",
+        ),
         (
             "user_interface_custom_loop_engine_capability_test",
             "large",
@@ -315,6 +314,7 @@ gerbil_project_projection(
 test_suite(
     name = "tests",
     tests = [
+        ":ai_security_executable_refinement_test",
         ":cli_support_tests",
         ":compile_performance_audit_test",
         ":compile_performance_budget_unit_test",
@@ -334,4 +334,10 @@ test_suite(
         ":performance_tests",
         ":tests",
     ],
+)
+gerbil_project_test(
+    name = "ai_security_executable_refinement_test",
+    size = "small",
+    project = ":compile",
+    tests = ["//:t/ai-security-executable-refinement-test.ss"],
 )

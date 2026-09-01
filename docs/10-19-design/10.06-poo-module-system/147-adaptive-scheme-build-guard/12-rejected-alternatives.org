@@ -1,0 +1,27 @@
+* Rejected alternatives
+
+** Always one unbounded session
+
+Rejected for adaptive cold execution.  It improves bounded wall time but the
+runtime A/B increases allocation by 29.733% and RSS by 6.197%.
+
+** Fixed chunk sizes or a global spec ceiling
+
+Rejected.  They encode one host's behavior and cannot explain changes from
+receipts.
+
+** Concurrent std/make coordinators
+
+Rejected.  They duplicate scheduling ownership and make the hard RSS cap more
+difficult to enforce.
+
+** Per-spec child gxi scheduling
+
+Rejected.  Prior process multiplicity imposed dominant startup overhead and
+duplicated Building Framework currentness, topology, and receipt ownership.
+
+** Python-owned build policy
+
+Rejected.  The Scheme build and its safety policy are Gerbil-owned.  Python may
+remain a validation runtime below other interfaces, but it is not the owner of
+this build controller.

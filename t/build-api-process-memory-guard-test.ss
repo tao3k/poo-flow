@@ -1,6 +1,6 @@
 (import :std/test
-        :gslph/src/testing/memory-profile
-        :gslph/src/building/facade
+        :asp-gerbil-scheme/src/testing/memory-profile
+        :asp-gerbil-scheme/src/building/facade
         :clan/poo/object
         "../src/build-api/process-memory-guard.ss"
         :poo-flow/src/build-api/guarded-stage-syntax)

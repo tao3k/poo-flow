@@ -129,7 +129,7 @@ packages/proof/lean/PooFlowProof/Enterprise/
 
 * Mathematical model
 
-The durable mathematical surface is Typst:
+The derived mathematical presentation is Typst:
 
 #+begin_src typst
 $ U = (e_1, ..., e_n) $

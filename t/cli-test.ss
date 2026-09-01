@@ -14,7 +14,7 @@
                  poo-flow-cli-usage)
         (only-in :poo-flow/src/testing/project
                  poo-flow-testing-project)
-        (only-in :gslph/src/testing/model
+        (only-in :asp-gerbil-scheme/src/testing/model
                  testing-object-ref))
 
 (export cli-test)

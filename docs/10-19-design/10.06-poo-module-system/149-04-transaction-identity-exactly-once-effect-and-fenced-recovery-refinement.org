@@ -157,7 +157,7 @@ packages/proof/lean/PooFlowProof/Enterprise/
 
 * Mathematical model
 
-The durable mathematical surface is Typst:
+The derived mathematical presentation is Typst:
 
 #+begin_src typst
 $ Q = (t, a, C, d_"pre", d_"target") $

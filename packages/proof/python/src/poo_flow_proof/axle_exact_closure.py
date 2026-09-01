@@ -7,7 +7,6 @@ canonicalize those declarations, and verify the resulting independent source.
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from hashlib import sha256
 from time import monotonic
@@ -25,8 +24,8 @@ from poo_flow_proof.lean_declaration_closure import (
 
 SCHEMA_ID = "poo-flow.axle-exact-declaration-closure.v1"
 PHASE_SCHEMA_ID = "poo-flow.axle-phase.v1"
-DEFAULT_OPERATION_TIMEOUT_SECONDS = 30.0
-DEFAULT_BASE_TIMEOUT_SECONDS = 10.0
+DEFAULT_OPERATION_TIMEOUT_SECONDS = 10.0
+DEFAULT_BASE_TIMEOUT_SECONDS = 2.0
 
 PhaseObserver = Callable[[Mapping[str, object]], None]
 PhaseResult = TypeVar("PhaseResult")
@@ -239,8 +238,7 @@ def source_declaration_closure(
         candidates = [
             declaration_name
             for declaration_name in aliases
-            if name == declaration_name
-            or name.startswith(f"{declaration_name}.")
+            if name == declaration_name or name.startswith(f"{declaration_name}.")
         ]
         if candidates:
             owner = max(candidates, key=len)
@@ -249,9 +247,7 @@ def source_declaration_closure(
             anchor
             for anchor in set(aliases.values())
             if (
-                name.startswith(
-                    f"{(anchor_namespace := anchor.rpartition('.')[0])}.inst"
-                )
+                name.startswith(f"{(anchor_namespace := anchor.rpartition('.')[0])}.inst")
                 and name.removeprefix(f"{anchor_namespace}.")
                 .split(".", maxsplit=1)[0]
                 .endswith(anchor.removeprefix(f"{anchor_namespace}."))
@@ -392,10 +388,7 @@ def _range_contains(
     outer: LeanSourceRange,
     inner: LeanSourceRange,
 ) -> bool:
-    return (
-        _range_key(outer) <= _range_key(inner)
-        and _range_end_key(inner) <= _range_end_key(outer)
-    )
+    return _range_key(outer) <= _range_key(inner) and _range_end_key(inner) <= _range_end_key(outer)
 
 
 def _coalesce_source_ranges(
@@ -438,10 +431,7 @@ def _coalesce_source_ranges(
                 f"{overlapping} <> {source_range}",
             )
         coalesced.append((source_range, names))
-    return tuple(
-        (source_range, tuple(dict.fromkeys(names)))
-        for source_range, names in coalesced
-    )
+    return tuple((source_range, tuple(dict.fromkeys(names))) for source_range, names in coalesced)
 
 
 def _source_declaration_aliases(
@@ -451,9 +441,7 @@ def _source_declaration_aliases(
         str,
         dict[LeanSourceRange, list[str]],
     ] = {}
-    declaration_by_name = {
-        declaration.name: declaration for declaration in closure.declarations
-    }
+    declaration_by_name = {declaration.name: declaration for declaration in closure.declarations}
     for declaration in closure.declarations:
         if declaration.source_range is None:
             raise AxleExactClosureError(
@@ -469,9 +457,7 @@ def _source_declaration_aliases(
     for ranged_declarations in declarations_by_module.values():
         for outer_range, names in _coalesce_source_ranges(ranged_declarations):
             outer_names = [
-                name
-                for name in names
-                if declaration_by_name[name].source_range == outer_range
+                name for name in names if declaration_by_name[name].source_range == outer_range
             ]
             if not outer_names:
                 raise AxleExactClosureError(
@@ -505,11 +491,7 @@ def _selected_open_commands(
                 f"{parent_namespace}.{target}" if parent_namespace else target,
             )
             resolved = next(
-                (
-                    candidate
-                    for candidate in candidates
-                    if candidate in selected_modules
-                ),
+                (candidate for candidate in candidates if candidate in selected_modules),
                 None,
             )
             if resolved is not None:
@@ -537,6 +519,12 @@ def _compose_owner_sources(
             {},
         ).setdefault(declaration.source_range, []).append(declaration.name)
     selected_modules = set(declarations_by_module)
+    proof_base_namespaces = {
+        namespace
+        for declaration in closure.proof_base_interface
+        if (namespace := declaration.name.rpartition(".")[0])
+    }
+    visible_modules = selected_modules | set(closure.proof_base_imports) | proof_base_namespaces
     for source in sources:
         source_text = source.path.read_text()
         ranged_declarations = declarations_by_module.get(source.module, {})
@@ -550,20 +538,16 @@ def _compose_owner_sources(
             _selected_open_commands(
                 source_text,
                 source_module=source.module,
-                selected_modules=selected_modules,
+                selected_modules=visible_modules,
             )
         )
         declaration_chunks = [
-            _slice_source_range(source_text, source_range).strip()
-            for source_range, _ in coalesced
+            _slice_source_range(source_text, source_range).strip() for source_range, _ in coalesced
         ]
         declarations = "\n\n".join(declaration_chunks)
         context = f"{open_commands}\n\n" if open_commands else ""
         declarations_are_fully_qualified = all(
-            any(
-                declaration_name in declaration_chunk
-                for declaration_name in declaration_names
-            )
+            any(declaration_name in declaration_chunk for declaration_name in declaration_names)
             for (_source_range, declaration_names), declaration_chunk in zip(
                 coalesced,
                 declaration_chunks,
@@ -574,21 +558,51 @@ def _compose_owner_sources(
             bodies.append(f"{context}{declarations}")
         else:
             bodies.append(
-                f"namespace {source.module}\n\n"
-                f"{context}{declarations}\n\n"
-                f"end {source.module}"
+                f"namespace {source.module}\n\n{context}{declarations}\n\nend {source.module}"
             )
-    imports = "\n".join(
-        f"import {base_import}" for base_import in closure.base_imports
-    )
+    imports = "\n".join(f"import {base_import}" for base_import in closure.base_imports)
     namespace_prelude = "\n".join(
         f"namespace {module}\nend {module}"
-        for module in sorted(selected_modules)
+        for module in sorted(visible_modules | proof_base_namespaces)
+    )
+    proof_base_universes = sorted(
+        {
+            level_param
+            for declaration in closure.proof_base_interface
+            for level_param in declaration.level_params
+        }
+    )
+    universe_prelude = f"universe {' '.join(proof_base_universes)}" if proof_base_universes else ""
+    proof_base_declarations = "\n\n".join(
+        (
+            f"{'abbrev' if declaration.declaration_role == 'abbrev' else 'def' if declaration.declaration_role == 'definition' else 'axiom'} "
+            f"{declaration.name}"
+            f" : {declaration.type_source}"
+            f"{' := ' + declaration.value_source if declaration.value_source is not None else ''}"
+        )
+        for declaration in closure.proof_base_interface
+    )
+    proof_base_instances = tuple(
+        declaration.name
+        for declaration in closure.proof_base_interface
+        if declaration.declaration_role == "instance"
+    )
+    proof_base_instance_attributes = "\n".join(
+        f"attribute [local instance] {name}" for name in proof_base_instances
+    )
+    noncomputable_projection = "noncomputable section" if proof_base_instances else ""
+    proof_base_prelude = "\n\n".join(
+        part
+        for part in (
+            universe_prelude,
+            proof_base_declarations,
+            proof_base_instance_attributes,
+            noncomputable_projection,
+        )
+        if part
     )
     return (
-        f"{imports}\n\n{namespace_prelude}\n\n"
-        + "\n\n".join(bodies)
-        + "\n"
+        f"{imports}\n\n{namespace_prelude}\n\n{proof_base_prelude}\n\n" + "\n\n".join(bodies) + "\n"
     )
 
 
@@ -610,22 +624,17 @@ def _compose_source_declarations(
             and owner.rpartition(".")[0] != namespace
         }
         opened = "\n".join(
-            f"open {dependency_namespace}"
-            for dependency_namespace in sorted(dependency_namespaces)
+            f"open {dependency_namespace}" for dependency_namespace in sorted(dependency_namespaces)
         )
         declaration_head = declaration.splitlines()[0]
         if name in declaration_head:
             declarations.append(f"{opened}\n\n{declaration}" if opened else declaration)
         elif separator:
             context = f"\n{opened}\n" if opened else "\n"
-            declarations.append(
-                f"namespace {namespace}\n{context}{declaration}\n\nend {namespace}"
-            )
+            declarations.append(f"namespace {namespace}\n{context}{declaration}\n\nend {namespace}")
         else:
             declarations.append(f"{opened}\n\n{declaration}" if opened else declaration)
-    imports = "\n".join(
-        f"import {base_import}" for base_import in base_imports
-    )
+    imports = "\n".join(f"import {base_import}" for base_import in base_imports)
     return f"{imports}\n\n" + "\n\n".join(declarations) + "\n"
 
 
@@ -644,16 +653,31 @@ async def build_exact_axle_closure(
     if operation_timeout_seconds <= 0 or base_timeout_seconds <= 0:
         raise AxleExactClosureError(
             "invalid-axle-timeout",
-            (
-                f"operation={operation_timeout_seconds};"
-                f"base={base_timeout_seconds}"
-            ),
+            (f"operation={operation_timeout_seconds};base={base_timeout_seconds}"),
         )
     owned_client = client is None
-    active_client = client or AxleClient(
-        base_timeout_seconds=base_timeout_seconds
-    )
+    active_client = client or AxleClient(base_timeout_seconds=base_timeout_seconds)
     try:
+        root_package = closure.root_module.partition(".")[0]
+        external_owner_modules = tuple(
+            sorted(
+                {
+                    source.module
+                    for source in sources
+                    if source.module.partition(".")[0] != root_package
+                }
+            )
+        )
+        if external_owner_modules:
+            raise AxleExactClosureError(
+                "external-proof-base-required",
+                (
+                    f"root_package={root_package}; "
+                    f"external_owner_modules={external_owner_modules}; "
+                    "declare external dependencies through --base-import or "
+                    "--proof-base-import"
+                ),
+            )
         combined_source = _compose_owner_sources(closure, sources)
         extracted = await _run_phase(
             "owner-source-extract",
@@ -668,60 +692,51 @@ async def build_exact_axle_closure(
         )
         _require_clean(extracted, "extract composed owner sources")
         declaration_aliases = _source_declaration_aliases(closure)
+        proof_base_names = {declaration.name for declaration in closure.proof_base_interface}
 
-        source_names = source_declaration_closure(
-            lean_declarations=[declaration.name for declaration in closure.declarations],
-            root_declarations=closure.root_declarations,
-            documents=extracted.documents,
-            declaration_aliases=declaration_aliases,
+        source_names = tuple(
+            name
+            for name in source_declaration_closure(
+                lean_declarations=[declaration.name for declaration in closure.declarations],
+                root_declarations=closure.root_declarations,
+                documents=extracted.documents,
+                declaration_aliases=declaration_aliases,
+            )
+            if name not in proof_base_names
         )
         canonical_source = combined_source
         canonical_roots = tuple(
-            _covering_document(root, source_names)
-            or _raise_root_without_source(root)
+            _covering_document(root, source_names) or _raise_root_without_source(root)
             for root in closure.root_declarations
         )
         canonical_payload_bytes = len(canonical_source.encode())
-        roundtrip, statement = await asyncio.gather(
-            _run_phase(
-                "canonical-roundtrip-extract",
-                payload_bytes=canonical_payload_bytes,
-                observer=phase_observer,
-                operation=active_client.extract_decls(
-                    canonical_source,
-                    environment,
-                    ignore_imports=False,
-                    timeout_seconds=operation_timeout_seconds,
-                ),
-            ),
-            _run_phase(
-                "root-theorem2sorry",
-                payload_bytes=canonical_payload_bytes,
-                observer=phase_observer,
-                operation=active_client.theorem2sorry(
-                    canonical_source,
-                    environment,
-                    names=list(canonical_roots),
-                    ignore_imports=False,
-                    timeout_seconds=operation_timeout_seconds,
-                ),
+        roundtrip = await _run_phase(
+            "canonical-roundtrip-extract",
+            payload_bytes=canonical_payload_bytes,
+            observer=phase_observer,
+            operation=active_client.extract_decls(
+                canonical_source,
+                environment,
+                ignore_imports=False,
+                timeout_seconds=operation_timeout_seconds,
             ),
         )
         _require_clean(roundtrip, "extract exact merged closure")
-        _require_clean(statement, "theorem2sorry exact closure roots")
-        roundtrip_by_name = {
-            document.name: document for document in roundtrip.documents.values()
-        }
+        roundtrip_by_name = {document.name: document for document in roundtrip.documents.values()}
         actual_names = tuple(document.name for document in roundtrip.documents.values())
         expected_names = source_names
         actual_names = tuple(
             sorted(
                 {
-                    _normalized_source_declaration_name(
-                        name,
-                        declaration_aliases,
-                    )
+                    normalized_name
                     for name in actual_names
+                    if (
+                        normalized_name := _normalized_source_declaration_name(
+                            name,
+                            declaration_aliases,
+                        )
+                    )
+                    not in proof_base_names
                 }
             )
         )
@@ -733,25 +748,104 @@ async def build_exact_axle_closure(
                 f"missing={missing}; extra={extra}",
             )
 
-        verified = await _run_phase(
-            "root-proof-verify",
-            payload_bytes=canonical_payload_bytes + len(statement.content.encode()),
-            observer=phase_observer,
-            operation=active_client.verify_proof(
-                statement.content,
-                canonical_source,
-                environment,
-                ignore_imports=False,
-                timeout_seconds=operation_timeout_seconds,
-            ),
-        )
-        _require_clean(verified, "verify exact declaration closure")
-        if not verified.okay or verified.failed_declarations:
+        root_declaration_kinds = {root: roundtrip_by_name[root].kind for root in canonical_roots}
+        if any(not kind.strip() for kind in root_declaration_kinds.values()):
             raise AxleExactClosureError(
-                "exact-proof-verification-failed",
-                ", ".join(verified.failed_declarations),
+                "invalid-root-declaration-kind",
+                repr(root_declaration_kinds),
             )
+        theorem_roots = tuple(
+            root for root, kind in root_declaration_kinds.items() if kind == "theorem"
+        )
 
+        if theorem_roots:
+            statement = await _run_phase(
+                "root-theorem2sorry",
+                payload_bytes=canonical_payload_bytes,
+                observer=phase_observer,
+                operation=active_client.theorem2sorry(
+                    canonical_source,
+                    environment,
+                    names=list(theorem_roots),
+                    ignore_imports=False,
+                    timeout_seconds=operation_timeout_seconds,
+                ),
+            )
+            _require_clean(statement, "theorem2sorry exact closure roots")
+
+            verified = await _run_phase(
+                "root-proof-verify",
+                payload_bytes=canonical_payload_bytes + len(statement.content.encode()),
+                observer=phase_observer,
+                operation=active_client.verify_proof(
+                    statement.content,
+                    canonical_source,
+                    environment,
+                    ignore_imports=False,
+                    timeout_seconds=operation_timeout_seconds,
+                ),
+            )
+            _require_clean(verified, "verify exact declaration closure")
+            if not verified.okay or verified.failed_declarations:
+                raise AxleExactClosureError(
+                    "exact-proof-verification-failed",
+                    ", ".join(verified.failed_declarations),
+                )
+
+            theorem2sorry_receipt = {
+                "schema_id": "poo-flow.axle-root-theorem-obligation.v1",
+                "status": "generated",
+                "root_declarations": theorem_roots,
+                "root_declaration_kinds": root_declaration_kinds,
+                "request": statement.info,
+                "messages": {
+                    "lean": message_payload(statement.lean_messages),
+                    "tool": message_payload(statement.tool_messages),
+                },
+            }
+            verification_receipt = {
+                "schema_id": "poo-flow.axle-root-declaration-validation.v1",
+                "status": "accepted",
+                "roundtrip": "accepted",
+                "theorem_proof": "accepted",
+                "okay": verified.okay,
+                "failed_declarations": verified.failed_declarations,
+                "lean_messages": message_payload(verified.lean_messages),
+                "tool_messages": message_payload(verified.tool_messages),
+                "timings": verified.timings,
+                "request": verified.info,
+            }
+        else:
+            theorem2sorry_receipt = {
+                "schema_id": "poo-flow.axle-root-theorem-obligation.v1",
+                "status": "not-applicable",
+                "root_declarations": (),
+                "root_declaration_kinds": root_declaration_kinds,
+            }
+            verification_receipt = {
+                "schema_id": "poo-flow.axle-root-declaration-validation.v1",
+                "status": "accepted",
+                "roundtrip": "accepted",
+                "theorem_proof": "not-applicable",
+                "okay": True,
+                "failed_declarations": (),
+                "lean_messages": (),
+                "tool_messages": (),
+                "timings": {},
+                "request": {
+                    "root_declarations": canonical_roots,
+                    "root_declaration_kinds": root_declaration_kinds,
+                },
+            }
+
+        exact_declaration_names = tuple(
+            dict.fromkeys(
+                (
+                    *expected_names,
+                    *(name for name in sorted(proof_base_names) if name in roundtrip_by_name),
+                )
+            )
+        )
         declarations = tuple(
             SourceDeclaration(
                 name=name,
@@ -763,7 +857,7 @@ async def build_exact_axle_closure(
                     if dependency in roundtrip_by_name
                 ),
             )
-            for name in expected_names
+            for name in exact_declaration_names
         )
         return ExactAxleClosure(
             lean_closure_digest=closure.closure_digest,
@@ -772,21 +866,8 @@ async def build_exact_axle_closure(
             source_declarations=source_names,
             declarations=declarations,
             canonical_source=canonical_source,
-            theorem2sorry={
-                "request": statement.info,
-                "messages": {
-                    "lean": message_payload(statement.lean_messages),
-                    "tool": message_payload(statement.tool_messages),
-                },
-            },
-            verification={
-                "okay": verified.okay,
-                "failed_declarations": verified.failed_declarations,
-                "lean_messages": message_payload(verified.lean_messages),
-                "tool_messages": message_payload(verified.tool_messages),
-                "timings": verified.timings,
-                "request": verified.info,
-            },
+            theorem2sorry=theorem2sorry_receipt,
+            verification=verification_receipt,
         )
     finally:
         if owned_client:

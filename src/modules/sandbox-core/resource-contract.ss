@@ -4,7 +4,7 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .ref .slot? object?)
-        (only-in :gslph/src/extensions/poo-object-validation
+        (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
         (only-in "../../utilities/contracts.ss"

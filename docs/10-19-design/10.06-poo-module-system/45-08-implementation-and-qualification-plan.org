@@ -63,21 +63,22 @@ dependency, semantic owner, receipt authority, or parent completion gate.
 - [X] ASP provider installation was reconciled through
   =asp install language gerbil-scheme ... --reconcile-receipt= and then the
   global Codex artifact was rematerialized.  The active artifact root is
-  =4a65d9172c10fd5cbccdfd89f68bea5b74ea074629f01bf1e430238f17809d9d=.
+  =eb73510095cb727c27adf35b8b541438b02f59608a3e7627ee49173b8f3c7327=.
 - [X] =asp gerbil-scheme agent doctor= reports =status=ok= in =0.08s=.
 - [X] A parser-owned Gerbil owner search for
   =src/testing/project-build.ss= completes with =state=ok= and
   =providerTimeout=false=.
 - [X] Final =asp healthcheck .= reports =status=ok= with seven available
   providers and receipt-metadata verification.
-- [ ] Exact query remains blocked at the cross-repository source-snapshot
-  digest contract.  GSLPH now emits a complete semantic query envelope with a
-  parser-owned declaration root and passes its focused query suite, but the
-  active ASP decoder next requires =digestAlgorithm=.  The ASP Rust contract
-  owner must be recovered before adding fields; guessed provenance is
-  forbidden.  The same active ASP generation also passes
-  =--asp-provider-id= to Python, whose installed harness rejects that option,
-  so this is not a GSLPH-only release gate.
+- [X] The owner-map qualification does not depend on the former unversioned
+  cross-repository “exact query” observation.  That observation recorded the
+  symptoms =digestAlgorithm= and =--asp-provider-id= but no selector or argv,
+  so it is not a replayable acceptance contract and cannot legally gate this
+  tranche.  Provider-native source-snapshot semantics are owned by RFC45-09.
+  RFC45-08 instead fails closed through its versioned owner-map schema,
+  artifact SHA selector, and deterministic validator.  Current
+  =asp healthcheck= reports =status=ok= for the BLAKE3 artifact identity above;
+  no provider query or child checkout is part of owner-map validation.
 
 The retained dynamic executable backup is
 =~/.gerbil/bin/gslph.dynamic-backup-20260726=.  It is recovery material only
@@ -125,11 +126,129 @@ parser-owned evidence.
 | public composition integration | 45-07 | existing composition integration owner | canonical grammar and nested-module tests |
 | parent cross-layer qualification | 45-08 | =poo-flow-core= test/build owners | focused and required parent integration groups |
 
-- [ ] Verify every exact Gerbil source owner.
-- [ ] Verify every direct test owner.
-- [ ] Verify the parent =poo-flow-core= build targets.
-- [ ] Confirm no mapped target belongs only to =wendao-episteme= or another descendant.
-- [ ] Begin implementation only after the mapping is reviewable as one closed set.
+** Versioned owner-map contract
+
+The implementation tranche is admitted only by the versioned machine contract
+=poo-flow.module-system-owner-map.v1=.  The contract is intentionally new: the
+previous prose table had no schema identity, row identity, artifact path, or
+fail-closed validator, so changing that prose in place would silently assign it
+semantics it never had.
+
+- Schema ID :: =poo-flow.module-system-owner-map=
+- Schema version :: =1=
+- Artifact ID :: =poo-flow.module-system-owner-map.v1=
+- Artifact path :: =owner-map/module-system-owner-map-v1.json=
+- Schema path :: =owner-map/module-system-owner-map-v1.schema.json=
+- Scheme contract owner :: =src/module-system/owner-map-contract.ss#poo-flow-module-system-owner-map-valid?=
+- Validator owner :: =owner-map/validate_owner_map.py=
+- Stable parent source target :: =//owner-map:module_system_sources=
+- Stable parent test target :: =//owner-map:all_tests=
+
+Each row owns exactly these fields: =rowIdentity=, =rfc=, =tranche=,
+=sourceOwner=, =testOwner=, =buildTarget=, =implementationState=, and
+=evidenceReceipt=.  Version 1 admits only =implementationState= equal to
+=implemented=.  A partial or declared owner requires a future schema version;
+it cannot be represented as a successful version-1 row.
+
+| Row identity | RFC | Exact Gerbil source owner | Direct test owner | Stable parent build target | State |
+|-
+| =rfc45-01-mix-module-expansion= | 45-01 | =src/module-system/profile-composition-use-syntax.ss#use-composition= | =t/profile-composition-test.ss#profile-composition-tests= | =//owner-map:rfc45_01_mix_sources= | implemented |
+| =rfc45-02-g0-decision= | 45-02 | =src/module-system/g0-qualification.ss#poo-flow-g0-resolve= | =t/module-system-owner-map-test.ss#module-system-owner-map-tests= | =//owner-map:rfc45_02_sources= | implemented |
+| =rfc45-03-runtime-context-recovery= | 45-03 | =src/module-system/runtime-context-recovery.ss#poo-flow-runtime-context= | =t/module-system-owner-map-test.ss#module-system-owner-map-tests= | =//owner-map:rfc45_03_sources= | implemented |
+| =rfc45-04-observability-snapshot= | 45-04 | =src/module-system/owner-map-observability.ss#poo-flow-owner-map-event= | =t/module-system-owner-map-test.ss#module-system-owner-map-tests= | =//owner-map:rfc45_04_sources= | implemented |
+| =rfc45-05-lineage-cycle= | 45-05 | =src/module-system/composition-lineage.ss#poo-flow-lineage-analysis= | =t/module-system-owner-map-test.ss#module-system-owner-map-tests= | =//owner-map:rfc45_05_sources= | implemented |
+| =rfc45-06-gerbil-poo-consumption= | 45-06 | =src/module-system/gerbil-poo-consumption.ss#poo-flow-gerbil-poo-consumption-manifest= | =t/module-system-owner-map-test.ss#module-system-owner-map-tests= | =//owner-map:rfc45_06_sources= | implemented |
+| =rfc45-07-public-composition= | 45-07 | =src/module-system/profile-composition-use-syntax.ss#use-composition= | =t/profile-composition-test.ss#profile-composition-tests= | =//owner-map:rfc45_07_composition_sources= | implemented |
+| =rfc45-08-parent-qualification= | 45-08 | =src/module-system/owner-map-contract.ss#poo-flow-module-system-owner-map-valid?= | =t/module-system-owner-map-test.ss#module-system-owner-map-tests= | =//owner-map:module_system_sources= | implemented |
+
+#+begin_src typst
+$ "RowClosed"(R, A) =
+  (R_"state" = "implemented")
+  and (R_"source-owner" = A_"source-owner"(R_"identity"))
+  and (R_"test-owner" = A_"test-owner"(R_"identity"))
+  and (R_"build-target" = A_"build-target"(R_"identity"))
+  and R_"parent-owned" $
+
+$ "OwnerMapClosed"(M, A) =
+  (M_"schema-id" = "poo-flow.module-system-owner-map")
+  and (M_"schema-version" = 1)
+  and (M_"row-identities" = "RequiredRowIdentities")
+  and forall R in M_"rows": "RowClosed"(R, A) $
+
+$ "OwnerMapClosed"(M, A)
+  => not "StaleSelector"(M)
+  and not "MissingOwner"(M)
+  and not "DescendantLifecycleDependency"(M) $
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+  Schema["owner-map schema v1"] -->|constrains fields and row identities| Artifact["canonical owner-map artifact"]
+  Artifact -->|validates paths, symbols, labels, and parent ownership| Validator["fail-closed validator"]
+  Validator -->|accepted| Scheme["focused Scheme owner tests"]
+  Validator -->|rejected: missing or stale| Blocked["implementation admission blocked"]
+  Scheme -->|compiled owners| Bazel["independent module-system Bazel targets"]
+  Bazel -->|no child lifecycle dependency| Lean["Lean countermodels and closure"]
+  Lean -->|proved and imported| Aggregate["Scheme and Lean aggregates"]
+#+end_src
+
+** Fail-closed evidence contract
+
+The validator MUST reject missing source or test paths, stale selector symbols,
+unknown or obsolete Bazel labels, duplicate or reordered row identities,
+non-implemented rows, and every owner path or evidence edge that crosses into a
+descendant checkout.  The only admitted =wendao-episteme= relationship is the
+parent Git gitlink recorded as pinned source provenance.  The validator never
+executes the child build, tests, publication, release, or distribution lifecycle.
+
+The =gerbil-poo= row consumes the existing =//scheme:gerbil_poo_package= target
+and =@gerbil_poo_sources//:source_resolution_receipt=.  It does not introduce a
+package manager or another POO library.
+
+The formal countermodels and closure theorems are owned by
+=PooFlowProof.Enterprise.ModuleSystemOwnerMapClosure=.  They prove that an
+=implemented= flag alone admits stale selectors and descendant lifecycle edges,
+that schema/version alone admits missing rows, and that authority-bound closed
+rows replay the same source, test, and build binding.
+
+** Qualification receipts
+
+The version-2 validation receipt is a portable evidence projection, not a copy
+of the local execution environment.  It may contain repository-relative paths,
+logical command roles, declared state scopes, and content identities.  A home
+directory, absolute Runtime installation path, temporary output base, sandbox
+path, or machine-specific symlink target is invalid evidence and MUST fail
+closed.
+
+#+begin_src typst
+$ "Portable"(r) := forall s in "Strings"(r), not "HostAbsolute"(s) $
+$ "Accept"(r, a) := "Portable"(r) and r."artifact-sha256" = "SHA256"(a) $
+#+end_src
+
+#+begin_src mermaid
+flowchart LR
+    L["Local execution evidence"] -->|"project relative projection"| R["Portable receipt v2"]
+    L -.->|"absolute host path"| X["Reject fail closed"]
+    A["Owner-map artifact"] -->|"SHA-256 equality"| R
+    C["ASP command role plus BLAKE3 identity"] -->|"no install path"| R
+#+end_src
+
+- Owner-map contract validation :: =//owner-map:contract_validation_test= passed 14 of 14 fail-closed tests, including rejection of absolute host paths in validation receipts.
+- Focused Scheme owner test :: =//owner-map:scheme_owner_map_test= passed two test files and 63 checks: 15 owner-map checks plus 48 profile-composition checks.
+- Independent Bazel module-system target :: =//owner-map:all= exposes 16 targets; =//owner-map:all_tests= passed two of two targets; the child/broad dependency filter returned an empty result.
+- Focused Lean closure :: focused module build passed two jobs; Enterprise aggregate exited 0 with only the pre-existing =unnecessarySimpa= warning owned by =AgentRedTeamProofRegressionClosure.lean= and no errors.
+- Scheme aggregate :: affected aggregate =//owner-map:all_tests= passed two of two targets.  The observed project aggregate passed three performance targets before the disposable batch was interrupted at 439.270 seconds; nine targets were skipped and no owner-map target failed.  This observation is not represented as a full project-suite pass.
+- Lean aggregate and full build :: Enterprise aggregate exited 0; full =lake build= completed successfully with 555 jobs.
+- Orgize Org/Typst/Mermaid lint :: =asp org lint= passed after the final receipt and checklist update.
+- Deterministic replay and gitlink validation :: artifact SHA-256 =ae623d28afb8c8b59d271c10f9b1d9562d0c4a6af517c93f71a3cb9a68090d37=; eight rows and sixteen owners validated; gitlink validation is true at =9566d310a2813e81068326e7d17a30d330de393f=.  The portable machine receipt is =owner-map/module-system-owner-map-validation-receipt-v2.json=; version 2 rejects absolute host paths and records only logical roles, repository-relative paths, and content identities.
+
+- [X] Verify every exact Gerbil source owner.
+- [X] Verify every direct test owner.
+- [X] Verify the stable parent module-system source and test targets.
+- [X] Confirm no mapped target owns or executes =wendao-episteme= or another descendant lifecycle.
+- [X] Validate the version-1 artifact, schema, deterministic replay, and pinned gitlink receipt.
+- [X] Import the Lean countermodels and closure into the Enterprise aggregate.
+- [X] Begin implementation only after the mapping is reviewable as one closed set.
 
 Provider or index unavailability leaves this gate open.  It does not authorize
 raw-source substitution, a guessed owner, a new adapter layer, or premature

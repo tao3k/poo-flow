@@ -1,4 +1,5 @@
 import PooFlowProof.Enterprise.SourceBoundEffectCompletionRecoveryOwnerAuditModel
+import PooFlowProof.Enterprise.SourceBoundEffectCompletionRecoveryOwnerAuditCore
 import PooFlowProof.Enterprise.SourceBoundEffectCompletionRecoveryOwnerCoverageClosure
 
 namespace PooFlowProof.Enterprise.SourceBoundEffectCompletionRecoveryOwnerAuditClosure
@@ -9,6 +10,7 @@ open SourceBoundDeterministicBudgetClosure
 open SourceBoundEffectCompletionCrashRecoveryClosure
 open SourceBoundEffectCompletionPublicationClosure
 open SourceBoundEffectCompletionRecoveryConvergenceClosure
+open SourceBoundEffectCompletionRecoveryOwnerAuditCore
 open SourceBoundEffectCompletionRecoveryOwnerCoverageClosure
 open SourceBoundEffectCompletionRecoveryOwnerDeferralAdmissionContractClosure
 open SourceBoundEffectCompletionRecoveryProgressEvidenceClosure
@@ -23,44 +25,6 @@ closure adds one canonical, cross-owner audit chain that preserves the exact
 native owner and receipt identities.  There is no compatibility, migration,
 legacy, or fallback interpretation.
 -/
-
-structure SourceBoundEffectCompletionRecoveryOwnerAuditWitness where
-  witnessId : String
-  previousWitnessId : Option String
-  ordinal : Nat
-  recoveryId : String
-  owner : SourceBoundEffectCompletionRecoveryProgressOwner
-  ownerIdentity : String
-  beforeReceiptId : String
-  afterReceiptId : String
-  runtimeEpoch : Nat
-  activeFenceToken : Nat
-
-def SourceBoundEffectCompletionRecoveryOwnerAuditWitness.Valid
-    (witness : SourceBoundEffectCompletionRecoveryOwnerAuditWitness) : Prop :=
-  witness.witnessId ≠ "" ∧
-  witness.recoveryId ≠ "" ∧
-  witness.ownerIdentity ≠ "" ∧
-  witness.beforeReceiptId ≠ witness.afterReceiptId ∧
-  (witness.ordinal = 0 → witness.previousWitnessId = none) ∧
-  (0 < witness.ordinal →
-    ∃ previous, witness.previousWitnessId = some previous)
-
-def SourceBoundEffectCompletionRecoveryOwnerAuditWitness.Adjacent
-    (current next :
-      SourceBoundEffectCompletionRecoveryOwnerAuditWitness) : Prop :=
-  next.ordinal = current.ordinal + 1 ∧
-  next.previousWitnessId = some current.witnessId ∧
-  next.recoveryId = current.recoveryId ∧
-  next.runtimeEpoch = current.runtimeEpoch ∧
-  next.activeFenceToken = current.activeFenceToken ∧
-  (next.owner = current.owner →
-    next.beforeReceiptId = current.afterReceiptId)
-
-def SourceBoundEffectCompletionRecoveryOwnerAuditWitness.receiptKey
-    (witness : SourceBoundEffectCompletionRecoveryOwnerAuditWitness) :
-    SourceBoundEffectCompletionRecoveryProgressOwner × String :=
-  (witness.owner, witness.afterReceiptId)
 
 inductive SourceBoundEffectCompletionRecoveryOwnerAuditBinding
     (expectation : SourceBoundEffectCompletionRecoveryExpectation)

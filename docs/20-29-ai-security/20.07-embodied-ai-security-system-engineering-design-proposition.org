@@ -1,0 +1,226 @@
+#+title: 20.07 Embodied AI Security System Engineering Design Proposition
+#+startup: overview
+
+* Status
+
+- State: proposal
+- Scope: embodied AI, humanoid robots, and other AI-enabled cyber-physical systems
+- Owner: poo-flow AI security architecture
+- Normative language: MUST, MUST NOT, SHOULD, and MAY are requirement keywords
+
+* Problem statement
+
+Embodied AI closes a perception--decision--action--feedback loop across models,
+software, networks, embedded controllers, sensors, actuators, operators, and the
+physical environment.  A local digital failure can therefore propagate into a
+physical effect, a safety consequence, an operational interruption, or a human
+responsibility transition.
+
+A component vulnerability list, a model evaluation, a penetration-test report,
+or a formal proof is useful but insufficient on its own.  The assurance subject
+is the composed system: its declared intent, authority, effects, dependencies,
+recovery behavior, evidence, and residual-risk acceptance.
+
+* Normative design proposition
+
+#+begin_quote
+Embodied-AI security MUST be engineered as a compositional system property over
+authority-governed effects and continuously qualified evidence.  poo-flow MUST
+connect system declarations, cross-domain risk, executable control flow,
+verification obligations, authority-bearing receipts, and empirical operating
+feedback without allowing any one representation or provider to claim complete
+assurance by itself.
+#+end_quote
+
+This proposition has five inseparable clauses.
+
+** The security subject is the constrained system effect
+
+A vulnerability, threat, failure, or model error is an initiating condition, not
+the final security subject.  Analysis MUST continue through the behavior change
+and the resulting digital, physical, safety, business, privacy, and human impact.
+
+Every security-relevant effect SHOULD declare at least:
+
+- the effect domain and target assets;
+- the initiating authority and authorization context;
+- preconditions, invariants, and prohibited outcomes;
+- commit, cancellation, compensation, rollback, and recovery semantics;
+- fencing or replay protection where authority can change;
+- the evidence required to establish completion or safe non-completion.
+
+The ordinary public API MUST expose these concepts through POO-native objects,
+prototypes, slots, extension helpers, and functional combinators.  Raw alist
+DSLs, ad hoc patch languages, and unbounded =(lambda (self super) ...)= hooks
+MUST NOT become the normal security-engineering surface.
+
+** A security conclusion is an authority-bearing declaration
+
+An architecture fact, threat, risk rating, requirement, control, test result,
+waiver, residual-risk decision, or operating observation MUST retain the
+authority that issued or accepted it.  A declaration without identity,
+provenance, scope, version, and applicable context MUST NOT silently participate
+in a system-level closure claim.
+
+Authority is not a generic metadata field.  The model MUST distinguish at least:
+
+- declaration authority;
+- implementation and execution authority;
+- evidence-producing authority;
+- verification or attestation authority;
+- residual-risk acceptance authority;
+- recovery, handoff, and emergency-intervention authority.
+
+Authority changes MUST be explicit system transitions.  Handoff, revocation,
+replacement, and recovery SHOULD have identity continuity, fencing, freshness,
+and audit obligations rather than being represented only as workflow comments.
+
+** The security digital thread is a computable typed relation graph
+
+The digital thread MUST represent semantic relations, not merely hyperlinks
+between documents.  Its minimum assurance chain is:
+
+#+begin_example
+System / IntendedUse / OperatingScenario
+  -> Asset / Interface / TrustBoundary / Dependency
+  -> Threat / Hazard / Failure / Assumption
+  -> BehaviorChange / PhysicalAndBusinessConsequence
+  -> SecurityGoal / SafetyConstraint
+  -> Requirement / Control / Responsibility
+  -> VerificationObligation / Test / Review / Proof
+  -> Evidence / Receipt / OperatingObservation
+  -> ResidualRisk / AcceptanceDecision
+#+end_example
+
+Relations MUST be typed sufficiently to distinguish derivation, dependency,
+allocation, mitigation, verification, contradiction, supersession, acceptance,
+and invalidation.  Composition MUST detect incompatible assumptions, conflicting
+controls, missing guarantees, withdrawn contributions, and evidence gaps instead
+of flattening them into a single aggregate score.
+
+Cybersecurity and functional-safety declarations SHOULD share architecture,
+scenario, effect, and consequence identities while retaining their distinct
+authorities, acceptance criteria, and verification methods.
+
+** System change drives invalidation and obligation regeneration
+
+Assurance is not monotonic merely because artifacts accumulate.  A change to a
+model, sensor, controller, network path, firmware image, OTA service, operating
+environment, supplier, policy, responsibility assignment, or recovery procedure
+MAY invalidate an earlier conclusion.
+
+poo-flow MUST be able to project a change onto affected assumptions, risks,
+requirements, controls, proofs, tests, receipts, and acceptance decisions.  The
+result MUST distinguish:
+
+- evidence that remains applicable;
+- evidence that is stale, superseded, or outside its declared context;
+- conclusions that can be recomposed without new evidence;
+- verification obligations that must be regenerated;
+- residual risks that require renewed human acceptance.
+
+Freshness, lineage, checkpoints, rollback history, and current publication head
+SHOULD be part of receipt acceptance wherever stale replay or split-view state
+could produce an unsafe effect.
+
+** AI is an analysis provider, not a risk-acceptance authority
+
+AI MAY parse architecture, map external knowledge, propose threats, generate
+scenarios, identify inconsistencies, suggest controls, and prioritize candidate
+obligations.  Every such result MUST remain attributable to a provider, model,
+input context, and generation version.
+
+AI output MUST NOT by itself:
+
+- authorize a physical or security-relevant effect;
+- declare a control implemented or effective;
+- discharge a verification obligation;
+- accept residual risk;
+- replace the accountable human or organizational authority.
+
+Providers translate and propose.  Canonical composition, execution authority,
+verification, and risk acceptance remain governed by the poo-flow system model
+and its explicitly assigned authorities.
+
+* poo-flow responsibility boundary
+
+poo-flow is the compositional assurance control plane.  It SHOULD provide:
+
+- POO-native declarations for systems, scenarios, assets, boundaries, effects,
+  risks, controls, obligations, evidence, receipts, and authorities;
+- functional composition and projection of local declarations into system views;
+- conflict, withdrawal, dependency, and assume--guarantee analysis;
+- explicit runtime handoff for effects, recovery, and evidence capture;
+- traceable refinement from normative intent to executable checks;
+- change-impact analysis and obligation regeneration;
+- provider boundaries for external standards, threat intelligence, scanners,
+  simulators, robot platforms, and AI-assisted analysis.
+
+poo-flow is not, by itself:
+
+- a robot operating system, motion planner, safety PLC, or real-time controller;
+- a vulnerability scanner, SIEM, penetration-testing engine, or model evaluator;
+- a replacement for domain experts, safety authorities, operators, or assessors;
+- empirical proof that a particular robot is safe in a particular environment.
+
+Those systems and authorities integrate through declarations, providers, effect
+boundaries, executable traces, and qualified evidence.
+
+* Four-authority-layer assurance obligations
+
+No single layer MAY claim complete closure.
+
+1. Normative Org defines the intended architecture, semantics, responsibilities,
+   risks, acceptance criteria, and required evidence.
+2. Formal Lean establishes logical closure and refinement properties under
+   explicit assumptions.
+3. Executable refinement demonstrates that the normative and formal semantics
+   project into runnable composition, transition, trace, and receipt checks.
+4. Empirical qualification supplies evidence from the actual robot, controller,
+   network, deployment, operator process, attack exercise, fault injection, and
+   operating environment.
+
+Cross-layer mappings MUST identify which normative claim is formalized, which
+formal object is executable, which executable observation is empirically
+qualified, and which assumptions remain outside the evidence envelope.
+
+Formal success MUST NOT be reported as runtime or empirical qualification.
+Runtime replay MUST NOT be reported as physical-system qualification.  A test
+receipt MUST NOT establish more authority, scope, or freshness than its producer
+and context justify.
+
+* Minimum acceptance criteria
+
+This design proposition is usable for a concrete embodied-AI system only when:
+
+1. intended use, operating scenarios, physical consequences, and system boundary
+   are explicitly declared;
+2. security-relevant effects and authority transitions have named owners;
+3. threats, hazards, requirements, controls, obligations, evidence, and residual
+   risks form a typed traceable chain;
+4. composition exposes missing guarantees and conflicting assumptions;
+5. a defined change set can invalidate stale conclusions and regenerate affected
+   obligations;
+6. AI-generated candidates remain provider-attributed and human-reviewable;
+7. Org, Lean, executable refinement, and empirical qualification are reported as
+   separate authority layers with explicit cross-layer mappings;
+8. the final report names unresolved assumptions, evidence gaps, residual risks,
+   and the authority responsible for accepting or closing each one.
+
+* Next assurance owner
+
+The cross-layer identity and obligation binding for the five normative clauses is
+owned by [[file:20.06-four-authority-layer-scientific-assurance-cycle.org::*20.07 cross-layer claim binding][20.06 — 20.07 cross-layer claim binding]].  It assigns
+=EASE-001= through =EASE-005= and advances each claim only when the corresponding
+Lean declaration set, executable transition and artifact, trace root, or
+empirical-run identity is explicitly bound and verified for that authority layer.
+
+No implementation, proof, provider output, or test receipt may infer closure from
+this RFC alone.
+
+* Design consequence
+
+Security is therefore a first-class input to system composition, not a final
+inspection stage.  poo-flow creates value when it makes risk-driven decisions
+composable, effects governable, evidence challengeable, responsibility explicit,
+and change continuously traceable from architecture to physical operation.

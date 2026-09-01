@@ -1,6 +1,6 @@
 (import :std/test
-        :gslph/src/build-api/framework
-        :gslph/src/testing/framework)
+        :asp-gerbil-scheme/src/build-api/framework
+        :asp-gerbil-scheme/src/testing/framework)
 
 (def +cli-support-command-events+ '())
 

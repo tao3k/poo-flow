@@ -268,6 +268,12 @@ Actual closure:
 * Verification receipt
 
 - Focused Lean module: 137 jobs passed.
+- Lean declaration closure: schema =poo-flow.lean-declaration-closure.v1=, 31 declarations, one owner module.
+- Local Python verification: two deadline tests passed; safe local suite passed 70 tests with eight external gates deselected.
+- Whitespace validation: tracked diff and all four new owner-coverage artifacts passed =git diff --check=.
+- Bounded AXLE execution: owner-source extraction was cancelled at 39,999 ms and rejected with =axle-operation-deadline-exceeded=.
+- External AXLE qualification remains blocked by DNS resolution for =axle.axiommath.ai=.
+- Mermaid CLI rendering remains open because no local CLI is available.
 - Lean-owned declaration audit confirmed all model and actual-closure
   declarations from the compiled environment.
 - Enterprise aggregate Lean build: 217 jobs passed.

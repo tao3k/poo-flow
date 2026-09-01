@@ -28,14 +28,14 @@ gerbil_dependency_sources.source_package(
 )
 
 gerbil_dependency_sources.source_package(
-    canonical_uri = "https://github.com/tao3k/gerbil-scheme-language-project-harness",
-    name = "gslph_sources",
-    package = "gslph",
-    revision = "a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
-    sha256 = "de202ddb3b204f4faa461f44df0cfeaa3bea5d77b047e46babc9a1fa51b84838",
-    strip_prefix = "gerbil-scheme-language-project-harness-a0ba60a15dd05d95ea89c0506f530f426d3dca1e",
+    canonical_uri = "https://github.com/tao3k/asp-gerbil-scheme",
+    name = "asp_gerbil_scheme_sources",
+    package = "asp-gerbil-scheme",
+    revision = "e8d00f54294ead9fead051ef1f618a53dd177640",
+    sha256 = "ca5c73bba8439a2db3a95f6ccb3997bf5b40bad812054dcffaaf542afd3161d4",
+    strip_prefix = "asp-gerbil-scheme-e8d00f54294ead9fead051ef1f618a53dd177640",
     urls = [
-        "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/a0ba60a15dd05d95ea89c0506f530f426d3dca1e.tar.gz",
+        "https://github.com/tao3k/asp-gerbil-scheme/archive/e8d00f54294ead9fead051ef1f618a53dd177640.tar.gz",
     ],
 )
 
@@ -43,5 +43,5 @@ use_repo(
     gerbil_dependency_sources,
     "gerbil_poo_sources",
     "gerbil_utils_sources",
-    "gslph_sources",
+    "asp_gerbil_scheme_sources",
 )

@@ -119,9 +119,9 @@ $
 
 #+begin_src typst
 $
-  i = 0 arrow w_i."previous" = none
+  i = 0 arrow w_i."previous" = "none"
   comma
-  i > 0 arrow exists p, w_i."previous" = some(p)
+  i > 0 arrow exists p, w_i."previous" = "some"(p)
 $
 #+end_src
 
@@ -182,7 +182,7 @@ Two adjacent non-committed witnesses satisfy:
 $
   "ordinal"_(i + 1) = "ordinal"_i + 1
   quad and quad
-  "previous"_(i + 1) = some("witness-id"_i)
+  "previous"_(i + 1) = "some"("witness-id"_i)
 $
 #+end_src
 
@@ -259,6 +259,33 @@ $
 =closedOwnerAuditConverges= reuses the existing convergence theorem without
 changing the recovery progress or convergence semantics.
 
+* AXLE-driven proof modularity
+
+The first actual-closure AXLE preflight selected five roots from the heavy
+native binding module.  That closure expanded to:
+
+- 25 owner source files;
+- 398 declarations;
+- 86,389 source bytes.
+
+AXLE reached its default 30-second =owner-source-extract= limit.  Increasing the
+timeout would have hidden a module-boundary problem.
+
+The canonical identity, adjacency, and non-reuse algebra was therefore moved
+into
+=SourceBoundEffectCompletionRecoveryOwnerAuditCore=.  Native binding now
+depends on that core in one direction.
+
+The qualified core closure contains:
+
+- 2 owner source files;
+- 21 preflight declarations;
+- 3,166 source bytes;
+- 8 exact declarations for 3 selected roots.
+
+It completes under the unchanged default AXLE timeout.  No versioned
+replacement API or compatibility alias was introduced.
+
 * Fail-closed boundaries
 
 The actual closure proves:
@@ -310,11 +337,12 @@ flowchart LR
 - [X] Prove projection into atomic owner coverage.
 - [X] Reuse the existing convergence theorem without changing its semantics.
 - [X] Prove fail-closed rejection boundaries.
-- [ ] Independently qualify the model and actual closure with AXLE.
-- [ ] Render and validate every Typst block.
-- [ ] Parse the Mermaid graph through Orgize's Mermaid dependency.
-- [ ] Run focused, Enterprise, full Lean, Python, and repository consistency
-      gates.
+- [X] Independently qualify the model and canonical actual audit core with
+      AXLE.
+- [X] Render and validate every Typst block.
+- [X] Parse the Mermaid graph through Orgize's Mermaid dependency.
+- [X] Run focused, Enterprise, full Lean, and repository whitespace gates.
+- [X] Re-run the current Python suite with a cleared pytest cache.
 
 * Proof files
 
@@ -322,8 +350,36 @@ flowchart LR
   =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditModel.lean=
 - Actual closure:
   =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditClosure.lean=
+- Canonical lightweight audit algebra:
+  =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerAuditCore.lean=
 - Strengthened native contracts:
   =packages/proof/lean/PooFlowProof/Enterprise/SourceBoundEffectCompletionRecoveryOwnerDeferralAdmissionContractClosure.lean=
+
+* Verification receipts
+
+- Focused crash/storage/scheduler freshness build: passed.
+- Focused owner-audit model, core, and actual closure builds: passed.
+- =PooFlowProof.Enterprise=: passed.
+- Full Lean build: passed; one unrelated existing =simpa= linter suggestion
+  remains in =AgentRedTeamProofRegressionClosure.lean=.
+- Independent model through =uv run axle --json check=: =okay=true=,
+  no failed declarations, errors, or warnings.
+- Canonical actual core through =uv run poo-flow-axle-verify=:
+  - closure digest:
+    =sha256:7d33b9fd89ca6dc45000b0dae1922b615e076c17b8bd62bba1af2f624cbc9f70=;
+  - bundle digest:
+    =sha256:7b9583baa3761e5f5ff6de83b195e826bff94c3c37a14e2a6b479729b62eda2a=;
+  - independent declaration bundle digest:
+    =sha256:9843540204a6e2c49cc6960c22fb50bda9235c03da0cc9cd734cad46aba28926=;
+  - =okay=true=, 3 roots, 8 exact declarations.
+- Orgize source-block projection: 10 blocks, 9 Typst and 1 Mermaid; Org
+  lint findings: 0.
+- Mermaid 11.16.0 through the Orgize dependency environment: 1/1 focused
+  Vitest passed.
+- Typst render:
+  =/private/tmp/45-120-41-owner-audit.pdf=, 23,305 bytes.
+- Current Python suite with =--cache-clear=: 78 passed in 16.09 seconds.
+- Staged and unstaged repository whitespace checks: passed.
 
 * Next proof gap
 

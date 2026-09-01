@@ -1,0 +1,158 @@
+* Versioned build-source identity and comparable performance receipts
+
+Cross-revision performance measurement is a separate, non-mutating consumer of
+the build graph. The audit runner alone passes =--lockfile_mode=off= because a
+historical revision's tracked lock freshness is not part of the compile
+workload. This does not authorize dependency drift: each canonical compile
+receipt folds resolved =dependencySourceResolutions= and the native ABI into
+=toolchainIdentity=, and the POO comparison rejects observations whose
+comparable identities differ. Normal development, CI, release, and runtime
+packaging retain =lockfile_mode=error=.
+
+The uploaded evidence is bounded to the comparison input, comparison and
+warm/no-op receipts, the warm BEP, and canonical per-sample compile receipts.
+Bazel output bases and dependency caches are execution state and must never be
+uploaded as performance evidence.
+
+#+begin_src mermaid :file images/147-cross-revision-audit-lock-boundary.svg
+flowchart LR
+    Revisions["Historical baseline + candidate"] --> Audit["Same-host audit only<br/>lockfile_mode=off"]
+    Audit --> Receipts["Canonical compile receipts<br/>native ABI + dependency resolutions"]
+    Receipts --> Identity["POO comparable-identity gate"]
+    Identity --> Evidence["Bounded JSON receipts + warm BEP"]
+    Normal["Development / CI / release / packaging"] --> Locked["lockfile_mode=error"]
+#+end_src
+
+The comparison identity and the workload descriptor are intentionally
+different.  Cross-revision comparison requires the same runner, host session,
+toolchain identity, execution policy, logical CPU count, worker count,
+coldness class, and dependency-cache state.  =specCount= is instead a
+side-local workload descriptor: every sample within one revision must agree,
+while the baseline and candidate may legitimately contain different numbers
+of source specifications.  Both counts remain explicit in the comparison
+receipt so a reviewer can distinguish code growth from a runtime regression.
+
+The JSON boundary is implemented by a small Gerbil adapter over the POO-native
+budget objects.  Its Bazel package contains only
+=src/utilities/functional.ss= and
+=src/build-api/project-compile-performance-budget.ss=, plus the upstream-style
+=:clan/building= entry point.  The validator therefore cannot pull the root
+=//scheme:compile= action into an otherwise lightweight policy check.
+
+#+begin_src mermaid
+flowchart LR
+    B["Baseline samples<br/>one revision and one specCount"] --> P["POO-native performance budget"]
+    C["Candidate samples<br/>one revision and one specCount"] --> P
+    I["Cross-side identity<br/>same host, toolchain, policy, CPU, workers, cache, coldness"] --> P
+    P --> R["Comparison receipt<br/>baselineSpecCount + candidateSpecCount"]
+    R --> A{"Median within<br/>relative ceiling?"}
+    A -->|yes| OK["accepted"]
+    A -->|no| BAD["regressed + nonzero validator exit"]
+#+end_src
+
+The focused Bazel gates are
+=//scheme:compile_performance_budget_unit_test= and
+=//scheme:compile_performance_budget_validator_test=.  Both must remain
+dependency-disconnected from =//scheme:compile=.
+
+The manual
+=.github/workflows/scheme-compile-performance-audit.yml= workflow implements
+the controlled evidence gate.  It checks out a caller-selected known-good
+revision and the candidate revision on one Linux host, then the Scheme runner
+interleaves baseline and candidate samples.  The sample count must be an odd
+integer of at least three; three is the default, not a machine-performance
+constant.  CPU count, worker count, source identity, dependency resolution,
+execution policy, and elapsed time are observations read from each canonical
+=compile.receipt.json=.  The equivalent local declarative entry point is
+=just audit-scheme-compile=; it requires explicit checkout, revision, host
+session, runner identity, and output-directory coordinates.
+
+Each sample owns a fresh Bazel output base.  Dependency packages are first
+materialized through a shared content-addressed dependency cache.  The root
+compile then uses an initially empty sample-local cache, so dependency actions
+are seeded while the root action remains cold.  After the last candidate
+sample, the runner replays =//scheme:compile_receipt= in the same output base
+and fails unless the Bazel build-event stream contains zero completed actions.
+Long Bazel commands use Gerbil's =run-process/batch= so their output is not
+accumulated in the gxi heap; only the short =cquery= and =info= results are
+captured.
+
+#+begin_src mermaid
+sequenceDiagram
+    participant S as "Scheme audit runner"
+    participant B as "Known-good checkout"
+    participant C as "Candidate checkout"
+    participant V as "POO budget validator"
+
+    loop "Odd sample count, default 3"
+        S->>B: "Seed dependency actions in fresh output base"
+        S->>B: "Cold //scheme:compile_receipt"
+        B-->>S: "Canonical observation"
+        S->>C: "Seed dependency actions in fresh output base"
+        S->>C: "Cold //scheme:compile_receipt"
+        C-->>S: "Canonical observation"
+    end
+    S->>C: "Warm replay in last candidate output base"
+    C-->>S: "BEP actionCount = 0"
+    S->>V: "baselineObservations + candidateObservations"
+    V-->>S: "accepted or regressed receipt"
+#+end_src
+
+This workflow is intentionally excluded from ordinary pull-request CI because
+it executes multiple cold root actions.  Its 45-minute job timeout is a
+runaway safety boundary, not the performance budget; the performance decision
+is the identity-scoped relative median encoded by the POO objects.
+
+GitHub accepts =workflow_dispatch= only after the workflow file exists on the
+default branch.  The existing default-branch =CI= workflow therefore exposes a
+manual reusable-workflow bridge that loads this audit implementation from the
+selected pull-request ref.  Pull requests retain the fast fake-Bazel
+end-to-end test for ordinary validation, while maintainers can execute the real
+3+3 gate before merge.  The initial controlled baseline candidate is
+=945a96445c445bb5542732d90f9f0d483dc18ece=, the earliest branch commit containing the canonical
+source-identity/root-policy generation used by the 194--195 second receipts.
+It proves whether later changes introduced another regression.  The historical
+155.837 second run remains a non-comparable observation until an equivalent
+identity tuple is recovered; it is not an unbounded closure blocker.
+
+POO Contract remains the unique canonical owner.  The build-source identity is
+not another owner, contract store, or memory layer.  It is a derived runtime
+receipt over the exact source graph that one compile invocation observed.
+
+The compile boundary materializes the Building Framework stage graph exactly
+once.  That same in-memory value is first projected to
+=poo-flow.project-build-source-identity.v1= and then passed to
+=package-source-stages-run!=.  Configuration inspection does not discover or
+hash the graph, and receipt projection does not rediscover it.
+
+The =sha256= input is an ordered byte stream.  It starts with the identity
+schema token and then, for every stage and spec in compile order, includes the
+stage label, spec kind, module path, source byte length, and exact source bytes.
+Every textual token is UTF-8 encoded and byte-length framed.  The receipt also
+records stage and spec counts plus per-stage counts.  The digest identifies the
+observed build inputs; it does not replace POO Contract ownership.
+
+Performance receipts are comparable only when source digest, Gerbil and GSLPH
+toolchain/dependency identities, execution policy, worker count, cache state,
+and coldness class agree.  A historical duration without those coordinates is
+evidence that a run happened, but it is not an attribution proof.
+
+The first timed canonical receipt after this amendment reported:
+
+- =execution-policy=topology= and =worker-count=12=;
+- =spec-count=389= across =3= stages;
+- source digest
+  =2962ac051b1750d6c0453e308b868c49d27c3853734c0a4c5c51f5300b53f4d9=;
+- =source-identity-materialization-elapsed-ms=96=;
+- guard =elapsed-ms=194746= and peak RSS =4,909,645,824= bytes;
+- Bazel elapsed =226.145= seconds with a =225.76=-second critical path;
+- an immediate no-op receipt of =0.296= seconds with a =0.01=-second critical
+  path and one action-cache hit.
+
+The 96-ms measurement rejects source hashing as the cause of the earlier
+multi-minute regression.  The current =194746=-ms guard duration is 511 ms
+below the preceding =195257=-ms topology receipt, but the two receipts do not
+share a source digest and therefore must not be presented as a controlled A/B.
+The isolated historical =155837=-ms duration likewise remains a target to
+reproduce under one identical identity tuple, not a baseline from which to
+infer a scheduler defect.

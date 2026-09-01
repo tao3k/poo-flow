@@ -17,7 +17,9 @@ from poo_flow_proof.independent_bundle import (
     AxleEnvironmentIdentity,
     DeclarationIdentity,
     IndependentDeclarationBundle,
+    ProofBaseInterfaceDeclarationIdentity,
     ResolvedSourceIdentity,
+    canonical_proof_base_interface_digest,
 )
 from poo_flow_proof.lean_declaration_closure import (
     LeanClosureError,
@@ -116,6 +118,76 @@ def build_independent_declaration_bundle(
         lake_manifest_digest=_digest(manifest_bytes),
     )
     sources_by_module = {source.module: source for source in sources}
+    if all(declaration.source_range is not None for declaration in closure.declarations):
+        declaration_aliases = _source_declaration_aliases(closure)
+    else:
+        declaration_aliases = {
+            declaration.name: declaration.name for declaration in closure.declarations
+        }
+    owned_source_names = set(declaration_aliases.values())
+    proof_base_names = {declaration.name for declaration in closure.proof_base_interface}
+    owned_exact_declarations = tuple(
+        declaration
+        for declaration in exact.declarations
+        if _normalized_source_declaration_name(
+            declaration.name,
+            declaration_aliases,
+        )
+        in owned_source_names
+    )
+    proof_base_exact_declarations = tuple(
+        declaration for declaration in exact.declarations if declaration.name in proof_base_names
+    )
+    classified_names = {
+        declaration.name
+        for declaration in (
+            *owned_exact_declarations,
+            *proof_base_exact_declarations,
+        )
+    }
+    unclassified_names = sorted(
+        declaration.name
+        for declaration in exact.declarations
+        if declaration.name not in classified_names
+    )
+    if unclassified_names:
+        raise IndependentBundleProjectionError(
+            "unclassified-exact-declaration",
+            ", ".join(unclassified_names),
+        )
+    proof_base_exact_by_name = {
+        declaration.name: declaration for declaration in proof_base_exact_declarations
+    }
+    proof_base_declarations_list = []
+    for declaration in closure.proof_base_interface:
+        exact_declaration = proof_base_exact_by_name.get(declaration.name)
+        if exact_declaration is None:
+            kind = "def" if declaration.declaration_role in {"abbrev", "definition"} else "axiom"
+            local_dependencies: tuple[str, ...] = ()
+        else:
+            kind = exact_declaration.kind
+            local_dependencies = tuple(
+                sorted(
+                    dependency
+                    for dependency in exact_declaration.local_dependencies
+                    if dependency in proof_base_names and dependency != declaration.name
+                )
+            )
+        proof_base_declarations_list.append(
+            ProofBaseInterfaceDeclarationIdentity(
+                name=declaration.name,
+                kind=kind,
+                level_params=declaration.level_params,
+                type_source=declaration.type_source,
+                value_source=declaration.value_source,
+                local_dependencies=local_dependencies,
+            )
+        )
+    proof_base_declarations = tuple(proof_base_declarations_list)
+    proof_base_interface_digest = canonical_proof_base_interface_digest(
+        closure.proof_base_imports,
+        proof_base_declarations,
+    )
     declarations = tuple(
         DeclarationIdentity(
             name=declaration.name,
@@ -130,18 +202,12 @@ def build_independent_declaration_bundle(
             owner_source_digest=owner.source_digest,
             local_dependencies=declaration.local_dependencies,
         )
-        for declaration in exact.declarations
+        for declaration in owned_exact_declarations
     )
     declaration_aliases = (
         _source_declaration_aliases(closure)
-        if all(
-            declaration.source_range is not None
-            for declaration in closure.declarations
-        )
-        else {
-            declaration.name: declaration.name
-            for declaration in closure.declarations
-        }
+        if all(declaration.source_range is not None for declaration in closure.declarations)
+        else {declaration.name: declaration.name for declaration in closure.declarations}
     )
     declarations = tuple(
         DeclarationIdentity(
@@ -175,6 +241,9 @@ def build_independent_declaration_bundle(
         lean_toolchain=closure.lean_version,
         axle_environment=environment,
         resolved_sources=(resolved_source,),
+        proof_base_imports=closure.proof_base_imports,
+        proof_base_interface_digest=proof_base_interface_digest,
+        proof_base_declarations=proof_base_declarations,
         declarations=declarations,
         canonical_source=exact.canonical_source,
     )

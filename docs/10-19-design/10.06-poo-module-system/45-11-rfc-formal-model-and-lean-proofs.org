@@ -268,7 +268,7 @@ Therefore policy authority is represented by a proof-carrying product:
 )
 #+end_src
 
-*** Typst--Lean--AXLE synchronization contract
+*** Presentation projection synchronization contract
 
 The earlier statement that token semantics remained open described the
 pre-synchronization proof state. Local Lean now models the token-bearing
@@ -277,9 +277,10 @@ runtime-local proof carrier and MUST NOT become a serializable receipt field.
 Scheme/runtime correspondence and AXLE modular verification remain separate
 gates.
 
-The Typst model is not an explanatory shadow of the Lean source. Every named
-Typst object below MUST map to one exact Lean declaration, and each proof claim
-MUST report local Lean and AXLE status independently.
+Typst is a presentation language, not a correctness authority. Every named
+Typst object below MUST map to one exact RFC claim and Lean declaration, and
+each proof claim MUST report local Lean and AXLE status independently. This
+mapping prevents presentation drift; it cannot discharge an authoritative-layer obligation.
 
 #+begin_src typst
 #let RecoveryDecisionOutcome = (

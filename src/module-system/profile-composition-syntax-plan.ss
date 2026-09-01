@@ -427,14 +427,19 @@
                          (stage-out '())
                          (stage-seen '()))
            (if (null? rest)
-             (composition-syntax-plan
-              name: composition-name
-              module-name: module-name
-              alias: alias
-              profiles: profiles
-              compose: (reverse compose-out)
-              stages: (reverse stage-out)
-              source: source)
+             (if (null? compose-out)
+               (composition-raise-syntax-error
+                'composition-missing-profile-operand
+                "use-composition requires at least one profile operand"
+                source)
+               (composition-syntax-plan
+                name: composition-name
+                module-name: module-name
+                alias: alias
+                profiles: profiles
+                compose: (reverse compose-out)
+                stages: (reverse stage-out)
+                source: source))
              (let* ((form (car rest))
                     (items
                      (composition-syntax-list

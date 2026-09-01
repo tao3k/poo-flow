@@ -2,7 +2,7 @@
 ;;; Boundary: harness-backed field contract validation.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/extensions/poo-object-validation
+        (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-field-contract-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)

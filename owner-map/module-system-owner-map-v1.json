@@ -1,0 +1,217 @@
+{
+  "schemaId": "poo-flow.module-system-owner-map",
+  "schemaVersion": 1,
+  "artifactId": "poo-flow.module-system-owner-map.v1",
+  "artifactPath": "owner-map/module-system-owner-map-v1.json",
+  "rows": [
+    {
+      "rowId": "rfc45-01-mix-module-expansion",
+      "rfc": "45-01",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/profile-composition-use-syntax.ss",
+        "symbol": "use-composition",
+        "kind": "macro",
+        "selector": "gerbil-scheme://src/module-system/profile-composition-use-syntax.ss#item/macro/use-composition",
+        "contentSha256": "1e6f1abbc367e9cb00963993a5019b00f267946978081bfd7ee786c9c1b59997"
+      },
+      "testOwner": {
+        "path": "t/profile-composition-test.ss",
+        "symbol": "profile-composition-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/profile-composition-test.ss#item/function/profile-composition-tests",
+        "contentSha256": "e572aadffc0b953a137d22d7efbb2dc0877d09b34b703866247880b9d98a026f"
+      },
+      "buildTarget": "//owner-map:rfc45_01_mix_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_01_mix_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    },
+    {
+      "rowId": "rfc45-02-g0-decision",
+      "rfc": "45-02",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/g0-qualification.ss",
+        "symbol": "poo-flow-g0-resolve",
+        "kind": "function",
+        "selector": "gerbil-scheme://src/module-system/g0-qualification.ss#item/function/poo-flow-g0-resolve",
+        "contentSha256": "a6d45b1983dd97d36f644b534d8cba77d5549a09f1a5adc4df318a74294d0a13"
+      },
+      "testOwner": {
+        "path": "t/module-system-owner-map-test.ss",
+        "symbol": "module-system-owner-map-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/module-system-owner-map-test.ss#item/function/module-system-owner-map-tests",
+        "contentSha256": "aa59608674647832473c2504681722c781136c5346eb61ad056a0d7b6e32981d"
+      },
+      "buildTarget": "//owner-map:rfc45_02_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_02_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    },
+    {
+      "rowId": "rfc45-03-runtime-context-recovery",
+      "rfc": "45-03",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/runtime-context-recovery.ss",
+        "symbol": "poo-flow-runtime-context",
+        "kind": "function",
+        "selector": "gerbil-scheme://src/module-system/runtime-context-recovery.ss#item/function/poo-flow-runtime-context",
+        "contentSha256": "d69e2b00e487a4c326083b587d25b2eb61dac174aaf8fb4e768e4ad1b058bc48"
+      },
+      "testOwner": {
+        "path": "t/module-system-owner-map-test.ss",
+        "symbol": "module-system-owner-map-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/module-system-owner-map-test.ss#item/function/module-system-owner-map-tests",
+        "contentSha256": "aa59608674647832473c2504681722c781136c5346eb61ad056a0d7b6e32981d"
+      },
+      "buildTarget": "//owner-map:rfc45_03_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_03_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    },
+    {
+      "rowId": "rfc45-04-observability-snapshot",
+      "rfc": "45-04",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/owner-map-observability.ss",
+        "symbol": "poo-flow-owner-map-event",
+        "kind": "function",
+        "selector": "gerbil-scheme://src/module-system/owner-map-observability.ss#item/function/poo-flow-owner-map-event",
+        "contentSha256": "d90fae3c66fd08475f50447fb2c3d6969c0de49de496771a6558879590af7d5b"
+      },
+      "testOwner": {
+        "path": "t/module-system-owner-map-test.ss",
+        "symbol": "module-system-owner-map-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/module-system-owner-map-test.ss#item/function/module-system-owner-map-tests",
+        "contentSha256": "aa59608674647832473c2504681722c781136c5346eb61ad056a0d7b6e32981d"
+      },
+      "buildTarget": "//owner-map:rfc45_04_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_04_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    },
+    {
+      "rowId": "rfc45-05-lineage-cycle",
+      "rfc": "45-05",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/composition-lineage.ss",
+        "symbol": "poo-flow-lineage-analysis",
+        "kind": "function",
+        "selector": "gerbil-scheme://src/module-system/composition-lineage.ss#item/function/poo-flow-lineage-analysis",
+        "contentSha256": "a69b26339403e4cfd896b9038a063432b231d6f5a5999b4bcd9d894ef705f18c"
+      },
+      "testOwner": {
+        "path": "t/module-system-owner-map-test.ss",
+        "symbol": "module-system-owner-map-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/module-system-owner-map-test.ss#item/function/module-system-owner-map-tests",
+        "contentSha256": "aa59608674647832473c2504681722c781136c5346eb61ad056a0d7b6e32981d"
+      },
+      "buildTarget": "//owner-map:rfc45_05_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_05_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    },
+    {
+      "rowId": "rfc45-06-gerbil-poo-consumption",
+      "rfc": "45-06",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/gerbil-poo-consumption.ss",
+        "symbol": "poo-flow-gerbil-poo-consumption-manifest",
+        "kind": "function",
+        "selector": "gerbil-scheme://src/module-system/gerbil-poo-consumption.ss#item/function/poo-flow-gerbil-poo-consumption-manifest",
+        "contentSha256": "ab559fef3f670acd36537474e45121d287a64a2a78eee12c09204f0836286db0"
+      },
+      "testOwner": {
+        "path": "t/module-system-owner-map-test.ss",
+        "symbol": "module-system-owner-map-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/module-system-owner-map-test.ss#item/function/module-system-owner-map-tests",
+        "contentSha256": "aa59608674647832473c2504681722c781136c5346eb61ad056a0d7b6e32981d"
+      },
+      "buildTarget": "//owner-map:rfc45_06_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_06_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test",
+        "providerTarget": "//scheme:gerbil_poo_package",
+        "sourceResolutionReceipt": "@gerbil_poo_sources//:source_resolution_receipt"
+      }
+    },
+    {
+      "rowId": "rfc45-07-public-composition",
+      "rfc": "45-07",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/profile-composition-use-syntax.ss",
+        "symbol": "use-composition",
+        "kind": "macro",
+        "selector": "gerbil-scheme://src/module-system/profile-composition-use-syntax.ss#item/macro/use-composition",
+        "contentSha256": "1e6f1abbc367e9cb00963993a5019b00f267946978081bfd7ee786c9c1b59997"
+      },
+      "testOwner": {
+        "path": "t/profile-composition-test.ss",
+        "symbol": "profile-composition-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/profile-composition-test.ss#item/function/profile-composition-tests",
+        "contentSha256": "e572aadffc0b953a137d22d7efbb2dc0877d09b34b703866247880b9d98a026f"
+      },
+      "buildTarget": "//owner-map:rfc45_07_composition_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:rfc45_07_composition_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    },
+    {
+      "rowId": "rfc45-08-parent-qualification",
+      "rfc": "45-08",
+      "implementationState": "implemented",
+      "sourceOwner": {
+        "path": "src/module-system/owner-map-contract.ss",
+        "symbol": "poo-flow-module-system-owner-map-valid?",
+        "kind": "function",
+        "selector": "gerbil-scheme://src/module-system/owner-map-contract.ss#item/function/poo-flow-module-system-owner-map-valid%3F",
+        "contentSha256": "2bea4ce523b87c40473d7a0bfa381e6831f5c1406d3ee5b5d5bdfb513d9a1bad"
+      },
+      "testOwner": {
+        "path": "t/module-system-owner-map-test.ss",
+        "symbol": "module-system-owner-map-tests",
+        "kind": "function",
+        "selector": "gerbil-scheme://t/module-system-owner-map-test.ss#item/function/module-system-owner-map-tests",
+        "contentSha256": "aa59608674647832473c2504681722c781136c5346eb61ad056a0d7b6e32981d"
+      },
+      "buildTarget": "//owner-map:module_system_sources",
+      "evidenceReceipt": {
+        "sourceTarget": "//owner-map:module_system_sources",
+        "testTarget": "//owner-map:scheme_owner_map_test",
+        "validationTarget": "//owner-map:contract_validation_test"
+      }
+    }
+  ],
+  "descendantBoundary": {
+    "path": "packages/wendao-episteme",
+    "relationship": "pinned-provenance-only",
+    "pin": "9566d310a2813e81068326e7d17a30d330de393f",
+    "url": "https://github.com/tao3k/wendao-episteme.git",
+    "forbiddenLifecycle": ["build", "test", "release", "source-scan"]
+  }
+}

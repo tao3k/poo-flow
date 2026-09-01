@@ -21,6 +21,7 @@
         poo-flow-sandbox-profile-capabilities
         poo-flow-sandbox-profile-resource-policy
         poo-flow-sandbox-profile-metadata
+        poo-flow-sandbox-profile-recipe-portable?
         poo-flow-sandbox-profile->descriptor
         poo-flow-sandbox-profile->profile
         poo-flow-sandbox-profile->alist
@@ -193,7 +194,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 2)
@@ -267,7 +267,121 @@
 ;;; Descriptor projection is the boundary where inert user recipes start
 ;;; participating in the existing sandbox profile validation contract.
 ;; : (-> PooSandboxProfile AgentSandboxProfileDescriptor)
+(def (poo-flow-sandbox-profile-recipe-path-separator? character)
+  (or (char=? character #\/)
+      (char=? character #\\)))
+
+(def (poo-flow-sandbox-profile-recipe-ascii-letter? character)
+  (or (and (char>=? character #\a) (char<=? character #\z))
+      (and (char>=? character #\A) (char<=? character #\Z))))
+
+(def (poo-flow-sandbox-profile-recipe-file-uri? value)
+  (and (>= (string-length value) 5)
+       (char-ci=? (string-ref value 0) #\f)
+       (char-ci=? (string-ref value 1) #\i)
+       (char-ci=? (string-ref value 2) #\l)
+       (char-ci=? (string-ref value 3) #\e)
+       (char=? (string-ref value 4) #\:)))
+
+(def (poo-flow-sandbox-profile-recipe-absolute-path? value)
+  (let (length (string-length value))
+    (or (and (> length 0)
+             (poo-flow-sandbox-profile-recipe-path-separator?
+              (string-ref value 0)))
+        (and (>= length 3)
+             (poo-flow-sandbox-profile-recipe-ascii-letter?
+              (string-ref value 0))
+             (char=? (string-ref value 1) #\:)
+             (poo-flow-sandbox-profile-recipe-path-separator?
+              (string-ref value 2)))
+        (poo-flow-sandbox-profile-recipe-file-uri? value))))
+
+(def (poo-flow-sandbox-profile-recipe-source-segment-portable?
+      value start end)
+  (let (length (- end start))
+    (and (> length 0)
+         (not (and (= length 1)
+                   (char=? (string-ref value start) #\.)))
+         (not (and (= length 2)
+                   (char=? (string-ref value start) #\.)
+                   (char=? (string-ref value (+ start 1)) #\.))))))
+
+(def (poo-flow-sandbox-profile-recipe-source-portable? value)
+  (and (string? value)
+       (not (poo-flow-sandbox-profile-recipe-absolute-path? value))
+       (or (string=? value ".")
+           (let (length (string-length value))
+             (and (> length 0)
+                  (let loop ((index 0) (segment-start 0))
+                    (cond
+                     ((= index length)
+                      (poo-flow-sandbox-profile-recipe-source-segment-portable?
+                       value segment-start index))
+                     ((or (char=? (string-ref value index) #\\)
+                          (char=? (string-ref value index) #\:))
+                      #f)
+                     ((char=? (string-ref value index) #\/)
+                      (and
+                       (poo-flow-sandbox-profile-recipe-source-segment-portable?
+                        value segment-start index)
+                       (loop (+ index 1) (+ index 1))))
+                     (else
+                      (loop (+ index 1) segment-start)))))))))
+
+(def (poo-flow-sandbox-profile-recipe-project-marker-portable? value)
+  (and (string? value)
+       (> (string-length value) 0)
+       (not (string=? value "."))
+       (not (string=? value ".."))
+       (let loop ((index 0))
+         (or (= index (string-length value))
+             (and
+              (not
+               (or
+                (poo-flow-sandbox-profile-recipe-path-separator?
+                 (string-ref value index))
+                (char=? (string-ref value index) #\:)))
+              (loop (+ index 1)))))))
+
+(def (poo-flow-sandbox-profile-recipe-datum-portable? datum)
+  (cond
+   ((string? datum)
+    (not (poo-flow-sandbox-profile-recipe-absolute-path? datum)))
+   ((pair? datum)
+    (and
+     (not (and (symbol? (car datum))
+               (eq? (car datum) 'target)))
+     (or (not (and (symbol? (car datum))
+                   (eq? (car datum) 'source)))
+         (poo-flow-sandbox-profile-recipe-source-portable? (cdr datum)))
+     (or (not (and (symbol? (car datum))
+                   (eq? (car datum) 'project-marker)))
+         (poo-flow-sandbox-profile-recipe-project-marker-portable? (cdr datum)))
+     (poo-flow-sandbox-profile-recipe-datum-portable? (car datum))
+     (poo-flow-sandbox-profile-recipe-datum-portable? (cdr datum))))
+   (else #t)))
+
+;; Recipes are portable declarations. Concrete sandbox mount paths belong to
+;; the backend materialization boundary, never to the composable POO object.
+(def (poo-flow-sandbox-profile-recipe-portable? profile)
+  (and (poo-flow-sandbox-profile? profile)
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-name profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-backend-ref profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-network-policy profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-capabilities profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-resource-policy profile))
+       (poo-flow-sandbox-profile-recipe-datum-portable?
+        (poo-flow-sandbox-profile-metadata profile))))
+
 (def (poo-flow-sandbox-profile->descriptor profile)
+  (unless (poo-flow-sandbox-profile-recipe-portable? profile)
+    (error "sandbox profile recipe contains an absolute path"
+           (poo-flow-sandbox-profile-name profile)))
   (make-agent-sandbox-profile-descriptor
    (poo-flow-sandbox-profile-name profile)
    (poo-flow-sandbox-profile-backend-kind profile)

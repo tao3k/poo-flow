@@ -420,6 +420,71 @@ in place.
 
 * Priority and precedence separation
 
+** Numeric control-priority semantics
+
+POO Flow adopts a commutative merge-priority ordering for authorized control
+decisions:
+
+- an unannotated contribution has numeric priority =0=;
+- larger numeric values have stronger control priority;
+- a semantic default element is lower than every numeric priority;
+- a semantic forced element is higher than every numeric priority;
+- the two extremal elements are semantic values and do not require new public
+  macro forms.
+
+The closed value domain, exact-real Contract, total order, and canonical
+receipt are owned by
+[[file:45-120-48-profile-priority-value-and-contract-refinement.org][ProfilePriority
+Value and Contract Refinement]].
+
+Different priorities resolve only competing definitions in the same qualified
+authority domain.  The stronger authorized contribution controls that
+decision.  Priority never erases an independent requirement, widens a
+capability, crosses a redaction boundary, or grants authority.
+
+Equal-priority contributions are recursively composed through the ordinary POO
+prototype and value algebra.  Equal atomic values agree only when their
+semantic values are equal.  Incompatible equal-priority contributions produce
+the existing structured =Conflict= object; source order, parser order, hash-map
+iteration order, and module loading order are not tie breakers.
+
+Authority intersection and domain qualification occur before priority
+comparison.  Native prototype precedence and C3 method resolution occur in
+their own structural plane as specified by
+[[file:45-102-native-prototype-precedence-and-typed-relation-conflict-resolution-bridge.org][Native
+Prototype Precedence and Typed Relation Conflict Resolution Bridge]].  Numeric
+priority cannot reorder a prototype list, synthesize a C3 position, or create a
+third precedence axis.
+
+#+begin_src mermaid
+flowchart LR
+  Inputs["Typed contributions"] -->|"intersect declared authority first"| Authority["Admitted authority"]
+  Authority -->|"qualify one conflict domain"| Domain["Comparable decisions"]
+  Domain -->|"compare semantic priority values"| Priority["Control-priority merge"]
+  Priority -->|"different priorities select the stronger authorized decision"| Selected["Selected control decision"]
+  Priority -->|"equal priorities recursively compose POO values"| Equal["Equal-priority composition"]
+  Equal -->|"compatible values preserve one semantic result"| Selected
+  Equal -->|"incompatible values emit structured evidence"| Conflict["Conflict object"]
+  Graph["Immutable prototype graph"] -->|"orders behavior through native precedence"| C3["C3 method resolution"]
+  Priority -.->|"never reorders prototype ancestry"| C3
+#+end_src
+
+*** Priority conformance checklist
+
+- [ ] Treat unannotated priority as numeric =0=.
+- [ ] Order numeric priorities from weaker to stronger by ordinary increasing
+      numeric order.
+- [ ] Keep semantic default below every number and semantic forced above every
+      number without requiring new public macros.
+- [ ] Apply authority intersection and domain qualification before comparing
+      priorities.
+- [ ] Recursively POO-compose equal-priority contributions.
+- [ ] Emit =Conflict= when equal-priority values cannot compose.
+- [ ] Prove source order and module loading order cannot resolve a tie.
+- [ ] Prove priority cannot widen capabilities or erase independent
+      requirements.
+- [ ] Prove numeric priority cannot alter native prototype or C3 precedence.
+
 Native POO prototype precedence resolves object ancestry.
 
 Control-policy priority resolves authorized policy decisions as defined by

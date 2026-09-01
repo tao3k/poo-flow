@@ -5,7 +5,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/src/benchmark/gate
                  benchmark-receipt-pass?)
         :poo-flow/t/module-system-poo-performance-test-support/composition-scenarios)
 

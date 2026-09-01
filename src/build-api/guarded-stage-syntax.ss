@@ -3,7 +3,7 @@
 
 (export define-guarded-gxi-stage)
 
-(import :gslph/src/building/facade
+(import :asp-gerbil-scheme/src/building/facade
         :clan/poo/object
         :poo-flow/src/build-api/process-memory-guard)
 

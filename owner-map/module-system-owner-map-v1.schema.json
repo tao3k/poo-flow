@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "poo-flow.module-system-owner-map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "artifactId", "artifactPath", "rows", "descendantBoundary"],
+  "properties": {
+    "schemaId": {"const": "poo-flow.module-system-owner-map"},
+    "schemaVersion": {"const": 1},
+    "artifactId": {"const": "poo-flow.module-system-owner-map.v1"},
+    "artifactPath": {"const": "owner-map/module-system-owner-map-v1.json"},
+    "rows": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rowId", "rfc", "implementationState", "sourceOwner", "testOwner", "buildTarget", "evidenceReceipt"],
+        "properties": {
+          "rowId": {"type": "string"},
+          "rfc": {"type": "string", "pattern": "^45-[0-9]{2}$"},
+          "implementationState": {"const": "implemented"},
+          "sourceOwner": {"$ref": "#/$defs/owner"},
+          "testOwner": {"$ref": "#/$defs/owner"},
+          "buildTarget": {"type": "string", "pattern": "^//owner-map:[a-zA-Z0-9_]+$"},
+          "evidenceReceipt": {
+            "type": "object",
+            "required": ["sourceTarget", "testTarget", "validationTarget"]
+          }
+        }
+      }
+    },
+    "descendantBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "relationship", "pin", "url", "forbiddenLifecycle"]
+    }
+  },
+  "$defs": {
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "symbol", "kind", "selector", "contentSha256"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^(src|t)/.+\\.ss$"},
+        "symbol": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["function", "macro"]},
+        "selector": {"type": "string", "pattern": "^gerbil-scheme://"},
+        "contentSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

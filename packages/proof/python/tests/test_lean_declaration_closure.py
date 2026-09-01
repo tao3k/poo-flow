@@ -17,6 +17,8 @@ from poo_flow_proof.lean_declaration_closure import (
 def closure_payload() -> dict[str, object]:
     return {
         "base_imports": ["Init"],
+        "proof_base_imports": [],
+        "proof_base_interface": [],
         "declarations": [
             {
                 "kind": "structure",
@@ -109,13 +111,16 @@ def test_exporter_builds_root_before_running_lean(tmp_path: Path) -> None:
 
     assert closure.root_declarations == ("Example.safe",)
     assert calls == [
-        ["lake", "build", "Example.Root"],
+        [
+            "lake",
+            "build",
+            "Example.Root",
+            "pooFlowDeclarationClosure",
+        ],
         [
             "lake",
             "env",
-            "lean",
-            "--run",
-            "PooFlowProof/Export/DeclarationClosure.lean",
+            ".lake/build/bin/pooFlowDeclarationClosure",
             "--root-module",
             "Example.Root",
             "--root-declaration",

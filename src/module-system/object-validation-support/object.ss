@@ -2,7 +2,7 @@
 ;;; Boundary: object-level diagnostics and validation receipts.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/extensions/poo-object-validation
+        (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-validation-valid?)
         :poo-flow/src/module-system/object-core
         :poo-flow/src/module-system/object-validation-support/facts

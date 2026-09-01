@@ -13,10 +13,13 @@ from poo_flow_proof.lean_declaration_closure import (
     LeanDeclaration,
     LeanDeclarationClosure,
     LeanOwnerSource,
+    LeanProofBaseInterfaceDeclaration,
 )
 
 
-def fixture_values(tmp_path: Path) -> tuple[
+def fixture_values(
+    tmp_path: Path,
+) -> tuple[
     LeanDeclarationClosure,
     ExactAxleClosure,
     tuple[LeanOwnerSource, ...],
@@ -30,6 +33,8 @@ def fixture_values(tmp_path: Path) -> tuple[
         root_module="Example.Root",
         root_declarations=("Example.safe",),
         base_imports=("Init",),
+        proof_base_imports=(),
+        proof_base_interface=(),
         owner_modules=("Example.Root",),
         declarations=(
             LeanDeclaration(
@@ -72,9 +77,7 @@ def test_projects_lake_and_owner_evidence_into_independent_bundle(
     tmp_path: Path,
 ) -> None:
     closure, exact, sources = fixture_values(tmp_path)
-    (tmp_path / "lake-manifest.json").write_text(
-        '{"name":"«poo-flow-proof»","packages":[]}\n'
-    )
+    (tmp_path / "lake-manifest.json").write_text('{"name":"«poo-flow-proof»","packages":[]}\n')
 
     bundle = build_independent_declaration_bundle(
         closure=closure,
@@ -95,9 +98,7 @@ def test_runtime_receipts_do_not_change_independent_bundle_identity(
     tmp_path: Path,
 ) -> None:
     closure, exact, sources = fixture_values(tmp_path)
-    (tmp_path / "lake-manifest.json").write_text(
-        '{"name":"poo-flow-proof","packages":[]}\n'
-    )
+    (tmp_path / "lake-manifest.json").write_text('{"name":"poo-flow-proof","packages":[]}\n')
     changed_receipt = ExactAxleClosure(
         **{
             **exact.__dict__,
@@ -120,6 +121,50 @@ def test_runtime_receipts_do_not_change_independent_bundle_identity(
     )
 
     assert first.bundle_digest == second.bundle_digest
+
+
+def test_unused_proof_base_interface_declarations_preserve_typed_identity(
+    tmp_path: Path,
+) -> None:
+    closure, exact, sources = fixture_values(tmp_path)
+    closure = LeanDeclarationClosure(
+        **{
+            **closure.__dict__,
+            "proof_base_imports": ("Cedar.Spec",),
+            "proof_base_interface": (
+                LeanProofBaseInterfaceDeclaration(
+                    name="Cedar.Data.Map._sizeOf_inst",
+                    declaration_role="instance",
+                    level_params=("u", "v"),
+                    type_source="SizeOf (Cedar.Data.Map α β)",
+                    value_source="Cedar.Data.Map.instSizeOf",
+                ),
+                LeanProofBaseInterfaceDeclaration(
+                    name="Cedar.Data.Map.empty",
+                    declaration_role="definition",
+                    level_params=("u", "v"),
+                    type_source="Cedar.Data.Map α β",
+                    value_source="{}",
+                ),
+            ),
+        }
+    )
+    (tmp_path / "lake-manifest.json").write_text('{"name":"poo-flow-proof","packages":[]}\n')
+
+    bundle = build_independent_declaration_bundle(
+        closure=closure,
+        exact=exact,
+        sources=sources,
+        lean_root=tmp_path,
+    )
+
+    assert tuple(
+        (declaration.name, declaration.kind, declaration.local_dependencies)
+        for declaration in bundle.proof_base_declarations
+    ) == (
+        ("Cedar.Data.Map._sizeOf_inst", "axiom", ()),
+        ("Cedar.Data.Map.empty", "def", ()),
+    )
 
 
 def test_missing_lake_manifest_fails_closed(tmp_path: Path) -> None:

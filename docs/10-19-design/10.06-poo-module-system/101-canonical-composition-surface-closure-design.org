@@ -11,8 +11,10 @@ Close the module-composition refactor around one unambiguous public grammar:
 
 #+begin_src scheme
 (use-composition composition-name
-  (use-module module-name as alias profile-clause ...)
-  composition-clause ...)
+  (compose profiles
+    profile-clause ...
+    (use-module module-name as alias
+      module-profile-clause ...)))
 #+end_src
 
 The parser, facade exports, user-interface cases, tests, and diagnostics must
@@ -23,7 +25,8 @@ normalized, preserved as an escape hatch, or mentioned as an alternative.
 
 This feature owns:
 
-- canonical =use-module ... as ...= parsing inside =use-composition=;
+- canonical =use-module ... as ...= contextual-clause parsing inside
+  =compose profiles=, itself owned by =use-composition=;
 - removal of legacy parser branches, legacy diagnostic codes, and legacy
   examples;
 - complete facade projection of composition accessors from their existing
@@ -36,6 +39,66 @@ It does not change organization Bundle semantics, runtime execution policy,
 profile meaning, stage meaning, or the C ABI/runtime-adapter roadmap.
 
 * Architecture
+
+** Contextual clause and POO lowering
+
+=use-composition= remains the named outer composition boundary.
+=compose profiles= remains the composition-category owner.  Within that
+category, =use-module= is a hygienically recognized contextual clause; it is
+not a separately exported top-level macro or binding.
+
+The clause resolves an existing =ModuleType= prototype and produces its refined
+=ModuleType= value.  It does not construct or expose a parallel =ModuleUse=
+wrapper type.  =module-name= selects the prototype by identity; =as alias=
+creates only a composition-local binding and never rewrites that identity.
+
+Profile clauses are POO prototype refinements over the selected module.
+Identity, imports, capabilities, and profiles therefore remain slots of the
+same resulting =ModuleType= object.  Imports and capabilities come from the
+selected prototype and its profile refinements rather than being redeclared by
+=use-module=.  The resulting object is validated through the existing
+=poo-flow-modules-system-use-module/contract= and enters composition as a pure
+value.
+
+The syntax layer must not introduce a raw record DSL, an alist patch language,
+a wrapper-object hierarchy, or a second module runtime.
+
+Recognition is bounded to macro-expansion time.  An out-of-context
+=use-module= form fails during expansion with the canonical actionable
+diagnostic.  A successful expansion contains ordinary POO-native and
+functional code; runtime behavior does not depend on syntax objects.
+
+Advanced module construction and refinement continue to use the POO object and
+prototype interface directly.  This contextual clause is only the constrained
+user-interface projection of that foundation.
+
+** Lazy identity-resolution boundary
+
+Macro expansion parses and validates the contextual clause shape but does not
+load a module, walk its imports, or recursively materialize its prototype.
+Instead, it lowers =module-name= to a pure POO identity-demand expression in
+the composition plan.  That expression is an internal staged lookup, not a
+public object type and not a =ModuleUse= wrapper.
+
+The POO Flow evaluator resolves that demand inside the lazy global fixed point.
+An unforced demand performs no module work.  A forced demand resolves the
+stable module identity, obtains its =ModuleType= prototype, and only then
+applies the already-pure profile prototype refinements.  The existing
+=poo-flow-modules-system-use-module/contract= validates the resulting refined
+=ModuleType= value.
+
+Recursive imports and submodule recursion therefore remain fixed-point
+semantics rather than macro-expansion recursion.  Cycle detection, evaluation
+budgets, observation events, recovery decisions, and closure recomputation are
+owned by [[file:45-10-provider-runtime-search-closure.org][Provider Runtime
+Search Closure]].  The separation between pure composition values, structural
+validation, and semantic evaluation is owned by
+[[file:45-48-compose-function-profiles-strategy-and-lazy-evaluator-boundary.org][Compose,
+Profiles Strategy, and Lazy Evaluator Boundary]].  This RFC owns only the
+contextual syntax projection into those existing semantics.  Module-demand
+cache keys, fixed-point epoch isolation, and active-demand identity are owned
+by [[file:45-122-poo-dispatch-semantic-plane-candidate-resolution-inherited-continuation-and-observability-contract.org][POO
+Dispatch Semantic Plane and Observability Contract]].
 
 ** Canonical parser
 
@@ -71,13 +134,23 @@ diagnostic and must not teach the removed syntax.
 
 #+begin_src mermaid
 flowchart LR
-  Source["Canonical use-composition form"] --> Parser["Syntax plan parser"]
-  Parser --> Plan["Composition syntax plan"]
-  Plan --> Lowering["POO profile and stage lowering"]
-  Lowering --> Object["Composition POO object"]
-  Accessors["Accessor owner"] --> Facade["Public composition facade"]
-  Facade --> Consumers["UI cases and tests"]
-  Object --> Consumers
+  Source["use-composition"] -->|"opens the named composition boundary"| Category["compose profiles"]
+  Category -->|"recognizes the contextual clause during expansion"| Clause["use-module module-name as alias"]
+  Clause -->|"records syntax without loading a module"| Plan["Composition syntax plan"]
+  Clause -->|"binds without rewriting module identity"| Alias["Composition-local alias"]
+  Plan -->|"lowers module-name to a pure lookup expression"| Demand["POO identity demand"]
+  Plan -->|"retains profile refinements as pure values"| Refinements["Profile prototype refinements"]
+  Demand -->|"enters the lazy global fixed point"| FixedPoint["POO module fixed point"]
+  FixedPoint -->|"resolves stable identity only when forced"| Prototype["ModuleType prototype"]
+  Prototype -->|"provides the base prototype"| ModuleObject["Refined ModuleType object"]
+  Refinements -->|"apply after identity resolution"| ModuleObject
+  ModuleObject -->|"preserves identity, imports, capabilities, and profiles"| Contract["Existing use-module contract"]
+  Contract -->|"admits the refined pure value"| Object["Composition POO object"]
+  FixedPoint -.->|"observes cycles, budgets, and recovery decisions"| Recovery["Existing observation and recovery plane"]
+  Clause -.->|"rejects out-of-context use during expansion"| Diagnostic["Canonical actionable diagnostic"]
+  Accessors["Accessor owner"] -->|"projects without duplicating logic"| Facade["Public composition facade"]
+  Facade -->|"serves the shallow user interface"| Consumers["UI cases and tests"]
+  Object -->|"provides the admitted composition value"| Consumers
 #+end_src
 
 * Error contract
@@ -109,6 +182,35 @@ The implementation refreshes the relevant Gerbil module artifacts before
 running consumers so stale compiled macros cannot mask source behavior.
 
 * Delivery
+
+** Contextual-clause implementation checklist
+
+- [ ] Recognize =use-module= only inside the =compose profiles= clause parser.
+- [ ] Keep =use-module= absent from standalone public exports.
+- [ ] Resolve =module-name= to an existing =ModuleType= prototype.
+- [ ] Keep =as alias= local to the composition and preserve module identity.
+- [ ] Ensure macro expansion performs no module loading, import traversal, or
+      recursive prototype materialization.
+- [ ] Lower =module-name= to a pure identity demand consumed by the existing
+      lazy POO fixed point.
+- [ ] Apply profile clauses through ordinary =gerbil-poo= prototype
+      refinement only after the base prototype is resolved.
+- [ ] Return the refined =ModuleType= directly, without a =ModuleUse= wrapper.
+- [ ] Preserve identity, imports, capabilities, and selected profiles in that
+      resulting module object.
+- [ ] Reuse =poo-flow-modules-system-use-module/contract= for validation.
+- [ ] Reject out-of-context use at expansion time with an actionable canonical
+      diagnostic.
+- [ ] Add expansion tests for multiple module clauses and profile refinements.
+- [ ] Add a test proving that aliases do not mutate module identity.
+- [ ] Add a test proving that an unforced module demand performs no module
+      evaluation.
+- [ ] Add recursive-module and recursive-submodule tests proving that cycles
+      enter the existing observation and recovery plane instead of expanding
+      recursively in the macro.
+- [ ] Add a negative test proving that standalone =use-module= is unavailable.
+- [ ] Re-run the focused composition gates and Org qualification before marking
+      this refinement complete.
 
 The design, implementation, regression repairs, tests, and receipt are one
 complete feature.  They are committed once, after all qualification gates pass.

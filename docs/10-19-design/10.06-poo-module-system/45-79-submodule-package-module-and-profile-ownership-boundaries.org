@@ -23,19 +23,19 @@ requires an explicit contract.
   "poo-profile",
 )
 
-$ forall(source in layers, target in layers,
-  source != target
-  ==> not implicitly-creates(source, target)
-) $
+$ forall S, T in layers:
+  (S != T) => not "ImplicitlyCreates"(S, T) $
 
-$ cross-layer-projection(source, target)
-  ==> explicit-projection-contract(source, target) $
+$ forall S, T in layers:
+  "CrossLayerProjection"(S, T)
+  => "ExplicitProjectionContract"(S, T) $
 
-$ git-submodule(pin)
-  ==> records(pin.repository, pin.commit, pin.checkout, pin.provenance)
-  and not implies-gerbil-package(pin)
-  and not implies-gerbil-module(pin)
-  and not implies-poo-profile(pin) $
+$ forall P:
+  "GitSubmodule"(P)
+  => "Records"(P_"repository", P_"commit", P_"checkout", P_"provenance")
+  and not "ImpliesGerbilPackage"(P)
+  and not "ImpliesGerbilModule"(P)
+  and not "ImpliesPooProfile"(P) $
 #+end_src
 
 The =packages/wendao-episteme= path is a pinned child source checkout, not a
@@ -45,26 +45,30 @@ module provides lexical bindings; only an explicit first-class POO profile
 value participates in =compose profiles=.
 
 #+begin_src typst
-$ parent-pins(child)
-  ==> child-owns(child.build)
-  and child-owns(child.tests)
-  and child-owns(child.publication)
-  and not parent-owns(child.lifecycle) $
+$ forall C:
+  "ParentPins"(C)
+  => "ChildOwns"(C_"build")
+  and "ChildOwns"(C_"tests")
+  and "ChildOwns"(C_"publication")
+  and not "ParentOwns"(C_"lifecycle") $
 
-$ gerbil-package(package)
-  ==> not declares-poo-profile(package)
-  and not registers-provider(package)
-  and not defines-runtime-capability(package)
-  and not selects-composition-root(package) $
+$ forall P:
+  "GerbilPackage"(P)
+  => not "DeclaresPooProfile"(P)
+  and not "RegistersProvider"(P)
+  and not "DefinesRuntimeCapability"(P)
+  and not "SelectsCompositionRoot"(P) $
 
-$ import(gerbil-module)
-  ==> lexical-bindings(gerbil-module)
-  and not grants-runtime-capability(gerbil-module)
-  and not activates-poo-profile(gerbil-module) $
+$ forall M:
+  "Import"(M)
+  => "LexicalBindings"(M)
+  and not "GrantsRuntimeCapability"(M)
+  and not "ActivatesPooProfile"(M) $
 
-$ update(submodule-pin)
-  ==> new-source-provenance(submodule-pin)
-  and not automatically-activate(profile) $
+$ forall S, P:
+  "Update"(S)
+  => "NewSourceProvenance"(S)
+  and not "AutomaticallyActivate"(P) $
 #+end_src
 
 #+begin_src mermaid
@@ -431,8 +435,14 @@ The implementation must distinguish at least:
 
 * Implementation checklist
 
-- [ ] Preserve the exact =wendao-episteme= Git submodule pin as source
-      provenance.
+- [X] Preserve the exact =wendao-episteme= Git submodule pin as source
+  provenance.
+  - Gitlink mode :: =160000=
+  - Submodule path :: =packages/wendao-episteme=
+  - Submodule URL :: =https://github.com/tao3k/wendao-episteme.git=
+  - Pinned commit :: =9566d310a2813e81068326e7d17a30d330de393f=
+  - Child worktree boundary :: two staged child-owned RFC files remain outside
+    the parent gitlink pin and remain owned by =wendao-episteme=.
 - [ ] Avoid declaring the child root as a Gerbil package.
 - [ ] Keep =gerbil.pkg= limited to Gerbil package dependencies.
 - [ ] Define the owner and module path of the =poo-flow-core= thin projection.
