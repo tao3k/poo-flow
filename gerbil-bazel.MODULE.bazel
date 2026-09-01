@@ -1,5 +1,5 @@
 git_override(
     module_name = "gerbil_bazel",
-    commit = "f61403639445573a3bf47be6877552a9293a1d52",
+    commit = "905b5d3ea78355a917f24d065766b78bdf93bc6e",
     remote = "https://github.com/tao3k/gerbil-bazel.git",
 )

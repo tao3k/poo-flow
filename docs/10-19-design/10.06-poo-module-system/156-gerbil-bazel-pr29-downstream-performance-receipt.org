@@ -1139,11 +1139,9 @@ flowchart TD
 The isolated Darwin cold validation was stopped when the root
 =//scheme:compile= action crossed twelve minutes.  Bazel reported 1,221.082
 seconds total elapsed time, a 1,206.96-second critical path, and zero executed
-tests.  This is a failed cold-performance gate, not functional evidence
-against the Linux PSS correction.  Promotion requires a green Linux receipt
-showing =memory-metric= equal to =linux-pss= and a guarded peak below the
-unchanged 5 GiB ceiling; the diagnostic RSS sum may exceed that value without
-causing a false termination.
+tests.  This remains a failed historical cold-performance gate.  Its fixed
+5 GiB promotion rule is superseded by the adaptive executor-memory correction
+below; preserving that machine-sized constant would reproduce the CI defect.
 
 * CI ownership correction for external validation
 
@@ -1174,6 +1172,64 @@ flowchart LR
   Dependencies --> Supervised["Supervised //scheme:compile"]
   Supervised --> MemoryReceipt["Linux PSS and diagnostic RSS receipt"]
 #+end_src
+
+* Adaptive executor-memory correction (Gerbil-Bazel PR 33)
+
+The subsequent Linux CI receipt proved that the 5 GiB boundary was not a
+runner limit.  The failing worker reported =16,766,414,848 bytes= of system
+memory and approximately =14.7 GiB= available, while the public
+=gerbil_project_execution_policy= injected exactly =5,368,709,120 bytes=.  The
+guard then summed per-process RSS, counted shared Gerbil and Gambit pages once
+per compiler process, and terminated healthy four-core actions at
+=5,940,273,152 bytes= and =5,489,696,768 bytes=.
+
+The correction is owned entirely by =gerbil-bazel= PR 33 at revision
+=905b5d3ea78355a917f24d065766b78bdf93bc6e=.  POO Flow only pins that public
+revision.  The reusable policy now has these semantics:
+
+1. The default =max_rss_bytes= is zero, selecting the live adaptive budget;
+   zero is never unlimited memory.
+2. Linux caps the host view with cgroup v2 =memory.max= and
+   =memory.max - memory.current= before retaining headroom and selecting
+   =GERBIL_BUILD_CORES=.
+3. Linux process-tree enforcement sums PSS from =smaps_rollup= so shared pages
+   are not duplicated.  A restricted or older procfs selects the explicit RSS
+   fallback.
+4. Receipt v1 remains stable.  Optional metric and cgroup fields expose which
+   measurement and executor boundary were applied.
+
+#+begin_src mermaid
+flowchart TD
+  Policy["Public project execution policy"] --> Adaptive["Default 0 means adaptive ceiling"]
+  Host["Host total and available memory"] --> Effective["Effective executor memory"]
+  Cgroup["cgroup v2 max and current"] --> Effective
+  Effective --> Headroom["Retain adaptive headroom"]
+  Adaptive --> Headroom
+  Headroom --> Workers["Adaptive GERBIL_BUILD_CORES"]
+  Workers --> Native["Native build.ss and std/make"]
+  Native --> Probe{"smaps_rollup readable?"}
+  Probe -->|"yes"| PSS["Process-tree PSS"]
+  Probe -->|"no"| RSS["Process-tree RSS fallback"]
+  PSS --> Receipt["Resource guard receipt v1"]
+  RSS --> Receipt
+#+end_src
+
+The review-corrected upstream validation is green:
+
+| Gate | Result | Duration |
+|------+--------+----------|
+| Local =gerbil-bazel= suite | 19/19 passed | =39.638 s= |
+| Linux immutable-prebuilt CI | passed, including PSS and cgroup fixtures | =3m44s= |
+| macOS Homebrew-host CI | passed with RSS fallback | =4m19s= |
+
+The final POO Flow acceptance consumed the remote pinned revision without a
+local module override.  =//scheme:compile= completed in =394.044 s= with 12
+requested and 12 effective workers.  It recorded an adaptive ceiling of
+=23,622,320,128 bytes=, peak process-tree RSS of =4,251,926,528 bytes=, and
+=processTreeMemoryMetric=rss= on Darwin.  The cgroup fields were zero because
+Darwin has no Linux cgroup boundary.  Final promotion remains the POO Flow PR
+CI run pinned to the review-corrected upstream revision; no POO-owned memory
+override or copied guard implementation is allowed.
 
 * Runtime-WASM package workflow correction
 
