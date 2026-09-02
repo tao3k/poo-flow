@@ -1183,9 +1183,9 @@ guard then summed per-process RSS, counted shared Gerbil and Gambit pages once
 per compiler process, and terminated healthy four-core actions at
 =5,940,273,152 bytes= and =5,489,696,768 bytes=.
 
-The correction is owned entirely by =gerbil-bazel= PR 33 at revision
-=905b5d3ea78355a917f24d065766b78bdf93bc6e=.  POO Flow only pins that public
-revision.  The reusable policy now has these semantics:
+The correction is owned entirely by merged =gerbil-bazel= PR 33 at the formal
+=main= revision =7e1a55660502d0e2d67aa1e2fca66344ab2e7b9d=.  POO Flow only
+pins that public revision.  The reusable policy now has these semantics:
 
 1. The default =max_rss_bytes= is zero, selecting the live adaptive budget;
    zero is never unlimited memory.
@@ -1262,3 +1262,113 @@ flowchart LR
   Wasm --> Pack
   Pack --> Payload
 #+end_src
+
+* GCC backend and incremental-build diagnosis (2026-09-02)
+
+** Decision
+
+GCC remains the production backend.  The comparison does not justify changing
+POO Flow to Clang: the exact Clang cold run was still incomplete after
+770.39 seconds (12.84 minutes), while the installed Gerbil 0.18.2 toolchain is
+already configured for =gcc-16=, =g++-16=, single-host compilation, trusted C
+tail calls, and the Darwin classic linker.  Gambit's upstream installation
+guidance also recommends GCC because computed-goto support materially improves
+generated-program runtime.
+
+This is a compiler-policy decision, not an acceptance of the current build
+latency.  Production keeps GCC and optimization; fast incremental development
+must be solved through the canonical Gerbil module graph, stable per-project
+dependency state, and ASP Build API profile ownership.
+
+** Validation identity
+
+- Host: Darwin arm64, 12 available logical CPUs, 32 GiB physical memory.
+- Gerbil: 0.18.2, source revision =07c84815=.
+- GCC configuration evidence: =gsc -v= reported =CC=gcc-16=,
+  =CXX=g++-16=, =--enable-single-host=, =--enable-trust-c-tco=, and
+  =LDFLAGS=-Wl,-ld_classic=.
+- Bazel dependency owner: merged =gerbil-bazel= revision
+  =7e1a55660502d0e2d67aa1e2fca66344ab2e7b9d=.
+- Native entry point: canonical =gxpkg build= invoking the package =build.ss=
+  and ASP Build API; no replacement shell scheduler was introduced.
+
+** Timed receipts
+
+Every duration has an explicit unit and terminal state.  Stopped runs are
+censored observations, not successful baselines.
+
+| Run | Terminal state | Elapsed seconds | Elapsed minutes | Interpretation |
+|-
+| Fresh Bazel downstream build | stopped after the root action exposed the same trajectory | 730.660 s | 12.18 min | critical path had already reached 715.80 s; not a successful cold baseline |
+| Native GCC =gxpkg build -g= cold | build body completed; =/usr/bin/time -lp= later reported a sandboxed =sysctl kern.clockrate= wrapper error | 793.92 s | 13.23 min | exact native cold evidence |
+| Native GCC =gxpkg build -g= warm | completed | 71.35 s | 1.19 min | warm state can be fast, but later runs proved it is not stable |
+| Local exact-revision Clang cold comparison | stopped, incomplete | 770.39 s | 12.84 min | no compiler-switch benefit was demonstrated |
+| Native GCC without =-g= | stopped, incomplete | 465.71 s | 7.76 min | removing debug information alone did not correct the trajectory |
+| Native GCC with temporary =optimize: #f= cold | completed | 619.62 s | 10.33 min | 174.30 s, or 21.96 percent, faster than the completed GCC debug cold run; still unacceptable |
+| Same temporary profile, first warm | completed | 126.14 s | 2.10 min | recompiled a non-empty module subset |
+| Same temporary profile, second warm | completed | 101.25 s | 1.69 min | recompiled a different non-empty module subset |
+| Explicit shared =framework-build-cache-root/build-deps= experiment | completed, rejected | 178.85 s | 2.98 min | slower warm result and an invalid cross-project cache owner |
+
+The dependency actions also exposed a serial critical-path floor before the
+root package began: =gerbil-utils= took about 156 seconds, =gerbil-poo= about
+130 seconds, and =asp-gerbil-scheme= about 208 seconds, for approximately
+494 seconds (8.23 minutes) on that observed dependency chain.  This is why a
+POO Flow-only compiler flag cannot be the root fix.
+
+** Corrected =build-deps= semantics
+
+The temporary explicit cache experiment is rejected and was removed from
+=build.ss=.  Local owner source at =.data/gerbil/src/std/make.ss= defines:
+
+- =libdir= and =bindir= under =GERBIL_PATH= by default;
+- =build-deps= as =(path-expand (or build-deps_ "build-deps") srcdir)=;
+- =optimize: #t= and =parallelize: #t= as the upstream defaults.
+
+Therefore =build-deps= is not, by default, a global file under
+=GERBIL_PATH=.  Its correct default owner is the =srcdir= of each make
+invocation.  The current ASP function named =framework-build-cache-root=
+evaluated to the Gerbil installation root
+=/opt/homebrew/Cellar/gerbil-scheme/0.18.2-source_1/v0.18.2/= on this host.
+Using that value for =build-deps:= would merge unrelated projects into one
+state location and contradict the upstream per-project requirement.
+
+** Root-cause boundary
+
+The completed =optimize: #f= run saved only 21.96 percent and still took more
+than ten minutes.  The two subsequent warm runs rebuilt different module
+subsets.  Together with the roughly 494-second dependency chain, this narrows
+the remaining work to three owners:
+
+1. ASP Build API must expose a small declarative development/production profile
+   that lowers directly to native =std/make= settings.
+2. The development profile must retain upstream per-project =srcdir/build-deps=
+   semantics and prove stable no-op warm behavior before promotion.
+3. Package topology and generated native units must be reduced or invalidated
+   correctly; disabling GCC optimization globally is not an architectural fix.
+
+POO Flow remains a downstream consumer.  It must not duplicate the scheduler,
+invent a global cache, or own a second compiler policy.  Once the ASP owner API
+is released, POO Flow should select the profile declaratively and pin that ASP
+revision through =gerbil.pkg=.
+
+#+begin_src mermaid
+flowchart TD
+    A[POO Flow build.ss] --> B[ASP Build API package profile]
+    B --> C{Build intent}
+    C -->|development| D[Native std/make incremental profile]
+    C -->|production or CI release| E[GCC optimized production profile]
+    D --> F[Per-project srcdir/build-deps]
+    D --> G[GERBIL_BUILD_CORES from available CPUs]
+    E --> H[Gerbil and Gambit GCC pipeline]
+    F --> I[Stable no-op warm receipt]
+    G --> I
+    H --> J[Runtime and release gates]
+    I --> K[Bazel consumes the same owner API]
+    J --> K
+    K --> L[POO Flow downstream receipt]
+#+end_src
+
+Promotion is blocked until the owner API demonstrates both a completed cold
+build and at least two consecutive no-op warm builds.  An incomplete faster
+trajectory, a compiler switch, or a shared installation-root cache is not a
+promotion receipt.
