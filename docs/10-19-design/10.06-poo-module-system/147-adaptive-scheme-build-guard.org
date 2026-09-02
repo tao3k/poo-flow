@@ -17,6 +17,8 @@ flowchart LR
   I --> E[Receipts and evidence]
   I --> H[Historical acceptance]
   I --> C[Current Build API cutover]
+  I --> W[Native warm invalidation]
+  I --> M[Reactive memory anomaly guard]
 #+end_src
 
 ** Policy and architecture
@@ -41,3 +43,6 @@ flowchart LR
 - [[file:147-adaptive-scheme-build-guard/15-authoritative-ci-acceptance.org][Authoritative CI acceptance]]
 - [[file:147-adaptive-scheme-build-guard/16-real-downstream-acceptance.org][Real downstream acceptance]]
 - [[file:147-adaptive-scheme-build-guard/17-build-api-cutover-closure.org][Build API cutover closure]]
+- [[file:147-adaptive-scheme-build-guard/18-native-warm-invalidation.org][Native warm invalidation]]
+- [[file:147-adaptive-scheme-build-guard/19-native-public-closure.org][Native public closure and warm-build convergence]]
+- [[file:147-adaptive-scheme-build-guard/20-reactive-memory-anomaly-guard.org][Reactive memory anomaly guard]]

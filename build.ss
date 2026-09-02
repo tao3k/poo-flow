@@ -10,6 +10,7 @@
         (only-in :asp-gerbil-scheme/src/build-api/package-spec
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype
+                 asp-gerbil-scheme-package-build-profile
                  asp-gerbil-scheme-package-native-spec)
         (only-in :asp-gerbil-scheme/src/building/build-script
                  defbuild-script
@@ -68,6 +69,7 @@
  (poo-flow-library-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
  (role 'library)
+ (profile 'development)
  (native-spec
   (append (nono-ffi-spec)
           (runtime-spec)
@@ -76,4 +78,6 @@
 (defbuild-script
  (asp-gerbil-scheme-package-native-spec
   poo-flow-library-package-spec)
+ profile: (asp-gerbil-scheme-package-build-profile
+           poo-flow-library-package-spec)
  bindir: (framework-build-bindir))

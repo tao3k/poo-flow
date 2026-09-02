@@ -1023,6 +1023,12 @@ published the following native =POO_FLOW_PROJECT_BUILD_RECEIPT=.  For this
 32-GiB host, the versioned formula derives an 8-GiB ceiling; the observed peak
 remained below that ceiling and the action reached =completed=.
 
+This paragraph and the following receipt are retained as historical evidence,
+not as the current policy.  RFC 0147's reactive-memory correction rejects its
+=memory-per-worker-bytes= and =memory-worker-capacity= fields as scheduler
+inputs: the guard must detect an abnormal RSS trajectory and must not lower
+normal =std/make= parallelism before execution.
+
 #+begin_example
 {
   "admission-outcome": "ready",
