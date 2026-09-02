@@ -203,9 +203,15 @@ Pull-request head =05a8fcae= closed the first downstream acceptance run:
 
 The macOS, Runtime-WASM, external-module, Lean, and Python gates are accepted.
 Linux is functionally green but is not promoted as a performance baseline until
-the remaining 32 seconds are removed.  The next documentation-only run must
-also prove that the just-published action generation is reusable; a second cold
-dependency action would be a cache-key regression, not normal variance.
+the remaining 32 seconds are removed.
+
+The following documentation-only head =3d31ace9=, run =33684933451=, proved
+that the published action generation is reusable.  It completed macOS in
+=2 min 38 s=, Linux in =5 min 07 s=, and the external-module job in
+=5 min 49 s=.  Runtime-WASM run =33684933209= completed in =2 min 58 s=;
+the Lean bridge took =21 s= and the Python wheel =37 s=.  Neither platform
+returned to the dependency cold-build phase, so the package-receipt data edges
+did not broaden the package action keys.
 
 #+begin_src mermaid
 flowchart LR
