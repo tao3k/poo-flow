@@ -33,7 +33,7 @@ permissions:
 
 concurrency:
   group: runtime-wasm-package-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   source-build:
@@ -95,9 +95,11 @@ jobs:
           echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
 
       - name: Install Gerbil project dependencies
+        timeout-minutes: 8
         run: bazelisk run @local_gerbil//:install_dependencies
 
       - name: Materialize POO Flow Gerbil project
+        timeout-minutes: 8
         shell: bash
         run: |
           bazelisk build //scheme:dependency_packages
@@ -110,6 +112,7 @@ jobs:
           test -f .gerbil/lib/poo-flow/src/core/flow.ssi
 
       - name: Build, test, and pack the package
+        timeout-minutes: 12
         shell: bash
         run: |
           cp LICENSE bindings/runtime-wasm/LICENSE

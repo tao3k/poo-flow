@@ -1404,3 +1404,40 @@ flowchart LR
     M1 --> N
     W1 --> N
 #+end_src
+
+** Runtime WASM timeout and stale-run cancellation
+
+The Runtime WASM workflow now enforces cancellation at two independent
+boundaries:
+
+1. =concurrency.cancel-in-progress: true= cancels an older run for the same Git
+   ref as soon as a newer commit starts.  An obsolete package build no longer
+   consumes the macOS runner until its job timeout.
+2. The existing 30-minute job deadline remains the final bound, while each
+   measured slow step has its own deadline.
+
+The step budgets are derived from the completed 23-minute-12-second source-build
+receipt rather than fixed CPU assumptions:
+
+| Step | Observed duration | Hard timeout | Margin |
+|-
+| Install Gerbil project dependencies | 343 s (5 min 43 s) | 480 s (8 min) | 137 s |
+| Materialize POO Flow Gerbil project | 351 s (5 min 51 s) | 480 s (8 min) | 129 s |
+| Build, test, and pack the package | 585 s (9 min 45 s) | 720 s (12 min) | 135 s |
+
+A step deadline is a failed build receipt and blocks promotion.  A concurrency
+cancellation means that the run was superseded by a newer commit; it must not be
+reported as a test failure or success for the newer revision.
+
+#+begin_src mermaid
+flowchart TD
+    P[Push on ref] --> C{Older WASM run active?}
+    C -->|yes| X[Cancel superseded run]
+    C -->|no| I[Install dependencies: 8 min max]
+    X --> I
+    I --> M[Materialize project: 8 min max]
+    M --> B[Build test pack: 12 min max]
+    B --> J{Whole job within 30 min?}
+    J -->|yes| S[Publish green source-build receipt]
+    J -->|no| F[Cancel and fail timeout receipt]
+#+end_src
