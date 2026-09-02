@@ -1372,3 +1372,35 @@ Promotion is blocked until the owner API demonstrates both a completed cold
 build and at least two consecutive no-op warm builds.  An incomplete faster
 trajectory, a compiler switch, or a shared installation-root cache is not a
 promotion receipt.
+
+** PR 12 downstream CI receipt
+
+Commit =4cad868c= completed the full GitHub check set.  Durations below are
+wall-clock job durations reported by GitHub Actions; all comparisons use the
+immediately preceding green PR 12 run rather than a local estimate.
+
+| Required check | Current duration | Previous duration | Delta | Result |
+|-
+| actionlint | 15 s | not performance-sensitive | n/a | passed |
+| POO Flow Lean proof bridge | 27 s | not performance-sensitive | n/a | passed |
+| POO Flow external Bazel module | 493 s (8 min 13 s) | no comparable value recorded here | n/a | passed |
+| Linux Gerbil package | 760 s (12 min 40 s) | 811 s (13 min 31 s) | -51 s (-6.3 percent) | passed |
+| macOS Gerbil package | 947 s (15 min 47 s) | 1590 s (26 min 30 s) | -643 s (-40.4 percent) | passed |
+| Python runtime wheel | 39 s | downstream continuation | n/a | passed |
+| Runtime WASM source-build | 1392 s (23 min 12 s) | 1664 s (27 min 44 s) | -272 s (-16.3 percent) | passed |
+
+The three lock refresh/verify jobs and the package publication job were
+conditionally skipped as designed; they are not failures.  The macOS and WASM
+reductions are material, but the absolute durations remain too high.  This
+receipt validates the merged =gerbil-bazel= revision as a downstream
+improvement; it does not close the ASP Build API incremental-profile work.
+
+#+begin_src mermaid
+flowchart LR
+    L0[Linux previous 811 s] -->|minus 51 s / 6.3 percent| L1[Linux current 760 s PASS]
+    M0[macOS previous 1590 s] -->|minus 643 s / 40.4 percent| M1[macOS current 947 s PASS]
+    W0[WASM previous 1664 s] -->|minus 272 s / 16.3 percent| W1[WASM current 1392 s PASS]
+    L1 --> N[Next owner: ASP Build API profile]
+    M1 --> N
+    W1 --> N
+#+end_src
