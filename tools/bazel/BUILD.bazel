@@ -13,8 +13,14 @@ sh_test(
     srcs = ["shared_gerbil_capability_test.sh"],
     args = [
         "$(rlocationpath @local_gerbil//:toolchain.receipt.json)",
+        "$(rlocationpath //scheme:gerbil_utils_package_receipt)",
+        "$(rlocationpath //scheme:gerbil_poo_package_receipt)",
+        "$(rlocationpath //scheme:asp_gerbil_scheme_package_receipt)",
     ],
     data = [
+        "//scheme:asp_gerbil_scheme_package_receipt",
+        "//scheme:gerbil_poo_package_receipt",
+        "//scheme:gerbil_utils_package_receipt",
         "@local_gerbil//:toolchain.receipt.json",
     ],
 )

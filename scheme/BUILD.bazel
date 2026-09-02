@@ -48,11 +48,24 @@ gerbil_project_compile(
 filegroup(
     name = "dependency_packages",
     srcs = [
+        ":asp_gerbil_scheme_package",
         ":gerbil_poo_package",
         ":gerbil_utils_package",
-        ":asp_gerbil_scheme_package",
     ],
 )
+
+[
+    filegroup(
+        name = name,
+        srcs = [project],
+        output_group = "receipt",
+    )
+    for name, project in [
+        ("gerbil_utils_package_receipt", ":gerbil_utils_package"),
+        ("gerbil_poo_package_receipt", ":gerbil_poo_package"),
+        ("asp_gerbil_scheme_package_receipt", ":asp_gerbil_scheme_package"),
+    ]
+]
 
 [
     filegroup(
@@ -72,8 +85,8 @@ gerbil_project_compile(
     srcs = ["//:runtime_wasm_generator_scheme_sources"],
     args = ["compile"],
     build_script = "//:runtime_wasm_generator_build_script",
-    require_library_output = True,
     receipt_line_prefix = "POO_FLOW_RUNTIME_WASM_GENERATOR_BUILD_RECEIPT ",
+    require_library_output = True,
     deps = [":gerbil_poo_package"],
 )
 
@@ -105,8 +118,11 @@ gerbil_project_dev(
     name = "runtime_wasm_generator_dev_compile",
     args = ["compile"],
     build_script = "//:runtime_wasm_generator_build_script",
+    tags = [
+        "local",
+        "manual",
+    ],
     deps = [":runtime_wasm_generator_compile"],
-    tags = ["local", "manual"],
 )
 
 sh_binary(
@@ -118,12 +134,15 @@ sh_binary(
         "$(locations :runtime_wasm_generator_compile)",
     ],
     data = [
-        ":gerbil_utils_package",
         ":gerbil_poo_package",
+        ":gerbil_utils_package",
         ":runtime_wasm_generator_compile",
         "@bazel_tools//tools/bash/runfiles",
     ],
-    tags = ["local", "manual"],
+    tags = [
+        "local",
+        "manual",
+    ],
 )
 
 gerbil_project_compile(
@@ -144,23 +163,23 @@ gerbil_project_dev(
     name = "dev_compile",
     args = ["compile"],
     build_script = "//:build.ss",
-    deps = [":asp_gerbil_scheme_package"],
     tags = [
         "local",
         "manual",
     ],
+    deps = [":asp_gerbil_scheme_package"],
 )
 
 gerbil_project_dev(
     name = "dev_unit_tests",
     args = ["compile"],
     build_script = "//:build.ss",
-    deps = [":asp_gerbil_scheme_package"],
     tags = [
         "local",
         "manual",
     ],
     tests = ["//:t/unit-tests.ss"],
+    deps = [":asp_gerbil_scheme_package"],
 )
 
 filegroup(
@@ -244,6 +263,7 @@ test_suite(
         ":tests",
     ],
 )
+
 gerbil_project_test(
     name = "ai_security_executable_refinement_test",
     size = "small",
