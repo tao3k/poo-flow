@@ -34,6 +34,27 @@
     "user-interface/custom/my-module/cases/durable-owner.ss"
     "user-interface/custom/my-module/config.ss"))
 
+(def +project-discovery-exclude-directories+
+  '("run" ".git" "_darcs" ".gerbil" ".data" ".devenv" ".direnv"
+    "bazel-bin" "bazel-out" "bazel-testlogs"
+    "benchmarks" "bindings" "docs" "packages" "proofs" "tools"))
+
+(def (project-source-module? module)
+  (or (string-prefix? "src/" module)
+      (string-prefix? "t/" module)
+      (string-prefix? "user-interface/" module)))
+
+(def (runtime-module? module)
+  (and (string-prefix? "src/" module)
+       (not (string-prefix? "src/build-api/" module))
+       (not (string-prefix? "src/cli-support/" module))
+       (not (string-prefix? "src/testing/" module))))
+
+(def +project-modules+
+  (filter project-source-module?
+          (all-gerbil-modules
+           exclude-dirs: +project-discovery-exclude-directories+)))
+
 (def (remove-build-files specs modules)
   (fold (lambda (module current)
           (remove-build-file current module))
@@ -50,11 +71,7 @@
 (def (runtime-spec)
   (interface-only-specs
    (remove-build-files
-    (filter (lambda (module)
-              (string-prefix? "src/" module))
-            (all-gerbil-modules
-             exclude-dirs: (append '("build-api" "cli-support" "testing")
-                                   default-exclude-dirs)))
+    (filter runtime-module? +project-modules+)
     +excluded-runtime-modules+)))
 
 (def (nono-ffi-spec)
@@ -68,8 +85,13 @@
 (asp-gerbil-scheme-package-spec!
  (poo-flow-library-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
+ (modules +project-modules+)
+ (source-catalog-authority 'project)
  (role 'library)
  (profile 'development)
+ (roots ["src" "t" "user-interface"])
+ (runtime-roots ["src"])
+ (exclude-directories +project-discovery-exclude-directories+)
  (native-spec
   (append (nono-ffi-spec)
           (runtime-spec)
