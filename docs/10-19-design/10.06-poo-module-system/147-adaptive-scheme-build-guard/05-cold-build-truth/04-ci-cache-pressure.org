@@ -133,6 +133,40 @@ This accepts the dual-platform warm-cache gate. Source changes still require a
 real Scheme action execution with a live host probe; documentation-only changes
 may reuse the compiled action while advancing the immutable CI cache generation.
 
+** Downstream CI package ownership correction
+
+Pull-request run =33673613151= exposed a downstream ownership violation after
+the ASP dependency revision changed.  POO Flow CI invoked
+=@local_gerbil//:install_dependencies= and then built
+=//scheme:dependency_packages=.  The first command is the explicit developer
+=gxpkg deps --install= side effect; the second is the declared Bazel artifact
+graph.  Running both compiled the same dependency closure through two owners.
+
+The duplicate developer action cost =148 s= on Linux and =392 s= on macOS
+before the Bazel dependency graph began.  The Linux job completed in =11 min 05
+s= and the macOS job in =19 min 01 s=, so both exceeded the =8 min= and =10
+min= promotion limits.  Runtime-WASM run =33673613015= failed at its =8 min=
+step limit while executing the same redundant developer action; its ASP guard
+receipt reported =146925 ms= for that package build, =3= configured workers,
+=1496350720 B= peak RSS, and no memory-based worker reduction.
+
+POO Flow CI now uses only =//scheme:dependency_packages=.  Bazel owns the
+isolated dependency artifacts and reverse invalidation closure, while
+=@local_gerbil//:install_dependencies= remains available solely as an explicit
+developer workspace operation.  The correction removes duplicate compilation;
+it does not relax a timeout or hide the remaining cold-action cost.
+
+#+begin_src mermaid
+flowchart LR
+  PKG["gerbil.pkg"] --> DEV["Developer: gxpkg deps --install"]
+  PKG --> PINS["Bzlmod source pins"]
+  PINS --> UTILS["gerbil_utils_package"]
+  UTILS --> POO["gerbil_poo_package"]
+  POO --> ASP["asp_gerbil_scheme_package"]
+  ASP --> FLOW["poo_flow compile"]
+  DEV -. "never a CI prerequisite" .-> FLOW
+#+end_src
+
 ** Dedicated external-module action-key audit
 
 Run =30034465973= job =89298795259= successfully restored the preceding

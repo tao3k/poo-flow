@@ -329,10 +329,6 @@ jobs:
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Install Gerbil project dependencies
-        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel run @local_gerbil//:install_dependencies
-
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         run: bazel build //scheme:dependency_packages

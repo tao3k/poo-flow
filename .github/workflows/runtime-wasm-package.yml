@@ -94,10 +94,6 @@ jobs:
           test "${#native_abi}" -eq 40
           echo "GERBIL_NATIVE_ABI=$native_abi" >> "$GITHUB_ENV"
 
-      - name: Install Gerbil project dependencies
-        timeout-minutes: 8
-        run: bazelisk run @local_gerbil//:install_dependencies
-
       - name: Materialize POO Flow Gerbil project
         timeout-minutes: 8
         shell: bash
