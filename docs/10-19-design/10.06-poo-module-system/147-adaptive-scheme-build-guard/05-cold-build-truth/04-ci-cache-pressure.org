@@ -167,6 +167,60 @@ flowchart LR
   DEV -. "never a CI prerequisite" .-> FLOW
 #+end_src
 
+*** Capability and package readiness are separate receipts
+
+Run =33681435600= proved that removing the developer installation side effect
+also invalidated an old test assumption.  All three declared package actions
+completed, but =shared_gerbil_capability_test= required the immutable
+=@local_gerbil= toolchain receipt to report those packages as installed in its
+prefix.  Its =dependencyState= correctly remained =missing=: Bazel package
+outputs live in isolated project roots and must not mutate the toolchain.
+
+The corrected gate assigns one authority to each receipt:
+
+- the local or prebuilt toolchain receipt proves compiler capability, declared
+  dependency policy, platform, and tool paths;
+- each =gerbil-bazel.project-receipt.v1= proves that one Bazel-owned package
+  action completed and that every observed source revision equals its expected
+  revision;
+- a successful child exit does not excuse a memory anomaly: any package
+  receipt with =peakRssBytes >= 5 GiB= fails downstream acceptance.
+
+The final memory check is deliberately a receipt gate, not a worker limiter.
+The upstream Scheme guard remains responsible for detecting a rapid RSS rise
+while preserving available CPU parallelism.
+
+Pull-request head =05a8fcae= closed the first downstream acceptance run:
+
+| Gate | Prior result | Corrected result | Change | Promotion state |
+|------+--------------+------------------+--------+-----------------|
+| macOS Gerbil package | =19 min 01 s= | =8 min 24 s= | =-10 min 37 s (-55.8%)= | passes =<=10 min= |
+| Linux Gerbil package | =11 min 05 s= | =8 min 32 s= | =-2 min 33 s (-23.0%)= | 32 s above =<=8 min= |
+| Runtime-WASM source build | failed at =8 min= step limit | =3 min 28 s= | completed below the former timeout | passes =<=15 min= |
+| External Bazel module | no accepted result for this head | =6 min 17 s= | exact downstream integration receipt | passes =<=8 min= |
+| Lean proof bridge | =19 s= | =19 s= | unchanged | passes |
+| Python runtime wheel | blocked by earlier package failure | =28 s= | downstream handoff restored | passes |
+
+The macOS, Runtime-WASM, external-module, Lean, and Python gates are accepted.
+Linux is functionally green but is not promoted as a performance baseline until
+the remaining 32 seconds are removed.  The next documentation-only run must
+also prove that the just-published action generation is reusable; a second cold
+dependency action would be a cache-key regression, not normal variance.
+
+#+begin_src mermaid
+flowchart LR
+  Toolchain["Immutable Gerbil toolchain receipt"] --> Capability["Compiler capability validation"]
+  Utils["gerbil-utils project receipt"] --> Ready["Bazel package readiness"]
+  Poo["gerbil-poo project receipt"] --> Ready
+  Asp["asp-gerbil-scheme project receipt"] --> Ready
+  Capability --> Gate{"Shared capability gate"}
+  Ready --> Revision{"status ok and exact revisions"}
+  Revision --> Memory{"peak RSS below 5 GiB"}
+  Memory --> Gate
+  Gate --> Flow["POO Flow build and tests"]
+  Install["gxpkg deps --install"] -. "developer-only side effect" .-> Toolchain
+#+end_src
+
 ** Dedicated external-module action-key audit
 
 Run =30034465973= job =89298795259= successfully restored the preceding

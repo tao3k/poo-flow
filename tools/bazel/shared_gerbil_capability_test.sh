@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Receipt policy boundary: a package action reaching 5 GiB is anomalous even
+# when the child compiler exits successfully.  The upstream guard owns early
+# detection; this downstream gate prevents an undetected spike from passing CI.
+readonly max_package_peak_rss_bytes=$((5 * 1024 * 1024 * 1024))
+
 resolve_runfile() {
   local key=${1:?runfile key is required}
   if [[ -n "${RUNFILES_DIR:-}" ]]; then
@@ -58,10 +63,12 @@ require_project_package_receipt() {
   local project_receipt
   project_receipt=$(resolve_runfile "${1:?project receipt runfile key is required}")
 
-  if ! jq -e '
+  if ! jq --argjson maxPeakRssBytes "$max_package_peak_rss_bytes" -e '
     .schema == "gerbil-bazel.project-receipt.v1"
       and .status == "ok"
       and .resourceGuard.outcome == "completed"
+      and (.resourceGuard.peakRssBytes | type == "number"
+        and . < $maxPeakRssBytes)
       and (.dependencySourceResolutions | type == "array" and length > 0)
       and all(.dependencySourceResolutions[];
         .outcome == "resolved"
