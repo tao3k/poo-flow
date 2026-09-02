@@ -192,7 +192,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
-        "usagesDigest": "ENIcQNDKBiTWWGB7kc+UWXA2As3pQK6+mJ413JYFt7g=",
+        "usagesDigest": "rcB36+iflzNpcgY2xjOyr2iK63TVNieg83djmW0wlEA=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -254,11 +254,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
               "package": "asp-gerbil-scheme",
-              "revision": "e8d00f54294ead9fead051ef1f618a53dd177640",
-              "sha256": "ca5c73bba8439a2db3a95f6ccb3997bf5b40bad812054dcffaaf542afd3161d4",
-              "strip_prefix": "asp-gerbil-scheme-e8d00f54294ead9fead051ef1f618a53dd177640",
+              "revision": "bfe1c6122cd414a55a7ffcbb306a65afb4a75bb3",
+              "sha256": "d694ec22b879404ddb719b0bba7e92983ee9ba1758ab0703c802279481b7f094",
+              "strip_prefix": "asp-gerbil-scheme-bfe1c6122cd414a55a7ffcbb306a65afb4a75bb3",
               "urls": [
-                "https://github.com/tao3k/asp-gerbil-scheme/archive/e8d00f54294ead9fead051ef1f618a53dd177640.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/bfe1c6122cd414a55a7ffcbb306a65afb4a75bb3.tar.gz"
               ]
             }
           }
