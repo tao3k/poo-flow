@@ -4,6 +4,7 @@
 ;;; macro parser modules so macro expansion remains shallow and reusable.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object<-alist)
+        (only-in :std/srfi/1 fold)
         :poo-flow/src/core/plan)
 
 (export poo-flow-composition-inline-section-slot
@@ -396,6 +397,14 @@
        path targets (cadr edge) (composition-plan-stage-name stage))))
    (composition-plan-explicit-edges stage)))
 
+;; Prepend a forward-ordered chunk to reversed accumulated state.  The final
+;; boundary performs one reverse, avoiding quadratic append growth while
+;; preserving the source traversal order.
+;; : (forall (a) (-> [a] [a] [a]))
+;; : (-> List List List)
+(def (composition-plan-accumulate chunk reversed)
+  (fold cons reversed chunk))
+
 (def (composition-plan-build-case
       stage-name path parent-key stages bindings active)
   (when (memq stage-name active)
@@ -410,9 +419,11 @@
          (descriptors (list descriptor))
          (edges (if parent-key (list (list parent-key key)) '())))
       (if (null? rest)
-        (values descriptors
-                (append edges
-                        (composition-plan-stage-edges stage path targets)))
+        (values (reverse descriptors)
+                (reverse
+                 (composition-plan-accumulate
+                  (composition-plan-stage-edges stage path targets)
+                  edges)))
         (let* ((target (car rest))
                (target-kind (car target))
                (target-name (cadr target)))
@@ -424,8 +435,9 @@
                      target-name child-path key stages bindings
                      (cons stage-name active))))
                 (loop (cdr rest)
-                      (append descriptors child-descriptors)
-                      (append edges child-edges))))
+                      (composition-plan-accumulate
+                       child-descriptors descriptors)
+                      (composition-plan-accumulate child-edges edges))))
             (let* ((binding
                     (composition-plan-binding-by-name bindings target-name))
                    (profile-key
@@ -434,59 +446,70 @@
                     (composition-plan-descriptor
                      profile-key target-name 'profile-instance binding)))
               (loop (cdr rest)
-                    (append descriptors (list profile-descriptor))
-                    (append edges (list (list key profile-key)))))))))))
+                    (cons profile-descriptor descriptors)
+                    (cons (list key profile-key) edges)))))))))
 
-(def (composition-plan-descriptor-by-key descriptors key)
-  (let loop ((rest descriptors))
-    (cond
-     ((null? rest) #f)
-     ((equal? (composition-plan-descriptor-key (car rest)) key) (car rest))
-     (else (loop (cdr rest))))))
+;; : (-> [CompositionPlanDescriptor] HashTable)
+(def (composition-plan-descriptor-index descriptors)
+  (let (index (make-hash-table))
+    (let loop ((rest descriptors) (ordinal 1))
+      (unless (null? rest)
+        (let (descriptor (car rest))
+          (hash-put! index
+                     (composition-plan-descriptor-key descriptor)
+                     (cons ordinal descriptor)))
+        (loop (cdr rest) (+ ordinal 1))))
+    index))
 
-(def (composition-plan-descriptor-ordinal descriptors key)
-  (let loop ((rest descriptors) (ordinal 1))
-    (cond
-     ((null? rest) #f)
-     ((equal? (composition-plan-descriptor-key (car rest)) key) ordinal)
-     (else (loop (cdr rest) (+ ordinal 1))))))
+;; : (-> [CompositionPlanEdge] HashTable)
+(def (composition-plan-incoming-index edges)
+  (let (index (make-hash-table))
+    (for-each
+     (lambda (edge)
+       (let ((source-key (car edge))
+             (target-key (cadr edge)))
+         (hash-put! index target-key
+                    (cons source-key (or (hash-get index target-key) '())))))
+     edges)
+    index))
 
-(def (composition-plan-node-id flow-name descriptors key)
-  (let* ((descriptor (composition-plan-descriptor-by-key descriptors key))
-         (ordinal (composition-plan-descriptor-ordinal descriptors key)))
-    (unless descriptor
+;; : (-> Symbol HashTable String PlanNodeId)
+(def (composition-plan-node-id flow-name descriptor-index key)
+  (let (entry (hash-get descriptor-index key))
+    (unless entry
       (error "POO-FLOW-PLAN-E106 unresolved descriptor" key))
-    (list 'node flow-name ordinal
+    (let ((ordinal (car entry))
+          (descriptor (cdr entry)))
+      (list 'node flow-name ordinal
           (composition-plan-descriptor-kind descriptor)
-          (composition-plan-descriptor-name descriptor))))
+          (composition-plan-descriptor-name descriptor)))))
 
-(def (composition-plan-dependencies flow-name descriptors edges target-key)
-  (let loop ((rest edges) (out '()))
-    (cond
-     ((null? rest) (reverse out))
-     ((equal? (cadar rest) target-key)
-      (loop (cdr rest)
-            (cons (composition-plan-node-id
-                   flow-name descriptors (caar rest))
-                  out)))
-     (else (loop (cdr rest) out)))))
+;; : (-> Symbol HashTable HashTable String [PlanNodeId])
+(def (composition-plan-dependencies
+      flow-name descriptor-index incoming-index target-key)
+  (map (lambda (source-key)
+         (composition-plan-node-id flow-name descriptor-index source-key))
+       (reverse (or (hash-get incoming-index target-key) '()))))
 
+;; : (-> Symbol [CompositionPlanDescriptor] [CompositionPlanEdge] [PlanNode])
 (def (composition-plan-make-nodes flow-name descriptors edges)
-  (let loop ((rest descriptors) (ordinal 1) (out '()))
-    (if (null? rest)
-      (reverse out)
-      (let* ((descriptor (car rest))
-             (key (composition-plan-descriptor-key descriptor))
-             (node
-              (make-plan-node
-               (composition-plan-node-id flow-name descriptors key)
-               ordinal
-               (composition-plan-descriptor-source descriptor)
-               (composition-plan-descriptor-kind descriptor)
-               (composition-plan-descriptor-name descriptor)
-               (composition-plan-dependencies
-                flow-name descriptors edges key))))
-        (loop (cdr rest) (+ ordinal 1) (cons node out))))))
+  (let ((descriptor-index (composition-plan-descriptor-index descriptors))
+        (incoming-index (composition-plan-incoming-index edges)))
+    (let loop ((rest descriptors) (ordinal 1) (out '()))
+      (if (null? rest)
+        (reverse out)
+        (let* ((descriptor (car rest))
+               (key (composition-plan-descriptor-key descriptor))
+               (node
+                (make-plan-node
+                 (composition-plan-node-id flow-name descriptor-index key)
+                 ordinal
+                 (composition-plan-descriptor-source descriptor)
+                 (composition-plan-descriptor-kind descriptor)
+                 (composition-plan-descriptor-name descriptor)
+                 (composition-plan-dependencies
+                  flow-name descriptor-index incoming-index key))))
+          (loop (cdr rest) (+ ordinal 1) (cons node out)))))))
 
 ;; : (-> PooFlowComposition ExecutionPlan)
 (def (poo-flow-composition->execution-plan composition)
@@ -506,7 +529,8 @@
       (if (null? rest)
         (make-execution-plan
          name
-         (composition-plan-make-nodes name descriptors edges)
+         (composition-plan-make-nodes
+          name (reverse descriptors) (reverse edges))
          #f
          #f)
         (let* ((root-name (car rest))
@@ -516,5 +540,6 @@
                 (composition-plan-build-case
                  root-name root-path root-key stages bindings '())))
             (loop (cdr rest)
-                  (append descriptors case-descriptors)
-                  (append edges case-edges))))))))
+                  (composition-plan-accumulate
+                   case-descriptors descriptors)
+                  (composition-plan-accumulate case-edges edges))))))))

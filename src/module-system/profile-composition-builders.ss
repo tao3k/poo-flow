@@ -163,6 +163,19 @@
         (launch-ranges launch-ranges-value)
         (total-count total-count-value))))
 
+;; : (-> PooFlowCompositionLaunchRange Integer Integer
+;;       PooFlowCompositionInstanceRef)
+(def (poo-flow-composition-instance-ref launch-range ordinal start)
+  (let ((composition-value (.ref launch-range 'composition))
+        (launch-range-value launch-range)
+        (ordinal-value ordinal)
+        (local-ordinal-value (- ordinal start)))
+    (.o (kind 'poo-flow.composition.instance-ref)
+        (composition composition-value)
+        (launch-range launch-range-value)
+        (ordinal ordinal-value)
+        (local-ordinal local-ordinal-value))))
+
 (def (poo-flow-composition-workload/ref workload ordinal)
   (let ((total-count (.ref workload 'total-count))
         (launch-ranges (.ref workload 'launch-ranges)))
@@ -184,15 +197,7 @@
          ((>= ordinal end)
           (loop (+ middle 1) high))
          (else
-          (let ((composition-value (.ref launch-range 'composition))
-                (launch-range-value launch-range)
-                (ordinal-value ordinal)
-                (local-ordinal-value (- ordinal start)))
-            (.o (kind 'poo-flow.composition.instance-ref)
-                (composition composition-value)
-                (launch-range launch-range-value)
-                (ordinal ordinal-value)
-                (local-ordinal local-ordinal-value)))))))))
+          (poo-flow-composition-instance-ref launch-range ordinal start)))))))
 
 (def (poo-flow-composition-object/profiles name module-bindings profiles stages)
   (poo-flow-composition-object/profile-bindings
