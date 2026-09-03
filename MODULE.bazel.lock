@@ -254,11 +254,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
               "package": "asp-gerbil-scheme",
-              "revision": "ea161c83655f4bd50ed58c318a063a143433972b",
-              "sha256": "346d22a706fc31350c3f65abf4c4866fb433bf51766cf6d71ee2defb552196a0",
-              "strip_prefix": "asp-gerbil-scheme-ea161c83655f4bd50ed58c318a063a143433972b",
+              "revision": "822a2728ee828b8d11ebcae1a0353680e693452c",
+              "sha256": "a29c43d5dfef3d00f6143db70c42a7b21e226e3b7b88f2771ffeb4ebd9afcb95",
+              "strip_prefix": "asp-gerbil-scheme-822a2728ee828b8d11ebcae1a0353680e693452c",
               "urls": [
-                "https://github.com/tao3k/asp-gerbil-scheme/archive/ea161c83655f4bd50ed58c318a063a143433972b.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/822a2728ee828b8d11ebcae1a0353680e693452c.tar.gz"
               ]
             }
           }
@@ -323,11 +323,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
               "package": "asp-gerbil-scheme",
-              "revision": "ea161c83655f4bd50ed58c318a063a143433972b",
-              "sha256": "346d22a706fc31350c3f65abf4c4866fb433bf51766cf6d71ee2defb552196a0",
-              "strip_prefix": "asp-gerbil-scheme-ea161c83655f4bd50ed58c318a063a143433972b",
+              "revision": "822a2728ee828b8d11ebcae1a0353680e693452c",
+              "sha256": "a29c43d5dfef3d00f6143db70c42a7b21e226e3b7b88f2771ffeb4ebd9afcb95",
+              "strip_prefix": "asp-gerbil-scheme-822a2728ee828b8d11ebcae1a0353680e693452c",
               "urls": [
-                "https://github.com/tao3k/asp-gerbil-scheme/archive/ea161c83655f4bd50ed58c318a063a143433972b.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/822a2728ee828b8d11ebcae1a0353680e693452c.tar.gz"
               ]
             }
           }
