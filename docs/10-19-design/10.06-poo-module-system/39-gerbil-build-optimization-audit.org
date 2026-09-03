@@ -39,7 +39,8 @@ flowchart TD
 
 This boundary does not prohibit optimization.  It determines where a proven
 fix belongs.  A Gerbil expansion or scheduling defect is reproduced through
-the native package entry and fixed or proposed upstream.  An ASP declaration,
+the native package entry and reported as an upstream limitation; POO Flow and
+ASP do not patch or replace the upstream executor.  An ASP declaration,
 platform capability, or receipt defect is fixed in ASP Build API.  A Bazel
 cache-key or action defect is fixed in =gerbil-bazel=.  A POO Flow module graph,
 macro hot path, scenario, or project budget is fixed here.
@@ -86,10 +87,41 @@ The correct next implementation is:
 2. Use =:clan/building= as the normal package build facade, matching =gerbil-poo= and =gerbil-utils=.
 3. Keep =build.ss= responsible only for package include dirs and true special targets: the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface that must be package-managed.
 4. Treat =src= and root =t= as the ordinary package surface. =.data=, docs, generated state, user examples, and fixtures stay out because they are not included, not because the build file carries a long negative directory list.
-5. Keep direct =compile-module= as an opt-in full-rebuild diagnostic strategy only, useful for measuring Gerbil bootstrap-style behavior or diagnosing =std/make= graph overhead.
+5. Keep diagnostics on the native package entry.  Do not introduce a direct
+   =compile-module= build path as a downstream performance workaround; bootstrap
+   internals remain upstream implementation evidence only.
 6. Continue reducing heavy POO macro expansion in module-system files. The earlier =object<-alist= fixes are aligned with this because they reduce compile-time expansion pressure before any build runner optimization starts.
 
 The core mistake to avoid is treating batch size or a hand-written giant stage list as the architecture. Build scripts should expose package boundaries; they should not become a second source tree model.
+
+** 10.06.39.45 Dependency Identity and Acquisition Boundary
+:PROPERTIES:
+
+Gerbil uses two distinct dependency names.  Build declarations use logical
+package identities such as =clan= and =clan/poo=.  Physical dependency
+installation uses provider locators in =gerbil.pkg=; Gerbil 0.18.2 =pkg-fetch=
+accepts =github.com/=, =gitlab.com/=, and =bitbucket.org/= providers and rejects
+an unfetched logical name with =Unknown package provider=.
+
+POO Flow therefore imports =:clan/poo/...= and declares
+=deps: '("clan" "clan/poo")= when lowering through =:clan/building=.  GitHub
+commit identities remain confined to =gerbil.pkg= and the Gerbil-Bazel source
+lock, where they provide immutable acquisition and integrity.  They must not
+appear in the user-facing Build API macro.
+
+#+begin_src mermaid
+flowchart LR
+  Decl["build declaration\ndeps: clan, clan/poo"]
+  Modules["Gerbil imports\n:clan/... · :clan/poo/..."]
+  Manifest["gerbil.pkg\nprovider locator + revision"]
+  Bazel["gerbil-bazel source lock\nURL + SHA-256"]
+  Installed["installed package identities\nclan · clan/poo"]
+
+  Decl --> Modules
+  Manifest --> Installed
+  Bazel --> Installed
+  Installed --> Modules
+#+end_src
 ** 10.06.39.50 Finding: POO Construction Can Be A Compile-Time Hot Path
 :PROPERTIES:
 The build slowdown is not only a runner problem. Large POO object literals can become expensive macro-expansion work when a module constructs broad nested objects with =.o= at compile time. The problem showed up most clearly in presentation/profile modules: the compiler spent substantial time in expander, hash, table, and GC code before useful =gsc= parallel work began.
@@ -190,6 +222,42 @@ The durable pattern is therefore:
 4. change the implementation at that owner boundary;
 5. rerun the scenario and the relevant semantic root;
 6. document the receipt here when it changes the engineering rule.
+
+** 10.06.39.72 Downstream ASP Ownership-Cleanup Receipt (2026-09-03)
+:PROPERTIES:
+
+POO Flow pinned ASP commit
+=f2af55c8560a573b8da1ebff7c71aaf32740ee02= after its Linux and macOS CI
+matrix passed.  The corresponding immutable archive SHA-256 is
+=375e2e6893632927ffde825b86faf6fab272b6f1808d9f266806bd183ff6eef8=.
+
+The first downstream =.devenv/devenv-profile-exec just build= after the pin
+completed successfully in =302.090 seconds=.  Bazel reported a =292.12-second=
+critical path and four Darwin-sandbox processes; the new ASP package action
+crossed approximately =78 seconds= before POO Flow compilation began, and the
+POO Flow compile action crossed approximately =100 seconds= before completion.
+These are cold dependency/action observations, not portable performance gates.
+
+The subsequent declared Scheme acceptance command completed in =219.650
+seconds=.  All =9/9= Bazel test targets passed.  The dependency package action
+was reused rather than rebuilt; =contract_tests= was the longest test at
+=126.4 seconds=.  This confirms that removing ASP's downstream topology,
+freshness, and adaptive execution-window APIs did not remove a POO Flow runtime
+consumer.
+
+An immediately repeated =just build= completed in =0.203 seconds= with a
+=0.00-second= critical path and one internal Bazel process.  No Gerbil package
+or project compilation action ran.  This is the intended downstream speedup:
+reuse the upstream-compatible immutable action result instead of inventing a
+second Scheme incremental scheduler.
+
+The first pushed lock contained the refreshed Darwin extension evaluation but
+retained the previous ASP revision in the Linux evaluation.  Both Linux CI jobs
+therefore stopped at =Verify Bazel module lock= before any Gerbil action ran.
+The repository-owned cross-platform refresh workflow run =33732742085= then
+completed Linux seed in =19 seconds=, Darwin merge in =28 seconds=, and final
+Linux verification in =14 seconds=.  Its merged artifact is the tracked lock;
+the JSON was not edited by hand.
 ** 10.06.39.75 Field Receipt: Harness Native POO Policy Hot Path
 :PROPERTIES:
 The next optimization pass used the Gerbil Scheme harness native POO scenarios as the pattern source. The useful rules were:
