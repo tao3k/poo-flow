@@ -235,16 +235,16 @@ The durable pattern is therefore:
 :PROPERTIES:
 
 POO Flow pinned ASP commit
-=db904ad60f7f5cc80eeb39cccbb6cb4a1067d6dd= after its Linux and macOS CI
-matrix passed.  The corresponding immutable archive SHA-256 is
-=490b4f5f794f3a5f44bf2ffce5567c6dc40212dadcfa8dfcb274e4217b5d9542=.
+=a77fee1c5061f5d748ba65b4399b888a84fc4d1a= after its Linux and macOS CI
+matrix passed.  The corresponding archive SHA-256, independently reproduced
+after the downstream fetch gate rejected the stale value, is
+=55ec5ad2a49e374494588ce5e7c984fbf7a5571760bcd2937045e59532d396ef=.
 
 The ASP matrix proved the adaptive optimized path before this downstream pin:
-Linux library =1 minute 51 seconds=, Linux provider =58 seconds=, macOS
-provider =4 minutes 16 seconds=, and the complete macOS library job =11
-minutes 54 seconds= including setup; its build step stayed inside the explicit
-10-minute gate.  The failed predecessor left =GERBIL_BUILD_CORES= unset and
-timed out the macOS optimized library step after 10 minutes.  The accepted ASP
+Linux library =1 minute 47 seconds=, Linux provider =54 seconds=, macOS
+provider =5 minutes 24 seconds=, and the complete macOS library job =8 minutes
+36 seconds= including setup; its build step stayed inside the explicit
+10-minute gate.  The accepted ASP
 entry now maps an explicit override, or otherwise the host logical CPU count,
 to both =GERBIL_BUILD_CORES= and Gerbil 0.18.2's captured
 =__available-cores= before the one upstream =std/make= session.

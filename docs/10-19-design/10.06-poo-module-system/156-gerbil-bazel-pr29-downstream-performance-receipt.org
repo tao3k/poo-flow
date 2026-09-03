@@ -1411,39 +1411,48 @@ flowchart LR
     W1 --> N
 #+end_src
 
-** Runtime WASM timeout and stale-run cancellation
+** Runtime WASM single-owner build and 15-minute gate
 
-The Runtime WASM workflow now enforces cancellation at two independent
-boundaries:
+Run =33748180317= disproved the former timeout model.  The workflow first built
+and materialized the Gerbil graph, =npm test= then entered
+=build -> generate= and built the bundle graph again, and
+=generator-determinism.mjs= entered Bazel a third time with a different
+=GERBIL_PATH= action environment.  The run was cancelled after the whole
+=source-build= exceeded 15 minutes.  Increasing the old eight-minute
+materialization deadline cannot fix this duplicate ownership.
 
-1. =concurrency.cancel-in-progress: true= cancels an older run for the same Git
-   ref as soon as a newer commit starts.  An obsolete package build no longer
-   consumes the macOS runner until its job timeout.
-2. The existing 30-minute job deadline remains the final bound, while each
-   measured slow step has its own deadline.
+The package is now the only build owner.  =npm test= owns generation, native
+WASM compilation, determinism, tests, and packing.  The workflow's earlier
+Gerbil step is reduced to Bazel graph queries; it neither compiles nor copies
+artifacts into the checkout.  Every package-internal Bazel invocation receives
+the same empty =GERBIL_PATH= so an ambient package path cannot change action
+keys between generation and determinism.
 
-The step budgets are derived from the completed 23-minute-12-second source-build
-receipt rather than fixed CPU assumptions:
+The complete =source-build= job has one 15-minute deadline.  Its package step
+retains the narrower 12-minute deadline, and
+=concurrency.cancel-in-progress: true= still cancels superseded revisions.  A
+run beyond either boundary is a performance failure and must not be promoted by
+relaxing the timeout.
 
-| Step | Observed duration | Hard timeout | Margin |
+| Owner | Allowed responsibility | Forbidden responsibility |
 |-
-| Install Gerbil project dependencies | 343 s (5 min 43 s) | 480 s (8 min) | 137 s |
-| Materialize POO Flow Gerbil project | 351 s (5 min 51 s) | 480 s (8 min) | 129 s |
-| Build, test, and pack the package | 585 s (9 min 45 s) | 720 s (12 min) | 135 s |
-
-A step deadline is a failed build receipt and blocks promotion.  A concurrency
-cancellation means that the run was superseded by a newer commit; it must not be
-reported as a test failure or success for the newer revision.
+| Workflow graph gate | Query dependency relationships | Build or materialize Scheme outputs |
+| Runtime WASM package | Generate once, compile, test, verify determinism, pack | Depend on ambient =GERBIL_PATH= |
+| Bazel / =gerbil-bazel= | Hermetic graph, cache, Gerbil actions | Duplicate package orchestration |
 
 #+begin_src mermaid
 flowchart TD
     P[Push on ref] --> C{Older WASM run active?}
     C -->|yes| X[Cancel superseded run]
-    C -->|no| I[Install dependencies: 8 min max]
-    X --> I
-    I --> M[Materialize project: 8 min max]
-    M --> B[Build test pack: 12 min max]
-    B --> J{Whole job within 30 min?}
-    J -->|yes| S[Publish green source-build receipt]
-    J -->|no| F[Cancel and fail timeout receipt]
+    C -->|no| G[Validate Bazel dependency graph]
+    X --> G
+    G --> E[Set one stable GERBIL_PATH action environment]
+    E --> N[npm test: sole build owner]
+    N --> B[Bazel bundle generation]
+    B --> W[Emscripten WASM compilation]
+    W --> D[Determinism and runtime tests]
+    D --> K[Pack verified package]
+    K --> J{Whole source-build at most 15 min?}
+    J -->|yes| S[Publish green receipt]
+    J -->|no| F[Cancel and fail performance gate]
 #+end_src
