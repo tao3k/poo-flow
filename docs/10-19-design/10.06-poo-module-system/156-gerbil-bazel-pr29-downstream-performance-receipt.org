@@ -1439,6 +1439,22 @@ retains the narrower 12-minute deadline, and
 run beyond either boundary is a performance failure and must not be promoted by
 relaxing the timeout.
 
+Pull-request run =33754153438= is the acceptance receipt for this ownership
+change.  =source-build= completed in =572 s= (=9 min 32 s=), below the
+=900 s= job gate.  This is =820 s= faster than the historical =1392 s=
+(=23 min 12 s=) receipt, a 58.9 percent reduction, and =106 s= faster than the
+intermediate =678 s= (=11 min 18 s=) single-owner run, a further 15.6 percent
+reduction.  The successful log contains one action each for
+=gerbil_utils_package=, =gerbil_poo_package=, and
+=runtime_wasm_generator_compile=.  After =test:generate-determinism= starts,
+no second Gerbil project action appears.
+
+| Runtime WASM receipt | Duration | Delta | Result |
+|-
+| Historical source-build | 1392 s (23 min 12 s) | baseline | passed but above current gate |
+| Workflow single-owner only | 678 s (11 min 18 s) | -714 s (-51.3 percent) | passed |
+| Single Bazel determinism invocation | 572 s (9 min 32 s) | -820 s (-58.9 percent) | passed |
+
 | Owner | Allowed responsibility | Forbidden responsibility |
 |-
 | Workflow graph gate | Query dependency relationships | Build or materialize Scheme outputs |
