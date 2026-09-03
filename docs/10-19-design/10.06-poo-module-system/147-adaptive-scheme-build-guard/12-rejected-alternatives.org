@@ -1,9 +1,11 @@
 * Rejected alternatives
 
-** Always one unbounded session
+** Replacing the upstream session with an adaptive downstream controller
 
-Rejected for adaptive cold execution.  It improves bounded wall time but the
-runtime A/B increases allocation by 29.733% and RSS by 6.197%.
+Rejected.  Worker scheduling, dependency completion, and incremental validity
+are =std/make= responsibilities.  POO Flow observes a single upstream session
+and may stop an actual RSS-rate anomaly; it does not pre-limit ordinary worker
+capacity or create a second scheduler.
 
 ** Fixed chunk sizes or a global spec ceiling
 
@@ -19,6 +21,20 @@ difficult to enforce.
 
 Rejected.  Prior process multiplicity imposed dominant startup overhead and
 duplicated Building Framework currentness, topology, and receipt ownership.
+
+** Parsing Scheme source headers to infer the build graph
+
+Rejected.  Textual import scanning cannot safely reproduce =cond-expand=,
+macro-generated imports, preludes, includes, custom readers, or expander
+registry semantics.  Missing one edge can make parallel compilation incorrect.
+Only the Gerbil expander is the dependency authority.
+
+** Package-local stamps as a freshness oracle
+
+Rejected.  A receipt can report what an upstream build did, but it cannot
+replace =std/make='s answer about whether generated Scheme, SSI, macro, and
+native units are current.  Mtime retouching and output enumeration must not be
+used to manufacture a warm result.
 
 ** Python-owned build policy
 

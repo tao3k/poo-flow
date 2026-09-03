@@ -1,5 +1,54 @@
 * 10.06.39 Gerbil Build Optimization Audit
 :PROPERTIES:
+** 10.06.39.05 Authority Boundary: Optimize At The Owner
+:PROPERTIES:
+POO Flow must improve build performance without replacing Gerbil's build
+semantics.  The ownership split is:
+
+1. Gerbil and Gambit own expansion, import semantics, dependency completion,
+   native compilation, incremental validity, and worker scheduling.
+2. ASP Build API owns a small declarative package/profile projection, portable
+   toolchain capabilities, validation, and typed observability receipts.  It
+   must not infer a second import graph or decide whether Gerbil output is
+   current.
+3. =gerbil-bazel= owns the reusable mapping from the same upstream package
+   entry to Bazel toolchains, actions, and content-addressed dependency caches.
+   It does not know POO Flow modules or scenarios.
+4. POO Flow owns its module roots, roles, exceptional native specs, scenario
+   selection, and project performance gates.
+
+#+begin_src mermaid
+flowchart TD
+  P["POO Flow package declarations<br/>roots, roles, native specs, scenarios"]
+  A["ASP Build API<br/>declarative profile, validation, typed receipts"]
+  M["Gerbil std/make and expander<br/>dependency truth, currentness, scheduling"]
+  G["Gambit and host C compiler<br/>native compilation"]
+  B["gerbil-bazel<br/>toolchain and atomic dependency cache mapping"]
+  C["POO Flow performance scenarios<br/>cold, warm, CPU, RSS, compiler jobs"]
+
+  P --> A
+  A --> M
+  M --> G
+  B --> A
+  C -. observes .-> A
+  C -. measures upstream execution .-> M
+
+  X["Forbidden downstream ownership<br/>source import parser, scheduler,<br/>freshness algorithm, compiler queue"]
+  X -. must not replace .-> M
+#+end_src
+
+This boundary does not prohibit optimization.  It determines where a proven
+fix belongs.  A Gerbil expansion or scheduling defect is reproduced through
+the native package entry and fixed or proposed upstream.  An ASP declaration,
+platform capability, or receipt defect is fixed in ASP Build API.  A Bazel
+cache-key or action defect is fixed in =gerbil-bazel=.  A POO Flow module graph,
+macro hot path, scenario, or project budget is fixed here.
+
+The acceptance rule is executable: a performance change must name the owner,
+retain an upstream-native comparison, and report elapsed time, CPU utilization,
+peak RSS, configured cores, observed compiler jobs, profile, source identity,
+and toolchain identity.  A faster result obtained by changing dependency or
+currentness semantics is not an optimization receipt.
 ** 10.06.39.10 Finding: =std/make= Parallelism Starts Late
 :PROPERTIES:
 Gerbil =std/make= computes =settings-parallelize= through =gerbil-build-cores=. When =parallelize:= is left as =#t=, Gerbil reads =GERBIL_BUILD_CORES= and falls back to =0=, which becomes one worker at build time. Passing =GERBIL_BUILD_CORES= is therefore the normal package-level way to opt into local parallelism.
@@ -61,7 +110,9 @@ The current build implementation has been corrected toward the =gerbil-poo= / =g
 - integration-only fixture wrappers such as =t/fixtures/object-load-valid/objects.ss= are explicit test build-spec entries, so fixture source remains outside package scanning while package-local imports have real compiler artifacts;
 - the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface remain explicit build-spec entries;
 - =GERBIL_BUILD_CORES= remains the normal parallelism knob, matching the reference packages and avoiding custom thread logic in =build.ss=.
-- clean optimized package builds now run a small uncached =runtime-bootstrap= stage for durable runtime store dependencies and loop-engine session-agent graph dependencies before the main package stage. This is a dependency-order repair for modules such as =durable-runtime-store=, =durable-runtime-store-backend=, =durable-runtime-store-operation=, =durable-recovery-scenario=, =session-registry=, =session-agent=, =loop-engine-intent-utils=, =loop-engine-session-agent-graph=, and =loop-engine-runtime-agent=; it is not a fixed worker-count policy. The main package stage still self-schedules through =GERBIL_BUILD_CORES= or the host CPU count.
+- dependency ordering must remain a single =std/make= concern.  A POO Flow
+  declaration may expose exceptional native entries, but it must not introduce
+  a bootstrap scheduler or a second coordinator to repair an inferred graph.
 - focused CLI compiler/test gates use the project package-local =.gerbil/lib= loadpath and never depend on a user's =~/.gerbil/lib= cache. This is fixed as benchmark scenario =GERBIL-SCHEME-AGENT-R039= under =t/scenarios/performance/focused-build-loadpath/benchmark.ss=: the optimization is not raw speed alone, but moving the focused build surface toward Gerbil/gxpkg's package-local build model while preventing stale user-cache artifacts from entering the compiler path.
  - package-local compilation is still guarded by =GERBIL_PATH=, but =gxpkg env= is not the ordinary developer hot-path wrapper. In a package-manager context, the externally supplied =GERBIL_PATH= remains authoritative. For the canonical direct self-host path, project configuration supplies the repository-local =.gerbil= only when the variable is absent. The normal warm-path check is therefore =./build.ss compile=; =gxpkg build -g= remains the package-manager and CI parity gate.
 
@@ -75,67 +126,14 @@ startup. For this package's warm build path, the measured command is:
 GERBIL_PATH=.gerbil gxi build.ss compile --debug
 #+end_src
 
-Final local receipts after the fix:
-- =GERBIL_PATH=.gerbil gxi build.ss compile --debug= with stamp-current cache:
-  =11.92s=.
-- After =touch build.ss=, the first mtime-current retouch run: =12.08s=.
-- =gxpkg build -g= passes, but includes package-manager wrapper overhead and is
-  a CI/package-manager parity gate rather than the daily hot-path probe.
-- GitHub Actions run =28631185368= completed green: Ubuntu =6m49s= and macOS
-  =7m43s=.
+*** Historical receipt and architectural correction
+The experiment produced =11.92s= and =12.08s= local checks by using a
+package-local stage cache and mtime retouch.  GitHub Actions run =28631185368=
+completed green at Ubuntu =6m49s= and macOS =7m43s=.  These values remain
+measurement history; the local freshness mechanism is rejected and must not be
+reintroduced.
 
-*** Root Cause
-Stage cache stamps include build-level sources such as =build.ss=. When
-=build.ss= changes, installed output artifacts can still be current while the
-stage stamp is older than the build-level source.
-
-The old fallback re-entered receipt/native output enumeration. Runtime and test
-stages had 12k+ native output candidates, so a warm check could inflate into
-minutes even when nothing semantic needed recompilation. The top-level
-=:clan/building= import was another hot-path cost center: it added roughly
-=24.75s= before the build script had reached project-specific decisions.
-
-*** Fix Pattern
-- Retouch existing stage stamps with an O(1) mtime update after lightweight
-  output diagnostics prove the stage is current. In this repo that means
-  Gambit =##os-file-times-set!= with =(current-second)=.
-- Treat skipped =mtime-current= stages like =stamp-current= in debug receipts:
-  report diagnostic outputs, not full native output enumeration.
-- Give =gsc:= and =ssi:= FFI specs explicit source/output projections, including
-  =_nono.scm=, =_nono.ssi=, =_nono.o1=, and the installed =_nono.ssi=, so FFI
-  stages participate in the same stamp cache.
-- Lazy-load =:std/make= only for actual compile/clean paths. Warm skip checks
-  should not load it.
-- Replace heavy generic module discovery imports with a project-local scanner
-  only when exact semantics are preserved, including the =.ss= suffix and the
-  runtime/test module counts.
-
-*** Anti-Patterns
-- Do not read or rewrite giant receipt files just to retouch stamps.
-- Do not pass =current-time= to =##os-file-times-set!=; in this environment that
-  set the stamp mtime to =0= and caused perpetual =mtime-current= misses.
-- Do not strip =.ss= suffixes from scanner results. That breaks
-  special-source removal and changes target counts.
-- Do not benchmark the daily hot path through =gxpkg env=.
-- Do not treat =gxpkg build -g= timing as a direct replacement for the local
-  =gxi= warm-path timing. It is the package-manager parity gate.
-
-*** Guardrail
-
-The warm-build receipt must separate external command wall time from the
-package build script's own wall time. =/usr/bin/time -p gxpkg build -g= includes
-=gxpkg= environment setup, Gerbil startup, package loading, terminal/pipe
-effects, and the actual poo-flow build script. A high =real= value is therefore
-not enough evidence that a stage cache regressed.
-
-The build script now emits a package-level timing line whenever debug tracking
-is enabled:
-
-#+begin_src text
-|poo-flow-compile-debug (phase: package-total ... excludes: gxpkg-env-startup elapsed-micros: ...)
-#+end_src
-
-Interpretation rule:
+The useful result is the timing decomposition, not the old cache:
 
 #+begin_src typst
 $
@@ -150,25 +148,19 @@ $
 
 If =package-total= is small but external =real= is high, investigate =gxpkg=
 environment startup, process startup, or output piping before changing stage
-cache code. If =package-total= is high, start from the largest
-=poo-flow-compile-debug= stage line and optimize that owner.
-For build performance work, record these four receipts separately:
+code. If =package-total= is high, profile the native upstream package build and
+send the fix to the owner of that phase.  For build performance work, record
+these receipts separately:
 - plain =gxi -e '(void)'= when measuring runtime startup;
-- =GERBIL_PATH=.gerbil gxi build.ss compile --debug= for the local warm path;
-- one =touch build.ss= retouch-path run;
+- the native =build.ss= entry for cold and repeated warm runs;
 - =gxpkg build -g= for package-manager and CI parity.
 
-The next refinement is structural: keep future package-owned modules under explicit include surfaces. If a new tree needs package compilation, it should be added as an include surface with a clear reason instead of expanding a negative exclude list.
-** 10.06.39.65 Field Receipt: Package Status Fast Path
-:PROPERTIES: The next measured split was between package compilation and no-op status checks:
-- =direnv exec . gxpkg env gxi -e '(display "ok")'= measured about =2.49s=, while direct =gxi= measured about =0.14s= and =direnv exec . gxi= about =0.71s=. This made =gxpkg env= wrapper startup a real no-op floor.
-- =gxpkg env ./build.ss compile --force= refreshes package-local artifacts and the package build-cache receipt.
-- A repeated =gxpkg env ./build.ss compile= skips =std/make= compilation but still pays the interpreted =build.ss= entry and build import cost.
-- =./.gerbil/bin/poo-flow build package-status= consumes the package-local =poo-flow-build-cache v1= receipt directly. The in-process benchmark scenario =GERBIL-SCHEME-AGENT-R040= guards the fast path without re-entering package compilation.
-
-The build-cache receipt is written only by the slow package owner after a successful compile. It records source and output paths under =.gerbil/lib/poo-flow/.compile-package.stamp=. The compiled CLI fast path only verifies that receipt: missing stamp, old stamp format, newer source, or missing output returns stale with the repair command =gxpkg env ./build.ss compile --force=.
-
-This keeps the ownership boundary clear. =std/make= and =gxpkg env= still own package compilation; the compiled CLI owns cheap status checks for agents deciding whether that package compile is necessary.
+Currentness, generated-unit ownership, and dependency completion belong to
+upstream =std/make=.  POO Flow may retain benchmark observations and project
+budgets; it must not use a receipt, mtime retouch, source-header parser, local
+output enumerator, or compiled CLI status command as a competing freshness
+oracle.  Future package modules stay under explicit include surfaces so the
+downstream declaration remains small and reviewable.
 
 ** 10.06.39.70 Field Report: Durable POO Performance Work
 :PROPERTIES:
