@@ -109,6 +109,14 @@ commit identities remain confined to =gerbil.pkg= and the Gerbil-Bazel source
 lock, where they provide immutable acquisition and integrity.  They must not
 appear in the user-facing Build API macro.
 
+POO Flow's direct =gerbil.pkg= dependency is ASP only.  ASP owns the pinned
+=gerbil-poo= dependency, and =gerbil-poo= owns =gerbil-utils=; repeating those
+GitHub locators in POO Flow would create competing direct version authority.
+The Bazel graph still materializes all three immutable source repositories
+because hermetic actions cannot perform =gxpkg= network fetches, but the POO
+Flow compile target depends directly only on =asp_gerbil_scheme_package=; the
+other two targets are its explicit transitive build graph.
+
 #+begin_src mermaid
 flowchart LR
   Decl["build declaration\ndeps: clan, clan/poo"]
@@ -227,25 +235,37 @@ The durable pattern is therefore:
 :PROPERTIES:
 
 POO Flow pinned ASP commit
-=f2af55c8560a573b8da1ebff7c71aaf32740ee02= after its Linux and macOS CI
+=db904ad60f7f5cc80eeb39cccbb6cb4a1067d6dd= after its Linux and macOS CI
 matrix passed.  The corresponding immutable archive SHA-256 is
-=375e2e6893632927ffde825b86faf6fab272b6f1808d9f266806bd183ff6eef8=.
+=490b4f5f794f3a5f44bf2ffce5567c6dc40212dadcfa8dfcb274e4217b5d9542=.
+
+The ASP matrix proved the adaptive optimized path before this downstream pin:
+Linux library =1 minute 51 seconds=, Linux provider =58 seconds=, macOS
+provider =4 minutes 16 seconds=, and the complete macOS library job =11
+minutes 54 seconds= including setup; its build step stayed inside the explicit
+10-minute gate.  The failed predecessor left =GERBIL_BUILD_CORES= unset and
+timed out the macOS optimized library step after 10 minutes.  The accepted ASP
+entry now maps an explicit override, or otherwise the host logical CPU count,
+to both =GERBIL_BUILD_CORES= and Gerbil 0.18.2's captured
+=__available-cores= before the one upstream =std/make= session.
 
 The first downstream =.devenv/devenv-profile-exec just build= after the pin
-completed successfully in =302.090 seconds=.  Bazel reported a =292.12-second=
-critical path and four Darwin-sandbox processes; the new ASP package action
-crossed approximately =78 seconds= before POO Flow compilation began, and the
-POO Flow compile action crossed approximately =100 seconds= before completion.
-These are cold dependency/action observations, not portable performance gates.
+completed successfully in =280.607 seconds=.  Bazel reported a =271.40-second=
+critical path and four Darwin-sandbox processes.  The ASP package action
+completed in approximately one minute before POO Flow compilation began; the
+POO Flow compile action crossed approximately =101 seconds= before completion.
+These are cold invalidated dependency/action observations, not portable
+performance gates.
 
 The subsequent declared Scheme acceptance command completed in =219.650
-seconds=.  All =9/9= Bazel test targets passed.  The dependency package action
+seconds= for the predecessor pin and =228.082 seconds= for this pin.  All
+=9/9= Bazel test targets passed.  The dependency package action
 was reused rather than rebuilt; =contract_tests= was the longest test at
-=126.4 seconds=.  This confirms that removing ASP's downstream topology,
+=130.5 seconds= in the current receipt.  This confirms that removing ASP's downstream topology,
 freshness, and adaptive execution-window APIs did not remove a POO Flow runtime
 consumer.
 
-An immediately repeated =just build= completed in =0.203 seconds= with a
+An immediately repeated =just build= completed in =0.190 seconds= with a
 =0.00-second= critical path and one internal Bazel process.  No Gerbil package
 or project compilation action ran.  This is the intended downstream speedup:
 reuse the upstream-compatible immutable action result instead of inventing a
@@ -254,8 +274,8 @@ second Scheme incremental scheduler.
 The first pushed lock contained the refreshed Darwin extension evaluation but
 retained the previous ASP revision in the Linux evaluation.  Both Linux CI jobs
 therefore stopped at =Verify Bazel module lock= before any Gerbil action ran.
-The repository-owned cross-platform refresh workflow run =33732742085= then
-completed Linux seed in =19 seconds=, Darwin merge in =28 seconds=, and final
+The repository-owned cross-platform refresh workflow run =33738373632= then
+completed Linux seed in =20 seconds=, Darwin merge in =28 seconds=, and final
 Linux verification in =14 seconds=.  Its merged artifact is the tracked lock;
 the JSON was not edited by hand.
 ** 10.06.39.75 Field Receipt: Harness Native POO Policy Hot Path
