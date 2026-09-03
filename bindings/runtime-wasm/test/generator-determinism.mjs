@@ -7,14 +7,6 @@ import { runBazel } from "../scripts/bazel-runner.mjs";
 
 const packageRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const workspaceRoot = resolve(packageRoot, "../..");
-const primaryTarget = "//bindings/runtime-wasm:human_capability_bundle";
-const independentTarget =
-  "//bindings/runtime-wasm:human_capability_bundle_determinism";
-
-runBazel(["build", primaryTarget, independentTarget], {
-  cwd: workspaceRoot,
-  env: { ...process.env, GERBIL_PATH: "" },
-});
 const bazelBin = runBazel(["info", "bazel-bin"], { cwd: workspaceRoot });
 const outputRoot = join(bazelBin, "bindings/runtime-wasm");
 

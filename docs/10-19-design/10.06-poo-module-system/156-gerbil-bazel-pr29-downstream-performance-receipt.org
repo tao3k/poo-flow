@@ -1424,9 +1424,11 @@ materialization deadline cannot fix this duplicate ownership.
 The package is now the only build owner.  =npm test= owns generation, native
 WASM compilation, determinism, tests, and packing.  The workflow's earlier
 Gerbil step is reduced to Bazel graph queries; it neither compiles nor copies
-artifacts into the checkout.  Every package-internal Bazel invocation receives
-the same empty =GERBIL_PATH= so an ambient package path cannot change action
-keys between generation and determinism.
+artifacts into the checkout.  Generation requests the primary and independent
+lowering targets in one Bazel invocation, compares both binary pairs before
+publication, and lets the later test reread those outputs without starting a
+second build.  Every package-internal Bazel invocation receives the same empty
+=GERBIL_PATH= so an ambient package path cannot change action keys.
 
 The complete =source-build= job has one 15-minute deadline.  Its package step
 retains the narrower 12-minute deadline, and
@@ -1448,9 +1450,9 @@ flowchart TD
     X --> G
     G --> E[Set one stable GERBIL_PATH action environment]
     E --> N[npm test: sole build owner]
-    N --> B[Bazel bundle generation]
+    N --> B[One Bazel build: primary plus independent lowering]
     B --> W[Emscripten WASM compilation]
-    W --> D[Determinism and runtime tests]
+    W --> D[Byte comparison and runtime tests without rebuild]
     D --> K[Pack verified package]
     K --> J{Whole source-build at most 15 min?}
     J -->|yes| S[Publish green receipt]
