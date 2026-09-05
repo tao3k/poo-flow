@@ -113,7 +113,7 @@ jobs:
           repository-cache: true
 
       - name: Verify Bazel module lock
-        run: bazel mod deps --lockfile_mode=error
+        run: bazelisk mod deps --lockfile_mode=error
 
       - name: Validate external Bazel startup arguments
         timeout-minutes: 2
@@ -293,7 +293,7 @@ jobs:
           repository-cache: true
 
       - name: Verify Bazel module lock
-        run: bazel mod deps --lockfile_mode=error
+        run: bazelisk mod deps --lockfile_mode=error
 
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
