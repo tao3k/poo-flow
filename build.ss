@@ -3,18 +3,16 @@
 ;;; Native POO Flow package build declaration.
 
 (import :std/make
-        :clan/building
+        (only-in :clan/building init-build-environment!)
         (only-in :std/misc/path path-expand)
         (only-in :std/srfi/1 fold)
         (only-in :std/srfi/13 string-prefix?)
-        (only-in :asp-gerbil-scheme/src/build-api/package-spec
+        (only-in :asp-gerbil-scheme/src/package-build-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype
-                 asp-gerbil-scheme-package-build-profile
-                 asp-gerbil-scheme-package-native-spec)
-        (only-in :asp-gerbil-scheme/src/building/build-script
-                 defbuild-script
-                 framework-build-bindir))
+                 asp-gerbil-scheme-development-builder-profile
+                 asp-gerbil-scheme-package-modules
+                 asp-gerbil-scheme-package-profiled-build-spec))
 
 (def +interface-only-modules+
   '("src/module-system/object-family-syntax.ss"
@@ -34,26 +32,11 @@
     "user-interface/custom/my-module/cases/durable-owner.ss"
     "user-interface/custom/my-module/config.ss"))
 
-(def +project-discovery-exclude-directories+
-  '("run" ".git" "_darcs" ".gerbil" ".data" ".devenv" ".direnv"
-    "bazel-bin" "bazel-out" "bazel-testlogs"
-    "benchmarks" "bindings" "docs" "packages" "proofs" "tools"))
-
-(def (project-source-module? module)
-  (or (string-prefix? "src/" module)
-      (string-prefix? "t/" module)
-      (string-prefix? "user-interface/" module)))
-
 (def (runtime-module? module)
   (and (string-prefix? "src/" module)
        (not (string-prefix? "src/build-api/" module))
        (not (string-prefix? "src/cli-support/" module))
        (not (string-prefix? "src/testing/" module))))
-
-(def +project-modules+
-  (filter project-source-module?
-          (all-gerbil-modules
-           exclude-dirs: +project-discovery-exclude-directories+)))
 
 (def (remove-build-files specs modules)
   (fold (lambda (module current)
@@ -68,10 +51,10 @@
         specs
         +interface-only-modules+))
 
-(def (runtime-spec)
+(def (runtime-spec modules)
   (interface-only-specs
    (remove-build-files
-    (filter runtime-module? +project-modules+)
+    (filter runtime-module? modules)
     +excluded-runtime-modules+)))
 
 (def (nono-ffi-spec)
@@ -82,24 +65,24 @@
               (else '("-ld-options" "-ldl"))))
     (ssi: "src/modules/nono-sandbox/_nono")))
 
+;; POO Flow owns only this project-specific native projection.  The Build API
+;; owns the single project scan and passes the resolved package catalog here.
+(def (poo-flow-native-spec package-spec)
+  (append (nono-ffi-spec)
+          (runtime-spec
+           (asp-gerbil-scheme-package-modules package-spec))
+          +user-interface-modules+))
+
 (asp-gerbil-scheme-package-spec!
  (poo-flow-library-package-spec
   @ asp-gerbil-scheme-library-package-prototype)
- (modules +project-modules+)
- (source-catalog-authority 'project)
+ (spec spec)
  (role 'library)
- (profile 'development)
- (roots ["src" "t" "user-interface"])
- (runtime-roots ["src"])
- (exclude-directories +project-discovery-exclude-directories+)
- (native-spec
-  (append (nono-ffi-spec)
-          (runtime-spec)
-          +user-interface-modules+)))
+ (profile asp-gerbil-scheme-development-builder-profile)
+ (spec-projector asp-gerbil-scheme-package-profiled-build-spec)
+ (native-spec-projector poo-flow-native-spec))
 
-(defbuild-script
- (asp-gerbil-scheme-package-native-spec
-  poo-flow-library-package-spec)
- profile: (asp-gerbil-scheme-package-build-profile
-           poo-flow-library-package-spec)
- bindir: (framework-build-bindir))
+(init-build-environment!
+ name: "poo-flow"
+ deps: '("clan" "clan/poo" "asp-gerbil-scheme")
+ spec: spec)
