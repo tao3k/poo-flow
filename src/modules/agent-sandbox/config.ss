@@ -329,19 +329,18 @@
                       (loop (+ index 1) segment-start)))))))))
 
 (def (poo-flow-sandbox-profile-recipe-project-marker-portable? value)
+  (and (poo-flow-sandbox-profile-recipe-project-marker-name-portable? value)
+       (andmap
+        poo-flow-sandbox-profile-recipe-project-marker-character-portable?
+        (string->list value))))
+
+(def (poo-flow-sandbox-profile-recipe-project-marker-name-portable? value)
   (and (string? value)
-       (> (string-length value) 0)
-       (not (string=? value "."))
-       (not (string=? value ".."))
-       (let loop ((index 0))
-         (or (= index (string-length value))
-             (and
-              (not
-               (or
-                (poo-flow-sandbox-profile-recipe-path-separator?
-                 (string-ref value index))
-                (char=? (string-ref value index) #\:)))
-              (loop (+ index 1)))))))
+       (not (member value '("" "." "..")))))
+
+(def (poo-flow-sandbox-profile-recipe-project-marker-character-portable? value)
+  (and (not (poo-flow-sandbox-profile-recipe-path-separator? value))
+       (not (char=? value #\:))))
 
 (def (poo-flow-sandbox-profile-recipe-datum-portable? datum)
   (cond

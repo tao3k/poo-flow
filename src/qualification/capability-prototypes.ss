@@ -4,7 +4,8 @@
 (export #t)
 
 (import :clan/poo/object
-        :poo-flow/src/core/object-syntax)
+        :poo-flow/src/core/object-syntax
+        (only-in :std/srfi/1 fold fold-right))
 
 (def +poo-flow-versioned-capability-slots+ '(schema-id schema-version))
 (def +poo-flow-revision-bound-capability-slots+ '(source-revision))
@@ -153,16 +154,21 @@
                (slots (cdr descriptor))
                (duplicate-id? (memq id ids))
                (collisions
-                (filter (lambda (slot) (memq slot owned)) slots)))
+                (filter (lambda (slot) (memq slot owned)) slots))
+               (diagnostics
+                (fold-right
+                 (lambda (slot out)
+                   (cons (list 'slot-owner-conflict slot) out))
+                 diagnostics
+                 collisions))
+               (diagnostics
+                (if duplicate-id?
+                  (cons (list 'duplicate-capability id) diagnostics)
+                  diagnostics)))
           (loop (cdr rest)
                 (cons id ids)
-                (append slots owned)
-                (append
-                 (if duplicate-id?
-                     (list (list 'duplicate-capability id)) '())
-                 (map (lambda (slot) (list 'slot-owner-conflict slot))
-                      collisions)
-                 diagnostics))))))
+                (fold cons owned slots)
+                diagnostics)))))
 
 (def (poo-flow-qualification-capability-composition-assert! descriptors)
   (let (diagnostics
