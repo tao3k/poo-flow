@@ -72,7 +72,6 @@ filegroup(
         "src/module-system/profile-composition-inline-runtime.ss",
         "src/module-system/profile-composition-syntax-plan.ss",
         "src/module-system/profile-composition-use-syntax.ss",
-        "src/projection-syntax-support.ss",
         "src/utilities/functional.ss",
     ],
 )
@@ -89,6 +88,7 @@ filegroup(
         ":scheme_runtime_sources",
     ] + glob([
         "bindings/nono-c/**/*.h",
+        "t/**/*.ss",
         "user-interface/**/*.ss",
     ]),
 )
@@ -100,9 +100,27 @@ filegroup(
 
 filegroup(
     name = "scheme_test_sources",
-    srcs = [":scheme_build_sources"] + glob([
-        "README.org",
-        "docs/**/*.org",
+    srcs = [
+        ":scheme_build_sources",
+    ] + glob([
         "t/**",
-    ]),
+    ], exclude = ["t/**/*.ss"]),
+)
+
+filegroup(
+    name = "json_schema_native_contract_test_support",
+    srcs = [
+        "schemas/json/github-workflow.json",
+        "t/funflow-github-ci-json-schema-contract-test.ss",
+        "t/json-schema-contract-bridge-test.ss",
+        "t/json-schema-native-contract-test.ss",
+    ],
+)
+
+filegroup(
+    name = "type_contract_performance_test_support",
+    srcs = [
+        "t/support/performance.ss",
+        "t/support/type-contract-performance.ss",
+    ],
 )
