@@ -98,7 +98,7 @@ jobs:
         timeout-minutes: 2
         shell: bash
         run: |
-          test -z "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:gslph_package)')"
+          test -z "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:asp_gerbil_scheme_package)')"
           test -n "$(bazelisk query 'somepath(//scheme:runtime_wasm_generator_compile, //scheme:gerbil_poo_package)')"
 
       - name: Build, test, and pack the package
