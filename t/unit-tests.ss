@@ -38,7 +38,6 @@
         :poo-flow/t/nono-sandbox-c-binding-test
         :poo-flow/t/nono-sandbox-c-language-test
         :poo-flow/t/nono-sandbox-native-ffi-test
-        :poo-flow/t/projection-syntax-support-test
         :poo-flow/t/sandbox-resource-test
         :poo-flow/t/session-agent-param-contract-test
         :poo-flow/t/session-agent-tool-policy-test
@@ -71,6 +70,6 @@
         :poo-flow/t/user-interface-custom-session-transform-test
         :poo-flow/t/user-interface-custom-tool-core-test)
 
-(export projection-syntax-support-test
+(export
         build-api-project-compile-performance-budget-test
         feature-system-bundle-v1-composition-writer-test)

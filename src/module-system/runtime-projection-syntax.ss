@@ -3,8 +3,6 @@
 ;;; Invariant: generated forms produce final boundary alists only; they are not
 ;;; user-facing authoring syntax and do not execute runtime work.
 
-(import :poo-flow/src/projection-syntax-support)
-
 (export defpoo-runtime-receipt-projection)
 
 ;; defpoo-runtime-receipt-projection
@@ -24,8 +22,6 @@
   ((_ constructor (argument ...)
       (bindings ((binding-name binding-expr) ...))
       (fields ((field-key field-expr) ...)))
-   (defpoo-static-receipt-projection
-     constructor
-     (argument ...)
-     (bindings ((binding-name binding-expr) ...))
-     (fields ((field-key field-expr) ...)))))
+   (def (constructor argument ...)
+     (let* ((binding-name binding-expr) ...)
+       (list (cons 'field-key field-expr) ...)))))

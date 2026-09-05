@@ -3,8 +3,6 @@
 ;;; Invariant: generated functions are inspection, receipt, or presentation
 ;;; boundaries only; module activation and resolver logic stay explicit.
 
-(import :poo-flow/src/projection-syntax-support)
-
 (export poo-flow-module-rows/tail
         poo-flow-module-rows-into/rev
         poo-flow-module-field-rows
@@ -96,20 +94,17 @@
       (guard guard-expr fallback-expr)
       (bindings ((binding-name binding-expr) ...))
       (fields ((field-key field-expr) ...)))
-   (defpoo-static-receipt-projection
-     constructor
-     (argument ...)
-     (guard guard-expr fallback-expr)
-     (bindings ((binding-name binding-expr) ...))
-     (fields (('field-key field-expr) ...))))
+   (def (constructor argument ...)
+     (if guard-expr
+       (let* ((binding-name binding-expr) ...)
+         (list (cons 'field-key field-expr) ...))
+       fallback-expr)))
   ((_ constructor (argument ...)
       (bindings ((binding-name binding-expr) ...))
       (fields ((field-key field-expr) ...)))
-   (defpoo-static-receipt-projection
-     constructor
-     (argument ...)
-     (bindings ((binding-name binding-expr) ...))
-     (fields (('field-key field-expr) ...)))))
+   (def (constructor argument ...)
+     (let* ((binding-name binding-expr) ...)
+       (list (cons 'field-key field-expr) ...)))))
 
 ;; defpoo-module-final-projection-batch
 ;;   : (-> ProjectionBatchDeclaration Syntax)

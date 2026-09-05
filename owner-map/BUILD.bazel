@@ -111,7 +111,6 @@ filegroup(
         "//:src/module-system/profile-composition-use-syntax.ss",
         "//:src/module-system/profile-composition.ss",
         "//:src/module-system/runtime-context-recovery.ss",
-        "//:src/projection-syntax-support.ss",
         "//:src/utilities/functional.ss",
     ],
 )
