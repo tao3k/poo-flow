@@ -1,0 +1,3 @@
+[submodule "packages/wendao-episteme"]
+	path = packages/wendao-episteme
+	url = https://github.com/tao3k/wendao-episteme.git

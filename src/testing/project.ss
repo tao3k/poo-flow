@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Thin POO Flow testing project declaration shared by runtime test commands.
 
-(import :gslph/src/testing/build)
+(import :asp-gerbil-scheme/src/testing/build)
 
 (export poo-flow-testing-project)
 

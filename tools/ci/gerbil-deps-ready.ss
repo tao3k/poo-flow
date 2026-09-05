@@ -3,6 +3,6 @@
 
 (import :clan/base
         :clan/poo/object
-        :gslph/src/building/facade)
+        :asp-gerbil-scheme/src/building/facade)
 
 (displayln "gerbil-package-cache-ready")

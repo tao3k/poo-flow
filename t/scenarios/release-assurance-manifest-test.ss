@@ -1,5 +1,5 @@
 (import :std/test
-        :gslph/src/testing/memory-profile
+        :asp-gerbil-scheme/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/core/object-syntax

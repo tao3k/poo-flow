@@ -1,0 +1,150 @@
+#+title: Native Public Closure and Warm-Build Convergence
+#+language: en
+
+* Status
+
+This module records the executable diagnosis of the native Gerbil warm-build
+regression.  It is a design and acceptance record, not permission to add a
+POO-Flow-local scheduler, cache, dependency parser, or shell launcher.
+
+The verified conclusion is narrower than the original scheduler hypothesis:
+
+- Gerbil =std/make= parallel execution is enabled.
+- A reverse-ordered dependency scenario converges correctly.
+- The complete 387-entry root build can converge to zero native compilation.
+- Its zero-work scan still takes 63.46 seconds and therefore fails the
+  30-second warm-build gate.
+- The three public entry interfaces have a 44-module all-phase closure.  That
+  closure produced three consecutive zero-work builds below 30 seconds.
+- The next repair belongs in the ASP Build API package-closure owner and the
+  POO Flow package declaration, not in Gerbil's scheduler.
+
+* Verified execution receipts
+
+| Scenario | Result | Native work | Meaning |
+|----------+--------+-------------+---------|
+| Four-module owner-map warm replay | 5.30 s | zero compile jobs | A small existing DAG is stable. |
+| Reverse-ordered two-module dependency update | 9.78 s | dependency then consumer | =std/make= restores topological order. |
+| Immediate two-module warm replay | 9.11 s | zero compile jobs | Deferred native jobs did not create a second invalidation wave. |
+| Full root recovery build | 474.18 s | parallel native jobs | The previously interrupted root was not a qualified warm state. |
+| Full root qualified warm replay | 63.46 s | zero compile jobs | Correct incrementality, failed latency gate. |
+| Public closure warm replay 1 | 22.65 s | zero compile jobs | Passed latency and work gates. |
+| Public closure warm replay 2 | 19.40 s | zero compile jobs | Passed latency and work gates. |
+| Public closure warm replay 3 | 20.70 s | zero compile jobs | Passed latency and work gates. |
+
+The project-path metadata audit observed 387 loadable modules and 1,861 direct
+POO dependency edges.  Before the recovery build it reported 121 timestamp
+inversions.  After the recovery build and correct output classification it
+reported:
+
+#+begin_example
+spec_entries=387
+modules_checked=387
+direct_poo_edges=1861
+inversions=0
+missing_outputs=0
+skipped=0
+#+end_example
+
+An SSI file is the authoritative completion output for a syntax-only module.
+An old zero-byte static SCM file is not allowed to override a newer SSI.  This
+rule removed 28 false inversions attributed to =src/module-system/init-syntax=.
+
+* Architectural boundary
+
+#+begin_src mermaid
+flowchart LR
+  Entry[Public POO entry interfaces] --> Closure[Package-aware all-phase closure]
+  Closure --> Spec[Minimal native-spec]
+  Spec --> Make[Gerbil std/make]
+  Make --> SSI[SSI and non-empty static outputs]
+  Make --> Receipt[Scheme JSON receipt]
+
+  Tools[Tools] --> FeatureTargets[Explicit feature targets]
+  UI[User interfaces] --> FeatureTargets
+  Fixtures[Tests and fixtures] --> FeatureTargets
+  Bindings[Bindings and generators] --> FeatureTargets
+  FeatureTargets --> Make
+
+  ASP[ASP Build API] --> Closure
+  Gerbil[Gerbil module metadata] --> Closure
+  POO[POO Flow build.ss] --> Spec
+
+  BadLocal[POO-local parser, scheduler, or cache] -. forbidden .-> Spec
+#+end_src
+
+The default library build must not own tools, fixtures, language bindings,
+benchmarks, generated-vector commands, and user-interface scenarios.  Those
+surfaces remain buildable through explicit feature or target declarations.
+They are not deleted and they are not silently omitted from release assurance.
+
+The current 387-entry profile contains 379 =src/= entries and eight
+=user-interface/= entries.  The dominant source owners are
+=src/modules/= (132), =src/module-system/= (129), =src/core/= (27),
+=src/contract/= (21), and =src/feature-system/= (15).  This distribution makes
+the next split concrete: capability modules and broad module-system surfaces
+must move behind explicit feature ownership.  Directory membership alone is
+not a closure rule; each feature target must be validated from its public entry
+interfaces and all syntax/runtime dependency phases.
+
+* ASP Build API gap
+
+The installed ASP API exposes:
+
+#+begin_src scheme
+(asp-gerbil-scheme-source-dependency-order workspace-root entry-files)
+#+end_src
+
+The verified two-argument interface cannot accept a downstream package
+identity.  Its current component-closure module exposes an ASP-specific package
+prefix.  Calling it for POO Flow public entries returned only the three entry
+files instead of their real dependency closure.  Gerbil compiler metadata
+showed that the same entries currently have a 44-module POO closure.
+
+The owner repair is to parameterize package identity in the ASP Build API and
+derive it from =gerbil.pkg= or an explicit package object slot.  POO Flow must
+not fork that algorithm or introduce a =poo-flow= constant into a generic
+library.
+
+The stable downstream shape remains one POO-native declaration:
+
+#+begin_src scheme
+(asp-gerbil-scheme-package-spec!
+  poo-flow-library-package-spec
+  (role 'library)
+  (profile 'development)
+  (native-spec
+   (package-source-closure
+    package: 'poo-flow
+    entries: '("src/core/api.ss"
+               "src/module-system/interface.ss"
+               "src/feature-system/interface.ss"))))
+#+end_src
+
+The exact final constructor name is owned by the ASP API review.  The example
+defines required semantics; it must not be copied into POO Flow before the
+upstream public interface exists.
+
+* Promotion gates
+
+A change is promotable only when all of the following hold:
+
+1. The ASP closure API accepts arbitrary Gerbil package identity and has a
+   non-ASP downstream scenario test.
+2. A clean sandbox build proves that the public closure contains every runtime
+   and syntax-phase dependency.
+3. POO Flow =build.ss= declares only package role, profile, public entries, and
+   explicit feature targets.
+4. Three consecutive native public-library warm builds take at most 30 seconds
+   and start no Gerbil or GCC compilation job.
+5. The full release target still builds and tests all explicitly owned tools,
+   bindings, fixtures, and user-interface scenarios.
+6. Scheme observability emits JSON receipts with package identity, profile,
+   closure digest, module count, elapsed milliseconds, cache state, effective
+   host-derived core count, and peak RSS.
+7. The tracked Bazel module lock contains both Linux and Darwin entries for the
+   pinned ASP revision.
+
+Until these gates pass, the current POO Flow dependency/profile changes remain
+uncommitted.  A zero-work 63.46-second full-root scan is evidence of correct
+incrementality, but it is not a passing warm-build result.

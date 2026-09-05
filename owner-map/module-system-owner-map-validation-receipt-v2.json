@@ -1,0 +1,72 @@
+{
+  "schemaId": "poo-flow.module-system-owner-map-validation-receipt",
+  "schemaVersion": 2,
+  "receiptPath": "owner-map/module-system-owner-map-validation-receipt-v2.json",
+  "artifact": {
+    "path": "owner-map/module-system-owner-map-v1.json",
+    "sha256": "ae623d28afb8c8b59d271c10f9b1d9562d0c4a6af517c93f71a3cb9a68090d37",
+    "rowCount": 8,
+    "checkedOwnerCount": 16
+  },
+  "focusedGates": {
+    "contractValidation": {
+      "target": "//owner-map:contract_validation_test",
+      "status": "passed",
+      "testCount": 14
+    },
+    "schemeOwnerMap": {
+      "target": "//owner-map:scheme_owner_map_test",
+      "status": "passed",
+      "testFileCount": 2,
+      "checkCount": 63,
+      "ownerMapCheckCount": 15,
+      "profileCompositionCheckCount": 48
+    },
+    "affectedAggregate": {
+      "target": "//owner-map:all_tests",
+      "status": "passed",
+      "passedTargetCount": 2,
+      "totalTargetCount": 2
+    },
+    "targetGraph": {
+      "query": "//owner-map:all",
+      "targetCount": 16,
+      "forbiddenDependencyQueryResultCount": 0
+    },
+    "gitlink": {
+      "path": "packages/wendao-episteme",
+      "mode": "160000",
+      "pin": "9566d310a2813e81068326e7d17a30d330de393f",
+      "checked": true
+    },
+    "lean": {
+      "focusedBuildJobs": 2,
+      "enterpriseAggregateExitCode": 0,
+      "fullBuildJobs": 554,
+      "status": "passed"
+    },
+    "orgize": {
+      "command": "asp org lint docs/10-19-design/10.06-poo-module-system/45-08-implementation-and-qualification-plan.org",
+      "status": "passed"
+    },
+    "workspaceChecks": {
+      "gitDiffCheck": "passed",
+      "gitDiffCachedCheck": "passed"
+    }
+  },
+  "projectAggregateObservation": {
+    "target": "//scheme:all_tests",
+    "authoritativeForOwnerMapClosure": false,
+    "status": "interrupted-after-scoped-evidence",
+    "elapsedSeconds": 439.270,
+    "passedTargetCount": 3,
+    "skippedTargetCount": 9,
+    "failedOwnerMapTargetCount": 0,
+    "note": "The disposable project aggregate was stopped after its three performance targets passed while the broad project compile continued; the independent owner-map aggregate is the authoritative affected gate."
+  },
+  "aspRuntimeArtifact": {
+    "commandRole": "asp",
+    "installScope": "ASP_STATE_HOME/runtime",
+    "artifactIdentity": "blake3-256:5809daeb043f1fd5bdbe776b3dfb58112cb9775115916c87a8ea525a4d6185b8"
+  }
+}

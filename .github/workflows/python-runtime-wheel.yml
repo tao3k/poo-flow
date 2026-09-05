@@ -167,7 +167,7 @@ jobs:
           from poo_flow_runtime._native.loader import probe_native_runtime
 
           health = probe_native_runtime()
-          assert (health.abi_major, health.abi_minor) == (0, 1)
+          assert (health.abi_major, health.abi_minor) == (0, 3)
           print("packaged Bazel runtime-v0 negotiation: ok")
           PY
           "$RUNNER_TEMP/poo-flow-runtime-wheel-smoke/bin/python" - <<'PY'

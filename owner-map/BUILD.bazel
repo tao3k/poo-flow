@@ -1,0 +1,177 @@
+load(
+    "@gerbil_bazel//gerbil:defs.bzl",
+    "gerbil_project_compile",
+    "gerbil_project_test",
+)
+load("@rules_python//python:py_test.bzl", "py_test")
+load("@rules_python//python:py_binary.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "module-system-owner-map-validation-receipt-v2.json",
+    "module-system-owner-map-validation-receipt-v2.schema.json",
+    "module-system-owner-map-v1.json",
+    "module-system-owner-map-v1.schema.json",
+])
+
+filegroup(
+    name = "rfc45_01_mix_sources",
+    srcs = ["//:src/module-system/profile-composition-use-syntax.ss"],
+)
+
+filegroup(
+    name = "rfc45_02_sources",
+    srcs = ["//:src/module-system/g0-qualification.ss"],
+)
+
+filegroup(
+    name = "rfc45_03_sources",
+    srcs = ["//:src/module-system/runtime-context-recovery.ss"],
+)
+
+filegroup(
+    name = "rfc45_04_sources",
+    srcs = ["//:src/module-system/owner-map-observability.ss"],
+)
+
+filegroup(
+    name = "rfc45_05_sources",
+    srcs = ["//:src/module-system/composition-lineage.ss"],
+)
+
+filegroup(
+    name = "rfc45_06_sources",
+    srcs = [
+        "//:src/module-system/gerbil-poo-consumption.ss",
+        "@gerbil_poo_sources//:source_resolution_receipt",
+    ],
+)
+
+filegroup(
+    name = "rfc45_07_composition_sources",
+    srcs = ["//:src/module-system/profile-composition-use-syntax.ss"],
+)
+
+filegroup(
+    name = "rfc45_08_sources",
+    srcs = [
+        ":module-system-owner-map-validation-receipt-v2.json",
+        ":module-system-owner-map-validation-receipt-v2.schema.json",
+        ":module-system-owner-map-v1.json",
+        ":module-system-owner-map-v1.schema.json",
+        "//:src/module-system/owner-map-contract.ss",
+    ],
+)
+
+filegroup(
+    name = "module_system_sources",
+    srcs = [
+        ":rfc45_02_sources",
+        ":rfc45_03_sources",
+        ":rfc45_04_sources",
+        ":rfc45_05_sources",
+        ":rfc45_06_sources",
+        ":rfc45_07_composition_sources",
+        ":rfc45_01_mix_sources",
+        ":rfc45_08_sources",
+    ],
+)
+
+filegroup(
+    name = "module_system_test_sources",
+    srcs = [
+        "//:t/module-system-owner-map-test.ss",
+        "//:t/profile-composition-test.ss",
+    ],
+)
+
+filegroup(
+    name = "module_system_scheme_sources",
+    srcs = [
+        "//:gerbil.pkg",
+        "//:src/core/failure.ss",
+        "//:src/core/flow-declarations.ss",
+        "//:src/core/flow-strand.ss",
+        "//:src/core/flow.ss",
+        "//:src/core/object-syntax.ss",
+        "//:src/core/plan.ss",
+        "//:src/core/projection-syntax.ss",
+        "//:src/core/roles.ss",
+        "//:src/core/task.ss",
+        "//:src/module-system/composition-lineage.ss",
+        "//:src/module-system/g0-qualification.ss",
+        "//:src/module-system/gerbil-poo-consumption.ss",
+        "//:src/module-system/owner-map-contract.ss",
+        "//:src/module-system/owner-map-observability.ss",
+        "//:src/module-system/profile-composition-accessors.ss",
+        "//:src/module-system/profile-composition-builders.ss",
+        "//:src/module-system/profile-composition-inline-runtime.ss",
+        "//:src/module-system/profile-composition-syntax-plan.ss",
+        "//:src/module-system/profile-composition-use-syntax.ss",
+        "//:src/module-system/profile-composition.ss",
+        "//:src/module-system/runtime-context-recovery.ss",
+        "//:src/utilities/functional.ss",
+    ],
+)
+
+gerbil_project_compile(
+    name = "owner_map_compile",
+    srcs = [":module_system_scheme_sources"],
+    args = ["compile"],
+    build_script = "//:owner-map-build.ss",
+    process_guard = True,
+    require_library_output = True,
+    source_resolution_receipts = [
+        "@gerbil_poo_sources//:source_resolution_receipt",
+    ],
+    deps = [
+        "//scheme:gerbil_poo_package",
+    ],
+)
+
+py_test(
+    name = "contract_validation_test",
+    srcs = [
+        "validate_owner_map.py",
+        "validate_owner_map_test.py",
+    ],
+    main = "validate_owner_map_test.py",
+    imports = ["."],
+    data = [
+        ":module_system_sources",
+        ":module_system_test_sources",
+    ],
+    python_version = "3.12",
+)
+
+py_binary(
+    name = "validate_owner_map",
+    srcs = ["validate_owner_map.py"],
+    main = "validate_owner_map.py",
+    data = [
+        ":module_system_sources",
+        ":module_system_test_sources",
+    ],
+    python_version = "3.12",
+)
+
+gerbil_project_test(
+    name = "scheme_owner_map_test",
+    project = ":owner_map_compile",
+    source_root_marker = "//:scheme_source_root_marker",
+    tests = [
+        "//:t/module-system-owner-map-test.ss",
+        "//:t/profile-composition-test.ss",
+    ],
+    tags = ["exclusive"],
+    size = "small",
+)
+
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":contract_validation_test",
+        ":scheme_owner_map_test",
+    ],
+)

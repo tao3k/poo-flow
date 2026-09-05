@@ -1,0 +1,223 @@
+#+title: Data and Knowledge Security Guarantee Semantics
+#+startup: overview
+
+* Status
+
+- Status: initial RFC and Lean closure implemented
+- Owner: =poo-flow=
+- Scope: composable data and knowledge assurance semantics
+- Engine boundary: this is a semantic package composed by POO Flow, not a
+  fixed POO Flow layer architecture
+
+* Research finding
+
+Data security in an agentic system cannot be reduced to a permission check at
+tool invocation time.  Data is read, transformed, summarized, embedded,
+copied into model context, persisted in memory, emitted through tools, and
+used to derive new data.  Each transition may change the artifact while the
+enterprise obligations must continue.
+
+The enterprise requirement is therefore not merely:
+
+#+begin_example
+may this agent read this object?
+#+end_example
+
+It is:
+
+#+begin_example
+which source, lineage, classification, residency, purpose, retention,
+authority, owner, and evidence obligations remain attached to every derived
+artifact and effect?
+#+end_example
+
+NIST AI RMF 600-1 treats generative-AI risk across the AI lifecycle and actor
+set.  NIST Privacy Framework treats privacy as enterprise risk management and
+is developing a dedicated Data Governance and Management Profile.  Snowflake's
+Data-Model-Agent framework makes data the first protection-object layer and
+calls out least privilege, masking, movement controls, sovereignty,
+resilience, and compliance.  OWASP's Agentic Security Initiative focuses on
+autonomous agents and multi-step workflows, where live tool and data access
+make continuity across steps essential.
+
+These frameworks provide source coordinates.  They do not define the POO Flow
+engine ontology.
+
+* Semantic package boundary
+
+The data and knowledge guarantee package composes at least these semantic
+families:
+
+- resource and data identity;
+- source and derivation lineage;
+- classification and taint;
+- policy root and accountable owner;
+- purpose and authorized use;
+- residency, sovereignty, and movement boundary;
+- retention deadline, erasure, and tombstone state;
+- declassification authority and evidence;
+- context and memory write continuity;
+- effect containment for export, copy, and disclosure;
+- observation, recovery, and independent replay.
+
+These are open semantic families, not universal layers.  An enterprise profile
+may compose different policy languages and enforcement systems while retaining
+the same proof obligations.
+
+The implementation must remain POO-native and functional at its public
+surface.  Raw JSON or record bundles may be internal evidence artifacts, but
+they are not the ordinary module interface.
+
+* Core invariants
+
+** Classification is monotone under derivation
+
+Combining two sources must not silently lower either classification.  The
+derived classification is at least as restrictive as both inputs unless an
+explicit declassification receipt is admitted.
+
+** Retention cannot be silently extended
+
+Derived data inherits the earliest applicable retention deadline.  A copy,
+summary, embedding, cache, or memory write cannot create a fresh retention
+period merely because its representation changed.
+
+** Declassification is an authorized effect
+
+A lower target classification requires both authority and evidence bound to
+the exact transformation.  Missing authority or an unbound receipt fails
+closed.
+
+** Cross-residency movement is an effect boundary
+
+Moving data across a residency or sovereignty boundary requires explicit
+authority and evidence.  Network success, tool success, or agent intent cannot
+substitute for this admission.
+
+** Purpose changes require authority
+
+Using an artifact for a new purpose is a policy-changing effect.  It requires
+purpose authority and a receipt even if the principal already has read access.
+
+** Memory writes preserve policy and lineage
+
+Long-term memory, retrieval indexes, summaries, and embeddings must bind the
+input policy root and parent lineage.  Agent memory is not a policy-free cache.
+
+** Expiry and erasure invalidate future use
+
+An expired or erased artifact cannot be retrieved merely because a copy,
+embedding, or derived index remains technically available.
+
+** Replay is bundle-only
+
+Independent replay reconstructs artifact identity, source root, lineage root,
+policy root, and evidence root without hidden session state.
+
+* Action and evidence projection
+
+The package projects into the existing POO Flow separation:
+
+- =ObservationEvent= records observed reads, transformations, memory writes,
+  movement, disclosure, expiry, and erasure evidence;
+- policy admission determines whether the action enters a proven region;
+- effects execute only behind the admitted boundary;
+- =RecoveryDecision= contains, revokes, compensates, deletes, or escalates;
+- the evidence root binds source, policy, transformation, effect, response,
+  and accountable owner;
+- an independent replay bundle reconstructs the decision.
+
+POO Flow does not parse vendor logs directly.  Cursor, Claude, Codex, data
+warehouses, vector databases, MCP servers, and policy engines project into the
+shared action/evidence envelope through provider-specific adapters.
+
+* Lean closure
+
+Implemented in:
+
+- =packages/proof/lean/PooFlowProof/Enterprise/AISecurityDataKnowledgeGuaranteeClosure.lean=
+
+The proof unit closes:
+
+1. =DerivedDataCannotLowerLeftClassification=
+2. =DerivedDataCannotLowerRightClassification=
+3. =DerivedDataCannotExtendLeftRetention=
+4. =DerivedDataCannotExtendRightRetention=
+5. =UnauthorizedDeclassificationFailsClosed=
+6. =UnboundDeclassificationEvidenceFailsClosed=
+7. =UnauthorizedCrossResidencyMovementFailsClosed=
+8. =CrossResidencyMovementWithoutEvidenceFailsClosed=
+9. =ExpiredDataUseFailsClosed=
+10. =UnauthorizedPurposeChangeFailsClosed=
+11. =MemoryWritePreservesPolicyAndLineage=
+12. =ErasedDataCannotBeRetrieved=
+13. =DataLineageReplayUsesOnlyBundle=
+
+Validation receipts:
+
+- focused Lean source check: passed;
+- focused module build: =6/6= jobs passed;
+- =Enterprise.lean= aggregate: passed.
+
+* Metrics and claim boundary
+
+- theorem/property proof coverage: =13/13= for the model obligations above;
+- theorem-level replay success: =1/1=;
+- runtime proof coverage: not yet reported because no concrete runtime data
+  bundle has been admitted;
+- runtime unknown/escalation rate: not yet reported for the same reason;
+- artifact replay: not yet attempted for a concrete data bundle.
+
+The =13/13= result does not mean an enterprise data estate is covered.  It
+means only that these model-level invariants are closed.  Runtime coverage must
+use a separate denominator over observed actions and evidence bundles.
+
+* Red-team compilation targets
+
+High-value counterexamples should include:
+
+- a summary that drops the source classification;
+- an embedding that extends retention indefinitely;
+- a memory write that loses policy or parent lineage;
+- a tool that exports data across residency boundaries after a successful
+  capability check;
+- an authorized reader that changes purpose without purpose authority;
+- an erased source that remains recoverable through an index;
+- an aggregation that hides its most restrictive input;
+- a replay that depends on session-local policy state.
+
+Each accepted counterexample must produce a policy refinement, Lean property,
+runtime property test, and versioned receipt rather than only LLM detection
+guidance.
+
+* Research sources
+
+- NIST AI RMF Generative AI Profile:
+  https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence
+- NIST Privacy Framework:
+  https://www.nist.gov/privacy-framework
+- Snowflake, /Securing the Agentic Enterprise Starts with the Data/:
+  https://www.snowflake.com/en/blog/securing-the-agentic-enterprise/
+- OWASP Agentic Security Initiative:
+  https://genai.owasp.org/initiatives/agentic-security-initiative/
+
+* Four-authority-layer closure status
+
+This RFC is the normative layer for the initial data and knowledge guarantees.
+The bound Lean module closes the formal layer for thirteen stated invariants.
+Executable Scheme/Rust/Python trace refinement and empirical adversarial,
+replay, and workload qualification are not yet reported. Consequently this
+package is formally closed for its current model, but is not four-layer closed.
+
+The governing lifecycle is [[file:20.06-four-authority-layer-scientific-assurance-cycle.org][RFC 20.06]].
+
+* Planned implementation frontier
+
+- define the thin POO-native data/knowledge semantic package;
+- bind a concrete runtime data action bundle to the shared evidence root;
+- add classification, retention, residency, purpose, and erasure property
+  tests;
+- compile the red-team targets into versioned proof regression receipts;
+- report runtime proof coverage, unknown/escalation, and replay success;
+- compose, but do not conflate, NIST, Snowflake, OWASP, and enterprise-specific
+  policy projections.

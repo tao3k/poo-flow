@@ -1,0 +1,885 @@
+#+title: 20.03 AI Security Provider and Proof Regression Receipts
+#+startup: overview
+
+* Status
+
+Draft implementation receipt.
+
+* Purpose
+
+This document turns provider, evidence, and proof-closure failures discovered
+while implementing the composable AI security architecture package into
+versioned regression obligations.
+
+It is not an AI security architecture, an engine layer, or a new POO Flow
+public interface. POO Flow remains the general composition engine. These
+receipts record whether a concrete toolchain can preserve the semantic,
+evidence, and proof boundaries selected by a composed architecture package.
+
+* Receipt envelope
+
+Every regression receipt MUST record:
+
+- receipt identifier and schema version;
+- owning repository, package, and runtime artifact digest;
+- exact action or structural selector;
+- expected owner and projection boundary;
+- observed provider, project root, or declaration closure;
+- fail-closed outcome;
+- proof-coverage effect;
+- unknown or escalation classification;
+- independent replay command and replay result;
+- required property test or theorem before closure.
+
+A receipt is closed only when the regression test fails against the defective
+artifact, passes against the repaired artifact, and can be replayed without the
+original agent session.
+
+* ASR-PROVIDER-DISPATCH-001
+
+** Provider dispatch intent
+
+Project a Python structural selector through the generic ASP exact-query
+surface.
+
+** Provider dispatch input
+
+Selector:
+
+=python://src/poo_flow_proof/axle_exact_closure.py#item/async_function/build_exact_axle_closure=
+
+Expected provider: =py-harness=.
+
+** Provider dispatch counterexample
+
+The activated =py-harness= projects the selector successfully when invoked
+directly. The generic =asp query= dispatcher instead routes the same selector
+to the Gerbil =gslph= launcher, which attempts to resolve a nonexistent
+=./python= source path.
+
+** Provider dispatch refinement
+
+Provider dispatch MUST derive the language facade from the structural selector
+scheme before interpreting any owner path. Unknown schemes MUST fail closed;
+they MUST NOT fall through to the Gerbil provider.
+
+** Provider dispatch regression obligations
+
+- property test: every registered selector scheme maps to exactly one active
+  provider;
+- negative property: =python://= never invokes =gslph=;
+- receipt property: selected provider identity and artifact digest are bound
+  into the exact-query receipt;
+- replay property: the selector projects the same declaration through direct
+  provider and generic dispatcher routes.
+
+** Provider dispatch implementation receipt
+
+The =agent-semantic-protocol= owner now contains a pure
+=root_structural_selector_language= projection and routes generic root
+=query --selector= requests through the language facade encoded by the
+canonical selector. Queries without a selector preserve the existing root
+facade. The focused regression set covers Python, Gerbil Scheme, absent
+selector, and malformed-selector fail-closed cases.
+
+Parser-owned projection confirms the root dispatch branch calls
+=run_language_command= with the projected language identifier and retains
+=run_root_language_facade("query", ...)= only for the absent-selector case.
+Restricted =git diff --check= passes for the two changed Rust owners.
+
+The receipt is not closed yet. The focused crate build is blocked before this
+test target by pre-existing =agent-semantic-hook= activation-manifest drift:
+=ActivationCoverage= and =ManifestSourceDefaults= are unresolved, the
+=coverage= field is absent from =ActivatedProviderConfig=, and
+=ProviderManifest::source= is now a method where callers still use a field.
+Those failures belong to their existing owner and are not widened into this
+dispatch repair.
+
+* ASR-PROJECT-ROOT-002
+
+** Project-root intent
+
+Discover the AXLE closure helpers through the Python search-pipe route.
+
+** Project-root counterexample
+
+The provider is invoked with a synthetic =project-resolution-stdin= root that
+does not exist, even when the request supplies either the Git top-level
+workspace or the nested Python package workspace.
+
+** Project-root refinement
+
+Project resolution MUST preserve three distinct identities:
+
+- request workspace root;
+- resolved language-package root;
+- parser owner path relative to that package root.
+
+Synthetic transport labels MUST NOT be admitted as filesystem project roots.
+
+** Project-root regression obligations
+
+- property test: a supplied existing workspace resolves to an existing package
+  root;
+- negative property: transport labels cannot satisfy the project-root type;
+- nested-package test: the same owner is stable when entered from the Git
+  top-level or the Python package root;
+- replay receipt: resolved roots and their canonical identities are included
+  without embedding transient stdin paths.
+
+** Project-root implementation receipt
+
+Parser-owned projection establishes that =project-resolution-stdin= is the
+provider ABI method token emitted by =LocalNativeCliBackend::push_method=; it
+is not a filesystem project root. The Python provider child implements
+=try_run_project_resolution= for exactly that method token. A direct capability
+probe against the activated =py-harness= returns the versioned
+=agent.semantic-protocols.provider-project-resolution-response= failure shape
+for empty stdin, proving that the method is registered.
+
+The State Home =runtime/bin/py-harness= and activated artifact have the same
+SHA-256 digest:
+
+=105e7c4f87201a572554a774cddc4885a107e78243a7e6561657000b9b78b81f=.
+
+A non-overlapping backend regression,
+=project_resolution_method_is_not_a_positional_project_root=, now binds the
+following identities:
+
+- provider argv is exactly =project-resolution-stdin=;
+- command cwd is the canonical requested project root;
+- the project-root path is not admitted as the method token.
+
+The test has a parser-owned Rust selector and restricted =git diff --check=
+passes. It is not closed: the focused test command compiled zero tests because
+the existing activation owner fails first. Current blockers are a missing
+=document_resolution= field in an =ActivatedProvider= initializer and stale
+=command_binding= access on
+=Option<&ProviderProjectResolutionDescriptor>=.
+
+* ASR-AXLE-CROSS-OWNER-003
+
+** Cross-owner AXLE intent
+
+Build an independent runtime-projection AXLE closure for the AI security
+architecture package.
+
+** Cross-owner AXLE evidence
+
+Lean compilation establishes that
+=AISecurityArchitectureRuntimeProjectionClosed= crosses these owners:
+
+- =PooFlowProof.Enterprise.BundleEvidenceBinding.BundleSubject=;
+- =PooFlowProof.Enterprise.BundleEvidenceBinding.BoundVerificationReceipt=;
+- =PooFlowProof.PooC3.AuthorizedEffectEvidenceFacts=;
+- =PooFlowProof.PooC3.authorizedEffectL1=.
+
+The runtime-projection AXLE preflight finds 85 declarations across 5 owner
+sources, but composed-owner extraction reports
+=AuthorizedEffectEvidenceFacts= and =authorizedEffectL1= as unknown.
+
+** Cross-owner AXLE refinement
+
+AXLE owner-source composition MUST preserve imported namespace identity and
+declaration aliases across all admitted owner sources. The repair MUST reuse
+the authoritative PooC3 declarations. A duplicate local evidence structure,
+predicate, axiom, or timeout increase is not an admissible repair.
+
+** Cross-owner AXLE regression obligations
+
+- positive fixture: the five-owner runtime closure extracts without unknown
+  declarations;
+- negative fixture: removing the PooC3 owner source fails closed;
+- identity property: fully qualified and source-local aliases resolve to one
+  canonical declaration;
+- theorem roots:
+  =closedCompositionRequiresBoundBundleEvidence=,
+  =closedCompositionRequiresAuthorizedEffectEvidence=, and
+  =mismatchedBundleEvidenceRejectsRuntimeProjectionClosure=;
+- replay receipt: canonical source digest, closure digest, declaration bundle
+  digest, and failed-declaration set.
+
+* ASR-RESIDENT-ENDPOINT-004
+
+** Resident endpoint intent
+
+Recover parser-owned exact projection after a runtime artifact change.
+
+** Resident endpoint counterexample
+
+The hook contract and installed binary fingerprint match, and the workspace
+resident runs the current runtime-binary digest. Nevertheless, exact query
+reports that the elected-owner endpoint is not reachable. Terminating the old
+global daemon and unreachable workspace resident starts a replacement
+workspace process but does not reconcile the endpoint state.
+
+** Resident endpoint refinement
+
+Resident ownership MUST bind process identity, runtime digest, transport
+contract digest, endpoint reachability, and owner epoch in one atomic
+reconciliation receipt. Process existence alone MUST NOT imply readiness.
+
+** Resident endpoint regression obligations
+
+- lifecycle test: replacing a stale daemon converges to one reachable owner;
+- negative property: unreachable endpoints cannot report =healthy=;
+- epoch test: a replacement process cannot inherit a stale owner election;
+- replay receipt: the health decision can be reconstructed from process,
+  digest, endpoint, and epoch evidence without live session history.
+
+* Enterprise metrics
+
+These receipts contribute to three separate metrics:
+
+- proof coverage: the proportion of runtime projections whose complete
+  cross-owner declaration closure receives an independent AXLE receipt;
+- unknown and escalation rate: the proportion rejected because provider,
+  project-root, namespace, or endpoint evidence is insufficient;
+- replay success: the proportion of historical decisions reproducible from
+  versioned receipts without the original agent, resident process, or hidden
+  transport state.
+
+Provider availability or a green Lean build alone does not increase proof
+coverage. A fail-closed unknown is a valid safety outcome, but remains visible
+in the escalation metric until its regression receipt closes.
+
+* Closure checklist
+
+* ASR-FRAMEWORK-MAPPING-005
+
+** ASR-006 trigger
+
+The external architecture research contains different coordinate kinds rather
+than one authoritative layer count:
+
+- Snowflake publishes Data, Model, and Agent protection-object layers;
+- CSA describes ten reference-architecture layers grouped into three
+  operational domains, while its final document remains pending;
+- POO Flow must compose both without treating either framework as its ontology.
+
+** Versioned bundle
+
+- schema: =ai-security-framework-mapping-bundle.v1=
+- bundle id: =snowflake-csa-poo-flow-001=
+- bundle:
+  =receipts/asr-framework-mapping-005.bundle.v1.json=
+- receipt:
+  =receipts/asr-framework-mapping-005.receipt.v1.json=
+- bundle SHA-256:
+  =829a2476e80940124ddae18d2955fb850011ff7b223472787bb3ecd511f7aed6=
+- receipt SHA-256:
+  =c0fdb518f495f1b4ee7841178e06599dd5490c05a04e2a6152a2a1ca5688c4fe=
+- owner: =poo-flow=
+
+The JSON bundle is an internal evidence artifact.  It is not a public POO Flow
+module API or a new ordinary record DSL.
+
+** Mapping admission
+
+The bundle contains eight claims:
+
+- three Snowflake protection-object refinements;
+- three CSA operational-domain projections;
+- one partial Snowflake Agent to CSA
+  Agency/Environment/Execution crosswalk;
+- one unknown mapping for the final CSA ten-layer detail.
+
+Only =exact=, =refinement=, and =projection= enter the proven region.
+=partial=, =conflicting=, and =unknown= require escalation.  The pending CSA
+final document is therefore not silently promoted into an exact mapping.
+
+** ASR-006 Lean closure
+
+Implemented in:
+
+- =PooFlowProof/Enterprise/AISecurityExternalFrameworkMappingBundleClosure.lean=
+
+The proof closes:
+
+- =FirstExternalFrameworkMappingProofCoverage=;
+- =FirstExternalFrameworkMappingUnknownEscalationRate=;
+- =FirstExternalFrameworkMappingConfinesAuthority=;
+- =FirstExternalFrameworkMappingBindsOneEvidenceRoot=;
+- =CSAFinalTenLayerMappingFailsClosed=;
+- =FirstExternalFrameworkMappingReplayUsesOnlyBundle=.
+
+Focused Lean checking passed, the focused module build passed with =3/3= jobs,
+and the =Enterprise.lean= aggregate passed.
+
+** ASR-005 enterprise metrics
+
+- proof coverage: =6/8=;
+- unknown/escalation rate: =2/8=;
+- proof replay success: =1/1=;
+- artifact replay success: =0/1= with one =unknown=.
+
+The last metric intentionally remains fail closed.  The bundle SHA-256 was
+captured, but the exact JSON structure has not been admitted through a
+parser-owned JSON route: raw =jq= validation was denied by source policy.
+Artifact replay remains denied until that exact digest is parser-validated.
+
+** Research sources
+
+- Snowflake, /Securing the Agentic Enterprise Starts with the Data/:
+  https://www.snowflake.com/en/blog/securing-the-agentic-enterprise/
+- Cloud Security Alliance, /AI Agents: Architecture and Control Plane/:
+  https://cloudsecurityalliance.org/artifacts/ai-agents-architecture-and-control-plane
+
+** Attestation assurance state
+
+ASR-005 reports independent assurance stages rather than one synthetic
+=validated= flag:
+
+- digest integrity: =verified=;
+- schema and semantic replay: =unknown=;
+- issuer authentication: =not-provided=;
+- transparency inclusion: =not-provided=;
+- enterprise artifact admission: =denied=.
+
+The prototype verifier is:
+
+- =tools/ai_security_mapping_replay.py=
+- =tools/test_ai_security_mapping_replay.py=
+
+Both Python owners are visible to parser-owned ASP search.  Runtime verification
+is still blocked by =deny-unbounded-structured-projection= /
+=deny-uncontrolled-source-materialization=, and direct exact-selector source
+projection currently fails to decode the Python provider response.  No passing
+Python test or artifact replay receipt is claimed.
+
+The additional proof boundary is implemented in:
+
+- =PooFlowProof/Enterprise/AISecurityEvidenceAttestationAssuranceClosure.lean=
+
+** ASR-006 closure condition
+
+This receipt closes only when:
+
+1. the exact bundle digest is validated through a parser-owned JSON route;
+2. artifact replay reconstructs the same eight claims and three metrics;
+3. publication of the final CSA document either refines the unknown mapping or
+   preserves escalation with a new versioned receipt;
+4. no refinement increases authority or loses its evidence root or owner.
+
+* EASE-CHANGE-REOPENING-007
+
+** Receipt identity
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-CHANGE-REOPENING-007=;
+- claim id: =EASE-004=;
+- owning repository/package: =poo-flow/packages/proof/lean=;
+- formal owner:
+  =PooFlowProof.Enterprise.AISecurityEmbodiedChangeDrivenAssuranceReopeningClosure=;
+- owner source digest:
+  =sha256:b0b43edc4286cb7ecc031b796073aac0b3bac2287914a7312b0fe3b7659b5a64=.
+
+** Defective and repaired declarations
+
+The defective rule is =evidenceAccumulationClosed=: it admits a result from four
+positive layer flags without binding the result to the architecture and
+assurance context under which the evidence was produced.
+=accumulationOnlyCounterexample= is the executable Lean counterexample: all
+four flags remain true after the architecture revision changes.
+
+The repaired rule is =contextBoundClosed=.  It requires the evidence context to
+equal the current context in addition to the four layer facts.
+=ease004FormalBound= proves that =ContextChanged= prevents this repaired closure.
+No duplicate evidence type, axiom, or elapsed-time assumption is introduced.
+
+** Exact replay and observed closure
+
+#+begin_src sh
+cd packages/proof/lean
+lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedChangeDrivenAssuranceReopeningClosure.lean
+lake build PooFlowProof.Enterprise
+#+end_src
+
+Observed result: focused Lean compilation and the aggregate enterprise build
+pass.  The umbrella owner imports the declaration, so the claim is visible
+through =PooFlowProof.Enterprise=.
+
+- fail-closed outcome: architecture-context mismatch cannot satisfy
+  =contextBoundClosed=;
+- proof-coverage effect: EASE-004 formal authority is closed;
+- replay result: =2/2= Lean actions pass without the originating agent session;
+- executable-refinement disposition: discharged by
+  =EASE-TYPED-GRAPH-CHANGE-IMPACT-011=;
+- unknown/escalation: empirical change-impact qualification remains open.
+
+** Executable obligation disposition
+
+The executable obligation is discharged by
+=EASE-TYPED-GRAPH-CHANGE-IMPACT-011=.  Its reference transition consumes
+versioned typed-graph/change identities, invalidates affected evidence and
+acceptance, and emits newly required verification obligations.  The transition
+is derived from the EASE-003 graph and introduces no ad hoc patch language, raw
+alist DSL, or boolean-only invalidation side channel.  This earlier receipt
+still does not claim empirical closure.
+
+* EASE-PROVIDER-NON-AUTHORITY-008
+
+** Receipt identity
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-PROVIDER-NON-AUTHORITY-008=;
+- claim id: =EASE-005=;
+- owning repository/package: =poo-flow/packages/proof=;
+- formal owner:
+  =PooFlowProof.Enterprise.AISecurityEmbodiedAIProviderNonAuthorityClosure=;
+- formal owner source digest:
+  =sha256:eac527a389329be6d55a2e1d56f5822b70ee7505acb6ebb662e7f6d7119d1ce1=;
+- executable owner:
+  =src/poo_flow_proof/embodied_ai_provider_non_authority.py=;
+- executable artifact digest:
+  =sha256:b31cbf63be0c7fd0c4acf9ea001449f9f61bc67d8ac8a265305cb3d70bceda0b=;
+- replay schema: =poo-flow.ai-security.ease005-replay-receipt.v1=;
+- trace root:
+  =sha256:83bc876033e40ab5bac81326b12bf9185bfe7a53d78bd7157fb63ce442b93cd0=.
+
+** Defective and repaired transitions
+
+The defective transition is the private countermodel =_role_only_admission=:
+possession of an authority role is sufficient, so an AI provider can
+self-assert effect authorization, verification discharge, or residual-risk
+acceptance.  It is not exposed as an ordinary public callable.
+
+The repaired transition is =evaluate_provider_admission= at:
+
+=python://src/poo_flow_proof/embodied_ai_provider_non_authority.py#item/function/evaluate_provider_admission=
+
+It binds the declared role to an issuer kind and an independent authority
+identity.  The Lean counterexample =roleOnlyAdmissionAcceptsForgedProvider=
+demonstrates the defective admission.  Theorems
+=issuerAwareAdmissionRejectsForgedProvider=,
+=aiProviderCannotAuthorizeEffect=,
+=aiProviderCannotDischargeVerification=,
+=aiProviderCannotAcceptResidualRisk=, and =ease005FormalBound= establish the
+repaired boundary without granting authority to a provider declaration.
+
+** Exact replay and observed closure
+
+#+begin_src sh
+cd packages/proof/python
+uv run pytest tests/test_embodied_ai_provider_non_authority.py tests/test_embodied_ai_provider_non_authority_replay.py -q
+uv run ruff check src/poo_flow_proof/embodied_ai_provider_non_authority.py src/poo_flow_proof/embodied_ai_provider_non_authority_replay.py tests/test_embodied_ai_provider_non_authority.py tests/test_embodied_ai_provider_non_authority_replay.py
+uv run python -m poo_flow_proof.embodied_ai_provider_non_authority_replay
+#+end_src
+
+Observed result: eight focused tests pass, Ruff passes, and two independent
+replay invocations emit byte-identical canonical JSON.  The replay rejects all
+three AI-provider authority assertions and admits only the independent human
+verification fixture.
+
+- fail-closed outcome: AI-provider issuer kind is rejected for all three
+  authority-bearing roles;
+- proof-coverage effect: formal authority is closed and executable refinement
+  is qualified;
+- replay result: trace root and implementation digest above reproduce exactly;
+- unknown/escalation: empirical authority remains open until a real provider
+  run binds model, context, human authority, and execution identifiers.
+
+** Parser-owned selector obligation
+
+The exact Python selector is recorded above, but parser-owned callable-skeleton
+projection is not claimed: the current ASP path returned =Operation not
+permitted (os error 1)=, and the Org exact-selector follow-up emitted an invalid
+=orgize= binary recommendation before the equivalent =asp org= query returned
+no content.  These tooling failures do not weaken the fail-closed transition or
+the independent replay, but the selector receipt remains an explicit tooling
+obligation rather than a fabricated success.
+
+* EASE-AUTHORITY-DECLARATION-009
+
+** Receipt identity
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-AUTHORITY-DECLARATION-009=;
+- claim id: =EASE-002=;
+- owning repository/package: =poo-flow/packages/proof/lean=;
+- formal owner:
+  =PooFlowProof.Enterprise.AISecurityEmbodiedAuthorityBearingDeclarationClosure=;
+- owner source digest:
+  =sha256:bbcca97ad4c9656d53c58aaab12f77b462c6a5fa869a9bd9fe24cfcf0ee60a0e=.
+
+** Countermodel, repair, and reused authority owners
+
+=roleOnlyAdmissionAcceptsForgedProvider= exhibits the defective path: a
+provider that merely declares an execution-authority role is admitted by
+=roleOnlyAdmission=.  =roleDeclarationDoesNotImplyAuthority= proves that the
+same declaration cannot satisfy =authorityBearingDeclaration=.
+
+The repaired predicate binds issuer kind, independent authority identity,
+canonical Cedar authorization subject, authority-receipt validity, and current
+context.  It reuses, rather than duplicates:
+
+- =CedarDualEngineAuthorization.closedDualDecisionProvidesSubjectEquality=;
+- =CedarDualEngineAuthorization.closedDualDecisionProvidesDistinctEngines=;
+- =HumanAuthorityAccountability.humanPromotionClosureProvidesBoundAuthority=.
+
+The claim owner exports negative theorems for execution authorization,
+verification discharge, and residual-risk acceptance, plus stale-context,
+subject-mismatch, and invalid-receipt rejection.
+
+** Exact replay and closure state
+
+#+begin_src sh
+cd packages/proof/lean
+lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedAuthorityBearingDeclarationClosure.lean
+lake build PooFlowProof.Enterprise
+#+end_src
+
+- fail-closed outcome: provider issuer, provider/authority identity equality,
+  subject mismatch, invalid receipt, or stale context prevents closure;
+- proof-coverage effect: EASE-002 formal authority is closed;
+- executable-refinement disposition: discharged by
+  =EASE-AUTHORITY-DECLARATION-EXECUTABLE-013=;
+- unknown/escalation: empirical-run identity remains open.
+
+* EASE-CONSTRAINED-SYSTEM-EFFECT-010
+
+** Receipt identity and formal closure
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-CONSTRAINED-SYSTEM-EFFECT-010=;
+- claim id: =EASE-001=;
+- formal owner:
+  =PooFlowProof.Enterprise.AISecurityEmbodiedConstrainedSystemEffectClosure=;
+- owner source digest:
+  =sha256:8187854ff66ec90815a4c8e26105ad9756a4c85a388900e8e4e201c49918f02b=.
+
+The countermodel =authorizedEffectAloneDoesNotClose= rejects the old assumption
+that an authorized effect is already a constrained system effect.  The repaired
+=constrainedSystemEffectClosed= predicate composes authorization, complete
+effect-domain coverage, duplicate safety, exclusive fencing, terminal recovery,
+and validated compensation evidence.
+
+This owner reuses =PooFlowProof.PooC3.authorizedEffectL1=,
+=PromotionTransactionRecovery.closedDuplicateRequiresPriorCommit=,
+=PromotionTransactionRecovery.closedRollbackRestoresCompleteEffectObservation=,
+and =EffectDomainCoverage.coveredRollbackAgreesOnEveryPlanEffect=.
+
+#+begin_src sh
+cd packages/proof/lean
+lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedConstrainedSystemEffectClosure.lean
+lake build PooFlowProof.Enterprise
+#+end_src
+
+- fail-closed outcome: authorization alone cannot close EASE-001;
+- proof-coverage effect: EASE-001 formal authority is closed;
+- executable-refinement disposition: discharged by
+  =EASE-CONSTRAINED-EFFECT-EXECUTABLE-012=;
+- unknown/escalation: empirical consequence qualification remains open.
+
+* EASE-TYPED-GRAPH-CHANGE-IMPACT-011
+
+** Receipt identity
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-TYPED-GRAPH-CHANGE-IMPACT-011=;
+- claim ids: =EASE-003= and =EASE-004=;
+- formal graph owner:
+  =PooFlowProof.Enterprise.AISecurityEmbodiedTypedRelationGraphClosure=;
+- formal graph source digest:
+  =sha256:71e79e460c78a64a52bd6e9c640c78e3b2e55830501f22bc953ee7d9f437c72c=;
+- executable graph owner:
+  =src/poo_flow_proof/embodied_ai_security_relation_graph.py=;
+- executable graph source digest:
+  =sha256:05516fac56efd141a444e38cf36db2e87bc89f6c13dcad5f7c5393367dc0c05b=;
+- replay owner:
+  =src/poo_flow_proof/embodied_ai_security_change_impact_replay.py=;
+- replay source digest:
+  =sha256:c768a11cb7f814499e43b1339a6589e578b7458bdf7fdbd9b1dbcb8e5a56c16f=;
+- change-impact schema: =poo-flow.ai-security.change-impact-receipt.v1=;
+- graph digest:
+  =sha256:d374b0cc01ee2bd006b3ad17157ab715ede55c1665b9126cc4d15d49dbb4a28f=;
+- trace root:
+  =sha256:314f2a57fe86d21c2bdd77d7ebd0cf271679a92b25a585ac30e85ef0b0de5da5=.
+
+** Defective graph and repaired projection
+
+=labelOnlyAdmissionAcceptsIllTypedRelation= exhibits the defective label-only
+graph rule.  =typedGraphRejectsIllTypedRelation= rejects the same relation
+because its source/target kinds are incompatible with =verifiedBy=.
+
+The executable graph is the direct projection of the 20.02
+=ArchitectureRelation= owner: relation identity/kind, typed source and target,
+direction, and evidence requirements are mandatory.  Duplicate identities,
+dangling endpoints, kind mismatches, reverse edges, and missing evidence
+requirements all fail closed.
+
+=project_change_impact= consumes only an admitted typed graph and versioned
+changed-node identities.  It deterministically walks forward relations,
+invalidates affected verification evidence and residual-risk acceptance, and
+reopens named control-verification obligations.  There is no raw patch/alist
+DSL and no boolean-only invalidation side channel.
+
+** Exact replay and observed closure
+
+#+begin_src sh
+cd packages/proof/lean
+lake env lean PooFlowProof/Enterprise/AISecurityEmbodiedTypedRelationGraphClosure.lean
+lake build PooFlowProof.Enterprise
+
+cd ../python
+uv run pytest tests/test_embodied_ai_security_relation_graph.py -q
+uv run ruff check src/poo_flow_proof/embodied_ai_security_relation_graph.py src/poo_flow_proof/embodied_ai_security_change_impact_replay.py tests/test_embodied_ai_security_relation_graph.py
+uv run python -m poo_flow_proof.embodied_ai_security_change_impact_replay
+#+end_src
+
+Observed executable result: eight tests pass; replay is byte-identical across
+two independent invocations; =command-admission-test= and
+=safety-owner-acceptance= are invalidated; and
+=verify:command-admission-control= is reopened.
+
+- proof-coverage effect: EASE-003 formal authority is closed;
+- executable-refinement effect: EASE-003 and EASE-004 are qualified against the
+  bound graph/replay artifacts above;
+- unknown/escalation: empirical runs against a deployed architecture revision,
+  runtime evidence store, and responsible acceptance authority remain open.
+
+* EASE-CONSTRAINED-EFFECT-EXECUTABLE-012
+
+** Receipt identity
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-CONSTRAINED-EFFECT-EXECUTABLE-012=;
+- claim id: =EASE-001=;
+- executable owner:
+  =src/poo_flow_proof/embodied_ai_constrained_effect.py=;
+- executable owner digest:
+  =sha256:34a7088bce66839fdd7c0f8abbde5143bf07c9a6dea8252606aad138653ae0d8=;
+- replay owner:
+  =src/poo_flow_proof/embodied_ai_constrained_effect_replay.py=;
+- replay owner digest:
+  =sha256:70b065055bc72001fb9f1b3e58b1ef810f904f7df696f42f502db78e9190d9f6=;
+- replay schema: =poo-flow.ai-security.ease001-replay-receipt.v1=;
+- trace root:
+  =sha256:d519efdc9cd22e189ce990bb329c14f3f26f38b7cb93c948dbafc7440753ef63=.
+
+** Reference transition and negative fixtures
+
+The exact transition identity is:
+
+=python://src/poo_flow_proof/embodied_ai_constrained_effect.py#item/function/evaluate_constrained_effect=
+
+The transition consumes typed authorization, effect-obligation, prior-commit,
+compensation, and recovery receipts.  It rejects:
+
+- authorization with incomplete effect-domain coverage;
+- duplicate outcome without a valid prior commit;
+- compensable rollback/recovery without compensation evidence for every
+  compensable effect in the plan;
+- recovery of any irreversible plan effect;
+- recovery without an exclusive fence owner; and
+- recovery that has not reached a terminal phase.
+
+The private =_authorization_only_countermodel= remains a negative fixture; it
+is not the admitted transition and is not an ordinary public API.
+
+** Exact replay and closure state
+
+#+begin_src sh
+cd packages/proof/python
+uv run pytest tests/test_embodied_ai_constrained_effect.py tests/test_embodied_ai_constrained_effect_replay.py -q
+uv run ruff check src/poo_flow_proof/embodied_ai_constrained_effect.py src/poo_flow_proof/embodied_ai_constrained_effect_replay.py tests/test_embodied_ai_constrained_effect.py tests/test_embodied_ai_constrained_effect_replay.py
+uv run python -m poo_flow_proof.embodied_ai_constrained_effect_replay
+#+end_src
+
+Observed result: ten focused tests pass in the combined EASE-001 slice; two
+independent process invocations emit byte-identical canonical JSON.  The replay
+contains six rejected cases with distinct reason kinds and one admitted case.
+
+- executable-refinement effect: EASE-001 is qualified against the exact owner,
+  digest, schema, and trace root above;
+- unknown/escalation: empirical physical-effect qualification remains open.
+
+* EASE-AUTHORITY-DECLARATION-EXECUTABLE-013
+
+** Receipt identity
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-AUTHORITY-DECLARATION-EXECUTABLE-013=;
+- claim id: =EASE-002=;
+- executable owner:
+  =src/poo_flow_proof/embodied_ai_authority_declaration.py=;
+- executable owner digest:
+  =sha256:91383a6a4ba629eda32e53094a4da6a4532e29f1735bcae26090f7bb49834891=;
+- replay owner:
+  =src/poo_flow_proof/embodied_ai_authority_declaration_replay.py=;
+- replay owner digest:
+  =sha256:923068bead0863bd19f61d6097377818cc6256d1990bb14b3ad478d2dadfcb0e=;
+- replay schema: =poo-flow.ai-security.ease002-replay-receipt.v1=;
+- trace root:
+  =sha256:33924ee01743bebeae0ed9c350e4d245b8d906dc2284277722e488c8d90ab905=.
+
+** Reference transition and authority separation
+
+The exact transition identity is:
+
+=python://src/poo_flow_proof/embodied_ai_authority_declaration.py#item/function/evaluate_authority_declaration_admission=
+
+The transition distinguishes =declaration=, =execution=, =evidence=,
+=verification=, =residual-risk acceptance=, and =recovery= authority acts.  An
+authority receipt must bind the exact requested act and complete authorization
+subject; act labels are not interchangeable.
+
+Admission additionally requires a current validity epoch, absence of
+revocation, independent human authority identity, exact subject equality,
+receipt validity, delegation root, responsibility-acceptance digest, pairwise
+proposer/approver/executor separation, and approver/issuer equality.
+
+The private =_roles_populated_countermodel= and
+=_provider_fields_match_countermodel= demonstrate the removed role-only and
+provider-field-only assumptions.  AI providers and analysis engines cannot
+issue authority-bearing declarations.
+
+** Exact replay and closure state
+
+#+begin_src sh
+cd packages/proof/python
+uv run pytest tests/test_embodied_ai_authority_declaration.py tests/test_embodied_ai_authority_declaration_replay.py -q
+uv run ruff check src/poo_flow_proof/embodied_ai_authority_declaration.py src/poo_flow_proof/embodied_ai_authority_declaration_replay.py tests/test_embodied_ai_authority_declaration.py tests/test_embodied_ai_authority_declaration_replay.py
+uv run python -m poo_flow_proof.embodied_ai_authority_declaration_replay
+#+end_src
+
+Observed result: nine focused tests pass in the combined EASE-002 slice; all six
+authority acts admit only with a matching bound receipt.  The replay contains
+five rejected cases and one admitted case, and two independent process
+invocations emit byte-identical canonical JSON.
+
+- executable-refinement effect: EASE-002 is qualified against the exact owner,
+  digest, schema, and trace root above;
+- unknown/escalation: empirical authority execution remains open.
+
+* EASE-PYTHON-SELECTOR-DEFERRED-014
+
+** Parser-owned tooling receipt
+
+- receipt schema: =poo-flow.ai-security.regression-receipt.v1=;
+- receipt id: =EASE-PYTHON-SELECTOR-DEFERRED-014=;
+- affected claims: =EASE-001= and =EASE-002=;
+- attempted owners:
+  =src/poo_flow_proof/embodied_ai_constrained_effect.py= and
+  =src/poo_flow_proof/embodied_ai_authority_declaration.py=;
+- requested projection: exact owner search followed by callable skeleton;
+- returned schema: =agent.semantic-protocols.host-native-execution-required=;
+- reason kind: =host-local-ipc-permission-denied=;
+- error kind: =permission-denied=;
+- required execution authority: =host-native=;
+- retry policy: =do-not-retry-in-current-sandbox=;
+- selector/callable result: =not-emitted=.
+
+The read-only ASP explorer did not receive a selector or callable skeleton, so
+none is claimed.  The main task did not retry through raw source, an old alias,
+or a downgraded projection.  This tooling receipt remains deferred until the
+Runtime Server data endpoint is available to the configured read-only sandbox.
+It does not substitute for, or invalidate, the independently replayable
+implementation digests and trace roots in receipts 012 and 013.
+
+* ASR-EXACT-PROJECTION-006
+
+** Trigger
+
+Parser-owned exact projection is declared and its runtime artifacts resolve,
+but the facade and activated provider do not share an invocable projection
+contract.
+
+** Runtime evidence
+
+- =asp --version=: =asp 0.1.0=
+- =asp healthcheck .=: =status=ok=
+- Rust provider manifest: =contractStatus=valid=
+- declared native route:
+  =exactSelectorNative=query/exact-selector-native-v1=
+- activated Rust provider SHA-256:
+  =28c293ec23b0dd7073ac93e63a979b704bfbdee3a9f56e860d41e7ce39c2e72d=
+- =~/.local/bin/rs-harness= SHA-256:
+  =e71990d04ecaf77287711b90952c6ae899798b8bccb23dd27536658d956c567d=
+- runtime =asp= SHA-256:
+  =48e51733d634dc1995160e0d3567904f74be2e7dc954e312497a24f92361a255=
+
+The activated Rust provider advertises legacy =--names-only | --code= syntax.
+The root facade requires =--projection source|callable-skeleton=.
+
+** Failing commands
+
+With =--projection source=:
+
+#+begin_example
+direct exact-selector provider failed:
+status=Some(2) stderr=unknown query option: --projection
+#+end_example
+
+With legacy =--code=:
+
+#+begin_example
+exact query requires --projection source|callable-skeleton;
+legacy --code and --names-only are unsupported
+#+end_example
+
+The Python exact route separately reaches provider output but fails to decode:
+
+#+begin_example
+failed to decode direct exact-selector provider output:
+data did not match any variant of untagged enum ProviderNativeExactResponse
+#+end_example
+
+** Capability conformance profile
+
+Capability assurance is split into:
+
+1. manifest contract valid;
+2. runtime binary resolved;
+3. invocation accepted;
+4. response decoded;
+5. independent replay verified.
+
+ASR-006 currently satisfies only the first two stages.  A green manifest or
+healthcheck therefore cannot increase proof coverage.
+
+** Lean closure
+
+Implemented in:
+
+- =PooFlowProof/Enterprise/AISecurityCapabilityConformanceAttestationClosure.lean=
+
+The proof closes:
+
+- =DeclaredCapabilityCannotSubstituteInvocation=;
+- =ResolvedBinaryCannotSubstituteProtocolAcceptance=;
+- =AcceptedInvocationWithoutDecodedEvidenceFailsClosed=;
+- =DecodedResponseWithoutReplayCannotEnterProofCoverage=;
+- =CompleteCapabilityConformanceCanBeAdmitted=;
+- =ASRExactProjection006RemainsFailClosed=.
+
+Focused Lean checking passed, the focused module build passed with =5/5= jobs,
+and the enterprise aggregate passed.
+
+** ASR-006 metrics
+
+- declaration/resolution stage coverage: =2/5=;
+- executable conformance: =0/1=;
+- unknown/escalation: =1/1=;
+- replay success: =0/1=;
+- admission: =denied=.
+
+** Closure condition
+
+This receipt closes only when:
+
+1. root facade and activated providers negotiate one projection contract;
+2. exact Rust and Python selectors return decodable source packets;
+3. the packet binds provider identity, parser identity, selector, source
+   digest, and evidence root;
+4. the same packet independently replays;
+5. ASR-005 semantic replay tests execute through that admitted route.
+
+- [ ] =ASR-PROVIDER-DISPATCH-001= has a failing and passing property test.
+- [ ] =ASR-PROJECT-ROOT-002= has nested-root and transport-label tests.
+- [ ] =ASR-AXLE-CROSS-OWNER-003= produces a clean independent declaration
+  bundle for all three runtime theorem roots.
+- [ ] =ASR-RESIDENT-ENDPOINT-004= produces an atomic reconciliation receipt.
+- [ ] Historical failing artifacts remain replayable.
+- [ ] The repaired path does not add a POO Flow public API, local evidence
+  duplicate, or architecture-specific engine assumption.

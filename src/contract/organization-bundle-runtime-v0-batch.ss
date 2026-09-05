@@ -1,6 +1,7 @@
 (export #t)
 
-(import :clan/poo/object :std/sort)
+(import :clan/poo/object :std/sort
+        (only-in :std/srfi/1 fold))
 
 (def +poo-flow-runtime-v0-layout-version+ 1)
 (def +poo-flow-runtime-v0-event-header-bytes+ 96)
@@ -18,22 +19,28 @@
       (full-identity full-identity-value)
       (compact compact-value)))
 
+(def (compact-id->list value)
+  (list (.ref value 'high) (.ref value 'low)))
+
 (def (poo-flow-runtime-v0-identity-table entries)
-  (let loop ((rest entries) (seen '()))
-    (if (null? rest)
-      (.o (kind 'poo-flow.runtime-v0.identity-table.1)
-          (entries entries) (collision-checked? #t))
-      (let* ((entry (car rest))
-             (compact (.ref entry 'compact))
-             (key (list (.ref compact 'high) (.ref compact 'low)))
-             (existing (assoc key seen)))
-        (when (and existing
-                   (not (equal? (cdr existing) (.ref entry 'full-identity))))
-          (error "runtime v0 compact identity collision"
-                 key (cdr existing) (.ref entry 'full-identity)))
-        (loop (cdr rest)
-              (if existing seen
-                  (cons (cons key (.ref entry 'full-identity)) seen)))))))
+  (let (validated-identity-index
+        (fold
+         (lambda (entry seen)
+           (let* ((compact (.ref entry 'compact))
+                  (full-identity (.ref entry 'full-identity))
+                  (key (compact-id->list compact))
+                  (existing (assoc key seen)))
+             (when (and existing
+                        (not (equal? (cdr existing) full-identity)))
+               (error "runtime v0 compact identity collision"
+                      key (cdr existing) full-identity))
+             (if existing seen
+                 (cons (cons key full-identity) seen))))
+         '()
+         entries))
+    (.o (kind 'poo-flow.runtime-v0.identity-table.1)
+        (entries entries)
+        (collision-checked? (list? validated-identity-index)))))
 
 (def (poo-flow-runtime-v0-event event-kind-value flags-value sequence-value
                                 event-identity-value correlation-identity-value
@@ -58,9 +65,6 @@
          (cons 'deadline-mono-ns deadline-value)
          (cons 'required-evidence-bits evidence-bits-value)
          (cons 'reserved0 0))))
-
-(def (compact-id->list value)
-  (list (.ref value 'high) (.ref value 'low)))
 
 (def (poo-flow-runtime-v0-event->native-fields event)
   (list (cons 'layout-version (.ref event 'layout-version))

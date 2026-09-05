@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "poo-flow.module-system-owner-map-validation-receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaId",
+    "schemaVersion",
+    "receiptPath",
+    "artifact",
+    "focusedGates",
+    "projectAggregateObservation",
+    "aspRuntimeArtifact"
+  ],
+  "properties": {
+    "schemaId": {"const": "poo-flow.module-system-owner-map-validation-receipt"},
+    "schemaVersion": {"const": 2},
+    "receiptPath": {"const": "owner-map/module-system-owner-map-validation-receipt-v2.json"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "rowCount", "checkedOwnerCount"],
+      "properties": {
+        "path": {"const": "owner-map/module-system-owner-map-v1.json"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "rowCount": {"const": 8},
+        "checkedOwnerCount": {"const": 16}
+      }
+    },
+    "focusedGates": {"type": "object"},
+    "projectAggregateObservation": {
+      "type": "object",
+      "required": ["target", "authoritativeForOwnerMapClosure", "status"],
+      "properties": {
+        "authoritativeForOwnerMapClosure": {"const": false}
+      }
+    },
+    "aspRuntimeArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commandRole", "installScope", "artifactIdentity"],
+      "properties": {
+        "commandRole": {"const": "asp"},
+        "installScope": {"const": "ASP_STATE_HOME/runtime"},
+        "artifactIdentity": {"type": "string", "pattern": "^blake3-256:[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

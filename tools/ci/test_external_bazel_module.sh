@@ -22,6 +22,20 @@ cleanup() {
 }
 trap cleanup EXIT
 
+bazel_output_args=(--output_user_root="$test_root/bazel")
+if [[ -n "${POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE:-}" ]]; then
+  case "$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE" in
+    /*) ;;
+    *)
+      printf 'POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE must be an absolute path: %s\n' \
+        "$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE" >&2
+      exit 2
+      ;;
+  esac
+  mkdir -p "$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE"
+  bazel_output_args=(--output_base="$POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE")
+fi
+
 exported_module="$test_root/poo-flow"
 consumer="$test_root/consumer"
 bazel_tmp="$test_root/tmp"
@@ -46,13 +60,7 @@ local_path_override(module_name = "poo_flow", path = "$exported_module")
 EOF
 
   if [[ "$include_gerbil_bazel_override" == 1 ]]; then
-    cat >>"$consumer/MODULE.bazel" <<EOF
-git_override(
-    module_name = "gerbil_bazel",
-    commit = "0d5ef5362674d788e0fc9e146b8e9e1daf78f137",
-    remote = "https://github.com/tao3k/gerbil-bazel.git",
-)
-EOF
+    cat "$exported_module/gerbil-bazel.MODULE.bazel" >>"$consumer/MODULE.bazel"
   fi
 }
 
@@ -89,26 +97,21 @@ EOF
 (
   cd "$consumer"
   export TMPDIR="$bazel_tmp"
-  "$bazel_bin" --output_user_root="$test_root/bazel" query \
+  "$bazel_bin" "${bazel_output_args[@]}" query \
     --lockfile_mode=off @poo_flow//scheme:compile
   if [[ "$external_test_mode" == analysis ]]; then
-    "$bazel_bin" --output_user_root="$test_root/bazel" build \
+    "$bazel_bin" "${bazel_output_args[@]}" build \
       --nobuild --lockfile_mode=off //:poo_flow_compile
   else
-    "$bazel_bin" --output_user_root="$test_root/bazel" build \
+    "$bazel_bin" "${bazel_output_args[@]}" build \
       --lockfile_mode=off //:poo_flow_compile
-    "$bazel_bin" --output_user_root="$test_root/bazel" test \
-      --lockfile_mode=off --test_output=errors \
-      @poo_flow//scheme:compile_receipt_v1_test
   fi
 )
 
 if [[ "$external_test_mode" == full ]]; then
   compiled=true
-  receipt_validated=true
 else
   compiled=false
-  receipt_validated=false
 fi
-printf '{"schema":"poo-flow.external-bazel-module.v1","mode":"%s","ambientGerbil":false,"configured":true,"requiresRootGerbilBazelOverride":true,"compiled":%s,"receiptValidated":%s}\n' \
-  "$external_test_mode" "$compiled" "$receipt_validated"
+printf '{"schema":"poo-flow.external-bazel-module.v1","mode":"%s","ambientGerbil":false,"configured":true,"requiresRootGerbilBazelOverride":true,"compiled":%s,"receiptOwner":"gerbil-bazel","pooFlowReceiptValidator":false}\n' \
+  "$external_test_mode" "$compiled"

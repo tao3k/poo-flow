@@ -6,7 +6,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        :gslph/src/testing/memory-profile
+        :asp-gerbil-scheme/src/testing/memory-profile
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profile-gate)

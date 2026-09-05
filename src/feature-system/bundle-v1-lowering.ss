@@ -55,6 +55,7 @@
 
 (import :std/crypto/digest
         :std/sort
+        (only-in :std/srfi/1 fold-right)
         :clan/poo/object
         :poo-flow/src/utilities/functional)
 
@@ -551,11 +552,14 @@
 
 (def (symbol-metadata-image symbols)
   (list->u8vector
-   (poo-flow-fold-left
+   (fold-right
     (lambda (symbol bytes)
-      (append bytes (u8vector->list (.ref symbol 'value-bytes))))
+      (append (u8vector->list (.ref symbol 'value-bytes)) bytes))
     '()
     symbols)))
+
+(def (feature-bundle-v1-region-length region)
+  (.ref region 'length))
 
 (def (build-descriptor bundle-id bundle-epoch symbols components edges evidence)
   (let* ((symbol-count (length symbols))
@@ -568,34 +572,38 @@
                        +feature-bundle-v1-symbol-row-size+
                        +feature-bundle-v1-row-alignment+))
          (component-offset
-          (align-up (.ref symbol-region 'length)
+          (align-up (feature-bundle-v1-region-length symbol-region)
                     +feature-bundle-v1-row-alignment+))
          (component-region
           (make-region 'components component-offset component-count
                        +feature-bundle-v1-component-row-size+
                        +feature-bundle-v1-row-alignment+))
          (edge-offset
-          (align-up (+ component-offset (.ref component-region 'length))
+          (align-up (+ component-offset
+                       (feature-bundle-v1-region-length component-region))
                     +feature-bundle-v1-row-alignment+))
          (edge-region
           (make-region 'edges edge-offset edge-count
                        +feature-bundle-v1-edge-row-size+
                        +feature-bundle-v1-row-alignment+))
          (evidence-offset
-          (align-up (+ edge-offset (.ref edge-region 'length))
+          (align-up (+ edge-offset
+                       (feature-bundle-v1-region-length edge-region))
                     +feature-bundle-v1-row-alignment+))
          (evidence-region
           (make-region 'evidence-obligations evidence-offset evidence-count
                        +feature-bundle-v1-evidence-row-size+
                        +feature-bundle-v1-row-alignment+))
          (metadata-offset
-          (+ evidence-offset (.ref evidence-region 'length)))
+          (+ evidence-offset
+             (feature-bundle-v1-region-length evidence-region)))
          (metadata
           (make-region 'metadata-bytes metadata-offset
                        (u8vector-length metadata-image) 1 1))
          (arena-bytes
           (max +feature-bundle-v1-arena-alignment+
-               (align-up (+ metadata-offset (.ref metadata 'length))
+               (align-up (+ metadata-offset
+                            (feature-bundle-v1-region-length metadata))
                          +feature-bundle-v1-arena-alignment+))))
     (feature-bundle-v1-descriptor
      +feature-bundle-v1-descriptor-size+

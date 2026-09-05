@@ -75,8 +75,13 @@
     (stage scenario
       (step collect))))
 
-(def (composition-syntax-error-message module-datum)
-  (let (module-form (datum->syntax #f module-datum))
+(def (composition-syntax-error-message module-datum . maybe-form-data)
+  (let* ((module-form (datum->syntax #f module-datum))
+         (forms
+          (if (null? maybe-form-data)
+            '()
+            (map (lambda (form) (datum->syntax #f form))
+                 (car maybe-form-data)))))
     (with-exception-catcher
      (lambda (exn)
        (call-with-output-string
@@ -85,7 +90,7 @@
        (parse-poo-flow-composition-syntax-plan
         (datum->syntax #f 'invalid-composition)
         module-form
-        '()
+        forms
         module-form)
        #f))))
 
@@ -242,6 +247,31 @@
            (profile report :kind report)
            (profile report :kind report)))
        "composition-duplicate-profile"))
-     #t))))
+     #t))
+   (test-case
+    "empty composition bodies are rejected during parsing"
+    (check-equal?
+     (integer?
+      (string-contains
+       (composition-syntax-error-message
+        '(use-module artifact-catalog as artifact))
+       "composition-missing-profile-operand"))
+     #t))
+   (test-case
+    "stage-only composition bodies are rejected during parsing"
+    (let (message
+          (composition-syntax-error-message
+           '(use-module artifact-catalog as artifact)
+           '((stage production
+               (graph artifact-publish-graph)
+               (loop #:fuel 3 #:exit published)
+               (prove audit-before-publish)
+               (handoff marlin-runtime)))))
+      (check-equal?
+       (integer?
+        (string-contains
+         message
+         "composition-missing-profile-operand"))
+       #t)))))
 
 (run-tests! profile-composition-tests)

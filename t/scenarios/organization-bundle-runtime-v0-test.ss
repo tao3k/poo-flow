@@ -1,5 +1,5 @@
 (import :clan/poo/object :std/test
-        :gslph/src/testing/memory-profile
+        :asp-gerbil-scheme/src/testing/memory-profile
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel
         :poo-flow/src/contract/organization-bundle-runtime-v0)
@@ -41,7 +41,7 @@
      (let* ((state (validated-state))
             (packet (poo-flow-runtime-v0-control-packet state)))
        (check-equal? (.ref packet 'abi-major) 0)
-       (check-equal? (.ref packet 'abi-minor) 1)
+       (check-equal? (.ref packet 'abi-minor) 3)
        (check-equal? (.ref packet 'bundle-schema)
                      'poo-flow.organization-bundle.draft.3)
        (check-equal? (.ref packet 'bundle-epoch) 12)

@@ -3,9 +3,9 @@
 ;;; Invariant: this owner observes parser-backed findings and never changes them.
 
 (import :gerbil/gambit
-        (only-in :gslph/src/policy/gxtest-report
+        (only-in :asp-gerbil-scheme/src/policy/gxtest-report
                  policy-report)
-        (only-in :gslph/src/types/facade
+        (only-in :asp-gerbil-scheme/src/types/facade
                  type-finding-details
                  type-finding-path
                  type-finding-rule-id))

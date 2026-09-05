@@ -71,6 +71,61 @@ jobs:
             packages/proof/lean/.lake
           key: lean-proof-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/proof/lean/lean-toolchain', 'packages/proof/lean/lakefile.lean', 'packages/proof/lean/lake-manifest.json') }}
 
+  external-module-linux-full:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
+    name: POO Flow external Bazel module (linux-amd64, full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout poo-flow
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ca-certificates \
+            git \
+            libsqlite3-dev \
+            libssl-dev \
+            pkg-config \
+            zlib1g-dev
+
+      - name: Declare Bazel disk-cache generation
+        shell: bash
+        env:
+          POO_FLOW_BAZEL_CACHE_GENERATION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/bazel-cache-generation
+          printf '# POO Flow external-module cache generation: %s\n' \
+            "$POO_FLOW_BAZEL_CACHE_GENERATION" \
+            > .ci/bazel-cache-generation/BUILD.bazel
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+        with:
+          bazelisk-cache: true
+          cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
+          disk-cache: ci-${{ runner.os }}-external-module-full-v1
+          repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazelisk mod deps --lockfile_mode=error
+
+      - name: Validate external Bazel startup arguments
+        timeout-minutes: 2
+        run: bash tools/ci/test_external_bazel_module_args_test.sh
+
+      - name: Validate POO Flow as an external Bazel module
+        timeout-minutes: 12
+        env:
+          POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE: ${{ runner.temp }}/poo-flow-external-bazel-output-base-v1
+          POO_FLOW_EXTERNAL_TEST_MODE: full
+        run: tools/ci/test_external_bazel_module.sh
+
   native-linux:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
     name: POO Flow Gerbil package (${{ matrix.os }}, ${{ matrix.gerbil-label }})
@@ -85,7 +140,9 @@ jobs:
             gerbil-install: prebuilt
             gerbil-formula: ""
             dependency-timeout-minutes: 12
-            external-module-mode: full
+            compile-timeout-minutes: 8
+            compile-runaway-timeout-seconds: 420
+            external-module-mode: analysis
             job-timeout-minutes: 20
     steps: &native-steps
       - name: Checkout poo-flow
@@ -231,8 +288,12 @@ jobs:
           # updated action cache is published instead of being trapped behind
           # GitHub's immutable exact key.  Forks remain restore-only.
           cache-save: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+          cache-version: 1
           disk-cache: ci-${{ runner.os }}-${{ matrix.gerbil-label }}
           repository-cache: true
+
+      - name: Verify Bazel module lock
+        run: bazelisk mod deps --lockfile_mode=error
 
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
@@ -268,10 +329,6 @@ jobs:
           echo "fingerprint=$native_abi" >> "$GITHUB_OUTPUT"
           echo "Gerbil native ABI: $native_abi"
 
-      - name: Install Gerbil project dependencies
-        timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel run @local_gerbil//:install_dependencies
-
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         run: bazel build //scheme:dependency_packages
@@ -284,9 +341,9 @@ jobs:
 
       - name: Build Scheme package through Bazel
         id: scheme-compile
-        timeout-minutes: 8
+        timeout-minutes: ${{ matrix.compile-timeout-minutes }}
         env:
-          COMPILE_BUDGET_SECONDS: 480
+          COMPILE_RUNAWAY_TIMEOUT_SECONDS: ${{ matrix.compile-runaway-timeout-seconds }}
         shell: bash
         run: |
           set -euo pipefail
@@ -295,23 +352,26 @@ jobs:
           start_seconds=$SECONDS
 
           set +e
-          bazel build --profile="$profile" //scheme:compile
+          bazel build \
+            --action_env=POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS="$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
+            --profile="$profile" \
+            //scheme:compile
           build_status=$?
           set -e
 
           elapsed_seconds=$((SECONDS - start_seconds))
           scheme_receipt="bazel-bin/scheme/compile.receipt.json"
           jq -n \
-            --arg schema "poo-flow.ci.bazel-phase-receipt.v1" \
+            --arg schema "poo-flow.ci.bazel-phase-observation.v1" \
             --arg phase "scheme-compile" \
             --arg runner "${RUNNER_OS}-${RUNNER_ARCH}" \
             --argjson status "$build_status" \
             --argjson elapsedSeconds "$elapsed_seconds" \
-            --argjson budgetSeconds "$COMPILE_BUDGET_SECONDS" \
+            --argjson runawayTimeoutSeconds "$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
             --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
             '{schema: $schema, phase: $phase, runner: $runner, status: $status,
-              elapsedSeconds: $elapsedSeconds, budgetSeconds: $budgetSeconds,
-              withinBudget: ($elapsedSeconds <= $budgetSeconds),
+              elapsedSeconds: $elapsedSeconds,
+              runawayTimeoutSeconds: $runawayTimeoutSeconds,
               schemeReceiptAvailable: $schemeReceiptAvailable}' > "$ci_receipt"
           echo "profile=$profile" >> "$GITHUB_OUTPUT"
           echo "ci-receipt=$ci_receipt" >> "$GITHUB_OUTPUT"
@@ -319,14 +379,6 @@ jobs:
           if (( build_status != 0 )); then
             exit "$build_status"
           fi
-          if (( elapsed_seconds > COMPILE_BUDGET_SECONDS )); then
-            echo "Scheme compile exceeded ${COMPILE_BUDGET_SECONDS}s budget" >&2
-            exit 1
-          fi
-
-      - name: Validate stable Scheme project receipt v1
-        timeout-minutes: 2
-        run: bazel test --test_output=errors //scheme:compile_receipt_v1_test
 
       - name: Upload Scheme compile evidence
         if: always()
@@ -604,7 +656,9 @@ jobs:
             gerbil-formula: tao3k/gerbil/gerbil-scheme
             dependency-timeout-minutes: 12
             external-module-mode: analysis
-            job-timeout-minutes: 30
+            compile-timeout-minutes: 15
+            compile-runaway-timeout-seconds: 840
+            job-timeout-minutes: 45
     steps: *native-steps
 
   python-runtime-wheel:

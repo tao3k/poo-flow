@@ -1,6 +1,6 @@
 (import :clan/poo/object
         :std/test
-        :gslph/src/testing/memory-profile
+        :asp-gerbil-scheme/src/testing/memory-profile
         :poo-flow/src/contract/organization-bundle
         :poo-flow/src/semantic/organization-bundle)
 

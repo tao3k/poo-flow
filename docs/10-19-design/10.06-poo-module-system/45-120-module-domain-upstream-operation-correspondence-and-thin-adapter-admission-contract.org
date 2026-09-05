@@ -1,0 +1,339 @@
+#+title: Module-Domain Upstream Operation Correspondence and Native Foundation Admission Contract
+#+author: POO Flow
+#+language: en
+
+* Status
+
+The normative status is foundation-first: project implementation is admitted
+only after the project-side object and POO-native type/contract foundation is in
+place.  Source-visible upstream proof is an admission gate, not the first
+project implementation layer.  Any older thin-adapter-first wording in this
+section is superseded and must not be used to order implementation.
+
+This RFC is an accepted correspondence method and a partially resolved,
+blocked admission record.
+
+It does not admit a Module implementation, a project adapter, or any concrete
+project adapter.  The current Gerbil ASP provider did not publish a workspace
+source envelope, but read-only Git-object evidence at the pinned revision proves
+the public exports and semantics named below.
+
+Upstream operation proof is not project-adapter admission.  No operation path
+currently reaches =ADMITTED=.
+
+* Scope
+
+This RFC owns:
+
+- the correspondence method between Module-domain responsibilities and
+  upstream =gerbil-poo= operations;
+- the distinction among source-visible candidates, public-export proof, and
+  admitted use;
+- the minimum justification required for a thin POO Flow adapter;
+- the rejection of duplicated upstream object, slot, prototype, composition,
+  delegation, =super=, and precedence semantics.
+
+It does not own:
+
+- upstream operation semantics;
+- a new POO object API;
+- the Module-domain implementation;
+- ProfileBundle closure implementation;
+- runtime effects;
+- application Profiles;
+- package, build, or development-harness behavior.
+
+* Evidence identity
+
+The implementation evidence must resolve to:
+
+#+begin_example
+github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead
+#+end_example
+
+The conceptual prototype remains:
+
+#+begin_example
+github.com/metareflection/poof@a07a6841d3fde46159f990065cde55b811f1f680
+#+end_example
+
+The local =.data/gerbil-poo= path is inspection evidence only.  It is not a
+durable package identity and must not appear as the dependency declaration.
+
+The inspected checkout currently has a different HEAD:
+
+#+begin_example
+240695a7461ec2d7fbbad4b83cab86508ec9c748
+#+end_example
+
+The pinned commit is present in the local Git object database.  A read-only
+comparison reports no differences between the pinned commit and the inspected
+HEAD for =object.ss=, =proto.ss=, and =mop.ss=.  The evidence below is therefore
+read directly from the pinned Git objects, not inferred from the checkout HEAD.
+
+At the pinned revision:
+
+- =object.ss= exports all local definitions and explicitly re-exports
+  =@object?= and =@make-object=;
+- =proto.ss= exports all local definitions;
+- =mop.ss= exports all local definitions and imports the native object
+  operations it consumes.
+
+* Central decision
+
+An operation is admitted only when all of the following are proven:
+
+1. its exact symbol identity;
+2. its concrete upstream owner module;
+3. its public export path;
+4. its semantics at the pinned revision;
+5. the Module-domain responsibility that consumes it;
+6. why a project adapter is necessary;
+7. which upstream semantics the adapter is forbidden to duplicate;
+8. its structured failure and observation boundary;
+9. focused evidence that exercises the upstream operation through the adapter.
+
+A source-visible symbol is only a candidate.  Documentation-only terminology
+is only explanatory evidence.  A theory concept is not an implementation
+identity.  No item advances by name similarity.
+
+#+begin_src mermaid
+flowchart LR
+  L["local inspection checkout"]
+  S["pinned upstream Git objects"]
+  C["source-visible operation candidate"]
+  E["public export and semantic correspondence"]
+  A["admitted thin adapter"]
+  M["Module-domain responsibility"]
+  D["duplicated POO semantics"]
+  X["unresolved operation family"]
+
+  L -->|"supplies paths and candidates but cannot prove the target revision alone"| C
+  S -->|"proves owner path, export declaration, and pinned semantics"| E
+  C -->|"exact export identity and pinned semantics are still required"| E
+  E -->|"justifies only project-owned projection or contract adaptation"| A
+  A -->|"serves one explicit Module-domain responsibility"| M
+  A -->|"admission fails if object, slot, prototype, or precedence behavior is copied"| D
+  X -->|"remains blocked until exact source and export evidence exist"| E
+#+end_src
+
+* Correspondence states
+
+The correspondence lattice is:
+
+#+begin_example
+MISSING
+  -> SOURCE-CANDIDATE
+  -> REVISION-MATCHED
+  -> EXPORT-PROVEN
+  -> SEMANTICS-PROVEN
+  -> ADAPTER-JUSTIFIED
+  -> ADMITTED
+#+end_example
+
+Advancement is monotonic only with new evidence.  A later state cannot be
+inferred from an earlier state.
+
+* Current correspondence matrix
+
+| Module-domain responsibility | Upstream owner evidence | Source-visible candidate identities | Current correspondence | Thin-adapter boundary |
+|------------------------------+-------------------------+-------------------------------------+------------------------+-----------------------|
+| Object construction and lifecycle | pinned =object.ss= with =export #t= | =object=, =make-object=, =instantiate-object!=, =uninstantiate-object!=, =object-instance=, =force-object= | =SEMANTICS-PROVEN=; Module adapter use remains unjustified | May project Module construction only after one exact responsibility mapping |
+| Object inspection and conversion | pinned =object.ss= with =export #t= | =.ref=, =.ref/cached=, =.get=, =.@=, =.all-slots=, =.alist=, =hash<-object= | =SEMANTICS-PROVEN=; ordinary Module interface use remains unproven | Diagnostic or receipt projection only; must not become the object model |
+| Raw object construction from host containers | pinned =object.ss= with =export #t= | =object<-alist=, =object<-hash=, =object<-fun= | =SEMANTICS-PROVEN= but rejected as the ordinary Module interface | No raw alist, hash, or function facade |
+| Slot discovery and projection | pinned =object.ss= with =export #t= | =.ref=, =.get=, =.@=, =.slot?=, =.has?=, =.all-slots=, =with-slots= | =SEMANTICS-PROVEN=; typed Module responsibility mapping remains unproven | May support typed responsibility projection without a second slot API |
+| Slot update | pinned =object.ss= with =export #t= | =.putslot!=, =.setslot!=, =.putdefault!=, =.def!=, =.put!=, =.set!= | =SEMANTICS-PROVEN=; mutation is excluded from pure composition | Runtime use requires an explicit effect boundary |
+| Slot deletion | =MISSING= | =MISSING= | =MISSING= | No project deletion operator may be invented |
+| Prototype ancestry and extension | pinned =object.ss= and =proto.ss= with =export #t= | =.mix=, =.extend=, =.+=, =.cc=, =instantiate-proto= | =SEMANTICS-PROVEN=; Module adapter mapping remains unproven | No project prototype engine may be implemented |
+| Composition and mix | pinned =object.ss= and =proto.ss= with =export #t= | =.mix=, =.extend=, =.+=, =compose-proto=, =compose-proto*=, =instantiate-protos= | =SEMANTICS-PROVEN=; correspondence to Profile composition remains intentionally unclaimed | =compose profiles= may not be mapped by name similarity |
+| Delegation and =super= | pinned =object.ss= with =export #t= | =object/slot-spec=, =$computed-slot-spec=, =.ref=, inherited computation through the slot-spec protocol | =SEMANTICS-PROVEN=; no ordinary user projection is admitted | No raw =(lambda (self super) ...)= ordinary interface |
+| Precedence | pinned =object.ss= with =export #t= | =compute-precedence-list!= using upstream =c3-compute-precedence-list= and the object supers graph | =SEMANTICS-PROVEN=; no direct project adapter is justified | No project priority or linearization engine may replace upstream semantics |
+
+* Module-domain responsibilities
+
+The project-owned Module contract remains semantic and minimal:
+
+- stable Module identity;
+- imports as reachable Module responsibilities;
+- exported Profile identities;
+- capability requirements and provisions;
+- ProfileBundle projection;
+- conflict and provenance projection;
+- one root composition and instantiation boundary.
+
+Those responsibilities do not authorize a new object representation, slot
+store, prototype graph, mix algorithm, delegation mechanism, or precedence
+algorithm.
+
+* Thin-adapter rule
+
+A thin adapter is justified only for a project-owned semantic mismatch:
+
+- naming a Module-domain responsibility;
+- projecting an upstream POO value into a generic POO Flow contract;
+- attaching structured condition, provenance, or receipt information;
+- preserving phase boundaries required by a small hygienic macro;
+- handing an admitted semantic value to an explicit runtime boundary.
+
+It is not justified for convenience aliases, raw container conversion, hidden
+registries, alternative slot syntax, alternative prototype composition, or
+imperative mutation hidden behind a Profile operation.
+
+* Failure and observation boundary
+
+Correspondence failure must remain structured:
+
+- missing upstream source owner;
+- missing public export;
+- pinned revision mismatch;
+- semantics not proven at the pinned revision;
+- adapter duplicates upstream behavior;
+- adapter introduces hidden authority or ambient mutation;
+- project operation cannot be traced to one Module-domain responsibility;
+- evidence exercises only documentation terminology or theory concepts.
+
+The failure receipt must name the operation family, candidate identity when
+known, owner path when known, pinned revision, failed admission state, and
+recommended next evidence.
+
+* Public-interface consequence
+
+This RFC adds no public syntax.
+
+The ordinary composition surface remains:
+
+#+begin_src scheme
+(use-composition production-system
+  (compose profiles
+    (use-module wendao-episteme production)
+    application-production))
+#+end_src
+
+=use-module= may become an admitted thin hygienic projection only after its
+underlying Module-domain operations pass this correspondence contract.
+
+Advanced extension remains native =gerbil-poo= object and prototype extension.
+
+* Admission checklist
+
+** Evidence substrate
+
+- [X] Pin the upstream repository and revision identity in the RFC.
+- [X] Resolve =object.ss= as the current source owner for object/lifecycle and
+  slot-operation candidates.
+- [X] Read the exact pinned Git objects without switching or modifying the
+  inspection checkout.
+- [X] Prove public export ownership for =object.ss= and =proto.ss=.
+- [ ] Publish the Gerbil ASP source envelope for repeatable parser-owned
+  correspondence queries.
+
+** Object and slot families
+
+- [X] Prove exact public construction and lifecycle operations.
+- [X] Prove exact slot projection and update operations.
+- [ ] Resolve whether an upstream slot-deletion operation exists and is public.
+- [X] Separate diagnostic conversion helpers from the ordinary Module
+  interface.
+- [ ] Prove structured failure behavior for every admitted operation.
+
+** Prototype algebra
+
+- [X] Resolve prototype ancestry and extension operations.
+- [X] Resolve composition and mix operations.
+- [X] Resolve delegation and =super= behavior.
+- [X] Resolve precedence behavior.
+- [ ] Prove that POO Flow does not implement substitute algorithms for any of
+  these families.
+
+** Adapter admission
+
+- [ ] Map each admitted operation to exactly one Module-domain responsibility.
+- [ ] Justify each adapter by a project-owned semantic mismatch.
+- [ ] Prove that the adapter preserves upstream semantics and identity.
+- [ ] Prove that ordinary composition remains pure and environment-free.
+- [ ] Produce focused development evidence through GSLPH without making GSLPH
+  a product dependency.
+
+* Rejected alternatives
+
+- Guessing operation names from POO terminology.
+- Treating a source-visible identifier as a public export.
+- Treating documentation or theory terminology as implementation identity.
+- Reimplementing prototype, mix, delegation, =super=, or precedence behavior.
+- Making =object<-alist=, =object<-hash=, or =object<-fun= the Module interface.
+- Mapping pure =compose profiles= to an upstream operation by name alone.
+- Adding a public adapter DSL or convenience macro.
+- Using GSLPH, Gerbil-Bazel, Nix, or =gerbil.pkg= to fill semantic evidence
+  gaps.
+
+* Successor contract
+
+The next RFC may admit the first Module-domain POO value only after at least one
+complete operation path reaches =ADMITTED=.
+
+That RFC must identify the exact upstream symbol, owner module, export path,
+pinned semantics, project-owned responsibility, thin adapter, structured
+failure behavior, and focused development evidence.
+
+Until then, Module-domain implementation entry remains blocked.
+
+* Accepted native foundation correction
+
+The first project-owned implementation entry is not a thin adapter, wrapper, or
+projection around an upstream POO object.  It is the native project foundation
+that specializes upstream =gerbil-poo= mechanics without replacing them.
+
+The admitted dependency order is:
+
+#+begin_src mermaid
+flowchart LR
+  U["upstream gerbil-poo"] -->|"provides native object, prototype, slot, dispatch, and C3 mechanics"| O["project objects.ss and object-core.ss"]
+  O -->|"provides the project object foundation required by type construction"| T["project types.ss: POO type and contract prototypes"]
+  T -->|"validates and explains the four required responsibilities"| M["four-slot Module POO value"]
+  M -->|"becomes an immutable semantic input after Module admission"| D["DispatchEvaluation"]
+#+end_src
+
+The repository already contains =src/module-system/objects.ss=,
+=src/module-system/object-core.ss=, and
+=src/module-system/object-core-support/contracts.ss=.  They are implementation
+evidence below the Module layer.  The current contract helpers do not by
+themselves admit the intended POO-native type foundation: the exact owner
+=src/module-system/types.ss= is still missing.
+
+Accordingly, every earlier phrase that can be read as “implement a thin adapter
+first” is superseded by this section.  The upstream correspondence table remains
+normative evidence for which mechanics must be reused, but it does not authorize
+a wrapper object, an object-conversion layer, or a parallel object model.
+
+The project foundation must satisfy all of these boundaries:
+
+- =objects.ss= and its internal support remain native users of =gerbil-poo=.
+- Types and contracts are themselves POO values or prototypes, not static tags,
+  record schemas, alists, or predicate registries.
+- Existing alist predicates and merge or diagnostic helpers may remain internal
+  evidence during implementation, but they are not the public type-and-contract
+  model.
+- Module construction depends on the admitted object and type/contract
+  foundation; it must not invent Module-specific validation machinery.
+- =wendao-episteme= extends and composes admitted Module values downstream.
+- =DispatchEvaluation= consumes an already admitted Module value later; it is
+  not part of the foundation constructor.
+- No runtime handle and no new public macro belong to this foundation boundary.
+
+** Foundation admission checklist
+
+- [X] Keep upstream object, prototype, dispatch, and C3 mechanics upstream-owned.
+- [X] Recognize the existing project object and contract owners below Module.
+- [X] Reject an adapter-first, wrapper-first, or conversion-first implementation.
+- [X] Require POO-native Type and Contract prototypes before Module admission.
+- [ ] Admit the exact project =types.ss= owner and its prototype algebra.
+- [ ] Admit the four-slot Module implementation only after that foundation.
+
+* References
+
+- [[file:45-98-upstream-gerbil-poo-native-operations-and-project-adapter-boundary.org][RFC 45-98: upstream gerbil-poo operations and adapter boundary]]
+- [[file:45-99-module-domain-prototype-minimal-projection-and-derived-closure-contract.org][RFC 45-99: Module-domain prototype contract]]
+- [[file:45-110-recovery-observability-profile-projection-and-minimal-use-composition-surface.org][RFC 45-110: minimal composition surface]]
+- [[file:45-111-profile-ownership-naming-export-identity-and-composition-repository-boundaries.org][RFC 45-111: ownership and repository boundaries]]
+- [[file:45-119-poo-native-implementation-admission-topology-and-layer-convergence-contract.org][RFC 45-119: implementation admission topology]]
+- [[file:44-current-project-programming-style.org][Current project programming style]]

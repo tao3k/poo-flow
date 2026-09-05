@@ -40,7 +40,7 @@ def test_native_runtime_override_negotiates_runtime_v0() -> None:
     if not library.is_file():
         pytest.skip("focused runtime-C build has not run")
     health = probe_native_runtime(library_path=library)
-    assert (health.abi_major, health.abi_minor) == (0, 1)
+    assert (health.abi_major, health.abi_minor) == (0, 3)
     assert health.capabilities & 1
 
 

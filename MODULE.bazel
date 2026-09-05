@@ -9,6 +9,8 @@ bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "gerbil_bazel", version = "0.1.0")
 
+include("//:gerbil-bazel.MODULE.bazel")
+
 GERBIL_LINUX_INSTALL_DIGEST = "ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208"
 
 GERBIL_LINUX_SHA256 = "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978f9d5fe7"
@@ -16,12 +18,6 @@ GERBIL_LINUX_SHA256 = "741d67f1d1a37e057181bfe8b3348ce2a9cfce06ac3b9c4e914400978
 GERBIL_LINUX_URLS = [
     "https://github.com/tao3k/gerbil-bazel/releases/download/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208/gerbil-v0.18.2-07c84815-linux-x86_64-ee5a236818e1b8fd9cc6e886b510795495e95402e790892961e6a1059a5c3208.tar.gz",
 ]
-
-git_override(
-    module_name = "gerbil_bazel",
-    commit = "0d5ef5362674d788e0fc9e146b8e9e1daf78f137",
-    remote = "https://github.com/tao3k/gerbil-bazel.git",
-)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.defaults(python_version = "3.12")
@@ -40,39 +36,14 @@ gerbil.auto(
     linux_prebuilt_urls = GERBIL_LINUX_URLS,
     project_root_marker = "//:gerbil.pkg",
 )
-gerbil.source_package(
-    name = "gerbil_utils_sources",
-    package = "gerbil-utils",
-    sha256 = "e7777c505e71de490dc05f8e3ff4473dddbc998a99899c085d31750add551296",
-    strip_prefix = "gerbil-utils-f45a4ef3bfecd2af39e114ed736ce9082cbb8244",
-    urls = [
-        "https://github.com/mighty-gerbils/gerbil-utils/archive/f45a4ef3bfecd2af39e114ed736ce9082cbb8244.tar.gz",
-    ],
-)
-gerbil.source_package(
-    name = "gerbil_poo_sources",
-    package = "gerbil-poo",
-    sha256 = "9425b2baff5ee87c046d43dac0b11ed6b174f4e4c12c01c747c066383517964e",
-    strip_prefix = "gerbil-poo-1c3225637525400341a09e958296962c10184ead",
-    urls = [
-        "https://github.com/mighty-gerbils/gerbil-poo/archive/1c3225637525400341a09e958296962c10184ead.tar.gz",
-    ],
-)
-gerbil.source_package(
-    name = "gslph_sources",
-    package = "gslph",
-    sha256 = "6b52760c63368027d24c43c0e01fffa54a915207fd236a45ca878dc7391d0307",
-    strip_prefix = "gerbil-scheme-language-project-harness-8eb8604e1907c294c60d8c6a7084c0ab50a80557",
-    urls = [
-        "https://github.com/tao3k/gerbil-scheme-language-project-harness/archive/8eb8604e1907c294c60d8c6a7084c0ab50a80557.tar.gz",
-    ],
+use_repo(
+    gerbil,
 )
 use_repo(
     gerbil,
-    "gerbil_poo_sources",
-    "gerbil_utils_sources",
-    "gslph_sources",
     "local_gerbil",
 )
+
+include("//:gerbil-dependencies.MODULE.bazel")
 
 register_toolchains("@local_gerbil//:registered_toolchain")

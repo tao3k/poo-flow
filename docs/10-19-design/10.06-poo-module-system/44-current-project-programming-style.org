@@ -88,6 +88,48 @@ Do not "simplify" these repairs back into alists.  Alists are acceptable only at
 projection boundaries, metadata payloads, or small diagnostics where the owning
 POO object is already known.
 
+** 10.06.44.35 Normative Mermaid State And Edge Semantics
+
+Architecture relationships that are materially clearer as a graph MUST be
+recorded in the owning Org RFC with a Mermaid export block.  A diagram shown
+only in discussion is not durable specification evidence.
+
+#+begin_export mermaid
+flowchart LR
+    A["State 1: declaration parsed"] -->|"lexical resolution"| B["State 2: bounded static plan"]
+    B -->|"evidence gate satisfied"| C["State 3: runtime lowering authorized"]
+    C -->|"one owner-scoped operation"| D["State 4: POO result"]
+    D -. "observation only; no precedence" .-> E["Receipt and trace projection"]
+#+end_export
+
+Mermaid nodes SHOULD name a semantic entity or an explicit state.  Edges MUST
+label nontrivial relationships, including:
+
+- state transition or lowering phase;
+- source-order or lineage precedence;
+- containment versus lazy dependency;
+- authority grant, decision, or continuation commit;
+- evidence and qualification gate;
+- owner handoff or runtime barrier;
+- an explicit absence of inheritance, override, or cross-boundary precedence.
+
+Solid edges denote an operative transition, contribution, containment, or
+dependency unless the label states otherwise.  Dotted edges SHOULD be used for
+observation, advisory relationships, or an explicitly non-precedence relation.
+Sibling boundaries MUST NOT be visually merged through an unlabeled edge.
+
+Diagrams supplement normative prose and do not replace it.  State names,
+edge labels, authority boundaries, and evidence gates in a diagram MUST agree
+with the surrounding RFC text.  Durable source uses Org syntax:
+
+#+begin_example
+#+begin_export mermaid
+...
+#+end_export
+#+end_example
+
+Markdown fences are not a project documentation format.
+
 ** 10.06.44.40 Macro And Metaprogramming Policy
 Use Gerbil macros when all of these are true:
 

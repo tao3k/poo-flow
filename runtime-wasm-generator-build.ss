@@ -5,7 +5,7 @@
         :clan/building)
 
 (def (runtime-wasm-generator-spec)
-  '("src/projection-syntax-support"
+  '(
     "src/core/roles"
     "src/core/failure"
     "src/core/object-syntax"

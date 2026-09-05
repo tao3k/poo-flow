@@ -6,8 +6,10 @@ load(
 )
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//tools/bazel:gerbil_project_environment.bzl", "gerbil_project_environment")
-load("//tools/bazel:gerbil_projection.bzl", "gerbil_project_projection")
-load("//tools/bazel:gerbil_receipt.bzl", "gerbil_project_receipt_v1_test")
+load(
+    "//tools/bazel:gerbil_projection.bzl",
+    "gerbil_project_projection",
+)
 
 package(default_visibility = ["//visibility:public"])
 
@@ -15,66 +17,112 @@ gerbil_project_compile(
     name = "gerbil_utils_package",
     srcs = ["@gerbil_utils_sources//:sources"],
     build_script = "@gerbil_utils_sources//:build_script",
-    process_guard = True,
     require_library_output = True,
+    source_resolution_receipts = [
+        "@gerbil_utils_sources//:source_resolution_receipt",
+    ],
 )
 
 gerbil_project_compile(
     name = "gerbil_poo_package",
     srcs = ["@gerbil_poo_sources//:sources"],
     build_script = "@gerbil_poo_sources//:build_script",
-    process_guard = True,
     require_library_output = True,
+    source_resolution_receipts = [
+        "@gerbil_poo_sources//:source_resolution_receipt",
+    ],
     deps = [":gerbil_utils_package"],
 )
 
 gerbil_project_compile(
-    name = "gslph_package",
-    srcs = ["@gslph_sources//:sources"],
-    build_script = "@gslph_sources//:build_script",
-    process_guard = True,
+    name = "asp_gerbil_scheme_package",
+    srcs = ["@asp_gerbil_scheme_sources//:sources"],
+    build_script = "@asp_gerbil_scheme_sources//:build_script",
     require_library_output = True,
+    source_resolution_receipts = [
+        "@asp_gerbil_scheme_sources//:source_resolution_receipt",
+    ],
     deps = [":gerbil_poo_package"],
 )
 
 filegroup(
     name = "dependency_packages",
     srcs = [
+        ":asp_gerbil_scheme_package",
         ":gerbil_poo_package",
         ":gerbil_utils_package",
-        ":gslph_package",
     ],
 )
+
+[
+    filegroup(
+        name = name,
+        srcs = [project],
+        output_group = "receipt",
+    )
+    for name, project in [
+        ("gerbil_utils_package_receipt", ":gerbil_utils_package"),
+        ("gerbil_poo_package_receipt", ":gerbil_poo_package"),
+        ("asp_gerbil_scheme_package_receipt", ":asp_gerbil_scheme_package"),
+    ]
+]
+
+[
+    filegroup(
+        name = name,
+        srcs = [project],
+        output_group = "project_root",
+    )
+    for name, project in [
+        ("gerbil_utils_package_project_root", ":gerbil_utils_package"),
+        ("gerbil_poo_package_project_root", ":gerbil_poo_package"),
+        ("asp_gerbil_scheme_package_project_root", ":asp_gerbil_scheme_package"),
+    ]
+]
 
 gerbil_project_compile(
     name = "runtime_wasm_generator_compile",
     srcs = ["//:runtime_wasm_generator_scheme_sources"],
     args = ["compile"],
     build_script = "//:runtime_wasm_generator_build_script",
-    process_guard = True,
-    require_library_output = True,
     receipt_line_prefix = "POO_FLOW_RUNTIME_WASM_GENERATOR_BUILD_RECEIPT ",
+    require_library_output = True,
+    deps = [":gerbil_poo_package"],
+)
+
+gerbil_project_compile(
+    name = "compile_performance_budget_package",
+    srcs = ["//:compile_performance_budget_sources"],
+    args = ["compile"],
+    build_script = "//:compile_performance_budget_build_script",
+    require_library_output = True,
     deps = [":gerbil_poo_package"],
 )
 
 filegroup(
-    name = "runtime_wasm_generator_compile_receipt",
-    srcs = [":runtime_wasm_generator_compile"],
-    output_group = "receipt",
+    name = "compile_performance_budget_package_project_root",
+    srcs = [":compile_performance_budget_package"],
+    output_group = "project_root",
 )
 
-gerbil_project_receipt_v1_test(
-    name = "runtime_wasm_generator_compile_receipt_v1_test",
-    receipt = ":runtime_wasm_generator_compile_receipt",
+gerbil_project_test(
+    name = "compile_performance_budget_unit_test",
     size = "small",
+    srcs = "//:compile_performance_budget_test_sources",
+    project = ":compile_performance_budget_package",
+    source_root_marker = "//:scheme_source_root_marker",
+    tests = ["//:t/build-api-project-compile-performance-budget-test.ss"],
 )
 
 gerbil_project_dev(
     name = "runtime_wasm_generator_dev_compile",
     args = ["compile"],
     build_script = "//:runtime_wasm_generator_build_script",
+    tags = [
+        "local",
+        "manual",
+    ],
     deps = [":runtime_wasm_generator_compile"],
-    tags = ["local", "manual"],
 )
 
 sh_binary(
@@ -86,12 +134,15 @@ sh_binary(
         "$(locations :runtime_wasm_generator_compile)",
     ],
     data = [
-        ":gerbil_utils_package",
         ":gerbil_poo_package",
+        ":gerbil_utils_package",
         ":runtime_wasm_generator_compile",
         "@bazel_tools//tools/bash/runfiles",
     ],
-    tags = ["local", "manual"],
+    tags = [
+        "local",
+        "manual",
+    ],
 )
 
 gerbil_project_compile(
@@ -99,8 +150,7 @@ gerbil_project_compile(
     srcs = ["//:scheme_build_sources"],
     args = ["compile"],
     build_script = "//:build.ss",
-    receipt_line_prefix = "POO_FLOW_PROJECT_BUILD_RECEIPT ",
-    deps = [":gslph_package"],
+    deps = [":asp_gerbil_scheme_package"],
 )
 
 gerbil_project_environment(
@@ -113,23 +163,23 @@ gerbil_project_dev(
     name = "dev_compile",
     args = ["compile"],
     build_script = "//:build.ss",
-    deps = [":gslph_package"],
     tags = [
         "local",
         "manual",
     ],
+    deps = [":asp_gerbil_scheme_package"],
 )
 
 gerbil_project_dev(
     name = "dev_unit_tests",
     args = ["compile"],
     build_script = "//:build.ss",
-    deps = [":gslph_package"],
     tags = [
         "local",
         "manual",
     ],
     tests = ["//:t/unit-tests.ss"],
+    deps = [":asp_gerbil_scheme_package"],
 )
 
 filegroup(
@@ -142,18 +192,6 @@ filegroup(
     name = "compile_log",
     srcs = [":compile"],
     output_group = "log",
-)
-
-filegroup(
-    name = "compile_receipt",
-    srcs = [":compile"],
-    output_group = "receipt",
-)
-
-gerbil_project_receipt_v1_test(
-    name = "compile_receipt_v1_test",
-    consumer_validator = ":validate_compile_receipt_v1.ss",
-    receipt = ":compile_receipt",
 )
 
 gerbil_project_projection(
@@ -176,10 +214,25 @@ gerbil_project_projection(
     )
     for name, size, test_root in [
         ("unit_tests", "medium", "//:t/unit-tests.ss"),
-        ("contract_tests", "small", "//:t/contract-tests.ss"),
+        (
+            "protocol_person_promotion_test",
+            "small",
+            "//:t/protocol-person-promotion-test.ss",
+        ),
+        (
+            "protocol_person_runtime_abi_test",
+            "small",
+            "//:t/protocol-person-runtime-abi-test.ss",
+        ),
+        ("contract_tests", "medium", "//:t/contract-tests.ss"),
         ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
-        ("integration_tests", "small", "//:t/integration-tests.ss"),
+        ("integration_tests", "medium", "//:t/integration-tests.ss"),
         ("performance_tests", "large", "//:t/performance-tests.ss"),
+        (
+            "user_interface_config_sandbox_case_test",
+            "medium",
+            "//:t/user-interface-config-sandbox-case-test.ss",
+        ),
         (
             "user_interface_custom_loop_engine_capability_test",
             "large",
@@ -191,9 +244,13 @@ gerbil_project_projection(
 test_suite(
     name = "tests",
     tests = [
+        ":ai_security_executable_refinement_test",
         ":cli_support_tests",
+        ":compile_performance_budget_unit_test",
         ":contract_tests",
         ":integration_tests",
+        ":protocol_person_promotion_test",
+        ":protocol_person_runtime_abi_test",
         ":unit_tests",
         ":user_interface_custom_loop_engine_capability_test",
     ],
@@ -205,4 +262,11 @@ test_suite(
         ":performance_tests",
         ":tests",
     ],
+)
+
+gerbil_project_test(
+    name = "ai_security_executable_refinement_test",
+    size = "small",
+    project = ":compile",
+    tests = ["//:t/ai-security-executable-refinement-test.ss"],
 )

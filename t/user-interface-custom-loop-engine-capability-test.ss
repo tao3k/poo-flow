@@ -8,7 +8,7 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :gslph/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/src/benchmark/gate
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)

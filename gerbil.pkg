@@ -1,29 +1,4 @@
 (package:
  poo-flow
- depend:
- ("github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead"
-  "github.com/mighty-gerbils/gerbil-utils@f45a4ef3bfecd2af39e114ed736ce9082cbb8244"
-  "github.com/tao3k/gerbil-scheme-language-project-harness@8eb8604e1907c294c60d8c6a7084c0ab50a80557")
- policy:
- ((macro-governance
-   allow-generated:
-   #t
-   explanation:
-   "Agent-sandbox backend profile macros must cite runtime-source guidance and expansion tests before changing transformer behavior."
-   witness:
-   "search runtime-source macro sugar module-sugar; t/agent-sandbox-profile-test.ss witnesses generated descriptor/profile constructors")
-  (source-scope
-   roots:
-   ("src" "user-interface")
-   runtime-roots:
-   ("src")
-   explanation:
-   "The Gerbil language project harness parses source owners under src, user-interface, and the default t test root; only src is runtime-owned, while user-interface fragments are loaded declarative module configuration and root generated files such as manifest.ss are not source owners.")
-  (runtime-boundary
-   heavy-owners:
-   ("rust" "external-runtime")
-   explanation:
-   "CAS, Docker, subprocesses, parallel scheduling, and durable persistence are not Scheme-owned.")
-  (poo-control-plane
-   explanation:
-   "Flow, task, strategy, runner, adapter, and receipt objects form the first Gerbil POO surface.")))
+depend:
+ ("github.com/tao3k/asp-gerbil-scheme@e3d5235220253c00ee678b1ea6537e968029f8cd"))

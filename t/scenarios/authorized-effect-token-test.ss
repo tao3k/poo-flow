@@ -1,5 +1,5 @@
 (import :std/test
-        :gslph/src/testing/memory-profile
+        :asp-gerbil-scheme/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/policy/authorized-effect-token
         :poo-flow/src/policy/cedar-decision

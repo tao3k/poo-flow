@@ -1,5 +1,5 @@
 (import :std/test
-        :gslph/src/testing/memory-profile
+        :asp-gerbil-scheme/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/core/object-syntax
         :poo-flow/src/module-system/domain-case

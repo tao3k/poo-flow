@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Receipt policy boundary: a package action reaching 5 GiB is anomalous even
+# when the child compiler exits successfully.  The upstream guard owns early
+# detection; this downstream gate prevents an undetected spike from passing CI.
+readonly max_package_peak_rss_bytes=$((5 * 1024 * 1024 * 1024))
+
 resolve_runfile() {
   local key=${1:?runfile key is required}
   if [[ -n "${RUNFILES_DIR:-}" ]]; then
@@ -14,6 +19,7 @@ resolve_runfile() {
 }
 
 receipt=$(resolve_runfile "${1:?toolchain receipt runfile key is required}")
+shift
 
 if [[ ! -f "$receipt" ]]; then
   printf 'shared Gerbil receipt is missing: %s\n' "$receipt" >&2
@@ -47,9 +53,31 @@ require_project_package_manifest() {
   if ! jq -e '
     .dependencyState
     | type == "object" and length > 0
-      and all(.[]; . == "ready")
+      and all(.[]; . == "ready" or . == "missing")
   ' "$receipt" >/dev/null; then
-    receipt_mismatch dependencyState ready-package-state-map "$dependency_state"
+    receipt_mismatch dependencyState declared-package-state-map "$dependency_state"
+  fi
+}
+
+require_project_package_receipt() {
+  local project_receipt
+  project_receipt=$(resolve_runfile "${1:?project receipt runfile key is required}")
+
+  if ! jq --argjson maxPeakRssBytes "$max_package_peak_rss_bytes" -e '
+    .schema == "gerbil-bazel.project-receipt.v1"
+      and .status == "ok"
+      and .resourceGuard.outcome == "completed"
+      and (.resourceGuard.peakRssBytes | type == "number"
+        and . < $maxPeakRssBytes)
+      and (.dependencySourceResolutions | type == "array" and length > 0)
+      and all(.dependencySourceResolutions[];
+        .outcome == "resolved"
+          and .observedRevision == .expectedRevision)
+  ' "$project_receipt" >/dev/null; then
+    printf 'Gerbil project package receipt is not ready: %s\n' \
+      "$project_receipt" >&2
+    jq -c . "$project_receipt" >&2
+    exit 1
   fi
 }
 
@@ -71,3 +99,7 @@ case "$schema" in
     receipt_mismatch schema supported-toolchain-receipt "$schema"
     ;;
 esac
+
+for project_receipt_key in "$@"; do
+  require_project_package_receipt "$project_receipt_key"
+done

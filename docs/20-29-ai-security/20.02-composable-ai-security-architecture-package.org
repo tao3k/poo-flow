@@ -1,0 +1,502 @@
+#+title: 20.02 Composable AI Security Architecture Package
+#+author: POO Flow
+#+startup: overview
+
+* Status
+
+DRAFT — architecture-semantics package boundary.
+
+This RFC defines how an AI enterprise security architecture is represented as
+POO-native composable semantics.  It does not define a universal AI security
+architecture and does not extend the public POO Flow engine API.
+
+* Problem
+
+Enterprise AI security architectures use incompatible coordinate systems:
+three-layer data/model/agent models, ten-layer reference architectures,
+perceive/reason/act stages, service topologies, threat taxonomies, lifecycle
+controls, and detector feedback loops.
+
+Copying one taxonomy into POO Flow would incorrectly make the engine own a
+particular architecture.  Treating every source as unrelated documentation
+would prevent composition, enterprise specialization, proof, and runtime
+projection.
+
+POO Flow needs a bounded architecture package semantic that:
+
+- preserves each architecture's identity and ownership;
+- reuses POO-native composition and profiles;
+- expresses explicit cross-architecture mappings;
+- detects conflicts and unknown mappings;
+- projects selected semantics to POL, proof, runtime, observation, and receipt
+  owners;
+- does not add another public DSL.
+
+* Core decision
+
+An architecture package is a first-class POO-native value assembled through
+existing functions, objects/prototypes, =compose=, capabilities, and profiles.
+
+It is not:
+
+- a Git submodule or Gerbil package identity;
+- a new public =defarchitecture= macro;
+- a raw alist/record/YAML architecture DSL;
+- a hidden global registry;
+- an owner of model, data, policy, proof, coordinator, or effects;
+- a runtime process by itself.
+
+The architecture package describes design semantics.  Existing owners decide
+how those semantics are proved or enforced.
+
+* Required engine invariants
+
+The package design MUST preserve the current module-system invariants:
+
+1. Functions and native POO objects/prototypes remain the default abstraction.
+2. Composition is pure and deterministic for the same identities and profile.
+3. Profiles are first-class values.
+4. Capabilities bind authority; they are not inferred from package names.
+5. Effects remain behind explicit coordinator/runtime handoff.
+6. Observation is a projection and cannot mutate semantic ownership.
+7. Recovery decisions remain distinct from coordinator admission.
+8. Proof receipts do not execute effects.
+9. No composition step scans Git, installs packages, queries registries, or
+   performs hidden I/O.
+10. Public macros remain limited to separately reviewed hygienic syntax needs.
+
+* Semantic object families
+
+The initial architecture package uses five conceptual POO object families.
+Names remain RFC-level until an implementation owner is approved.
+
+** ArchitectureIdentity
+
+Names the architecture source and revision:
+
+- architecture identity;
+- owner identity;
+- source/revision digest;
+- coordinate kind;
+- schema family;
+- provenance/evidence root.
+
+** ArchitectureSemantic
+
+Names one semantic object without assigning runtime authority:
+
+- semantic identity;
+- source architecture;
+- semantic kind;
+- owner reference;
+- required identities;
+- declared constraints;
+- evidence status.
+
+** ArchitectureRelation
+
+Relates named semantics:
+
+- relation identity and kind;
+- source and target semantic identities;
+- direction;
+- preconditions;
+- preserved properties;
+- evidence requirements.
+
+** ArchitectureInvariant
+
+Declares a bounded property:
+
+- invariant identity;
+- quantified semantic scope;
+- assumptions;
+- required evidence level;
+- candidate proof/property-test owner;
+- failure/escalation disposition.
+
+** ArchitectureMapping
+
+Relates two independently owned architectures:
+
+- source and target identities;
+- mapping status: exact, refinement, projection, partial, conflicting, unknown;
+- mapped semantic/relation identities;
+- obligations preserved and lost;
+- evidence/proof identity;
+- policy revision.
+
+These families expand to ordinary POO-native values.  They are not a public
+record language.
+
+* Package use of existing module slots
+
+Architecture semantics MUST fit the existing thin module surface.
+
+| Existing slot | Architecture-package meaning |
+|---------------+------------------------------|
+| identity | package/source/revision identity |
+| imports | explicit semantic package dependencies |
+| capabilities | authority required by a projection or runtime consumer |
+| profiles | selected enterprise architecture composition and policy view |
+
+Semantic objects, relations, invariants, and mappings are ordinary POO-native
+objects referenced by the package/profile.  They do not become new public
+module slots.
+
+* Pure composition semantics
+
+Given packages =A= and =B= under profile =P=, composition produces a new value
+=C= and no effects.
+
+Composition MUST:
+
+1. preserve =A= and =B= identities and owner provenance;
+2. compute explicit import closure;
+3. reject duplicate semantic identities with different owners;
+4. combine compatible relations deterministically;
+5. retain partial and unknown mappings instead of guessing equivalence;
+6. reject conflicting invariants unless =P= selects a named refinement or
+   human-approved exception;
+7. union proof obligations without claiming they are discharged;
+8. bind the selected profile and policy revisions;
+9. derive a deterministic composition identity/evidence root;
+10. produce no runtime effects.
+
+* Mapping and conflict rules
+
+** Exact mapping
+
+Requires identity-compatible semantics, matching required relations, and a
+named proof/property receipt.  Matching labels are insufficient.
+
+** Refinement
+
+The target may add stricter obligations.  It MUST preserve all source
+obligations named by the mapping and expose the additional unknown/escalation
+population.
+
+** Projection
+
+The target exposes a bounded subset.  Lost semantics and lost guarantees MUST
+be explicit and cannot be inferred by downstream consumers.
+
+** Partial mapping
+
+Only named objects/relations correspond.  Unmapped semantics remain owned by
+their original architecture.
+
+** Conflict
+
+If two selected invariants cannot both hold, composition fails closed unless a
+profile names a separately authorized resolution.  Precedence by import order
+is forbidden.
+
+** Unknown
+
+Unknown mapping never becomes permissive compatibility.  It may:
+
+- block a proof-required profile;
+- enter semantic/human escalation;
+- remain observable in an exploratory profile.
+
+* Architecture profile
+
+A profile selects an architecture interpretation without mutating packages.
+It MAY select:
+
+- included packages and revisions;
+- mapping set;
+- required invariants;
+- proof-required versus semantic-review regions;
+- permitted unknown/escalation budget;
+- runtime projection targets;
+- enterprise jurisdiction, business purpose, and risk class;
+- red-team/benchmark suites;
+- receipt and replay requirements.
+
+A profile MUST NOT:
+
+- manufacture missing evidence;
+- override an owner identity;
+- grant capabilities not present in its authority input;
+- convert a detector result into a Lean discharge;
+- make a non-authoritative observation authoritative;
+- execute an effect.
+
+* Projection boundaries
+
+One composed architecture can project into several independent owners.
+
+** POL projection
+
+Produces candidate policy obligations and profile selections.  POL remains the
+policy owner and records the architecture composition identity it consumed.
+
+** Lean/property projection
+
+Produces bounded invariants and counterexamples.  The proof owner returns
+theorem/property receipts and does not authorize effects.
+
+** Runtime-admission projection
+
+Produces the identities, capabilities, evidence requirements, and obligations
+needed by the coordinator.  The coordinator remains the effect-admission owner.
+
+** Observation projection
+
+Projects runtime outcomes into =ObservationEvent= values.  Telemetry remains
+non-authoritative unless admitted by its evidence owner.
+
+** Recovery projection
+
+Provides inputs to =RecoveryDecision=.  Decision selection remains separate
+from retry/resume/effect admission.
+
+** Receipt projection
+
+Links architecture composition identity, profile revision, policy discharge,
+proof bundle, runtime admission, and observation identities.  It does not
+collapse those receipts or owners.
+
+* Enterprise acceptance composition
+
+The future enterprise acceptance projection SHOULD bind:
+
+- architecture package identities and revisions;
+- selected profile identity;
+- cross-architecture mapping digest;
+- unresolved/accepted unknowns;
+- principal, model/provider, agent/composition, and tool identities;
+- data/knowledge usage obligations where selected;
+- policy revision and discharge identities;
+- action/evidence envelope and evidence root;
+- required theorem/property roots;
+- =IndependentDeclarationBundle= digest;
+- runtime admission outcome;
+- =ObservationEvent= identity;
+- =RecoveryDecision= identity when applicable;
+- replay outcome.
+
+Acceptance is valid only when each referenced owner validates its own receipt.
+
+* Example composition
+
+An enterprise profile MAY compose:
+
+#+begin_example
+CSA architecture coverage package
+  + Snowflake-style governed-data semantics
+  + AWS perceive/reason/act lifecycle semantics
+  + ADR observation/detection/red-team feedback semantics
+  + NIST identity/authorization semantics
+  + OWASP agentic counterexample taxonomy
+  + enterprise jurisdiction and business-policy package
+#+end_example
+
+The result is not a synthetic industry standard.  It is an enterprise-owned
+composition whose identity records each source, mapping, refinement, conflict,
+unknown, and selected obligation.
+
+For example:
+
+- ADR Detector maps to a semantic risk-observation projection, not proof.
+- Snowflake data controls remain owned by the data platform package.
+- AWS =act= maps partially to action/effect semantics; POO Flow coordinator
+  admission is a refinement, not an asserted equivalence.
+- OWASP risks generate counterexample classifications, not capabilities.
+- NIST identity semantics refine principal/delegation obligations.
+
+* Red-team and external issue lifecycle
+
+An incident, blog, paper, benchmark, or GitHub issue enters through the catalog
+as an external observation.
+
+#+begin_example
+external observation
+  -> affected architecture package/mapping
+  -> reproducible counterexample
+  -> invariant or mapping refinement
+  -> Lean theorem/property regression
+  -> profile revision
+  -> runtime/receipt projection
+  -> independent replay
+#+end_example
+
+If a case does not fit existing packages, it creates a new semantic candidate;
+it is not forced into the nearest layer.
+
+* Metrics
+
+Composition and runtime projections SHOULD report:
+
+- semantic coverage: catalog semantics represented by selected packages;
+- mapping coverage: exact/refinement/projection/partial/unknown counts;
+- proof coverage: admitted executions inside discharged obligations;
+- unknown/escalation rate;
+- replay success;
+- proof and source freshness;
+- conflict rate and authorized-exception rate;
+- external observations converted to reproducible counterexamples;
+- counterexamples converted to policy/proof regression;
+- runtime effects with complete owner receipts.
+
+Precision/recall remain detector metrics and do not substitute for these
+architecture-assurance metrics.
+
+* Proof obligations
+
+The initial Lean/property frontier SHOULD cover:
+
+1. composition identity determinism;
+2. owner identity preservation;
+3. import closure completeness;
+4. capability non-amplification;
+5. exact mapping preserves named invariants;
+6. refinement preserves source obligations;
+7. projection cannot claim omitted guarantees;
+8. conflicting mappings fail closed;
+9. unknown mappings cannot enter proof-required admission;
+10. profile selection cannot manufacture evidence;
+11. runtime receipt binds the selected architecture composition;
+12. replay rejects package, mapping, policy, source, or proof drift.
+
+These obligations specialize existing proof owners where possible.  They do
+not justify a monolithic new proof owner.
+
+* Current implementation receipt
+
+The first admitted implementation is an isolated Lean model:
+
+- owner:
+  =PooFlowProof.Enterprise.AISecurityArchitectureCompositionClosure=;
+- engine impact: none;
+- public API impact: none;
+- Scheme runtime impact: none;
+- mapping statuses:
+  exact, refinement, projection, partial, conflicting, and unknown;
+- pure composition properties:
+  deterministic value construction, left/right semantic preservation,
+  capability non-amplification, omitted-claim rejection, conflict rejection,
+  and proof-required unknown rejection;
+- runtime projection properties:
+  bound bundle evidence, authorized-effect L1 evidence, and mismatch rejection.
+
+Verification:
+
+- focused Lean: 43 jobs passed;
+- Enterprise aggregate: 223 jobs passed;
+- full Lean: 295 jobs passed;
+
+The parser-owned recovery path remains blocked before an owner-side source
+projection can be trusted. Owner-workspace health confirms that the installed
+binary receipt is current at digest
+=664942dfd309d1ff34c6c76ea0a86daf5f46d4241de890ba26a25c685b11df6b=,
+and =asp hook doctor= confirms that the =poo-flow= hook contract and binary
+fingerprint match. The remaining failure is resident-control state:
+=asp healthcheck= reports a global transport-contract mismatch, and after the
+old global daemon and unreachable =poo-flow= resident were terminated with
+=TERM=, a new workspace resident was started but exact query still reported
+that its elected-owner endpoint was not reachable. Until the resident
+control-plane owner reconciles this endpoint state, this package must not infer
+an owner-side Lean or Gerbil change from failed exact-selector projection.
+
+Direct provider evidence narrows the remaining AXLE recovery defect further.
+The activated =py-harness= can project the exact
+=build_exact_axle_closure= selector and exposes the bounded pipeline
+=_compose_owner_sources -> owner-source-extract -> _require_clean ->
+_source_declaration_aliases -> source_declaration_closure=. The generic
+=asp query= dispatcher incorrectly routes that Python selector to the Gerbil
+=gslph= launcher, which then attempts to resolve a nonexistent =./python=
+source path. The Python =search pipe= route independently fails project
+resolution against a nonexistent =project-resolution-stdin= root. These are
+versioned provider-dispatch and project-resolution regression inputs; they do
+not authorize weakening the Lean runtime closure or duplicating its evidence
+predicates inside this package.
+- pure architecture AXLE:
+  53 preflight declarations across 2 owner sources, 22 exact declarations,
+  =verification.okay=true=;
+- pure AXLE closure digest:
+  =sha256:854ab9335194f1f8aebabe073b52cd0df9a691c7a6662d2da4e46fb0672983b7=;
+- pure independent bundle digest:
+  =sha256:cbfafb308e1b9aa6f37a7e1f60796bf4ae7479b02339b3774de6c6be92c79bab=.
+
+The runtime-projection AXLE root remains fail closed.  Preflight found
+85 declarations across 5 owner sources, but composed-owner extraction rejected
+the =AuthorizedEffectEvidenceFacts= and =authorizedEffectL1= references as
+unknown identifiers.  The Lean project build is green; no fallback, timeout
+increase, or duplicate local evidence predicate is admitted.
+
+* Implementation stages
+
+** Stage 0 — catalog and RFC
+
+- [X] Separate engine and architecture semantics.
+- [X] Define coordinate and mapping vocabulary.
+- [X] Preserve current POO module slots and public surface.
+- [X] Define projection ownership.
+
+** Stage 1 — isolated semantic model
+
+- [ ] Implement pure internal POO object families.
+- [ ] Add deterministic composition identity.
+- [ ] Add conflict/unknown receipts.
+- [ ] Avoid public macros and engine API expansion.
+
+** Stage 2 — proof model
+
+- [X] Add mapping/composition Lean model.
+- [X] Prove identity, owner, capability, conflict, and unknown invariants.
+- [X] Add positive and negative property fixtures.
+
+** Stage 3 — architecture packages
+
+- [ ] Add minimal example packages for three-layer, ten-layer, and lifecycle
+  architectures.
+- [ ] Demonstrate partial/refinement mappings without declaring equivalence.
+- [ ] Add one enterprise-specialized profile.
+
+** Stage 4 — runtime projection
+
+- [ ] Project to POL without moving policy ownership.
+- [ ] Project to action/evidence envelope and coordinator admission.
+- [ ] Emit enterprise acceptance and replay receipts.
+- [ ] Report semantic/mapping/proof/unknown/replay metrics.
+
+* Non-goals
+
+- Standardize the industry on one architecture.
+- Reproduce every vendor product object.
+- Make POO Flow own enterprise data or model platforms.
+- Replace NIST, OWASP, CSA, SOC, DLP, IAM, or model evaluation systems.
+- Prove general maliciousness or model alignment.
+- Treat source edits, an RFC, or isolated Lean compilation as runtime closure.
+
+* Acceptance criteria
+
+- [X] POO Flow remains the general composition engine.
+- [X] Architecture packages are POO-native values, not a new DSL.
+- [X] Existing =identity/imports/capabilities/profiles= slots are sufficient.
+- [X] Cross-architecture equivalence requires evidence.
+- [X] Unknown and conflict behavior is fail closed where guarantees are needed.
+- [X] Policy, proof, admission, effect, observation, and recovery owners remain
+  distinct.
+- [ ] Internal semantic implementation exists.
+- [ ] Focused composition/property tests pass.
+- [X] Lean mapping obligations pass.
+- [ ] At least three differently shaped external architectures compose.
+- [ ] Enterprise acceptance receipt independently replays.
+
+* Next owner
+
+The embodied-AI system-engineering interpretation of these architecture
+semantics is owned by [[file:20.07-embodied-ai-security-system-engineering-design-proposition.org][20.07 Embodied AI Security System Engineering Design Proposition]].
+This document remains the owner of architecture-package identity, relation,
+mapping, conflict, and projection semantics.  =20.07= normatively projects those
+semantics onto authority-governed system effects, typed assurance relations, and
+change-driven evidence invalidation without moving effect execution or runtime
+coordination into the architecture package itself.
+
+Implementation admission requires a focused audit of the existing POO
+module/profile composition implementation.  The next change should be an
+isolated internal semantic model plus proof fixtures, not a public API or macro.
