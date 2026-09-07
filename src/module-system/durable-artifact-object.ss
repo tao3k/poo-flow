@@ -147,6 +147,7 @@
        (eq? (.ref artifact 'durable-artifact-kind)
             +poo-flow-durable-artifact-kind+)))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooDurableArtifact Alist)
 (def (poo-flow-durable-artifact->alist artifact)
   (map (lambda (field) (cons field (.ref artifact field)))

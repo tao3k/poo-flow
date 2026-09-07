@@ -99,7 +99,7 @@
             [])
            ((equal? suite-name "scenario-observability-feedback")
             [])
-           ((equal? suite-name "scenario-utilities-contracts")
+           ((equal? suite-name "scenario-contract-schema")
             [])
            ((equal? suite-name "scenario-utilities-functional")
             [])
@@ -109,15 +109,15 @@
             [])
            ((equal? suite-name "scenario-json-schema-contract-performance")
             (poo-flow-common-suite-support []))
-           ((equal? suite-name "scenario-sandbox-resource-utilities-contract")
+           ((equal? suite-name "scenario-sandbox-resource-native-type-contract")
             [])
-           ((equal? suite-name "scenario-graph-utilities-contract")
+           ((equal? suite-name "scenario-sandbox-profile-native-type-contract")
             [])
-           ((equal? suite-name "scenario-loop-governor-utilities-contract")
+           ((equal? suite-name "scenario-graph-native-type-contract")
             [])
-           ((equal? suite-name "scenario-loop-human-audit-utilities-contract")
+           ((equal? suite-name "scenario-loop-native-type-contract")
             [])
-           ((equal? suite-name "scenario-session-policy-utilities-contract")
+           ((equal? suite-name "scenario-session-policy-native-type-contract")
             [])
            ((equal? suite-name "scenario-type-facts-contract-projection")
             [])
@@ -126,6 +126,7 @@
              ["t/user-interface-fixtures.ss"
               "t/fixtures/object-load-valid/objects.ss"]))))))
 
+;;; Test-plan boundary: declare canonical suites and support files without running them.
 ;; : (-> ProjectRoot ContractRoot PooFlowTestingProject)
 (def (poo-flow-testing-project root contract-root)
   (let (gxtest-suites
@@ -167,16 +168,17 @@
          ["scenario-user-interface-composition" "t/scenarios/user-interface-composition-test.ss"]
          ["scenario-boundary-namespace" "t/boundary-namespace-test.ss"]
          ["scenario-observability-feedback" "t/observability-feedback-test.ss"]
-         ["scenario-utilities-contracts" "t/utilities-contracts-test.ss"]
+         ["scenario-contract-schema" "t/contract-schema-test.ss"]
          ["scenario-utilities-functional" "t/utilities-functional-test.ss"]
          ["scenario-json-schema-contract-bridge" "t/json-schema-contract-bridge-test.ss"]
+         ["scenario-json-schema-native-contract" "t/json-schema-native-contract-test.ss"]
          ["scenario-funflow-github-ci-json-schema-contract" "t/funflow-github-ci-json-schema-contract-test.ss"]
          ["scenario-json-schema-contract-performance" "t/json-schema-contract-performance-test.ss"]
-         ["scenario-sandbox-resource-utilities-contract" "t/sandbox-resource-utilities-contract-test.ss"]
-         ["scenario-graph-utilities-contract" "t/graph-utilities-contract-test.ss"]
-         ["scenario-loop-governor-utilities-contract" "t/loop-governor-utilities-contract-test.ss"]
-         ["scenario-loop-human-audit-utilities-contract" "t/loop-human-audit-utilities-contract-test.ss"]
-         ["scenario-session-policy-utilities-contract" "t/session-policy-utilities-contract-test.ss"]
+         ["scenario-sandbox-resource-native-type-contract" "t/sandbox-resource-native-type-contract-test.ss"]
+         ["scenario-sandbox-profile-native-type-contract" "t/sandbox-profile-native-type-contract-test.ss"]
+         ["scenario-graph-native-type-contract" "t/graph-native-type-contract-test.ss"]
+         ["scenario-loop-native-type-contract" "t/loop-native-type-contract-test.ss"]
+         ["scenario-session-policy-native-type-contract" "t/session-policy-native-type-contract-test.ss"]
          ["scenario-type-facts-contract-projection" "t/type-facts-contract-projection-test.ss"]
          ["integration" "t/integration-tests.ss"]
          ["performance" "t/performance-tests.ss"]])

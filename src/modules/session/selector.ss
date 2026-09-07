@@ -5,7 +5,8 @@
 
 (import (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/modules/session/objects
-        :poo-flow/src/modules/session/receipt-syntax)
+        :poo-flow/src/modules/session/receipt-syntax
+        :poo-flow/src/modules/session/receipt-projection)
 
 (export poo-flow-session-selector-candidate
         poo-flow-session-selector-candidate?
@@ -51,31 +52,22 @@
 (def (poo-flow-session-selector-rows/tail rows tail)
   (foldr cons tail rows))
 
-;;; Boundary: selector field rows preserve the policy-visible selector receipt
-;;; shape used for parent-child session addressing.
-;; poo-flow-session-selector-field-rows
-;; : (-> Syntax Syntax)
-;; | doc m%
-;;   Expands session selector field clauses into selector receipt rows.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-session-selector-field-rows (selection-policy 'parent))
-;;   ;; => ((selection-policy . parent))
-;;   ```
-(defrules poo-flow-session-selector-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
+;;; Boundary: selector callers construct explicit field pairs; this function
+;;; preserves their order without introducing a syntax-only row language.
+;; : (-> (List (Pair Symbol Object)) (List (Pair Symbol Object)))
+(def (poo-flow-session-selector-field-rows . rows)
+  rows)
 
 ;; : (-> Symbol Symbol Alist)
 (def (poo-flow-session-selector-diagnostic code selector-id detail)
   (poo-flow-session-selector-field-rows
-   (kind 'poo-flow.session.selector.diagnostic)
-   (schema 'poo-flow.modules.session.selector.diagnostic.v1)
-   (code code)
-   (selector-id selector-id)
-   (detail detail)
-   (severity 'error)
-   (runtime-executed #f)))
+   (cons 'kind 'poo-flow.session.selector.diagnostic)
+   (cons 'schema 'poo-flow.modules.session.selector.diagnostic.v1)
+   (cons 'code code)
+   (cons 'selector-id selector-id)
+   (cons 'detail detail)
+   (cons 'severity 'error)
+   (cons 'runtime-executed #f)))
 
 ;; : (-> Symbol Symbol Symbol String [Symbol] [Alist] PooSessionSelectorCandidate)
 (def (poo-flow-session-selector-candidate candidate-id
@@ -156,11 +148,11 @@
     ('metadata (.ref candidate 'metadata)))))
 
 ;; : (-> [PooSessionSelectorCandidate] [Alist])
-(defpoo-session-receipt-projection-batch
-  poo-flow-session-selector-candidates->alists
-  (candidates)
-  (projector poo-flow-session-selector-candidate->alist)
-  (error-message "session selector candidate projection requires a list"))
+(def (poo-flow-session-selector-candidates->alists candidates)
+  (poo-flow-session-receipt-projection-batch
+   candidates
+   poo-flow-session-selector-candidate->alist
+   "session selector candidate projection requires a list"))
 
 ;; : (-> [PooSessionSelectorCandidate] Alist)
 (def (poo-flow-session-selector-candidate-summary candidates)
@@ -251,11 +243,11 @@
    'selector-candidate-target-not-declared
    selector-id
    (poo-flow-session-selector-field-rows
-    (candidate-id
+    (cons 'candidate-id
      (poo-flow-session-selector-candidate-id candidate))
-    (candidate-kind
+    (cons 'candidate-kind
      (poo-flow-session-selector-candidate-kind candidate))
-    (target-ref
+    (cons 'target-ref
      (poo-flow-session-selector-candidate-target-ref candidate)))))
 
 ;; : (-> Symbol [PooSessionSelectorCandidate] Alist [Symbol] [Symbol] [Alist] Alist)
@@ -325,7 +317,7 @@
    'selector-fallback-not-declared
    selector-id
    (poo-flow-session-selector-field-rows
-    (fallback-ref fallback-ref))))
+    (cons 'fallback-ref fallback-ref))))
 
 ;; : PooSessionSelectorReceiptRecordStruct
 (defstruct poo-flow-session-selector-receipt-record
@@ -466,9 +458,9 @@
      'pending
      #f
      (poo-flow-session-selector-field-rows
-      (state 'pending)
-      (runtime-owner "marlin-agent-core")
-      (runtime-executed #f))
+      (cons 'state 'pending)
+      (cons 'runtime-owner "marlin-agent-core")
+      (cons 'runtime-executed #f))
      (null? diagnostics)
      (length diagnostics)
      diagnostics

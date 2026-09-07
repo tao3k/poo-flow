@@ -1,4 +1,6 @@
-(import :clan/poo/object
+;;; Boundary: materializes Bundle v1 lowering output in a foreign-memory arena.
+;;; Invariant: arena offsets are validated before any foreign view is exposed.
+(import (only-in :clan/poo/object .ref .slot? object<-alist object?)
         :poo-flow/src/utilities/functional
         :poo-flow/src/feature-system/bundle-v1-lowering)
 
@@ -31,6 +33,18 @@
   '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
     16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31))
 
+;; define-bundle-v1-foreign-arena-object
+;;   : (-> Syntax Syntax)
+;;   | doc m%
+;;       `define-bundle-v1-foreign-arena-object` defines a typed foreign-arena POO constructor.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (define-bundle-v1-foreign-arena-object (constructor field) value-kind)
+;;       ;; => defines constructor
+;;       ```
+;;     %
 (defsyntax define-bundle-v1-foreign-arena-object
   (syntax-rules ()
     ((_ (constructor object-kind) (slot ...))
@@ -49,26 +63,32 @@
    +feature-bundle-v1-foreign-arena-diagnostic-kind+)
   (reason detail))
 
+;; : (-> Object Symbol Boolean)
 (def (poo-kind? value expected-kind)
   (and (object? value)
        (.slot? value 'kind)
        (eq? (.ref value 'kind) expected-kind)))
 
+;; : (-> Object Boolean)
 (def (feature-bundle-v1-foreign-arena-image? value)
   (poo-kind? value +feature-bundle-v1-foreign-arena-image-kind+))
 
+;; : (-> Object Boolean)
 (def (feature-bundle-v1-foreign-arena-diagnostic? value)
   (poo-kind? value +feature-bundle-v1-foreign-arena-diagnostic-kind+))
 
+;; : (-> PooFeatureBundleV1ForeignArenaImage PooFeatureBundleV1ForeignArenaImage)
 (def (require-feature-bundle-v1-foreign-arena-image value)
   (unless (and (feature-bundle-v1-foreign-arena-image? value)
                (.ref value 'accepted?))
     (error "Accepted Bundle v1 foreign arena image expected" value))
   value)
 
+;; : (-> Object Integer Boolean)
 (def (valid-unsigned? value limit)
   (and (exact-integer? value) (<= 0 value) (< value limit)))
 
+;; : (-> U8Vector Integer Integer [Integer] Integer Unit)
 (def (write-unsigned-le! target offset value byte-offsets limit)
   (unless (and (u8vector? target)
                (valid-unsigned? offset +uint64-limit+)
@@ -89,18 +109,22 @@
       (error "Bundle v1 unsigned write overflow" value)))
   target)
 
+;; : (-> U8Vector Integer Integer Unit)
 (def (write-u16! target offset value)
   (write-unsigned-le! target offset value
                       +byte-offsets/u16+ +uint16-limit+))
 
+;; : (-> U8Vector Integer Integer Unit)
 (def (write-u32! target offset value)
   (write-unsigned-le! target offset value
                       +byte-offsets/u32+ +uint32-limit+))
 
+;; : (-> U8Vector Integer Integer Unit)
 (def (write-u64! target offset value)
   (write-unsigned-le! target offset value
                       +byte-offsets/u64+ +uint64-limit+))
 
+;; : (-> U8Vector Integer PooFeatureBundleV1CompactId Unit)
 (def (write-compact-id! target offset compact-id)
   (unless (and (object? compact-id)
                (.slot? compact-id 'high)
@@ -110,6 +134,7 @@
   (write-u64! target (+ offset 8) (.ref compact-id 'low))
   target)
 
+;; : (-> U8Vector Integer [PooFeatureBundleV1CompactId] Unit)
 (def (write-compact-ids! target offset compact-ids)
   (poo-flow-fold-left
    (lambda (compact-id cursor)
@@ -118,6 +143,7 @@
    offset
    compact-ids))
 
+;; : (-> U8Vector Integer U8Vector [Integer] Unit)
 (def (write-bytevector! target offset source byte-offsets)
   (unless (u8vector? source)
     (error "Bundle v1 digest bytevector expected" source))
@@ -129,6 +155,7 @@
    target
    byte-offsets))
 
+;; : (-> U8Vector Integer PooFeatureBundleV1Region Unit)
 (def (write-region! target offset region)
   (write-u64! target offset (.ref region 'offset))
   (write-u64! target (+ offset 8) (.ref region 'length))
@@ -136,6 +163,7 @@
   (write-u32! target (+ offset 20) (.ref region 'alignment))
   target)
 
+;; : (-> PooFeatureBundleV1Region Integer Integer Integer List PooFeatureBundleV1Region)
 (def (checked-region! region arena-length expected-stride expected-alignment
                       rows)
   (let ((offset (.ref region 'offset))
@@ -155,6 +183,7 @@
              expected-stride expected-alignment (length rows))))
   region)
 
+;; : (-> U8Vector Integer PooFeatureBundleV1ComponentRow U8Vector)
 (def (write-component-row! target offset row)
   (let ((cursor
          (write-compact-ids!
@@ -176,6 +205,7 @@
     (write-u64! target (+ cursor 16) (.ref row 'reserved1)))
   target)
 
+;; : (-> U8Vector Integer PooFeatureBundleV1SymbolRow U8Vector)
 (def (write-symbol-row! target offset row)
   (write-compact-id! target offset (.ref row 'id))
   (write-u64! target (+ offset 16) (.ref row 'byte-offset))
@@ -184,6 +214,7 @@
   (write-u16! target (+ offset 30) (.ref row 'flags))
   target)
 
+;; : (-> U8Vector Integer PooFeatureBundleV1EdgeRow U8Vector)
 (def (write-edge-row! target offset row)
   (let ((cursor
          (write-compact-ids!
@@ -197,6 +228,7 @@
     (write-u32! target (+ cursor 12) (.ref row 'reserved0)))
   target)
 
+;; : (-> U8Vector Integer PooFeatureBundleV1EvidenceRow U8Vector)
 (def (write-evidence-row! target offset row)
   (let ((cursor
          (write-compact-ids!
@@ -211,6 +243,7 @@
     (write-u32! target (+ cursor 12) (.ref row 'reserved0)))
   target)
 
+;; : (-> U8Vector PooFeatureBundleV1Region List Integer Integer Procedure U8Vector)
 (def (write-row-table! target region rows row-size row-alignment write-row!)
   (checked-region! region (u8vector-length target)
                    row-size row-alignment rows)
@@ -224,6 +257,7 @@
    rows)
   target)
 
+;; : (-> U8Vector PooFeatureBundleV1Region U8Vector U8Vector)
 (def (write-metadata! target region metadata-image)
   (unless (and (u8vector? metadata-image)
                (= (.ref region 'stride) 1)
@@ -243,6 +277,7 @@
       (loop (+ index 1))))
   target)
 
+;; : (-> U8Vector Integer [Integer] U8Vector)
 (def (write-reserved! target offset values)
   (unless (= (length values) 7)
     (error "Bundle v1 descriptor requires seven reserved uint64 values"
@@ -255,6 +290,7 @@
    values)
   target)
 
+;; : (-> U8Vector PooFeatureBundleV1Descriptor U8Vector)
 (def (write-descriptor! target descriptor)
   (let ((digest (.ref descriptor 'digest)))
     (unless (and (= (u8vector-length target) +bundle-v1-descriptor-size+)
@@ -280,6 +316,7 @@
     (write-reserved! target 200 (.ref descriptor 'reserved)))
   target)
 
+;; : (-> U8Vector PooFeatureBundleV1Descriptor U8Vector)
 (def (write-arena! target descriptor)
   (let ((symbols (.ref descriptor 'symbols))
         (metadata (.ref descriptor 'metadata-bytes))
@@ -307,11 +344,13 @@
                       write-evidence-row!))
   target)
 
+;; : (-> Symbol Object PooFeatureBundleV1ForeignArenaImage)
 (def (rejected-image reason detail)
   (make-foreign-arena-image
    'rejected #f #f (make-u8vector 0) (make-u8vector 0) 0
    (list (make-foreign-arena-diagnostic reason detail))))
 
+;; : (-> PooFeatureBundleV1LoweringPlan PooFeatureBundleV1ForeignArenaImage)
 (def (feature-bundle-v1-write-foreign-arena lowering-plan)
   (with-catch
    (lambda (failure)

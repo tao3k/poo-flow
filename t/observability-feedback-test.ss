@@ -1,142 +1,107 @@
 ;;; -*- Gerbil -*-
-;;; Contract: standalone scenario test for observability feedback receipts.
+;;; Contract: native POO observability Type/Contract scenario tests.
 
-(eval '(import "./src/observability/objects.ss"))
-(eval '(import "./src/observability/types.ss"))
-(eval '(import "./src/utilities/contracts.ss"))
+(export observability-feedback-test)
 
-;; : (-> PooFlowObservabilityExpr PooFlowObservabilityValue)
-(def (observability-eval expr)
-  (eval expr))
+(import :std/test
+        "../src/observability/objects.ss"
+        "../src/observability/types.ss"
+        (only-in "../src/module-system/types.ss"
+                 poo-flow-validation-evidence-accepted?))
 
-;; : (-> Alist Symbol PooFlowAlistValue)
 (def (observability-test-ref row key)
   (cdr (assq key row)))
 
-;; : (-> Alist Symbol Symbol PooFlowAlistValue)
 (def (observability-test-nested-ref row outer-key inner-key)
   (observability-test-ref (observability-test-ref row outer-key) inner-key))
 
-(unless (observability-eval
-         '(poo-flow-observability-prototype?
-           poo-flow-observability-receipt-prototype))
-  (error "receipt prototype should be a canonical observability prototype"))
+(def (observability-sandbox-diagnostic severity)
+  (poo-flow-observability-diagnostic-record
+   severity 'contract 'sandbox-resource-validator 'build #f
+   'permission-widening-denied
+   "build cannot widen filesystem write scope"
+   'author
+   '((module . sandbox) (resource . filesystem))))
 
-(unless (observability-eval
-         '(poo-flow-object-type-contract?
-           +poo-flow-observability-receipt-type-contract+))
-  (error "receipt type contract should be a structured contract object"))
+(def (observability-blocked-receipt diagnostic)
+  (poo-flow-observability-feedback-receipt
+   "poo-flow-observability-feedback/v1"
+   'sandbox-resource
+   (poo-flow-observability-graph
+    'sandbox-resource '((nodes . (build)) (edges . ())))
+   (list diagnostic)
+   (poo-flow-observability-repair
+    'author 'sandbox-resource-declaration '((field . filesystem)))
+   (poo-flow-observability-readiness 'blocked #f)
+   '((manifest-preview . #f))))
 
-(let (receipt-type-row
-      (observability-eval
-       '(poo-flow-object-type-contract->alist
-         +poo-flow-observability-receipt-type-contract+)))
-  (unless (and (eq? (observability-test-ref receipt-type-row 'object-kind)
-                    'PooFlowObservabilityReceipt)
-               (pair? (observability-test-ref receipt-type-row 'slots)))
-    (error "receipt type contract should project object kind and slot contracts")))
+(def (observability-ready-receipt)
+  (poo-flow-observability-feedback-receipt
+   "poo-flow-observability-feedback/v1"
+   'sandbox-resource
+   (poo-flow-observability-graph
+    'sandbox-resource
+    '((nodes . (build)) (edges . ()))
+    '((preview . ready)))
+   '()
+   (poo-flow-observability-repair #f #f)
+   (poo-flow-observability-readiness 'ready #t)
+   '((manifest-preview . report-only))))
 
-(def sandbox-diagnostic
-  (observability-eval
-   '(poo-flow-observability-diagnostic-record
-     'error
-     'contract
-     'sandbox-resource-validator
-     'build
-     #f
-     'permission-widening-denied
-     "build cannot widen filesystem write scope"
-     'author
-     '((module . sandbox) (resource . filesystem)))))
+(def observability-feedback-test
+  (test-suite
+   "native POO observability Type and Contract"
 
-(when (observability-eval
-       '(with-catch
-         (lambda (_failure) #f)
-         (lambda ()
-           (poo-flow-observability-diagnostic-record
-            'bad-severity
-            'contract
-            'sandbox-resource-validator
-            'build
-            #f
-            'permission-widening-denied
-            "build cannot widen filesystem write scope"
-            'author)
-           #t)))
-  (error "invalid diagnostic severity should fail the structured slot contract"))
+   (test-case "constructs a prototype-derived diagnostic and evidence"
+     (let (diagnostic (observability-sandbox-diagnostic 'error))
+       (check (poo-flow-observability-prototype?
+               poo-flow-observability-receipt-prototype) => #t)
+       (check (poo-flow-observability-diagnostic-contract? diagnostic) => #t)
+       (check (poo-flow-validation-evidence-accepted?
+               (poo-flow-observability-diagnostic-contract-evidence diagnostic))
+              => #t)
+       (check (poo-flow-observability-diagnostic-code diagnostic)
+              => 'permission-widening-denied)))
 
-(unless (eq? (observability-eval
-              `(poo-flow-observability-diagnostic-code ',sandbox-diagnostic))
-             'permission-widening-denied)
-  (error "diagnostic code should come from the validator reason"))
+   (test-case "rejects an invalid diagnostic obligation"
+     (check-exception
+      (observability-sandbox-diagnostic 'bad-severity)
+      true))
 
-(def blocked-receipt
-  (observability-eval
-   `(poo-flow-observability-feedback-receipt
-     "poo-flow-observability-feedback/v1"
-     'sandbox-resource
-     (poo-flow-observability-graph
-      'sandbox-resource
-      '((nodes . (build)) (edges . ())))
-     (list ',sandbox-diagnostic)
-     (poo-flow-observability-repair
-      'author
-      'sandbox-resource-declaration
-      '((field . filesystem)))
-     (poo-flow-observability-readiness
-      'blocked
-      #f)
-     '((manifest-preview . #f)))))
+   (test-case "projects blocked feedback from the admitted receipt"
+     (let* ((receipt
+             (observability-blocked-receipt
+              (observability-sandbox-diagnostic 'error)))
+            (feedback
+             (poo-flow-observability-agent-feedback
+              'poo-flow-agent-feedback
+              'accept-sandbox-resource
+              'repair-sandbox-resource
+              receipt)))
+       (check (poo-flow-observability-receipt-valid? receipt) => #f)
+       (check (observability-test-ref feedback 'next-action)
+              => 'repair-sandbox-resource)
+       (check (observability-test-ref feedback 'family)
+              => 'observability/receipt)
+       (check (observability-test-nested-ref feedback 'graph 'kind)
+              => 'sandbox-resource)
+       (check (observability-test-nested-ref feedback 'repair 'target-layer)
+              => 'author)
+       (check (observability-test-nested-ref feedback 'readiness 'state)
+              => 'blocked)
+       (check (member 'permission-widening-denied
+                      (observability-test-ref feedback 'diagnostic-codes))
+              ? values)))
 
-(when (observability-eval
-       `(poo-flow-observability-receipt-valid? ',blocked-receipt))
-  (error "blocked receipt with diagnostics should not validate as ready"))
-
-(let (feedback
-      (observability-eval
-       `(poo-flow-observability-agent-feedback
-         'poo-flow-agent-feedback
-         'accept-sandbox-resource
-         'repair-sandbox-resource
-         ',blocked-receipt)))
-  (unless (and (eq? (observability-test-ref feedback 'next-action)
-                    'repair-sandbox-resource)
-               (eq? (observability-test-ref feedback 'family)
-                    'observability/receipt)
-               (eq? (observability-test-nested-ref feedback 'graph 'kind)
-                    'sandbox-resource)
-               (eq? (observability-test-nested-ref feedback 'repair 'target-layer)
-                    'author)
-               (eq? (observability-test-nested-ref feedback 'readiness 'state)
-                    'blocked)
-               (member 'permission-widening-denied
-                       (observability-test-ref feedback 'diagnostic-codes)))
-    (error "blocked observability feedback should expose graph, repair, readiness, and diagnostic code")))
-
-(def ready-receipt
-  (observability-eval
-   '(poo-flow-observability-feedback-receipt
-     "poo-flow-observability-feedback/v1"
-     'sandbox-resource
-     (poo-flow-observability-graph
-      'sandbox-resource
-      '((nodes . (build)) (edges . ()))
-      '((preview . ready)))
-     '()
-     (poo-flow-observability-repair #f #f)
-     (poo-flow-observability-readiness 'ready #t)
-     '((manifest-preview . report-only)))))
-
-(let (feedback
-      (observability-eval
-       `(poo-flow-observability-agent-feedback
-         'poo-flow-agent-feedback
-         'accept-sandbox-resource
-         'repair-sandbox-resource
-         ',ready-receipt)))
-  (unless (and (observability-eval
-                `(poo-flow-observability-receipt-valid? ',ready-receipt))
-               (eq? (observability-test-ref feedback 'next-action)
-                    'accept-sandbox-resource)
-               (null? (observability-test-ref feedback 'diagnostic-codes)))
-    (error "ready observability feedback should accept and carry no diagnostic codes")))
+   (test-case "accepts ready feedback without diagnostics"
+     (let* ((receipt (observability-ready-receipt))
+            (feedback
+             (poo-flow-observability-agent-feedback
+              'poo-flow-agent-feedback
+              'accept-sandbox-resource
+              'repair-sandbox-resource
+              receipt)))
+       (check (poo-flow-observability-receipt-valid? receipt) => #t)
+       (check (observability-test-ref feedback 'next-action)
+              => 'accept-sandbox-resource)
+       (check (observability-test-ref feedback 'diagnostic-codes) => '())))))

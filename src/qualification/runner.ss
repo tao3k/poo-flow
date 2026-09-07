@@ -5,9 +5,9 @@
 
 (export #t)
 
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex)
+(import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/text/hex hex-encode))
 
 (def +poo-flow-ac10-release-gates+
   '(scheme-canonical-fixture runtime-v0-installed-consumer
@@ -76,27 +76,23 @@
 
 (def (poo-flow-qualification-gate-receipt gate source-revision accepted?
                                           evidence)
-  (object<-alist
-   (list (cons 'kind 'poo-flow.qualification-gate-receipt.v1)
-         (cons 'gate-id (.ref gate 'gate-id))
-         (cons 'owner (.ref gate 'owner))
-         (cons 'source-revision source-revision)
-         (cons 'declaration-digest
-               (poo-flow-qualification-gate-digest gate))
-         (cons 'artifact (.ref gate 'artifact))
-         (cons 'installed-consumer? (.ref gate 'installed-consumer?))
-         (cons 'accepted? accepted?)
-         (cons 'evidence evidence))))
+  (.o (kind 'poo-flow.qualification-gate-receipt.v1)
+      (gate-id (.ref gate 'gate-id))
+      (owner (.ref gate 'owner))
+      (source-revision source-revision)
+      (declaration-digest (poo-flow-qualification-gate-digest gate))
+      (artifact (.ref gate 'artifact))
+      (installed-consumer? (.ref gate 'installed-consumer?))
+      (accepted? accepted?)
+      (evidence evidence)))
 
 (def (poo-flow-qualification-run-receipt mode source-revision gate-receipts)
-  (object<-alist
-   (list (cons 'kind 'poo-flow.qualification-run-receipt.v1)
-         (cons 'mode mode)
-         (cons 'source-revision source-revision)
-         (cons 'gate-receipts gate-receipts)
-         (cons 'accepted?
-               (andmap (lambda (receipt) (.ref receipt 'accepted?))
-                       gate-receipts)))))
+  (.o (kind 'poo-flow.qualification-run-receipt.v1)
+      (mode mode)
+      (source-revision source-revision)
+      (gate-receipts gate-receipts)
+      (accepted?
+       (andmap (lambda (receipt) (.ref receipt 'accepted?)) gate-receipts))))
 
 (def (find-gate id gates)
   (find (lambda (gate) (eq? id (.ref gate 'gate-id))) gates))
@@ -135,11 +131,10 @@
                 (not (.ref receipt 'installed-consumer?)))
            (reject! 'installed-consumer-required id)))))
      required)
-    (object<-alist
-     (list (cons 'kind 'poo-flow.qualification-verification-receipt.v1)
-           (cons 'accepted? (null? diagnostics))
-           (cons 'code (if (null? diagnostics) 'verified 'rejected))
-           (cons 'diagnostics (reverse diagnostics))))))
+    (.o (kind 'poo-flow.qualification-verification-receipt.v1)
+        (accepted? (null? diagnostics))
+        (code (if (null? diagnostics) 'verified 'rejected))
+        (diagnostics (reverse diagnostics)))))
 
 (def (poo-flow-qualification-run-receipt->alist receipt)
   (list

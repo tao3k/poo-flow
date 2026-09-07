@@ -33,6 +33,7 @@
                      no-runtime-execution))))
 
 ;;; Proof facts stay as bounded rows for Lean/FFI handoff.
+;; : (forall (id rule) (-> id Boolean Boolean Boolean Boolean Boolean rule Alist))
 ;; : (-> Symbol Boolean Boolean Boolean Boolean Boolean Symbol Alist)
 (def (poo-flow-composition-contract->proof-facts
       fact-id

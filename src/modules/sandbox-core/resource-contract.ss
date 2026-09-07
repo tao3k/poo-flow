@@ -4,17 +4,19 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .ref .slot? object?)
+        (only-in :clan/poo/mop element? raise-type-error)
         (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
-        (only-in "../../utilities/contracts.ss"
-                 poo-flow-slot-contract-slot
-                 poo-flow-slot-contract-value-kind
-                 poo-flow-slot-contract-metadata
-                 poo-flow-object-type-contract->alist
-                 poo-flow-contract-check-slot!)
-        (only-in "../../utilities/contract-syntax.ss"
-                 defcontract-family)
+        (only-in "../../module-system/contract-schema.ss"
+                 poo-flow-contract-slot
+                 poo-flow-contract-slot-metadata
+                 poo-flow-contract-slot-name
+                 poo-flow-contract-slot-report-kind
+                 poo-flow-contract-slot-type
+                 poo-flow-contract-value-type
+                 poo-flow-native-contract
+                 poo-flow-native-contract->alist)
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/type-facts/objects)
 
@@ -25,14 +27,7 @@
         poo-flow-runtime-volume-resources-prototype
         poo-flow-snapshot-resources-prototype
         poo-flow-runtime-volume-ports-resources-prototype
-        +poo-flow-sandbox-resources-prototype-filesystem-slot-contract+
-        +poo-flow-sandbox-resources-prototype-cpu-slot-contract+
-        +poo-flow-sandbox-resources-prototype-ports-slot-contract+
-        +poo-flow-sandbox-resources-prototype-memory-slot-contract+
-        +poo-flow-sandbox-resources-prototype-timeout-slot-contract+
-        +poo-flow-sandbox-resources-prototype-slot-contracts+
-        +poo-flow-sandbox-resources-prototype-type-contract+
-        +poo-flow-sandbox-resources-prototype-slots+
+        PooFlowSandboxResourcesPrototypeContract
         poo-flow-sandbox-resources-prototype-type-contract->alist
         poo-flow-sandbox-resources-prototype-contract-validation
         poo-flow-sandbox-resources-prototype-contract-validation-valid?
@@ -45,50 +40,7 @@
         poo-flow-sandbox-resources-prototype->resource-policy
         poo-flow-sandbox-resources-value->resource-policy)
 
-;;; Runtime resources are modeled as a first-class POO object so backend
-;;; profiles can extend concrete slots without reintroducing ad hoc alists.
-;; : PooSandboxFilesystemPrototype
-(.def poo-flow-runtime-filesystem-prototype
-  scope: 'runtime
-  materialized-by: 'runtime
-  mounts: 'runtime)
-
-;; : PooSandboxFilesystemPrototype
-(.def poo-flow-runtime-volume-filesystem-prototype
-  scope: 'volume
-  materialized-by: 'runtime
-  mounts: 'runtime)
-
-;; : PooSandboxFilesystemPrototype
-(.def poo-flow-snapshot-filesystem-prototype
-  scope: 'snapshot
-  snapshot: 'clone)
-
-;; : PooSandboxResourcesPrototype
-(.def poo-flow-runtime-filesystem-resources-prototype
-  filesystem: poo-flow-runtime-filesystem-prototype
-  cpu: 2
-  memory: "4Gi")
-
-;; : PooSandboxResourcesPrototype
-(.def poo-flow-runtime-volume-resources-prototype
-  filesystem: poo-flow-runtime-volume-filesystem-prototype
-  cpu: 2
-  memory: "4Gi")
-
-;; : PooSandboxResourcesPrototype
-(.def poo-flow-snapshot-resources-prototype
-  filesystem: poo-flow-snapshot-filesystem-prototype
-  cpu: 2
-  memory: "4Gi")
-
-;; : PooSandboxResourcesPrototype
-(.def poo-flow-runtime-volume-ports-resources-prototype
-  filesystem: poo-flow-runtime-volume-filesystem-prototype
-  ports: '((scope . runtime)
-           (published-by . runtime))
-  cpu: 2
-  memory: "4Gi")
+(import :poo-flow/src/modules/sandbox-core/resource-prototypes)
 
 ;; : PooSandboxResourcesPrototypeContractValidationKind
 (def poo-flow-sandbox-resources-prototype-contract-validation-kind
@@ -98,64 +50,54 @@
 (def poo-flow-sandbox-resources-prototype-contract-validation-schema
   "poo-flow-sandbox-resources-prototype-contract-validation/v1")
 
-;; : (-> ContractFamilyDeclaration ContractFamilyDefinitions)
-;;   | doc m%
-;;       Declare sandbox resource slot contracts as structured data while
-;;       keeping sandbox resource semantics in sandbox-core.
-;;
-;;       # Examples
-;;       ```scheme
-;;       +poo-flow-sandbox-resources-prototype-slot-contracts+
-;;       ;; => sandbox-resource-slot-contract-list
-;;       ```
-;;     %
-(defcontract-family
-  +poo-flow-sandbox-resources-prototype-slot-contracts+
-  +poo-flow-sandbox-resources-prototype-type-contract+
-  'sandbox/resources
-  'sandbox-core
-  'PooSandboxResourcesPrototype
-  '((scope . sandbox-core) (projection . resource-contract))
-  ((+poo-flow-sandbox-resources-prototype-filesystem-slot-contract+
-    'sandbox.resources/filesystem
-    'filesystem
-    'PooSandboxFilesystemPrototype
-    'object?
-    object?
-    #t
-    '((scope . sandbox-core) (slot . filesystem) (merge . node-extend)))
-   (+poo-flow-sandbox-resources-prototype-cpu-slot-contract+
-    'sandbox.resources/cpu
-    'cpu
-    'Number
-    'number?
-    number?
-    #t
-    '((scope . sandbox-core) (slot . cpu) (merge . override)))
-   (+poo-flow-sandbox-resources-prototype-ports-slot-contract+
-    'sandbox.resources/ports
-    'ports
-    'List
-    'list?
-    list?
-    #f
-    '((scope . sandbox-core) (slot . ports) (optional . #t) (merge . override)))
-   (+poo-flow-sandbox-resources-prototype-memory-slot-contract+
-    'sandbox.resources/memory
-    'memory
-    'String
-    'string?
-    string?
-    #t
-    '((scope . sandbox-core) (slot . memory) (merge . override)))
-   (+poo-flow-sandbox-resources-prototype-timeout-slot-contract+
-    'sandbox.resources/timeout-ms
-    'timeout-ms
-    'Number
-    'number?
-    number?
-    #f
-    '((scope . sandbox-core) (slot . timeout-ms) (optional . #t) (merge . override)))))
+(def PooFlowSandboxFilesystemType
+  (poo-flow-contract-value-type
+   'PooSandboxFilesystemPrototype object? 'PooSandboxFilesystemPrototype))
+(def PooFlowSandboxNumberType
+  (poo-flow-contract-value-type 'Number number? 'Number))
+(def PooFlowSandboxListType
+  (poo-flow-contract-value-type 'List list? 'List))
+(def PooFlowSandboxStringType
+  (poo-flow-contract-value-type 'String string? 'String))
+
+(def PooFlowSandboxFilesystemSlot
+  (poo-flow-contract-slot
+   'sandbox.resources/filesystem 'filesystem PooFlowSandboxFilesystemType #t
+   '((scope . sandbox-core) (slot . filesystem) (merge . node-extend))))
+(def PooFlowSandboxCpuSlot
+  (poo-flow-contract-slot
+   'sandbox.resources/cpu 'cpu PooFlowSandboxNumberType #t
+   '((scope . sandbox-core) (slot . cpu) (merge . override))))
+(def PooFlowSandboxPortsSlot
+  (poo-flow-contract-slot
+   'sandbox.resources/ports 'ports PooFlowSandboxListType #f
+   '((scope . sandbox-core) (slot . ports) (optional . #t) (merge . override))))
+(def PooFlowSandboxMemorySlot
+  (poo-flow-contract-slot
+   'sandbox.resources/memory 'memory PooFlowSandboxStringType #t
+   '((scope . sandbox-core) (slot . memory) (merge . override))))
+(def PooFlowSandboxTimeoutSlot
+  (poo-flow-contract-slot
+   'sandbox.resources/timeout-ms 'timeout-ms PooFlowSandboxNumberType #f
+   '((scope . sandbox-core) (slot . timeout-ms) (optional . #t) (merge . override))))
+
+(def PooFlowSandboxResourceSlotContracts
+  (list PooFlowSandboxFilesystemSlot
+        PooFlowSandboxCpuSlot
+        PooFlowSandboxPortsSlot
+        PooFlowSandboxMemorySlot
+        PooFlowSandboxTimeoutSlot))
+
+(def PooFlowSandboxResourcesPrototypeContract
+  (poo-flow-native-contract
+   'sandbox/resources
+   'sandbox-core
+   'PooSandboxResourcesPrototype
+   object?
+   PooFlowSandboxResourceSlotContracts
+   (lambda (resources slot) (and (object? resources) (.slot? resources slot)))
+   (lambda (resources slot) (.ref resources slot))
+   '((scope . sandbox-core) (projection . resource-contract))))
 
 ;; : (-> List List List)
 (def (poo-flow-sandbox-resource-rows/tail rows tail)
@@ -228,14 +170,13 @@
      (cdr resource-policy)))))
 
 ;; : [Symbol]
-(def +poo-flow-sandbox-resources-prototype-slots+
-  (map poo-flow-slot-contract-slot
-       +poo-flow-sandbox-resources-prototype-slot-contracts+))
+(def PooFlowSandboxResourcesPrototypeSlots
+  (map poo-flow-contract-slot-name
+       PooFlowSandboxResourceSlotContracts))
 
 ;; : (-> Alist)
 (def (poo-flow-sandbox-resources-prototype-type-contract->alist)
-  (poo-flow-object-type-contract->alist
-   +poo-flow-sandbox-resources-prototype-type-contract+))
+  (poo-flow-native-contract->alist PooFlowSandboxResourcesPrototypeContract))
 
 ;;; Boundary: sandbox resources prototype slot if present is the policy-visible
 ;;; edge for sandbox, core behavior, keeping validation, lookup, or projection
@@ -251,7 +192,7 @@
 (def (poo-flow-sandbox-resources-prototype-present-slots resources)
   (if (object? resources)
     (filter (lambda (slot) (.slot? resources slot))
-            +poo-flow-sandbox-resources-prototype-slots+)
+            PooFlowSandboxResourcesPrototypeSlots)
     '()))
 
 ;; : (-> PooSandboxResourcesPrototype HashTable)
@@ -286,27 +227,27 @@
 
 ;; : (-> PooFlowSlotContract Symbol)
 (def (poo-flow-sandbox-resources-prototype-slot-merge contract)
-  (let (entry (assoc 'merge (poo-flow-slot-contract-metadata contract)))
+  (let (entry (assoc 'merge (poo-flow-contract-slot-metadata contract)))
     (if entry (cdr entry) 'override)))
 
 ;; : (-> PooSandboxResourcesPrototype PooFlowSlotContract Value)
 (def (poo-flow-sandbox-resources-prototype-slot-default resources contract)
   (poo-flow-sandbox-resources-prototype-slot/default
    resources
-   (poo-flow-slot-contract-slot contract)
+   (poo-flow-contract-slot-name contract)
    #f))
 
 ;; : (-> PooFlowSlotContract Value HashTable)
 (def (poo-flow-sandbox-resources-prototype-field-contract contract default)
-  (let (field (poo-flow-slot-contract-slot contract))
+  (let (field (poo-flow-contract-slot-name contract))
     (poo-flow-sandbox-contract-receipt
      (cons 'field field)
      (cons 'identity field)
-     (cons 'valueKind (poo-flow-slot-contract-value-kind contract))
-     (cons 'value-kind (poo-flow-slot-contract-value-kind contract))
+     (cons 'valueKind (poo-flow-contract-slot-report-kind contract))
+     (cons 'value-kind (poo-flow-contract-slot-report-kind contract))
      (cons 'merge (poo-flow-sandbox-resources-prototype-slot-merge contract))
      (cons 'default default)
-     (cons 'metadata (poo-flow-slot-contract-metadata contract)))))
+     (cons 'metadata (poo-flow-contract-slot-metadata contract)))))
 
 ;; : (-> PooSandboxResourcesPrototype [HashTable])
 (def (poo-flow-sandbox-resources-prototype-field-contracts resources)
@@ -315,7 +256,7 @@
      (poo-flow-sandbox-resources-prototype-field-contract
       contract
       (poo-flow-sandbox-resources-prototype-slot-default resources contract)))
-   +poo-flow-sandbox-resources-prototype-slot-contracts+))
+   PooFlowSandboxResourceSlotContracts))
 
 ;; : (-> Symbol String Dyn Alist)
 (def (poo-flow-sandbox-resources-prototype-diagnostic code message value)
@@ -444,7 +385,7 @@
 (def (poo-flow-sandbox-resources-prototype-slot-contract-diagnostics
       resources
       contract)
-  (let (slot (poo-flow-slot-contract-slot contract))
+  (let (slot (poo-flow-contract-slot-name contract))
     (if (and (object? resources)
              (.slot? resources slot)
              (poo-flow-sandbox-resources-prototype-slot-readable? resources slot))
@@ -458,8 +399,12 @@
             (cons 'slot slot)
             (cons 'value (.ref resources slot))))))
        (lambda ()
-         (poo-flow-contract-check-slot! contract (.ref resources slot))
-         '()))
+         (let (value (.ref resources slot))
+           (if (element? (poo-flow-contract-slot-type contract) value)
+             '()
+             (raise-type-error
+              (poo-flow-contract-slot-type contract)
+              value)))))
       '())))
 
 ;; : (-> PooSandboxResourcesPrototype [Alist])
@@ -471,7 +416,7 @@
       (poo-flow-sandbox-resources-prototype-slot-contract-diagnostics
        resources
        contract))
-    +poo-flow-sandbox-resources-prototype-slot-contracts+)
+    PooFlowSandboxResourceSlotContracts)
    '()))
 
 ;;; Boundary: sandbox resources prototype missing slot diagnostics is the

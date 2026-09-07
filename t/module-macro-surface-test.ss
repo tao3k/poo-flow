@@ -6,6 +6,7 @@
                  check-equal?
                  test-case
                  test-suite)
+        (only-in :clan/poo/object .ref)
         (only-in :poo-flow/src/module-system/init-syntax
                  poo-flow-profile-extend)
         (only-in :poo-flow/src/module-system/load-syntax
@@ -21,6 +22,11 @@
                  poo-flow-kernel-profile)
         (only-in :poo-flow/src/module-system/projection-syntax
                  poo-flow-module-field-rows/tail)
+        (only-in :poo-flow/src/module-system/durable-artifact-policy
+                 artifact-module
+                 database-module
+                 poo-flow-artifact-profile?
+                 poo-flow-artifact-database-profile?)
         :poo-flow/src/modules/cubeSandbox/config
         :poo-flow/src/modules/docker-sandbox/config
         :poo-flow/src/modules/nono-sandbox/config
@@ -108,6 +114,15 @@
     (:derive nono/list (scope . task))
     (metadata (derived-by . collection)))))
 
+;;; Durable module macros lower their named rows to fixed POO profile values.
+(def durable-artifact-module-witness
+  (artifact-module
+    (profile macro-artifact :scope (session) :storage (file-system))))
+
+(def durable-database-module-witness
+  (database-module
+    (profile macro-database :kind libsql :storage (file-system))))
+
 ;; : (-> [PooSandboxProfile] [Symbol])
 (def (profile-names profiles)
   (map poo-flow-sandbox-profile-name profiles))
@@ -133,6 +148,15 @@
         (kind 'module)
         (name 'syntax-surface))
        '((kind . module) (name . syntax-surface) (tail . value))))
+    (test-case "durable module macros expose POO-native named profiles"
+      (check-equal?
+       (poo-flow-artifact-profile?
+        (.ref durable-artifact-module-witness 'macro-artifact))
+       #t)
+      (check-equal?
+       (poo-flow-artifact-database-profile?
+        (.ref durable-database-module-witness 'macro-database))
+       #t))
     (test-case "backend profile macros construct and derive POO profiles"
       (check-equal? (poo-flow-sandbox-profile-backend-kind
                      cube-direct-profile)

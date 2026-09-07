@@ -33,8 +33,9 @@
 
 ;; : (-> PooModuleObject Symbol Symbol)
 (def (field-value-kind object field)
-  (poo-flow-module-field-contract-value-kind
-   (required-field object field)))
+  (poo-flow-module-value-type-kind
+   (poo-flow-module-field-contract-value-type
+    (required-field object field))))
 
 ;; : (-> PooModuleObject Symbol Alist)
 (def (field-metadata object field)

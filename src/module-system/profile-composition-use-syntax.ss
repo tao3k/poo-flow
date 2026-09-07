@@ -128,7 +128,18 @@
 
 ;;; Expand the canonical declarative composition grammar into POO-native
 ;;; module, profile, clause, stage, and composition builders.
-;; : (-> Syntax Syntax)
+;; use-composition
+;;   : (-> Syntax Syntax)
+;;   | doc m%
+;;       Expand a validated composition plan into ordinary POO-native builders.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (use-composition application (module runtime))
+;;       ;; => binds the validated application composition
+;;       ```
+;;     %
 (defsyntax (use-composition stx)
   (syntax-case stx ()
     ((_ composition-name module-form form ...)

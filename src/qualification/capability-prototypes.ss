@@ -3,7 +3,7 @@
 
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
         (only-in :std/srfi/1 fold fold-right))
 

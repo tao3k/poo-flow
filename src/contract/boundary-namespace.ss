@@ -256,6 +256,7 @@
        'negative
        '((scope . boundary)))))))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooFlowBoundaryNamespaceValidation Alist)
 (def (poo-flow-boundary-namespace-validation->alist validation)
   (list

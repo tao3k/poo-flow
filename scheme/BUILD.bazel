@@ -202,11 +202,31 @@ gerbil_project_projection(
     source = "//packages/python-runtime/src/poo_flow_runtime:wheel_smoke_projection_source",
 )
 
+native_contract_test_sources = ["//:scheme_build_sources"]
+
+precise_test_sources = {
+    "contract_schema_test": native_contract_test_sources,
+    "graph_native_type_contract_test": native_contract_test_sources,
+    "loop_native_type_contract_test": native_contract_test_sources,
+    "module_object_native_type_contract_test": native_contract_test_sources,
+    "observability_native_type_contract_test": native_contract_test_sources,
+    "sandbox_profile_native_type_contract_test": native_contract_test_sources,
+    "sandbox_resource_native_type_contract_test": native_contract_test_sources,
+    "session_native_type_contract_test": native_contract_test_sources,
+    "type_facts_native_projection_test": native_contract_test_sources,
+    "json_schema_native_contract_test": native_contract_test_sources + [
+        "//:json_schema_native_contract_test_support",
+    ],
+    "type_contract_performance_test": native_contract_test_sources + [
+        "//:type_contract_performance_test_support",
+    ],
+}
+
 [
     gerbil_project_test(
         name = name,
         size = size,
-        srcs = "//:scheme_test_sources",
+        srcs = precise_test_sources.get(name, "//:scheme_test_sources"),
         project = ":compile",
         source_root_marker = "//:scheme_source_root_marker",
         tags = ["exclusive"],
@@ -227,7 +247,62 @@ gerbil_project_projection(
         ("contract_tests", "medium", "//:t/contract-tests.ss"),
         ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
         ("integration_tests", "medium", "//:t/integration-tests.ss"),
+        (
+            "observability_native_type_contract_test",
+            "small",
+            "//:t/observability-feedback-test.ss",
+        ),
+        (
+            "module_object_native_type_contract_test",
+            "small",
+            "//:t/module-object-validation-test.ss",
+        ),
+        (
+            "graph_native_type_contract_test",
+            "small",
+            "//:t/graph-native-type-contract-test.ss",
+        ),
+        (
+            "sandbox_resource_native_type_contract_test",
+            "small",
+            "//:t/sandbox-resource-native-type-contract-test.ss",
+        ),
+        (
+            "sandbox_profile_native_type_contract_test",
+            "small",
+            "//:t/sandbox-profile-native-type-contract-test.ss",
+        ),
+        (
+            "session_native_type_contract_test",
+            "small",
+            "//:t/session-policy-native-type-contract-test.ss",
+        ),
+        (
+            "loop_native_type_contract_test",
+            "small",
+            "//:t/loop-native-type-contract-test.ss",
+        ),
+        (
+            "contract_schema_test",
+            "small",
+            "//:t/contract-schema-test.ss",
+        ),
+        (
+            "json_schema_native_contract_test",
+            "small",
+            "//:t/json-schema-native-contract-tests.ss",
+        ),
+        (
+            "type_facts_native_projection_test",
+            "small",
+            "//:t/type-facts-contract-projection-test.ss",
+        ),
         ("performance_tests", "large", "//:t/performance-tests.ss"),
+        (
+            "type_contract_performance_test",
+            "small",
+            "//:t/type-contract-performance-test.ss",
+        ),
         (
             "user_interface_config_sandbox_case_test",
             "medium",
@@ -249,6 +324,16 @@ test_suite(
         ":compile_performance_budget_unit_test",
         ":contract_tests",
         ":integration_tests",
+        ":graph_native_type_contract_test",
+        ":contract_schema_test",
+        ":json_schema_native_contract_test",
+        ":loop_native_type_contract_test",
+        ":module_object_native_type_contract_test",
+        ":observability_native_type_contract_test",
+        ":sandbox_profile_native_type_contract_test",
+        ":sandbox_resource_native_type_contract_test",
+        ":session_native_type_contract_test",
+        ":type_facts_native_projection_test",
         ":protocol_person_promotion_test",
         ":protocol_person_runtime_abi_test",
         ":unit_tests",

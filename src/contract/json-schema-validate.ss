@@ -5,13 +5,14 @@
 
 (import (only-in :clan/poo/object
                  object?)
-        (only-in "../utilities/contracts.ss"
-                 poo-flow-object-type-contract-key
-                 poo-flow-object-type-contract-slots
-                 poo-flow-slot-contract-slot
-                 poo-flow-slot-contract-predicate
-                 poo-flow-slot-contract-required?
-                 poo-flow-slot-contract->alist)
+        (only-in :clan/poo/mop element?)
+        (only-in "../module-system/contract-schema.ss"
+                 poo-flow-contract-slot-name
+                 poo-flow-contract-slot-required?
+                 poo-flow-contract-slot-type
+                 poo-flow-contract-slot->alist
+                 poo-flow-native-contract-key
+                 poo-flow-native-contract-slots)
         (only-in "./functional.ss"
                  poo-flow-contract-any?
                  poo-flow-contract-append-map
@@ -132,9 +133,9 @@
    'error
    'missing-required-slot
    "Required JSON Schema contract slot is missing"
-   (poo-flow-slot-contract-slot slot-contract)
+   (poo-flow-contract-slot-name slot-contract)
    candidate
-   (poo-flow-slot-contract->alist slot-contract)
+   (poo-flow-contract-slot->alist slot-contract)
    '((owner . json-schema-validate))))
 
 ;; : (-> JsonSchemaValidationPath JsonSchemaCandidateSlotValue JsonSchemaContractAlist PooFlowJsonSchemaValidationDiagnostic)
@@ -155,9 +156,9 @@
    'error
    'invalid-slot-value
    "JSON Schema contract slot predicate rejected the value"
-   (poo-flow-slot-contract-slot slot-contract)
+   (poo-flow-contract-slot-name slot-contract)
    value
-   (poo-flow-slot-contract->alist slot-contract)
+   (poo-flow-contract-slot->alist slot-contract)
    '((owner . json-schema-validate))))
 
 ;; : (-> Symbol String JsonSchemaValidationPath JsonSchemaCandidateSlotValue JsonSchemaContractAlist PooFlowJsonSchemaValidationDiagnostic)
@@ -386,14 +387,14 @@
   (let (value
         (poo-flow-json-schema-candidate-slot
          candidate
-         (poo-flow-slot-contract-slot slot-contract)))
+         (poo-flow-contract-slot-name slot-contract)))
     (cond
      ((eq? value +poo-flow-json-schema-validation-missing+)
-      (and (poo-flow-slot-contract-required? slot-contract)
+      (and (poo-flow-contract-slot-required? slot-contract)
            (poo-flow-json-schema-missing-required-diagnostic
             slot-contract
             candidate)))
-     (((poo-flow-slot-contract-predicate slot-contract) value)
+     ((element? (poo-flow-contract-slot-type slot-contract) value)
       #f)
      (else
       (poo-flow-json-schema-invalid-slot-diagnostic
@@ -457,15 +458,15 @@
 
 ;; : (-> PooFlowObjectTypeContract [Diagnostic] PooFlowJsonSchemaObjectContractValidation)
 (def (poo-flow-json-schema-validation-receipt object-contract diagnostics)
-  (let (slots (poo-flow-object-type-contract-slots object-contract))
+  (let (slots (poo-flow-native-contract-slots object-contract))
     (make-poo-flow-json-schema-object-contract-validation
      'json-schema-object-contract-validation
      "poo-flow-json-schema-object-contract-validation/v1"
-     (poo-flow-object-type-contract-key object-contract)
+     (poo-flow-native-contract-key object-contract)
      (poo-flow-json-schema-validation-diagnostics-valid? diagnostics)
      diagnostics
      (poo-flow-contract-project-list
-      poo-flow-slot-contract-slot
+      poo-flow-contract-slot-name
       slots)
      (poo-flow-json-schema-validation-slots-by-reason
       diagnostics
@@ -485,7 +486,7 @@
 ;; : (-> PooFlowObjectTypeContract JsonSchemaCandidateObject PooFlowJsonSchemaObjectContractValidation)
 (def (poo-flow-json-schema-object-contract-validate object-contract candidate)
   (let* ((slots
-          (poo-flow-object-type-contract-slots object-contract))
+          (poo-flow-native-contract-slots object-contract))
          (shape-diagnostics
           (if (or (poo-flow-contract-json-object? candidate)
                   (object? candidate))

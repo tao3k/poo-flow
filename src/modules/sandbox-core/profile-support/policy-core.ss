@@ -150,7 +150,7 @@
 ;;     %
 ;;; Profile policy options share the same row shape across sandbox backends.
 ;;; - Keep kind/value/default metadata construction centralized for backend and profile helpers.
-;; : (-> Alist Symbol Any Any)
+;; : (-> Alist Symbol Object Object)
 (def (poo-flow-sandbox-profile-policy-option options key default-value)
   (let (entry (assoc key options))
     (if entry (cdr entry) default-value)))
@@ -220,6 +220,7 @@
 ;;       (poo-flow-sandbox-profile-policy-object-slot/default '() 'network-policy 'deny)
 ;;       ;; => deny
 ;;       ```
+;;     %
 (def (poo-flow-sandbox-profile-policy-object-slot/default object
                                                            key
                                                            default-value)

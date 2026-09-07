@@ -1,6 +1,9 @@
+;;; Boundary: encodes fixed-layout Runtime v0 batches from validated bundle events.
+;;; Invariant: batching preserves canonical order and never changes event identity.
 (export #t)
 
-(import :clan/poo/object :std/sort
+(import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :std/sort sort)
         (only-in :std/srfi/1 fold))
 
 (def +poo-flow-runtime-v0-layout-version+ 1)

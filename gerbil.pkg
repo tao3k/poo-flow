@@ -1,4 +1,10 @@
 (package:
  poo-flow
 depend:
- ("github.com/tao3k/asp-gerbil-scheme@0692a0e94979c8bdb1a988cf6e497e961e336f55"))
+ ("github.com/tao3k/asp-gerbil-scheme@0692a0e94979c8bdb1a988cf6e497e961e336f55")
+policy:
+ ((macro-governance
+   explanation:
+   "Public macros are thin hygienic projections whose expansion families are exercised by parser-visible executable test owners."
+   witnesses:
+   (("poo-flow-memory-field-rows" "t/memory-core-test.ss")))))

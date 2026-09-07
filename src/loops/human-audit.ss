@@ -2,7 +2,7 @@
 ;;; Boundary: human audit loops project review decisions over loop facts.
 ;;; Invariant: this module never edits config, schedules loops, or executes runtime work.
 
-(import (only-in :clan/poo/object .o object?)
+(import (only-in :clan/poo/object .o .ref .slot? object?)
         :poo-flow/src/core/roles
         :poo-flow/src/core/failure
         :poo-flow/src/core/object-syntax
@@ -13,13 +13,12 @@
                  loop-governor-human-node-role
                  loop-governor-node->contract
                  loop-governor-validation-errors)
-        (only-in "../utilities/contracts.ss"
-                 poo-flow-contract-alist?
-                 poo-flow-contract-list-of?
+        (only-in "../module-system/contract-schema.ss"
                  poo-flow-contract-check-slot!
-                 poo-flow-object-type-contract->alist)
-        (only-in "../utilities/contract-syntax.ss"
-                 defcontract-family))
+                 poo-flow-contract-slot
+                 poo-flow-contract-value-type
+                 poo-flow-native-contract
+                 poo-flow-native-contract->alist))
 
 (export +loop-human-audit-schema+
         +loop-human-audit-decisions+
@@ -61,6 +60,8 @@
         loop-human-audit->agent-operation
         loop-human-audit->runtime-snapshot
         loop-human-audit->contract)
+
+(import :poo-flow/src/loops/human-audit-value-support)
 
 ;;; Boundary: schema names the human audit review contract.
 ;; : (-> Unit Symbol)
@@ -191,57 +192,6 @@
 (def (loop-human-audit-slot audit slot default)
   (role-slot/default audit slot default))
 
-;;; Boundary: loop human audit alist ref is the policy-visible edge for loop
-;;; behavior, keeping validation, lookup, or projection responsibilities
-;;; centralized for callers.
-;; : (-> Alist Symbol Value Value)
-(def (loop-human-audit-alist-ref alist key default)
-  (cond
-   ((assoc key alist) => cdr)
-   (else default)))
-
-;; | LoopHumanAuditDecisionCandidate = Symbol
-;; : (-> LoopHumanAuditDecisionCandidate (List LoopHumanAuditDecisionCandidate) Boolean)
-(def (loop-human-audit-member? value values)
-  (cond
-   ((null? values) #f)
-   ((equal? value (car values)) #t)
-   (else
-    (loop-human-audit-member? value (cdr values)))))
-
-;; loop-human-audit-alist?
-;;   : (-> PooFlowValue Boolean)
-;;   | doc m%
-;;       Recognize proper alist values used by audit review projections.
-;;       # Examples
-;;       (loop-human-audit-alist? '((mode . review-loop)))
-;;       # Result
-;;       #t for proper association lists.
-;;     %
-(def (loop-human-audit-alist? value)
-  (poo-flow-contract-alist? value))
-
-;; loop-human-audit-list-of?
-;;   : (-> (-> PooFlowValue Boolean) PooFlowValue Boolean)
-;;   | doc m%
-;;       Recognize proper human-audit lists whose elements satisfy a predicate.
-;;       # Examples
-;;       (loop-human-audit-list-of? symbol? '(pending approved))
-;;       # Result
-;;       #t when every element satisfies the supplied predicate.
-;;     %
-(def (loop-human-audit-list-of? predicate values)
-  (poo-flow-contract-list-of? predicate values))
-
-;; : (-> PooFlowValue Boolean)
-(def (loop-human-audit-state-fact-list? value)
-  (loop-human-audit-list-of? loop-human-audit-alist? value))
-
-;; : (-> PooFlowValue Boolean)
-(def (loop-human-audit-governor-contract? value)
-  (or (not value)
-      (loop-human-audit-alist? value)))
-
 ;; : (-> PooFlowValue Boolean)
 (def (loop-human-audit-decision-entry? value)
   (and (pair? value)
@@ -262,7 +212,7 @@
 ;;       An alist representation for doctor, graph explanation, and manifests.
 ;;     %
 (def (loop-human-audit-type-contract->alist)
-  (poo-flow-object-type-contract->alist +loop-human-audit-type-contract+))
+  (poo-flow-native-contract->alist +loop-human-audit-type-contract+))
 
 ;; loop-human-audit-check-slot!
 ;;   : (-> PooFlowSlotContract PooFlowValue PooFlowValue)
@@ -576,114 +526,100 @@
 ;;; centralized for callers.
 ;; : (-> LoopHumanAudit Alist)
 
-(defcontract-family
-  +loop-human-audit-slot-contracts+
-  +loop-human-audit-type-contract+
-  'loop-human-audit
-  'loops
-  'LoopHumanAudit
-  '((boundary . loop-human-audit) (projection . human-review-loop))
-  ((+loop-human-audit-name-contract+
-    'loop-human-audit/name
-    'name
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+loop-human-audit-governor-contract+
-    'loop-human-audit/governor
-    'governor
-    'LoopGovernor
-    'loop-governor?
-    loop-governor?
-    #t
-    '())
-   (+loop-human-audit-governor-contract-slot-contract+
-    'loop-human-audit/governor-contract
-    'governor-contract
-    'MaybeAlist
-    'loop-human-audit-governor-contract?
-    loop-human-audit-governor-contract?
-    #t
-    '())
-   (+loop-human-audit-state-facts-contract+
-    'loop-human-audit/state-facts
-    'state-facts
-    '[Alist]
-    'loop-human-audit-state-fact-list?
-    loop-human-audit-state-fact-list?
-    #t
-    '())
-   (+loop-human-audit-decisions-contract+
-    'loop-human-audit/decisions
-    'decisions
-    '[LoopHumanAuditDecision]
-    'loop-human-audit-decision-list?
-    loop-human-audit-decision-list?
-    #t
-    '())
-   (+loop-human-audit-review-policy-contract+
-    'loop-human-audit/review-policy
-    'review-policy
-    'Alist
-    'loop-human-audit-alist?
-    loop-human-audit-alist?
-    #t
-    '())
-   (+loop-human-audit-governor-derived-contract+
-    'loop-human-audit/governor-derived
-    'governor-derived
-    'Boolean
-    'boolean?
-    boolean?
-    #t
-    '())
-   (+loop-human-audit-governance-node-kind-contract+
-    'loop-human-audit/governance-node-kind
-    'governance-node-kind
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+loop-human-audit-human-intervention-contract+
-    'loop-human-audit/human-intervention
-    'human-intervention
-    'Boolean
-    'boolean?
-    boolean?
-    #t
-    '())
-   (+loop-human-audit-control-owner-contract+
-    'loop-human-audit/control-owner
-    'control-owner
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+loop-human-audit-decision-owner-contract+
-    'loop-human-audit/decision-owner
-    'decision-owner
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+loop-human-audit-execution-owner-contract+
-    'loop-human-audit/execution-owner
-    'execution-owner
-    'Symbol
-    'symbol?
-    symbol?
-    #t
-    '())
-   (+loop-human-audit-metadata-contract+
-    'loop-human-audit/metadata
-    'metadata
-    'Alist
-    'loop-human-audit-alist?
-    loop-human-audit-alist?
-    #t
-    '())))
+(def LoopHumanAuditSymbolType
+  (poo-flow-contract-value-type 'Symbol symbol? 'Symbol))
+(def LoopHumanAuditBooleanType
+  (poo-flow-contract-value-type 'Boolean boolean? 'Boolean))
+(def LoopHumanAuditAlistType
+  (poo-flow-contract-value-type 'Alist loop-human-audit-alist? 'Alist))
+(def LoopHumanAuditGovernorType
+  (poo-flow-contract-value-type
+   'LoopGovernor loop-governor? 'LoopGovernor))
+(def LoopHumanAuditMaybeAlistType
+  (poo-flow-contract-value-type
+   'MaybeAlist loop-human-audit-governor-contract? 'MaybeAlist))
+(def LoopHumanAuditStateFactListType
+  (poo-flow-contract-value-type
+   '[Alist] loop-human-audit-state-fact-list? '[Alist]))
+(def LoopHumanAuditDecisionListType
+  (poo-flow-contract-value-type
+   '[LoopHumanAuditDecision]
+   loop-human-audit-decision-list?
+   '[LoopHumanAuditDecision]))
+
+(def (loop-human-audit-required-slot key slot value-type)
+  (poo-flow-contract-slot key slot value-type #t '()))
+
+(def +loop-human-audit-name-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/name 'name LoopHumanAuditSymbolType))
+(def +loop-human-audit-governor-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/governor 'governor LoopHumanAuditGovernorType))
+(def +loop-human-audit-governor-contract-slot-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/governor-contract
+   'governor-contract
+   LoopHumanAuditMaybeAlistType))
+(def +loop-human-audit-state-facts-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/state-facts
+   'state-facts
+   LoopHumanAuditStateFactListType))
+(def +loop-human-audit-decisions-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/decisions
+   'decisions
+   LoopHumanAuditDecisionListType))
+(def +loop-human-audit-review-policy-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/review-policy 'review-policy LoopHumanAuditAlistType))
+(def +loop-human-audit-governor-derived-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/governor-derived
+   'governor-derived
+   LoopHumanAuditBooleanType))
+(def +loop-human-audit-governance-node-kind-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/governance-node-kind
+   'governance-node-kind
+   LoopHumanAuditSymbolType))
+(def +loop-human-audit-human-intervention-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/human-intervention
+   'human-intervention
+   LoopHumanAuditBooleanType))
+(def +loop-human-audit-control-owner-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/control-owner 'control-owner LoopHumanAuditSymbolType))
+(def +loop-human-audit-decision-owner-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/decision-owner 'decision-owner LoopHumanAuditSymbolType))
+(def +loop-human-audit-execution-owner-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/execution-owner 'execution-owner LoopHumanAuditSymbolType))
+(def +loop-human-audit-metadata-contract+
+  (loop-human-audit-required-slot
+   'loop-human-audit/metadata 'metadata LoopHumanAuditAlistType))
+
+(def +loop-human-audit-slot-contracts+
+  (list +loop-human-audit-name-contract+
+        +loop-human-audit-governor-contract+
+        +loop-human-audit-governor-contract-slot-contract+
+        +loop-human-audit-state-facts-contract+
+        +loop-human-audit-decisions-contract+
+        +loop-human-audit-review-policy-contract+
+        +loop-human-audit-governor-derived-contract+
+        +loop-human-audit-governance-node-kind-contract+
+        +loop-human-audit-human-intervention-contract+
+        +loop-human-audit-control-owner-contract+
+        +loop-human-audit-decision-owner-contract+
+        +loop-human-audit-execution-owner-contract+
+        +loop-human-audit-metadata-contract+))
+(def +loop-human-audit-type-contract+
+  (poo-flow-native-contract
+   'loop-human-audit 'loops 'LoopHumanAudit loop-human-audit?
+   +loop-human-audit-slot-contracts+
+   (lambda (candidate slot) (and (object? candidate) (.slot? candidate slot)))
+   (lambda (candidate slot) (.ref candidate slot))
+   '((boundary . loop-human-audit) (projection . human-review-loop))))

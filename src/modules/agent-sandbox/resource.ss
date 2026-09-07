@@ -144,18 +144,21 @@
 
 ;;; Boundary: sequence projection stays a pure map over POO bindings; backend
 ;;; adapters receive plain request data after this edge.
+;; : (forall (a) (-> [SandboxVolumeBinding] [a]))
 ;; : (-> [SandboxVolumeBinding] [Alist])
 (def (sandbox-volume-bindings->request bindings)
   (map sandbox-volume-binding->request bindings))
 
 ;;; Boundary: port projection is shared by sandbox backends and avoids each
 ;;; extension open-coding the same request field names.
+;; : (forall (a) (-> [SandboxPortBinding] [a]))
 ;; : (-> [SandboxPortBinding] [Alist])
 (def (sandbox-port-bindings->request bindings)
   (map sandbox-port-binding->request bindings))
 
 ;;; Boundary: env projection is shared by sandbox backends and preserves source
 ;;; metadata through the runtime handoff.
+;; : (forall (a) (-> [SandboxEnvBinding] [a]))
 ;; : (-> [SandboxEnvBinding] [Alist])
 (def (sandbox-env-bindings->request bindings)
   (map sandbox-env-binding->request bindings))

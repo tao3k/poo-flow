@@ -1,10 +1,11 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: verify existing benchmark receipts; never synthesize measurements.
+;;; Boundary: verifies existing benchmark receipts against the performance matrix.
+;;; Invariant: qualification never synthesizes or substitutes measurements.
 
 (export #t)
 
 (import :gerbil/gambit
-        :clan/poo/object
+        (only-in :clan/poo/object object<-alist object?)
         (only-in :std/srfi/13 string-index string-prefix?))
 
 (def +runtime-batches+ '(1 8 32 128 1024))
@@ -27,17 +28,27 @@
          (cons (substring line 0 separator)
                (substring line (+ separator 1) (string-length line))))))
 
+;; : (-> Alist [Alist] [Alist])
+(def (receipt-flush-current current blocks)
+  (if (pair? current)
+    (cons (reverse current) blocks)
+    blocks))
+
+;; : (-> String (Pair Alist [Alist]) (Pair Alist [Alist]))
+(def (receipt-block-step line state)
+  (let ((current (car state))
+        (blocks (cdr state)))
+    (if (string=? line "--")
+      (cons '() (receipt-flush-current current blocks))
+      (let (field (line-field line))
+        (cons (if field (cons field current) current) blocks)))))
+
+;; : (-> [String] [Alist])
 (def (receipt-blocks lines)
-  (let loop ((rest lines) (current '()) (blocks '()))
-    (cond
-     ((null? rest)
-      (reverse (if (pair? current) (cons (reverse current) blocks) blocks)))
-     ((string=? (car rest) "--")
-      (loop (cdr rest) '()
-            (if (pair? current) (cons (reverse current) blocks) blocks)))
-     (else
-      (let (field (line-field (car rest)))
-        (loop (cdr rest) (if field (cons field current) current) blocks))))))
+  (let* ((state (foldl receipt-block-step (cons '() '()) lines))
+         (current (car state))
+         (blocks (cdr state)))
+    (reverse (receipt-flush-current current blocks))))
 
 (def (block-ref block key)
   (let (entry (assoc key block))

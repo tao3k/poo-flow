@@ -1,6 +1,8 @@
+;;; Boundary: declares Runtime v0 ABI capability and schema descriptors.
+;;; Invariant: numeric capability bits and symbolic names remain a stable bijection.
 (export #t)
 
-(import :clan/poo/object)
+(import (only-in :clan/poo/object .o .ref))
 
 (def (runtime-v0-capability name-value bit-value)
   (.o (kind 'poo-flow.runtime-v0.abi-capability.1)

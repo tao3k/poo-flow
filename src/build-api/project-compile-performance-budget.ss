@@ -3,7 +3,7 @@
 ;;; Invariant: absolute wall-clock limits are not performance budgets.  The
 ;;; budget is a relative policy over comparable, identity-scoped medians.
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .o .ref)
         :gerbil/gambit
         (only-in :std/text/json
                  json-object->string
@@ -54,7 +54,34 @@
 (def (poo-flow-scheme-compile-nonnegative-integer? value)
   (and (exact-integer? value) (>= value 0)))
 
-;; : (-> String String String String Symbol Integer Integer Integer Symbol Symbol Integer POOObject)
+;; : (-> (Pair Symbol Object) Void)
+(def (poo-flow-scheme-compile-require-identity-entry entry)
+  (poo-flow-scheme-compile-performance-require
+   "Scheme compile performance identity must be a non-empty string"
+   (and (string? (cdr entry))
+        (> (string-length (cdr entry)) 0))
+   entry))
+
+;; : (-> (Pair Symbol Object) Void)
+(def (poo-flow-scheme-compile-require-capacity-entry entry)
+  (poo-flow-scheme-compile-performance-require
+   "Scheme compile performance capacity must be a positive integer"
+   (poo-flow-scheme-compile-positive-integer? (cdr entry))
+   entry))
+
+;; : (-> (Pair Symbol Object) Void)
+(def (poo-flow-scheme-compile-require-classification-entry entry)
+  (poo-flow-scheme-compile-performance-require
+   "Scheme compile performance classification must be a symbol"
+   (symbol? (cdr entry))
+   entry))
+
+;; : (forall (k v) (-> [k] [v] [(Pair k v)]))
+;; : (-> [Symbol] [Object] Alist)
+(def (poo-flow-scheme-compile-entry-rows keys values)
+  (map cons keys values))
+
+;; : (-> String String String String String Symbol Integer Integer Integer Symbol Symbol Integer POOObject)
 (def (poo-flow-scheme-compile-performance-observation
       revision
       runner
@@ -69,62 +96,34 @@
       dependency-cache-state
       elapsed-ms)
   (for-each
-   (lambda (entry)
-     (poo-flow-scheme-compile-performance-require
-      "Scheme compile performance identity must be a non-empty string"
-      (and (string? (cdr entry))
-           (> (string-length (cdr entry)) 0))
-      entry))
-   (list (cons 'revision revision)
-         (cons 'runner runner)
-         (cons 'host-session-id host-session-id)
-         (cons 'toolchain-identity toolchain-identity)
-         (cons 'source-digest source-digest)))
+   poo-flow-scheme-compile-require-identity-entry
+   (poo-flow-scheme-compile-entry-rows
+    '(revision runner host-session-id toolchain-identity source-digest)
+    (list revision runner host-session-id toolchain-identity source-digest)))
   (for-each
-   (lambda (entry)
-     (poo-flow-scheme-compile-performance-require
-      "Scheme compile performance capacity must be a positive integer"
-      (poo-flow-scheme-compile-positive-integer? (cdr entry))
-      entry))
-   (list (cons 'logical-cpu-count logical-cpu-count)
-         (cons 'worker-count worker-count)
-         (cons 'spec-count spec-count)
-         (cons 'elapsed-ms elapsed-ms)))
+   poo-flow-scheme-compile-require-capacity-entry
+   (poo-flow-scheme-compile-entry-rows
+    '(logical-cpu-count worker-count spec-count elapsed-ms)
+    (list logical-cpu-count worker-count spec-count elapsed-ms)))
   (for-each
-   (lambda (entry)
-     (poo-flow-scheme-compile-performance-require
-      "Scheme compile performance classification must be a symbol"
-      (symbol? (cdr entry))
-      entry))
-   (list (cons 'execution-policy execution-policy)
-         (cons 'coldness-class coldness-class)
-         (cons 'dependency-cache-state dependency-cache-state)))
-  (let ((revision-value revision)
-        (runner-value runner)
-        (host-session-id-value host-session-id)
-        (toolchain-identity-value toolchain-identity)
-        (source-digest-value source-digest)
-        (execution-policy-value execution-policy)
-        (logical-cpu-count-value logical-cpu-count)
-        (worker-count-value worker-count)
-        (spec-count-value spec-count)
-        (coldness-class-value coldness-class)
-        (dependency-cache-state-value dependency-cache-state)
-        (elapsed-ms-value elapsed-ms))
-    (.o (schema +poo-flow-scheme-compile-performance-observation-schema+)
-        (kind 'scheme-compile-performance-observation)
-        (revision revision-value)
-        (runner runner-value)
-        (host-session-id host-session-id-value)
-        (toolchain-identity toolchain-identity-value)
-        (source-digest source-digest-value)
-        (execution-policy execution-policy-value)
-        (logical-cpu-count logical-cpu-count-value)
-        (worker-count worker-count-value)
-        (spec-count spec-count-value)
-        (coldness-class coldness-class-value)
-        (dependency-cache-state dependency-cache-state-value)
-        (elapsed-ms elapsed-ms-value))))
+   poo-flow-scheme-compile-require-classification-entry
+   (poo-flow-scheme-compile-entry-rows
+    '(execution-policy coldness-class dependency-cache-state)
+    (list execution-policy coldness-class dependency-cache-state)))
+  (.o (schema +poo-flow-scheme-compile-performance-observation-schema+)
+      (kind 'scheme-compile-performance-observation)
+      (revision revision)
+      (runner runner)
+      (host-session-id host-session-id)
+      (toolchain-identity toolchain-identity)
+      (source-digest source-digest)
+      (execution-policy execution-policy)
+      (logical-cpu-count logical-cpu-count)
+      (worker-count worker-count)
+      (spec-count spec-count)
+      (coldness-class coldness-class)
+      (dependency-cache-state dependency-cache-state)
+      (elapsed-ms elapsed-ms)))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-scheme-compile-performance-observation? value)
@@ -218,6 +217,7 @@
    (* (- candidate-median-ms baseline-median-ms) 10000)
    baseline-median-ms))
 
+;;; Decision boundary: compare identity-matched sample medians and retain every observation in the receipt.
 ;; : (-> [POOObject] [POOObject] Integer POOObject)
 (def (poo-flow-scheme-compile-performance-budget-receipt
       baseline-observations
@@ -330,6 +330,7 @@
        (.ref receipt 'within-budget)
        (eq? (.ref receipt 'outcome) 'accepted)))
 
+;; : (forall (v) (-> v [(Pair Symbol v)]))
 ;; : (-> POOObject Alist)
 (def (poo-flow-scheme-compile-performance-budget-receipt->alist receipt)
   (poo-flow-map
@@ -371,6 +372,7 @@
       (cdr entry)
       (error "missing Scheme compile comparison identity field" key))))
 
+;;; Serialization boundary: emit the complete comparison receipt without recomputing acceptance.
 ;; : (-> POOObject HashTable)
 (def (poo-flow-scheme-compile-performance-budget-receipt->json-object receipt)
   (let (identity (.ref receipt 'comparison-identity))

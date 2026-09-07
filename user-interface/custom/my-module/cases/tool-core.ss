@@ -64,12 +64,12 @@
           deny
           ()))
        (validation
-        (tool-catalog-validation validation/custom-tool-core
+        (tool-catalog-validation 'validation/custom-tool-core
           catalog
           agent-policy
           hook-policy
-          (metadata (source . user-interface)
-                    (case . tool-core)))))
+          '((source . user-interface)
+            (case . tool-core)))))
   (list
    (poo-flow-user-module-selection->alist selection)
    (poo-flow-tool-catalog->alist catalog)

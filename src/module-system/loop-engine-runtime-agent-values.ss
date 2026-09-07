@@ -10,6 +10,7 @@
         poo-flow-loop-engine-runtime-agent-unique)
 
 ;;; Field projection preserves row order for receipt comparison.
+;; : (forall (a) (-> [Alist] Symbol [a]))
 ;; : (-> [Alist] Symbol [Datum])
 (def (poo-flow-loop-engine-runtime-agent-field-values rows key)
   (map (lambda (row)
@@ -18,6 +19,7 @@
 
 ;;; Flat field projection preserves row and in-row order without building
 ;;; intermediate nested rows.
+;; : (forall (a) (-> [Alist] Symbol [a]))
 ;; : (-> [Alist] Symbol [Datum])
 (def (poo-flow-loop-engine-runtime-agent-flat-field-values rows key)
   (reverse

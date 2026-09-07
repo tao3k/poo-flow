@@ -120,6 +120,7 @@
 
 ;;; Profile projection preserves user declaration order so presentation output
 ;;; and runtime manifests can be compared without sorting.
+;; : (forall (a) (-> Alist [a] [Alist] [Alist]))
 ;; : (-> Alist [Alist] [Alist] [Alist])
 (def (poo-flow-user-loop-engine-intent-agent-profiles-from-nodes/rev
       intent

@@ -131,6 +131,7 @@
 
 ;;; Runtime summary collection preserves reference order and skips missing
 ;;; profiles; unresolved refs are recorded by a sibling diagnostic pass.
+;; : (forall (a b) (-> [a] [b] [Alist]))
 ;; : (-> [Symbol] [PooSandboxProfile] [Alist])
 (def (poo-flow-user-loop-engine-sandbox-runtime-summaries refs profile-catalog)
   (cond
@@ -150,6 +151,7 @@
 
 ;;; Handoff summary collection mirrors runtime summary collection so the two
 ;;; projections stay comparable in tests and presentation traces.
+;; : (forall (a b) (-> [a] [b] [Alist]))
 ;; : (-> [Symbol] [PooSandboxProfile] [Alist])
 (def (poo-flow-user-loop-engine-sandbox-handoff-summaries refs profile-catalog)
   (cond

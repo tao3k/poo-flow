@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
-;;; Contract: session policy exposes utilities-backed type contracts.
+;;; Contract: session policy and tool grants expose native POO Contracts.
 
 (eval '(import "./src/modules/session/policy.ss"))
-(eval '(import "./src/type-facts/objects.ss"))
+(eval '(import :clan/poo/mop :clan/poo/object))
 
 ;; : (-> PooFlowSessionPolicyExpr PooFlowSessionPolicyValue)
 (def (session-policy-eval expr)
@@ -18,16 +18,6 @@
   (map (lambda (slot-row)
          (alist-ref/default slot-row 'slot #f))
        (alist-ref/default row 'slots '())))
-
-;; : (-> [Alist] Symbol Alist)
-(def (fact-row-by-source-slot rows source-slot)
-  (cond
-   ((null? rows) '())
-   ((eq? (alist-ref/default (car rows) 'source-slot #f)
-         source-slot)
-    (car rows))
-   (else
-    (fact-row-by-source-slot (cdr rows) source-slot))))
 
 (let (policy-row
       (session-policy-eval
@@ -50,44 +40,59 @@
                          trigger-refs metadata runtime-executed)))
     (error "session tool grant contract should expose grant slots")))
 
-(let (policy-fact-rows
-      (session-policy-eval
-       '(map poo-flow-type-fact-contract->alist
-             (poo-flow-object-type-contract->type-facts
-              +poo-flow-session-policy-type-contract+))))
-  (let (default-action-row
-        (fact-row-by-source-slot policy-fact-rows 'default-action))
-    (unless (and (= (length policy-fact-rows) 10)
-                 (eq? (alist-ref/default default-action-row 'owner #f)
-                      'PooSessionPolicy)
-                 (eq? (alist-ref/default default-action-row 'value-kind #f)
-                      'Symbol)
-                 (eq? (alist-ref/default default-action-row 'polarity #f)
-                      'positive)
-                 (eq? (alist-ref/default
-                       (alist-ref/default default-action-row 'metadata '())
-                       'predicate
-                       #f)
-                      'symbol?))
-      (error "session policy contract should project type facts"))))
+(unless
+ (session-policy-eval
+  '(and
+    (element? Type PooFlowSessionPolicyContract)
+    (element? Type PooFlowSessionToolGrantContract)
+    (element?
+     PooFlowSessionPolicyContract
+     (poo-flow-session-tool-permission-policy
+      'policy/native-contract
+      'session/native-contract
+      '()
+      '()
+      'deny))
+    (element?
+     PooFlowSessionToolGrantContract
+     (poo-flow-session-tool-grant
+      'grant/read
+      'read-workspace-file
+      '(read)
+      '(project-workspace)
+      '(agent-turn)))))
+ (error "session policy contracts should be native Types and admit valid grants"))
 
-(let (grant-lean-rows
-      (session-policy-eval
-       '(map poo-flow-lean-fact-contract->alist
-             (poo-flow-object-type-contract->lean-fact-contracts
-              +poo-flow-session-tool-grant-type-contract+))))
-  (let (actions-row
-        (fact-row-by-source-slot grant-lean-rows 'actions))
-    (unless (and (= (length grant-lean-rows) 9)
-                 (eq? (alist-ref/default actions-row 'kind #f)
-                      'slot-contract)
-                 (eq? (alist-ref/default actions-row 'lean-owner #f)
-                      'PooSessionToolGrant)
-                 (eq? (alist-ref/default actions-row 'lean-name #f)
-                      'actions)
-                 (eq? (alist-ref/default actions-row 'polarity #f)
-                      'positive))
-      (error "session tool grant contract should project Lean fact rows"))))
+(when
+ (session-policy-eval
+  '(element?
+    PooFlowSessionToolGrantContract
+    '((kind . poo-flow.session.tool-grant)
+      (schema . poo-flow.modules.session.tool-grant.v1)
+      (grant-id . grant/read)
+      (tool-ref . read-workspace-file)
+      (actions . (read))
+      (resource-refs . (project-workspace))
+      (trigger-refs . (agent-turn))
+      (metadata)
+      (runtime-executed . not-a-boolean))))
+ (error "native session tool grant contract should reject invalid slots"))
+
+(when
+ (session-policy-eval
+  '(element?
+    PooFlowSessionPolicyContract
+    (.o kind: 'poo-flow.session.policy
+        schema: 'poo-flow.modules.session.policy.tool-permission.v1
+        policy-kind: 'agent-tool-permission
+        policy-name: 'policy/native-contract
+        scope-ref: 'session/native-contract
+        default-action: 'deny
+        policy-slots: '()
+        metadata: '()
+        runtime-owner: 'marlin-agent-core
+        runtime-executed: 'not-a-boolean)))
+ (error "native session policy contract should reject invalid slots"))
 
 (unless
  (session-policy-eval

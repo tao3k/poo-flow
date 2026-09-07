@@ -34,7 +34,7 @@
 
 ;; : PooModuleFieldContract
 (def module-object-list-merge-field
-  (poo-flow-module-field-contract 'capabilities 'List 'append '() '()))
+  (poo-flow-module-field-contract 'capabilities PooFlowModuleListType 'append '() '()))
 
 ;; : PooModuleObject
 (def module-object-list-merge-object

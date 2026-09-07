@@ -170,6 +170,7 @@
 ;;; Reversing into an existing tail is the hot append-free path for pending
 ;;; operation stacks, preserving order without allocating intermediate appends.
 ;; : (forall (a) (-> (List a) (List a) (List a)))
+;; : (-> List List List)
 (def (poo-flow-module-extension-reverse-onto values tail)
   (foldl cons tail values))
 

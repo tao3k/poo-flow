@@ -46,6 +46,7 @@
     (list (cons 'kind 'poo-flow.session.communication-channel-receipt.invalid)
           (cons 'value receipt)))))
 
+;; : (forall (a b) (-> [a] [b]))
 ;; : (-> [PooSessionCommunicationChannelReceiptOrRow] [Alist])
 (def (poo-flow-session-policy-communication-channel-receipt-rows receipts)
   (map poo-flow-session-policy-communication-channel-receipt-row receipts))
@@ -60,6 +61,7 @@
     (list (cons 'kind 'poo-flow.session.communication-receipt.invalid)
           (cons 'value receipt)))))
 
+;; : (forall (a b) (-> [a] [b]))
 ;; : (-> [PooSessionCommunicationReceiptOrRow] [Alist])
 (def (poo-flow-session-policy-communication-receipt-rows receipts)
   (map poo-flow-session-policy-communication-receipt-row receipts))

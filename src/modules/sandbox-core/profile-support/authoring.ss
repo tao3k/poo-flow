@@ -217,7 +217,7 @@
 (def (poo-flow-sandbox-profile-object-field-with-merge field merge)
   (poo-flow-module-field-contract
    (poo-flow-module-field-contract-identity field)
-   (poo-flow-module-field-contract-value-kind field)
+   (poo-flow-module-field-contract-value-type field)
    merge
     (poo-flow-module-field-contract-default field)
    (poo-flow-module-field-contract-metadata field)))

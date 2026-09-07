@@ -227,12 +227,12 @@
                    (key (vector-ref contribution 4))
                    (slot-key (car entry))
                    (merge (vector-ref contribution 5))
-                   (value-kind (vector-ref contribution 6))
+                   (value-type (vector-ref contribution 6))
                    (field-contract? (vector-ref contribution 7))
                    (valid?
                     (or (not field-contract?)
-                        (poo-flow-module-value-kind-accepts?
-                         value-kind
+                        (poo-flow-module-value-type-accepts?
+                         value-type
                          value))))
               (if (and (equal? target node-identity)
                        valid?
@@ -413,10 +413,10 @@
                        contribution)))
                    (valid?
                     (or (not field-contract?)
-                        (poo-flow-module-value-kind-accepts?
+                        (poo-flow-module-value-type-accepts?
                          (if vector-contribution?
                            (vector-ref contribution 6)
-                           (poo-flow-module-field-contribution-field-value-kind
+                           (poo-flow-module-field-contribution-field-value-type
                             contribution))
                          value)))
                    (key

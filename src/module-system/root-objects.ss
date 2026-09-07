@@ -14,7 +14,7 @@
    (list poo-flow-shared-sandbox-object)
    (list
     (poo-flow-module-field-contract
-     'flags 'List 'append '(doctor) '((scope . user-interface))))
+     'flags PooFlowModuleListType 'append '(doctor) '((scope . user-interface))))
    '((namespace . objects.user-interface)
      (domain . sandbox)
      (inherits . objects.shared.sandbox))))

@@ -141,6 +141,7 @@
     'proof-case-vector
     '(obligation-tags obligations proof-scope c-abi))))
 
+;; : (forall (k) (-> [(Pair k Fixnum)] Fixnum))
 ;; : (-> Alist Fixnum)
 (def (poo-flow-loop-engine-proof-obligation-mask tags)
   (foldl (lambda (tag mask) (+ (cdr tag) mask))

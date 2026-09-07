@@ -1,8 +1,9 @@
 ;;; -*- Gerbil -*-
-;;; Contract: graph objects expose utilities-backed type contracts.
+;;; Contract: graph objects expose native POO Type/Contract descriptors.
 
 (eval '(import "./src/graph/types.ss"))
 (eval '(import "./src/graph/algorithms.ss"))
+(eval '(import :clan/poo/mop :clan/poo/object))
 
 ;; : (-> PooFlowGraphExpr PooFlowGraphValue)
 (def (graph-eval expr)
@@ -34,6 +35,26 @@
                (equal? (contract-slot-names edge-row)
                        '(from to edge-kind metadata)))
     (error "graph edge contract should expose edge slots")))
+
+(unless (graph-eval
+         '(and (element? Type PooFlowGraphEdgeContract)
+               (element? PooFlowGraphEdgeContract
+                         (poo-flow-graph-edge 'start 'finish))))
+  (error "graph edge contract should be a native Type and admit valid edges"))
+
+(when (graph-eval
+       '(element?
+         PooFlowGraphEdgeContract
+         (object<-alist
+          (list
+           (cons 'kind +poo-flow-graph-edge-prototype-kind+)
+           (cons 'schema 'poo-flow.graph.edge.v1)
+           (cons 'from 'start)
+           (cons 'to 'finish)
+           (cons 'edge-kind "not-a-symbol")
+           (cons 'metadata '())
+           (cons 'runtime-executed #f)))))
+  (error "native graph edge contract should reject an invalid slot type"))
 
 (let (graph-row
       (graph-eval '(poo-flow-graph-type-contract->alist)))

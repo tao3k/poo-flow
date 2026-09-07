@@ -34,7 +34,7 @@
 (def (large-object-field index)
   (poo-flow-module-field-contract
    (large-object-field-name index)
-   'Any
+   PooFlowModuleAnyType
    'override
    #f
    '((scope . large-object-performance)
@@ -44,7 +44,7 @@
 (def (large-object-list-field index)
   (poo-flow-module-field-contract
    (large-object-field-name index)
-   'List
+   PooFlowModuleListType
    'append
    '()
    '((scope . large-object-performance)
@@ -59,7 +59,7 @@
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
-                 'List
+                 PooFlowModuleListType
                  'append
                  '(filesystem-read)
                  '((scope . best-practice)
@@ -67,7 +67,7 @@
                (note-field
                 (poo-flow-module-field-contract
                  'note
-                 'String
+                 PooFlowModuleStringType
                  'override
                  "unset"
                  '((scope . best-practice)
@@ -233,7 +233,7 @@
         (let* ((capabilities-field
                 (poo-flow-module-field-contract
                  'capabilities
-                 'List
+                 PooFlowModuleListType
                  'override
                  '(filesystem-read process-run cache-mount)
                  '((scope . best-practice)
@@ -241,7 +241,7 @@
                (metadata-field
                 (poo-flow-module-field-contract
                  'metadata-map
-                 'Map
+                 PooFlowModuleMapType
                  'override
                  '((stage . default))
                  '((scope . best-practice)

@@ -106,13 +106,13 @@
     (test-case "merges module config contributions through POO field contracts"
       (let* ((needs-field
               (poo-flow-module-field-contract
-               'needs 'List 'append '() '((domain . workflow))))
+               'needs PooFlowModuleListType 'append '() '((domain . workflow))))
              (features-field
               (poo-flow-module-field-contract
-               'features 'List 'prepend '() '((domain . workflow))))
+               'features PooFlowModuleListType 'prepend '() '((domain . workflow))))
              (run-field
               (poo-flow-module-field-contract
-               'run 'String 'override #f '((domain . workflow))))
+               'run PooFlowModuleStringType 'override #f '((domain . workflow))))
              (root-node
               (poo-flow-module-extension-node
                'workflow/pipeline/default
@@ -161,11 +161,11 @@
                '()
                (list
                 (poo-flow-module-field-contract
-                 'backend 'Symbol 'override 'sandbox '())
+                 'backend PooFlowModuleSymbolType 'override 'sandbox '())
                 (poo-flow-module-field-contract
-                 'flags 'List 'append '() '())
+                 'flags PooFlowModuleListType 'append '() '())
                 (poo-flow-module-field-contract
-                 'runtime-args 'List 'append '() '()))
+                 'runtime-args PooFlowModuleListType 'append '() '()))
                '((domain . sandbox))))
              (nono-sandbox-object
               (poo-flow-module-object
@@ -173,9 +173,9 @@
                (list shared-sandbox-object)
                (list
                 (poo-flow-module-field-contract
-                 'backend 'Symbol 'override 'nono '())
+                 'backend PooFlowModuleSymbolType 'override 'nono '())
                 (poo-flow-module-field-contract
-                 'binding 'Symbol 'override 'none '()))
+                 'binding PooFlowModuleSymbolType 'override 'none '()))
                '((backend . nono))))
              (cube-sandbox-object
               (poo-flow-module-object
@@ -183,9 +183,9 @@
                (list shared-sandbox-object)
                (list
                 (poo-flow-module-field-contract
-                 'backend 'Symbol 'override 'cube '())
+                 'backend PooFlowModuleSymbolType 'override 'cube '())
                 (poo-flow-module-field-contract
-                 'profile 'Symbol 'override 'default '()))
+                 'profile PooFlowModuleSymbolType 'override 'default '()))
                '((backend . cube))))
              (root-node
               (poo-flow-module-extension-node
@@ -241,9 +241,9 @@
                '()
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'root '())
+                 'shared PooFlowModuleSymbolType 'override 'root '())
                 (poo-flow-module-field-contract
-                 'root-only 'Symbol 'override 'root-only '()))
+                 'root-only PooFlowModuleSymbolType 'override 'root-only '()))
                '()))
              (right-object
               (poo-flow-module-object
@@ -251,9 +251,9 @@
                (list root-object)
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'right '())
+                 'shared PooFlowModuleSymbolType 'override 'right '())
                 (poo-flow-module-field-contract
-                 'right-only 'Symbol 'override 'right-only '()))
+                 'right-only PooFlowModuleSymbolType 'override 'right-only '()))
                '()))
              (left-object
               (poo-flow-module-object
@@ -261,9 +261,9 @@
                (list root-object)
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'left '())
+                 'shared PooFlowModuleSymbolType 'override 'left '())
                 (poo-flow-module-field-contract
-                 'left-only 'Symbol 'override 'left-only '()))
+                 'left-only PooFlowModuleSymbolType 'override 'left-only '()))
                '()))
              (child-object
               (poo-flow-module-object
@@ -271,7 +271,7 @@
                (list left-object right-object)
                (list
                 (poo-flow-module-field-contract
-                 'child-only 'Symbol 'override 'child-only '()))
+                 'child-only PooFlowModuleSymbolType 'override 'child-only '()))
                '())))
         (check-equal? (map poo-flow-module-field-contract-identity
                            (poo-flow-module-object-fields child-object))
@@ -302,7 +302,7 @@
                '()
                (list
                 (poo-flow-module-field-contract
-                 'shared 'Symbol 'override 'root '()))
+                 'shared PooFlowModuleSymbolType 'override 'root '()))
                '()))
              (a-object
               (poo-flow-module-object

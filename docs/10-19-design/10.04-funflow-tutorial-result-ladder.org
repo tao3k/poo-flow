@@ -433,25 +433,24 @@ Poo-flow result:
 Proof:
 - =gxtest t/functional-flow-kernel-test.ss=, suite ="functional flow kernel"=.
 
-*** 10.04.41 Stage 21: Workflow Module Macro Authoring
+*** 10.04.41 Stage 21: Workflow Constructor Composition
 Reference result:
 - Funflow users author real task-family flows through a compact functional
   surface while task interpreters stay extension/runtime-owned.
 Poo-flow result:
-- =src/modules/workflow/syntax.ss= exposes hygienic Gerbil macros for
-  custom-repeat, Docker, Store/CAS, CCompilation, TensorflowDocker,
-  makefile-tool, and makefile-tool runtime command descriptors.
-- Macro expansion targets workflow module public constructors such as
+- Workflow modules expose ordinary public constructors such as
   =custom-repeat-flow=, =docker-flow=, =store-flow=,
   =make-ccompilation-store-workflow=, =make-tensorflow-workflow=,
   =make-makefile-tool-workflow=, and
   =make-makefile-tool-runtime-command-descriptor=.
-- The macros produce ordinary =flow= values or inert runtime command
-  descriptors. Scheme still does not execute Docker, CAS, Makefile,
+- Callers bind and compose those values directly; no parallel macro DSL is
+  required when no phase semantics exist.  Constructors produce ordinary
+  =flow= values or inert runtime command descriptors. Scheme still does not
+  execute Docker, CAS, Makefile,
   Tensorflow, subprocess, or artifact work.
 Proof:
-- =gxtest t/tutorial-feature-batch-test.ss=, case ="authors extension-owned
-  workflows with Gerbil macros"=.
+- =gxtest t/tutorial-feature-batch-test.ss= exercises extension-owned workflow
+  constructors directly.
 - =gxtest t/tutorial-makefile-runtime-test.ss=, case ="authors makefile
   runtime descriptor with Gerbil macros"=.
 

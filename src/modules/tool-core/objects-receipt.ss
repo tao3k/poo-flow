@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: POO-native policy-catalog validation receipts.
 
-(import (only-in :clan/poo/object .ref object? object<-alist)
+(import (only-in :clan/poo/object .o .ref object?)
         :poo-flow/src/module-system/projection-syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy
@@ -20,6 +20,7 @@
 (def +poo-flow-tool-core-policy-validation-receipt-kind+
   'poo-flow.tool-core.policy-catalog-validation-receipt)
 
+;; : (-> Symbol PooToolCatalog PooSessionPolicy PooSessionPolicy [Alist] PooToolPolicyCatalogValidationReceipt)
 (def (poo-flow-tool-policy-catalog-validation-receipt validation-id catalog
                                                       agent-policy hook-policy
                                                       . maybe-metadata)
@@ -45,40 +46,41 @@
          (diagnostics
           (append (poo-flow-session-alist-ref summary 'diagnostics '())
                   action-diagnostics)))
-    (object<-alist
-     (list
-      (cons 'kind +poo-flow-tool-core-policy-validation-receipt-kind+)
-      (cons 'schema 'poo-flow.modules.tool-core.policy-catalog-validation.v1)
-      (cons 'validation-id validation-id)
-      (cons 'catalog-ref (poo-flow-tool-catalog-ref catalog))
-      (cons 'catalog-tool-count (poo-flow-tool-catalog-tool-count catalog))
-      (cons 'catalog-tool-refs (poo-flow-tool-catalog-tool-refs catalog))
-      (cons 'agent-tool-policy-ref (poo-flow-session-policy-name agent-policy))
-      (cons 'hook-tool-policy-ref (poo-flow-session-policy-name hook-policy))
-      (cons 'policy-tool-refs policy-refs)
-      (cons 'resolved-tool-refs
-            (poo-flow-session-alist-ref summary 'resolved-tool-refs '()))
-      (cons 'unresolved-tool-refs
-            (poo-flow-session-alist-ref summary 'unresolved-tool-refs '()))
-      (cons 'sandbox-required-tool-refs
-            (poo-flow-session-alist-ref summary 'sandbox-required-tool-refs '()))
-      (cons 'action-mismatch-grants
-            (poo-flow-session-alist-ref action-bundle 'rows '()))
-      (cons 'valid? (null? diagnostics))
-      (cons 'diagnostic-count (length diagnostics))
-      (cons 'diagnostics diagnostics)
-      (cons 'runtime-owner "marlin-agent-core")
-      (cons 'runtime-executed #f)
-      (cons 'metadata (if (null? maybe-metadata) '() (car maybe-metadata)))))))
+    (.o (kind +poo-flow-tool-core-policy-validation-receipt-kind+)
+        (schema 'poo-flow.modules.tool-core.policy-catalog-validation.v1)
+        (validation-id validation-id)
+        (catalog-ref (poo-flow-tool-catalog-ref catalog))
+        (catalog-tool-count (poo-flow-tool-catalog-tool-count catalog))
+        (catalog-tool-refs (poo-flow-tool-catalog-tool-refs catalog))
+        (agent-tool-policy-ref (poo-flow-session-policy-name agent-policy))
+        (hook-tool-policy-ref (poo-flow-session-policy-name hook-policy))
+        (policy-tool-refs policy-refs)
+        (resolved-tool-refs
+         (poo-flow-session-alist-ref summary 'resolved-tool-refs '()))
+        (unresolved-tool-refs
+         (poo-flow-session-alist-ref summary 'unresolved-tool-refs '()))
+        (sandbox-required-tool-refs
+         (poo-flow-session-alist-ref summary 'sandbox-required-tool-refs '()))
+        (action-mismatch-grants
+         (poo-flow-session-alist-ref action-bundle 'rows '()))
+        (valid? (null? diagnostics))
+        (diagnostic-count (length diagnostics))
+        (diagnostics diagnostics)
+        (runtime-owner "marlin-agent-core")
+        (runtime-executed #f)
+        (metadata (if (null? maybe-metadata) '() (car maybe-metadata))))))
 
+;; : (-> Object Boolean)
 (def (poo-flow-tool-policy-catalog-validation-receipt? value)
   (and (object? value)
        (eq? (poo-flow-tool-slot value 'kind #f)
             +poo-flow-tool-core-policy-validation-receipt-kind+)))
 
+;; : (-> PooToolPolicyCatalogValidationReceipt Boolean)
 (def (poo-flow-tool-policy-catalog-validation-receipt-valid? receipt)
   (.ref receipt 'valid?))
 
+;; : (-> PooToolPolicyCatalogValidationReceipt [Alist])
 (def (poo-flow-tool-policy-catalog-validation-receipt-diagnostics receipt)
   (.ref receipt 'diagnostics))
 

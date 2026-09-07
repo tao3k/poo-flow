@@ -60,7 +60,7 @@
 (def (poo-performance-field-contract index)
   (poo-flow-module-field-contract
    (poo-performance-field-name index)
-   'Any
+   PooFlowModuleAnyType
    'override
    index
    '((scenario . poo-performance))))

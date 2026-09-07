@@ -34,3 +34,50 @@ in =144.418 s=.  The ordinary Scheme suite then passed all =11/11= Bazel test
 targets; its final cached convergence run completed in =34.150 s=.  A focused
 uncached unit action passed in =173.3 s=.  These measurements include explicit
 seconds and are correctness receipts, not a replacement cold-build baseline.
+
+** 2026-09-04 dependency-facade correction
+
+POO Flow imports only =:asp-gerbil-scheme/src/package-build-api= from its
+=gerbil.pkg= dependency.  It does not import ASP's CLI, provider server, HTTP
+runtime, testing framework, or product-native build plan.  The facade exposes
+the declarative package macro, builder profiles, source discovery, profile
+projection, and the native =std/make= bridge.
+
+The package macro captures one module owner catalog.  Profile admission parses
+that declared catalog once, then the accepted native-spec is passed to the one
+upstream =std/make= session.  This shares ownership without pretending that the
+policy parser AST can replace Gerbil's compiler AST.
+
+#+begin_src mermaid
+flowchart LR
+  Dep[gerbil.pkg dependency] --> API[package-build-api facade]
+  API --> Package[POO package object]
+  Package --> Catalog[one declared module catalog]
+  Catalog --> Policy[one policy projection]
+  Catalog --> Spec[native std/make spec]
+  Policy --> Admission[profile admission]
+  Admission --> Make[one upstream std/make session]
+  Spec --> Make
+
+  Product[ASP CLI / provider / HTTP / tests] -. excluded from dependency facade .-> API
+#+end_src
+* Project Root and Runtime Closure Correction
+
+The downstream Package Spec has one source catalog boundary.  For a customary
+Gerbil repository that boundary is =roots: ["."]=; =t/= is a Builder Profile
+test convention, not a second runtime catalog.  POO Flow may retain an explicit
+=native-spec= while its specialized FFI ownership is being projected, but it
+must not reintroduce =runtime-roots=.  A Provider executable owns its static
+closure separately through =runtime-modules=.
+
+#+begin_src mermaid
+flowchart LR
+  ROOT["Package Spec\nroots"] --> CATALOG["One module catalog"]
+  PROFILE["Build API Profile\nGit ignore + fixture exclusions"] --> CATALOG
+  CATALOG --> POLICY["Policy admission\none scan"]
+  TESTS["Profile test-roots: t/"] --> NATIVE["Native build projection"]
+  CATALOG --> NATIVE
+  PROJECTOR["POO Flow named projector\nSSI + Nono FFI + UI ownership"] --> NATIVE
+  NATIVE --> RUNTIME["Production library units"]
+  PROVIDER["Provider runtime-modules"] --> CLOSURE["Static executable closure"]
+#+end_src

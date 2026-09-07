@@ -1,4 +1,6 @@
-(import :clan/poo/object
+;;; Boundary: assembles accepted feature plans into one DomainCase receipt;
+;;; component closure semantics remain owned by module-system/domain-case.
+(import (only-in :clan/poo/object .ref make-object object-slots-set!)
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/capability-model
         :poo-flow/src/feature-system/composition
@@ -9,11 +11,13 @@
         require-feature-domain-case-assembly
         defpoo-feature-domain-case-assembly)
 
+;; : (-> Alist POOObject)
 (def (constant-domain-case-assembly-object slot-values)
   (let ((object (make-object)))
     (object-slots-set! object (role-constant-slots slot-values))
     object))
 
+;; : (-> Object Alist)
 (def (feature-domain-case-projection-request-diagnostic request)
   (constant-domain-case-assembly-object
    `((kind . poo-flow.feature-domain-case-assembly-diagnostic.v1)
@@ -21,6 +25,7 @@
      (channel . projections)
      (observed . ,request))))
 
+;; : (-> [Object] [Alist])
 (def (feature-domain-case-projection-request-diagnostics requests)
   (poo-flow-filter-map
    (lambda (request)
@@ -28,6 +33,7 @@
           (feature-domain-case-projection-request-diagnostic request)))
    requests))
 
+;; : (-> Symbol Integer PooFeatureCompositionPlan [PooCaseComponent] [PooFeatureProjectionRequest] [Symbol] Object Boolean Object Object [Alist] PooFeatureDomainCaseAssembly)
 (def (feature-domain-case-assembly-receipt
       domain-case-id domain-case-version composition-plan components
       projection-requests selected-projection-ids closure-receipt
@@ -55,6 +61,7 @@
      (selected-projection-ids . ,selected-projection-ids)
      (projections . ,projection-requests))))
 
+;; : (-> PooDomainCaseCache Symbol Integer PooFeatureCompositionPlan PooFeatureDomainCaseAssembly)
 (def (feature-domain-case-assembly cache
                                    domain-case-id
                                    domain-case-version
@@ -89,6 +96,7 @@
          (.ref closure-receipt 'domain-case)
          (.ref closure-receipt 'diagnostics))))))
 
+;; : (-> PooFeatureDomainCaseAssembly PooFeatureDomainCaseAssembly)
 (def (require-feature-domain-case-assembly assembly)
   (if (.ref assembly 'accepted?)
     assembly
@@ -96,6 +104,20 @@
            (.ref assembly 'domain-case-id)
            (.ref assembly 'diagnostics))))
 
+;; defpoo-feature-domain-case-assembly
+;;   : (-> Identifier Clauses FeatureDomainCaseAssemblyBinding)
+;;   | doc m%
+;;       Bind an accepted domain-case assembly from a feature composition plan.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-domain-case-assembly assembly
+;;         (using-cache cache) (domain-case-id app) (domain-case-version 1)
+;;         (from-plan plan))
+;;       ;; => binds assembly
+;;       ```
+;;     %
 (defrules defpoo-feature-domain-case-assembly
   (using-cache domain-case-id domain-case-version from-plan)
   ((_ binding

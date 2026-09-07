@@ -118,37 +118,38 @@ Current proof:
 - =t/functional-flow-kernel-test.ss= proves that macro-authored flows run
   through the same runner path as direct function-authored flows.
 
-** 10.07.60 Extension Macro Plan
+** 10.07.60 Extension Composition Plan
 
-The next functional slice was to lift extension-owned task constructors into
-the same macro authoring style. The first candidates were Docker/store/runtime
-descriptor helpers because they already preserve the runtime boundary.
+The next functional slice was to compose extension-owned task constructors
+through the same functional authoring style. Docker/store/runtime descriptor
+helpers already preserve the runtime boundary.
 
 Constraints:
 
-- macro expansion target: extension-owned public constructors and existing
-  =flow= combinators;
-- proof target: macro-authored extension flows produce the same request
-  envelopes and receipts as direct function calls;
+- composition target: extension-owned public constructors and existing =flow=
+  combinators;
+- proof target: directly composed extension flows produce the expected request
+  envelopes and receipts;
 - non-goal: no alternate workflow data language.
 
-** 10.07.70 Workflow Module Macro Landing
+** 10.07.70 Workflow Module Constructor Landing
 
-The workflow macro authoring layer is now implemented in
-=src/modules/workflow/syntax.ss=.
+The workflow layer uses its public constructors directly. The former
+=src/modules/workflow/syntax.ss= binding macros were removed because they added
+no phase semantics and duplicated the functional API.
 
-Implemented workflow module macro surface:
+Implemented workflow constructor surface:
 
-- =defpoo-custom-repeat-flow= authors Tutorial2 custom-repeat flows.
-- =defpoo-docker-flow= authors Docker request flows.
-- =defpoo-store-flow= authors Store/CAS request flows.
-- =defpoo-ccompilation-flow= and =defpoo-ccompilation-store-workflow= author
+- =custom-repeat-flow= constructs Tutorial2 custom-repeat flows.
+- =docker-flow= constructs Docker request flows.
+- =store-flow= constructs Store/CAS request flows.
+- =make-ccompilation-flow= and =make-ccompilation-store-workflow= construct
   CCompilation descriptor workflows.
-- =defpoo-tensorflow-train-flow=, =defpoo-tensorflow-inference-flow=, and
-  =defpoo-tensorflow-workflow= author TensorflowDocker descriptor workflows.
-- =defpoo-makefile-tool-parse-flow=, =defpoo-makefile-tool-run-flow=, and
-  =defpoo-makefile-tool-workflow= author makefile-tool descriptor workflows.
-- =defpoo-makefile-tool-runtime-command-descriptor= authors inert Rust CLI
+- =make-tensorflow-train-flow=, =make-tensorflow-inference-flow=, and
+  =make-tensorflow-workflow= construct TensorflowDocker descriptor workflows.
+- =make-makefile-tool-parse-flow=, =make-makefile-tool-run-flow=, and
+  =make-makefile-tool-workflow= construct makefile-tool descriptor workflows.
+- =make-makefile-tool-runtime-command-descriptor= constructs inert Rust CLI
   runtime command descriptors.
 
 Proof commands:
@@ -160,13 +161,12 @@ GERBIL_LOADPATH=src:t gxtest t/tutorial-makefile-runtime-test.ss
 
 Boundary result:
 
-- macro-authored extension flows still produce ordinary =flow= values;
-- macro-authored Docker/Store/custom requests still pass through extension
-  constructors;
-- macro-authored runtime descriptors still materialize manifests through
+- directly composed extension flows produce ordinary =flow= values;
+- Docker/Store/custom requests pass through their extension constructors;
+- runtime descriptors materialize manifests through
   =runtime-command-descriptor->manifest=;
-- no macro executes Docker, CAS, Makefile, Tensorflow, subprocess, or artifact
-  work in Scheme.
+- no Scheme constructor executes Docker, CAS, Makefile, Tensorflow, subprocess,
+  or artifact work.
 
 ** 10.07.80 Next Slice
 

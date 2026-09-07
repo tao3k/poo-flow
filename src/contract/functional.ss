@@ -123,6 +123,7 @@
   (if (every predicate values) #t #f))
 
 ;; poo-flow-contract-object-ref
+;;   : (forall (k v) (-> [(Pair k v)] k v v))
 ;;   : (-> Alist ContractKey Object Object)
 ;;   | result: matched row value or DEFAULT-VALUE
 ;;   | doc m%

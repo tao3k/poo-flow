@@ -1,4 +1,7 @@
-(import (only-in :clan/poo/object object<-alist object?))
+;;; Boundary: bounded owner-map observation value construction; persistence and
+;;; runtime publication are outside this pure POO object owner.
+(import (only-in :std/srfi/1 drop)
+        (only-in :clan/poo/object .o object?))
 
 (export poo-flow-owner-map-event-prototype
         poo-flow-detached-snapshot-prototype
@@ -8,32 +11,44 @@
         poo-flow-owner-map-observation-object?)
 
 (def poo-flow-owner-map-event-prototype
-  (object<-alist '((kind . owner-map-event))))
+  (.o (kind 'owner-map-event)))
 
 (def poo-flow-detached-snapshot-prototype
-  (object<-alist '((kind . detached-snapshot))))
+  (.o (kind 'detached-snapshot)))
 
+;; : (-> Symbol Symbol Symbol Integer POOObject)
 (def (poo-flow-owner-map-event row-identity stage status sequence)
-  (object<-alist
-   `((kind . owner-map-event)
-     (row-identity . ,row-identity)
-     (stage . ,stage)
-     (status . ,status)
-     (sequence . ,sequence))))
+  (.o (kind 'owner-map-event)
+      (row-identity row-identity)
+      (stage stage)
+      (status status)
+      (sequence sequence)))
 
+;; : (-> Integer [Symbol] String POOObject)
 (def (poo-flow-detached-snapshot generation row-identities digest)
-  (object<-alist
-   `((kind . detached-snapshot)
-     (generation . ,generation)
-     (row-identities . ,row-identities)
-     (digest . ,digest))))
+  (.o (kind 'detached-snapshot)
+      (generation generation)
+      (row-identities row-identities)
+      (digest digest)))
 
+;; poo-flow-bounded-event-append
+;;   : (forall (a) (-> (List a) a Integer (List a)))
+;;   : (-> [POOObject] POOObject Integer [POOObject])
+;;   | doc m%
+;;       Append one event and retain only the newest bounded suffix.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-bounded-event-append '(a b) 'c 2)
+;;       ;; => (b c)
+;;       ```
+;;     %
 (def (poo-flow-bounded-event-append events event limit)
-  (let (next (append events (list event)))
-    (let loop ((remaining next))
-      (if (<= (length remaining) limit)
-          remaining
-          (loop (cdr remaining))))))
+  (let* ((next (append events (list event)))
+         (overflow (max 0 (- (length next) limit))))
+    (drop next overflow)))
 
+;; : (-> Object Boolean)
 (def (poo-flow-owner-map-observation-object? value)
   (object? value))

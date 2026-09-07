@@ -14,7 +14,7 @@
 
 ;;; Missing typed documentation and forall targets are compact enough for the
 ;;; normal receipt. Other policy rules retain their native diagnostic details.
-;; : (-> Hash Value)
+;; : (-> Hash Object)
 (def (poo-flow-policy-debug-targets details)
   (let ((missing-docs (hash-get details 'typedDocMissingTargets))
         (missing-foralls (hash-get details 'typedForallMissingTargets))

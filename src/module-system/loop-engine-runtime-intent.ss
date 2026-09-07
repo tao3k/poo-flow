@@ -1,3 +1,5 @@
+;;; Boundary: converts accepted loop-engine intent into runtime request and receipt objects.
+;;; Invariant: intent projection preserves policy, capability, proof, and session evidence.
 (import :poo-flow/src/core/runtime-protocol
         :poo-flow/src/core/runtime-command-descriptor
         :poo-flow/src/module-system/loop-engine-core
@@ -31,13 +33,14 @@
 
 (def (poo-flow-user-loop-engine-intent-use-case-refs intent)
   (let ((selected (poo-flow-user-loop-engine-intent-use-case-name intent)))
-    (let loop ((rest (poo-flow-user-loop-engine-intent-ref intent 'use-cases '()))
-               (refs (if selected (list selected) '())))
-      (cond
-       ((null? rest) (reverse refs))
-       ((and (pair? (car rest)) (not (memq (caar rest) refs)))
-        (loop (cdr rest) (cons (caar rest) refs)))
-       (else (loop (cdr rest) refs))))))
+    (reverse
+     (foldl
+      (lambda (entry refs)
+        (if (and (pair? entry) (not (memq (car entry) refs)))
+          (cons (car entry) refs)
+          refs))
+      (if selected (list selected) '())
+      (poo-flow-user-loop-engine-intent-ref intent 'use-cases '())))))
 
 (def (poo-flow-user-loop-engine-intent-runtime-readiness-receipts
       intent
@@ -386,6 +389,7 @@
      (cdr policies)
      use-case))))
 
+;;; Receipt boundary: resolve one memory policy per use case and retain unresolved selections as diagnostics.
 (def (poo-flow-user-loop-engine-intent-memory-receipt intent)
   (let* ((memory-policies
           (poo-flow-user-loop-engine-intent-ref intent 'memory-policies '()))
@@ -493,6 +497,7 @@
       (cons 'artifact-refs
             (poo-flow-user-loop-engine-intent-ref intent 'artifact-refs '()))))))
 
+;;; Handoff boundary: package stable request identities and evidence without executing the runtime operation.
 (def (poo-flow-user-loop-engine-intent-runtime-envelope intent)
   (let ((use-case-name
          (poo-flow-user-loop-engine-intent-use-case-name intent)))

@@ -37,14 +37,14 @@
 ;;       ;; => "poo-flow.modules.user-interface.profile-gate.v1"
 ;;       ```
 ;;     %
-;; : (-> Unit PooFlowUserInterfaceProfileGateKind)
+;; : PooFlowUserInterfaceProfileGateKind
 (def poo-flow-user-interface-profile-gate-kind
   "poo-flow.modules.user-interface.profile-gate.v1")
 
 ;;; Gate receipts keep benchmark, proof, dependency, scope, and observability
 ;;; evidence as a POO object instead of turning the public path into a JSON or
 ;;; alist manifest.
-;; : (-> Unit PooFlowUserInterfaceProfileGateReceiptKind)
+;; : PooFlowUserInterfaceProfileGateReceiptKind
 (def poo-flow-user-interface-profile-gate-receipt-kind
   "poo-flow.modules.user-interface.profile-gate-receipt.v1")
 
@@ -61,7 +61,7 @@
 ;;       ;; => non-false
 ;;       ```
 ;;     %
-;; : (-> Unit PooFlowUserInterfaceProfileProofStatusSet)
+;; : PooFlowUserInterfaceProfileProofStatusSet
 (def poo-flow-user-interface-profile-proof-statuses
   '(discharged open experimental rejected))
 
@@ -78,7 +78,7 @@
 ;;       ;; => non-false
 ;;       ```
 ;;     %
-;; : (-> Unit PooFlowUserInterfaceProfileLeanFactKeySet)
+;; : PooFlowUserInterfaceProfileLeanFactKeySet
 (def poo-flow-user-interface-profile-gate-fact-keys
   '(ui.profile/public-profile
     ui.profile/in-profile-set
@@ -529,6 +529,7 @@
      (cons 'ui.profile/experimental
            (eq? status 'experimental)))))
 
+;; : (forall (v) (-> [(Pair Symbol v)] Boolean))
 ;; poo-flow-user-interface-profile-lean-fact-contract-complete?
 ;;   : (-> Alist Boolean)
 ;;   | contract: validates that projected Lean fact rows match this gate family
@@ -540,7 +541,6 @@
 ;;       ;; => #t when every required UI profile fact key is present
 ;;       ```
 ;;     %
-;; : (-> Alist Boolean)
 (def (poo-flow-user-interface-profile-lean-fact-contract-complete? facts)
   (and (andmap (lambda (key)
                  (and (assq key facts) #t))

@@ -210,19 +210,19 @@
 (test-case "accepts canonical relative sources under a logical resource root"
   (let (profile
         (poo-flow-sandbox-profile
-         (canonical-relative-source-recipe
-          (backend nono)
-          (network deny-by-default)
-          (capabilities filesystem-read)
-          (resources
-           (filesystem
-            (scope . project-workspace)
-            (paths
-             ((role . project-workspace)
-              (source . "src/module")
-              (project-marker . "gerbil.pkg")
-              (mode . read-only)))))
-          (metadata (intent . portability-regression)))))
+         canonical-relative-source-recipe
+         (backend nono)
+         (network deny-by-default)
+         (capabilities filesystem-read)
+         (resources
+          (filesystem
+           (scope . project-workspace)
+           (paths
+            ((role . project-workspace)
+             (source . "src/module")
+             (project-marker . "gerbil.pkg")
+             (mode . read-only)))))
+         (metadata (intent . portability-regression))))
     (check-equal?
      (poo-flow-sandbox-profile-recipe-portable? profile)
      #t)))

@@ -8,7 +8,9 @@
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config
-        :poo-flow/src/modules/memory-core/config)
+        :poo-flow/src/modules/memory-core/config
+        (only-in :poo-flow/src/modules/memory-core/objects-core
+                 poo-flow-memory-field-rows))
 
 (export memory-core-test)
 
@@ -23,6 +25,12 @@
 
 (def memory-core-test
   (test-suite "poo-flow memory-core"
+    (test-case "expands ordered memory field rows"
+      (check-equal?
+       (poo-flow-memory-field-rows
+        (kind 'memory)
+        (schema 'memory.v1))
+       '((kind . memory) (schema . memory.v1))))
     (test-case "authors custom memory store specs and projects handoff manifests"
       (let* ((store
               (poo-flow-memory-store-spec

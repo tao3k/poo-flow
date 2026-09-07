@@ -1,14 +1,17 @@
+;;; Boundary: serializes validated feature compositions as Bundle v1 images.
+;;; Invariant: writing preserves the lowering result and canonical content identity.
 (export poo-flow-composition->bundle-v1-image
         poo-flow-write-composition-bundle-v1!
         poo-flow-write-composition-bundle-v1/from-environment!)
 
-(import :std/format
-        :clan/poo/object
+(import (only-in :std/format format)
+        (only-in :clan/poo/object .ref .slot?)
         :poo-flow/src/core/plan
         :poo-flow/src/module-system/profile-composition
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/feature-system/bundle-v1-foreign-arena)
 
+;; : (-> PooPlanNode String)
 (def (plan-node-semantic-id node)
   (format "~s" (plan-node-id node)))
 
@@ -16,21 +19,25 @@
 ;;; policy metadata; an admitted receipt is supplied by the execution runtime.
 (def +poo-flow-bundle-v1-guard-symbol-kind+ 2)
 
+;; : (-> Object String)
 (def (guard->string guard)
   (if (string? guard)
     guard
     (call-with-output-string (lambda (port) (write guard port)))))
 
+;; : (-> Object Object)
 (def (guard-unbox value)
   (if (and (pair? value) (null? (cdr value)) (pair? (car value)))
     (guard-unbox (car value))
     value))
 
+;; : (-> List String)
 (def (guard-payload->string payload)
   (unless (and (pair? payload) (null? (cdr payload)))
     (error "POO-FLOW-GUARD-E001 guard expects exactly one declaration" payload))
   (guard->string (guard-unbox (car payload))))
 
+;; : (-> PooCompositionStage MaybeString)
 (def (stage-guard stage)
   (let loop ((clauses (.ref stage 'clauses)))
     (cond
@@ -39,6 +46,7 @@
       (guard-payload->string (.ref (car clauses) 'payload)))
      (else (loop (cdr clauses))))))
 
+;; : (-> PooComposition Symbol MaybeString)
 (def (profile-guard composition profile-name)
   (let loop ((profiles (.ref composition 'profiles)))
     (cond
@@ -50,15 +58,18 @@
           #f)))
      (else (loop (cdr profiles))))))
 
+;; : (-> PooComposition PooPlanNode MaybeString)
 (def (plan-node-guard composition node)
   (case (plan-node-kind node)
     ((case) (stage-guard (plan-node-step node)))
     ((profile-instance) (profile-guard composition (plan-node-name node)))
     (else #f)))
 
+;; : (-> PooPlanNode String)
 (def (plan-node-policy-id node)
   (string-append (plan-node-semantic-id node) ".guard"))
 
+;; : (-> PooExecutionPlan PooComposition [PooFeatureBundleV1Component])
 (def (plan-components plan composition)
   (map
    (lambda (node)
@@ -80,6 +91,7 @@
         (plan-node-ordinal node))))
    (execution-plan-nodes plan)))
 
+;; : (-> PooExecutionPlan PooComposition [PooFeatureBundleV1Symbol])
 (def (plan-symbols plan composition)
   (append
    (map
@@ -90,43 +102,38 @@
        (symbol->string (plan-node-name node))
        1))
     (execution-plan-nodes plan))
-   (let loop ((nodes (execution-plan-nodes plan)) (out '()))
-     (if (null? nodes)
-       (reverse out)
-       (let* ((node (car nodes))
-              (guard (plan-node-guard composition node)))
-         (loop
-          (cdr nodes)
-          (if guard
-            (cons
+   (filter-map
+    (lambda (node)
+      (let (guard (plan-node-guard composition node))
+        (and guard
              (feature-bundle-v1-symbol
               'policy
               (plan-node-policy-id node)
               guard
-              +poo-flow-bundle-v1-guard-symbol-kind+)
-             out)
-            out)))))))
+              +poo-flow-bundle-v1-guard-symbol-kind+))))
+    (execution-plan-nodes plan))))
 
+;; : (-> PooExecutionPlan [PooFeatureBundleV1Edge])
 (def (plan-edges plan)
-  (let loop
-      ((rest (execution-plan-dependency-edges plan))
-       (order 0)
-       (out '()))
-    (if (null? rest)
-      (reverse out)
-      (let (edge (car rest))
-        (loop
-         (cdr rest)
-         (+ order 1)
-         (cons
-          (feature-bundle-v1-edge
-           (execution-plan-flow-name plan)
-           (format "~s" (car edge))
-           (format "~s" (cadr edge))
-           'poo-flow.bundle-v1.plan-dependency
-           order)
-          out))))))
+  (let (order+edges-reversed
+        (foldl
+         (lambda (edge state)
+           (let (order (car state))
+             (cons
+              (+ order 1)
+              (cons
+               (feature-bundle-v1-edge
+                (execution-plan-flow-name plan)
+                (format "~s" (car edge))
+                (format "~s" (cadr edge))
+                'poo-flow.bundle-v1.plan-dependency
+                order)
+               (cdr state)))))
+         (cons 0 '())
+         (execution-plan-dependency-edges plan)))
+    (reverse (cdr order+edges-reversed))))
 
+;; : (-> PooComposition Symbol Integer (Values PooExecutionPlan PooFeatureBundleV1ForeignArenaImage))
 (def (poo-flow-composition->bundle-v1-image composition bundle-id bundle-epoch)
   (let* ((plan (poo-flow-composition->execution-plan composition))
          (lowering
@@ -143,6 +150,7 @@
            (feature-bundle-v1-write-foreign-arena lowering))))
     (values plan image)))
 
+;; : (-> String U8Vector Unit)
 (def (write-u8vector-file! path bytes)
   (let (port (open-output-file (list path: path)))
     (unwind-protect
@@ -153,6 +161,7 @@
                  path written (u8vector-length bytes))))
       (close-output-port port))))
 
+;; : (-> PooComposition Symbol Integer String String PooExecutionPlan)
 (def (poo-flow-write-composition-bundle-v1!
       composition bundle-id bundle-epoch descriptor-path arena-path)
   (let-values (((plan image)
@@ -162,12 +171,14 @@
     (write-u8vector-file! arena-path (.ref image 'arena-image))
     plan))
 
+;; : (-> String String)
 (def (required-environment-value name)
   (let (value (getenv name))
     (unless (and value (> (string-length value) 0))
       (error "Bundle v1 composition environment value is required" name))
     value))
 
+;; : (-> PooComposition PooExecutionPlan)
 (def (poo-flow-write-composition-bundle-v1/from-environment! composition)
   (let* ((bundle-id
           (string->symbol

@@ -1,18 +1,18 @@
 ;;; -*- Gerbil -*-
-;;; Observability: object-specific predicates and reusable contract declarations.
+;;; Boundary: native POO type and contract descriptors for observability.
+;;; Invariant: validation dispatches through gerbil-poo descriptors; contract
+;;; evidence is projected only after the semantic decision has been made.
 
-(import (only-in "../utilities/contracts.ss"
-                 poo-flow-contract-alist?
-                 poo-flow-contract-list-of?
-                 poo-flow-contract-require!
-                 poo-flow-contract-check-slot!)
-        (only-in "../utilities/contract-syntax.ss"
-                 defcontract-family))
+(import :gerbil/gambit
+        (only-in :clan/poo/object .o .ref .slot? object?)
+        (only-in :clan/poo/mop define-type element? validate)
+        (only-in "../module-system/types.ss"
+                 PooFlowContract.
+                 poo-flow-classification-evidence
+                 poo-flow-contract-admit))
 
-(export +poo-flow-observability-diagnostic-slot-contracts+
-        +poo-flow-observability-receipt-slot-contracts+
-        +poo-flow-observability-diagnostic-type-contract+
-        +poo-flow-observability-receipt-type-contract+
+(export PooFlowObservabilityDiagnosticContract
+        PooFlowObservabilityReceiptContract
         poo-flow-observability-alist?
         poo-flow-observability-list-of?
         poo-flow-observability-source-ref?
@@ -27,321 +27,174 @@
         poo-flow-observability-graph-shape?
         poo-flow-observability-repair-shape?
         poo-flow-observability-readiness-shape?
-        poo-flow-observability-require!
-        poo-flow-observability-check-slot!
-        poo-flow-observability-require-diagnostic-slots!
-        poo-flow-observability-require-receipt-slots!)
+        poo-flow-observability-diagnostic-contract-evidence
+        poo-flow-observability-receipt-contract-evidence
+        poo-flow-observability-diagnostic-contract?
+        poo-flow-observability-receipt-contract?
+        poo-flow-observability-require-diagnostic!
+        poo-flow-observability-require-receipt!)
 
-;; poo-flow-observability-alist?
-;;   : (-> PooFlowValue Boolean)
-;;   | doc m%
-;;       Recognize observability metadata alists by delegating to utilities.
-;;       # Examples
-;;       (poo-flow-observability-alist? '((kind . graph) (valid? . #t)))
-;;       # Result
-;;       #t for proper association lists; #f otherwise.
-;;     %
 (def (poo-flow-observability-alist? value)
-  (poo-flow-contract-alist? value))
+  (and (list? value) (andmap pair? value)))
 
-;; poo-flow-observability-list-of?
-;;   : (-> (-> PooFlowValue Boolean) [PooFlowValue] Boolean)
-;;   | doc m%
-;;       Recognize a proper observability list whose elements satisfy a predicate.
-;;       # Examples
-;;       (poo-flow-observability-list-of? symbol? '(a b c))
-;;       # Result
-;;       #t when the input is a proper list and every item passes.
-;;     %
 (def (poo-flow-observability-list-of? predicate values)
-  (poo-flow-contract-list-of? predicate values))
+  (and (list? values) (andmap predicate values)))
 
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-source-ref? value)
-  (or (symbol? value)
-      (string? value)
-      (poo-flow-observability-alist? value)))
+  (or (symbol? value) (string? value) (poo-flow-observability-alist? value)))
 
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-severity? value)
   (and (symbol? value)
-       (member value '(debug info warning error fatal))
-       #t))
+       (if (member value '(debug info warning error fatal)) #t #f)))
 
-;; : (-> PooFlowValue Boolean)
-(def (poo-flow-observability-boundary-ref? value)
-  (symbol? value))
+(def (poo-flow-observability-boundary-ref? value) (symbol? value))
+(def (poo-flow-observability-validator-ref? value) (symbol? value))
 
-;; : (-> PooFlowValue Boolean)
-(def (poo-flow-observability-validator-ref? value)
-  (symbol? value))
-
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-graph-node-ref? value)
-  (or (not value)
-      (symbol? value)
-      (string? value)
+  (or (not value) (symbol? value) (string? value)
       (poo-flow-observability-alist? value)))
 
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-graph-edge-ref? value)
-  (or (not value)
-      (symbol? value)
-      (string? value)
-      (pair? value)
+  (or (not value) (symbol? value) (string? value) (pair? value)
       (poo-flow-observability-alist? value)))
 
-;; : (-> PooFlowValue Boolean)
-(def (poo-flow-observability-reason? value)
-  (symbol? value))
+(def (poo-flow-observability-reason? value) (symbol? value))
+(def (poo-flow-observability-message? value) (string? value))
 
-;; : (-> PooFlowValue Boolean)
-(def (poo-flow-observability-message? value)
-  (string? value))
-
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-repair-target? value)
-  (or (not value)
-      (symbol? value)
-      (string? value)
+  (or (not value) (symbol? value) (string? value)
       (poo-flow-observability-alist? value)))
 
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-graph-shape? value)
   (poo-flow-observability-alist? value))
 
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-repair-shape? value)
   (and (poo-flow-observability-alist? value)
-       (assq 'target-layer value)
-       (assq 'repair-target value)
-       #t))
+       (assq 'target-layer value) (assq 'repair-target value) #t))
 
-;; : (-> PooFlowValue Boolean)
 (def (poo-flow-observability-readiness-shape? value)
   (and (poo-flow-observability-alist? value)
-       (assq 'state value)
-       (assq 'valid? value)
-       #t))
+       (assq 'state value) (assq 'valid? value) #t))
 
-(defcontract-family
-  +poo-flow-observability-diagnostic-slot-contracts+
-  +poo-flow-observability-diagnostic-type-contract+
-  'observability/diagnostic
-  'observability
-  'PooFlowObservabilityDiagnostic
-  '((boundary . observability) (projection . diagnostic))
-  ((+poo-flow-observability-diagnostic-severity-contract+
-    'observability.diagnostic/severity
-    'severity
-    'Symbol
-    'poo-flow-observability-severity?
-    poo-flow-observability-severity?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-boundary-contract+
-    'observability.diagnostic/boundary
-    'boundary
-    'Symbol
-    'poo-flow-observability-boundary-ref?
-    poo-flow-observability-boundary-ref?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-validator-contract+
-    'observability.diagnostic/validator
-    'validator
-    'Symbol
-    'poo-flow-observability-validator-ref?
-    poo-flow-observability-validator-ref?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-node-contract+
-    'observability.diagnostic/node
-    'node
-    'PooFlowGraphNodeRef
-    'poo-flow-observability-graph-node-ref?
-    poo-flow-observability-graph-node-ref?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-edge-contract+
-    'observability.diagnostic/edge
-    'edge
-    'PooFlowGraphEdgeRef
-    'poo-flow-observability-graph-edge-ref?
-    poo-flow-observability-graph-edge-ref?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-reason-contract+
-    'observability.diagnostic/reason
-    'reason
-    'Symbol
-    'poo-flow-observability-reason?
-    poo-flow-observability-reason?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-message-contract+
-    'observability.diagnostic/message
-    'message
-    'String
-    'poo-flow-observability-message?
-    poo-flow-observability-message?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-repair-target-contract+
-    'observability.diagnostic/repair-target
-    'repair-target
-    'PooFlowRepairTarget
-    'poo-flow-observability-repair-target?
-    poo-flow-observability-repair-target?
-    #t
-    '())
-   (+poo-flow-observability-diagnostic-artifacts-contract+
-    'observability.diagnostic/artifacts
-    'artifacts
-    'Alist
-    'poo-flow-observability-alist?
-    poo-flow-observability-alist?
-    #t
-    '())))
+(def (poo-flow-observability-object-slots? candidate slots)
+  (and (object? candidate)
+       (andmap (lambda (slot) (.slot? candidate slot)) slots)))
 
-(defcontract-family
-  +poo-flow-observability-receipt-slot-contracts+
-  +poo-flow-observability-receipt-type-contract+
-  'observability/receipt
-  'observability
-  'PooFlowObservabilityReceipt
-  '((boundary . observability) (projection . agent-feedback))
-  ((+poo-flow-observability-receipt-schema-contract+
-    'observability.receipt/schema
-    'schema
-    'String
-    'string?
-    string?
-    #t
-    '())
-   (+poo-flow-observability-receipt-source-contract+
-    'observability.receipt/source
-    'source
-    'PooFlowSourceRef
-    'poo-flow-observability-source-ref?
-    poo-flow-observability-source-ref?
-    #t
-    '())
-   (+poo-flow-observability-receipt-graph-contract+
-    'observability.receipt/graph
-    'graph
-    'Alist
-    'poo-flow-observability-graph-shape?
-    poo-flow-observability-graph-shape?
-    #t
-    '())
-   (+poo-flow-observability-receipt-repair-contract+
-    'observability.receipt/repair
-    'repair
-    'Alist
-    'poo-flow-observability-repair-shape?
-    poo-flow-observability-repair-shape?
-    #t
-    '())
-   (+poo-flow-observability-receipt-readiness-contract+
-    'observability.receipt/readiness
-    'readiness
-    'Alist
-    'poo-flow-observability-readiness-shape?
-    poo-flow-observability-readiness-shape?
-    #t
-    '())
-   (+poo-flow-observability-receipt-artifacts-contract+
-    'observability.receipt/artifacts
-    'artifacts
-    'Alist
-    'poo-flow-observability-alist?
-    poo-flow-observability-alist?
-    #t
-    '())))
+(def (poo-flow-observability-obligation-failure contract-identity-value
+                                                  slot-value expected-value)
+  (.o kind: 'poo-flow.contract.obligation-failure
+      contract-identity: contract-identity-value
+      slot: slot-value
+      expected: expected-value))
 
-;; poo-flow-observability-require!
-;;   : (-> Symbol (-> PooFlowValue Boolean) PooFlowValue PooFlowValue)
-;;   | doc m%
-;;       Delegate low-level predicate enforcement to utilities.
-;;       # Examples
-;;       (poo-flow-observability-require! 'receipt.schema string? schema)
-;;       # Result
-;;       The original value when valid; raises a contract error when invalid.
-;;     %
-(def (poo-flow-observability-require! label predicate value)
-  (poo-flow-contract-require! label predicate value))
+(def (poo-flow-observability-check-obligation candidate contract-identity
+                                                slot predicate expected)
+  (if (predicate (.ref candidate slot))
+    '()
+    (list (poo-flow-observability-obligation-failure
+           contract-identity slot expected))))
 
-;; poo-flow-observability-check-slot!
-;;   : (-> PooFlowSlotContract PooFlowValue PooFlowValue)
-;;   | doc m%
-;;       Execute one observability slot contract through utilities.
-;;       # Examples
-;;       (poo-flow-observability-check-slot! slot-contract value)
-;;       # Result
-;;       The original value when valid; raises with the slot contract key when invalid.
-;;     %
-(def (poo-flow-observability-check-slot! contract value)
-  (poo-flow-contract-check-slot! contract value))
+(def +poo-flow-observability-diagnostic-slots+
+  '(family severity boundary validator node edge reason message repair-target artifacts))
 
-;; poo-flow-observability-require-diagnostic-slots!
-;;   : (-> Symbol Symbol Symbol PooFlowGraphNodeRef PooFlowGraphEdgeRef Symbol String PooFlowRepairTarget [Alist] Boolean)
-;;   | doc m%
-;;       Enforce diagnostic slot contracts generated by =defcontract-family=.
-;;       # Examples
-;;       (poo-flow-observability-require-diagnostic-slots!
-;;        'error 'contract 'validator 'node #f 'reason "message" 'author '())
-;;       # Result
-;;       #t when every diagnostic slot satisfies its generated contract.
-;;     %
-(def (poo-flow-observability-require-diagnostic-slots! severity boundary validator node edge reason message repair-target artifacts)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-severity-contract+ severity)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-boundary-contract+ boundary)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-validator-contract+ validator)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-node-contract+ node)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-edge-contract+ edge)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-reason-contract+ reason)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-message-contract+ message)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-repair-target-contract+ repair-target)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-diagnostic-artifacts-contract+ artifacts)
-  #t)
+(def +poo-flow-observability-receipt-slots+
+  '(family schema source graph diagnostics repair readiness artifacts))
 
-;; poo-flow-observability-require-receipt-slots!
-;;   : (-> String PooFlowSourceRef Alist [PooFlowObservabilityDiagnostic] (-> PooFlowValue Boolean) Alist Alist [Alist] Boolean)
-;;   | doc m%
-;;       Enforce receipt slot contracts generated by =defcontract-family=.
-;;       The diagnostic predicate comes from objects.ss to avoid a module cycle.
-;;       # Examples
-;;       (poo-flow-observability-require-receipt-slots!
-;;        schema source graph diagnostics diagnostic? repair readiness artifacts)
-;;       # Result
-;;       #t when the receipt shape is legal.
-;;     %
-(def (poo-flow-observability-require-receipt-slots! schema source graph diagnostics diagnostic? repair readiness artifacts)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-receipt-schema-contract+ schema)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-receipt-source-contract+ source)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-receipt-graph-contract+ graph)
-  (poo-flow-observability-require!
-   'observability.receipt/diagnostics
-   (lambda (value)
-     (poo-flow-observability-list-of? diagnostic? value))
-   diagnostics)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-receipt-repair-contract+ repair)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-receipt-readiness-contract+ readiness)
-  (poo-flow-observability-check-slot!
-   +poo-flow-observability-receipt-artifacts-contract+ artifacts)
-  #t)
+(def (poo-flow-observability-classification identity slots candidate context)
+  (let (accepted? (poo-flow-observability-object-slots? candidate slots))
+    (poo-flow-classification-evidence
+     identity candidate accepted?
+     (if accepted? '()
+         (list (poo-flow-observability-obligation-failure
+                identity 'object-shape 'POOObject)))
+     context)))
+
+(def (poo-flow-observability-diagnostic-classify candidate context)
+  (poo-flow-observability-classification
+   'observability/diagnostic
+   +poo-flow-observability-diagnostic-slots+
+   candidate context))
+
+(def (poo-flow-observability-diagnostic-obligations candidate _context)
+  (append
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'family (lambda (value) (eq? value 'observability/diagnostic)) 'observability/diagnostic)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'severity poo-flow-observability-severity? 'ObservabilitySeverity)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'boundary poo-flow-observability-boundary-ref? 'Symbol)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'validator poo-flow-observability-validator-ref? 'Symbol)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'node poo-flow-observability-graph-node-ref? 'GraphNodeRef)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'edge poo-flow-observability-graph-edge-ref? 'GraphEdgeRef)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'reason poo-flow-observability-reason? 'Symbol)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'message poo-flow-observability-message? 'String)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'repair-target poo-flow-observability-repair-target? 'RepairTarget)
+   (poo-flow-observability-check-obligation candidate 'observability/diagnostic
+    'artifacts poo-flow-observability-alist? 'Alist)))
+
+;;; Diagnostic contract: classification fixes the kind while obligations validate every diagnostic field.
+(define-type (PooFlowObservabilityDiagnosticContract @ PooFlowContract.)
+  identity: 'observability/diagnostic
+  .classify: poo-flow-observability-diagnostic-classify
+  .obligations: poo-flow-observability-diagnostic-obligations)
+
+(def (poo-flow-observability-diagnostic-contract? candidate)
+  (element? PooFlowObservabilityDiagnosticContract candidate))
+
+(def (poo-flow-observability-diagnostic-contract-evidence candidate)
+  (poo-flow-contract-admit
+   PooFlowObservabilityDiagnosticContract candidate 'observability))
+
+(def (poo-flow-observability-diagnostic-list? value)
+  (poo-flow-observability-list-of?
+   poo-flow-observability-diagnostic-contract? value))
+
+(def (poo-flow-observability-receipt-classify candidate context)
+  (poo-flow-observability-classification
+   'observability/receipt
+   +poo-flow-observability-receipt-slots+
+   candidate context))
+
+(def (poo-flow-observability-receipt-obligations candidate _context)
+  (append
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'family (lambda (value) (eq? value 'observability/receipt)) 'observability/receipt)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'schema string? 'String)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'source poo-flow-observability-source-ref? 'SourceRef)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'graph poo-flow-observability-graph-shape? 'GraphProjection)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'diagnostics poo-flow-observability-diagnostic-list? 'DiagnosticList)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'repair poo-flow-observability-repair-shape? 'RepairProjection)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'readiness poo-flow-observability-readiness-shape? 'ReadinessProjection)
+   (poo-flow-observability-check-obligation candidate 'observability/receipt
+    'artifacts poo-flow-observability-alist? 'Alist)))
+
+;;; Receipt contract: admission requires graph, diagnostic, repair, readiness, and artifact projections.
+(define-type (PooFlowObservabilityReceiptContract @ PooFlowContract.)
+  identity: 'observability/receipt
+  .classify: poo-flow-observability-receipt-classify
+  .obligations: poo-flow-observability-receipt-obligations)
+
+(def (poo-flow-observability-receipt-contract? candidate)
+  (element? PooFlowObservabilityReceiptContract candidate))
+
+(def (poo-flow-observability-receipt-contract-evidence candidate)
+  (poo-flow-contract-admit
+   PooFlowObservabilityReceiptContract candidate 'observability))
+
+(def (poo-flow-observability-require-diagnostic! candidate)
+  (validate PooFlowObservabilityDiagnosticContract candidate))
+
+(def (poo-flow-observability-require-receipt! candidate)
+  (validate PooFlowObservabilityReceiptContract candidate))

@@ -19,7 +19,7 @@
         :poo-flow/src/modules/docker
         :poo-flow/src/modules/text
         :poo-flow/src/modules/workflow/flows
-        :poo-flow/src/modules/workflow/syntax)
+        :poo-flow/src/workflow/store)
 
 ;; : (-> RunConfig Flow Input Value)
 (def (configured-run config flow input)
@@ -34,42 +34,48 @@
     flow
     input)))
 
-(defpoo-custom-repeat-flow macro-custom-repeat
-  macro-custom-repeat
-  "woop!"
-  7
-  'string
-  'string)
+;; These fixtures exercise the public constructors directly.  Naming a value
+;; does not require a second macro language or a compile-time binding layer.
+;; : Flow
+(def macro-custom-repeat
+  (custom-repeat-flow 'macro-custom-repeat "woop!" 7 'string 'string))
 
-(defpoo-docker-flow macro-docker-compile
-  macro-docker-compile
-  "gcc:9.3.0"
-  "gcc"
-  '("/example/main.c" "-o" "/output/main")
-  '(((store-item . example-src)
-     (mount-path . "/example"))
-    ((store-item . output-dir)
-     (mount-path . "/output")))
-  'process-handle
-  'integer
-  'process-handle)
+;; : Flow
+(def macro-docker-compile
+  (docker-flow
+   'macro-docker-compile
+   "gcc:9.3.0"
+   "gcc"
+   '("/example/main.c" "-o" "/output/main")
+   '(((store-item . example-src)
+      (mount-path . "/example"))
+     ((store-item . output-dir)
+      (mount-path . "/output")))
+   'process-handle
+   'integer
+   'process-handle))
 
-(defpoo-store-flow macro-store-put
-  macro-store-put
-  put
-  '((store-item . macro-output)
-    (path . "/output/main"))
-  'process-handle
-  'artifact-manifest)
+;; : Flow
+(def macro-store-put
+  (store-flow
+   'macro-store-put
+   'put
+   '((store-item . macro-output)
+     (path . "/output/main"))
+   'process-handle
+   'artifact-manifest))
 
-(defpoo-ccompilation-store-workflow macro-ccompilation-store
-  macro-ccompilation-store)
+;; : Flow
+(def macro-ccompilation-store
+  (make-ccompilation-store-workflow 'macro-ccompilation-store))
 
-(defpoo-tensorflow-workflow macro-tensorflow
-  macro-tensorflow)
+;; : Flow
+(def macro-tensorflow
+  (make-tensorflow-workflow 'macro-tensorflow))
 
-(defpoo-makefile-tool-workflow macro-makefile-tool
-  macro-makefile-tool)
+;; : Flow
+(def macro-makefile-tool
+  (make-makefile-tool-workflow 'macro-makefile-tool))
 
 (run-tests!
   (test-suite "funflow tutorial feature batch"

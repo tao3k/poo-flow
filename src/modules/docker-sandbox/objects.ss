@@ -24,8 +24,8 @@
   (sandbox objects.docker-sandbox.sandbox
            objects.docker-sandbox
            objects.shared.sandbox
-           ((backend Symbol override 'docker '((scope . docker-sandbox)))
-            (image String override "ubuntu:latest" '((scope . docker-sandbox)))))
+           ((backend PooFlowModuleSymbolType override 'docker '((scope . docker-sandbox)))
+            (image PooFlowModuleStringType override "ubuntu:latest" '((scope . docker-sandbox)))))
   (backend docker
            poo-flow-sandbox-backend-capability/docker
            '((metadata . ((scope . docker-sandbox)
@@ -35,21 +35,21 @@
            objects.sandbox-core.profile
            (poo-flow-sandbox-core-profile-object
             poo-flow-docker-sandbox-object)
-           ((backend-kind Symbol override 'docker
+           ((backend-kind PooFlowModuleSymbolType override 'docker
                           '((scope . docker-sandbox)
                             (owned-by . module-config)))
-            (backend-ref Symbol override 'docker-sandbox
+            (backend-ref PooFlowModuleSymbolType override 'docker-sandbox
                          '((scope . docker-sandbox)
                            (owned-by . module-config)))
-            (capabilities List override
+            (capabilities PooFlowModuleListType override
                           '(process-run filesystem-read filesystem-write tmpdir)
                           '((scope . docker-sandbox)
                             (dsl-row . capabilities)))
-            (backend-capability Object override
+            (backend-capability PooFlowModuleObjectType override
                                 poo-flow-docker-sandbox-backend-capability
                                 '((scope . docker-sandbox)
                                   (owned-by . module-config)))
-            (resource-policy List override
+            (resource-policy PooFlowModuleListType override
                              (poo-flow-sandbox-filesystem-prototype->resource-policy
                               poo-flow-runtime-volume-filesystem-prototype)
                              '((scope . docker-sandbox)

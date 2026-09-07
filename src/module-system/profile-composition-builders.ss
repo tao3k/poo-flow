@@ -176,6 +176,25 @@
         (ordinal ordinal-value)
         (local-ordinal local-ordinal-value))))
 
+;; Binary search remains a bounded lookup over the immutable range vector; the
+;; recursive helper makes its search boundary explicit instead of accumulating
+;; a list transform in the public workload accessor.
+;; : (-> Vector Integer Integer Integer PooFlowCompositionInstanceRef)
+(def (poo-flow-composition-launch-range-ref launch-ranges ordinal low high)
+  (let* ((middle (quotient (+ low high) 2))
+         (launch-range (vector-ref launch-ranges middle))
+         (start (.ref launch-range 'start))
+         (end (.ref launch-range 'end)))
+    (cond
+     ((< ordinal start)
+      (poo-flow-composition-launch-range-ref
+       launch-ranges ordinal low (- middle 1)))
+     ((>= ordinal end)
+      (poo-flow-composition-launch-range-ref
+       launch-ranges ordinal (+ middle 1) high))
+     (else
+      (poo-flow-composition-instance-ref launch-range ordinal start)))))
+
 (def (poo-flow-composition-workload/ref workload ordinal)
   (let ((total-count (.ref workload 'total-count))
         (launch-ranges (.ref workload 'launch-ranges)))
@@ -185,19 +204,8 @@
       (error "POO Flow composition workload ordinal is out of range"
              ordinal
              total-count))
-    (let loop ((low 0)
-               (high (- (vector-length launch-ranges) 1)))
-      (let* ((middle (quotient (+ low high) 2))
-             (launch-range (vector-ref launch-ranges middle))
-             (start (.ref launch-range 'start))
-             (end (.ref launch-range 'end)))
-        (cond
-         ((< ordinal start)
-          (loop low (- middle 1)))
-         ((>= ordinal end)
-          (loop (+ middle 1) high))
-         (else
-          (poo-flow-composition-instance-ref launch-range ordinal start)))))))
+    (poo-flow-composition-launch-range-ref
+     launch-ranges ordinal 0 (- (vector-length launch-ranges) 1))))
 
 (def (poo-flow-composition-object/profiles name module-bindings profiles stages)
   (poo-flow-composition-object/profile-bindings

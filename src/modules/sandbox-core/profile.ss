@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: public facade for sandbox-core profile POO projection.
 
-(import :poo-flow/src/modules/sandbox-core/profile-support/prototype
+(import :poo-flow/src/modules/agent-sandbox/profile-native-contract
+        :poo-flow/src/modules/sandbox-core/profile-support/prototype
         :poo-flow/src/modules/sandbox-core/profile-support/policy
         :poo-flow/src/modules/sandbox-core/profile-support/authoring
         :poo-flow/src/modules/sandbox-core/profile-support/derivation
@@ -16,7 +17,8 @@
                  poo-flow-sandbox-profile-resource-policy
                  poo-flow-sandbox-profile-metadata))
 
-(export (import: :poo-flow/src/modules/sandbox-core/resource-contract)
+(export (import: :poo-flow/src/modules/agent-sandbox/profile-native-contract)
+        (import: :poo-flow/src/modules/sandbox-core/resource-contract)
         (import: :poo-flow/src/modules/sandbox-core/profile-support/policy)
         poo-flow-sandbox-profile?
         poo-flow-sandbox-profile-name

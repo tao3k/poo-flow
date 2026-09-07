@@ -2,7 +2,7 @@
 ;;; Boundary: internal hygienic authoring forms for CaseComponent/DomainCase.
 ;;; Invariant: expansion produces ordinary POO objects and functional closure.
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .ref)
         :poo-flow/src/module-system/domain-case)
 
 (export defpoo-case-component
@@ -16,6 +16,15 @@
 ;;       fixed deliberately so malformed or incomplete declarations fail at
 ;;       macro expansion.  Every referenced role, type, slot contract, method
 ;;       contract, and projection remains an ordinary POO object.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-case-component storage storage.v1
+;;         (role role) (type contract) (slots) (contracts) (projections)
+;;         (parents) (policy-algebra policy) (strategy-algebra strategy))
+;;       ;; => binds storage to a CaseComponent
+;;       ```
 ;;     %
 (defrules defpoo-case-component
   (role type slots contracts projections parents policy-algebra
@@ -49,6 +58,15 @@
 ;;       both the resulting DomainCase and its fail-closed receipt.  The macro
 ;;       owns declaration shape only; closure, diagnostics, caching, and POO
 ;;       composition remain runtime functions.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-domain-case case receipt
+;;         (cache cache) (schema domain.v1 1) (components component)
+;;         (local-overrides) (select-projections))
+;;       ;; => binds case and receipt
+;;       ```
 ;;     %
 (defrules defpoo-domain-case
   (cache schema components local-overrides select-projections)

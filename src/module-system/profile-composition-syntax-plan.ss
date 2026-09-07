@@ -2,7 +2,8 @@
 ;;; Boundary: phase-owned parser and immutable plan for use-composition.
 ;;; Invariant: syntax remains syntax until the public macro lowers the plan.
 
-(import :gerbil/expander)
+(import :gerbil/expander
+        (only-in :std/srfi/1 append-map fold))
 
 (export parse-poo-flow-composition-syntax-plan
         composition-syntax-plan-name
@@ -25,21 +26,27 @@
         composition-clause-syntax-kind
         composition-clause-syntax-payload)
 
+;;; Syntax IR root: retains source syntax beside normalized profiles, compose clauses, and stages.
 (defclass composition-syntax-plan
   (name module-name alias profiles compose stages source))
 
+;;; Profile IR node: distinguishes inline and referenced profiles before expansion.
 (defclass composition-profile-syntax
   (name mode module-name value sections source))
 
+;;; Section IR node: preserves the source-bearing slot/value pair for diagnostics.
 (defclass composition-profile-section-syntax
   (slot value source))
 
+;;; Reference IR node: keeps module and exported slot identity separate.
 (defclass composition-profile-ref-syntax
   (module slot source))
 
+;;; Stage IR node: owns an ordered set of already parsed composition clauses.
 (defclass composition-stage-syntax
   (name clauses source))
 
+;;; Clause IR node: records the closed clause kind with its normalized payload.
 (defclass composition-clause-syntax
   (kind payload source))
 
@@ -90,32 +97,28 @@
 
 ;; : (-> [Syntax] [CompositionProfileSectionSyntax])
 (def (composition-parse-profile-sections sections)
-  (let loop ((rest sections) (out '()))
-    (cond
-     ((null? rest)
-      (reverse out))
-     ((null? (cdr rest))
-      (composition-raise-syntax-error
-       'composition-missing-profile-section-value
-       "profile section key requires a value"
-       (car rest)))
-     (else
-      (let* ((key (car rest))
-             (value (cadr rest))
-             (slot (composition-profile-section-slot key)))
-        (when (eq? slot 'hooks)
-          (composition-syntax-list
-           value
-           'composition-unknown-profile-section
-           ":with expects a parenthesized list of named extension functions"))
-        (loop
-         (cddr rest)
-         (cons
-          (composition-profile-section-syntax
-           slot: slot
-           value: value
-           source: key)
-          out)))))))
+  (cond
+   ((null? sections) '())
+   ((null? (cdr sections))
+    (composition-raise-syntax-error
+     'composition-missing-profile-section-value
+     "profile section key requires a value"
+     (car sections)))
+   (else
+    (let* ((key (car sections))
+           (value (cadr sections))
+           (slot (composition-profile-section-slot key)))
+      (when (eq? slot 'hooks)
+        (composition-syntax-list
+         value
+         'composition-unknown-profile-section
+         ":with expects a parenthesized list of named extension functions"))
+      (cons
+       (composition-profile-section-syntax
+        slot: slot
+        value: value
+        source: key)
+       (composition-parse-profile-sections (cddr sections)))))))
 
 ;; : (-> Syntax Syntax CompositionProfileSyntax)
 (def (composition-imported-profile module-name profile-name source)
@@ -159,6 +162,28 @@
    sections: (composition-parse-profile-sections sections)
    source: source))
 
+;; : (-> Syntax Syntax [Syntax] [Symbol] (values CompositionProfileSyntax Symbol))
+(def (composition-parse-profile-body module-name clause body seen)
+  (match body
+    ([profile-name . sections]
+     (let (name (syntax->datum profile-name))
+       (when (memq name seen)
+         (composition-raise-syntax-error
+          'composition-duplicate-profile
+          "profile names must be unique inside one composition module"
+          profile-name))
+       (values
+        (if (null? sections)
+          (composition-existing-profile module-name profile-name clause)
+          (composition-local-profile
+           module-name profile-name sections clause))
+        name)))
+    (else
+     (composition-raise-syntax-error
+      'composition-invalid-module-form
+      "profile expects an existing POO object or a named profile with section pairs"
+      clause))))
+
 ;; : (-> Syntax Syntax [Syntax] (values [CompositionProfileSyntax] [Symbol]))
 (def (composition-parse-profiles module-name clauses)
   (let clause-loop ((rest clauses) (out '()) (seen '()))
@@ -197,40 +222,12 @@
                      next-out)
                     (cons name next-seen))))))
             ((composition-literal=? head #'profile)
-             (match body
-               ([profile-name]
-                (let (name (syntax->datum profile-name))
-                  (when (memq name seen)
-                    (composition-raise-syntax-error
-                     'composition-duplicate-profile
-                     "profile names must be unique inside one composition module"
-                     profile-name))
-                  (clause-loop
-                   (cdr rest)
-                   (cons
-                    (composition-existing-profile
-                     module-name profile-name clause)
-                    out)
-                   (cons name seen))))
-               ([profile-name . sections]
-                (let (name (syntax->datum profile-name))
-                  (when (memq name seen)
-                    (composition-raise-syntax-error
-                     'composition-duplicate-profile
-                     "profile names must be unique inside one composition module"
-                     profile-name))
-                  (clause-loop
-                   (cdr rest)
-                   (cons
-                    (composition-local-profile
-                     module-name profile-name sections clause)
-                    out)
-                   (cons name seen))))
-               (else
-                (composition-raise-syntax-error
-                 'composition-invalid-module-form
-                 "profile expects an existing POO object or a named profile with section pairs"
-                 clause))))
+             (let-values (((profile name)
+                           (composition-parse-profile-body
+                            module-name clause body seen)))
+               (clause-loop (cdr rest)
+                            (cons profile out)
+                            (cons name seen))))
             (else
              (composition-raise-syntax-error
               'composition-invalid-module-form
@@ -308,14 +305,10 @@
 
 ;; : (-> Syntax [Syntax] [CompositionProfileRefSyntax])
 (def (composition-parse-compose alias items)
-  (let item-loop ((rest items) (out '()))
-    (if (null? rest)
-      (reverse out)
-      (let ref-loop ((refs (composition-parse-compose-item alias (car rest)))
-                     (next-out out))
-        (if (null? refs)
-          (item-loop (cdr rest) next-out)
-          (ref-loop (cdr refs) (cons (car refs) next-out)))))))
+  (append-map
+   (lambda (item)
+     (composition-parse-compose-item alias item))
+   items))
 
 ;; : (-> Syntax CompositionClauseSyntax)
 (def (composition-parse-stage-clause clause)
@@ -384,6 +377,85 @@
         "stage must be (stage name clause ...)"
         stage-form)))))
 
+;; : (-> Syntax Syntax Syntax [CompositionProfileSyntax] [CompositionProfileRefSyntax] [CompositionStageSyntax] Syntax CompositionSyntaxPlan)
+(def (composition-finish-syntax-plan composition-name module-name alias profiles
+                                     compose-out stage-out source)
+  (if (null? compose-out)
+    (composition-raise-syntax-error
+     'composition-missing-profile-operand
+     "use-composition requires at least one profile operand"
+     source)
+    (composition-syntax-plan
+     name: composition-name
+     module-name: module-name
+     alias: alias
+     profiles: profiles
+     compose: (reverse compose-out)
+     stages: (reverse stage-out)
+     source: source)))
+
+;; : (-> Syntax Syntax [CompositionProfileRefSyntax] [CompositionStageSyntax] [Symbol] CompositionPlanFoldState)
+(def (composition-add-plan-form alias form compose-out stage-out stage-seen)
+  (let (items
+        (composition-syntax-list
+         form
+         'composition-invalid-stage-clause
+         "use-composition expects compose or stage forms after use-module"))
+    (match items
+      ([head . body]
+       (cond
+        ((composition-literal=? head #'compose)
+         (list (append (reverse (composition-parse-compose alias body))
+                       compose-out)
+               stage-out
+               stage-seen))
+        ((composition-literal=? head #'stage)
+         (let* ((stage (composition-parse-stage form))
+                (stage-name
+                 (syntax->datum (composition-stage-syntax-name stage))))
+           (when (memq stage-name stage-seen)
+             (composition-raise-syntax-error
+              'composition-duplicate-stage
+              "stage names must be unique inside one composition"
+              (composition-stage-syntax-name stage)))
+           (list compose-out
+                 (cons stage stage-out)
+                 (cons stage-name stage-seen))))
+        (else
+         (composition-raise-syntax-error
+          'composition-invalid-stage-clause
+          "use-composition expects compose or stage forms after use-module"
+          form))))
+      (else
+       (composition-raise-syntax-error
+        'composition-invalid-stage-clause
+        "use-composition expects parenthesized compose or stage forms"
+        form)))))
+
+;; : (-> Syntax Syntax CompositionPlanFoldState CompositionPlanFoldState)
+(def (composition-fold-plan-form alias form state)
+  (composition-add-plan-form
+   alias
+   form
+   (car state)
+   (cadr state)
+   (caddr state)))
+
+;; : (-> Syntax Syntax Syntax [CompositionProfileSyntax] [Syntax] Syntax CompositionSyntaxPlan)
+(def (composition-build-syntax-plan composition-name module-name alias profiles
+                                    forms source)
+  (let (state
+        (fold
+         (lambda (form state)
+           (composition-fold-plan-form alias form state))
+         (list '() '() '())
+         forms))
+    (match state
+      ([compose-out stage-out _stage-seen]
+       (composition-finish-syntax-plan
+        composition-name module-name alias profiles
+        compose-out stage-out source)))))
+
 ;; : (-> Syntax Syntax [Syntax] CompositionSyntaxPlan)
 (def (parse-poo-flow-composition-syntax-plan
       composition-name
@@ -416,78 +488,14 @@
         'composition-invalid-module-form
         "module name must be an identifier")
        (composition-require-identifier
-        alias
+       alias
         'composition-invalid-module-form
-        "module alias must be an identifier")
+       "module alias must be an identifier")
        (let-values (((profiles _seen)
                      (composition-parse-profiles
                       module-name profile-clauses)))
-         (let form-loop ((rest forms)
-                         (compose-out '())
-                         (stage-out '())
-                         (stage-seen '()))
-           (if (null? rest)
-             (if (null? compose-out)
-               (composition-raise-syntax-error
-                'composition-missing-profile-operand
-                "use-composition requires at least one profile operand"
-                source)
-               (composition-syntax-plan
-                name: composition-name
-                module-name: module-name
-                alias: alias
-                profiles: profiles
-                compose: (reverse compose-out)
-                stages: (reverse stage-out)
-                source: source))
-             (let* ((form (car rest))
-                    (items
-                     (composition-syntax-list
-                      form
-                      'composition-invalid-stage-clause
-                      "use-composition expects compose or stage forms after use-module")))
-               (match items
-                 ([head . body]
-                  (cond
-                   ((composition-literal=? head #'compose)
-                    (let ref-loop
-                        ((refs (composition-parse-compose alias body))
-                         (next-out compose-out))
-                      (if (null? refs)
-                        (form-loop
-                         (cdr rest) next-out stage-out stage-seen)
-                        (ref-loop
-                         (cdr refs) (cons (car refs) next-out)))))
-                   ((composition-literal=? head #'stage)
-                    (let* ((stage (composition-parse-stage form))
-                           (stage-name
-                            (syntax->datum
-                             (composition-stage-syntax-name stage))))
-                      (when (memq stage-name stage-seen)
-                        (composition-raise-syntax-error
-                         'composition-duplicate-stage
-                         "stage names must be unique inside one composition"
-                         (composition-stage-syntax-name stage)))
-                      (form-loop
-                       (cdr rest)
-                       compose-out
-                       (cons stage stage-out)
-                       (cons stage-name stage-seen))))
-                   (else
-                    (composition-raise-syntax-error
-                     'composition-invalid-stage-clause
-                     "use-composition expects compose or stage forms after use-module"
-                     form))))
-                 (else
-                  (composition-raise-syntax-error
-                   'composition-invalid-stage-clause
-                   "use-composition expects parenthesized compose or stage forms"
-                   form))))))))
-      ([head . _]
-       (composition-raise-syntax-error
-        'composition-invalid-module-form
-        "expected canonical (use-module module-name as alias ...)"
-        module-form))
+         (composition-build-syntax-plan
+          composition-name module-name alias profiles forms source)))
       (else
        (composition-raise-syntax-error
         'composition-invalid-module-form

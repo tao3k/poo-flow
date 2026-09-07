@@ -1,7 +1,9 @@
+;;; Boundary: compares canonical organization bundles through a shadow-evaluation lane.
+;;; Invariant: shadow comparison observes divergence without changing accepted state.
 (export #t)
 
-(import :clan/poo/object
-        :std/sort
+(import (only-in :clan/poo/object .o .ref object?)
+        (only-in :std/sort sort)
         :poo-flow/src/semantic/organization-bundle)
 
 (def +poo-flow-organization-shadow-receipt-schema+
@@ -50,17 +52,17 @@
           (shadow-value-admissible? (.ref fact 'semantic-value))))))
 
 (def (shadow-facet-rank facet)
-  (let loop ((rest +shadow-facet-order+) (rank 0))
-    (cond ((null? rest) 99)
-          ((eq? (car rest) facet) rank)
-          (else (loop (cdr rest) (+ rank 1))))))
+  (let (ranked-tail (memq facet +shadow-facet-order+))
+    (if ranked-tail
+      (- (length +shadow-facet-order+) (length ranked-tail))
+      99)))
 
 (def (shadow-unique values)
-  (let loop ((rest values) (seen '()))
-    (if (null? rest)
-      (reverse seen)
-      (loop (cdr rest)
-            (if (memq (car rest) seen) seen (cons (car rest) seen))))))
+  (reverse
+   (foldl (lambda (value seen)
+            (if (memq value seen) seen (cons value seen)))
+          '()
+          values)))
 
 (def (shadow-section-facts facet section values)
   (map (lambda (value)
@@ -105,13 +107,19 @@
   (find (lambda (fact) (equal? identity (shadow-fact-identity fact))) facts))
 
 (def (shadow-duplicate-identities facts)
-  (let loop ((rest (shadow-sort facts)) (previous #f) (duplicates '()))
-    (if (null? rest)
-      (reverse duplicates)
-      (let (identity (shadow-fact-identity (car rest)))
-        (loop (cdr rest) identity
-              (if (and previous (equal? previous identity))
-                (cons identity duplicates) duplicates))))))
+  (let (previous+duplicates
+        (foldl
+         (lambda (fact state)
+           (let ((previous (car state))
+                 (duplicates (cdr state))
+                 (identity (shadow-fact-identity fact)))
+             (cons identity
+                   (if (and previous (equal? previous identity))
+                     (cons identity duplicates)
+                     duplicates))))
+         (cons #f '())
+         (shadow-sort facts)))
+    (reverse (cdr previous+duplicates))))
 
 (def (shadow-diagnostic code-value path-value expected-value observed-value)
   (.o (kind 'poo-flow.organization-shadow-diagnostic.draft.1)
@@ -133,6 +141,7 @@
       (accepted? accepted-value?) (equivalent? equivalent-value?)
       (v1-conformant? #f) (diagnostics diagnostics-value)))
 
+;;; Comparison boundary: report duplicate, missing, and mismatched facts without mutating shadow state.
 (def (poo-flow-organization-bundle-shadow-compare state current-facts profile)
   (let* ((bundle-facts (poo-flow-organization-bundle-shadow-facts state))
          (all-facts (append current-facts bundle-facts))

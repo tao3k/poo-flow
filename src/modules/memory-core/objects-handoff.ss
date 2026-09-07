@@ -34,6 +34,7 @@
    runtime-executed
    metadata)
   transparent: #t)
+;; : (-> Symbol PooMemoryStoreSpec [Alist] PooMemoryHandoffManifest)
 (def (poo-flow-memory-handoff-manifest request-id spec . maybe-metadata)
   (poo-flow-session-require "memory handoff request id must be a symbol"
                             (symbol? request-id)

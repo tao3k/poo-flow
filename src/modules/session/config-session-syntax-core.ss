@@ -59,7 +59,7 @@
     (poo-flow-session-syntax-default-placement 'profile-ref))))
 
 ;; session-graph
-;;   : (-> Syntax PooSessionGraphPresentation)
+;;   : (-> PooSessionValue ... PooSessionGraphPresentation)
 ;;   | doc m%
 ;;       `session-graph` mirrors the declaration form: users list session values
 ;;       and receive the existing report-only graph receipt.
@@ -70,10 +70,8 @@
 ;;       ;; => pooFlowSessionGraphPresentation receipt
 ;;       ```
 ;;     %
-(defrules session-graph ()
-  ((_ session-value ...)
-   (poo-flow-session-syntax-graph-presentation
-    (list session-value ...))))
+(def (session-graph . session-values)
+  (poo-flow-session-syntax-graph-presentation session-values))
 
 ;; session-registry-entry
 ;;   : (-> Syntax PooSessionRegistryEntry)

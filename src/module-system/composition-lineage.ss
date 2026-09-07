@@ -1,3 +1,5 @@
+;;; Boundary: analyzes composition lineage for cycles and productive recursion.
+;;; Invariant: analysis reports lineage facts without mutating the composed objects.
 (import (only-in :clan/poo/object object<-alist object?))
 
 (export poo-flow-lineage-analysis-prototype
@@ -9,21 +11,24 @@
 (def poo-flow-lineage-analysis-prototype
   (object<-alist '((kind . lineage-analysis))))
 
+;; : (-> [PooFlowLineageIdentity] Boolean)
 (def (poo-flow-lineage-cycle? lineage)
-  (let loop ((remaining lineage) (seen '()))
-    (cond
-     ((null? remaining) #f)
-     ((member (car remaining) seen) #t)
-     (else (loop (cdr remaining) (cons (car remaining) seen))))))
+  (car
+   (foldl (lambda (identity state)
+            (cons (or (car state)
+                      (and (member identity (cdr state)) #t))
+                  (cons identity (cdr state))))
+          (cons #f '())
+          lineage)))
 
+;; : (-> [PooFlowLineageIdentity] [PooFlowLineageIdentity] Boolean)
 (def (poo-flow-productive-recursion? lineage productive-identities)
   (and (poo-flow-lineage-cycle? lineage)
-       (let loop ((remaining lineage))
-         (cond
-          ((null? remaining) #f)
-          ((member (car remaining) productive-identities) #t)
-          (else (loop (cdr remaining)))))))
+       (ormap (lambda (identity)
+                (member identity productive-identities))
+              lineage)))
 
+;; : (-> [PooFlowLineageIdentity] [PooFlowLineageIdentity] PooFlowLineageAnalysis)
 (def (poo-flow-lineage-analysis lineage productive-identities)
   (let* ((cycle? (poo-flow-lineage-cycle? lineage))
          (productive? (poo-flow-productive-recursion?
@@ -34,10 +39,11 @@
        (lineage . ,lineage)
        (cycle? . ,cycle?)
        (productive? . ,productive?)
-       (status . ,(cond
-                   ((not cycle?) 'acyclic)
-                   (productive? 'productive-recursion)
-                   (else 'non-productive-cycle)))))))
+       (status . ,(match (cons cycle? productive?)
+                    ([#f . _] 'acyclic)
+                    ([#t . #t] 'productive-recursion)
+                    (else 'non-productive-cycle)))))))
 
+;; : (-> Object Boolean)
 (def (poo-flow-lineage-analysis? value)
   (object? value))

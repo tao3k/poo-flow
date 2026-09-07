@@ -95,35 +95,24 @@
 (def (poo-flow-session-transform-rows/tail rows tail)
   (foldr cons tail rows))
 
-;;; Boundary: transform tail field rows keep generated session transform
-;;; projections hygienic across variadic field clauses.
-;; poo-flow-session-transform-field-rows/tail
-;; : (-> SessionTransformFieldRowsTailSyntax SessionTransformRowsExpansionSyntax)
-;; | doc m%
-;;   Prepends session transform field rows to an existing transform row tail.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-session-transform-field-rows/tail tail (status 'ready))
-;;   ;; => (poo-flow-session-transform-rows/tail ((status . ready)) tail)
-;;   ```
-(defrules poo-flow-session-transform-field-rows/tail ()
-  ((_ tail (field value) ...)
-   (poo-flow-session-transform-rows/tail
-    (list (cons 'field value) ...)
-    tail)))
+;;; Boundary: callers provide explicit field pairs and the runtime function
+;;; prepends them to the existing transform tail in deterministic order.
+;; : (-> Alist (List (Pair Symbol Object)) Alist)
+(def (poo-flow-session-transform-field-rows/tail tail . rows)
+  (poo-flow-session-transform-rows/tail rows tail))
 
 ;; : (-> Symbol Alist Alist)
 (def (poo-flow-session-transform-declaration-metadata/tail declared-by tail)
   (poo-flow-session-transform-field-rows/tail
    tail
-   (declared-by declared-by)
-   (runtime-executed #f)))
+   (cons 'declared-by declared-by)
+   (cons 'runtime-executed #f)))
 
 ;; : (-> Symbol Alist Alist)
 (def (poo-flow-session-transform-lineage-metadata/tail transform-name tail)
   (poo-flow-session-transform-field-rows/tail
    tail
-   (transform-name transform-name)))
+   (cons 'transform-name transform-name)))
 
 ;; : (-> Symbol Symbol Fixnum Alist Alist)
 (def (poo-flow-session-transform-derived-metadata/tail transform-name
@@ -132,10 +121,10 @@
                                                         tail)
   (poo-flow-session-transform-field-rows/tail
    tail
-   (derived-by 'poo-flow-session-transform)
-   (transform-name transform-name)
-   (source-session-id source-session-id)
-   (memory-intent-count memory-intent-count)))
+   (cons 'derived-by 'poo-flow-session-transform)
+   (cons 'transform-name transform-name)
+   (cons 'source-session-id source-session-id)
+   (cons 'memory-intent-count memory-intent-count)))
 
 ;;; A memory intent is a report-only request for a runtime memory backend. It is
 ;;; attached to session transforms but never recalls or commits data in Scheme.

@@ -1,4 +1,10 @@
-(import :clan/poo/object
+;;; Boundary: declarative feature capability values and kind predicates;
+;;; catalog indexing and adapter resolution remain separate owners.
+(import (only-in :clan/poo/object
+                 .ref
+                 make-object
+                 object-slots-set!
+                 object?)
         :poo-flow/src/core/roles)
 
 (export +feature-adapter-capability-kind+
@@ -23,11 +29,13 @@
 (def +feature-projection-request-kind+
   'poo-flow.feature-projection-request.v1)
 
+;; : (-> Alist POOObject)
 (def (constant-feature-capability-object slot-values)
   (let ((object (make-object)))
     (object-slots-set! object (role-constant-slots slot-values))
     object))
 
+;; : (-> Object Symbol [Symbol] Boolean)
 (def (feature-capability-object-kind? value expected-kind required-slots)
   (with-catch
    (lambda (_failure) #f)
@@ -40,6 +48,7 @@
              ((.ref value (car slots)) (loop (cdr slots)))
              (else #f)))))))
 
+;; : (-> Symbol Symbol Symbol Integer PooFeatureAdapterCapability)
 (def (feature-adapter-capability capability-id provider-module-id
                                  contract-id contract-version)
   (constant-feature-capability-object
@@ -50,12 +59,14 @@
      (contract-id . ,contract-id)
      (contract-version . ,contract-version))))
 
+;; : (-> Object Boolean)
 (def (feature-adapter-capability? value)
   (feature-capability-object-kind?
    value
    +feature-adapter-capability-kind+
    '(capability-id provider-module-id contract-id contract-version)))
 
+;; : (-> Symbol Symbol Symbol Integer PooFeatureAdapterRequirement)
 (def (feature-adapter-requirement requirement-id capability-id
                                   contract-id contract-version)
   (constant-feature-capability-object
@@ -66,12 +77,14 @@
      (contract-id . ,contract-id)
      (contract-version . ,contract-version))))
 
+;; : (-> Object Boolean)
 (def (feature-adapter-requirement? value)
   (feature-capability-object-kind?
    value
    +feature-adapter-requirement-kind+
    '(requirement-id capability-id contract-id contract-version)))
 
+;; : (-> Symbol Symbol Symbol PooFeatureProjectionRequest)
 (def (feature-projection-request request-id projection-id schema-id)
   (constant-feature-capability-object
    `((kind . ,+feature-projection-request-kind+)
@@ -80,12 +93,27 @@
      (projection-id . ,projection-id)
      (schema-id . ,schema-id))))
 
+;; : (-> Object Boolean)
 (def (feature-projection-request? value)
   (feature-capability-object-kind?
    value
    +feature-projection-request-kind+
    '(request-id projection-id schema-id)))
 
+;; defpoo-feature-adapter-capability
+;;   : (-> Identifier Clauses FeatureAdapterCapabilityBinding)
+;;   | doc m%
+;;       Bind a module-owned adapter capability as a POO object.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-adapter-capability adapter
+;;         (capability-id adapter) (provider-module-id runtime)
+;;         (contract-id adapter.v1) (contract-version 1))
+;;       ;; => binds adapter
+;;       ```
+;;     %
 (defrules defpoo-feature-adapter-capability
   (capability-id provider-module-id contract-id contract-version)
   ((_ binding
@@ -97,6 +125,20 @@
      (feature-adapter-capability
       semantic-id module-id adapter-contract-id adapter-contract-version))))
 
+;; defpoo-feature-adapter-requirement
+;;   : (-> Identifier Clauses FeatureAdapterRequirementBinding)
+;;   | doc m%
+;;       Bind an adapter requirement as a POO object.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-adapter-requirement required
+;;         (requirement-id required) (capability-id adapter)
+;;         (contract-id adapter.v1) (contract-version 1))
+;;       ;; => binds required
+;;       ```
+;;     %
 (defrules defpoo-feature-adapter-requirement
   (requirement-id capability-id contract-id contract-version)
   ((_ binding
@@ -111,6 +153,19 @@
       adapter-contract-id
       adapter-contract-version))))
 
+;; defpoo-feature-projection-request
+;;   : (-> Identifier Clauses FeatureProjectionRequestBinding)
+;;   | doc m%
+;;       Bind a named projection request for a feature profile.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (defpoo-feature-projection-request request
+;;         (request-id request) (projection-id runtime) (schema-id runtime.v1))
+;;       ;; => binds request
+;;       ```
+;;     %
 (defrules defpoo-feature-projection-request
   (request-id projection-id schema-id)
   ((_ binding

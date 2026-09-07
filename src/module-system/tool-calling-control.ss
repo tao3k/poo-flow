@@ -75,6 +75,7 @@
       family-pairs
       (cons (cons 'source source-tag) family-pairs))))
 
+;; : (forall (v) (-> PooObject [(Pair Symbol v)] PooObject))
 ;; : (-> PooObject Alist PooObject)
 (def (poo-flow-tool-call-fact-family-build family fact-pair-list)
   (let* ((pairs (poo-flow-tool-call-fact-family-pairs

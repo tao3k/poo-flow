@@ -58,6 +58,7 @@
     (else
      (error "unknown proof fact schema" schema))))
 
+;; : (forall (v) (-> [(Pair Symbol v)] [Symbol]))
 ;; : (-> Alist [Symbol])
 (def (poo-flow-proof-facts-missing-required-fields facts)
   (let ((schema (poo-flow-proof-fact-ref 'schema facts)))

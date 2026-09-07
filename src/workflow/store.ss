@@ -38,22 +38,6 @@
         store-content-address-receipt-runtime-executed
         store-flow->content-address-receipt)
 
-;;; Boundary: store field rows keep workflow store object slots stable for
-;;; runtime persistence and policy projections.
-;; store-field-rows
-;; : (-> StoreFieldRowsClauseSyntax StoreFieldRowsExpansionSyntax)
-;; | doc m%
-;;   Expands workflow store field clauses into stable alist rows for the store
-;;   object projection macros.
-;;   # Examples
-;;   ```scheme
-;;   (store-field-rows (backend 'memory))
-;;   ;; => ((backend . memory))
-;;   ```
-(defrules store-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
-
 ;; : (-> Unit Symbol)
 (def +store-content-address-receipt-schema+
   'poo-flow.extensions.store-content-address-receipt.v1)
@@ -86,9 +70,8 @@
      'store-extension
      'unsupported-store-operation
      "unsupported store operation"
-     (store-field-rows
-      (task (task-name task))
-      (operation (task-store-operation task)))))))
+     (list (cons 'task (task-name task))
+           (cons 'operation (task-store-operation task)))))))
 
 ;; : (-> Unit TaskFamilyDescriptor)
 (def store-task-family-descriptor

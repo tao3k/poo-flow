@@ -3,6 +3,10 @@
         :poo-flow/src/modules/model-core/objects
         :poo-flow/src/modules/model-core/config)
 
+(def (model-core-test-row-ref row key)
+  (let (entry (assq key row))
+    (and entry (cdr entry))))
+
 (def model-core-tests
   (test-suite "model core"
     (test-case "model specs expose POO-native accessors and projections"
@@ -14,9 +18,10 @@
                     "local-tool-json")
       (check-equal? (poo-flow-model-spec-capabilities poo-flow-model-core-tool-json-model)
                     '(chat text json tool-calling))
-      (check-equal? (cdr (assq 'runtime-executed
-                               (poo-flow-model-spec->alist
-                                poo-flow-model-core-tool-json-model)))
+      (check-equal? (model-core-test-row-ref
+                     (poo-flow-model-spec->alist
+                      poo-flow-model-core-tool-json-model)
+                     'runtime-executed)
                     #f))
     (test-case "model catalog summarizes refs without runtime execution"
       (check-equal? (poo-flow-model-catalog-ref poo-flow-model-core-default-catalog)
@@ -43,8 +48,9 @@
                     'tool-json)
       (check-equal? (poo-flow-model-selection-receipt-diagnostics receipt)
                     '())
-      (check-equal? (cdr (assq 'runtime-executed
-                               (poo-flow-model-selection-receipt->alist receipt)))
+      (check-equal? (model-core-test-row-ref
+                     (poo-flow-model-selection-receipt->alist receipt)
+                     'runtime-executed)
                     #f))
     (test-case "selection policy records diagnostics before fallback"
       (def small-catalog
@@ -64,8 +70,9 @@
                     #t)
       (check-equal? (poo-flow-model-selection-receipt-selected-model-ref receipt)
                     'fast-text)
-      (check-equal? (cdr (assq 'reason
-                               (car (poo-flow-model-selection-receipt-diagnostics receipt))))
+      (check-equal? (model-core-test-row-ref
+                     (car (poo-flow-model-selection-receipt-diagnostics receipt))
+                     'reason)
                     'missing-model))))
 
 (run-tests! model-core-tests)

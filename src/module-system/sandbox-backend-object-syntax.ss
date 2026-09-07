@@ -54,7 +54,7 @@
         (list poo-flow-shared-sandbox-object)
         (list
          (poo-flow-module-field-contract
-          'sandbox-field 'sandbox-type 'sandbox-merge
+          'sandbox-field sandbox-type 'sandbox-merge
           sandbox-default
           sandbox-metadata)
          ...)
@@ -79,12 +79,12 @@
 	        (list profile-super ...)
 	        (list
 	         (poo-flow-module-field-contract
-	          'backend 'Symbol 'override
+	          'backend PooFlowModuleSymbolType 'override
 	          'backend-key
 	          '((scope . backend-key)
 	            (owned-by . module-config)))
 	         (poo-flow-module-field-contract
-	          'profile-field 'profile-type 'profile-merge
+	          'profile-field profile-type 'profile-merge
 	          profile-default
           profile-metadata)
          ...)

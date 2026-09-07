@@ -30,6 +30,10 @@
   (poo-flow-promotion-decision-facts
    cedar? lean? evaluator? evidence? count injection?))
 
+(def (promotion-projection-ref projection key)
+  (let (entry (assq key projection))
+    (and entry (cdr entry))))
+
 (def protocol-person-promotion-test
   (test-suite "RFC 149 protocol-person promotion"
   (test-case "protocol subjects keep identity, provenance, and temporal role separate"
@@ -119,7 +123,7 @@
         (check (poo-flow-promotion-validation-receipt-active receipt) => #f)
         (check (poo-flow-promotion-validation-receipt-activation-code receipt)
                => 'injection-receipt-missing)
-        (check (cdr (assq 'candidate-digest projection))
+        (check (promotion-projection-ref projection 'candidate-digest)
                => "candidate-digest-1")
-        (check (cdr (assq 'runtime-executed projection)) => #f))))
+        (check (promotion-projection-ref projection 'runtime-executed) => #f))))
   )

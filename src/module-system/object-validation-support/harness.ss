@@ -33,7 +33,8 @@
   (let ((identity
          (poo-flow-module-field-contract-identity field))
         (value-kind
-         (poo-flow-module-field-contract-value-kind field))
+         (poo-flow-module-value-type-kind
+          (poo-flow-module-field-contract-value-type field)))
         (merge
          (poo-flow-module-field-contract-merge field))
         (default
@@ -157,7 +158,9 @@
    (poo-flow-module-validation-hash-field cached 'schema)
    (cons 'object (poo-flow-module-object-identity object))
    (cons 'field (poo-flow-module-field-contract-identity field))
-   (cons 'valueKind (poo-flow-module-field-contract-value-kind field))
+   (cons 'valueKind
+         (poo-flow-module-value-type-kind
+          (poo-flow-module-field-contract-value-type field)))
    (cons 'merge (poo-flow-module-field-contract-merge field))
    (poo-flow-module-validation-hash-field cached 'valid)
    (poo-flow-module-validation-hash-field cached 'diagnostics)

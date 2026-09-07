@@ -210,7 +210,8 @@
            (if (eq? provider object) 'direct 'inherited))
      (cons 'provider provider-identity)
      (cons 'value-kind
-           (poo-flow-module-field-contract-value-kind field))
+           (poo-flow-module-value-type-kind
+            (poo-flow-module-field-contract-value-type field)))
      (cons 'merge
            (poo-flow-module-field-contract-merge field))
      (cons 'metadata
@@ -311,7 +312,8 @@
   (poo-flow-module-field-contract-validation-source-ref/values
    object
    (poo-flow-module-field-contract-identity field)
-   (poo-flow-module-field-contract-value-kind field)
+   (poo-flow-module-value-type-kind
+    (poo-flow-module-field-contract-value-type field))
    (poo-flow-module-field-contract-merge field)))
 
 ;; : (-> PooModuleObject Symbol Value Value HashTable)

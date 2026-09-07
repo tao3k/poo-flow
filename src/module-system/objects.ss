@@ -13,11 +13,11 @@
    '()
    (list
     (poo-flow-module-field-contract
-     'backend 'Symbol 'override 'sandbox '((scope . shared)))
+     'backend PooFlowModuleSymbolType 'override 'sandbox '((scope . shared)))
     (poo-flow-module-field-contract
-     'flags 'List 'append '() '((scope . shared)))
+     'flags PooFlowModuleListType 'append '() '((scope . shared)))
     (poo-flow-module-field-contract
-     'runtime-args 'List 'append '() '((scope . shared))))
+     'runtime-args PooFlowModuleListType 'append '() '((scope . shared))))
    '((namespace . objects.shared)
      (domain . sandbox))))
 

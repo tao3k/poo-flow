@@ -4,7 +4,7 @@
 ;;; macro parser modules so macro expansion remains shallow and reusable.
 
 (import (only-in :clan/poo/object .all-slots .o .ref object<-alist)
-        (only-in :std/srfi/1 fold)
+        (only-in :std/srfi/1 append-map filter-map find fold)
         :poo-flow/src/core/plan)
 
 (export poo-flow-composition-inline-section-slot
@@ -274,88 +274,77 @@
 (def (composition-plan-target-clause? kind)
   (or (eq? kind 'step) (eq? kind 'handoff)))
 
+;; : (-> PooCompositionClause PooCompositionStage [PooCompositionStage] [PooProfileBinding] MaybeTarget)
+(def (composition-plan-stage-target clause stage stages bindings)
+  (let (kind (composition-plan-clause-kind clause))
+    (if (not (composition-plan-target-clause? kind))
+      #f
+      (let (payload (composition-plan-clause-payload clause))
+        (unless (and (pair? payload)
+                     (null? (cdr payload))
+                     (symbol? (car payload)))
+          (error "POO-FLOW-PLAN-E101 target requires one symbol"
+                 (composition-plan-stage-name stage) kind payload))
+        (let (target (car payload))
+          (cond
+           ((composition-plan-stage-by-name stages target)
+            (list 'case target kind))
+           ((composition-plan-binding-by-name bindings target)
+            (list 'profile target kind))
+           (else
+            (error "POO-FLOW-PLAN-E102 unknown Case or Profile target"
+                   (composition-plan-stage-name stage) kind target))))))))
+
 (def (composition-plan-stage-targets stage stages bindings)
-  (let loop ((rest (composition-plan-stage-clauses stage)) (out '()))
-    (if (null? rest)
-      (reverse out)
-      (let* ((clause (car rest))
-             (kind (composition-plan-clause-kind clause)))
-        (if (not (composition-plan-target-clause? kind))
-          (loop (cdr rest) out)
-          (let (payload (composition-plan-clause-payload clause))
-            (unless (and (pair? payload)
-                         (null? (cdr payload))
-                         (symbol? (car payload)))
-              (error "POO-FLOW-PLAN-E101 target requires one symbol"
-                     (composition-plan-stage-name stage) kind payload))
-            (let (target (car payload))
-              (cond
-               ((composition-plan-stage-by-name stages target)
-                (loop (cdr rest) (cons (list 'case target kind) out)))
-               ((composition-plan-binding-by-name bindings target)
-                (loop (cdr rest) (cons (list 'profile target kind) out)))
-               (else
-                (error "POO-FLOW-PLAN-E102 unknown Case or Profile target"
-                       (composition-plan-stage-name stage) kind target))))))))))
+  (filter-map
+   (lambda (clause)
+     (composition-plan-stage-target clause stage stages bindings))
+   (composition-plan-stage-clauses stage)))
 
 (def (composition-plan-explicit-edges stage)
-  (let clause-loop ((rest (composition-plan-stage-clauses stage)) (out '()))
-    (if (null? rest)
-      (reverse out)
-      (let (clause (car rest))
-        (if (not (eq? (composition-plan-clause-kind clause) 'edges))
-          (clause-loop (cdr rest) out)
-          (let edge-loop
-              ((edges (composition-plan-clause-payload clause)) (next out))
-            (if (null? edges)
-              (clause-loop (cdr rest) next)
-              (let (edge (car edges))
-                (unless (and (pair? edge)
-                             (pair? (cdr edge))
-                             (null? (cddr edge))
-                             (symbol? (car edge))
-                             (symbol? (cadr edge)))
-                  (error "POO-FLOW-PLAN-E103 edge requires two symbols"
-                         (composition-plan-stage-name stage) edge))
-                (edge-loop (cdr edges)
-                           (cons (list (car edge) (cadr edge)) next))))))))))
+  (append-map
+   (lambda (clause)
+     (if (not (eq? (composition-plan-clause-kind clause) 'edges))
+       '()
+       (map
+        (lambda (edge)
+          (unless (and (pair? edge)
+                       (pair? (cdr edge))
+                       (null? (cddr edge))
+                       (symbol? (car edge))
+                       (symbol? (cadr edge)))
+            (error "POO-FLOW-PLAN-E103 edge requires two symbols"
+                   (composition-plan-stage-name stage) edge))
+          (list (car edge) (cadr edge)))
+        (composition-plan-clause-payload clause))))
+   (composition-plan-stage-clauses stage)))
 
 (def (composition-plan-case-target-names stage stages bindings)
-  (let loop
-      ((rest (composition-plan-stage-targets stage stages bindings)) (out '()))
-    (cond
-     ((null? rest) (reverse out))
-     ((eq? (caar rest) 'case)
-      (loop (cdr rest) (cons (cadar rest) out)))
-     (else (loop (cdr rest) out)))))
+  (filter-map
+   (lambda (target)
+     (and (eq? (car target) 'case)
+          (cadr target)))
+   (composition-plan-stage-targets stage stages bindings)))
 
 (def (composition-plan-referenced-case-names stages bindings)
-  (let stage-loop ((rest stages) (out '()))
-    (if (null? rest)
-      out
-      (let target-loop
-          ((targets
-            (composition-plan-case-target-names (car rest) stages bindings))
-           (next out))
-        (if (null? targets)
-          (stage-loop (cdr rest) next)
-          (target-loop
-           (cdr targets)
-           (if (memq (car targets) next)
-             next
-             (cons (car targets) next))))))))
+  (fold
+   (lambda (stage names)
+     (fold
+      (lambda (name next)
+        (if (memq name next) next (cons name next)))
+      names
+      (composition-plan-case-target-names stage stages bindings)))
+   '()
+   stages))
 
 (def (composition-plan-root-stage-names stages bindings)
   (let ((referenced
          (composition-plan-referenced-case-names stages bindings)))
-    (let loop ((rest stages) (out '()))
-      (cond
-       ((null? rest) (reverse out))
-       ((memq (composition-plan-stage-name (car rest)) referenced)
-        (loop (cdr rest) out))
-       (else
-        (loop (cdr rest)
-              (cons (composition-plan-stage-name (car rest)) out)))))))
+    (filter-map
+     (lambda (stage)
+       (let (name (composition-plan-stage-name stage))
+         (and (not (memq name referenced)) name)))
+     stages)))
 
 ;; Descriptor = (key name kind source)
 (def (composition-plan-descriptor key name kind source)
@@ -372,11 +361,7 @@
   (string-append "profile:" (composition-plan-path-child path name)))
 
 (def (composition-plan-target-by-name targets name)
-  (let loop ((rest targets))
-    (cond
-     ((null? rest) #f)
-     ((eq? (cadar rest) name) (car rest))
-     (else (loop (cdr rest))))))
+  (find (lambda (target) (eq? (cadr target) name)) targets))
 
 (def (composition-plan-target-key path targets name stage-name)
   (let (target (composition-plan-target-by-name targets name))
@@ -414,40 +399,44 @@
          (key (composition-plan-case-key path))
          (targets (composition-plan-stage-targets stage stages bindings))
          (descriptor (composition-plan-descriptor key stage-name 'case stage)))
-    (let loop
-        ((rest targets)
-         (descriptors (list descriptor))
-         (edges (if parent-key (list (list parent-key key)) '())))
-      (if (null? rest)
-        (values (reverse descriptors)
-                (reverse
-                 (composition-plan-accumulate
-                  (composition-plan-stage-edges stage path targets)
-                  edges)))
-        (let* ((target (car rest))
-               (target-kind (car target))
-               (target-name (cadr target)))
-          (if (eq? target-kind 'case)
-            (let (child-path (composition-plan-path-child path target-name))
-              (let-values
-                  (((child-descriptors child-edges)
-                    (composition-plan-build-case
-                     target-name child-path key stages bindings
-                     (cons stage-name active))))
-                (loop (cdr rest)
+    (let (descriptors+edges
+          (fold
+           (lambda (target state)
+             (let ((descriptors (car state))
+                   (edges (cadr state))
+                   (target-kind (car target))
+                   (target-name (cadr target)))
+               (if (eq? target-kind 'case)
+                 (let (child-path
+                       (composition-plan-path-child path target-name))
+                   (let-values
+                       (((child-descriptors child-edges)
+                         (composition-plan-build-case
+                          target-name child-path key stages bindings
+                          (cons stage-name active))))
+                     (list
                       (composition-plan-accumulate
                        child-descriptors descriptors)
                       (composition-plan-accumulate child-edges edges))))
-            (let* ((binding
-                    (composition-plan-binding-by-name bindings target-name))
-                   (profile-key
-                    (composition-plan-profile-key path target-name))
-                   (profile-descriptor
-                    (composition-plan-descriptor
-                     profile-key target-name 'profile-instance binding)))
-              (loop (cdr rest)
-                    (cons profile-descriptor descriptors)
-                    (cons (list key profile-key) edges)))))))))
+                 (let* ((binding
+                         (composition-plan-binding-by-name
+                          bindings target-name))
+                        (profile-key
+                         (composition-plan-profile-key path target-name))
+                        (profile-descriptor
+                         (composition-plan-descriptor
+                          profile-key target-name 'profile-instance binding)))
+                   (list (cons profile-descriptor descriptors)
+                         (cons (list key profile-key) edges))))))
+           (list (list descriptor)
+                 (if parent-key (list (list parent-key key)) '()))
+           targets))
+      (values
+       (reverse (car descriptors+edges))
+       (reverse
+        (composition-plan-accumulate
+         (composition-plan-stage-edges stage path targets)
+         (cadr descriptors+edges)))))))
 
 ;; : (-> [CompositionPlanDescriptor] HashTable)
 (def (composition-plan-descriptor-index descriptors)
@@ -495,21 +484,26 @@
 (def (composition-plan-make-nodes flow-name descriptors edges)
   (let ((descriptor-index (composition-plan-descriptor-index descriptors))
         (incoming-index (composition-plan-incoming-index edges)))
-    (let loop ((rest descriptors) (ordinal 1) (out '()))
-      (if (null? rest)
-        (reverse out)
-        (let* ((descriptor (car rest))
-               (key (composition-plan-descriptor-key descriptor))
-               (node
-                (make-plan-node
-                 (composition-plan-node-id flow-name descriptor-index key)
-                 ordinal
-                 (composition-plan-descriptor-source descriptor)
-                 (composition-plan-descriptor-kind descriptor)
-                 (composition-plan-descriptor-name descriptor)
-                 (composition-plan-dependencies
-                  flow-name descriptor-index incoming-index key))))
-          (loop (cdr rest) (+ ordinal 1) (cons node out)))))))
+    (reverse
+     (cdr
+      (fold
+       (lambda (descriptor ordinal+nodes)
+         (let ((ordinal (car ordinal+nodes))
+               (key (composition-plan-descriptor-key descriptor)))
+           (cons
+            (+ ordinal 1)
+            (cons
+             (make-plan-node
+              (composition-plan-node-id flow-name descriptor-index key)
+              ordinal
+              (composition-plan-descriptor-source descriptor)
+              (composition-plan-descriptor-kind descriptor)
+              (composition-plan-descriptor-name descriptor)
+              (composition-plan-dependencies
+               flow-name descriptor-index incoming-index key))
+             (cdr ordinal+nodes)))))
+       (cons 1 '())
+       descriptors)))))
 
 ;; : (-> PooFlowComposition ExecutionPlan)
 (def (poo-flow-composition->execution-plan composition)
@@ -524,22 +518,24 @@
          (roots (composition-plan-root-stage-names stages bindings)))
     (when (null? roots)
       (error "POO-FLOW-PLAN-E107 composition has no acyclic root Case" name))
-    (let loop
-        ((rest roots) (descriptors (list root-descriptor)) (edges '()))
-      (if (null? rest)
-        (make-execution-plan
-         name
-         (composition-plan-make-nodes
-          name (reverse descriptors) (reverse edges))
-         #f
-         #f)
-        (let* ((root-name (car rest))
-               (root-path (symbol->string root-name)))
-          (let-values
-              (((case-descriptors case-edges)
-                (composition-plan-build-case
-                 root-name root-path root-key stages bindings '())))
-            (loop (cdr rest)
-                  (composition-plan-accumulate
-                   case-descriptors descriptors)
-                  (composition-plan-accumulate case-edges edges))))))))
+    (let (descriptors+edges
+          (fold
+           (lambda (root-name state)
+             (let (root-path (symbol->string root-name))
+               (let-values
+                   (((case-descriptors case-edges)
+                     (composition-plan-build-case
+                      root-name root-path root-key stages bindings '())))
+                 (list
+                  (composition-plan-accumulate case-descriptors (car state))
+                  (composition-plan-accumulate case-edges (cadr state))))))
+           (list (list root-descriptor) '())
+           roots))
+      (make-execution-plan
+       name
+       (composition-plan-make-nodes
+        name
+        (reverse (car descriptors+edges))
+        (reverse (cadr descriptors+edges)))
+       #f
+       #f))))

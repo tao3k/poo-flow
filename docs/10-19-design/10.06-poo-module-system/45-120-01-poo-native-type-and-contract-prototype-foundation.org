@@ -43,8 +43,10 @@ flowchart LR
   M -->|"supplies an admitted semantic receiver"| D["DispatchEvaluation"]
 #+end_src
 
-The exact project owner =src/module-system/types.ss= is currently missing.
-This RFC admits the semantic contract for that owner, not its implementation.
+The exact project owner is =src/module-system/types.ss=.  It now defines the
+first admitted implementation slice: native Type/Contract prototypes, sparse
+generic operations, and evidence-bearing classification and admission.  Domain
+ObjectType and ModuleType specialization remain successor work.
 
 * Type prototype
 
@@ -194,9 +196,9 @@ commitment to those representations.
 
 ** Implementation admission
 
-- [ ] Admit the exact =src/module-system/types.ss= owner.
-- [ ] Admit Type and Contract prototype constructors.
-- [ ] Admit evidence-bearing classification and validation.
+- [X] Admit the exact =src/module-system/types.ss= owner.
+- [X] Admit Type and Contract prototype constructors.
+- [X] Admit evidence-bearing classification and validation.
 - [ ] Admit ObjectType responsibility-contract validation.
 - [ ] Admit ModuleType only after the shared foundation passes its own tests.
 
@@ -250,23 +252,50 @@ flowchart TD
 
 * Implementation admission checklist
 
-- [ ] Resolve all upstream evidence against
+- [X] Resolve all upstream evidence against
   =github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead=.
-- [ ] Keep primitive validation and typed value-pair machinery owned by
+- [X] Keep primitive validation and typed value-pair machinery owned by
   upstream =gerbil-poo/type.ss=.
-- [ ] Keep project =types.ss= limited to domain specialization and
+- [X] Keep project =types.ss= limited to domain specialization and
   Module admission semantics.
-- [ ] Construct specializations from native =gerbil-poo= prototypes or
+- [X] Construct specializations from native =gerbil-poo= prototypes or
   prototype-derived values.
-- [ ] Do not introduce a parallel generic type system, compatibility
+- [X] Do not introduce a parallel generic type system, compatibility
   layer, registry, record DSL, or public type-declaration macro.
-- [ ] Do not export =Type=, =Contract=, =ObjectType=, or =ModuleType=
+- [X] Do not export =Type=, =Contract=, =ObjectType=, or =ModuleType=
   merely because the RFC uses those design nouns.
 - [ ] Keep ObjectType specialization before Module construction.
 - [ ] Apply the function-ownership boundary in
   [[file:45-120-02-module-local-functional-kernel-governance.org][45-120-02]].
 - [ ] Apply the observation and recovery boundary in
   [[file:45-120-03-module-debug-observability-recovery-and-telemetry-plane-governance.org][45-120-03]].
+
+* First implementation slice
+
+The first implementation slice is deliberately narrow and has no legacy
+compatibility adapter:
+
+- =src/module-system/types.ss= owns =PooFlowType.=, =PooFlowContract.=,
+  classification evidence, validation evidence, and the three open generic
+  operations =poo-flow-type-classify=, =poo-flow-contract-obligations=, and
+  =poo-flow-contract-admit=;
+- =src/observability/types.ss= defines diagnostic and receipt Contract
+  descriptors with upstream =define-type=;
+- =src/observability/objects.ss= constructs native POO objects and validates
+  them through those descriptors; and
+- the former utilities record contracts no longer participate in the
+  observability owner.
+
+#+begin_src mermaid
+flowchart LR
+  U["gerbil-poo Type. and define-type"] -->|"owns primitive descriptor and validation mechanics"| F["POO Flow Type and Contract prototypes"]
+  F -->|"specializes classify and obligations"| D["Observability Contract descriptors"]
+  P["Observability POO prototypes"] -->|"native supers extension constructs candidate"| O["Diagnostic or Receipt POO object"]
+  D -->|"classifies and admits without effects"| O
+  D -->|"emits one immutable decision"| E["Validation evidence"]
+  E -. "projects only at report boundaries" .-> R["Alist, JSON, Lean, or ABI receipt"]
+  L["Legacy contract records"] -. "no compatibility or semantic edge" .-> F
+#+end_src
 
 * References
 

@@ -272,6 +272,7 @@
 (def (poo-flow-durable-artifact-policy-receipt-valid? receipt)
   (poo-flow-durable-artifact-policy-receipt-ref receipt 'valid?))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooDurableArtifactPolicyReceipt Alist)
 (def (poo-flow-durable-artifact-policy-receipt->alist receipt)
   (map (lambda (field)

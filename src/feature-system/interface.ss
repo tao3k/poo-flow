@@ -1,3 +1,5 @@
+;;; Boundary: re-exports the public POO-native feature-system surface.
+;;; Invariant: implementation ownership remains in the imported feature modules.
 (import :poo-flow/src/feature-system/model
         :poo-flow/src/feature-system/resolver
         :poo-flow/src/feature-system/feature-manifest

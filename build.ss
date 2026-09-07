@@ -3,7 +3,7 @@
 ;;; Native POO Flow package build declaration.
 
 (import :std/make
-        (only-in :clan/building init-build-environment!)
+        (only-in :clan/building remove-build-file)
         (only-in :std/misc/path path-expand)
         (only-in :std/srfi/1 fold)
         (only-in :std/srfi/13 string-prefix?)
@@ -82,7 +82,4 @@
  (spec-projector asp-gerbil-scheme-package-profiled-build-spec)
  (native-spec-projector poo-flow-native-spec))
 
-(init-build-environment!
- name: "poo-flow"
- deps: '("clan" "clan/poo" "asp-gerbil-scheme")
- spec: spec)
+(make (spec) srcdir: (current-directory))

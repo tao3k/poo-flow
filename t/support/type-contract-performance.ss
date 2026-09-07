@@ -1,23 +1,24 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: reusable workloads for utilities/type-contract performance gates.
+;;; Boundary: reusable workloads for native Type/Contract performance gates.
 ;;; Invariant: workloads measure Scheme contract operations, not gxi startup,
 ;;; package loading, Lean execution, or Marlin runtime work.
 
 (import (only-in :std/srfi/1 fold iota)
         (only-in "./performance.ss"
                  poo-flow-performance-build-list)
-        (only-in "../../src/utilities/contracts.ss"
-                 poo-flow-slot-contract-record
-                 poo-flow-object-type-contract-record
-                 poo-flow-object-type-contract->alist
-                 poo-flow-object-type-contract-slots
-                 poo-flow-contract-check-slot!)
+        (only-in "../../src/module-system/contract-schema.ss"
+                 poo-flow-contract-check-slot!
+                 poo-flow-contract-slot
+                 poo-flow-contract-value-type
+                 poo-flow-native-contract
+                 poo-flow-native-contract->alist
+                 poo-flow-native-contract-slots)
         (only-in "../../src/type-facts/objects.ss"
-                 poo-flow-object-type-contract->type-facts
-                 poo-flow-object-type-contract->lean-fact-contracts)
+                 poo-flow-native-contract->type-facts
+                 poo-flow-native-contract->lean-fact-contracts)
         (only-in "../../src/modules/session/policy.ss"
-                 +poo-flow-session-policy-type-contract+
-                 +poo-flow-session-tool-grant-type-contract+
+                 PooFlowSessionPolicyContract
+                 PooFlowSessionToolGrantContract
                  poo-flow-session-policy-require-slots!
                  poo-flow-session-tool-grant-require-slots!))
 
@@ -32,8 +33,8 @@
         type-contract-performance-type-facts-rounds
         type-contract-performance-lean-facts-rounds
         type-contract-performance-cached-type-facts-rounds
-        type-contract-performance-session-policy-type-facts-rounds
-        type-contract-performance-session-tool-grant-lean-facts-rounds
+        type-contract-performance-session-policy-projection-rounds
+        type-contract-performance-session-tool-grant-projection-rounds
         type-contract-performance-session-policy-require-rounds
         type-contract-performance-session-tool-grant-require-rounds)
 
@@ -45,28 +46,28 @@
 ;; : (-> Integer PooFlowSlotContract)
 (def (type-contract-performance-slot-contract index)
   (let (slot-name (type-contract-performance-slot-name index))
-    (poo-flow-slot-contract-record
+    (poo-flow-contract-slot
      (string->symbol
       (string-append "type-contract.performance/"
                      (number->string index)))
-     'PooFlowTypeContractPerformanceObject
      slot-name
-     'Symbol
-     'symbol?
-     symbol?
+     (poo-flow-contract-value-type 'Symbol symbol? 'Symbol 'symbol?)
      #t
      (list (cons 'scenario 'type-contract-performance)
            (cons 'slot-index index)))))
 
 ;; : (-> Integer PooFlowObjectTypeContract)
 (def (type-contract-performance-object-contract slot-count)
-  (poo-flow-object-type-contract-record
+  (poo-flow-native-contract
    'type-contract/performance
    'type-contract-performance
    'PooFlowTypeContractPerformanceObject
+   (lambda (_candidate) #t)
    (poo-flow-performance-build-list
     slot-count
     type-contract-performance-slot-contract)
+   (lambda (_candidate _slot) #f)
+   (lambda (_candidate _slot) #f)
    '((projection . performance))))
 
 ;; : (-> Integer [Symbol])
@@ -94,7 +95,7 @@
    (map (lambda (slot-contract value)
           (poo-flow-contract-check-slot! slot-contract value)
           slot-contract)
-        (poo-flow-object-type-contract-slots object-contract)
+        (poo-flow-native-contract-slots object-contract)
         values)))
 
 ;; type-contract-performance-repeat
@@ -149,7 +150,7 @@
      (lambda ()
        (length
         (cdr (assoc 'slots
-                    (poo-flow-object-type-contract->alist
+                    (poo-flow-native-contract->alist
                      object-contract))))))))
 
 ;; : (-> Integer Integer Integer)
@@ -160,7 +161,7 @@
      rounds
      (lambda ()
        (length
-        (poo-flow-object-type-contract->type-facts object-contract))))))
+        (poo-flow-native-contract->type-facts object-contract))))))
 
 ;; : (-> Integer Integer Integer)
 (def (type-contract-performance-lean-facts-rounds slot-count rounds)
@@ -170,7 +171,7 @@
      rounds
      (lambda ()
        (length
-        (poo-flow-object-type-contract->lean-fact-contracts
+        (poo-flow-native-contract->lean-fact-contracts
          object-contract))))))
 
 ;;; Boundary: cached projections model agent-loop hot paths. Contract facts are
@@ -179,7 +180,7 @@
 ;; : (-> Integer Integer Integer)
 (def (type-contract-performance-cached-type-facts-rounds slot-count rounds)
   (let (facts
-        (poo-flow-object-type-contract->type-facts
+        (poo-flow-native-contract->type-facts
          (type-contract-performance-object-contract slot-count)))
     (type-contract-performance-repeat
      rounds
@@ -187,22 +188,22 @@
        (length facts)))))
 
 ;; : (-> Integer Integer)
-(def (type-contract-performance-session-policy-type-facts-rounds rounds)
+(def (type-contract-performance-session-policy-projection-rounds rounds)
   (type-contract-performance-repeat
    rounds
    (lambda ()
      (length
-      (poo-flow-object-type-contract->type-facts
-       +poo-flow-session-policy-type-contract+)))))
+      (poo-flow-native-contract->alist
+       PooFlowSessionPolicyContract)))))
 
 ;; : (-> Integer Integer)
-(def (type-contract-performance-session-tool-grant-lean-facts-rounds rounds)
+(def (type-contract-performance-session-tool-grant-projection-rounds rounds)
   (type-contract-performance-repeat
    rounds
    (lambda ()
      (length
-      (poo-flow-object-type-contract->lean-fact-contracts
-       +poo-flow-session-tool-grant-type-contract+)))))
+      (poo-flow-native-contract->alist
+       PooFlowSessionToolGrantContract)))))
 
 ;; : (-> Integer Integer)
 (def (type-contract-performance-session-policy-require-rounds rounds)

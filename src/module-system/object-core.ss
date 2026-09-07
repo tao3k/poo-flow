@@ -11,11 +11,23 @@
         poo-flow-module-transformer-contract-kind
         poo-flow-module-config-merge-result-kind
         poo-flow-module-objects-root-identity
-        poo-flow-module-value-kind-accepts?
+        PooFlowModuleAnyType
+        PooFlowModuleListType
+        PooFlowModuleMapType
+        PooFlowModuleAlistType
+        PooFlowModuleSymbolType
+        PooFlowModuleStringType
+        PooFlowModuleBooleanType
+        PooFlowModuleObjectType
+        PooFlowModuleNodeType
+        poo-flow-module-list-type
+        poo-flow-module-value-type?
+        poo-flow-module-value-type-kind
+        poo-flow-module-value-type-accepts?
         poo-flow-module-field-contract
         poo-flow-module-field-contract?
         poo-flow-module-field-contract-identity
-        poo-flow-module-field-contract-value-kind
+        poo-flow-module-field-contract-value-type
         poo-flow-module-field-contract-merge
         poo-flow-module-field-contract-default
         poo-flow-module-field-contract-metadata
@@ -33,9 +45,9 @@
         poo-flow-module-transformer-contract?
         poo-flow-module-transformer-contract-identity
         poo-flow-module-transformer-contract-merge
-        poo-flow-module-transformer-contract-input-kind
-        poo-flow-module-transformer-contract-argument-kind
-        poo-flow-module-transformer-contract-output-kind
+        poo-flow-module-transformer-contract-input-type
+        poo-flow-module-transformer-contract-argument-type
+        poo-flow-module-transformer-contract-output-type
         poo-flow-module-transformer-contract-idempotent?
         poo-flow-module-transformer-contract-identity-key
         poo-flow-module-transformer-contract-metadata

@@ -1,9 +1,11 @@
+;;; Boundary: owns canonical organization-bundle values, normalization, and validation.
+;;; Invariant: normalized content identity is stable across equivalent input ordering.
 (export #t)
 
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/sort
-        :std/text/hex)
+(import (only-in :clan/poo/object .o .ref object?)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/sort sort)
+        (only-in :std/text/hex hex-encode))
 
 (def +poo-flow-organization-bundle-schema+
   'poo-flow.organization-bundle.draft.3)
@@ -304,27 +306,25 @@
         objects))
 
 (def (semantic-duplicate-ids objects)
-  (let loop ((rest (semantic-sort objects)) (previous #f) (duplicates '()))
-    (if (null? rest)
-      (reverse duplicates)
-      (let (id (poo-flow-organization-object-id (car rest)))
-        (loop (cdr rest)
-              id
-              (if (and previous (equal? previous id))
-                (cons id duplicates)
-                duplicates))))))
+  (let (sorted (semantic-sort objects))
+    (filter-map
+     (lambda (adjacent)
+       (let ((previous-id
+              (poo-flow-organization-object-id (car adjacent)))
+             (current-id
+              (poo-flow-organization-object-id (cdr adjacent))))
+         (and (equal? previous-id current-id) current-id)))
+     (map cons sorted (cdr sorted)))))
 
 (def (semantic-subset? child parent)
   (andmap (lambda (value) (member value parent)) child))
 
 (def (semantic-unique-count values)
-  (let loop ((rest values) (seen '()))
-    (if (null? rest)
-      (length seen)
-      (loop (cdr rest)
-            (if (member (car rest) seen)
-              seen
-              (cons (car rest) seen))))))
+  (length
+   (foldl (lambda (value seen)
+            (if (member value seen) seen (cons value seen)))
+          '()
+          values)))
 
 (def (semantic-proper-subset? child parent)
   (and (semantic-subset? child parent)
@@ -337,6 +337,7 @@
         (cons 'expected expected)
         (cons 'observed observed)))
 
+;;; Validation boundary: collect cross-facet diagnostics against one canonical bundle identity.
 (def (poo-flow-organization-bundle-validate/unsafe bundle . maybe-identity)
   (let* ((organization (.ref bundle 'organization))
          (authority (.ref bundle 'authority))

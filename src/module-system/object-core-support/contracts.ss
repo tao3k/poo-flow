@@ -3,12 +3,18 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object
+                 .cc
                  .o
                  .ref
+                 .slot?
                  object?
                  make-object
                  $constant-slot-spec
                  $computed-slot-spec)
+        (only-in :clan/poo/mop
+                 Any Bool Object Type element? raise-type-error)
+        (only-in :clan/poo/type List String Symbol)
+        (only-in "../types.ss" poo-flow-predicate-type)
         :poo-flow/src/module-system/extension)
 
 (export poo-flow-module-object-kind
@@ -19,11 +25,23 @@
         poo-flow-module-objects-root-identity
         poo-flow-module-object-kind?
         poo-flow-module-alist?
-        poo-flow-module-value-kind-accepts?
+        PooFlowModuleAnyType
+        PooFlowModuleListType
+        PooFlowModuleMapType
+        PooFlowModuleAlistType
+        PooFlowModuleSymbolType
+        PooFlowModuleStringType
+        PooFlowModuleBooleanType
+        PooFlowModuleObjectType
+        PooFlowModuleNodeType
+        poo-flow-module-list-type
+        poo-flow-module-value-type?
+        poo-flow-module-value-type-kind
+        poo-flow-module-value-type-accepts?
         poo-flow-module-field-contract
         poo-flow-module-field-contract?
         poo-flow-module-field-contract-identity
-        poo-flow-module-field-contract-value-kind
+        poo-flow-module-field-contract-value-type
         poo-flow-module-field-contract-merge
         poo-flow-module-field-contract-default
         poo-flow-module-field-contract-metadata
@@ -36,7 +54,7 @@
         poo-flow-module-field-contribution-field
         poo-flow-module-field-contribution-value
         poo-flow-module-field-contribution-field-contract?
-        poo-flow-module-field-contribution-field-value-kind
+        poo-flow-module-field-contribution-field-value-type
         poo-flow-module-field-contribution-field-identity
         poo-flow-module-field-contribution-merge
         poo-flow-module-field-contribution-valid?
@@ -47,16 +65,16 @@
         poo-flow-module-transformer-contract?
         poo-flow-module-transformer-contract-identity
         poo-flow-module-transformer-contract-merge
-        poo-flow-module-transformer-contract-input-kind
-        poo-flow-module-transformer-contract-argument-kind
-        poo-flow-module-transformer-contract-output-kind
+        poo-flow-module-transformer-contract-input-type
+        poo-flow-module-transformer-contract-argument-type
+        poo-flow-module-transformer-contract-output-type
         poo-flow-module-transformer-contract-idempotent?
         poo-flow-module-transformer-contract-identity-key
         poo-flow-module-transformer-contract-metadata
         poo-flow-module-transformer-list-append-contract
         poo-flow-module-transformer-list-remove-contract
         poo-flow-module-transformer-map-set-contract
-        poo-flow-module-transformer-kind-compatible?
+        poo-flow-module-transformer-type-compatible?
         poo-flow-module-transformer-diagnostic
         poo-flow-module-transformer-contract-diagnostics
         poo-flow-module-transformer-contract-valid?
@@ -92,34 +110,70 @@
          (poo-flow-module-alist? (cdr value)))
         (else #f)))
 
-;;; Boundary: module value kind accepts predicate is the policy-visible edge
-;;; for module-system, object, core behavior, keeping validation, lookup, or
-;;; projection responsibilities centralized for callers.
-;; : (-> PooModuleKindId PooModuleFieldValueCandidate Boolean)
-(def (poo-flow-module-value-kind-accepts? value-kind value)
-  (cond ((eq? value-kind 'Any) #t)
-        ((eq? value-kind 'List) (list? value))
-        ((eq? value-kind 'Map) (poo-flow-module-alist? value))
-        ((eq? value-kind 'Alist) (poo-flow-module-alist? value))
-        ((eq? value-kind 'Symbol) (symbol? value))
-        ((eq? value-kind 'String) (string? value))
-        ((eq? value-kind 'Boolean) (boolean? value))
-        ((eq? value-kind 'Object) (object? value))
-        ((eq? value-kind 'Node) (poo-flow-module-extension-node? value))
-        (else #t)))
+;;; Module field types are native gerbil-poo Type descriptors.  The symbol in
+;;; `module-value-kind` is a report-only projection for the upstream harness;
+;;; it never participates in semantic dispatch.
+(def (poo-flow-module-value-type base-type kind)
+  (.cc base-type
+       'module-value-kind kind
+       'sexp kind))
+
+(def PooFlowModuleAnyType
+  (poo-flow-module-value-type Any 'Any))
+(def (poo-flow-module-list-type element-type)
+  (poo-flow-module-value-type (List element-type) 'List))
+(def PooFlowModuleListType
+  (poo-flow-module-list-type Any))
+(def PooFlowModuleMapType
+  (poo-flow-module-value-type
+   (poo-flow-predicate-type 'PooFlowModuleMap poo-flow-module-alist?)
+   'Map))
+(def PooFlowModuleAlistType
+  (poo-flow-module-value-type
+   (poo-flow-predicate-type 'PooFlowModuleAlist poo-flow-module-alist?)
+   'Alist))
+(def PooFlowModuleSymbolType
+  (poo-flow-module-value-type Symbol 'Symbol))
+(def PooFlowModuleStringType
+  (poo-flow-module-value-type String 'String))
+(def PooFlowModuleBooleanType
+  (poo-flow-module-value-type Bool 'Boolean))
+(def PooFlowModuleObjectType
+  (poo-flow-module-value-type Object 'Object))
+(def PooFlowModuleNodeType
+  (poo-flow-module-value-type
+   (poo-flow-predicate-type 'PooFlowModuleNode
+                            poo-flow-module-extension-node?)
+   'Node))
+
+(def (poo-flow-module-value-type? value-type)
+  (and (element? Type value-type)
+       (.slot? value-type 'module-value-kind)
+       (symbol? (.ref value-type 'module-value-kind))))
+
+(def (poo-flow-module-value-type-kind value-type)
+  (unless (poo-flow-module-value-type? value-type)
+    (raise-type-error Type value-type))
+  (.ref value-type 'module-value-kind))
+
+(def (poo-flow-module-value-type-accepts? value-type value)
+  (and (poo-flow-module-value-type? value-type)
+       (element? value-type value)))
 
 ;;; Field contracts translate object-level C3 inheritance into merge operations
 ;;; without hardcoding backend-specific fields in the module system.
 ;; : (-> Symbol Symbol Symbol PooModuleFieldDefault PooModuleFieldMetadata PooModuleFieldContract)
-(def (poo-flow-module-field-contract identity value-kind merge default metadata)
+(def (poo-flow-module-field-contract identity value-type merge default metadata)
+  (unless (poo-flow-module-value-type? value-type)
+    (raise-type-error Type value-type))
   (let ((identity-value identity)
-        (value-kind-value value-kind)
+        (value-type-value value-type)
         (merge-value merge)
         (default-value default)
         (metadata-value metadata))
     (.o kind: poo-flow-module-field-contract-kind
         identity: identity-value
-        value-kind: value-kind-value
+        value-type: value-type-value
         merge: merge-value
         default: default-value
         metadata: metadata-value)))
@@ -131,7 +185,7 @@
 ;; : (-> PooModuleFieldContract Symbol)
 (def (poo-flow-module-field-contract-identity field) (.ref field 'identity))
 ;; : (-> PooModuleFieldContract Symbol)
-(def (poo-flow-module-field-contract-value-kind field) (.ref field 'value-kind))
+(def (poo-flow-module-field-contract-value-type field) (.ref field 'value-type))
 ;; : (-> PooModuleFieldContract Symbol)
 (def (poo-flow-module-field-contract-merge field) (.ref field 'merge))
 ;; : (-> PooModuleFieldContract PooModuleFieldDefault)
@@ -143,15 +197,15 @@
 ;;; contracts can refine this before an extension operation is projected.
 ;; : (-> PooModuleFieldContract PooModuleFieldValueCandidate Boolean)
 (def (poo-flow-module-field-contract-accepts? field value)
-  (poo-flow-module-value-kind-accepts?
-   (poo-flow-module-field-contract-value-kind field)
+  (poo-flow-module-value-type-accepts?
+   (poo-flow-module-field-contract-value-type field)
    value))
 
 ;; : (-> PooModuleFieldContract Symbol PooModuleFieldContract)
 (def (poo-flow-module-field-contract-with-merge field merge)
   (poo-flow-module-field-contract
    (poo-flow-module-field-contract-identity field)
-   (poo-flow-module-field-contract-value-kind field)
+   (poo-flow-module-field-contract-value-type field)
    merge
    (poo-flow-module-field-contract-default field)
    (poo-flow-module-field-contract-metadata field)))
@@ -172,17 +226,17 @@
           (if field-contract?
             (poo-flow-module-field-contract-merge field-value)
             'override))
-         (field-value-kind-value
+         (field-value-type-value
           (if field-contract?
-            (poo-flow-module-field-contract-value-kind field-value)
-            'Any)))
+            (poo-flow-module-field-contract-value-type field-value)
+            PooFlowModuleAnyType)))
     (vector poo-flow-module-field-contribution-kind
             target-value
             field-value
             value-value
             field-identity-value
             field-merge-value
-            field-value-kind-value
+            field-value-type-value
             field-contract?)))
 
 ;; : (-> PooModuleFieldContributionCandidate Boolean)
@@ -233,10 +287,10 @@
 ;;; edge for module-system, object, core behavior, keeping validation, lookup,
 ;;; or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
-(def (poo-flow-module-field-contribution-field-value-kind contribution)
+(def (poo-flow-module-field-contribution-field-value-type contribution)
   (if (poo-flow-module-field-contribution-vector? contribution)
     (vector-ref contribution 6)
-    (.ref contribution 'field-value-kind)))
+    (.ref contribution 'field-value-type)))
 
 ;;; Boundary: module field contribution field identity is the policy-visible
 ;;; edge for module-system, object, core behavior, keeping validation, lookup,
@@ -259,8 +313,8 @@
 ;; : (-> PooModuleFieldContribution Boolean)
 (def (poo-flow-module-field-contribution-valid? contribution)
   (or (not (poo-flow-module-field-contribution-field-contract? contribution))
-      (poo-flow-module-value-kind-accepts?
-       (poo-flow-module-field-contribution-field-value-kind contribution)
+      (poo-flow-module-value-type-accepts?
+       (poo-flow-module-field-contribution-field-value-type contribution)
        (poo-flow-module-field-contribution-value contribution))))
 
 ;;; Contribution conversion is the only place field merge names become graph
@@ -302,8 +356,8 @@
           (poo-flow-module-field-contribution-field-contract? contribution))
          (valid?
           (or (not field-contract?)
-              (poo-flow-module-value-kind-accepts?
-               (poo-flow-module-field-contribution-field-value-kind
+              (poo-flow-module-value-type-accepts?
+               (poo-flow-module-field-contribution-field-value-type
                 contribution)
                value)))
          (field-identity
@@ -340,29 +394,35 @@
 ;;; Transformer contracts are object-owned wrappers around standard
 ;;; list/map-shaped operations. They validate user or agent repair payloads
 ;;; before those payloads become ordinary field contributions.
+;; : (forall (m) (-> Symbol Symbol Symbol Symbol Symbol Boolean MaybeSymbol m PooModuleTransformerContract))
 ;; : (-> Symbol Symbol Symbol Symbol Symbol Boolean MaybeSymbol Alist PooModuleTransformerContract)
 (def (poo-flow-module-transformer-contract identity
                                            merge
-                                           input-kind
-                                           argument-kind
-                                           output-kind
+                                           input-type
+                                           argument-type
+                                           output-type
                                            idempotent?
                                            identity-key
                                            metadata)
+  (for-each
+   (lambda (value-type)
+     (unless (poo-flow-module-value-type? value-type)
+       (raise-type-error Type value-type)))
+   (list input-type argument-type output-type))
   (let ((identity-value identity)
         (merge-value merge)
-        (input-kind-value input-kind)
-        (argument-kind-value argument-kind)
-        (output-kind-value output-kind)
+        (input-type-value input-type)
+        (argument-type-value argument-type)
+        (output-type-value output-type)
         (idempotent-value idempotent?)
         (identity-key-value identity-key)
         (metadata-value metadata))
     (.o kind: poo-flow-module-transformer-contract-kind
         identity: identity-value
         merge: merge-value
-        input-kind: input-kind-value
-        argument-kind: argument-kind-value
-        output-kind: output-kind-value
+        input-type: input-type-value
+        argument-type: argument-type-value
+        output-type: output-type-value
         idempotent?: idempotent-value
         identity-key: identity-key-value
         metadata: metadata-value)))
@@ -378,14 +438,14 @@
 (def (poo-flow-module-transformer-contract-merge transformer)
   (.ref transformer 'merge))
 ;; : (-> PooModuleTransformerContract Symbol)
-(def (poo-flow-module-transformer-contract-input-kind transformer)
-  (.ref transformer 'input-kind))
+(def (poo-flow-module-transformer-contract-input-type transformer)
+  (.ref transformer 'input-type))
 ;; : (-> PooModuleTransformerContract Symbol)
-(def (poo-flow-module-transformer-contract-argument-kind transformer)
-  (.ref transformer 'argument-kind))
+(def (poo-flow-module-transformer-contract-argument-type transformer)
+  (.ref transformer 'argument-type))
 ;; : (-> PooModuleTransformerContract Symbol)
-(def (poo-flow-module-transformer-contract-output-kind transformer)
-  (.ref transformer 'output-kind))
+(def (poo-flow-module-transformer-contract-output-type transformer)
+  (.ref transformer 'output-type))
 ;; : (-> PooModuleTransformerContract Boolean)
 (def (poo-flow-module-transformer-contract-idempotent? transformer)
   (.ref transformer 'idempotent?))
@@ -401,9 +461,9 @@
   (poo-flow-module-transformer-contract
    'list.append
    'append
-   'List
-   'List
-   'List
+   PooFlowModuleListType
+   PooFlowModuleListType
+   PooFlowModuleListType
    #t
    #f
    '((scope . object-core) (standard-library-shape . list.append))))
@@ -413,9 +473,9 @@
   (poo-flow-module-transformer-contract
    'list.remove
    'remove
-   'List
-   'List
-   'List
+   PooFlowModuleListType
+   PooFlowModuleListType
+   PooFlowModuleListType
    #t
    #f
    '((scope . object-core) (standard-library-shape . list.remove))))
@@ -425,20 +485,22 @@
   (poo-flow-module-transformer-contract
    'map.set
    'override
-   'Map
-   'Map
-   'Map
+   PooFlowModuleMapType
+   PooFlowModuleMapType
+   PooFlowModuleMapType
    #t
    #f
    '((scope . object-core) (standard-library-shape . map.set))))
 
 ;; : (-> Symbol Symbol Boolean)
-(def (poo-flow-module-transformer-kind-compatible? expected actual)
-  (or (eq? expected 'Any)
-      (eq? actual 'Any)
+(def (poo-flow-module-transformer-type-compatible? expected actual)
+  (or (eq? expected PooFlowModuleAnyType)
+      (eq? actual PooFlowModuleAnyType)
       (eq? expected actual)
-      (and (eq? expected 'Map) (eq? actual 'Alist))
-      (and (eq? expected 'Alist) (eq? actual 'Map))))
+      (and (eq? expected PooFlowModuleMapType)
+           (eq? actual PooFlowModuleAlistType))
+      (and (eq? expected PooFlowModuleAlistType)
+           (eq? actual PooFlowModuleMapType))))
 
 ;; : (-> Symbol PooModuleTransformerContract String)
 (def (poo-flow-module-transformer-diagnostic code transformer)
@@ -454,15 +516,15 @@
 ;; : (-> PooModuleTransformerContract PooModuleFieldContract PooModuleFieldValue [String])
 (def (poo-flow-module-transformer-contract-diagnostics transformer field value)
   (append
-   (if (poo-flow-module-transformer-kind-compatible?
-        (poo-flow-module-transformer-contract-input-kind transformer)
-        (poo-flow-module-field-contract-value-kind field))
+   (if (poo-flow-module-transformer-type-compatible?
+        (poo-flow-module-transformer-contract-input-type transformer)
+        (poo-flow-module-field-contract-value-type field))
      '()
      (list (poo-flow-module-transformer-diagnostic
             'field-kind-mismatch
             transformer)))
-   (if (poo-flow-module-value-kind-accepts?
-        (poo-flow-module-transformer-contract-argument-kind transformer)
+   (if (poo-flow-module-value-type-accepts?
+        (poo-flow-module-transformer-contract-argument-type transformer)
         value)
      '()
      (list (poo-flow-module-transformer-diagnostic

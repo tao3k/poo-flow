@@ -121,12 +121,12 @@
             ':tool-catalog)))
          (custom-session-tool-catalog-validation-row
           (tool-catalog-validation-row
-           (tool-catalog-validation validation/custom-session-tool-catalog
+           (tool-catalog-validation 'validation/custom-session-tool-catalog
              custom-session-tool-catalog
              custom-session-build-agent-tool-policy
              custom-session-hook-tool-policy
-             (metadata (source . user-interface)
-                       (case . session-policy)))))
+             '((source . user-interface)
+               (case . session-policy)))))
          (custom-session-memory-selection
           (car
            (use-module memory-core

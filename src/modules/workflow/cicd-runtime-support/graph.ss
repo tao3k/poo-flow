@@ -77,6 +77,7 @@
 
 ;; Dependency edges are emitted as inert `from` and `to` facts. The runtime
 ;; scheduler can choose its own execution plan from the graph report later.
+;; : (forall (e) (-> PooFlowCicdCheck [e] [e]))
 ;; : (-> PooFlowCicdCheck [Alist] [Alist])
 (def (poo-flow-cicd-check-dependency-edges/rev check edges-rev)
   (let ((check-name (poo-flow-cicd-check-name check)))
@@ -89,6 +90,7 @@
      edges-rev
      (poo-flow-cicd-check-dependency-refs check))))
 
+;; : (forall (a e) (-> [a] [e]))
 ;; : (-> [PooFlowCicdCheck] [Alist])
 (def (poo-flow-cicd-dependency-edges checks)
   (reverse
@@ -192,6 +194,7 @@
 
 ;; The dependency graph is a declarative DAG handoff. It reports nodes, edges,
 ;; and unresolved refs but deliberately does not sort or schedule the checks.
+;; : (forall (a) (-> a Alist))
 ;; poo-flow-cicd-check-map->dependency-graph
 ;; : (-> PooFlowCicdCheckMap Alist)
 ;; | doc m%

@@ -3,9 +3,10 @@
 ;;; Boundary: provider adapters normalize logs into the POO-native envelope.
 ;;; This module owns only pure policy transition and versioned proof receipts.
 
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex)
+(import (only-in :clan/poo/object .def .mix .o .ref)
+        (only-in :std/srfi/1 every filter-map)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/text/hex hex-encode))
 
 (export poo-flow-agent-action-evidence-envelope
         poo-flow-agent-action-evidence-envelope->projection
@@ -21,6 +22,7 @@
 (def executable-transition-receipt-schema
   'poo-flow.ai-security.executable-transition-receipt.v1)
 
+;; : (-> Object String)
 (def (canonical-digest value)
   (string-append
    "sha256:"
@@ -29,12 +31,12 @@
      (call-with-output-string
       (lambda (port) (write value port)))))))
 
+;; : (forall (a) (-> (List a) (List a) Boolean))
+;; : (-> List List Boolean)
 (def (set-subset? requested allowed)
-  (let loop ((remaining requested))
-    (or (null? remaining)
-        (and (member (car remaining) allowed)
-             (loop (cdr remaining))))))
+  (every (lambda (value) (if (member value allowed) #t #f)) requested))
 
+;; : (-> Symbol MaybeSymbol Symbol Symbol Symbol Symbol Symbol Symbol String String [Symbol] [Symbol] PooAgentActionEvidenceEnvelope)
 (def (poo-flow-agent-action-evidence-envelope
       action-id parent-action-id observation-event-id recovery-decision-id
       actor-identity tool-identity capability-id effect-domain evidence-root
@@ -55,6 +57,7 @@
       (requested-effects requested-effects)
       (allowed-effects allowed-effects)))
 
+;; : (-> PooAgentActionEvidenceEnvelope Alist)
 (def (poo-flow-agent-action-evidence-envelope->projection envelope)
   (unless (eq? (.ref envelope 'kind)
                'poo-flow-agent-action-evidence-envelope)
@@ -75,6 +78,7 @@
    (cons 'requestedEffects (.ref envelope 'requested-effects))
    (cons 'allowedEffects (.ref envelope 'allowed-effects))))
 
+;; : (-> [Symbol] Symbol [Symbol] MaybeSymbol String PooAiSecurityTransitionPolicy)
 (def (poo-flow-ai-security-transition-policy
       granted-capabilities expected-tool-identity allowed-effect-domains
       expected-parent-action-id expected-trace-parent-root)
@@ -87,6 +91,7 @@
       (expected-parent-action-id expected-parent-action-id)
       (expected-trace-parent-root expected-trace-parent-root)))
 
+;; : (-> PooAgentActionEvidenceEnvelope List)
 (def (envelope-identity envelope)
   (list action-evidence-envelope-schema
         "1"
@@ -103,27 +108,35 @@
         (.ref envelope 'requested-effects)
         (.ref envelope 'allowed-effects)))
 
+;; : (-> Symbol Boolean String PooAiSecurityInvariantEvidence)
 (def (invariant-receipt name satisfied reason)
   (.o (kind 'poo-flow-ai-security-invariant-evidence)
       (invariant name)
       (satisfied? satisfied)
       (reason reason)))
 
+;; : (-> PooAiSecurityInvariantEvidence List)
 (def (invariant-identity invariant)
   (list (.ref invariant 'invariant)
         (.ref invariant 'satisfied?)
         (.ref invariant 'reason)))
 
+;; : (-> [PooAiSecurityInvariantEvidence] [Symbol])
 (def (failed-invariants invariants)
-  (let loop ((remaining invariants) (failures '()))
-    (cond
-     ((null? remaining) (reverse failures))
-     ((.ref (car remaining) 'satisfied?)
-      (loop (cdr remaining) failures))
-     (else
-      (loop (cdr remaining)
-            (cons (.ref (car remaining) 'invariant) failures))))))
+  (filter-map
+   (lambda (invariant)
+     (and (not (.ref invariant 'satisfied?))
+          (.ref invariant 'invariant)))
+   invariants))
 
+;; : (-> Symbol Boolean String String POOObject)
+(def (described-invariant name accepted? accepted-reason rejected-reason)
+  (invariant-receipt name
+                     accepted?
+                     (if accepted? accepted-reason rejected-reason)))
+
+;;; Reference transition: evaluate the full invariant set and return an auditable denial or acceptance receipt.
+;; : (-> PooAgentActionEvidenceEnvelope PooAiSecurityTransitionPolicy PooAiSecurityTransitionReceipt)
 (def (poo-flow-ai-security-reference-transition envelope policy)
   (unless (eq? (.ref envelope 'kind)
                'poo-flow-agent-action-evidence-envelope)
@@ -132,8 +145,9 @@
                'poo-flow-ai-security-transition-policy)
     (error "reference transition requires TransitionPolicy" policy))
   (let* ((capability-ok
-          (if (member (.ref envelope 'capability-id)
-                      (.ref policy 'granted-capabilities)) #t #f))
+          (and (member (.ref envelope 'capability-id)
+                       (.ref policy 'granted-capabilities))
+               #t))
          (tool-ok
           (equal? (.ref envelope 'tool-identity)
                   (.ref policy 'expected-tool-identity)))
@@ -149,26 +163,22 @@
                        (.ref policy 'expected-trace-parent-root))))
          (invariants
           (list
-           (invariant-receipt
+           (described-invariant
             'capability-confinement capability-ok
-            (if capability-ok
-                "capability is explicitly granted"
-                "capability is outside the granted set"))
-           (invariant-receipt
+            "capability is explicitly granted"
+            "capability is outside the granted set")
+           (described-invariant
             'tool-identity tool-ok
-            (if tool-ok
-                "tool identity matches policy"
-                "tool identity does not match policy"))
-           (invariant-receipt
+            "tool identity matches policy"
+            "tool identity does not match policy")
+           (described-invariant
             'effect-containment effect-ok
-            (if effect-ok
-                "effect domain and requested effects are contained"
-                "effect domain or requested effects escape containment"))
-           (invariant-receipt
+            "effect domain and requested effects are contained"
+            "effect domain or requested effects escape containment")
+           (described-invariant
             'causal-continuity causal-ok
-            (if causal-ok
-                "parent action and trace root are continuous"
-                "parent action or trace root breaks causal continuity"))))
+            "parent action and trace root are continuous"
+            "parent action or trace root breaks causal continuity")))
          (failures (failed-invariants invariants))
          (decision (if (null? failures) 'accepted 'fail-closed))
          (envelope-digest (canonical-digest (envelope-identity envelope)))
@@ -190,6 +200,7 @@
         (output-digest output-digest)
         (trace-root trace-root))))
 
+;; : (-> PooAiSecurityTransitionReceipt List)
 (def (receipt-identity receipt)
   (list (.ref receipt 'schema)
         (.ref receipt 'schema-version)
@@ -200,6 +211,7 @@
         (.ref receipt 'output-digest)
         (.ref receipt 'trace-root)))
 
+;; : (-> PooAgentActionEvidenceEnvelope PooAiSecurityTransitionPolicy PooAiSecurityTransitionReceipt Boolean)
 (def (poo-flow-ai-security-transition-replay-valid? envelope policy receipt)
   (equal? (receipt-identity
            (poo-flow-ai-security-reference-transition envelope policy))
@@ -214,5 +226,6 @@
   (execute poo-flow-ai-security-reference-transition)
   (replay-valid? poo-flow-ai-security-transition-replay-valid?))
 
+;; : (-> [POOObject] PooAiSecurityTransitionEngine)
 (def (poo-flow-ai-security-transition-engine . policy-prototypes)
   (.mix policy-prototypes poo-flow-ai-security-transition-prototype))

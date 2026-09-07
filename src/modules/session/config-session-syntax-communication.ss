@@ -56,7 +56,7 @@
     '(delivery-policy ...))))
 
 ;; session-communication-channel-rows
-;; : (-> Syntax [Alist])
+;; : (-> PooSessionCommunicationChannelReceipt ... [Alist])
 ;; | doc m%
 ;;   Collect communication channel receipts into a bounded channel rows object.
 ;;   # Examples
@@ -64,10 +64,8 @@
 ;;   (session-communication-channel-rows inbox outbox)
 ;;   ;; => communication channel rows object
 ;;   ```
-(defrules session-communication-channel-rows ()
-  ((_ receipt ...)
-   (poo-flow-session-syntax-communication-channel-rows
-    (list receipt ...))))
+(def (session-communication-channel-rows . receipts)
+  (poo-flow-session-syntax-communication-channel-rows receipts))
 
 ;; session-communication
 ;; : (-> Syntax PooSessionCommunicationReceipt)
@@ -127,7 +125,7 @@
     'delivery-policy)))
 
 ;; session-communication-rows
-;; : (-> Syntax [Alist])
+;; : (-> PooSessionCommunicationReceipt ... [Alist])
 ;; | doc m%
 ;;   Collect communication event receipts into a bounded rows object.
 ;;   # Examples
@@ -135,7 +133,5 @@
 ;;   (session-communication-rows request response)
 ;;   ;; => communication rows object
 ;;   ```
-(defrules session-communication-rows ()
-  ((_ receipt ...)
-   (poo-flow-session-syntax-communication-rows
-    (list receipt ...))))
+(def (session-communication-rows . receipts)
+  (poo-flow-session-syntax-communication-rows receipts))

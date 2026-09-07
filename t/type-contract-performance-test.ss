@@ -108,9 +108,9 @@
           (type-contract-performance-best-ms
            attempts
            (lambda ()
-             (+ (type-contract-performance-session-policy-type-facts-rounds
+             (+ (type-contract-performance-session-policy-projection-rounds
                  session-rounds)
-                (type-contract-performance-session-tool-grant-lean-facts-rounds
+                (type-contract-performance-session-tool-grant-projection-rounds
                  session-rounds)
                 (type-contract-performance-session-policy-require-rounds
                  session-rounds)

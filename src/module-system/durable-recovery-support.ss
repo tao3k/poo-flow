@@ -527,6 +527,7 @@
    (cons 'handoff-required handoff-required)
    (cons 'runtime-executed runtime-executed)))
 
+;; : (forall (a) (-> Symbol Symbol [a] String [a]))
 ;; : (-> Symbol Symbol [Alist] String [Alist])
 (def (poo-flow-durable-recovery-observability-rows scenario-id
                                                    status

@@ -1,8 +1,9 @@
 ;;; Boundary: POO proof values project into the canonical native vector.
 ;;; Invariant: the hot path writes once into caller-owned storage; no JSON.
-(import :clan/poo/object
-        :std/crypto/digest
-        :std/text/hex
+(import (only-in :clan/poo/object .ref)
+        (only-in :std/crypto/digest sha256)
+        (only-in :std/srfi/1 iota)
+        (only-in :std/text/hex hex-decode hex-encode)
         :poo-flow/src/proof/generated/proof-case-vector-v1)
 
 (export poo-flow-proof-case-vector-write!
@@ -11,24 +12,30 @@
 (def (write-u32-le! target offset value)
   (unless (and (exact-integer? value) (<= 0 value #xffffffff))
     (error "proof vector u32 out of range" value))
-  (let loop ((index 0) (remaining value))
-    (when (< index 4)
-      (u8vector-set! target (+ offset index) (bitwise-and remaining #xff))
-      (loop (+ index 1) (arithmetic-shift remaining -8)))))
+  (for-each
+   (lambda (index)
+     (u8vector-set!
+      target
+      (+ offset index)
+      (bitwise-and (arithmetic-shift value (- (* index 8))) #xff)))
+   (iota 4)))
 
 (def (write-u64-le! target offset value)
   (unless (and (exact-integer? value) (<= 0 value #xffffffffffffffff))
     (error "proof vector u64 out of range" value))
-  (let loop ((index 0) (remaining value))
-    (when (< index 8)
-      (u8vector-set! target (+ offset index) (bitwise-and remaining #xff))
-      (loop (+ index 1) (arithmetic-shift remaining -8)))))
+  (for-each
+   (lambda (index)
+     (u8vector-set!
+      target
+      (+ offset index)
+      (bitwise-and (arithmetic-shift value (- (* index 8))) #xff)))
+   (iota 8)))
 
 (def (copy-u8vector! source target offset)
-  (let loop ((index 0))
-    (when (< index (u8vector-length source))
-      (u8vector-set! target (+ offset index) (u8vector-ref source index))
-      (loop (+ index 1)))))
+  (for-each
+   (lambda (index)
+     (u8vector-set! target (+ offset index) (u8vector-ref source index)))
+   (iota (u8vector-length source))))
 
 (def (digest32-bytes value field-name optional?: (optional? #f))
   (let (normalized

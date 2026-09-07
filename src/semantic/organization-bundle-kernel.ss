@@ -1,6 +1,8 @@
+;;; Boundary: applies canonical organization bundles to the semantic kernel state.
+;;; Invariant: transitions retain bundle identity and emit explicit acceptance receipts.
 (export #t)
 
-(import :clan/poo/object
+(import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/semantic/organization-bundle)
 
 (def +poo-flow-organization-bundle-kernel-state-schema+
@@ -90,6 +92,46 @@
                              (.ref state 'epoch) #f #f
                              (list (kernel-diagnostic code expected observed)))))
 
+;; : (-> PooBundleKernelState MaybeState PooBundleKernelReceipt (values MaybeState PooBundleKernelReceipt))
+(def (kernel-finish-validated-advance state validated validation-receipt)
+  (if (not validated)
+    (values #f (kernel-receipt 'advance #f 'kernel-next-bundle-rejected
+                               (.ref state 'identity) #f
+                               (.ref state 'epoch) #f
+                               (.ref validation-receipt 'validation-receipt)
+                               '()))
+    (let* ((next-epoch (+ (.ref state 'epoch) 1))
+           (next (kernel-state 'advanced (.ref validated 'bundle)
+                               (.ref validated 'canonical-payload)
+                               (.ref validated 'identity) next-epoch
+                               (.ref state 'identity) 'advance
+                               (.ref validated 'validation-receipt))))
+      (values next (kernel-receipt 'advance #t 'kernel-advanced
+                                   (.ref state 'identity)
+                                   (.ref next 'identity)
+                                   (.ref state 'epoch) next-epoch
+                                   (.ref next 'validation-receipt) '())))))
+
+;; : (-> PooBundleKernelState PooBundleKernelState (values MaybeState PooBundleKernelReceipt))
+(def (kernel-finish-opened-advance state opened)
+  (if (equal? (.ref opened 'canonical-payload)
+              (.ref state 'canonical-payload))
+    (values state (kernel-receipt 'advance #t 'kernel-noop
+                                  (.ref state 'identity) (.ref state 'identity)
+                                  (.ref state 'epoch) (.ref state 'epoch)
+                                  #f '()))
+    (let-values (((validated validation-receipt)
+                  (poo-flow-organization-bundle-kernel-validate opened)))
+      (kernel-finish-validated-advance state validated validation-receipt))))
+
+;; : (-> PooBundleKernelState PooOrganizationBundle (values MaybeState PooBundleKernelReceipt))
+(def (kernel-advance-next-bundle state next-bundle)
+  (let-values (((opened open-receipt)
+                (poo-flow-organization-bundle-kernel-open next-bundle)))
+    (if opened
+      (kernel-finish-opened-advance state opened)
+      (values #f open-receipt))))
+
 (def (poo-flow-organization-bundle-kernel-advance state expected-identity
                                                   expected-epoch next-bundle)
   (cond
@@ -107,31 +149,4 @@
     (kernel-reject-advance state 'kernel-stale-epoch
                            (.ref state 'epoch) expected-epoch))
    (else
-    (let-values (((opened open-receipt)
-                  (poo-flow-organization-bundle-kernel-open next-bundle)))
-      (if (not opened)
-        (values #f open-receipt)
-        (if (equal? (.ref opened 'canonical-payload)
-                    (.ref state 'canonical-payload))
-          (values state (kernel-receipt 'advance #t 'kernel-noop
-                                        (.ref state 'identity) (.ref state 'identity)
-                                        (.ref state 'epoch) (.ref state 'epoch) #f '()))
-          (let-values (((validated validation-receipt)
-                        (poo-flow-organization-bundle-kernel-validate opened)))
-            (if (not validated)
-              (values #f (kernel-receipt 'advance #f 'kernel-next-bundle-rejected
-                                         (.ref state 'identity) #f
-                                         (.ref state 'epoch) #f
-                                         (.ref validation-receipt 'validation-receipt)
-                                         '()))
-              (let* ((next-epoch (+ (.ref state 'epoch) 1))
-                     (next (kernel-state 'advanced next-bundle
-                                         (.ref validated 'canonical-payload)
-                                         (.ref validated 'identity) next-epoch
-                                         (.ref state 'identity) 'advance
-                                         (.ref validated 'validation-receipt))))
-                (values next (kernel-receipt 'advance #t 'kernel-advanced
-                                             (.ref state 'identity)
-                                             (.ref next 'identity)
-                                             (.ref state 'epoch) next-epoch
-                                             (.ref next 'validation-receipt) '())))))))))))
+    (kernel-advance-next-bundle state next-bundle))))

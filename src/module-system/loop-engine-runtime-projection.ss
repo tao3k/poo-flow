@@ -1,3 +1,5 @@
+;;; Boundary: projects user loop-engine configuration into runtime-owned inputs.
+;;; Invariant: projection is pure and leaves execution to the runtime handoff boundary.
 (import :poo-flow/src/modules/funflow/config
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/sandbox-profile-catalog
@@ -67,6 +69,7 @@
     memory-policies
     '())))
 
+;;; Projection boundary: expose the accepted intent as named contract catalogs and runtime facts.
 (def (poo-flow-user-loop-engine-intent-runtime-projections intent)
   (list
    (cons 'runtime-handoff-contracts

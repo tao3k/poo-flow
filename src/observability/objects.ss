@@ -3,10 +3,12 @@
 ;;; Invariant: diagnostics and receipts are Scheme-side evidence products;
 ;;; runtime manifests and proof rows are projections, not semantic owners.
 
-(import (only-in :clan/poo/object .def .ref object?)
+(import (only-in :clan/poo/object .def .o .ref object?)
         (only-in "./types.ss"
-                 poo-flow-observability-require-diagnostic-slots!
-                 poo-flow-observability-require-receipt-slots!))
+                 poo-flow-observability-diagnostic-contract?
+                 poo-flow-observability-receipt-contract?
+                 poo-flow-observability-require-diagnostic!
+                 poo-flow-observability-require-receipt!))
 
 (export poo-flow-observability-event-prototype
         poo-flow-observability-span-prototype
@@ -18,7 +20,6 @@
         poo-flow-observability-prototype?
         poo-flow-observability-prototype-id
         poo-flow-observability-prototype->alist
-        make-poo-flow-observability-diagnostic
         poo-flow-observability-diagnostic?
         poo-flow-observability-diagnostic-family
         poo-flow-observability-diagnostic-severity
@@ -33,7 +34,6 @@
         poo-flow-observability-diagnostic-record
         poo-flow-observability-diagnostic-code
         poo-flow-observability-diagnostic->alist
-        make-poo-flow-observability-receipt
         poo-flow-observability-receipt?
         poo-flow-observability-receipt-family
         poo-flow-observability-receipt-schema
@@ -129,49 +129,45 @@
    (cons 'owns (.ref prototype 'owns))
    (cons 'requires (.ref prototype 'requires))))
 
-;; poo-flow-observability-diagnostic
-;;   : (-> Symbol Symbol Symbol Symbol PooFlowGraphNodeRef PooFlowGraphEdgeRef Symbol String PooFlowRepairTarget [Alist] PooFlowObservabilityDiagnostic)
-;;   | doc m%
-;;       Fixed diagnostic evidence row. It carries validator ownership, graph
-;;       position, rejection reason, and the highest legal repair target.
-;;     %
-(defstruct poo-flow-observability-diagnostic
-  (family
-   severity
-   boundary
-   validator
-   node
-   edge
-   reason
-   message
-   repair-target
-   artifacts)
-  transparent: #t)
-
 ;; : (-> Symbol Symbol Symbol PooFlowGraphNodeRef PooFlowGraphEdgeRef Symbol String PooFlowRepairTarget [Alist] PooFlowObservabilityDiagnostic)
 (def (poo-flow-observability-diagnostic-record severity boundary validator node edge reason message repair-target . maybe-artifacts)
-  (let (artifacts (if (null? maybe-artifacts) '() (car maybe-artifacts)))
-    (poo-flow-observability-require-diagnostic-slots!
-     severity
-     boundary
-     validator
-     node
-     edge
-     reason
-     message
-     repair-target
-     artifacts)
-    (make-poo-flow-observability-diagnostic
-     'observability/diagnostic
-     severity
-     boundary
-     validator
-     node
-     edge
-     reason
-     message
-     repair-target
-     artifacts)))
+  (let ((prototype poo-flow-observability-diagnostic-prototype)
+        (severity-value severity)
+        (boundary-value boundary)
+        (validator-value validator)
+        (node-value node)
+        (edge-value edge)
+        (reason-value reason)
+        (message-value message)
+        (repair-target-value repair-target)
+        (artifacts-value (if (null? maybe-artifacts) '() (car maybe-artifacts))))
+    (poo-flow-observability-require-diagnostic!
+     (.o (:: @ [prototype])
+         family: 'observability/diagnostic
+         severity: severity-value
+         boundary: boundary-value
+         validator: validator-value
+         node: node-value
+         edge: edge-value
+         reason: reason-value
+         message: message-value
+         repair-target: repair-target-value
+         artifacts: artifacts-value))))
+
+(def (poo-flow-observability-diagnostic? value)
+  (poo-flow-observability-diagnostic-contract? value))
+
+(def (poo-flow-observability-diagnostic-family value) (.ref value 'family))
+(def (poo-flow-observability-diagnostic-severity value) (.ref value 'severity))
+(def (poo-flow-observability-diagnostic-boundary value) (.ref value 'boundary))
+(def (poo-flow-observability-diagnostic-validator value) (.ref value 'validator))
+(def (poo-flow-observability-diagnostic-node value) (.ref value 'node))
+(def (poo-flow-observability-diagnostic-edge value) (.ref value 'edge))
+(def (poo-flow-observability-diagnostic-reason value) (.ref value 'reason))
+(def (poo-flow-observability-diagnostic-message value) (.ref value 'message))
+(def (poo-flow-observability-diagnostic-repair-target value)
+  (.ref value 'repair-target))
+(def (poo-flow-observability-diagnostic-artifacts value) (.ref value 'artifacts))
 
 ;; : (-> PooFlowObservabilityDiagnostic Symbol)
 (def (poo-flow-observability-diagnostic-code diagnostic)
@@ -193,45 +189,38 @@
    (cons 'artifacts
          (poo-flow-observability-diagnostic-artifacts diagnostic))))
 
-;; poo-flow-observability-receipt
-;;   : (-> Symbol String PooFlowSourceRef Alist [PooFlowObservabilityDiagnostic] Alist Alist [Alist] PooFlowObservabilityReceipt)
-;;   | doc m%
-;;       Agent-facing feedback packet. The stable top level is graph,
-;;       diagnostics, repair, and readiness; proof and manifest details remain
-;;       drill-down artifacts.
-;;     %
-(defstruct poo-flow-observability-receipt
-  (family
-   schema
-   source
-   graph
-   diagnostics
-   repair
-   readiness
-   artifacts)
-  transparent: #t)
-
 ;; : (-> String PooFlowSourceRef Alist [PooFlowObservabilityDiagnostic] Alist Alist [Alist] PooFlowObservabilityReceipt)
 (def (poo-flow-observability-receipt-record schema source graph diagnostics repair readiness . maybe-artifacts)
-  (let (artifacts (if (null? maybe-artifacts) '() (car maybe-artifacts)))
-    (poo-flow-observability-require-receipt-slots!
-     schema
-     source
-     graph
-     diagnostics
-     poo-flow-observability-diagnostic?
-     repair
-     readiness
-     artifacts)
-    (make-poo-flow-observability-receipt
-     'observability/receipt
-     schema
-     source
-     graph
-     diagnostics
-     repair
-     readiness
-     artifacts)))
+  (let ((prototype poo-flow-observability-receipt-prototype)
+        (schema-value schema)
+        (source-value source)
+        (graph-value graph)
+        (diagnostics-value diagnostics)
+        (repair-value repair)
+        (readiness-value readiness)
+        (artifacts-value (if (null? maybe-artifacts) '() (car maybe-artifacts))))
+    (poo-flow-observability-require-receipt!
+     (.o (:: @ [prototype])
+         family: 'observability/receipt
+         schema: schema-value
+         source: source-value
+         graph: graph-value
+         diagnostics: diagnostics-value
+         repair: repair-value
+         readiness: readiness-value
+         artifacts: artifacts-value))))
+
+(def (poo-flow-observability-receipt? value)
+  (poo-flow-observability-receipt-contract? value))
+
+(def (poo-flow-observability-receipt-family value) (.ref value 'family))
+(def (poo-flow-observability-receipt-schema value) (.ref value 'schema))
+(def (poo-flow-observability-receipt-source value) (.ref value 'source))
+(def (poo-flow-observability-receipt-graph value) (.ref value 'graph))
+(def (poo-flow-observability-receipt-diagnostics value) (.ref value 'diagnostics))
+(def (poo-flow-observability-receipt-repair value) (.ref value 'repair))
+(def (poo-flow-observability-receipt-readiness value) (.ref value 'readiness))
+(def (poo-flow-observability-receipt-artifacts value) (.ref value 'artifacts))
 
 ;; : (-> PooFlowObservabilityReceipt Boolean)
 (def (poo-flow-observability-receipt-valid? receipt)
@@ -302,6 +291,7 @@
            repair-action))
     (poo-flow-observability-receipt->alist receipt))))
 
+;; : (forall (a) (-> PooFlowObservabilityReceipt (List (Pair Symbol a))))
 ;; : (-> PooFlowObservabilityReceipt Alist)
 (def (poo-flow-observability-receipt->alist receipt)
   (list

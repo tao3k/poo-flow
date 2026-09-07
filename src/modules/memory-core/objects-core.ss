@@ -28,6 +28,18 @@
         poo-flow-memory-store-spec->alist
         poo-flow-memory-reverse-onto)
 
+;; poo-flow-memory-field-rows
+;;   : (-> FieldRow... Alist)
+;;   | doc m%
+;;       `poo-flow-memory-field-rows` constructs ordered memory object fields.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-memory-field-rows (kind memory) (schema memory.v1))
+;;       ;; => ((kind . memory) (schema . memory.v1))
+;;       ```
+;;     %
 (defrules poo-flow-memory-field-rows ()
   ((_ (field value) ...)
    (list (cons 'field value) ...)))

@@ -1,4 +1,6 @@
-(import :clan/poo/object)
+;;; Boundary: models protocol-person promotion facts and decisions as POO values.
+;;; Invariant: promotion requires explicit provenance, commitments, and world evidence.
+(import (only-in :clan/poo/object .o .ref))
 
 (export poo-flow-provenance
         poo-flow-protocol-subject

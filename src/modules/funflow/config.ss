@@ -55,7 +55,10 @@
 ;;; The CI/CD payload is a Funflow feature, not a new top-level category. It is
 ;;; inspectable module data; adapters such as GitHub, Docker, or Nix stay out.
 ;; : UserModuleFlagEntry
-(import ./config-adapter.ss)
+(import (only-in ./config-adapter.ss
+                 poo-flow-funflow-require
+                 poo-flow-funflow-poo-check->cicd-check
+                 poo-flow-funflow-poo-pipeline->check-map))
 
 (def poo-flow-funflow-cicd-default-payload
   '(+cicd

@@ -177,9 +177,7 @@
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-sandbox-profile-object-profile? value)
-  (and (object? value)
-       (.slot? value 'kind)
-       (equal? (.ref value 'kind) poo-flow-sandbox-profile-kind)))
+  (poo-flow-sandbox-profile? value))
 
 ;;; Backend config modules call this with their inherited POO profile object.
 ;;; This is the only constructor that turns profile rows into merged profiles.

@@ -24,8 +24,8 @@
   (sandbox objects.cubeSandbox.sandbox
            objects.cubeSandbox
            objects.shared.sandbox
-           ((backend Symbol override 'cube '((scope . cubeSandbox)))
-            (profile Symbol override 'default '((scope . cubeSandbox)))))
+           ((backend PooFlowModuleSymbolType override 'cube '((scope . cubeSandbox)))
+            (profile PooFlowModuleSymbolType override 'default '((scope . cubeSandbox)))))
   (backend cube
            poo-flow-sandbox-backend-capability/cube
            '((aliases . ((cubeSandbox . cube)))
@@ -36,21 +36,21 @@
            objects.sandbox-core.profile
            (poo-flow-sandbox-core-profile-object
             poo-flow-cubeSandbox-object)
-           ((backend-kind Symbol override 'cube
+           ((backend-kind PooFlowModuleSymbolType override 'cube
                           '((scope . cubeSandbox)
                             (owned-by . module-config)))
-            (backend-ref Symbol override 'cubeSandbox
+            (backend-ref PooFlowModuleSymbolType override 'cubeSandbox
                          '((scope . cubeSandbox)
                            (owned-by . module-config)))
-            (capabilities List override
+            (capabilities PooFlowModuleListType override
                           '(process-run filesystem-read cache-mount)
                           '((scope . cubeSandbox)
                             (dsl-row . capabilities)))
-            (backend-capability Object override
+            (backend-capability PooFlowModuleObjectType override
                                 poo-flow-cubeSandbox-backend-capability
                                 '((scope . cubeSandbox)
                                   (owned-by . module-config)))
-            (resource-policy List override
+            (resource-policy PooFlowModuleListType override
                              (poo-flow-sandbox-filesystem-prototype->resource-policy
                               poo-flow-snapshot-filesystem-prototype)
                              '((scope . cubeSandbox)

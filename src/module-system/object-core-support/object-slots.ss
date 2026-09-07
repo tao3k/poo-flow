@@ -1,3 +1,5 @@
+;;; Boundary: constant-slot lookup and field indexing for POO object support;
+;;; inheritance resolution remains owned by object.ss.
 (import :gerbil/gambit
         (only-in :clan/poo/object
                  $constant-slot-spec
@@ -18,31 +20,36 @@
 
 ;; Boundary: slot lookup and field indexing helpers stay independent from
 ;; object inheritance resolution, which remains in object.ss.
-;; : (-> Symbol Any ConstantSlotSpec)
+;; : (-> Symbol Object ConstantSlotSpec)
 (def (poo-flow-module-object-constant-slot key value)
-  (cons key ($constant-slot-spec value)))
+  (let (spec ($constant-slot-spec value))
+    `(,key . ,spec)))
 
 ;; : MissingSlotSentinel
 (def +poo-flow-module-object-slot-missing+
   (list 'poo-flow-module-object-slot-missing))
 
-;; : (-> POOObject Symbol Any Any)
-;; | doc Reads a constant POO slot without forcing dynamic slot fallback.
-;; # Examples
-;; (poo-flow-module-object-constant-slot-ref/default object 'name #f) => value
-;; result: Any
+;; poo-flow-module-object-constant-slot-ref/default
+;;   : (-> POOObject Symbol Object Object)
+;;   | doc m%
+;;       Read a constant POO slot without forcing dynamic slot fallback.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-module-object-constant-slot-ref/default object 'name #f)
+;;       ;; => the constant value, or #f
+;;       ```
+;;     %
 (def (poo-flow-module-object-constant-slot-ref/default object key default)
-  (let loop ((slots (object-slots object)))
-    (cond
-     ((null? slots) default)
-     ((eq? (caar slots) key)
-      (let (spec (cdar slots))
-        (if ($constant-slot-spec? spec)
-          ($constant-slot-spec-value spec)
-          default)))
-     (else (loop (cdr slots))))))
+  (match (assq key (object-slots object))
+    (#f default)
+    ([_ . spec]
+     (if ($constant-slot-spec? spec)
+       ($constant-slot-spec-value spec)
+       default))))
 
-;; : (-> POOObject Symbol Any)
+;; : (-> POOObject Symbol Object)
 (def (poo-flow-module-object-constant-slot-ref object key)
   (let (value (poo-flow-module-object-constant-slot-ref/default
                object
@@ -70,7 +77,7 @@
      fields)
     index))
 
-;; : (-> HashTable Symbol Any)
+;; : (-> HashTable Symbol Object)
 (def (poo-flow-module-object-identity-hash-ref table identity)
   (hash-get table identity))
 

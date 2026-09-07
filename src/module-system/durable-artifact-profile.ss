@@ -255,11 +255,13 @@
    name
    (poo-flow-artifact-sections->alist sections)))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooArtifactProfile Alist)
 (def (poo-flow-artifact-profile->alist profile)
   (map (lambda (field) (cons field (.ref profile field)))
        +poo-flow-artifact-profile-fields+))
 
+;; : (forall (v) (-> v [(Pair Symbol Object)]))
 ;; : (-> PooArtifactDatabaseProfile Alist)
 (def (poo-flow-artifact-database-profile->alist profile)
   (map (lambda (field) (cons field (.ref profile field)))

@@ -209,6 +209,7 @@
 ;;; - It serializes request metadata without running Makefile or process work.
 ;; | RuntimeArgumentBuilder = (-> RuntimeEnvelope [String])
 ;; : (-> [Alist] RuntimeArgumentBuilder)
+;; : (forall (o) (-> [o] RuntimeArgumentBuilder))
 ;; make-makefile-tool-runtime-arguments
 ;;   : (-> [Alist] RuntimeArgumentBuilder)
 ;;   | contract: options produce an envelope serializer, not runtime execution

@@ -241,11 +241,13 @@
                           #t
                           #f)
                         #t)
+          ;; The former workflow binding macros duplicated public constructors;
+          ;; discovery must not resurrect that removed DSL surface.
           (check-equal? (if (member "src/modules/workflow/syntax.ss"
                                     source-values)
                           #t
                           #f)
-                        #t)
+                        #f)
           (check-equal? (lazy-loader-plans-deferred? plans) #t)
           (check-equal? (cdr (assoc 'mode first-metadata)) 'lazy)
           (check-equal? (cdr (assoc 'owner first-metadata)) 'src-modules)

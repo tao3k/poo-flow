@@ -1,5 +1,5 @@
-(import :std/sugar)
-
+;;; Boundary: declarative owner-map row validation only; artifact loading and
+;;; observability remain in their dedicated module-system owners.
 (export +poo-flow-module-system-owner-map-schema-id+
         +poo-flow-module-system-owner-map-schema-version+
         +poo-flow-module-system-owner-map-artifact-id+
@@ -25,10 +25,12 @@
     rfc45-07-public-composition
     rfc45-08-parent-qualification))
 
+;; : (-> Alist Symbol Object)
 (def (poo-flow-owner-map-ref value key)
   (let (entry (assq key value))
     (and entry (cdr entry))))
 
+;; : (-> Alist Boolean)
 (def (poo-flow-module-system-owner-map-row-valid? row)
   (and (pair? row)
        (member (poo-flow-owner-map-ref row 'row-identity)
@@ -41,21 +43,47 @@
        (eq? (poo-flow-owner-map-ref row 'implementation-state)
             'implemented)))
 
+;; : (-> Symbol [Alist] Integer)
+(def (poo-flow-owner-map-row-identity-count identity rows)
+  (match rows
+    ([] 0)
+    ([row . rest]
+     (+ (if (eq? (poo-flow-owner-map-ref row 'row-identity) identity) 1 0)
+        (poo-flow-owner-map-row-identity-count identity rest)))))
+
+;; : (-> [Symbol] [Alist] Boolean)
+(def (poo-flow-owner-map-required-identities-valid? required rows)
+  (match required
+    ([] #t)
+    ([identity . rest]
+     (and (= 1 (poo-flow-owner-map-row-identity-count identity rows))
+          (poo-flow-owner-map-required-identities-valid? rest rows)))))
+
+;; : (-> [Alist] Boolean)
+(def (poo-flow-owner-map-rows-valid? rows)
+  (match rows
+    ([] #t)
+    ([row . rest]
+     (and (poo-flow-module-system-owner-map-row-valid? row)
+          (poo-flow-owner-map-rows-valid? rest)))))
+
+;; poo-flow-module-system-owner-map-valid?
+;;   : (forall (a) (-> (List a) Boolean))
+;;   : (-> [Alist] Boolean)
+;;   | doc m%
+;;       Validate complete, unique owner-map coverage and every row contract.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-module-system-owner-map-valid? rows)
+;;       ;; => #t when every required owner row occurs exactly once
+;;       ```
+;;     %
 (def (poo-flow-module-system-owner-map-valid? rows)
   (and (= (length rows)
           (length +poo-flow-module-system-owner-map-required-row-identities+))
-       (let loop ((required
-                   +poo-flow-module-system-owner-map-required-row-identities+))
-         (or (null? required)
-             (and (= 1
-                     (length
-                      (filter (lambda (row)
-                                (eq? (poo-flow-owner-map-ref row 'row-identity)
-                                     (car required)))
-                              rows)))
-                  (loop (cdr required)))))
-       (let loop ((remaining rows))
-         (or (null? remaining)
-             (and (poo-flow-module-system-owner-map-row-valid?
-                   (car remaining))
-                  (loop (cdr remaining)))))))
+       (poo-flow-owner-map-required-identities-valid?
+        +poo-flow-module-system-owner-map-required-row-identities+
+        rows)
+       (poo-flow-owner-map-rows-valid? rows)))

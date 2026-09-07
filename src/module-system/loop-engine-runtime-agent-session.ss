@@ -21,6 +21,7 @@
 
 ;;; Harness projection is one row per named profile so multi-agent governor
 ;;; configurations remain explicit in the handoff packet.
+;; : (forall (a) (-> Alist [a]))
 ;; : (-> Alist [Alist])
 (def (poo-flow-user-loop-engine-intent-agent-harnesses intent)
   (map (lambda (node)
@@ -105,6 +106,7 @@
 
 ;;; Session projection gives every named profile a stable namespace that agents
 ;;; can audit before a backend opens durable conversation state.
+;; : (forall (a) (-> Alist [a]))
 ;; : (-> Alist [Alist])
 (def (poo-flow-user-loop-engine-intent-agent-sessions intent)
   (map (lambda (node)

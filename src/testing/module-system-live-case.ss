@@ -34,8 +34,7 @@
         poo-flow-module-system-live-case-stage-project-copy
         poo-flow-module-system-live-case-runtime-manifest
         poo-flow-module-system-live-case-receipt
-        poo-flow-module-system-live-case-test-suite
-        define-poo-flow-module-system-live-case-test)
+        poo-flow-module-system-live-case-test-suite)
 
 ;;; Host probes are best-effort support for building the nono command. A failed
 ;;; probe returns an explicit default instead of changing the case semantics.
@@ -706,25 +705,3 @@
                                   project-copy-failed))
                                #t)
                           #t)))))))
-
-;; define-poo-flow-module-system-live-case-test
-;;   : (-> Syntax Syntax)
-;;   | contract: expands a downstream live case object into a std/test suite definition
-;;   | result: a named test suite; the case is executed only when the suite runs
-;;   | doc m%
-;;       # Examples
-;;
-;;       ```scheme
-;;       (define-poo-flow-module-system-live-case-test
-;;         user-interface-live-cicd-case-test
-;;         poo-flow-custom-my-module-current-system-build-case)
-;;       ;; => defines user-interface-live-cicd-case-test
-;;       ```
-;;     %
-;; : (-> Syntax Syntax)
-(defsyntax (define-poo-flow-module-system-live-case-test stx)
-  (syntax-case stx ()
-    ((_ test-name live-case)
-     (syntax
-      (def test-name
-        (poo-flow-module-system-live-case-test-suite live-case))))))

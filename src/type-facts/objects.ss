@@ -3,18 +3,18 @@
 ;;; Invariant: facts are Scheme control-plane data; Lean and runtime payloads
 ;;; are final projections, not semantic owners.
 
-(import (only-in "../utilities/contracts.ss"
-                 poo-flow-slot-contract-key
-                 poo-flow-slot-contract-slot
-                 poo-flow-slot-contract-value-kind
-                 poo-flow-slot-contract-predicate-key
-                 poo-flow-slot-contract-required?
-                 poo-flow-slot-contract-metadata
-                 poo-flow-object-type-contract-key
-                 poo-flow-object-type-contract-owner
-                 poo-flow-object-type-contract-object-kind
-                 poo-flow-object-type-contract-slots
-                 poo-flow-object-type-contract-metadata))
+(import (only-in "../module-system/contract-schema.ss"
+                 poo-flow-contract-slot-key
+                 poo-flow-contract-slot-name
+                 poo-flow-contract-slot-report-kind
+                 poo-flow-contract-slot-predicate-key
+                 poo-flow-contract-slot-required?
+                 poo-flow-contract-slot-metadata
+                 poo-flow-native-contract-key
+                 poo-flow-native-contract-owner
+                 poo-flow-native-contract-object-kind
+                 poo-flow-native-contract-slots
+                 poo-flow-native-contract-metadata))
 
 (export make-poo-flow-type-fact-contract
         poo-flow-type-fact-contract?
@@ -42,9 +42,9 @@
         poo-flow-contract-required-polarity
         poo-flow-contract-slot-fact-metadata
         poo-flow-contract-slot->type-fact
-        poo-flow-object-type-contract->type-facts
+        poo-flow-native-contract->type-facts
         poo-flow-contract-slot->lean-fact-contract
-        poo-flow-object-type-contract->lean-fact-contracts
+        poo-flow-native-contract->lean-fact-contracts
         make-poo-flow-type-validation-receipt
         poo-flow-type-validation-receipt?
         poo-flow-type-validation-receipt-kind
@@ -170,16 +170,16 @@
   (append
    (list
     (cons 'object-contract
-          (poo-flow-object-type-contract-key object-contract))
+          (poo-flow-native-contract-key object-contract))
     (cons 'contract-owner
-          (poo-flow-object-type-contract-owner object-contract))
+          (poo-flow-native-contract-owner object-contract))
     (cons 'object-metadata
-          (poo-flow-object-type-contract-metadata object-contract))
+          (poo-flow-native-contract-metadata object-contract))
     (cons 'predicate
-          (poo-flow-slot-contract-predicate-key slot-contract))
+          (poo-flow-contract-slot-predicate-key slot-contract))
     (cons 'required?
-          (poo-flow-slot-contract-required? slot-contract)))
-   (poo-flow-slot-contract-metadata slot-contract)))
+          (poo-flow-contract-slot-required? slot-contract)))
+   (poo-flow-contract-slot-metadata slot-contract)))
 
 ;; poo-flow-contract-slot->type-fact
 ;;   : (-> PooFlowObjectTypeContract PooFlowSlotContract PooFlowTypeFactContract)
@@ -193,31 +193,30 @@
 ;;     %
 (def (poo-flow-contract-slot->type-fact object-contract slot-contract)
   (poo-flow-type-fact
-   (poo-flow-slot-contract-key slot-contract)
+   (poo-flow-contract-slot-key slot-contract)
    'slot-contract
-   (poo-flow-object-type-contract-object-kind object-contract)
-   (poo-flow-slot-contract-slot slot-contract)
-   (poo-flow-slot-contract-slot slot-contract)
-   (poo-flow-slot-contract-value-kind slot-contract)
+   (poo-flow-native-contract-object-kind object-contract)
+   (poo-flow-contract-slot-name slot-contract)
+   (poo-flow-contract-slot-name slot-contract)
+   (poo-flow-contract-slot-report-kind slot-contract)
    (poo-flow-contract-required-polarity
-    (poo-flow-slot-contract-required? slot-contract))
+    (poo-flow-contract-slot-required? slot-contract))
    (poo-flow-contract-slot-fact-metadata object-contract slot-contract)))
 
-;; poo-flow-object-type-contract->type-facts
-;;   : (-> PooFlowObjectTypeContract [PooFlowTypeFactContract])
+;; poo-flow-native-contract->type-facts
+;;   : (-> PooFlowContract [PooFlowTypeFactContract])
 ;;   | doc m%
-;;       Project every slot contract in an object contract into stable type
-;;       facts. This is the default bridge from defcontract-family declarations
-;;       into proof-addressable validation data.
+;;       Project every native slot schema in a Contract into stable type facts.
+;;       This is a one-way proof projection from native descriptors.
 ;;       # Examples
-;;       (poo-flow-object-type-contract->type-facts receipt-contract)
+;;       (poo-flow-native-contract->type-facts receipt-contract)
 ;;       # Result
 ;;       A list of type fact contract rows.
 ;;     %
-(def (poo-flow-object-type-contract->type-facts object-contract)
+(def (poo-flow-native-contract->type-facts object-contract)
   (map (lambda (slot-contract)
          (poo-flow-contract-slot->type-fact object-contract slot-contract))
-       (poo-flow-object-type-contract-slots object-contract)))
+       (poo-flow-native-contract-slots object-contract)))
 
 ;; poo-flow-contract-slot->lean-fact-contract
 ;;   : (-> PooFlowObjectTypeContract PooFlowSlotContract PooFlowLeanFactContract)
@@ -231,30 +230,30 @@
 ;;     %
 (def (poo-flow-contract-slot->lean-fact-contract object-contract slot-contract)
   (poo-flow-lean-fact
-   (poo-flow-slot-contract-key slot-contract)
+   (poo-flow-contract-slot-key slot-contract)
    'slot-contract
-   (poo-flow-object-type-contract-object-kind object-contract)
-   (poo-flow-slot-contract-slot slot-contract)
-   (poo-flow-slot-contract-slot slot-contract)
+   (poo-flow-native-contract-object-kind object-contract)
+   (poo-flow-contract-slot-name slot-contract)
+   (poo-flow-contract-slot-name slot-contract)
    (poo-flow-contract-required-polarity
-    (poo-flow-slot-contract-required? slot-contract))
+    (poo-flow-contract-slot-required? slot-contract))
    (poo-flow-contract-slot-fact-metadata object-contract slot-contract)))
 
-;; poo-flow-object-type-contract->lean-fact-contracts
-;;   : (-> PooFlowObjectTypeContract [PooFlowLeanFactContract])
+;; poo-flow-native-contract->lean-fact-contracts
+;;   : (-> PooFlowContract [PooFlowLeanFactContract])
 ;;   | doc m%
 ;;       Project every slot contract in an object contract into Lean fact
 ;;       contract requests. The output is data for proof tooling, not execution.
 ;;       # Examples
-;;       (poo-flow-object-type-contract->lean-fact-contracts receipt-contract)
+;;       (poo-flow-native-contract->lean-fact-contracts receipt-contract)
 ;;       # Result
 ;;       A list of Lean fact contract rows.
 ;;     %
-(def (poo-flow-object-type-contract->lean-fact-contracts object-contract)
+(def (poo-flow-native-contract->lean-fact-contracts object-contract)
   (map (lambda (slot-contract)
          (poo-flow-contract-slot->lean-fact-contract object-contract
                                                      slot-contract))
-       (poo-flow-object-type-contract-slots object-contract)))
+       (poo-flow-native-contract-slots object-contract)))
 
 ;; poo-flow-type-validation-receipt
 ;;   : (-> Symbol String Symbol Boolean PooFlowSourceRef PooFlowHarnessValidation [Alist] [Symbol] [PooFlowTypeFactContract] [PooFlowLeanFactContract] Boolean PooFlowTypeValidationReceipt)

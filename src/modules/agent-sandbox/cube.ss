@@ -17,6 +17,7 @@
 
 ;;; Cube profiles model remote or clustered KVM-backed sandboxes. The ordinary
 ;;; helper form keeps backend defaults explicit and avoids macro-only evidence.
+;; : (forall (o) (-> BackendRef [o] AgentSandboxProfileDescriptor))
 ;; : (-> BackendRef [Alist] AgentSandboxProfileDescriptor)
 (def (make-cube-agent-sandbox-profile-descriptor backend-ref . maybe-options)
   (make-agent-sandbox-backend-profile-descriptor

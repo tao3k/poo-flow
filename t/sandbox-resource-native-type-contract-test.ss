@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
-;;; Contract: sandbox resources expose utilities-backed type contracts.
+;;; Contract: sandbox resources expose native POO Type/Contract descriptors.
 
 (eval '(import (only-in :clan/poo/object .o)))
+(eval '(import (only-in :clan/poo/mop Type element?)))
 (eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
 
 ;; : (-> PooFlowSandboxResourceExpr PooFlowSandboxResourceValue)
@@ -27,6 +28,19 @@
                        '(filesystem cpu ports memory timeout-ms)))
     (error "sandbox resource type contract should expose structured slot contracts")))
 
+(unless (sandbox-resource-eval
+         '(and (element? Type PooFlowSandboxResourcesPrototypeContract)
+               (element? PooFlowSandboxResourcesPrototypeContract
+                         poo-flow-runtime-volume-resources-prototype)))
+  (error "sandbox resource contract should be native and admit valid resources"))
+
+(when (sandbox-resource-eval
+       '(element? PooFlowSandboxResourcesPrototypeContract
+                  (.o filesystem: poo-flow-runtime-volume-filesystem-prototype
+                      cpu: "two"
+                      memory: "4Gi")))
+  (error "native sandbox resource contract should reject an invalid cpu slot"))
+
 (def valid-validation
   (sandbox-resource-eval
    '(poo-flow-sandbox-resources-prototype-contract-validation
@@ -35,7 +49,7 @@
 (unless (sandbox-resource-eval
          `(poo-flow-sandbox-resources-prototype-contract-validation-valid?
            ',valid-validation))
-  (error "runtime volume resources should satisfy utilities-backed validation"))
+  (error "runtime volume resources should satisfy native validation"))
 
 (def invalid-validation
   (sandbox-resource-eval
@@ -47,4 +61,4 @@
 (when (sandbox-resource-eval
        `(poo-flow-sandbox-resources-prototype-contract-validation-valid?
          ',invalid-validation))
-  (error "invalid cpu should fail utilities-backed validation"))
+  (error "invalid cpu should fail native validation"))

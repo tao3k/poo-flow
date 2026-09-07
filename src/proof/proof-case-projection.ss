@@ -1,4 +1,7 @@
-(import :clan/poo/object
+;;; Boundary: projects policy evidence into named proof obligations and case vectors.
+;;; Invariant: proof cases retain source identities and explicit discharge status.
+(import (only-in :clan/poo/object .o .ref object<-alist)
+        (only-in :std/srfi/1 find)
         :poo-flow/src/policy/authorized-effect-token)
 
 (export poo-flow-proof-obligation
@@ -50,44 +53,45 @@
                                                   (cdr obligations))))))
 
 (def (poo-flow-proof-obligations-sort obligations)
-  (let loop ((rest obligations) (sorted '()))
-    (if (null? rest)
-        sorted
-        (loop (cdr rest)
-              (poo-flow-proof-obligation-insert (car rest) sorted)))))
+  (foldl poo-flow-proof-obligation-insert '() obligations))
 
 (def (poo-flow-proof-obligations-unique? obligations)
-  (let loop ((rest obligations) (names '()) (bits '()))
-    (if (null? rest)
-        #t
-        (let* ((obligation (car rest))
-               (name (.ref obligation 'name))
-               (bit (.ref obligation 'bit)))
-          (and (not (memq name names))
-               (not (memv bit bits))
-               (loop (cdr rest) (cons name names) (cons bit bits)))))))
+  (car
+   (foldl
+    (lambda (obligation state)
+      (if (not (car state))
+        state
+        (let ((name (.ref obligation 'name))
+              (bit (.ref obligation 'bit))
+              (names (cadr state))
+              (bits (caddr state)))
+          (if (or (memq name names) (memv bit bits))
+            (list #f names bits)
+            (list #t (cons name names) (cons bit bits))))))
+    (list #t '() '())
+    obligations)))
 
 (def (poo-flow-proof-obligations-complete? obligations)
   (and (= (length obligations)
           (length +poo-flow-authorized-effect-obligation-layout+))
-       (let loop ((layout +poo-flow-authorized-effect-obligation-layout+))
-         (or (null? layout)
-             (and (let find ((rest obligations))
-                    (and (pair? rest)
-                         (or (eq? (caar layout) (.ref (car rest) 'name))
-                             (find (cdr rest)))))
-                  (loop (cdr layout)))))))
+       (andmap
+        (lambda (layout-entry)
+          (and
+           (find (lambda (obligation)
+                   (eq? (car layout-entry) (.ref obligation 'name)))
+                 obligations)
+           #t))
+        +poo-flow-authorized-effect-obligation-layout+)))
 
 (def (poo-flow-proof-obligation-mask obligations satisfied-only?)
-  (let loop ((rest obligations) (mask 0))
-    (if (null? rest)
-        mask
-        (let (obligation (car rest))
-          (loop (cdr rest)
-                (if (or (not satisfied-only?)
-                        (.ref obligation 'satisfied?))
-                    (+ mask (expt 2 (.ref obligation 'bit)))
-                    mask))))))
+  (foldl
+   (lambda (obligation mask)
+     (if (or (not satisfied-only?)
+             (.ref obligation 'satisfied?))
+       (+ mask (expt 2 (.ref obligation 'bit)))
+       mask))
+   0
+   obligations))
 
 (def (poo-flow-proof-obligation-family-build obligations)
   (unless (and (list? obligations)
@@ -112,11 +116,8 @@
         (complete? (= required-value present-value)))))
 
 (def (poo-flow-proof-obligation-family-ref family name)
-  (let loop ((rest (.ref family 'obligations)))
-    (and (pair? rest)
-         (if (eq? name (.ref (car rest) 'name))
-             (car rest)
-             (loop (cdr rest))))))
+  (find (lambda (obligation) (eq? name (.ref obligation 'name)))
+        (.ref family 'obligations)))
 
 (def (poo-flow-authorized-effect-obligations
       policy-bound? effect-bound? semantic-bound? execution-bound?
