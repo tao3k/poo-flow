@@ -192,7 +192,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
-        "usagesDigest": "LUXJvR7lQsjWJVXUClXx45kpvh8ghuxmF0LI3Cvsz+8=",
+        "usagesDigest": "g9IXo/ODIghjtkid6vagkDMBg57JI7jrqOUZUGQWcyU=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
