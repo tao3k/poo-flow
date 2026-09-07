@@ -33,6 +33,7 @@
         :poo-flow/t/module-system-lazy-loader-test
         :poo-flow/t/module-system-observability-test
         :poo-flow/t/module-object-practice-test
+        :poo-flow/t/module-macro-surface-test
         :poo-flow/t/module-system-test
         :poo-flow/t/memory-core-test
         :poo-flow/t/nono-sandbox-c-binding-test
