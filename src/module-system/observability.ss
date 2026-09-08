@@ -190,6 +190,7 @@
 ;;; conservatively as source-visible until a future syntax-object walker can
 ;;; prove a nearer lexical binder.  This covers direct references and nested
 ;;; forms such as `(reverse diagnostics)` without expanding or evaluating code.
+;; : (forall (a) (-> Symbol a Boolean))
 ;; : (-> Symbol Value Boolean)
 (def (poo-flow-poo-slot-authoring-identifier-reference? identifier datum)
   (cond
