@@ -16,6 +16,7 @@
     "src/core/flow"
     "src/core/plan"
     "src/utilities/functional"
+    "src/feature-system/bundle-v1-lowering-model"
     "src/feature-system/bundle-v1-lowering"
     "src/feature-system/bundle-v1-foreign-arena"
     "src/feature-system/bundle-v1-composition-writer"
