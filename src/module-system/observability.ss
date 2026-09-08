@@ -48,7 +48,11 @@
         poo-flow-poo-slot-authoring-observation-ok?
         poo-flow-poo-slot-authoring-statuses
         poo-flow-poo-slot-authoring-diagnostics
-        poo-flow-poo-slot-authoring-summary)
+        poo-flow-poo-slot-authoring-summary
+        poo-flow-scheme-lexical-call-shadow-observation-kind
+        poo-flow-scheme-lexical-call-shadow-datum-observations
+        poo-flow-scheme-lexical-call-shadow-port-observations
+        poo-flow-scheme-lexical-call-shadow-file-observations)
 
 ;;; Observation kind ids are shared by doctor, user-config, and future CLI
 ;;; surfaces so tooling can recognize one trace vocabulary across projections.
@@ -481,3 +485,203 @@
            (diagnostics diagnostics)
            (descriptor-realized? #f)
            (runtime-executed #f))))
+
+;;; Ordinary Scheme lexical bindings can shadow core procedures independently
+;;; of POO slot authoring.  This reader-native gate records only the dangerous
+;;; combination: a function formal named `values` whose body calls `values` as
+;;; an operator.  It does not flag data parameters that are never invoked.
+;; : (-> Unit PooFlowSchemeLexicalCallShadowObservationKind)
+(def poo-flow-scheme-lexical-call-shadow-observation-kind
+  "poo-flow.scheme-lexical-call-shadow-observation.v1")
+
+;; : [Symbol]
+(def +poo-flow-scheme-lexical-call-shadow-procedures+ '(values))
+
+;;; Formal projection handles fixed, optional, keyword-backed, and dotted-rest
+;;; formals without evaluating their default expressions.
+;; : (forall (a) (-> a [Symbol]))
+;; : (-> Value [Symbol])
+(def (poo-flow-scheme-lexical-call-shadow-formal-names formals)
+  (let loop ((remaining formals) (names-rev '()))
+    (cond
+     ((null? remaining) (reverse names-rev))
+     ((symbol? remaining) (reverse (cons remaining names-rev)))
+     ((pair? remaining)
+      (let* ((formal (car remaining))
+             (name (cond ((symbol? formal) formal)
+                         ((and (pair? formal) (symbol? (car formal)))
+                          (car formal))
+                         (else #f))))
+        (loop (cdr remaining)
+              (if name (cons name names-rev) names-rev))))
+     (else (reverse names-rev)))))
+
+;;; Call-head inspection deliberately ignores quoted and syntax data.  Other
+;;; nested forms remain visible so a shadowed call cannot hide in a branch or
+;;; a local sequencing form.
+;; : (forall (a) (-> Symbol [a] Boolean))
+;; : (-> Symbol List Boolean)
+(def (poo-flow-scheme-lexical-call-shadow-called-in-elements? identifier elements)
+  (cond
+   ((null? elements) #f)
+   ((pair? elements)
+    (or (poo-flow-scheme-lexical-call-shadow-identifier-called?
+         identifier (car elements))
+        (poo-flow-scheme-lexical-call-shadow-called-in-elements?
+         identifier (cdr elements))))
+   (else
+    (poo-flow-scheme-lexical-call-shadow-identifier-called?
+     identifier elements))))
+
+;; : (-> Symbol [Pair] Boolean)
+(def (poo-flow-scheme-lexical-call-shadow-called-in-bindings? identifier bindings)
+  (cond
+   ((null? bindings) #f)
+   ((not (pair? bindings)) #f)
+   (else
+    (let (binding (car bindings))
+      (or (and (pair? binding)
+               (poo-flow-scheme-lexical-call-shadow-called-in-elements?
+                identifier (cdr binding)))
+          (poo-flow-scheme-lexical-call-shadow-called-in-bindings?
+           identifier (cdr bindings)))))))
+
+;; : (-> Symbol Value Boolean)
+(def (poo-flow-scheme-lexical-call-shadow-called-in-let? identifier datum)
+  (let* ((tail (cdr datum))
+         (named? (and (pair? tail) (symbol? (car tail))))
+         (binding-tail (if named? (cdr tail) tail))
+         (bindings (if (pair? binding-tail) (car binding-tail) '()))
+         (body (if (pair? binding-tail) (cdr binding-tail) '())))
+    (or (poo-flow-scheme-lexical-call-shadow-called-in-bindings?
+         identifier bindings)
+        (poo-flow-scheme-lexical-call-shadow-called-in-elements?
+         identifier body))))
+
+;; : (-> Symbol Value Boolean)
+(def (poo-flow-scheme-lexical-call-shadow-called-in-poo? identifier datum)
+  (let loop
+       ((bindings (poo-flow-poo-slot-authoring-datum-bindings datum)))
+    (and (pair? bindings)
+         (or (poo-flow-scheme-lexical-call-shadow-identifier-called?
+              identifier (cdar bindings))
+             (loop (cdr bindings))))))
+
+;; : (forall (a) (-> Symbol a Boolean))
+;; : (-> Symbol Value Boolean)
+(def (poo-flow-scheme-lexical-call-shadow-identifier-called? identifier datum)
+  (cond
+   ((not (pair? datum)) #f)
+   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) #f)
+   ((eq? (car datum) identifier) #t)
+   ((memq (car datum) '(let let* letrec letrec*))
+    (poo-flow-scheme-lexical-call-shadow-called-in-let? identifier datum))
+   ((memq (car datum) '(.o .def))
+    (poo-flow-scheme-lexical-call-shadow-called-in-poo? identifier datum))
+   (else
+    (or (and (pair? (car datum))
+             (poo-flow-scheme-lexical-call-shadow-identifier-called?
+              identifier (car datum)))
+        (poo-flow-scheme-lexical-call-shadow-called-in-elements?
+         identifier (cdr datum))))))
+
+;; : (-> Symbol Symbol Symbol Alist)
+(def (poo-flow-scheme-lexical-call-shadow-observation scope definition identifier)
+  (list
+   (cons 'kind poo-flow-scheme-lexical-call-shadow-observation-kind)
+   (cons 'scope scope)
+   (cons 'definition definition)
+   (cons 'identifier identifier)
+   (cons 'status 'lexical-procedure-shadow)
+   (cons 'detail
+         (list
+          (cons 'code 'scheme-lexical-binding-shadows-procedure)
+          (cons 'rule 'scheme-procedure-formal-must-not-be-called-as-operator)
+          (cons 'definition definition)
+          (cons 'identifier identifier)
+          (cons 'recommendation 'rename-lexical-binding)))
+   (cons 'runtime-executed #f)))
+
+;; : (-> Symbol Symbol [Symbol] [Value] [Alist])
+(def (poo-flow-scheme-lexical-call-shadow-local-observations
+      scope definition formals body)
+  (let loop ((identifiers +poo-flow-scheme-lexical-call-shadow-procedures+)
+             (observations-rev '()))
+    (if (null? identifiers)
+      (reverse observations-rev)
+      (let (identifier (car identifiers))
+        (loop
+         (cdr identifiers)
+         (if (and (memq identifier formals)
+                  (poo-flow-scheme-lexical-call-shadow-identifier-called?
+                   identifier body))
+           (cons
+            (poo-flow-scheme-lexical-call-shadow-observation
+             scope definition identifier)
+            observations-rev)
+           observations-rev))))))
+
+;;; Definition discovery stays on reader data and recognizes only ordinary
+;;; function headers.  Quoted examples and syntax templates are not code.
+;; : (forall (a) (-> Symbol a [Alist]))
+;; : (-> Symbol Value [Alist])
+(def (poo-flow-scheme-lexical-call-shadow-datum-observations scope datum)
+  (cond
+   ((not (pair? datum)) '())
+   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) '())
+   ((and (memq (car datum) '(def define))
+         (pair? (cdr datum))
+         (pair? (cadr datum))
+         (symbol? (caadr datum)))
+    (let* ((header (cadr datum))
+           (definition (car header))
+           (body (cddr datum))
+           (formals
+            (poo-flow-scheme-lexical-call-shadow-formal-names (cdr header))))
+      (append
+       (poo-flow-scheme-lexical-call-shadow-local-observations
+        scope definition formals body)
+       (poo-flow-scheme-lexical-call-shadow-datum-observations scope body))))
+   (else
+    (append
+     (poo-flow-scheme-lexical-call-shadow-datum-observations scope (car datum))
+     (poo-flow-scheme-lexical-call-shadow-datum-observations scope (cdr datum))))))
+
+;; : (-> Symbol InputPort [Alist])
+;; poo-flow-scheme-lexical-call-shadow-port-observations
+;;   : (-> Symbol InputPort [Alist])
+;;   | doc m%
+;;       Read Scheme datums in source order and report function formals that
+;;       shadow `values` exactly where the corresponding body invokes it.
+;;       Quoted and syntax data remain inert, and no source form is expanded or
+;;       evaluated by the observation pass.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-scheme-lexical-call-shadow-port-observations
+;;        'source (open-input-string "(def (bad values) (values values))"))
+;;       ;; => one lexical-procedure-shadow observation
+;;       ```
+;;     %
+(def (poo-flow-scheme-lexical-call-shadow-port-observations scope port)
+  (let loop ((observations-rev '()))
+    (let (datum (read port))
+      (if (eof-object? datum)
+        (reverse observations-rev)
+        (let collect
+             ((remaining
+               (poo-flow-scheme-lexical-call-shadow-datum-observations
+                scope datum))
+              (next observations-rev))
+          (if (null? remaining)
+            (loop next)
+            (collect (cdr remaining) (cons (car remaining) next))))))))
+
+;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
+;; : (-> Symbol PathString [Alist])
+(def (poo-flow-scheme-lexical-call-shadow-file-observations scope path)
+  (call-with-input-file
+   path
+   (lambda (port)
+     (poo-flow-scheme-lexical-call-shadow-port-observations scope port))))

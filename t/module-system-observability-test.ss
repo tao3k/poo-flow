@@ -42,6 +42,12 @@
    (string->symbol path)
    path))
 
+;; : (-> PathString [Alist])
+(def (module-observability-source-lexical-shadow-observations path)
+  (poo-flow-scheme-lexical-call-shadow-file-observations
+   (string->symbol path)
+   path))
+
 ;; : (-> Unit TestSuite)
 ;;; This suite protects module observability receipts used to debug expansion
 ;;; and lazy-load decisions.
@@ -183,6 +189,42 @@
                 (module-observability-test-alist-value 'slot diagnostic))
               (poo-flow-poo-slot-authoring-diagnostics observations))
          '(values before diagnostics policy))))
+    (test-case "reader-native source inspection catches lexical values calls"
+      (let* ((source
+              (string-append
+               "(def (poo-flow-tool-unique-symbols/accumulate remaining seen values)\n"
+               "  (if (null? remaining) (values remaining values) values))\n"
+               "(def (safe values) (reverse values))\n"
+               "(def (safe-loop values)\n"
+               "  (let loop ((values values)) (if (null? values) '() (loop (cdr values)))))\n"
+               "(.o (values values-vector-value))\n"
+               "'(def (quoted values) (values values))\n"))
+             (observations
+              (poo-flow-scheme-lexical-call-shadow-port-observations
+               'synthetic-source
+               (open-input-string source)))
+             (observation (car observations))
+             (detail (module-observability-test-alist-value
+                      'detail observation)))
+        (check-equal? (length observations) 1)
+        (check-equal?
+         (module-observability-test-alist-value 'kind observation)
+         poo-flow-scheme-lexical-call-shadow-observation-kind)
+        (check-equal?
+         (module-observability-test-alist-value 'definition observation)
+         'poo-flow-tool-unique-symbols/accumulate)
+        (check-equal?
+         (module-observability-test-alist-value 'identifier observation)
+         'values)
+        (check-equal?
+         (module-observability-test-alist-value 'status observation)
+         'lexical-procedure-shadow)
+        (check-equal?
+         (module-observability-test-alist-value 'code detail)
+         'scheme-lexical-binding-shadows-procedure)
+        (check-equal?
+         (module-observability-test-alist-value 'runtime-executed observation)
+         #f)))
     (test-case "all repository POO source slots pass the native authoring gate"
       (let* ((paths (module-observability-source-files "src"))
              (observations
@@ -191,4 +233,12 @@
         (check-equal? (pair? paths) #t)
         (check-equal?
          (poo-flow-poo-slot-authoring-diagnostics observations)
-         '())))))
+         '())))
+    (test-case "all repository Scheme sources avoid lexical values calls"
+      (let* ((paths (module-observability-source-files "src"))
+             (observations
+              (apply append
+                     (map module-observability-source-lexical-shadow-observations
+                          paths))))
+        (check-equal? (pair? paths) #t)
+        (check-equal? observations '())))))

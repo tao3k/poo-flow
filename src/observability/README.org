@@ -193,6 +193,16 @@ module-system test recursively reads every =src/**/*.ss= file and rejects
 authoring diagnostics before object realization; the memory receipt separately
 proves the runtime boundary.
 
+Ordinary lexical bindings have a separate reader-native gate.  The
+=poo-flow-scheme-lexical-call-shadow-{datum,port,file}-observations= APIs find
+function formals named =values= whose body later uses =(values ...)= as a call
+head.  This catches the argument-shadowing defect that replaced Scheme's
+multiple-value procedure with accumulator data, while leaving an ordinary
+=values= data parameter valid when it is never invoked.  The pass reads Scheme
+datums only, treats quoted and syntax forms as inert, and neither expands nor
+evaluates the inspected source.  The same module-system test applies this gate
+to every =src/**/*.ss= file.
+
 The killed =gxtest= investigation found the same defect in the parenthesized
 POO form used by =poo-flow-session-registry-receipt=: =(project-id project-id)=
 created a lazy self lookup.  Receipt construction appeared successful; reading
