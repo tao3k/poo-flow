@@ -123,6 +123,19 @@
 ;;; thread. A POO lazy-slot cycle therefore need not return before detection.
 ;;; Gambit's launch ceiling remains necessary for code that cannot yield to the
 ;;; Scheme scheduler or fails before this module loads.
+;; call-with-poo-flow-debug-memory-monitor
+;; : (forall (a) (-> PooFlowDebugMemoryPolicy Symbol (-> a) port: OutputPort emit?: Boolean (values a PooFlowDebugMemoryReceipt)))
+;; : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
+;; | doc m%
+;;   Run one development operation in a native Scheme worker while the calling
+;;   thread samples bounded heap counters and enforces the supplied POO policy.
+;;   The specialized timeout branch preserves the worker's lexical result or
+;;   original exception and terminates it only after a typed fail-closed anomaly.
+;;   # Examples
+;;   ```scheme
+;;   (call-with-poo-flow-debug-memory-monitor policy 'compile (lambda () 'ok))
+;;   ;; => (values 'ok PooFlowDebugMemoryReceipt)
+;;   ```
 (def (call-with-poo-flow-debug-memory-monitor policy phase thunk
                                               port: (port (current-error-port))
                                               emit?: (emit? #f))
