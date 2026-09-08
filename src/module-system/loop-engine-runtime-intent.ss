@@ -10,21 +10,28 @@
         :poo-flow/src/module-system/loop-engine-result-contract)
 
 (export poo-flow-user-loop-engine-intent-runtime-action-kind
+        poo-flow-user-loop-engine-intent-runtime-request
         poo-flow-user-loop-engine-intent-runtime-envelope
+        poo-flow-user-loop-engine-runtime-envelope/from-request
         poo-flow-user-loop-engine-intent-runtime-capability-descriptor
         poo-flow-user-loop-engine-intent-policy-profile-packet
         poo-flow-user-loop-engine-intent-runtime-action-packet
         poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
         poo-flow-user-loop-engine-intent-runtime-handoff-facts
+        poo-flow-user-loop-engine-runtime-handoff-facts/from-request
         poo-flow-user-loop-engine-intent-lineage-receipt
         poo-flow-user-loop-engine-intent-selector-receipt
         poo-flow-user-loop-engine-intent-resource-dispatch-receipt
         poo-flow-user-loop-engine-intent-memory-receipt
         poo-flow-user-loop-engine-intent-compression-receipt
         poo-flow-user-loop-engine-intent-runtime-command-manifest
+        poo-flow-user-loop-engine-runtime-command-manifest/from-envelope
         poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
+        poo-flow-user-loop-engine-runtime-command-manifest-summary/from-manifest
         poo-flow-user-loop-engine-intent-proof-manifest
-        poo-flow-user-loop-engine-intent-runtime-snapshot)
+        poo-flow-user-loop-engine-proof-manifest/from-manifest
+        poo-flow-user-loop-engine-intent-runtime-snapshot
+        poo-flow-user-loop-engine-runtime-snapshot/from-components)
 
 (def (poo-flow-user-loop-engine-intent-runtime-action-kind intent)
   (if (null? (poo-flow-user-loop-engine-intent-ref intent 'human-audit '()))
@@ -207,17 +214,14 @@
    (cons 'runtime-owner "marlin-agent-core")
    (cons 'runtime-executed #f)))
 
-(def (poo-flow-user-loop-engine-intent-runtime-handoff-facts intent)
+(def (poo-flow-user-loop-engine-runtime-handoff-facts/from-request
+      intent
+      request)
   (let* ((workflow-agreement
           (poo-flow-user-loop-engine-intent-workflow-agreement intent))
          (sandbox-agreement
           (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
            intent))
-         (request
-          (poo-flow-user-loop-engine-intent-ref
-           (poo-flow-user-loop-engine-intent-runtime-envelope intent)
-           'request
-           '()))
          (workflow-valid?
           (poo-flow-user-loop-engine-intent-ref
            workflow-agreement
@@ -258,6 +262,11 @@
       (cons 'runtime-owner "marlin-agent-core")
       (cons 'runtime-executed #f))
      request)))
+
+(def (poo-flow-user-loop-engine-intent-runtime-handoff-facts intent)
+  (poo-flow-user-loop-engine-runtime-handoff-facts/from-request
+   intent
+   (poo-flow-user-loop-engine-intent-runtime-request intent)))
 
 (def (poo-flow-user-loop-engine-intent-lineage-receipt intent)
   (let ((lineage-policy
@@ -497,20 +506,71 @@
       (cons 'artifact-refs
             (poo-flow-user-loop-engine-intent-ref intent 'artifact-refs '()))))))
 
-;;; Handoff boundary: package stable request identities and evidence without executing the runtime operation.
-(def (poo-flow-user-loop-engine-intent-runtime-envelope intent)
-  (let ((use-case-name
-         (poo-flow-user-loop-engine-intent-use-case-name intent)))
+;;; Materialize each expensive runtime projection once. The returned request
+;;; deliberately shares its component values with higher-level projections;
+;;; presentation must not rebuild the whole request for every report field.
+(def (poo-flow-user-loop-engine-intent-runtime-request intent)
+  (let* ((runtime-capability-descriptor
+          (poo-flow-user-loop-engine-intent-runtime-capability-descriptor
+           intent))
+         (policy-profile-packet
+          (poo-flow-user-loop-engine-intent-policy-profile-packet intent))
+         (runtime-action-packets
+          (list
+           (poo-flow-user-loop-engine-intent-runtime-action-packet intent)))
+         (runtime-receipt-batch-template
+          (poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
+           intent))
+         (workflow-agreement
+          (poo-flow-user-loop-engine-intent-workflow-agreement intent))
+         (result-contract
+          (poo-flow-user-loop-engine-intent-result-contract intent))
+         (agent-profiles
+          (poo-flow-user-loop-engine-intent-agent-profiles intent))
+         (agent-harnesses
+          (poo-flow-user-loop-engine-intent-agent-harnesses intent))
+         (agent-sessions
+          (poo-flow-user-loop-engine-intent-agent-sessions intent))
+         (session-agent-graph
+          (poo-flow-user-loop-engine-intent-session-agent-graph intent))
+         (session-agent-topology-trace
+          (poo-flow-user-loop-engine-intent-session-agent-topology-trace
+           intent))
+         (workflow-run
+          (poo-flow-user-loop-engine-intent-workflow-run intent))
+         (dispatch-receipt
+          (poo-flow-user-loop-engine-intent-dispatch-receipt intent))
+         (agent-operation
+          (poo-flow-user-loop-engine-intent-agent-operation intent))
+         (delegated-operation
+          (poo-flow-user-loop-engine-intent-delegated-operation intent))
+         (lineage-receipt
+          (poo-flow-user-loop-engine-intent-lineage-receipt intent))
+         (selector-receipt
+          (poo-flow-user-loop-engine-intent-selector-receipt intent))
+         (resource-dispatch-receipt
+          (poo-flow-user-loop-engine-intent-resource-dispatch-receipt intent))
+         (capability-receipt
+          (poo-flow-user-loop-engine-capability-receipt->alist
+           (poo-flow-user-loop-engine-intent-capability-receipt intent)))
+         (memory-receipt
+          (poo-flow-user-loop-engine-intent-memory-receipt intent))
+         (compression-receipt
+          (poo-flow-user-loop-engine-intent-compression-receipt intent))
+         (sandbox-agreement
+          (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement intent))
+         (runtime-snapshot
+          (poo-flow-user-loop-engine-runtime-snapshot/from-components
+           intent
+           workflow-agreement
+           lineage-receipt
+           selector-receipt
+           resource-dispatch-receipt
+           capability-receipt
+           memory-receipt
+           compression-receipt
+           sandbox-agreement)))
     (list
-     (cons 'schema +runtime-request-schema+)
-     (cons 'runtime 'manifest)
-     (cons 'operation 'loop-engine-handoff)
-     (cons 'request-id
-           (poo-flow-user-loop-engine-runtime-id use-case-name "request"))
-     (cons 'artifact-handle
-           (poo-flow-user-loop-engine-runtime-id use-case-name "artifact"))
-     (cons 'request
-           (list
             (cons 'kind 'loop-engine-runtime-handoff-request)
             (cons 'contract
                   +poo-flow-user-loop-engine-runtime-command-contract+)
@@ -522,66 +582,51 @@
             (cons 'runtime-packet-contracts
                   +poo-flow-user-loop-engine-runtime-packet-contracts+)
             (cons 'runtime-capability-descriptor
-                  (poo-flow-user-loop-engine-intent-runtime-capability-descriptor
-                   intent))
+                  runtime-capability-descriptor)
             (cons 'policy-profile-packet
-                  (poo-flow-user-loop-engine-intent-policy-profile-packet
-                   intent))
+                  policy-profile-packet)
             (cons 'runtime-action-packets
-                  (list
-                   (poo-flow-user-loop-engine-intent-runtime-action-packet
-                    intent)))
+                  runtime-action-packets)
             (cons 'runtime-receipt-batch-template
-                  (poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
-                   intent))
+                  runtime-receipt-batch-template)
             (cons 'use-case
                   (poo-flow-user-loop-engine-intent-ref intent 'use-case '()))
             (cons 'use-cases
                   (poo-flow-user-loop-engine-intent-ref intent 'use-cases '()))
             (cons 'workflow-agreement
-                  (poo-flow-user-loop-engine-intent-workflow-agreement
-                   intent))
+                  workflow-agreement)
             (cons 'result-contract
-                  (poo-flow-user-loop-engine-intent-result-contract intent))
+                  result-contract)
             (cons 'agent-profiles
-                  (poo-flow-user-loop-engine-intent-agent-profiles intent))
+                  agent-profiles)
             (cons 'agent-harnesses
-                  (poo-flow-user-loop-engine-intent-agent-harnesses intent))
+                  agent-harnesses)
             (cons 'agent-sessions
-                  (poo-flow-user-loop-engine-intent-agent-sessions intent))
+                  agent-sessions)
             (cons 'session-agent-graph
-                  (poo-flow-user-loop-engine-intent-session-agent-graph
-                   intent))
+                  session-agent-graph)
             (cons 'session-agent-topology-trace
-                  (poo-flow-user-loop-engine-intent-session-agent-topology-trace
-                   intent))
+                  session-agent-topology-trace)
             (cons 'workflow-run
-                  (poo-flow-user-loop-engine-intent-workflow-run intent))
+                  workflow-run)
             (cons 'dispatch-receipt
-                  (poo-flow-user-loop-engine-intent-dispatch-receipt intent))
+                  dispatch-receipt)
             (cons 'agent-operation
-                  (poo-flow-user-loop-engine-intent-agent-operation intent))
+                  agent-operation)
             (cons 'delegated-operation
-                  (poo-flow-user-loop-engine-intent-delegated-operation
-                   intent))
+                  delegated-operation)
             (cons 'lineage-receipt
-                  (poo-flow-user-loop-engine-intent-lineage-receipt
-                   intent))
+                  lineage-receipt)
             (cons 'selector-receipt
-                  (poo-flow-user-loop-engine-intent-selector-receipt
-                   intent))
+                  selector-receipt)
             (cons 'resource-dispatch-receipt
-                  (poo-flow-user-loop-engine-intent-resource-dispatch-receipt
-                   intent))
+                  resource-dispatch-receipt)
             (cons 'capability-receipt
-                  (poo-flow-user-loop-engine-capability-receipt->alist
-                   (poo-flow-user-loop-engine-intent-capability-receipt
-                    intent)))
+                  capability-receipt)
             (cons 'memory-receipt
-                  (poo-flow-user-loop-engine-intent-memory-receipt intent))
+                  memory-receipt)
             (cons 'compression-receipt
-                  (poo-flow-user-loop-engine-intent-compression-receipt
-                   intent))
+                  compression-receipt)
             (cons 'session-selector-receipts
                   (poo-flow-user-loop-engine-intent-ref
                    intent
@@ -613,7 +658,7 @@
                    'spec-evolution-runtime-manifest-rows
                    '()))
             (cons 'runtime-snapshot
-                  (poo-flow-user-loop-engine-intent-runtime-snapshot intent))
+                  runtime-snapshot)
             (cons 'sandbox-profile-refs
                   (poo-flow-user-loop-engine-intent-ref
                    intent
@@ -630,14 +675,26 @@
                    'sandbox-handoff-summaries
                    '()))
             (cons 'sandbox-handoff-agreement
-                  (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
-                   intent))
+                  sandbox-agreement)
             (cons 'sandbox-unresolved-profile-refs
                   (poo-flow-user-loop-engine-intent-ref
                    intent
                    'sandbox-unresolved-profile-refs
                    '()))
-            (cons 'runtime-executed #f)))
+            (cons 'runtime-executed #f))))
+
+(def (poo-flow-user-loop-engine-runtime-envelope/from-request intent request)
+  (let ((use-case-name
+         (poo-flow-user-loop-engine-intent-use-case-name intent)))
+    (list
+     (cons 'schema +runtime-request-schema+)
+     (cons 'runtime 'manifest)
+     (cons 'operation 'loop-engine-handoff)
+     (cons 'request-id
+           (poo-flow-user-loop-engine-runtime-id use-case-name "request"))
+     (cons 'artifact-handle
+           (poo-flow-user-loop-engine-runtime-id use-case-name "artifact"))
+     (cons 'request request)
      (cons 'policy
            (poo-flow-user-loop-engine-intent-policy intent))
      (cons 'plan-id
@@ -647,7 +704,13 @@
      (cons 'frontier
            (poo-flow-user-loop-engine-intent-ref intent 'agent-judges '())))))
 
-(def (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)
+;;; Handoff boundary: package stable request identities and evidence without executing the runtime operation.
+(def (poo-flow-user-loop-engine-intent-runtime-envelope intent)
+  (poo-flow-user-loop-engine-runtime-envelope/from-request
+   intent
+   (poo-flow-user-loop-engine-intent-runtime-request intent)))
+
+(def (poo-flow-user-loop-engine-runtime-command-manifest/from-envelope envelope)
   (runtime-command-fields->manifest
    +poo-flow-user-loop-engine-runtime-command-name+
    +poo-flow-user-loop-engine-runtime-command-executable+
@@ -661,12 +724,15 @@
     (cons 'object-families
           +poo-flow-user-loop-engine-runtime-object-families+)
     (cons 'runtime-executed #f))
+   envelope))
+
+(def (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)
+  (poo-flow-user-loop-engine-runtime-command-manifest/from-envelope
    (poo-flow-user-loop-engine-intent-runtime-envelope intent)))
 
-(def (poo-flow-user-loop-engine-intent-runtime-command-manifest-summary intent)
-  (let* ((manifest
-          (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))
-         (request
+(def (poo-flow-user-loop-engine-runtime-command-manifest-summary/from-manifest
+      manifest)
+  (let* ((request
           (poo-flow-user-loop-engine-intent-ref manifest 'request '()))
          (metadata
           (poo-flow-user-loop-engine-intent-ref manifest 'metadata '())))
@@ -703,13 +769,25 @@
             "marlin-agent-core"))
      (cons 'runtime-executed #f))))
 
-(def (poo-flow-user-loop-engine-intent-proof-manifest intent)
-  (let* ((manifest
-          (poo-flow-user-loop-engine-intent-runtime-command-manifest
-           intent)))
-    (poo-flow-loop-engine-proof-manifest
+(def (poo-flow-user-loop-engine-intent-runtime-command-manifest-summary intent)
+  (poo-flow-user-loop-engine-runtime-command-manifest-summary/from-manifest
+   (poo-flow-user-loop-engine-intent-runtime-command-manifest intent)))
+
+(def (poo-flow-user-loop-engine-proof-manifest/from-manifest manifest)
+  (poo-flow-loop-engine-proof-manifest
      (poo-flow-user-loop-engine-intent-ref manifest 'request-id #f)
      (poo-flow-user-loop-engine-intent-ref manifest 'artifact-handle #f)
+     +poo-flow-user-loop-engine-runtime-command-contract+
+     +poo-flow-user-loop-engine-runtime-object-families+
+     +poo-flow-user-loop-engine-receipt-contracts+
+     +poo-flow-user-loop-engine-runtime-packet-contracts+))
+
+(def (poo-flow-user-loop-engine-intent-proof-manifest intent)
+  (let (use-case-name
+        (poo-flow-user-loop-engine-intent-use-case-name intent))
+    (poo-flow-loop-engine-proof-manifest
+     (poo-flow-user-loop-engine-runtime-id use-case-name "request")
+     (poo-flow-user-loop-engine-runtime-id use-case-name "artifact")
      +poo-flow-user-loop-engine-runtime-command-contract+
      +poo-flow-user-loop-engine-runtime-object-families+
      +poo-flow-user-loop-engine-receipt-contracts+
@@ -717,27 +795,20 @@
 
 ;;; Runtime intent snapshots are already serialized as bounded alists at this
 ;;; boundary; avoid depending on the heavier runtime snapshot projection owner.
-(def (poo-flow-user-loop-engine-intent-runtime-snapshot intent)
+(def (poo-flow-user-loop-engine-runtime-snapshot/from-components
+      intent
+      workflow-agreement
+      lineage-receipt
+      selector-receipt
+      resource-dispatch-receipt
+      capability-receipt
+      memory-receipt
+      compression-receipt
+      sandbox-agreement)
   (let* ((use-case-name
           (poo-flow-user-loop-engine-intent-use-case-name intent))
          (workflow-ref
           (poo-flow-user-loop-engine-intent-workflow-ref intent))
-         (workflow-agreement
-          (poo-flow-user-loop-engine-intent-workflow-agreement intent))
-         (lineage-receipt
-          (poo-flow-user-loop-engine-intent-lineage-receipt intent))
-         (selector-receipt
-          (poo-flow-user-loop-engine-intent-selector-receipt intent))
-         (resource-dispatch-receipt
-         (poo-flow-user-loop-engine-intent-resource-dispatch-receipt
-          intent))
-         (capability-receipt
-          (poo-flow-user-loop-engine-capability-receipt->alist
-           (poo-flow-user-loop-engine-intent-capability-receipt intent)))
-         (memory-receipt
-         (poo-flow-user-loop-engine-intent-memory-receipt intent))
-         (compression-receipt
-          (poo-flow-user-loop-engine-intent-compression-receipt intent))
          (spec-evolution-human-audit-review-items
           (poo-flow-user-loop-engine-intent-ref
            intent
@@ -748,9 +819,6 @@
            intent
            'spec-evolution-runtime-manifest-rows
            '()))
-         (sandbox-agreement
-          (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
-           intent))
          (handoff-ready?
           (and
            (poo-flow-user-loop-engine-intent-ref
@@ -798,3 +866,16 @@
             handoff-summary
             (list (cons 'contract 'poo-flow.loop-governor.v1)
                   (cons 'runtime-owner "marlin-agent-core")))))))
+
+(def (poo-flow-user-loop-engine-intent-runtime-snapshot intent)
+  (poo-flow-user-loop-engine-runtime-snapshot/from-components
+   intent
+   (poo-flow-user-loop-engine-intent-workflow-agreement intent)
+   (poo-flow-user-loop-engine-intent-lineage-receipt intent)
+   (poo-flow-user-loop-engine-intent-selector-receipt intent)
+   (poo-flow-user-loop-engine-intent-resource-dispatch-receipt intent)
+   (poo-flow-user-loop-engine-capability-receipt->alist
+    (poo-flow-user-loop-engine-intent-capability-receipt intent))
+   (poo-flow-user-loop-engine-intent-memory-receipt intent)
+   (poo-flow-user-loop-engine-intent-compression-receipt intent)
+   (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement intent)))

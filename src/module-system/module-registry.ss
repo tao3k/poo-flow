@@ -82,7 +82,7 @@
     ("funflow" config)
     ("loop-governor" config)
     ("nono-sandbox" objects config)
-    ("workflow" flows syntax)))
+    ("workflow" flows)))
 
 ;;; Boundary: module-system source refs are internal package owners, not
 ;;; user-interface modules. They stay explicit so the loader never scans src.

@@ -182,23 +182,33 @@
                              poo-flow-session-registry-entry?
                              entries)
                             entries)
-  (let* ((entry-summary
-          (poo-flow-session-registry-entry-summary entries))
-         (session-ids (car entry-summary))
-         (durable-policy-refs (cadr entry-summary)))
+  ;; `.o` slot bodies treat a bare identifier matching the slot name as
+  ;; self-dispatch. Capture constructor inputs under distinct lexical names so
+  ;; receipt reads cannot turn into recursive project-id/session-id lookups.
+  (let* ((project-id-value project-id)
+         (root-session-id-values root-session-ids)
+         (child-session-id-values child-session-ids)
+         (active-session-ref-value active-session-ref)
+         (entry-values entries)
+         (metadata-value
+          (if (null? maybe-metadata) '() (car maybe-metadata)))
+         (entry-summary
+          (poo-flow-session-registry-entry-summary entry-values))
+         (session-id-values (car entry-summary))
+         (durable-policy-ref-values (cadr entry-summary)))
     (.o (kind 'poo-flow.session.registry-receipt)
         (schema 'poo-flow.modules.session.registry-receipt.v1)
-        (project-id project-id)
-        (root-session-ids root-session-ids)
-        (child-session-ids child-session-ids)
-        (session-ids session-ids)
-        (active-session-ref active-session-ref)
-        (durable-policy-refs durable-policy-refs)
-        (entry-count (length entries))
-        (entries entries)
+        (project-id project-id-value)
+        (root-session-ids root-session-id-values)
+        (child-session-ids child-session-id-values)
+        (session-ids session-id-values)
+        (active-session-ref active-session-ref-value)
+        (durable-policy-refs durable-policy-ref-values)
+        (entry-count (length entry-values))
+        (entries entry-values)
         (runtime-owner "marlin-agent-core")
         (runtime-executed #f)
-        (metadata (if (null? maybe-metadata) '() (car maybe-metadata))))))
+        (metadata metadata-value))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-session-registry-receipt? value)

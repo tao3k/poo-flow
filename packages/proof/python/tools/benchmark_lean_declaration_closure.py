@@ -9,6 +9,7 @@ import time
 from typing import Mapping
 
 from poo_flow_proof.lean_declaration_closure import (
+    LeanClosureError,
     LeanDeclarationClosureRequest,
     export_declaration_closures,
 )
@@ -39,12 +40,22 @@ def _sample(
 ) -> dict[str, object]:
     phases: list[Mapping[str, object]] = []
     started = time.monotonic()
-    closures = export_declaration_closures(
-        lean_root=lean_root,
-        requests=REQUESTS,
-        timeout_seconds=timeout_seconds,
-        phase_observer=phases.append,
-    )
+    try:
+        closures = export_declaration_closures(
+            lean_root=lean_root,
+            requests=REQUESTS,
+            timeout_seconds=timeout_seconds,
+            phase_observer=phases.append,
+        )
+    except LeanClosureError as error:
+        return {
+            "cache_state": "unavailable",
+            "closure_digests": [],
+            "elapsed_ms": round((time.monotonic() - started) * 1000),
+            "error": {"code": error.code, "detail": error.detail},
+            "phases": phases,
+            "status": "failed",
+        }
     elapsed_ms = round((time.monotonic() - started) * 1000)
     cache_states = tuple(
         phase.get("cache_state") for phase in phases if phase.get("phase") == "closure-cache-read"
@@ -55,6 +66,7 @@ def _sample(
         else "cold-or-mixed"
     )
     return {
+        "status": "completed",
         "cache_state": state,
         "closure_digests": [closure.closure_digest for closure in closures],
         "elapsed_ms": elapsed_ms,
@@ -75,6 +87,7 @@ def _summary(samples: list[dict[str, object]]) -> dict[str, object]:
         else None
     )
     return {
+        "failed_sample_count": sum(sample.get("status") == "failed" for sample in samples),
         "sample_count": len(samples),
         "warm_max_ms": max(warm_elapsed) if warm_elapsed else None,
         "warm_p50_ms": round(median(warm_elapsed)) if warm_elapsed else None,
@@ -92,8 +105,19 @@ def main() -> int:
     args = parser.parse_args()
     if args.runs <= 0:
         parser.error("--runs must be positive")
-    samples = [_sample(args.lean_root, args.timeout_seconds) for _ in range(args.runs)]
+    if not math.isfinite(args.timeout_seconds) or args.timeout_seconds <= 0:
+        parser.error("--timeout-seconds must be positive and finite")
+    samples = []
+    for _ in range(args.runs):
+        sample = _sample(args.lean_root, args.timeout_seconds)
+        samples.append(sample)
+        if sample["status"] == "failed":
+            break
+    failed = any(sample["status"] == "failed" for sample in samples)
     receipt = {
+        "requested_sample_count": args.runs,
+        "timeout_seconds": args.timeout_seconds,
+        "status": "failed" if failed else "completed",
         "requests": [
             {
                 "root_declarations": list(request.root_declarations),
@@ -118,7 +142,7 @@ def main() -> int:
         print(output, end="")
     else:
         args.output.write_text(output)
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

@@ -1,0 +1,223 @@
+#+title: Upstream-based POO Observability Framework
+
+* Scope
+
+This package extends the existing Observability owner. Existing Diagnostic and
+Receipt APIs remain available to JSON Schema and feedback consumers. The new
+Contract-admission observation family is native POO, not an alist facade or a
+second tracer.
+
+This is a development/semantic-inspection foundation, not an implementation of
+the complete public =inspect/explain/diff/simulate= DebugDemand evaluator,
+authorized recovery, Profile policy, or production telemetry.
+
+* Owners
+
+| File | Responsibility |
+|------+----------------|
+| =types.ss= | Explicit upstream =define-type= declarations and native responsibility Contracts. |
+| =func.ss= | Pure bounded inspection of source admission receipts, explanation, and aggregate projections. |
+| =objects.ss= | Native observation construction and upstream slot-dispatched =.explain= / =.summary=. |
+| =interface.ss= | Pure framework interface; it does not import a runtime logger. |
+| =debug.ss= | Explicit development output through upstream =DDT= / =trace-poo=. |
+
+=src/module-system/observability.ss= remains a separate strict presentation
+owner. Its structs and terminal alists are neither replaced nor promoted into
+authoritative observation evidence. The pre-existing metadata catalog in
+=objects.ss= is not the new observation-family dispatch registry.
+
+* Running a real example
+
+#+begin_src sh
+./.devenv/devenv-profile-exec gxi tools/observability-admission-demo.ss
+#+end_src
+
+The example creates a real SemanticModule, replaces its imports responsibility
+with an invalid symbol, evaluates the native Contract once, and then observes
+the resulting admission evidence. Internal inspection identifies path
+=(imports)= with cause =prototype-mismatch=. The development renderer prints
+aggregate verdict/completeness/count facts through the upstream debug API.
+
+* Constructing observations
+
+Consumers explicitly supply native semantic identities, causal references, and
+provenance. An identity consists of namespace, name, and revision. The
+observation context contains identity, source, generation, causes, provenance,
+and a detail-inspection budget (default 256 visited receipts).
+
+#+begin_src scheme
+(import :poo-flow/src/observability/interface)
+
+;; context is a poo-flow-observation-context value; contract and candidate
+;; are the actual source-owned Contract and subject under evaluation.
+(def observation
+  (poo-flow-observe-contract-admission context contract candidate))
+(def explanation (poo-flow-observation-explain observation))
+(def summary (poo-flow-observation-summary observation))
+#+end_src
+
+For already-computed source evidence, use
+=(poo-flow-observe-admission-evidence context receipt)=. This path does not
+invoke the candidate's Contract again. Neither path infers generation from
+wall-clock time, a pointer, log position, or a global session.
+
+Existing =PooFlowObservabilityDiagnosticContract= and
+=PooFlowObservabilityReceiptContract= values can be supplied through the same
+entry point; their existing authoring APIs do not need to be replaced. The
+framework tests exercise both real Module admission and the existing
+Diagnostic constructor.
+
+Identities and provenance supplied by a producer provide correlation, not
+cryptographic authentication or proof that a named causal predecessor exists.
+The framework does not grant read, simulation, recovery, or export authority.
+
+* Extension follows native POO
+
+The observation family derives from =PooFlowObservationContract=, not
+SemanticModule. =PooFlowAdmissionObservationContract= refines the evidence
+responsibility and preserves the base native ancestry.
+
+=poo-flow-observation-explain= and =poo-flow-observation-summary= are upstream
+=.defgeneric= slot projections. Their unary form projects a derived POO value;
+it does not call a zero-argument procedure stored inside that slot.
+
+Advanced authors refine the observation prototype using native =.o=, =.mix=,
+and derived responsibilities. No central kind switch or event registry must
+change for a specialized explanation. Existing published observations are not
+mutated by any framework operation.
+
+* Failure and budget semantics
+
+- Admission verdict and observation completeness are independent. An exhausted
+  detail budget cannot turn a rejected Contract into an accepted one.
+- =detail-complete? #f= means that the displayed failure list is partial; a
+  zero failure count is not an acceptance claim.
+- Paths are derived from existing responsibility evidence, including nested
+  fields. The inspector never requests Module import contributions or follows
+  live runtime resources.
+- A repeated receipt stops detail traversal. This is incomplete inspection,
+  not proof of an unproductive Module cycle.
+- Each rejected leaf retains its first source-owned symbolic diagnostic code
+  (=reason=, =code=, or =kind=), without a central code registry. Free-form text
+  is omitted with a generic classification/obligation rejection code. Reported
+  failure count counts rejected paths, not every diagnostic at each path.
+  =detail-complete?= describes receipt traversal, not full diagnostic retention.
+- Raw candidate, evaluation context, exceptions, free-form diagnostic messages,
+  and runtime handles are not retained in the projected admission facts.
+- Contract exceptions still propagate from evaluation. This slice does not
+  invent an exception-to-recovery bridge or fabricate a successful event.
+
+* Development output boundary
+
+#+begin_src scheme
+(import :poo-flow/src/observability/debug)
+(poo-flow-observation-debug observation (current-error-port) trace?: #t)
+#+end_src
+
+The adapter builds a fresh closed aggregate containing only booleans and
+counts before passing anything to the upstream printer or tracer. It does not
+execute a user-overridden =.summary= / =.explain= renderer. Failed projection
+raises =PooFlowObservationProjectionError= before output and does not attach
+the source exception or its irritants.
+
+=trace?= traces the aggregate view's render method, not the live Module.
+For explicit local tracing of a non-sensitive native object, advanced users
+can import upstream =:clan/poo/debug= and call =trace-poo= directly with a
+non-sensitive name. That operation creates a new receiver/cache and may print
+raw arguments and results. It is not a redaction boundary.
+
+These development aggregates are not declared universally public: even counts
+can be sensitive. Production publication still needs an admitted audience,
+capability, redaction policy, and telemetry adapter. No global tracing hooks,
+implicit runtime sampling, recovery effects, or extra Module slots are installed here.
+As with ordinary POO evaluation, input prototype code is trusted: this adapter
+is a data-projection boundary, not an execution sandbox for malicious computed
+slots.
+
+* Development memory diagnosis
+
+=debug.ss= also owns an explicit in-band memory observation slice:
+
+- =poo-flow-debug-memory-policy= constructs a validated native POO policy;
+- =poo-flow-debug-memory-snapshot= projects Gambit's heap-size, allocation,
+  live, movable, and still counters into a native POO sample;
+- =poo-flow-debug-memory-receipt= is a pure comparison of policy and samples;
+- =poo-flow-debug-memory-checkpoint= and
+  =call-with-poo-flow-debug-memory-span= perform the effectful sampling and may
+  fail closed with =PooFlowDebugMemoryAnomaly=;
+- =call-with-poo-flow-debug-memory-monitor= runs a development operation in a
+  Scheme thread and samples it at the POO policy interval, so a yielding lazy
+  slot cycle does not need to return before detection; and
+- only =poo-flow-debug-memory-receipt-sexp='s bounded phase, verdict, reason,
+  heap, and live counters may enter the default DDT output path.
+
+Long operations add checkpoints at owner-named phases or use the native monitor
+when they cannot cooperatively return to a checkpoint.  The framework does not
+walk the live heap or retain observed subjects.  Optional collection is an
+explicit policy field and is disabled by default because collection changes
+the measured operation.
+
+The in-band framework cannot run before its own module has loaded.  Native test
+launchers must therefore set a Gambit =-:max-heap=...= ceiling before source
+loading.  The ASP Scheme process-tree anomaly guard remains an outer final
+defense for compiler children and pre-import failure; it is not the semantic
+diagnosis owner and does not replace phase receipts.
+
+Do not add a shell poller or shell test wrapper as the detector.  Shell cannot
+observe POO phase identity, native contracts, or the lazy slot read that
+triggers a cycle.  Memory diagnosis remains native Scheme in this framework;
+the Gambit ceiling and existing external guard are independent final defenses.
+
+The motivating failure was a native POO authoring cycle.  In an =.o= body,
+=policy: policy=, =before: before=, or =after: after= resolves the bare right
+hand identifier as a self slot.  It does not capture a same-named constructor
+parameter.  The generated getters recurse and allocate until heap exhaustion.
+Constructors must first bind differently named lexical values, for example
+=policy-value=, and use =policy: policy-value=.  The existing source-shaped
+=poo-flow-poo-slot-authoring-observations= projection detects this pattern
+before object realization; the memory receipt proves the runtime boundary.
+
+The killed =gxtest= investigation found the same defect in the parenthesized
+POO form used by =poo-flow-session-registry-receipt=: =(project-id project-id)=
+created a lazy self lookup.  Receipt construction appeared successful; reading
+=project-id= during =poo-flow-session-agent-graph->alist= recursed through POO's
+slot hash until =hash-ensure-ref= or =make-vector= exhausted the heap.  The
+constructor now captures every input under a distinct =*-value= binding.
+
+The runtime intent projection also now materializes one request graph and
+shares its descriptor, packets, receipts, session graph, manifest, summary,
+proof, and snapshot projections.  Equal deep copies are not a debugging or
+handoff contract.  This reduces retained allocation while keeping every public
+projection value and runtime-executed boundary unchanged.
+
+* Verification
+
+#+begin_src sh
+./.devenv/devenv-profile-exec gxtest t/observability-framework-test.ss t/observability-feedback-test.ss t/type-contract-foundation-test.ss t/gerbil-poo-debug-admission-test.ss t/semantic-module-test.ss t/module-system-observability-test.ss
+#+end_src
+
+=//scheme:observability_framework_test= registers the framework gate. Native
+source tests with cached dependencies and source-blob identity checks do not
+substitute for a full pinned build, parser qualification, or full-suite run.
+
+The original six-suite command completed on 2026-09-08 with 174 checks and exit
+code 0. After the memory slice and root-cause repairs landed, one source-first
+native =gxtest -:max-heap=1G= run passed the observability framework,
+module-system authoring observation, loop-engine capability and runtime
+manifest, session registry, and multi-agent session graph suites.  The runtime
+manifest case alone exercised 169 assertions.  The standalone demo produced:
+
+#+begin_example
+(failure-path (imports) cause prototype-mismatch)
+>>> 0 ((.@ admission-observation-view render))
+<<< 0 ((.@ admission-observation-view render))
+=== ['admission-observation ['accepted? #f] ['detail-complete? #t] ['failure-count 1] ['inspected-count 5]]
+observation
+  summary => (admission-observation (accepted? #f) (detail-complete? #t) (failure-count 1) (inspected-count 5))
+#+end_example
+
+Additional JSON Schema bridge and Funflow integration tests could not run in
+the current cached environment: importing =json-schema-emit.ss= failed to
+resolve =:poo-flow/src/contract/json-schema-emit-runtime=. The source exists,
+but its =.gerbil/lib/poo-flow/src/contract/json-schema-emit-runtime.ssi= was
+absent. Those two suites exited 42 during import and are not counted as passes.

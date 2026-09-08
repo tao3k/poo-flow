@@ -1,6 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 bazel := "bazelisk"
+devenv_exec := ".devenv/devenv-profile-exec"
 scheme_compile := "//scheme:compile"
 scheme_dev_compile := "//scheme:dev_compile"
 scheme_dev_unit_tests := "//scheme:dev_unit_tests"
@@ -17,6 +18,7 @@ gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 python_runtime_dir := "packages/python-runtime"
 python_runtime_test_environment := "//scheme:python_runtime_test_environment"
 composition_lifecycle_tests := "tests/unit/test_composition_lifecycle_arrival.py tests/unit/test_composition_lifecycle_benchmark.py tests/unit/test_composition_lifecycle_workload.py"
+cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 
 # Show the maintained developer entrypoints.
 [group('discovery')]
@@ -47,6 +49,11 @@ build-runtime-c:
 [group('build')]
 build-bundle-v1:
     {{ bazel }} build {{ bundle_v1_library }}
+
+# Build the single Lean-linked Cedar Runtime Host at an explicit output path (Nix: $out/bin/cedarRuntimeHost).
+[group('build')]
+build-cedar-runtime-host out:
+    {{ devenv_exec }} tools/ci/build-cedar-runtime-host "{{ out }}"
 
 # Show the registered Gerbil implementation selected for the host platform.
 [group('build')]
@@ -82,6 +89,11 @@ test-runtime-c:
 [group('test')]
 test-bundle-v1:
     {{ bazel }} test --test_output=errors {{ bundle_v1_tests }}
+
+# Qualify an explicitly supplied Cedar Runtime Host artifact.
+[group('test')]
+test-cedar-runtime-host host:
+    POO_FLOW_CEDAR_RUNTIME_HOST="{{ host }}" {{ devenv_exec }} cargo test --locked --manifest-path {{ cedar_workspace }} -p poo-flow-cedar-authority --features native-runtime-host-qualification --test runtime_host --test authorization
 
 # Run the focused composition-lifecycle Python gate.
 [group('test')]

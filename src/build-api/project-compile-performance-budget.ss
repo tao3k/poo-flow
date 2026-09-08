@@ -3,7 +3,7 @@
 ;;; Invariant: absolute wall-clock limits are not performance budgets.  The
 ;;; budget is a relative policy over comparable, identity-scoped medians.
 
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .cc .def .ref)
         :gerbil/gambit
         (only-in :std/text/json
                  json-object->string
@@ -40,6 +40,47 @@
 (def +poo-flow-scheme-compile-sample-set-identity-fields+
   (append +poo-flow-scheme-compile-comparable-identity-fields+
           '(revision source-digest spec-count)))
+
+;;; Optimization boundary: compile observations share one fixed POO shape.
+;;; Instances specialize this prototype once instead of rebuilding a wide root object.
+(.def poo-flow-scheme-compile-performance-observation-prototype
+  schema: +poo-flow-scheme-compile-performance-observation-schema+
+  kind: 'scheme-compile-performance-observation
+  revision: #f
+  runner: #f
+  host-session-id: #f
+  toolchain-identity: #f
+  source-digest: #f
+  execution-policy: #f
+  logical-cpu-count: 0
+  worker-count: 0
+  spec-count: 0
+  coldness-class: #f
+  dependency-cache-state: #f
+  elapsed-ms: 0)
+
+;;; Optimization boundary: comparison receipts also share one immutable slot layout.
+;;; The constructor performs one specialization after all scalar work is complete.
+(.def poo-flow-scheme-compile-performance-budget-prototype
+  schema: +poo-flow-scheme-compile-performance-budget-schema+
+  kind: 'scheme-compile-performance-budget-receipt
+  outcome: #f
+  comparable: #f
+  within-budget: #f
+  diagnostics: '()
+  maximum-regression-basis-points: 0
+  sample-count: 0
+  baseline-median-ms: 0
+  candidate-median-ms: 0
+  relative-ceiling-ms: 0
+  regression-basis-points: 0
+  baseline-source-digest: #f
+  candidate-source-digest: #f
+  baseline-spec-count: 0
+  candidate-spec-count: 0
+  comparison-identity: '()
+  runtime-owner: 'poo-flow-scheme-control-plane
+  runtime-executed: #f)
 
 ;; : (-> String Boolean Object Void)
 (def (poo-flow-scheme-compile-performance-require message condition value)
@@ -110,20 +151,19 @@
    (poo-flow-scheme-compile-entry-rows
     '(execution-policy coldness-class dependency-cache-state)
     (list execution-policy coldness-class dependency-cache-state)))
-  (.o (schema +poo-flow-scheme-compile-performance-observation-schema+)
-      (kind 'scheme-compile-performance-observation)
-      (revision revision)
-      (runner runner)
-      (host-session-id host-session-id)
-      (toolchain-identity toolchain-identity)
-      (source-digest source-digest)
-      (execution-policy execution-policy)
-      (logical-cpu-count logical-cpu-count)
-      (worker-count worker-count)
-      (spec-count spec-count)
-      (coldness-class coldness-class)
-      (dependency-cache-state dependency-cache-state)
-      (elapsed-ms elapsed-ms)))
+  (.cc poo-flow-scheme-compile-performance-observation-prototype
+       'revision revision
+       'runner runner
+       'host-session-id host-session-id
+       'toolchain-identity toolchain-identity
+       'source-digest source-digest
+       'execution-policy execution-policy
+       'logical-cpu-count logical-cpu-count
+       'worker-count worker-count
+       'spec-count spec-count
+       'coldness-class coldness-class
+       'dependency-cache-state dependency-cache-state
+       'elapsed-ms elapsed-ms))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-scheme-compile-performance-observation? value)
@@ -303,26 +343,22 @@
            (poo-flow-scheme-compile-observation-identity
             baseline-first
             +poo-flow-scheme-compile-comparable-identity-fields+)))
-      (.o (schema +poo-flow-scheme-compile-performance-budget-schema+)
-          (kind 'scheme-compile-performance-budget-receipt)
-          (outcome outcome-value)
-          (comparable comparable-value)
-          (within-budget within-budget-value)
-          (diagnostics diagnostics-value)
-          (maximum-regression-basis-points
-           maximum-regression-basis-points-value)
-          (sample-count sample-count-value)
-          (baseline-median-ms baseline-median-ms-value)
-          (candidate-median-ms candidate-median-ms-value)
-          (relative-ceiling-ms relative-ceiling-ms-value)
-          (regression-basis-points regression-basis-points-value)
-          (baseline-source-digest baseline-source-digest-value)
-          (candidate-source-digest candidate-source-digest-value)
-          (baseline-spec-count baseline-spec-count-value)
-          (candidate-spec-count candidate-spec-count-value)
-          (comparison-identity comparison-identity-value)
-          (runtime-owner 'poo-flow-scheme-control-plane)
-          (runtime-executed #f)))))
+      (.cc poo-flow-scheme-compile-performance-budget-prototype
+           'outcome outcome-value
+           'comparable comparable-value
+           'within-budget within-budget-value
+           'diagnostics diagnostics-value
+           'maximum-regression-basis-points maximum-regression-basis-points-value
+           'sample-count sample-count-value
+           'baseline-median-ms baseline-median-ms-value
+           'candidate-median-ms candidate-median-ms-value
+           'relative-ceiling-ms relative-ceiling-ms-value
+           'regression-basis-points regression-basis-points-value
+           'baseline-source-digest baseline-source-digest-value
+           'candidate-source-digest candidate-source-digest-value
+           'baseline-spec-count baseline-spec-count-value
+           'candidate-spec-count candidate-spec-count-value
+           'comparison-identity comparison-identity-value))))
 
 ;; : (-> POOObject Boolean)
 (def (poo-flow-scheme-compile-performance-budget-receipt-accepted? receipt)

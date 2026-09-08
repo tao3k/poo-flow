@@ -5,9 +5,11 @@
 
 (import (only-in :clan/poo/object
                  .cc
+                 .all-slots
                  .o
                  .ref
                  .slot?
+                 compute-precedence-list!
                  object?)
         (only-in :clan/poo/mop
                  .defgeneric
@@ -21,6 +23,7 @@
 
 (export PooFlowType.
         PooFlowContract.
+        PooFlowNativeObjectContract.
         PooFlowClassificationEvidence
         PooFlowValidationEvidence
         poo-flow-predicate-type
@@ -50,29 +53,50 @@
 (.defgeneric (poo-flow-contract-admit contract candidate context)
   slot: .admit)
 
-;; : (-> Object Symbol Boolean)
-(def (poo-flow-evidence-object? value expected-kind)
+;; : (-> Object Symbol [Symbol] Boolean)
+(def (poo-flow-evidence-object? value expected-kind required-slots)
   (and (object? value)
-       (every (cut .slot? value <>) '(kind accepted? diagnostics))
+       (every (cut .slot? value <>) required-slots)
        (eq? (.ref value 'kind) expected-kind)
        (boolean? (.ref value 'accepted?))
        (list? (.ref value 'diagnostics))))
 
+;; : (-> Object Boolean)
+(def (poo-flow-type-identity? value)
+  (or (symbol? value)
+      (and (pair? value)
+           (list? value)
+           (every poo-flow-type-identity? value))))
+
 ;;; Evidence type: accepts only classification receipts with the required typed slots.
 (define-type (PooFlowClassificationEvidence @ Type.)
   .element?:
-  (cut poo-flow-evidence-object?
-       <>
-       'poo-flow.type.classification-evidence))
+  (lambda (value)
+    (and (poo-flow-evidence-object?
+          value 'poo-flow.type.classification-evidence
+          '(kind type-identity candidate accepted? diagnostics context))
+         (poo-flow-type-identity? (.ref value 'type-identity)))))
 
 ;;; Evidence type: accepts only validation receipts with the required typed slots.
 (define-type (PooFlowValidationEvidence @ Type.)
   .element?:
-  (cut poo-flow-evidence-object?
-       <>
-       'poo-flow.contract.validation-evidence))
+  (lambda (value)
+    (and (poo-flow-evidence-object?
+          value 'poo-flow.contract.validation-evidence
+          '(kind contract-identity candidate classification obligation-evidence
+                 accepted? diagnostics context))
+         (symbol? (.ref value 'contract-identity))
+         (element? PooFlowClassificationEvidence (.ref value 'classification))
+         (list? (.ref value 'obligation-evidence))
+         (equal? (.ref value 'candidate)
+                 (.ref (.ref value 'classification) 'candidate))
+         (equal? (.ref value 'context)
+                 (.ref (.ref value 'classification) 'context))
+         (eq? (.ref value 'accepted?)
+              (and (.ref (.ref value 'classification) 'accepted?)
+                   (null? (.ref value 'obligation-evidence)))))))
 
-;; : (-> Symbol Object Boolean [Alist] Object PooFlowClassificationEvidence)
+;; : (-> Object Object Boolean [Alist] Object PooFlowClassificationEvidence)
 (def (poo-flow-classification-evidence type-identity-value candidate-value
                                         accepted-value diagnostics-value
                                         context-value)
@@ -169,6 +193,11 @@
 (def (poo-flow-contract-admit-evidence contract identity candidate context)
   (let* ((classification
           (poo-flow-type-classify contract candidate context))
+         (_checked
+          (unless (and (poo-flow-classification-evidence? classification)
+                       (equal? candidate (.ref classification 'candidate))
+                       (equal? context (.ref classification 'context)))
+            (raise-type-error PooFlowClassificationEvidence classification)))
          (classification-ok?
           (poo-flow-classification-evidence-accepted? classification))
          (obligation-evidence
@@ -229,12 +258,6 @@
   (.cc PooFlowType.
        'identity identity
        '.classify (poo-flow-predicate-classifier identity predicate)
-       '.element? predicate
-       '.validate
-       (lambda (candidate)
-         (if (predicate candidate)
-           candidate
-           (raise-type-error identity candidate)))
        'sexp identity))
 
 ;; : (-> Symbol Procedure Procedure PooFlowContract)
@@ -244,3 +267,70 @@
        '.classify (poo-flow-predicate-classifier identity predicate)
        '.obligations obligations
        'sexp identity))
+
+;;; Object responsibility admission delegates every slot to its native Contract.
+;;; The map is a POO value; inherited map slots follow upstream precedence.
+(def (poo-flow-responsibility-evidence candidate context responsibilities slot)
+  (if (.slot? candidate slot)
+    (.cc (poo-flow-contract-admit (.ref responsibilities slot)
+                                (.ref candidate slot) context)
+         'responsibility slot)
+    (let (classification
+          (poo-flow-classification-evidence
+           (.ref (.ref responsibilities slot) 'identity) #f #f
+           (list (.o kind: 'missing-responsibility responsibility: slot)) context))
+      (.cc (poo-flow-validation-evidence
+            (.ref (.ref responsibilities slot) 'identity) #f classification '()
+            #f (.ref classification 'diagnostics) context)
+           'responsibility slot))))
+
+(def (poo-flow-object-admit descriptor candidate context)
+  (let* ((classification (poo-flow-type-classify descriptor candidate context))
+         (_checked
+          (unless (and (poo-flow-classification-evidence? classification)
+                       (eq? (.ref descriptor 'identity)
+                            (.ref classification 'type-identity))
+                       (equal? candidate (.ref classification 'candidate))
+                       (equal? context (.ref classification 'context)))
+            (raise-type-error PooFlowClassificationEvidence classification)))
+         (responsibilities (.ref descriptor 'responsibilities))
+         (evidence
+          (if (poo-flow-classification-evidence-accepted? classification)
+            (map (cut poo-flow-responsibility-evidence
+                      candidate context responsibilities <>)
+                 (.all-slots responsibilities))
+            '()))
+         (rejections
+          (filter (lambda (item)
+                    (not (poo-flow-validation-evidence-accepted? item))) evidence))
+         (obligations
+          (if (and (poo-flow-classification-evidence-accepted? classification)
+                   (null? rejections))
+            (poo-flow-contract-obligations descriptor candidate context)
+            '()))
+         (failures (append rejections obligations)))
+    (.cc (poo-flow-validation-evidence
+          (.ref descriptor 'identity) candidate classification failures
+          (and (poo-flow-classification-evidence-accepted? classification)
+               (null? failures))
+          (append (.ref classification 'diagnostics) failures) context)
+         'responsibility-evidence evidence)))
+
+;;; Protocol boundary: responsibility admission walks the descriptor-owned slot map.
+(define-type (PooFlowResponsibilityContract. @ PooFlowContract. responsibilities)
+  .admit: (cut poo-flow-object-admit @ <> <>))
+
+;;; Domain declarations inherit this native prototype-aware responsibility contract.
+(def (poo-flow-native-classify identity proto candidate context)
+  (let (accepted?
+        (and (object? candidate)
+             (if (memq proto (compute-precedence-list! candidate)) #t #f)))
+    (poo-flow-classification-evidence
+     identity candidate accepted?
+     (if accepted? '()
+       (list (.o kind: 'prototype-mismatch type-identity: identity))) context)))
+
+;;; Invariant: native objects must prove prototype ancestry before slot obligations run.
+(define-type (PooFlowNativeObjectContract. @ PooFlowResponsibilityContract.
+                                         identity proto)
+  .classify: (cut poo-flow-native-classify identity proto <> <>))

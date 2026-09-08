@@ -59,10 +59,9 @@
                       '((filesystem
                          (scope . project-workspace)
                          (paths
-                          ((role . project-workspace)
+                         ((role . project-workspace)
                            (source . ".")
                            (project-marker . "gerbil.pkg")
-                           (target . "/workspace/project")
                            (mode . read-only)))
                          (access . read-only))
                         (cpu . 1)

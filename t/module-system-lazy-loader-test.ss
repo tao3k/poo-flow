@@ -203,7 +203,7 @@
                 (poo-flow-lazy-load-plan-receipt (car plans)))
                (first-metadata
                 (poo-flow-module-load-receipt-metadata first-receipt)))
-          (check-equal? (length plans) 14)
+          (check-equal? (length plans) 13)
           (check-equal? (car source-values)
                         "src/modules/agent-sandbox/config.ss")
           (check-equal? (if (member "src/modules/sandbox-core/objects.ss"

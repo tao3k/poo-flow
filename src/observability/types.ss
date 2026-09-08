@@ -6,12 +6,26 @@
 (import :gerbil/gambit
         (only-in :clan/poo/object .o .ref .slot? object?)
         (only-in :clan/poo/mop define-type element? validate)
+        (only-in :std/sugar cut)
         (only-in "../module-system/types.ss"
                  PooFlowContract.
+                 PooFlowNativeObjectContract.
                  poo-flow-classification-evidence
                  poo-flow-contract-admit))
 
 (export PooFlowObservabilityDiagnosticContract
+        PooFlowObservationIdentityContract
+        PooFlowObservationProvenanceContract
+        PooFlowObservationContextContract
+        PooFlowObservationFailureContract
+        PooFlowObservationFactsContract
+        PooFlowAdmissionObservationFactsContract
+        PooFlowObservationContract
+        PooFlowAdmissionObservationContract
+        PooFlowObservationSummaryContract
+        PooFlowDebugMemoryPolicyContract
+        PooFlowDebugMemorySampleContract
+        PooFlowDebugMemoryReceiptContract
         PooFlowObservabilityReceiptContract
         poo-flow-observability-alist?
         poo-flow-observability-list-of?
@@ -198,3 +212,210 @@
 
 (def (poo-flow-observability-require-receipt! candidate)
   (validate PooFlowObservabilityReceiptContract candidate))
+
+;;; Framework foundation: explicit native prototypes, independent of legacy
+;;; feedback receipts and strict module-system presentation structs.
+(def (poo-flow-observation-scalar-classify identity predicate candidate context)
+  (let (accepted? (predicate candidate))
+    (poo-flow-classification-evidence identity candidate accepted?
+      (if accepted? '() '(invalid-observation-field)) context)))
+
+;;; Invariant: symbolic observation fields remain closed over Scheme symbols.
+(define-type (ObservationSymbol @ PooFlowContract.)
+  identity: 'observation/symbol
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/symbol symbol? <> <>))
+
+;;; Invariant: boolean observation fields reject truthy non-boolean values.
+(define-type (ObservationBoolean @ PooFlowContract.)
+  identity: 'observation/boolean
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/boolean boolean? <> <>))
+
+(def (poo-flow-observation-natural? value)
+  (and (exact-integer? value) (>= value 0)))
+
+;;; Invariant: counts and budgets are exact nonnegative integers.
+(define-type (ObservationNatural @ PooFlowContract.)
+  identity: 'observation/natural
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/natural poo-flow-observation-natural? <> <>))
+
+;;; Boundary: observable identities bind namespace, name, and revision together.
+(define-type (PooFlowObservationIdentityContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/identity
+  proto: (.o)
+  responsibilities: (.o namespace: ObservationSymbol name: ObservationSymbol
+                        revision: ObservationSymbol))
+
+(def (poo-flow-observation-identities? value)
+  (poo-flow-observability-list-of?
+   (cut element? PooFlowObservationIdentityContract <>) value))
+
+;;; Invariant: causal identity lists contain only admitted native identity objects.
+(define-type (ObservationIdentities @ PooFlowContract.)
+  identity: 'observation/identities
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/identities poo-flow-observation-identities? <> <>))
+
+;;; Boundary: provenance records producer, provider, and phase without asserting authority.
+(define-type (PooFlowObservationProvenanceContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/provenance
+  proto: (.o)
+  responsibilities: (.o producer: PooFlowObservationIdentityContract
+                        provider: PooFlowObservationIdentityContract phase: ObservationSymbol))
+
+;;; Invariant: context keeps identity lineage and its bounded disclosure budget in one value.
+(define-type (PooFlowObservationContextContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/context
+  proto: (.o)
+  responsibilities: (.o identity: PooFlowObservationIdentityContract
+                        source: PooFlowObservationIdentityContract
+                        generation: PooFlowObservationIdentityContract
+                        causes: ObservationIdentities
+                        provenance: PooFlowObservationProvenanceContract
+                        detail-budget: ObservationNatural))
+
+(def (poo-flow-observation-path? value)
+  (poo-flow-observability-list-of? symbol? value))
+
+;;; Invariant: failure paths are structural symbol lists, not presentation strings.
+(define-type (ObservationPath @ PooFlowContract.)
+  identity: 'observation/path
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/path poo-flow-observation-path? <> <>))
+
+;;; Boundary: each failure binds its structural path to a contract and stable code.
+(define-type (PooFlowObservationFailureContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/failure
+  proto: (.o)
+  responsibilities: (.o path: ObservationPath contract: ObservationSymbol code: ObservationSymbol))
+
+(def (poo-flow-observation-failures? value)
+  (poo-flow-observability-list-of?
+   (cut element? PooFlowObservationFailureContract <>) value))
+
+;;; Invariant: failure collections contain only admitted failure objects.
+(define-type (ObservationFailures @ PooFlowContract.)
+  identity: 'observation/failures
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/failures poo-flow-observation-failures? <> <>))
+
+;;; Boundary: this empty responsibility base is the native extension point for fact families.
+(define-type (PooFlowObservationFactsContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/facts
+  proto: (.o)
+  responsibilities: (.o))
+
+(def (poo-flow-admission-facts-obligations value _context)
+  (if (and (eq? (.ref value 'accepted?)
+                (and (.ref value 'classification-accepted?)
+                     (zero? (.ref value 'obligation-count))))
+           (or (not (.ref value 'accepted?)) (null? (.ref value 'failures)))
+           (or (not (.ref value 'detail-complete?))
+               (and (> (.ref value 'inspected-count) 0)
+                    (or (.ref value 'accepted?) (pair? (.ref value 'failures)))))
+           (>= (.ref value 'inspected-count) (length (.ref value 'failures))))
+    '() '(inconsistent-admission-observation)))
+
+;;; Invariant: admission facts must reconcile their decision, counts, and bounded failures.
+(define-type (PooFlowAdmissionObservationFactsContract @ PooFlowObservationFactsContract)
+  identity: 'observation/admission-facts
+  proto: (.o (:: @ (.ref PooFlowObservationFactsContract 'proto)))
+  responsibilities: (.o contract: ObservationSymbol accepted?: ObservationBoolean
+                        classification-accepted?: ObservationBoolean
+                        obligation-count: ObservationNatural
+                        failures: ObservationFailures detail-complete?: ObservationBoolean
+                        inspected-count: ObservationNatural)
+  .obligations: poo-flow-admission-facts-obligations)
+
+(def (poo-flow-observation-internal? value) (eq? value 'internal))
+;;; Invariant: the initial framework admits only internal disclosure.
+(define-type (ObservationDisclosure @ PooFlowContract.)
+  identity: 'observation/disclosure
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/disclosure poo-flow-observation-internal? <> <>))
+
+;;; Boundary: the event contract binds lineage, disclosure, and native evidence responsibilities.
+(define-type (PooFlowObservationContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/event
+  proto: (.o)
+  responsibilities: (.o identity: PooFlowObservationIdentityContract
+                        source: PooFlowObservationIdentityContract
+                        generation: PooFlowObservationIdentityContract
+                        causes: ObservationIdentities provenance: PooFlowObservationProvenanceContract
+                        disclosure: ObservationDisclosure evidence: PooFlowObservationFactsContract))
+
+;;; Invariant: admission events refine the generic evidence slot with admission facts.
+(define-type (PooFlowAdmissionObservationContract @ PooFlowObservationContract)
+  identity: 'observation/admission-event
+  proto: (.o (:: @ (.ref PooFlowObservationContract 'proto)))
+  responsibilities: (.o (:: @ (.ref PooFlowObservationContract 'responsibilities))
+                        evidence: PooFlowAdmissionObservationFactsContract))
+
+;;; Boundary: only bounded aggregate scalars enter the default development renderer.
+(define-type (PooFlowObservationSummaryContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/summary
+  proto: (.o)
+  responsibilities: (.o accepted?: ObservationBoolean detail-complete?: ObservationBoolean
+                        failure-count: ObservationNatural inspected-count: ObservationNatural))
+
+;;; Boundary: a debug memory policy is an explicit POO value. The process
+;;; launcher owns the independent Gambit heap ceiling used before this module
+;;; can be loaded.
+(define-type (PooFlowDebugMemoryPolicyContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-memory-policy
+  proto: (.o)
+  responsibilities: (.o label: ObservationSymbol
+                        heap-limit-bytes: ObservationNatural
+                        live-growth-limit-bytes: ObservationNatural
+                        sample-interval-milliseconds: ObservationNatural
+                        collect-before-sample?: ObservationBoolean
+                        fail-closed?: ObservationBoolean))
+
+;;; Boundary: a sample projects Gerbil runtime counters into a native POO
+;;; value; it never retains heap objects or exposes the runtime statistics row.
+(define-type (PooFlowDebugMemorySampleContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-memory-sample
+  proto: (.o)
+  responsibilities: (.o phase: ObservationSymbol
+                        heap-size-bytes: ObservationNatural
+                        allocated-bytes: ObservationNatural
+                        live-bytes: ObservationNatural
+                        movable-bytes: ObservationNatural
+                        still-bytes: ObservationNatural))
+
+(def (poo-flow-debug-memory-receipt-obligations receipt _context)
+  (let* ((policy (.ref receipt 'policy))
+         (after (.ref receipt 'after))
+         (heap-exceeded?
+          (> (.ref after 'heap-size-bytes)
+             (.ref policy 'heap-limit-bytes)))
+         (growth-exceeded?
+          (> (.ref receipt 'live-growth-bytes)
+             (.ref policy 'live-growth-limit-bytes)))
+         (expected-reason
+          (cond (heap-exceeded? 'heap-limit-exceeded)
+                (growth-exceeded? 'live-growth-limit-exceeded)
+                (else 'within-budget)))
+         (expected-accepted?
+          (and (not heap-exceeded?) (not growth-exceeded?))))
+    (if (and (eq? (.ref receipt 'reason) expected-reason)
+             (eq? (.ref receipt 'accepted?) expected-accepted?))
+      '()
+      '(inconsistent-debug-memory-receipt))))
+
+;;; Invariant: a receipt binds one policy to two samples and a derived verdict.
+;;; Negative deltas are normalized to zero by the pure constructor.
+(define-type (PooFlowDebugMemoryReceiptContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-memory-receipt
+  proto: (.o)
+  responsibilities: (.o phase: ObservationSymbol
+                        policy: PooFlowDebugMemoryPolicyContract
+                        before: PooFlowDebugMemorySampleContract
+                        after: PooFlowDebugMemorySampleContract
+                        heap-growth-bytes: ObservationNatural
+                        live-growth-bytes: ObservationNatural
+                        accepted?: ObservationBoolean
+                        reason: ObservationSymbol)
+  .obligations: poo-flow-debug-memory-receipt-obligations)

@@ -22,6 +22,8 @@ only how already required evidence is computed and observed.
 - A batch generation never becomes a second declaration or source authority.
 - Every root retains an independent canonical closure and digest.
 - Cache hits do not authorize stale source or skip Lake freshness admission.
+- A newly exported receipt enters the cache only after parsing and validation
+  of its root module, declaration roots, base imports, and proof-base imports.
 - AXLE operation and base limits remain =10s= and =2s=.
 - User backend configuration names runtime and language identity, not Python
   scripts, Lean paths, exporter binaries, or batch protocol details.
@@ -166,7 +168,50 @@ authority; only the matched relative observation is recorded here.
 - [X] Exact, canonical-source, and independent bundle digests are unchanged.
 - [X] AXLE remains within the =10s/2s= limits.
 
-* Acceptance criteria
+** Current requalification (2026-09-08)
+
+The implementation and historical observations above remain historical
+evidence.  The current performance gate is open; the earlier ten-run result
+has not been reproduced in this checkout environment.
+
+The cache regression fix moves publication after receipt identity validation.
+Its negative tests verify that malformed or mismatched output is not cached,
+that equal-size/equal-mtime content changes invalidate either artifact, and
+that a warm hit still requires successful Lake admission.
+
+The benchmark now writes a typed failure sample with the original code/detail
+and observed phases, stops at the first failed generation, and returns a
+nonzero exit code.  It records requested versus executed sample counts;
+failed samples never enter warm percentiles.  A completed benchmark means
+measurement completed, not proof or performance acceptance.
+
+| Current receipt | Observation |
+|-----------------+-------------|
+| Focused Python regression | 43 tests passed; Ruff passed |
+| Default Lake launcher | Two generation-build attempts exceeded the unchanged 30-second budget |
+| Installed project-pinned toolchain | Lean 4.31.0; normal Lake build admission retained |
+| Three completed warm generations | 28442ms, 14932ms, 12388ms; two cache hits each |
+| Three-sample warm p50 / nearest-rank p95 | 14932ms / 28442ms; not a replacement for ten-run qualification |
+| Lake build phase per generation | 28301ms, 14109ms, 11661ms |
+| Closure digests | Both equal the semantic-identity table above |
+
+The raw current receipt is
+=/private/tmp/poo-flow-m0-generation-20260908.json=.  The measurement used the
+already installed project-pinned Lean 4.31.0 binary directory first in PATH;
+it did not skip the build, change cache identities, or relax the deadline.
+The build phase remains slow on that path, so launcher behavior alone does
+not explain the regression.  Root-cause attribution remains unresolved.
+No new remote AXLE acceptance or full repository acceptance is claimed by
+these focused checks.
+
+A real tiny-budget negative execution also returned exit 1 and wrote
+=/private/tmp/poo-flow-m0-generation-failure-20260908.json=: one failed
+sample out of three requested, zero warm samples, null percentiles, and the
+original =lean-declaration-closure-export-timeout= code with
+=phase=generation-lake-build=.  The diagnostic budget was 0.01 seconds;
+this tests failure reporting and does not replace the normal 30-second gate.
+
+* Historical acceptance criteria
 
 - [X] One native environment serves a compatible multi-root generation.
 - [X] Trusted and proof-base membership derive from Lean module metadata.

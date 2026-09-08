@@ -250,6 +250,69 @@ observation functions.
 An abnormal runtime threshold is a diagnostic signal.  It must lead to
 process-and-phase attribution rather than merely raising the threshold.
 
+** Development memory diagnosis and final-defense boundary
+
+Development memory safety is a layered protocol, not one guard process:
+
+#+begin_export mermaid
+flowchart LR
+  S["source-shaped POO slot bindings"] -->|"detect self-slot initializer before realization"| A["authoring observation"]
+  A -->|"admits owner-named operation"| D["debug memory span and checkpoints"]
+  D -->|"compare native POO policy and heap samples"| R["bounded memory receipt"]
+  R -. "diagnostic evidence only; no hidden semantic input" .-> O["semantic observation and developer output"]
+  H["launch-time Gambit heap ceiling"] -->|"bounds source import before debug can load"| D
+  G["outer process-tree anomaly guard"] -. "final defense for compiler children and pre-import failure" .-> H
+#+end_export
+
+The source-shaped authoring observation owns the first and cheapest diagnosis.
+In an upstream =.o= body, a bare right-hand identifier equal to its slot name
+is self dispatch.  For example, =policy: policy= does not capture a same-named
+constructor argument; it constructs a recursively computed =self.policy= slot.
+This failure can allocate until heap exhaustion before an ordinary =.ref=
+returns.  Constructors bind a distinct lexical identifier such as
+=policy-value= before entering =.o=.
+
+This applies to both colon and parenthesized POO clauses.  The killed =gxtest=
+root cause was =(project-id project-id)= in
+=poo-flow-session-registry-receipt=.  Object construction remained lazy and
+appeared to succeed; the first =.ref project-id= during session graph
+serialization recursively dispatched the same slot until Gambit failed in
+=hash-ensure-ref= or =make-vector=.  The constructor now captures every input
+under a distinct =*-value= name before entering =.o=.
+
+The in-band debug layer owns native POO =MemoryPolicy=, =MemorySample=, and
+=MemoryReceipt= values.  Pure comparison derives a verdict from explicit
+samples.  The effectful adapter alone may read Gambit's heap counters, request
+an explicitly configured collection, emit a bounded aggregate through upstream
+DDT, or signal a typed fail-closed anomaly.  Long operations expose
+owner-named checkpoints rather than one anonymous end-of-process peak.
+The native monitor variant runs a development operation in a Scheme thread and
+samples from the owner thread at the policy interval.  On a fail-closed receipt
+it terminates that debug worker before raising the typed anomaly.  This covers
+yielding lazy-slot cycles that never return to an ordinary span checkpoint.
+
+The debug module cannot protect the memory used to load itself.  A native test
+or build launcher therefore applies a Gambit maximum heap before source import.
+That ceiling is a final safety property, not a diagnosis and not permission to
+widen a budget until a test passes.  The pre-existing process-tree anomaly
+guard is reclassified as the outermost final defense for compiler children and
+pre-import failures.  It must not own semantic reason codes, phase identity, or
+normal POO debug policy.
+
+A shell poller or shell test wrapper is not an observability implementation.
+It cannot see POO phase identity, native contracts, or lazy slot realization,
+so this architecture must not add one as the memory detector.  The normal
+diagnostic path is Scheme-native: source-shaped observation followed by native
+POO memory spans/checkpoints.  Gambit's own launch ceiling and the existing
+external process-tree guard remain independent final defenses only.
+
+Daily development uses the native Gerbil build and isolated gxtest route.  A
+source-first run is a deliberate cold graph/expansion diagnostic: it keeps the
+source module graph resident and therefore has a different baseline from an
+installed-library test.  A source-first heap failure is not by itself evidence
+that the tested runtime operation leaks; the failing phase and in-band receipt
+must agree before making that claim.
+
 * Runtime telemetry plane
 
 The runtime telemetry plane consumes redacted ObservationEvent projections and
@@ -423,8 +486,176 @@ flowchart TD
 
 * Implementation admission checklist
 
-- [ ] Resolve upstream debug evidence against the pinned =gerbil-poo=
-  Git object.
+** Native development-debug consumption slice
+
+The first executable debug slice is
+=t/gerbil-poo-debug-admission-test.ss=, registered as
+=//scheme:gerbil_poo_debug_admission_test=. It directly consumes upstream
+=DDT=, =trace-poo=, and =traced-function=; it introduces no project tracer,
+public debug macro, runtime sink, or recovery coordinator.
+
+The source identities inspected for this slice are:
+
+| Package revision | File | Git blob |
+|------------------+------+----------|
+| =gerbil-poo@1c3225637525400341a09e958296962c10184ead= | =debug.ss= | =8cfdaf1458c57d933629368f7d20f40c4feceac5= |
+| =gerbil-utils@f45a4ef3bfecd2af39e114ed736ce9082cbb8244= | =debug.ss= | =ad7d4a45cb4a756ab5466b773c97a114a6d626e6= |
+
+The current local source blobs match these pinned blobs. This is source
+identity evidence, not a claim that a cached compiled dependency has been
+rebuilt from those revisions or that the Bazel suite has passed.
+
+Development-debug consumers MUST observe these constraints:
+
+- =DDT= may display values using an explicit native Type's =.sexp<-=.
+  It is diagnostic printing, not Contract admission or semantic evidence.
+- =trace-poo= derives a new receiver and wraps inherited procedure-valued
+  slots. It is not transparent instrumentation of the original receiver or
+  its cache. A debug variant MUST NOT replace a production cache identity.
+- Supply an explicit non-sensitive trace name. The default name projects
+  the object's =sexp= responsibility and can evaluate user-defined code.
+- Creating a trace variant must not force lazy import contributions. The
+  test exercises the actual four-responsibility SemanticModule constructor,
+  rather than adding a fifth debug slot or an empty local debug owner.
+- Function tracing reports normal call/return values. An exception propagates
+  without a normal return line; logs are not a complete outcome protocol.
+- Traced arguments and returns are raw output. =DDT= type failures and
+  conversion failures can print the raw candidate. A conversion callback
+  alone is therefore NOT a fail-closed redactor.
+- Only synthetic/non-sensitive values may enter this development output.
+  Production telemetry requires a separate authority/redaction boundary;
+  capturing a string port does not perform redaction.
+- Binding mutation through =trace!= and process-wide thread tracing hooks
+  remain outside this slice. Semantic =types.ss=, =func.ss=, and
+  =objects.ss= do not import these debug facilities.
+
+Native validation uses the captured project environment and cached toolchain:
+
+#+begin_src sh
+./.devenv/devenv-profile-exec gxtest t/gerbil-poo-debug-admission-test.ss
+#+end_src
+
+This bounded slice does not admit ObservationEvent, RecoveryDecision,
+fixed-point cycle evidence, runtime telemetry, or recovery resumption.
+
+The native debug test passed seven cases and 33 checks with exit code 0 on
+2026-09-08. Buildifier validation passed for the registered test targets.
+This is a focused native receipt, not full-suite or Bazel acceptance.
+
+** Framework delivery path
+
+The intended product is a usable upstream-based POO observability framework,
+not only a collection of tracing tests. The first end-to-end domain is the
+actual SemanticModule Contract admission result, including successful
+admission, missing responsibilities, invalid responsibility values, and
+native ancestry rejection.
+
+Implementation must connect these responsibilities without conflating them:
+
+1. A native observation prototype preserves source-owned admission evidence,
+   subject identity, generation, causal evidence, producer provenance, and
+   disclosure classification. Explicit =define-type= declarations own its
+   Contracts; existing strict presentation structs are not promoted into it.
+2. A pure diagnostic view explains the same evidence and supports bounded
+   inspection of responsibility failures. It must not re-evaluate the subject
+   under inspection or invent missing generation/provenance facts.
+3. An explicit development adapter uses upstream =DDT= and =trace-poo= for
+   non-sensitive diagnostic projections and isolated debug variants. It never
+   parses printed traces into authoritative evidence or replaces production
+   receiver/cache identity with the variant's identity.
+4. Native prototype refinement supplies domain-specific explanation behavior.
+   New observation domains must not require adding a central tag switch.
+5. An example must exercise one real Module admission failure through evidence,
+   explanation, and captured upstream debug output. Negative tests must retain
+   the first cause, reject forged evidence, avoid forcing lazy imports, and
+   show that omitted/private fields never reach the safe diagnostic output.
+
+This first framework path adds no recovery execution, remote telemetry sink,
+clock-based semantic input, global hook, or fifth Module slot. Such extensions
+retain their separate authority and admission gates. Concrete exported API
+names and the semantic source owner remain subject to the owner-discovery
+gate in RFC 45-120-15; this section does not invent their implementation path.
+
+On 2026-09-08 the normal ASP Search command could not supply that gate:
+
+#+begin_src sh
+./.devenv/devenv-profile-exec asp search playbook --languages gerbil-scheme --rg 'poo-flow-classification-evidence|poo-flow-module-observation' src/module-system/types.ss src/module-system/observability.ss
+#+end_src
+
+The sandboxed call returned =host-operation-not-permitted=. The exact command
+with the required Host permission reached Runtime but exited 2 with
+=topology-manifest-unavailable= for =.agents/asp/topology/manifest.org=.
+Separately, =asp gerbil-scheme info= reported an unadmitted Runtime Server
+route. No parser-owned source evidence was produced. Repairing the registered
+workspace topology and confirming the normal parser route precede semantic
+owner implementation; grep matches and upstream unit tests cannot substitute
+for that evidence.
+
+** Current native framework slice
+
+The user subsequently authorized temporary =rg= / =fd= owner exploration.
+That exploration located the existing native =src/observability/= package,
+including its Diagnostic/Receipt Contracts and JSON Schema consumers. The
+framework now extends that owner as documented in RFC 45-120-15; no parallel
+tracer or strict-struct replacement is introduced. The parser checks below
+remain unclosed rather than being inferred from local text discovery.
+
+The concrete pure entry points are
+=poo-flow-observation-identity=, =poo-flow-observation-provenance=,
+=poo-flow-observation-context=, =poo-flow-observe-contract-admission=,
+=poo-flow-observe-admission-evidence=, =poo-flow-observation-explain=, and
+=poo-flow-observation-summary=. They operate on native POO values.
+=poo-flow-observation-debug= is a separately imported development-output
+adapter; it hands only freshly projected aggregate facts to upstream debug.
+
+The observation preserves explicit source, generation, causal references, and
+provenance with bounded structured admission facts. Producer correlation is
+not cryptographic authentication. Detail truncation/repeated evidence affects
+observation completeness, never the original Contract verdict. Candidate,
+raw context, diagnostic text, and runtime handles are not retained in the
+projected facts. The source Contract is not re-run during explanation.
+
+The framework adds no public =inspect/explain/diff/simulate= DebugDemand
+evaluator, authorization policy, recovery coordinator, production sink, or
+implicit global tracing hook. In particular, counts are not automatically
+public data and the development output is not a production redaction policy.
+
+The separately imported debug adapter now includes native POO memory policy,
+sample, and receipt values plus explicit checkpoint/span effects and a native
+Scheme monitor.  Its first regression found and repaired a real =.o= self-slot
+initializer cycle in the receipt constructor itself.  The framework test now
+covers pure comparison, bounded DDT projection, typed fail-closed receipts,
+worker termination, and containment of an actual non-returning lazy POO
+self-slot cycle.  The existing module-system authoring observation covers the
+source-shaped pre-realization form.
+
+The executable example is =tools/observability-admission-demo.ss=. The focused
+gate is =//scheme:observability_framework_test=; existing feedback, strict
+presentation, shared foundation, native debug, and Module tests are retained.
+See =src/observability/README.org= for the exact commands and native extension
+contract.
+
+The focused native command recorded there passed six suites and 174 checks
+with exit code 0 on 2026-09-08. The standalone example also exited 0 and showed
+=(failure-path (imports) cause prototype-mismatch)= followed by the upstream
+call/return trace and typed aggregate output. This evidence admits the bounded
+development path, not a full parser/pinned-build/production acceptance claim.
+
+The memory extension and root-cause repair were then validated through native
+Gerbil only.  One source-first run under a 1 GiB Gambit ceiling passed the
+Observability framework, module-system authoring observation, loop-engine
+capability, runtime manifest, session registry, and multi-agent graph suites.
+The runtime manifest case includes =eq?= assertions proving that presentation,
+manifest, and handoff views share the one materialized request graph.  The full
+native package build remains red at the pre-existing project policy gate and
+is not counted as compile acceptance.
+
+** Remaining integration gates
+
+- [X] Resolve upstream debug source evidence against the pinned =gerbil-poo=
+  Git object; compiled-cache and full integration admission remain separate.
+- [X] Bind development memory diagnosis to native POO policy/sample/receipt
+  values, explicit phase checkpoints, and a distinct launch-time final defense.
 - [ ] Reuse =gerbil-poo/debug.ss= for native POO slot and inheritance
   trace projection.
 - [ ] Keep =ObservationEvent= immutable and derived from evaluation

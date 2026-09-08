@@ -12,6 +12,7 @@
         (only-in :clan/poo/object
                  $computed-slot-spec
                  .@
+                 .all-slots
                  .call
                  .cc
                  .def
@@ -26,6 +27,7 @@
                  .defgeneric
                  Type
                  Type.
+                 TypeError?
                  define-type
                  element?
                  validate))
@@ -54,7 +56,8 @@
        (check-equal? (.get clone identity) 'clone)
        (check-equal? (.@ clone identity) 'clone)
        (check-equal? (.call clone render '(tail)) '(clone tail))
-       (check-equal? (.slot? clone 'render) #t)))
+       (check-equal? (.slot? clone 'render) #t)
+       (check-equal? (length (.all-slots clone)) 2)))
 
    (test-case "preserves C3 super order and lazy slot caching"
      (let ((b-evaluations 0)
@@ -88,7 +91,7 @@
      (check-equal? (element? Type AdmissionSymbol) #t)
      (check-equal? (validate AdmissionSymbol 'flow) 'flow)
      (check-equal? (admission-project AdmissionSymbol 'flow) "flow")
-     (check-exception (validate AdmissionSymbol 42) true))
+     (check-exception (validate AdmissionSymbol 42) TypeError?))
 
    (test-case "preserves native missing-method failure"
      (check-exception

@@ -13,7 +13,8 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/facade
+        :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/presentation-config
         (only-in :poo-flow/src/module-system/loop-engine-runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)

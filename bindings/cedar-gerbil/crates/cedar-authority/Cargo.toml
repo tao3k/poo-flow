@@ -1,0 +1,39 @@
+[package]
+name = "poo-flow-cedar-authority"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "POO Flow strict Cedar authorization and single-use runtime admission boundary"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+
+[features]
+aot-runtime-host = []
+native-ffi-qualification = []
+native-runtime-host-qualification = []
+
+[[test]]
+name = "native_ffi"
+required-features = ["native-ffi-qualification"]
+
+[[test]]
+name = "runtime_host"
+required-features = ["native-runtime-host-qualification"]
+
+[[test]]
+name = "authorization"
+required-features = ["native-runtime-host-qualification"]
+
+[dependencies]
+cedar-policy.workspace = true
+ed25519-dalek.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true

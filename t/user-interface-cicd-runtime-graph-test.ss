@@ -8,8 +8,9 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/user-interface/custom/my-module/config
+        :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/presentation-config
+        (only-in :poo-flow/user-interface/custom/my-module/cases/cicd-owner
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
         :poo-flow/t/user-interface-fixtures)

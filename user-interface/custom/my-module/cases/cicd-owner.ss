@@ -6,6 +6,10 @@
 (import :poo-flow/src/module-system/init-syntax
         :poo-flow/user-interface/custom/my-module/profiles/all)
 
+(export poo-flow-custom-my-module-cicd-case
+        poo-flow-custom-my-module-cicd-module
+        poo-flow-custom-my-module-funflow-cicd-case)
+
 (load! "cicd")
 (load! "funflow-cicd")
 (load! "poo-introspection")

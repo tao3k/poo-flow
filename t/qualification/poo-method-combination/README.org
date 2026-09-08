@@ -1,0 +1,40 @@
+#+title: Method-combination qualification ownership
+
+This directory owns the test-only Scheme entrypoints. No executable shell
+implementation or duplicate =tools/= entrypoint exists.
+
+| File | Responsibility |
+|------+----------------|
+| =qualify.ss= | explicit native POO input, fresh compilation, fingerprints, process logs, terminal receipt |
+| =run.ss= | same-process runtime artifact admission, seven compiled suites, repeated performance trials |
+| =artifacts.ss= | exact owned =.o1= resolution and upstream dependency fingerprints |
+| =summary.ss= | read-only median/range/GC/allocation projections from trial evidence |
+| =summary-test.ss= | repeated-trial arithmetic and empty/duplicate/inconsistent input rejection |
+| =io-test.ss= | exact file/console writes, nonempty manifests, eager algorithm-tagged fingerprints and drift rejection |
+| =preflight.ss= | native helper test runner before compilation |
+
+From the project root with its Gerbil environment active:
+#+begin_src scheme
+;; Importable functional entry, with effects limited to explicit qualification.
+(import "t/qualification/poo-method-combination/qualify.ss")
+(combination-qualify!)
+#+end_src
+
+Equivalent command entrypoints (the existing environment launcher only supplies
+the project environment; it does not implement qualification):
+#+begin_src sh
+./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/qualify.ss
+./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/summary.ss /absolute/run-directory/qualification.sexp
+./.devenv/devenv-profile-exec gxtest t/qualification/poo-method-combination/summary-test.ss
+./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/preflight.ss
+#+end_src
+
+Fingerprint records name =algorithm: sha256= and =purpose: content-integrity=.
+The algorithm uses native =:std/crypto/digest=. SHA-256 retains direct comparison
+with historical evidence; this is not a limitation of Gerbil's SHA3/BLAKE2
+support. No signature, signer identity or authenticity claim is made. ED25519
+would require a separate signing/key-ownership contract, not a digest rename.
+
+The mechanism is local dependent-slice qualification, not all-package release
+admission. Exact frozen semantics and workload limitations are in
+[[file:../../../src/research/poo-method-combination/V1-CONTRACT.org][the source-owned v1 contract]].

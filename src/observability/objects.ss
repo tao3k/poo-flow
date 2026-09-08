@@ -4,13 +4,26 @@
 ;;; runtime manifests and proof rows are projections, not semantic owners.
 
 (import (only-in :clan/poo/object .def .o .ref object?)
+        (only-in :clan/poo/mop .defgeneric validate)
+        (only-in "../module-system/types.ss" poo-flow-contract-admit)
+        "func.ss"
         (only-in "./types.ss"
+                 PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
+                 PooFlowObservationContextContract PooFlowAdmissionObservationContract
                  poo-flow-observability-diagnostic-contract?
                  poo-flow-observability-receipt-contract?
                  poo-flow-observability-require-diagnostic!
                  poo-flow-observability-require-receipt!))
 
 (export poo-flow-observability-event-prototype
+        poo-flow-admission-observation-prototype
+        poo-flow-observation-identity
+        poo-flow-observation-provenance
+        poo-flow-observation-context
+        poo-flow-observe-admission-evidence
+        poo-flow-observe-contract-admission
+        poo-flow-observation-explain
+        poo-flow-observation-summary
         poo-flow-observability-span-prototype
         poo-flow-observability-diagnostic-prototype
         poo-flow-observability-receipt-prototype
@@ -309,3 +322,54 @@
    (cons 'next-action
          (poo-flow-observability-receipt-next-action receipt))
    (cons 'artifacts (poo-flow-observability-receipt-artifacts receipt))))
+
+;;; Boundary: native framework behavior is resolved by upstream slots,
+;;; not the legacy metadata-family catalog or an event-kind switch.
+(.defgeneric (poo-flow-observation-explain observation) slot: .explain)
+;;; Boundary: summary dispatch shares the same native observation receiver contract.
+(.defgeneric (poo-flow-observation-summary observation) slot: .summary)
+
+(def poo-flow-admission-observation-prototype
+  (.o (:: self (.ref PooFlowAdmissionObservationContract 'proto))
+      (.explain (poo-flow-observation-admission-explanation self))
+      (.summary (poo-flow-observation-admission-summary self))))
+
+(def (poo-flow-observation-identity namespace-value name-value revision-value)
+  (validate PooFlowObservationIdentityContract
+    (.o (:: @ (.ref PooFlowObservationIdentityContract 'proto))
+        namespace: namespace-value name: name-value revision: revision-value)))
+
+(def (poo-flow-observation-provenance producer-value provider-value phase-value)
+  (validate PooFlowObservationProvenanceContract
+    (.o (:: @ (.ref PooFlowObservationProvenanceContract 'proto))
+        producer: producer-value provider: provider-value phase: phase-value)))
+
+;;; Identity/provenance are supplied explicitly by the producer. They provide
+;;; correlation, not a cryptographic assertion of producer authority.
+(def (poo-flow-observation-context identity-value source-value generation-value
+                                   causes-value provenance-value
+                                   detail-budget: (budget-value 256))
+  (validate PooFlowObservationContextContract
+    (.o (:: @ (.ref PooFlowObservationContextContract 'proto))
+        identity: identity-value source: source-value generation: generation-value
+        causes: causes-value provenance: provenance-value detail-budget: budget-value)))
+
+(def (poo-flow-observe-admission-evidence context receipt)
+  (let ((facts-value (poo-flow-observation-admission-facts receipt context))
+        (identity-value (.ref context 'identity))
+        (source-value (.ref context 'source))
+        (generation-value (.ref context 'generation))
+        (causes-value (.ref context 'causes))
+        (provenance-value (.ref context 'provenance)))
+    (validate PooFlowAdmissionObservationContract
+      (.o (:: @ poo-flow-admission-observation-prototype)
+          identity: identity-value source: source-value generation: generation-value
+          causes: causes-value provenance: provenance-value
+          disclosure: 'internal evidence: facts-value))))
+
+(def (poo-flow-observe-contract-admission context contract candidate
+                                         evaluation-context: (evaluation-context #f))
+  ;; Validate observation metadata before evaluating the subject exactly once.
+  (validate PooFlowObservationContextContract context)
+  (poo-flow-observe-admission-evidence
+   context (poo-flow-contract-admit contract candidate evaluation-context)))

@@ -1,0 +1,50 @@
+#+title: Cedar Gerbil binding workspace
+
+This directory is the package-management owner for the Cedar/Gerbil boundary.
+Its root =Cargo.toml= owns the lockfile, resolver, profiles, and member set.
+
+The workspace contains two explicit crates:
+
+- =crates/cedar-authority=: Cedar projection, dual witnesses, Runtime Host
+  protocol, signed decisions, and single-use grants;
+- =crates/cedar-gerbil=: the thin Gerbil POO/native projection adapter and its
+  native conformance fixture.
+
+Run the default workspace gate from the repository root with:
+
+#+begin_src sh
+.devenv/devenv-profile-exec cargo test --locked \
+  --manifest-path bindings/cedar-gerbil/Cargo.toml
+#+end_src
+
+Feature-specific qualification remains explicit; see each crate's README.
+There are no sibling standalone Cargo packages under =bindings/=. A member
+must not add its own =Cargo.lock= or profile tables.
+
+The workspace metadata names four explicit outer-build inputs. Cargo produces
+=POO_FLOW_CEDAR_RUNTIME_CORE_ARCHIVE=; Lake links that archive and the Cedar
+Lean object graph once into =POO_FLOW_CEDAR_RUNTIME_HOST=. The runtime owner
+provides =POO_FLOW_CEDAR_RUNTIME_SOCKET=. The separate
+=POO_FLOW_CEDAR_NATIVE_PROBE= remains a diagnostic qualification artifact.
+Nix, Bazel, or another outer build owns every store/runfile path. No member
+derives a repository root, =target= directory, or Lake cache path.
+
+The repository exposes one outer-build entrypoint with a required output:
+
+#+begin_src sh
+just build-cedar-runtime-host "$out/bin/cedarRuntimeHost"
+#+end_src
+
+The command builds the Cargo archive, gives it to Lake as an explicit input,
+then copies the single linked Host to the requested output. Cargo and Lake
+build directories are private builder state; neither is embedded as a runtime
+path. =CARGO_TARGET_DIR= and =POO_FLOW_CEDAR_BUILD_PROFILE= (=dev= or
+=release=) remain ordinary builder controls. The generated devenv profile
+supplies Cargo, Rust, elan, and just without entering a shell;
+=lean-toolchain= selects the exact Lean release.
+
+Qualify the exported artifact itself with:
+
+#+begin_src sh
+just test-cedar-runtime-host "$out/bin/cedarRuntimeHost"
+#+end_src

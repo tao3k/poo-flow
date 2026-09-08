@@ -62,6 +62,21 @@ jobs:
           lake build ffiSmoke
           .lake/build/bin/ffiSmoke
 
+      - name: Build and qualify Cedar AOT Runtime Host
+        shell: bash
+        run: |
+          set -euo pipefail
+          host="$RUNNER_TEMP/cedarRuntimeHost"
+          POO_FLOW_CEDAR_BUILD_PROFILE=dev \
+            tools/ci/build-cedar-runtime-host "$host"
+          POO_FLOW_CEDAR_RUNTIME_HOST="$host" \
+            cargo test --locked \
+              --manifest-path bindings/cedar-gerbil/Cargo.toml \
+              -p poo-flow-cedar-authority \
+              --features native-runtime-host-qualification \
+              --test runtime_host \
+              --test authorization
+
       - name: Save Lean cache
         if: steps.lean-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

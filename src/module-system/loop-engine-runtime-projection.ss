@@ -71,7 +71,24 @@
 
 ;;; Projection boundary: expose the accepted intent as named contract catalogs and runtime facts.
 (def (poo-flow-user-loop-engine-intent-runtime-projections intent)
-  (list
+  ;; One request owns the expensive graph/receipt materialization. Every
+  ;; presentation field below reuses values from that request, so the enriched
+  ;; intent preserves one object graph rather than several equal deep copies.
+  (let* ((request
+          (poo-flow-user-loop-engine-intent-runtime-request intent))
+         (envelope
+          (poo-flow-user-loop-engine-runtime-envelope/from-request
+           intent request))
+         (runtime-command-manifest
+          (poo-flow-user-loop-engine-runtime-command-manifest/from-envelope
+           envelope))
+         (runtime-command-manifest-summary
+          (poo-flow-user-loop-engine-runtime-command-manifest-summary/from-manifest
+           runtime-command-manifest))
+         (proof-manifest
+          (poo-flow-user-loop-engine-proof-manifest/from-manifest
+           runtime-command-manifest)))
+   (list
    (cons 'runtime-handoff-contracts
          +poo-flow-user-loop-engine-handoff-contracts+)
    (cons 'receipt-contracts
@@ -79,54 +96,60 @@
    (cons 'runtime-packet-contracts
          +poo-flow-user-loop-engine-runtime-packet-contracts+)
    (cons 'runtime-capability-descriptor
-         (poo-flow-user-loop-engine-intent-runtime-capability-descriptor
-          intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'runtime-capability-descriptor '()))
    (cons 'policy-profile-packet
-         (poo-flow-user-loop-engine-intent-policy-profile-packet intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'policy-profile-packet '()))
    (cons 'runtime-action-packets
-         (list (poo-flow-user-loop-engine-intent-runtime-action-packet
-                intent)))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'runtime-action-packets '()))
    (cons 'runtime-receipt-batch-template
-         (poo-flow-user-loop-engine-intent-runtime-receipt-batch-template
-          intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'runtime-receipt-batch-template '()))
    (cons 'runtime-handoff-facts
-         (poo-flow-user-loop-engine-intent-runtime-handoff-facts intent))
+         (poo-flow-user-loop-engine-runtime-handoff-facts/from-request
+          intent request))
    (cons 'workflow-agreement
-         (poo-flow-user-loop-engine-intent-workflow-agreement intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'workflow-agreement '()))
    (cons 'result-contract
-         (poo-flow-user-loop-engine-intent-result-contract intent))
+         (poo-flow-user-loop-engine-intent-ref request 'result-contract '()))
    (cons 'agent-profiles
-         (poo-flow-user-loop-engine-intent-agent-profiles intent))
+         (poo-flow-user-loop-engine-intent-ref request 'agent-profiles '()))
    (cons 'agent-harnesses
-         (poo-flow-user-loop-engine-intent-agent-harnesses intent))
+         (poo-flow-user-loop-engine-intent-ref request 'agent-harnesses '()))
    (cons 'agent-sessions
-         (poo-flow-user-loop-engine-intent-agent-sessions intent))
+         (poo-flow-user-loop-engine-intent-ref request 'agent-sessions '()))
    (cons 'session-agent-graph
-         (poo-flow-user-loop-engine-intent-session-agent-graph intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'session-agent-graph '()))
    (cons 'session-agent-topology-trace
-         (poo-flow-user-loop-engine-intent-session-agent-topology-trace
-          intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'session-agent-topology-trace '()))
    (cons 'workflow-run
-         (poo-flow-user-loop-engine-intent-workflow-run intent))
+         (poo-flow-user-loop-engine-intent-ref request 'workflow-run '()))
    (cons 'dispatch-receipt
-         (poo-flow-user-loop-engine-intent-dispatch-receipt intent))
+         (poo-flow-user-loop-engine-intent-ref request 'dispatch-receipt '()))
    (cons 'agent-operation
-         (poo-flow-user-loop-engine-intent-agent-operation intent))
+         (poo-flow-user-loop-engine-intent-ref request 'agent-operation '()))
    (cons 'delegated-operation
-         (poo-flow-user-loop-engine-intent-delegated-operation intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'delegated-operation '()))
    (cons 'lineage-receipt
-         (poo-flow-user-loop-engine-intent-lineage-receipt intent))
+         (poo-flow-user-loop-engine-intent-ref request 'lineage-receipt '()))
    (cons 'selector-receipt
-         (poo-flow-user-loop-engine-intent-selector-receipt intent))
+         (poo-flow-user-loop-engine-intent-ref request 'selector-receipt '()))
    (cons 'resource-dispatch-receipt
-         (poo-flow-user-loop-engine-intent-resource-dispatch-receipt
-          intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'resource-dispatch-receipt '()))
    (cons 'capability-receipt
          (poo-flow-user-loop-engine-intent-capability-receipt intent))
    (cons 'memory-receipt
-         (poo-flow-user-loop-engine-intent-memory-receipt intent))
+         (poo-flow-user-loop-engine-intent-ref request 'memory-receipt '()))
    (cons 'compression-receipt
-         (poo-flow-user-loop-engine-intent-compression-receipt intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'compression-receipt '()))
    (cons 'session-selector-receipts
          (poo-flow-user-loop-engine-intent-ref
           intent
@@ -158,12 +181,11 @@
           'spec-evolution-runtime-manifest-rows
           '()))
    (cons 'runtime-command-manifest
-         (poo-flow-user-loop-engine-intent-runtime-command-manifest intent))
+         runtime-command-manifest)
    (cons 'runtime-command-manifest-summary
-         (poo-flow-user-loop-engine-intent-runtime-command-manifest-summary
-          intent))
+         runtime-command-manifest-summary)
    (cons 'proof-manifest
-         (poo-flow-user-loop-engine-intent-proof-manifest intent))
+         proof-manifest)
    (cons 'sandbox-runtime-summaries
          (poo-flow-user-loop-engine-intent-ref
           intent
@@ -175,15 +197,16 @@
           'sandbox-handoff-summaries
           '()))
    (cons 'sandbox-handoff-agreement
-         (poo-flow-user-loop-engine-intent-sandbox-handoff-agreement
-          intent))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'sandbox-handoff-agreement '()))
    (cons 'sandbox-unresolved-profile-refs
          (poo-flow-user-loop-engine-intent-ref
           intent
           'sandbox-unresolved-profile-refs
           '()))
    (cons 'runtime-snapshot
-         (poo-flow-user-loop-engine-intent-runtime-snapshot intent))))
+         (poo-flow-user-loop-engine-intent-ref
+          request 'runtime-snapshot '())))))
 
 (def (poo-flow-user-loop-engine-intents-field-values intents field)
   (poo-flow-fold-right

@@ -154,6 +154,38 @@ owner discovery before implementation.  This RFC does not invent that source
 path and does not authorize a parallel generic type, object, debug, or
 fixed-point foundation.
 
+** Current source owner under temporary local discovery
+
+For the current implementation task, the user explicitly authorized =rg= / =fd=
+exploration while the ASP parser route is unavailable. Local source and caller
+inspection identified the already-existing =src/observability/types.ss= and
+=src/observability/objects.ss= as the native Diagnostic/Receipt owner. Its
+existing consumers include =src/contract/json-schema-receipt.ss= and
+=src/contract/boundary-namespace.ss=, with executable feedback scenarios in
+=t/observability-feedback-test.ss=.
+
+The first framework slice extends that owner rather than creating a parallel
+observation package:
+
+- =types.ss= declares the native identity, provenance, context, fact, event,
+  and aggregate Contracts through upstream =define-type=;
+- =func.ss= performs pure bounded inspection of already-computed admission
+  evidence;
+- =objects.ss= constructs observations and uses upstream =.defgeneric= for
+  derived explanation/summary responsibilities;
+- =interface.ss= exposes the pure native interface;
+- =debug.ss= explicitly consumes upstream =DDT= / =trace-poo= at the
+  development-output boundary.
+
+The strict =src/module-system/observability.ss= owner is unchanged. Existing
+Diagnostic/Receipt callers remain on their original API. The new admission
+observation does not use the legacy family catalog as a dispatch registry.
+
+This task-specific exploration authorization is not a parser receipt or a
+global relaxation of source-owner governance. Parser-owned confirmation and
+full qualification remain open. The concrete usage and limitations are
+recorded in =src/observability/README.org=.
+
 * Conformance checklist
 
 - [X] Semantic evidence and presentation projection are distinct owners.

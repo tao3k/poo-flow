@@ -283,6 +283,35 @@ scheduled after the semantic tranches are green, but it is not a first-round
 GSLPH may execute these groups as the development harness.  It does not define
 the semantics or issue runtime evidence.
 
+* Mainline resumption audit (2026-09-08)
+
+The implementation instruction resumes the existing owner-scoped work; it
+does not turn the historical owner-map receipts above into current semantic
+acceptance.  Return from the bounded proof-tool milestone to the following
+vertical slice, without creating another performance roadmap.
+
+| Milestone | Current evidence and gap | Existing owner |
+|-----------+--------------------------+----------------|
+| M0 proof substrate | Generation batching already exists; cache publication now follows receipt identity validation.  Current build/performance admission must still be measured independently of historical numbers. | [[file:45-120-63-lean-declaration-closure-generation-performance.org][45-120-63]] |
+| M1 user composition | Contextual parser/refinement acceptance is distinct from the historical surface delivery. | [[file:101-canonical-composition-surface-closure-design.org][101]] and =profile-composition-use-syntax.ss= |
+| M1 G0 | =poo-flow-g0-resolve= currently consumes observed/authorized booleans.  This is not the four-root canonical contract or runtime-internal import observation transaction. | [[file:45-02-g0-qualification-contract.org][45-02]] and =g0-qualification.ss= |
+| M1 Cedar subject | =cedar-decision.ss= projects a supplied outcome.  =agentic-control-plane-fixture.ss= supplies fixed permit, true obligations, and a fixture signature; this does not establish an authority-issued dual-engine decision. | [[file:45-07-user-composition-and-mix-module-interface.org][45-07]] and =src/policy/cedar-decision.ss= |
+| M1 runtime handoff/reflection | Plan projection and fixture/vector consumers do not demonstrate the same live generation, subject, authority context, and runtime-produced receipt through the complete slice. | [[file:11-marlin-runtime-handoff.org][11]] and [[file:142-feature-runtime-handoff-plan.org][142]] |
+| M2 recovery/integration | =runtime-context-recovery.ss= models context and transitions as values; it does not itself supply live context sharing, replacement, close, or stale-resume evidence. | 45-03 and the required test groups above |
+
+The next production integration needs an identified Cedar evaluation/receipt
+issuer and runtime handoff entrypoint, including their source owners and
+authority-validation contract.  No such issuer was established by inspecting
+the current Scheme decision projection, Python runtime adapter, or C runtime
+transition implementation.  This bounded finding is not a claim that no
+external implementation exists.
+
+Do not manufacture that missing authority using caller-supplied observations,
+an accept-all validator, a fixed permit, a dummy signature, or a new Scheme
+runtime.  Establish the existing external owner, or explicitly scope creation
+of that owner, before wiring production authorization.  Local pure tests and
+negative cases remain necessary but are not live admission receipts.
+
 * Completion gate
 
 Work is not complete from source edits, a focused green check, =Ready=,

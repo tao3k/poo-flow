@@ -4,7 +4,7 @@
 
 (export #t)
 
-(import (only-in :clan/poo/object .o .ref)
+(import (only-in :clan/poo/object .cc .def .ref)
         (only-in :std/sort sort)
         (only-in :std/misc/walist walist? walist->alist)
         (only-in :std/srfi/13 string-contains)
@@ -18,6 +18,28 @@
   "poo-flow.runtime-symbol-manifest.v1")
 (def +poo-flow-runtime-symbol-manifest-version+ 1)
 
+;;; Optimization boundary: parsed manifests share one fixed native POO shape.
+(.def poo-flow-runtime-symbol-manifest-prototype
+  kind: 'poo-flow.runtime-symbol-manifest.v1
+  schema: #f
+  schema-version: #f
+  abi: #f
+  required-symbols: #f
+  forbidden-fragments: #f
+  owners: #f)
+
+;;; Optimization boundary: verification receipts specialize one fixed slot layout.
+(.def poo-flow-runtime-symbol-manifest-receipt-prototype
+  kind: 'poo-flow.runtime-symbol-manifest-receipt.v1
+  schema: "poo-flow.runtime-symbol-manifest-receipt.v1"
+  schema-version: 1
+  accepted?: #f
+  abi: #f
+  expected-symbols: '()
+  actual-symbols: '()
+  forbidden-symbols: '()
+  diagnostics: '())
+
 (def (symbol-manifest-ref rows key default)
   (let (entry (assq key rows))
     (if entry (cdr entry) default)))
@@ -29,13 +51,7 @@
   (sort (append values '()) string<?))
 
 (def (invalid-symbol-manifest)
-  (.o (kind 'poo-flow.runtime-symbol-manifest.v1)
-      (schema #f)
-      (schema-version #f)
-      (abi #f)
-      (required-symbols #f)
-      (forbidden-fragments #f)
-      (owners #f)))
+  poo-flow-runtime-symbol-manifest-prototype)
 
 (def (poo-flow-runtime-symbol-manifest-read port)
   (with-catch
@@ -49,16 +65,13 @@
        (if (not (walist? decoded))
            (invalid-symbol-manifest)
            (let (rows (walist->alist decoded))
-             (.o (kind 'poo-flow.runtime-symbol-manifest.v1)
-                 (schema (symbol-manifest-ref rows 'schema #f))
-                 (schema-version
-                  (symbol-manifest-ref rows 'schemaVersion #f))
-                 (abi (symbol-manifest-ref rows 'abi #f))
-                 (required-symbols
-                  (symbol-manifest-ref rows 'requiredSymbols #f))
-                 (forbidden-fragments
-                  (symbol-manifest-ref rows 'forbiddenFragments #f))
-                 (owners (symbol-manifest-ref rows 'owners #f)))))))))
+             (.cc poo-flow-runtime-symbol-manifest-prototype
+                  'schema (symbol-manifest-ref rows 'schema #f)
+                  'schema-version (symbol-manifest-ref rows 'schemaVersion #f)
+                  'abi (symbol-manifest-ref rows 'abi #f)
+                  'required-symbols (symbol-manifest-ref rows 'requiredSymbols #f)
+                  'forbidden-fragments (symbol-manifest-ref rows 'forbiddenFragments #f)
+                  'owners (symbol-manifest-ref rows 'owners #f))))))))
 
 (def (poo-flow-runtime-symbol-manifest-read-file path)
   (call-with-input-file path poo-flow-runtime-symbol-manifest-read))
@@ -110,14 +123,12 @@
          (accepted?
           (and shape-valid? (equal? expected actual)
                (null? forbidden-symbols))))
-    (.o (kind 'poo-flow.runtime-symbol-manifest-receipt.v1)
-        (schema "poo-flow.runtime-symbol-manifest-receipt.v1")
-        (schema-version 1)
-        (accepted? accepted?)
-        (abi abi)
-        (expected-symbols expected)
-        (actual-symbols actual)
-        (forbidden-symbols forbidden-symbols)
-        (diagnostics
+    (.cc poo-flow-runtime-symbol-manifest-receipt-prototype
+         'accepted? accepted?
+         'abi abi
+         'expected-symbols expected
+         'actual-symbols actual
+         'forbidden-symbols forbidden-symbols
+         'diagnostics
          (runtime-symbol-manifest-diagnostics
-          shape-valid? expected actual forbidden-symbols)))))
+          shape-valid? expected actual forbidden-symbols))))

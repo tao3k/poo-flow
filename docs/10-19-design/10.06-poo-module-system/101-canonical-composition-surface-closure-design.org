@@ -5,6 +5,12 @@
 Approved in conversation on 2026-07-11.  Implementation and focused
 qualification are complete.
 
+The preceding statement records the historical delivery, not acceptance of
+every subsequent contextual-clause refinement below.  The unchecked delivery
+items remain open until their current source and execution evidence are
+recorded.  Neither this historical status nor a parser-only check closes the
+runtime qualification, Cedar authorization, or recovery gates of 45-08.
+
 * Objective
 
 Close the module-composition refactor around one unambiguous public grammar:

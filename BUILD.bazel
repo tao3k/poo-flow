@@ -40,8 +40,8 @@ filegroup(
 filegroup(
     name = "compile_performance_budget_test_sources",
     srcs = [
-        ":compile_performance_budget_sources",
         "t/build-api-project-compile-performance-budget-test.ss",
+        ":compile_performance_budget_sources",
     ],
 )
 
@@ -66,6 +66,7 @@ filegroup(
         "src/feature-system/bundle-v1-composition-writer.ss",
         "src/feature-system/bundle-v1-foreign-arena.ss",
         "src/feature-system/bundle-v1-lowering.ss",
+        "src/feature-system/bundle-v1-lowering-model.ss",
         "src/module-system/profile-composition.ss",
         "src/module-system/profile-composition-accessors.ss",
         "src/module-system/profile-composition-builders.ss",
@@ -102,9 +103,12 @@ filegroup(
     name = "scheme_test_sources",
     srcs = [
         ":scheme_build_sources",
-    ] + glob([
-        "t/**",
-    ], exclude = ["t/**/*.ss"]),
+    ] + glob(
+        [
+            "t/**",
+        ],
+        exclude = ["t/**/*.ss"],
+    ),
 )
 
 filegroup(

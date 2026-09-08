@@ -15,10 +15,24 @@
     pkgs.binaryen
     pkgs.bazel-buildtools
     pkgs.nodejs_24
+    # The lockfile and lean-toolchain remain the source pins. These tools make
+    # `just build-cedar-runtime-host OUT` available through the generated
+    # devenv profile entrypoint.
+    pkgs.elan
+    pkgs.just
   ];
 
-  # https://devenv.sh/languages/
-  # languages.rust.enable = true;
+  languages.rust = {
+    enable = true;
+    channel = "stable";
+    # Ensure rust can link python library
+    components = [
+      "rustc"
+      "cargo"
+      "clippy"
+      "rustfmt"
+    ];
+  };
 
   # https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";

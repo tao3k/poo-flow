@@ -38,7 +38,6 @@
   paths: '(((role . project-workspace)
             (source . ".")
             (project-marker . "gerbil.pkg")
-            (target . "/workspace/project")
             (mode . read-only)))
   access: 'read-only))
 
@@ -57,7 +56,6 @@
   paths: '(((role . project-workspace)
             (source . ".")
             (project-marker . "gerbil.pkg")
-            (target . "/workspace/project")
             (mode . read-write)))
   access: 'read-write))
 

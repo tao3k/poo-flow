@@ -604,6 +604,7 @@ def export_declaration_closure(
             command.extend(("--base-import", base_import))
     for proof_base_import in proof_base_imports:
         command.extend(("--proof-base-import", proof_base_import))
+    cache_miss = exported_json is None
     if exported_json is None:
         if _exported_json_provider is None:
             exported = run_export_phase(
@@ -619,11 +620,6 @@ def export_declaration_closure(
             exported_json = exported.stdout
         else:
             exported_json = _exported_json_provider()
-        if cache_path is not None:
-            cache_path.parent.mkdir(parents=True, exist_ok=True)
-            temporary_cache = cache_path.with_suffix(f".tmp.{os.getpid()}")
-            temporary_cache.write_text(exported_json)
-            temporary_cache.replace(cache_path)
     parse_started = time.monotonic()
     closure = LeanDeclarationClosure.from_json(exported_json)
     _observe_export_phase(
@@ -656,6 +652,11 @@ def export_declaration_closure(
             "proof-base-import-mismatch",
             root_module,
         )
+    if cache_miss and cache_path is not None:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_cache = cache_path.with_suffix(f".tmp.{os.getpid()}")
+        temporary_cache.write_text(exported_json)
+        temporary_cache.replace(cache_path)
     return closure
 
 

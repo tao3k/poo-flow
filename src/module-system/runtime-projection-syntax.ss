@@ -14,7 +14,7 @@
 ;;   ```scheme
 ;;   (defpoo-runtime-receipt-projection make-receipt (r)
 ;;     (bindings ((status (runtime-response-status r))))
-;;     (fields ((status status))))
+;;     (fields (('status status))))
 ;;   ;; => make-receipt
 ;;   ```
 (defrules defpoo-runtime-receipt-projection
@@ -24,4 +24,4 @@
       (fields ((field-key field-expr) ...)))
    (def (constructor argument ...)
      (let* ((binding-name binding-expr) ...)
-       (list (cons 'field-key field-expr) ...)))))
+       (list (cons field-key field-expr) ...)))))

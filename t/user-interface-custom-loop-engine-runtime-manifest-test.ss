@@ -605,6 +605,22 @@
        intent
        runtime-manifest
        runtime-manifest-request)
+      ;; Retained-memory contract: presentation, manifest, and handoff views
+      ;; share the single materialized request graph instead of rebuilding
+      ;; equal deep copies.
+      (check-equal? (eq? (test-ref intent 'session-agent-graph)
+                         (test-ref runtime-manifest-request
+                                   'session-agent-graph))
+                    #t)
+      (check-equal? (eq? (test-ref intent 'runtime-snapshot)
+                         (test-ref runtime-manifest-request
+                                   'runtime-snapshot))
+                    #t)
+      (check-equal? (eq? (test-ref (test-ref intent
+                                             'runtime-handoff-facts)
+                                   'agent-profiles)
+                         (test-ref runtime-manifest-request 'agent-profiles))
+                    #t)
       (check-equal? (test-ref intent 'runtime-executed) #f))))
 
 ;;; The suite keeps ABI handoff assertions separate from profile projection so

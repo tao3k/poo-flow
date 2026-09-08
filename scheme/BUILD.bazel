@@ -207,10 +207,21 @@ native_contract_test_sources = ["//:scheme_build_sources"]
 precise_test_sources = {
     "contract_schema_test": native_contract_test_sources,
     "gerbil_poo_operation_admission_test": native_contract_test_sources,
+    "gerbil_poo_debug_admission_test": native_contract_test_sources,
+    "type_contract_foundation_test": native_contract_test_sources,
+    "semantic_module_test": native_contract_test_sources,
     "graph_native_type_contract_test": native_contract_test_sources,
     "loop_native_type_contract_test": native_contract_test_sources,
     "module_object_native_type_contract_test": native_contract_test_sources,
     "observability_native_type_contract_test": native_contract_test_sources,
+    "observability_framework_test": native_contract_test_sources,
+    "poo_method_combination_test": native_contract_test_sources,
+    "poo_method_combination_contract_test": native_contract_test_sources,
+    "poo_method_combination_next_test": native_contract_test_sources,
+    "poo_method_combination_observation_test": native_contract_test_sources,
+    "poo_method_combination_performance_test": native_contract_test_sources,
+    "poo_method_combination_summary_test": native_contract_test_sources,
+    "poo_method_combination_io_test": native_contract_test_sources,
     "sandbox_profile_native_type_contract_test": native_contract_test_sources,
     "sandbox_resource_native_type_contract_test": native_contract_test_sources,
     "session_native_type_contract_test": native_contract_test_sources,
@@ -247,16 +258,70 @@ precise_test_sources = {
         ),
         ("contract_tests", "medium", "//:t/contract-tests.ss"),
         ("cli_support_tests", "small", "//:t/cli-support-tests.ss"),
-        ("integration_tests", "medium", "//:t/integration-tests.ss"),
         (
             "gerbil_poo_operation_admission_test",
             "small",
             "//:t/gerbil-poo-operation-admission-test.ss",
         ),
         (
+            "gerbil_poo_debug_admission_test",
+            "small",
+            "//:t/gerbil-poo-debug-admission-test.ss",
+        ),
+        (
+            "type_contract_foundation_test",
+            "small",
+            "//:t/type-contract-foundation-test.ss",
+        ),
+        (
+            "semantic_module_test",
+            "small",
+            "//:t/semantic-module-test.ss",
+        ),
+        (
             "observability_native_type_contract_test",
             "small",
             "//:t/observability-feedback-test.ss",
+        ),
+        (
+            "observability_framework_test",
+            "small",
+            "//:t/observability-framework-test.ss",
+        ),
+        (
+            "poo_method_combination_test",
+            "small",
+            "//:t/poo-method-combination-test.ss",
+        ),
+        (
+            "poo_method_combination_observation_test",
+            "small",
+            "//:t/poo-method-combination-observation-test.ss",
+        ),
+        (
+            "poo_method_combination_contract_test",
+            "small",
+            "//:t/poo-method-combination-contract-test.ss",
+        ),
+        (
+            "poo_method_combination_next_test",
+            "small",
+            "//:t/poo-method-combination-next-test.ss",
+        ),
+        (
+            "poo_method_combination_performance_test",
+            "small",
+            "//:t/poo-method-combination-performance-test.ss",
+        ),
+        (
+            "poo_method_combination_summary_test",
+            "small",
+            "//:t/qualification/poo-method-combination/summary-test.ss",
+        ),
+        (
+            "poo_method_combination_io_test",
+            "small",
+            "//:t/qualification/poo-method-combination/io-test.ss",
         ),
         (
             "module_object_native_type_contract_test",
@@ -322,6 +387,61 @@ precise_test_sources = {
     ]
 ]
 
+[
+    gerbil_project_test(
+        name = name,
+        size = "medium",
+        srcs = "//:scheme_test_sources",
+        project = ":compile",
+        source_root_marker = "//:scheme_source_root_marker",
+        tags = ["exclusive"],
+        tests = [test_root],
+    )
+    for name, test_root in [
+        ("integration_tests_1", "//:t/integration-tests-1.ss"),
+        ("integration_tests_2", "//:t/integration-tests-2.ss"),
+    ]
+]
+
+[
+    gerbil_project_test(
+        name = name,
+        size = "medium",
+        srcs = "//:scheme_test_sources",
+        project = ":compile",
+        source_root_marker = "//:scheme_source_root_marker",
+        tags = ["exclusive"],
+        tests = [test_root],
+    )
+    for name, test_root in [
+        ("integration_runtime_bridge_test", "//:t/runtime-bridge-test.ss"),
+        ("integration_user_interface_cicd_test", "//:t/user-interface-cicd-test.ss"),
+        ("integration_user_interface_cicd_pipeline_run_test", "//:t/user-interface-cicd-pipeline-run-test.ss"),
+        ("integration_user_interface_cicd_runtime_projection_test", "//:t/user-interface-cicd-runtime-projection-test.ss"),
+        ("integration_user_interface_cicd_runtime_graph_test", "//:t/user-interface-cicd-runtime-graph-test.ss"),
+    ]
+]
+
+test_suite(
+    name = "integration_tests_3",
+    tests = [
+        ":integration_runtime_bridge_test",
+        ":integration_user_interface_cicd_pipeline_run_test",
+        ":integration_user_interface_cicd_runtime_graph_test",
+        ":integration_user_interface_cicd_runtime_projection_test",
+        ":integration_user_interface_cicd_test",
+    ],
+)
+
+test_suite(
+    name = "integration_tests",
+    tests = [
+        ":integration_tests_1",
+        ":integration_tests_2",
+        ":integration_tests_3",
+    ],
+)
+
 test_suite(
     name = "tests",
     tests = [
@@ -330,18 +450,29 @@ test_suite(
         ":compile_performance_budget_unit_test",
         ":contract_schema_test",
         ":contract_tests",
+        ":gerbil_poo_debug_admission_test",
         ":gerbil_poo_operation_admission_test",
         ":graph_native_type_contract_test",
         ":integration_tests",
         ":json_schema_native_contract_test",
         ":loop_native_type_contract_test",
         ":module_object_native_type_contract_test",
+        ":observability_framework_test",
         ":observability_native_type_contract_test",
+        ":poo_method_combination_contract_test",
+        ":poo_method_combination_io_test",
+        ":poo_method_combination_next_test",
+        ":poo_method_combination_observation_test",
+        ":poo_method_combination_performance_test",
+        ":poo_method_combination_summary_test",
+        ":poo_method_combination_test",
         ":protocol_person_promotion_test",
         ":protocol_person_runtime_abi_test",
         ":sandbox_profile_native_type_contract_test",
         ":sandbox_resource_native_type_contract_test",
+        ":semantic_module_test",
         ":session_native_type_contract_test",
+        ":type_contract_foundation_test",
         ":type_facts_native_projection_test",
         ":unit_tests",
         ":user_interface_custom_loop_engine_capability_test",
