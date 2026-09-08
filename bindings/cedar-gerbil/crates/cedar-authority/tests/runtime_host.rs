@@ -118,8 +118,12 @@ fn long_lived_host_rejects_bad_input_then_authorizes_with_pinned_witnesses() {
     assert_eq!(hello.lean_component_digest, lean_digest);
     assert_eq!(hello.generation.len(), 64);
 
-    // The admitted process keeps a private AOT copy for isolated workers.
-    std::fs::write(&host, b"mutated after runtime admission").unwrap();
+    // Replace the deployment path instead of truncating a running executable:
+    // Linux rejects the latter with ETXTBSY, while atomic replacement models a
+    // real deployment update and still proves that this generation stays pinned.
+    let replacement = deployment.path().join("cedar-runtime-host.replacement");
+    std::fs::write(&replacement, b"mutated after runtime admission").unwrap();
+    std::fs::rename(&replacement, &host).unwrap();
 
     assert_eq!(
         runtime.evaluate(&[0xff]).unwrap_err().code,
