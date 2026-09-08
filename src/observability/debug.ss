@@ -34,6 +34,22 @@
 (deferror-class PooFlowObservationProjectionError ())
 (deferror-class PooFlowDebugMemoryAnomaly (receipt))
 
+;; : (-> PooFlowDebugMemoryReceipt Never)
+;; poo-flow-debug-raise-memory-anomaly
+;;   : (-> PooFlowDebugMemoryReceipt Never)
+;;   | doc m%
+;;       Raise the typed fail-closed anomaly while retaining the exact rejected
+;;       receipt for native Scheme handlers and audit projections.
+;;       The specialized constructor path mutates only the exception's receipt
+;;       field before raising and cannot substitute or recompute the evidence.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-debug-raise-memory-anomaly rejected-receipt)
+;;       ;; => raises PooFlowDebugMemoryAnomaly with rejected-receipt
+;;       ```
+;;     %
 (def (poo-flow-debug-raise-memory-anomaly receipt)
   (let (failure
         (PooFlowDebugMemoryAnomaly
@@ -54,6 +70,21 @@
 ;;; renderer. A fresh closed-schema aggregate is built before any output occurs.
 ;;; trace? traces only the aggregate view, never the observed Module receiver.
 ;; : (-> PooFlowObservation OutputPort trace?: Boolean PooFlowObservationSummary)
+;; poo-flow-observation-debug
+;;   : (-> PooFlowObservation OutputPort trace?: Boolean PooFlowObservationSummary)
+;;   | doc m%
+;;       Emit only the admitted closed-schema observation summary and return
+;;       that identical native POO aggregate to the caller.
+;;       The specialized trace branch constructs a fresh bounded view, so it
+;;       cannot dispatch a renderer on the observed Module receiver.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-observation-debug observation (current-error-port) trace?: #f)
+;;       ;; => PooFlowObservationSummary
+;;       ```
+;;     %
 (def (poo-flow-observation-debug observation port trace?: (trace? #f))
   (unless (and (output-port? port) (boolean? trace?))
     (raise (PooFlowObservationProjectionError "invalid observation debug output request")))
@@ -72,19 +103,52 @@
 ;;; a native POO sample, so callers never depend on Gambit's vector layout.
 ;;; Indices 15..19 are the counters projected by std/debug/heap: heap size,
 ;;; allocation, live, movable, and still bytes.
+;; : (-> Symbol collect?: Boolean PooFlowDebugMemorySample)
+;; poo-flow-debug-memory-snapshot
+;;   : (-> Symbol collect?: Boolean PooFlowDebugMemorySample)
+;;   | doc m%
+;;       Read one runtime heap snapshot into the closed native POO sample
+;;       contract, optionally collecting immediately before the measurement.
+;;       The specialized collection branch runs at most once; both branches
+;;       project the same five scalar counters into the result.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-debug-memory-snapshot 'compile collect?: #f)
+;;       ;; => PooFlowDebugMemorySample
+;;       ```
+;;     %
 (def (poo-flow-debug-memory-snapshot phase collect?: (collect? #f))
   (unless (and (symbol? phase) (boolean? collect?))
     (error "invalid POO Flow debug memory snapshot request" phase collect?))
   (when collect? (##gc))
-  (let (usage (##process-statistics))
-    (poo-flow-debug-memory-sample
-     phase
-     (inexact->exact (f64vector-ref usage 15))
-     (inexact->exact (f64vector-ref usage 16))
-     (inexact->exact (f64vector-ref usage 17))
-     (inexact->exact (f64vector-ref usage 18))
-     (inexact->exact (f64vector-ref usage 19)))))
+  (let* ((usage (##process-statistics))
+         (counters
+          (map (lambda (index)
+                 (inexact->exact (f64vector-ref usage index)))
+               '(15 16 17 18 19))))
+    (apply (lambda (heap-size allocation live movable still)
+             (poo-flow-debug-memory-sample
+              phase heap-size allocation live movable still))
+           counters)))
 
+;; : (-> PooFlowDebugMemoryPolicy PooFlowDebugMemorySample Symbol port: OutputPort emit?: Boolean PooFlowDebugMemoryReceipt)
+;; poo-flow-debug-memory-checkpoint
+;;   : (-> PooFlowDebugMemoryPolicy PooFlowDebugMemorySample Symbol port: OutputPort emit?: Boolean PooFlowDebugMemoryReceipt)
+;;   | doc m%
+;;       Sample one policy checkpoint and return its typed POO receipt, raising
+;;       the same receipt as an anomaly when fail-closed policy rejects it.
+;;       The specialized emission branch projects only bounded scalar evidence;
+;;       it never changes the receipt used for the policy decision.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-debug-memory-checkpoint policy baseline 'compile)
+;;       ;; => PooFlowDebugMemoryReceipt
+;;       ```
+;;     %
 (def (poo-flow-debug-memory-checkpoint policy baseline phase
                                        port: (port (current-error-port))
                                        emit?: (emit? #f))
@@ -105,19 +169,22 @@
 ;;; A span adds in-band phase evidence around one development operation. Long
 ;;; operations should expose intermediate checkpoints; launch-time heap caps
 ;;; remain the final defense before this module can be loaded.
-;; call-with-poo-flow-debug-memory-span
 ;; : (forall (a) (-> PooFlowDebugMemoryPolicy Symbol (-> a) port: OutputPort emit?: Boolean (values a PooFlowDebugMemoryReceipt)))
-;; : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
-;; | doc m%
-;;   Measure one returning development operation and preserve its value beside
-;;   a typed POO receipt for the observed heap delta.
-;;   The specialized branch evaluates the operation exactly once before the
-;;   final checkpoint, so sampling cannot duplicate user effects.
-;;   # Examples
-;;   ```scheme
-;;   (call-with-poo-flow-debug-memory-span policy 'compile (lambda () 'ok))
-;;   ;; => (values 'ok PooFlowDebugMemoryReceipt)
-;;   ```
+;; call-with-poo-flow-debug-memory-span
+;;   : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
+;;   | doc m%
+;;       Measure one returning development operation and preserve its value
+;;       beside a typed POO receipt for the observed heap delta.
+;;       The specialized branch evaluates the operation exactly once before
+;;       the final checkpoint, so sampling cannot duplicate user effects.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (call-with-poo-flow-debug-memory-span policy 'compile (lambda () 'ok))
+;;       ;; => (values 'ok PooFlowDebugMemoryReceipt)
+;;       ```
+;;     %
 (def (call-with-poo-flow-debug-memory-span policy phase thunk
                                            port: (port (current-error-port))
                                            emit?: (emit? #f))
@@ -136,19 +203,22 @@
 ;;; thread. A POO lazy-slot cycle therefore need not return before detection.
 ;;; Gambit's launch ceiling remains necessary for code that cannot yield to the
 ;;; Scheme scheduler or fails before this module loads.
-;; call-with-poo-flow-debug-memory-monitor
 ;; : (forall (a) (-> PooFlowDebugMemoryPolicy Symbol (-> a) port: OutputPort emit?: Boolean (values a PooFlowDebugMemoryReceipt)))
-;; : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
-;; | doc m%
-;;   Run one development operation in a native Scheme worker while the calling
-;;   thread samples bounded heap counters and enforces the supplied POO policy.
-;;   The specialized timeout branch preserves the worker's lexical result or
-;;   original exception and terminates it only after a typed fail-closed anomaly.
-;;   # Examples
-;;   ```scheme
-;;   (call-with-poo-flow-debug-memory-monitor policy 'compile (lambda () 'ok))
-;;   ;; => (values 'ok PooFlowDebugMemoryReceipt)
-;;   ```
+;; call-with-poo-flow-debug-memory-monitor
+;;   : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
+;;   | doc m%
+;;       Run one development operation in a native Scheme worker while the
+;;       caller samples bounded heap counters and enforces its POO policy.
+;;       The specialized timeout branch preserves the worker's lexical result
+;;       or exception and terminates it only after a fail-closed anomaly.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (call-with-poo-flow-debug-memory-monitor policy 'compile (lambda () 'ok))
+;;       ;; => (values 'ok PooFlowDebugMemoryReceipt)
+;;       ```
+;;     %
 (def (call-with-poo-flow-debug-memory-monitor policy phase thunk
                                               port: (port (current-error-port))
                                               emit?: (emit? #f))
