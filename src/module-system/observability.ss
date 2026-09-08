@@ -90,6 +90,7 @@
 ;;; stage therefore carries both a `recursive-stage` status and the full path
 ;;; needed to reproduce the problematic projection walk.
 ;; : (forall (a) (-> [a] [a] [a]))
+;; : (-> List List List)
 (def (poo-flow-module-observation-values/tail values tail)
   (append values tail))
 
