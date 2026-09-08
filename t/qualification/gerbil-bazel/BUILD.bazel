@@ -27,6 +27,7 @@ py_test(
         "shared_gerbil_capability_test.py",
         "shared_gerbil_capability_unit_test.py",
     ],
+    imports = ["."],
     main = "shared_gerbil_capability_unit_test.py",
     python_version = "3.12",
 )

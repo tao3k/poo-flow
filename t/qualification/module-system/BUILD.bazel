@@ -25,6 +25,7 @@ py_test(
         "//:t/module-system-observability-test.ss",
         "//:t/profile-composition-test.ss",
     ],
+    imports = ["."],
     main = "owner_map_test.py",
     python_version = "3.12",
 )
