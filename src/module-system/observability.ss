@@ -417,6 +417,7 @@
             (loop next)
             (collect (cdr remaining) (cons (car remaining) next))))))))
 
+;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
 ;; : (-> Symbol PathString [Alist])
 ;; poo-flow-poo-slot-authoring-file-observations
 ;;   : (-> Symbol PathString [Alist])
