@@ -105,6 +105,19 @@
 ;;; A span adds in-band phase evidence around one development operation. Long
 ;;; operations should expose intermediate checkpoints; launch-time heap caps
 ;;; remain the final defense before this module can be loaded.
+;; call-with-poo-flow-debug-memory-span
+;; : (forall (a) (-> PooFlowDebugMemoryPolicy Symbol (-> a) port: OutputPort emit?: Boolean (values a PooFlowDebugMemoryReceipt)))
+;; : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
+;; | doc m%
+;;   Measure one returning development operation and preserve its value beside
+;;   a typed POO receipt for the observed heap delta.
+;;   The specialized branch evaluates the operation exactly once before the
+;;   final checkpoint, so sampling cannot duplicate user effects.
+;;   # Examples
+;;   ```scheme
+;;   (call-with-poo-flow-debug-memory-span policy 'compile (lambda () 'ok))
+;;   ;; => (values 'ok PooFlowDebugMemoryReceipt)
+;;   ```
 (def (call-with-poo-flow-debug-memory-span policy phase thunk
                                            port: (port (current-error-port))
                                            emit?: (emit? #f))
