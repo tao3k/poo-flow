@@ -10,8 +10,10 @@ It defines dispatch as a first-class POO semantic plane.  It does not admit a
 POO Flow dispatch implementation, replace upstream =gerbil-poo= dispatch, or add
 a public dispatch DSL.
 
-Implementation remains blocked until the consumed upstream operation paths in
-RFC 45-120 reach =ADMITTED=.
+RFC 45-120 now admits the direct native generic, computed-slot, inherited-
+continuation, and precedence substrate.  Concrete dispatch demand, explanation,
+condition, fixed-point, and integration values remain blocked by the unchecked
+items in this RFC.
 
 * Scope
 
@@ -481,8 +483,8 @@ Dispatch is not written inside =use-composition=.
 - [X] Prove upstream =NoApplicableMethod= identity.
 - [X] Prove upstream C3 precedence entrypoints.
 - [X] Keep upstream dispatch mechanics outside =poo-flow-core= ownership.
-- [ ] Move every consumed dispatch path from semantics proof to project-adapter
-  =ADMITTED= in RFC 45-120.
+- [X] Move the exact direct native dispatch paths needed by the first focused
+  Module kernel to =ADMITTED= in RFC 45-120.
 
 ** Semantic dispatch
 
@@ -540,8 +542,9 @@ The next RFC may define the first concrete POO Flow dispatch semantic values:
 It must keep them native POO values, preserve upstream mechanics, and avoid
 exposing a new ordinary user interface.
 
-No implementation may begin until the exact upstream adapter paths it consumes
-are =ADMITTED= by RFC 45-120.
+A focused implementation may consume only the exact direct native paths marked
+=ADMITTED= by RFC 45-120.  Any additional operation family remains blocked until
+it independently reaches that state.
 
 * References
 

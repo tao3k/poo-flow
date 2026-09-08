@@ -10,16 +10,20 @@ place.  Source-visible upstream proof is an admission gate, not the first
 project implementation layer.  Any older thin-adapter-first wording in this
 section is superseded and must not be used to order implementation.
 
-This RFC is an accepted correspondence method and a partially resolved,
-blocked admission record.
+This RFC is an accepted correspondence method and a partially admitted
+operation record.
 
-It does not admit a Module implementation, a project adapter, or any concrete
-project adapter.  The current Gerbil ASP provider did not publish a workspace
-source envelope, but read-only Git-object evidence at the pinned revision proves
-the public exports and semantics named below.
+It admits only the direct native operation paths named =ADMITTED= in the matrix
+below.  It does not admit a second project object model, a project dispatch or
+precedence adapter, recursive Module evaluation, or runtime effects.  The
+current Gerbil ASP provider did not publish a workspace source envelope, but
+read-only Git-object evidence at the pinned revision proves the public exports
+and semantics named below.
 
-Upstream operation proof is not project-adapter admission.  No operation path
-currently reaches =ADMITTED=.
+Upstream operation proof is not admission by itself.  The admitted paths also
+have one project responsibility mapping and focused executable evidence at
+=//scheme:gerbil_poo_operation_admission_test=.  Every operation not named in an
+=ADMITTED= matrix cell remains unavailable to the Module implementation.
 
 * Scope
 
@@ -88,10 +92,11 @@ An operation is admitted only when all of the following are proven:
 3. its public export path;
 4. its semantics at the pinned revision;
 5. the Module-domain responsibility that consumes it;
-6. why a project adapter is necessary;
-7. which upstream semantics the adapter is forbidden to duplicate;
+6. whether direct native use is sufficient or a project adapter is necessary;
+7. which upstream semantics direct use or an adapter is forbidden to duplicate;
 8. its structured failure and observation boundary;
-9. focused evidence that exercises the upstream operation through the adapter.
+9. focused evidence that exercises the upstream operation through the admitted
+   direct-use or adapter path.
 
 A source-visible symbol is only a candidate.  Documentation-only terminology
 is only explanatory evidence.  A theory concept is not an implementation
@@ -103,6 +108,7 @@ flowchart LR
   S["pinned upstream Git objects"]
   C["source-visible operation candidate"]
   E["public export and semantic correspondence"]
+  N["admitted direct native use"]
   A["admitted thin adapter"]
   M["Module-domain responsibility"]
   D["duplicated POO semantics"]
@@ -111,8 +117,11 @@ flowchart LR
   L -->|"supplies paths and candidates but cannot prove the target revision alone"| C
   S -->|"proves owner path, export declaration, and pinned semantics"| E
   C -->|"exact export identity and pinned semantics are still required"| E
-  E -->|"justifies only project-owned projection or contract adaptation"| A
+  E -->|"is already the exact Module-domain operation"| N
+  E -->|"justifies project-owned projection or contract adaptation"| A
+  N -->|"serves one explicit Module-domain responsibility"| M
   A -->|"serves one explicit Module-domain responsibility"| M
+  N -->|"admission fails if object, slot, prototype, or precedence behavior is copied"| D
   A -->|"admission fails if object, slot, prototype, or precedence behavior is copied"| D
   X -->|"remains blocked until exact source and export evidence exist"| E
 #+end_src
@@ -127,8 +136,9 @@ MISSING
   -> REVISION-MATCHED
   -> EXPORT-PROVEN
   -> SEMANTICS-PROVEN
-  -> ADAPTER-JUSTIFIED
-  -> ADMITTED
+  -> DIRECT-USE-JUSTIFIED --\
+                              -> ADMITTED
+  -> ADAPTER-JUSTIFIED ----/
 #+end_example
 
 Advancement is monotonic only with new evidence.  A later state cannot be
@@ -138,16 +148,18 @@ inferred from an earlier state.
 
 | Module-domain responsibility | Upstream owner evidence | Source-visible candidate identities | Current correspondence | Thin-adapter boundary |
 |------------------------------+-------------------------+-------------------------------------+------------------------+-----------------------|
-| Object construction and lifecycle | pinned =object.ss= with =export #t= | =object=, =make-object=, =instantiate-object!=, =uninstantiate-object!=, =object-instance=, =force-object= | =SEMANTICS-PROVEN=; Module adapter use remains unjustified | May project Module construction only after one exact responsibility mapping |
-| Object inspection and conversion | pinned =object.ss= with =export #t= | =.ref=, =.ref/cached=, =.get=, =.@=, =.all-slots=, =.alist=, =hash<-object= | =SEMANTICS-PROVEN=; ordinary Module interface use remains unproven | Diagnostic or receipt projection only; must not become the object model |
+| Native Module authoring | pinned =object.ss= with =export #t= | =.o= and =.def= | =ADMITTED= for direct native construction of the four-slot Module value | No construction adapter; do not wrap an alist, record, or manifest |
+| Required-slot projection | pinned =object.ss= with =export #t= | =.ref=, =.get=, =.@=, and =.slot?= | =ADMITTED= for direct typed projection of required and derived Module responsibilities | No second accessor or slot registry |
+| Native callable projection | pinned =object.ss= with =export #t= | =.call= | =ADMITTED= only for invoking a pure semantic operation already owned by an admitted receiver | It does not authorize runtime effects or a project dispatch engine |
+| Object lifecycle and diagnostic conversion | pinned =object.ss= with =export #t= | =object=, =make-object=, =instantiate-object!=, =uninstantiate-object!=, =object-instance=, =force-object=, =.ref/cached=, =.all-slots=, =.alist=, =hash<-object= | =SEMANTICS-PROVEN=; not admitted to the ordinary Module path | Diagnostic or upstream-internal use only; must not become the Module representation |
 | Raw object construction from host containers | pinned =object.ss= with =export #t= | =object<-alist=, =object<-hash=, =object<-fun= | =SEMANTICS-PROVEN= but rejected as the ordinary Module interface | No raw alist, hash, or function facade |
-| Slot discovery and projection | pinned =object.ss= with =export #t= | =.ref=, =.get=, =.@=, =.slot?=, =.has?=, =.all-slots=, =with-slots= | =SEMANTICS-PROVEN=; typed Module responsibility mapping remains unproven | May support typed responsibility projection without a second slot API |
 | Slot update | pinned =object.ss= with =export #t= | =.putslot!=, =.setslot!=, =.putdefault!=, =.def!=, =.put!=, =.set!= | =SEMANTICS-PROVEN=; mutation is excluded from pure composition | Runtime use requires an explicit effect boundary |
 | Slot deletion | =MISSING= | =MISSING= | =MISSING= | No project deletion operator may be invented |
-| Prototype ancestry and extension | pinned =object.ss= and =proto.ss= with =export #t= | =.mix=, =.extend=, =.+=, =.cc=, =instantiate-proto= | =SEMANTICS-PROVEN=; Module adapter mapping remains unproven | No project prototype engine may be implemented |
-| Composition and mix | pinned =object.ss= and =proto.ss= with =export #t= | =.mix=, =.extend=, =.+=, =compose-proto=, =compose-proto*=, =instantiate-protos= | =SEMANTICS-PROVEN=; correspondence to Profile composition remains intentionally unclaimed | =compose profiles= may not be mapped by name similarity |
-| Delegation and =super= | pinned =object.ss= with =export #t= | =object/slot-spec=, =$computed-slot-spec=, =.ref=, inherited computation through the slot-spec protocol | =SEMANTICS-PROVEN=; no ordinary user projection is admitted | No raw =(lambda (self super) ...)= ordinary interface |
-| Precedence | pinned =object.ss= with =export #t= | =compute-precedence-list!= using upstream =c3-compute-precedence-list= and the object supers graph | =SEMANTICS-PROVEN=; no direct project adapter is justified | No project priority or linearization engine may replace upstream semantics |
+| Type and Contract descriptor foundation | pinned =mop.ss= with =export #t= | =.defgeneric=, =define-type=, =Type=, =Type.=, =element?=, =validate=, and =raise-type-error= | =ADMITTED= through =src/module-system/types.ss= for pure classification, obligation, and admission behavior | Generic lookup remains upstream; evidence encoding remains project-owned |
+| Descriptor specialization | pinned =object.ss= with =export #t= | =.cc= | =ADMITTED= for immutable Type or Contract descriptor specialization | No mutation or alternate descriptor store |
+| Prototype ancestry and extension | pinned =object.ss= and =proto.ss= with =export #t= | =.mix= and =.extend= | =ADMITTED= for direct Module prototype derivation and composition; =.+=, =compose-proto=, =compose-proto*=, and =instantiate-protos= remain only =SEMANTICS-PROVEN= | No project prototype engine; =compose profiles= is not inferred by name similarity |
+| Delegation and =super= | pinned =object.ss= with =export #t= | =$computed-slot-spec= and inherited computation through the native slot-spec protocol | =ADMITTED= for internal derived-responsibility implementations and advanced native authoring only | No raw =(lambda (self super) ...)= ordinary user interface |
+| Precedence | pinned =object.ss= with =export #t= | native =compute-precedence-list!= and =c3-compute-precedence-list= reached through =.mix= | =ADMITTED= only by delegation to upstream while evaluating the admitted native prototype graph | No project priority or linearization engine may replace upstream semantics |
 
 * Module-domain responsibilities
 
@@ -178,6 +190,43 @@ A thin adapter is justified only for a project-owned semantic mismatch:
 It is not justified for convenience aliases, raw container conversion, hidden
 registries, alternative slot syntax, alternative prototype composition, or
 imperative mutation hidden behind a Profile operation.
+
+When the upstream operation already has the exact required semantics, direct
+native import is the admitted path.  Creating a pass-through adapter merely to
+advance the correspondence lattice is forbidden.
+
+* First executable admission evidence
+
+The first direct-use admission slice is exercised by:
+
+#+begin_example
+//scheme:gerbil_poo_operation_admission_test
+#+end_example
+
+The target is defined to run against the Bazel-resolved
+=github.com/mighty-gerbils/gerbil-poo@1c3225637525400341a09e958296962c10184ead=
+package.  Its test cases cover:
+
+- native =.o= and =.def= construction, =.ref=, =.get=, =.@=, =.slot?=, and
+  =.call=;
+- immutable =.cc= descriptor/object specialization;
+- a diamond built with =.extend= and =.mix= whose computed responsibility follows
+  upstream C3 and calls each inherited contribution once;
+- a second projection of that responsibility observes the upstream lazy cache;
+- =.defgeneric= and =define-type= dispatch, successful validation, and rejected
+  validation;
+- preservation of native =NoApplicableMethod= and invalid-precedence failure.
+
+This evidence deliberately does not define the production Module value.  It
+admits the exact upstream substrate on which that value may be implemented.
+
+The current development receipt uses
+=./.devenv/devenv-profile-exec gxtest
+t/gerbil-poo-operation-admission-test.ss= and passes all 15 checks.  A
+=bazelisk query= through the same launcher resolves the focused target.  The
+corresponding cold Bazel test build was interrupted before test execution when
+validation moved to the cached native path, so this RFC does not claim a Bazel
+test pass from that invocation.
 
 * Failure and observation boundary
 
@@ -234,7 +283,8 @@ Advanced extension remains native =gerbil-poo= object and prototype extension.
 - [ ] Resolve whether an upstream slot-deletion operation exists and is public.
 - [X] Separate diagnostic conversion helpers from the ordinary Module
   interface.
-- [ ] Prove structured failure behavior for every admitted operation.
+- [X] Preserve native missing-method, validation, and invalid-precedence failure
+  behavior in the focused direct-use test.
 
 ** Prototype algebra
 
@@ -242,15 +292,18 @@ Advanced extension remains native =gerbil-poo= object and prototype extension.
 - [X] Resolve composition and mix operations.
 - [X] Resolve delegation and =super= behavior.
 - [X] Resolve precedence behavior.
-- [ ] Prove that POO Flow does not implement substitute algorithms for any of
+- [X] Prove that the admitted path invokes upstream operations directly and does
+  not implement substitute algorithms for any of
   these families.
 
-** Adapter admission
+** Direct-use and adapter admission
 
-- [ ] Map each admitted operation to exactly one Module-domain responsibility.
-- [ ] Justify each adapter by a project-owned semantic mismatch.
-- [ ] Prove that the adapter preserves upstream semantics and identity.
-- [ ] Prove that ordinary composition remains pure and environment-free.
+- [X] Map each admitted operation to one Module-domain responsibility in the
+  correspondence matrix.
+- [X] Prefer direct native use when there is no project-owned semantic mismatch.
+- [X] Keep object, slot, generic, inherited-computation, and precedence mechanics
+  under their upstream identities.
+- [X] Exercise the admitted direct-use path without environment or runtime effects.
 - [ ] Produce focused development evidence through GSLPH without making GSLPH
   a product dependency.
 
@@ -331,7 +384,7 @@ The project foundation must satisfy all of these boundaries:
 
 * References
 
-- [[file:45-98-upstream-gerbil-poo-native-operations-and-project-adapter-boundary.org][RFC 45-98: upstream gerbil-poo operations and adapter boundary]]
+- [[file:45-98-gerbil-poo-native-boundary-and-poo-flow-adapter-minimization.org][RFC 45-98: upstream gerbil-poo operations and adapter boundary]]
 - [[file:45-99-module-domain-prototype-minimal-projection-and-derived-closure-contract.org][RFC 45-99: Module-domain prototype contract]]
 - [[file:45-110-recovery-observability-profile-projection-and-minimal-use-composition-surface.org][RFC 45-110: minimal composition surface]]
 - [[file:45-111-profile-ownership-naming-export-identity-and-composition-repository-boundaries.org][RFC 45-111: ownership and repository boundaries]]

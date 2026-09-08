@@ -6,10 +6,11 @@
 
 This RFC is an accepted semantic contract.
 
-It defines the minimum higher-order Module POO value.  It does not admit an
-implementation, freeze dispatch behavior, or add public syntax.  Implementation
-remains blocked until RFC 45-120 admits the exact thin-adapter paths used by the
-Module value.
+It defines the minimum higher-order Module POO value.  It does not implement the
+value, freeze public dispatch names, or add public syntax.  RFC 45-120 now admits
+the exact direct native operation substrate for a focused Module kernel; recursive
+imports, public dispatch values, and integration remain gated by the unchecked
+items below.
 
 * Scope
 
@@ -229,7 +230,7 @@ dependencies, execute runtime effects, or interpret clauses.
 - [X] Reject raw list, alist, hash, string, runtime-handle, and callback values
   as the ordinary representation of required slots.
 
-** Derived responsibilities
+** Derived-responsibility admission
 
 - [X] Keep reachability, ProfileBundle, conflict, provenance, and receipt values
   derived rather than duplicated required storage.
@@ -241,12 +242,12 @@ dependencies, execute runtime effects, or interpret clauses.
 
 ** Upstream adapter admission
 
-- [ ] Admit the =.def= and =.o= authoring path required by the Module value.
-- [ ] Admit =.extend= for responsibility-preserving derivation.
-- [ ] Admit =.mix= and =.+= only where the Module semantic contract requires
-  native prototype composition.
-- [ ] Admit =.get= and =.@= for typed semantic projection.
-- [ ] Prove that no adapter reproduces upstream precedence, inherited
+- [X] Admit the =.def= and =.o= authoring path required by the Module value.
+- [X] Admit =.extend= for responsibility-preserving derivation.
+- [X] Admit =.mix= where the Module semantic contract requires native prototype
+  composition; =.+= remains unadmitted.
+- [X] Admit =.get= and =.@= for typed semantic projection.
+- [X] Prove that no adapter reproduces upstream precedence, inherited
   computation, slot, or object semantics.
 
 ** Integration boundary

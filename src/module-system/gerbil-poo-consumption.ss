@@ -21,7 +21,8 @@
   "@gerbil_poo_sources//:source_resolution_receipt")
 
 (def +poo-flow-gerbil-poo-required-api+
-  '(.o .@ .ref .slot? .cc .def
+  '(.o .def .@ .get .ref .slot? .call
+    .cc .extend .mix $computed-slot-spec NoApplicableMethod?
     .defgeneric define-type
     Type Type. element? validate raise-type-error
     object? object<-alist))
