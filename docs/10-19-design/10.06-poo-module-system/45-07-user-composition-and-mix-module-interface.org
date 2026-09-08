@@ -1517,10 +1517,11 @@ installation paths or temporary output bases.
   =cd packages/proof/lean && direnv exec . lake build= returned exit =0= for
   =555= jobs.  Its only warning is the pre-existing =unnecessarySimpa= warning
   owned by =AgentRedTeamProofRegressionClosure.lean=.
-- Focused Scheme owner:
-  =direnv exec . bazelisk test //owner-map:scheme_owner_map_test --test_output=all --nocache_test_results=
-  returned exit =0=: =1/1= target, =2= suites, =15= cases, and =63= checks
-  (=15= owner-map checks plus =48= profile-composition checks).
+- Focused Scheme owner (historical execution): the predecessor owner-map
+  target returned exit =0= with =2= suites, =15= cases, and =63= checks.  The
+  maintained successor is
+  =//t/qualification/module-system:owner_map_tests=; it must be executed anew
+  for current acceptance.
 - AXLE closure mode:
   =cd packages/proof/python && uv run --extra axle poo-flow-axle-verify=
   with the repository-relative Lean root, module

@@ -1,0 +1,40 @@
+load("@rules_python//python:py_test.bzl", "py_test")
+
+package(default_visibility = ["//visibility:public"])
+
+py_test(
+    name = "shared_gerbil_capability_test",
+    srcs = ["shared_gerbil_capability_test.py"],
+    args = [
+        "$(rlocationpath @local_gerbil//:toolchain.receipt.json)",
+        "$(rlocationpath //scheme:gerbil_utils_package_receipt)",
+        "$(rlocationpath //scheme:gerbil_poo_package_receipt)",
+        "$(rlocationpath //scheme:asp_gerbil_scheme_package_receipt)",
+    ],
+    data = [
+        "//scheme:asp_gerbil_scheme_package_receipt",
+        "//scheme:gerbil_poo_package_receipt",
+        "//scheme:gerbil_utils_package_receipt",
+        "@local_gerbil//:toolchain.receipt.json",
+    ],
+    main = "shared_gerbil_capability_test.py",
+    python_version = "3.12",
+)
+
+py_test(
+    name = "shared_gerbil_capability_unit_test",
+    srcs = [
+        "shared_gerbil_capability_test.py",
+        "shared_gerbil_capability_unit_test.py",
+    ],
+    main = "shared_gerbil_capability_unit_test.py",
+    python_version = "3.12",
+)
+
+test_suite(
+    name = "tests",
+    tests = [
+        ":shared_gerbil_capability_test",
+        ":shared_gerbil_capability_unit_test",
+    ],
+)

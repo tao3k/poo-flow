@@ -71,19 +71,19 @@ def permissiveImplementationAdmission (row : OwnerMapRow) : Prop :=
   row.state = .implemented
 
 def exampleAuthority : OwnerAuthority where
-  sourcePath := fun _ => "src/module-system/owner-map-contract.ss"
-  sourceSymbol := fun _ => "poo-flow-module-system-owner-map-valid?"
-  testPath := fun _ => "t/module-system-owner-map-test.ss"
-  testSymbol := fun _ => "module-system-owner-map-tests"
-  buildTarget := fun _ => "//owner-map:module_system_sources"
+  sourcePath := fun _ => "parent/source.ss"
+  sourceSymbol := fun _ => "source-owner"
+  testPath := fun _ => "parent/test.ss"
+  testSymbol := fun _ => "test-owner"
+  buildTarget := fun _ => "//parent:source"
 
 def staleSelectorRow : OwnerMapRow where
   identity := .parentQualification
-  sourcePath := "src/module-system/owner-map-contract.ss"
+  sourcePath := "parent/source.ss"
   sourceSymbol := "stale-owner-selector"
-  testPath := "t/module-system-owner-map-test.ss"
-  testSymbol := "module-system-owner-map-tests"
-  buildTarget := "//owner-map:module_system_sources"
+  testPath := "parent/test.ss"
+  testSymbol := "test-owner"
+  buildTarget := "//parent:source"
   state := .implemented
   parentOwned := true
 

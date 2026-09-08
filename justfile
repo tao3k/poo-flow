@@ -6,7 +6,8 @@ scheme_compile := "//scheme:compile"
 scheme_dev_compile := "//scheme:dev_compile"
 scheme_dev_unit_tests := "//scheme:dev_unit_tests"
 scheme_tests := "//scheme:tests"
-gerbil_capability_tests := "//tools/bazel:shared_gerbil_capability_test"
+gerbil_capability_tests := "//t/qualification/gerbil-bazel:tests"
+module_system_owner_tests := "//t/qualification/module-system:owner_map_tests"
 scheme_performance_tests := "//scheme:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
 runtime_c_tests := "//bindings/runtime-c:runtime_c_tests"
@@ -73,7 +74,13 @@ test-gerbil-capability:
 # Validate POO Flow as a clean external Bzlmod dependency.
 [group('test')]
 test-external-bazel-module:
-    tools/ci/test_external_bazel_module.sh
+    python3 -m unittest discover -s t/qualification/external_bazel -p 'external_module_test.py' -v
+    python3 t/qualification/external_bazel/external_module.py
+
+# Validate the single source-owned RFC45 module-system ownership map.
+[group('test')]
+test-module-system-ownership:
+    {{ bazel }} test --test_output=errors {{ module_system_owner_tests }}
 
 # Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
 [group('test')]
@@ -122,7 +129,7 @@ test-performance:
 
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]
-check: query build test test-gerbil-capability test-external-bazel-module
+check: query build test test-gerbil-capability test-module-system-ownership test-external-bazel-module
 
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]

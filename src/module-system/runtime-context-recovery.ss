@@ -29,12 +29,12 @@
 
 ;; : (-> PooFlowDemandCellState PooFlowDemandCellState PooFlowDemandCellState)
 (def (poo-flow-demand-cell-transition current requested)
-  (match (cons current requested)
-    (['pending . 'realizing] 'realizing)
-    (['realizing . 'realized] 'realized)
-    (['realizing . 'failed] 'failed)
-    ([state . state] state)
-    (else 'invalid-transition)))
+  (cond
+   ((eq? current requested) current)
+   ((and (eq? current 'pending) (eq? requested 'realizing)) 'realizing)
+   ((and (eq? current 'realizing) (eq? requested 'realized)) 'realized)
+   ((and (eq? current 'realizing) (eq? requested 'failed)) 'failed)
+   (else 'invalid-transition)))
 
 ;; : (-> Condition Boolean Natural PooFlowRecoveryDecision)
 (def (poo-flow-recovery-decision condition continuable? retry-budget)

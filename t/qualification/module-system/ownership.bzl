@@ -1,0 +1,82 @@
+"""Single source of truth for RFC45 module-system qualification ownership."""
+
+OWNER_MAP_SCHEMA = "poo-flow.module-system-qualification-ownership.v1"
+
+DESCENDANT_BOUNDARIES = [
+    "packages/wendao-episteme",
+]
+
+OWNER_MAP_ROWS = [
+    {
+        "row_id": "rfc45-01-mix-module-expansion",
+        "rfc": "45-01",
+        "source_path": "src/module-system/profile-composition-use-syntax.ss",
+        "source_symbol": "use-composition",
+        "source_kind": "macro",
+        "test_path": "t/profile-composition-test.ss",
+        "test_symbol": "profile-composition-tests",
+        "target_name": "rfc45_01_mix_sources",
+    },
+    {
+        "row_id": "rfc45-02-g0-decision",
+        "rfc": "45-02",
+        "source_path": "src/module-system/g0-qualification.ss",
+        "source_symbol": "poo-flow-g0-resolve",
+        "source_kind": "function",
+        "test_path": "t/qualification/module-system/owner-contract-test.ss",
+        "test_symbol": "module-system-owner-contract-tests",
+        "target_name": "rfc45_02_sources",
+    },
+    {
+        "row_id": "rfc45-03-runtime-context-recovery",
+        "rfc": "45-03",
+        "source_path": "src/module-system/runtime-context-recovery.ss",
+        "source_symbol": "poo-flow-runtime-context",
+        "source_kind": "function",
+        "test_path": "t/qualification/module-system/owner-contract-test.ss",
+        "test_symbol": "module-system-owner-contract-tests",
+        "target_name": "rfc45_03_sources",
+    },
+    {
+        "row_id": "rfc45-04-observability-snapshot",
+        "rfc": "45-04",
+        "source_path": "src/module-system/observability.ss",
+        "source_symbol": "poo-flow-module-presentation-trace",
+        "source_kind": "function",
+        "test_path": "t/module-system-observability-test.ss",
+        "test_symbol": "module-system-observability-test",
+        "target_name": "rfc45_04_sources",
+    },
+    {
+        "row_id": "rfc45-05-lineage-cycle",
+        "rfc": "45-05",
+        "source_path": "src/module-system/composition-lineage.ss",
+        "source_symbol": "poo-flow-lineage-analysis",
+        "source_kind": "function",
+        "test_path": "t/qualification/module-system/owner-contract-test.ss",
+        "test_symbol": "module-system-owner-contract-tests",
+        "target_name": "rfc45_05_sources",
+    },
+    {
+        "row_id": "rfc45-06-gerbil-poo-consumption",
+        "rfc": "45-06",
+        "source_path": "src/module-system/gerbil-poo-consumption.ss",
+        "source_symbol": "poo-flow-gerbil-poo-consumption-manifest",
+        "source_kind": "function",
+        "test_path": "t/qualification/module-system/owner-contract-test.ss",
+        "test_symbol": "module-system-owner-contract-tests",
+        "target_name": "rfc45_06_sources",
+    },
+    {
+        "row_id": "rfc45-07-public-composition",
+        "rfc": "45-07",
+        "source_path": "src/module-system/profile-composition-use-syntax.ss",
+        "source_symbol": "use-composition",
+        "source_kind": "macro",
+        "test_path": "t/profile-composition-test.ss",
+        "test_symbol": "profile-composition-tests",
+        "target_name": "rfc45_07_composition_sources",
+    },
+]
+
+QUALIFICATION_TARGET = "//t/qualification/module-system:owner_map_tests"

@@ -25,7 +25,7 @@
 (def (poo-flow-productive-recursion? lineage productive-identities)
   (and (poo-flow-lineage-cycle? lineage)
        (ormap (lambda (identity)
-                (member identity productive-identities))
+                (if (member identity productive-identities) #t #f))
               lineage)))
 
 ;; : (-> [PooFlowLineageIdentity] [PooFlowLineageIdentity] PooFlowLineageAnalysis)

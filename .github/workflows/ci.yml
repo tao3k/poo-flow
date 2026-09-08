@@ -132,16 +132,16 @@ jobs:
       - name: Verify Bazel module lock
         run: bazelisk mod deps --lockfile_mode=error
 
-      - name: Validate external Bazel startup arguments
+      - name: Validate external Bazel qualification logic
         timeout-minutes: 2
-        run: bash tools/ci/test_external_bazel_module_args_test.sh
+        run: python3 -m unittest discover -s t/qualification/external_bazel -p 'external_module_test.py' -v
 
       - name: Validate POO Flow as an external Bazel module
         timeout-minutes: 12
         env:
           POO_FLOW_EXTERNAL_BAZEL_OUTPUT_BASE: ${{ runner.temp }}/poo-flow-external-bazel-output-base-v1
           POO_FLOW_EXTERNAL_TEST_MODE: full
-        run: tools/ci/test_external_bazel_module.sh
+        run: python3 t/qualification/external_bazel/external_module.py
 
   native-linux:
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.refresh_lock }}
@@ -159,8 +159,10 @@ jobs:
             dependency-timeout-minutes: 12
             compile-timeout-minutes: 8
             compile-runaway-timeout-seconds: 420
+            acceptance-timeout-minutes: 10
+            acceptance-runaway-timeout-seconds: 540
             external-module-mode: analysis
-            job-timeout-minutes: 20
+            job-timeout-minutes: 30
     steps: &native-steps
       - name: Checkout poo-flow
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -316,7 +318,7 @@ jobs:
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
         env:
           POO_FLOW_EXTERNAL_TEST_MODE: ${{ matrix.external-module-mode }}
-        run: tools/ci/test_external_bazel_module.sh
+        run: python3 t/qualification/external_bazel/external_module.py
 
       - name: Resolve shared Gerbil capability
         id: gerbil-native-abi
@@ -351,7 +353,7 @@ jobs:
         run: bazel build //scheme:dependency_packages
 
       - name: Validate shared Gerbil provider
-        run: bazel test --test_output=errors //tools/bazel:shared_gerbil_capability_test
+        run: bazel test --test_output=errors //t/qualification/gerbil-bazel:tests
 
       - name: Validate Bazel target graph
         run: bazel query //...
@@ -516,9 +518,9 @@ jobs:
 
       - name: Run Bazel acceptance suites
         id: bazel-acceptance
-        timeout-minutes: 3
+        timeout-minutes: ${{ matrix.acceptance-timeout-minutes }}
         env:
-          ACCEPTANCE_BUDGET_SECONDS: 150
+          ACCEPTANCE_BUDGET_SECONDS: ${{ matrix.acceptance-runaway-timeout-seconds }}
         shell: bash
         run: |
           set -euo pipefail
@@ -528,7 +530,8 @@ jobs:
 
           targets=(
             //scheme:tests
-            //tools/bazel:shared_gerbil_capability_test
+            //t/qualification/gerbil-bazel:tests
+            //t/qualification/module-system:owner_map_tests
             //bindings/runtime-c:runtime_c_tests
             //bindings/runtime-c/bundle-v1:bundle_v1_tests
           )
@@ -570,7 +573,7 @@ jobs:
 
       - name: Reject stale runtime-C Make routes
         if: runner.os == 'Linux'
-        run: tools/ci/check-runtime-c-build-boundary
+        run: python3 -m unittest t/qualification/runtime_c/build_boundary_test.py -v
 
       - name: Finalize runtime-C producer handoff
         if: runner.os == 'Linux'
@@ -675,6 +678,8 @@ jobs:
             external-module-mode: analysis
             compile-timeout-minutes: 15
             compile-runaway-timeout-seconds: 840
+            acceptance-timeout-minutes: 15
+            acceptance-runaway-timeout-seconds: 840
             job-timeout-minutes: 45
     steps: *native-steps
 
