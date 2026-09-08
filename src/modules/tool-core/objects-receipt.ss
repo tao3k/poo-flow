@@ -45,10 +45,15 @@
           (poo-flow-session-alist-ref action-bundle 'diagnostics '()))
          (diagnostics
           (append (poo-flow-session-alist-ref summary 'diagnostics '())
-                  action-diagnostics)))
+                  action-diagnostics))
+         ;; Keep lexical inputs distinct from `.o` fixed-point slot bindings.
+         (validation-id-value validation-id)
+         (diagnostic-values diagnostics)
+         (metadata-value
+          (if (null? maybe-metadata) '() (car maybe-metadata))))
     (.o (kind +poo-flow-tool-core-policy-validation-receipt-kind+)
         (schema 'poo-flow.modules.tool-core.policy-catalog-validation.v1)
-        (validation-id validation-id)
+        (validation-id validation-id-value)
         (catalog-ref (poo-flow-tool-catalog-ref catalog))
         (catalog-tool-count (poo-flow-tool-catalog-tool-count catalog))
         (catalog-tool-refs (poo-flow-tool-catalog-tool-refs catalog))
@@ -63,12 +68,12 @@
          (poo-flow-session-alist-ref summary 'sandbox-required-tool-refs '()))
         (action-mismatch-grants
          (poo-flow-session-alist-ref action-bundle 'rows '()))
-        (valid? (null? diagnostics))
-        (diagnostic-count (length diagnostics))
-        (diagnostics diagnostics)
+        (valid? (null? diagnostic-values))
+        (diagnostic-count (length diagnostic-values))
+        (diagnostics diagnostic-values)
         (runtime-owner "marlin-agent-core")
         (runtime-executed #f)
-        (metadata (if (null? maybe-metadata) '() (car maybe-metadata))))))
+        (metadata metadata-value))))
 
 ;; : (-> Object Boolean)
 (def (poo-flow-tool-policy-catalog-validation-receipt? value)

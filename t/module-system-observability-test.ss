@@ -2,7 +2,9 @@
 ;;; Boundary: tests verify strict module-system observability traces.
 ;;; Invariant: trace construction never dereferences POO slots.
 
-(import (only-in :std/test
+(import :gerbil/gambit
+        (only-in :std/srfi/13 string-suffix?)
+        (only-in :std/test
                  check
                  check-eq?
                  check-equal?
@@ -21,6 +23,24 @@
 ;; : (-> Symbol Alist Value)
 (def (module-observability-test-alist-value key rows)
   (cdr (assoc key rows)))
+
+;; Native Scheme owns the source gate as well as the observations.  The walk is
+;; deliberately rooted at `src/` and reads `.ss` files without expanding them.
+(def (module-observability-source-files directory)
+  (apply append
+         (map (lambda (name)
+                (let (path (path-expand name directory))
+                  (cond
+                   ((eq? (file-info-type (file-info path)) 'directory)
+                    (module-observability-source-files path))
+                   ((string-suffix? ".ss" name) (list path))
+                   (else '()))))
+              (directory-files directory))))
+
+(def (module-observability-source-observations path)
+  (poo-flow-poo-slot-authoring-file-observations
+   (string->symbol path)
+   path))
 
 ;; : (-> Unit TestSuite)
 ;;; This suite protects module observability receipts used to debug expansion
@@ -141,4 +161,34 @@
                        (cons 'runtime-executed #f)))
         (check-equal? (poo-flow-poo-slot-authoring-diagnostics
                        (list good))
-                      '())))))
+                      '())))
+    (test-case "reader-native source inspection catches both POO slot spellings"
+      (let* ((source
+              "(.o values: values safe: safe-value (before before) (after after-value) diagnostics: (reverse diagnostics))\n(.def Prototype policy: policy (result result-value))")
+             (observations
+              (poo-flow-poo-slot-authoring-port-observations
+               'synthetic-source
+               (open-input-string source))))
+        (check-equal?
+         (poo-flow-poo-slot-authoring-statuses observations)
+         '(self-referential-slot-initializer
+           ok
+           self-referential-slot-initializer
+           ok
+           self-referential-slot-initializer
+           self-referential-slot-initializer
+           ok))
+        (check-equal?
+         (map (lambda (diagnostic)
+                (module-observability-test-alist-value 'slot diagnostic))
+              (poo-flow-poo-slot-authoring-diagnostics observations))
+         '(values before diagnostics policy))))
+    (test-case "all repository POO source slots pass the native authoring gate"
+      (let* ((paths (module-observability-source-files "src"))
+             (observations
+              (apply append
+                     (map module-observability-source-observations paths))))
+        (check-equal? (pair? paths) #t)
+        (check-equal?
+         (poo-flow-poo-slot-authoring-diagnostics observations)
+         '())))))

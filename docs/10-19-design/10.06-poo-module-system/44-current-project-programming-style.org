@@ -489,7 +489,11 @@ object-local slot values already materialized by =.ref=.
    Do not use instance mutation as a policy-evolution mechanism.
 6. Keep slot names distinct from lexical value bindings in dynamic POO forms.
    Public macros must preserve hygiene and generate distinct value bindings so
-   a slot cannot recursively force itself through a same-name capture.
+   a slot cannot recursively force itself through a same-name capture. This
+   applies to both =slot: initializer= and =(slot initializer)= spellings.
+   =t/module-system-observability-test.ss= is the reader-native source gate:
+   it scans =src/**/*.ss= through the module-system authoring observations and
+   must report zero diagnostics without expanding or realizing any POO object.
 7. Use =std/lazy= only for a pure deferred calculation that is not naturally a
    POO slot. It is a Scheme control-plane mechanism, not a runtime concurrency
    primitive.

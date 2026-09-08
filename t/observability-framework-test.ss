@@ -188,6 +188,102 @@
                          PooFlowObservationProjectionError?)
         (check-equal? (get-output-string port) "")))
 
+    (test-case "bounded call tracing rejects a shadowed core procedure before invocation"
+      (let* ((policy (poo-flow-debug-call-policy 'tool-policy 8))
+             (shadowed-values '(not a procedure))
+             (port (open-output-string))
+             (captured
+              (with-exception-catcher
+               (lambda (failure) failure)
+               (lambda ()
+                 (call-with-poo-flow-debug-trace
+                  policy 'unique-symbols-return shadowed-values '(seen values)
+                  port: port)))))
+        (check-equal? (PooFlowDebugCallAnomaly? captured) #t)
+        (check-equal?
+         (.ref (PooFlowDebugCallAnomaly-receipt captured) 'operator-kind)
+         'pair)
+        (check-equal?
+         (.ref (PooFlowDebugCallAnomaly-receipt captured) 'reason)
+         'non-procedure-operator)
+        (check-equal? (framework-contains? (get-output-string port)
+                                           "non-procedure-operator") #t)
+        (check-equal? (framework-contains? (get-output-string port)
+                                           "not a procedure") #f)))
+
+    (test-case "bounded call tracing preserves multiple values through upstream trace"
+      (let* ((policy (poo-flow-debug-call-policy 'multiple-values 8))
+             (port (open-output-string))
+             (result
+              (call-with-values
+                (lambda ()
+                  (call-with-poo-flow-debug-trace
+                   policy 'return-pair
+                   (lambda (left right) (values left right))
+                   '(left right)
+                   port: port))
+                list)))
+        (check-equal? result '(left right))
+        (let (output (get-output-string port))
+          (check-equal? (framework-contains? output "poo-flow-debug-call") #t)
+          (check-equal? (framework-contains? output "call-returned") #t))))
+
+    (test-case "bounded call tracing rejects a repeated call identity before recursion"
+      (let* ((policy (poo-flow-debug-call-policy 'cycle 8))
+             (port (open-output-string))
+             (captured #f))
+        (with-catch
+         (lambda (failure) (set! captured failure))
+         (lambda ()
+           (call-with-poo-flow-debug-trace
+            policy 'cycle-edge
+            (lambda ()
+              (call-with-poo-flow-debug-trace
+               policy 'cycle-edge (lambda () 'unreachable) '()
+               port: port))
+            '()
+            port: port)))
+        (check-equal? (PooFlowDebugCallAnomaly? captured) #t)
+        (check-equal?
+         (.ref (PooFlowDebugCallAnomaly-receipt captured) 'reason)
+         'recursive-call-cycle)))
+
+    (test-case "bounded call tracing preserves exceptions and enforces depth"
+      (let* ((policy (poo-flow-debug-call-policy 'bounded 1))
+             (private-marker (list 'synthetic-private-exception-canary))
+             (exception-port (open-output-string))
+             (captured
+              (with-exception-catcher
+               (lambda (failure) failure)
+               (lambda ()
+                 (call-with-poo-flow-debug-trace
+                  policy 'raises
+                  (lambda () (raise private-marker))
+                  '()
+                  port: exception-port))))
+             (depth-port (open-output-string))
+             (depth-failure
+              (with-exception-catcher
+               (lambda (failure) failure)
+               (lambda ()
+                 (call-with-poo-flow-debug-trace
+                  policy 'outer
+                  (lambda ()
+                    (call-with-poo-flow-debug-trace
+                     policy 'inner (lambda () 'unreachable) '()
+                     port: depth-port))
+                  '()
+                  port: depth-port)))))
+        (check-equal? (eq? captured private-marker) #t)
+        (check-equal?
+         (framework-contains? (get-output-string exception-port)
+                              "synthetic-private-exception-canary")
+         #f)
+        (check-equal? (PooFlowDebugCallAnomaly? depth-failure) #t)
+        (check-equal?
+         (.ref (PooFlowDebugCallAnomaly-receipt depth-failure) 'reason)
+         'maximum-call-depth-exceeded)))
+
     (test-case "memory policy comparison is a pure native POO receipt"
       (let* ((policy
               (poo-flow-debug-memory-policy

@@ -70,10 +70,10 @@
 (def (poo-flow-contract-obligations slots slot-present? slot-ref)
   (lambda (candidate _context)
     (let (slot-failure
-          (lambda (slot-name reason)
+          (lambda (slot-name reason-value)
             (.o kind: 'poo-flow.contract.slot-failure
                 slot: slot-name
-                reason: reason)))
+                reason: reason-value)))
       (filter-map
        (lambda (slot-contract)
          (let* ((slot-name (poo-flow-contract-slot-name slot-contract))

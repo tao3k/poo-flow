@@ -101,7 +101,9 @@
    object
    lenses
    (lambda (family descriptor-name value)
-     (.o (kind 'poo-indexed-family-descriptor)
-         (family family)
-         (name descriptor-name)
-         (value value)))))
+     (let ((family-value family)
+           (descriptor-value value))
+       (.o (kind 'poo-indexed-family-descriptor)
+           (family family-value)
+           (name descriptor-name)
+           (value descriptor-value))))))

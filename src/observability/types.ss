@@ -23,6 +23,8 @@
         PooFlowObservationContract
         PooFlowAdmissionObservationContract
         PooFlowObservationSummaryContract
+        PooFlowDebugCallPolicyContract
+        PooFlowDebugCallReceiptContract
         PooFlowDebugMemoryPolicyContract
         PooFlowDebugMemorySampleContract
         PooFlowDebugMemoryReceiptContract
@@ -359,6 +361,28 @@
   proto: (.o)
   responsibilities: (.o accepted?: ObservationBoolean detail-complete?: ObservationBoolean
                         failure-count: ObservationNatural inspected-count: ObservationNatural))
+
+;;; Boundary: traced calls carry an explicit depth budget.  The policy is a
+;;; native POO value rather than an ambient global tracer setting.
+(define-type (PooFlowDebugCallPolicyContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-call-policy
+  proto: (.o)
+  responsibilities: (.o label: ObservationSymbol
+                        maximum-depth: ObservationNatural))
+
+;;; Boundary: call tracing retains only structural identities and categories.
+;;; Arguments, results, receivers, and exceptions never enter this receipt.
+(define-type (PooFlowDebugCallReceiptContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-call-receipt
+  proto: (.o)
+  responsibilities: (.o policy: PooFlowDebugCallPolicyContract
+                        call: ObservationSymbol
+                        depth: ObservationNatural
+                        active-path: ObservationPath
+                        operator-kind: ObservationSymbol
+                        outcome: ObservationSymbol
+                        accepted?: ObservationBoolean
+                        reason: ObservationSymbol))
 
 ;;; Boundary: a debug memory policy is an explicit POO value. The process
 ;;; launcher owns the independent Gambit heap ceiling used before this module

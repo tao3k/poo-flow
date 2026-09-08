@@ -12,11 +12,11 @@
 
 ;; : (-> [PooSessionToolGrant] [Symbol])
 (def (poo-flow-tool-policy-grant-tool-refs grants)
-  (match grants
-    ([] '())
-    ([grant . rest]
-     (cons (poo-flow-session-tool-grant-tool-ref grant)
-           (poo-flow-tool-policy-grant-tool-refs rest)))))
+  (cond
+   ((null? grants) '())
+   (else
+    (cons (poo-flow-session-tool-grant-tool-ref (car grants))
+          (poo-flow-tool-policy-grant-tool-refs (cdr grants))))))
 
 ;; : (-> PooSessionPolicy [PooSessionToolGrant])
 (def (poo-flow-tool-policy-grants policy)
@@ -27,25 +27,31 @@
 
 ;; : (-> [Symbol] [Symbol] [Symbol])
 (def (poo-flow-tool-unique-symbols values seen)
-  (match values
-    ([] '())
-    ([value . rest]
-     (if (or (eq? value '*) (member value seen))
-       (poo-flow-tool-unique-symbols rest seen)
-       (cons value
-             (poo-flow-tool-unique-symbols rest (cons value seen)))))))
+  (cond
+   ((null? values) '())
+   ((or (eq? (car values) '*)
+        (member (car values) seen))
+    (poo-flow-tool-unique-symbols (cdr values) seen))
+   (else
+    (cons (car values)
+          (poo-flow-tool-unique-symbols (cdr values)
+                                        (cons (car values) seen))))))
 
 ;; : (-> [Symbol] [Symbol] [Symbol] (Values [Symbol] [Symbol]))
-(def (poo-flow-tool-unique-symbols/accumulate values seen values-rev)
-  (match values
-    ([] (values seen values-rev))
-    ([value . rest]
-     (if (or (eq? value '*) (member value seen))
-       (poo-flow-tool-unique-symbols/accumulate rest seen values-rev)
-       (poo-flow-tool-unique-symbols/accumulate
-        rest
-        (cons value seen)
-        (cons value values-rev))))))
+(def (poo-flow-tool-unique-symbols/accumulate remaining seen values-rev)
+  (cond
+   ((null? remaining) (values seen values-rev))
+   ((or (eq? (car remaining) '*)
+        (member (car remaining) seen))
+    (poo-flow-tool-unique-symbols/accumulate
+     (cdr remaining)
+     seen
+     values-rev))
+   (else
+    (poo-flow-tool-unique-symbols/accumulate
+     (cdr remaining)
+     (cons (car remaining) seen)
+     (cons (car remaining) values-rev)))))
 
 ;; : (-> [Symbol] [Symbol] [Symbol])
 (def (poo-flow-tool-merge-policy-tool-refs agent-tool-refs hook-tool-refs)

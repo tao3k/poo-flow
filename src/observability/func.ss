@@ -9,6 +9,9 @@
         poo-flow-observation-admission-explanation
         poo-flow-observation-admission-summary
         poo-flow-observation-summary-sexp
+        poo-flow-debug-call-policy
+        poo-flow-debug-call-receipt
+        poo-flow-debug-call-receipt-sexp
         poo-flow-debug-memory-policy
         poo-flow-debug-memory-sample
         poo-flow-debug-memory-receipt
@@ -141,6 +144,55 @@
         (list 'detail-complete? (.ref summary 'detail-complete?))
         (list 'failure-count (.ref summary 'failure-count))
         (list 'inspected-count (.ref summary 'inspected-count))))
+
+;; : (-> Symbol Natural PooFlowDebugCallPolicy)
+(def (poo-flow-debug-call-policy label-value maximum-depth-value)
+  (unless (> maximum-depth-value 0)
+    (error "POO Flow debug call depth must be positive" maximum-depth-value))
+  (validate PooFlowDebugCallPolicyContract
+    (.o (:: @ (.ref PooFlowDebugCallPolicyContract 'proto))
+        label: label-value
+        maximum-depth: maximum-depth-value)))
+
+;; : (-> PooFlowDebugCallPolicy Symbol Natural [Symbol] Symbol Symbol PooFlowDebugCallReceipt)
+(def (poo-flow-debug-call-receipt policy call-value depth-value path-value
+                                  operator-kind-value outcome-value)
+  (validate PooFlowDebugCallPolicyContract policy)
+  (let* ((policy-value policy)
+         (accepted-value (memq outcome-value '(admitted returned)))
+         (reason-value
+          (case outcome-value
+            ((admitted) 'call-admitted)
+            ((returned) 'call-returned)
+            ((raised) 'operator-raised)
+            ((rejected-non-procedure) 'non-procedure-operator)
+            ((rejected-cycle) 'recursive-call-cycle)
+            ((rejected-depth) 'maximum-call-depth-exceeded)
+            (else 'invalid-call-outcome))))
+    (validate PooFlowDebugCallReceiptContract
+      (.o (:: @ (.ref PooFlowDebugCallReceiptContract 'proto))
+          policy: policy-value
+          call: call-value
+          depth: depth-value
+          active-path: path-value
+          operator-kind: operator-kind-value
+          outcome: outcome-value
+          accepted?: (if accepted-value #t #f)
+          reason: reason-value))))
+
+;;; The renderer is deliberately closed: it cannot force or retain arguments,
+;;; results, a POO receiver, or an exception while reporting a bad call edge.
+(def (poo-flow-debug-call-receipt-sexp receipt)
+  (validate PooFlowDebugCallReceiptContract receipt)
+  (list 'debug-call-observation
+        (list 'label (.ref (.ref receipt 'policy) 'label))
+        (list 'call (.ref receipt 'call))
+        (list 'depth (.ref receipt 'depth))
+        (list 'active-path (.ref receipt 'active-path))
+        (list 'operator-kind (.ref receipt 'operator-kind))
+        (list 'outcome (.ref receipt 'outcome))
+        (list 'accepted? (.ref receipt 'accepted?))
+        (list 'reason (.ref receipt 'reason))))
 
 ;;; Public policy construction remains POO-native. The defaults affect debug
 ;;; observation only; they do not replace a launch-time Gambit heap ceiling.

@@ -41,9 +41,10 @@
                  (cons (cons key full-identity) seen))))
          '()
          entries))
-    (.o (kind 'poo-flow.runtime-v0.identity-table.1)
-        (entries entries)
-        (collision-checked? (list? validated-identity-index)))))
+    (let (entry-values entries)
+      (.o (kind 'poo-flow.runtime-v0.identity-table.1)
+          (entries entry-values)
+          (collision-checked? (list? validated-identity-index))))))
 
 (def (poo-flow-runtime-v0-event event-kind-value flags-value sequence-value
                                 event-identity-value correlation-identity-value

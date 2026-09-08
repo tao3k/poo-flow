@@ -125,75 +125,75 @@
 
 ;; P1: runtime-owned, Scheme-declared primitives.
 ;; : (-> Symbol [Symbol] [Symbol] PooScenarioGapIntent)
-(def (poo-flow-stream-intent name event-classes projection-labels)
+(def (poo-flow-stream-intent name-value event-classes-value projection-labels-value)
   (.o kind: 'runtime.stream
       priority: 'P1
-      name: name
-      event-classes: event-classes
-      projection-labels: projection-labels))
+      name: name-value
+      event-classes: event-classes-value
+      projection-labels: projection-labels-value))
 
 ;; : (-> Symbol Symbol Integer Symbol PooScenarioGapIntent)
-(def (poo-flow-retry-intent name node attempts backoff)
+(def (poo-flow-retry-intent name-value node-value attempts-value backoff-value)
   (.o kind: 'runtime.retry
       priority: 'P1
-      name: name
-      node: node
-      attempts: attempts
-      backoff: backoff))
+      name: name-value
+      node: node-value
+      attempts: attempts-value
+      backoff: backoff-value))
 
 ;; : (-> Symbol Symbol Integer PooScenarioGapIntent)
-(def (poo-flow-timeout-intent name node timeout-ms)
+(def (poo-flow-timeout-intent name-value node-value timeout-ms-value)
   (.o kind: 'runtime.timeout
       priority: 'P1
-      name: name
-      node: node
-      timeout-ms: timeout-ms))
+      name: name-value
+      node: node-value
+      timeout-ms: timeout-ms-value))
 
 ;; : (-> Symbol Symbol Symbol Symbol PooScenarioGapIntent)
-(def (poo-flow-error-route-intent name node after-retries target)
+(def (poo-flow-error-route-intent name-value node-value after-retries-value target-value)
   (.o kind: 'runtime.error-route
       priority: 'P1
-      name: name
-      node: node
-      after-retries: after-retries
-      target: target))
+      name: name-value
+      node: node-value
+      after-retries: after-retries-value
+      target: target-value))
 
 ;; : (-> Symbol Symbol Symbol Symbol PooScenarioGapIntent)
-(def (poo-flow-replay-fork-intent name checkpoint-key fork-key policy)
+(def (poo-flow-replay-fork-intent name-value checkpoint-key-value fork-key-value policy-value)
   (.o kind: 'runtime.replay-fork
       priority: 'P1
-      name: name
-      checkpoint-key: checkpoint-key
-      fork-key: fork-key
-      policy: policy))
+      name: name-value
+      checkpoint-key: checkpoint-key-value
+      fork-key: fork-key-value
+      policy: policy-value))
 
 ;; : (-> Symbol Symbol Symbol Symbol PooScenarioGapIntent)
-(def (poo-flow-store-scope-intent name store-key scope access)
+(def (poo-flow-store-scope-intent name-value store-key-value scope-value access-value)
   (.o kind: 'runtime.store-scope
       priority: 'P1
-      name: name
-      store-key: store-key
-      scope: scope
-      access: access))
+      name: name-value
+      store-key: store-key-value
+      scope: scope-value
+      access: access-value))
 
 ;; : (-> Symbol [Symbol] [Symbol] PooScenarioGapIntent)
-(def (poo-flow-observability-intent name labels receipt-keys)
+(def (poo-flow-observability-intent name-value labels-value receipt-keys-value)
   (.o kind: 'runtime.observability
       priority: 'P1
-      name: name
-      labels: labels
-      receipt-keys: receipt-keys))
+      name: name-value
+      labels: labels-value
+      receipt-keys: receipt-keys-value))
 
 ;; P2: production evolution hardening.
 ;; : (-> Symbol Symbol Symbol Symbol Symbol PooScenarioGapIntent)
-(def (poo-flow-state-version-intent name state-key from-version to-version drain-policy)
+(def (poo-flow-state-version-intent name-value state-key-value from-version-value to-version-value drain-policy-value)
   (.o kind: 'profile.state-version
       priority: 'P2
-      name: name
-      state-key: state-key
-      from-version: from-version
-      to-version: to-version
-      drain-policy: drain-policy))
+      name: name-value
+      state-key: state-key-value
+      from-version: from-version-value
+      to-version: to-version-value
+      drain-policy: drain-policy-value))
 
 ;; : (-> Symbol [PooScenarioGapIntent] [PooScenarioGapIntent] [PooScenarioGapIntent] PooScenarioGapPlan)
 (def (poo-flow-scenario-gap-plan name p0 p1 p2)

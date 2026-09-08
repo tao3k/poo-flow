@@ -40,6 +40,10 @@
         poo-flow-poo-slot-authoring-status
         poo-flow-poo-slot-authoring-observation/alist
         poo-flow-poo-slot-authoring-observations
+        poo-flow-poo-slot-authoring-datum-bindings
+        poo-flow-poo-slot-authoring-datum-observations
+        poo-flow-poo-slot-authoring-port-observations
+        poo-flow-poo-slot-authoring-file-observations
         poo-flow-poo-slot-authoring-summary-kind
         poo-flow-poo-slot-authoring-observation-ok?
         poo-flow-poo-slot-authoring-statuses
@@ -182,11 +186,29 @@
    runtime-executed?)
   transparent: #t)
 
+;;; Quoted data cannot dispatch a POO slot.  Every other occurrence is treated
+;;; conservatively as source-visible until a future syntax-object walker can
+;;; prove a nearer lexical binder.  This covers direct references and nested
+;;; forms such as `(reverse diagnostics)` without expanding or evaluating code.
+;; : (-> Symbol Value Boolean)
+(def (poo-flow-poo-slot-authoring-identifier-reference? identifier datum)
+  (cond
+   ((symbol? datum) (eq? identifier datum))
+   ((not (pair? datum)) #f)
+   ((and (memq (car datum) '(quote quasiquote syntax quasisyntax))
+         (pair? (cdr datum)))
+    #f)
+   (else
+    (or (poo-flow-poo-slot-authoring-identifier-reference?
+         identifier (car datum))
+        (poo-flow-poo-slot-authoring-identifier-reference?
+         identifier (cdr datum))))))
+
 ;; : (-> Symbol Value Boolean)
 (def (poo-flow-poo-slot-authoring-self-reference? slot initializer)
   (and (symbol? slot)
-       (symbol? initializer)
-       (eq? slot initializer)))
+       (poo-flow-poo-slot-authoring-identifier-reference?
+        slot initializer)))
 
 ;; : [Symbol]
 (def +poo-flow-poo-slot-authoring-primitive-slots+
@@ -282,6 +304,137 @@
           scope
           slot-initializer))
        slot-initializers))
+
+;;; Read-only source inspection recognizes both POO-native slot spellings:
+;;; `slot: initializer` and `(slot initializer)`.  It operates on reader data,
+;;; never expands `.o`/`.def`, constructs a POO object, or evaluates an
+;;; initializer.  In particular, a lexical spelling such as `values: values`
+;;; is observable before POO can reinterpret the right hand identifier as a
+;;; lazy self-slot lookup.
+;; : (forall (a) (-> [a] [(Pair Symbol a)]))
+;; : (-> List [Pair])
+(def (poo-flow-poo-slot-authoring-form-bindings elements)
+  (cond
+   ((null? elements) '())
+   ((not (pair? elements)) '())
+   ((and (keyword? (car elements))
+         (pair? (cdr elements)))
+    (cons (cons (string->symbol (keyword->string (car elements)))
+                (cadr elements))
+          (poo-flow-poo-slot-authoring-form-bindings (cddr elements))))
+   ((and (pair? (car elements))
+         (symbol? (caar elements))
+         (pair? (cdar elements))
+         (null? (cddar elements)))
+    (cons (cons (caar elements) (cadar elements))
+          (poo-flow-poo-slot-authoring-form-bindings (cdr elements))))
+   (else
+    (poo-flow-poo-slot-authoring-form-bindings (cdr elements)))))
+
+;; : (forall (a) (-> a [(Pair Symbol a)]))
+;; poo-flow-poo-slot-authoring-datum-bindings
+;;   : (-> Value [Pair])
+;;   | doc m%
+;;       Read the POO slot/initializer bindings nested in one Scheme datum
+;;       without expanding the form, realizing an object, or evaluating code.
+;;       The specialized keyword and parenthesized branches preserve source
+;;       order and return only source-shaped pairs for the observation owner.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-poo-slot-authoring-datum-bindings
+;;        '(.o values: values (safe safe-value)))
+;;       ;; => ((values . values) (safe . safe-value))
+;;       ```
+;;     %
+(def (poo-flow-poo-slot-authoring-datum-bindings datum)
+  (cond
+   ((not (pair? datum)) '())
+   ((and (memq (car datum) '(quote quasiquote syntax quasisyntax))
+         (pair? (cdr datum)))
+    '())
+   (else
+    (let* ((head (car datum))
+           (object-elements
+            (cond
+             ((eq? head '.o) (cdr datum))
+             ((and (eq? head '.def) (pair? (cdr datum))) (cddr datum))
+             (else '())))
+           (local-bindings
+            (poo-flow-poo-slot-authoring-form-bindings object-elements)))
+      (append local-bindings
+              (poo-flow-poo-slot-authoring-datum-bindings (car datum))
+              (poo-flow-poo-slot-authoring-datum-bindings (cdr datum)))))))
+
+;; : (forall (a) (-> Symbol a [Alist]))
+;; poo-flow-poo-slot-authoring-datum-observations
+;;   : (-> Symbol Value [Alist])
+;;   | doc m%
+;;       Project one source datum's POO slot bindings into strict authoring
+;;       observations without expanding or evaluating the source.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-poo-slot-authoring-datum-observations
+;;        'source '(.o value: value))
+;;       ;; => one self-referential-slot-initializer observation
+;;       ```
+;;     %
+(def (poo-flow-poo-slot-authoring-datum-observations scope datum)
+  (poo-flow-poo-slot-authoring-observations
+   scope
+   (poo-flow-poo-slot-authoring-datum-bindings datum)))
+
+;; : (-> Symbol InputPort [Alist])
+;; poo-flow-poo-slot-authoring-port-observations
+;;   : (-> Symbol InputPort [Alist])
+;;   | doc m%
+;;       Read every datum from a Scheme port and preserve source order while
+;;       projecting POO slot authoring observations.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-poo-slot-authoring-port-observations
+;;        'source (open-input-string "(.o value: value)"))
+;;       ;; => one self-referential-slot-initializer observation
+;;       ```
+;;     %
+(def (poo-flow-poo-slot-authoring-port-observations scope port)
+  (let loop ((observations '()))
+    (let (datum (read port))
+      (if (eof-object? datum)
+        (reverse observations)
+        (let collect
+             ((remaining
+               (poo-flow-poo-slot-authoring-datum-observations scope datum))
+              (next observations))
+          (if (null? remaining)
+            (loop next)
+            (collect (cdr remaining) (cons (car remaining) next))))))))
+
+;; : (-> Symbol PathString [Alist])
+;; poo-flow-poo-slot-authoring-file-observations
+;;   : (-> Symbol PathString [Alist])
+;;   | doc m%
+;;       Open one Scheme source file and return its reader-native POO authoring
+;;       observations without loading the module or realizing an object.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-poo-slot-authoring-file-observations
+;;        'module "src/module-system/ability.ss")
+;;       ;; => ordered authoring observations
+;;       ```
+;;     %
+(def (poo-flow-poo-slot-authoring-file-observations scope path)
+  (call-with-input-file
+   path
+   (lambda (port)
+     (poo-flow-poo-slot-authoring-port-observations scope port))))
 
 ;; : (-> Unit PooFlowPooSlotAuthoringSummaryKind)
 (def poo-flow-poo-slot-authoring-summary-kind

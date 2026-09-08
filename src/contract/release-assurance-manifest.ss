@@ -271,12 +271,14 @@
 
 (def (duplicate-ids values id-of)
   (let (sorted (assurance-sort values id-of))
-    (filter-map
-     (lambda (adjacent)
-       (let ((previous-id (id-of (car adjacent)))
-             (current-id (id-of (cdr adjacent))))
-         (and (equal? previous-id current-id) current-id)))
-     (map cons sorted (cdr sorted)))))
+    (if (or (null? sorted) (null? (cdr sorted)))
+      '()
+      (filter-map
+       (lambda (adjacent)
+         (let ((previous-id (id-of (car adjacent)))
+               (current-id (id-of (cdr adjacent))))
+           (and (equal? previous-id current-id) current-id)))
+       (map cons sorted (cdr sorted))))))
 
 (def (nonempty-id? value)
   (or (symbol? value)
@@ -377,10 +379,11 @@
                      (nonempty-id?
                       (poo-flow-assurance-abi-decision-review abi)))
           (reject! 'invalid-abi-decision '(abi-decision) abi))))
-    (.o (kind 'poo-flow.release-assurance-validation-receipt.v1)
-        (accepted? (null? diagnostics))
-        (code (if (null? diagnostics) 'accepted 'rejected))
-        (diagnostics (reverse diagnostics)))))
+    (let (diagnostic-values (reverse diagnostics))
+      (.o (kind 'poo-flow.release-assurance-validation-receipt.v1)
+          (accepted? (null? diagnostic-values))
+          (code (if (null? diagnostic-values) 'accepted 'rejected))
+          (diagnostics diagnostic-values)))))
 
 (def (poo-flow-release-assurance-manifest-identity manifest)
   (let (validation (poo-flow-release-assurance-manifest-validate manifest))

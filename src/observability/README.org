@@ -19,7 +19,7 @@ authorized recovery, Profile policy, or production telemetry.
 | =func.ss= | Pure bounded inspection of source admission receipts, explanation, and aggregate projections. |
 | =objects.ss= | Native observation construction and upstream slot-dispatched =.explain= / =.summary=. |
 | =interface.ss= | Pure framework interface; it does not import a runtime logger. |
-| =debug.ss= | Explicit development output through upstream =DDT= / =trace-poo=. |
+| =debug.ss= | Explicit development output and bounded call tracing through upstream =DDT= / =trace-poo= / =traced-function=. |
 
 =src/module-system/observability.ss= remains a separate strict presentation
 owner. Its structs and terminal alists are neither replaced nor promoted into
@@ -126,6 +126,17 @@ can import upstream =:clan/poo/debug= and call =trace-poo= directly with a
 non-sensitive name. That operation creates a new receiver/cache and may print
 raw arguments and results. It is not a redaction boundary.
 
+For a call edge that may itself be malformed, use a validated
+=poo-flow-debug-call-policy= with =call-with-poo-flow-debug-trace=.  The adapter
+rejects a non-procedure operator, a repeated symbolic call identity, or a call
+beyond the policy depth before invocation and raises
+=PooFlowDebugCallAnomaly= with a typed receipt.  The admitted invocation is
+still traced by upstream =:clan/debug='s =traced-function=, but upstream sees
+only a zero-argument closed thunk and the symbolic result =returned=.  Raw
+arguments, receivers, multiple returned values, and exceptions never enter
+the trace printer.  Multiple values and the original exception are preserved
+unchanged at the caller boundary.
+
 These development aggregates are not declared universally public: even counts
 can be sensitive. Production publication still needs an admitted audience,
 capability, redaction policy, and telemetry adapter. No global tracing hooks,
@@ -173,9 +184,14 @@ The motivating failure was a native POO authoring cycle.  In an =.o= body,
 hand identifier as a self slot.  It does not capture a same-named constructor
 parameter.  The generated getters recurse and allocate until heap exhaustion.
 Constructors must first bind differently named lexical values, for example
-=policy-value=, and use =policy: policy-value=.  The existing source-shaped
-=poo-flow-poo-slot-authoring-observations= projection detects this pattern
-before object realization; the memory receipt proves the runtime boundary.
+=policy-value=, and use =policy: policy-value=.  The reader-native
+=poo-flow-poo-slot-authoring-{datum,port,file}-observations= APIs inspect both
+=slot: initializer= and =(slot initializer)= spellings without expansion or
+evaluation. They reject the same slot identifier anywhere in its unquoted
+initializer, including nested forms such as =(reverse diagnostics)=. The
+module-system test recursively reads every =src/**/*.ss= file and rejects
+authoring diagnostics before object realization; the memory receipt separately
+proves the runtime boundary.
 
 The killed =gxtest= investigation found the same defect in the parenthesized
 POO form used by =poo-flow-session-registry-receipt=: =(project-id project-id)=
