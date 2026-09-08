@@ -16,7 +16,8 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/module-system/observability)
+        :poo-flow/src/module-system/observability
+        :poo-flow/src/module-system/source-lexical-observability)
 
 (export module-system-observability-test)
 
