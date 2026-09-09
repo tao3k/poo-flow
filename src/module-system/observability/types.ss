@@ -4,7 +4,7 @@
 ;;; evidence is projected only after the semantic decision has been made.
 
 (import :gerbil/gambit
-        (only-in :clan/poo/object .mix .o .ref .slot? object? object<-alist)
+        (only-in :clan/poo/object .cc .mix .o .ref .slot? object? object<-alist)
         (only-in :clan/poo/mop define-type element? validate)
         (only-in :std/sugar cut)
         (only-in "../types.ss"
@@ -414,10 +414,12 @@
   proto: (poo-flow-observation-contract-shape/extends
           PooFlowObservation. '())
   responsibilities:
-  (poo-flow-observation-contract-shape/extends
-   (poo-flow-observation-contract-responsibilities
-    PooFlowObservationContract)
-   `((evidence . ,PooFlowAdmissionObservationFactsContract))))
+  ;; Evidence is a refinement, not a fallback default.  A default loses to
+  ;; the generic evidence responsibility inherited from the base map and lets
+  ;; forged admission facts validate as generic observation facts.
+  (.cc (poo-flow-observation-contract-responsibilities
+        PooFlowObservationContract)
+       'evidence PooFlowAdmissionObservationFactsContract))
 
 ;;; Boundary: only bounded aggregate scalars enter the default development renderer.
 (define-type (PooFlowObservationSummaryContract @ PooFlowNativeObjectContract.)
