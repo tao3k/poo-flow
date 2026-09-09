@@ -4,7 +4,7 @@
 (import (only-in :clan/poo/object .o .ref)
          (only-in :std/test check-equal? run-tests! test-case test-suite)
          :asp-gerbil-scheme/src/testing/memory-profile
-         :poo-flow/src/module-system/profile-composition)
+         :poo-flow/src/module-system/profile-composition/interface)
 
 (declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 

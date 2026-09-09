@@ -37,7 +37,7 @@
         poo-flow-model-select)
 
 (import (only-in :clan/poo/object .ref object<-alist object?)
-        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/modules/session/policy
         (only-in :poo-flow/src/modules/session/objects-core
                  poo-flow-session-every?

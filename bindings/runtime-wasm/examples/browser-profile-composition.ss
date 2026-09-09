@@ -1,6 +1,6 @@
 #!/usr/bin/env gxi
 
-(import :poo-flow/src/module-system/profile-composition)
+(import :poo-flow/src/module-system/profile-composition/interface)
 
 (export browser-profile-composition)
 

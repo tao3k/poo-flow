@@ -45,16 +45,16 @@ not live under =src/modules= or use =user-interface= as a mechanism namespace.
 ** 10.06.22.40 Applied Rename
 This audit validates the following final source move:
 - =src/modules/module-system.ss= -> =src/module-system/facade.ss=
-- =src/modules/modules-system-base.ss= -> =src/module-system/base.ss=
-- =src/modules/modules-system/user-profile.ss= -> =src/module-system/root-profile.ss=
-- =src/modules/modules-system/root-objects.ss= -> =src/module-system/root-objects.ss=
+- =src/modules/modules-system-base.ss= -> =src/module-system/declaration/interface.ss=
+- =src/modules/modules-system/user-profile.ss= -> =src/user-interface/root-profile.ss=
+- =src/modules/modules-system/root-objects.ss= -> =src/user-interface/root-objects.ss=
 - =src/modules/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
   -> =src/module-system/{loader,doctor,projection,descriptor,source,context,diagnostics,resolver,observability}.ss=
 - =src/modules/{object-core,object-validation,objects,extension}.ss=
   -> =src/module-system/{object-core,object-validation,objects,extension}.ss=
-- =src/modules/user-config.ss= -> =src/module-system/profile-config.ss=
-- =src/modules/user-config-syntax.ss= -> =src/module-system/init-syntax.ss=
-- =src/modules/user-interface-case.ss= -> =src/module-system/declaration-case.ss=
+- =src/modules/user-config.ss= -> =src/user-interface/profile-config.ss=
+- =src/modules/user-config-syntax.ss= -> =src/user-interface/init-syntax.ss=
+- =src/modules/user-interface-case.ss= -> =src/user-interface/declaration-case.ss=
 - =src/testing/user-interface-live-case*.ss=
   -> =src/testing/module-system-live-case*.ss=
 
@@ -65,11 +65,11 @@ separates module-system mechanics from concrete built-in modules under
 ** 10.06.22.50 Current Public Surface
 Source-level mechanics use root/declaration/module-system names:
 - =src/module-system/facade.ss= is the explicit public re-export surface.
-- =src/module-system/root-profile.ss= owns the root declaration projection
+- =src/user-interface/root-profile.ss= owns the root declaration projection
   helpers.
-- =src/module-system/profile-config.ss= owns profile/config data APIs.
-- =src/module-system/init-syntax.ss= owns Doom-style declaration macros.
-- =src/module-system/declaration-case.ss= owns upstream case contracts.
+- =src/user-interface/profile-config.ss= owns profile/config data APIs.
+- =src/user-interface/init-syntax.ss= owns Doom-style declaration macros.
+- =src/user-interface/declaration-case.ss= owns upstream case contracts.
 - =src/testing/module-system-live-case*.ss= owns the generic live-case
   framework.
 

@@ -7,11 +7,11 @@
                  run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-runtime-store-backend
-        :poo-flow/src/module-system/durable-runtime-store-operation
-        :poo-flow/src/module-system/durable-runtime-store-operation-bridge)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend
+        :poo-flow/src/modules/memory-core/durable/store-operation
+        :poo-flow/src/modules/memory-core/durable/store-operation-bridge)
 
 (export durable-runtime-store-operation-bridge-test)
 

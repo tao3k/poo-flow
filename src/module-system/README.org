@@ -1,0 +1,36 @@
+#+title: POO Flow module-system feature layout
+
+* Boundary
+
+=src/module-system= owns the POO Flow module mechanism.  Its root contains only
+package-level entrypoints; each implementation feature owns a directory with an
+=interface.ss= public factor and focused implementation factors.
+
+Maintained product modules live in =src/modules/<module>/=.  In particular,
+workflow implementation belongs to =src/modules/workflow/=.  Module-system
+features such as native method combination and Loader observability live here,
+under =poo-method-combination/= and =observability/= respectively.
+
+* Feature owners
+
+| Feature | Public factor | Responsibility |
+|-
+| declaration | =declaration/interface.ss= | POO-native selections and flags |
+| descriptor | =descriptor/interface.ss= | module descriptor contracts |
+| loader | =loader/interface.ss= | discovery, resolution, lazy loading |
+| projection | =projection/interface.ss= | option and receipt projection |
+| profile composition | =profile-composition/interface.ss= | functional composition values |
+| object core | =object-core/interface.ss= | POO object inheritance and merge |
+| object validation | =object-validation/interface.ss= | object contract evidence |
+| extension | =extension/interface.ss= | extension fixed point |
+| composition | =composition/interface.ss= | lineage and proof facts |
+| diagnostics | =diagnostics/interface.ss= | diagnostic and doctor receipts |
+| object family | =object-family/interface.ss= | hygienic object-family declarations |
+| semantic module | =semantic-module/interface.ss= | semantic module objects and types |
+| method combination | =poo-method-combination/interface.ss= | qualified native POO methods |
+| observability | =observability/interface.ss= | module authoring and observation |
+
+The mechanism may consume the declarative maintained-module list from
+=src/modules/init.ss= as Loader input.  It must not import maintained module
+implementations.  User profile and presentation composition belongs to
+=src/user-interface/=, not to this directory.

@@ -8,8 +8,8 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store)
 
 (export durable-runtime-store-contract-test)
 

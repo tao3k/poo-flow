@@ -4,8 +4,8 @@
 
 (import :poo-flow/src/modules/docker-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-docker-sandbox-module-bundles
         poo-flow-docker-sandbox-config-flags

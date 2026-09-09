@@ -192,7 +192,7 @@ The reference architecture is
 Stable large POO object families must not hand-write the same predicate,
 accessor, and boundary projection pattern for every object.
 
-Use =src/module-system/object-family-syntax.ss= when the family has:
+Use =src/module-system/object-family/syntax.ss= when the family has:
 
 - one stable =kind= slot;
 - fixed public slot accessors;

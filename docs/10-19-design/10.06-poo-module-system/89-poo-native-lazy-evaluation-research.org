@@ -3,7 +3,7 @@
 :JD_ID:     10.06.89
 :STATUS:    active
 :OWNER:     poo-flow
-:EVIDENCE:  .data/gerbil-poo/object.ss, .data/gerbil-poo/proto.ss, .data/gerbil/src/std/lazy.ss, src/module-system/load-syntax.ss
+:EVIDENCE:  .data/gerbil-poo/object.ss, .data/gerbil-poo/proto.ss, .data/gerbil/src/std/lazy.ss, src/module-system/loader/fragment-syntax.ss
 :END:
 
 * Scope

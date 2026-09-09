@@ -4,8 +4,8 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :std/sugar foldl)
         :poo-flow/t/support/performance
-        :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/presentation-config
+        :poo-flow/src/user-interface/facade
+        (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation))
 
 (export funflow-config-pipeline-scenario-count

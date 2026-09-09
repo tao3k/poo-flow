@@ -220,7 +220,7 @@ The POO-native profile interface slice is now implemented through:
 - =src/modules/nono-sandbox/profile-interface.ss=
 - =src/modules/cubeSandbox/profile-interface.ss=
 - =src/modules/docker-sandbox/profile-interface.ss=
-- =src/module-system/init-syntax.ss=
+- =src/user-interface/init-syntax.ss=
 
 The important design rule remains fixed:
 

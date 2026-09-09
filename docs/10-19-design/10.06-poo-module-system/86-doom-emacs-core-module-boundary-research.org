@@ -361,7 +361,7 @@ or composition surface over the same kernel/factor/plugin model.
 ** 10.06.86.130 Open Gaps To Track
 *** Current concrete module: poo-method-combination
 
-=src/modules/poo-method-combination/= is the first =:core= category application
+=src/module-system/poo-method-combination/= is the first =:core= category application
 of this boundary. Its descriptor depth =(-110 . -110)= orders it before
 ordinary modules such as =(:flow . funflow)=:
 

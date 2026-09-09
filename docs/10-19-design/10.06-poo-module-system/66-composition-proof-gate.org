@@ -76,7 +76,7 @@ Current theorem coverage:
 
 * Scheme Facts
 
-=src/module-system/composition-proof-facts.ss= converts normalized Scheme
+=src/module-system/composition/proof-facts.ss= converts normalized Scheme
 composition contract bits into structured proof facts. It does not inspect
 runtime state, does not execute a graph, and does not concatenate Lean source
 strings.

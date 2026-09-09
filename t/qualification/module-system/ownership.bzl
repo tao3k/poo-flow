@@ -10,7 +10,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-01-mix-module-expansion",
         "rfc": "45-01",
-        "source_path": "src/module-system/profile-composition-use-syntax.ss",
+        "source_path": "src/module-system/profile-composition/use-syntax.ss",
         "source_symbol": "use-composition",
         "source_kind": "macro",
         "test_path": "t/profile-composition-test.ss",
@@ -20,7 +20,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-02-g0-decision",
         "rfc": "45-02",
-        "source_path": "src/module-system/g0-qualification.ss",
+        "source_path": "src/qualification/module-system/g0.ss",
         "source_symbol": "poo-flow-g0-resolve",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
@@ -30,7 +30,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-03-runtime-context-recovery",
         "rfc": "45-03",
-        "source_path": "src/module-system/runtime-context-recovery.ss",
+        "source_path": "src/modules/session/runtime-context-recovery.ss",
         "source_symbol": "poo-flow-runtime-context",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
@@ -40,7 +40,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-04-observability-snapshot",
         "rfc": "45-04",
-        "source_path": "src/module-system/observability.ss",
+        "source_path": "src/module-system/observability/module-presentation.ss",
         "source_symbol": "poo-flow-module-presentation-trace",
         "source_kind": "function",
         "test_path": "t/module-system-observability-test.ss",
@@ -50,7 +50,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-05-lineage-cycle",
         "rfc": "45-05",
-        "source_path": "src/module-system/composition-lineage.ss",
+        "source_path": "src/module-system/composition/lineage.ss",
         "source_symbol": "poo-flow-lineage-analysis",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
@@ -60,7 +60,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-06-gerbil-poo-consumption",
         "rfc": "45-06",
-        "source_path": "src/module-system/gerbil-poo-consumption.ss",
+        "source_path": "src/qualification/module-system/gerbil-poo-consumption.ss",
         "source_symbol": "poo-flow-gerbil-poo-consumption-manifest",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
@@ -70,7 +70,7 @@ OWNER_MAP_ROWS = [
     {
         "row_id": "rfc45-07-public-composition",
         "rfc": "45-07",
-        "source_path": "src/module-system/profile-composition-use-syntax.ss",
+        "source_path": "src/module-system/profile-composition/use-syntax.ss",
         "source_symbol": "use-composition",
         "source_kind": "macro",
         "test_path": "t/profile-composition-test.ss",

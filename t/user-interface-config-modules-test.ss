@@ -14,7 +14,7 @@
         test-case
         test-error
         test-suite)
-        :poo-flow/src/module-system/facade
+        :poo-flow/src/user-interface/facade
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-session-module

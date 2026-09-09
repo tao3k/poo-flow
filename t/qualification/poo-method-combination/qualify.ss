@@ -15,28 +15,33 @@
         fingerprint unchanged! successful-check-count stream-process-log write-module-manifest!)
 
 (def combination-qualification-input
-  (.o kind: 'poo-combination/qualification-input schema: 'v2
+  (.o kind: 'poo-combination/qualification-input schema: 'v1
       evidence-directory: ".data/qualification/poo-method-combination"
       modules:
       '("src/module-system/types.ss"
-        "src/module-system/projection-syntax.ss"
-        "src/module-system/observability.ss"
-        "src/module-system/source-lexical-observability.ss"
+        "src/module-system/interface.ss"
+        "src/module-system/projection/syntax.ss"
+        "src/module-system/loader/source.ss"
+        "src/module-system/declaration/flags.ss"
+        "src/module-system/declaration/interface.ss"
+        "src/module-system/descriptor/interface.ss"
+        "src/module-system/observability/module-presentation.ss"
+        "src/module-system/observability/module-source-observation.ss"
         "src/module-system/semantic-module/types.ss"
         "src/module-system/semantic-module/objects.ss"
-        "src/observability/types.ss"
-        "src/observability/func.ss"
-        "src/observability/objects.ss"
-        "src/observability/source-authoring.ss"
-        "src/observability/interface.ss"
-        "src/observability/slot-debug.ss"
-        "src/observability/debug.ss"
-        "src/modules/poo-method-combination/types.ss"
-        "src/modules/poo-method-combination/objects.ss"
-        "src/modules/poo-method-combination/funcs.ss"
-        "src/modules/poo-method-combination/interface.ss"
-        "src/modules/poo-method-combination/plugins/observation.ss"
-        "src/modules/poo-method-combination/config.ss"
+        "src/module-system/observability/types.ss"
+        "src/module-system/observability/funcs.ss"
+        "src/module-system/observability/objects.ss"
+        "src/module-system/observability/source-authoring.ss"
+        "src/module-system/observability/interface.ss"
+        "src/module-system/observability/slot-debug.ss"
+        "src/module-system/observability/debug.ss"
+        "src/module-system/poo-method-combination/types.ss"
+        "src/module-system/poo-method-combination/objects.ss"
+        "src/module-system/poo-method-combination/funcs.ss"
+        "src/module-system/poo-method-combination/interface.ss"
+        "src/module-system/poo-method-combination/plugins/observation.ss"
+        "src/module-system/poo-method-combination/config.ss"
         "t/scenarios/poo-method-combination/performance.ss"
         "t/scenarios/poo-method-combination/observation.ss"
         "t/poo-method-combination-test.ss"
@@ -180,7 +185,7 @@
       (unchanged! sources)
       (unchanged! artifacts)
       (let* ((receipt
-              (.o kind: 'poo-combination/qualification-receipt schema: 'v2 producer: 'poo-flow/modules/poo-method-combination
+              (.o kind: 'poo-combination/qualification-receipt schema: 'v1 producer: 'poo-flow/module-system/poo-method-combination
                   accepted?: #t evidence-directory: run source-count: (length sources)
                   artifact-count: (length artifacts) same-process-tests?: #t
                   assertions: assertion-count-value

@@ -11,7 +11,7 @@ The maintained kernel module implementations are upstream-owned under
 - =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
 
 =user-interface/init.ss= exports category/module/feature bundle rows, and
-upstream =src/module-system/root-profile.ss= extends
+upstream =src/user-interface/root-profile.ss= extends
 =poo-flow-kernel-profile= with those rows. Downstream users extend through
 =init.ss= and =custom/*/config.ss= instead of editing or repeating upstream
 kernel files.
@@ -33,9 +33,9 @@ The files here stay declarative:
 
 The implementation stays upstream:
 
-- =src/module-system/root-objects.ss= owns user-interface object contracts.
-- =src/module-system/root-profile.ss= owns profile/config projection helpers.
-- =src/module-system/declaration-case.ss= owns declaration case contracts for tools and tests.
+- =src/user-interface/root-objects.ss= owns user-interface object contracts.
+- =src/user-interface/root-profile.ss= owns profile/config projection helpers.
+- =src/user-interface/declaration-case.ss= owns declaration case contracts for tools and tests.
 - module descriptors, loaders, merge rules, and runtime adapters remain in =src/module-system=, =src/modules=, and other implementation owners according to domain.
 
 * Public Entry Points

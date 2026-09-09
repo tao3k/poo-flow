@@ -17,7 +17,7 @@
         (only-in :std/sort stable-sort)
         (only-in :clan/poo/object .ref .slot? object? object<-alist)
         :poo-flow/src/utilities/functional
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/feature-system/runtime-handoff-plan)
 

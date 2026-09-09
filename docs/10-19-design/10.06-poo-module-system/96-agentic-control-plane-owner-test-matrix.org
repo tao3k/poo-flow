@@ -37,11 +37,11 @@ The matrix keeps three boundaries explicit:
 
 | Concern | Current owner candidate | Required AC-00 evidence |
 |-
-| Public POO-native authoring | =src/module-system/init-syntax.ss=, including =session-case= | Exact definitions, exports, and scenario consumers |
-| Profile composition | =src/module-system/profile-composition.ss= and its accessors | Composition order, override rules, and receipt path |
+| Public POO-native authoring | =src/user-interface/init-syntax.ss=, including =session-case= | Exact definitions, exports, and scenario consumers |
+| Profile composition | =src/module-system/profile-composition/interface.ss= and its accessors | Composition order, override rules, and receipt path |
 | Session policy | =src/modules/session/policy-syntax.ss=, validation and receipt modules; =src/core/policy.ss= | Policy normalization, validation, evaluation, and public surface |
 | Core receipts | =src/core/receipt.ss= and policy-validation receipt owners | Stable fields, digest inputs, and serialization boundaries |
-| Lifecycle assurance | =src/module-system/agent-lifecycle-gate.ss= | Gate inputs, decision outputs, and failure semantics |
+| Lifecycle assurance | =src/modules/session/lifecycle-gate.ss= | Gate inputs, decision outputs, and failure semantics |
 | Proof and evidence | =src/proof/= and =packages/proof/lean/= | Wire format, bridge, gate bundle, decision, receipts, and checked theorem linkage |
 | Semantic namespaces | =src/semantic/=, including =boundary-namespace.ss= | Namespace registry, canonical identifiers, and projection rules |
 | Contract infrastructure | =src/contract/= | Schema IR, normalization, validation, and receipt ownership |

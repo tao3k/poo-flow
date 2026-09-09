@@ -6,7 +6,7 @@
 (import (only-in :std/srfi/1 fold iota)
         (only-in "./performance.ss"
                  poo-flow-performance-build-list)
-        (only-in "../../src/module-system/contract-schema.ss"
+        (only-in "../../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type

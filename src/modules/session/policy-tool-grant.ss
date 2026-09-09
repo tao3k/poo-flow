@@ -4,7 +4,7 @@
 (import :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-syntax
         :poo-flow/src/modules/session/policy-core
-        (only-in "../../module-system/contract-schema.ss"
+        (only-in "../../module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type

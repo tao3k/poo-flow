@@ -14,9 +14,9 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/cubeSandbox/objects)

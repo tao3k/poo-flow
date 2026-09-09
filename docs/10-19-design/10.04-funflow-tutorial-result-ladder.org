@@ -170,7 +170,7 @@ Poo-flow precursor landed:
 - =src/core/runner.ss= no longer emits =cache-hit= or =cache-request-only= for
   store operations; it emits generic adapter evidence so CAS policy can be
   layered outside core.
-- =src/workflow/store.ss= owns =store-task-family-descriptor=,
+- =src/modules/workflow/store.ss= owns =store-task-family-descriptor=,
   =store-flow=, =make-store-task=, and store-enabled run configs.
 - Core defaults no longer install store task families or store capabilities;
   Store/CAS users opt in through the extension registry and strategy wrappers.

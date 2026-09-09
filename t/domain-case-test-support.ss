@@ -2,8 +2,8 @@
         :asp-gerbil-scheme/src/testing/memory-profile
         :clan/poo/object
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/domain-case
-        :poo-flow/src/module-system/domain-case-syntax)
+        :poo-flow/src/feature-system/domain-case/interface
+        :poo-flow/src/feature-system/domain-case/syntax)
 
 
 (export #t)

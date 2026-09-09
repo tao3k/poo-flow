@@ -11,9 +11,9 @@
         (only-in :clan/poo/object .o object?)
         :poo-flow/src/core/runtime-protocol
         :poo-flow/src/core/runtime-adapter
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-runtime-store-backend)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend)
 
 (export durable-runtime-store-backend-test)
 

@@ -3,7 +3,7 @@
 ;;; Invariant: session-core enables report-only session declarations; it never
 ;;; realizes sandbox runtimes or Marlin handlers.
 
-(import :poo-flow/src/module-system/base
+(import :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/modules/session/config)
 
 (export (import: :poo-flow/src/modules/session/config)

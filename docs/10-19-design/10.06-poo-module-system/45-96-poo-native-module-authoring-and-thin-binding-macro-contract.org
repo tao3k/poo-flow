@@ -34,9 +34,9 @@ This RFC does not define:
 Parser-owned ASP discovery currently identifies:
 
 - =use-composition= as a macro owner in
-  =src/module-system/profile-composition-use-syntax.ss=;
+  =src/module-system/profile-composition/use-syntax.ss=;
 - =poo-flow-composition-module-binding= as an internal helper owner in
-  =src/module-system/profile-composition-builders.ss=;
+  =src/module-system/profile-composition/builders.ss=;
 - composition accessors and builders as internal implementation surfaces;
 - no emitted owner for =defmodule=, =define-module=, or =module!=.
 

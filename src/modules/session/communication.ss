@@ -3,7 +3,7 @@
 ;;; Invariant: communication receipts describe routing intent only; Scheme does
 ;;; not deliver messages or mutate source/target sessions.
 
-(import :poo-flow/src/module-system/durable-policy
+(import :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/receipt-syntax
         :poo-flow/src/modules/session/receipt-projection)

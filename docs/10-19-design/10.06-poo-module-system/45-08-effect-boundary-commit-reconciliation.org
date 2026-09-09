@@ -39,8 +39,8 @@ Current POO Flow source owners preserve the correct handoff boundary:
 
 | Source owner | Observed fact | What it proves |
 |-
-| =src/module-system/durable-runtime-store-operation.ss= | Runtime owner is =marlin-agent-core=; handoff records =runtime-executed #f=. | POO Flow plans and hands off operations; it does not claim execution. |
-| =src/module-system/durable-runtime-store-operation-bridge.ss= | Store, graph, workflow, artifact, and sandbox operations are projected to handoff receipts. | Operation intent crosses an explicit boundary. |
+| =src/modules/memory-core/durable/store-operation.ss= | Runtime owner is =marlin-agent-core=; handoff records =runtime-executed #f=. | POO Flow plans and hands off operations; it does not claim execution. |
+| =src/modules/memory-core/durable/store-operation-bridge.ss= | Store, graph, workflow, artifact, and sandbox operations are projected to handoff receipts. | Operation intent crosses an explicit boundary. |
 | =src/modules/loop-engine/runtime-intent.ss= | Runtime manifests remain =runtime-executed #f= and batch status is =not-executed=. | Scheme emits runtime intent rather than executing it. |
 | =t/durable-runtime-store-operation-test.ss= | Eight operation receipts and the Marlin handoff are checked as not executed. | The non-execution boundary is tested; runtime linearizability is not. |
 

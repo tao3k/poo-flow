@@ -17,7 +17,7 @@
  (spec cedar-conformance-spec)
  (profile asp-gerbil-scheme-development-builder-profile)
  (source-catalog-authority #f)
- (modules ["src/module-system/object-family-syntax.ss"
+ (modules ["src/module-system/object-family/syntax.ss"
            "src/policy/cedar-authority.ss"
            "bindings/cedar-gerbil/crates/cedar-gerbil/scheme/conformance.ss"]))
 

@@ -15,9 +15,9 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-config
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/user-interface/profile-config
         "user-interface-fixtures.ss")
 
 (export user-interface-presentation-test)

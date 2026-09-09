@@ -1,6 +1,6 @@
 (import :std/test
         (only-in :clan/poo/object object<-alist)
-        :poo-flow/src/module-system/object-family-syntax)
+        :poo-flow/src/module-system/object-family/syntax)
 
 (def +poo-object-family-syntax-test-kind+
   'poo-object-family-syntax-test)

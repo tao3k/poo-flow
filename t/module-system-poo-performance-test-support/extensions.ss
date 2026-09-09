@@ -12,9 +12,9 @@
         :poo-flow/t/support/poo-performance-fixtures
         :poo-flow/t/support/poo-performance-object-scenarios
         :poo-flow/t/support/poo-performance
-        :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-validation)
+        :poo-flow/src/module-system/object-core/interface
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-validation/interface)
 
 (export module-system-poo-performance-extensions-test)
 

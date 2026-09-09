@@ -4,8 +4,8 @@
 
 (import (only-in :std/sugar filter)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/config-prototype-syntax
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/declaration/config-syntax
         :poo-flow/src/modules/tool-core/objects)
 
 (export (import: :poo-flow/src/modules/tool-core/objects)

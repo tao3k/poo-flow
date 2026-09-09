@@ -12,9 +12,9 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection?)
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/session/config
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-case

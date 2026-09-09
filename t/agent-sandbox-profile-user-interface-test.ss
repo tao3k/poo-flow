@@ -14,8 +14,8 @@
                  test-error
         test-suite)
         (only-in :clan/poo/object .o .ref .slot? object?)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/agent-sandbox/config)
 
 (export agent-sandbox-profile-user-interface-test)

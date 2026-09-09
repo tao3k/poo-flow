@@ -4,8 +4,8 @@
 
 (import :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-cubeSandbox-module-bundles
         poo-flow-cubeSandbox-config-flags

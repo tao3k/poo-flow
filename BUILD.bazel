@@ -66,12 +66,12 @@ filegroup(
         "src/feature-system/bundle-v1-foreign-arena.ss",
         "src/feature-system/bundle-v1-lowering.ss",
         "src/feature-system/bundle-v1-lowering-model.ss",
-        "src/module-system/profile-composition.ss",
-        "src/module-system/profile-composition-accessors.ss",
-        "src/module-system/profile-composition-builders.ss",
-        "src/module-system/profile-composition-inline-runtime.ss",
-        "src/module-system/profile-composition-syntax-plan.ss",
-        "src/module-system/profile-composition-use-syntax.ss",
+        "src/module-system/profile-composition/interface.ss",
+        "src/module-system/profile-composition/accessors.ss",
+        "src/module-system/profile-composition/builders.ss",
+        "src/module-system/profile-composition/inline-runtime.ss",
+        "src/module-system/profile-composition/syntax-plan.ss",
+        "src/module-system/profile-composition/use-syntax.ss",
         "src/utilities/functional.ss",
     ],
 )
@@ -95,7 +95,7 @@ filegroup(
 
 filegroup(
     name = "runtime_load_projection_source",
-    srcs = ["src/module-system/runtime-load-projection.ss"],
+    srcs = ["src/modules/funflow/runtime-load-projection.ss"],
 )
 
 filegroup(

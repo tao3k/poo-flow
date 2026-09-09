@@ -19,7 +19,7 @@
         :poo-flow/src/modules/docker/config
         :poo-flow/src/modules/text/config
         :poo-flow/src/modules/workflow/flows
-        :poo-flow/src/workflow/store)
+        :poo-flow/src/modules/workflow/store)
 
 ;; : (-> RunConfig Flow Input Value)
 (def (configured-run config flow input)

@@ -1,11 +1,12 @@
 ;;; Boundary: projects user loop-engine configuration into runtime-owned inputs.
 ;;; Invariant: projection is pure and leaves execution to the runtime handoff boundary.
-(import "../funflow/config.ss"
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/sandbox-profile-catalog
-        :poo-flow/src/module-system/sandbox-backend-capability-catalog
-        :poo-flow/src/module-system/workflow-cicd-config
-        :poo-flow/src/module-system/workflow-cicd-runtime-command-config
+(import (only-in "../funflow/config.ss"
+                 poo-flow-funflow-workflow-agreement)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/modules/sandbox-core/profile-catalog
+        :poo-flow/src/modules/sandbox-core/backend-capability-catalog
+        :poo-flow/src/modules/workflow/cicd-config
+        :poo-flow/src/modules/workflow/cicd-runtime-command-config
         "core.ss"
         "runtime-base.ss"
         "runtime-capability.ss"

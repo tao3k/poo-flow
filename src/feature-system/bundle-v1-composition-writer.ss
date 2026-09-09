@@ -7,7 +7,7 @@
 (import (only-in :std/format format)
         (only-in :clan/poo/object .ref .slot?)
         :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition
+        :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/feature-system/bundle-v1-foreign-arena)
 

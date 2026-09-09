@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Pure scenario: real Module admission -> source-owned Observation summary.
 (import (only-in :clan/poo/object .ref .cc)
-        "../../../src/modules/poo-method-combination/plugins/observation.ss"
-        "../../../src/observability/interface.ss"
+        "../../../src/module-system/poo-method-combination/plugins/observation.ss"
+        "../../../src/module-system/observability/interface.ss"
         "../../../src/module-system/semantic-module/objects.ss")
 (export combination-observation-scenario combination-observation-event)
 (def (identity-value name) (poo-flow-observation-identity 'module name 'v1))

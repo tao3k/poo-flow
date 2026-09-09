@@ -8,7 +8,7 @@
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/capability-model
         :poo-flow/src/feature-system/policy-strategy-binding
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/utilities/functional)
 
 (export +feature-adapter-capability-catalog-kind+

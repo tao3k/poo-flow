@@ -4,7 +4,7 @@
 ;;; runtime model output or executes reviewer operations.
 
 (import "core.ss"
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-user-loop-engine-intent-result-contract
         poo-flow-user-loop-engine-result-contract-valid?

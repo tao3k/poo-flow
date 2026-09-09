@@ -1,0 +1,74 @@
+#+title: POO method combination qualification contract — v1
+
+* Scope
+
+This document records the stable qualification contract for the native
+POO method-combination feature. It does not version an ignored run directory,
+receipt count, content digest, local timing sample, or generated artifact path.
+Those values are evidence for one invocation and remain under
+=.data/qualification/=.
+
+The qualified slice covers qualified method ordering, call-next-method frame
+semantics, native POO contracts, the opt-in Observation adapter, bounded
+performance checks, Loader integration, and fresh AOT artifact admission. It
+does not claim a complete CLOS class system, production telemetry activation,
+or full-package release acceptance.
+
+* Entry points
+
+From the project root:
+
+#+begin_src sh
+./.devenv/devenv-profile-exec gxtest t/poo-method-combination-module-test.ss t/poo-method-combination-test.ss t/poo-method-combination-contract-test.ss t/poo-method-combination-next-test.ss t/poo-method-combination-observation-test.ss t/poo-method-combination-performance-test.ss t/observability-framework-test.ss t/gerbil-poo-debug-admission-test.ss
+./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/qualify.ss
+#+end_src
+
+The first command is the source-level regression surface. The second is the
+Scheme-owned qualification transaction: native preflight, fresh compilation,
+same-process artifact admission, compiled suites, repeated measurements, and a
+terminal receipt.
+
+* Acceptance contract
+
+An accepted invocation must produce a =v1= receipt owned by
+=poo-flow/module-system/poo-method-combination= and must establish all of the
+following:
+
+- every declared source and test-owned checker is fingerprinted before work;
+- preflight and semantic suites execute nonempty assertion sets;
+- every requested module produces nonempty fresh =.ssi= and =.o1= artifacts;
+- the test process resolves the generated artifacts from the isolated library;
+- source and artifact fingerprints remain stable through terminal settlement;
+- dependency fingerprints are checked before and after execution;
+- repeated measurement rows retain the expected checksum and method-plan
+  identity and remain within the v1 smoke budget;
+- the receipt is written only after all prior obligations succeed.
+
+The receipt binds the source snapshot, artifact snapshot, toolchain, module
+manifest, dependency snapshot, preflight log, and qualification log. Digest
+records are algorithm- and purpose-tagged integrity evidence; they do not claim
+signer identity or artifact authenticity.
+
+* Representative semantic witnesses
+
+- Diamond primary order is =D B C A= and after order is =A C B D=; the shared
+  ancestor contributes once.
+- Repeated next calls can use original or replacement arguments while retaining
+  the qualified method chain by descriptor identity.
+- Primary replacement does not suppress the enclosing before/after methods.
+- The real rejected SemanticModule observation retains the failing path and
+  =prototype-mismatch= reason.
+- The Observation renderer is opt-in, preserves default behavior, reuses its
+  method plan, returns fresh summaries, and performs no output side effect.
+- Warm-path checks compare against the v1 functional-chain comparator and
+  preserve exact results; the bounded threshold is a smoke guard, not a
+  production latency claim.
+
+* Evidence retention boundary
+
+Generated run directories are deliberately ignored. Reviewers should inspect
+the terminal receipt and its bound files from the invocation being evaluated,
+not copy their UUIDs, counts, hashes, or timing samples into this document.
+Interrupted runs, empty suites, source-only checks, and stale receipts are not
+acceptance. Full-package build, installed dependency provenance, and production
+performance admission remain separate gates.

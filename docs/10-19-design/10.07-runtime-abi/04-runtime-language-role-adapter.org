@@ -242,7 +242,7 @@ runtime selection completed with =189 passed, 8 skipped, 6 deselected in
 The full suite is not repository-wide green: it completed with =190 passed, 7
 skipped, 6 failed=.  All six failures are caused by the current dirty
 module-system state, where =gxi= cannot load
-=:poo-flow/src/module-system/init-syntax= or the durable modules.  This receipt
+=:poo-flow/src/user-interface/init-syntax= or the durable modules.  This receipt
 therefore qualifies the Python async/cancellation/backpressure substrate only;
 it does not introduce a second runtime, change C ABI semantics, or claim full
 repository acceptance.

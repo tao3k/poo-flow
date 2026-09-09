@@ -124,7 +124,7 @@ This keeps POO Flow strong at composition and proof, while Python remains respon
 
 * Implementation Owners
 
-- core control-plane module: =src/module-system/tool-calling-control.ss=
+- core control-plane module: =src/modules/tool-core/calling-control.ss=
 - reusable profile: =user-interface/profiles/tool-calling.ss=
 - reusable case: =user-interface/cases/tool-calling-agent-loop.ss=
 - scenario smoke test: =t/scenarios/tool-calling-control-plane-test.ss=
@@ -157,7 +157,7 @@ object-list/index discipline so the object model remains fast and inspectable.
 
 Current focused checks:
 
-- ~env GERBIL_LOADPATH=$PWD/.gerbil/lib gxc -g -d .gerbil/lib src/module-system/tool-calling-control.ss~
+- ~env GERBIL_LOADPATH=$PWD/.gerbil/lib gxc -g -d .gerbil/lib src/modules/tool-core/calling-control.ss~
 - ~env GERBIL_LOADPATH=$PWD/.gerbil/lib gxi t/scenarios/tool-calling-control-plane-test.ss~
 - ~gxpkg env gxi t/scenarios/performance/tool-calling-object-list-control/exercise.ss~
 

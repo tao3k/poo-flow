@@ -8,7 +8,7 @@
                  run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-durable-recovery-test)
 

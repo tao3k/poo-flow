@@ -234,7 +234,7 @@ Delivered:
   memory intents. A transform derives a session receipt and emits handoff
   intent without provider, tool, memory, selector, or sandbox execution.
 - =src/modules/session-core/config.ss= and
-  =src/module-system/session-core-config.ss= expose the upstream session-core
+  =src/modules/session-core/presentation.ss= expose the upstream session-core
   module row and feature flags.
 - =src/modules/loop-engine/runtime-agent.ss= projects agent profiles,
   harnesses, sessions, workflow runs, dispatch receipts, and operations for
@@ -399,7 +399,7 @@ Current implementation:
 - =user-interface/custom/my-module/cases/session-agent-graph.ss= declares a root session with build and audit child-agent sessions.
 - =t/session-multi-agent-graph-test.ss= proves graph topology and registry correlation without executing agents or delivering messages.
 - =src/modules/loop-engine/runtime-agent.ss= now projects loop-engine agent/judge/human-audit rows into the same =poo-flow-session-agent-graph= topology instead of maintaining a parallel agent/session graph.
-- =src/modules/loop-engine/runtime.ss= carries the shared =session-agent-graph= and =session-agent-topology-trace= through runtime envelope, handoff facts, and runtime projections; =src/module-system/presentation-config.ss= exposes them as =loop-engine-session-agent-graphs= and =loop-engine-session-agent-topology-traces=.
+- =src/modules/loop-engine/runtime.ss= carries the shared =session-agent-graph= and =session-agent-topology-trace= through runtime envelope, handoff facts, and runtime projections; =src/user-interface/presentation-config.ss= exposes them as =loop-engine-session-agent-graphs= and =loop-engine-session-agent-topology-traces=.
 - =t/user-interface-custom-loop-engine-test.ss= proves intent, handoff, and presentation all reference the same graph and that topology trace profile/session ids stay aligned; =t/loop-engine-session-agent-graph-performance-test.ss= and =t/scenarios/performance/loop-engine-session-agent-graph/benchmark.ss= guard the projection cost.
 *** 10.06.42.70.30 P3 Session Communication Receipt
 Add a report-only communication object between sessions:

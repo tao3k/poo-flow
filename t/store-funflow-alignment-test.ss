@@ -14,7 +14,7 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/workflow/store)
+        :poo-flow/src/modules/workflow/store)
 
 (export store-funflow-alignment-test)
 

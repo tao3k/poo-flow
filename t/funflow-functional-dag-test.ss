@@ -9,10 +9,10 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-flags)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         (only-in :poo-flow/src/modules/funflow/config
                  poo-flow-funflow-check-map->functional-dag
                  poo-flow-funflow-composition-step?

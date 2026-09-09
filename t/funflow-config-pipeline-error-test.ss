@@ -2,8 +2,8 @@
 ;;; Boundary: invalid Funflow POO configs fail at the declarative contract.
 
 (import (only-in :std/test check-equal? test-case test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax)
 
 (export funflow-config-pipeline-error-test)
 

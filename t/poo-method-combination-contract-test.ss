@@ -2,7 +2,7 @@
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :clan/poo/object .o .ref .cc .mix)
         (only-in :clan/poo/mop element? .defgeneric)
-        "../src/modules/poo-method-combination/interface.ss")
+        "../src/module-system/poo-method-combination/interface.ss")
 (export poo-method-combination-contract-test)
 (def (code? expected)
   (lambda (e) (and (poo-combination-failure? e) (eq? (.ref e 'code) expected))))

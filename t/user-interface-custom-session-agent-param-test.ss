@@ -8,9 +8,9 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-selection-key)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-session-agent-param-test)
 

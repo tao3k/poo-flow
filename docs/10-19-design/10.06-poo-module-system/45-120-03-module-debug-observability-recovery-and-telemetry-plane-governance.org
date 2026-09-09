@@ -336,11 +336,11 @@ The core owners are:
 
 | Owner | Responsibility |
 |-------+----------------|
-| =src/module-system/observability.ss= | Pure ObservationEvent construction, projection, lineage, and explanation. |
+| =src/module-system/observability/module-presentation.ss= | Pure ObservationEvent construction, projection, lineage, and explanation. |
 | =src/module-system/debug.ss= | Condition, RecoveryDecision, coordinator, and bounded resumption policy. |
 | Runtime observability adapter | Redaction, runtime measurement, publication, and receipt effects. |
 
-The existing =src/module-system/observability.ss= is implementation evidence
+The existing =src/module-system/observability/module-presentation.ss= is implementation evidence
 for presentation-trace projections.  It does not by itself admit the POO-native
 ObservationEvent and three-plane contract defined here.  This new architecture
 makes no compatibility or migration commitment to presentation alists.
@@ -579,7 +579,7 @@ gate in RFC 45-120-15; this section does not invent their implementation path.
 On 2026-09-08 the normal ASP Search command could not supply that gate:
 
 #+begin_src sh
-./.devenv/devenv-profile-exec asp search playbook --languages gerbil-scheme --rg 'poo-flow-classification-evidence|poo-flow-module-observation' src/module-system/types.ss src/module-system/observability.ss
+./.devenv/devenv-profile-exec asp search playbook --languages gerbil-scheme --rg 'poo-flow-classification-evidence|poo-flow-module-observation' src/module-system/types.ss src/module-system/observability/module-presentation.ss
 #+end_src
 
 The sandboxed call returned =host-operation-not-permitted=. The exact command
@@ -594,7 +594,7 @@ for that evidence.
 ** Current native framework slice
 
 The user subsequently authorized temporary =rg= / =fd= owner exploration.
-That exploration located the existing native =src/observability/= package,
+That exploration located the existing native =src/module-system/observability/= package,
 including its Diagnostic/Receipt Contracts and JSON Schema consumers. The
 framework now extends that owner as documented in RFC 45-120-15; no parallel
 tracer or strict-struct replacement is introduced. The parser checks below
@@ -632,7 +632,7 @@ source-shaped pre-realization form.
 The executable example is =tools/observability-admission-demo.ss=. The focused
 gate is =//scheme:observability_framework_test=; existing feedback, strict
 presentation, shared foundation, native debug, and Module tests are retained.
-See =src/observability/README.org= for the exact commands and native extension
+See =src/module-system/observability/README.org= for the exact commands and native extension
 contract.
 
 The focused native command recorded there passed six suites and 174 checks
@@ -688,4 +688,4 @@ is not counted as compile acceptance.
 - [[file:45-127-higher-order-capability-materialization-poo-lifecycle-object-and-runtime-policy-prototype-algebra.org][Capability materialization lifecycle object]]
 - [[file:44-current-project-programming-style.org][Current project programming style]]
 - [[file:29-gerbil-poo-programming-guidelines.org][Gerbil POO programming guidelines]]
-- =src/module-system/observability.ss=
+- =src/module-system/observability/module-presentation.ss=

@@ -3,8 +3,8 @@
 
 (import :gerbil/gambit
         (only-in :clan/poo/object .def .o .ref .slot? object?)
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/agent-sandbox/config
         (only-in :poo-flow/src/modules/agent-sandbox/profile-validation

@@ -3,7 +3,7 @@
 
 (eval '(import "./src/contract/json-schema-receipt.ss"))
 (eval '(import "./src/contract/json-schema-validate.ss"))
-(eval '(import "./src/module-system/contract-schema.ss"))
+(eval '(import "./src/module-system/descriptor/contracts.ss"))
 (eval '(import "./src/type-facts/objects.ss"))
 (eval '(import :clan/poo/mop))
 

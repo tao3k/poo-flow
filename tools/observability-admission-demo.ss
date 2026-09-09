@@ -2,8 +2,8 @@
 ;;; Run: ./.devenv/devenv-profile-exec gxi tools/observability-admission-demo.ss
 ;;; A synthetic real Module error; no runtime resources or secrets are involved.
 (import (only-in :clan/poo/object .cc .ref)
-        "../src/observability/interface.ss"
-        "../src/observability/debug.ss"
+        "../src/module-system/observability/interface.ss"
+        "../src/module-system/observability/debug.ss"
         "../src/module-system/semantic-module/objects.ss")
 
 (def (demo-id name)

@@ -6,7 +6,7 @@
 
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/core/object-syntax
-        :poo-flow/src/module-system/object-family-syntax
+        :poo-flow/src/module-system/object-family/syntax
         :poo-flow/src/qualification/capability-prototypes)
 
 (def +poo-flow-cutover-readiness-input-kind+

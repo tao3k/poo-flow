@@ -2,7 +2,7 @@
 ;;; Whole invocation semantics, beyond descriptor and applicability checks.
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :clan/poo/object .o .ref .cc)
-        "../src/modules/poo-method-combination/interface.ss")
+        "../src/module-system/poo-method-combination/interface.ss")
 (export poo-method-combination-next-test)
 (def g (poo-combination-generic 'invocation 'invocation/plan required: 1 rest?: #f))
 (def root (poo-method-root g))

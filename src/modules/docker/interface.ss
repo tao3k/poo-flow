@@ -9,7 +9,9 @@
 ;;; Policy evidence: tests should trust the installed module registry.
 
 (import :poo-flow/src/core/api
-        "../agent-sandbox/resource.ss")
+        (only-in "../agent-sandbox/resource.ss"
+                 sandbox-volume-bindings->request
+                 sandbox-volume-bindings-merge))
 
 (export docker-task-family-descriptor
         +docker-task-input-receipt-schema+
@@ -46,21 +48,6 @@
         docker-task-input-receipt-output-policy
         docker-task-input-receipt-runtime-executed
         docker-flow->task-input-receipt)
-
-;;; Boundary: docker field rows keep module object construction hygienic while
-;;; preserving runtime sandbox field names expected by downstream policy.
-;; docker-field-rows
-;; : (-> DockerFieldRowsClauseSyntax DockerFieldRowsExpansionSyntax)
-;; | doc m%
-;;   Expands Docker sandbox object field clauses into stable projection rows.
-;;   # Examples
-;;   ```scheme
-;;   (docker-field-rows (image "alpine"))
-;;   ;; => ((image . "alpine"))
-;;   ```
-(defrules docker-field-rows ()
-  ((_ (field value) ...)
-   (list (cons 'field value) ...)))
 
 ;; : (forall (a) (-> [a] [a] [a]))
 (def (docker-values/tail values tail)
@@ -222,11 +209,11 @@
 ;;; flags, resolves store items, and writes CAS outputs.
 ;; : (-> DockerTaskInput Alist)
 (def (docker-task-input->request input)
-  (docker-field-rows
-   (input-bindings
-    (sandbox-volume-bindings->request
-     (docker-task-input-input-bindings input)))
-   (args-vals (docker-task-input-args-vals input))))
+  (list
+   (cons 'input-bindings
+         (sandbox-volume-bindings->request
+          (docker-task-input-input-bindings input)))
+   (cons 'args-vals (docker-task-input-args-vals input))))
 
 ;;; The configured Docker run entrypoint installs the extension task registry
 ;;; and adapter capability while preserving core run-config behavior.

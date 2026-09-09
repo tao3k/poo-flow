@@ -1,9 +1,9 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: shared module objects available to every module namespace.
 
-(import :poo-flow/src/module-system/object-core)
+(import :poo-flow/src/module-system/object-core/interface)
 
-(export (import: :poo-flow/src/module-system/object-core)
+(export (import: :poo-flow/src/module-system/object-core/interface)
         poo-flow-shared-sandbox-object
         poo-flow-shared-module-objects)
 

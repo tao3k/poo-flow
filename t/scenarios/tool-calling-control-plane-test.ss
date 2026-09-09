@@ -1,6 +1,6 @@
 (import (only-in :clan/poo/object .o)
-        :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/tool-calling-control)
+        :poo-flow/src/module-system/profile-composition/interface
+        :poo-flow/src/modules/tool-core/calling-control)
 
 (def tool-calling
   (eval (call-with-input-file "user-interface/profiles/tool-calling.ss" read)))

@@ -1,9 +1,9 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: CubeSandbox module objects.
 
-(import :poo-flow/src/module-system/object-core
+(import :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/objects
-        :poo-flow/src/module-system/sandbox-backend-object-syntax
+        :poo-flow/src/modules/sandbox-core/backend-object-syntax
         :poo-flow/src/modules/sandbox-core/objects
         :poo-flow/src/modules/sandbox-core/resource-contract)
 

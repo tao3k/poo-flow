@@ -18,7 +18,7 @@
                  .ref
                  .setslot!
                  $constant-slot-spec)
-        :poo-flow/src/module-system/indexed-family
+        :poo-flow/src/module-system/object-family/indexed
         (only-in :std/sugar ormap))
 
 (export benchmark-fixture-memory-contract-pass?

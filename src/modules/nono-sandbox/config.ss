@@ -4,8 +4,8 @@
 
 (import :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-nono-sandbox-module-bundles
         +poo-flow-nono-sandbox-default-binding+

@@ -22,16 +22,16 @@ Funflow alignment exists to keep workflow authoring on the functional programmin
 
 The user-interface layer mirrors Doom's module-selection block:
 
-- =src/module-system/profiles/kernel.ss= composes the built-in kernel profile.
+- =src/profiles/kernel/interface.ss= composes the built-in kernel profile.
 - =src/modules/funflow/config.ss= owns the Funflow module row.
 - =src/modules/governor/config.ss= owns the loop governor row.
 - =src/modules/nono-sandbox/config.ss= owns the nono sandbox row.
 - =src/modules/cubeSandbox/config.ss= owns the CubeSandbox row.
-- =src/module-system/root-objects.ss= owns user-interface object contracts.
-- =src/module-system/root-profile.ss= owns root declaration projection helpers.
+- =src/user-interface/root-objects.ss= owns user-interface object contracts.
+- =src/user-interface/root-profile.ss= owns root declaration projection helpers.
 
 =user-interface/init.ss= exports category/module/feature bundle rows. Upstream
-=src/module-system/root-profile.ss= extends =poo-flow-kernel-profile= with
+=src/user-interface/root-profile.ss= extends =poo-flow-kernel-profile= with
 those rows. Core workflow, loop, and sandbox rows stay upstream-owned in profile
 config files; users should not have to repeat them just to get a working
 profile.
@@ -54,9 +54,9 @@ management:
 - =pooFlowRootProfileSetPresentation= exposes selected/default profile metadata for inspection.
 - =pooFlowRootProfileSetDoctorPresentation= reports duplicate profile names, empty registries, and missing defaults before activation.
 
-=src/module-system/profile-config.ss= owns profile/config data APIs.
-=src/module-system/root-profile.ss= owns the root user-interface projection
-helpers. =src/module-system/profiles/kernel.ss= owns the kernel profile set.
+=src/user-interface/profile-config.ss= owns profile/config data APIs.
+=src/user-interface/root-profile.ss= owns the root user-interface projection
+helpers. =src/profiles/kernel/interface.ss= owns the kernel profile set.
 
 Root =user-interface/init.ss= should stay close to Doom's =init.el= ergonomics:
 the visible block groups only optional patches under category markers. Required

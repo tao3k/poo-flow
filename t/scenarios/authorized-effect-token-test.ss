@@ -5,7 +5,7 @@
         :poo-flow/src/policy/cedar-decision
         :poo-flow/src/policy/strict-mediation
         :poo-flow/src/proof/authorized-effect-evidence
-        :poo-flow/src/module-system/tool-calling-control)
+        :poo-flow/src/modules/tool-core/calling-control)
 
 (declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 

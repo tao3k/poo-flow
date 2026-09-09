@@ -8,7 +8,7 @@
         (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-contract-validation
                  poo-object-validation-valid?)
-        (only-in "../../module-system/contract-schema.ss"
+        (only-in "../../module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot
                  poo-flow-contract-slot-metadata
                  poo-flow-contract-slot-name
@@ -17,7 +17,7 @@
                  poo-flow-contract-value-type
                  poo-flow-native-contract
                  poo-flow-native-contract->alist)
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/type-facts/objects)
 
 (export poo-flow-runtime-filesystem-prototype

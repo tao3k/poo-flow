@@ -20,12 +20,12 @@
     "src/feature-system/bundle-v1-lowering"
     "src/feature-system/bundle-v1-foreign-arena"
     "src/feature-system/bundle-v1-composition-writer"
-    "src/module-system/profile-composition-builders"
-    "src/module-system/profile-composition-inline-runtime"
-    "src/module-system/profile-composition-accessors"
-    "src/module-system/profile-composition-syntax-plan"
-    "src/module-system/profile-composition-use-syntax"
-    "src/module-system/profile-composition"))
+    "src/module-system/profile-composition/builders"
+    "src/module-system/profile-composition/inline-runtime"
+    "src/module-system/profile-composition/accessors"
+    "src/module-system/profile-composition/syntax-plan"
+    "src/module-system/profile-composition/use-syntax"
+    "src/module-system/profile-composition/interface"))
 
 (init-build-environment!
   name: "POO Flow runtime-wasm generators"

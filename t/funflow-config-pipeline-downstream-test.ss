@@ -3,8 +3,8 @@
 
 (import (only-in :std/sugar match)
         (only-in :std/test check-equal? test-case test-suite)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         :poo-flow/src/modules/agent-sandbox/config
         :poo-flow/src/modules/workflow/cicd)
 

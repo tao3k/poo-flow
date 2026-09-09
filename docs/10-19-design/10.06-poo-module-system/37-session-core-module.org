@@ -4,10 +4,10 @@
 This keeps the OpenRath-inspired session-first direction concrete while preserving POO Flow's boundary: Scheme owns POO objects, functional composition, validation, strategy, and receipts; Marlin or another runtime owns execution.
 ** 10.06.37.20 Delivered Code Owners
 - =src/modules/session-core/config.ss= owns the built-in module bundle.
-- =src/module-system/session-core-config.ss= owns report-only intent rows.
-- =src/module-system/presentation.ss= projects config-level session-core rows.
-- =src/module-system/profile-presentation.ss= forwards profile and doctor rows.
-- =src/module-system/declaration-case.ss= records the root declaration contract.
+- =src/modules/session-core/presentation.ss= owns report-only intent rows.
+- =src/user-interface/presentation.ss= projects config-level session-core rows.
+- =src/user-interface/profile-presentation.ss= forwards profile and doctor rows.
+- =src/user-interface/declaration-case.ss= records the root declaration contract.
 The module key is =(session . session-core)=. It is intentionally not a sandbox backend and not a workflow descriptor.
 ** 10.06.37.30 User Shape
 The compact module row is:
@@ -58,8 +58,8 @@ This row is part of =pooFlowUserConfigPresentation=, =pooFlowUserProfilePresenta
 Focused package-context gates:
 #+begin_src sh
 gxpkg env gxc src/modules/session/transform.ss src/modules/session/config.ss
-gxpkg env gxc src/modules/session-core/config.ss src/module-system/session-core-config.ss
-gxpkg env gxc src/module-system/presentation.ss src/module-system/profile-presentation.ss
+gxpkg env gxc src/modules/session-core/config.ss src/modules/session-core/presentation.ss
+gxpkg env gxc src/user-interface/presentation.ss src/user-interface/profile-presentation.ss
 gxtest t/session-transform-test.ss
 gxtest t/user-interface-presentation-test.ss
 gxtest t/declaration-case-test.ss

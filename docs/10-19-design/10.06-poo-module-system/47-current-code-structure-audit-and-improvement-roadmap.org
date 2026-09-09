@@ -15,13 +15,13 @@ The current codebase already has a useful layered shape:
    Single-file test selection belongs to the new testing framework and =gxtest='s native single-file selection support.
 
 2. Core functional and POO foundations.
-   =src/core/flow-declarations.ss= defines flow declaration descriptors and registries as POO-native values. =src/core/flow.ss= contains flow category access. =src/module-system/object-core-support/object.ss= owns module object construction, field resolution, inheritance, contribution indexing, and merge behavior.
+   =src/core/flow-declarations.ss= defines flow declaration descriptors and registries as POO-native values. =src/core/flow.ss= contains flow category access. =src/module-system/object-core/support/object.ss= owns module object construction, field resolution, inheritance, contribution indexing, and merge behavior.
 
 3. Module system facade and syntax.
-   =src/module-system/init-syntax.ss= owns public =use-module= syntax, profile construction helpers, and module bundle collection. It is the current public syntax choke point.
+   =src/user-interface/init-syntax.ss= owns public =use-module= syntax, profile construction helpers, and module bundle collection. It is the current public syntax choke point.
 
 4. Sandbox backend modules.
-   =src/module-system/sandbox-backend-object-syntax.ss= owns the internal =defpoo-sandbox-backend-object-family= macro. Concrete backends such as =src/modules/docker-sandbox/objects.ss= already call that macro instead of hand-writing every object/profile/capability family.
+   =src/modules/sandbox-core/backend-object-syntax.ss= owns the internal =defpoo-sandbox-backend-object-family= macro. Concrete backends such as =src/modules/docker-sandbox/objects.ss= already call that macro instead of hand-writing every object/profile/capability family.
 
 5. Session policy module.
    =src/modules/session/policy.ss= owns policy predicates, constructors, accessors, durable policy attachment, tool grants, policy checks, and final alist projections.
@@ -54,15 +54,15 @@ The target architecture is a small set of stable owners with clear responsibilit
 | Owner | Responsibility | Public surface |
 |-------+----------------+----------------|
 | =src/core/*= | Functional flow descriptors, flow registry, DAG/arrow-style composition kernel | Functional constructors and POO values |
-| =src/module-system/object-core-support/*= | Module object contract, inheritance, field merge, contribution indexing | Internal object engine |
-| =src/module-system/sandbox-backend-object-syntax.ss= | Declarative backend object/profile/capability generation | Internal macro only |
+| =src/module-system/object-core/support/*= | Module object contract, inheritance, field merge, contribution indexing | Internal object engine |
+| =src/modules/sandbox-core/backend-object-syntax.ss= | Declarative backend object/profile/capability generation | Internal macro only |
 | =src/modules/session/policy-syntax.ss= | Session policy family generation | Internal macro only |
 | =src/modules/session/policy.ss= | Public policy constructors/checks/projections | Stable POO-native policy functions |
-| =src/module-system/runtime-projection-syntax.ss= | Runtime receipt/manifest projection generation | Internal macro only |
+| =src/module-system/projection/runtime-syntax.ss= | Runtime receipt/manifest projection generation | Internal macro only |
 | =src/modules/loop-engine/runtime-receipts.ss= | Generated and hand-owned receipt functions | Internal ABI/report helpers |
 | =src/modules/loop-engine/runtime-intent.ss= | Functional loop intent enrichment pipeline | Internal pure pipeline helpers |
 | =src/modules/loop-engine/runtime.ss= | Orchestrates runtime intent, receipts, and projections | Existing compatibility owner during migration |
-| =src/module-system/init-syntax.ss= | Public =use-module= syntax | User-facing module entry |
+| =src/user-interface/init-syntax.ss= | Public =use-module= syntax | User-facing module entry |
 | =user-interface/*= | Real scenario examples for users and agents | Public examples |
 | =t/*= | Owner and scenario gates | Verification contract |
 
@@ -132,7 +132,7 @@ Completion condition:
 Purpose: make receipt/manifest payloads generated from named contract declarations while keeping alists only at final ABI/report boundaries.
 
 Deliverables:
-- New =src/module-system/runtime-projection-syntax.ss=.
+- New =src/module-system/projection/runtime-syntax.ss=.
 - Generated lineage, selector, resource-dispatch, capability, memory, and compression receipt projections.
 - A future =src/modules/loop-engine/runtime-receipts.ss= owner once projection generation is stable.
 - Runtime command manifest and discovery consistency checks.

@@ -4,8 +4,8 @@
 (export observability-feedback-test)
 
 (import :std/test
-        "../src/observability/objects.ss"
-        "../src/observability/types.ss"
+        "../src/module-system/observability/objects.ss"
+        "../src/module-system/observability/types.ss"
         (only-in "../src/module-system/types.ss"
                  poo-flow-validation-evidence-accepted?))
 

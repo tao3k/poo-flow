@@ -11,9 +11,9 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         :poo-flow/t/support/performance
-        (only-in :poo-flow/src/module-system/extension
+        (only-in :poo-flow/src/module-system/extension/interface
                  poo-flow-module-extension-node-slots)
-        (only-in :poo-flow/src/module-system/object-core
+        (only-in :poo-flow/src/module-system/object-core/interface
                  PooFlowModuleListType
                  poo-flow-module-config-merge-result-root
                  poo-flow-module-field-contract

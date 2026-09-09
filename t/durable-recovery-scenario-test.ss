@@ -8,9 +8,9 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-recovery-scenario
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/recovery-scenario
         :poo-flow/src/modules/session/config
         :poo-flow/src/modules/memory-core/config)
 

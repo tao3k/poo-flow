@@ -1,4 +1,4 @@
-(import (only-in :poo-flow/src/module-system/indexed-family
+(import (only-in :poo-flow/src/module-system/object-family/indexed
                  poo-indexed-family
                  poo-indexed-family-object
                  poo-indexed-family-lenses

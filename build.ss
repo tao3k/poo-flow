@@ -15,8 +15,8 @@
                  asp-gerbil-scheme-package-profiled-build-spec))
 
 (def +interface-only-modules+
-  '("src/module-system/object-family-syntax.ss"
-    "src/module-system/init-syntax.ss"))
+  '("src/module-system/object-family/syntax.ss"
+    "src/user-interface/init-syntax.ss"))
 
 (def +excluded-runtime-modules+
   '("src/contract/dependency-source-identity.ss"

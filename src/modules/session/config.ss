@@ -5,9 +5,9 @@
 
 (import (only-in :std/sugar filter)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/config-prototype-syntax
-        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/module-system/declaration/config-syntax
+        :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/agent
         :poo-flow/src/modules/session/agent-param
         :poo-flow/src/modules/session/communication
@@ -21,7 +21,7 @@
         :poo-flow/src/modules/session/config-session-syntax
         :poo-flow/src/modules/session/config-policy-syntax)
 
-(export (import: :poo-flow/src/module-system/durable-policy)
+(export (import: :poo-flow/src/modules/memory-core/durable/policy)
         (import: :poo-flow/src/modules/session/agent)
         (import: :poo-flow/src/modules/session/agent-param)
         (import: :poo-flow/src/modules/session/communication)

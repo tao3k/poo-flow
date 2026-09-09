@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :clan/poo/object .ref .slot?)
-        "../src/modules/poo-method-combination/plugins/observation.ss"
-        "../src/observability/interface.ss"
+        "../src/module-system/poo-method-combination/plugins/observation.ss"
+        "../src/module-system/observability/interface.ss"
         "scenarios/poo-method-combination/observation.ss")
 (export poo-method-combination-observation-test)
 (def poo-method-combination-observation-test

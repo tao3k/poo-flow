@@ -41,7 +41,7 @@ not subtracted from the gate.
 - Directly invoking the real =gxpkg= binary kept a no-op profile inside the
   gate: one measured run had =wall-micros= at =8288136=, =package-total= at
   =613402=, and =external-gap-micros= at =7674734=.
-- A stale untracked module, =src/module-system/tool-calling-control.ss=, caused
+- A stale untracked module, =src/modules/tool-core/calling-control.ss=, caused
   a cold single-file runtime compile of about =17352964= microseconds before
   the following no-op build returned to package-gate range.
 

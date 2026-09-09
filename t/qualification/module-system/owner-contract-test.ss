@@ -13,10 +13,10 @@
                  test-error
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/g0-qualification
-        :poo-flow/src/module-system/runtime-context-recovery
-        :poo-flow/src/module-system/composition-lineage
-        :poo-flow/src/module-system/gerbil-poo-consumption)
+        :poo-flow/src/qualification/module-system/g0
+        :poo-flow/src/modules/session/runtime-context-recovery
+        :poo-flow/src/module-system/composition/lineage
+        :poo-flow/src/qualification/module-system/gerbil-poo-consumption)
 
 (export module-system-owner-contract-tests)
 

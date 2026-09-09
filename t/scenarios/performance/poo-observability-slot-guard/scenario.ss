@@ -3,7 +3,7 @@
 
 (import (only-in :std/srfi/1 iota)
         (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow/src/observability/debug
+        (only-in :poo-flow/src/module-system/observability/debug
                  PooFlowDebugSlotPolicyContract
                  poo-flow-debug-poo
                  poo-flow-debug-slot-policy)

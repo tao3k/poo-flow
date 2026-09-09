@@ -28,11 +28,11 @@ def _scheme_generated_durable_payloads() -> tuple[bytes, bytes]:
             "-e",
             (
                 "(begin "
-                "(import :poo-flow/src/module-system/durable-policy "
-                ":poo-flow/src/module-system/durable-policy-manifest "
-                ":poo-flow/src/module-system/durable-runtime-store "
-                ":poo-flow/src/module-system/durable-runtime-store-backend "
-                ":poo-flow/src/module-system/durable-runtime-manifest) "
+                "(import :poo-flow/src/modules/memory-core/durable/policy "
+                ":poo-flow/src/modules/memory-core/durable/policy-manifest "
+                ":poo-flow/src/modules/memory-core/durable/store "
+                ":poo-flow/src/modules/memory-core/durable/store-backend "
+                ":poo-flow/src/modules/memory-core/durable/runtime-manifest) "
                 "(define policy "
                 "(poo-flow-durable-policy "
                 "(quote durable/python-runtime-envelope) "

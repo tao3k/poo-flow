@@ -1,4 +1,4 @@
-(import :poo-flow/src/module-system/composition-proof-facts)
+(import :poo-flow/src/module-system/composition/proof-facts)
 
 (def (alist-ref key alist)
   (let ((entry (assq key alist)))

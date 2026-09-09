@@ -15,7 +15,7 @@ inspect safely while a lazy POO projection is failing.
 
 These are different responsibilities.
 
-The existing =src/module-system/observability.ss= owner provides strict
+The existing =src/module-system/observability/module-presentation.ss= owner provides strict
 observation structs, presentation traces, and terminal alist projections.  Its
 values are deliberately outside lazy POO evaluation and do not execute runtime
 behavior.  That makes the owner suitable for safe presentation, but not for
@@ -29,7 +29,7 @@ owners.
 - =ObservationEvent= is a POO-native immutable semantic evidence value.
 - =RecoveryDecision= is a pure POO-native decision derived from visible
   evidence and bounded authority.
-- =src/module-system/observability.ss= remains the strict read-only projection
+- =src/module-system/observability/module-presentation.ss= remains the strict read-only projection
   owner for doctor, CLI, serialization, and presentation consumers.
 - Runtime telemetry consumes redacted projections.  It does not own semantic
   evidence and cannot reconstruct authority.
@@ -104,7 +104,7 @@ coordinator.
 
 ** Strict observability projection
 
-=src/module-system/observability.ss= owns:
+=src/module-system/observability/module-presentation.ss= owns:
 
 - strict observation structs that remain inspectable during lazy projection
   failure;
@@ -158,8 +158,8 @@ fixed-point foundation.
 
 For the current implementation task, the user explicitly authorized =rg= / =fd=
 exploration while the ASP parser route is unavailable. Local source and caller
-inspection identified the already-existing =src/observability/types.ss= and
-=src/observability/objects.ss= as the native Diagnostic/Receipt owner. Its
+inspection identified the already-existing =src/module-system/observability/types.ss= and
+=src/module-system/observability/objects.ss= as the native Diagnostic/Receipt owner. Its
 existing consumers include =src/contract/json-schema-receipt.ss= and
 =src/contract/boundary-namespace.ss=, with executable feedback scenarios in
 =t/observability-feedback-test.ss=.
@@ -177,14 +177,14 @@ observation package:
 - =debug.ss= explicitly consumes upstream =DDT= / =trace-poo= at the
   development-output boundary.
 
-The strict =src/module-system/observability.ss= owner is unchanged. Existing
+The strict =src/module-system/observability/module-presentation.ss= owner is unchanged. Existing
 Diagnostic/Receipt callers remain on their original API. The new admission
 observation does not use the legacy family catalog as a dispatch registry.
 
 This task-specific exploration authorization is not a parser receipt or a
 global relaxation of source-owner governance. Parser-owned confirmation and
 full qualification remain open. The concrete usage and limitations are
-recorded in =src/observability/README.org=.
+recorded in =src/module-system/observability/README.org=.
 
 * Conformance checklist
 
@@ -201,7 +201,7 @@ recorded in =src/observability/README.org=.
 
 * Non-goals
 
-- Replacing =src/module-system/observability.ss=.
+- Replacing =src/module-system/observability/module-presentation.ss=.
 - Treating strict structs or alists as the public composition interface.
 - Designing a second generic POO, type, contract, debug, or fixed-point library.
 - Storing or replaying raw continuations.

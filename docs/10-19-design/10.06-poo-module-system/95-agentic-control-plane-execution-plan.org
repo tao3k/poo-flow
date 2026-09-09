@@ -65,11 +65,11 @@ These areas are reused. The plan does not create a parallel top-level semantic u
 The new architecture extends and qualifies these owners. It does not pretend they are absent.
 
 ** Existing Authoring, Policy, Receipt, And Proof Owners
-- =src/module-system/init-syntax.ss= owns the current =session-case= authoring path.
-- =src/module-system/profile-composition.ss= and related accessors own profile composition.
+- =src/user-interface/init-syntax.ss= owns the current =session-case= authoring path.
+- =src/module-system/profile-composition/interface.ss= and related accessors own profile composition.
 - =src/modules/session/policy-syntax.ss= and policy-validation modules own session-policy declarations and checks.
 - =src/core/receipt.ss=, =src/modules/session/policy-validation-receipt.ss=, and =src/proof/proof-gate-receipts.ss= own existing receipt families.
-- =src/module-system/agent-lifecycle-gate.ss= and the Lean PooC3 lifecycle/policy modules own existing proof gates.
+- =src/modules/session/lifecycle-gate.ss= and the Lean PooC3 lifecycle/policy modules own existing proof gates.
 
 These are migration inputs and validation anchors, not licenses to overload one existing module with the complete new architecture.
 

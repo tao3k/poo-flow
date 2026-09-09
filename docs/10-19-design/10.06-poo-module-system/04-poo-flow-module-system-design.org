@@ -272,7 +272,7 @@ not read files, query package managers, or evaluate Scheme code.
 
 This keeps the boundary explicit:
 - loading belongs to a later source-loader layer;
-- resolving belongs to =src/module-system/resolver.ss=;
+- resolving belongs to =src/module-system/loader/resolver.ss=;
 - activation receives descriptor values only.
 
 ** 10.06.04.40 Activation Rules
@@ -330,7 +330,7 @@ The Doom/C3 interface additions are data-only:
 
 This keeps the boundary stable: Scheme owns descriptor data and validation, while loader backends and runtime execution remain separate owners.
 ** 10.06.04.80 User Interface Contract
-The user-facing import is =:poo-flow/src/module-system=. Users should not import leaf owners such as =:poo-flow/src/module-system/context= or =:poo-flow/src/module-system/projection= directly for normal module authoring.
+The user-facing import is =:poo-flow/src/module-system=. Users should not import leaf owners such as =:poo-flow/src/module-system/loader/context= or =:poo-flow/src/module-system/projection= directly for normal module authoring.
 
 The public interface contract is:
 - declare profiles with =poo-module-interface= and string schema helpers;

@@ -6,13 +6,13 @@
                  test-suite
                  test-case
                  check-equal?)
-        (only-in :poo-flow/src/module-system/profile-config
+        (only-in :poo-flow/src/user-interface/profile-config
                  poo-flow-user-profile-name
                  poo-flow-user-profile-set-name
                  poo-flow-user-profile-set-default-profile-name
                  poo-flow-user-profile-module-bundles
                  poo-flow-user-profile-modules)
-        (only-in :poo-flow/src/module-system/profiles/kernel
+        (only-in :poo-flow/src/profiles/kernel/interface
                  poo-flow-kernel-module-bundles
                  poo-flow-kernel-profile-module-bundles
                  poo-flow-kernel-profile

@@ -13,16 +13,16 @@
                  poo-flow-default-sandbox-profiles)
         (only-in "../funflow/config.ss"
                  poo-flow-funflow-workflow-agreement)
-        (only-in :poo-flow/src/module-system/sandbox-backend-capability-catalog
+        (only-in :poo-flow/src/modules/sandbox-core/backend-capability-catalog
                  poo-flow-user-config-sandbox-backend-capability-registry)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/sandbox-profile-catalog
-        :poo-flow/src/module-system/workflow-cicd-config
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/modules/sandbox-core/profile-catalog
+        :poo-flow/src/modules/workflow/cicd-config
         "core.ss"
         "proof-abi.ss"
         "runtime-base.ss"
         "runtime-capability.ss"
-        :poo-flow/src/module-system/runtime-projection-syntax
+        :poo-flow/src/module-system/projection/runtime-syntax
         "runtime-agent.ss"
         (only-in "runtime-intent.ss"
                  poo-flow-user-loop-engine-intent-runtime-action-kind

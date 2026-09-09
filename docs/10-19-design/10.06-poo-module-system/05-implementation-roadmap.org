@@ -12,7 +12,7 @@ Status: implemented.
 
 Files:
 - =src/module-system.ss=
-- =src/module-system/observability.ss=
+- =src/module-system/observability/module-presentation.ss=
 - =t/module-system-test.ss=
 - =t/module-system-observability-test.ss=
 - =build.ss=
@@ -52,7 +52,7 @@ Planned loader sources:
 - registry manifests;
 - generated module descriptors.
 Implemented first-pass behavior:
-- added =src/module-system/loader.ss= as a source-loader owner under =src/module-system=;
+- added =src/module-system/loader/interface.ss= as a source-loader owner under =src/module-system=;
 - added static loader entries for source-ref to descriptor mappings;
 - added load receipts so user tooling can inspect loaded and missing sources before activation;
 - added =poo-module-load-catalog= to hand loaded descriptors to the existing catalog resolver;
@@ -68,7 +68,7 @@ Add a command or helper surface that can explain:
 - config requirements introduced by modules.
 This is the =poo-flow= equivalent of borrowing Doom's =doctor= idea without borrowing Doom's implementation.
 Implemented first-pass behavior:
-- added =src/module-system/doctor.ss= as the user-facing doctor presentation owner;
+- added =src/module-system/diagnostics/doctor.ss= as the user-facing doctor presentation owner;
 - added =pooModuleDoctorPresentation= for value catalogs;
 - added =pooModuleSourceDoctorPresentation= for loader receipts plus module doctor summary;
 - included module ids, import graph, contribution counts, diagnostic status, validation count, merge status, and merged option summary;
@@ -85,7 +85,7 @@ Status: implemented.
 Delivered behavior:
 - added =src/module-system/user-config.ss= as the upstream-owned thin user config API;
 - added =src/module-system/user-profile.ss= as the upstream projection owner for root declarations;
-- added =src/module-system/root-objects.ss= as the upstream object-contract owner for user-interface data;
+- added =src/user-interface/root-objects.ss= as the upstream object-contract owner for user-interface data;
 - kept root =user-interface/init.ss= as the pure module-selection declaration entrypoint;
 - kept root =user-interface/custom/*/config.ss= as the downstream custom-module authoring space;
 - added =user-interface/README.org= to document that descriptor realization remains in =src/modules=;
@@ -115,7 +115,7 @@ Delivered behavior:
 Status: implemented.
 
 Delivered behavior:
-- added =src/module-system/descriptor-syntax.ss= as the macro-only owner;
+- added =src/module-system/descriptor/syntax.ss= as the macro-only owner;
 - exported macro sugar through =:poo-flow/src/module-system=;
 - added =poo-module-option-block= for schema/config POO slot blocks;
 - added =poo-module-hook-block= for data-only hook payload blocks;
@@ -125,7 +125,7 @@ Delivered behavior:
 ** 10.06.05.21 Slice 1F: Nix-Style Option Merge Receipts
 Status: implemented.
 Delivered behavior:
-- kept option merge receipts under =src/module-system/projection.ss=;
+- kept option merge receipts under =src/module-system/projection/interface.ss=;
 - exported merge receipts through =:poo-flow/src/module-system=;
 - added user-facing helpers =poo-option-append=, =poo-option-override=, =poo-option-conflict=, and =poo-option-merge=;
 - composed option configs dependencies-first and root-last for append and override behavior;

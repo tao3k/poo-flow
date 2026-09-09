@@ -1,7 +1,7 @@
 ;;; Proof gate bundle construction and validation.
 ;;; - Keep composition, scenario, and handoff proof wires joined at one bounded gate boundary.
 (import :poo-flow/src/proof/proof-fact-wire
-        :poo-flow/src/module-system/composition-proof-facts
+        :poo-flow/src/module-system/composition/proof-facts
         :poo-flow/src/graph/control-plane-handoff-facts
         :poo-flow/src/graph/scenario-gap-rejection-facts)
 

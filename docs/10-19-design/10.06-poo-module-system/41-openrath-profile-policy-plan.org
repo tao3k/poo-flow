@@ -65,7 +65,7 @@ The part to avoid is making Python-style classes or attribute assignment the
   collection.
 - =src/core/policy.ss= owns the current =execution-policy= shape: strategy,
   cache policy, failure policy, capabilities, and frontier.
-- =src/module-system/object-validation.ss= owns object/field contract
+- =src/module-system/object-validation/interface.ss= owns object/field contract
   validation and summary projection.
 
 The current gap is not a missing row operator. The gap is a first-class
@@ -285,7 +285,7 @@ P3: Session/Profile Handoff Policy
   owns execution.
 - Main owners:
   - =src/modules/session-core/config.ss=
-  - =src/module-system/session-core-config.ss=
+  - =src/modules/session-core/presentation.ss=
   - =src/modules/session/objects.ss=
   - =src/modules/session/transform.ss=
   - =src/modules/sandbox-core/profile.ss=
@@ -431,16 +431,16 @@ P2: Capability Registry Object
     entries, alias target holes, and registry shape errors.
   - =nono-sandbox=, =docker-sandbox=, and =cubeSandbox= each export a backend
     capability registry contribution object beside their profile/module objects.
-  - =module-system/sandbox-backend-capability-catalog.ss= builds a merged
+  - =src/modules/sandbox-core/backend-capability-catalog.ss= builds a merged
     backend registry from enabled user module selections and exports it through
-    =module-system/profile-config.ss=.
-  - =module-system/sandbox-backend-capability-catalog.ss= also preserves the
+    =src/user-interface/profile-config.ss=.
+  - =src/modules/sandbox-core/backend-capability-catalog.ss= also preserves the
     contribution registry list before merge so validation can report conflicts
     before last-writer merge semantics erase evidence.
   - =agent-sandbox/config.ss= exposes registry-aware policy validation,
     projection, runtime-intent, and profile-presentation helpers so callers can
     pass the merged module-system registry.
-  - =module-system/presentation-config.ss= and profile presentation now expose
+  - =src/user-interface/presentation-config.ss= and profile presentation now expose
     the sandbox backend capability registry validation receipt, validity flag,
     diagnostic count, and diagnostics.
   - The legacy fixed helper now delegates to the default registry, so call sites
@@ -481,7 +481,7 @@ The likely owners are:
 - =src/modules/sandbox-core/profile-support/resolve.ss=: composed object
   resolution and projection-only handoff construction.
 - =src/modules/*/objects.ss=: backend capability objects for concrete modules.
-- =src/module-system/object-validation.ss=: shared structured diagnostic
+- =src/module-system/object-validation/interface.ss=: shared structured diagnostic
   projection and summary formatting.
 - =user-interface/custom/*=: real user-facing profile examples and policy
   fixtures.

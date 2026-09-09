@@ -7,22 +7,22 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :poo-flow/src/module-system/init-syntax
+        (only-in :poo-flow/src/user-interface/init-syntax
                  poo-flow-profile-extend)
-        (only-in :poo-flow/src/module-system/load-syntax
+        (only-in :poo-flow/src/module-system/loader/fragment-syntax
                  poo-flow-load-profile-module-binding)
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-user-module-bundle)
-        (only-in :poo-flow/src/module-system/profile-composition-profile-syntax
+        (only-in :poo-flow/src/module-system/profile-composition/profile-syntax
                  poo-flow-composition-profile-module)
-        (only-in :poo-flow/src/module-system/profile-config
+        (only-in :poo-flow/src/user-interface/profile-config
                  poo-flow-user-profile-module-bundles
                  poo-flow-user-profile-name)
-        (only-in :poo-flow/src/module-system/profiles/kernel
+        (only-in :poo-flow/src/profiles/kernel/interface
                  poo-flow-kernel-profile)
-        (only-in :poo-flow/src/module-system/projection-syntax
+        (only-in :poo-flow/src/module-system/projection/syntax
                  poo-flow-module-field-rows/tail)
-        (only-in :poo-flow/src/module-system/durable-artifact-policy
+        (only-in :poo-flow/src/modules/memory-core/durable/artifact-policy
                  artifact-module
                  database-module
                  poo-flow-artifact-profile?

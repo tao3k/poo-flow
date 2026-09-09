@@ -1,6 +1,6 @@
 (import :std/test
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-policy-manifest)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/policy-manifest)
 
 (export durable-policy-manifest-test)
 

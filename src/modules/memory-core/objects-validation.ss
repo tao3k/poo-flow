@@ -4,7 +4,7 @@
 (import (only-in :std/srfi/1 fold)
         (only-in :std/sugar cut)
         (only-in :clan/poo/object .o .ref object? object<-alist)
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/transform
         :poo-flow/src/modules/memory-core/objects-core

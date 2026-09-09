@@ -349,8 +349,8 @@ flowchart LR
 #+end_src
 
 The repository already contains =src/module-system/objects.ss=,
-=src/module-system/object-core.ss=, and
-=src/module-system/object-core-support/contracts.ss=.  They are implementation
+=src/module-system/object-core/interface.ss=, and
+=src/module-system/object-core/support/contracts.ss=.  They are implementation
 evidence below the Module layer.  The current contract helpers do not by
 themselves admit the intended POO-native type foundation: the exact owner
 =src/module-system/types.ss= is still missing.

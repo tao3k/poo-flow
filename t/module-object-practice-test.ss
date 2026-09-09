@@ -15,8 +15,8 @@
                  test-error
                  test-suite)
         :poo-flow/t/support/performance
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-core)
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-core/interface)
 
 (export module-object-practice-test)
 

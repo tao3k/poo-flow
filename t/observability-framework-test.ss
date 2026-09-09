@@ -5,10 +5,10 @@
         (only-in :clan/base λ)
         (only-in :clan/poo/object .o .cc .ref .slot? .all-slots)
         (only-in :clan/poo/mop element? validate TypeError?)
-        "../src/observability/interface.ss"
-        "../src/observability/debug.ss"
-        (only-in "../src/observability/types.ss" PooFlowObservabilityDiagnosticContract)
-        (only-in "../src/observability/objects.ss" poo-flow-observability-diagnostic-record)
+        "../src/module-system/observability/interface.ss"
+        "../src/module-system/observability/debug.ss"
+        (only-in "../src/module-system/observability/types.ss" PooFlowObservabilityDiagnosticContract)
+        (only-in "../src/module-system/observability/objects.ss" poo-flow-observability-diagnostic-record)
         (only-in "../src/module-system/types.ss"
                  poo-flow-contract-admit poo-flow-predicate-contract)
         "../src/module-system/semantic-module/objects.ss")

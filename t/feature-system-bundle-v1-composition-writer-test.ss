@@ -4,7 +4,7 @@
 (import :std/test
         :clan/poo/object
         :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition
+        :poo-flow/src/module-system/profile-composition/interface
         :poo-flow/src/feature-system/bundle-v1-composition-writer
         :poo-flow/src/feature-system/bundle-v1-lowering)
 

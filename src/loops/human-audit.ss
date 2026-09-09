@@ -13,7 +13,7 @@
                  loop-governor-human-node-role
                  loop-governor-node->contract
                  loop-governor-validation-errors)
-        (only-in "../module-system/contract-schema.ss"
+        (only-in "../module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type

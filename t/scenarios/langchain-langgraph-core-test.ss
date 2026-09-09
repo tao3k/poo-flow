@@ -8,9 +8,9 @@
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-analysis
         :poo-flow/src/graph/runtime-executor
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-composition
-        :poo-flow/src/module-system/profile-composition-accessors)
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/module-system/profile-composition/interface
+        :poo-flow/src/module-system/profile-composition/accessors)
 
 (declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 

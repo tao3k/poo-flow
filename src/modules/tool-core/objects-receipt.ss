@@ -2,7 +2,7 @@
 ;;; Boundary: POO-native policy-catalog validation receipts.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy
         :poo-flow/src/modules/tool-core/objects-catalog

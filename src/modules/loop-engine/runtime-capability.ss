@@ -9,10 +9,10 @@
                  poo-flow-sandbox-backend-capability/capabilities
                  poo-flow-sandbox-backend-capability-registry-entries)
         (only-in :std/sugar filter-map)
-        :poo-flow/src/module-system/sandbox-backend-capability-catalog
+        :poo-flow/src/modules/sandbox-core/backend-capability-catalog
         "core.ss"
         "runtime-base.ss"
-        :poo-flow/src/module-system/runtime-projection-syntax
+        :poo-flow/src/module-system/projection/runtime-syntax
         :poo-flow/src/utilities/functional)
 
 (export make-loop-engine-capability-receipt

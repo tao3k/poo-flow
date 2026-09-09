@@ -8,7 +8,7 @@
         :poo-flow/src/modules/agent-sandbox/profile-native-contract
         :poo-flow/src/modules/agent-sandbox/projection-syntax
         :poo-flow/src/modules/sandbox-core/profile-support/policy
-        :poo-flow/src/module-system/projection-syntax)
+        :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-sandbox-profile-kind PooFlowSandboxProfileContract
         poo-flow-sandbox-profile-contract-admission poo-flow-sandbox-profile-contract-admitted?

@@ -6,8 +6,8 @@
         :gerbil/gambit
         (only-in :gerbil/expander datum->syntax)
         :poo-flow/src/core/plan
-        :poo-flow/src/module-system/profile-composition
-        (only-in :poo-flow/src/module-system/profile-composition-syntax-plan
+        :poo-flow/src/module-system/profile-composition/interface
+        (only-in :poo-flow/src/module-system/profile-composition/syntax-plan
                  parse-poo-flow-composition-syntax-plan))
 
 (def base-report

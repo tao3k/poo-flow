@@ -8,8 +8,8 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/facade
-        :poo-flow/src/module-system/init-syntax
+        :poo-flow/src/user-interface/facade
+        :poo-flow/src/user-interface/init-syntax
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-loop-engine-case))
 

@@ -22,6 +22,10 @@ version.ss
 # Shared native binding build cache.
 /target/
 
+# Local Python packaging and native-extension build outputs.
+*.egg-info/
+*.so
+
 # Generated runtime-WASM bundle artifacts are build outputs, not sources.
 /bindings/runtime-wasm/workflows/*.bin
 /bindings/runtime-wasm/workflows/.human-capability.*.tmp

@@ -1475,9 +1475,9 @@ flowchart LR
 ** Verification receipt
 
 - [X] Concrete Gerbil owner:
-  =src/module-system/profile-composition-use-syntax.ss=.
+  =src/module-system/profile-composition/use-syntax.ss=.
 - [X] Parser owner:
-  =src/module-system/profile-composition-syntax-plan.ss=.
+  =src/module-system/profile-composition/syntax-plan.ss=.
 - [X] Focused Scheme owner: =t/profile-composition-test.ss= and the
   composition syntax smoke scenario.
 - [X] Lean counterexample: generic composition equality does not imply parser

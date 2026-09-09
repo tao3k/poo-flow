@@ -302,7 +302,7 @@ precise_test_sources = {
         ),
         (
             "poo_method_combination_module_test",
-            "small",
+            "medium",
             "//:t/poo-method-combination-module-test.ss",
         ),
         (

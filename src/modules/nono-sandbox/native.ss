@@ -8,7 +8,7 @@
 (import :gerbil/gambit
         :poo-flow/src/modules/agent-sandbox/alist
         :poo-flow/src/modules/nono-sandbox/c-binding-runtime
-        :poo-flow/src/module-system/base
+        :poo-flow/src/module-system/declaration/interface
         (only-in ./_nono
                  nono_native_apply_null
                  nono_native_capability_roundtrip

@@ -665,10 +665,10 @@ Delivered in this slice:
 
 - =src/modules/agent-sandbox/config.ss= owns the profile DSL and presentation;
 - =src/modules/agent-sandbox/config.ss= owns the built-in =agent/nono= and =agent/cube= defaults;
-- =src/module-system/profile-config.ss= exposes the upstream DSL and defaults to downstream init files;
+- =src/user-interface/profile-config.ss= exposes the upstream DSL and defaults to downstream init files;
 - =user-interface/init.ss= remains a module-loading surface only;
-- =src/module-system/profile-config.ss= builds the canonical =users= profile projection from root declarations;
-- =src/module-system/base.ss= projects loop-engine sandbox profile refs into sandbox-owned runtime/handoff summaries when the selected config exposes a matching profile catalog;
+- =src/user-interface/profile-config.ss= builds the canonical =users= profile projection from root declarations;
+- =src/module-system/declaration/interface.ss= projects loop-engine sandbox profile refs into sandbox-owned runtime/handoff summaries when the selected config exposes a matching profile catalog;
 - focused tests cover inert recipes, upstream runtime intent presentation, runtime summary projection, handoff summary projection, and root config loading.
 
 Next milestone: connect selected profile names to Funflow/CI runtime-command manifest projection so workflow nodes can request a sandbox profile without embedding backend-specific execution details in Scheme.

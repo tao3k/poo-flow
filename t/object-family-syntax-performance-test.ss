@@ -16,7 +16,7 @@
         (only-in :clan/poo/object .ref object<-alist)
         (only-in :poo-flow/t/support/poo-performance-object-scenarios
                  poo-performance-build-list)
-        :poo-flow/src/module-system/object-family-syntax)
+        :poo-flow/src/module-system/object-family/syntax)
 
 (export object-family-syntax-performance-test)
 

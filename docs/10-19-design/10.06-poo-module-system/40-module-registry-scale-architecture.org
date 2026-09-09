@@ -10,11 +10,11 @@ The root fix is an architectural boundary, not another local import trim:
 ** 40.20 Boundary
 The module-system path is split into three layers.
 
-1. =src/module-system/module-registry.ss=
+1. =src/module-system/loader/registry.ss=
 
-This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/source=. It must not import loaders, resolvers, extension graphs, concrete =src/modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
+This owner stores source-ref metadata and static module-tree manifests. It imports only =src/module-system/loader/source=. It must not import loaders, resolvers, extension graphs, concrete =src/modules/*= packages, or POO object owners. Expanding the catalog to hundreds of modules should only expand data and string/source-ref mapping.
 
-2. =src/module-system/loader-tree.ss=
+2. =src/module-system/loader/tree.ss=
 
 This owner consumes registry source refs and turns them into lazy-load plans, auto-import graphs, and strict load/catalog operations. Loader behavior stays here because it is an action boundary. Registry users can inspect module sources without forcing descriptor realization.
 

@@ -9,7 +9,7 @@
                  member)
         (only-in :clan/poo/object
                  object<-alist)
-        (only-in "../src/module-system/contract-schema.ss"
+        (only-in "../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot-name
                  poo-flow-native-contract-slots)
         (only-in "../src/contract/json-schema-source.ss"

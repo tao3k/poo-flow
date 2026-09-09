@@ -7,7 +7,7 @@
         poo-object-family-syntax-expected->alist)
 
 (import (only-in :clan/poo/object object<-alist)
-        :poo-flow/src/module-system/object-family-syntax)
+        :poo-flow/src/module-system/object-family/syntax)
 
 (def +poo-object-family-syntax-expected-kind+
   'poo-object-family-syntax-scenario)

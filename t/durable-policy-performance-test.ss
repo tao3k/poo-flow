@@ -13,7 +13,7 @@
                  benchmark-run)
         (only-in :clan/poo/object object?)
         :poo-flow/t/support/performance
-        :poo-flow/src/module-system/durable-policy)
+        :poo-flow/src/modules/memory-core/durable/policy)
 
 (export durable-policy-performance-test)
 

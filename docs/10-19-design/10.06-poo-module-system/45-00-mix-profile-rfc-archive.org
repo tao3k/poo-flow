@@ -3202,13 +3202,13 @@ already share this surface.
 
 ** Existing internal projection and qualification
 
-- [[../../../src/module-system/profile-core.ss][profile-core.ss]] owns the
+- [[../../../src/user-interface/profile-core.ss][profile-core.ss]] owns the
   reusable Profile identity, extension, settings, and module projections.
-- [[../../../src/module-system/root-profile.ss][root-profile.ss]] owns root
+- [[../../../src/user-interface/root-profile.ss][root-profile.ss]] owns root
   Profile selection and configuration/presentation projection.
-- [[../../../src/module-system/profile-presentation.ss][profile-presentation.ss]]
+- [[../../../src/user-interface/profile-presentation.ss][profile-presentation.ss]]
   owns the existing Profile presentation boundary.
-- [[../../../src/module-system/declaration-case.ss][declaration-case.ss]] owns
+- [[../../../src/user-interface/declaration-case.ss][declaration-case.ss]] owns
   case presentation matching and trace-safety qualification.
 
 * Public User Interface invariant

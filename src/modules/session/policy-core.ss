@@ -2,10 +2,10 @@
 ;;; Boundary: core session policy object shape, projection, and contracts.
 
 (import (only-in :clan/poo/object .o .ref .slot? object? object<-alist)
-        :poo-flow/src/module-system/durable-policy
+        :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/session/policy-syntax
-        (only-in "../../module-system/contract-schema.ss"
+        (only-in "../../module-system/descriptor/contracts.ss"
                  poo-flow-contract-check-slot!
                  poo-flow-contract-slot
                  poo-flow-contract-value-type

@@ -49,7 +49,7 @@
    (newline))
  trials)
 (verify-combination-dependencies! dependency-snapshot)
-(write (list 'qualification-complete 'schema 'v2 'producer 'poo-flow/modules/poo-method-combination
+(write (list 'qualification-complete 'schema 'v1 'producer 'poo-flow/module-system/poo-method-combination
              'artifact-count artifact-count 'suites (length suites) 'tests-passed #t
              'performance-trials (length trials)))
 (newline)

@@ -37,4 +37,4 @@ would require a separate signing/key-ownership contract, not a digest rename.
 
 The mechanism is local dependent-slice qualification, not all-package release
 admission. Exact frozen semantics and workload limitations are in
-[[file:../../../src/modules/poo-method-combination/V1-CONTRACT.org][the source-owned v1 contract]].
+[[file:../../../src/module-system/poo-method-combination/V1-CONTRACT.org][the source-owned v1 contract]].

@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: shared slot schemas and Contracts are native POO Type values.
 
-(eval '(import "./src/module-system/contract-schema.ss"))
+(eval '(import "./src/module-system/descriptor/contracts.ss"))
 (eval '(import :clan/poo/object :clan/poo/mop))
 
 (def (contract-schema-eval expr)

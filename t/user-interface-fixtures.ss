@@ -3,11 +3,11 @@
 ;;; Invariant: fixtures are declarative data and never realize descriptors.
 
 (import (only-in :clan/poo/object .o .ref)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/init-syntax
-        :poo-flow/src/module-system/profile-config
-        :poo-flow/src/module-system/profile-core
-        :poo-flow/src/module-system/profiles/kernel)
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/init-syntax
+        :poo-flow/src/user-interface/profile-config
+        :poo-flow/src/user-interface/profile-core
+        :poo-flow/src/profiles/kernel/interface)
 
 (defrules poo-flow-profile-set (default profiles)
   ((_ name (default default-name) (profiles profile ...))

@@ -1,8 +1,8 @@
 (import :std/test
         :asp-gerbil-scheme/src/testing/memory-profile
         :clan/poo/object
-        :poo-flow/src/module-system/durable-artifact-policy
-        :poo-flow/src/module-system/profile-composition)
+        :poo-flow/src/modules/memory-core/durable/artifact-policy
+        :poo-flow/src/module-system/profile-composition/interface)
 
 (declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 

@@ -8,7 +8,7 @@
         (only-in :std/srfi/1
                  find)
         (only-in :clan/poo/mop element?)
-        (only-in "../src/module-system/contract-schema.ss"
+        (only-in "../src/module-system/descriptor/contracts.ss"
                  poo-flow-contract-slot-name
                  poo-flow-contract-slot-predicate-key
                  poo-flow-contract-slot-report-kind

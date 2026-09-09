@@ -1,8 +1,8 @@
 (import :std/test
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-runtime-store-backend
-        :poo-flow/src/module-system/durable-runtime-manifest)
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/store-backend
+        :poo-flow/src/modules/memory-core/durable/runtime-manifest)
 
 (export durable-runtime-manifest-test)
 

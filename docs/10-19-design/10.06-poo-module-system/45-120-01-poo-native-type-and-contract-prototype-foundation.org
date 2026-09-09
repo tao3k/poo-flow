@@ -161,8 +161,8 @@ This RFC adds no public macro.
 The repository already contains:
 
 - =src/module-system/objects.ss=;
-- =src/module-system/object-core.ss=; and
-- =src/module-system/object-core-support/contracts.ss=.
+- =src/module-system/object-core/interface.ss=; and
+- =src/module-system/object-core/support/contracts.ss=.
 
 Those owners prove that project object and contract concerns already exist below
 Module.  They do not prove the Type and Contract prototype algebra defined here.
@@ -279,9 +279,9 @@ compatibility adapter:
   classification evidence, validation evidence, and the three open generic
   operations =poo-flow-type-classify=, =poo-flow-contract-obligations=, and
   =poo-flow-contract-admit=;
-- =src/observability/types.ss= defines diagnostic and receipt Contract
+- =src/module-system/observability/types.ss= defines diagnostic and receipt Contract
   descriptors with upstream =define-type=;
-- =src/observability/objects.ss= constructs native POO objects and validates
+- =src/module-system/observability/objects.ss= constructs native POO objects and validates
   them through those descriptors; and
 - the former utilities record contracts no longer participate in the
   observability owner.

@@ -4,7 +4,7 @@
 * Status
 
 IMPLEMENTED as an opt-in development boundary in
-=src/observability/slot-debug.ss=.  It diagnoses lazy slot recursion before
+=src/module-system/observability/slot-debug.ss=.  It diagnoses lazy slot recursion before
 unbounded heap growth while preserving upstream POO caching and exception
 semantics.  It does not modify the vendored reference sources under =.data=.
 
@@ -93,7 +93,7 @@ changing =accepted?=.
 
 This separation keeps the effectful adapter independent from the existing
 Module observation model.  It does not add slots to SemanticModule, replace
-the strict =src/module-system/observability.ss= presentation owner, or make
+the strict =src/module-system/observability/module-presentation.ss= presentation owner, or make
 debug output semantic evidence.
 
 * Authoring and performance path

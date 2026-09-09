@@ -14,11 +14,11 @@
                  test-error
                  test-suite)
         :poo-flow/t/support/performance
-        :poo-flow/src/module-system/source
-        :poo-flow/src/module-system/descriptor
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/loader
-        :poo-flow/src/module-system/loader-tree)
+        :poo-flow/src/module-system/loader/source
+        :poo-flow/src/module-system/descriptor/interface
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/loader/interface
+        :poo-flow/src/module-system/loader/tree)
 
 (export module-system-lazy-loader-test)
 
@@ -205,7 +205,7 @@
                 (poo-flow-module-load-receipt-metadata first-receipt)))
           (check-equal? (length plans) 22)
           (check-equal? (car source-values)
-                        "src/modules/poo-method-combination/config.ss")
+                        "src/module-system/poo-method-combination/config.ss")
           (check-equal? (if (member "src/modules/sandbox-core/config.ss"
                                     source-values)
                           #t
@@ -216,22 +216,22 @@
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/module-system/profile-config.ss"
+          (check-equal? (if (member "src/user-interface/profile-config.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/module-system/init-syntax.ss"
+          (check-equal? (if (member "src/user-interface/init-syntax.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/module-system/root-profile.ss"
+          (check-equal? (if (member "src/user-interface/root-profile.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/module-system/declaration-case.ss"
+          (check-equal? (if (member "src/user-interface/declaration-case.ss"
                                     source-values)
                           #t
                           #f)

@@ -162,7 +162,7 @@ shape, and integration with the existing evidence-producing validation path.
 * Session policy vertical slice
 
 Session policy and tool-grant owners use the repository-wide functional native
-composition owner, =module-system/contract-schema.ss=.  That module constructs
+composition owner, =module-system/descriptor/contracts.ss=.  That module constructs
 native value Types, POO slot-schema objects, pure slot obligations, and
 =PooFlowContract.= descriptors.  Graph and sandbox resource contracts use the
 same owner.  Policy objects use POO slot presence and lookup; tool-grant

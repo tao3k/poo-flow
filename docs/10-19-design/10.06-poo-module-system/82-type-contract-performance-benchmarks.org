@@ -50,7 +50,7 @@ The benchmark implementation is split by responsibility:
 - =src/testing/project.ss= registers the support file for harness-aware test selection.
 
 The support file is deliberately source-level. It imports the current
-=src/module-system/contract-schema.ss=, =src/type-facts=, and
+=src/module-system/descriptor/contracts.ss=, =src/type-facts=, and
 =src/modules/session= owners directly so benchmark results track the active
 checkout, not stale installed ABI state.
 

@@ -4,7 +4,7 @@
         :poo-flow/src/core/roles
         :poo-flow/src/feature-system/capability-model
         :poo-flow/src/feature-system/composition
-        :poo-flow/src/module-system/domain-case
+        :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/utilities/functional)
 
 (export feature-domain-case-assembly

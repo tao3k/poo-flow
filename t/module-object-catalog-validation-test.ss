@@ -6,11 +6,11 @@
                  test-suite
                  test-case
                  check-equal?)
-        :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/object-validation
+        :poo-flow/src/module-system/object-core/interface
+        :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/objects
         :poo-flow/src/modules/sandbox-core/objects
-        :poo-flow/src/module-system/root-objects
+        :poo-flow/src/user-interface/root-objects
         :poo-flow/src/modules/nono-sandbox/objects
         :poo-flow/src/modules/cubeSandbox/objects
         :poo-flow/src/modules/docker-sandbox/objects)

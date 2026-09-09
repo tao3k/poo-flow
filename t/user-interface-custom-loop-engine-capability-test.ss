@@ -13,12 +13,12 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/presentation-config
+        :poo-flow/src/module-system/declaration/interface
+        :poo-flow/src/user-interface/presentation-config
         (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
-        :poo-flow/src/module-system/init-syntax)
+        :poo-flow/src/user-interface/init-syntax)
 
 (export user-interface-custom-loop-engine-capability-test)
 

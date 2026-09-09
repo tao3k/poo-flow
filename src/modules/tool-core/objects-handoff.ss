@@ -2,7 +2,7 @@
 ;;; Boundary: POO-native runtime handoff manifest projections.
 
 (import (only-in :clan/poo/object .o .ref object?)
-        :poo-flow/src/module-system/projection-syntax
+        :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/modules/session/objects
         :poo-flow/src/modules/tool-core/objects-spec
         :poo-flow/src/modules/tool-core/objects-support)

@@ -2,9 +2,9 @@
 ;;; Boundary: reusable native POO object scenarios for performance gates.
 
 (import (only-in :clan/poo/object .ref)
-        :poo-flow/src/module-system/object-core
-        :poo-flow/src/module-system/extension
-        :poo-flow/src/module-system/object-validation
+        :poo-flow/src/module-system/object-core/interface
+        :poo-flow/src/module-system/extension/interface
+        :poo-flow/src/module-system/object-validation/interface
         (only-in :std/srfi/1 iota)
         (only-in :std/sugar filter))
 

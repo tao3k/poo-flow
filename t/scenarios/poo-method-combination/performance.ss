@@ -3,14 +3,14 @@
 (import (only-in :gerbil/gambit current-time time->seconds f64vector-ref f64vector-length)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric)
-        "../../../src/modules/poo-method-combination/interface.ss")
+        "../../../src/module-system/poo-method-combination/interface.ss")
 (export combination-performance-scenario CombinationPerformanceInput
         combination-performance-matrix)
 (def CombinationPerformanceInput
   (.o iterations: 1000 depth: 8 warm-budget-ms: 10000))
 (def PerformanceReceipt.
   (.o kind: 'poo-combination/performance-receipt schema: 'v1
-      producer: 'poo-flow/modules/poo-method-combination runtime-executed?: #t))
+      producer: 'poo-flow/module-system/poo-method-combination runtime-executed?: #t))
 (def (measure thunk)
   (let* ((start (time->seconds (current-time))) (result (thunk))
          (elapsed (* 1000 (- (time->seconds (current-time)) start))))
@@ -83,7 +83,7 @@
 (def (trial-receipt depth-value mode-value qualifiers-value iterations-value trial-value
                     order-value expected-value combination-value functional-value)
   (.o kind: 'poo-combination/performance-trial schema: 'v1
-      producer: 'poo-flow/modules/poo-method-combination runtime-executed?: #t
+      producer: 'poo-flow/module-system/poo-method-combination runtime-executed?: #t
       depth: depth-value from: mode-value qualifiers: qualifiers-value iterations: iterations-value trial: trial-value
       order: order-value expected: expected-value plan-reused?: #t
       combination: combination-value functional: functional-value))

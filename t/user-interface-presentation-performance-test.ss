@@ -13,11 +13,11 @@
                  benchmark-run/result)
         (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/t/support/performance
-        (only-in :poo-flow/src/module-system/base
+        (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules
                  pooFlowUserConfig)
-        (only-in :poo-flow/src/module-system/presentation-config
+        (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation)
         (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)

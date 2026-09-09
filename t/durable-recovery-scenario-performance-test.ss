@@ -11,9 +11,9 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         :poo-flow/t/support/performance
-        :poo-flow/src/module-system/durable-policy
-        :poo-flow/src/module-system/durable-runtime-store
-        :poo-flow/src/module-system/durable-recovery-scenario
+        :poo-flow/src/modules/memory-core/durable/policy
+        :poo-flow/src/modules/memory-core/durable/store
+        :poo-flow/src/modules/memory-core/durable/recovery-scenario
         :poo-flow/src/modules/session/transform
         :poo-flow/src/modules/memory-core/objects)
 

@@ -8,7 +8,7 @@
                  run-tests!
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/object-core
+        :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/modules/sandbox-core/objects
         :poo-flow/src/modules/sandbox-core/profile-support/policy
         :poo-flow/src/modules/nono-sandbox/objects

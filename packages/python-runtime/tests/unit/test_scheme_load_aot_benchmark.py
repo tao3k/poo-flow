@@ -12,7 +12,7 @@ from poo_flow_runtime import _scheme_load_cache as scheme_cache
 
 
 def _runtime_projection_fixture(root: Path) -> Path:
-    projection = root / "src" / "module-system" / "runtime-load-projection.ss"
+    projection = root / "src" / "modules" / "funflow" / "runtime-load-projection.ss"
     projection.parent.mkdir(parents=True)
     projection.write_text(";; projection fixture\n", encoding="utf-8")
     return projection

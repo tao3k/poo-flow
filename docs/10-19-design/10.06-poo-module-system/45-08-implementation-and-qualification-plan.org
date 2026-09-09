@@ -147,13 +147,13 @@ gate over those rows; it is not represented as a self-owning runtime row.
 
 | Row identity | RFC | Exact Gerbil source owner | Direct test owner | Stable parent build target | State |
 |-
-| =rfc45-01-mix-module-expansion= | 45-01 | =src/module-system/profile-composition-use-syntax.ss#use-composition= | =t/profile-composition-test.ss#profile-composition-tests= | =//t/qualification/module-system:rfc45_01_mix_sources= | implemented |
-| =rfc45-02-g0-decision= | 45-02 | =src/module-system/g0-qualification.ss#poo-flow-g0-resolve= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_02_sources= | implemented |
-| =rfc45-03-runtime-context-recovery= | 45-03 | =src/module-system/runtime-context-recovery.ss#poo-flow-runtime-context= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_03_sources= | implemented |
-| =rfc45-04-observability-snapshot= | 45-04 | =src/module-system/observability.ss#poo-flow-module-presentation-trace= | =t/module-system-observability-test.ss#module-system-observability-test= | =//t/qualification/module-system:rfc45_04_sources= | implemented |
-| =rfc45-05-lineage-cycle= | 45-05 | =src/module-system/composition-lineage.ss#poo-flow-lineage-analysis= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_05_sources= | implemented |
-| =rfc45-06-gerbil-poo-consumption= | 45-06 | =src/module-system/gerbil-poo-consumption.ss#poo-flow-gerbil-poo-consumption-manifest= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_06_sources= | implemented |
-| =rfc45-07-public-composition= | 45-07 | =src/module-system/profile-composition-use-syntax.ss#use-composition= | =t/profile-composition-test.ss#profile-composition-tests= | =//t/qualification/module-system:rfc45_07_composition_sources= | implemented |
+| =rfc45-01-mix-module-expansion= | 45-01 | =src/module-system/profile-composition/use-syntax.ss#use-composition= | =t/profile-composition-test.ss#profile-composition-tests= | =//t/qualification/module-system:rfc45_01_mix_sources= | implemented |
+| =rfc45-02-g0-decision= | 45-02 | =src/qualification/module-system/g0.ss#poo-flow-g0-resolve= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_02_sources= | implemented |
+| =rfc45-03-runtime-context-recovery= | 45-03 | =src/modules/session/runtime-context-recovery.ss#poo-flow-runtime-context= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_03_sources= | implemented |
+| =rfc45-04-observability-snapshot= | 45-04 | =src/module-system/observability/module-presentation.ss#poo-flow-module-presentation-trace= | =t/module-system-observability-test.ss#module-system-observability-test= | =//t/qualification/module-system:rfc45_04_sources= | implemented |
+| =rfc45-05-lineage-cycle= | 45-05 | =src/module-system/composition/lineage.ss#poo-flow-lineage-analysis= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_05_sources= | implemented |
+| =rfc45-06-gerbil-poo-consumption= | 45-06 | =src/qualification/module-system/gerbil-poo-consumption.ss#poo-flow-gerbil-poo-consumption-manifest= | =t/qualification/module-system/owner-contract-test.ss#module-system-owner-contract-tests= | =//t/qualification/module-system:rfc45_06_sources= | implemented |
+| =rfc45-07-public-composition= | 45-07 | =src/module-system/profile-composition/use-syntax.ss#use-composition= | =t/profile-composition-test.ss#profile-composition-tests= | =//t/qualification/module-system:rfc45_07_composition_sources= | implemented |
 
 #+begin_src typst
 $ "RowClosed"(R, A) =

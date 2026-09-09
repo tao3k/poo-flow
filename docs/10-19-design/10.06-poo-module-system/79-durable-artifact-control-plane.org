@@ -404,7 +404,7 @@ edges. Runtime languages execute storage, indexing, and publishing after the
 control plane has produced a valid receipt.
 
 * Scheme Implementation Surface
-This document is implemented by =src/module-system/durable-artifact-policy.ss=.
+This document is implemented by =src/modules/memory-core/durable/artifact-policy.ss=.
 
 - =artifact-profile= defines reusable artifact policy profiles.
 - =database-profile= defines backend capability profiles. Turso belongs here,

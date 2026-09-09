@@ -48,7 +48,7 @@ skipped=0
 
 An SSI file is the authoritative completion output for a syntax-only module.
 An old zero-byte static SCM file is not allowed to override a newer SSI.  This
-rule removed 28 false inversions attributed to =src/module-system/init-syntax=.
+rule removed 28 false inversions attributed to =src/user-interface/init-syntax=.
 
 * Architectural boundary
 

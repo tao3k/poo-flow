@@ -8,7 +8,7 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :poo-flow/src/module-system/durable-runtime-store-operation
+        (only-in :poo-flow/src/modules/memory-core/durable/store-operation
                  +poo-flow-durable-runtime-store-operation-specs+)
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-durable-runtime-store-operations-case))
