@@ -203,9 +203,18 @@
                 (poo-flow-lazy-load-plan-receipt (car plans)))
                (first-metadata
                 (poo-flow-module-load-receipt-metadata first-receipt)))
-          (check-equal? (length plans) 22)
+          (check-equal?
+           (length plans)
+           (+ (length poo-flow-src-module-tree-entrypoints)
+              (length (poo-flow-module-system-source-refs))))
           (check-equal? (car source-values)
-                        "src/module-system/poo-method-combination/config.ss")
+                        "src/modules/funflow/config.ss")
+          (check-equal?
+           (if (member "src/module-system/poo-method-combination/config.ss"
+                       source-values)
+             #t
+             #f)
+           #t)
           (check-equal? (if (member "src/modules/sandbox-core/config.ss"
                                     source-values)
                           #t

@@ -1,6 +1,7 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: pure native POO observation authoring and inspection interface.
-;;; Development output requires a separate explicit import of ./debug.ss.
+;;; Boundary: native POO observation, authoring, quality, and development
+;;; performance interface. Debug effects remain opt-in function calls; loading
+;;; this interface only makes their bounded contracts available by default.
 (import (only-in "types.ss"
                  PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
                  PooFlowObservationContextContract PooFlowObservationContract
@@ -12,7 +13,8 @@
                  poo-flow-observation-context poo-flow-observe-admission-evidence
                  poo-flow-observe-contract-admission poo-flow-observation-explain
                  poo-flow-observation-summary)
-        "source-authoring.ss")
+        "source-authoring.ss"
+        "debug.ss")
 (export PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
         PooFlowObservationContextContract PooFlowObservationContract
         PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
@@ -21,4 +23,5 @@
         poo-flow-observation-context poo-flow-observe-admission-evidence
         poo-flow-observe-contract-admission poo-flow-observation-explain
         poo-flow-observation-summary
-        (import: "source-authoring.ss"))
+        (import: "source-authoring.ss")
+        (import: "debug.ss"))

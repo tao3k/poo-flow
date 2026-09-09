@@ -1,15 +1,15 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: extension contribution coalescing and fixed-point application.
+;;; Boundary: extension contribution coalescing and single-pass resolution.
 
 (import (only-in :clan/poo/object
                  .o
                  .ref
                  object?)
         :poo-flow/src/module-system/extension/support/data
-        :poo-flow/src/module-system/extension/support/merge)
+        :poo-flow/src/module-system/extension/support/merge
+        :poo-flow/src/module-system/extension/support/operation)
 
 (export poo-flow-module-extension-apply-operations
-        poo-flow-module-extension-local-operation?
         poo-flow-module-extension-local-operations?
         poo-flow-module-extension-reverse-onto
         poo-flow-module-extension-flush-coalesced
@@ -18,8 +18,7 @@
         poo-flow-module-extension-apply-contributions/coalesced
         poo-flow-module-extension-apply-contributions
         poo-flow-module-extension-node-snapshot
-        poo-flow-module-extension-fixed-point-step
-        poo-flow-module-extension-fixed-point)
+        poo-flow-module-extension-resolve)
 
 ;; : (-> [PooModuleExtensionOperation] PooModuleExtensionOperationState PooModuleExtensionOperationState)
 (def (poo-flow-module-extension-operation-state/fold operations state)
@@ -27,18 +26,6 @@
            (poo-flow-module-extension-operation-state operation current))
          state
          operations))
-
-;; poo-flow-module-extension-node-extend-operation?
-;; : (-> PooModuleExtensionOperation Boolean)
-;; | doc m%
-;;   Detect node-extension operations before the fast node-extend path runs.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-module-extension-node-extend-operation? operation)
-;;   ;; => #t for node-extend operations
-;;   ```
-(def (poo-flow-module-extension-node-extend-operation? operation)
-  (eq? (poo-flow-module-extension-operation-action operation) 'node-extend))
 
 ;; : (-> [PooModuleExtensionOperation] Boolean)
 (def (poo-flow-module-extension-node-extend-operations? operations)
@@ -144,22 +131,6 @@
        (poo-flow-module-extension-flush-pending current
                                                 pending-node-extends
                                                 pending-slot-overrides)))))
-
-;; poo-flow-module-extension-local-operation?
-;; : (-> PooModuleExtensionOperation Boolean)
-;; | doc m%
-;;   Detect operations that can be coalesced within one target node.
-;;   # Examples
-;;   ```scheme
-;;   (poo-flow-module-extension-local-operation? operation)
-;;   ;; => #t for local slot operations
-;;   ```
-(def (poo-flow-module-extension-local-operation? operation)
-  (let (action (poo-flow-module-extension-operation-action operation))
-    (or (eq? action 'slot-override)
-        (eq? action 'slot-append)
-        (eq? action 'slot-prepend)
-        (eq? action 'slot-remove))))
 
 ;;; Local batches may be coalesced only when every operation stays within the
 ;;; current target; graph-wide operations must force a contribution boundary.
@@ -344,8 +315,8 @@
    node
    (poo-flow-module-extension-coalesce-local-contributions contributions)))
 
-;;; Snapshot comparison keeps fixed-point convergence structural and independent
-;;; of POO object identity or lazy slot internals.
+;;; Snapshot comparison reports whether resolution changed semantic graph data;
+;;; POO object identity and lazy slot caches never affect the receipt.
 ;; : (-> PooModuleExtensionNode PooModuleExtensionSnapshot)
 ;; | PooModuleExtensionSnapshot = List
 (def (poo-flow-module-extension-node-snapshot node)
@@ -353,17 +324,6 @@
         (poo-flow-module-extension-node-slots node)
         (map poo-flow-module-extension-node-snapshot
              (poo-flow-module-extension-node-children node))))
-
-;; : (-> PooModuleExtensionContribution Boolean)
-(def (poo-flow-module-extension-local-contribution? contribution)
-  (poo-flow-module-extension-local-operations?
-   (poo-flow-module-extension-contribution-operations contribution)))
-
-;;; Fixed-point fast paths only use local contribution batches when every
-;;; contribution is local; mixed graph operations must fall back to iteration.
-;; : (-> [PooModuleExtensionContribution] Boolean)
-(def (poo-flow-module-extension-local-contributions? contributions)
-  (andmap poo-flow-module-extension-local-contribution? contributions))
 
 ;;; Root slot append fast path is valid only for the current root identity and
 ;;; pure slot append payloads, avoiding child traversal.
@@ -377,7 +337,7 @@
                 contribution))))
 
 ;;; All root append contributions must satisfy the same identity guard before
-;;; the batch can bypass fixed-point graph traversal.
+;;; the batch can bypass general contribution graph traversal.
 ;; : (-> Symbol [PooModuleExtensionContribution] Boolean)
 (def (poo-flow-module-extension-root-slot-append-contributions?/loop
       node-identity
@@ -560,63 +520,30 @@
             (if (cdr state) 1 0)
             #t)))))
 
-;;; Fast local evaluation returns a result only when local checks prove that one
-;;; non-recursive application is equivalent to the fixed-point loop.
-;; : (-> PooModuleExtensionNode [PooModuleExtensionContribution] MaybePooModuleExtensionResult)
-(def (poo-flow-module-extension-fast-local-result base contributions)
-  (or (poo-flow-module-extension-fast-root-slot-append-result base
-                                                             contributions)
-      (and (poo-flow-module-extension-local-contributions? contributions)
-           (let (next (poo-flow-module-extension-apply-contributions
-                       base
-                       contributions))
-             (poo-flow-module-extension-result
-              next
-              (if (equal? (poo-flow-module-extension-node-snapshot base)
-                          (poo-flow-module-extension-node-snapshot next))
-                0
-                1)
-              #t)))))
-
-;; poo-flow-module-extension-fixed-point-step
-;;   : (-> PooModuleExtensionNode (List PooModuleExtensionContribution) Integer PooModuleExtensionResult)
-;;   | doc m%
-;;       `poo-flow-module-extension-fixed-point-step` performs one bounded
-;;       fixed-point pass and recurs only when the node snapshot changes,
-;;       returning an unstable result after the iteration cap.
-;;
-;;       # Examples
-;;       ```scheme
-;;       (poo-flow-module-extension-fixed-point-step node contributions 0)
-;;       ;; => extension result with stable? reflecting the bounded pass
-;;       ```
-;;     %
-(def (poo-flow-module-extension-fixed-point-step current contributions iteration)
-  (let (next (poo-flow-module-extension-apply-contributions current contributions))
-    (cond
-     ((equal? (poo-flow-module-extension-node-snapshot current)
-              (poo-flow-module-extension-node-snapshot next))
-      (poo-flow-module-extension-result next iteration #t))
-     ((>= iteration 16)
-      (poo-flow-module-extension-result next iteration #f))
-     (else
-      (poo-flow-module-extension-fixed-point-step
-       next
-       contributions
-       (+ iteration 1))))))
-
-;; poo-flow-module-extension-fixed-point
+;; poo-flow-module-extension-resolve
 ;;   : (-> PooModuleExtensionNode [PooModuleExtensionContribution] PooModuleExtensionResult)
-;;   | contract: applies extension contributions until the graph snapshot is stable
-;;   | warning: stops after 16 iterations and marks the result unstable
 ;;   | doc m%
+;;       Apply the ordered, idempotent operation algebra exactly once. Native
+;;       operation prototypes own behavior; POO Flow does not run a shadow
+;;       evaluator or local fixed-point engine.
+;;
 ;;       # Examples
 ;;
 ;;       ```scheme
-;;       (poo-flow-module-extension-fixed-point root contributions)
-;;       ;; => extension result with root, iteration count, and stable? flag
+;;       (poo-flow-module-extension-resolve root contributions)
+;;       ;; => stable extension result with a changed-pass receipt
 ;;       ```
 ;;     %
-(def (poo-flow-module-extension-fixed-point base contributions)
-  (or (poo-flow-module-extension-fast-local-result base contributions)
-      (poo-flow-module-extension-fixed-point-step base contributions 0)))
+(def (poo-flow-module-extension-resolve base contributions)
+  (or (poo-flow-module-extension-fast-root-slot-append-result base
+                                                              contributions)
+      (let (next (poo-flow-module-extension-apply-contributions
+                  base
+                  contributions))
+        (poo-flow-module-extension-result
+         next
+         (if (equal? (poo-flow-module-extension-node-snapshot base)
+                     (poo-flow-module-extension-node-snapshot next))
+           0
+           1)
+         #t))))

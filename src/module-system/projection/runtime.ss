@@ -2,7 +2,7 @@
 ;;; Boundary: module runtime-facing projections and presentation receipts.
 ;;; Invariant: projection returns inspectable Scheme values, not runtime handles.
 
-(import (only-in :clan/poo/object .@ .ref object<-alist)
+(import (only-in :clan/poo/object .@ .o .ref)
         :poo-flow/src/core/agent-harness-vocabulary
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/descriptor/interface
@@ -37,22 +37,20 @@
 ;;; Boundary: apply creates an inspectable runtime-module value, not a handle.
 ;; : (-> PooModuleDescriptor POOObject)
 (def (poo-flow-module-apply module)
-  (object<-alist
-   (list
-    (cons 'kind "poo-flow.modules.runtime-module.v1")
-    (cons 'id (poo-flow-module-name module))
-    (cons 'group (poo-flow-module-group module))
-    (cons 'flags (poo-flow-module-flags module))
-    (cons 'features (poo-flow-module-features module))
-    (cons 'depth (poo-flow-module-depth module))
-    (cons 'phase-files (poo-flow-module-phase-files module))
-    (cons 'hooks (poo-flow-module-hooks module))
-    (cons 'imports
-          (map poo-flow-module-runtime-import (poo-flow-module-imports module)))
-    (cons 'extensions (poo-flow-module-extensions module))
-    (cons 'scripts (poo-flow-module-scripts module))
-    (cons 'options (poo-flow-module-option-configs module))
-    (cons 'metadata (poo-flow-module-metadata module)))))
+  (.o kind: "poo-flow.modules.runtime-module.v1"
+      id: (poo-flow-module-name module)
+      group: (poo-flow-module-group module)
+      flags: (poo-flow-module-flags module)
+      features: (poo-flow-module-features module)
+      depth: (poo-flow-module-depth module)
+      phase-files: (poo-flow-module-phase-files module)
+      hooks: (poo-flow-module-hooks module)
+      imports: (map poo-flow-module-runtime-import
+                    (poo-flow-module-imports module))
+      extensions: (poo-flow-module-extensions module)
+      scripts: (poo-flow-module-scripts module)
+      options: (poo-flow-module-option-configs module)
+      metadata: (poo-flow-module-metadata module)))
 
 ;;; Boundary: projection append preserves closure module order.
 ;; : (-> [PooModuleDescriptor] (-> PooModuleDescriptor ProjectionValueList) [ProjectionValue])
@@ -63,36 +61,29 @@
 ;; : (-> PooModuleDescriptor POOObject)
 (def (poo-flow-module-evaluate module)
   (let (closed-modules (poo-flow-module-closure (list module)))
-    (object<-alist
-     (list
-      (cons 'kind "poo-flow.modules.runtime-evaluation.v1")
-      (cons 'module-ids (poo-flow-module-names closed-modules))
-      (cons 'init-module-ids
-            (poo-flow-module-names
-             (poo-flow-module-phase-order closed-modules 'init)))
-      (cons 'config-module-ids
-            (poo-flow-module-names
-             (poo-flow-module-phase-order closed-modules 'config)))
-      (cons 'hooks
-            (poo-flow-module-append-projection
-             closed-modules
-             poo-flow-module-hooks))
-      (cons 'extensions
-            (poo-flow-module-append-projection
-             closed-modules
-             poo-flow-module-extensions))
-      (cons 'scripts
-            (poo-flow-module-append-projection
-             closed-modules
-             poo-flow-module-scripts))
-      (cons 'options
-            (poo-flow-module-append-projection
-             closed-modules
-             poo-flow-module-option-configs))
-      (cons 'validation-receipts
-            (poo-flow-module-append-projection
-             closed-modules
-             poo-flow-module-option-validation-receipts))))))
+    (.o kind: "poo-flow.modules.runtime-evaluation.v1"
+        module-ids: (poo-flow-module-names closed-modules)
+        init-module-ids:
+        (poo-flow-module-names
+         (poo-flow-module-phase-order closed-modules 'init))
+        config-module-ids:
+        (poo-flow-module-names
+         (poo-flow-module-phase-order closed-modules 'config))
+        hooks:
+        (poo-flow-module-append-projection
+         closed-modules poo-flow-module-hooks)
+        extensions:
+        (poo-flow-module-append-projection
+         closed-modules poo-flow-module-extensions)
+        scripts:
+        (poo-flow-module-append-projection
+         closed-modules poo-flow-module-scripts)
+        options:
+        (poo-flow-module-append-projection
+         closed-modules poo-flow-module-option-configs)
+        validation-receipts:
+        (poo-flow-module-append-projection
+         closed-modules poo-flow-module-option-validation-receipts))))
 
 ;;; Boundary: workflow groups root projections and validation receipts.
 ;; : (-> PooModuleDescriptor [AllowedHookId] POOObject)
@@ -103,52 +94,48 @@
             (car maybe-allowed-hook-id-values)))
          (runtime-module-value (poo-flow-module-apply module))
          (evaluation-value (poo-flow-module-evaluate module)))
-    (object<-alist
-     (list
-      (cons 'kind poo-flow-module-workflow-kind)
-      (cons 'config module)
-      (cons 'runtime-module runtime-module-value)
-      (cons 'evaluation evaluation-value)
-      (cons 'allowed-hook-ids allowed-hook-id-values)
-      (cons 'root-options (poo-flow-module-option-configs module))
-      (cons 'option-schemas (poo-flow-module-option-schemas module))
-      (cons 'root-validation-receipts
-            (poo-flow-module-option-validation-receipts module))
-      (cons 'validation-receipts
-            (.ref evaluation-value 'validation-receipts))))))
+    (.o kind: poo-flow-module-workflow-kind
+        config: module
+        runtime-module: runtime-module-value
+        evaluation: evaluation-value
+        allowed-hook-ids: allowed-hook-id-values
+        root-options: (poo-flow-module-option-configs module)
+        option-schemas: (poo-flow-module-option-schemas module)
+        root-validation-receipts:
+        (poo-flow-module-option-validation-receipts module)
+        validation-receipts:
+        (.ref evaluation-value 'validation-receipts))))
 
 ;;; Boundary: this projection reports runtime-facing object family capability.
 ;;; It does not construct runtime handles, start sessions, or submit dispatches.
 ;; : (-> POOObject)
 (def (poo-flow-module-runtime-capability-projection)
-  (object<-alist
-   (list
-    (cons 'kind "poo-flow.modules.runtime-capability-projection.v1")
-    (cons 'owner poo-flow-module-system-owner)
-    (cons 'runtime-owner "marlin-agent-core")
-    (cons 'runtime-executed #f)
-    (cons 'object-families
-          '(agent-profile
-            agent-harness
-            agent-session
-            session-agent-graph
-            agent-operation
-            workflow-run
-            dispatch-receipt
-            runtime-snapshot))
-    (cons 'operation-kinds +poo-flow-agent-operation-kinds+)
-    (cons 'snapshot-statuses +poo-flow-runtime-snapshot-statuses+)
-    (cons 'handoff-contracts
-          '(start-workflow-run
-            admit-dispatch
-            open-agent-session
-            execute-agent-operation
-            stream-events
-            read-runtime-snapshot))
-    (cons 'presentation-trace
-          '((stage . runtime-capability-projection)
-            (runtime-executed . #f)
-            (projection-only . #t))))))
+  (.o kind: "poo-flow.modules.runtime-capability-projection.v1"
+      owner: poo-flow-module-system-owner
+      runtime-owner: "marlin-agent-core"
+      runtime-executed: #f
+      object-families:
+      '(agent-profile
+        agent-harness
+        agent-session
+        session-agent-graph
+        agent-operation
+        workflow-run
+        dispatch-receipt
+        runtime-snapshot)
+      operation-kinds: +poo-flow-agent-operation-kinds+
+      snapshot-statuses: +poo-flow-runtime-snapshot-statuses+
+      handoff-contracts:
+      '(start-workflow-run
+        admit-dispatch
+        open-agent-session
+        execute-agent-operation
+        stream-events
+        read-runtime-snapshot)
+      presentation-trace:
+      '((stage . runtime-capability-projection)
+        (runtime-executed . #f)
+        (projection-only . #t))))
 
 ;;; Boundary: value catalog lookup is by module id only.
 ;; : (-> PooModuleValueCatalog ModuleName MaybePooModuleDescriptor)
@@ -210,43 +197,39 @@
          (evaluation-value (.ref workflow 'evaluation))
          (runtime-capabilities
           (poo-flow-module-runtime-capability-projection)))
-    (object<-alist
-     (list
-      (cons 'kind poo-flow-eval-modules-result-kind)
-      (cons 'catalog-kind (.ref catalog 'kind))
-      (cons 'root-module-id (poo-flow-module-name root-module))
-      (cons 'root-module-kind (.@ root-module kind))
-      (cons 'workflow-kind (.ref workflow 'kind))
-      (cons 'module-evaluation-kind (.ref evaluation-value 'kind))
-      (cons 'module-count (length (.ref evaluation-value 'module-ids)))
-      (cons 'init-module-count
-            (length (.ref evaluation-value 'init-module-ids)))
-      (cons 'config-module-count
-            (length (.ref evaluation-value 'config-module-ids)))
-      (cons 'hook-count (length (.ref evaluation-value 'hooks)))
-      (cons 'extension-count (length (.ref evaluation-value 'extensions)))
-      (cons 'script-count (length (.ref evaluation-value 'scripts)))
-      (cons 'option-count (length (.ref evaluation-value 'options)))
-      (cons 'validation-receipt-count
-            (length (.ref evaluation-value 'validation-receipts)))
-      (cons 'brand-name poo-flow-brand-name)
-      (cons 'brand-group poo-flow-brand-group)
-      (cons 'scheme-owner poo-flow-scheme-owner)
-      (cons 'module-system-owner poo-flow-module-system-owner)
-      (cons 'runtime-owner "marlin-agent-core")
-      (cons 'runtime-boundary-owner "marlin-agent-core")
-      (cons 'runtime-capability-projection-kind
-            (.ref runtime-capabilities 'kind))
-      (cons 'runtime-object-families
-            (.ref runtime-capabilities 'object-families))
-      (cons 'runtime-object-family-count
-            (length (.ref runtime-capabilities 'object-families)))
-      (cons 'runtime-snapshot-statuses
-            (.ref runtime-capabilities 'snapshot-statuses))
-      (cons 'runtime-handoff-contracts
-            (.ref runtime-capabilities 'handoff-contracts))
-      (cons 'runtime-executed #f)
-      (cons 'replayable #t)))))
+    (.o kind: poo-flow-eval-modules-result-kind
+        catalog-kind: (.ref catalog 'kind)
+        root-module-id: (poo-flow-module-name root-module)
+        root-module-kind: (.@ root-module kind)
+        workflow-kind: (.ref workflow 'kind)
+        module-evaluation-kind: (.ref evaluation-value 'kind)
+        module-count: (length (.ref evaluation-value 'module-ids))
+        init-module-count: (length (.ref evaluation-value 'init-module-ids))
+        config-module-count: (length (.ref evaluation-value 'config-module-ids))
+        hook-count: (length (.ref evaluation-value 'hooks))
+        extension-count: (length (.ref evaluation-value 'extensions))
+        script-count: (length (.ref evaluation-value 'scripts))
+        option-count: (length (.ref evaluation-value 'options))
+        validation-receipt-count:
+        (length (.ref evaluation-value 'validation-receipts))
+        brand-name: poo-flow-brand-name
+        brand-group: poo-flow-brand-group
+        scheme-owner: poo-flow-scheme-owner
+        module-system-owner: poo-flow-module-system-owner
+        runtime-owner: "marlin-agent-core"
+        runtime-boundary-owner: "marlin-agent-core"
+        runtime-capability-projection-kind:
+        (.ref runtime-capabilities 'kind)
+        runtime-object-families:
+        (.ref runtime-capabilities 'object-families)
+        runtime-object-family-count:
+        (length (.ref runtime-capabilities 'object-families))
+        runtime-snapshot-statuses:
+        (.ref runtime-capabilities 'snapshot-statuses)
+        runtime-handoff-contracts:
+        (.ref runtime-capabilities 'handoff-contracts)
+        runtime-executed: #f
+        replayable: #t)))
 
 ;; : (-> PooModuleValueCatalog PooFlowEvalModuleOptions POOObject)
 (def (pooFlowEvalModules catalog . eval-options)
@@ -287,64 +270,61 @@
              allowed-hook-id-values))))
          (runtime-capabilities
           (poo-flow-module-runtime-capability-projection)))
-    (object<-alist
-     (list
-      (cons 'kind poo-flow-module-system-presentation-kind)
-      (cons 'catalog-kind (.ref catalog 'kind))
-      (cons 'catalog-module-count (length (.ref catalog 'modules)))
-      (cons 'root-module-id (poo-flow-module-name root-module))
-      (cons 'root-module-kind (.@ root-module kind))
-      (cons 'root-import-count (length (poo-flow-module-imports root-module)))
-      (cons 'root-flag-count (length (poo-flow-module-flags root-module)))
-      (cons 'root-hook-count (length (poo-flow-module-hooks root-module)))
-      (cons 'root-extension-count
-            (length (poo-flow-module-extensions root-module)))
-      (cons 'root-script-count (length (poo-flow-module-scripts root-module)))
-      (cons 'allowed-hook-count (length allowed-hook-id-values))
-      (cons 'user-entrypoints
-            '("poo-flow-modules"
-              "poo-flow-module-catalog"
-              "poo-flow-module-active?"
-              "poo-flow-module-value-catalog-active?"
-              "poo-flow-eval-modules"
-              "poo-flow-module-system-presentation"))
-      (cons 'module-eval-result-kind (.ref eval-result 'kind))
-      (cons 'workflow-kind (.ref eval-result 'workflow-kind))
-      (cons 'module-evaluation-receipt-kind
-            (.ref eval-result 'module-evaluation-kind))
-      (cons 'module-count (.ref eval-result 'module-count))
-      (cons 'init-module-count (.ref eval-result 'init-module-count))
-      (cons 'config-module-count (.ref eval-result 'config-module-count))
-      (cons 'hook-count (.ref eval-result 'hook-count))
-      (cons 'extension-count (.ref eval-result 'extension-count))
-      (cons 'script-count (.ref eval-result 'script-count))
-      (cons 'option-count (.ref eval-result 'option-count))
-      (cons 'validation-receipt-count
-            (.ref eval-result 'validation-receipt-count))
-      (cons 'import-graph-owner "poo-flow-module-system")
-      (cons 'brand-name poo-flow-brand-name)
-      (cons 'brand-group poo-flow-brand-group)
-      (cons 'option-policy-owner poo-flow-module-system-owner)
-      (cons 'extension-composition-owner poo-flow-module-system-owner)
-      (cons 'scheme-owner (.ref eval-result 'scheme-owner))
-      (cons 'module-system-owner (.ref eval-result 'module-system-owner))
-      (cons 'runtime-owner (.ref eval-result 'runtime-owner))
-      (cons 'runtime-boundary-owner (.ref eval-result 'runtime-boundary-owner))
-      (cons 'runtime-lifecycle-owner "marlin-agent-core")
-      (cons 'runtime-capability-projection-kind
-            (.ref runtime-capabilities 'kind))
-      (cons 'runtime-object-family-count
-            (.ref eval-result 'runtime-object-family-count))
-      (cons 'runtime-object-families
-            (.ref eval-result 'runtime-object-families))
-      (cons 'runtime-snapshot-statuses
-            (.ref eval-result 'runtime-snapshot-statuses))
-      (cons 'runtime-handoff-contracts
-            (.ref eval-result 'runtime-handoff-contracts))
-      (cons 'runtime-executed (.ref eval-result 'runtime-executed))
-      (cons 'runtime-parses-scheme-source #f)
-      (cons 'scheme-manufactures-runtime-handlers #f)
-      (cons 'replayable (.ref eval-result 'replayable))))))
+    (.o kind: poo-flow-module-system-presentation-kind
+        catalog-kind: (.ref catalog 'kind)
+        catalog-module-count: (length (.ref catalog 'modules))
+        root-module-id: (poo-flow-module-name root-module)
+        root-module-kind: (.@ root-module kind)
+        root-import-count: (length (poo-flow-module-imports root-module))
+        root-flag-count: (length (poo-flow-module-flags root-module))
+        root-hook-count: (length (poo-flow-module-hooks root-module))
+        root-extension-count: (length (poo-flow-module-extensions root-module))
+        root-script-count: (length (poo-flow-module-scripts root-module))
+        allowed-hook-count: (length allowed-hook-id-values)
+        user-entrypoints:
+        '("poo-flow-modules"
+          "poo-flow-module-catalog"
+          "poo-flow-module-active?"
+          "poo-flow-module-value-catalog-active?"
+          "poo-flow-eval-modules"
+          "poo-flow-module-system-presentation")
+        module-eval-result-kind: (.ref eval-result 'kind)
+        workflow-kind: (.ref eval-result 'workflow-kind)
+        module-evaluation-receipt-kind:
+        (.ref eval-result 'module-evaluation-kind)
+        module-count: (.ref eval-result 'module-count)
+        init-module-count: (.ref eval-result 'init-module-count)
+        config-module-count: (.ref eval-result 'config-module-count)
+        hook-count: (.ref eval-result 'hook-count)
+        extension-count: (.ref eval-result 'extension-count)
+        script-count: (.ref eval-result 'script-count)
+        option-count: (.ref eval-result 'option-count)
+        validation-receipt-count:
+        (.ref eval-result 'validation-receipt-count)
+        import-graph-owner: "poo-flow-module-system"
+        brand-name: poo-flow-brand-name
+        brand-group: poo-flow-brand-group
+        option-policy-owner: poo-flow-module-system-owner
+        extension-composition-owner: poo-flow-module-system-owner
+        scheme-owner: (.ref eval-result 'scheme-owner)
+        module-system-owner: (.ref eval-result 'module-system-owner)
+        runtime-owner: (.ref eval-result 'runtime-owner)
+        runtime-boundary-owner: (.ref eval-result 'runtime-boundary-owner)
+        runtime-lifecycle-owner: "marlin-agent-core"
+        runtime-capability-projection-kind:
+        (.ref runtime-capabilities 'kind)
+        runtime-object-family-count:
+        (.ref eval-result 'runtime-object-family-count)
+        runtime-object-families:
+        (.ref eval-result 'runtime-object-families)
+        runtime-snapshot-statuses:
+        (.ref eval-result 'runtime-snapshot-statuses)
+        runtime-handoff-contracts:
+        (.ref eval-result 'runtime-handoff-contracts)
+        runtime-executed: (.ref eval-result 'runtime-executed)
+        runtime-parses-scheme-source: #f
+        scheme-manufactures-runtime-handlers: #f
+        replayable: (.ref eval-result 'replayable))))
 
 ;; : (-> PooModuleValueCatalog PooFlowModulePresentationOptions POOObject)
 (def (pooFlowModuleSystemPresentation catalog . eval-options)

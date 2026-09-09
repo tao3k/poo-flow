@@ -3,19 +3,24 @@
 ;;; Invariant: this owner returns data and never activates modules.
 
 (import :poo-flow/src/module-system/projection/syntax
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface)
 
-(export make-poo-flow-module-loader-entry
+(export poo-flow-module-loader-entry-prototype
+        make-poo-flow-module-loader-entry
         poo-flow-module-loader-entry?
         poo-flow-module-loader-entry-source
         poo-flow-module-loader-entry-module
+        poo-flow-module-loader-backend-prototype
         make-poo-flow-module-loader-backend
         poo-flow-module-loader-backend?
         poo-flow-module-loader-backend-name
         poo-flow-module-loader-backend-source-kind
         poo-flow-module-loader-backend-load
         poo-flow-module-loader-backend-metadata
+        poo-flow-lazy-load-plan-prototype
         make-poo-flow-lazy-load-plan
         poo-flow-lazy-load-plan?
         poo-flow-lazy-load-plan-source
@@ -23,6 +28,7 @@
         poo-flow-lazy-load-plan-forced?
         poo-flow-lazy-load-plan-receipt
         poo-flow-lazy-load-plan-metadata
+        poo-flow-module-load-receipt-prototype
         make-poo-flow-module-load-receipt
         poo-flow-module-load-receipt?
         poo-flow-module-load-receipt-source
@@ -45,41 +51,79 @@
 
 ;;; Boundary: static loader entries bind source refs to already-built descriptors.
 ;; : (-> PooModuleSourceRef PooModuleDescriptor PooModuleLoaderEntry)
-(defstruct poo-flow-module-loader-entry
-  (source
-   module)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-loader-entry-prototype
+             loader-entry?
+             poo-flow-module-loader-entry?)
+  (constructor make-poo-flow-module-loader-entry
+               (source-value source)
+               (module-value module))
+  (accessors
+   (poo-flow-module-loader-entry-source source)
+   (poo-flow-module-loader-entry-module module))
+  (projections))
 
 ;;; Boundary: backend load procedures are pure source-ref to maybe descriptor functions.
 ;; : (-> LoaderName SourceKind LoaderProcedure Alist PooModuleLoaderBackend)
-(defstruct poo-flow-module-loader-backend
-  (name
-   source-kind
-   load
-   metadata)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-loader-backend-prototype
+             loader-backend?
+             poo-flow-module-loader-backend?)
+  (constructor make-poo-flow-module-loader-backend
+               (name-value name)
+               (source-kind-value source-kind)
+               (load-value load)
+               (metadata-value metadata))
+  (accessors
+   (poo-flow-module-loader-backend-name name)
+   (poo-flow-module-loader-backend-source-kind source-kind)
+   (poo-flow-module-loader-backend-load load)
+   (poo-flow-module-loader-backend-metadata metadata))
+  (projections))
 
 ;;; Boundary: lazy load plans hold source/backend data without invoking loaders.
 ;; : (-> PooModuleSourceRef [PooModuleLoaderBackend] Boolean PooModuleLoadReceipt Alist PooFlowLazyLoadPlan)
-(defstruct poo-flow-lazy-load-plan
-  (source
-   backends
-   forced?
-   receipt
-   metadata)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-lazy-load-plan-prototype
+             lazy-load-plan?
+             poo-flow-lazy-load-plan?)
+  (constructor make-poo-flow-lazy-load-plan
+               (source-value source)
+               (backends-value backends)
+               (forced-value forced?)
+               (receipt-value receipt)
+               (metadata-value metadata))
+  (accessors
+   (poo-flow-lazy-load-plan-source source)
+   (poo-flow-lazy-load-plan-backends backends)
+   (poo-flow-lazy-load-plan-forced? forced?)
+   (poo-flow-lazy-load-plan-receipt receipt)
+   (poo-flow-lazy-load-plan-metadata metadata))
+  (projections))
 
 ;;; Boundary: load receipts are inspection data before catalog resolution.
 ;; : (-> PooModuleSourceRef MaybePooModuleDescriptor MaybeLoaderName Boolean Symbol [String] Alist PooModuleLoadReceipt)
-(defstruct poo-flow-module-load-receipt
-  (source
-   module
-   backend-name
-   loaded?
-   code
-   messages
-   metadata)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-load-receipt-prototype
+             load-receipt?
+             poo-flow-module-load-receipt?)
+  (constructor make-poo-flow-module-load-receipt
+               (source-value source)
+               (module-value module)
+               (backend-name-value backend-name)
+               (loaded-value loaded?)
+               (code-value code)
+               (messages-value messages)
+               (metadata-value metadata))
+  (accessors
+   (poo-flow-module-load-receipt-source source)
+   (poo-flow-module-load-receipt-module module)
+   (poo-flow-module-load-receipt-backend-name backend-name)
+   (poo-flow-module-load-receipt-loaded? loaded?)
+   (poo-flow-module-load-receipt-code code)
+   (poo-flow-module-load-receipt-messages messages)
+   (poo-flow-module-load-receipt-metadata metadata))
+  (projections))
 
 ;;; Boundary: wildcard source kind is explicit and does not inspect source values.
 ;; : (-> SourceKind PooModuleSourceRef Boolean)

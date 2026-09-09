@@ -3,7 +3,7 @@
 ;;; Invariant: keep POO object construction and hook normalization outside
 ;;; macro parser modules so macro expansion remains shallow and reusable.
 
-(import (only-in :clan/poo/object .all-slots .o .ref object<-alist)
+(import (only-in :clan/poo/object .all-slots .mix .o .ref object<-alist)
         (only-in :std/srfi/1 append-map filter-map find fold)
         :poo-flow/src/core/plan)
 
@@ -69,76 +69,7 @@
 ;;; deterministic before composition stages inherit or extend them.
 ;; : (-> PooProfile PooProfile PooProfile)
 (def (poo-flow-composition-inline-profile-normalize base profile)
-  (let ((base-slots (.all-slots base))
-        (profile-slots (.all-slots profile)))
-    (object<-alist
-     (list
-      (cons 'name
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'name
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'name 'profile)))
-      (cons 'extends
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'extends
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'extends #f)))
-      (cons 'kind
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'kind
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'kind 'profile)))
-      (cons 'scope
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'scope
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'scope '())))
-      (cons 'storage
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'storage
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'storage '())))
-      (cons 'analysis
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'analysis
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'analysis '())))
-      (cons 'publish
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'publish
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'publish '())))
-      (cons 'retention
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'retention
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'retention '())))
-      (cons 'capabilities
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'capabilities
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'capabilities '())))
-      (cons 'guard
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'guard
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'guard #f)))
-      (cons 'hooks
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'hooks
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'hooks '())))
-      (cons 'runtime-executed
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'runtime-executed
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'runtime-executed #f)))
-      (cons 'source
-            (poo-flow-composition-inline-profile-ref/default*
-             profile profile-slots 'source
-             (poo-flow-composition-inline-profile-ref/default*
-              base base-slots 'source
-              'poo-flow.composition.inline-profile)))))))
+  (.mix profile base))
 
 ;; : (-> PooProfile [(-> PooProfile PooProfile)] PooProfile)
 (def (poo-flow-composition-inline-apply-hooks profile hooks)
@@ -180,73 +111,71 @@
 ;; : (-> Symbol Alist PooProfile)
 (def (poo-flow-composition-inline-profile profile-name sections)
   (let* ((base (poo-flow-composition-inline-alist-ref sections 'extends #f))
-         (hooks (poo-flow-composition-inline-alist-ref sections 'hooks '()))
+         (hook-values
+          (poo-flow-composition-inline-alist-ref sections 'hooks '()))
          (profile
           (if base
-            (object<-alist
-             (list
-              (cons ':extends base)
-              (cons 'name profile-name)
-              (cons 'extends base)
-              (cons 'kind
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'kind profile-name))
-              (cons 'scope
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'scope '()))
-              (cons 'storage
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'storage '()))
-              (cons 'analysis
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'analysis '()))
-              (cons 'publish
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'publish '()))
-              (cons 'retention
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'retention '()))
-              (cons 'capabilities
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'capabilities '()))
-              (cons 'guard
-                    (poo-flow-composition-inline-profile-field
-                     sections base 'guard #f))
-              (cons 'hooks hooks)
-              (cons 'runtime-executed #f)
-              (cons 'source 'poo-flow.composition.inline-profile)))
-            (object<-alist
-             (list
-              (cons 'name profile-name)
-              (cons 'extends #f)
-              (cons 'kind
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'kind profile-name))
-              (cons 'scope
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'scope '()))
-              (cons 'storage
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'storage '()))
-              (cons 'analysis
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'analysis '()))
-              (cons 'publish
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'publish '()))
-              (cons 'retention
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'retention '()))
-              (cons 'capabilities
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'capabilities '()))
-              (cons 'guard
-                    (poo-flow-composition-inline-alist-ref
-                     sections 'guard #f))
-              (cons 'hooks hooks)
-              (cons 'runtime-executed #f)
-              (cons 'source 'poo-flow.composition.inline-profile))))))
-    (poo-flow-composition-inline-apply-hooks profile hooks)))
+            (.o (:: @ base)
+                (:extends base)
+                name: profile-name
+                extends: base
+                kind:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'kind profile-name)
+                scope:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'scope '())
+                storage:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'storage '())
+                analysis:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'analysis '())
+                publish:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'publish '())
+                retention:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'retention '())
+                capabilities:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'capabilities '())
+                guard:
+                (poo-flow-composition-inline-profile-field
+                 sections base 'guard #f)
+                hooks: hook-values
+                runtime-executed: #f
+                source: 'poo-flow.composition.inline-profile)
+            (.o name: profile-name
+                extends: #f
+                kind:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'kind profile-name)
+                scope:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'scope '())
+                storage:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'storage '())
+                analysis:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'analysis '())
+                publish:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'publish '())
+                retention:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'retention '())
+                capabilities:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'capabilities '())
+                guard:
+                (poo-flow-composition-inline-alist-ref
+                 sections 'guard #f)
+                hooks: hook-values
+                runtime-executed: #f
+                source: 'poo-flow.composition.inline-profile))))
+    (poo-flow-composition-inline-apply-hooks profile hook-values)))
 
 ;;; Boundary: a composition lowers into the canonical execution-plan before
 ;;; any consumer observes it. Bundle/WASM and future projections consume the

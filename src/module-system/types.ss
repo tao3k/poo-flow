@@ -40,6 +40,10 @@
         poo-flow-validation-evidence-accepted?
         poo-flow-validation-evidence->alist)
 
+;;; Keep the upstream metaobject type behind one explicit local ancestry name.
+;;; Domain descriptors below then mention only POO Flow-owned abstractions.
+(def PooFlowUpstreamType. Type.)
+
 ;; Open POO protocols dispatch through descriptor slots.  They are intentionally
 ;; sparse: fixed accessors and final receipt encoders remain ordinary functions.
 (.defgeneric (poo-flow-type-classify type candidate context)
@@ -68,33 +72,37 @@
            (list? value)
            (every poo-flow-type-identity? value))))
 
+;; : (-> Object Boolean)
+(def (poo-flow-classification-evidence-element? value)
+  (and (poo-flow-evidence-object?
+        value 'poo-flow.type.classification-evidence
+        '(kind type-identity candidate accepted? diagnostics context))
+       (poo-flow-type-identity? (.ref value 'type-identity))))
+
 ;;; Evidence type: accepts only classification receipts with the required typed slots.
-(define-type (PooFlowClassificationEvidence @ Type.)
-  .element?:
-  (lambda (value)
-    (and (poo-flow-evidence-object?
-          value 'poo-flow.type.classification-evidence
-          '(kind type-identity candidate accepted? diagnostics context))
-         (poo-flow-type-identity? (.ref value 'type-identity)))))
+(define-type (PooFlowClassificationEvidence @ PooFlowUpstreamType.)
+  .element?: poo-flow-classification-evidence-element?)
+
+;; : (-> Object Boolean)
+(def (poo-flow-validation-evidence-element? value)
+  (and (poo-flow-evidence-object?
+        value 'poo-flow.contract.validation-evidence
+        '(kind contract-identity candidate classification obligation-evidence
+               accepted? diagnostics context))
+       (symbol? (.ref value 'contract-identity))
+       (element? PooFlowClassificationEvidence (.ref value 'classification))
+       (list? (.ref value 'obligation-evidence))
+       (equal? (.ref value 'candidate)
+               (.ref (.ref value 'classification) 'candidate))
+       (equal? (.ref value 'context)
+               (.ref (.ref value 'classification) 'context))
+       (eq? (.ref value 'accepted?)
+            (and (.ref (.ref value 'classification) 'accepted?)
+                 (null? (.ref value 'obligation-evidence))))))
 
 ;;; Evidence type: accepts only validation receipts with the required typed slots.
-(define-type (PooFlowValidationEvidence @ Type.)
-  .element?:
-  (lambda (value)
-    (and (poo-flow-evidence-object?
-          value 'poo-flow.contract.validation-evidence
-          '(kind contract-identity candidate classification obligation-evidence
-                 accepted? diagnostics context))
-         (symbol? (.ref value 'contract-identity))
-         (element? PooFlowClassificationEvidence (.ref value 'classification))
-         (list? (.ref value 'obligation-evidence))
-         (equal? (.ref value 'candidate)
-                 (.ref (.ref value 'classification) 'candidate))
-         (equal? (.ref value 'context)
-                 (.ref (.ref value 'classification) 'context))
-         (eq? (.ref value 'accepted?)
-              (and (.ref (.ref value 'classification) 'accepted?)
-                   (null? (.ref value 'obligation-evidence)))))))
+(define-type (PooFlowValidationEvidence @ PooFlowUpstreamType.)
+  .element?: poo-flow-validation-evidence-element?)
 
 ;; : (-> Object Object Boolean [Alist] Object PooFlowClassificationEvidence)
 (def (poo-flow-classification-evidence type-identity-value candidate-value

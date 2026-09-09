@@ -1,12 +1,15 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: strict observability data for module-system debugging.
-;;; Invariant: observations do not use POO objects, lazy slots, or runtime adapters.
+;;; Invariant: observations are strict POO values without lazy slots or runtime adapters.
 ;;; Intent: make recursive presentation paths visible without participating in them.
 
 (import (only-in :std/sugar filter)
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 
 (export poo-flow-module-observation-kind
+        poo-flow-module-observation-prototype
         make-poo-flow-module-observation
         poo-flow-module-observation?
         poo-flow-module-observation-scope
@@ -26,6 +29,7 @@
         poo-flow-module-presentation-trace
         poo-flow-module-presentation-trace/add
         poo-flow-poo-slot-authoring-observation-kind
+        poo-flow-poo-slot-authoring-observation-prototype
         make-poo-flow-poo-slot-authoring-observation
         poo-flow-poo-slot-authoring-observation?
         poo-flow-poo-slot-authoring-observation-scope
@@ -56,20 +60,34 @@
 (def poo-flow-module-observation-kind
   "poo-flow.modules.observation.v1")
 
-;;; Observation records are strict structs. This keeps debug data inspectable
-;;; even when the problem being debugged is a lazy POO `.ref` recursion.
+;;; Observation values are strict native POO objects. They contain only eager
+;;; slots, so debugging a lazy `.ref` recursion never creates another lazy path.
 ;; : (-> Symbol Symbol Symbol Integer Integer [Symbol] Alist Boolean Boolean PooFlowModuleObservation)
-(defstruct poo-flow-module-observation
-  (scope
-   stage
-   status
-   count
-   depth
-   path
-   detail
-   descriptor-realized?
-   runtime-executed?)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-observation-prototype
+             module-observation?
+             poo-flow-module-observation?)
+  (constructor make-poo-flow-module-observation
+               (scope-value scope)
+               (stage-value stage)
+               (status-value status)
+               (count-value count)
+               (depth-value depth)
+               (path-value path)
+               (detail-value detail)
+               (descriptor-realized-value descriptor-realized?)
+               (runtime-executed-value runtime-executed?))
+  (accessors
+   (poo-flow-module-observation-scope scope)
+   (poo-flow-module-observation-stage stage)
+   (poo-flow-module-observation-status status)
+   (poo-flow-module-observation-count count)
+   (poo-flow-module-observation-depth depth)
+   (poo-flow-module-observation-path path)
+   (poo-flow-module-observation-detail detail)
+   (poo-flow-module-observation-descriptor-realized? descriptor-realized?)
+   (poo-flow-module-observation-runtime-executed? runtime-executed?))
+  (projections))
 
 ;;; Recursive-stage detection is intentionally just path membership. The
 ;;; framework should flag suspicious projection shape without interpreting
@@ -177,15 +195,29 @@
   "poo-flow.poo-slot-authoring-observation.v1")
 
 ;; : (-> Symbol Symbol Value Symbol Alist Boolean Boolean PooFlowPooSlotAuthoringObservation)
-(defstruct poo-flow-poo-slot-authoring-observation
-  (scope
-   slot
-   initializer
-   status
-   detail
-   descriptor-realized?
-   runtime-executed?)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-poo-slot-authoring-observation-prototype
+             poo-slot-authoring-observation?
+             poo-flow-poo-slot-authoring-observation?)
+  (constructor make-poo-flow-poo-slot-authoring-observation
+               (scope-value scope)
+               (slot-value slot)
+               (initializer-value initializer)
+               (status-value status)
+               (detail-value detail)
+               (descriptor-realized-value descriptor-realized?)
+               (runtime-executed-value runtime-executed?))
+  (accessors
+   (poo-flow-poo-slot-authoring-observation-scope scope)
+   (poo-flow-poo-slot-authoring-observation-slot slot)
+   (poo-flow-poo-slot-authoring-observation-initializer initializer)
+   (poo-flow-poo-slot-authoring-observation-status status)
+   (poo-flow-poo-slot-authoring-observation-detail detail)
+   (poo-flow-poo-slot-authoring-observation-descriptor-realized?
+    descriptor-realized?)
+   (poo-flow-poo-slot-authoring-observation-runtime-executed?
+    runtime-executed?))
+  (projections))
 
 ;;; Quoted data cannot dispatch a POO slot.  Every other occurrence is treated
 ;;; conservatively as source-visible until a future syntax-object walker can

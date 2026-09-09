@@ -4,8 +4,10 @@
 ;;; Descriptor realization stays in package-root modules.
 ;;; Intent: keep the downstream surface focused on POO Flow module activation.
 
-(import (only-in :clan/poo/object .o .ref object?)
+(import (only-in :clan/poo/object .o .ref)
         :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/declaration/flags)
@@ -61,12 +63,6 @@
 ;; : (-> Unit PooFlowUserConfigPresentationKind)
 (def poo-flow-user-config-presentation-kind
   "poo-flow.modules.user-config.presentation.v1")
-
-;;; Boundary: kind checks keep root user files independent of constructor identity.
-;; : (-> POOObject String Boolean)
-(def (poo-flow-user-config-object-kind? value expected-kind)
-  (and (object? value)
-       (equal? (.ref value 'kind) expected-kind)))
 
 ;;; Boundary: user modules are hot-plug selections, not descriptors.
 ;; : (-> Symbol Symbol [Symbol] MaybePooModuleSourceRef MaybePath POOObject)
@@ -187,17 +183,16 @@
      '())))
 
 ;; : (-> PooUserModuleSelectionCandidate Boolean)
-(def (poo-flow-user-module-selection? value)
-  (poo-flow-user-config-object-kind? value poo-flow-user-module-selection-kind))
+(defpoo-object-family poo-flow-user-module-selection-kind
+  poo-flow-user-module-selection?
+  (accessors
+   (poo-flow-user-module-selection-flags selection-flags))
+  (projections))
 
 ;; : (-> POOObject Pair)
 (def (poo-flow-user-module-selection-key selection)
   (cons (.ref selection 'user-group)
         (.ref selection 'user-module)))
-
-;; : (-> POOObject [Symbol])
-(def (poo-flow-user-module-selection-flags selection)
-  (.ref selection 'selection-flags))
 
 ;;; Selection extension is declaration-layer normalization only; the result is
 ;;; still a user selection and is not a descriptor or activation closure.
@@ -553,16 +548,12 @@
       user-settings: settings))
 
 ;; : (-> PooUserConfigCandidate Boolean)
-(def (poo-flow-user-config? value)
-  (poo-flow-user-config-object-kind? value poo-flow-user-config-kind))
-
-;; : (-> PooUserConfig [PooUserModuleSelection])
-(def (poo-flow-user-config-modules config)
-  (.ref config 'user-modules))
-
-;; : (-> PooUserConfig POOObject)
-(def (poo-flow-user-config-settings config)
-  (.ref config 'user-settings))
+(defpoo-object-family poo-flow-user-config-kind
+  poo-flow-user-config?
+  (accessors
+   (poo-flow-user-config-modules user-modules)
+   (poo-flow-user-config-settings user-settings))
+  (projections))
 
 ;;; Module key projection is a user-facing summary for selected groups and
 ;;; names. It intentionally drops flags because flag checks stay per selection.

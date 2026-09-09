@@ -5,16 +5,19 @@
 (import :poo-flow/src/module-system/loader/backend
         :poo-flow/src/module-system/loader/tree)
 
-(export make-poo-flow-module-loader-entry
+(export poo-flow-module-loader-entry-prototype
+        make-poo-flow-module-loader-entry
         poo-flow-module-loader-entry?
         poo-flow-module-loader-entry-source
         poo-flow-module-loader-entry-module
+        poo-flow-module-loader-backend-prototype
         make-poo-flow-module-loader-backend
         poo-flow-module-loader-backend?
         poo-flow-module-loader-backend-name
         poo-flow-module-loader-backend-source-kind
         poo-flow-module-loader-backend-load
         poo-flow-module-loader-backend-metadata
+        poo-flow-lazy-load-plan-prototype
         make-poo-flow-lazy-load-plan
         poo-flow-lazy-load-plan?
         poo-flow-lazy-load-plan-source
@@ -22,6 +25,7 @@
         poo-flow-lazy-load-plan-forced?
         poo-flow-lazy-load-plan-receipt
         poo-flow-lazy-load-plan-metadata
+        poo-flow-module-load-receipt-prototype
         make-poo-flow-module-load-receipt
         poo-flow-module-load-receipt?
         poo-flow-module-load-receipt-source

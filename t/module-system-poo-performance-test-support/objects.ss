@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: POO performance object and object-catalog test cases.
 
-(import (only-in :std/test
+(import (only-in :clan/poo/object .ref object?)
+        (only-in :std/test
                  check-equal?
                  test-case
                  test-suite)
@@ -91,8 +92,9 @@
                  (lambda ()
                    (poo-flow-module-objects-validation objects)))))
           (check-equal? (length validations) 40)
-          (check-equal? (hash-get summary 'valid) #t)
-          (check-equal? (car (hash-get summary 'resolved-field-counts))
+          (check-equal? (object? summary) #t)
+          (check-equal? (.ref summary 'valid) #t)
+          (check-equal? (car (.ref summary 'resolved-field-counts))
                         160)
           (module-system-poo-performance-display-receipt receipt)
           (check-equal? (benchmark-receipt-pass? receipt) #t))))

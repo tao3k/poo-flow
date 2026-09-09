@@ -2,7 +2,8 @@
 ;;; Boundary: real module object catalog validation stays out of the unit root.
 ;;; Invariant: catalog checks load backend object sets but never realize runtime.
 
-(import (only-in :std/test
+(import (only-in :clan/poo/object .ref object?)
+        (only-in :std/test
                  test-suite
                  test-case
                  check-equal?)
@@ -17,9 +18,9 @@
 
 (export module-object-catalog-validation-test)
 
-;; : (-> HashTable Symbol Value)
+;; : (-> POOObject Symbol Value)
 (def (receipt-ref receipt key)
-  (hash-get receipt key))
+  (.ref receipt key))
 
 ;; : TestSuite
 (def module-object-catalog-validation-test
@@ -35,11 +36,13 @@
              (validations
               (poo-flow-module-objects-validation objects)))
         (check-equal? (length validations) 9)
+        (check-equal? (andmap object? validations) #t)
         (check-equal? (map poo-flow-module-object-validation-valid?
                            validations)
                       '(#t #t #t #t #t #t #t #t #t))
         (let (summary
               (poo-flow-module-objects-validation-summary validations))
+          (check-equal? (object? summary) #t)
           (check-equal? (receipt-ref summary 'valid) #t)
           (check-equal? (receipt-ref summary 'invalid-count) 0)
           (check-equal? (receipt-ref summary 'object-count) 9)

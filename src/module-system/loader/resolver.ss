@@ -17,13 +17,17 @@
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/diagnostics/records
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 
-(export make-poo-flow-module-catalog-entry
+(export poo-flow-module-catalog-entry-prototype
+        make-poo-flow-module-catalog-entry
         poo-flow-module-catalog-entry?
         poo-flow-module-catalog-entry-source
         poo-flow-module-catalog-entry-module
         poo-flow-module-catalog-entry->alist
+        poo-flow-module-catalog-prototype
         make-poo-flow-module-catalog
         poo-flow-module-catalog?
         poo-flow-module-catalog-name
@@ -39,6 +43,7 @@
         poo-flow-module-resolve-doctor
         poo-flow-module-resolve-and-activate
         poo-flow-module-resolve-and-activate-with-base
+        poo-flow-module-activation-prototype
         make-poo-flow-module-activation
         poo-flow-module-activation?
         poo-flow-module-activation-modules
@@ -51,10 +56,17 @@
 
 ;;; Boundary: catalog entries bind already-built descriptors to source metadata.
 ;; : (-> PooModuleSourceRef PooModuleDescriptor PooModuleCatalogEntry)
-(defstruct poo-flow-module-catalog-entry
-  (source
-   module)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-catalog-entry-prototype
+             catalog-entry?
+             poo-flow-module-catalog-entry?)
+  (constructor make-poo-flow-module-catalog-entry
+               (source-value source)
+               (module-value module))
+  (accessors
+   (poo-flow-module-catalog-entry-source source)
+   (poo-flow-module-catalog-entry-module module))
+  (projections))
 
 ;;; Boundary: catalog entry projection preserves source/module association.
 ;; : (-> PooModuleCatalogEntry Alist)
@@ -71,10 +83,17 @@
 
 ;;; Boundary: catalogs are immutable resolver indexes, not loaders.
 ;; : (-> Symbol [PooModuleCatalogEntry] PooModuleCatalog)
-(defstruct poo-flow-module-catalog
-  (name
-   entries)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-catalog-prototype
+             catalog?
+             poo-flow-module-catalog?)
+  (constructor make-poo-flow-module-catalog
+               (name-value name)
+               (entries-value entries))
+  (accessors
+   (poo-flow-module-catalog-name name)
+   (poo-flow-module-catalog-entries entries))
+  (projections))
 
 ;;; Boundary: source ref listing is for inspection, not resolution side effects.
 ;; : (-> PooModuleCatalog [PooModuleSourceRef])
@@ -179,12 +198,21 @@
 
 ;;; Boundary: activation appends descriptor contributions without mutation.
 ;; : (-> [PooModuleDescriptor] TaskFamilyRegistry FlowDeclarationRegistry ModuleOptionAlist PooModuleActivation)
-(defstruct poo-flow-module-activation
-  (modules
-   task-registry
-   flow-registry
-   options)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-activation-prototype
+             activation?
+             poo-flow-module-activation?)
+  (constructor make-poo-flow-module-activation
+               (modules-value modules)
+               (task-registry-value task-registry)
+               (flow-registry-value flow-registry)
+               (options-value options))
+  (accessors
+   (poo-flow-module-activation-modules modules)
+   (poo-flow-module-activation-task-registry task-registry)
+   (poo-flow-module-activation-flow-registry flow-registry)
+   (poo-flow-module-activation-options options))
+  (projections))
 
 ;;; Boundary: activation validates closure then appends base-first registries.
 ;;; Intent: runtime-visible registries are deterministic snapshots of module data.

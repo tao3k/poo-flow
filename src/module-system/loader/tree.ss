@@ -129,7 +129,7 @@
 ;;; Boundary: disabling an auto import is a regular node-remove contribution.
 ;; : (-> [PooModuleSourceRef] [PooModuleExtensionContribution] PooModuleExtensionResult)
 (def (poo-flow-module-auto-imports-mk-merge source-refs contributions)
-  (poo-flow-module-extension-fixed-point
+  (poo-flow-module-extension-resolve
    (poo-flow-module-auto-imports-node source-refs)
    contributions))
 

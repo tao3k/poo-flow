@@ -3,6 +3,7 @@
 
 (import :poo-flow/src/module-system/extension/support/data
         :poo-flow/src/module-system/extension/support/merge
+        :poo-flow/src/module-system/extension/support/operation
         :poo-flow/src/module-system/extension/support/apply)
 
 (export poo-flow-module-extension-node-kind
@@ -27,7 +28,7 @@
         poo-flow-module-extension-contribution-operations
         poo-flow-module-extension-apply-contribution
         poo-flow-module-extension-apply-contributions
-        poo-flow-module-extension-fixed-point
+        poo-flow-module-extension-resolve
         poo-flow-module-extension-result
         poo-flow-module-extension-result?
         poo-flow-module-extension-result-root

@@ -1,5 +1,5 @@
 ;;; -*- Gerbil -*-
-;;; Boundary: generic module extension tests keep POO fixed-point semantics out
+;;; Boundary: generic module extension tests keep POO resolution semantics out
 ;;; of feature-specific workflow code.
 
 (import (only-in :std/test
@@ -31,8 +31,8 @@
 ;;; This suite locks extension composition behavior for user-authored modules
 ;;; without introducing a second module-system surface.
 ;; : TestSuite
-(def module-extension-fixed-point-test
-  (test-suite "poo-flow module extension fixed point"
+(def module-extension-resolution-test
+  (test-suite "poo-flow module extension resolution"
     (test-case "applies slot and child-node operations to a stable object graph"
       (let* ((build-node
               (poo-flow-module-extension-node
@@ -75,7 +75,7 @@
                 (poo-flow-module-extension-slot-remove 'env '(DEBUG))
                 (poo-flow-module-extension-slot-append 'artifacts '("dist")))))
              (result
-              (poo-flow-module-extension-fixed-point
+              (poo-flow-module-extension-resolve
                root-node
                (list root-contribution build-contribution)))
              (resolved-root
@@ -150,7 +150,7 @@
                       "gxi build.ss --optimized")))))
 
 ;;; This suite keeps object inheritance and C3 precedence separate from the
-;;; slot-level fixed-point tests above.
+;;; slot-level resolution tests above.
 ;; : TestSuite
 (def module-extension-object-inheritance-test
   (test-suite "poo-flow module object inheritance"
@@ -391,10 +391,10 @@
 ;; : TestSuite
 (def module-extension-test
   (test-suite "poo-flow module extension"
-    module-extension-fixed-point-test
+    module-extension-resolution-test
     module-extension-object-inheritance-test
     module-extension-object-merge-test))
 
-(run-tests! module-extension-fixed-point-test
+(run-tests! module-extension-resolution-test
             module-extension-object-inheritance-test
             module-extension-object-merge-test)

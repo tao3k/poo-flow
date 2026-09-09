@@ -4,7 +4,7 @@
 ;;; evidence is projected only after the semantic decision has been made.
 
 (import :gerbil/gambit
-        (only-in :clan/poo/object .o .ref .slot? object?)
+        (only-in :clan/poo/object .mix .o .ref .slot? object? object<-alist)
         (only-in :clan/poo/mop define-type element? validate)
         (only-in :std/sugar cut)
         (only-in "../types.ss"
@@ -246,12 +246,28 @@
   .classify: (cut poo-flow-observation-scalar-classify
                   'observation/natural poo-flow-observation-natural? <> <>))
 
+;;; These owner-local constructors keep dependency primitives out of domain
+;;; declarations while returning ordinary native POO values.
+;; : (-> Unit POOObject)
+(def (poo-flow-observation-empty-prototype) (.o))
+;; : (-> Alist POOObject)
+(def (poo-flow-observation-contract-shape rows) (object<-alist rows))
+;; : (-> POOObject Alist POOObject)
+(def (poo-flow-observation-contract-shape/extends base rows)
+  (.mix base defaults: rows))
+;; : (-> PooFlowContract POOObject)
+(def (poo-flow-observation-contract-responsibilities contract)
+  (.ref contract 'responsibilities))
+
 ;;; Boundary: observable identities bind namespace, name, and revision together.
 (define-type (PooFlowObservationIdentityContract @ PooFlowNativeObjectContract.)
   identity: 'observation/identity
-  proto: (.o)
-  responsibilities: (.o namespace: ObservationSymbol name: ObservationSymbol
-                        revision: ObservationSymbol))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((namespace . ,ObservationSymbol)
+     (name . ,ObservationSymbol)
+     (revision . ,ObservationSymbol))))
 
 (def (poo-flow-observation-identities? value)
   (poo-flow-observability-list-of?
@@ -266,20 +282,25 @@
 ;;; Boundary: provenance records producer, provider, and phase without asserting authority.
 (define-type (PooFlowObservationProvenanceContract @ PooFlowNativeObjectContract.)
   identity: 'observation/provenance
-  proto: (.o)
-  responsibilities: (.o producer: PooFlowObservationIdentityContract
-                        provider: PooFlowObservationIdentityContract phase: ObservationSymbol))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((producer . ,PooFlowObservationIdentityContract)
+     (provider . ,PooFlowObservationIdentityContract)
+     (phase . ,ObservationSymbol))))
 
 ;;; Invariant: context keeps identity lineage and its bounded disclosure budget in one value.
 (define-type (PooFlowObservationContextContract @ PooFlowNativeObjectContract.)
   identity: 'observation/context
-  proto: (.o)
-  responsibilities: (.o identity: PooFlowObservationIdentityContract
-                        source: PooFlowObservationIdentityContract
-                        generation: PooFlowObservationIdentityContract
-                        causes: ObservationIdentities
-                        provenance: PooFlowObservationProvenanceContract
-                        detail-budget: ObservationNatural))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((identity . ,PooFlowObservationIdentityContract)
+     (source . ,PooFlowObservationIdentityContract)
+     (generation . ,PooFlowObservationIdentityContract)
+     (causes . ,ObservationIdentities)
+     (provenance . ,PooFlowObservationProvenanceContract)
+     (detail-budget . ,ObservationNatural))))
 
 (def (poo-flow-observation-path? value)
   (poo-flow-observability-list-of? symbol? value))
@@ -310,8 +331,12 @@
 ;;; Boundary: each failure binds its structural path to a contract and stable code.
 (define-type (PooFlowObservationFailureContract @ PooFlowNativeObjectContract.)
   identity: 'observation/failure
-  proto: (.o)
-  responsibilities: (.o path: ObservationPath contract: ObservationSymbol code: ObservationSymbol))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((path . ,ObservationPath)
+     (contract . ,ObservationSymbol)
+     (code . ,ObservationSymbol))))
 
 (def (poo-flow-observation-failures? value)
   (poo-flow-observability-list-of?
@@ -326,8 +351,8 @@
 ;;; Boundary: this empty responsibility base is the native extension point for fact families.
 (define-type (PooFlowObservationFactsContract @ PooFlowNativeObjectContract.)
   identity: 'observation/facts
-  proto: (.o)
-  responsibilities: (.o))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities: (poo-flow-observation-empty-prototype))
 
 (def PooFlowObservationFacts.
   (.ref PooFlowObservationFactsContract 'proto))
@@ -346,12 +371,17 @@
 ;;; Invariant: admission facts must reconcile their decision, counts, and bounded failures.
 (define-type (PooFlowAdmissionObservationFactsContract @ PooFlowObservationFactsContract)
   identity: 'observation/admission-facts
-  proto: (.o (:: @ PooFlowObservationFacts.))
-  responsibilities: (.o contract: ObservationSymbol accepted?: ObservationBoolean
-                        classification-accepted?: ObservationBoolean
-                        obligation-count: ObservationNatural
-                        failures: ObservationFailures detail-complete?: ObservationBoolean
-                        inspected-count: ObservationNatural)
+  proto: (poo-flow-observation-contract-shape/extends
+          PooFlowObservationFacts. '())
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((contract . ,ObservationSymbol)
+     (accepted? . ,ObservationBoolean)
+     (classification-accepted? . ,ObservationBoolean)
+     (obligation-count . ,ObservationNatural)
+     (failures . ,ObservationFailures)
+     (detail-complete? . ,ObservationBoolean)
+     (inspected-count . ,ObservationNatural)))
   .obligations: poo-flow-admission-facts-obligations)
 
 (def (poo-flow-observation-internal? value) (eq? value 'internal))
@@ -364,12 +394,16 @@
 ;;; Boundary: the event contract binds lineage, disclosure, and native evidence responsibilities.
 (define-type (PooFlowObservationContract @ PooFlowNativeObjectContract.)
   identity: 'observation/event
-  proto: (.o)
-  responsibilities: (.o identity: PooFlowObservationIdentityContract
-                        source: PooFlowObservationIdentityContract
-                        generation: PooFlowObservationIdentityContract
-                        causes: ObservationIdentities provenance: PooFlowObservationProvenanceContract
-                        disclosure: ObservationDisclosure evidence: PooFlowObservationFactsContract))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((identity . ,PooFlowObservationIdentityContract)
+     (source . ,PooFlowObservationIdentityContract)
+     (generation . ,PooFlowObservationIdentityContract)
+     (causes . ,ObservationIdentities)
+     (provenance . ,PooFlowObservationProvenanceContract)
+     (disclosure . ,ObservationDisclosure)
+     (evidence . ,PooFlowObservationFactsContract))))
 
 (def PooFlowObservation.
   (.ref PooFlowObservationContract 'proto))
@@ -377,16 +411,24 @@
 ;;; Invariant: admission events refine the generic evidence slot with admission facts.
 (define-type (PooFlowAdmissionObservationContract @ PooFlowObservationContract)
   identity: 'observation/admission-event
-  proto: (.o (:: @ PooFlowObservation.))
-  responsibilities: (.o (:: @ (.ref PooFlowObservationContract 'responsibilities))
-                        evidence: PooFlowAdmissionObservationFactsContract))
+  proto: (poo-flow-observation-contract-shape/extends
+          PooFlowObservation. '())
+  responsibilities:
+  (poo-flow-observation-contract-shape/extends
+   (poo-flow-observation-contract-responsibilities
+    PooFlowObservationContract)
+   `((evidence . ,PooFlowAdmissionObservationFactsContract))))
 
 ;;; Boundary: only bounded aggregate scalars enter the default development renderer.
 (define-type (PooFlowObservationSummaryContract @ PooFlowNativeObjectContract.)
   identity: 'observation/summary
-  proto: (.o)
-  responsibilities: (.o accepted?: ObservationBoolean detail-complete?: ObservationBoolean
-                        failure-count: ObservationNatural inspected-count: ObservationNatural))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((accepted? . ,ObservationBoolean)
+     (detail-complete? . ,ObservationBoolean)
+     (failure-count . ,ObservationNatural)
+     (inspected-count . ,ObservationNatural))))
 
 ;;; Authoring observations are structural advice, not executed runtime facts.
 ;;; Their fixed phase and rejection polarity prevent a style diagnostic from
@@ -408,39 +450,45 @@
 ;;; It never retains the source datum, expanded syntax, object, or slot value.
 (define-type (PooFlowAuthoringObservationContract @ PooFlowNativeObjectContract.)
   identity: 'observation/poo-authoring
-  proto: (.o)
-  responsibilities: (.o scope: ObservationSymbol
-                        owner: ObservationSymbol
-                        form: ObservationSymbol
-                        phase: ObservationSymbol
-                        status: ObservationSymbol
-                        code: ObservationSymbol
-                        recommendation: ObservationSymbol
-                        accepted?: ObservationBoolean
-                        runtime-executed?: ObservationBoolean)
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((scope . ,ObservationSymbol)
+     (owner . ,ObservationSymbol)
+     (form . ,ObservationSymbol)
+     (phase . ,ObservationSymbol)
+     (status . ,ObservationSymbol)
+     (code . ,ObservationSymbol)
+     (recommendation . ,ObservationSymbol)
+     (accepted? . ,ObservationBoolean)
+     (runtime-executed? . ,ObservationBoolean)))
   .obligations: poo-flow-authoring-observation-obligations)
 
 ;;; Boundary: traced calls carry an explicit depth budget.  The policy is a
 ;;; native POO value rather than an ambient global tracer setting.
 (define-type (PooFlowDebugCallPolicyContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-call-policy
-  proto: (.o)
-  responsibilities: (.o label: ObservationSymbol
-                        maximum-depth: ObservationNatural))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((label . ,ObservationSymbol)
+     (maximum-depth . ,ObservationNatural))))
 
 ;;; Boundary: call tracing retains only structural identities and categories.
 ;;; Arguments, results, receivers, and exceptions never enter this receipt.
 (define-type (PooFlowDebugCallReceiptContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-call-receipt
-  proto: (.o)
-  responsibilities: (.o policy: PooFlowDebugCallPolicyContract
-                        call: ObservationSymbol
-                        depth: ObservationNatural
-                        active-path: ObservationPath
-                        operator-kind: ObservationSymbol
-                        outcome: ObservationSymbol
-                        accepted?: ObservationBoolean
-                        reason: ObservationSymbol))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((policy . ,PooFlowDebugCallPolicyContract)
+     (call . ,ObservationSymbol)
+     (depth . ,ObservationNatural)
+     (active-path . ,ObservationPath)
+     (operator-kind . ,ObservationSymbol)
+     (outcome . ,ObservationSymbol)
+     (accepted? . ,ObservationBoolean)
+     (reason . ,ObservationSymbol))))
 
 ;;; Boundary: lazy slot resolution has its own depth budget.  It is separate
 ;;; from the call policy because resolving a slot may precede procedure lookup.
@@ -455,9 +503,11 @@
 ;;; A separate call policy cannot silently widen or disable its slot budget.
 (define-type (PooFlowDebugSlotPolicyContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-slot-policy
-  proto: (.o)
-  responsibilities: (.o label: ObservationSymbol
-                        maximum-depth: ObservationNatural)
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((label . ,ObservationSymbol)
+     (maximum-depth . ,ObservationNatural)))
   .obligations: poo-flow-debug-slot-policy-obligations)
 
 ;;; Forged slot receipts cannot turn a cycle, excessive depth, or raised
@@ -504,15 +554,17 @@
 ;;; path only.  The object, computed value, and original exception stay out.
 (define-type (PooFlowDebugSlotReceiptContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-slot-receipt
-  proto: (.o)
-  responsibilities: (.o policy: PooFlowDebugSlotPolicyContract
-                        receiver: ObservationSymbol
-                        slot: ObservationSymbol
-                        depth: ObservationNatural
-                        active-path: ObservationSlotPath
-                        outcome: ObservationSymbol
-                        accepted?: ObservationBoolean
-                        reason: ObservationSymbol)
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((policy . ,PooFlowDebugSlotPolicyContract)
+     (receiver . ,ObservationSymbol)
+     (slot . ,ObservationSymbol)
+     (depth . ,ObservationNatural)
+     (active-path . ,ObservationSlotPath)
+     (outcome . ,ObservationSymbol)
+     (accepted? . ,ObservationBoolean)
+     (reason . ,ObservationSymbol)))
   .obligations: poo-flow-debug-slot-receipt-obligations)
 
 ;;; Boundary: a debug memory policy is an explicit POO value. The process
@@ -520,25 +572,29 @@
 ;;; can be loaded.
 (define-type (PooFlowDebugMemoryPolicyContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-memory-policy
-  proto: (.o)
-  responsibilities: (.o label: ObservationSymbol
-                        heap-limit-bytes: ObservationNatural
-                        live-growth-limit-bytes: ObservationNatural
-                        sample-interval-milliseconds: ObservationNatural
-                        collect-before-sample?: ObservationBoolean
-                        fail-closed?: ObservationBoolean))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((label . ,ObservationSymbol)
+     (heap-limit-bytes . ,ObservationNatural)
+     (live-growth-limit-bytes . ,ObservationNatural)
+     (sample-interval-milliseconds . ,ObservationNatural)
+     (collect-before-sample? . ,ObservationBoolean)
+     (fail-closed? . ,ObservationBoolean))))
 
 ;;; Boundary: a sample projects Gerbil runtime counters into a native POO
 ;;; value; it never retains heap objects or exposes the runtime statistics row.
 (define-type (PooFlowDebugMemorySampleContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-memory-sample
-  proto: (.o)
-  responsibilities: (.o phase: ObservationSymbol
-                        heap-size-bytes: ObservationNatural
-                        allocated-bytes: ObservationNatural
-                        live-bytes: ObservationNatural
-                        movable-bytes: ObservationNatural
-                        still-bytes: ObservationNatural))
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((phase . ,ObservationSymbol)
+     (heap-size-bytes . ,ObservationNatural)
+     (allocated-bytes . ,ObservationNatural)
+     (live-bytes . ,ObservationNatural)
+     (movable-bytes . ,ObservationNatural)
+     (still-bytes . ,ObservationNatural))))
 
 (def (poo-flow-debug-memory-receipt-obligations receipt _context)
   (let* ((policy (.ref receipt 'policy))
@@ -564,13 +620,15 @@
 ;;; Negative deltas are normalized to zero by the pure constructor.
 (define-type (PooFlowDebugMemoryReceiptContract @ PooFlowNativeObjectContract.)
   identity: 'observation/debug-memory-receipt
-  proto: (.o)
-  responsibilities: (.o phase: ObservationSymbol
-                        policy: PooFlowDebugMemoryPolicyContract
-                        before: PooFlowDebugMemorySampleContract
-                        after: PooFlowDebugMemorySampleContract
-                        heap-growth-bytes: ObservationNatural
-                        live-growth-bytes: ObservationNatural
-                        accepted?: ObservationBoolean
-                        reason: ObservationSymbol)
+  proto: (poo-flow-observation-empty-prototype)
+  responsibilities:
+  (poo-flow-observation-contract-shape
+   `((phase . ,ObservationSymbol)
+     (policy . ,PooFlowDebugMemoryPolicyContract)
+     (before . ,PooFlowDebugMemorySampleContract)
+     (after . ,PooFlowDebugMemorySampleContract)
+     (heap-growth-bytes . ,ObservationNatural)
+     (live-growth-bytes . ,ObservationNatural)
+     (accepted? . ,ObservationBoolean)
+     (reason . ,ObservationSymbol)))
   .obligations: poo-flow-debug-memory-receipt-obligations)

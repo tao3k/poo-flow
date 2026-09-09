@@ -13,7 +13,8 @@
         :poo-flow/src/module-system/loader/resolver
         :poo-flow/src/module-system/loader/interface
         :poo-flow/src/module-system/descriptor/syntax
-        :poo-flow/src/module-system/projection/interface)
+        :poo-flow/src/module-system/projection/interface
+        :poo-flow/src/module-system/observability/interface)
 
 (export (import: :poo-flow/src/module-system/interface)
         (import: :poo-flow/src/module-system/loader/source)
@@ -25,4 +26,5 @@
         (import: :poo-flow/src/module-system/loader/resolver)
         (import: :poo-flow/src/module-system/loader/interface)
         (import: :poo-flow/src/module-system/descriptor/syntax)
-        (import: :poo-flow/src/module-system/projection/interface))
+        (import: :poo-flow/src/module-system/projection/interface)
+        (import: :poo-flow/src/module-system/observability/interface))

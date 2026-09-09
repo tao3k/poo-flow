@@ -2,7 +2,8 @@
 ;;; Boundary: module object validation receipts bridge POO Flow objects to the
 ;;; Gerbil harness structural validation vocabulary.
 
-(import (only-in :std/test
+(import (only-in :clan/poo/object .ref object?)
+        (only-in :std/test
                  test-suite
                  test-case
                  check-equal?
@@ -14,18 +15,13 @@
 
 (export module-object-validation-test)
 
-;; : (-> HashTable Symbol Value)
+;; : (-> POOObject Symbol Value)
 (def (receipt-ref receipt key)
-  (hash-get receipt key))
-
-;; : (-> Alist Symbol Value Value)
-(def (alist-ref entries key default)
-  (let (entry (assoc key entries))
-    (if entry (cdr entry) default)))
+  (.ref receipt key))
 
 ;;; Receipt projection boundary: keep the field list assertion independent from
 ;;; harness-private receipt nesting.
-;; : (-> [HashTable] [Symbol])
+;; : (-> [POOObject] [Symbol])
 (def (field-contract-validation-fields validations)
   (map (lambda (validation) (receipt-ref validation 'field))
        validations))
@@ -92,6 +88,14 @@
              (harness-dependency
               (receipt-ref source-ref 'dependency)))
         (check-equal? (poo-flow-module-object-validation? validation) #t)
+        (check-equal?
+         (and (object? validation)
+              (object? harness-validation)
+              (object? source-ref)
+              (andmap object? field-contract-validations)
+              (andmap object? field-origins)
+              (andmap object? validation-phases))
+         #t)
         (check-equal? (receipt-ref validation 'kind)
                       poo-flow-module-object-validation-kind)
         (check-equal? (receipt-ref validation 'schema)
@@ -106,16 +110,16 @@
         (check-equal? (receipt-ref validation 'resolved-field-identities)
                       '(flags runtime-args backend binding))
         (check-equal? (map (lambda (origin)
-                             (cons (alist-ref origin 'field #f)
-                                   (alist-ref origin 'origin #f)))
+                             (cons (receipt-ref origin 'field)
+                                   (receipt-ref origin 'origin)))
                            field-origins)
                       '((flags . inherited)
                         (runtime-args . inherited)
                         (backend . direct)
                         (binding . direct)))
         (check-equal? (map (lambda (origin)
-                             (cons (alist-ref origin 'field #f)
-                                   (alist-ref origin 'provider #f)))
+                             (cons (receipt-ref origin 'field)
+                                   (receipt-ref origin 'provider)))
                            field-origins)
                       '((flags . objects.validation.shared)
                         (runtime-args . objects.validation.shared)
@@ -172,7 +176,7 @@
                                  checked-signals)))
                       #t)
         (check-equal? harness-dependency
-                      "github.com/tao3k/gerbil-scheme-language-project-harness")
+                      "github.com/tao3k/asp-gerbil-scheme")
         (check-equal? (poo-flow-module-object-validation-valid? validation)
                       #t)
         (check-equal? (poo-flow-module-object-validation-diagnostics

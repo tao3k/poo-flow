@@ -220,15 +220,24 @@
        (else
         (let ((entry (car remaining-slots))
               (contribution (car remaining-contributions)))
-          (if (not (poo-flow-module-field-contribution-vector? contribution))
+          (if (not (poo-flow-module-field-contribution? contribution))
             #f
-            (let* ((target (vector-ref contribution 1))
-                   (value (vector-ref contribution 3))
-                   (key (vector-ref contribution 4))
+            (let* ((target
+                    (poo-flow-module-field-contribution-target contribution))
+                   (value
+                    (poo-flow-module-field-contribution-value contribution))
+                   (key
+                    (poo-flow-module-field-contribution-field-identity
+                     contribution))
                    (slot-key (car entry))
-                   (merge (vector-ref contribution 5))
-                   (value-type (vector-ref contribution 6))
-                   (field-contract? (vector-ref contribution 7))
+                   (merge
+                    (poo-flow-module-field-contribution-merge contribution))
+                   (value-type
+                    (poo-flow-module-field-contribution-field-value-type
+                     contribution))
+                   (field-contract?
+                    (poo-flow-module-field-contribution-field-contract?
+                     contribution))
                    (valid?
                     (or (not field-contract?)
                         (poo-flow-module-value-type-accepts?
@@ -394,41 +403,24 @@
               slots
               (materialize-updated-slots new-order))
             (let* ((contribution (car rest))
-                   (vector-contribution?
-                    (poo-flow-module-field-contribution-vector? contribution))
                    (target
-                    (if vector-contribution?
-                      (vector-ref contribution 1)
-                      (poo-flow-module-field-contribution-target
-                       contribution)))
+                    (poo-flow-module-field-contribution-target contribution))
                    (value
-                    (if vector-contribution?
-                      (vector-ref contribution 3)
-                      (poo-flow-module-field-contribution-value
-                       contribution)))
+                    (poo-flow-module-field-contribution-value contribution))
                    (field-contract?
-                    (if vector-contribution?
-                      (vector-ref contribution 7)
-                      (poo-flow-module-field-contribution-field-contract?
-                       contribution)))
+                    (poo-flow-module-field-contribution-field-contract?
+                     contribution))
                    (valid?
                     (or (not field-contract?)
                         (poo-flow-module-value-type-accepts?
-                         (if vector-contribution?
-                           (vector-ref contribution 6)
-                           (poo-flow-module-field-contribution-field-value-type
-                            contribution))
+                         (poo-flow-module-field-contribution-field-value-type
+                          contribution)
                          value)))
                    (key
-                    (if vector-contribution?
-                      (vector-ref contribution 4)
-                      (poo-flow-module-field-contribution-field-identity
-                       contribution)))
+                    (poo-flow-module-field-contribution-field-identity
+                     contribution))
                    (merge
-                    (if vector-contribution?
-                      (vector-ref contribution 5)
-                      (poo-flow-module-field-contribution-merge
-                       contribution))))
+                    (poo-flow-module-field-contribution-merge contribution)))
               (if (and (equal? target node-identity)
                        valid?
                        (poo-flow-module-config-slot-merge-action? merge))
@@ -507,7 +499,7 @@
        contributions)))
 
 ;;; The fast extension result is valid only for childless nodes; child graphs
-;;; require the general fixed-point path to preserve recursive semantics.
+;;; require the general contribution resolver to preserve nested semantics.
 ;; : (-> PooModuleExtensionNode [PooModuleFieldContribution] MaybePooModuleExtensionResult)
 (def (poo-flow-module-config-fast-extension-result base contributions)
   (let ((children (poo-flow-module-extension-node-children base))
@@ -531,7 +523,7 @@
 (def (poo-flow-module-config-mk-merge base contributions)
   (poo-flow-module-config-merge-result
    (or (poo-flow-module-config-fast-extension-result base contributions)
-       (poo-flow-module-extension-fixed-point
+       (poo-flow-module-extension-resolve
         base
         (poo-flow-module-field-contributions->extensions contributions)))
    contributions))

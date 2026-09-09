@@ -11,6 +11,7 @@
                  $constant-slot-spec?
                  $constant-slot-spec-value
                  $computed-slot-spec)
+        (only-in :std/sugar find)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/support/contracts
         :poo-flow/src/module-system/object-core/support/merge)
@@ -66,7 +67,9 @@
         (fields-value fields)
         (metadata-value metadata))
     (make-object
-     supers: '()
+     ;; Native POO owns precedence and cycle rejection.  `inherits` is retained
+     ;; as domain metadata, but it is also the actual prototype parent list.
+     supers: inherits-value
      defaults: '((fields . ()))
      slots: (list
              (poo-flow-module-object-constant-slot
@@ -81,7 +84,7 @@
              (poo-flow-module-object-constant-slot
               'direct-fields
               fields-value)
-             (poo-flow-module-object-fields-slot inherits-value fields-value)
+             (poo-flow-module-object-fields-slot fields-value)
              (poo-flow-module-object-constant-slot
               'metadata
               metadata-value)
@@ -134,12 +137,12 @@
 ;;; Field slots are computed from the superclass chain, letting child objects
 ;;; override or add fields without duplicating inherited object metadata.
 ;; : (-> [PooModuleFieldContract] PooModuleObjectSlotSpec)
-(def (poo-flow-module-object-fields-slot inherits fields)
+(def (poo-flow-module-object-fields-slot fields)
   (cons 'fields
         ($computed-slot-spec
-         (lambda (_self _superfun)
+         (lambda (_self superfun)
            (poo-flow-module-object-fields-merge
-            (poo-flow-module-object-inherited-fields inherits)
+            (superfun)
             fields)))))
 
 ;;; Field identity accepts contracts and raw symbols so lookup paths share one
@@ -236,29 +239,25 @@
           (hash-put! overrides identity field)
           (loop (cdr fields) next-new-identities))))))
 
-;;; Inherited field resolution builds a synthetic object so direct and inherited
-;;; schemas both pass through the same computed-slot semantics.
+;;; Inherited field resolution builds a zero-field native POO child.  Parent
+;;; precedence, duplicate ancestry, and inconsistent graphs therefore remain
+;;; owned by gerbil-poo rather than a second local traversal.
 ;; : (-> [PooModuleObject] [PooModuleFieldContract])
 (def (poo-flow-module-object-inherited-fields inherits)
   (if (null? inherits)
     '()
-    (foldl
-     (lambda (inherit fields)
-       (poo-flow-module-object-fields-merge
-        fields
-        (poo-flow-module-object-resolved-fields inherit)))
-     '()
-     ;; Fold parents from weakest to strongest: left parents override right
-     ;; parents, while field projection remains root/right/left/child.
-     (reverse inherits))))
+    (.ref
+     (make-object
+      supers: inherits
+      defaults: '((fields . ()))
+      slots: (list (poo-flow-module-object-fields-slot '())))
+     'fields)))
 
-;;; Resolved fields avoid POO slot evaluation for leaf objects and only consult
-;;; computed inheritance state when the object has parents.
+;;; Field demand always follows the native lazy slot chain.  Leaf objects hit
+;;; the same protocol with the empty `fields` default as their recursion base.
 ;; : (-> PooModuleObject [PooModuleFieldContract])
 (def (poo-flow-module-object-resolved-fields object)
-  (if (null? (poo-flow-module-object-inherits object))
-    (poo-flow-module-object-fields object)
-    (.ref object 'fields)))
+  (.ref object 'fields))
 
 ;; : (-> PooModuleObject HashTable)
 (def (poo-flow-module-object-resolved-field-index object)
@@ -273,13 +272,10 @@
 ;;; mapping should use the indexed lookup path.
 ;; : (-> [PooModuleFieldContract] Symbol MaybePooModuleFieldContract)
 (def (poo-flow-module-object-field/in-fields fields identity)
-  (cond
-   ((null? fields) #f)
-   ((equal? (poo-flow-module-object-field-identity (car fields))
-            identity)
-    (car fields))
-   (else
-    (poo-flow-module-object-field/in-fields (cdr fields) identity))))
+  (find (lambda (field)
+          (equal? (poo-flow-module-object-field-identity field)
+                  identity))
+        fields))
 
 ;; poo-flow-module-object-field
 ;;   : (-> PooModuleObject Symbol MaybePooModuleFieldContract)
@@ -297,24 +293,14 @@
    (poo-flow-module-object-resolved-fields object)
    identity))
 
-;;; Default slot materialization maps field contracts to slot values; override
-;;; rows only merge after every field identity has a contract-owned default.
-;; : (-> [PooModuleFieldContract] PooModuleSlotMap PooModuleSlotMap)
-(def (poo-flow-module-object-default-slots/rev fields slots-rev)
-  (if (null? fields)
-    slots-rev
-    (poo-flow-module-object-default-slots/rev
-     (cdr fields)
-     (cons (cons (poo-flow-module-field-contract-identity (car fields))
-                 (poo-flow-module-field-contract-default (car fields)))
-           slots-rev))))
-
+;;; Default slot materialization is a pure projection from field contracts;
+;;; override rows merge only after every identity has its contract-owned value.
 ;; : (-> PooModuleObject PooModuleSlotMap)
 (def (poo-flow-module-object-default-slots object)
-  (reverse
-   (poo-flow-module-object-default-slots/rev
-    (poo-flow-module-object-resolved-fields object)
-    '())))
+  (map (lambda (field)
+         (cons (poo-flow-module-field-contract-identity field)
+               (poo-flow-module-field-contract-default field)))
+       (poo-flow-module-object-resolved-fields object)))
 
 ;;; Slot alist replacement preserves the first key position and updates only
 ;;; the matching row, matching extension slot merge order.
@@ -457,51 +443,26 @@
              (poo-flow-module-object-identity object)
              (car entry)))))
 
-;;; Object contribution mapping preserves one field-contract lookup per user
-;;; row, keeping unknown fields as validation failures instead of silent slots.
-;; : (-> PooModuleObject HashTable PooModuleObjectContributionEntries [PooModuleFieldContribution] [PooModuleFieldContribution])
-(def (poo-flow-module-object-contributions/rev
-      object
-      field-index
-      entries
-      contributions-rev)
-  (if (null? entries)
-    contributions-rev
-    (poo-flow-module-object-contributions/rev
-     object
-     field-index
-     (cdr entries)
-     (cons (poo-flow-module-object-contribution/index
-            object
-            field-index
-            (car entries))
-           contributions-rev))))
-
+;;; Object contribution mapping preserves one indexed field-contract lookup per
+;;; user row, keeping unknown fields as failures instead of silent slots.
 ;; : (-> PooModuleObject PooModuleObjectContributionEntries [PooModuleFieldContribution])
 (def (poo-flow-module-object-contributions object entries)
   (let (field-index
         (poo-flow-module-object-resolved-field-index object))
-    (reverse
-     (poo-flow-module-object-contributions/rev
-      object
-      field-index
-      entries
-      '()))))
+    (map (lambda (entry)
+           (poo-flow-module-object-contribution/index
+            object
+            field-index
+            entry))
+         entries)))
 
-;;; The object namespace is a regular extension graph root, so object removal
-;;; and extension use the same fixed-point merge path as runtime modules.
-;; : (-> [PooModuleObject] [PooModuleExtensionNode] [PooModuleExtensionNode])
-(def (poo-flow-module-object-nodes/rev objects nodes-rev)
-  (if (null? objects)
-    nodes-rev
-    (poo-flow-module-object-nodes/rev
-     (cdr objects)
-     (cons (poo-flow-module-object-node (car objects) '() '())
-           nodes-rev))))
-
+;;; The object namespace is a regular extension graph root; object schemas
+;;; project independently into child nodes before runtime contributions merge.
 ;; : (-> [PooModuleObject] [PooModuleExtensionNode])
 (def (poo-flow-module-object-nodes objects)
-  (reverse (poo-flow-module-object-nodes/rev objects '())))
+  (map (lambda (object)
+         (poo-flow-module-object-node object '() '()))
+       objects))
 
 ;; : (-> [PooModuleObject] PooModuleExtensionNode)
 (def (poo-flow-module-objects-node objects)

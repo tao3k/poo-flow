@@ -2,12 +2,16 @@
 ;;; Boundary: module object validation facts, origins, and source refs.
 
 (import :gerbil/gambit
+        (only-in :clan/poo/object .ref object? object<-alist)
         :poo-flow/src/module-system/object-core/interface)
 
 (export poo-flow-module-object-validation-kind
         poo-flow-module-object-validation-schema
         poo-flow-module-field-contract-validation-kind
         receipt
+        harness-receipt
+        poo-flow-validation-ref
+        poo-flow-validation-value->native
         diagnostic
         poo-flow-module-field-identities
         poo-flow-module-object-direct-field-identities
@@ -43,10 +47,10 @@
 (def poo-flow-module-field-contract-validation-kind
   "poo-object-field-contract-validation")
 
-;;; Receipt helpers keep this module JSON-ish without importing an additional
-;;; serialization layer; the upstream harness owns the validation vocabulary.
+;;; Harness adapters remain private hash values because the upstream ASP
+;;; validator owns that ABI. Public receipts cross the seam as native POO.
 ;; : (-> Pair... HashTable)
-(def (receipt . entries)
+(def (harness-receipt . entries)
   (let (table (make-hash-table))
     (for-each
      (lambda (entry)
@@ -54,7 +58,34 @@
      entries)
     table))
 
-;; : (-> Symbol String Value Value HashTable)
+;; : (-> Pair... POOObject)
+(def (receipt . entries)
+  (object<-alist entries))
+
+;; : (-> ValidationValue Symbol Value)
+(def (poo-flow-validation-ref value key)
+  (cond
+   ((object? value) (.ref value key))
+   ((hash-table? value) (hash-get value key))
+   (else (error "module validation value is not inspectable" value key))))
+
+;;; Recursively close the upstream hash receipt into native POO values before
+;;; any public module-system API or cache can retain it.
+;; : (-> ValidationValue NativeValidationValue)
+(def (poo-flow-validation-value->native value)
+  (cond
+   ((hash-table? value)
+    (object<-alist
+     (map (lambda (entry)
+            (cons (car entry)
+                  (poo-flow-validation-value->native (cdr entry))))
+          (hash->list value))))
+   ((pair? value)
+    (cons (poo-flow-validation-value->native (car value))
+          (poo-flow-validation-value->native (cdr value))))
+   (else value)))
+
+;; : (-> Symbol String Value Value POOObject)
 (def (diagnostic code message subject evidence)
   (receipt (cons 'code code)
            (cons 'message message)
@@ -196,7 +227,7 @@
 ;;; Boundary: module object field origin index is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> PooModuleObject PooModuleFieldContract HashTable Alist)
+;; : (-> PooModuleObject PooModuleFieldContract HashTable POOObject)
 (def (poo-flow-module-object-field-origin/index object field providers)
   (let* ((field-identity
           (poo-flow-module-field-contract-identity field))
@@ -204,7 +235,7 @@
           (hash-get providers field-identity))
          (provider-identity
           (and provider (poo-flow-module-object-identity provider))))
-    (list
+    (receipt
      (cons 'field field-identity)
      (cons 'origin
            (if (eq? provider object) 'direct 'inherited))
@@ -217,7 +248,7 @@
      (cons 'metadata
            (poo-flow-module-field-contract-metadata field)))))
 
-;; : (-> PooModuleObject PooModuleFieldContract Alist)
+;; : (-> PooModuleObject PooModuleFieldContract POOObject)
 (def (poo-flow-module-object-field-origin object field)
   (poo-flow-module-object-field-origin/index
    object
@@ -227,7 +258,7 @@
 ;;; Boundary: module object field origins is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> PooModuleObject [PooModuleFieldContract] Alist [Alist] [Alist])
+;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [POOObject] [POOObject])
 (def (poo-flow-module-object-field-origins/rev
       object
       fields
@@ -245,7 +276,7 @@
             providers)
            origins-rev))))
 
-;; : (-> PooModuleObject [Alist])
+;; : (-> PooModuleObject [POOObject])
 (def (poo-flow-module-object-field-origins object)
   (let (providers
         (poo-flow-module-object-field-provider-index object))
@@ -266,7 +297,7 @@
 
 ;;; Source references deliberately point at the upstream facade, not at this
 ;;; adapter, so failing receipts send framework authors to the contract owner.
-;; : (-> PooModuleObject HashTable)
+;; : (-> PooModuleObject POOObject)
 (def (poo-flow-module-object-validation-source-ref object)
   (let* ((inherits
           (poo-flow-module-object-inherits object))
@@ -274,11 +305,12 @@
           (poo-flow-module-object-fields object))
          (resolved-fields
           (poo-flow-module-object-resolved-fields object)))
-    (poo-flow-module-object-validation-source-ref/identities
-     object
-     (map poo-flow-module-object-identity inherits)
-     (poo-flow-module-field-identities direct-fields)
-     (poo-flow-module-field-identities resolved-fields))))
+    (poo-flow-validation-value->native
+     (poo-flow-module-object-validation-source-ref/identities
+      object
+      (map poo-flow-module-object-identity inherits)
+      (poo-flow-module-field-identities direct-fields)
+      (poo-flow-module-field-identities resolved-fields)))))
 
 ;; : (-> PooModuleObject [Symbol] [Symbol] [Symbol] HashTable)
 (def (poo-flow-module-object-validation-source-ref/identities
@@ -286,14 +318,14 @@
       inherit-identities
       direct-field-identities
       resolved-field-identities)
-  (receipt
+  (harness-receipt
    (cons 'kind "dependency")
    (cons 'manager "gerbil.pkg")
-   (cons 'dependency "github.com/tao3k/gerbil-scheme-language-project-harness")
+   (cons 'dependency "github.com/tao3k/asp-gerbil-scheme")
    (cons 'repository "github.com/tao3k/agent-semantic-protocols")
-   (cons 'localSource "languages/gerbil-scheme-language-project-harness")
-   (cons 'repositorySource "src/extensions/facade.ss")
-   (cons 'indexHint "gslph-extensions-facade")
+   (cons 'localSource ".gerbil/pkg/github.com/tao3k/asp-gerbil-scheme")
+   (cons 'repositorySource "src/extensions/poo-object-validation.ss")
+   (cons 'indexHint "asp-gerbil-scheme-poo-object-validation")
    (cons 'pathPolicy "package-dependency")
    (cons 'selectorScheme "gerbil-poo")
    (cons 'object (poo-flow-module-object-identity object))
@@ -307,28 +339,29 @@
 
 ;;; Field-level source references preserve the concrete field identity while
 ;;; still citing the same upstream facade as the semantic validation owner.
-;; : (-> PooModuleObject PooModuleFieldContract HashTable)
+;; : (-> PooModuleObject PooModuleFieldContract POOObject)
 (def (poo-flow-module-field-contract-validation-source-ref object field)
-  (poo-flow-module-field-contract-validation-source-ref/values
-   object
-   (poo-flow-module-field-contract-identity field)
-   (poo-flow-module-value-type-kind
-    (poo-flow-module-field-contract-value-type field))
-   (poo-flow-module-field-contract-merge field)))
+  (poo-flow-validation-value->native
+   (poo-flow-module-field-contract-validation-source-ref/values
+    object
+    (poo-flow-module-field-contract-identity field)
+    (poo-flow-module-value-type-kind
+     (poo-flow-module-field-contract-value-type field))
+    (poo-flow-module-field-contract-merge field))))
 
 ;; : (-> PooModuleObject Symbol Value Value HashTable)
 (def (poo-flow-module-field-contract-validation-source-ref/values object
                                                                   field
                                                                   value-kind
                                                                   merge)
-  (receipt
+  (harness-receipt
    (cons 'kind "dependency")
    (cons 'manager "gerbil.pkg")
-   (cons 'dependency "github.com/tao3k/gerbil-scheme-language-project-harness")
+   (cons 'dependency "github.com/tao3k/asp-gerbil-scheme")
    (cons 'repository "github.com/tao3k/agent-semantic-protocols")
-   (cons 'localSource "languages/gerbil-scheme-language-project-harness")
-   (cons 'repositorySource "src/extensions/facade.ss")
-   (cons 'indexHint "gslph-extensions-facade")
+   (cons 'localSource ".gerbil/pkg/github.com/tao3k/asp-gerbil-scheme")
+   (cons 'repositorySource "src/extensions/poo-object-validation.ss")
+   (cons 'indexHint "asp-gerbil-scheme-poo-object-validation")
    (cons 'pathPolicy "package-dependency")
    (cons 'selectorScheme "gerbil-poo")
    (cons 'object (poo-flow-module-object-identity object))

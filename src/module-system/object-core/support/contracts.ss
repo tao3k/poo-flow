@@ -4,6 +4,7 @@
 (import :gerbil/gambit
         (only-in :clan/poo/object
                  .cc
+                 .mix
                  .o
                  .ref
                  .slot?
@@ -12,7 +13,7 @@
                  $constant-slot-spec
                  $computed-slot-spec)
         (only-in :clan/poo/mop
-                 Any Bool Object Type element? raise-type-error)
+                 .defgeneric Any Bool Object Type element? raise-type-error)
         (only-in :clan/poo/type List String Symbol)
         (only-in "../../types.ss" poo-flow-predicate-type)
         :poo-flow/src/module-system/extension/interface)
@@ -47,8 +48,8 @@
         poo-flow-module-field-contract-metadata
         poo-flow-module-field-contract-accepts?
         poo-flow-module-field-contract-with-merge
+        poo-flow-module-field-contribution-prototype
         poo-flow-module-field-contribution
-        poo-flow-module-field-contribution-vector?
         poo-flow-module-field-contribution?
         poo-flow-module-field-contribution-target
         poo-flow-module-field-contribution-field
@@ -210,6 +211,18 @@
    (poo-flow-module-field-contract-default field)
    (poo-flow-module-field-contract-metadata field)))
 
+;;; The contribution prototype owns derived extension behavior.  Concrete
+;;; contributions refine this native POO value with constant defaults; no
+;;; positional record or compatibility representation participates in dispatch.
+(def poo-flow-module-field-contribution-prototype
+  (.o (:: self)
+      kind: poo-flow-module-field-contribution-kind
+      (.operation
+       (poo-flow-module-field-operation
+        (.ref self 'field-identity)
+        (.ref self 'field-merge)
+        (.ref self 'value)))))
+
 ;;; Field contributions are object-aware extension requests: the field decides
 ;;; merge behavior while the contribution carries target and value.
 ;; : (-> Symbol PooModuleFieldContract PooModuleFieldValue PooModuleFieldContribution)
@@ -230,85 +243,64 @@
           (if field-contract?
             (poo-flow-module-field-contract-value-type field-value)
             PooFlowModuleAnyType)))
-    (vector poo-flow-module-field-contribution-kind
-            target-value
-            field-value
-            value-value
-            field-identity-value
-            field-merge-value
-            field-value-type-value
-            field-contract?)))
-
-;; : (-> PooModuleFieldContributionCandidate Boolean)
-(def (poo-flow-module-field-contribution-vector? value)
-  (and (vector? value)
-       (= (vector-length value) 8)
-       (equal? (vector-ref value 0)
-               poo-flow-module-field-contribution-kind)))
+    (.mix poo-flow-module-field-contribution-prototype
+      defaults: (list
+                 (cons 'target target-value)
+                 (cons 'field field-value)
+                 (cons 'value value-value)
+                 (cons 'field-identity field-identity-value)
+                 (cons 'field-merge field-merge-value)
+                 (cons 'field-value-type field-value-type-value)
+                 (cons 'field-contract? field-contract?)))))
 
 ;; : (-> PooModuleFieldContributionCandidate Boolean)
 (def (poo-flow-module-field-contribution? value)
-  (or (poo-flow-module-field-contribution-vector? value)
-      (poo-flow-module-object-kind? value poo-flow-module-field-contribution-kind)))
+  (poo-flow-module-object-kind? value poo-flow-module-field-contribution-kind))
 
 ;;; Boundary: module field contribution target is the policy-visible edge for
 ;;; module-system, object, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-target contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 1)
-    (.ref contribution 'target)))
+  (.ref contribution 'target))
 ;;; Boundary: module field contribution field is the policy-visible edge for
 ;;; module-system, object, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution PooModuleFieldContract)
 (def (poo-flow-module-field-contribution-field contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 2)
-    (.ref contribution 'field)))
+  (.ref contribution 'field))
 ;;; Boundary: module field contribution value is the policy-visible edge for
 ;;; module-system, object, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution PooModuleFieldValue)
 (def (poo-flow-module-field-contribution-value contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 3)
-    (.ref contribution 'value)))
+  (.ref contribution 'value))
 ;;; Boundary: module field contribution field contract predicate is the policy-
 ;;; visible edge for module-system, object, core behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Boolean)
 (def (poo-flow-module-field-contribution-field-contract? contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 7)
-    (.ref contribution 'field-contract-p)))
+  (.ref contribution 'field-contract?))
 ;;; Boundary: module field contribution field value kind is the policy-visible
 ;;; edge for module-system, object, core behavior, keeping validation, lookup,
 ;;; or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-field-value-type contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 6)
-    (.ref contribution 'field-value-type)))
+  (.ref contribution 'field-value-type))
 
 ;;; Boundary: module field contribution field identity is the policy-visible
 ;;; edge for module-system, object, core behavior, keeping validation, lookup,
 ;;; or projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-field-identity contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 4)
-    (.ref contribution 'field-identity)))
+  (.ref contribution 'field-identity))
 
 ;;; Boundary: module field contribution merge is the policy-visible edge for
 ;;; module-system, object, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution Symbol)
 (def (poo-flow-module-field-contribution-merge contribution)
-  (if (poo-flow-module-field-contribution-vector? contribution)
-    (vector-ref contribution 5)
-    (.ref contribution 'field-merge)))
+  (.ref contribution 'field-merge))
 
 ;; : (-> PooModuleFieldContribution Boolean)
 (def (poo-flow-module-field-contribution-valid? contribution)
@@ -317,73 +309,43 @@
        (poo-flow-module-field-contribution-field-value-type contribution)
        (poo-flow-module-field-contribution-value contribution))))
 
-;;; Contribution conversion is the only place field merge names become graph
-;;; operations, keeping custom objects independent from merge internals.
+;;; Field merge names are interpreted once behind the prototype method.  The
+;;; contribution-to-extension path dispatches through native POO slots.
+;; : (-> Symbol Symbol PooModuleFieldValue PooModuleExtensionOperation)
+(def (poo-flow-module-field-operation field-identity merge value)
+  (cond
+   ((eq? merge 'override)
+    (poo-flow-module-extension-slot-override field-identity value))
+   ((eq? merge 'append)
+    (poo-flow-module-extension-slot-append field-identity value))
+   ((eq? merge 'prepend)
+    (poo-flow-module-extension-slot-prepend field-identity value))
+   ((eq? merge 'remove)
+    (poo-flow-module-extension-slot-remove field-identity value))
+   ((eq? merge 'node-extend)
+    (poo-flow-module-extension-node-extend value))
+   ((eq? merge 'node-remove)
+    (poo-flow-module-extension-node-remove value))
+   (else
+    (poo-flow-module-extension-slot-override field-identity value))))
+
+;;; Native generic dispatch lets refined contribution prototypes replace the
+;;; projection without extending this owner with another representation case.
 ;; : (-> PooModuleFieldContribution PooModuleExtensionOperation)
-(def (poo-flow-module-field-contribution-operation contribution)
-  (let* ((field-identity
-          (poo-flow-module-field-contribution-field-identity contribution))
-         (value
-          (poo-flow-module-field-contribution-value contribution))
-         (merge
-          (poo-flow-module-field-contribution-merge contribution)))
-    (cond
-     ((eq? merge 'override)
-      (poo-flow-module-extension-slot-override field-identity value))
-     ((eq? merge 'append)
-      (poo-flow-module-extension-slot-append field-identity value))
-     ((eq? merge 'prepend)
-      (poo-flow-module-extension-slot-prepend field-identity value))
-     ((eq? merge 'remove)
-      (poo-flow-module-extension-slot-remove field-identity value))
-     ((eq? merge 'node-extend)
-      (poo-flow-module-extension-node-extend value))
-     ((eq? merge 'node-remove)
-      (poo-flow-module-extension-node-remove value))
-     (else
-      (poo-flow-module-extension-slot-override field-identity value)))))
+(.defgeneric (poo-flow-module-field-contribution-operation contribution)
+  slot: .operation)
 
 ;;; Boundary: module field contribution to extension is the policy-visible edge
 ;;; for module-system, object, core behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; : (-> PooModuleFieldContribution PooModuleExtensionContribution)
 (def (poo-flow-module-field-contribution->extension contribution)
-  (let* ((target
-          (poo-flow-module-field-contribution-target contribution))
-         (value
-          (poo-flow-module-field-contribution-value contribution))
-         (field-contract?
-          (poo-flow-module-field-contribution-field-contract? contribution))
-         (valid?
-          (or (not field-contract?)
-              (poo-flow-module-value-type-accepts?
-               (poo-flow-module-field-contribution-field-value-type
-                contribution)
-               value)))
-         (field-identity
-          (poo-flow-module-field-contribution-field-identity contribution))
-         (merge
-          (poo-flow-module-field-contribution-merge contribution))
-         (operation
-          (cond
-           ((eq? merge 'override)
-            (poo-flow-module-extension-slot-override field-identity value))
-           ((eq? merge 'append)
-            (poo-flow-module-extension-slot-append field-identity value))
-           ((eq? merge 'prepend)
-            (poo-flow-module-extension-slot-prepend field-identity value))
-           ((eq? merge 'remove)
-            (poo-flow-module-extension-slot-remove field-identity value))
-           ((eq? merge 'node-extend)
-            (poo-flow-module-extension-node-extend value))
-           ((eq? merge 'node-remove)
-            (poo-flow-module-extension-node-remove value))
-           (else
-            (poo-flow-module-extension-slot-override field-identity value)))))
-    (if valid?
-      (poo-flow-module-extension-contribution target (list operation))
+  (if (poo-flow-module-field-contribution-valid? contribution)
+    (poo-flow-module-extension-contribution
+     (poo-flow-module-field-contribution-target contribution)
+     (list (poo-flow-module-field-contribution-operation contribution)))
       (error "poo-flow module field contribution violates its POO contract"
-             contribution))))
+             contribution)))
 
 ;;; Field contribution projection is a map because validation happens at each
 ;;; contribution boundary before the generic extension graph sees operations.

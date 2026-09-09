@@ -319,7 +319,7 @@
          "stage expects graph, loop, prove, handoff, step, guard, edges, or route clauses"))
     (match items
       ([head . payload]
-       (let (kind
+       (let (kind-value
              (cond
               ((composition-literal=? head #'graph) 'graph)
               ((composition-literal=? head #'loop) 'loop)
@@ -335,7 +335,7 @@
                 "unknown stage clause; expected graph, loop, prove, handoff, step, guard, edges, or route"
                 head))))
          (composition-clause-syntax
-          kind: kind
+          kind: kind-value
           payload: payload
           source: clause)))
       (else

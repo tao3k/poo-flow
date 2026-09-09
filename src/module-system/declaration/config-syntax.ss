@@ -3,7 +3,7 @@
 ;;; Invariant: generated forms are ordinary POO objects and predicates; public
 ;;; config authoring remains prototype composition plus named conversion helpers.
 
-(import (only-in :clan/poo/object .ref .slot? object? object<-alist))
+(import (only-in :clan/poo/object .o .ref .slot? object?))
 
 (export defpoo-module-config-prototype
         defpoo-module-config-kind-predicate
@@ -15,7 +15,7 @@
 ;; | type ConfigBindingSyntax = Syntax
 ;; | type ConfigSlotRowsSyntax = Syntax
 ;; | type ConfigPrototypeSyntax = Syntax
-;; | contract: expands a binding plus literal slots into an `object<-alist` definition
+;; | contract: expands a binding plus literal slots into a native `.o` definition
 ;; | warning: keep object inheritance and merge policy outside this syntax helper
 ;; | doc m%
 ;;   Defines a module config prototype object.
@@ -29,8 +29,7 @@
   ((_ binding
       (slots ((slot-key slot-value) ...)))
    (def binding
-     (object<-alist
-      (list (cons 'slot-key slot-value) ...)))))
+     (.o (slot-key slot-value) ...))))
 
 ;;; Predicate macros generate kind guards over POO config prototypes.
 ;; defpoo-module-config-kind-predicate

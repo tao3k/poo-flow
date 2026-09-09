@@ -13,7 +13,7 @@
         :poo-flow/t/support/performance
         (only-in :poo-flow/src/module-system/extension/interface
                  poo-flow-module-extension-contribution
-                 poo-flow-module-extension-fixed-point
+                 poo-flow-module-extension-resolve
                  poo-flow-module-extension-node
                  poo-flow-module-extension-node-slots
                  poo-flow-module-extension-result-root
@@ -75,7 +75,7 @@
 ;; : (-> [PooModuleExtensionOperation] Alist)
 (def (module-extension-list-merge-summary/from-operations operations)
   (let* ((result
-          (poo-flow-module-extension-fixed-point
+          (poo-flow-module-extension-resolve
            module-extension-list-merge-root
            (list
             (poo-flow-module-extension-contribution

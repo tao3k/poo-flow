@@ -6,6 +6,7 @@
 (import (only-in :clan/poo/object .def .o .ref object?)
         (only-in :clan/poo/mop .defgeneric validate)
         (only-in "../types.ss" poo-flow-contract-admit)
+        (only-in "../object-family/syntax.ss" defpoo-object-family)
         "funcs.ss"
         (only-in "./types.ss"
                  PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
@@ -179,17 +180,19 @@
 (def (poo-flow-observability-diagnostic? value)
   (poo-flow-observability-diagnostic-contract? value))
 
-(def (poo-flow-observability-diagnostic-family value) (.ref value 'family))
-(def (poo-flow-observability-diagnostic-severity value) (.ref value 'severity))
-(def (poo-flow-observability-diagnostic-boundary value) (.ref value 'boundary))
-(def (poo-flow-observability-diagnostic-validator value) (.ref value 'validator))
-(def (poo-flow-observability-diagnostic-node value) (.ref value 'node))
-(def (poo-flow-observability-diagnostic-edge value) (.ref value 'edge))
-(def (poo-flow-observability-diagnostic-reason value) (.ref value 'reason))
-(def (poo-flow-observability-diagnostic-message value) (.ref value 'message))
-(def (poo-flow-observability-diagnostic-repair-target value)
-  (.ref value 'repair-target))
-(def (poo-flow-observability-diagnostic-artifacts value) (.ref value 'artifacts))
+(defpoo-object-family
+  (accessors
+   (poo-flow-observability-diagnostic-family family)
+   (poo-flow-observability-diagnostic-severity severity)
+   (poo-flow-observability-diagnostic-boundary boundary)
+   (poo-flow-observability-diagnostic-validator validator)
+   (poo-flow-observability-diagnostic-node node)
+   (poo-flow-observability-diagnostic-edge edge)
+   (poo-flow-observability-diagnostic-reason reason)
+   (poo-flow-observability-diagnostic-message message)
+   (poo-flow-observability-diagnostic-repair-target repair-target)
+   (poo-flow-observability-diagnostic-artifacts artifacts))
+  (projections))
 
 ;; : (-> PooFlowObservabilityDiagnostic Symbol)
 (def (poo-flow-observability-diagnostic-code diagnostic)
@@ -235,14 +238,17 @@
 (def (poo-flow-observability-receipt? value)
   (poo-flow-observability-receipt-contract? value))
 
-(def (poo-flow-observability-receipt-family value) (.ref value 'family))
-(def (poo-flow-observability-receipt-schema value) (.ref value 'schema))
-(def (poo-flow-observability-receipt-source value) (.ref value 'source))
-(def (poo-flow-observability-receipt-graph value) (.ref value 'graph))
-(def (poo-flow-observability-receipt-diagnostics value) (.ref value 'diagnostics))
-(def (poo-flow-observability-receipt-repair value) (.ref value 'repair))
-(def (poo-flow-observability-receipt-readiness value) (.ref value 'readiness))
-(def (poo-flow-observability-receipt-artifacts value) (.ref value 'artifacts))
+(defpoo-object-family
+  (accessors
+   (poo-flow-observability-receipt-family family)
+   (poo-flow-observability-receipt-schema schema)
+   (poo-flow-observability-receipt-source source)
+   (poo-flow-observability-receipt-graph graph)
+   (poo-flow-observability-receipt-diagnostics diagnostics)
+   (poo-flow-observability-receipt-repair repair)
+   (poo-flow-observability-receipt-readiness readiness)
+   (poo-flow-observability-receipt-artifacts artifacts))
+  (projections))
 
 ;; : (-> PooFlowObservabilityReceipt Boolean)
 (def (poo-flow-observability-receipt-valid? receipt)

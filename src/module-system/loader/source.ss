@@ -14,9 +14,12 @@
 
 (import (only-in :clan/poo/object .o .ref object?)
         :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 
-(export make-poo-flow-module-source-ref
+(export poo-flow-module-source-ref-prototype
+        make-poo-flow-module-source-ref
         poo-flow-module-source-ref?
         poo-flow-module-source-ref-kind
         poo-flow-module-source-ref-value
@@ -44,14 +47,23 @@
         poo-flow-extensions-append
         poo-flow-import?)
 
-;;; Boundary: source refs are metadata only and shared by catalog/import code.
-;;; Intent: keep loader provenance comparable without granting this layer IO authority.
+;;; Boundary: source refs are extensible POO values shared by catalogs and
+;;; import declarations. The marker lives on the prototype, while source kind
+;;; remains an ordinary data slot such as local, package, or registry.
 ;; : (-> Symbol SourceRefValue Alist PooModuleSourceRef)
-(defstruct poo-flow-module-source-ref
-  (kind
-   value
-   metadata)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-source-ref-prototype
+             module-source-ref?
+             poo-flow-module-source-ref?)
+  (constructor make-poo-flow-module-source-ref
+               (kind-value kind)
+               (value-value value)
+               (metadata-value metadata))
+  (accessors
+   (poo-flow-module-source-ref-kind kind)
+   (poo-flow-module-source-ref-value value)
+   (poo-flow-module-source-ref-metadata metadata))
+  (projections))
 
 ;;; Boundary: local sources are path metadata, not file reads.
 ;; : (-> Path PooModuleSourceRef)

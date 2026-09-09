@@ -9,6 +9,8 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/interface
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/loader/source)
 
 (export poo-flow-module-role
@@ -374,94 +376,27 @@
        (eq? (.@ descriptor kind) 'poo-flow-module)))
 
 ;;; Boundary: accessors expose descriptor slots without reinterpreting values.
-;; : (-> PooModuleDescriptor Symbol)
-(def (poo-flow-module-name descriptor)
-  (.@ descriptor name))
-
-;;; Boundary: imports expose raw direct/import-spec values.
-;; : (-> PooModuleDescriptor ModuleImportList)
-(def (poo-flow-module-imports descriptor)
-  (.@ descriptor imports))
-
-;;; Boundary: task registry contribution remains descriptor-local.
-;; : (-> PooModuleDescriptor TaskFamilyRegistry)
-(def (poo-flow-module-task-registry descriptor)
-  (.@ descriptor task-registry))
-
-;;; Boundary: flow registry contribution remains descriptor-local.
-;; : (-> PooModuleDescriptor FlowDeclarationRegistry)
-(def (poo-flow-module-flow-registry descriptor)
-  (.@ descriptor flow-registry))
-
-;;; Boundary: options accessor returns the activation-edge option projection.
-;; : (-> PooModuleDescriptor ModuleOptionAlist)
-(def (poo-flow-module-options descriptor)
-  (.@ descriptor options))
-
-;;; Boundary: interface object is optional for direct descriptor constructors.
-;; : (-> PooModuleDescriptor MaybePooModuleInterface)
-(def (poo-flow-module-interface-object descriptor)
-  (.@ descriptor interface))
-
-;;; Boundary: schemas are carried from interfaces for projection only.
-;; : (-> PooModuleDescriptor POOObject)
-(def (poo-flow-module-schemas descriptor)
-  (.@ descriptor schemas))
-
-;;; Boundary: config keeps original POO shape for schema validation.
-;; : (-> PooModuleDescriptor POOObject)
-(def (poo-flow-module-config descriptor)
-  (.@ descriptor config))
-
-;;; Boundary: extensions remain uninterpreted module payloads.
-;; : (-> PooModuleDescriptor [Value])
-(def (poo-flow-module-extensions descriptor)
-  (.@ descriptor extensions))
-
-;;; Boundary: scripts remain uninterpreted module payloads.
-;; : (-> PooModuleDescriptor [Value])
-(def (poo-flow-module-scripts descriptor)
-  (.@ descriptor scripts))
-
-;;; Boundary: metadata is inspection data and never activation logic.
-;; : (-> PooModuleDescriptor Alist)
-(def (poo-flow-module-metadata descriptor)
-  (.@ descriptor metadata))
-
-;;; Boundary: descriptor source refs are provenance only.
-;; : (-> PooModuleDescriptor MaybePooModuleSourceRef)
-(def (poo-flow-module-descriptor-source-ref descriptor)
-  (.@ descriptor source-ref))
-
-;;; Boundary: group is the stable category part of a Doom-style module key.
-;; : (-> PooModuleDescriptor ModuleGroup)
-(def (poo-flow-module-group descriptor)
-  (.@ descriptor group))
-
-;;; Boundary: flags are user-facing feature switches and never loader commands.
-;; : (-> PooModuleDescriptor [ModuleFlag])
-(def (poo-flow-module-flags descriptor)
-  (.@ descriptor flags))
-
-;;; Boundary: features are descriptive capabilities for doctor projections.
-;; : (-> PooModuleDescriptor [ModuleFeature])
-(def (poo-flow-module-features descriptor)
-  (.@ descriptor features))
-
-;;; Boundary: depth is explicit ordering data for phase projections.
-;; : (-> PooModuleDescriptor ModuleDepth)
-(def (poo-flow-module-depth descriptor)
-  (.@ descriptor depth))
-
-;;; Boundary: phase files record Doom-like entry names without loading them.
-;; : (-> PooModuleDescriptor ModulePhaseFiles)
-(def (poo-flow-module-phase-files descriptor)
-  (.@ descriptor phase-files))
-
-;;; Boundary: hooks are projected POO slot contributions for runtime owners.
-;; : (-> PooModuleDescriptor ModuleHooks)
-(def (poo-flow-module-hooks descriptor)
-  (.@ descriptor hooks))
+(defpoo-object-family
+  (reader .@)
+  (accessors
+   (poo-flow-module-name name)
+   (poo-flow-module-imports imports)
+   (poo-flow-module-task-registry task-registry)
+   (poo-flow-module-flow-registry flow-registry)
+   (poo-flow-module-options options)
+   (poo-flow-module-interface-object interface)
+   (poo-flow-module-schemas schemas)
+   (poo-flow-module-config config)
+   (poo-flow-module-extensions extensions)
+   (poo-flow-module-scripts scripts)
+   (poo-flow-module-metadata metadata)
+   (poo-flow-module-descriptor-source-ref source-ref)
+   (poo-flow-module-group group)
+   (poo-flow-module-flags flags)
+   (poo-flow-module-features features)
+   (poo-flow-module-depth depth)
+   (poo-flow-module-phase-files phase-files)
+   (poo-flow-module-hooks hooks)))
 
 ;;; Boundary: task descriptors are already normalized inside registries.
 ;; : (-> PooModuleDescriptor [TaskFamilyDescriptor])

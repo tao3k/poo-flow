@@ -20,7 +20,7 @@
 ;;; Boundary: module objects validation is the policy-visible edge for module-
 ;;; system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> [PooModuleObject] HashTable HashTable HashTable HashTable [HashTable] [HashTable])
+;; : (-> [PooModuleObject] HashTable HashTable HashTable HashTable [POOObject] [POOObject])
 (def (poo-flow-module-objects-validation/rev
       objects
       field-cache
@@ -40,7 +40,7 @@
    validations-rev
    objects))
 
-;; : (-> [PooModuleObject] [HashTable])
+;; : (-> [PooModuleObject] [POOObject])
 (def (poo-flow-module-objects-validation objects)
   (let ((field-cache (make-hash-table))
         (harness-cache (make-hash-table))
@@ -56,8 +56,8 @@
       '()))))
 
 ;;; Validation receipts stay list-shaped for callers that serialize reports;
-;;; the hash-table detail remains private to each object validation pass.
-;; : (-> [HashTable] [Alist])
+;;; the POO detail remains available to object-native callers.
+;; : (-> [POOObject] [Alist])
 (defpoo-module-final-projection-batch
   poo-flow-module-objects-validation->alists (validations)
   (projector poo-flow-module-object-validation->alist)
@@ -66,21 +66,21 @@
 ;;; Boundary: module invalid object identities is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> [HashTable] [Symbol] [Symbol])
+;; : (-> [POOObject] [Symbol] [Symbol])
 (def (poo-flow-module-invalid-object-identities/rev validations
                                                     identities-rev)
   (fold
    (lambda (validation identities)
      (if (poo-flow-module-object-validation-valid? validation)
        identities
-       (let (identity (hash-get validation 'object))
+       (let (identity (poo-flow-validation-ref validation 'object))
          (if identity
            (cons identity identities)
            identities))))
    identities-rev
    validations))
 
-;; : (-> [HashTable] [Symbol])
+;; : (-> [POOObject] [Symbol])
 (def (poo-flow-module-invalid-object-identities validations)
   (reverse
    (poo-flow-module-invalid-object-identities/rev validations '())))
@@ -88,15 +88,15 @@
 ;;; Boundary: module validation values is the policy-visible edge for module-
 ;;; system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> [HashTable] Symbol [Value] [Value])
+;; : (-> [POOObject] Symbol [Value] [Value])
 (def (poo-flow-module-validation-values/rev validations key values-rev)
   (fold
    (lambda (validation values)
-     (cons (hash-get validation key) values))
+     (cons (poo-flow-validation-ref validation key) values))
    values-rev
    validations))
 
-;; : (-> [HashTable] Symbol [Value])
+;; : (-> [POOObject] Symbol [Value])
 (def (poo-flow-module-validation-values validations key)
   (reverse
    (poo-flow-module-validation-values/rev validations key '())))
@@ -105,7 +105,7 @@
 ;;; edge for module-system, object behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
 ;; poo-flow-module-objects-validation-summary/collect
-;;   : (-> [HashTable] Values)
+;;   : (-> [POOObject] Values)
 ;;   | doc m%
 ;;       `poo-flow-module-objects-validation-summary/collect` documents the
 ;;       module-system, object boundary that the Gerbil policy harness treats
@@ -144,28 +144,33 @@
               (reverse validation-phases)
               (reverse invalid-objects))
       (let* ((validation (car rest))
-             (object (hash-get validation 'object))
+             (object (poo-flow-validation-ref validation 'object))
              (invalid? (not (poo-flow-module-object-validation-valid? validation))))
         (loop (cdr rest)
               (+ object-count 1)
               (cons object object-identities)
-              (cons (hash-get validation 'inheritance-chain) inheritance-chains)
-              (cons (hash-get validation 'direct-field-count) direct-field-counts)
-              (cons (hash-get validation 'direct-field-identities)
+              (cons (poo-flow-validation-ref validation 'inheritance-chain)
+                    inheritance-chains)
+              (cons (poo-flow-validation-ref validation 'direct-field-count)
+                    direct-field-counts)
+              (cons (poo-flow-validation-ref validation 'direct-field-identities)
                     direct-field-identities)
-              (cons (hash-get validation 'resolved-field-count)
+              (cons (poo-flow-validation-ref validation 'resolved-field-count)
                     resolved-field-counts)
-              (cons (hash-get validation 'resolved-field-identities)
+              (cons (poo-flow-validation-ref validation 'resolved-field-identities)
                     resolved-field-identities)
-              (cons (hash-get validation 'field-origins) field-origins)
-              (cons (hash-get validation 'inherit-count) inheritance-counts)
-              (cons (hash-get validation 'validationPhases) validation-phases)
+              (cons (poo-flow-validation-ref validation 'field-origins)
+                    field-origins)
+              (cons (poo-flow-validation-ref validation 'inherit-count)
+                    inheritance-counts)
+              (cons (poo-flow-validation-ref validation 'validationPhases)
+                    validation-phases)
               (if invalid?
                 (cons object invalid-objects)
                 invalid-objects))))))
 
 ;; poo-flow-module-objects-validation-summary
-;;   : (-> [HashTable] HashTable)
+;;   : (-> [POOObject] POOObject)
 ;;   | doc m%
 ;;       `poo-flow-module-objects-validation-summary` projects catalog-level
 ;;       validation facts without rewalking module objects or executing runtime

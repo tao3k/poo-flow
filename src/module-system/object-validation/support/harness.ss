@@ -4,8 +4,7 @@
 (import :gerbil/gambit
         (only-in :asp-gerbil-scheme/src/extensions/poo-object-validation
                  poo-object-field-contract-validation
-                 poo-object-contract-validation
-                 poo-object-validation-valid?)
+                 poo-object-contract-validation)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/support/facts
         :poo-flow/src/module-system/projection/syntax)
@@ -41,7 +40,7 @@
          (poo-flow-module-field-contract-default field))
         (metadata
          (poo-flow-module-field-contract-metadata field)))
-    (receipt
+    (harness-receipt
      (cons 'field identity)
      (cons 'identity identity)
      (cons 'valueKind value-kind)
@@ -53,12 +52,21 @@
 ;;; Harness validation is report-only here. The Gerbil language-project harness
 ;;; owns field type/merge/default/metadata checks upstream; poo-flow supplies the
 ;;; object-aware source reference and keeps only module-domain catalog gates local.
-;; : (-> PooModuleObject HashTable)
+;; : (-> PooModuleObject POOObject)
 (def (poo-flow-module-object-harness-validation object)
-  (poo-flow-module-object-harness-validation/resolved-fields
-   object
-   (poo-flow-module-object-resolved-fields object)
-   (poo-flow-module-object-validation-source-ref object)))
+  (let* ((resolved-fields
+          (poo-flow-module-object-resolved-fields object))
+         (direct-fields
+          (poo-flow-module-object-fields object)))
+    (poo-flow-module-object-harness-validation/resolved-fields
+     object
+     resolved-fields
+     (poo-flow-module-object-validation-source-ref/identities
+      object
+      (map poo-flow-module-object-identity
+           (poo-flow-module-object-inherits object))
+      (poo-flow-module-field-identities direct-fields)
+      (poo-flow-module-field-identities resolved-fields)))))
 
 ;;; Boundary: module object harness validation resolved fields is the policy-
 ;;; visible edge for module-system, object behavior, keeping validation,
@@ -78,7 +86,7 @@
   (reverse
    (poo-flow-module-object-harness-fields/rev resolved-fields '())))
 
-;; : (-> PooModuleObject [PooModuleFieldContract] HashTable HashTable)
+;; : (-> PooModuleObject [PooModuleFieldContract] HashTable POOObject)
 (def (poo-flow-module-object-harness-validation/resolved-fields object
                                                                resolved-fields
                                                                source-ref)
@@ -87,16 +95,17 @@
    (poo-flow-module-object-harness-fields resolved-fields)
    source-ref))
 
-;; : (-> PooModuleObject [HashTable] HashTable HashTable)
+;; : (-> PooModuleObject [HashTable] HashTable POOObject)
 (def (poo-flow-module-object-harness-validation/harness-fields object
                                                               harness-fields
                                                               source-ref)
-  (poo-object-contract-validation
-   (poo-flow-module-object-identity object)
-   harness-fields
-   source-ref))
+  (poo-flow-validation-value->native
+   (poo-object-contract-validation
+    (poo-flow-module-object-identity object)
+    harness-fields
+    source-ref)))
 
-;; : (-> PooModuleObject HashTable HashTable)
+;; : (-> PooModuleObject POOObject POOObject)
 (def (poo-flow-module-object-harness-validation-cache-receipt object cached)
   (receipt
    (poo-flow-module-validation-hash-field cached 'kind)
@@ -109,7 +118,7 @@
 ;;; Boundary: module object harness validation resolved fields cache is the
 ;;; policy-visible edge for module-system, object behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
-;; : (-> PooModuleObject [PooModuleFieldContract] [HashTable] HashTable HashTable)
+;; : (-> PooModuleObject [PooModuleFieldContract] [HashTable] HashTable HashTable POOObject)
 (def (poo-flow-module-object-harness-validation/resolved-fields/cache
       object
       cache-key
@@ -127,29 +136,30 @@
                 object
                 harness-fields
                 source-ref))
-           (if (poo-object-validation-valid? validation)
+           (if (poo-flow-module-field-contract-validation-valid? validation)
              (hash-put! cache cache-key validation))
            validation))))
 
-;; : (-> PooModuleObject PooModuleFieldContract HashTable)
+;; : (-> PooModuleObject PooModuleFieldContract POOObject)
 (def (poo-flow-module-field-contract-validation object field)
   (poo-flow-module-field-contract-validation/harness-field
    object
    (poo-flow-module-field-contract->harness-field field)))
 
-;; : (-> PooModuleObject HashTable HashTable)
+;; : (-> PooModuleObject HashTable POOObject)
 (def (poo-flow-module-field-contract-validation/harness-field object
                                                              harness-field)
-  (poo-object-field-contract-validation
-   (poo-flow-module-object-identity object)
-   harness-field
-   (poo-flow-module-field-contract-validation-source-ref/values
-    object
-    (hash-get harness-field 'field)
-    (hash-get harness-field 'valueKind)
-    (hash-get harness-field 'merge))))
+  (poo-flow-validation-value->native
+   (poo-object-field-contract-validation
+    (poo-flow-module-object-identity object)
+    harness-field
+    (poo-flow-module-field-contract-validation-source-ref/values
+     object
+     (hash-get harness-field 'field)
+     (hash-get harness-field 'valueKind)
+     (hash-get harness-field 'merge)))))
 
-;; : (-> PooModuleObject PooModuleFieldContract HashTable HashTable)
+;; : (-> PooModuleObject PooModuleFieldContract POOObject POOObject)
 (def (poo-flow-module-field-contract-validation-cache-receipt object
                                                               field
                                                               cached)
@@ -170,7 +180,7 @@
 ;;; Boundary: module field contract validation cached is the policy-visible
 ;;; edge for module-system, object behavior, keeping validation, lookup, or
 ;;; projection responsibilities centralized for callers.
-;; : (-> PooModuleObject PooModuleFieldContract HashTable HashTable)
+;; : (-> PooModuleObject PooModuleFieldContract HashTable POOObject)
 (def (poo-flow-module-field-contract-validation/cached object field cache)
   (cond ((hash-get cache field)
          => (lambda (cached)
@@ -186,50 +196,52 @@
              (hash-put! cache field validation))
            validation))))
 
-;; : (-> HashTable Boolean)
+;; : (-> POOObject Boolean)
 (def (poo-flow-module-field-contract-validation-valid? validation)
-  (poo-object-validation-valid? validation))
+  (poo-flow-validation-ref validation 'valid))
 
-;; : (-> HashTable Symbol Pair)
+;; : (-> ValidationValue Symbol Pair)
 (def (poo-flow-module-validation-hash-field validation key)
-  (cons key (hash-get validation key)))
+  (cons key (poo-flow-validation-ref validation key)))
 
 ;;; Boundary: module type validation to alist is the policy-visible edge for
 ;;; module-system, object behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
-;; : (-> HashTable Alist)
+;; : (-> POOObject Alist)
 (defpoo-module-final-projection
   poo-flow-module-type-validation->alist (validation)
-  (guard (hash-table? validation) '())
   (bindings ())
-  (fields ((kind (hash-get validation 'kind))
-           (schema (hash-get validation 'schema))
-           (valueKind (hash-get validation 'valueKind))
-           (typeDisplay (hash-get validation 'typeDisplay))
-           (valid (hash-get validation 'valid))
-           (diagnostics (hash-get validation 'diagnostics)))))
+  (fields ((kind (poo-flow-validation-ref validation 'kind))
+           (schema (poo-flow-validation-ref validation 'schema))
+           (valueKind (poo-flow-validation-ref validation 'valueKind))
+           (typeDisplay (poo-flow-validation-ref validation 'typeDisplay))
+           (valid (poo-flow-validation-ref validation 'valid))
+           (diagnostics
+            (poo-flow-validation-ref validation 'diagnostics)))))
 
 ;;; User-facing projection: preserve the upstream validation vocabulary while
 ;;; making field-level receipts easy for doctors and agents to scan.
-;; : (-> HashTable Alist)
+;; : (-> POOObject Alist)
 (defpoo-module-final-projection
   poo-flow-module-field-contract-validation->alist (validation)
   (bindings ((type-validation
-              (poo-flow-module-type-validation->alist
-               (hash-get validation 'typeValidation)))))
-  (fields ((kind (hash-get validation 'kind))
-           (schema (hash-get validation 'schema))
-           (object (hash-get validation 'object))
-           (field (hash-get validation 'field))
-           (valueKind (hash-get validation 'valueKind))
-           (merge (hash-get validation 'merge))
-           (valid (hash-get validation 'valid))
-           (diagnostics (hash-get validation 'diagnostics))
-           (checkedSignals (hash-get validation 'checkedSignals))
+               (poo-flow-module-type-validation->alist
+               (poo-flow-validation-ref validation 'typeValidation)))))
+  (fields ((kind (poo-flow-validation-ref validation 'kind))
+           (schema (poo-flow-validation-ref validation 'schema))
+           (object (poo-flow-validation-ref validation 'object))
+           (field (poo-flow-validation-ref validation 'field))
+           (valueKind (poo-flow-validation-ref validation 'valueKind))
+           (merge (poo-flow-validation-ref validation 'merge))
+           (valid (poo-flow-validation-ref validation 'valid))
+           (diagnostics
+            (poo-flow-validation-ref validation 'diagnostics))
+           (checkedSignals
+            (poo-flow-validation-ref validation 'checkedSignals))
            (type-validation type-validation))))
 
 ;; field-contract-validations-valid?
-;;   : (-> (List HashTable) Boolean)
+;;   : (-> (List POOObject) Boolean)
 ;;   | doc m%
 ;;       `field-contract-validations-valid?` reduces upstream field validation
 ;;       receipts without interpreting their diagnostics in poo-flow.
@@ -246,7 +258,7 @@
 
 ;;; Higher-order boundary: each resolved C3 field is validated independently so
 ;;; upstream diagnostics keep the concrete field identity.
-;; : (-> PooModuleObject [HashTable])
+;; : (-> PooModuleObject [POOObject])
 (def (poo-flow-module-object-field-contract-validations object)
   (poo-flow-module-object-field-contract-validations/resolved-fields
    object
@@ -255,7 +267,7 @@
 ;;; Boundary: module object field contract validations harness fields is the
 ;;; policy-visible edge for module-system, object behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
-;; : (-> PooModuleObject [PooModuleFieldContract] [HashTable])
+;; : (-> PooModuleObject [PooModuleFieldContract] [POOObject])
 (def (poo-flow-module-object-field-contract-validations/resolved-fields object
                                                                         resolved-fields)
   (poo-flow-module-object-field-contract-validations/harness-fields
@@ -265,7 +277,7 @@
 ;;; Boundary: module object field contract validations resolved fields cache is
 ;;; the policy-visible edge for module-system, object behavior, keeping
 ;;; validation, lookup, or projection responsibilities centralized for callers.
-;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [HashTable] [HashTable])
+;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [POOObject] [POOObject])
 (def (poo-flow-module-object-field-contract-validations/resolved-fields/cache/rev
       object
       resolved-fields
@@ -283,7 +295,7 @@
             cache)
            validations-rev))))
 
-;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [HashTable])
+;; : (-> PooModuleObject [PooModuleFieldContract] HashTable [POOObject])
 (def (poo-flow-module-object-field-contract-validations/resolved-fields/cache
       object
       resolved-fields
@@ -298,7 +310,7 @@
 ;;; Boundary: module object field contract validations harness fields is the
 ;;; policy-visible edge for module-system, object behavior, keeping validation,
 ;;; lookup, or projection responsibilities centralized for callers.
-;; : (-> PooModuleObject [HashTable] [HashTable] [HashTable])
+;; : (-> PooModuleObject [HashTable] [POOObject] [POOObject])
 (def (poo-flow-module-object-field-contract-validations/harness-fields/rev
       object
       harness-fields
@@ -313,7 +325,7 @@
             (car harness-fields))
            validations-rev))))
 
-;; : (-> PooModuleObject [HashTable] [HashTable])
+;; : (-> PooModuleObject [HashTable] [POOObject])
 (def (poo-flow-module-object-field-contract-validations/harness-fields object
                                                                       harness-fields)
   (reverse
@@ -361,4 +373,4 @@
 
 ;;; Object diagnostics stay intentionally narrow: only object-local metadata and
 ;;; C3-resolved identity collisions are checked here.
-;; : (-> PooModuleObject [HashTable])
+;; : (-> PooModuleObject [POOObject])

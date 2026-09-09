@@ -2,12 +2,16 @@
 ;;; Boundary: non-mutating module doctor diagnostics.
 ;;; Invariant: diagnostics never change activation behavior.
 
-(import :poo-flow/src/core/task
+(import (only-in :clan/poo/object .ref)
+        :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/descriptor/interface
+        (only-in :poo-flow/src/module-system/object-family/syntax
+                 defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
 
-(export make-poo-flow-module-diagnostic
+(export poo-flow-module-diagnostic-prototype
+        make-poo-flow-module-diagnostic
         poo-flow-module-diagnostic?
         poo-flow-module-diagnostic-severity
         poo-flow-module-diagnostic-code
@@ -16,6 +20,7 @@
         poo-flow-module-diagnostic->alist
         poo-flow-module-diagnostics
         poo-flow-module-diagnostics-status
+        poo-flow-module-doctor-report-prototype
         make-poo-flow-module-doctor-report
         poo-flow-module-doctor-report?
         poo-flow-module-doctor-report-modules
@@ -25,14 +30,22 @@
         poo-flow-module-doctor-ok?
         poo-flow-module-doctor-report->alist)
 
-;;; Boundary: diagnostic records are typed values until projected at the edge.
-;; : (-> Symbol Symbol Symbol Detail PooModuleDiagnostic)
-(defstruct poo-flow-module-diagnostic
-  (severity
-   code
-   target
-   detail)
-  transparent: #t)
+;;; Diagnostic values are native POO families until projected at the edge.
+(defpoo-object-family
+  (prototype poo-flow-module-diagnostic-prototype
+             module-diagnostic?
+             poo-flow-module-diagnostic?)
+  (constructor make-poo-flow-module-diagnostic
+               (severity-value severity)
+               (code-value code)
+               (target-value target)
+               (detail-value detail))
+  (accessors
+   (poo-flow-module-diagnostic-severity severity)
+   (poo-flow-module-diagnostic-code code)
+   (poo-flow-module-diagnostic-target target)
+   (poo-flow-module-diagnostic-detail detail))
+  (projections))
 
 ;; : (-> PooModuleDiagnostic Alist)
 (defpoo-module-final-projection
@@ -242,13 +255,21 @@
    ((pair? diagnostics) 'warning)
    (else 'ok)))
 
-;;; Boundary: reports summarize health and keep diagnostic records typed.
+;;; Boundary: reports summarize health and keep diagnostic values typed.
 ;; : (-> [Symbol] Symbol [PooModuleDiagnostic] PooModuleDoctorReport)
-(defstruct poo-flow-module-doctor-report
-  (modules
-   status
-   diagnostics)
-  transparent: #t)
+(defpoo-object-family
+  (prototype poo-flow-module-doctor-report-prototype
+             module-doctor-report?
+             poo-flow-module-doctor-report?)
+  (constructor make-poo-flow-module-doctor-report
+               (modules-value modules)
+               (status-value status)
+               (diagnostics-value diagnostics))
+  (accessors
+   (poo-flow-module-doctor-report-modules modules)
+   (poo-flow-module-doctor-report-status status)
+   (poo-flow-module-doctor-report-diagnostics diagnostics))
+  (projections))
 
 ;;; Boundary: doctor reports summarize closure health without activation.
 ;; : (-> [PooModuleDescriptor] PooModuleDoctorReport)

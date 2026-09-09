@@ -17,18 +17,11 @@
         poo-flow-module-extension-node-identity
         poo-flow-module-extension-node-slots
         poo-flow-module-extension-node-children
-        poo-flow-module-extension-operation
         poo-flow-module-extension-operation-action
         poo-flow-module-extension-operation-slot
         poo-flow-module-extension-operation-value
         poo-flow-module-extension-operation-node
         poo-flow-module-extension-operation-target
-        poo-flow-module-extension-slot-override
-        poo-flow-module-extension-slot-append
-        poo-flow-module-extension-slot-prepend
-        poo-flow-module-extension-slot-remove
-        poo-flow-module-extension-node-extend
-        poo-flow-module-extension-node-remove
         poo-flow-module-extension-contribution
         poo-flow-module-extension-contribution?
         poo-flow-module-extension-contribution-target
@@ -93,22 +86,6 @@
 ;; : (-> PooModuleExtensionNode [PooModuleExtensionNode])
 (def (poo-flow-module-extension-node-children node) (.ref node 'children))
 
-;;; Operations are normalized to one POO value so module objects, field
-;;; contracts, and direct graph edits share a single merge path.
-;; : (-> Symbol MaybeSymbol PooModuleSlotValue MaybePooModuleExtensionNode MaybeSymbol PooModuleExtensionOperation)
-(def (poo-flow-module-extension-operation action slot value node target)
-  (let ((action-value action)
-        (slot-value slot)
-        (value-value value)
-        (node-value node)
-        (target-value target))
-    (.o kind: poo-flow-module-extension-operation-kind
-        action: action-value
-        slot: slot-value
-        value: value-value
-        node: node-value
-        target: target-value)))
-
 ;; : (-> PooModuleExtensionOperation Symbol)
 (def (poo-flow-module-extension-operation-action operation) (.ref operation 'action))
 ;; : (-> PooModuleExtensionOperation MaybeSymbol)
@@ -119,25 +96,6 @@
 (def (poo-flow-module-extension-operation-node operation) (.ref operation 'node))
 ;; : (-> PooModuleExtensionOperation MaybeSymbol)
 (def (poo-flow-module-extension-operation-target operation) (.ref operation 'target))
-
-;; : (-> Symbol PooModuleSlotValue PooModuleExtensionOperation)
-(def (poo-flow-module-extension-slot-override slot value)
-  (poo-flow-module-extension-operation 'slot-override slot value #f #f))
-;; : (-> Symbol [PooModuleSlotValue] PooModuleExtensionOperation)
-(def (poo-flow-module-extension-slot-append slot values)
-  (poo-flow-module-extension-operation 'slot-append slot values #f #f))
-;; : (-> Symbol [PooModuleSlotValue] PooModuleExtensionOperation)
-(def (poo-flow-module-extension-slot-prepend slot values)
-  (poo-flow-module-extension-operation 'slot-prepend slot values #f #f))
-;; : (-> Symbol [PooModuleSlotValue] PooModuleExtensionOperation)
-(def (poo-flow-module-extension-slot-remove slot values)
-  (poo-flow-module-extension-operation 'slot-remove slot values #f #f))
-;; : (-> PooModuleExtensionNode PooModuleExtensionOperation)
-(def (poo-flow-module-extension-node-extend node)
-  (poo-flow-module-extension-operation 'node-extend #f #f node #f))
-;; : (-> Symbol PooModuleExtensionOperation)
-(def (poo-flow-module-extension-node-remove target)
-  (poo-flow-module-extension-operation 'node-remove #f #f #f target))
 
 ;;; Contributions keep the target identity outside individual operations so a
 ;;; profile can patch one node with several ordered edits.
@@ -193,7 +151,7 @@
     index))
 
 ;;; Append keeps the base order stable and filters only duplicate extras, which
-;;; makes agent-authored list extensions deterministic across fixed-point runs.
+;;; makes agent-authored list extensions deterministic under repeated demand.
 ;; : (-> [PooModuleSlotValue] [PooModuleSlotValue] [PooModuleSlotValue])
 (def (poo-flow-module-extension-append-distinct base extra)
   (if (null? extra)

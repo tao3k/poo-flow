@@ -183,22 +183,23 @@
 ;;; Boundary: source doctor surfaces loader evidence before descriptor diagnostics.
 ;; : (-> [PooModuleLoaderBackend] [PooModuleSourceRef] POOObject)
 (def (pooFlowModuleSourceDoctorPresentation backends source-refs)
-  (let* ((load-receipts
+  (let* ((load-receipts-value
          (poo-flow-module-load-source-receipts backends source-refs))
          (loaded-modules
-          (poo-flow-module-loaded-modules-from-receipts load-receipts))
+          (poo-flow-module-loaded-modules-from-receipts load-receipts-value))
          (root-module
           (if (null? loaded-modules) #f (car loaded-modules)))
          (missing-count-value
-          (poo-flow-module-load-receipts-missing-count load-receipts))
+          (poo-flow-module-load-receipts-missing-count load-receipts-value))
          (load-status-value
-          (poo-flow-module-load-status source-refs load-receipts)))
+          (poo-flow-module-load-status source-refs load-receipts-value)))
     (.o kind: poo-flow-module-source-doctor-presentation-kind
         source-count: (length source-refs)
         loaded-count: (length loaded-modules)
         missing-count: missing-count-value
         load-status: load-status-value
-        load-receipts: (map poo-flow-module-load-receipt->alist load-receipts)
+        load-receipts:
+        (map poo-flow-module-load-receipt->alist load-receipts-value)
         module-doctor:
         (if root-module
           (poo-flow-module-root-doctor-presentation root-module)

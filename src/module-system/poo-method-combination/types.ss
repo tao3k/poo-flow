@@ -7,6 +7,22 @@
 (export CombinationGeneric CombinationMethod CombinationBundle CombinationFailure
         CombinationPlan CombinationFrame combination-instance?)
 
+;;; One owner-local alias marks where POO Flow specializes the upstream type
+;;; metaobject rather than presenting each descriptor as a dependency adapter.
+(def CombinationType. Type.)
+
+;; : (-> POOType Symbol POOObject)
+(def (combination-prototype type-value kind-value)
+  (.o .type: type-value kind: kind-value schema: 'v1))
+
+;; : (-> POOType POOObject)
+(def (combination-plan-prototype type)
+  (.o (:: self)
+      .type: type
+      kind: 'poo-combination/plan
+      schema: 'v1
+      valid?: (element? type self)))
+
 ;; : (-> POOObject Object Boolean)
 (def (combination-instance? prototype candidate)
   (and (object? candidate)
@@ -43,8 +59,8 @@
          (list symbol? collector-slot? combination-from? natural? boolean? object?))))
 
 ;;; Invariant: a generic binds dispatch ownership, arity, and root ancestry together.
-(define-type (CombinationGeneric @ Type.)
-  proto: (.o .type: CombinationGeneric kind: 'poo-combination/generic schema: 'v1)
+(define-type (CombinationGeneric @ CombinationType.)
+  proto: (combination-prototype CombinationGeneric 'poo-combination/generic)
   .element?: combination-generic-element?)
 
 ;; : (-> Object Boolean)
@@ -53,8 +69,8 @@
        (fields? candidate '(identity body) (list symbol? procedure?))))
 
 ;;; Boundary: method descriptors admit a stable identity and executable body only.
-(define-type (CombinationMethod @ Type.)
-  proto: (.o .type: CombinationMethod kind: 'poo-combination/method schema: 'v1)
+(define-type (CombinationMethod @ CombinationType.)
+  proto: (combination-prototype CombinationMethod 'poo-combination/method)
   .element?: combination-method-element?)
 
 ;; : (-> Object Boolean)
@@ -64,8 +80,8 @@
          (list method-or-false? method-or-false? method-or-false? method-or-false?))))
 
 ;;; Invariant: each prototype contributes at most one method per qualifier.
-(define-type (CombinationBundle @ Type.)
-  proto: (.o .type: CombinationBundle kind: 'poo-combination/bundle schema: 'v1)
+(define-type (CombinationBundle @ CombinationType.)
+  proto: (combination-prototype CombinationBundle 'poo-combination/bundle)
   .element?: combination-bundle-element?)
 
 ;; : (-> Object Boolean)
@@ -75,8 +91,8 @@
          (list symbol? symbol-or-false? symbol-or-false? symbol-or-false?))))
 
 ;;; Boundary: typed failure values preserve dispatch identity without string parsing.
-(define-type (CombinationFailure @ Type.)
-  proto: (.o .type: CombinationFailure kind: 'poo-combination/failure schema: 'v1)
+(define-type (CombinationFailure @ CombinationType.)
+  proto: (combination-prototype CombinationFailure 'poo-combination/failure)
   .element?: combination-failure-element?)
 
 ;; : (-> Object Boolean)
@@ -86,9 +102,8 @@
          (list (cut element? CombinationGeneric <>) methods? methods? methods? methods?))))
 
 ;;; Invariant: plan validity is derived from the same descriptor used by admission.
-(define-type (CombinationPlan @ Type.)
-  proto: (.o (:: self) .type: CombinationPlan kind: 'poo-combination/plan schema: 'v1
-             valid?: (element? CombinationPlan self))
+(define-type (CombinationPlan @ CombinationType.)
+  proto: (combination-plan-prototype CombinationPlan)
   .element?: combination-plan-element?)
 
 ;; : (-> Object Boolean)
@@ -109,6 +124,6 @@
                (cut element? CombinationMethod <>)))))
 
 ;;; Boundary: a frame captures one plan, argument set, continuation, qualifier, and method.
-(define-type (CombinationFrame @ Type.)
-  proto: (.o .type: CombinationFrame kind: 'poo-combination/frame schema: 'v1)
+(define-type (CombinationFrame @ CombinationType.)
+  proto: (combination-prototype CombinationFrame 'poo-combination/frame)
   .element?: combination-frame-element?)
