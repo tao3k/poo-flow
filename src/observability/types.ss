@@ -25,6 +25,8 @@
         PooFlowObservationSummaryContract
         PooFlowDebugCallPolicyContract
         PooFlowDebugCallReceiptContract
+        PooFlowDebugSlotPolicyContract
+        PooFlowDebugSlotReceiptContract
         PooFlowDebugMemoryPolicyContract
         PooFlowDebugMemorySampleContract
         PooFlowDebugMemoryReceiptContract
@@ -287,6 +289,23 @@
   .classify: (cut poo-flow-observation-scalar-classify
                   'observation/path poo-flow-observation-path? <> <>))
 
+(def (poo-flow-observation-slot-edge? value)
+  (and (pair? value)
+       (symbol? (car value))
+       (symbol? (cdr value))))
+
+(def (poo-flow-observation-slot-path? value)
+  (poo-flow-observability-list-of?
+   poo-flow-observation-slot-edge? value))
+
+;;; Invariant: a slot path identifies each edge by receiver and slot symbols.
+;;; Equal slot names on distinct guarded receivers are not recursive aliases.
+(define-type (ObservationSlotPath @ PooFlowContract.)
+  identity: 'observation/slot-path
+  .classify: (cut poo-flow-observation-scalar-classify
+                  'observation/slot-path
+                  poo-flow-observation-slot-path? <> <>))
+
 ;;; Boundary: each failure binds its structural path to a contract and stable code.
 (define-type (PooFlowObservationFailureContract @ PooFlowNativeObjectContract.)
   identity: 'observation/failure
@@ -383,6 +402,79 @@
                         outcome: ObservationSymbol
                         accepted?: ObservationBoolean
                         reason: ObservationSymbol))
+
+;;; Boundary: lazy slot resolution has its own depth budget.  It is separate
+;;; from the call policy because resolving a slot may precede procedure lookup.
+;;; Invariant: the budget is positive.  A zero budget would misreport every
+;;; first slot lookup as a runtime depth anomaly instead of policy rejection.
+(def (poo-flow-debug-slot-policy-obligations policy _context)
+  (if (> (.ref policy 'maximum-depth) 0)
+    '()
+    '(non-positive-maximum-slot-depth)))
+
+;;; Boundary: this Contract owns debug-slot admission configuration only.
+;;; A separate call policy cannot silently widen or disable its slot budget.
+(define-type (PooFlowDebugSlotPolicyContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-slot-policy
+  proto: (.o)
+  responsibilities: (.o label: ObservationSymbol
+                        maximum-depth: ObservationNatural)
+  .obligations: poo-flow-debug-slot-policy-obligations)
+
+;;; Forged slot receipts cannot turn a cycle, excessive depth, or raised
+;;; resolver into an accepted observation.  Depth always equals the bounded
+;;; active path retained by the receipt.
+(def (poo-flow-debug-slot-receipt-obligations receipt _context)
+  (let* ((policy (.ref receipt 'policy))
+         (receiver (.ref receipt 'receiver))
+         (slot (.ref receipt 'slot))
+         (edge (cons receiver slot))
+         (depth (.ref receipt 'depth))
+         (path (.ref receipt 'active-path))
+         (outcome (.ref receipt 'outcome)))
+    (let-values (((expected-accepted? expected-reason valid-boundary?)
+                  (case outcome
+                    ((admitted)
+                     (values #t 'slot-resolution-admitted
+                             (and (not (member edge path))
+                                  (< depth (.ref policy 'maximum-depth)))))
+                    ((resolved)
+                     (values #t 'slot-resolved
+                             (and (not (member edge path))
+                                  (< depth (.ref policy 'maximum-depth)))))
+                    ((raised)
+                     (values #f 'slot-resolution-raised
+                             (and (not (member edge path))
+                                  (< depth (.ref policy 'maximum-depth)))))
+                    ((rejected-cycle)
+                     (values #f 'recursive-slot-resolution
+                             (and (member edge path) #t)))
+                    ((rejected-depth)
+                     (values #f 'maximum-slot-depth-exceeded
+                             (and (not (member edge path))
+                                  (>= depth (.ref policy 'maximum-depth)))))
+                    (else (values #f 'invalid-slot-outcome #f)))))
+      (if (and (= depth (length path))
+               valid-boundary?
+               (eq? (.ref receipt 'accepted?) expected-accepted?)
+               (eq? (.ref receipt 'reason) expected-reason))
+        '()
+        '(inconsistent-debug-slot-receipt)))))
+
+;;; Boundary: slot receipts retain receiver/slot symbols and an active symbol
+;;; path only.  The object, computed value, and original exception stay out.
+(define-type (PooFlowDebugSlotReceiptContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/debug-slot-receipt
+  proto: (.o)
+  responsibilities: (.o policy: PooFlowDebugSlotPolicyContract
+                        receiver: ObservationSymbol
+                        slot: ObservationSymbol
+                        depth: ObservationNatural
+                        active-path: ObservationSlotPath
+                        outcome: ObservationSymbol
+                        accepted?: ObservationBoolean
+                        reason: ObservationSymbol)
+  .obligations: poo-flow-debug-slot-receipt-obligations)
 
 ;;; Boundary: a debug memory policy is an explicit POO value. The process
 ;;; launcher owns the independent Gambit heap ceiling used before this module

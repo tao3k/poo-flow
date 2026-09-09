@@ -284,6 +284,125 @@
          (.ref (PooFlowDebugCallAnomaly-receipt depth-failure) 'reason)
          'maximum-call-depth-exceeded)))
 
+    (test-case "slot policy receipts reject forged cycle verdicts"
+      (let* ((policy (poo-flow-debug-slot-policy 'slot-receipt 4))
+             (admitted
+              (poo-flow-debug-slot-receipt
+               policy 'configuration 'project-id 0 '() 'admitted))
+             (cycle
+              (poo-flow-debug-slot-receipt
+               policy 'configuration 'project-id 1
+               '((configuration . project-id))
+               'rejected-cycle)))
+        (check-equal? (element? PooFlowDebugSlotPolicyContract policy) #t)
+        (check-equal? (element? PooFlowDebugSlotReceiptContract admitted) #t)
+        (check-equal? (.ref cycle 'accepted?) #f)
+        (check-equal? (.ref cycle 'reason) 'recursive-slot-resolution)
+        (check-exception
+         (validate PooFlowDebugSlotPolicyContract
+                   (.cc policy 'maximum-depth 0))
+         TypeError?)
+        (check-exception
+         (validate PooFlowDebugSlotReceiptContract
+                   (.cc admitted 'accepted? #f))
+         TypeError?)))
+
+    (test-case "slot guard preserves lazy caching and redacts resolved values"
+      (let* ((evaluations 0)
+             (private-value "SYNTHETIC-PRIVATE-SLOT-VALUE")
+             (source
+              (.o payload:
+                  (begin
+                    (set! evaluations (1+ evaluations))
+                    private-value)))
+             (policy (poo-flow-debug-slot-policy 'slot-cache 4))
+             (port (open-output-string))
+             (guarded
+              (poo-flow-debug-poo
+               policy 'configuration source port: port emit?: #t)))
+        (check-equal? (.ref guarded 'payload) private-value)
+        (check-equal? (.ref guarded 'payload) private-value)
+        (check-equal? evaluations 1)
+        (let (output (get-output-string port))
+          (check-equal? (framework-contains? output "poo-flow-debug-slot") #t)
+          (check-equal? (framework-contains? output "slot-resolved") #t)
+          (check-equal? (framework-contains? output private-value) #f))))
+
+    (test-case "slot guard propagates exceptions without disclosing them"
+      (let* ((canary "SYNTHETIC-PRIVATE-SLOT-FAILURE")
+             (failure (list canary))
+             (source (.o payload: (raise failure)))
+             (policy (poo-flow-debug-slot-policy 'slot-exception 4))
+             (port (open-output-string))
+             (guarded
+              (poo-flow-debug-poo
+               policy 'configuration source port: port emit?: #t))
+             (captured
+              (with-exception-catcher
+               (lambda (value) value)
+               (lambda () (.ref guarded 'payload))))
+             (output (get-output-string port)))
+        (check-equal? (eq? captured failure) #t)
+        (check-equal? (framework-contains? output "slot-resolution-raised") #t)
+        (check-equal? (framework-contains? output canary) #f)))
+
+    (test-case "slot guard rejects a lazy self reference before heap growth"
+      (let* ((policy (poo-flow-debug-slot-policy 'slot-cycle 4))
+             (port (open-output-string))
+             (source (.o project-id: project-id))
+             (guarded
+              (poo-flow-debug-poo
+               policy 'configuration source port: port emit?: #t))
+             (captured
+              (with-exception-catcher
+               (lambda (failure) failure)
+               (lambda () (.ref guarded 'project-id))))
+             (receipt (PooFlowDebugSlotAnomaly-receipt captured)))
+        (check-equal? (PooFlowDebugSlotAnomaly? captured) #t)
+        (check-equal? (.ref receipt 'receiver) 'configuration)
+        (check-equal? (.ref receipt 'slot) 'project-id)
+        (check-equal? (.ref receipt 'depth) 1)
+        (check-equal? (.ref receipt 'active-path)
+                      '((configuration . project-id)))
+        (check-equal? (.ref receipt 'reason) 'recursive-slot-resolution)
+        (check-equal?
+         (framework-contains? (get-output-string port)
+                              "recursive-slot-resolution")
+         #t)))
+
+    (test-case "equal slot names on distinct receivers are not cycles"
+      (let* ((policy (poo-flow-debug-slot-policy 'receiver-identity 4))
+             (inner-source (.o value: 'inner))
+             (inner
+              (poo-flow-debug-poo
+               policy 'inner inner-source emit?: #f))
+             (outer-source (.o value: (.ref inner 'value)))
+             (outer
+              (poo-flow-debug-poo
+               policy 'outer outer-source emit?: #f)))
+        (check-equal? (.ref outer 'value) 'inner)))
+
+    (test-case "slot guard enforces depth across dependent slots"
+      (let* ((policy (poo-flow-debug-slot-policy 'slot-depth 1))
+             (source
+              (.o (:: @ [] second)
+                  first: second
+                  second: 'done))
+             (guarded
+              (poo-flow-debug-poo
+               policy 'dependency source emit?: #f))
+             (captured
+              (with-exception-catcher
+               (lambda (failure) failure)
+               (lambda () (.ref guarded 'first))))
+             (receipt (PooFlowDebugSlotAnomaly-receipt captured)))
+        (check-equal? (PooFlowDebugSlotAnomaly? captured) #t)
+        (check-equal? (.ref receipt 'slot) 'second)
+        (check-equal? (.ref receipt 'active-path)
+                      '((dependency . first)))
+        (check-equal? (.ref receipt 'reason)
+                      'maximum-slot-depth-exceeded)))
+
     (test-case "memory policy comparison is a pure native POO receipt"
       (let* ((policy
               (poo-flow-debug-memory-policy

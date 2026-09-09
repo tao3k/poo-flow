@@ -20,6 +20,7 @@ authorized recovery, Profile policy, or production telemetry.
 | =objects.ss= | Native observation construction and upstream slot-dispatched =.explain= / =.summary=. |
 | =interface.ss= | Pure framework interface; it does not import a runtime logger. |
 | =debug.ss= | Explicit development output and bounded call tracing through upstream =DDT= / =trace-poo= / =traced-function=. |
+| =slot-debug.ss= | Opt-in lazy-slot admission proxy, receiver-qualified cycle/depth guard, and redacted typed receipts. |
 
 =src/module-system/observability.ss= remains a separate strict presentation
 owner. Its structs and terminal alists are neither replaced nor promoted into
@@ -136,6 +137,28 @@ only a zero-argument closed thunk and the symbolic result =returned=.  Raw
 arguments, receivers, multiple returned values, and exceptions never enter
 the trace printer.  Multiple values and the original exception are preserved
 unchanged at the caller boundary.
+
+For a lazy POO slot that may recursively re-enter before upstream caching can
+complete, use =poo-flow-debug-poo=.  It returns a distinct native POO receiver
+whose inherited slots are computed through an admission guard.  Each active
+path element is a pair of explicit receiver and slot symbols, so equal slot
+names on different guarded objects are not cycles.  The guard rejects a
+repeated edge or a policy depth crossing before invoking the inherited slot.
+Successful values retain the wrapper's ordinary object-local lazy cache.
+
+The proxy sends =traced-function= only a zero-argument resolver whose visible
+result is the symbol =resolved=.  Typed receipts retain policy, receiver, slot,
+depth, symbolic path, outcome, and reason; they never retain or print the POO
+object, computed value, resolver closure, or exception.  The original
+exception still propagates unchanged.  Receiver labels are explicit because
+reading an identity or =sexp= slot merely to obtain a label could itself enter
+the broken lazy path.
+
+This API is opt-in and does not patch upstream =.ref=, install a global hook,
+or recursively wrap POO values returned by slots.  A nested object that needs
+the same diagnosis must be wrapped explicitly.  The design and upstream
+source evidence are recorded in
+[[file:../../docs/10-19-design/10.06-poo-module-system/158-poo-lazy-slot-resolution-observability.org][POO Lazy Slot Resolution Observability]].
 
 These development aggregates are not declared universally public: even counts
 can be sensitive. Production publication still needs an admitted audience,

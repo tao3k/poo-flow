@@ -12,6 +12,9 @@
         poo-flow-debug-call-policy
         poo-flow-debug-call-receipt
         poo-flow-debug-call-receipt-sexp
+        poo-flow-debug-slot-policy
+        poo-flow-debug-slot-receipt
+        poo-flow-debug-slot-receipt-sexp
         poo-flow-debug-memory-policy
         poo-flow-debug-memory-sample
         poo-flow-debug-memory-receipt
@@ -190,6 +193,55 @@
         (list 'depth (.ref receipt 'depth))
         (list 'active-path (.ref receipt 'active-path))
         (list 'operator-kind (.ref receipt 'operator-kind))
+        (list 'outcome (.ref receipt 'outcome))
+        (list 'accepted? (.ref receipt 'accepted?))
+        (list 'reason (.ref receipt 'reason))))
+
+;; : (-> Symbol Natural PooFlowDebugSlotPolicy)
+(def (poo-flow-debug-slot-policy label-value maximum-depth-value)
+  (unless (> maximum-depth-value 0)
+    (error "POO Flow debug slot depth must be positive" maximum-depth-value))
+  (validate PooFlowDebugSlotPolicyContract
+    (.o (:: @ (.ref PooFlowDebugSlotPolicyContract 'proto))
+        label: label-value
+        maximum-depth: maximum-depth-value)))
+
+;; : (-> PooFlowDebugSlotPolicy Symbol Symbol Natural [(Pair Symbol Symbol)] Symbol PooFlowDebugSlotReceipt)
+(def (poo-flow-debug-slot-receipt policy receiver-value slot-value depth-value
+                                  path-value outcome-value)
+  (validate PooFlowDebugSlotPolicyContract policy)
+  (let* ((policy-value policy)
+         (accepted-value (memq outcome-value '(admitted resolved)))
+         (reason-value
+          (case outcome-value
+            ((admitted) 'slot-resolution-admitted)
+            ((resolved) 'slot-resolved)
+            ((raised) 'slot-resolution-raised)
+            ((rejected-cycle) 'recursive-slot-resolution)
+            ((rejected-depth) 'maximum-slot-depth-exceeded)
+            (else 'invalid-slot-outcome))))
+    (validate PooFlowDebugSlotReceiptContract
+      (.o (:: @ (.ref PooFlowDebugSlotReceiptContract 'proto))
+          policy: policy-value
+          receiver: receiver-value
+          slot: slot-value
+          depth: depth-value
+          active-path: path-value
+          outcome: outcome-value
+          accepted?: (if accepted-value #t #f)
+          reason: reason-value))))
+
+;;; The slot renderer is a closed projection.  It cannot force or retain the
+;;; receiver, computed value, resolver closure, or exception.
+;; : (-> PooFlowDebugSlotReceipt Sexp)
+(def (poo-flow-debug-slot-receipt-sexp receipt)
+  (validate PooFlowDebugSlotReceiptContract receipt)
+  (list 'debug-slot-observation
+        (list 'label (.ref (.ref receipt 'policy) 'label))
+        (list 'receiver (.ref receipt 'receiver))
+        (list 'slot (.ref receipt 'slot))
+        (list 'depth (.ref receipt 'depth))
+        (list 'active-path (.ref receipt 'active-path))
         (list 'outcome (.ref receipt 'outcome))
         (list 'accepted? (.ref receipt 'accepted?))
         (list 'reason (.ref receipt 'reason))))

@@ -22,7 +22,8 @@
                  poo-flow-debug-memory-policy
                  poo-flow-debug-memory-sample
                  poo-flow-debug-memory-receipt
-                 poo-flow-debug-memory-receipt-sexp))
+                 poo-flow-debug-memory-receipt-sexp)
+        "slot-debug.ss")
 (export poo-flow-observation-debug PooFlowObservationProjectionError?
         PooFlowDebugMemoryPolicyContract
         PooFlowDebugMemorySampleContract
@@ -44,7 +45,8 @@
         call-with-poo-flow-debug-memory-span
         call-with-poo-flow-debug-memory-monitor
         PooFlowDebugMemoryAnomaly?
-        PooFlowDebugMemoryAnomaly-receipt)
+        PooFlowDebugMemoryAnomaly-receipt
+        (import: "slot-debug.ss"))
 
 (deferror-class PooFlowObservationProjectionError ())
 (deferror-class PooFlowDebugMemoryAnomaly (receipt))
