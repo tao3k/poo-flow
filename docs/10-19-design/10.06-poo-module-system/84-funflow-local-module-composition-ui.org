@@ -178,7 +178,7 @@ adding another project script entry:
 
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.scheme_load_aot \
-  precompile packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  precompile packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 
@@ -193,7 +193,7 @@ plane:
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks \
   scheme-load-aot --iterations 10 \
-  --source packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --source packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 
@@ -210,7 +210,7 @@ After a projection artifact is exported, benchmark the no-Gerbil path with:
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.benchmarks \
   scheme-load-aot --iterations 10 --include-artifact --preproject-artifact \
-  --source packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  --source packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 
@@ -291,7 +291,7 @@ The publish-time command shape is:
 
 #+begin_src sh
 uv run --project packages/python-runtime python -m poo_flow_runtime.scheme_projection_artifact \
-  export packages/python-runtime/tests/fixtures/funflow_user_module.ss \
+  export packages/python-runtime/t/fixtures/funflow_user_module.ss \
   --cwd .
 #+end_src
 

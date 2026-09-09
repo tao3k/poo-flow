@@ -23,7 +23,7 @@ SCHEME_FIXTURE = (
     REPO_ROOT
     / "packages"
     / "python-runtime"
-    / "tests"
+    / "t"
     / "fixtures"
     / "funflow_user_module.ss"
 )

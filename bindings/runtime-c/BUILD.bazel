@@ -7,6 +7,8 @@ load(":runtime_contract.bzl", "runtime_contract")
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files(["t/validate-runtime-v0-symbol-surface.ss"])
+
 runtime_contract(
     name = "runtime_v0_contract",
     clan_poo_root = "@gerbil_poo_sources//:gerbil.pkg",
@@ -143,7 +145,7 @@ runtime_gerbil_script_test(
     name = "runtime_v0_symbol_surface_test",
     size = "small",
     arguments = [
-        "//:tools/validate-runtime-v0-symbol-surface.ss",
+        ":t/validate-runtime-v0-symbol-surface.ss",
         ":runtime_c_shared",
         ":runtime_v0_exported_symbols",
         "@gerbil_poo_sources//:gerbil.pkg",

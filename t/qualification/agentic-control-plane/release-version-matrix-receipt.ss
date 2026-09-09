@@ -1,0 +1,57 @@
+;;; -*- Gerbil -*-
+;;; Qualification owner: render one release-version assurance receipt and
+;;; reflect its acceptance decision in the process status.
+
+(import :gerbil/gambit
+        (only-in :clan/poo/object .ref)
+        (only-in :std/misc/walist walist)
+        (only-in :std/text/json json-object->string)
+        :poo-flow/src/qualification/release-version-matrix)
+
+(export main)
+
+;;; Command boundary: argument validation, receipt construction, rendering,
+;;; and the process exit decision are owned by one explicit entrypoint.
+;; : (-> [String] Void)
+(def (main . args)
+  (unless (= (length args) 1)
+    (displayln "usage: gxi t/qualification/agentic-control-plane/release-version-matrix-receipt.ss SOURCE_REVISION")
+    (exit 64))
+  (let* ((matrix (poo-flow-ac11-current-release-version-matrix))
+         (receipt (poo-flow-ac11-release-version-matrix-verify matrix))
+         (runtime-abi (poo-flow-release-version-matrix-runtime-abi matrix))
+         (proof-vector (poo-flow-release-version-matrix-proof-vector matrix)))
+    (display
+     (json-object->string
+      (walist
+       (list
+        (cons "schema" "poo-flow.release-version-matrix.v1")
+        (cons "schemaVersion" 1)
+        (cons "sourceRevision" (car args))
+        (cons "bundleSchema"
+              (symbol->string
+               (poo-flow-release-version-matrix-bundle-schema matrix)))
+        (cons "runtimeAbi"
+              (walist
+               (list (cons "major" (.ref runtime-abi 'major))
+                     (cons "minor" (.ref runtime-abi 'minor)))))
+        (cons "proofVector"
+              (walist
+               (list
+                (cons "version" (.ref proof-vector 'version))
+                (cons "schemaFingerprint"
+                      (.ref proof-vector 'schema-fingerprint))
+                (cons "vectorDomain" (.ref proof-vector 'vector-domain))
+                (cons "theoremSetDomain"
+                      (.ref proof-vector 'theorem-set-domain)))))
+        (cons "evidenceAssurance"
+              (symbol->string
+               (poo-flow-release-version-matrix-assurance-schema matrix)))
+        (cons "ownerArtifacts"
+              (map symbol->string
+                   (poo-flow-release-version-matrix-owner-artifacts matrix)))
+        (cons "abiV1Frozen" (.ref receipt 'abi-v1-frozen?))
+        (cons "decisionRequired" (.ref receipt 'decision-required?))
+        (cons "accepted" (.ref receipt 'accepted?))))))
+    (newline)
+    (exit (if (.ref receipt 'accepted?) 0 1))))

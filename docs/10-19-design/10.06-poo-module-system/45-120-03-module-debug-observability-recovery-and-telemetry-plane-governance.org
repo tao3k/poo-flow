@@ -629,7 +629,7 @@ worker termination, and containment of an actual non-returning lazy POO
 self-slot cycle.  The existing module-system authoring observation covers the
 source-shaped pre-realization form.
 
-The executable example is =tools/observability-admission-demo.ss=. The focused
+The executable example is =examples/observability-admission-demo.ss=. The focused
 gate is =//scheme:observability_framework_test=; existing feedback, strict
 presentation, shared foundation, native debug, and Module tests are retained.
 See =src/module-system/observability/README.org= for the exact commands and native extension

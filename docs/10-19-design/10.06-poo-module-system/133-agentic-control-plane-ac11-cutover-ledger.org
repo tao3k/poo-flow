@@ -139,7 +139,8 @@ freeze.  A release decision remains required even when this matrix verifies.
 The machine-readable current receipt is emitted with:
 
 #+begin_src sh
-gxi tools/run-ac11-release-version-matrix.ss "$(git rev-parse HEAD)"
+gxi t/qualification/agentic-control-plane/release-version-matrix-receipt.ss \
+  "$(git rev-parse HEAD)"
 #+end_src
 
 The runtime shared-library gate owns a schema-versioned JSON symbol manifest

@@ -1,15 +1,30 @@
 ;;; -*- Gerbil -*-
-;;; Run: ./.devenv/devenv-profile-exec gxi tools/observability-admission-demo.ss
+;;; Run: ./.devenv/devenv-profile-exec gxi examples/observability-admission-demo.ss
 ;;; A synthetic real Module error; no runtime resources or secrets are involved.
 (import (only-in :clan/poo/object .cc .ref)
-        "../src/module-system/observability/interface.ss"
-        "../src/module-system/observability/debug.ss"
-        "../src/module-system/semantic-module/objects.ss")
+        (only-in "../src/module-system/observability/interface.ss"
+                 poo-flow-observation-identity
+                 poo-flow-observation-context
+                 poo-flow-observation-provenance
+                 poo-flow-observe-contract-admission
+                 poo-flow-observation-explain)
+        (only-in "../src/module-system/observability/debug.ss"
+                 poo-flow-observation-debug)
+        (only-in "../src/module-system/semantic-module/objects.ss"
+                 SemanticModuleContract
+                 poo-flow-semantic-identity
+                 poo-flow-semantic-module))
 
+(export main)
+
+;; : (-> Symbol ObservationIdentity)
 (def (demo-id name)
   (poo-flow-observation-identity 'demo name 'v1))
 
-(def (run-observability-demo)
+;;; Demonstration boundary: all inputs are synthetic POO values and the only
+;;; effect is an explicit diagnostic rendering to the current output port.
+;; : (-> Unit Void)
+(def (main)
   (let* ((context
           (poo-flow-observation-context
            (demo-id 'admission-event) (demo-id 'sample-module) (demo-id 'generation-1)
@@ -27,5 +42,3 @@
     ;; Both the typed printer and traced render method are upstream-owned.
     (poo-flow-observation-debug event (current-output-port) trace?: #t)
     (void)))
-
-(run-observability-demo)

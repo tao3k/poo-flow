@@ -38,6 +38,7 @@ fn run_gxi(
 
 fn main() {
     println!("cargo:rerun-if-changed=build.ss");
+    println!("cargo:rerun-if-changed=scheme/conformance-build-runtime.ss");
     println!("cargo:rerun-if-changed=../../../../gerbil.pkg");
     println!("cargo:rerun-if-changed=scheme/conformance.ss");
     println!("cargo:rerun-if-changed=../../../../src/policy/cedar-authority.ss");

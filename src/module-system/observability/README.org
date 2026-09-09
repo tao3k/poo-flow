@@ -30,7 +30,7 @@ authoritative observation evidence. The pre-existing metadata catalog in
 * Running a real example
 
 #+begin_src sh
-./.devenv/devenv-profile-exec gxi tools/observability-admission-demo.ss
+./.devenv/devenv-profile-exec gxi examples/observability-admission-demo.ss
 #+end_src
 
 The example creates a real SemanticModule, replaces its imports responsibility
