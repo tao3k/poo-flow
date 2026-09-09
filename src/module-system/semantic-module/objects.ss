@@ -12,21 +12,29 @@
 
 (def SemanticModule. (.ref SemanticModuleContract 'proto))
 (def SemanticImports. (.ref ModuleImportsContract 'proto))
+(def SemanticProfiles. (.ref ModuleProfilesContract 'proto))
+(def SemanticCapabilities. (.ref ModuleCapabilitiesContract 'proto))
+(def ModuleIdentity. (.ref ModuleIdentityContract 'proto))
 (def ImportContribution. (.ref ImportContributionContract 'proto))
+(def CapabilityResponsibilities.
+  (.ref ModuleCapabilitiesContract 'responsibilities))
+(def CapabilityRequirements.
+  (.ref (.ref CapabilityResponsibilities. 'requirements) 'proto))
+(def CapabilityProvisions.
+  (.ref (.ref CapabilityResponsibilities. 'provisions) 'proto))
 
 ;; : (-> Symbol Symbol ModuleIdentity)
 (def (poo-flow-semantic-identity namespace-value name-value)
   (validate ModuleIdentityContract
-    (.o (:: @ (.ref ModuleIdentityContract 'proto))
+    (.o (:: @ ModuleIdentity.)
         namespace: namespace-value name: name-value)))
 
 (def (poo-flow-empty-imports) (.mix SemanticImports.))
-(def (poo-flow-empty-profiles) (.mix (.ref ModuleProfilesContract 'proto)))
+(def (poo-flow-empty-profiles) (.mix SemanticProfiles.))
 (def (poo-flow-empty-capabilities)
-  (let (contracts (.ref ModuleCapabilitiesContract 'responsibilities))
-    (.o (:: @ (.ref ModuleCapabilitiesContract 'proto))
-        requirements: (.mix (.ref (.ref contracts 'requirements) 'proto))
-        provisions: (.mix (.ref (.ref contracts 'provisions) 'proto)))))
+  (.o (:: @ SemanticCapabilities.)
+      requirements: (.mix CapabilityRequirements.)
+      provisions: (.mix CapabilityProvisions.)))
 
 ;; : (-> ModuleIdentity imports: ModuleImports capabilities: ModuleCapabilities profiles: ModuleProfiles SemanticModule)
 (def (poo-flow-semantic-module identity-value

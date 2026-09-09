@@ -11,7 +11,8 @@
                  poo-flow-observation-identity poo-flow-observation-provenance
                  poo-flow-observation-context poo-flow-observe-admission-evidence
                  poo-flow-observe-contract-admission poo-flow-observation-explain
-                 poo-flow-observation-summary))
+                 poo-flow-observation-summary)
+        "source-authoring.ss")
 (export PooFlowObservationIdentityContract PooFlowObservationProvenanceContract
         PooFlowObservationContextContract PooFlowObservationContract
         PooFlowAdmissionObservationContract PooFlowAdmissionObservationFactsContract
@@ -19,4 +20,5 @@
         poo-flow-observation-identity poo-flow-observation-provenance
         poo-flow-observation-context poo-flow-observe-admission-evidence
         poo-flow-observe-contract-admission poo-flow-observation-explain
-        poo-flow-observation-summary)
+        poo-flow-observation-summary
+        (import: "source-authoring.ss"))

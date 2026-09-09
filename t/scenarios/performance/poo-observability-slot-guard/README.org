@@ -1,0 +1,63 @@
+#+TITLE: POO Observability Slot Guard Performance Scenario
+
+* Purpose
+
+This scenario keeps the native POO lazy-slot observability path measurable and
+teachable.  It separates prototype authoring, guarded-object construction,
+first demand, cached demand, and traced demand instead of collapsing them into
+one opaque elapsed value.
+
+* Scenario contract
+
+The outer benchmark takes the best of three complete scenario attempts.  Each
+phase owns its own bounded repetitions and fresh inputs where cold behavior
+matters:
+
+- construction creates 16 guarded objects without demanding their slots;
+- cold demand uses three independently constructed batches;
+- warm demand evaluates one guarded source once and reads its cache 1,000 times;
+- trace demand uses fresh sources and bounded output-string ports; and
+- prototype evidence compares inline lookup with one lexical binding reused
+  across 20 compositions, without asserting which micro-measurement is faster.
+
+Checksums, the one-time evaluation count, and absolute phase envelopes are the
+semantic gate.  Best-of-three timing is noise reduction, not permission to
+discard an incorrect attempt.
+
+* Authoring rule
+
+Do not write a dynamic receipt field as =slot: slot=.  POO initializer scope
+binds declared slot names, so that form can recursively demand itself.  Use a
+distinct lexical binding such as =slot-value= and write =slot: slot-value=.
+The executable classification policy is documented in
+=../poo-dynamic-slot-binding-leak/README.org=.
+
+Likewise, repeated constructors should bind a stable Contract prototype once
+before the repetition and compose with that binding.  The reader-only source
+gate reports direct =(.ref Contract 'proto)= expressions inside =.o= super
+clauses as repair advice; it does not claim the source was executed.
+
+* Baseline
+
+Ten source-first native =gxtest= runs on 2026-09-09 measured 13.886-14.589 ms
+for nine uncontended complete scenarios, with one 28.541 ms scheduler outlier.
+The fixture records a 15 ms observed baseline, a 20 ms target, and a 50 ms hard
+limit; tighter phase-owned envelopes still cap construction at 10 ms, first
+demand at 1 ms, and traced demand at 10 ms.  The emitted line includes dynamic
+gate microseconds and the finite native receipt projection; process startup
+time is not a POO phase.
+
+Measure the scenario with the native Gerbil test runner through the captured
+project environment:
+
+#+begin_src sh
+./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
+  gxtest \
+  t/observability-slot-performance-test.ss
+#+end_src
+
+The native receipt's =gate-elapsed-us= and phase fields are the performance
+evidence.  Bazel may run the same test as a dependency-closure and acceptance
+gate, but its sandbox, compilation, and launcher wall time must not be reported
+as POO performance.  Project documentation and automation use the checked-in
+=.devenv/devenv-profile-exec= launcher contract.

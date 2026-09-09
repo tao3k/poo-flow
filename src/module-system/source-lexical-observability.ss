@@ -9,7 +9,11 @@
 (export poo-flow-scheme-lexical-call-shadow-observation-kind
         poo-flow-scheme-lexical-call-shadow-datum-observations
         poo-flow-scheme-lexical-call-shadow-port-observations
-        poo-flow-scheme-lexical-call-shadow-file-observations)
+        poo-flow-scheme-lexical-call-shadow-file-observations
+        poo-flow-scheme-inline-prototype-observation-kind
+        poo-flow-scheme-inline-prototype-datum-observations
+        poo-flow-scheme-inline-prototype-port-observations
+        poo-flow-scheme-inline-prototype-file-observations)
 
 ;;; Ordinary Scheme lexical bindings can shadow core procedures independently
 ;;; of POO slot authoring.  This reader-native gate records only the dangerous
@@ -204,3 +208,128 @@
    path
    (lambda (port)
      (poo-flow-scheme-lexical-call-shadow-port-observations scope port))))
+
+;;; Repeated `(.o (:: @ (.ref Contract 'proto)) ...)` couples prototype lookup
+;;; to object construction.  It is semantically valid but obscures the cold
+;;; lookup boundary and repeats a stable dependency in every constructor body.
+;; : (-> Unit PooFlowSchemeInlinePrototypeObservationKind)
+(def poo-flow-scheme-inline-prototype-observation-kind
+  "poo-flow.scheme-inline-prototype-observation.v1")
+
+;; : (-> SchemeDatum Boolean)
+(def (poo-flow-scheme-inline-prototype-ref? datum)
+  (and (pair? datum)
+       (eq? (car datum) '.ref)
+       (pair? (cdr datum))
+       (pair? (cddr datum))
+       (null? (cdddr datum))
+       (equal? (caddr datum) '(quote proto))))
+
+;; : (-> Value Symbol)
+(def (poo-flow-scheme-inline-prototype-owner datum)
+  (let (owner (cadr datum))
+    (if (symbol? owner) owner 'dynamic-prototype-owner)))
+
+;; : (-> Symbol Value Alist)
+(def (poo-flow-scheme-inline-prototype-observation scope prototype-ref)
+  (let (owner (poo-flow-scheme-inline-prototype-owner prototype-ref))
+    (list
+     (cons 'kind poo-flow-scheme-inline-prototype-observation-kind)
+     (cons 'scope scope)
+     (cons 'owner owner)
+     (cons 'form '.o)
+     (cons 'phase 'object-construction)
+     (cons 'status 'inline-prototype-lookup)
+     (cons 'detail
+           (list
+            (cons 'code 'poo-prototype-lookup-inside-composition)
+            (cons 'rule 'poo-prototype-lookup-must-be-hoisted)
+            (cons 'owner owner)
+            (cons 'recommendation
+                  'bind-prototype-once-before-repeated-construction)))
+     (cons 'runtime-executed #f))))
+
+;; : (-> Symbol Value [Alist])
+(def (poo-flow-scheme-inline-prototype-refs-observations scope refs)
+  (if (pair? refs)
+    (let (prototype-ref (car refs))
+      (append
+       (if (poo-flow-scheme-inline-prototype-ref? prototype-ref)
+         (list (poo-flow-scheme-inline-prototype-observation
+                scope prototype-ref))
+         '())
+       (poo-flow-scheme-inline-prototype-refs-observations scope (cdr refs))))
+    '()))
+
+;;; Source datums may use dotted `.o` forms.  Walk the pair spine instead of
+;;; requiring every constructor clause list to be proper.
+;; : (-> Symbol Value [Alist])
+(def (poo-flow-scheme-inline-prototype-super-observations scope clauses)
+  (if (pair? clauses)
+    (let (clause (car clauses))
+      (append
+       (if (and (pair? clause)
+                (eq? (car clause) '::)
+                (pair? (cdr clause)))
+         (poo-flow-scheme-inline-prototype-refs-observations
+          scope (cddr clause))
+         '())
+       (poo-flow-scheme-inline-prototype-super-observations
+        scope (cdr clauses))))
+    '()))
+
+;;; The walker observes only direct super expressions.  A `.ref` in an
+;;; ordinary slot initializer may be runtime-dependent and is not this rule.
+;;; Quoted examples and syntax templates remain inert.
+;; : (forall (a) (-> Symbol a [Alist]))
+;; : (-> Symbol Value [Alist])
+(def (poo-flow-scheme-inline-prototype-datum-observations scope datum)
+  (cond
+   ((not (pair? datum)) '())
+   ((memq (car datum) '(quote quasiquote syntax quasisyntax)) '())
+   ((eq? (car datum) '.o)
+    (append
+     (poo-flow-scheme-inline-prototype-super-observations scope (cdr datum))
+     (poo-flow-scheme-inline-prototype-datum-observations scope (cdr datum))))
+   (else
+    (append
+     (poo-flow-scheme-inline-prototype-datum-observations scope (car datum))
+     (poo-flow-scheme-inline-prototype-datum-observations scope (cdr datum))))))
+
+;; : (-> Symbol InputPort [Alist])
+;; poo-flow-scheme-inline-prototype-port-observations
+;;   : (-> Symbol InputPort [Alist])
+;;   | doc m%
+;;       Read Scheme datums in source order and report direct contract
+;;       prototype lookups nested in `.o` super clauses. Quoted data and
+;;       already-hoisted prototype bindings remain inert.
+;;
+;;       # Examples
+;;
+;;       ```scheme
+;;       (poo-flow-scheme-inline-prototype-port-observations
+;;        'source (open-input-string "(.o (:: @ (.ref Contract 'proto)))"))
+;;       ;; => one inline-prototype-lookup observation
+;;       ```
+;;     %
+(def (poo-flow-scheme-inline-prototype-port-observations scope port)
+  (let loop ((observations-rev '()))
+    (let (datum (read port))
+      (if (eof-object? datum)
+        (reverse observations-rev)
+        (let collect
+             ((remaining
+               (poo-flow-scheme-inline-prototype-datum-observations
+                scope datum))
+              (next observations-rev))
+          (if (null? remaining)
+            (loop next)
+            (collect (cdr remaining) (cons (car remaining) next))))))))
+
+;; : (forall (k v) (-> Symbol PathString [(Pair k v)]))
+;; : (-> Symbol PathString [Alist])
+(def (poo-flow-scheme-inline-prototype-file-observations scope path)
+  (call-with-input-file
+   path
+   (lambda (port)
+     (poo-flow-scheme-inline-prototype-port-observations scope port))))

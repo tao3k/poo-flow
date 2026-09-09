@@ -3,6 +3,7 @@
 ;;; Invariant: trace construction never dereferences POO slots.
 
 (import :gerbil/gambit
+        (only-in :clan/poo/object .ref)
         (only-in :std/srfi/13 string-suffix?)
         (only-in :std/test
                  check
@@ -17,7 +18,8 @@
                  test-error
                  test-suite)
         :poo-flow/src/module-system/observability
-        :poo-flow/src/module-system/source-lexical-observability)
+        :poo-flow/src/module-system/source-lexical-observability
+        :poo-flow/src/observability/source-authoring)
 
 (export module-system-observability-test)
 
@@ -48,6 +50,10 @@
   (poo-flow-scheme-lexical-call-shadow-file-observations
    (string->symbol path)
    path))
+
+(def (module-observability-source-inline-prototype-observations path)
+  (poo-flow-scheme-inline-prototype-file-observations
+   (string->symbol path) path))
 
 ;; : (-> Unit TestSuite)
 ;;; This suite protects module observability receipts used to debug expansion
@@ -226,6 +232,22 @@
         (check-equal?
          (module-observability-test-alist-value 'runtime-executed observation)
          #f)))
+    (test-case "projects one inline prototype lookup as native authoring advice"
+      (let* ((source
+              (string-append
+               "(.o (:: @ (.ref Contract 'proto)) value: 1)\n"
+               "(.o (:: @ Contract.) value: 2)\n"
+               "(.o . slots)\n"
+               "'(.o (:: @ (.ref Quoted 'proto)))\n"))
+             (observations
+              (poo-flow-authoring-inline-prototype-port-observations
+               'synthetic-source (open-input-string source)))
+             (observation (car observations)))
+        (check-equal? (length observations) 1)
+        (check-equal? (.ref observation 'owner) 'Contract)
+        (check-equal? (.ref observation 'code)
+                      'poo-prototype-lookup-inside-composition)
+        (check-equal? (.ref observation 'runtime-executed?) #f)))
     (test-case "all repository POO source slots pass the native authoring gate"
       (let* ((paths (module-observability-source-files "src"))
              (observations
@@ -240,6 +262,14 @@
              (observations
               (apply append
                      (map module-observability-source-lexical-shadow-observations
+                          paths))))
+        (check-equal? (pair? paths) #t)
+        (check-equal? observations '())))
+    (test-case "all repository constructors hoist stable prototype lookups"
+      (let* ((paths (module-observability-source-files "src"))
+             (observations
+              (apply append
+                     (map module-observability-source-inline-prototype-observations
                           paths))))
         (check-equal? (pair? paths) #t)
         (check-equal? observations '())))))

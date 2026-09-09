@@ -96,6 +96,35 @@ Module observation model.  It does not add slots to SemanticModule, replace
 the strict =src/module-system/observability.ss= presentation owner, or make
 debug output semantic evidence.
 
+* Authoring and performance path
+
+The supported path is deliberately phase-separated:
+
+#+begin_export mermaid
+flowchart LR
+  A["Authoring: reader-only diagnostics"] -. "repair advice; no execution" .-> B["Construction: guarded POO proxy"]
+  B -->|"first .ref"| C["Cold demand: admission and inherited resolver"]
+  C -->|"upstream cache fill"| D["Warm demand: cached .ref"]
+  C -. "emit? true" .-> E["Trace projection: bounded symbolic receipts"]
+#+end_export
+
+Authoring diagnostics do not claim runtime evidence.  The existing POO slot
+authoring gate rejects same-name dynamic initializers such as
+=construction-us: construction-us=: =.o= introduces declared slot names in
+initializer scope, so that spelling recursively resolves the slot rather than
+capturing the lexical value.  The standard repair is a distinct lexical name,
+for example =construction-us: construction-us-value=.  The prototype rule
+similarly advises resolving a stable =Contract.proto= once before repeated
+construction instead of embedding =(.ref Contract 'proto)= in every =.o=
+super clause.
+
+The performance scenario under
+=t/scenarios/performance/poo-observability-slot-guard/= measures those phases
+without nesting the workload in an outer repetition count.  It prebuilds fresh
+cold and traced batches, warms a separate guarded object once, and asserts
+semantic checksums plus one-time evaluation.  Inline and bound prototype
+times are diagnostic fields, not a relative-speed acceptance condition.
+
 * Explicit limits
 
 - The proxy is opt-in.  Unwrapped objects retain upstream behavior.
@@ -124,7 +153,11 @@ The framework gate must prove:
 4. a raised resolver preserves exception identity without disclosing it;
 5. a direct self reference is rejected at the first repeated edge;
 6. equal slot names on distinct receiver labels remain valid; and
-7. a dependent slot crossing the configured depth fails before invocation.
+7. a dependent slot crossing the configured depth fails before invocation;
+8. repository constructors contain no direct stable prototype lookup in a
+   =.o= super clause; and
+9. performance receipts use distinct lexical value names rather than
+   self-referential slot initializers.
 
 The existing upstream debug-admission suite remains responsible for proving
 raw =DDT= / =trace-poo= behavior and demonstrating that upstream output is not

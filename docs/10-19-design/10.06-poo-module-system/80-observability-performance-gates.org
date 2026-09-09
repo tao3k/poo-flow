@@ -122,14 +122,54 @@ above. Without those gates, splitting a builder can improve modularity while
 silently making every build slower.
 
 ** Current Baseline
+*** Lazy-slot observability
+
+The lazy-slot observability gate takes the best of three complete scenario
+invocations, while its phase helpers independently use bounded best-of-three
+samples.  The fixture keeps this outer count at =3=: enough to reject a
+scheduler outlier without multiplying the small cold and warm batches into a
+stress workload.
+
+Ten source-first native =gxtest= runs on 2026-09-09 measured 13.886-14.589 ms
+for nine uncontended end-to-end samples, plus one 28.541 ms scheduler outlier.
+Representative phase ranges were:
+
+- 20 inline prototype compositions: 10-11 microseconds;
+- 20 compositions reusing one lexically bound prototype: 9-10 microseconds;
+- 16 guarded-object constructions: 952-1,039 microseconds;
+- first demand across 16 fresh guards: 29-35 microseconds;
+- 1,000 direct or guarded warm reads: 106-123 microseconds; and
+- traced first demand across two fresh guards: 2.04-2.44 milliseconds.
+
+The hot fixture therefore records a 15 ms observed baseline, a 20 ms target,
+and a 50 ms hard gate that tolerates host scheduling noise.  Phase-owned gates
+remain tighter: 10 ms construction, 1 ms first demand, and 10 ms traced demand.
+Gerbil/Bazel launcher time is intentionally excluded: the benchmark receipt's
+dynamic =elapsedMicros= owns workload evidence.
+
+The first version of this scenario timed out because its receipt used forms
+such as =construction-us: construction-us=.  Under =.o= that right-hand name
+is an object-local slot reference, so the receipt recursively demanded itself.
+The fix follows the standing dynamic-slot policy: bind
+=construction-us-value= and construct =construction-us:
+construction-us-value=.  Reducing iterations would have hidden the authoring
+error and is not an accepted repair.
+
 *** Focused Test Runner
 
 Use the test runner that owns test process lifecycle for focused package tests:
 
 #+begin_src sh
-gxpkg env gxtest -q t/model-core-test.ss
-gxpkg env gxtest -q t/object-family-syntax-performance-test.ss
+./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
+  gxtest -q t/model-core-test.ss
+./.devenv/devenv-profile-exec tools/run-native-scheme-env --source-first \
+  gxtest -q t/object-family-syntax-performance-test.ss
 #+end_src
+
+The checked-in =.devenv/devenv-profile-exec= launcher is the canonical
+non-interactive project entry.  It reuses the captured devenv export without
+reevaluating =.envrc= for every command and is the normal test and benchmark
+path.
 
 Do not use =gxpkg env gxi t/<test-file>.ss= as the normal focused-test gate.
 That shape can execute the assertions successfully while retaining the direct
@@ -154,8 +194,8 @@ Use bare =gxi= for trivial interpreter probes.  Use =gxpkg env= only when a
 package registry import is required, and use =gxtest= for package test files.
 
 The current composition gate baseline after the fix:
-- =gxpkg build -g= passes
-- hot-cache =gxpkg build -g= is about 3.6 seconds
+- =./.devenv/devenv-profile-exec gxpkg build -g= passes
+- the hot-cache form through =.devenv/devenv-profile-exec= is about 3.6 seconds
 - tests stage strict skip is about 55 ms
 - composition performance suite passes
 - gate rounds remain at 1000

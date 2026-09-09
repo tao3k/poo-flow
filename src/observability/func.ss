@@ -20,6 +20,19 @@
         poo-flow-debug-memory-receipt
         poo-flow-debug-memory-receipt-sexp)
 
+;;; Stable contract prototypes are resolved at module load, outside every
+;;; constructor and receipt path.
+(def ObservationFailure. (.ref PooFlowObservationFailureContract 'proto))
+(def AdmissionFacts. (.ref PooFlowAdmissionObservationFactsContract 'proto))
+(def ObservationSummary. (.ref PooFlowObservationSummaryContract 'proto))
+(def DebugCallPolicy. (.ref PooFlowDebugCallPolicyContract 'proto))
+(def DebugCallReceipt. (.ref PooFlowDebugCallReceiptContract 'proto))
+(def DebugSlotPolicy. (.ref PooFlowDebugSlotPolicyContract 'proto))
+(def DebugSlotReceipt. (.ref PooFlowDebugSlotReceiptContract 'proto))
+(def DebugMemoryPolicy. (.ref PooFlowDebugMemoryPolicyContract 'proto))
+(def DebugMemorySample. (.ref PooFlowDebugMemorySampleContract 'proto))
+(def DebugMemoryReceipt. (.ref PooFlowDebugMemoryReceiptContract 'proto))
+
 (def (poo-flow-observation-validate-receipt receipt)
   (validate PooFlowValidationEvidence receipt)
   (unless (eq? (.ref receipt 'contract-identity)
@@ -47,7 +60,7 @@
 (def (poo-flow-observation-failure receipt path-value)
   (let ((contract-value (.ref receipt 'contract-identity))
         (code-value (poo-flow-observation-failure-code receipt)))
-    (.o (:: @ (.ref PooFlowObservationFailureContract 'proto))
+    (.o (:: @ ObservationFailure.)
         path: path-value contract: contract-value code: code-value)))
 
 ;;; The returned values are failures, completeness, and visited receipt count.
@@ -104,7 +117,7 @@
           (classified-value (.ref (.ref receipt 'classification) 'accepted?))
           (obligation-count-value (length (.ref receipt 'obligation-evidence))))
       (validate PooFlowAdmissionObservationFactsContract
-        (.o (:: @ (.ref PooFlowAdmissionObservationFactsContract 'proto))
+        (.o (:: @ AdmissionFacts.)
             contract: contract-value accepted?: accepted-value
             classification-accepted?: classified-value obligation-count: obligation-count-value
             failures: failure-values detail-complete?: complete-value
@@ -119,7 +132,7 @@
          (complete-value (.ref facts 'detail-complete?))
          (count-value (length (.ref facts 'failures)))
          (inspected-value (.ref facts 'inspected-count)))
-    (.o (:: @ (.ref PooFlowObservationSummaryContract 'proto))
+    (.o (:: @ ObservationSummary.)
         accepted?: accepted-value detail-complete?: complete-value
         failure-count: count-value inspected-count: inspected-value)))
 
@@ -153,7 +166,7 @@
   (unless (> maximum-depth-value 0)
     (error "POO Flow debug call depth must be positive" maximum-depth-value))
   (validate PooFlowDebugCallPolicyContract
-    (.o (:: @ (.ref PooFlowDebugCallPolicyContract 'proto))
+    (.o (:: @ DebugCallPolicy.)
         label: label-value
         maximum-depth: maximum-depth-value)))
 
@@ -173,7 +186,7 @@
             ((rejected-depth) 'maximum-call-depth-exceeded)
             (else 'invalid-call-outcome))))
     (validate PooFlowDebugCallReceiptContract
-      (.o (:: @ (.ref PooFlowDebugCallReceiptContract 'proto))
+      (.o (:: @ DebugCallReceipt.)
           policy: policy-value
           call: call-value
           depth: depth-value
@@ -202,7 +215,7 @@
   (unless (> maximum-depth-value 0)
     (error "POO Flow debug slot depth must be positive" maximum-depth-value))
   (validate PooFlowDebugSlotPolicyContract
-    (.o (:: @ (.ref PooFlowDebugSlotPolicyContract 'proto))
+    (.o (:: @ DebugSlotPolicy.)
         label: label-value
         maximum-depth: maximum-depth-value)))
 
@@ -221,7 +234,7 @@
             ((rejected-depth) 'maximum-slot-depth-exceeded)
             (else 'invalid-slot-outcome))))
     (validate PooFlowDebugSlotReceiptContract
-      (.o (:: @ (.ref PooFlowDebugSlotReceiptContract 'proto))
+      (.o (:: @ DebugSlotReceipt.)
           policy: policy-value
           receiver: receiver-value
           slot: slot-value
@@ -256,7 +269,7 @@
                                    collect-before-sample?: (collect-value #f)
                                    fail-closed?: (fail-closed-value #t))
   (validate PooFlowDebugMemoryPolicyContract
-    (.o (:: @ (.ref PooFlowDebugMemoryPolicyContract 'proto))
+    (.o (:: @ DebugMemoryPolicy.)
         label: label-value
         heap-limit-bytes: heap-limit-value
         live-growth-limit-bytes: live-growth-limit-value
@@ -268,7 +281,7 @@
 (def (poo-flow-debug-memory-sample phase-value heap-size-value allocated-value
                                    live-value movable-value still-value)
   (validate PooFlowDebugMemorySampleContract
-    (.o (:: @ (.ref PooFlowDebugMemorySampleContract 'proto))
+    (.o (:: @ DebugMemorySample.)
         phase: phase-value
         heap-size-bytes: heap-size-value
         allocated-bytes: allocated-value
@@ -311,7 +324,7 @@
                 (growth-exceeded? 'live-growth-limit-exceeded)
                 (else 'within-budget))))
     (validate PooFlowDebugMemoryReceiptContract
-      (.o (:: @ (.ref PooFlowDebugMemoryReceiptContract 'proto))
+      (.o (:: @ DebugMemoryReceipt.)
           phase: phase-value
           policy: policy-value
           before: before-value

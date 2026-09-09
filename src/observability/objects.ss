@@ -68,6 +68,15 @@
         poo-flow-observability-agent-feedback
         poo-flow-observability-receipt->alist)
 
+(def ObservationIdentity.
+  (.ref PooFlowObservationIdentityContract 'proto))
+(def ObservationProvenance.
+  (.ref PooFlowObservationProvenanceContract 'proto))
+(def ObservationContext.
+  (.ref PooFlowObservationContextContract 'proto))
+(def AdmissionObservation.
+  (.ref PooFlowAdmissionObservationContract 'proto))
+
 ;; +poo-flow-observability-object-families+
 ;;   : [Symbol]
 ;;   | doc m%
@@ -330,18 +339,18 @@
 (.defgeneric (poo-flow-observation-summary observation) slot: .summary)
 
 (def poo-flow-admission-observation-prototype
-  (.o (:: self (.ref PooFlowAdmissionObservationContract 'proto))
+  (.o (:: self AdmissionObservation.)
       (.explain (poo-flow-observation-admission-explanation self))
       (.summary (poo-flow-observation-admission-summary self))))
 
 (def (poo-flow-observation-identity namespace-value name-value revision-value)
   (validate PooFlowObservationIdentityContract
-    (.o (:: @ (.ref PooFlowObservationIdentityContract 'proto))
+    (.o (:: @ ObservationIdentity.)
         namespace: namespace-value name: name-value revision: revision-value)))
 
 (def (poo-flow-observation-provenance producer-value provider-value phase-value)
   (validate PooFlowObservationProvenanceContract
-    (.o (:: @ (.ref PooFlowObservationProvenanceContract 'proto))
+    (.o (:: @ ObservationProvenance.)
         producer: producer-value provider: provider-value phase: phase-value)))
 
 ;;; Identity/provenance are supplied explicitly by the producer. They provide
@@ -350,7 +359,7 @@
                                    causes-value provenance-value
                                    detail-budget: (budget-value 256))
   (validate PooFlowObservationContextContract
-    (.o (:: @ (.ref PooFlowObservationContextContract 'proto))
+    (.o (:: @ ObservationContext.)
         identity: identity-value source: source-value generation: generation-value
         causes: causes-value provenance: provenance-value detail-budget: budget-value)))
 

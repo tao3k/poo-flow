@@ -6,9 +6,15 @@
 (export poo-combination-generic poo-combination-method poo-method-bundle
         poo-method-root poo-method-prototype poo-combination-failure?
         combination-fail require-generic require-plan receiver-plan make-frame)
+(def CombinationGeneric. (.ref CombinationGeneric 'proto))
+(def CombinationMethod. (.ref CombinationMethod 'proto))
+(def CombinationBundle. (.ref CombinationBundle 'proto))
+(def CombinationFailure. (.ref CombinationFailure 'proto))
+(def CombinationPlan. (.ref CombinationPlan 'proto))
+(def CombinationFrame. (.ref CombinationFrame 'proto))
 (def (combination-fail code-value generic: (generic-value #f)
                        qualifier: (qualifier-value #f) method: (method-value #f))
-  (raise (.o (:: @ (.ref CombinationFailure 'proto))
+  (raise (.o (:: @ CombinationFailure.)
              code: code-value generic: generic-value
              qualifier: qualifier-value method: method-value)))
 (def (poo-combination-failure? value) (element? CombinationFailure value))
@@ -20,27 +26,27 @@
                              from: (from-value 'instance)
                              required: (required-value 0) rest?: (rest-value #t))
   (checked CombinationGeneric
-    (.o (:: self (.ref CombinationGeneric 'proto))
+    (.o (:: self CombinationGeneric.)
         identity: identity-value collector-slot: collector-slot-value
         from: from-value required: required-value rest?: rest-value
         root: (make-root self)) 'invalid-generic))
 (def (poo-combination-method identity-value body-value)
   (checked CombinationMethod
-    (.o (:: @ (.ref CombinationMethod 'proto)) identity: identity-value body: body-value) 'invalid-method))
+    (.o (:: @ CombinationMethod.) identity: identity-value body: body-value) 'invalid-method))
 (def (poo-method-bundle around: (around-value #f) before: (before-value #f)
                         primary: (primary-value #f) after: (after-value #f))
   (checked CombinationBundle
-    (.o (:: @ (.ref CombinationBundle 'proto))
+    (.o (:: @ CombinationBundle.)
         around: around-value before: before-value primary: primary-value after: after-value) 'invalid-bundle))
 (def (make-plan generic-value around-value before-value primary-value after-value)
-  (.o (:: @ (.ref CombinationPlan 'proto))
+  (.o (:: @ CombinationPlan.)
       generic: generic-value around: around-value before: before-value
       primary: primary-value after: after-value
       ;; Explicit native demand: derived once per receiver plan.
       after-order: (reverse after)))
 (def (require-plan generic candidate)
   ;; Plans come from our collector. Preserve upstream C3/slot exceptions.
-  (unless (combination-instance? (.ref CombinationPlan 'proto) candidate)
+  (unless (combination-instance? CombinationPlan. candidate)
     (combination-fail 'invalid-method-plan generic: (.ref generic 'identity)))
   (unless (.ref candidate 'valid?)
     (combination-fail 'invalid-method-plan generic: (.ref generic 'identity)))
@@ -105,7 +111,7 @@
 (def (make-frame plan-value arguments-value next-value qualifier-value method-value)
   ;; A hot-path value family: reuse the static prototype and constant defaults.
   ;; These internal rows are native constructor inputs, not an authoring DSL.
-  (.mix (.ref CombinationFrame 'proto)
+  (.mix CombinationFrame.
     defaults: (list (cons 'plan plan-value) (cons 'arguments arguments-value)
                     (cons 'next next-value) (cons 'qualifier qualifier-value)
                     (cons 'method method-value))))

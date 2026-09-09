@@ -72,11 +72,14 @@
              policy receiver slot depth path rejected-outcome))
         (when emit? (poo-flow-debug-emit-slot-receipt receipt port))
         (poo-flow-debug-raise-slot-anomaly receipt)))
-    (let ((resolved-value #!void)
-          (admitted
-           (poo-flow-debug-slot-receipt
-            policy receiver slot depth path 'admitted)))
-      (when emit? (poo-flow-debug-emit-slot-receipt admitted port))
+    (let (resolved-value #!void)
+      ;; The non-emitting guard is an admission boundary, not a receipt path.
+      ;; Avoid constructing and validating an observation that cannot escape.
+      (when emit?
+        (poo-flow-debug-emit-slot-receipt
+         (poo-flow-debug-slot-receipt
+          policy receiver slot depth path 'admitted)
+         port))
       (parameterize ((poo-flow-debug-active-slot-path (cons edge path)))
         (let (resolve
               (lambda ()

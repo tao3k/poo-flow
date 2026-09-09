@@ -23,7 +23,7 @@
 (def module-system-poo-performance-fixture-contract-case
   (test-case "keeps every POO performance fixture inside upstream benchmark contract"
         (let (fixtures (poo-performance-fixtures))
-        (check-equal? (length fixtures) 29)
+        (check-equal? (length fixtures) 31)
         (check-equal?
          (map (lambda (fixture)
                 (benchmark-fixture-ref fixture 'sourcePath))

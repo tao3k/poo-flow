@@ -23,6 +23,7 @@
         PooFlowObservationContract
         PooFlowAdmissionObservationContract
         PooFlowObservationSummaryContract
+        PooFlowAuthoringObservationContract
         PooFlowDebugCallPolicyContract
         PooFlowDebugCallReceiptContract
         PooFlowDebugSlotPolicyContract
@@ -328,6 +329,9 @@
   proto: (.o)
   responsibilities: (.o))
 
+(def PooFlowObservationFacts.
+  (.ref PooFlowObservationFactsContract 'proto))
+
 (def (poo-flow-admission-facts-obligations value _context)
   (if (and (eq? (.ref value 'accepted?)
                 (and (.ref value 'classification-accepted?)
@@ -342,7 +346,7 @@
 ;;; Invariant: admission facts must reconcile their decision, counts, and bounded failures.
 (define-type (PooFlowAdmissionObservationFactsContract @ PooFlowObservationFactsContract)
   identity: 'observation/admission-facts
-  proto: (.o (:: @ (.ref PooFlowObservationFactsContract 'proto)))
+  proto: (.o (:: @ PooFlowObservationFacts.))
   responsibilities: (.o contract: ObservationSymbol accepted?: ObservationBoolean
                         classification-accepted?: ObservationBoolean
                         obligation-count: ObservationNatural
@@ -367,10 +371,13 @@
                         causes: ObservationIdentities provenance: PooFlowObservationProvenanceContract
                         disclosure: ObservationDisclosure evidence: PooFlowObservationFactsContract))
 
+(def PooFlowObservation.
+  (.ref PooFlowObservationContract 'proto))
+
 ;;; Invariant: admission events refine the generic evidence slot with admission facts.
 (define-type (PooFlowAdmissionObservationContract @ PooFlowObservationContract)
   identity: 'observation/admission-event
-  proto: (.o (:: @ (.ref PooFlowObservationContract 'proto)))
+  proto: (.o (:: @ PooFlowObservation.))
   responsibilities: (.o (:: @ (.ref PooFlowObservationContract 'responsibilities))
                         evidence: PooFlowAdmissionObservationFactsContract))
 
@@ -380,6 +387,38 @@
   proto: (.o)
   responsibilities: (.o accepted?: ObservationBoolean detail-complete?: ObservationBoolean
                         failure-count: ObservationNatural inspected-count: ObservationNatural))
+
+;;; Authoring observations are structural advice, not executed runtime facts.
+;;; Their fixed phase and rejection polarity prevent a style diagnostic from
+;;; being promoted into evidence that a Module or operation actually ran.
+(def (poo-flow-authoring-observation-obligations observation _context)
+  (if (and (eq? (.ref observation 'form) '.o)
+           (eq? (.ref observation 'phase) 'object-construction)
+           (eq? (.ref observation 'status) 'inline-prototype-lookup)
+           (eq? (.ref observation 'code)
+                'poo-prototype-lookup-inside-composition)
+           (eq? (.ref observation 'recommendation)
+                'bind-prototype-once-before-repeated-construction)
+           (not (.ref observation 'accepted?))
+           (not (.ref observation 'runtime-executed?)))
+    '()
+    '(inconsistent-authoring-observation)))
+
+;;; Boundary: source inspection retains only symbolic owner and repair facts.
+;;; It never retains the source datum, expanded syntax, object, or slot value.
+(define-type (PooFlowAuthoringObservationContract @ PooFlowNativeObjectContract.)
+  identity: 'observation/poo-authoring
+  proto: (.o)
+  responsibilities: (.o scope: ObservationSymbol
+                        owner: ObservationSymbol
+                        form: ObservationSymbol
+                        phase: ObservationSymbol
+                        status: ObservationSymbol
+                        code: ObservationSymbol
+                        recommendation: ObservationSymbol
+                        accepted?: ObservationBoolean
+                        runtime-executed?: ObservationBoolean)
+  .obligations: poo-flow-authoring-observation-obligations)
 
 ;;; Boundary: traced calls carry an explicit depth budget.  The policy is a
 ;;; native POO value rather than an ambient global tracer setting.

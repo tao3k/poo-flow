@@ -167,9 +167,12 @@
 
 ;; : (-> Alist Boolean)
 (def (poo-performance-observed-timing-entry-contract-pass? entry)
-  (and (list? entry)
-       (poo-performance-fixture-nonempty-string? entry 'name)
-       (poo-performance-fixture-positive-integer? entry 'durationMs)))
+  (let ((duration-ms (poo-performance-slot-ref/default entry 'durationMs #f))
+        (duration-ns (poo-performance-slot-ref/default entry 'durationNs #f)))
+    (and (list? entry)
+         (poo-performance-fixture-nonempty-string? entry 'name)
+         (or (and (number? duration-ms) (>= duration-ms 0))
+             (and (number? duration-ns) (>= duration-ns 0))))))
 
 ;; : (-> Alist Boolean)
 (def (poo-performance-observed-timings-contract-pass? fixture)

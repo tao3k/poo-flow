@@ -14,6 +14,7 @@
         (only-in :poo-flow/src/module-system/extension
                  poo-flow-module-extension-node-slots)
         (only-in :poo-flow/src/module-system/object-core
+                 PooFlowModuleListType
                  poo-flow-module-config-merge-result-root
                  poo-flow-module-field-contract
                  poo-flow-module-field-contribution
