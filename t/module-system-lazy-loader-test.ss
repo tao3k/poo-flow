@@ -188,7 +188,7 @@
 
 ;; : TestCase
 (def module-system-lazy-loader-src-modules-case
-  (test-case "projects src/modules entrypoints as lazy load plans"
+  (test-case "projects canonical src/modules config entrypoints as lazy load plans"
         (set! lazy-loader-call-count 0)
         (let* ((plans
                 (poo-flow-src-modules-lazy-load-plans
@@ -203,15 +203,15 @@
                 (poo-flow-lazy-load-plan-receipt (car plans)))
                (first-metadata
                 (poo-flow-module-load-receipt-metadata first-receipt)))
-          (check-equal? (length plans) 13)
+          (check-equal? (length plans) 22)
           (check-equal? (car source-values)
-                        "src/modules/agent-sandbox/config.ss")
-          (check-equal? (if (member "src/modules/sandbox-core/objects.ss"
+                        "src/modules/poo-method-combination/config.ss")
+          (check-equal? (if (member "src/modules/sandbox-core/config.ss"
                                     source-values)
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/nono-sandbox/objects.ss"
+          (check-equal? (if (member "src/modules/nono-sandbox/config.ss"
                                     source-values)
                           #t
                           #f)
@@ -236,7 +236,7 @@
                           #t
                           #f)
                         #t)
-          (check-equal? (if (member "src/modules/workflow/flows.ss"
+          (check-equal? (if (member "src/modules/workflow/config.ss"
                                     source-values)
                           #t
                           #f)
@@ -255,7 +255,7 @@
 
 ;; : TestCase
 (def module-system-lazy-loader-entrypoint-conflicts-case
-  (test-case "reports module names that collide with loader categories"
+  (test-case "qualified keys allow category and module names to share spelling"
         (let ((conflicts
                (poo-flow-module-tree-entrypoint-conflicts
                 '(("sandbox" objects)
@@ -263,10 +263,7 @@
                   ("flow" config)
                   ("nono-sandbox" objects config)))))
           (check-equal? (poo-flow-src-module-tree-entrypoint-conflicts) '())
-          (check-equal? (length conflicts) 2)
-          (check-equal? (cdr (assoc 'module-name (car conflicts))) 'sandbox)
-          (check-equal? (cdr (assoc 'module-name (cadr conflicts)))
-                        'flow))))
+          (check-equal? conflicts '()))))
 
 ;; : TestCase
 (def module-system-lazy-loader-user-root-case

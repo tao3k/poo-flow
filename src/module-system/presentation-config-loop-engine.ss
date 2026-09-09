@@ -16,7 +16,7 @@
                  poo-flow-sandbox-backend-capability-registry-validation-diagnostics)
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/workflow-cicd-runtime-command-config
-        :poo-flow/src/module-system/loop-engine-config
+        "../modules/loop-engine/config.ss"
         :poo-flow/src/module-system/presentation-config-support)
 
 ;; Engineering note: loop-engine-only presentation uses lazy slots so heavy

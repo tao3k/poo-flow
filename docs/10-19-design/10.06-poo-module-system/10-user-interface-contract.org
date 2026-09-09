@@ -24,7 +24,7 @@ The user-interface layer mirrors Doom's module-selection block:
 
 - =src/module-system/profiles/kernel.ss= composes the built-in kernel profile.
 - =src/modules/funflow/config.ss= owns the Funflow module row.
-- =src/modules/loop-governor/config.ss= owns the loop governor row.
+- =src/modules/governor/config.ss= owns the loop governor row.
 - =src/modules/nono-sandbox/config.ss= owns the nono sandbox row.
 - =src/modules/cubeSandbox/config.ss= owns the CubeSandbox row.
 - =src/module-system/root-objects.ss= owns user-interface object contracts.

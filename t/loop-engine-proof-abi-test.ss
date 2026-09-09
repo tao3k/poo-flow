@@ -7,7 +7,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        :poo-flow/src/module-system/loop-engine-proof-abi)
+        :poo-flow/src/modules/loop-engine/proof-abi)
 
 (export loop-engine-proof-abi-test)
 

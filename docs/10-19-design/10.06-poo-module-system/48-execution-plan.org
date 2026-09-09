@@ -27,7 +27,7 @@ Before starting a package:
 | P0 | Scenario and test owner matrix | =10.06.49= | none | Acceptance spine |
 | P1 | Sandbox POO object family hardening | =sandbox-core=, backend objects, backend syntax | P0 | Reusable sandbox/resource object pattern |
 | P2 | Session policy family generation | =src/modules/session/*= | P0, P1 pattern | Macro-backed policy families |
-| P3 | Runtime receipt projection generation | =src/module-system/loop-engine-runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
+| P3 | Runtime receipt projection generation | =src/modules/loop-engine/runtime.ss=, =runtime-projection-syntax.ss= | P0, P1 pattern | Stable boundary receipts |
 | P4 | Loop intent functional pipeline | =loop-engine-*=, session selector/materialization owners | P2, P3 | Value-in/value-out loop governance core |
 | P5 | Funflow functional kernel alignment | =src/core/flow*=, =src/modules/funflow=, workflow owners | P3, P4 | Functional DAG and arrow/Kleisli flow surface |
 | P6 | Public =use-module= branch generation | =init-syntax.ss=, profile/config owners | P1-P5 | Generated syntax branches with unchanged public form |
@@ -385,8 +385,8 @@ Actions:
 4. Keep observability POO-friendly by exposing inspectable receipts and presentation slots instead of long ad hoc debug paths.
 
 Primary owners:
-- =src/module-system/loop-engine-runtime.ss=
-- =src/module-system/loop-engine-runtime-agent.ss=
+- =src/modules/loop-engine/runtime.ss=
+- =src/modules/loop-engine/runtime-agent.ss=
 - =src/modules/memory-core/*=
 - =user-interface/custom/my-module/cases/loop-engine.ss=
 

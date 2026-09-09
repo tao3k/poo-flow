@@ -359,6 +359,33 @@ set of hand-written hooks.  The framework-specific vocabulary becomes a profile
 or composition surface over the same kernel/factor/plugin model.
 
 ** 10.06.86.130 Open Gaps To Track
+*** Current concrete module: poo-method-combination
+
+=src/modules/poo-method-combination/= is the first =:core= category application
+of this boundary. Its descriptor depth =(-110 . -110)= orders it before
+ordinary modules such as =(:flow . funflow)=:
+
+- =types.ss=, =objects.ss=, and =funcs.ss= are its closed kernel factors;
+- =interface.ss= is its public POO-native factor;
+- =config.ss= owns its native module interface, descriptor, factor manifest,
+  selection, depth =(-110 . -110)=, and its canonical entrypoint;
+- =plugins/observation.ss= is an optional =+observation= plugin factor and is not loaded
+  by the default facade or descriptor path;
+- =t/scenarios/poo-method-combination/= owns executable fixtures rather than a
+  second public API.
+
+The maintained collection declares =(:core . poo-method-combination)= and the
+registry derives =config.ss= by convention. Funflow remains
+=(:flow . funflow)= and publishes a =standard-library= source ref to this shared
+standard. This promotes the qualified implementation into the maintained module
+collection without broadening its semantic envelope or
+turning the Observation consumer into a kernel owner.
+
+This does not invent a second registry or tier system. It mirrors Doom's
+=(:category . module)= keys, separate core/module collections, ordered module
+load paths, and profile-owned enablement. POO Flow keeps one descriptor,
+source-ref, ordering, and diagnostic model.
+
 The current =poo-flow= design still needs implementation-level checks for:
 
 - kernel-factor visibility: normal =use-module= should inherit kernels without

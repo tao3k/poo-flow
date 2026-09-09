@@ -3,7 +3,7 @@
 
 (import (only-in :std/test check-equal?)
         (only-in :clan/poo/object object?)
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
         :poo-flow/t/support/custom-loop-engine/fixtures)
 

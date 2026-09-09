@@ -14,7 +14,7 @@
 (def (write-fixture path text)
   (call-with-output-file path (lambda (port) (display text port))))
 (def combination-qualification-io-test
-  (test-suite "research: native qualification I/O boundaries"
+  (test-suite "module: native qualification I/O boundaries"
     (test-case "test log bytes go to both explicit log and console, never printed port objects"
       (let* ((input (open-input-string "... 7 checks OK\n... 3 checks OK\nOK\n"))
              (log (open-output-string)) (console (open-output-string))

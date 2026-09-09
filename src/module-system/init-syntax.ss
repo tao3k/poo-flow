@@ -26,14 +26,16 @@
         :poo-flow/src/modules/nono-sandbox/config
         :poo-flow/src/modules/nono-sandbox/profile-interface
         :poo-flow/src/loops/spec-evolution
-        :poo-flow/src/module-system/loop-engine-config
-        :poo-flow/src/module-system/loop-engine-policy-extension
+        "../modules/loop-engine/config.ss"
+        "../modules/loop-engine/policy-extension.ss"
         :poo-flow/src/modules/sandbox-core/profile
         :poo-flow/src/modules/sandbox-core/profile-interface
         :poo-flow/src/module-system/profile-config
+        "load.ss"
         :poo-flow/src/module-system/use-module-contract)
 
 (export poo-flow-module-bundles
+        (import: "load.ss")
         poo-flow-custom-module-bundles
         poo-flow-init-module-bundles
         use-module
@@ -51,8 +53,8 @@
         (import: :poo-flow/src/modules/session/config)
         (import: :poo-flow/src/modules/tool-core/config)
         (import: :poo-flow/src/loops/spec-evolution)
-        (import: :poo-flow/src/module-system/loop-engine-config)
-        (import: :poo-flow/src/module-system/loop-engine-policy-extension)
+        (import: "../modules/loop-engine/config.ss")
+        (import: "../modules/loop-engine/policy-extension.ss")
         (import: :poo-flow/src/modules/nono-sandbox/profile-interface)
         (import: :poo-flow/src/module-system/observability)
         (import: :poo-flow/src/module-system/durable-policy)
@@ -548,10 +550,10 @@
    '())
   ((_ (modules module-clause ...) init-clause ...)
    (append (poo-flow-module-bundles module-clause ...)
-           (poo-flow-init-module-bundles init-clause ...)))
+           (poo-flow-modules! init-clause ...)))
   ((_ (custom custom-clause ...) init-clause ...)
    (append (poo-flow-custom-module-bundles custom-clause ...)
-           (poo-flow-init-module-bundles init-clause ...)))
+           (poo-flow-modules! init-clause ...)))
   ((_ :workflow init-clause ...)
    (poo-flow-init-flow-bundles init-clause ...))
   ((_ :loop init-clause ...)
@@ -734,7 +736,7 @@
           (pooFlowUserProfileExtend
            'profile-name
            base-profile
-           (poo-flow-init-module-bundles init-clause ...)))
+           (poo-flow-modules! init-clause ...)))
         (def profile-set-binding
           (pooFlowUserProfileSet
            'user
@@ -749,7 +751,7 @@
         (def profile-binding
           (pooFlowUserProfile
            'profile-name
-           (poo-flow-init-module-bundles init-clause ...)
+           (poo-flow-modules! init-clause ...)
            (pooFlowDefaultUserSettings 'profile-name)
            poo-flow-default-user-setting-keys))
         (def profile-set-binding
@@ -764,7 +766,7 @@
        (syntax
         (begin
           (def module-bundles-binding
-            (poo-flow-init-module-bundles init-clause ...))
+            (poo-flow-modules! init-clause ...))
           (export module-bundles-binding)))))))
 
 ;;; Compact profile-set syntax borrows Doom's profiles.el shape but restricts

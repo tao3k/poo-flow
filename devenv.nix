@@ -4,6 +4,10 @@
   # https://devenv.sh/basics/
   env.GREET = "devenv";
 
+  # Homebrew Gerbil/Gambit must compile against the host system SDK. Nix tools
+  # such as Bazel, Rust, and Emscripten retain their own explicit toolchains.
+  apple.sdk = null;
+
   # https://devenv.sh/packages/
   packages = [
     pkgs.typst
@@ -49,12 +53,6 @@
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
-  '' + lib.optionalString pkgs.stdenv.isDarwin ''
-    # Homebrew Gerbil/Gambit selects the host C toolchain itself.  Nix's SDK
-    # and compiler selectors form a mixed Darwin toolchain when inherited by
-    # gxpkg, so keep them outside the native Gerbil build boundary.  Bazel and
-    # Emscripten retain their own declared toolchains.
-    unset SDKROOT DEVELOPER_DIR CC CXX
   '';
 
   # https://devenv.sh/tasks/

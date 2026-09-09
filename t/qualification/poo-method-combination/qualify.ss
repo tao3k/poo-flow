@@ -11,7 +11,7 @@
         (only-in :std/sort sort)
         (only-in :std/srfi/13 string-prefix? string-suffix?))
 (export main combination-qualification-input combination-qualify!
-        ;; Test-owned primitives; these are not exported by the research library.
+        ;; Test-owned primitives; these are not exported by the maintained module.
         fingerprint unchanged! successful-check-count stream-process-log write-module-manifest!)
 
 (def combination-qualification-input
@@ -19,20 +19,26 @@
       evidence-directory: ".data/qualification/poo-method-combination"
       modules:
       '("src/module-system/types.ss"
+        "src/module-system/projection-syntax.ss"
+        "src/module-system/observability.ss"
+        "src/module-system/source-lexical-observability.ss"
         "src/module-system/semantic-module/types.ss"
         "src/module-system/semantic-module/objects.ss"
         "src/observability/types.ss"
         "src/observability/func.ss"
         "src/observability/objects.ss"
+        "src/observability/source-authoring.ss"
         "src/observability/interface.ss"
+        "src/observability/slot-debug.ss"
         "src/observability/debug.ss"
-        "src/research/poo-method-combination/types.ss"
-        "src/research/poo-method-combination/objects.ss"
-        "src/research/poo-method-combination/func.ss"
-        "src/research/poo-method-combination/interface.ss"
-        "src/research/poo-method-combination/observation.ss"
-        "t/scenarios/research/poo-method-combination/performance.ss"
-        "t/scenarios/research/poo-method-combination/observation.ss"
+        "src/modules/poo-method-combination/types.ss"
+        "src/modules/poo-method-combination/objects.ss"
+        "src/modules/poo-method-combination/funcs.ss"
+        "src/modules/poo-method-combination/interface.ss"
+        "src/modules/poo-method-combination/plugins/observation.ss"
+        "src/modules/poo-method-combination/config.ss"
+        "t/scenarios/poo-method-combination/performance.ss"
+        "t/scenarios/poo-method-combination/observation.ss"
         "t/poo-method-combination-test.ss"
         "t/poo-method-combination-contract-test.ss"
         "t/poo-method-combination-next-test.ss"
@@ -174,7 +180,7 @@
       (unchanged! sources)
       (unchanged! artifacts)
       (let* ((receipt
-              (.o kind: 'poo-combination/qualification-receipt schema: 'v2 producer: 'poo-flow/research
+              (.o kind: 'poo-combination/qualification-receipt schema: 'v2 producer: 'poo-flow/modules/poo-method-combination
                   accepted?: #t evidence-directory: run source-count: (length sources)
                   artifact-count: (length artifacts) same-process-tests?: #t
                   assertions: assertion-count-value

@@ -15,9 +15,9 @@
                  test-error
                  test-suite)
         :poo-flow/src/core/api
-        :poo-flow/src/modules/custom-task
-        :poo-flow/src/modules/docker
-        :poo-flow/src/modules/text
+        :poo-flow/src/modules/custom-task/config
+        :poo-flow/src/modules/docker/config
+        :poo-flow/src/modules/text/config
         :poo-flow/src/modules/workflow/flows
         :poo-flow/src/workflow/store)
 

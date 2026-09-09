@@ -3,7 +3,7 @@
 ;;; Invariant: inspection reads datums only and never expands or evaluates code.
 
 (import (only-in :std/sugar filter-map)
-        (only-in :poo-flow/src/module-system/observability
+        (only-in "observability.ss"
                  poo-flow-poo-slot-authoring-datum-bindings))
 
 (export poo-flow-scheme-lexical-call-shadow-observation-kind

@@ -6,7 +6,7 @@
         (only-in :std/sugar filter-map)
         :poo-flow/src/module-system/interface
         :poo-flow/src/module-system/base
-        :poo-flow/src/module-system/loop-engine-config
+        "../modules/loop-engine/config.ss"
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/projection-syntax)
 

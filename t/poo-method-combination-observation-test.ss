@@ -1,12 +1,12 @@
 ;;; -*- Gerbil -*-
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :clan/poo/object .ref .slot?)
-        "../src/research/poo-method-combination/observation.ss"
+        "../src/modules/poo-method-combination/plugins/observation.ss"
         "../src/observability/interface.ss"
-        "scenarios/research/poo-method-combination/observation.ss")
+        "scenarios/poo-method-combination/observation.ss")
 (export poo-method-combination-observation-test)
 (def poo-method-combination-observation-test
-  (test-suite "research: method-combined real observation"
+  (test-suite "module plugin: method-combined real observation"
     (test-case "extension retains base decision and source-owned explanation"
       (let-values (((base detailed) (combination-observation-scenario)))
         (check-equal? (.ref base 'accepted?) #f)
@@ -19,7 +19,7 @@
           (check-equal? (.ref failure 'code) 'prototype-mismatch))))
     (test-case "one opt-in renderer reuses its plan across independent admissions"
       (let* ((renderer (poo-observation-combination-renderer explanation?: #t))
-             (plan (.ref renderer 'research/summary-plan))
+             (plan (.ref renderer 'poo-method-combination/summary-plan))
              (rejected (combination-observation-event))
              (accepted (combination-observation-event #t))
              (before (poo-flow-observation-summary rejected))
@@ -30,7 +30,9 @@
                      (list rejected accepted rejected)))))
         (check-equal? (map (lambda (result) (.ref result 'accepted?)) results) '(#f #t #f))
         (check-equal? (map (lambda (result) (.ref result 'failure-count)) results) '(1 0 1))
-        (check-equal? (eq? plan (.ref renderer 'research/summary-plan)) #t)
+        (check-equal?
+         (eq? plan (.ref renderer 'poo-method-combination/summary-plan))
+         #t)
         (check-equal? (eq? (car results) (caddr results)) #f)
         (check-equal? (get-output-string port) "")
         (check-equal? (.slot? before 'explanation) #f)

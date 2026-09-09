@@ -1,10 +1,10 @@
 ;;; -*- Gerbil -*-
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :clan/poo/object .ref)
-        "scenarios/research/poo-method-combination/performance.ss")
+        "scenarios/poo-method-combination/performance.ss")
 (export poo-method-combination-performance-test)
 (def poo-method-combination-performance-test
-  (test-suite "research: method combination measured cache scenario"
+  (test-suite "module: method combination measured cache scenario"
     (test-case "cold construction, first demand and warm invocation are distinct"
       (let (receipt (combination-performance-scenario))
         (check-equal? (.ref receipt 'first-result) (.ref receipt 'depth))

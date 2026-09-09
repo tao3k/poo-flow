@@ -3,7 +3,7 @@
 
 (import (only-in :clan/poo/object .ref .slot? object?)
         :poo-flow/src/module-system/facade
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?
                  poo-flow-user-loop-engine-capability-receipt-ref)
         (only-in :poo-flow/src/modules/cubeSandbox/config

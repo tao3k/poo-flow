@@ -27,5 +27,6 @@
  (optimizationFocus . "loop-engine intent rows projected once through the lightweight session-agent graph owner plus graph/registry/communication topology trace")
  (inputShape . "one loop-engine intent row fixture with auditor, verifier, governor, and human-audit agents plus graph sessions, registry entries, durable refs, channels, and parent-child/child-parent communication receipts")
  (expectedRepair . "derive shared session-agent graph topology, first-class communication receipts, registry-aligned session refs, channel refs, and bounded topology trace diagnostics from loop-engine intent rows without importing full user-interface presentation or runtime handoff facades")
+ (expectedOutcome . "bounded loop-engine topology receipts preserve session, registry, and communication graph counts without runtime execution")
  (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate assert-memory-gate)
  (tags poo loop-engine session-agent topology topology-trace performance))

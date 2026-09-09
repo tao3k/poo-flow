@@ -2,7 +2,7 @@
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :clan/poo/object .o .ref .cc .mix)
         (only-in :clan/poo/mop element? .defgeneric)
-        "../src/research/poo-method-combination/interface.ss")
+        "../src/modules/poo-method-combination/interface.ss")
 (export poo-method-combination-contract-test)
 (def (code? expected)
   (lambda (e) (and (poo-combination-failure? e) (eq? (.ref e 'code) expected))))
@@ -15,7 +15,7 @@
 (.defgeneric (native-value receiver) slot: native/value)
 (.defgeneric (native-type-value receiver value) from: type slot: native/value)
 (def poo-method-combination-contract-test
-  (test-suite "research: native method combination contracts"
+  (test-suite "module: native method combination contracts"
     (test-case "native Type descriptors reject lookalikes and retain extension"
       (check-equal? (element? CombinationGeneric g) #t)
       (check-equal? (element? CombinationMethod m) #t)

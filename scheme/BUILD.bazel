@@ -217,6 +217,7 @@ precise_test_sources = {
     "observability_framework_test": native_contract_test_sources,
     "observability_slot_performance_test": native_contract_test_sources,
     "poo_method_combination_test": native_contract_test_sources,
+    "poo_method_combination_module_test": native_contract_test_sources,
     "poo_method_combination_contract_test": native_contract_test_sources,
     "poo_method_combination_next_test": native_contract_test_sources,
     "poo_method_combination_observation_test": native_contract_test_sources,
@@ -298,6 +299,11 @@ precise_test_sources = {
             "poo_method_combination_test",
             "small",
             "//:t/poo-method-combination-test.ss",
+        ),
+        (
+            "poo_method_combination_module_test",
+            "small",
+            "//:t/poo-method-combination-module-test.ss",
         ),
         (
             "poo_method_combination_observation_test",
@@ -468,6 +474,7 @@ test_suite(
         ":observability_native_type_contract_test",
         ":poo_method_combination_contract_test",
         ":poo_method_combination_io_test",
+        ":poo_method_combination_module_test",
         ":poo_method_combination_next_test",
         ":poo_method_combination_observation_test",
         ":poo_method_combination_performance_test",

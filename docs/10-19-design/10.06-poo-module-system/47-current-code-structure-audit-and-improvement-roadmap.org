@@ -27,7 +27,7 @@ The current codebase already has a useful layered shape:
    =src/modules/session/policy.ss= owns policy predicates, constructors, accessors, durable policy attachment, tool grants, policy checks, and final alist projections.
 
 6. Loop engine runtime module.
-   =src/module-system/loop-engine-runtime.ss= owns runtime envelopes, manifests, receipts, capability lookup, memory/compression policy projection, context enrichment, and loop-engine intent collection.
+   =src/modules/loop-engine/runtime.ss= owns runtime envelopes, manifests, receipts, capability lookup, memory/compression policy projection, context enrichment, and loop-engine intent collection.
 
 7. User-interface scenarios and tests.
    =user-interface/custom/my-module/cases/loop-engine.ss= shows a real POO-native loop-engine profile with sandbox, runtime, memory, compression, lineage, selector, resource, and capability policies. =user-interface/custom/my-module/cases/session-policy.ss= shows real session policy use across tool grants, model, prompt, resource, and agent execution. Tests such as =t/user-interface-custom-loop-engine-runtime-manifest-test.ss=, =t/user-interface-custom-loop-engine-memory-policy-test.ss=, and =t/session-policy-contract-test.ss= are the scenario-level acceptance surfaces.
@@ -59,9 +59,9 @@ The target architecture is a small set of stable owners with clear responsibilit
 | =src/modules/session/policy-syntax.ss= | Session policy family generation | Internal macro only |
 | =src/modules/session/policy.ss= | Public policy constructors/checks/projections | Stable POO-native policy functions |
 | =src/module-system/runtime-projection-syntax.ss= | Runtime receipt/manifest projection generation | Internal macro only |
-| =src/module-system/loop-engine-runtime-receipts.ss= | Generated and hand-owned receipt functions | Internal ABI/report helpers |
-| =src/module-system/loop-engine-runtime-intent.ss= | Functional loop intent enrichment pipeline | Internal pure pipeline helpers |
-| =src/module-system/loop-engine-runtime.ss= | Orchestrates runtime intent, receipts, and projections | Existing compatibility owner during migration |
+| =src/modules/loop-engine/runtime-receipts.ss= | Generated and hand-owned receipt functions | Internal ABI/report helpers |
+| =src/modules/loop-engine/runtime-intent.ss= | Functional loop intent enrichment pipeline | Internal pure pipeline helpers |
+| =src/modules/loop-engine/runtime.ss= | Orchestrates runtime intent, receipts, and projections | Existing compatibility owner during migration |
 | =src/module-system/init-syntax.ss= | Public =use-module= syntax | User-facing module entry |
 | =user-interface/*= | Real scenario examples for users and agents | Public examples |
 | =t/*= | Owner and scenario gates | Verification contract |
@@ -134,7 +134,7 @@ Purpose: make receipt/manifest payloads generated from named contract declaratio
 Deliverables:
 - New =src/module-system/runtime-projection-syntax.ss=.
 - Generated lineage, selector, resource-dispatch, capability, memory, and compression receipt projections.
-- A future =src/module-system/loop-engine-runtime-receipts.ss= owner once projection generation is stable.
+- A future =src/modules/loop-engine/runtime-receipts.ss= owner once projection generation is stable.
 - Runtime command manifest and discovery consistency checks.
 
 Acceptance gates:
@@ -151,7 +151,7 @@ Completion condition:
 Purpose: split loop enrichment into pure functional steps while keeping heavy execution outside Scheme.
 
 Deliverables:
-- Future =src/module-system/loop-engine-runtime-intent.ss=.
+- Future =src/modules/loop-engine/runtime-intent.ss=.
 - Named pipeline steps:
   - base intent creation;
   - sandbox profile resolution;

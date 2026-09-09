@@ -14,7 +14,7 @@
         :poo-flow/src/module-system/workflow-cicd-config
         :poo-flow/src/module-system/workflow-cicd-pipeline-run-config
         :poo-flow/src/module-system/session-core-config
-        :poo-flow/src/module-system/loop-engine-config
+        "../modules/loop-engine/config.ss"
         :poo-flow/src/module-system/presentation-config-support
         :poo-flow/src/module-system/presentation-config-loop-engine
         :poo-flow/src/module-system/presentation-config-workflow-cicd)

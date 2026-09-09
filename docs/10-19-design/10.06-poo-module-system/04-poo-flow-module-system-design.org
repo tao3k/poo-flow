@@ -56,6 +56,31 @@ Every module is made from four layers:
 3. Plugin factors.
 4. Fixtures and scenarios.
 
+Module identity follows Doom's qualified key shape =(:category . module)=.
+=:core=, =:flow=, =:session=, =:loop=, and =:sandbox= are peer categories; there
+is no second =base/core/extension= tier layered over them. Load depth and module
+dependencies express ordering, while profiles independently select defaults.
+
+The ownership split is also explicit: =src/module-system/= is the source-neutral
+loader mechanism, =src/modules/init.ss= declares the collection maintained by
+this repository, and downstream/user-contributed module roots use the same
+hygienic =poo-flow-modules!= syntax through =poo-flow!=. The maintained list does
+not repeat roots or phase filenames: =src/modules/<module>/config.ss= is the
+canonical entrypoint and imports its owned factors.
+
+=src/modules/init.ss= is the only Scheme file permitted directly under
+=src/modules/=. Every concrete maintained module owns a directory and exposes
+at least =config.ss= plus =interface.ss=. A module adds =types.ss=,
+=objects.ss=, =funcs.ss=, and =plugins/*= when those roles exist; =config.ss=
+orders the factors and =interface.ss= defines the public POO-native surface.
+The Loader derives =src/modules/<module>/config.ss= from the hygienic qualified
+declaration. Missing required entrypoints therefore fail at source loading or
+build expansion instead of being repaired by duplicate profile metadata.
+
+Default flags and module bundles have exactly one owner: the module's own
+=config.ss=. Kernel and user profiles compose those exports; they do not copy
+the flags into a second Loader declaration.
+
 Doom Emacs is the right reference shape here.  Its strength is not that users
 can override the core.  Its strength is that core implementation, feature
 implementation, and macro implementation have clear jobs:

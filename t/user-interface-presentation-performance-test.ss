@@ -19,7 +19,7 @@
                  pooFlowUserConfig)
         (only-in :poo-flow/src/module-system/presentation-config
                  pooFlowUserConfigPresentation)
-        (only-in :poo-flow/src/module-system/loop-engine-runtime
+        (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
         (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
                  poo-flow-custom-my-module-loop-engine-case))

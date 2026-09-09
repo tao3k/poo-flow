@@ -5,11 +5,13 @@
 (import (only-in :clan/poo/object .ref object<-alist)
         :poo-flow/src/module-system/base
         :poo-flow/src/module-system/projection-syntax
-        (only-in :poo-flow/src/modules/workflow/cicd-core
+        (only-in :poo-flow/src/module-system/source
+                 poo-flow-standard-library-source)
+        (only-in "../workflow/cicd-core.ss"
                  poo-flow-cicd-alist-ref
                  poo-flow-cicd-symbol-member?)
-        :poo-flow/src/modules/funflow/config-prototypes
-        :poo-flow/src/modules/workflow/cicd)
+        "config-prototypes.ss"
+        "../workflow/cicd.ss")
 
 (export poo-flow-funflow-cicd-default-payload
         +poo-flow-funflow-workflow-agreement-contract+
@@ -49,6 +51,7 @@
         poo-flow-funflow-workflow-ref?
         poo-flow-funflow-workflow-agreement
         poo-flow-funflow-pipeline-runtime-command-manifests
+        poo-flow-funflow-method-combination-module-ref
         poo-flow-funflow-module-bundles
         poo-upstream-flow-funflow-module-bundles)
 
@@ -67,6 +70,11 @@
     (release +manual-gate)
     (webhook +server)
     (runtime +manifest-handoff)))
+
+;;; Funflow references the shared core module through module-system source data;
+;;; it does not import or re-export the core module's private kernel factors.
+(def poo-flow-funflow-method-combination-module-ref
+  (poo-flow-standard-library-source 'poo-method-combination))
 
 ;;; Workflow agreement is Funflow-owned vocabulary. Loop engines can reference
 ;;; these refs, but the validity of a Funflow workflow stays with this module.

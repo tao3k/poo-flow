@@ -6,7 +6,7 @@ The maintained kernel module implementations are upstream-owned under
 =src/modules=:
 
 - =src/modules/funflow/config.ss= owns =(flow funflow +functional +dag +typed-receipts +runtime-manifest)=.
-- =src/modules/loop-governor/config.ss= owns =(loop governor +strategy +policy)=.
+- =src/modules/governor/config.ss= owns =(loop governor +strategy +policy)=.
 - =src/modules/nono-sandbox/config.ss= owns =(sandbox nono-sandbox +nono +doctor)=.
 - =src/modules/cubeSandbox/config.ss= owns =(sandbox cubeSandbox +cube +doctor)=.
 

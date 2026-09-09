@@ -8,15 +8,11 @@
                  pooFlowUserProfile
                  pooFlowUserProfileSet
                  poo-flow-user-profile-modules)
-        (only-in :poo-flow/src/module-system/profiles/kernel-bundles
-                 poo-flow-funflow-module-bundles
-                 poo-flow-session-core-module-bundles
-                 poo-flow-loop-governor-module-bundles
-                 poo-flow-docker-sandbox-module-bundles
-                 poo-flow-nono-sandbox-module-bundles
-                 poo-flow-cubeSandbox-module-bundles))
+        (only-in "kernel-bundles.ss"
+                 poo-flow-kernel-module-bundles))
 
-(export poo-flow-kernel-profile-module-bundles
+(export poo-flow-kernel-module-bundles
+        poo-flow-kernel-profile-module-bundles
         poo-flow-kernel-profile
         poo-flow-kernel-profile-set
         poo-flow-kernel-profile-modules)
@@ -24,13 +20,7 @@
 ;;; Kernel profile bundles are loaded through profile composition.
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def poo-flow-kernel-profile-module-bundles
-  (append
-   poo-flow-funflow-module-bundles
-   poo-flow-session-core-module-bundles
-   poo-flow-loop-governor-module-bundles
-   poo-flow-nono-sandbox-module-bundles
-   poo-flow-cubeSandbox-module-bundles
-   poo-flow-docker-sandbox-module-bundles))
+  poo-flow-kernel-module-bundles)
 
 ;;; The kernel profile is inspectable user-profile data, not descriptor activation.
 ;; : (-> Unit PooUserProfile)

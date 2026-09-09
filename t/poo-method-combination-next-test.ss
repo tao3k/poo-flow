@@ -2,7 +2,7 @@
 ;;; Whole invocation semantics, beyond descriptor and applicability checks.
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :clan/poo/object .o .ref .cc)
-        "../src/research/poo-method-combination/interface.ss")
+        "../src/modules/poo-method-combination/interface.ss")
 (export poo-method-combination-next-test)
 (def g (poo-combination-generic 'invocation 'invocation/plan required: 1 rest?: #f))
 (def root (poo-method-root g))
@@ -15,7 +15,7 @@
     (poo-method-bundle around: (method 'around around) before: (method 'before before)
                        primary: (method 'primary primary) after: (method 'after after))))
 (def poo-method-combination-next-test
-  (test-suite "research: complete effective invocation scenarios"
+  (test-suite "module: complete effective invocation scenarios"
     (test-case "primary shadow skips inherited primary, but not auxiliary methods"
       (let (events '())
         (def (record x) (set! events (append events (list x))))

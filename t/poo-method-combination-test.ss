@@ -1,9 +1,12 @@
 ;;; -*- Gerbil -*-
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :clan/poo/object .o .ref .mix .cc)
-        "../src/research/poo-method-combination/interface.ss")
+        "../src/modules/poo-method-combination/interface.ss")
 (export poo-method-combination-test)
-(def generic (poo-combination-generic 'research/render 'research/render-plan))
+(def generic
+  (poo-combination-generic
+   'poo-method-combination/render
+   'poo-method-combination/render-plan))
 (def root (poo-method-root generic))
 (def (failure-code? code)
   (lambda (e) (and (poo-combination-failure? e) (eq? (.ref e 'code) code))))
@@ -11,7 +14,7 @@
 (def leaf (poo-method-prototype root generic
             (poo-method-bundle primary: (poo-combination-method 'value return-value))))
 (def poo-method-combination-test
-  (test-suite "research: POO native C3 standard method combination"
+  (test-suite "module: POO native C3 standard method combination"
     (test-case "native diamond order, reverse after, shared ancestor once, no result cache"
       (let (trace '())
         (def (record value) (set! trace (append trace (list value))))
@@ -81,7 +84,12 @@
          (poo-method-bundle around: (poo-combination-method 'stop stop))) 0)
        (failure-code? 'no-primary-method))
       (check-exception
-       (poo-combination-call (poo-combination-generic 'another 'research/render-plan) leaf 0)
+       (poo-combination-call
+        (poo-combination-generic
+         'another
+         'poo-method-combination/render-plan)
+        leaf
+        0)
        (failure-code? 'generic-slot-collision)))
     (test-case "multiple next calls retain lexical original arguments"
       (def (twice frame receiver value)

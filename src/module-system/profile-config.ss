@@ -6,7 +6,7 @@
         :poo-flow/src/module-system/sandbox-profile-catalog
         :poo-flow/src/module-system/sandbox-backend-capability-catalog
         :poo-flow/src/module-system/workflow-cicd-config
-        :poo-flow/src/module-system/loop-engine-config
+        "../modules/loop-engine/config.ss"
         :poo-flow/src/module-system/presentation
         :poo-flow/src/module-system/profile-core
         :poo-flow/src/module-system/profile-gate
@@ -17,7 +17,7 @@
         (import: :poo-flow/src/module-system/sandbox-profile-catalog)
         (import: :poo-flow/src/module-system/sandbox-backend-capability-catalog)
         (import: :poo-flow/src/module-system/workflow-cicd-config)
-        (import: :poo-flow/src/module-system/loop-engine-config)
+        (import: "../modules/loop-engine/config.ss")
         (import: :poo-flow/src/module-system/presentation)
         poo-flow-user-profile-kind
         poo-flow-user-profile-set-kind

@@ -49,7 +49,7 @@
                                 (= (wire-field row 'expected) (metric row 'combination 'checksum))
                                 (= (wire-field row 'expected) (metric row 'functional 'checksum)))) rows))
       (error "Incomplete or inconsistent performance trials" key-value))
-    (.o kind: 'poo-combination/performance-summary schema: 'v1 producer: 'poo-flow/research
+    (.o kind: 'poo-combination/performance-summary schema: 'v1 producer: 'poo-flow/modules/poo-method-combination
         key: key-value iterations: iterations-value trials: (length rows)
         combination-ms: combination-value functional-ms: functional-value
         combination-gc-ms: gc-value combination-allocated-bytes: allocation-value

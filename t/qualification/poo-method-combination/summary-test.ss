@@ -23,7 +23,7 @@
         (inspect path))
       (when (file-exists? path) (delete-file path)))))
 (def combination-summary-test
-  (test-suite "research: native qualification statistics"
+  (test-suite "module: native qualification statistics"
     (test-case "summary is computed from repeated compatible trials"
       (with-trial-file (list (trial-wire 0 2) (trial-wire 1 4))
         (lambda (path)

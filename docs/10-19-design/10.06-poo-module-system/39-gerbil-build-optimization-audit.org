@@ -309,7 +309,7 @@ The next optimization owner was the loop-engine capability receipt. The earlier 
 2. generated runtime receipts use fixed =defstruct= values and struct accessors;
 3. manifest, JSON, Marlin handoff, and test summaries receive an explicit bounded =receipt->alist= projection.
 
-This landed in =src/module-system/loop-engine-runtime.ss= as =loop-engine-capability-receipt=. Presentation keeps the generated receipt as a struct, while runtime handoff and manifest requests call =loop-engine-capability-receipt->alist= once at the boundary.
+This landed in =src/modules/loop-engine/runtime.ss= as =loop-engine-capability-receipt=. Presentation keeps the generated receipt as a struct, while runtime handoff and manifest requests call =loop-engine-capability-receipt->alist= once at the boundary.
 
 The user-interface performance gate now checks the representation contract directly:
 - =t/user-interface-presentation-performance-test.ss= asserts presentation capability receipts are =loop-engine-capability-receipt?= values.

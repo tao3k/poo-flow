@@ -53,15 +53,6 @@
 (def (poo-flow-user-module-bundles->modules bundles)
   (apply append bundles))
 
-(defrules poo-flow-custom-module-bundles ()
-  ((_ (name path feature ...) ...)
-   (list
-    (list
-     (poo-flow-user-module-selection 'custom
-                                     'name
-                                     '(feature ...)))
-    ...)))
-
 (def poo-flow-default-user-setting-keys
   '(surface profile flow-mode loop-strategy sandbox-policy sandbox-backends mode-lock))
 
@@ -141,7 +132,8 @@
 
 ;; : (-> Unit [[PooUserModuleSelection]])
 (def test-poo-flow-user-custom-module-bundles
-  (poo-flow-custom-module-bundles
+  (poo-flow-modules!
+   :custom
    (my-module "./custom/my-module" +private +doctor)))
 
 ;; : (-> Unit PooUserProfile)

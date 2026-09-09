@@ -3,7 +3,10 @@
 ;;; Invariant: this owner is data-only; it never imports loaders, resolvers, or POO graphs.
 
 (import (only-in :std/sugar filter)
-        :poo-flow/src/module-system/source)
+        :poo-flow/src/module-system/source
+        (only-in :poo-flow/src/module-system/base
+                 poo-flow-user-module-selection-key)
+        "../modules/init.ss")
 
 (export poo-flow-module-tree-entrypoint
         poo-flow-module-tree-source
@@ -73,16 +76,15 @@
 ;; : Path
 (def poo-flow-src-modules-root "src/modules")
 
-;;; Boundary: each entry names module-tree entrypoints that exist under src/modules.
+;;; The maintained declaration lists module keys only. The loader applies the
+;;; canonical config.ss entrypoint convention instead of repeating paths.
 ;; : [(Path Symbol...)]
 (def poo-flow-src-module-tree-entrypoints
-  '(("agent-sandbox" config)
-    ("cubeSandbox" objects config)
-    ("sandbox-core" objects)
-    ("funflow" config)
-    ("loop-governor" config)
-    ("nono-sandbox" objects config)
-    ("workflow" flows)))
+  (map (lambda (bundle)
+         (let* ((selection (car bundle))
+                (key (poo-flow-user-module-selection-key selection)))
+           (cons (symbol->string (cdr key)) '(config))))
+       poo-flow-maintained-module-bundles))
 
 ;;; Boundary: module-system source refs are internal package owners, not
 ;;; user-interface modules. They stay explicit so the loader never scans src.
@@ -106,11 +108,12 @@
    (poo-flow-module-system-source 'root-profile "root-profile.ss")
    (poo-flow-module-system-source 'declaration-case "declaration-case.ss")))
 
-;;; Boundary: category names are registry-owned because module trees, developer
-;;; object trees, and user trees all pass through the same naming constraints.
+;;; Boundary: category names are registry vocabulary. They are keyword markers
+;;; in declarations, while module names occur inside rows, so equal spellings do
+;;; not collide in a qualified (:category . module) key.
 ;; : [Symbol]
 (def poo-flow-module-category-names
-  '(modules flow loop sandbox custom))
+  '(core flow session loop sandbox custom))
 
 ;;; Boundary: module registry member predicate is the policy-visible edge for
 ;;; module-system behavior, keeping validation, lookup, or projection
@@ -133,9 +136,8 @@
 
 ;; : (-> (Path Symbol...) Boolean)
 (def (poo-flow-module-tree-entrypoint-name-conflict? entrypoint-spec)
-  (poo-flow-module-registry-member?
-   (poo-flow-module-tree-entrypoint-module-name entrypoint-spec)
-   poo-flow-module-category-names))
+  ;; Retained for compatibility: qualified category/module keys cannot collide.
+  (begin entrypoint-spec #f))
 
 ;;; Conflict receipts are data so doctors can report naming drift without
 ;;; forcing source loading or descriptor realization.

@@ -150,15 +150,15 @@ Poo-flow target result:
   invocation shape.
 - Process-backed commands may use the stdout protocol: print one
   =poo-flow.runtime-response.v1= s-expression and let Scheme normalize it.
-- Docker-specific declarations belong to =src/modules/docker.ss=.
+- Docker-specific declarations belong to =src/modules/docker/config.ss=.
 - CAS/store lifecycle interpretation belongs to a store/CAS extension or Rust
   runtime, not to =src/core/runner.ss=.
 - Core receipts may carry generic =adapter-result= evidence: task, kind,
   adapter operation, status, request id, and artifact handle.
 
 Poo-flow precursor landed:
-- =src/modules/docker.ss= owns =docker-task-family-descriptor=.
-- =src/modules/docker.ss= owns =docker-flow= and =make-docker-task=.
+- =src/modules/docker/config.ss= owns =docker-task-family-descriptor=.
+- =src/modules/docker/config.ss= owns =docker-flow= and =make-docker-task=.
 - The extension installs its own registry, strategy capability, and adapter
   capability instead of changing core defaults.
 - Docker request data carries image, command, args, volume bindings, and output

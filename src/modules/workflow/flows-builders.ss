@@ -4,7 +4,7 @@
 
 (import :poo-flow/src/core/api
         :poo-flow/src/core/projection-syntax
-        :poo-flow/src/modules/docker
+        :poo-flow/src/modules/docker/config
         :poo-flow/src/workflow/store)
 
 (export make-docker-store-run-config

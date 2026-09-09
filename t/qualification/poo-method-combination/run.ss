@@ -9,7 +9,7 @@
         :poo-flow/t/poo-method-combination-performance-test
         :poo-flow/t/observability-framework-test
         :poo-flow/t/gerbil-poo-debug-admission-test
-        :poo-flow/t/scenarios/research/poo-method-combination/performance
+        :poo-flow/t/scenarios/poo-method-combination/performance
         "artifacts.ss")
 (def artifact-count (verify-combination-artifacts!))
 (def dependency-snapshot (combination-dependency-snapshot))
@@ -49,7 +49,7 @@
    (newline))
  trials)
 (verify-combination-dependencies! dependency-snapshot)
-(write (list 'qualification-complete 'schema 'v2 'producer 'poo-flow/research
+(write (list 'qualification-complete 'schema 'v2 'producer 'poo-flow/modules/poo-method-combination
              'artifact-count artifact-count 'suites (length suites) 'tests-passed #t
              'performance-trials (length trials)))
 (newline)
