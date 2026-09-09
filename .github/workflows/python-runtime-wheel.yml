@@ -67,7 +67,7 @@ jobs:
           jq -e --arg head "$GITHUB_SHA" '
             .schema == "poo-flow.ci.scheme-projection-handoff.v1" and
             .producerJob == "native-linux" and
-            .compileOwner == "//scheme:compile" and
+            .compileOwner == "//gerbil:compile" and
             .currentHeadSha == $head and
             .status == 0 and
             .withinBudget == true and

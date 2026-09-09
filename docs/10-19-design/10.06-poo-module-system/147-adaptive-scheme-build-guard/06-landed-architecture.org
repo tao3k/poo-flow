@@ -32,7 +32,7 @@ flowchart LR
 - =gerbil-bazel= owns toolchain selection, Darwin/Linux environment projection,
   sandboxing, cache keys, adaptive resource admission, process-tree
   observation, termination, and canonical build receipts.
-- =scheme/BUILD.bazel= is a downstream declaration of source sets, package
+- =gerbil/BUILD.bazel= is a downstream declaration of source sets, package
   dependencies, compile targets, and test roots.  It must use the public
   =@gerbil_bazel//gerbil:defs.bzl= rules without copying their implementation.
 - =justfile= is a declarative catalog of stable Bazel targets.  It does not

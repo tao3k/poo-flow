@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Materialize Bazel-owned Gerbil project outputs into the developer workspace.
 set -euo pipefail
 
 if [[ -z "${BUILD_WORKSPACE_DIRECTORY:-}" ]]; then

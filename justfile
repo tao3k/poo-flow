@@ -2,13 +2,13 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 bazel := "bazelisk"
 devenv_exec := ".devenv/devenv-profile-exec"
-scheme_compile := "//scheme:compile"
-scheme_dev_compile := "//scheme:dev_compile"
-scheme_dev_unit_tests := "//scheme:dev_unit_tests"
-scheme_tests := "//scheme:tests"
+gerbil_compile := "//gerbil:compile"
+gerbil_dev_compile := "//gerbil:dev_compile"
+gerbil_dev_unit_tests := "//gerbil:dev_unit_tests"
+gerbil_tests := "//gerbil:tests"
 gerbil_capability_tests := "//t/qualification/gerbil-bazel:tests"
 module_system_owner_tests := "//t/qualification/module-system:owner_map_tests"
-scheme_performance_tests := "//scheme:performance_tests"
+gerbil_performance_tests := "//gerbil:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
 runtime_c_tests := "//bindings/runtime-c:runtime_c_tests"
 runtime_c_sanitizer_tests := "//bindings/runtime-c:runtime_c_sanitizer_tests"
@@ -17,7 +17,7 @@ bundle_v1_library := "//bindings/runtime-c/bundle-v1:bundle_v1"
 bundle_v1_tests := "//bindings/runtime-c/bundle-v1:bundle_v1_tests"
 gerbil_toolchain_type := "@gerbil_bazel//gerbil:toolchain_type"
 python_runtime_dir := "packages/python-runtime"
-python_runtime_test_environment := "//scheme:python_runtime_test_environment"
+python_runtime_test_environment := "//gerbil:python_runtime_test_environment"
 composition_lifecycle_tests := "tests/unit/test_composition_lifecycle_arrival.py tests/unit/test_composition_lifecycle_benchmark.py tests/unit/test_composition_lifecycle_workload.py"
 cedar_workspace := "bindings/cedar-gerbil/Cargo.toml"
 
@@ -34,12 +34,12 @@ query:
 # Resolve and build the canonical Scheme project through build.ss.
 [group('build')]
 build:
-    {{ bazel }} build {{ scheme_compile }}
+    {{ bazel }} build {{ gerbil_compile }}
 
 # Incrementally build the canonical Scheme project through a persistent Bazel development root.
 [group('build')]
 build-dev:
-    {{ bazel }} run {{ scheme_dev_compile }}
+    {{ bazel }} run {{ gerbil_dev_compile }}
 
 # Build the runtime-C library target.
 [group('build')]
@@ -59,12 +59,12 @@ build-cedar-runtime-host out:
 # Show the registered Gerbil implementation selected for the host platform.
 [group('build')]
 toolchain:
-    {{ bazel }} build --toolchain_resolution_debug={{ gerbil_toolchain_type }} {{ scheme_compile }}
+    {{ bazel }} build --toolchain_resolution_debug={{ gerbil_toolchain_type }} {{ gerbil_compile }}
 
 # Run the ordinary Scheme acceptance suite.
 [group('test')]
 test:
-    {{ bazel }} test --test_output=errors {{ scheme_tests }}
+    {{ bazel }} test --test_output=errors {{ gerbil_tests }}
 
 # Validate the shared Gerbil toolchain and dependency-install capabilities.
 [group('test')]
@@ -85,7 +85,7 @@ test-module-system-ownership:
 # Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
 [group('test')]
 test-dev:
-    {{ bazel }} run {{ scheme_dev_unit_tests }}
+    {{ bazel }} run {{ gerbil_dev_unit_tests }}
 
 # Run the ordinary runtime-C acceptance suite.
 [group('test')]
@@ -125,7 +125,7 @@ test-runtime-c-leaks:
 # Run the explicit performance gate, which is intentionally outside test.
 [group('test')]
 test-performance:
-    {{ bazel }} test --test_output=errors {{ scheme_performance_tests }}
+    {{ bazel }} test --test_output=errors {{ gerbil_performance_tests }}
 
 # Run the maintained query, build, and ordinary-test convergence gate.
 [group('check')]

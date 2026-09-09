@@ -15,7 +15,7 @@
         poo-flow-gerbil-poo-api-closed?)
 
 (def +poo-flow-gerbil-poo-provider-label+
-  "//scheme:gerbil_poo_package")
+  "//gerbil:gerbil_poo_package")
 
 (def +poo-flow-gerbil-poo-resolution-receipt-label+
   "@gerbil_poo_sources//:source_resolution_receipt")

@@ -34,7 +34,7 @@ gerbil_project_test(
     name = "owner_contract_test",
     size = "small",
     srcs = "//:scheme_build_sources",
-    project = "//scheme:compile",
+    project = "//gerbil:compile",
     source_root_marker = "//:scheme_source_root_marker",
     tags = ["exclusive"],
     tests = [

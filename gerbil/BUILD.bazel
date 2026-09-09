@@ -11,6 +11,7 @@ load(
     "gerbil_project_projection",
 )
 
+# Gerbil package, toolchain, and qualification targets.
 package(default_visibility = ["//visibility:public"])
 
 gerbil_project_compile(

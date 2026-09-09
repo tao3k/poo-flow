@@ -101,7 +101,7 @@ poo_flow_bundle_v1 = rule(
         "bundle_id": attr.string(mandatory = True),
         "descriptor_out": attr.output(mandatory = True),
         "project": attr.label(
-            default = Label("//scheme:runtime_wasm_generator_compile"),
+            default = Label("//gerbil:runtime_wasm_generator_compile"),
             providers = [GerbilProjectInfo],
         ),
         "src": attr.label(

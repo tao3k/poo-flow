@@ -1,16 +1,16 @@
 ;;; -*- Gerbil -*-
-;;; Run: ./.devenv/devenv-profile-exec gxi examples/observability-admission-demo.ss
+;;; Run: ./.devenv/devenv-profile-exec gxi t/scenarios/observability-admission-demo.ss
 ;;; A synthetic real Module error; no runtime resources or secrets are involved.
 (import (only-in :clan/poo/object .cc .ref)
-        (only-in "../src/module-system/observability/interface.ss"
+        (only-in "../../src/module-system/observability/interface.ss"
                  poo-flow-observation-identity
                  poo-flow-observation-context
                  poo-flow-observation-provenance
                  poo-flow-observe-contract-admission
                  poo-flow-observation-explain)
-        (only-in "../src/module-system/observability/debug.ss"
+        (only-in "../../src/module-system/observability/debug.ss"
                  poo-flow-observation-debug)
-        (only-in "../src/module-system/semantic-module/objects.ss"
+        (only-in "../../src/module-system/semantic-module/objects.ss"
                  SemanticModuleContract
                  poo-flow-semantic-identity
                  poo-flow-semantic-module))

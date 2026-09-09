@@ -350,7 +350,7 @@ jobs:
 
       - name: Build declared Gerbil dependency projects
         timeout-minutes: ${{ matrix.dependency-timeout-minutes }}
-        run: bazel build //scheme:dependency_packages
+        run: bazel build //gerbil:dependency_packages
 
       - name: Validate shared Gerbil provider
         run: bazel test --test_output=errors //t/qualification/gerbil-bazel:tests
@@ -374,12 +374,12 @@ jobs:
           bazel build \
             --action_env=POO_FLOW_BUILD_TOTAL_TIMEOUT_SECONDS="$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
             --profile="$profile" \
-            //scheme:compile
+            //gerbil:compile
           build_status=$?
           set -e
 
           elapsed_seconds=$((SECONDS - start_seconds))
-          scheme_receipt="bazel-bin/scheme/compile.receipt.json"
+          gerbil_receipt="bazel-bin/gerbil/compile.receipt.json"
           jq -n \
             --arg schema "poo-flow.ci.bazel-phase-observation.v1" \
             --arg phase "scheme-compile" \
@@ -387,7 +387,7 @@ jobs:
             --argjson status "$build_status" \
             --argjson elapsedSeconds "$elapsed_seconds" \
             --argjson runawayTimeoutSeconds "$COMPILE_RUNAWAY_TIMEOUT_SECONDS" \
-            --argjson schemeReceiptAvailable "$([[ -f "$scheme_receipt" ]] && printf true || printf false)" \
+            --argjson schemeReceiptAvailable "$([[ -f "$gerbil_receipt" ]] && printf true || printf false)" \
             '{schema: $schema, phase: $phase, runner: $runner, status: $status,
               elapsedSeconds: $elapsedSeconds,
               runawayTimeoutSeconds: $runawayTimeoutSeconds,
@@ -407,8 +407,8 @@ jobs:
           path: |
             ${{ steps.scheme-compile.outputs.ci-receipt }}
             ${{ steps.scheme-compile.outputs.profile }}
-            bazel-bin/scheme/compile.receipt.json
-            bazel-bin/scheme/compile.log
+            bazel-bin/gerbil/compile.receipt.json
+            bazel-bin/gerbil/compile.log
           if-no-files-found: warn
           retention-days: 7
 
@@ -417,7 +417,7 @@ jobs:
         id: wheel-scheme-projection
         timeout-minutes: 2
         env:
-          PROJECTION_ARTIFACT: bazel-bin/scheme/wheel_smoke.ss.poo-flow-projection.sexp
+          PROJECTION_ARTIFACT: bazel-bin/gerbil/wheel_smoke.ss.poo-flow-projection.sexp
           PROJECTION_BUDGET_SECONDS: 120
         shell: bash
         run: |
@@ -431,7 +431,7 @@ jobs:
           set +e
           bazel build \
             --profile="$profile" \
-            //scheme:wheel_smoke_projection_artifact
+            //gerbil:wheel_smoke_projection_artifact
           build_status=$?
           set -e
 
@@ -446,8 +446,8 @@ jobs:
           jq -n \
             --arg schema "poo-flow.ci.scheme-projection-handoff.v1" \
           --arg producerJob "native-linux" \
-          --arg action "//scheme:wheel_smoke_projection_artifact" \
-          --arg compileOwner "//scheme:compile" \
+          --arg action "//gerbil:wheel_smoke_projection_artifact" \
+          --arg compileOwner "//gerbil:compile" \
           --arg currentHeadSha "$GITHUB_SHA" \
           --arg artifactDigest "$artifact_digest" \
             --argjson status "$build_status" \
@@ -529,7 +529,7 @@ jobs:
           start_seconds=$SECONDS
 
           targets=(
-            //scheme:tests
+            //gerbil:tests
             //t/qualification/gerbil-bazel:tests
             //t/qualification/module-system:owner_map_tests
             //bindings/runtime-c:runtime_c_tests
