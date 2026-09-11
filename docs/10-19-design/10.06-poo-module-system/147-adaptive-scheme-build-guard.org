@@ -1,7 +1,25 @@
 #+title: RFC 0147 - Adaptive Scheme Build Guard and Execution Windows
 #+author: POO Flow
-#+status: Accepted, Implemented, Full-Cold Validated, and Performance-Amended
+#+status: Historical downstream design; current guard owned by ASP Gerbil Scheme
 #+language: en
+
+* Current ownership
+
+The downstream guard implementation described by the earlier sections of this
+RFC has been removed.  POO Flow does not own build-process sampling, heap/RSS
+classification, compiler-job observation, worker admission, or abnormal-build
+termination.  Its root =build.ss= declares the package with the public ASP
+Gerbil Scheme =PackageSpec= API and composes the public native-build memory
+guard around =clan/building#init-build-environment!=.  The upstream guard owns
+its versioned
+=asp-gerbil-scheme.build-trace.v1= and
+=asp-gerbil-scheme.memory-anomaly-guard.v1= receipts.
+
+The module tree below is retained as design and acceptance history.  The
+normative downstream boundary is the Build API cutover in module 17 and the
+upstream-only trace/guard convergence in module 20.  Historical local names,
+environment variables, thresholds, and receipts must not be reintroduced as
+POO Flow APIs.
 
 * Module map
 
@@ -18,7 +36,7 @@ flowchart LR
   I --> H[Historical acceptance]
   I --> C[Current Build API cutover]
   I --> W[Native warm invalidation]
-  I --> M[Reactive memory anomaly guard]
+  I --> M[Upstream trace and memory guard]
 #+end_src
 
 ** Policy and architecture

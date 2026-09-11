@@ -1,6 +1,8 @@
 (import :std/test
-        :asp-gerbil-scheme/src/build-api/framework
-        :asp-gerbil-scheme/src/testing/framework)
+        (only-in :asp-gerbil-scheme/build-api
+                 define-build-options
+                 define-build-commands
+                 define-project-test))
 
 (def +cli-support-command-events+ '())
 

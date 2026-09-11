@@ -3,6 +3,16 @@ This note records the failure mode exposed while adding the user-interface
 profile proof gate. It is implementation documentation, not an implementation
 plan.
 
+** Current status
+
+This document is historical.  POO Flow no longer implements the build
+watchdog, process-tree sampler, RSS policy, compiler supervisor, or guard
+receipt described below.  Those responsibilities are owned by the pinned ASP
+Gerbil Scheme Building Framework and are entered through the public native
+build memory-guard composition in =build.ss=.  The old =POO_FLOW_BUILD_*= variables and local guard
+schemas are not supported interfaces.  Current ownership and evidence limits
+are recorded in RFC 0147 modules 17 and 20.
+
 ** 10.06.58.10 What Went Wrong
 The existing observability surface could describe module-system observations,
 but it did not prevent the build from continuing through a dangerous Gerbil

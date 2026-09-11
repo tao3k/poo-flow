@@ -1,6 +1,40 @@
 #+title: Reactive Memory Anomaly Guard
 #+language: en
 
+* 2026-09-11 downstream convergence
+
+POO Flow owns no memory guard implementation.  The root package build and POO
+CLOS qualification invoke
+=call-with-framework-native-build-memory-anomaly-guard= from the pinned public
+ASP Gerbil Scheme Build API around downstream-owned work.  They must not copy
+its process-table reader, Gambit heap sampler, rolling-window classifier,
+worker policy, trace emitter, or termination behavior.
+
+The upstream evidence has two distinct schemas:
+
+- =asp-gerbil-scheme.build-trace.v1= identifies phases as build-lease,
+  std-make admission, native compiler activity, or Scheme
+  expansion/dependency analysis, with elapsed time, RSS, CPU, and active
+  compiler-job observations;
+- =asp-gerbil-scheme.memory-anomaly-guard.v1= records the terminal outcome,
+  measurement source, peak process-tree memory, maximum window growth and
+  rate, compiler activity, observer coverage, and pre/post-native timing.
+
+These receipts can establish a hard-limit breach, a rapid-growth anomaly, a
+degraded observer, or whether native compiler activity was observed.  They do
+not currently prove object retention, assign a peak to a Scheme or native heap
+owner, or prove a generic "heap takeover" condition: that would require a
+phase-correlated structured sample series or another upstream-owned ownership
+signal.  POO Flow therefore must not invent a downstream verdict from the
+current aggregate fields.  If that diagnosis becomes required, the receipt is
+extended and validated upstream first; POO Flow then consumes the new field or
+projection without adding another sampler.
+
+The obsolete local =process-memory-guard-complete.ss= fixture was removed with
+this convergence.  Product runtime memory policies and module-system debug
+observations remain separate POO Flow semantics; they do not supervise builds
+and are not replacements for the upstream guard.
+
 * Corrected responsibility
 
 The memory guard protects a normal parallel build from abnormal memory growth.
@@ -15,7 +49,7 @@ build starts.  A stable resident set below the hard boundary is normal even
 when its absolute value is relatively high.
 
 The public ASP Building Framework owns the reusable Scheme implementation.
-POO Flow declares its package/profile and consumes that implementation;
+POO Flow declares its PackageSpec and consumes that implementation;
 =std/make= remains the only compiler scheduler.
 
 #+begin_src mermaid
@@ -71,7 +105,7 @@ downstream scheduler or compile windows.
 
 #+begin_src mermaid
 flowchart LR
-  Profile[Package profile] --> Cores[GERBIL_BUILD_CORES or host CPUs]
+  Package[PackageSpec] --> Cores[GERBIL_BUILD_CORES or host CPUs]
   Cores --> Make[Single upstream std/make scheduler]
   Make --> Jobs[Full normal parallel compiler jobs]
   Jobs --> Samples[Scheme process-tree RSS samples]

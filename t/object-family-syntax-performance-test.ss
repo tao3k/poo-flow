@@ -7,11 +7,11 @@
                  run-tests!
                  test-case
                  test-suite)
-        (only-in :asp-gerbil-scheme/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  )
-        (only-in :asp-gerbil-scheme/src/testing/performance
+        (only-in :asp-gerbil-scheme/build-api
                  testing-benchmark-run/result)
         (only-in :clan/poo/object .ref object<-alist)
         (only-in :poo-flow/t/support/poo-performance-object-scenarios

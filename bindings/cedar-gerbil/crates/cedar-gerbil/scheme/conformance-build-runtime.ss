@@ -26,7 +26,7 @@
     (make build-spec
           srcdir: root libdir: library
           build-deps: (path-expand "build-deps" output-dir)
-          optimize: #t parallelize: #f)
+          optimize: #t)
     (gerbil-rs-stage-program
      (path-expand "conformance.ss" +cedar-build-directory+)
      output-dir)))

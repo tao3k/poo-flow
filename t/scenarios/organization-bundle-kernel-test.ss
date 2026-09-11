@@ -1,5 +1,5 @@
 (import :clan/poo/object :std/test
-        :asp-gerbil-scheme/src/testing/memory-profile
+        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel)
 

@@ -1,5 +1,5 @@
 (import :std/test
-        :asp-gerbil-scheme/src/testing/memory-profile
+        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/qualification/runtime-symbol-manifest)
 

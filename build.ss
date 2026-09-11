@@ -2,17 +2,18 @@
 ;;; -*- Gerbil -*-
 ;;; Native POO Flow package build declaration.
 
-(import :std/make
-        (only-in :clan/building remove-build-file)
+(import (only-in :clan/building
+                 all-gerbil-modules
+                 init-build-environment!
+                 remove-build-file)
         (only-in :std/misc/path path-expand)
         (only-in :std/srfi/1 fold)
         (only-in :std/srfi/13 string-prefix?)
-        (only-in :asp-gerbil-scheme/src/package-build-api
+        (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype
-                 asp-gerbil-scheme-development-builder-profile
                  asp-gerbil-scheme-package-modules
-                 asp-gerbil-scheme-package-profiled-build-spec))
+                 call-with-framework-native-build-memory-anomaly-guard))
 
 (def +interface-only-modules+
   '("src/module-system/object-family/syntax.ss"
@@ -75,11 +76,15 @@
 
 (asp-gerbil-scheme-package-spec!
  (poo-flow-library-package-spec
-  @ asp-gerbil-scheme-library-package-prototype)
+ @ asp-gerbil-scheme-library-package-prototype)
  (spec spec)
- (role 'library)
- (profile asp-gerbil-scheme-development-builder-profile)
- (spec-projector asp-gerbil-scheme-package-profiled-build-spec)
+ (modules (all-gerbil-modules))
  (native-spec-projector poo-flow-native-spec))
 
-(make (spec) srcdir: (current-directory))
+(call-with-framework-native-build-memory-anomaly-guard
+ "poo-flow package build"
+ (lambda ()
+   (init-build-environment!
+    name: "poo-flow"
+    deps: '("clan" "clan/poo" "asp-gerbil-scheme")
+    spec: spec)))

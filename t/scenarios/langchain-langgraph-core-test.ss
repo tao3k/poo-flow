@@ -3,7 +3,7 @@
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :std/test check-equal? run-tests! test-case test-suite)
-        :asp-gerbil-scheme/src/testing/memory-profile
+        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/graph/types
         :poo-flow/src/graph/algorithms
         :poo-flow/src/graph/control-analysis

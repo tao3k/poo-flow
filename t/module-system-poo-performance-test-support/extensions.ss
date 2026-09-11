@@ -5,7 +5,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :asp-gerbil-scheme/src/benchmark/gate
+        (only-in :asp-gerbil-scheme/build-api
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
