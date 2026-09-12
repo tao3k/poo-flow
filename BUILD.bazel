@@ -30,7 +30,7 @@ filegroup(
     name = "compile_performance_budget_sources",
     srcs = [
         "gerbil.pkg",
-        "src/build-api/project-compile-performance-budget.ss",
+        "t/support/compile-performance-budget.ss",
         "src/utilities/functional.ss",
     ],
 )

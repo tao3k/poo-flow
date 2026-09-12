@@ -3,7 +3,6 @@
 ;;; Native POO Flow package build declaration.
 
 (import (only-in :clan/building
-                 all-gerbil-modules
                  remove-build-file)
         (only-in :std/build-script defbuild-script)
         (only-in :std/misc/path path-expand)
@@ -34,8 +33,6 @@
 
 (def (runtime-module? module)
   (and (string-prefix? "src/" module)
-       (not (string-prefix? "src/build-api/" module))
-       (not (string-prefix? "src/cli-support/" module))
        (not (string-prefix? "src/testing/" module))))
 
 (def (remove-build-files specs modules)
@@ -77,7 +74,6 @@
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec spec)
- (modules (all-gerbil-modules))
  (native-spec-projector poo-flow-native-spec))
 
 ;; This macro must remain at top level: it installs the package script's

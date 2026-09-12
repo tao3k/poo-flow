@@ -7,7 +7,7 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/src/build-api/project-compile-performance-budget)
+        :poo-flow/t/support/compile-performance-budget)
 
 (export build-api-project-compile-performance-budget-test)
 

@@ -1,4 +1,5 @@
 ;;; -*- Gerbil -*-
+;;; Test-owned relative performance contract; no build execution or scheduling.
 ;;; Boundary: compare two same-host Scheme compile sample sets.
 ;;; Invariant: absolute wall-clock limits are not performance budgets.  The
 ;;; budget is a relative policy over comparable, identity-scoped medians.

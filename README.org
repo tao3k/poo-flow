@@ -205,6 +205,18 @@ asp org lint docs/10-19-design/10.06-poo-module-system/60-pooc3-policy-compositi
 gxpkg build -g
 #+end_src
 
+The package =build.ss= declares its native projection through
+=:asp-gerbil-scheme/build-api=. ASP Scheme owns shared build and testing
+machinery; POO Flow retains its domain modules, test cases, and performance
+contracts. There is no package-local CLI support or testing framework wrapper.
+
+Run focused tests and Scheme scripts through the native package environment:
+
+#+begin_src shell
+gxpkg env gxtest t/functional-flow-kernel-test.ss
+gxpkg env gxi t/fixtures/cli-run-smoke.ss 3
+#+end_src
+
 Do not run =gxpkg uninstall= inside this workspace. If package identity or tag state drifts, use =gxpkg clean=, =gxpkg update <package>=, or =gxpkg deps --install= and report any remaining tag conflict.
 
 * Docs
