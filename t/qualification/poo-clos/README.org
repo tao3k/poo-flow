@@ -1,0 +1,42 @@
+#+title: POO-native CLOS qualification ownership
+
+This directory owns the executable ANSI CLOS acceptance evidence.  The
+=mop-extended= row is deliberately outside the ANSI denominator.
+
+| File | Responsibility |
+|------+----------------|
+| =interface.ss= | qualification component interface imported by both execution modes |
+| =clause-ledger.ss= | explicit-status semantic clauses plus the exhaustive 41-entry CLHS 7.7 operator manifest |
+| =clause-ledger-test.ss= | closure, uniqueness, validity and profile-separation checks |
+| =interpreted-run.ss= | source-owned interpreted suites grouped by semantic fixture |
+| =run.ss= | same-process fresh-AOT suites and terminal closure projection |
+| =artifacts.ss= | exact fresh =.o1= resolution and dependency fingerprints |
+| =qualify.ss= | fresh directory, SHA-256 snapshots, compile/run logs and terminal receipt |
+
+The qualifier declares only the CLOS runtime interface and the qualification
+component interface.  The ASP Gerbil Scheme source-closure owner resolves their
+internal import graph and dependency order.  Internal files are not duplicated
+as caller-owned module declarations.
+
+From the project root with its Gerbil environment active:
+
+#+begin_src sh
+./.devenv/devenv-profile-exec gxi -:max-heap=1G t/qualification/poo-clos/qualify.ss
+#+end_src
+
+Every interpreted and AOT fixture runs under the native POO heap monitor.
+The launcher also applies a =1G= Gambit heap ceiling to test interpreters, a
+=4G= ceiling to the compiler, a bounded elapsed-time guard, and the shared ASP
+Gerbil Scheme process-tree memory anomaly guard.  Begin/end observations name
+the fixture and retain heap/live growth.  The source gate scans CLOS-owned
+directories for lazy self-slot initializers before runtime realization.
+
+Qualification is fail-closed while any required dictionary operator is =open=;
+no receipt is emitted merely because implemented suites pass.  Closed operator
+rows must resolve to a source-owned executable suite, while open rows carry an
+explicit gap identifier.
+
+An eventual accepted receipt only admits semantic conformance.  It records
+=performance-claim? #f= because no user-approved workload and SLA exists.
+SHA-256 fingerprints establish content integrity for comparison, not signer
+identity or authenticity.

@@ -37,4 +37,16 @@
         (check-equal? (get-output-string port) "")
         (check-equal? (.slot? before 'explanation) #f)
         (check-equal? (.slot? (poo-flow-observation-summary rejected) 'explanation) #f)
-        (check-equal? (.slot? (car results) 'candidate) #f)))))
+        (check-equal? (.slot? (car results) 'candidate) #f)))
+    (test-case "Observation performance rows retain semantics and consumer identity"
+      (let (rows (combination-observation-performance-matrix 3 2))
+        (check-equal? (length rows) 2)
+        (for-each
+         (lambda (row)
+           (check-equal? (.ref row 'from) 'observation)
+           (check-equal? (.ref row 'qualifiers) 'detailed)
+           (check-equal? (.ref row 'expected) 6)
+           (check-equal? (.ref row 'plan-reused?) #t)
+           (check-equal? (.ref (.ref row 'combination) 'checksum) 6)
+           (check-equal? (.ref (.ref row 'functional) 'checksum) 6))
+         rows)))))

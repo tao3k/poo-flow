@@ -21,12 +21,15 @@ From the project root:
 #+begin_src sh
 ./.devenv/devenv-profile-exec gxtest t/poo-method-combination-module-test.ss t/poo-method-combination-test.ss t/poo-method-combination-contract-test.ss t/poo-method-combination-next-test.ss t/poo-method-combination-observation-test.ss t/poo-method-combination-performance-test.ss t/observability-framework-test.ss t/gerbil-poo-debug-admission-test.ss
 ./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/qualify.ss
+bazelisk test //gerbil:poo_method_combination_module_test //gerbil:poo_method_combination_test //gerbil:poo_method_combination_contract_test //gerbil:poo_method_combination_next_test //gerbil:poo_method_combination_observation_test //gerbil:poo_method_combination_performance_test //gerbil:poo_method_combination_summary_test //gerbil:poo_method_combination_io_test
 #+end_src
 
 The first command is the source-level regression surface. The second is the
 Scheme-owned qualification transaction: native preflight, fresh compilation,
 same-process artifact admission, compiled suites, repeated measurements, and a
-terminal receipt.
+terminal receipt. The third is the focused Bazel package-graph gate for the six
+semantic suites and the two qualification-support suites. It is not the full
+=//gerbil= package test surface.
 
 * Acceptance contract
 
@@ -40,6 +43,8 @@ following:
 - the test process resolves the generated artifacts from the isolated library;
 - source and artifact fingerprints remain stable through terminal settlement;
 - dependency fingerprints are checked before and after execution;
+- compiler and interpreter logs record exact argv before execution and explicit
+  zero status after success, without serializing the inherited environment;
 - repeated measurement rows retain the expected checksum and method-plan
   identity and remain within the v1 smoke budget;
 - the receipt is written only after all prior obligations succeed.
@@ -60,6 +65,8 @@ signer identity or artifact authenticity.
   =prototype-mismatch= reason.
 - The Observation renderer is opt-in, preserves default behavior, reuses its
   method plan, returns fresh summaries, and performs no output side effect.
+- The default matrix contains 80 generic-chain trials plus five trials of that
+  real Observation consumer against its equivalent pure functional renderer.
 - Warm-path checks compare against the v1 functional-chain comparator and
   preserve exact results; the bounded threshold is a smoke guard, not a
   production latency claim.
@@ -70,5 +77,6 @@ Generated run directories are deliberately ignored. Reviewers should inspect
 the terminal receipt and its bound files from the invocation being evaluated,
 not copy their UUIDs, counts, hashes, or timing samples into this document.
 Interrupted runs, empty suites, source-only checks, and stale receipts are not
-acceptance. Full-package build, installed dependency provenance, and production
-performance admission remain separate gates.
+acceptance. Passing the eight declared Bazel labels admits only this focused
+package slice. Full-package release, installed dependency provenance, and
+production performance admission remain separate gates.

@@ -3,7 +3,8 @@
 (import (only-in :gerbil/gambit current-time time->seconds f64vector-ref f64vector-length)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric)
-        "../../../src/module-system/poo-method-combination/interface.ss")
+        "../../../src/module-system/poo-method-combination/interface.ss"
+        (only-in "observation.ss" combination-observation-performance-matrix))
 (export combination-performance-scenario CombinationPerformanceInput
         combination-performance-matrix)
 (def CombinationPerformanceInput
@@ -127,10 +128,12 @@
   (unless (and (exact-integer? iterations) (> iterations 0)
                (exact-integer? repetitions) (>= repetitions 2))
     (error "Invalid performance matrix bounds"))
-  (apply append
-    (map (lambda (depth)
-           (apply append
-             (map (lambda (mode)
-                    (apply append
-                      (map (lambda (qualifiers) (matrix-case depth mode qualifiers iterations repetitions))
-                           '(primary all)))) '(instance type)))) '(0 1 4 8))))
+  (append
+   (apply append
+     (map (lambda (depth)
+            (apply append
+              (map (lambda (mode)
+                     (apply append
+                       (map (lambda (qualifiers) (matrix-case depth mode qualifiers iterations repetitions))
+                            '(primary all)))) '(instance type)))) '(0 1 4 8)))
+   (combination-observation-performance-matrix iterations repetitions)))

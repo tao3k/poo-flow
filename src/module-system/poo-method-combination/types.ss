@@ -5,7 +5,7 @@
         (only-in :clan/poo/mop define-type Type. element?)
         (only-in :std/sugar cut))
 (export CombinationGeneric CombinationMethod CombinationBundle CombinationFailure
-        CombinationPlan CombinationFrame combination-instance?)
+        CombinationPlan CombinationFrame combination-instance? combination-frame?)
 
 ;;; One owner-local alias marks where POO Flow specializes the upstream type
 ;;; metaobject rather than presenting each descriptor as a dependency adapter.
@@ -117,13 +117,18 @@
 (def (qualifier? value) (if (memq value '(around before primary after)) #t #f))
 
 ;; : (-> Object Boolean)
-(def (combination-frame-element? candidate)
+(def (combination-frame? candidate)
   (and (combination-instance? (.ref CombinationFrame 'proto) candidate)
-       (fields? candidate '(plan arguments next qualifier method)
-         (list combination-plan-instance? invocation-arguments? next-method? qualifier?
-               (cut element? CombinationMethod <>)))))
+       ;; This predicate is the CombinationFrame Type predicate itself. Keep
+       ;; the hot public boundary exact while avoiding a transient predicate
+       ;; list and a second generic Type dispatch for the method field.
+       (field-valid? candidate 'plan combination-plan-instance?)
+       (field-valid? candidate 'arguments invocation-arguments?)
+       (field-valid? candidate 'next next-method?)
+       (field-valid? candidate 'qualifier qualifier?)
+       (field-valid? candidate 'method combination-method-element?)))
 
 ;;; Boundary: a frame captures one plan, argument set, continuation, qualifier, and method.
 (define-type (CombinationFrame @ CombinationType.)
   proto: (combination-prototype CombinationFrame 'poo-combination/frame)
-  .element?: combination-frame-element?)
+  .element?: combination-frame?)

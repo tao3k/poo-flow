@@ -2,10 +2,12 @@
 ;;; Boundary: effective method execution consumes cached plans.
 ;;; Invariant: invocation results are never cached.
 (import (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop element?) "types.ss" "objects.ss")
+        "types.ss" "objects.ss")
 (export poo-combination-call poo-combination-bind poo-call-next-method poo-next-method?)
 (def (require-frame frame)
-  (unless (element? CombinationFrame frame) (combination-fail 'invalid-invocation-frame)) frame)
+  ;; combination-frame? is exactly CombinationFrame's native Type predicate;
+  ;; calling it directly avoids redispatching through element? on every next.
+  (unless (combination-frame? frame) (combination-fail 'invalid-invocation-frame)) frame)
 (def (frame-fail frame code)
   (combination-fail code generic: (.ref (.ref (.ref frame 'plan) 'generic) 'identity)
                     qualifier: (.ref frame 'qualifier) method: (.ref (.ref frame 'method) 'identity)))

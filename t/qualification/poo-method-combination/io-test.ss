@@ -3,7 +3,7 @@
         (only-in :std/misc/uuid random-uuid uuid->string)
         (only-in :clan/poo/object .o .ref)
         (only-in "qualify.ss" fingerprint unchanged! successful-check-count
-                 stream-process-log write-module-manifest!))
+                 stream-process-log write-process-record! write-module-manifest!))
 (export combination-qualification-io-test)
 (def (with-owned-file inspect)
   (let* ((directory ".data/qualification/poo-method-combination/io-fixtures")
@@ -26,6 +26,13 @@
         (check-equal? console-text log-text)
         (check-equal? (successful-check-count "... 0 checks OK") 0)
         (check-equal? (successful-check-count "... All tests OK") 0)))
+    (test-case "process records preserve exact argv and status without environment data"
+      (let (log (open-output-string))
+        (write-process-record! log 'process-begin '((argv "/usr/bin/gxc" "-O" "example.ss")))
+        (write-process-record! log 'process-exit '((status . 0)))
+        (check-equal?
+         (get-output-string log)
+         "(process-begin (argv \"/usr/bin/gxc\" \"-O\" \"example.ss\"))\n(process-exit (status . 0))\n")))
     (test-case "module manifest is nonempty and file-local, with exact main and implementation identities"
       (with-owned-file
         (lambda (path)

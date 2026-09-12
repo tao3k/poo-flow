@@ -117,6 +117,7 @@ arity and applicability are checked even at the end of a primary chain.
 #+begin_src sh
 ./.devenv/devenv-profile-exec gxtest t/poo-method-combination-module-test.ss t/poo-method-combination-test.ss t/poo-method-combination-contract-test.ss t/poo-method-combination-next-test.ss t/poo-method-combination-observation-test.ss t/poo-method-combination-performance-test.ss
 ./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/qualify.ss
+bazelisk test //gerbil:poo_method_combination_module_test //gerbil:poo_method_combination_test //gerbil:poo_method_combination_contract_test //gerbil:poo_method_combination_next_test //gerbil:poo_method_combination_observation_test //gerbil:poo_method_combination_performance_test //gerbil:poo_method_combination_summary_test //gerbil:poo_method_combination_io_test
 #+end_src
 
 The source suites and Scheme-native qualification entrypoint exercise the same
@@ -154,21 +155,30 @@ short circuit, auxiliary exceptions, replacement argument scope, repeated
 around next, recursive invocations, type-based receiver replacement and
 last-primary replacement validation.
 
-=performance.ss= owns a real timing scenario: depth 8, 1000 invocations, a
-predeclared 10000 ms warm smoke budget, exact checksum and native plan identity.
-Construction, first demand, warm calls and ordinary native generic calls are
-measured separately. The wide smoke budget is not a latency SLA or evidence of
-parity with =.defgeneric=. No test parses timing text to make its decision;
-tests consume a native POO receipt.
+=performance.ss= owns a real timing matrix. Its generic cases span depths
+=0, 1, 4, 8=, both owner modes and primary/all-qualifier forms. The first
+Observation consumer adds five trials of its detailed renderer against the
+equivalent pure functional summary/explanation path. Together the default
+matrix contains 85 trials, alternating measurement order and preserving exact
+checksums and native plan identity. Construction, first demand, warm calls and
+ordinary native generic calls are measured separately. The predeclared 10000 ms
+warm smoke budget is not a latency SLA or evidence of parity with =.defgeneric=.
+No test parses timing text to make its decision; tests consume native POO
+receipts. The accepted frame-predicate specialization reduced allocations in
+the measured consumer and depth-8 cases, but noisy wall samples establish no
+latency or production-SLA claim.
 
 The AOT qualification script compiles all six owned modules plus focused tests
 into a fresh temporary library, verifies nonempty =.ssi= and =.o1= outputs, and
-runs package-qualified compiled imports. Source hashes must remain unchanged
-through compilation. No installed dependency cache or source checkout is
-rewritten. Its Darwin child environment follows =devenv.nix='s Homebrew native
+runs package-qualified compiled imports. Each compiler/interpreter log starts
+with an exact argv record and ends with an explicit zero-status record; inherited
+environment data is not serialized. Source hashes must remain unchanged through
+compilation. No installed dependency cache or source checkout is rewritten.
+Its Darwin child environment follows =devenv.nix='s Homebrew native
 toolchain boundary; the first raw-profile attempt failed with mixed Nix SDK
-=FILE= errors and is not an AOT pass. Full-package and Bazel qualification are
-separate from this own-library closure.
+=FILE= errors and is not an AOT pass. The eight focused =//gerbil:= targets above
+are the package-graph gate for this slice. They do not constitute full-package
+release acceptance and remain separate evidence from the own-library closure.
 
 * Limits and upstream proposal gate
 This is single-receiver instance/type-prototype selection. It does not implement

@@ -12,7 +12,8 @@
         (only-in :std/srfi/13 string-prefix? string-suffix?))
 (export main combination-qualification-input combination-qualify!
         ;; Test-owned primitives; these are not exported by the maintained module.
-        fingerprint unchanged! successful-check-count stream-process-log write-module-manifest!)
+        fingerprint unchanged! successful-check-count stream-process-log
+        write-process-record! write-module-manifest!)
 
 (def combination-qualification-input
   (.o kind: 'poo-combination/qualification-input schema: 'v1
@@ -20,6 +21,7 @@
       modules:
       '("src/module-system/types.ss"
         "src/module-system/interface.ss"
+        "src/module-system/object-family/syntax.ss"
         "src/module-system/projection/syntax.ss"
         "src/module-system/loader/source.ss"
         "src/module-system/declaration/flags.ss"
@@ -42,8 +44,8 @@
         "src/module-system/poo-method-combination/interface.ss"
         "src/module-system/poo-method-combination/plugins/observation.ss"
         "src/module-system/poo-method-combination/config.ss"
-        "t/scenarios/poo-method-combination/performance.ss"
         "t/scenarios/poo-method-combination/observation.ss"
+        "t/scenarios/poo-method-combination/performance.ss"
         "t/poo-method-combination-test.ss"
         "t/poo-method-combination-contract-test.ss"
         "t/poo-method-combination-next-test.ss"
@@ -116,17 +118,25 @@
         (display line log) (newline log) (force-output log)
         (displayln line) (force-output)
         (loop (+ checks (successful-check-count line))))))))
+(def (write-process-record! log kind fields)
+  (write (cons kind fields) log)
+  (newline log)
+  (force-output log))
 (def (execute! argv environment log-path)
   ;; Preserve output while streaming; errors leave a failed log, never success.
   (call-with-output-file log-path
     (lambda (log)
-      (run-process argv environment: environment stdin-redirection: #f stderr-redirection: #t
-        check-status:
-        (lambda (status _settings)
-          ;; The standard ProcessError includes the entire environment. Keep
-          ;; exact status and argv, but never expose the inherited environment.
-          (unless (zero? status) (error "Qualification subprocess failed" status argv log-path)))
-        coprocess: (lambda (process) (stream-process-log process log))))))
+      (write-process-record! log 'process-begin (list (cons 'argv argv)))
+      (let (result
+            (run-process argv environment: environment stdin-redirection: #f stderr-redirection: #t
+              check-status:
+              (lambda (status _settings)
+                ;; The standard ProcessError includes the entire environment. Keep
+                ;; exact status and argv, but never expose the inherited environment.
+                (unless (zero? status) (error "Qualification subprocess failed" status argv log-path)))
+              coprocess: (lambda (process) (stream-process-log process log))))
+        (write-process-record! log 'process-exit '((status . 0)))
+        result))))
 (def (write-module-manifest! manifest library artifacts)
   (call-with-output-file manifest
     (lambda (port)
