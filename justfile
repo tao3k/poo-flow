@@ -4,11 +4,8 @@ bazel := "bazelisk"
 devenv_exec := ".devenv/devenv-profile-exec"
 gerbil_compile := "//gerbil:compile"
 gerbil_dev_compile := "//gerbil:dev_compile"
-gerbil_dev_unit_tests := "//gerbil:dev_unit_tests"
-gerbil_tests := "//gerbil:tests"
 gerbil_capability_tests := "//t/qualification/gerbil-bazel:tests"
 module_system_owner_tests := "//t/qualification/module-system:owner_map_tests"
-gerbil_performance_tests := "//gerbil:performance_tests"
 runtime_c_library := "//bindings/runtime-c:runtime_c_library"
 runtime_c_tests := "//bindings/runtime-c:runtime_c_tests"
 runtime_c_sanitizer_tests := "//bindings/runtime-c:runtime_c_sanitizer_tests"
@@ -100,11 +97,6 @@ test-external-bazel-module:
 test-module-system-ownership:
     {{ bazel }} test --test_output=errors {{ module_system_owner_tests }}
 
-# Incrementally build and run the Scheme unit suite through the persistent Bazel development root.
-[group('test')]
-test-dev:
-    {{ bazel }} run {{ gerbil_dev_unit_tests }}
-
 # Run the ordinary runtime-C acceptance suite.
 [group('test')]
 test-runtime-c:
@@ -139,11 +131,6 @@ test-runtime-c-sanitizers:
 [group('test')]
 test-runtime-c-leaks:
     {{ bazel }} test --test_output=errors {{ runtime_c_leak_test }}
-
-# Run the explicit performance gate, which is intentionally outside test.
-[group('test')]
-test-performance:
-    {{ bazel }} test --test_output=errors {{ gerbil_performance_tests }}
 
 # Run the native Scheme build and ordinary-test convergence gate.
 [group('check')]

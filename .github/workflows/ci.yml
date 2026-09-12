@@ -529,7 +529,7 @@ jobs:
           start_seconds=$SECONDS
 
           targets=(
-            //gerbil:tests
+            //gerbil:unit_tests
             //t/qualification/gerbil-bazel:tests
             //t/qualification/module-system:owner_map_tests
             //bindings/runtime-c:runtime_c_tests
