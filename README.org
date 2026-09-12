@@ -205,8 +205,10 @@ asp org lint docs/10-19-design/10.06-poo-module-system/60-pooc3-policy-compositi
 gxpkg build -g
 #+end_src
 
-The package =build.ss= declares its native projection through
-=:asp-gerbil-scheme/build-api=. ASP Scheme owns shared build and testing
+The package =build.ss= declares native targets through the =exclude-modules=
+and =extra-spec= POO slots of =:asp-gerbil-scheme/build-api=. The upstream
+catalog owns discovery; there is no downstream =native-spec-projector= or
+second source scan. ASP Scheme owns shared build and testing
 machinery; POO Flow retains its domain modules, test cases, and performance
 contracts. There is no package-local CLI support or testing framework wrapper.
 
