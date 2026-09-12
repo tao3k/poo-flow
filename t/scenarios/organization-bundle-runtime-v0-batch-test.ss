@@ -1,12 +1,10 @@
 (import :clan/poo/object :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/contract/organization-bundle-runtime-v0-batch)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (id high low) (poo-flow-runtime-v0-compact-id high low))
 
-(def batch-contract-tests
+(def organization-bundle-runtime-v0-batch-test
   (test-suite
    "runtime v0 hot/bulk typed projection"
    (test-case "event projects fixed 96-byte native fields"
@@ -36,5 +34,3 @@
                 (poo-flow-runtime-v0-identity-entry 'full-b (id 9 9))))
          #f))
       #t))))
-
-(run-tests! batch-contract-tests)

@@ -1,9 +1,7 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/evidence/batched-merkle)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (leaf index)
   (poo-flow-batched-evidence-leaf
@@ -55,5 +53,3 @@
         (check (equal? (.ref canonical 'digest) (.ref reordered 'digest)) => #f)
         (check (equal? (.ref canonical 'digest) (.ref omitted 'digest)) => #f)
         (check (poo-flow-batched-merkle-proof-verify? (leaf 99) proof) => #f)))))
-
-(run-tests! batched-merkle-evidence-test)

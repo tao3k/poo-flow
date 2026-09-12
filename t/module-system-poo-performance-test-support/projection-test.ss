@@ -11,10 +11,10 @@
         (only-in :clan/poo/object
                  .get
                  .o)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance)
+        "../support/poo-performance-fixtures"
+        "../support/poo-performance")
 
-(export module-system-poo-performance-projection-test)
+(export projection-test)
 
 ;; : (-> Alist Unit)
 (def (module-system-poo-performance-projection-display-receipt receipt)
@@ -83,6 +83,6 @@
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestSuite
-(def module-system-poo-performance-projection-test
+(def projection-test
   (test-suite "poo-flow module system POO projection performance"
     module-system-poo-performance-fixed-slot-projection-case))

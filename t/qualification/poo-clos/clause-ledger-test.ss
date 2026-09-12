@@ -11,7 +11,7 @@
                  poo-flow-poo-slot-authoring-diagnostics)
         "clause-ledger.ss")
 
-(export poo-clos-clause-ledger-test)
+(export clause-ledger-test)
 
 (def (unique-symbols? values)
   (= (length values)
@@ -36,7 +36,7 @@
   (poo-flow-poo-slot-authoring-diagnostics
    (poo-flow-poo-slot-authoring-file-observations 'poo-clos path)))
 
-(def poo-clos-clause-ledger-test
+(def clause-ledger-test
   (test-suite "POO-native CLOS executable clause ledger"
     (test-case "semantic clause rows remain explicit and structurally valid"
       (let (required (poo-clos-required-ansi-rows))

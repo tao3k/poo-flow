@@ -8,7 +8,6 @@
                  check-equal?
                  check-not-equal?
                  check-output
-                 run-tests!
                  test-case
         test-suite)
         (only-in :clan/poo/object .ref)

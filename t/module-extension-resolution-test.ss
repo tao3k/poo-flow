@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/module-system/extension/interface)
@@ -78,5 +77,3 @@
           (poo-flow-module-extension-result-root result)
           'needs)
          '(test lint))))))
-
-(run-tests! module-extension-resolution-test)

@@ -188,11 +188,7 @@
 
 ;; : (-> Unit PooUserConfig)
 (def test-poo-flow-user-config
-  (.o kind: "poo-flow.modules.user-config.v1"
-      user-modules: (apply append
-                           (.ref test-poo-flow-user-profile
-                                 'profile-selection-bundles))
-      user-settings: (.ref test-poo-flow-user-profile 'user-settings)))
+  (pooFlowUserConfigFromProfile test-poo-flow-user-profile))
 
 ;; : (-> UserInterfaceEntry Alist MaybeValue)
 (def (alist-value key entries)

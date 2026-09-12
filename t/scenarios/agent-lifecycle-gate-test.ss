@@ -6,10 +6,8 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/modules/session/lifecycle-gate)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (export agent-lifecycle-gate-test)
 

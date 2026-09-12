@@ -10,7 +10,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -54,7 +53,9 @@
   (let (entry (and (list? entries) (assoc key entries)))
     (if entry (cdr entry) #f)))
 
-(run-tests!
+(export agent-sandbox-profile-test)
+
+(def agent-sandbox-profile-test
  (test-suite "agent sandbox profile descriptors"
    (test-case "builds backend profiles for nono and CubeSandbox"
      (let ((nono (make-nono-agent-sandbox-profile 'always-further/opencode))

@@ -1,11 +1,9 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/core/object-syntax
         :poo-flow/src/qualification/capability-prototypes)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def tcb
   (poo-flow-assurance-tcb
@@ -190,5 +188,3 @@
         (check (map (lambda (entry) (cdr (assq 'code entry)))
                     (.ref receipt 'diagnostics))
                => '(incomplete-claim invalid-gate-result))))))
-
-(run-tests! release-assurance-manifest-test)

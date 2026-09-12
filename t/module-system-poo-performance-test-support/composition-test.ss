@@ -7,9 +7,9 @@
                  test-suite)
         (only-in :asp-gerbil-scheme/build-api
                  benchmark-receipt-pass?)
-        :poo-flow/t/module-system-poo-performance-test-support/composition-scenarios)
+        "./composition-scenarios")
 
-(export module-system-poo-performance-composition-test)
+(export composition-test)
 
 ;; : (-> (-> Integer Alist) Pair)
 (def (poo-performance-composition-run-observed-gate gate)
@@ -142,7 +142,7 @@
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestSuite
-(def module-system-poo-performance-composition-test
+(def composition-test
   (test-suite "poo-flow composition macro POO performance"
     module-system-poo-performance-profile-declaration-case
     module-system-poo-performance-profiles-bulk-case

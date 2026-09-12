@@ -8,7 +8,6 @@
                  check-false
                  check-not-equal?
                  check-output
-                 run-tests!
                  test-case
                  test-error
                  test-suite)

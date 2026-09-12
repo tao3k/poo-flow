@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/memory-core/durable/policy
@@ -110,5 +109,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'invalid-causal-refs)
          #t)))))
-
-(run-tests! durable-runtime-store-operation-test)

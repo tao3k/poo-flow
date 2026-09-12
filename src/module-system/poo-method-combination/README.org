@@ -115,16 +115,13 @@ arity and applicability are checked even at the end of a primary chain.
 
 * Executable scenarios
 #+begin_src sh
-./.devenv/devenv-profile-exec gxtest t/poo-method-combination-module-test.ss t/poo-method-combination-test.ss t/poo-method-combination-contract-test.ss t/poo-method-combination-next-test.ss t/poo-method-combination-observation-test.ss t/poo-method-combination-performance-test.ss
-./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/qualify.ss
-bazelisk test //gerbil:poo_method_combination_module_test //gerbil:poo_method_combination_test //gerbil:poo_method_combination_contract_test //gerbil:poo_method_combination_next_test //gerbil:poo_method_combination_observation_test //gerbil:poo_method_combination_performance_test //gerbil:poo_method_combination_summary_test //gerbil:poo_method_combination_io_test
+gerbil build
+just test
 #+end_src
 
-The source suites and Scheme-native qualification entrypoint exercise the same
-v1 contract from different execution boundaries. AOT admission is checked
-independently; source and compiled observations are never added together as if
-they were disjoint evidence. Exact runtime receipts stay in the ignored
-qualification directory. Git retains only the stable acceptance contract in
+The native Gerbil package build and upstream test runner exercise the v1
+contract without a second qualification compiler, artifact manifest, or test
+scheduler.  Git retains the stable acceptance contract in
 [[file:QUALIFICATION.org][Qualification]].
 
 =t/poo-method-combination-test.ss= covers native diamond D/B/C/A ordering,

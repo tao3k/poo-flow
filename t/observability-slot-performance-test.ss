@@ -11,10 +11,10 @@
         (only-in :clan/poo/object .o .ref)
         (only-in :poo-flow/src/module-system/observability/debug
                  PooFlowDebugSlotPolicyContract)
-        (only-in :poo-flow/t/support/poo-performance
+        (only-in "./support/poo-performance"
                  poo-performance-fixture-policy-contract-pass?
                  poo-performance-display-receipt)
-        (only-in :poo-flow/t/support/poo-performance-fixtures
+        (only-in "./support/poo-performance-fixtures"
                  poo-performance-observability-slot-guard-fixture)
         "scenarios/performance/poo-observability-slot-guard/scenario.ss")
 (export observability-slot-performance-test)

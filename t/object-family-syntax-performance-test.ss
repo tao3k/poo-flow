@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :asp-gerbil-scheme/build-api
@@ -14,7 +13,7 @@
         (only-in :asp-gerbil-scheme/build-api
                  testing-benchmark-run/result)
         (only-in :clan/poo/object .ref object<-alist)
-        (only-in :poo-flow/t/support/poo-performance-object-scenarios
+        (only-in "./support/poo-performance-object-scenarios"
                  poo-performance-build-list)
         :poo-flow/src/module-system/object-family/syntax)
 
@@ -229,5 +228,3 @@
               (check-equal? (benchmark-receipt-pass? construction-receipt) #t)
               (check-equal? (benchmark-receipt-pass? projection-receipt) #t)
               (check-equal? (benchmark-receipt-pass? selection-receipt) #t))))))))
-
-(run-tests! object-family-syntax-performance-test)

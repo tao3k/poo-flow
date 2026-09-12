@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/modules/memory-core/durable/store-operation
@@ -56,5 +55,3 @@
                         "durable-runtime-store"
                         "operations"))
         (check-equal? (test-ref handoff-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-runtime-store-operations-test)

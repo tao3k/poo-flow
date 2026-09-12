@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -58,5 +57,3 @@
         (check-equal? (test-ref build-entry 'communication-channels)
                       '(channel/build-root channel/build-audit))
         (check-equal? (.ref registry 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-registry-test)

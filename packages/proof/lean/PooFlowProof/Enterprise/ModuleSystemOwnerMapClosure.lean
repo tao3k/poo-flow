@@ -89,11 +89,11 @@ def staleSelectorRow : OwnerMapRow where
 
 def descendantLifecycleRow : OwnerMapRow where
   identity := .parentQualification
-  sourcePath := "packages/wendao-episteme/build.ss"
+  sourcePath := "lambda-episteme/build.ss"
   sourceSymbol := "child-build"
-  testPath := "packages/wendao-episteme/test.ss"
+  testPath := "lambda-episteme/test.ss"
   testSymbol := "child-tests"
-  buildTarget := "//packages/wendao-episteme:all"
+  buildTarget := "//lambda-episteme:all"
   state := .implemented
   parentOwned := false
 

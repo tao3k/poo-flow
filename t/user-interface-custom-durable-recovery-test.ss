@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/user-interface/init-syntax)
@@ -39,5 +38,3 @@
                       '(#f #f #f #f #f #f))
         (check-equal? (test-ref row 'handoff-required) #t)
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-recovery-test)

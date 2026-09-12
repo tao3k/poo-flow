@@ -1,9 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: native POO Contracts project into type-fact proof rows.
 
-(eval '(import "./src/module-system/descriptor/contracts.ss"))
-(eval '(import "./src/type-facts/objects.ss"))
-(eval '(import :clan/poo/object :clan/poo/mop))
+(import :std/test)
 
 ;; : (-> PooFlowTypeFactsProjectionExpr PooFlowTypeFactsProjectionValue)
 (def (type-facts-projection-eval expr)
@@ -14,7 +12,15 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
-(type-facts-projection-eval
+(export type-facts-contract-projection-test)
+
+(def type-facts-contract-projection-test
+  (test-suite "type-facts-contract-projection-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/module-system/descriptor/contracts.ss"))
+      (eval '(import "./src/type-facts/objects.ss"))
+      (eval '(import :clan/poo/object :clan/poo/mop))
+      (type-facts-projection-eval
  '(begin
     (def +type-facts-fixture-name-slot+
       (poo-flow-contract-slot
@@ -75,4 +81,4 @@
                (eq? (alist-ref/default name-row 'lean-name #f) 'name)
                (eq? (alist-ref/default name-row 'source-slot #f) 'name)
                (eq? (alist-ref/default tags-row 'polarity #f) 'optional))
-    (error "object contract should project stable Lean fact contracts")))
+    (error "object contract should project stable Lean fact contracts"))))))

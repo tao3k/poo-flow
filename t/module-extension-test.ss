@@ -10,7 +10,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -394,7 +393,3 @@
     module-extension-resolution-test
     module-extension-object-inheritance-test
     module-extension-object-merge-test))
-
-(run-tests! module-extension-resolution-test
-            module-extension-object-inheritance-test
-            module-extension-object-merge-test)

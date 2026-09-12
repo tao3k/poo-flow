@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/user-interface/custom/my-module/config
@@ -48,5 +47,3 @@
                         "durable-runtime-store"
                         "negotiate"))
         (check-equal? (test-ref handoff-row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-durable-runtime-store-handoff-test)

@@ -1,0 +1,110 @@
+#+title: POO Flow contribution module layout and build ownership
+
+POO Flow documents the reusable module convention. Contribution repositories
+own domain source and declare their package identity directly through the ASP
+Gerbil Scheme PackageSpec. Native =std/make= owns source dependency analysis,
+compilation and scheduling; POO Flow does not expose a second build catalog API.
+
+The package script declares its native entry through the upstream macro:
+#+begin_src scheme
+(asp-gerbil-scheme-package-spec!
+ (my-package @ asp-gerbil-scheme-library-package-prototype)
+ (modules (all-gerbil-modules))
+ (spec spec))
+(defbuild-script (spec))
+#+end_src
+
+This invokes upstream build-core capacity initialization and native projection
+before =std/make=. Generated-module =extra-inputs:= remain available for native
+freshness checks. POO Flow adds no compiler cache or scheduler. A warm build
+must be measured; inheriting PackageSpec alone is not a speedup claim.
+
+* Module structure
+This document describes the POO Flow-owned contract for this repository.
+Each direct directory under =modules/= is an independently named module and must
+provide these five roles. Extra focused implementation files and subdirectories
+are permitted; the public entry remains =interface.ss=.
+
+| File | Responsibility | Must not own |
+|------+----------------+--------------|
+| types.ss | Predicates and source contracts | Default activation, runtime effects |
+| objects.ss | POO prototypes and default values | Configuration routing |
+| funs.ss | Pure operations over native objects | User syntax or hidden I/O |
+| config.ss | User selection to module/profile projection | Runtime execution |
+| interface.ss | Public exports | Business logic or another DSL |
+
+Dependencies flow from types through objects/functions to configuration and the
+public interface. Same-module imports reversing those layers are rejected by
+build preflight, including wrapped and relative imports. This check covers
+literal top-level import declarations; std/make remains responsible for the full
+Scheme dependency graph and compilation. Cross-module consumers use public
+interfaces; focused internal owners may import lower-level implementation units.
+Public extension is native POO derivation; do not bind type identity to a user's
+chosen profile identity string. Functions validate derived inputs at boundaries.
+When capturing local values inside =.o=, use names distinct from the emitted
+slot names (for example =status-value= for =status:=). Native slot binding can
+otherwise shadow the lexical value. Tests must read diagnostic/result slots,
+not only construct the object, to expose recursive or incorrect bindings.
+No contributor runtime, backend or implicit registration is installed by import.
+
+* Directory build
+
+The child =build.ss= declares one PackageSpec and one =defbuild-script=. Source
+discovery is the upstream =clan/building#all-gerbil-modules= value supplied to
+that PackageSpec; POO Flow performs no second scan, import-order check,
+preflight, compiler dispatch, or scenario build.
+
+
+* Qualification boundary
+
+The package-native build and =unit-tests.ss= are the executable evidence.
+Generated output enumeration and independent source-catalog receipts are not
+part of this module convention.
+
+* CLOS contracts for pure model snapshots
+=contribution/model.ss= projects existing =poo-clos= class metadata onto ordinary
+POO values. Contributors declare =poo-clos-class= and
+=poo-clos-direct-slot-definition= values in =types.ss=. CLOS owns superclass
+resolution and effective slots, including conjunction of inherited predicates.
+=objects.ss= extends =poo-flow-model-prototype= with =.o= and checks the result
+with =poo-flow-check-model=. Public algorithm boundaries use =poo-flow-model?=
+to revalidate derived overrides. An equal kind or copied class marker never
+substitutes for actual prototype ancestry.
+
+This projection is deliberately for pure snapshots. It requires all declared
+slots and does not run initforms, allocate class slots, dispatch lifecycle
+hooks, or claim to create a mutable CLOS instance. Classes for this projection
+should declare instance slots only and supply values explicitly. Features
+requiring CLOS lifecycle state use =poo-clos-make-instance= instead. No second
+class registry, slot merge algorithm, or public macro language is introduced.
+
+SDLC supplies domain classes in the independent contribution repository; this
+projection and its tests belong to POO Flow. NASA source rows remain source
+catalog data rather than being turned into lifecycle instances.
+
+
+* Large source catalogs and warm-build cost
+Native =std/make= expands source modules while determining dependencies even
+when no output needs recompilation. A large data catalog should use one shared
+POO constructor over ordinary quoted source data, instead of emitting a full
+=.o= macro declaration for every row. This preserves native objects and source
+freshness checks while bounding repeated macro expansion. NASA measurements
+identified this cost in the contribution catalog, not in PackageSpec discovery;
+no new scheduler or cache is needed to eliminate it. Source changes must still
+trigger native recompilation after this optimization.
+
+* Explicit verification boundaries
+
+=contribution/verification.ss= provides a domain-neutral host-configured adapter,
+issuance, current validity and revocation operations. A contribution supplies
+its typed request projection and snapshot function. The host supplies the actual
+verification operation and clock. Submitted POO objects cannot authorize
+themselves by adding a flag or copying a receipt's slots.
+
+Receipt issuance and revocation are explicit effects isolated in the adapter;
+contribution assessment and lifecycle transitions remain pure. Private receipt
+identity, copied snapshots, interval checks and revocation define session-local
+admission. This is not a persistent signature store or concurrent authority
+service. No NASA field or source identifier occurs in the generic mechanism.
+=t/contribution/unit/verification-test.ss= qualifies the generic boundary;
+NASA request semantics and scenario tests stay in the independent contribution.

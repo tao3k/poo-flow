@@ -22,11 +22,12 @@
   "t/scenarios/performance/poo-composition-lazy-demand/input/src/composition/incident-response.ss")
  (expectedPath .
   "t/scenarios/performance/poo-composition-lazy-demand/expected/src/composition/incident-response.ss")
- (inputShape
+ (inputTopology
   composition
   (agent pull-request model sandbox)
   (agent scheduled-audit model sandbox))
- (expectedOutcome
+ (inputShape . "two agent branches sharing POO model and sandbox objects with one demand-loaded route")
+ (expectedTopology
   composition
   (shared-object model)
   (shared-object sandbox)
@@ -34,10 +35,11 @@
   (unforced-object unused-candidate)
   (unforced-object large-library))
  (expectedOutcome . "the poo-composition-lazy-demand scenario preserves its declared semantic result under the ASP P95 gate")
- (expectedRepair
+ (repairSteps
   "reuse peer POO objects across agent branches"
   "push expensive route/image facts behind native lazy slots"
   "materialize only the requested object path until an explicit boundary")
+ (expectedRepair . "reuse peer POO objects and defer expensive slots until an explicit demand boundary")
  (expectedQualitySignals
   (selected-route . triage-fast-path)
   (shared-model . eq?)

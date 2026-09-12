@@ -1,6 +1,12 @@
 (import (only-in :clan/poo/object .ref)
         :poo-flow/src/graph/scenario-gap-intent)
 
+(import (only-in :std/test test-case test-suite))
+
+(def langgraph-scenario-gap-intent-test
+  (test-suite "LangGraph scenario gap intent"
+    (test-case "projects exact runtime and Lean facts"
+
 (def (check-equal label actual expected)
   (unless (equal? actual expected)
     (error "check failed" label actual expected)))
@@ -231,6 +237,4 @@
 (check-true 'lean-complete
             (contains-string? lean-source "GeneratedScenarioGapComplete_ok"))
 (check-true 'lean-p0
-            (contains-string? lean-source "GeneratedScenarioGapP0Count : Nat := 8"))
-
-(displayln "... All tests OK")
+            (contains-string? lean-source "GeneratedScenarioGapP0Count : Nat := 8")))))

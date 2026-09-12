@@ -5,7 +5,7 @@
         (only-in :clan/poo/object object?)
         (only-in :poo-flow/src/modules/loop-engine/runtime
                  loop-engine-capability-receipt?)
-        :poo-flow/t/support/custom-loop-engine/fixtures)
+        "./fixtures")
 
 (export check-custom-loop-agent-boundary)
 

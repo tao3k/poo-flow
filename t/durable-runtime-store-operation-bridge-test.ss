@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/memory-core/durable/policy
@@ -164,5 +163,3 @@
         (check-equal? (test-ref row 'operation-kind) 'claim-job-lease)
         (check-equal? (test-ref row 'valid?) #f)
         (check-equal? (test-ref row 'diagnostic-count) 1)))))
-
-(run-tests! durable-runtime-store-operation-bridge-test)

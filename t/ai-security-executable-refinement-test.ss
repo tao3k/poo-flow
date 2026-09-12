@@ -20,7 +20,9 @@
    '("capability:repo-write") "tool:filesystem-patch"
    '("workspace:poo-flow") "action-1" parent-root))
 
-(def ai-security-executable-refinement-tests
+(export ai-security-executable-refinement-test)
+
+(def ai-security-executable-refinement-test
   (test-suite
    "ai-security executable refinement"
    (test-case "POO engine accepts a confined action and replays it"
@@ -57,6 +59,3 @@
        (check (.ref receipt 'decision) => 'fail-closed)
        (check (not (not (member 'effect-containment
                                 (.ref receipt 'escalation-reasons)))) => #t)))))
-
-(def (main . args)
-  (run-tests! ai-security-executable-refinement-tests))

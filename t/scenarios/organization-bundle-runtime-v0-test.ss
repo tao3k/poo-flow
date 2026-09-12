@@ -1,10 +1,8 @@
 (import :clan/poo/object :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel
         :poo-flow/src/contract/organization-bundle-runtime-v0)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (runtime-v0-bundle)
   (poo-flow-organization-bundle
@@ -34,7 +32,7 @@
     (let-values (((state _) (poo-flow-organization-bundle-kernel-validate candidate)))
       state)))
 
-(def runtime-v0-tests
+(def organization-bundle-runtime-v0-test
   (test-suite
    "organization Bundle runtime v0 control packet"
    (test-case "validated Kernel projects deterministic pre-v1 packet"
@@ -55,5 +53,3 @@
                       (poo-flow-runtime-v0-control-packet candidate)
                       #f))
         #t)))))
-
-(run-tests! runtime-v0-tests)

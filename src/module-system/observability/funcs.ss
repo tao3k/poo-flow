@@ -260,7 +260,8 @@
         (list 'reason (.ref receipt 'reason))))
 
 ;;; Public policy construction remains POO-native. The defaults affect debug
-;;; observation only; they do not replace a launch-time Gambit heap ceiling.
+;;; observation; the package test entrypoint applies the independent runtime
+;;; heap profile before loading suites.
 (def (poo-flow-debug-memory-policy label-value
                                    heap-limit-bytes: heap-limit-value
                                    live-growth-limit-bytes: live-growth-limit-value

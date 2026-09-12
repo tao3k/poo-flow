@@ -192,15 +192,17 @@ explicit policy field and is disabled by default because collection changes
 the measured operation.
 
 The in-band framework cannot run before its own module has loaded.  Native test
-launchers must therefore set a Gambit =-:max-heap=...= ceiling before source
-loading.  The ASP Scheme process-tree anomaly guard remains an outer final
-defense for compiler children and pre-import failure; it is not the semantic
-diagnosis owner and does not replace phase receipts.
+programs therefore apply the selected ASP POO Testing profile to their current
+Gambit runtime before loading the suites.  No caller-owned heap command-line
+option or shell wrapper is part of the test interface.  Builds remain
+unbounded.  The ASP Scheme process-tree observer remains an outer diagnostic
+for test children and pre-import failure; it is not the semantic diagnosis
+owner and does not replace phase receipts.
 
 Do not add a shell poller or shell test wrapper as the detector.  Shell cannot
 observe POO phase identity, native contracts, or the lazy slot read that
 triggers a cycle.  Memory diagnosis remains native Scheme in this framework;
-the Gambit ceiling and existing external guard are independent final defenses.
+the runtime test profile and existing external observer are independent layers.
 
 The motivating failure was a native POO authoring cycle.  In an =.o= body,
 =policy: policy=, =before: before=, or =after: after= resolves the bare right
@@ -251,7 +253,7 @@ substitute for a full pinned build, parser qualification, or full-suite run.
 
 The original six-suite command completed on 2026-09-08 with 174 checks and exit
 code 0. After the memory slice and root-cause repairs landed, one source-first
-native =gxtest -:max-heap=1G= run passed the observability framework,
+native test run with the declarative 1 GiB POO memory profile passed the observability framework,
 module-system authoring observation, loop-engine capability and runtime
 manifest, session registry, and multi-agent session graph suites.  The runtime
 manifest case alone exercised 169 assertions.  The standalone demo produced:

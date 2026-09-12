@@ -10,14 +10,14 @@
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance-object-scenarios
-        :poo-flow/t/support/poo-performance
+        "../support/poo-performance-fixtures"
+        "../support/poo-performance-object-scenarios"
+        "../support/poo-performance"
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-validation/interface)
 
-(export module-system-poo-performance-objects-test)
+(export objects-test)
 
 ;; : (-> Alist Unit)
 (def (module-system-poo-performance-display-receipt receipt)
@@ -199,7 +199,7 @@
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestSuite
-(def module-system-poo-performance-objects-test
+(def objects-test
   (test-suite "poo-flow module system POO object performance"
     module-system-poo-performance-construction-case
     module-system-poo-performance-materialization-case

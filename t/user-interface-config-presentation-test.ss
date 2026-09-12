@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -36,7 +35,9 @@
                 (thunk)
                 #f)))
 
-(run-tests!
+(export user-interface-config-presentation-test)
+
+(def user-interface-config-presentation-test
  (test-suite "user-interface config presentation"
    (test-case "shows an independent custom-module profile fragment as user config"
      (let* ((config (pooFlowUserConfig

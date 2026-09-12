@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: shared slot schemas and Contracts are native POO Type values.
 
-(eval '(import "./src/module-system/descriptor/contracts.ss"))
-(eval '(import :clan/poo/object :clan/poo/mop))
+(import :std/test)
 
 (def (contract-schema-eval expr)
   (eval expr))
@@ -10,7 +9,14 @@
 (def (contract-schema-test-ref row key)
   (cdr (assq key row)))
 
-(contract-schema-eval
+(export contract-schema-test)
+
+(def contract-schema-test
+  (test-suite "contract-schema-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/module-system/descriptor/contracts.ss"))
+      (eval '(import :clan/poo/object :clan/poo/mop))
+      (contract-schema-eval
  '(begin
     (def +contract-schema-fixture-slot+
       (poo-flow-contract-slot
@@ -65,4 +71,4 @@
      +contract-schema-fixture-slot+
      "schema/v1"))
   "schema/v1")
- (error "native slot gate should return valid values unchanged"))
+ (error "native slot gate should return valid values unchanged")))))

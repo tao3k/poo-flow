@@ -1,11 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: loop governor and human audit expose native POO Contracts.
 
-(eval '(import "./src/loops/descriptor.ss"))
-(eval '(import "./src/loops/strategy.ss"))
-(eval '(import "./src/loops/governor.ss"))
-(eval '(import "./src/loops/human-audit.ss"))
-(eval '(import :clan/poo/mop :clan/poo/object))
+(import :std/test)
 
 (def (loop-contract-eval expr)
   (eval expr))
@@ -19,7 +15,17 @@
          (alist-ref/default slot-row 'slot #f))
        (alist-ref/default row 'slots '())))
 
-(let (node-row
+(export loop-native-type-contract-test)
+
+(def loop-native-type-contract-test
+  (test-suite "loop-native-type-contract-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/loops/descriptor.ss"))
+      (eval '(import "./src/loops/strategy.ss"))
+      (eval '(import "./src/loops/governor.ss"))
+      (eval '(import "./src/loops/human-audit.ss"))
+      (eval '(import :clan/poo/mop :clan/poo/object))
+      (let (node-row
       (loop-contract-eval '(loop-governor-node-type-contract->alist)))
   (unless (and (eq? (alist-ref/default node-row 'object-kind #f)
                     'LoopGovernorNode)
@@ -116,4 +122,4 @@
          '((mode . review-loop)) #t 'human #t 'gerbil 'human
          'marlin-agent-core '()))
       #t)))
- (error "native human audit contract should reject invalid decisions"))
+ (error "native human audit contract should reject invalid decisions")))))

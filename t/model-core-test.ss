@@ -7,7 +7,9 @@
   (let (entry (assq key row))
     (and entry (cdr entry))))
 
-(def model-core-tests
+(export model-core-test)
+
+(def model-core-test
   (test-suite "model core"
     (test-case "model specs expose POO-native accessors and projections"
       (check-equal? (poo-flow-model-spec-ref poo-flow-model-core-tool-json-model)
@@ -74,5 +76,3 @@
                      (car (poo-flow-model-selection-receipt-diagnostics receipt))
                      'reason)
                     'missing-model))))
-
-(run-tests! model-core-tests)

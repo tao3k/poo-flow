@@ -5,7 +5,6 @@
 (import (only-in :std/test
                  check-eq?
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/module-system/object-core/interface
@@ -52,7 +51,9 @@
   (check-eq? (poo-flow-sandbox-backend-capability/backend-kind capability)
              key))
 
-(run-tests!
+(export sandbox-backend-object-family-test)
+
+(def sandbox-backend-object-family-test
  (test-suite "sandbox backend object family macro contracts"
    (test-case "generates backend object identities and metadata"
      (check-equal? (poo-flow-module-object? poo-flow-nono-sandbox-object) #t)

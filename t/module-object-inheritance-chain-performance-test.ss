@@ -11,7 +11,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :std/srfi/1 fold)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/module-system/object-core/interface
                  poo-flow-module-object)
         (only-in :poo-flow/src/module-system/object-validation/interface

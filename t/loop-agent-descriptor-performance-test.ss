@@ -11,7 +11,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :std/srfi/1 fold)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor
                  loop-pattern-descriptor->contract))

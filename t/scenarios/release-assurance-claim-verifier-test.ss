@@ -1,10 +1,8 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/contract/release-assurance-manifest
         :poo-flow/src/contract/release-assurance-claim-verifier)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (evidence id owner)
   (poo-flow-assurance-evidence-reference id owner "artifact" "digest"))
@@ -95,5 +93,3 @@
               (poo-flow-release-assurance-manifest-verify-claims invalid)))
         (check (.ref unknown 'accepted?) => #f)
         (check (.ref manifest-receipt 'code) => 'invalid-manifest)))))
-
-(run-tests! release-assurance-claim-verifier-test)

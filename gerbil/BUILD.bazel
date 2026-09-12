@@ -82,71 +82,6 @@ filegroup(
 ]
 
 gerbil_project_compile(
-    name = "runtime_wasm_generator_compile",
-    srcs = ["//:runtime_wasm_generator_scheme_sources"],
-    args = ["compile"],
-    build_script = "//:runtime_wasm_generator_build_script",
-    receipt_line_prefix = "POO_FLOW_RUNTIME_WASM_GENERATOR_BUILD_RECEIPT ",
-    require_library_output = True,
-    deps = [":gerbil_poo_package"],
-)
-
-gerbil_project_compile(
-    name = "compile_performance_budget_package",
-    srcs = ["//:compile_performance_budget_sources"],
-    args = ["compile"],
-    build_script = "//:compile_performance_budget_build_script",
-    require_library_output = True,
-    deps = [":asp_gerbil_scheme_package"],
-)
-
-filegroup(
-    name = "compile_performance_budget_package_project_root",
-    srcs = [":compile_performance_budget_package"],
-    output_group = "project_root",
-)
-
-gerbil_project_test(
-    name = "compile_performance_budget_unit_test",
-    size = "small",
-    srcs = "//:compile_performance_budget_test_sources",
-    project = ":compile_performance_budget_package",
-    source_root_marker = "//:scheme_source_root_marker",
-    tests = ["//:t/build-api-project-compile-performance-budget-test.ss"],
-)
-
-gerbil_project_dev(
-    name = "runtime_wasm_generator_dev_compile",
-    args = ["compile"],
-    build_script = "//:runtime_wasm_generator_build_script",
-    tags = [
-        "local",
-        "manual",
-    ],
-    deps = [":runtime_wasm_generator_compile"],
-)
-
-sh_binary(
-    name = "runtime_wasm_generator_materialize",
-    srcs = ["materialize_gerbil_projects.sh"],
-    args = [
-        "$(locations :gerbil_utils_package)",
-        "$(locations :gerbil_poo_package)",
-        "$(locations :runtime_wasm_generator_compile)",
-    ],
-    data = [
-        ":gerbil_poo_package",
-        ":gerbil_utils_package",
-        ":runtime_wasm_generator_compile",
-        "@bazel_tools//tools/bash/runfiles",
-    ],
-    tags = [
-        "local",
-        "manual",
-    ],
-)
-
-gerbil_project_compile(
     name = "compile",
     srcs = ["//:scheme_build_sources"],
     args = ["compile"],
@@ -179,7 +114,7 @@ gerbil_project_dev(
         "local",
         "manual",
     ],
-    tests = ["//:t/unit-tests.ss"],
+    tests = ["//:unit-tests.ss"],
     deps = [":asp_gerbil_scheme_package"],
 )
 
@@ -255,7 +190,7 @@ precise_test_sources = {
         tests = [test_root],
     )
     for name, size, test_root in [
-        ("unit_tests", "medium", "//:t/unit-tests.ss"),
+        ("unit_tests", "medium", "//:unit-tests.ss"),
         (
             "protocol_person_promotion_test",
             "small",
@@ -266,7 +201,6 @@ precise_test_sources = {
             "small",
             "//:t/protocol-person-runtime-abi-test.ss",
         ),
-        ("contract_tests", "medium", "//:t/contract-tests.ss"),
         (
             "gerbil_poo_operation_admission_test",
             "small",
@@ -413,16 +347,10 @@ precise_test_sources = {
             "//:t/contract-schema-test.ss",
         ),
         (
-            "json_schema_native_contract_test",
-            "small",
-            "//:t/json-schema-native-contract-tests.ss",
-        ),
-        (
             "type_facts_native_projection_test",
             "small",
             "//:t/type-facts-contract-projection-test.ss",
         ),
-        ("performance_tests", "large", "//:t/performance-tests.ss"),
         (
             "type_contract_performance_test",
             "small",
@@ -500,7 +428,6 @@ test_suite(
     name = "tests",
     tests = [
         ":ai_security_executable_refinement_test",
-        ":compile_performance_budget_unit_test",
         ":contract_schema_test",
         ":contract_tests",
         ":gerbil_poo_debug_admission_test",

@@ -86,7 +86,7 @@
 
     (stage pull-request
       (step build
-        (run "gxpkg" "build" "-g"))
+        (run "gerbil" "build" "-g"))
       (step test
         (run "uv" "run" "pytest" "-q"))
       (edges

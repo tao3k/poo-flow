@@ -3,7 +3,7 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :std/sugar foldl)
-        :poo-flow/t/support/performance
+        "./performance"
         :poo-flow/src/user-interface/facade
         (only-in :poo-flow/src/user-interface/presentation-config
                  pooFlowUserConfigPresentation))

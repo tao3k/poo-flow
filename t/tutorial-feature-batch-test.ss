@@ -10,7 +10,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -77,7 +76,9 @@
 (def macro-makefile-tool
   (make-makefile-tool-workflow 'macro-makefile-tool))
 
-(run-tests!
+(export tutorial-feature-batch-test)
+
+(def tutorial-feature-batch-test
   (test-suite "funflow tutorial feature batch"
     (test-case "stage 11 quick reference conditional and cached increment run"
       (let* ((limited-increment

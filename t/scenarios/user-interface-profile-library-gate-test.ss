@@ -6,12 +6,10 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/module-system/declaration/interface
         :poo-flow/src/user-interface/profile-core
         :poo-flow/src/user-interface/profile-gate)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (export user-interface-profile-library-gate-test)
 

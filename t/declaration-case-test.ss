@@ -10,7 +10,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -100,7 +99,10 @@
                feature-facts
                '(custom . my-module)))
              (cicd-intent (car (.ref presentation 'cicd-intents))))
-        (check-equal? (.ref presentation 'module-count) 8)
+        (check-equal?
+         (.ref presentation 'module-count)
+         (length
+          (poo-flow-declaration-case-expected-module-keys case-object)))
         (check-equal? (.ref presentation 'module-keys)
                       (poo-flow-declaration-case-expected-module-keys
                        case-object))
@@ -122,7 +124,7 @@
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-index
                        custom-fact)
-                      7)
+                      8)
         (check-equal? (poo-flow-declaration-case-alist-value
                        'declaration-phase
                        custom-fact)

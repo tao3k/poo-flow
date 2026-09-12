@@ -64,5 +64,3 @@
         (check-equal? (string? payload) #t)
         (check-equal? (u8vector? bytes) #t)
         (check-equal? (> (u8vector-length bytes) 0) #t)))))
-
-(run-tests! durable-runtime-manifest-test)

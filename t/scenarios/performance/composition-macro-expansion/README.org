@@ -15,31 +15,24 @@ concurrency must not be reduced to obtain a passing receipt.
 * Verification
 
 #+begin_src sh
-env -u SDKROOT gxpkg env gxc \
-  t/scenarios/performance/composition-macro-expansion/generator-syntax.ss
-env -u SDKROOT gxpkg env gxc \
-  t/scenarios/performance/composition-macro-expansion/case-1000.ss
-env -u SDKROOT gxpkg env gxc \
-  t/scenarios/performance/composition-macro-expansion/case-5000.ss
-gxpkg env gxtest -q t/profile-composition-performance-test.ss
+gerbil build
+gerbil env gerbil test t/profile-composition-performance-test.ss
 #+end_src
 
-The focused test records cold compiler elapsed time, peak RSS, generated profile
-count, and repeated-run RSS stability through the Harness performance receipt.
+The focused test records compiler elapsed time with the upstream
+=:clan/timestamp#call-with-timing= API and verifies generated profile counts.
+Runtime memory enforcement belongs to the ASP Gerbil Scheme POO Testing Profile;
+the compiler subprocess is build work and is not re-wrapped by a local memory
+runner.
 
 * Current Receipt
 
 The 2026-07-09 focused receipt is:
 
-| Case | Gerbil elapsed | Peak RSS | Result |
-|------+----------------+----------+--------|
-| 1,000 profiles | 1.000 s | 124.75 MiB | pass |
-| 5,000 profiles, first run | 2.850 s | 192.77 MiB | pass |
-| 5,000 profiles, second run | 2.570 s | 193.41 MiB | pass |
-
-The repeated 5,000-profile RSS drift is 0.64 MiB, below the 32 MiB stability
-budget.  The focused =gxtest= gate completes in approximately 13.5 seconds on
-the recorded machine.
+The historical 2026-07-09 host receipt remains useful as a baseline, but it is
+not a portable gate: macOS =/usr/bin/time -l= depends on host =sysctl= access.
+Current admission uses the 20-second elapsed budget for each real =gxc -S= case
+and the declarative ASP Testing Profile for test-process heap enforcement.
 
 The compiler subprocess uses =gxc -S=: Gerbil expands the production macro,
 validates module context, and generates Scheme, while Gambit C compilation is

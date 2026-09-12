@@ -12,7 +12,7 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .ref .slot? object?)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/module-system/declaration/interface
                  poo-flow-settings
                  poo-flow-user-module-bundles->modules

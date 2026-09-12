@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
@@ -180,5 +179,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'memory-intent-commit-denied)
          #t)))))
-
-(run-tests! memory-durable-job-receipt-test)

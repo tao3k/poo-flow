@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -16,7 +15,7 @@
                  poo-flow-custom-my-module-cicd-case
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
-        :poo-flow/t/user-interface-fixtures)
+        "./user-interface-fixtures")
 
 (export user-interface-cicd-test)
 

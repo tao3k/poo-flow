@@ -38,7 +38,7 @@ $ forall P:
   and not "ImpliesPooProfile"(P) $
 #+end_src
 
-The =packages/wendao-episteme= path is a pinned child source checkout, not a
+The =lambda-episteme= path is a pinned child source checkout, not a
 Gerbil package declaration.  The child owns its build, tests, and publication.
 =gerbil.pkg= manages package metadata and installation relationships; a Gerbil
 module provides lexical bindings; only an explicit first-class POO profile
@@ -145,7 +145,7 @@ A submodule does not imply:
 - runtime evidence closure;
 - provider registration.
 
-The =packages/wendao-episteme= checkout is a pinned external source tree. Its
+The =lambda-episteme= checkout is a pinned external source tree. Its
 directory name does not turn its repository root into a Gerbil package.
 
 The submodule commit is source identity evidence. It is not the complete
@@ -438,7 +438,7 @@ The implementation must distinguish at least:
 - [X] Preserve the exact =wendao-episteme= Git submodule pin as source
   provenance.
   - Gitlink mode :: =160000=
-  - Submodule path :: =packages/wendao-episteme=
+  - Submodule path :: =lambda-episteme=
   - Submodule URL :: =https://github.com/tao3k/wendao-episteme.git=
   - Pinned commit :: =9566d310a2813e81068326e7d17a30d330de393f=
   - Child worktree boundary :: two staged child-owned RFC files remain outside

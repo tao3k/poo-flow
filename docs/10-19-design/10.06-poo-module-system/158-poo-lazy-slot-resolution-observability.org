@@ -135,11 +135,11 @@ times are diagnostic fields, not a relative-speed acceptance condition.
   proxy may still surface upstream precedence errors.
 - Input prototype code remains trusted.  The guard detects active-edge cycles
   and bounded dependency depth; it is not a sandbox or a termination proof.
-- The in-band guard begins only after its module loads.  A native Gambit
-  =max-heap= limit remains mandatory for test and diagnostic launchers, while
-  the ASP process guard remains an independent outer defense.
-- Source authoring gates, runtime slot admission, memory receipts, and heap
-  ceilings are complementary evidence and must not be reported as substitutes
+- The in-band guard begins only after its module loads.  Test programs apply a
+  declarative ASP POO Testing memory profile to the current Gambit runtime,
+  while builds remain unbounded and the ASP process observer stays diagnostic.
+- Source authoring gates, runtime slot admission, memory receipts, and runtime
+  profiles are complementary evidence and must not be reported as substitutes
   for one another.
 
 * Verification contract

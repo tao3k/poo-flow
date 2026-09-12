@@ -1,10 +1,8 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         (only-in :clan/poo/object .ref)
         :poo-flow/src/core/object-syntax
         :poo-flow/src/qualification/capability-prototypes)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def capability-prototypes-test
   (test-suite "qualification POO capability prototypes"
@@ -69,5 +67,3 @@
        (poo-flow-qualification-capability-composition-diagnostics
         '((left unique-a shared) (right unique-b shared)))
        => '((slot-owner-conflict shared))))))
-
-(run-tests! capability-prototypes-test)

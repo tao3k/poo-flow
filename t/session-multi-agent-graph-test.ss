@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -201,5 +200,3 @@
         (check-equal? (cdr (assoc 'durable-policy-refs registry-row))
                       '(durable/graph durable/graph))
         (check-equal? (.ref graph 'runtime-executed) #f)))))
-
-(run-tests! session-multi-agent-graph-test)

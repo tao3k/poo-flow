@@ -13,7 +13,7 @@
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :asp-gerbil-scheme/build-api benchmark-p95-elapsed-ms)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface

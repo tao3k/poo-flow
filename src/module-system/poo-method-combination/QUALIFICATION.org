@@ -10,7 +10,7 @@ Those values are evidence for one invocation and remain under
 
 The qualified slice covers qualified method ordering, call-next-method frame
 semantics, native POO contracts, the opt-in Observation adapter, bounded
-performance checks, Loader integration, and fresh AOT artifact admission. It
+performance checks, and Loader integration. It
 does not claim a complete CLOS class system, production telemetry activation,
 or full-package release acceptance.
 
@@ -19,40 +19,22 @@ or full-package release acceptance.
 From the project root:
 
 #+begin_src sh
-./.devenv/devenv-profile-exec gxtest t/poo-method-combination-module-test.ss t/poo-method-combination-test.ss t/poo-method-combination-contract-test.ss t/poo-method-combination-next-test.ss t/poo-method-combination-observation-test.ss t/poo-method-combination-performance-test.ss t/observability-framework-test.ss t/gerbil-poo-debug-admission-test.ss
-./.devenv/devenv-profile-exec gxi t/qualification/poo-method-combination/qualify.ss
-bazelisk test //gerbil:poo_method_combination_module_test //gerbil:poo_method_combination_test //gerbil:poo_method_combination_contract_test //gerbil:poo_method_combination_next_test //gerbil:poo_method_combination_observation_test //gerbil:poo_method_combination_performance_test //gerbil:poo_method_combination_summary_test //gerbil:poo_method_combination_io_test
+gerbil build
+just test
 #+end_src
 
-The first command is the source-level regression surface. The second is the
-Scheme-owned qualification transaction: native preflight, fresh compilation,
-same-process artifact admission, compiled suites, repeated measurements, and a
-terminal receipt. The third is the focused Bazel package-graph gate for the six
-semantic suites and the two qualification-support suites. It is not the full
-=//gerbil= package test surface.
+The package's =build.ss= is the only build graph and =unit-tests.ss= is the
+single upstream =:clan/testing= entrypoint.
 
 * Acceptance contract
 
-An accepted invocation must produce a =v1= receipt owned by
-=poo-flow/module-system/poo-method-combination= and must establish all of the
-following:
+The focused slice must establish all of the following:
 
-- every declared source and test-owned checker is fingerprinted before work;
-- preflight and semantic suites execute nonempty assertion sets;
-- every requested module produces nonempty fresh =.ssi= and =.o1= artifacts;
-- the test process resolves the generated artifacts from the isolated library;
-- source and artifact fingerprints remain stable through terminal settlement;
-- dependency fingerprints are checked before and after execution;
-- compiler and interpreter logs record exact argv before execution and explicit
-  zero status after success, without serializing the inherited environment;
-- repeated measurement rows retain the expected checksum and method-plan
+- semantic suites execute nonempty assertion sets;
+- repeated native POO measurement receipts retain the expected checksum and method-plan
   identity and remain within the v1 smoke budget;
-- the receipt is written only after all prior obligations succeed.
-
-The receipt binds the source snapshot, artifact snapshot, toolchain, module
-manifest, dependency snapshot, preflight log, and qualification log. Digest
-records are algorithm- and purpose-tagged integrity evidence; they do not claim
-signer identity or artifact authenticity.
+- statistical summaries consume those POO receipts directly and reject empty,
+  duplicate, or inconsistent trials.
 
 * Representative semantic witnesses
 
@@ -71,12 +53,10 @@ signer identity or artifact authenticity.
   preserve exact results; the bounded threshold is a smoke guard, not a
   production latency claim.
 
-* Evidence retention boundary
+* Evidence boundary
 
-Generated run directories are deliberately ignored. Reviewers should inspect
-the terminal receipt and its bound files from the invocation being evaluated,
-not copy their UUIDs, counts, hashes, or timing samples into this document.
-Interrupted runs, empty suites, source-only checks, and stale receipts are not
-acceptance. Passing the eight declared Bazel labels admits only this focused
-package slice. Full-package release, installed dependency provenance, and
-production performance admission remain separate gates.
+Passing the focused native tests admits only this package slice.  The build
+system's generated files are not qualification-domain objects and are neither
+rescanned nor promoted into a second manifest. Full-package release, installed
+dependency provenance, and production performance admission remain separate
+gates.

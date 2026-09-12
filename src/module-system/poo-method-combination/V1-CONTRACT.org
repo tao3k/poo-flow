@@ -83,26 +83,16 @@ Thus the default qualification matrix has 85 trials. Frame validation uses the
 exact native =CombinationFrame= predicate directly; the resulting allocation
 reduction is local measured evidence, not a wall-time or production-SLA claim.
 
-* Scheme-native qualification owner
-=t/qualification/poo-method-combination/qualify.ss= owns an explicit native POO input,
-source snapshots, fresh output directory, argv-based =gxc=/=gxi= subprocesses,
-artifact presence/integrity, log streaming and final POO receipt projection.
-There is no shell implementation or shell fallback. Filesystem operations and
-SHA-256 are native Scheme APIs. Only the compiler and isolated interpreter are
-external processes; native Darwin toolchain environment changes affect those
-children only. Each child log records =process-begin= with exact argv before
-execution and =process-exit= with status zero only after successful completion;
-the inherited environment is deliberately absent from those records.
+* Native build and test ownership
 
-All seven critical suites, the consumer and the consumed local Module/
-Observability dependencies are included in the fresh AOT library. The actual
-runtime path check, compiled suites and timing matrix run in the same isolated
-interpreter. Loader and implementation =.o1= paths are verified against the
-fresh manifest. Source and compiled fingerprints are checked again after the
-run. A final receipt is written only on terminal success; an existing directory,
-nonempty log, compiler exit alone, or partial suite success is not acceptance.
-Evidence persists under =.data/qualification/poo-method-combination/= without
-changing dependency installation caches. This is dependent-slice qualification,
-not all-package release acceptance or an upstream proposal. The separately
-declared eight-label =//gerbil:= Bazel gate checks this feature's package graph,
-but does not generalize to the complete package test surface.
+The project-level =build.ss= is the sole package build declaration and delegates
+to the ASP Gerbil Scheme Build API and upstream =std/make=.  Suites are
+discovered and run through the single =unit-tests.ss= =:clan/testing=
+entrypoint.  This feature does not maintain a
+second source catalog, compiler subprocess, output tree, =.o1= scanner,
+artifact manifest, dependency fingerprint set, or private test scheduler.
+
+The performance matrix returns native POO receipts.  The optional summary is a
+pure projection over those objects, so no textual runner log is parsed back
+into an ad hoc wire model.  This is focused semantic/performance validation,
+not all-package release acceptance or an artifact-provenance claim.

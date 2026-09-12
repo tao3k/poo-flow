@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config)
@@ -195,5 +194,3 @@
         (check-equal? (test-ref (car rows) 'handoff-required) #t)
         (check-equal? (test-ref (car rows) 'delivered?) #f)
         (check-equal? (test-ref (car rows) 'runtime-executed) #f)))))
-
-(run-tests! session-communication-receipt-test)

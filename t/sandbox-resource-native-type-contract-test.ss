@@ -1,9 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: sandbox resources expose native POO Type/Contract descriptors.
 
-(eval '(import (only-in :clan/poo/object .o)))
-(eval '(import (only-in :clan/poo/mop Type element?)))
-(eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
+(import :std/test)
 
 ;; : (-> PooFlowSandboxResourceExpr PooFlowSandboxResourceValue)
 (def (sandbox-resource-eval expr)
@@ -14,7 +12,15 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
-(let* ((row
+(export sandbox-resource-native-type-contract-test)
+
+(def sandbox-resource-native-type-contract-test
+  (test-suite "sandbox-resource-native-type-contract-test"
+    (test-case "validates the native contract"
+      (eval '(import (only-in :clan/poo/object .o)))
+      (eval '(import (only-in :clan/poo/mop Type element?)))
+      (eval '(import "./src/modules/sandbox-core/resource-contract.ss"))
+      (let* ((row
         (sandbox-resource-eval
          '(poo-flow-sandbox-resources-prototype-type-contract->alist)))
        (slot-rows (alist-ref/default row 'slots '()))
@@ -61,4 +67,4 @@
 (when (sandbox-resource-eval
        `(poo-flow-sandbox-resources-prototype-contract-validation-valid?
          ',invalid-validation))
-  (error "invalid cpu should fail native validation"))
+  (error "invalid cpu should fail native validation")))))

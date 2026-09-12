@@ -10,7 +10,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)

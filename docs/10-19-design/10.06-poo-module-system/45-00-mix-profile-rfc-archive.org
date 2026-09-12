@@ -3806,7 +3806,7 @@ No item below is authorized by this RFC's current implementation state.
 
 The wendao consumer record is:
 
-[[../../../packages/wendao-episteme/docs/rfcs/wendao-episteme-mix-profile-qualification-rfc.org][Wendao Episteme Mix Profile Qualification RFC]]
+[[../../../lambda-episteme/docs/rfcs/wendao-episteme-mix-profile-qualification-rfc.org][Wendao Episteme Mix Profile Qualification RFC]]
 
 The child record owns governance-domain projection and downstream qualification.
 It does not own =clan/poo= semantics or parent implementation.

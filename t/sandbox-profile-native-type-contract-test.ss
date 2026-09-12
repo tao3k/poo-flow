@@ -2,8 +2,7 @@
 ;;; Contract: sandbox profile recipes are admitted by one native POO Contract.
 ;;; This root is self-contained; unrelated test sources are not runfile inputs.
 
-(eval '(import "./src/modules/agent-sandbox/config.ss"))
-(eval '(import :clan/poo/mop :clan/poo/object))
+(import :std/test)
 
 (def (sandbox-profile-contract-eval expression)
   (eval expression))
@@ -12,7 +11,14 @@
   (let (entry (assoc key entries))
     (if entry (cdr entry) default-value)))
 
-(let (contract-row
+(export sandbox-profile-native-type-contract-test)
+
+(def sandbox-profile-native-type-contract-test
+  (test-suite "sandbox-profile-native-type-contract-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/modules/agent-sandbox/config.ss"))
+      (eval '(import :clan/poo/mop :clan/poo/object))
+      (let (contract-row
       (sandbox-profile-contract-eval
        '(poo-flow-sandbox-profile-type-contract->alist)))
   (unless
@@ -84,4 +90,4 @@
            resource-policy: '()
            metadata: '()))
       #t)))
- (error "descriptor handoff should fail before projecting an invalid profile"))
+ (error "descriptor handoff should fail before projecting an invalid profile")))))

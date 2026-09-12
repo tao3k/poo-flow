@@ -67,8 +67,8 @@ owner merely because POO Flow pins or consumes it.
 
 The concrete Wendao owner evidence remains:
 
-- [[file:../../../packages/wendao-episteme/docs/rfcs/wendao-episteme-governance-language-package-boundary-rfc.org][wendao-episteme governance-language package boundary RFC]]
-- [[file:../../../packages/wendao-episteme/docs/rfcs/wendao-episteme-mix-profile-qualification-rfc.org][wendao-episteme Mix Profile qualification RFC]]
+- [[file:../../../lambda-episteme/docs/rfcs/wendao-episteme-governance-language-package-boundary-rfc.org][wendao-episteme governance-language package boundary RFC]]
+- [[file:../../../lambda-episteme/docs/rfcs/wendao-episteme-mix-profile-qualification-rfc.org][wendao-episteme Mix Profile qualification RFC]]
 
 The first is still a draft for discussion.  The second approves the
 architecture but explicitly does not authorize implementation or a public API.

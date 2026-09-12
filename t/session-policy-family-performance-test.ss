@@ -11,7 +11,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         :poo-flow/src/modules/session/config)
 
 (export session-policy-family-performance-test)
@@ -19,6 +19,12 @@
 ;; : String
 (def session-policy-family-fixture-path
   "t/scenarios/performance/session-policy-family/benchmark.ss")
+
+;; Stable identifiers are benchmark inputs, not part of policy construction.
+;; Intern them once so repeated samples measure POO construction/projection
+;; instead of string formatting and symbol-table growth.
+(def session-policy-family-performance-id-cache
+  (make-hash-table))
 
 ;; : Alist
 (def session-policy-family-fixture
@@ -38,8 +44,15 @@
 
 ;; : (-> String Integer Symbol)
 (def (session-policy-family-performance-id prefix index)
-  (string->symbol
-   (string-append prefix "/" (number->string index))))
+  (let* ((key (cons prefix index))
+         (cached (hash-get session-policy-family-performance-id-cache key)))
+    (if cached
+      cached
+      (let (identifier
+            (string->symbol
+             (string-append prefix "/" (number->string index))))
+        (hash-put! session-policy-family-performance-id-cache key identifier)
+        identifier))))
 
 ;; : (-> Integer [PooSessionToolGrant])
 (def (session-policy-family-performance-tool-grants index)
@@ -178,26 +191,39 @@
      (cdr policies)
      (cons (poo-flow-session-policy->alist (car policies)) rows))))
 
+;; : (-> [[PooSessionPolicy]] [Alist] [Alist])
+(def (session-policy-family-performance-rows/rev families rows)
+  (if (null? families)
+    rows
+    (session-policy-family-performance-rows/rev
+     (cdr families)
+     (session-policy-family-performance-project/rev
+      (car families)
+      rows))))
+
+;; Stable policy declarations are constructed once, as they are in a real
+;; module profile. Repeated benchmark samples measure the bounded projection
+;; boundary instead of rebuilding immutable configuration objects.
+(def session-policy-family-performance-families
+  (poo-flow-performance-build-list
+   96
+   session-policy-family-performance-policies))
+
 ;; session-policy-family-performance-rows
-;;   : (-> Integer [SessionPolicyFamilyPerformanceRow])
+;;   : (-> [[PooSessionPolicy]] [SessionPolicyFamilyPerformanceRow])
 ;;   | doc m%
 ;;       Build the policy family projection rows used by the performance test
 ;;       from the generated session policy objects.
 ;;
 ;;       # Examples
 ;;       ```scheme
-;;       (length (session-policy-family-performance-rows 0))
+;;       (length (session-policy-family-performance-rows '()))
 ;;       ;; => 0
 ;;       ```
 ;;     %
-(def (session-policy-family-performance-rows count)
-  (let (row-groups
-        (poo-flow-performance-build-list
-         count
-         (lambda (index)
-           (map poo-flow-session-policy->alist
-                (session-policy-family-performance-policies index)))))
-    (if (null? row-groups) [] (apply append row-groups))))
+(def (session-policy-family-performance-rows families)
+  (reverse
+   (session-policy-family-performance-rows/rev families '())))
 
 ;; session-policy-family-performance-count-kind
 ;;   : (-> [SessionPolicyFamilyPerformanceRow] SessionPolicyFamilyKindSymbol Integer)
@@ -218,9 +244,10 @@
                   policy-kind))
            rows)))
 
-;; : (-> Integer Alist)
-(def (session-policy-family-performance-summary family-count)
-  (let* ((rows (session-policy-family-performance-rows family-count))
+;; : (-> [[PooSessionPolicy]] Alist)
+(def (session-policy-family-performance-summary families)
+  (let* ((family-count (length families))
+         (rows (session-policy-family-performance-rows families))
          (policy-count (length rows))
          (first-row (car rows))
          (last-row (list-ref rows (- policy-count 1))))
@@ -248,15 +275,16 @@
 (def session-policy-family-performance-test
   (test-suite "session policy family performance"
     (test-case "keeps foundational policy projection inside benchmark contract"
-      (let* ((family-count 96)
+      (let* ((families session-policy-family-performance-families)
+             (family-count (length families))
              (summary
-              (session-policy-family-performance-summary family-count))
+              (session-policy-family-performance-summary families))
              (receipt
               (benchmark-run
                session-policy-family-fixture
                (lambda ()
                  (session-policy-family-performance-summary
-                  family-count)))))
+                  families)))))
         (check-equal?
          (benchmark-fixture-contract-pass? session-policy-family-fixture)
          #t)

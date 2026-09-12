@@ -1,9 +1,7 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/qualification/runtime-symbol-manifest)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (read-manifest json)
   (poo-flow-runtime-symbol-manifest-read (open-input-string json)))
@@ -52,5 +50,3 @@
         (check (.ref receipt 'accepted?) => #f)
         (check (.ref receipt 'diagnostics)
                => '(invalid-or-unknown-manifest))))))
-
-(run-tests! runtime-symbol-manifest-test)

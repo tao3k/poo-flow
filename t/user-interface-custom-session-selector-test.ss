@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -70,5 +69,3 @@
         (check-equal? (test-ref row 'diagnostic-count) 0)
         (check-equal? (test-ref row 'diagnostics) '())
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-selector-test)

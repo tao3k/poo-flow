@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .o object?)
@@ -222,5 +221,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'runtime-store-contract-not-ready)
          #t)))))
-
-(run-tests! durable-runtime-store-backend-test)

@@ -3,17 +3,16 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/core/api)
 
-(export poo-role-test)
+(export control-plane-role-test)
 
 ;;; This suite keeps POO role projection aligned with the public workflow
 ;;; surface.
 ;; : TestSuite
-(def poo-role-test
+(def control-plane-role-test
   (test-suite "poo role descriptors"
     (test-case "declares control-plane roles as Gerbil POO objects"
       (check-equal? (role-object? flow-role) #t)

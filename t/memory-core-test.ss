@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/modules/session/config
@@ -173,5 +172,3 @@
                         memory-intent-commit-denied
                         memory-store-recall-disabled))
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! memory-core-test)

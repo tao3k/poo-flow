@@ -12,7 +12,7 @@
    (list (cons 'kind 'gerbil-bazel.action-receipt.v1)
          (cons 'gate-id gate-id))))
 
-(def qualification-runner-test
+(def runner-test
   (test-suite "AC-10 S4 cross-language qualification receipts"
     (test-case "registry declares exact release owners and installed gates"
       (check (map (lambda (gate) (.ref gate 'gate-id)) registry)
@@ -61,5 +61,3 @@
                          (.ref verified 'diagnostics)))
           (check (car codes) => 'stale-source-revision)
           (check (length codes) => (length +poo-flow-ac10-release-gates+)))))))
-
-(run-tests! qualification-runner-test)

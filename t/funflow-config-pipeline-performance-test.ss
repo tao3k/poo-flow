@@ -12,7 +12,7 @@
         (only-in :poo-flow/user-interface/custom/my-module/config
                  poo-flow-custom-my-module-cicd-module
                  poo-flow-custom-my-module-funflow-cicd-case)
-        :poo-flow/t/support/funflow-config-pipeline-performance)
+        "./support/funflow-config-pipeline-performance")
 
 (export funflow-config-pipeline-performance-test)
 

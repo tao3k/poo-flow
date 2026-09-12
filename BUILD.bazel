@@ -22,60 +22,6 @@ filegroup(
 )
 
 filegroup(
-    name = "compile_performance_budget_build_script",
-    srcs = ["compile-performance-budget-build.ss"],
-)
-
-filegroup(
-    name = "compile_performance_budget_sources",
-    srcs = [
-        "gerbil.pkg",
-        "t/support/compile-performance-budget.ss",
-        "src/utilities/functional.ss",
-    ],
-)
-
-filegroup(
-    name = "compile_performance_budget_test_sources",
-    srcs = [
-        "t/build-api-project-compile-performance-budget-test.ss",
-        ":compile_performance_budget_sources",
-    ],
-)
-
-filegroup(
-    name = "runtime_wasm_generator_build_script",
-    srcs = ["runtime-wasm-generator-build.ss"],
-)
-
-filegroup(
-    name = "runtime_wasm_generator_scheme_sources",
-    srcs = [
-        "gerbil.pkg",
-        "src/core/failure.ss",
-        "src/core/flow.ss",
-        "src/core/flow-declarations.ss",
-        "src/core/flow-strand.ss",
-        "src/core/object-syntax.ss",
-        "src/core/plan.ss",
-        "src/core/projection-syntax.ss",
-        "src/core/roles.ss",
-        "src/core/task.ss",
-        "src/feature-system/bundle-v1-composition-writer.ss",
-        "src/feature-system/bundle-v1-foreign-arena.ss",
-        "src/feature-system/bundle-v1-lowering.ss",
-        "src/feature-system/bundle-v1-lowering-model.ss",
-        "src/module-system/profile-composition/interface.ss",
-        "src/module-system/profile-composition/accessors.ss",
-        "src/module-system/profile-composition/builders.ss",
-        "src/module-system/profile-composition/inline-runtime.ss",
-        "src/module-system/profile-composition/syntax-plan.ss",
-        "src/module-system/profile-composition/use-syntax.ss",
-        "src/utilities/functional.ss",
-    ],
-)
-
-filegroup(
     name = "scheme_source_root_marker",
     srcs = ["gerbil.pkg"],
 )

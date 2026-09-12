@@ -6,7 +6,7 @@
                  test-suite
                  test-case
                  check-equal?
-                 run-tests!)
+                 )
         (only-in :poo-flow/src/core/runtime-protocol
                  +runtime-command-descriptor-schema+
                  +runtime-request-schema+)
@@ -39,7 +39,7 @@
     (poo-flow-cicd-check
      'build
      'ci/build
-     '("gxpkg" "build")
+     '("gerbil" "build")
      '()
      '()
      '(build-log)
@@ -51,7 +51,7 @@
     (poo-flow-cicd-check
      'test
      'ci/check
-     '("gxtest" "t/unit-tests.ss")
+     '("gerbil" "env" "./unit-tests.ss")
      '()
      '()
      '(test-receipt)
@@ -77,7 +77,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-write)))
                 (access . read-write))
                (cpu . 4)
@@ -95,7 +94,6 @@
                  ((role . project-workspace)
                   (source . ".")
                   (project-marker . "gerbil.pkg")
-                  (target . "/workspace/project")
                   (mode . read-only)))
                 (access . read-only))
                (cpu . 1)
@@ -213,12 +211,12 @@
                       '(read :lines))
         (check-equal? (cicd-runtime-test-alist-ref build-manifest
                                                   'executable)
-                      "gxpkg")
+                      "gerbil")
         (check-equal? (cicd-runtime-test-alist-ref build-manifest
                                                   'arguments)
                       '("build"))
         (check-equal? (cicd-runtime-test-alist-ref build-manifest 'argv)
-                      '("gxpkg" "build"))
+                      '("gerbil" "build"))
         (check-equal? (cicd-runtime-test-alist-ref build-request 'kind)
                       'poo-flow.workflow.cicd.runtime-manifest-ready)
         (check-equal? (cicd-runtime-test-alist-ref
@@ -305,7 +303,7 @@
         (check-equal? (cicd-runtime-test-alist-ref build-entry 'request-id)
                       '(poo-flow.workflow.cicd build))
         (check-equal? (cicd-runtime-test-alist-ref build-entry 'argv)
-                      '("gxpkg" "build"))
+                      '("gerbil" "build"))
         (check-equal? (cicd-runtime-test-alist-ref
                        build-request
                        'sandbox-unresolved-profile-refs)

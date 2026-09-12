@@ -1,9 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: graph objects expose native POO Type/Contract descriptors.
 
-(eval '(import "./src/graph/types.ss"))
-(eval '(import "./src/graph/algorithms.ss"))
-(eval '(import :clan/poo/mop :clan/poo/object))
+(import :std/test)
 
 ;; : (-> PooFlowGraphExpr PooFlowGraphValue)
 (def (graph-eval expr)
@@ -20,7 +18,15 @@
          (alist-ref/default slot-row 'slot #f))
        (alist-ref/default row 'slots '())))
 
-(let (node-row
+(export graph-native-type-contract-test)
+
+(def graph-native-type-contract-test
+  (test-suite "graph-native-type-contract-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/graph/types.ss"))
+      (eval '(import "./src/graph/algorithms.ss"))
+      (eval '(import :clan/poo/mop :clan/poo/object))
+      (let (node-row
       (graph-eval '(poo-flow-graph-node-type-contract->alist)))
   (unless (and (eq? (alist-ref/default node-row 'object-kind #f)
                     'PooFlowGraphNode)
@@ -89,4 +95,4 @@
   (unless (and (eq? (alist-ref/default analysis-row 'object-kind #f)
                     'PooFlowGraphAnalysis)
                (member 'diagnostics (contract-slot-names analysis-row)))
-    (error "graph analysis contract should expose analysis slots")))
+    (error "graph analysis contract should expose analysis slots"))))))

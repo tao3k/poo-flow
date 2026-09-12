@@ -13,7 +13,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/module-system/object-validation/interface
                  poo-flow-module-objects-validation-summary))
 

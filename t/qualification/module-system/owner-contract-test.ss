@@ -8,7 +8,6 @@
                  check-equal?
                  check-not-equal?
                  check-output
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -18,9 +17,9 @@
         :poo-flow/src/module-system/composition/lineage
         :poo-flow/src/qualification/module-system/gerbil-poo-consumption)
 
-(export module-system-owner-contract-tests)
+(export owner-contract-test)
 
-(def module-system-owner-contract-tests
+(def owner-contract-test
   (test-suite
    "RFC45 source owner contracts"
    (test-case "G0 rejects missing evidence and requires authorization"
@@ -66,5 +65,3 @@
         (poo-flow-gerbil-poo-api-closed?
          (cdr (.ref manifest 'required-api)))
         #f)))))
-
-(run-tests! module-system-owner-contract-tests)

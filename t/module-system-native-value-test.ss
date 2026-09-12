@@ -4,7 +4,7 @@
 ;;; prototype-composable objects rather than parallel Scheme records.
 
 (import (only-in :clan/poo/object .ref object?)
-        (only-in :std/test check-equal? run-tests! test-case test-suite)
+        (only-in :std/test check-equal? test-case test-suite)
         :poo-flow/src/module-system/facade)
 
 (export module-system-native-value-test)
@@ -77,5 +77,3 @@
         (check-equal?
          (resolve-poo-flow-module-source catalog source)
          module)))))
-
-(run-tests! module-system-native-value-test)

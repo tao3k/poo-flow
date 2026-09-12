@@ -10,11 +10,10 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :asp-gerbil-scheme/build-api benchmark-p95-elapsed-ms)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/interface)

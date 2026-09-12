@@ -12,7 +12,7 @@
                  benchmark-receipt-pass?
                  benchmark-run)
         (only-in :clan/poo/object object?)
-        :poo-flow/t/support/performance
+        "./support/performance"
         :poo-flow/src/modules/memory-core/durable/policy)
 
 (export durable-policy-performance-test)

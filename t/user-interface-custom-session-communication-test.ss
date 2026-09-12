@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -76,5 +75,3 @@
         (check-equal? (test-ref cross-root 'handoff-required) #t)
         (check-equal? (test-ref cross-root 'delivered?) #f)
         (check-equal? (test-ref cross-root 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-communication-test)

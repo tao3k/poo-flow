@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
@@ -115,5 +114,3 @@
         (check-equal? (test-ref row 'candidate-ids) '())
         (check-equal? (test-ref row 'fallback-ref) 'empty-workflow)
         (check-equal? (test-ref row 'selected-candidate-ref) #f)))))
-
-(run-tests! session-selector-receipt-test)

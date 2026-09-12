@@ -9,12 +9,12 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
         (only-in :std/sugar filter)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance-object-scenarios
-        :poo-flow/t/support/poo-performance
+        "../support/poo-performance-fixtures"
+        "../support/poo-performance-object-scenarios"
+        "../support/poo-performance"
         :poo-flow/src/modules/tool-core/calling-control)
 
-(export module-system-poo-performance-tool-calling-test)
+(export tool-calling-test)
 
 ;; : (-> Alist Unit)
 (def (module-system-poo-performance-tool-calling-display-receipt receipt)
@@ -167,6 +167,6 @@
       (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestSuite
-(def module-system-poo-performance-tool-calling-test
+(def tool-calling-test
   (test-suite "poo-flow module system POO tool-calling performance"
     module-system-poo-performance-tool-calling-object-list-control-case))

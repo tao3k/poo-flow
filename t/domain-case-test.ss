@@ -1,13 +1,11 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/core/object-syntax
         :poo-flow/src/feature-system/domain-case/interface
         :poo-flow/src/feature-system/domain-case/syntax)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
-(import :poo-flow/t/domain-case-test-support)
+(import "./domain-case-test-support")
 
 (def domain-case-test
   (test-suite "POO CaseComponent and DomainCase closure"
@@ -479,4 +477,4 @@
            (check (.ref receipt 'instance-overlay-count) => 1000)))
        '(8 32 64)))))
 
-(run-tests! domain-case-test)
+(export domain-case-test)

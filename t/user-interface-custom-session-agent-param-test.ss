@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -73,5 +72,3 @@
         (check-equal? (test-ref row 'denied-communication-receipts)
                       '())
         (check-equal? (test-ref row 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-agent-param-test)

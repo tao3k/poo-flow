@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object object?)
@@ -207,5 +206,3 @@
         (check-equal?
          (diagnostic-code-present? diagnostics 'invalid-memory-durable-job)
          #t)))))
-
-(run-tests! durable-recovery-scenario-test)

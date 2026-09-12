@@ -375,6 +375,10 @@
   proto: (clos-prototype ClosFailure 'poo-clos/failure)
   .element?: clos-failure-element?)
 
+;;; The inherited failure prototype is stable for the lifetime of this module.
+;;; Hoist it once so subtype construction does not repeat reflective lookup.
+(def ClosFailure. (.ref ClosFailure 'proto))
+
 (def (clos-unbound-slot-failure-element? candidate)
   (and (element? ClosFailure candidate)
        (clos-instance? (.ref ClosUnboundSlotFailure 'proto) candidate)
@@ -383,7 +387,7 @@
 ;;; UNBOUND-SLOT refines the common failure carrier with the exact instance;
 ;;; the inherited `slot` field is its cell-error name adaptation.
 (define-type (ClosUnboundSlotFailure @ ClosFailure)
-  proto: (.o (:: @ (.ref ClosFailure 'proto))
+  proto: (.o (:: @ ClosFailure.)
              .type: ClosUnboundSlotFailure
              kind: 'poo-clos/unbound-slot schema: 'v1)
   .element?: clos-unbound-slot-failure-element?)

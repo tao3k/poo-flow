@@ -7,7 +7,7 @@ on:
       - bindings/runtime-wasm/**
       - bindings/runtime-c/bundle-v1/**
       - BUILD.bazel
-      - runtime-wasm-generator-build.ss
+      - build.ss
       - src/core/plan.ss
       - src/feature-system/bundle-v1-*.ss
       - src/module-system/profile-composition.ss
@@ -19,7 +19,7 @@ on:
       - bindings/runtime-wasm/**
       - bindings/runtime-c/bundle-v1/**
       - BUILD.bazel
-      - runtime-wasm-generator-build.ss
+      - build.ss
       - src/core/plan.ss
       - src/feature-system/bundle-v1-*.ss
       - src/module-system/profile-composition.ss
@@ -98,8 +98,8 @@ jobs:
         timeout-minutes: 2
         shell: bash
         run: |
-          test -z "$(bazelisk query 'somepath(//gerbil:runtime_wasm_generator_compile, //gerbil:asp_gerbil_scheme_package)')"
-          test -n "$(bazelisk query 'somepath(//gerbil:runtime_wasm_generator_compile, //gerbil:gerbil_poo_package)')"
+          test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:asp_gerbil_scheme_package)')"
+          test -n "$(bazelisk query 'somepath(//gerbil:compile, //gerbil:gerbil_poo_package)')"
 
       - name: Build, test, and pack the package
         timeout-minutes: 12

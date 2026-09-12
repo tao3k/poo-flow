@@ -53,7 +53,9 @@
    (poo-object-family-fixed-value value))
   (projections))
 
-(def object-family-syntax-suite
+(export object-family-syntax-test)
+
+(def object-family-syntax-test
   (test-suite "object family syntax"
     (test-case "generates POO-native predicates, accessors, and projections"
       (check-equal? (poo-object-family-syntax-test?
@@ -97,5 +99,3 @@
         (check-equal? (poo-object-family-fixed? instance) #t)
         (check-equal? (.ref instance 'kind) 'fixed-object)
         (check-equal? (poo-object-family-fixed-value instance) 42)))))
-
-(run-tests! object-family-syntax-suite)

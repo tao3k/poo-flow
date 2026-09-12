@@ -2,10 +2,10 @@
 ;;; Boundary: reusable POO composition performance scenarios and gates.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :poo-flow/t/support/poo-performance-fixtures
+        (only-in "../support/poo-performance-fixtures"
                  poo-performance-composition-lazy-demand-fixture)
-        :poo-flow/t/module-system-poo-performance-test-support/composition-gates
-        :poo-flow/t/module-system-poo-performance-test-support/composition-large-library)
+        "./composition-gates"
+        "./composition-large-library")
 
 (export poo-performance-composition-profile-declaration-valid-count
         poo-performance-composition-profile-declaration-gate-receipt

@@ -1,16 +1,22 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: JSON Schema emits and validates native POO Contracts directly.
 
-(eval '(import "./src/contract/json-schema-receipt.ss"))
-(eval '(import "./src/contract/json-schema-validate.ss"))
-(eval '(import "./src/module-system/descriptor/contracts.ss"))
-(eval '(import "./src/type-facts/objects.ss"))
-(eval '(import :clan/poo/mop))
+(import :std/test)
 
 (def (json-schema-native-eval expr)
   (eval expr))
 
-(json-schema-native-eval
+(export json-schema-native-contract-test)
+
+(def json-schema-native-contract-test
+  (test-suite "json-schema-native-contract-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/contract/json-schema-receipt.ss"))
+      (eval '(import "./src/contract/json-schema-validate.ss"))
+      (eval '(import "./src/module-system/descriptor/contracts.ss"))
+      (eval '(import "./src/type-facts/objects.ss"))
+      (eval '(import :clan/poo/mop))
+      (json-schema-native-eval
  '(def +json-schema-native-artifact+
     (poo-flow-json-schema->contract-artifact
      '((type . "object")
@@ -47,4 +53,4 @@
     (poo-flow-json-schema-contract-artifact-validate
      +json-schema-native-artifact+
      '((name . 42)))))
- (error "native JSON Schema validation should reject an invalid candidate"))
+ (error "native JSON Schema validation should reject an invalid candidate")))))

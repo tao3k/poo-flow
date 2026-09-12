@@ -6,7 +6,6 @@
 (import (only-in :std/test
                  check-equal?
                  check-exception
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object
@@ -105,5 +104,3 @@
             (yx (.mix y x))
             (inconsistent (.mix xy yx)))
        (check-exception (.slot? inconsistent 'identity) true)))))
-
-(run-tests! gerbil-poo-operation-admission-test)

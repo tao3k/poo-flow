@@ -5,7 +5,6 @@
         (only-in :std/sugar filter-map)
         (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/type-facts/objects

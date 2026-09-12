@@ -30,7 +30,7 @@
                             dependency-refs)
       check-name: 'bad
       profile-ref: 'ci/check
-      command-vector: '("gxpkg" "build")
+      command-vector: '("gerbil" "build")
       dependency-refs: '("build"))
     (.def (funflow-test/bad-pipeline @ funflow-pipeline
                                      pipeline-name checks)

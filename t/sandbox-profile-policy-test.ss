@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref .slot? object?)
@@ -183,5 +182,3 @@
         (check-equal? (test-ref validation 'durable-valid? #t) #f)
         (check-equal? (test-diagnostic-codes validation)
                       '(invalid-durable-placement-policy))))))
-
-(run-tests! sandbox-profile-policy-test)

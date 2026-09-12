@@ -5,7 +5,7 @@
 
 (import (only-in :std/test check-equal?)
         (only-in :clan/poo/object .ref)
-        :poo-flow/t/support/custom-loop-engine/fixtures)
+        "./fixtures")
 
 (export check-custom-loop-presentation-boundary)
 

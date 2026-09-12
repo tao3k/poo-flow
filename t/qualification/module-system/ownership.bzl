@@ -3,7 +3,7 @@
 OWNER_MAP_SCHEMA = "poo-flow.module-system-qualification-ownership.v1"
 
 DESCENDANT_BOUNDARIES = [
-    "packages/wendao-episteme",
+    "lambda-episteme",
 ]
 
 OWNER_MAP_ROWS = [

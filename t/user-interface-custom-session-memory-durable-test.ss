@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -89,5 +88,3 @@
                         "marlin-agent-core"))
         (check-equal? (rows-field rows 'runtime-executed)
                       '(#f #f #f #f #f #f))))))
-
-(run-tests! user-interface-custom-session-memory-durable-test)

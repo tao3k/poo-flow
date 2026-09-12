@@ -245,19 +245,34 @@
 ;;       ;; => PooFlowDebugMemorySample
 ;;       ```
 ;;     %
-(def (poo-flow-debug-memory-snapshot phase collect?: (collect? #f))
-  (unless (and (symbol? phase) (boolean? collect?))
-    (error "invalid POO Flow debug memory snapshot request" phase collect?))
+(def (poo-flow-debug-memory-counters collect?)
   (when collect? (##gc))
-  (let* ((usage (##process-statistics))
-         (counters
-          (map (lambda (index)
-                 (inexact->exact (f64vector-ref usage index)))
-               '(15 16 17 18 19))))
+  (let (usage (##process-statistics))
+    (map (lambda (index)
+           (inexact->exact (f64vector-ref usage index)))
+         '(15 16 17 18 19))))
+
+(def (poo-flow-debug-memory-sample-from-counters phase counters)
     (apply (lambda (heap-size allocation live movable still)
              (poo-flow-debug-memory-sample
               phase heap-size allocation live movable still))
-           counters)))
+           counters))
+
+(def (poo-flow-debug-memory-snapshot phase collect?: (collect? #f))
+  (unless (and (symbol? phase) (boolean? collect?))
+    (error "invalid POO Flow debug memory snapshot request" phase collect?))
+  (poo-flow-debug-memory-sample-from-counters
+   phase (poo-flow-debug-memory-counters collect?)))
+
+;;; Periodic monitor ticks stay scalar-only while the test worker is active.
+;;; POO construction and Contract validation resume only after the worker has
+;;; stopped, avoiding cross-thread validation races in instrumented tests.
+(def (poo-flow-debug-memory-counters-rejected?
+      heap-limit live-growth-limit baseline-counters counters)
+  (let ((heap-size (list-ref counters 0))
+        (live (list-ref counters 2)))
+    (or (> heap-size heap-limit)
+        (> (- live (list-ref baseline-counters 2)) live-growth-limit))))
 
 ;; : (-> PooFlowDebugMemoryPolicy PooFlowDebugMemorySample Symbol port: OutputPort emit?: Boolean PooFlowDebugMemoryReceipt)
 ;; poo-flow-debug-memory-checkpoint
@@ -293,8 +308,8 @@
     receipt))
 
 ;;; A span adds in-band phase evidence around one development operation. Long
-;;; operations should expose intermediate checkpoints; launch-time heap caps
-;;; remain the final defense before this module can be loaded.
+;;; operations should expose intermediate checkpoints; the test entrypoint's
+;;; declarative runtime profile remains the final pre-suite heap boundary.
 ;; : (forall (a) (-> PooFlowDebugMemoryPolicy Symbol (-> a) port: OutputPort emit?: Boolean (values a PooFlowDebugMemoryReceipt)))
 ;; call-with-poo-flow-debug-memory-span
 ;;   : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
@@ -327,8 +342,8 @@
 ;;; The monitored form is the asynchronous debug boundary: the observed
 ;;; operation runs in a Scheme thread while its owner samples from the calling
 ;;; thread. A POO lazy-slot cycle therefore need not return before detection.
-;;; Gambit's launch ceiling remains necessary for code that cannot yield to the
-;;; Scheme scheduler or fails before this module loads.
+;;; The test entrypoint applies Gambit's heap boundary declaratively before the
+;;; suites load; this monitor adds phase-attributed growth evidence in-band.
 ;; : (forall (a) (-> PooFlowDebugMemoryPolicy Symbol (-> a) port: OutputPort emit?: Boolean (values a PooFlowDebugMemoryReceipt)))
 ;; call-with-poo-flow-debug-memory-monitor
 ;;   : (-> PooFlowDebugMemoryPolicy Symbol (-> Object) port: OutputPort emit?: Boolean (values Object PooFlowDebugMemoryReceipt))
@@ -350,18 +365,43 @@
                                               emit?: (emit? #f))
   (unless (procedure? thunk)
     (error "POO Flow debug memory monitor requires a thunk"))
-  (let* ((baseline
-          (poo-flow-debug-memory-snapshot
-           phase collect?: (.ref policy 'collect-before-sample?)))
+  (let* ((policy-label (.ref policy 'label))
+         (collect-before-sample? (.ref policy 'collect-before-sample?))
+         (fail-closed? (.ref policy 'fail-closed?))
+         (sample-interval-milliseconds
+          (.ref policy 'sample-interval-milliseconds))
+         (baseline-counters
+          (poo-flow-debug-memory-counters
+           collect-before-sample?))
+         (heap-limit (.ref policy 'heap-limit-bytes))
+         (live-growth-limit (.ref policy 'live-growth-limit-bytes))
          (timeout-token (cons 'poo-flow-debug-memory-timeout '()))
          (interval-seconds
-          (/ (max 1 (.ref policy 'sample-interval-milliseconds)) 1000.0))
+          (/ (max 1 sample-interval-milliseconds) 1000.0))
          (worker
           (make-thread
            (lambda ()
              (with-exception-catcher
               (lambda (failure) (cons 'failure failure))
-              (lambda () (cons 'value (thunk)))))))
+              (lambda ()
+                (let* ((worker-policy
+                        (poo-flow-debug-memory-policy
+                         policy-label
+                         heap-limit-bytes: heap-limit
+                         live-growth-limit-bytes: live-growth-limit
+                         sample-interval-milliseconds:
+                         sample-interval-milliseconds
+                         collect-before-sample?: collect-before-sample?
+                         fail-closed?: fail-closed?))
+                       (baseline
+                        (poo-flow-debug-memory-sample-from-counters
+                         phase baseline-counters))
+                       (value (thunk))
+                       (receipt
+                        (poo-flow-debug-memory-checkpoint
+                         worker-policy baseline phase
+                         port: port emit?: emit?)))
+                  (cons 'value (cons value receipt))))))))
          (joined? #f))
     (thread-start! worker)
     (dynamic-wind
@@ -371,24 +411,32 @@
           (let (outcome
                 (thread-join! worker interval-seconds timeout-token))
             (if (eq? outcome timeout-token)
-              (with-exception-catcher
-               (lambda (failure)
-                 (when (PooFlowDebugMemoryAnomaly? failure)
-                   (thread-terminate! worker)
-                   (set! joined? #t))
-                 (raise failure))
-               (lambda ()
-                 (poo-flow-debug-memory-checkpoint
-                  policy baseline phase port: port emit?: emit?)
-                 (monitor)))
+              (let (counters (poo-flow-debug-memory-counters #f))
+                (if (poo-flow-debug-memory-counters-rejected?
+                     heap-limit live-growth-limit baseline-counters counters)
+                  (begin
+                    (thread-terminate! worker)
+                    (set! joined? #t)
+                    (let* ((baseline
+                            (poo-flow-debug-memory-sample-from-counters
+                             phase baseline-counters))
+                           (after
+                            (poo-flow-debug-memory-sample-from-counters
+                             phase counters))
+                           (receipt
+                            (poo-flow-debug-memory-receipt
+                             policy baseline after)))
+                      (when emit?
+                        (parameterize ((current-error-port port))
+                          (DDT 'debug-memory
+                               poo-flow-debug-memory-receipt-sexp receipt)))
+                      (poo-flow-debug-raise-memory-anomaly receipt)))
+                  (monitor)))
               (begin
                 (set! joined? #t)
-                (let (receipt
-                      (poo-flow-debug-memory-checkpoint
-                       policy baseline phase port: port emit?: emit?))
-                  (if (eq? (car outcome) 'failure)
-                    (raise (cdr outcome))
-                    (values (cdr outcome) receipt))))))))
+                (if (eq? (car outcome) 'failure)
+                  (raise (cdr outcome))
+                  (values (cadr outcome) (cddr outcome))))))))
       (lambda ()
         (unless joined?
           (thread-terminate! worker))))))

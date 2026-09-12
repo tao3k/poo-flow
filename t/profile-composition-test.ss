@@ -94,7 +94,9 @@
         module-form)
        #f))))
 
-(def profile-composition-tests
+(export profile-composition-test)
+
+(def profile-composition-test
   (test-suite
    "profile composition"
    (test-case
@@ -273,5 +275,3 @@
          message
          "composition-missing-profile-operand"))
        #t)))))
-
-(run-tests! profile-composition-tests)

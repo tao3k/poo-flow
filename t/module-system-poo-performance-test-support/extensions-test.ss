@@ -9,14 +9,14 @@
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance-object-scenarios
-        :poo-flow/t/support/poo-performance
+        "../support/poo-performance-fixtures"
+        "../support/poo-performance-object-scenarios"
+        "../support/poo-performance"
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-validation/interface)
 
-(export module-system-poo-performance-extensions-test)
+(export extensions-test)
 
 ;; : TestCase
 (def module-system-poo-performance-extension-children-case
@@ -127,7 +127,7 @@
           (check-equal? (benchmark-receipt-pass? receipt) #t))))
 
 ;; : TestSuite
-(def module-system-poo-performance-extensions-test
+(def extensions-test
   (test-suite "poo-flow module system POO extension performance"
     module-system-poo-performance-extension-children-case
     module-system-poo-performance-cross-targeting-case

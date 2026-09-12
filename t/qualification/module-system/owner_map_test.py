@@ -45,7 +45,7 @@ class OwnerMapTest(unittest.TestCase):
 
     def test_descendant_owner_fails_closed(self) -> None:
         values = copy.deepcopy(self.values)
-        values["OWNER_MAP_ROWS"][0]["source_path"] = "packages/wendao-episteme/build.ss"
+        values["OWNER_MAP_ROWS"][0]["source_path"] = "lambda-episteme/build.ss"
         self.assert_rejected(values)
 
     def test_duplicate_target_fails_closed(self) -> None:

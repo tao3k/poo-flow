@@ -1,9 +1,7 @@
 (import :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :clan/poo/object
         :poo-flow/src/qualification/cutover-readiness)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def accepted-symbol-receipt
   (.o (kind 'poo-flow.runtime-symbol-manifest-receipt.v1) (accepted? #t)))
@@ -86,5 +84,3 @@
         (check (.ref receipt 'diagnostics)
                => '(release-decision-bypassed implicit-abi-v1-freeze
                     deletion-without-release-decision))))))
-
-(run-tests! cutover-readiness-test)

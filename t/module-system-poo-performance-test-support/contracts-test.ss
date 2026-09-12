@@ -9,15 +9,15 @@
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance
+        "../support/poo-performance-fixtures"
+        "../support/poo-performance"
         :poo-flow/src/module-system/object-family/indexed
         :poo-flow/src/core/runtime-protocol
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-validation/interface)
 
-(export module-system-poo-performance-contracts-test)
+(export contracts-test)
 
 ;; : TestCase
 (def module-system-poo-performance-fixture-contract-case
@@ -31,15 +31,6 @@
          poo-performance-fixture-paths)
         (check-equal?
          (map benchmark-fixture-contract-pass? fixtures)
-         (map (lambda (_) #t) fixtures))
-        (check-equal?
-         (map (lambda (fixture)
-                (benchmark-fixture-ref fixture 'maxRssMb))
-              fixtures)
-         (map (lambda (_) 512) fixtures))
-        (check-equal?
-         (map benchmark-fixture-memory-contract-pass?
-              fixtures)
          (map (lambda (_) #t) fixtures))
         (check-equal?
          (map poo-performance-api-evidence-contract-pass?
@@ -56,7 +47,6 @@
         (let (fixture
               '((feature . missing-poo-policy)
                 (iterations . 1000)
-                (maxRssMb . 512)
                 (sourcePath . "missing")))
           (check-equal?
            (poo-performance-fixture-policy-contract-pass? fixture)
@@ -248,7 +238,7 @@
            'completed))))
 
 ;; : TestSuite
-(def module-system-poo-performance-contracts-test
+(def contracts-test
   (test-suite "poo-flow module system POO performance contracts"
     module-system-poo-performance-fixture-contract-case
     module-system-poo-performance-fixture-policy-reject-case

@@ -1665,7 +1665,7 @@ flowchart LR
   binding; self-reported acceptance is never sufficient.
 - Every granted capability is proven to belong to the original requested set.
 - The parent proof owns this cross-plane contract.  The
-  =packages/wendao-episteme= child may publish profiles and requests, but it does
+  =lambda-episteme= child may publish profiles and requests, but it does
   not own the parent Cedar admission lifecycle and is never scanned or executed
   implicitly to validate the proof.
 - This theorem does not claim that the current Scheme composition runtime has

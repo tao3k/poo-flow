@@ -1,6 +1,11 @@
-(import :poo-flow/src/proof/proof-fact-wire
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/proof/proof-fact-wire
         :poo-flow/src/proof/proof-ffi-bridge
         :poo-flow/src/proof/proof-gate-receipts)
+
+(def proof-ffi-bridge-test
+  (test-suite "proof FFI bridge"
+    (test-case "projects the accepted proof payload"
 
 (def (assert-equal label actual expected)
   (unless (equal? actual expected)
@@ -32,4 +37,4 @@
               (poo-flow-proof-fact-ref
                'schema
                (poo-flow-proof-fact-ref 'handoff-wire payload))
-              'poo-flow.proof.ffi-wire)
+              'poo-flow.proof.ffi-wire))))

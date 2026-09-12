@@ -1,4 +1,9 @@
-(import :poo-flow/src/graph/scenario-gap-rejection-facts)
+(import (only-in :std/test test-case test-suite)
+        :poo-flow/src/graph/scenario-gap-rejection-facts)
+
+(def scenario-gap-rejection-facts-test
+  (test-suite "scenario gap rejection facts"
+    (test-case "projects each rejection class"
 
 (def (alist-ref key alist)
   (let ((entry (assq key alist)))
@@ -56,4 +61,4 @@
 
 (assert-equal 'rejected-kind-rule
               (alist-ref 'rejection-rule rejected-kind-facts)
-              'runtime-row-rejected-by-rejections)
+              'runtime-row-rejected-by-rejections))))

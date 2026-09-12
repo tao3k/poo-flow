@@ -10,7 +10,6 @@
                  check-not-equal?
                  check-output
                  check-true
-                 run-tests!
                  test-case
                  test-error
                  test-suite)
@@ -30,7 +29,9 @@
 (def (choice-value choice)
   (agent-sandbox-alist-ref choice 'value '()))
 
-(run-tests!
+(export agent-sandbox-nono-profile-candidate-test)
+
+(def agent-sandbox-nono-profile-candidate-test
  (test-suite "nono profile candidate projection"
    (test-case "builds nono backend candidates through backend constructor"
      (let* ((choice

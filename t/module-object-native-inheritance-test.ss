@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         :poo-flow/src/module-system/object-core/interface)
@@ -69,5 +68,3 @@
                  (poo-flow-module-object-resolved-fields broken)
                  #f))))
         (check-equal? (not (not failure)) #t)))))
-
-(run-tests! module-object-native-inheritance-test)

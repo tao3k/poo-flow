@@ -211,7 +211,7 @@ The most useful optimization evidence from this pass was not a single faster bui
 4. aggregate test roots can hide memory growth unless the roots are semantic boundaries.
 This separation is now the engineering rule for future POO optimization work. A fix is only durable when it lands at the owner boundary that created the cost. Shell wrappers, fallback behavior, giant negative file lists, or arbitrary test group sizes can reduce one receipt while leaving the next agent with the same root problem.
 
-The performance scenarios under =t/scenarios/performance= are the place to preserve this evidence. Each scenario should state the optimization focus in its =benchmark.ss= metadata, keep a local =maxRssMb= budget, and exercise one concrete object boundary. Current examples cover object/list merge, extension list merge, inheritance chains, validation summaries, POO construction, catalog validation, clone override, cross-contribution targeting, flow-strand registry merge, and loop contract projection. These scenarios are intentionally narrow: they protect the exact shape that regressed instead of relying on one large end-to-end test to explain every cost.
+The performance scenarios under =t/scenarios/performance= are the place to preserve this evidence. Each scenario states the optimization focus in its =benchmark.ss= metadata and exercises one concrete object boundary. Runtime memory limits come from the ASP POO Testing Profile, while benchmark receipts retain actual observations. Current examples cover object/list merge, extension list merge, inheritance chains, validation summaries, POO construction, catalog validation, clone override, cross-contribution targeting, flow-strand registry merge, and loop contract projection. These scenarios are intentionally narrow: they protect the exact shape that regressed instead of relying on one large end-to-end test to explain every cost.
 
 The benchmark policy should stay strict but honest:
 1. add or update a scenario before optimizing a large POO object path;
@@ -226,7 +226,8 @@ For runtime tests, semantic roots are the guardrail. Splitting a high-RSS aggreg
 The durable pattern is therefore:
 1. reproduce with a focused command and record time/RSS;
 2. identify whether the owner is build runner, macro construction, object operation, validation traversal, fixture load, or test-root aggregation;
-3. add or reuse a scenario with =optimizationFocus= and =maxRssMb=;
+3. add or reuse a scenario with =optimizationFocus= and bind any non-default
+   memory limit through the ASP POO Testing Profile;
 4. change the implementation at that owner boundary;
 5. rerun the scenario and the relevant semantic root;
 6. document the receipt here when it changes the engineering rule.

@@ -6,7 +6,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/user-interface/custom/my-module/config
@@ -61,5 +60,3 @@
         (check-equal? (test-ref marlin-handoff 'runtime-executed) #f)
         (check-equal? (test-ref marlin-handoff 'runtime-parses-scheme-source)
                       #f)))))
-
-(run-tests! user-interface-custom-durable-artifact-test)

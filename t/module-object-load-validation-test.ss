@@ -9,7 +9,7 @@
                  check-equal?)
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/interface
-        :poo-flow/t/fixtures/object-load-valid/objects)
+        "./fixtures/object-load-valid/objects")
 
 (export module-object-load-validation-test)
 

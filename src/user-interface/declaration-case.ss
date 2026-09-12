@@ -43,7 +43,8 @@
 
 ;; : (-> Unit [Pair])
 (def (poo-flow-declaration-case-default-module-keys)
-  '((flow . funflow)
+  '((core . poo-method-combination)
+    (flow . funflow)
     (session . session-core)
     (loop . governor)
     (sandbox . nono-sandbox)

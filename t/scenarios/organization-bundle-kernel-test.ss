@@ -1,9 +1,7 @@
 (import :clan/poo/object :std/test
-        (only-in :asp-gerbil-scheme/build-api declare-gxtest-memory-exception)
         :poo-flow/src/semantic/organization-bundle
         :poo-flow/src/semantic/organization-bundle-kernel)
 
-(declare-gxtest-memory-exception '((maxHeapMiB . 512)))
 
 (def (bundle epoch child-authority)
   (poo-flow-organization-bundle
@@ -32,7 +30,7 @@
                 (poo-flow-organization-bundle-kernel-open value)))
     (poo-flow-organization-bundle-kernel-validate candidate)))
 
-(def kernel-tests
+(def organization-bundle-kernel-test
   (test-suite
    "immutable organization Bundle kernel"
    (test-case "open and validate"
@@ -89,5 +87,3 @@
                       (bundle 8 '(search)))))
          (check-equal? next #f)
          (check-equal? (.ref receipt 'code) 'kernel-invalid-phase))))))
-
-(run-tests! kernel-tests)

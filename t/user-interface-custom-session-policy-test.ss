@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :poo-flow/src/module-system/declaration/interface
@@ -257,5 +256,3 @@
          (has-code? 'communication-channel-receipt-not-granted codes)
          #t)
         (check-equal? (test-ref validation 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-policy-test)

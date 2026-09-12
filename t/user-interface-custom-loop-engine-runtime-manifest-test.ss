@@ -4,7 +4,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -17,7 +16,7 @@
                  poo-flow-cubeSandbox-module-bundles)
         (only-in :poo-flow/src/modules/nono-sandbox/config
                  poo-flow-nono-sandbox-module-bundles)
-        (only-in :poo-flow/t/support/loop-engine-runtime-manifest-receipts
+        (only-in "./support/loop-engine-runtime-manifest-receipts"
                  check-custom-loop-runtime-manifest-request-receipts)
         (only-in :poo-flow/user-interface/custom/my-module/cases/loop-engine-owner
                  poo-flow-custom-my-module-loop-engine-case))

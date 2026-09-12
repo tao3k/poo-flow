@@ -34,7 +34,25 @@ query:
 # Resolve and build the canonical Scheme project through build.ss.
 [group('build')]
 build:
-    {{ bazel }} build {{ gerbil_compile }}
+    gerbil build
+
+# Install the dependency revisions declared by gerbil.pkg.
+[group('dependency')]
+deps:
+    gerbil deps --install
+
+# Clean only native Gerbil package build artifacts.
+[group('build')]
+clean:
+    gerbil clean
+
+# Run the cold native lifecycle in order; stop on the first failure.
+[group('check')]
+rebuild:
+    just clean
+    just deps
+    just build
+    just test
 
 # Incrementally build the canonical Scheme project through a persistent Bazel development root.
 [group('build')]
@@ -61,10 +79,10 @@ build-cedar-runtime-host out:
 toolchain:
     {{ bazel }} build --toolchain_resolution_debug={{ gerbil_toolchain_type }} {{ gerbil_compile }}
 
-# Run the ordinary Scheme acceptance suite.
+# Run the package's single native Scheme test entrypoint.
 [group('test')]
 test:
-    {{ bazel }} test --test_output=errors {{ gerbil_tests }}
+    gerbil env ./unit-tests.ss
 
 # Validate the shared Gerbil toolchain and dependency-install capabilities.
 [group('test')]
@@ -127,9 +145,9 @@ test-runtime-c-leaks:
 test-performance:
     {{ bazel }} test --test_output=errors {{ gerbil_performance_tests }}
 
-# Run the maintained query, build, and ordinary-test convergence gate.
+# Run the native Scheme build and ordinary-test convergence gate.
 [group('check')]
-check: query build test test-gerbil-capability test-module-system-ownership test-external-bazel-module
+check: build test
 
 # Verify that dependency resolution is represented by the tracked lock.
 [group('dependency')]

@@ -5,7 +5,6 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
@@ -80,5 +79,3 @@
         (check-equal? (test-ref handoff-intent 'memory-intent-count) 1)
         (check-equal? (test-ref handoff-intent 'runtime-executed) #f)
         (check-equal? (.ref receipt 'runtime-executed) #f)))))
-
-(run-tests! user-interface-custom-session-transform-test)

@@ -1,8 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Contract: session policy and tool grants expose native POO Contracts.
 
-(eval '(import "./src/modules/session/policy.ss"))
-(eval '(import :clan/poo/mop :clan/poo/object))
+(import :std/test)
 
 ;; : (-> PooFlowSessionPolicyExpr PooFlowSessionPolicyValue)
 (def (session-policy-eval expr)
@@ -19,7 +18,18 @@
          (alist-ref/default slot-row 'slot #f))
        (alist-ref/default row 'slots '())))
 
-(let (policy-row
+(export session-policy-native-type-contract-test)
+
+(def session-policy-native-type-contract-test
+  (test-suite "session-policy-native-type-contract-test"
+    (test-case "validates the native contract"
+      (eval '(import "./src/modules/session/policy.ss"))
+      (eval '(import :clan/poo/mop :clan/poo/object))
+      (eval
+       '(def (alist-ref/default entries key default-value)
+          (let (entry (assoc key entries))
+            (if entry (cdr entry) default-value))))
+      (let (policy-row
       (session-policy-eval
        '(poo-flow-session-policy-type-contract->alist)))
   (unless (and (eq? (alist-ref/default policy-row 'object-kind #f)
@@ -162,4 +172,4 @@
        '()
        'not-a-boolean)
       #t)))
- (error "session tool grant runtime-executed contract should reject invalid values"))
+ (error "session tool grant runtime-executed contract should reject invalid values")))))

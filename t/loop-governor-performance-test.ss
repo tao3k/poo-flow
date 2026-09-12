@@ -10,7 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/loops/descriptor
                  make-loop-pattern-descriptor)
         (only-in :poo-flow/src/loops/strategy

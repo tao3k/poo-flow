@@ -8,7 +8,7 @@
                  test-case
                  check-equal?
                  check-exception
-                 run-tests!)
+                 )
         :poo-flow/src/module-system/object-core/interface
         :poo-flow/src/module-system/object-validation/interface
         :poo-flow/src/module-system/objects)

@@ -10,7 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/performance
+        "./support/performance"
         (only-in :poo-flow/src/module-system/extension/interface
                  poo-flow-module-extension-node-slots)
         (only-in :poo-flow/src/module-system/object-core/interface

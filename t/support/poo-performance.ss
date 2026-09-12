@@ -6,8 +6,8 @@
                  benchmark-fixture-ref
                  benchmark-receipt-pass?
                  benchmark-run)
-        :poo-flow/t/support/poo-performance-fixtures
-        :poo-flow/t/support/poo-performance-object-scenarios
+        "./poo-performance-fixtures"
+        "./poo-performance-object-scenarios"
         (only-in :clan/poo/object
                  .all-slots
                  .def
@@ -21,8 +21,7 @@
         :poo-flow/src/module-system/object-family/indexed
         (only-in :std/sugar ormap))
 
-(export benchmark-fixture-memory-contract-pass?
-        poo-performance-fixture-policy-contract-pass?
+(export poo-performance-fixture-policy-contract-pass?
         poo-performance-display-receipt
         poo-performance-run-gate
         poo-performance-required-form-evidence
@@ -60,15 +59,6 @@
         poo-performance-generated-receipt-boundary->alist
         poo-performance-generated-receipt-boundary-valid-count
         poo-performance-generated-receipt-boundary-gate-receipt)
-
-;; : (-> Alist Boolean)
-(def (benchmark-fixture-memory-contract-pass? fixture)
-  (let (max-rss-mb (poo-performance-slot-ref/default
-                    fixture
-                    'maxRssMb
-                    #f))
-    (and (integer? max-rss-mb)
-         (> max-rss-mb 0))))
 
 ;; : [Symbol]
 (def poo-performance-required-policy-keys

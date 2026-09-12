@@ -1,16 +1,16 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: aggregate Funflow config checks in one Gerbil loader.
 
-(import :poo-flow/t/funflow-config-pipeline-direct-test
-        :poo-flow/t/funflow-config-pipeline-downstream-test
-        :poo-flow/t/funflow-config-pipeline-error-test)
+(import "./funflow-config-pipeline-direct-test"
+        "./funflow-config-pipeline-downstream-test"
+        "./funflow-config-pipeline-error-test")
 
-(export funflow-config-pipeline-import-ok)
+(import :std/test)
 
-;; Focused modules execute their checks on import; this aggregate preserves
-;; loader/expander memory coverage without adding runtime assertions.
-;; : Boolean
-(def poo-flow-import-side-effect-test-suite? #t)
+(export funflow-config-pipeline-test)
 
-;; : Symbol
-(def funflow-config-pipeline-import-ok 'ok)
+(def funflow-config-pipeline-test
+  (test-suite "Funflow config pipeline"
+    funflow-config-pipeline-direct-test
+    funflow-config-pipeline-downstream-test
+    funflow-config-pipeline-error-test))

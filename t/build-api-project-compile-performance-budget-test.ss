@@ -3,11 +3,10 @@
 
 (import (only-in :std/test
                  check-equal?
-                 run-tests!
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        :poo-flow/t/support/compile-performance-budget)
+        "./support/compile-performance-budget")
 
 (export build-api-project-compile-performance-budget-test)
 
@@ -114,5 +113,3 @@
         (check-equal?
          (.ref receipt 'diagnostics)
          '(comparison-identity-mismatch))))))
-
-(run-tests! build-api-project-compile-performance-budget-test)

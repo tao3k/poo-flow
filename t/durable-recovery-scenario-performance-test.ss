@@ -10,7 +10,7 @@
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run/result)
-        :poo-flow/t/support/performance
+        "./support/performance"
         :poo-flow/src/modules/memory-core/durable/policy
         :poo-flow/src/modules/memory-core/durable/store
         :poo-flow/src/modules/memory-core/durable/recovery-scenario

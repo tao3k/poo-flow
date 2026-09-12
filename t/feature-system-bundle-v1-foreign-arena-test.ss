@@ -4,7 +4,7 @@
         :poo-flow/src/feature-system/bundle-v1-lowering
         :poo-flow/src/feature-system/bundle-v1-foreign-arena)
 
-(export feature-system-bundle-v1-foreign-arena-test-suite)
+(export feature-system-bundle-v1-foreign-arena-test)
 
 (def +byte-offsets/u16+ '(0 1))
 (def +byte-offsets/u32+ '(0 1 2 3))
@@ -49,7 +49,7 @@
     (feature-bundle-v1-evidence
      'case-a 'obligation-a 'contract-a 'evidence-a 'lean-a 0))))
 
-(def feature-system-bundle-v1-foreign-arena-test-suite
+(def feature-system-bundle-v1-foreign-arena-test
   (test-suite
    "feature system Bundle v1 foreign arena"
 
@@ -131,5 +131,3 @@
       (check (.ref diagnostic 'reason) => 'foreign-arena-write-failed)
       (check (u8vector-length (.ref image 'descriptor-image)) => 0)
       (check (u8vector-length (.ref image 'arena-image)) => 0)))))
-
-(run-tests! feature-system-bundle-v1-foreign-arena-test-suite)
