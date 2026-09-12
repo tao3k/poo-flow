@@ -1,24 +1,25 @@
 * 2026-09-12 native PackageSpec and guard convergence
 
-The current root =build.ss= no longer uses the retired ASP package profiles,
-profile projectors, or =defbuild-script= compatibility surface.  It declares
-one POO-native =PackageSpec= with an explicit =all-gerbil-modules= catalog and
-the POO Flow native-spec projector, then gives the resulting =spec= procedure
-to =clan/building#init-build-environment!=.  The whole native call is supervised
-by the public
-=call-with-framework-native-build-memory-anomaly-guard= composition.
+The current root =build.ss= no longer uses the retired ASP package profiles or
+profile projectors.  It declares one POO-native =PackageSpec= with an explicit
+=all-gerbil-modules= catalog and the POO Flow native-spec projector, then gives
+the resulting heterogeneous Scheme/SSI/GSC/FFI spec to a top-level upstream
+=std/build-script#defbuild-script= form.  Top-level placement is required: the
+macro installs the package script's =spec=/=compile=/=clean= multicall main.
+Wrapping entrypoint declaration in a runtime thunk would silently leave the
+script without that main and is not build supervision.  The enclosing
+gerbil-bazel action owns the root build resource guard.
 
-That composition reads ASP's canonical positive override-or-host-capacity
-selection for its observation receipt.  PackageSpec remains the only owner
-that publishes the value into =GERBIL_BUILD_CORES= and Gerbil's compiler
-capacity immediately before =std/make= constructs settings.  POO Flow neither
-hardcodes a worker count nor implements a second scheduler, sampler, classifier,
-or receipt schema.
+PackageSpec remains the only package-side owner that applies ASP's canonical
+positive override-or-host-capacity selection, publishes it into
+=GERBIL_BUILD_CORES= and Gerbil's compiler capacity, and does so immediately
+before =std/make= constructs settings.  POO Flow neither hardcodes a worker
+count nor implements a second scheduler, sampler, classifier, or receipt schema.
 
 The nested Cedar conformance build uses the same public PackageSpec and guard
-surface.  Its specialized Cargo artifact staging remains downstream-owned, but
-the old =parallelize: #f= override is removed so native Gerbil scheduling keeps
-the caller or machine capacity.
+surface around its explicit build work.  Its specialized Cargo artifact
+staging remains downstream-owned, but the old =parallelize: #f= override is
+removed so native Gerbil scheduling keeps the caller or machine capacity.
 
 The sections below are retained as the historical 2026-09-01 cutover record;
 their former profile names are not current APIs.

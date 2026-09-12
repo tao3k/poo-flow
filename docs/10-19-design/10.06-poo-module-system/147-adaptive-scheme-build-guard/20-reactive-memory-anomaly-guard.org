@@ -3,10 +3,12 @@
 
 * 2026-09-11 downstream convergence
 
-POO Flow owns no memory guard implementation.  The root package build and POO
-CLOS qualification invoke
+POO Flow owns no memory guard implementation.  The root package build uses the
+top-level upstream =std/build-script#defbuild-script= entrypoint inside the
+enclosing gerbil-bazel resource guard.  Explicit downstream work such as POO
+CLOS qualification invokes
 =call-with-framework-native-build-memory-anomaly-guard= from the pinned public
-ASP Gerbil Scheme Build API around downstream-owned work.  They must not copy
+ASP Gerbil Scheme Build API.  These paths must not copy
 its process-table reader, Gambit heap sampler, rolling-window classifier,
 worker policy, trace emitter, or termination behavior.
 

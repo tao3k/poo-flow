@@ -7,9 +7,10 @@ plan.
 
 This document is historical.  POO Flow no longer implements the build
 watchdog, process-tree sampler, RSS policy, compiler supervisor, or guard
-receipt described below.  Those responsibilities are owned by the pinned ASP
-Gerbil Scheme Building Framework and are entered through the public native
-build memory-guard composition in =build.ss=.  The old =POO_FLOW_BUILD_*= variables and local guard
+receipt described below.  The root =build.ss= installs the top-level upstream
+=std/build-script#defbuild-script= entrypoint; gerbil-bazel owns its enclosing
+resource guard.  Explicit downstream build work may enter the pinned public ASP
+Gerbil Scheme native memory-guard composition.  The old =POO_FLOW_BUILD_*= variables and local guard
 schemas are not supported interfaces.  Current ownership and evidence limits
 are recorded in RFC 0147 modules 17 and 20.
 

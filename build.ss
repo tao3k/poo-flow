@@ -4,16 +4,15 @@
 
 (import (only-in :clan/building
                  all-gerbil-modules
-                 init-build-environment!
                  remove-build-file)
+        (only-in :std/build-script defbuild-script)
         (only-in :std/misc/path path-expand)
         (only-in :std/srfi/1 fold)
         (only-in :std/srfi/13 string-prefix?)
         (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype
-                 asp-gerbil-scheme-package-modules
-                 call-with-framework-native-build-memory-anomaly-guard))
+                 asp-gerbil-scheme-package-modules))
 
 (def +interface-only-modules+
   '("src/module-system/object-family/syntax.ss"
@@ -81,10 +80,7 @@
  (modules (all-gerbil-modules))
  (native-spec-projector poo-flow-native-spec))
 
-(call-with-framework-native-build-memory-anomaly-guard
- "poo-flow package build"
- (lambda ()
-   (init-build-environment!
-    name: "poo-flow"
-    deps: '("clan" "clan/poo" "asp-gerbil-scheme")
-    spec: spec)))
+;; This macro must remain at top level: it installs the package script's
+;; multicall main for spec/compile/clean and passes the heterogeneous native
+;; projection to the single upstream std/make scheduler.
+(defbuild-script (spec))

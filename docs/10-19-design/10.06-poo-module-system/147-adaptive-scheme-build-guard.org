@@ -9,8 +9,10 @@ The downstream guard implementation described by the earlier sections of this
 RFC has been removed.  POO Flow does not own build-process sampling, heap/RSS
 classification, compiler-job observation, worker admission, or abnormal-build
 termination.  Its root =build.ss= declares the package with the public ASP
-Gerbil Scheme =PackageSpec= API and composes the public native-build memory
-guard around =clan/building#init-build-environment!=.  The upstream guard owns
+Gerbil Scheme =PackageSpec= API and composes that native projection with the
+top-level =std/build-script#defbuild-script= entrypoint.
+The enclosing gerbil-bazel action owns the root build resource guard.  The
+upstream guard owns
 its versioned
 =asp-gerbil-scheme.build-trace.v1= and
 =asp-gerbil-scheme.memory-anomaly-guard.v1= receipts.

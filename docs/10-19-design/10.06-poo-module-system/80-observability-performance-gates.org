@@ -15,11 +15,14 @@ Composition scenarios must separate construction from hot-path validation.
 
 #+begin_src scheme
 (let (composition (poo-performance-composition-profile-declaration))
-  (poo-performance-family-run-gate
-   +poo-performance-benchmark-receipt-family+
-   poo-performance-composition-profile-declaration-fixture
-   (lambda ()
-     (poo-performance-composition-valid-count composition rounds))))
+  (let-values (((receipt selected-result)
+                (benchmark-run/result
+                 poo-performance-composition-profile-declaration-fixture
+                 (lambda ()
+                   (poo-performance-composition-valid-count
+                    composition
+                    rounds)))))
+    (values receipt selected-result)))
 #+end_src
 
 The construction counter is the hard observability repair:
@@ -58,15 +61,21 @@ The current policy scenarios are:
 - user-interface composition
 - runtime boundary
 
-The POO performance fixture policy is still enforced at the benchmark boundary:
-- the upstream benchmark fixture contract must pass
-- =maxRssMb= and memory metric fields must be valid
-- canonical input/expected timing phases must be present
-- =expectedOutcome= must state the semantic result of the measured POO path
-- required POO form evidence must be present
-- required POO usage-call evidence must be present
+The POO performance fixture policy is enforced as an extension of the ASP
+benchmark boundary:
+- =benchmarkKind= is =scenario-e2e=;
+- =sampleCount= is at least 20 and admission uses nearest-rank P95;
+- =max_total = target_total + regression_budget= and remains below one second;
+- =expectedOutcome= states the semantic result of the measured POO path;
+- =measurementPhases= includes =assert-time-gate= and
+  =observe-runtime-memory=;
+- required POO form and usage-call evidence remains present where the POO
+  scenario policy applies.
 
-This policy gates =poo-performance-run-gate=. A fixture missing local POO policy evidence is rejected before benchmark execution.
+ASP's =benchmark-run/result= owns timing, sample statistics, selected-result
+identity, runtime memory observations, and pass/fail.  POO Flow does not layer
+an =observed_total=, static =observedTimings=, best-of-N selector, or a second
+timing gate on top of that receipt.
 
 ** Build Cache Gate
 The build cache must not treat a stage stamp or receipt as proof that every module output is current. A stage stamp proves only that the stage was assessed. It does not prove that each generated =.ssi=, =.scm=, or native object is newer than the source that owns it.
@@ -124,36 +133,28 @@ silently making every build slower.
 ** Current Baseline
 *** Lazy-slot observability
 
-The lazy-slot observability gate takes the best of three complete scenario
-invocations, while its phase helpers independently use bounded best-of-three
-samples.  The fixture keeps this outer count at =3=: enough to reject a
-scheduler outlier without multiplying the small cold and warm batches into a
-stress workload.
+The lazy-slot observability gate now presents one semantic sample procedure to
+ASP.  ASP executes 20 independent samples, records =samplesNs=, =minNs=,
+=p50Ns=, =p95Ns=, =maxNs=, the selected sample's =elapsedNs= and
+=runtimeStats=, and admits P95 against the unchanged 50 ms hard limit.  The
+selected result proves construction counts, cold and traced checksums, warm
+cache checksums, one-time lazy evaluation, and prototype placement.  It does
+not contain local stopwatch fields.
 
-Ten source-first native =gxtest= runs on 2026-09-09 measured 13.886-14.589 ms
-for nine uncontended end-to-end samples, plus one 28.541 ms scheduler outlier.
-Representative phase ranges were:
+The former scenario nested best-of-three timers and excluded substantial setup
+from its phase clocks.  Those clocks were removed instead of translated.  A
+single ASP receipt now owns the complete measured boundary, while the POO result
+owns semantics only.  Dynamic POO initializer bindings continue to use distinct
+=*-value= lexical names so receipt construction cannot recursively demand its
+own slots.
 
-- 20 inline prototype compositions: 10-11 microseconds;
-- 20 compositions reusing one lexically bound prototype: 9-10 microseconds;
-- 16 guarded-object constructions: 952-1,039 microseconds;
-- first demand across 16 fresh guards: 29-35 microseconds;
-- 1,000 direct or guarded warm reads: 106-123 microseconds; and
-- traced first demand across two fresh guards: 2.04-2.44 milliseconds.
-
-The hot fixture therefore records a 15 ms observed baseline, a 20 ms target,
-and a 50 ms hard gate that tolerates host scheduling noise.  Phase-owned gates
-remain tighter: 10 ms construction, 1 ms first demand, and 10 ms traced demand.
-Gerbil/Bazel launcher time is intentionally excluded: the benchmark receipt's
-dynamic =elapsedMicros= owns workload evidence.
-
-The first version of this scenario timed out because its receipt used forms
-such as =construction-us: construction-us=.  Under =.o= that right-hand name
-is an object-local slot reference, so the receipt recursively demanded itself.
-The fix follows the standing dynamic-slot policy: bind
-=construction-us-value= and construct =construction-us:
-construction-us-value=.  Reducing iterations would have hidden the authoring
-error and is not an accepted repair.
+Prototype lookup and composition are not inferred from this millisecond-scale
+end-to-end scenario.  Two dedicated micro-kernels import the public
+=:asp-gerbil-scheme/build-api= facade, emit only V1 receipts, and measure the
+native operations in batched CPU nanoseconds per operation.  Current calibrated
+hard ceilings are 200 ns/op for prototype lookup and 2000 ns/op for one
+composition.  P95 and maximum batch values remain scheduler/jitter diagnostics;
+the intrinsic gate admits P50 after bracketed no-op baseline subtraction.
 
 *** Focused Test Runner
 
