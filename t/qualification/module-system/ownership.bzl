@@ -14,7 +14,7 @@ OWNER_MAP_ROWS = [
         "source_symbol": "use-composition",
         "source_kind": "macro",
         "test_path": "t/profile-composition-test.ss",
-        "test_symbol": "profile-composition-tests",
+        "test_symbol": "profile-composition-test",
         "target_name": "rfc45_01_mix_sources",
     },
     {
@@ -24,7 +24,7 @@ OWNER_MAP_ROWS = [
         "source_symbol": "poo-flow-g0-resolve",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
-        "test_symbol": "module-system-owner-contract-tests",
+        "test_symbol": "owner-contract-test",
         "target_name": "rfc45_02_sources",
     },
     {
@@ -34,7 +34,7 @@ OWNER_MAP_ROWS = [
         "source_symbol": "poo-flow-runtime-context",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
-        "test_symbol": "module-system-owner-contract-tests",
+        "test_symbol": "owner-contract-test",
         "target_name": "rfc45_03_sources",
     },
     {
@@ -54,7 +54,7 @@ OWNER_MAP_ROWS = [
         "source_symbol": "poo-flow-lineage-analysis",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
-        "test_symbol": "module-system-owner-contract-tests",
+        "test_symbol": "owner-contract-test",
         "target_name": "rfc45_05_sources",
     },
     {
@@ -64,7 +64,7 @@ OWNER_MAP_ROWS = [
         "source_symbol": "poo-flow-gerbil-poo-consumption-manifest",
         "source_kind": "function",
         "test_path": "t/qualification/module-system/owner-contract-test.ss",
-        "test_symbol": "module-system-owner-contract-tests",
+        "test_symbol": "owner-contract-test",
         "target_name": "rfc45_06_sources",
     },
     {
@@ -74,7 +74,7 @@ OWNER_MAP_ROWS = [
         "source_symbol": "use-composition",
         "source_kind": "macro",
         "test_path": "t/profile-composition-test.ss",
-        "test_symbol": "profile-composition-tests",
+        "test_symbol": "profile-composition-test",
         "target_name": "rfc45_07_composition_sources",
     },
 ]
