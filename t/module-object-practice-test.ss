@@ -15,6 +15,7 @@
                  test-error
                  test-suite)
         :poo-flow/t/support/performance
+        (only-in :asp-gerbil-scheme/build-api benchmark-p95-elapsed-ms)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/interface)
 
@@ -140,7 +141,7 @@
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-object-contributions practice-object
@@ -198,12 +199,12 @@
                 (/ (* (- (current-jiffy) start-jiffy) 1000)
                    (jiffies-per-second)))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-config-mk-merge base-node contributions))))
                (noop-best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (poo-flow-module-config-mk-merge base-node

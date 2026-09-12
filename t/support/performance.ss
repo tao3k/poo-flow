@@ -3,13 +3,11 @@
 ;;; Invariant: helper functions are pure except elapsed measurement thunks.
 
 (import :gerbil/gambit
-        (only-in :std/srfi/1 iota))
+        (only-in :std/srfi/1 iota)
+        (only-in :asp-gerbil-scheme/build-api
+                 benchmark-p95-elapsed-us))
 
-(export poo-flow-performance-build-list
-        poo-flow-performance-elapsed-ms
-        poo-flow-performance-best-elapsed-ms
-        poo-flow-performance-elapsed-us
-        poo-flow-performance-best-elapsed-us)
+(export poo-flow-performance-build-list)
 
 ;;; Intent: construct deterministic index-addressed fixture lists.
 ;;; Boundary: callers own the item constructor and count.
@@ -22,43 +20,6 @@
 
 (def (poo-flow-performance-build-list count make-value)
   (map make-value (iota count)))
-
-;;; Intent: measure one thunk execution in milliseconds.
-;;; Boundary: the thunk owns side effects; this helper owns only timing.
-;; : (-> (-> Unit Object) Rational)
-(def (poo-flow-performance-elapsed-ms thunk)
-  (let (start-jiffy (current-jiffy))
-    (thunk)
-    (/ (* (- (current-jiffy) start-jiffy) 1000)
-       (jiffies-per-second))))
-
-;;; Intent: report the best elapsed time across repeated benchmark attempts.
-;;; Boundary: zero attempts preserves the previous #f result shape.
-;; : (-> Integer (-> Unit Object) Object)
-(def (poo-flow-performance-best-elapsed-ms attempts thunk)
-  (if (<= attempts 0)
-    #f
-    (apply min
-           (map (lambda (_attempt)
-                  (poo-flow-performance-elapsed-ms thunk))
-                (iota attempts)))))
-
-;; : (-> (-> Unit Object) Integer)
-(def (poo-flow-performance-elapsed-us thunk)
-  (let (start (##current-time-point))
-    (thunk)
-    (inexact->exact
-     (floor
-      (* (- (##current-time-point) start) 1000000.0)))))
-
-;; : (-> Integer (-> Unit Object) Object)
-(def (poo-flow-performance-best-elapsed-us attempts thunk)
-  (if (<= attempts 0)
-    #f
-    (apply min
-           (map (lambda (_attempt)
-                  (poo-flow-performance-elapsed-us thunk))
-                (iota attempts)))))
 
 (def +domain-case-instance-overlay-benchmark-kind+
   'poo-flow.domain-case-instance-overlay-benchmark.v1)
@@ -156,7 +117,7 @@
            64 shared last-slot-key))
          (_baseline-gc (##gc))
          (baseline-us
-          (poo-flow-performance-best-elapsed-us
+          (benchmark-p95-elapsed-us
            5
            (lambda ()
              (domain-case-instance-overlay-benchmark-exercise
@@ -164,7 +125,7 @@
               agent-count shared last-slot-key))))
          (_overlay-gc (##gc))
          (overlay-us
-          (poo-flow-performance-best-elapsed-us
+          (benchmark-p95-elapsed-us
            5
            (lambda ()
              (domain-case-instance-overlay-benchmark-exercise
@@ -183,6 +144,7 @@
     (domain-case-instance-overlay-benchmark-role
      (list
       (cons 'kind +domain-case-instance-overlay-benchmark-kind+)
+      (cons 'admissionStatistic 'p95)
       (cons 'agent-count agent-count)
       (cons 'shared-slot-count slot-count)
       (cons 'materialized-slot-count (+ slot-count 4))
@@ -210,7 +172,7 @@
 (def (domain-case-instance-overlay-benchmark->alist receipt)
   (map
    (lambda (key) (cons key (.ref receipt key)))
-   '(kind agent-count shared-slot-count materialized-slot-count
+   '(kind admissionStatistic agent-count shared-slot-count materialized-slot-count
      baseline-mix-count overlay-mix-count resolver-depth
      construction-complexity lookup-source-depth
      baseline-us overlay-us speedup correct?

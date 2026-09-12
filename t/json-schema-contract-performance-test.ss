@@ -7,9 +7,9 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in "./support/performance.ss"
-                 poo-flow-performance-best-elapsed-ms
-                 poo-flow-performance-best-elapsed-us)
+        (only-in :asp-gerbil-scheme/build-api
+                 benchmark-p95-elapsed-ms
+                 benchmark-p95-elapsed-us)
         "./support/json-schema-contract-performance.ss")
 
 (export json-schema-contract-performance-test)
@@ -33,15 +33,15 @@
    #t))
 
 ;; : (-> Integer (-> Integer) Rational)
-(def (json-schema-contract-performance-best-ms attempts workload)
-  (poo-flow-performance-best-elapsed-ms
+(def (json-schema-contract-performance-p95-ms attempts workload)
+  (benchmark-p95-elapsed-ms
    attempts
    (lambda ()
      (workload))))
 
 ;; : (-> Integer (-> Integer) Integer)
-(def (json-schema-contract-performance-best-us attempts workload)
-  (poo-flow-performance-best-elapsed-us
+(def (json-schema-contract-performance-p95-us attempts workload)
+  (benchmark-p95-elapsed-us
    attempts
    (lambda ()
      (workload))))
@@ -80,28 +80,28 @@
            poo-workflow
            rounds))
          (alist-ms
-          (json-schema-contract-performance-best-ms
+          (json-schema-contract-performance-p95-ms
            attempts
            (lambda ()
              (json-schema-contract-performance-validate-rounds
               alist-workflow
               rounds))))
          (poo-ms
-          (json-schema-contract-performance-best-ms
+          (json-schema-contract-performance-p95-ms
            attempts
            (lambda ()
              (json-schema-contract-performance-validate-rounds
               poo-workflow
               rounds))))
          (micro-fast-us
-          (json-schema-contract-performance-best-us
+          (json-schema-contract-performance-p95-us
            attempts
            (lambda ()
              (json-schema-contract-performance-fast-validate-rounds
               micro-workflow
               micro-rounds))))
          (micro-receipt-us
-          (json-schema-contract-performance-best-us
+          (json-schema-contract-performance-p95-us
            attempts
            (lambda ()
              (json-schema-contract-performance-validate-rounds
@@ -109,6 +109,7 @@
               micro-rounds)))))
     (list
      (cons 'attempts attempts)
+     (cons 'admissionStatistic 'p95)
      (cons 'job-count job-count)
      (cons 'step-count step-count)
      (cons 'rounds rounds)

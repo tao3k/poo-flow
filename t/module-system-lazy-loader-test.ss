@@ -14,6 +14,7 @@
                  test-error
                  test-suite)
         :poo-flow/t/support/performance
+        (only-in :asp-gerbil-scheme/build-api benchmark-p95-elapsed-ms)
         :poo-flow/src/module-system/loader/source
         :poo-flow/src/module-system/descriptor/interface
         :poo-flow/src/module-system/extension/interface
@@ -104,7 +105,7 @@
                (source-refs
                 (lazy-loader-module-tree-source-refs module-roots))
                (best-ms
-                (poo-flow-performance-best-elapsed-ms
+                (benchmark-p95-elapsed-ms
                  5
                  (lambda ()
                    (lazy-loader-module-tree-source-refs module-roots)))))
