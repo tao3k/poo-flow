@@ -136,16 +136,14 @@ jobs:
             .gerbil/pkg
             .gerbil/lib
             .gerbil/bin
-          key: native-gerbil-pkg-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
-          restore-keys: |
-            native-gerbil-pkg-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
+          key: native-gerbil-pkg-portable-v2-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Install native Gerbil package dependencies
         run: |
           mkdir -p "$HOME/.gerbil/pkg"
           gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
-          if ! gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/build-api) (displayln "native-dependencies-ready"))'; then
-            gerbil deps --install
+          if ! gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/build-api :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api :asp-gerbil-scheme/testing-api) (displayln "native-dependencies-ready"))'; then
+            gerbil deps --update
           fi
 
       - name: Save native Gerbil package cache
@@ -156,7 +154,7 @@ jobs:
             .gerbil/pkg
             .gerbil/lib
             .gerbil/bin
-          key: native-gerbil-pkg-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
+          key: native-gerbil-pkg-portable-v2-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Build native Gerbil package
         run: |
