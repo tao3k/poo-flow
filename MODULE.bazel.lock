@@ -192,7 +192,7 @@
     "@@gerbil_bazel+//gerbil:extensions.bzl%gerbil": {
       "os:linux,arch:amd64": {
         "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
-        "usagesDigest": "FChFolAHMa47n1dSL8vqujTeBRPJPdHzq4YtqmmtEIE=",
+        "usagesDigest": "L1ZG7euHNAqb0iYky1Il9uhfgsm+zw/s8sKcczFX6L4=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -254,11 +254,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
               "package": "asp-gerbil-scheme",
-              "revision": "91f28cc968a3d63121f86b5c9a89d630e1d4d47a",
-              "sha256": "d662607dcb01c53403f7e1b06186e041db97e95439e742d7623a2f666eae1018",
-              "strip_prefix": "asp-gerbil-scheme-91f28cc968a3d63121f86b5c9a89d630e1d4d47a",
+              "revision": "7fb8e8b320fd1af9375a64f052ead309823aff3f",
+              "sha256": "eb10a96bb088ef5fadc1a549e939a10bc48a1cb0b98f935b2c16fb79b54b676e",
+              "strip_prefix": "asp-gerbil-scheme-7fb8e8b320fd1af9375a64f052ead309823aff3f",
               "urls": [
-                "https://github.com/tao3k/asp-gerbil-scheme/archive/91f28cc968a3d63121f86b5c9a89d630e1d4d47a.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/7fb8e8b320fd1af9375a64f052ead309823aff3f.tar.gz"
               ]
             }
           }
@@ -266,7 +266,7 @@
       },
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "syK1vkgy74JTqVFQ+OZjMzo0XraQ682l5TBodh1nX9g=",
-        "usagesDigest": "FChFolAHMa47n1dSL8vqujTeBRPJPdHzq4YtqmmtEIE=",
+        "usagesDigest": "L1ZG7euHNAqb0iYky1Il9uhfgsm+zw/s8sKcczFX6L4=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "local_gerbil": {
@@ -323,11 +323,11 @@
               "build_script": "build.ss",
               "canonical_uri": "https://github.com/tao3k/asp-gerbil-scheme",
               "package": "asp-gerbil-scheme",
-              "revision": "91f28cc968a3d63121f86b5c9a89d630e1d4d47a",
-              "sha256": "d662607dcb01c53403f7e1b06186e041db97e95439e742d7623a2f666eae1018",
-              "strip_prefix": "asp-gerbil-scheme-91f28cc968a3d63121f86b5c9a89d630e1d4d47a",
+              "revision": "7fb8e8b320fd1af9375a64f052ead309823aff3f",
+              "sha256": "eb10a96bb088ef5fadc1a549e939a10bc48a1cb0b98f935b2c16fb79b54b676e",
+              "strip_prefix": "asp-gerbil-scheme-7fb8e8b320fd1af9375a64f052ead309823aff3f",
               "urls": [
-                "https://github.com/tao3k/asp-gerbil-scheme/archive/91f28cc968a3d63121f86b5c9a89d630e1d4d47a.tar.gz"
+                "https://github.com/tao3k/asp-gerbil-scheme/archive/7fb8e8b320fd1af9375a64f052ead309823aff3f.tar.gz"
               ]
             }
           }
