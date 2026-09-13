@@ -7,6 +7,7 @@
 (import (only-in :clan/poo/object .ref object?)
         (only-in :std/crypto/digest sha256)
         (only-in :std/sort sort)
+        (only-in :std/misc/list delete-duplicates/hash)
         (only-in :std/text/hex hex-encode)
         (only-in :std/srfi/1 every)
         :poo-flow/src/core/object-syntax
@@ -20,6 +21,7 @@
                  poo-flow-remove
                  poo-flow-append-map
                  poo-flow-all?
+                 poo-flow-stable-duplicates
                  poo-flow-member?
                  poo-flow-list-of?))
 
@@ -75,27 +77,10 @@
                     (domain-case-id->string right)))))
 
 (def (domain-case-unique values)
-  (reverse
-   (poo-flow-fold-left
-    (lambda (value unique-reversed)
-      (if (poo-flow-member? value unique-reversed)
-          unique-reversed
-          (cons value unique-reversed)))
-    '()
-    values)))
+  (delete-duplicates/hash values from-end?: #t))
 
 (def (domain-case-duplicates values)
-  (let (seen+duplicates
-        (poo-flow-fold-left
-         (lambda (value state)
-           (let ((seen (car state))
-                 (duplicates-reversed (cdr state)))
-             (if (poo-flow-member? value seen)
-                 (cons seen (cons value duplicates-reversed))
-                 (cons (cons value seen) duplicates-reversed))))
-         (cons '() '())
-         values))
-    (reverse (domain-case-unique (cdr seen+duplicates)))))
+  (poo-flow-stable-duplicates values))
 
 (def (domain-case-every-eq? left right)
   (and (= (length left) (length right))

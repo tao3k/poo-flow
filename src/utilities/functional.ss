@@ -9,12 +9,16 @@
                  append-map
                  every
                  find
+                 filter
                  filter-map
                  fold
                  fold-right
                  map
                  member
-        remove)
+                 remove)
+        (only-in :std/misc/list
+                 delete-duplicates/hash
+                 duplicates)
         (only-in :std/srfi/13
                  string-drop
                  string-prefix?))
@@ -29,6 +33,7 @@
         poo-flow-any?
         poo-flow-all?
         poo-flow-member?
+        poo-flow-stable-duplicates
         poo-flow-alist?
         poo-flow-list-of?
         poo-flow-string-prefix?
@@ -201,6 +206,24 @@
 ;;     %
 (def (poo-flow-member? value values)
   (if (member value values) #t #f))
+
+;; poo-flow-stable-duplicates
+;;   : (-> [Object] [Object])
+;;   | doc m%
+;;       Returns each duplicated value once, ordered by its first appearance.
+;;       The implementation composes the maintained `std/misc/list` hash
+;;       algorithms instead of repeatedly scanning an accumulated list.
+;;     %
+(def (poo-flow-stable-duplicates values)
+  (let (duplicate-table (make-hash-table))
+    (for-each
+     (lambda (entry)
+       (hash-put! duplicate-table (car entry) #t))
+     (duplicates values))
+    (filter
+     (lambda (value)
+       (hash-key? duplicate-table value))
+     (delete-duplicates/hash values from-end?: #t))))
 
 ;; poo-flow-alist?
 ;;   : (-> Object Boolean)

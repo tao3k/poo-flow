@@ -4,6 +4,7 @@
 
 (import (only-in :clan/poo/object .o .ref object?)
         (only-in :std/crypto/digest sha256)
+        (only-in :std/misc/list delete-duplicates/hash)
         (only-in :std/sort sort)
         (only-in :std/text/hex hex-encode))
 
@@ -320,11 +321,7 @@
   (andmap (lambda (value) (member value parent)) child))
 
 (def (semantic-unique-count values)
-  (length
-   (foldl (lambda (value seen)
-            (if (member value seen) seen (cons value seen)))
-          '()
-          values)))
+  (length (delete-duplicates/hash values)))
 
 (def (semantic-proper-subset? child parent)
   (and (semantic-subset? child parent)

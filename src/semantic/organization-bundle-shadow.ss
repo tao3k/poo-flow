@@ -57,13 +57,6 @@
       (- (length +shadow-facet-order+) (length ranked-tail))
       99)))
 
-(def (shadow-unique values)
-  (reverse
-   (foldl (lambda (value seen)
-            (if (memq value seen) seen (cons value seen)))
-          '()
-          values)))
-
 (def (shadow-section-facts facet section values)
   (map (lambda (value)
          (poo-flow-organization-shadow-fact

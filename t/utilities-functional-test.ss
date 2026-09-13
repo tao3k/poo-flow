@@ -13,6 +13,7 @@
                  poo-flow-append-map
                  poo-flow-any?
                  poo-flow-all?
+                 poo-flow-stable-duplicates
                  poo-flow-list-of?
                  poo-flow-predicate-and
                  poo-flow-predicate-or
@@ -71,6 +72,13 @@
         (check-equal? (exact-string-or-symbol? "agent") #t)
         (check-equal? (exact-string-or-symbol? 'agent) #t)
         (check-equal? (exact-string-or-symbol? 42) #f)))
+    (test-case "extracts stable duplicate values with hash-backed std algorithms"
+      (check-equal?
+       (poo-flow-stable-duplicates '(alpha beta alpha gamma beta alpha))
+       '(alpha beta))
+      (check-equal?
+       (poo-flow-stable-duplicates '((a . 1) (b . 2) (a . 1)))
+       '((a . 1))))
     (test-case "projects and merges association lists deterministically"
       (let ((base '((owner . kernel)
                     (budget . 100)

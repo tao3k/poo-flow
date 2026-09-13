@@ -3,7 +3,8 @@
 ;;; Invariant: helpers are pure datum transforms over already-materialized
 ;;; receipt rows; they do not realize runtime sessions or tool calls.
 
-(import "core.ss")
+(import (only-in :std/misc/list delete-duplicates/hash)
+        "core.ss")
 
 (export poo-flow-loop-engine-runtime-agent-field-values
         poo-flow-loop-engine-runtime-agent-flat-field-values
@@ -36,10 +37,4 @@
 ;;; Uniqueness keeps the first visible declaration for topology diagnostics.
 ;; : (-> [Datum] [Datum])
 (def (poo-flow-loop-engine-runtime-agent-unique values)
-  (reverse
-   (foldl (lambda (value unique)
-            (if (member value unique)
-              unique
-              (cons value unique)))
-          '()
-          values)))
+  (delete-duplicates/hash values from-end?: #t))

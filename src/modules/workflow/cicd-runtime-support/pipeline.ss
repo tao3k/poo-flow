@@ -2,6 +2,7 @@
 ;;; Boundary: CI/CD pipeline assembly and status projection from check maps.
 
 (import (only-in :clan/poo/object .ref)
+        (only-in :std/misc/list delete-duplicates/hash)
         :poo-flow/src/modules/workflow/cicd-core
         :poo-flow/src/modules/workflow/cicd-projection-syntax
         :poo-flow/src/modules/workflow/cicd-sandbox
@@ -13,7 +14,6 @@
         poo-flow-cicd-pipeline-run-step-fields
         poo-flow-cicd-check->pipeline-run-step
         poo-flow-cicd-pipeline-run-step-summary
-        poo-flow-cicd-symbol-list-unique/fold
         poo-flow-cicd-symbol-list-unique
         poo-flow-cicd-symbols-into/rev
         poo-flow-cicd-pipeline-run-steps-diagnostics/rev
@@ -163,20 +163,9 @@
      (cons 'steps steps)
      (cons 'blocked-steps (reverse blocked-steps-rev)))))
 
-;; Unique diagnostic projection preserves first-seen order while removing
-;; repeated step diagnostics from large pipelines.
-;; : (-> [Symbol] [Symbol] [Symbol])
-(def (poo-flow-cicd-symbol-list-unique/fold values seen)
-  (cond
-   ((null? values) seen)
-   (else
-    (poo-flow-cicd-symbol-list-unique/fold
-     (cdr values)
-     (poo-flow-cicd-symbol-add (car values) seen)))))
-
 ;; : (-> [Symbol] [Symbol])
 (def (poo-flow-cicd-symbol-list-unique values)
-  (poo-flow-cicd-symbol-list-unique/fold values '()))
+  (delete-duplicates/hash values from-end?: #t))
 
 ;; : (-> [Symbol] [Symbol] [Symbol])
 (def (poo-flow-cicd-symbols-into/rev values result)
