@@ -1,6 +1,6 @@
 #!/usr/bin/env gxi
 ;;; Canonical compiler owner for the downstream native conformance program.
-(import (only-in :asp-gerbil-scheme/build-api
+(import (only-in :asp-gerbil-scheme/building-api
                  asp-gerbil-scheme-package-spec!
                  asp-gerbil-scheme-library-package-prototype
                  call-with-framework-native-build-memory-anomaly-guard)

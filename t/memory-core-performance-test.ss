@@ -8,7 +8,7 @@
                  test-case
                  test-suite)
         (only-in :clan/poo/object .ref)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)

@@ -155,30 +155,25 @@ requests and backend-specific adapters. That work belongs in
 - The request contract is explicit enough for Marlin to implement backend
   selection later without changing the Scheme task API.
 ** 10.05.90 Native Binding Build Audit
-The =gerbil-mysql= reference package shows the correct Gerbil pattern for a
-real native FFI module:
-- =build.ss= imports =:std/build-script= and =:std/make=.
-- The build spec uses =gsc:= for a raw Gambit FFI file such as =db/_mysql.scm=.
-- The same target passes =-cc-options= and =-ld-options= through =cppflags= and
-  =ldflags= so package build owns native compiler and linker flags.
-- An =ssi:= target exposes the raw FFI module to Gerbil code.
+The current =nono= surface contains a real Gerbil FFI module.  It follows the
+upstream =:std/foreign= path:
+- =src/modules/nono-sandbox/_nono.ss= declares its exported native procedures
+  with =begin-ffi=;
+- the ASP package declaration adds one ordinary =gxc:= target carrying the
+  required host include and linker options;
+- Gerbil owns generation of the module interface, Gambit source, and native
+  object outputs.
 
-POO Flow should not copy that pattern for the current =nono= surface. The
-=nono= adapter in this repository is not a Scheme-owned FFI module; it is a
-host compile probe and a runtime handoff contract. Therefore:
-- =build.ss= remains responsible for Gerbil package lifecycle through
-  =clan/building=.
-- =src/modules/nono-sandbox/c-binding-descriptor.ss= owns the ABI inventory.
+POO Flow must not maintain a parallel raw =.scm= plus =.ssi= target pair for
+this module.  Besides duplicating Gerbil's normal module lifecycle, a raw
+=gsc:= target has no deterministic output before its first compilation and
+therefore cannot satisfy the native =gerbil clean= contract on a fresh package.
+The remaining boundaries are unchanged:
+- =src/modules/nono-sandbox/c-binding-descriptor.ss= owns the ABI inventory;
 - =src/modules/nono-sandbox/c-binding-build.ss= owns the POO build/probe object
-  and direct argv command for syntax-only host checks.
-- =src/modules/nono-sandbox/c-binding-runtime.ss= consumes that build object
-  when it needs a smoke-test command, but it still never links, dlopens, or
-  applies the native sandbox.
-
-If POO Flow later adds a real Gerbil FFI module, that slice should add a
-dedicated =gsc:= + =ssi:= pair and keep C flags in the package build spec, as
-=gerbil-mysql= does. Until then, modeling the nono probe as =gsc:= would be a
-false owner boundary.
+  for syntax-only host checks;
+- =src/modules/nono-sandbox/c-binding-runtime.ss= owns runtime handoff data;
+- =src/modules/nono-sandbox/native.ss= alone owns the gated =dlopen= probes.
 ** 10.05.91 Nono C Probe Input Contract
 The =nono= C probe remains a syntax-only host check, but its input contract is
 now explicit:
@@ -191,7 +186,7 @@ now explicit:
 - probe command generation validates required inputs first and raises a typed
   Scheme failure instead of relying on compiler diagnostics.
 
-This keeps the current slice below the full =gsc:= + =ssi:= FFI line while
+This keeps the host probe separate from the =begin-ffi= runtime module while
 removing the dependency on a particular =.data= checkout layout.
 ** 10.05.92 Always-Further Nono Diagnostic ABI
 The =always-further/nono= C binding source currently exposes diagnostic helpers

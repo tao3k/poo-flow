@@ -7,7 +7,7 @@
                  test-case
                  test-suite)
         (only-in :std/sugar foldl)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-receipt-pass?
                  benchmark-run)

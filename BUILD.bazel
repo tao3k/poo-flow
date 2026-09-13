@@ -3,6 +3,8 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "gerbil-dependencies.MODULE.bazel",
     "t/feature-system-bundle-v1-foreign-arena-fixture.ss",
+    "t/module-system-observability-test.ss",
+    "t/profile-composition-test.ss",
 ])
 
 filegroup(
@@ -15,9 +17,7 @@ filegroup(
     srcs = glob([
         "gerbil.pkg",
         "src/**/*.inc",
-        "src/**/*.scm",
         "src/**/*.ss",
-        "src/**/*.ssi",
     ]),
 )
 
@@ -33,7 +33,6 @@ filegroup(
         ":scheme_runtime_sources",
     ] + glob([
         "bindings/nono-c/**/*.h",
-        "t/**/*.ss",
         "user-interface/**/*.ss",
     ]),
 )

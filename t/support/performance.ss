@@ -4,7 +4,7 @@
 
 (import :gerbil/gambit
         (only-in :std/srfi/1 iota)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-p95-elapsed-us))
 
 (export poo-flow-performance-build-list)

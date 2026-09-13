@@ -85,7 +85,9 @@ That strategy avoids =std/make='s package dependency tables, but it recompiles t
 The correct next implementation is:
 1. Keep default =gxpkg build= on =std/make= so package clean/build semantics and incremental checks stay intact.
 2. Use =:clan/building= as the normal package build facade, matching =gerbil-poo= and =gerbil-utils=.
-3. Keep =build.ss= responsible only for package include dirs and true special targets: the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface that must be package-managed.
+3. Keep =build.ss= responsible only for true special target options: the nono
+   =begin-ffi= module's host flags and the small user-interface entry surface
+   that must be package-managed. Gerbil owns the FFI module outputs.
 4. Treat =src= and root =t= as the ordinary package surface. =.data=, docs, generated state, user examples, and fixtures stay out because they are not included, not because the build file carries a long negative directory list.
 5. Keep diagnostics on the native package entry.  Do not introduce a direct
    =compile-module= build path as a downstream performance workaround; bootstrap
@@ -148,7 +150,9 @@ The current build implementation has been corrected toward the =gerbil-poo= / =g
 - =build.ss= imports the clan filesystem/building helpers, but ordinary source discovery is project-owned and positive: scan only the include dirs that define the package surface;
 - package discovery is positive: runtime modules come from =src=, and package-managed tests come from =t= while =fixtures= and =scenarios= stay outside broad discovery;
 - integration-only fixture wrappers such as =t/fixtures/object-load-valid/objects.ss= are explicit test build-spec entries, so fixture source remains outside package scanning while package-local imports have real compiler artifacts;
-- the nono =gsc:= + =ssi:= FFI shim, the CLI executable, and the small user-interface entry surface remain explicit build-spec entries;
+- the nono =begin-ffi= module remains one explicit =gxc:= entry for its host
+  compiler/linker options; no raw Gambit source or hand-maintained interface
+  target duplicates Gerbil's generated outputs;
 - =GERBIL_BUILD_CORES= remains the normal parallelism knob, matching the reference packages and avoiding custom thread logic in =build.ss=.
 - dependency ordering must remain a single =std/make= concern.  A POO Flow
   declaration may expose exceptional native entries, but it must not introduce

@@ -26,7 +26,7 @@ One sample performs these bounded operations:
 
 Checksums and the one-time evaluation count are the semantic gate.  The ASP P95
 receipt is the sole end-to-end time gate.  The lookup and composition tests use
-the public =:asp-gerbil-scheme/build-api= micro-kernel API and V1 receipts; they
+the public =:asp-gerbil-scheme/benchmark-api= micro-kernel API and V1 receipts; they
 warm up, batch operations, subtract bracketed no-op CPU baselines, and admit the
 P50 intrinsic nanoseconds per operation while retaining P95 and maximum jitter.
 

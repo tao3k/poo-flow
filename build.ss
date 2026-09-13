@@ -2,8 +2,7 @@
 ;;; -*- Gerbil -*-
 ;;; Native POO Flow package build declaration.
 
-(import (only-in :clan/building default-exclude-dirs)
-        (only-in :std/build-script defbuild-script)
+(import (only-in :std/build-script defbuild-script)
         (only-in :std/misc/path path-expand)
         (only-in :asp-gerbil-scheme/build-api
                  asp-gerbil-scheme-package-spec!
@@ -28,18 +27,16 @@
     "user-interface/custom/my-module/config.ss"))
 
 (def +nono-ffi-spec+
-  `((gsc: "src/modules/nono-sandbox/_nono"
+  `((gxc: "src/modules/nono-sandbox/_nono"
           "-cc-options" ,(string-append "-I" (path-expand "bindings/nono-c"))
           ,@(cond-expand
               (darwin '("-ld-options" "-Wl,-undefined,dynamic_lookup"))
-              (else '("-ld-options" "-ldl"))))
-    (ssi: "src/modules/nono-sandbox/_nono")))
+              (else '("-ld-options" "-ldl"))))))
 
 (asp-gerbil-scheme-package-spec!
  (poo-flow-library-package-spec
  @ asp-gerbil-scheme-library-package-prototype)
  (spec spec)
- (exclude-dirs (cons "testing" default-exclude-dirs))
  (exclude-modules
   (append '("version.ss")
           +excluded-runtime-modules+

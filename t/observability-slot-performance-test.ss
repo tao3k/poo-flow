@@ -1,6 +1,6 @@
 ;;; -*- Gerbil -*-
 (import (only-in :std/test check-equal? test-case test-suite)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
                  benchmark-run/result
                  benchmark-receipt-pass?

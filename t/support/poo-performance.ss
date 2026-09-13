@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; Boundary: shared fixtures and helpers for POO performance scenario tests.
 
-(import (only-in :asp-gerbil-scheme/build-api
+(import (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-contract-pass?
                  benchmark-fixture-ref
                  benchmark-receipt-pass?

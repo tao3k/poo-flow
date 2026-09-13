@@ -1,6 +1,6 @@
 #!/usr/bin/env gxi
 (import (only-in :clan/poo/object .cc)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/testing-api
                  +asp-testing-interface+
                  +testing-discovery-profile+
                  testing-interface-add-profile

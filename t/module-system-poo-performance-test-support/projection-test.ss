@@ -5,7 +5,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref
                  benchmark-receipt-pass?)
         (only-in :clan/poo/object

@@ -14,7 +14,7 @@
                  test-error
                  test-suite)
         "./support/performance"
-        (only-in :asp-gerbil-scheme/build-api benchmark-p95-elapsed-ms)
+        (only-in :asp-gerbil-scheme/benchmark-api benchmark-p95-elapsed-ms)
         :poo-flow/src/module-system/extension/interface
         :poo-flow/src/module-system/object-core/interface)
 

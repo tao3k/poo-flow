@@ -150,7 +150,7 @@ own slots.
 
 Prototype lookup and composition are not inferred from this millisecond-scale
 end-to-end scenario.  Two dedicated micro-kernels import the public
-=:asp-gerbil-scheme/build-api= facade, emit only V1 receipts, and measure the
+=:asp-gerbil-scheme/benchmark-api= facade, emit only V1 receipts, and measure the
 native operations in batched CPU nanoseconds per operation.  Current calibrated
 hard ceilings are 200 ns/op for prototype lookup and 2000 ns/op for one
 composition.  P95 and maximum batch values remain scheduler/jitter diagnostics;

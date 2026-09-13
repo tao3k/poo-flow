@@ -1,7 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-bazel := "bazelisk"
 devenv_exec := ".devenv/devenv-profile-exec"
+bazel := devenv_exec + " bazelisk"
 gerbil_compile := "//gerbil:compile"
 gerbil_dev_compile := "//gerbil:dev_compile"
 gerbil_capability_tests := "//t/qualification/gerbil-bazel:tests"

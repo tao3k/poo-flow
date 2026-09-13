@@ -7,7 +7,7 @@
                  check-equal?
                  test-case
                  test-suite)
-        (only-in :asp-gerbil-scheme/build-api
+        (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-p95-elapsed-ms)
         "./support/type-contract-performance.ss")
 
