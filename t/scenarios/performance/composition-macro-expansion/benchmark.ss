@@ -33,7 +33,7 @@
       output-directory
       max-elapsed-ms)
   (unless (file-exists? output-directory)
-    (create-directory output-directory))
+    (create-directory* output-directory))
   (let-values (((elapsed-nanos ignored-output)
                 (call-with-timing
                  (lambda ()
