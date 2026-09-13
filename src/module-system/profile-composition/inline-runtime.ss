@@ -4,6 +4,7 @@
 ;;; macro parser modules so macro expansion remains shallow and reusable.
 
 (import (only-in :clan/poo/object .all-slots .mix .o .ref object<-alist)
+        (only-in :std/misc/list delete-duplicates/hash)
         (only-in :std/srfi/1 append-map filter-map find fold)
         :poo-flow/src/core/plan)
 
@@ -256,15 +257,13 @@
    (composition-plan-stage-targets stage stages bindings)))
 
 (def (composition-plan-referenced-case-names stages bindings)
-  (fold
-   (lambda (stage names)
-     (fold
-      (lambda (name next)
-        (if (memq name next) next (cons name next)))
-      names
-      (composition-plan-case-target-names stage stages bindings)))
-   '()
-   stages))
+  (delete-duplicates/hash
+   (append-map
+    (lambda (stage)
+      (composition-plan-case-target-names stage stages bindings))
+    stages)
+   table: (make-hash-table-eq)
+   from-end?: #t))
 
 (def (composition-plan-root-stage-names stages bindings)
   (let ((referenced

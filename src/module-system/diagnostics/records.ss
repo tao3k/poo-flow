@@ -6,6 +6,8 @@
         :poo-flow/src/core/task
         :poo-flow/src/core/flow
         :poo-flow/src/module-system/descriptor/interface
+        (only-in :poo-flow/src/utilities/functional
+                 poo-flow-stable-duplicates)
         (only-in :poo-flow/src/module-system/object-family/syntax
                  defpoo-object-family)
         :poo-flow/src/module-system/projection/syntax)
@@ -60,32 +62,11 @@
 ;;; for module-system behavior, keeping validation, lookup, or projection
 ;;; responsibilities centralized for callers.
 ;; : (-> DiagnosticKey [DiagnosticKey] Boolean)
-(def (poo-flow-module-diagnostic-key-member? value values)
-  (cond
-   ((null? values) #f)
-   ((equal? value (car values)) #t)
-   (else
-    (poo-flow-module-diagnostic-key-member? value (cdr values)))))
-
 ;;; Boundary: duplicate computation preserves first duplicate owner order.
 ;;; Intent: doctor remains responsive when downstream overlays repeat template option keys.
-;; : (-> [DiagnosticKey] [DiagnosticKey] [DiagnosticKey])
-(def (poo-flow-module-duplicate-symbols/add values emitted)
-  (cond
-   ((null? values) '())
-   ((and (poo-flow-module-diagnostic-key-member? (car values) (cdr values))
-         (not (poo-flow-module-diagnostic-key-member? (car values) emitted)))
-    (cons (car values)
-          (poo-flow-module-duplicate-symbols/add
-           (cdr values)
-           (cons (car values) emitted))))
-   (else
-    (poo-flow-module-duplicate-symbols/add (cdr values) emitted))))
-
-;;; Boundary: duplicate computation is quadratic, not recursively exponential.
 ;; : (-> [DiagnosticKey] [DiagnosticKey])
 (def (poo-flow-module-duplicate-symbols values)
-  (poo-flow-module-duplicate-symbols/add values '()))
+  (poo-flow-stable-duplicates values))
 
 ;;; Boundary: option diagnostics look only at keys, not option payloads.
 ;; : (-> ModuleOptionAlist [Symbol])

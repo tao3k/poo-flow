@@ -4,7 +4,7 @@
  (regression_budget . 75ms)
  (expected_over_input_budget . 5ms)
  (sampleCount . 20)
- (targetRationale . "Pinned to batch validation of session tool policy refs against concrete POO tool specs.")
+ (targetRationale . "Pinned to hash-backed policy-ref merge and batch validation against concrete POO tool specs.")
  (maxRssMb . 512)
  (memoryMetric . resident-set-size)
  (memoryUnit . "MB")
@@ -13,9 +13,9 @@
  (sourcePath . "t/scenarios/performance/tool-core-catalog-policy-validation/benchmark.ss")
  (rule . GERBIL-SCHEME-AGENT-R031)
  (feature . tool-core-catalog-policy-validation)
- (optimizationFocus . "POO tool specs with bounded policy catalog validation receipts")
+ (optimizationFocus . "std/misc/list hash-backed agent and hook policy-ref merge before POO catalog validation")
  (inputShape . "160 tool specs and 160 session tool grants resolved through a catalog validation receipt")
- (expectedRepair . "keep tool specs shallow POO objects and validate symbolic session grants against a concrete catalog before runtime handoff")
+ (expectedRepair . "retain first-seen policy-ref order with the upstream eq-hash algorithm; do not restore recursive member scans")
  (measurementPhases collect-before policy-before collect-after policy-after assert-time-gate observe-runtime-memory)
  (expectedOutcome
   .

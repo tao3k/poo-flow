@@ -4,6 +4,7 @@
 (import (only-in :clan/poo/object .o .ref .put!)
         (only-in :clan/poo/mop element?)
         (only-in :std/misc/hash hash-ref/default hash-remove!)
+        (only-in :std/misc/list delete-duplicates/hash)
         (only-in :std/srfi/1 find filter filter-map foldl)
         "types.ss" "objects.ss")
 
@@ -83,10 +84,10 @@
 
 ;; : (-> [SchemeValue] [SchemeValue])
 (def (unique/identity values)
-  (reverse
-   (foldl (lambda (value result)
-            (if (memq value result) result (cons value result)))
-          '() values)))
+  (delete-duplicates/hash
+   values
+   table: (make-hash-table-eq)
+   from-end?: #t))
 
 ;; : (-> [SchemeValue] Boolean)
 (def (unique-identities? values)

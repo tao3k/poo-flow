@@ -7,7 +7,6 @@
         :poo-flow/src/utilities/functional)
 
 (export poo-flow-cicd-checks-names
-        poo-flow-cicd-duplicate-symbols/fold
         poo-flow-cicd-duplicate-symbols
         poo-flow-cicd-check-unresolved-dependency-refs/rev
         poo-flow-cicd-unresolved-dependency-refs
@@ -27,26 +26,9 @@
 (def (poo-flow-cicd-checks-names checks)
   (map poo-flow-cicd-check-name checks))
 
-;; Duplicate names make dependency refs ambiguous, so the graph reports them
-;; before any downstream scheduler tries to interpret edges.
-;; : (-> Symbol Pair Pair)
-(def (poo-flow-cicd-duplicate-symbol-state name state)
-  (let ((seen (car state))
-        (duplicates (cdr state)))
-    (if (poo-flow-cicd-symbol-member? name seen)
-      (cons seen (poo-flow-cicd-symbol-add name duplicates))
-      (cons (poo-flow-cicd-symbol-add name seen) duplicates))))
-
-;; : (-> [Symbol] [Symbol] [Symbol] [Symbol])
-(def (poo-flow-cicd-duplicate-symbols/fold names seen duplicates)
-  (cdr (poo-flow-fold-left
-        poo-flow-cicd-duplicate-symbol-state
-        (cons seen duplicates)
-        names)))
-
 ;; : (-> [Symbol] [Symbol])
 (def (poo-flow-cicd-duplicate-symbols names)
-  (poo-flow-cicd-duplicate-symbols/fold names '() '()))
+  (poo-flow-stable-duplicates names))
 
 ;; Unresolved dependency refs are graph diagnostics, not constructor errors.
 ;; Keeping this local to one check lets the map-level report aggregate every
