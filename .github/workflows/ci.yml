@@ -87,9 +87,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: native-gerbil-unit-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
+          key: native-gerbil-unit-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
           restore-keys: |
-            native-gerbil-unit-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
+            native-gerbil-unit-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
 
       - name: Build native Gerbil
         if: steps.native-gerbil-cache.outputs.cache-hit != 'true'
@@ -104,7 +104,10 @@ jobs:
           git clone https://git.cons.io/mighty-gerbils/gerbil "$GERBIL_SRC"
           cd "$GERBIL_SRC"
           git checkout "$GERBIL_REF"
-          ./configure --prefix="$GERBIL_PREFIX"
+          # GitHub may schedule the same OS/architecture on CPUs with different
+          # instruction sets. Gerbil defaults to --enable-march=native, so a
+          # cached install is not portable unless the architecture is cleared.
+          ./configure --prefix="$GERBIL_PREFIX" --enable-march=
           echo "(def (gerbil-version-string) \"ci-${GERBIL_REF}\")" > src/gerbil/runtime/version.ss
           . ./build-env.sh
           for target in prepare gambit boot-gxi stage0 stage1 stdlib libgerbil lang r7rs-large srfi tools; do
@@ -117,7 +120,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .ci/gerbil/${{ matrix.gerbil-label }}
-          key: native-gerbil-unit-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
+          key: native-gerbil-unit-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ matrix.gerbil-ref }}
 
       - name: Activate native Gerbil
         run: |
@@ -133,9 +136,9 @@ jobs:
             .gerbil/pkg
             .gerbil/lib
             .gerbil/bin
-          key: native-gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
+          key: native-gerbil-pkg-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
           restore-keys: |
-            native-gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
+            native-gerbil-pkg-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-
 
       - name: Install native Gerbil package dependencies
         run: |
@@ -153,7 +156,7 @@ jobs:
             .gerbil/pkg
             .gerbil/lib
             .gerbil/bin
-          key: native-gerbil-pkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
+          key: native-gerbil-pkg-portable-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.gerbil-label }}-${{ hashFiles('gerbil.pkg') }}
 
       - name: Build native Gerbil package
         run: |
